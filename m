@@ -1,40 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 794067F84
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 15:51:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5996230404E
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 13:51:02 -0700 (PDT)
-Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id n6So0kWj6ofnHXP8 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 13:51:01 -0700 (PDT)
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Tue, 13 Aug 2013 21:51:00 +0100
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 1D5B76E803C
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 16:50:53 -0400 (EDT)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r7DKowu134013402
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 16:50:58 -0400
-Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r7DKouoc023098
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 14:50:56 -0600
-Subject: Re: [PATCH 1/3] quota: Add a new quotactl command Q_XGETQSTATV
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <520A9A2F.5090009@sgi.com>
-References: <1375828029-26360-1-git-send-email-sekharan@us.ibm.com>
-	<1375828029-26360-2-git-send-email-sekharan@us.ibm.com>
-	<520A9A2F.5090009@sgi.com>
-Date: Tue, 13 Aug 2013 15:50:48 -0500
-Message-ID: <1376427048.971.17.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 519737F8C
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 16:00:43 -0500 (CDT)
+Date: Tue, 13 Aug 2013 16:00:39 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v8 0/7] userns: Convert xfs to use kuid_t/kgid_t where
+	appropriate
+Message-ID: <20130813210039.GC12719@sgi.com>
+References: <20130801112953.48c2870b@oracle.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130801112953.48c2870b@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -47,68 +23,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, Abhijith Das <adas@redhat.com>
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com, Gao feng <gaofeng@cn.fujitsu.com>, "Eric W. Biederman" <ebiederm@gmail.com>
 
-On Tue, 2013-08-13 at 15:42 -0500, Rich Johnston wrote:
-> Hey Chandra,
-> 
-> Nice addition to quotas.  Just a couple of comments.
-> 
-> On 08/06/2013 05:27 PM, Chandra Seetharaman wrote:
-> 
-> . . .
-> >
-> > +/*
-> > + * fs_quota_statv is the used by Q_XGETQSTATV for a given file system. It
-> Remove extra word       ^^^^
-> 
-> > + * provides a centralized way to get meta information about the quota
-> > + * subsystem. eg. space taken up for user, group, and project quotas, number
-> > + * of dquots currently incore.
-> > + *
-> > + * This version has proper versioning support with appropriate padding for
-> > + * future expansions, and ability to expand for future without creating any
-> > + * backwward compatibility issues.
-> backward is misspelled (extra w)
-> 
-> > + *
-> > + * For Q_XGETQSTATV, user space caller need to specify fs_quota_statv.qs_version
-> > + * to the version of data they are interested in. Kernel will fill the data
-> > + * fields relevant to that version.
-> > + *
-> > + * If kernel does not support user space caller specified version, EINVAL will
-> > + * be returned. User space caller can then reduce the version number and retry
-> > + * the same command.
-> > + */
-> This was a little difficult to follow, suggest rewording a little, 
-> something like:
-> 
-> Q_XGETQSTATV uses the passed in value of the requested version via
-> fs_quota_statv.qs_version to determine the return data layout of 
-> fs_quota_statv.
-> 
-> 
+Hi Dwight,
 
-Will make all the suggested fixes.
-
-> It would be nice to get this information documented in the quotactl(2)
-> manpage similar to Q_XGETQSTAT.
-
-Once it is in the kernel will work with Jan Kara to add the relevant
-changes to user space.
-
-Thanks
-
-Chandra
+On Thu, Aug 01, 2013 at 11:29:53AM -0400, Dwight Engen wrote:
+> Hi All,
 > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> This updated patchset is on top of 7a378c9a (HEAD) of xfs git. The
+> patches do not convert the id's returned from bulkstat, since bulkstat
+> cannot be called from inside a userns right now anyway since the caller
+> must be CAP_SYS_ADMIN in init_user_ns. Similar checks ensure that
+> open_by_handle, and changing of projid can also only be called from
+> init_user_ns.
 
+We pulled in Dave's kernel/libxfs sync series yesterday.  Could you rebase this
+on git://oss.sgi.com/xfs/xfs.git master branch?  Sorry for the inconvenience.
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
