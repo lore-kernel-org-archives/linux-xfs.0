@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EBE8D29E14
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:31:18 -0500 (CDT)
-Message-ID: <520AB3B4.7000808@sgi.com>
-Date: Tue, 13 Aug 2013 17:31:16 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 06F1229E14
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:31:35 -0500 (CDT)
+Message-ID: <520AB3C1.7050805@sgi.com>
+Date: Tue, 13 Aug 2013 17:31:29 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xftests: renumber existing btrfs tests to start with
- 1
-References: <1375793841-25114-1-git-send-email-dsterba@suse.cz>
-In-Reply-To: <1375793841-25114-1-git-send-email-dsterba@suse.cz>
+Subject: Re: [PATCH v4 0/2] xfstest btrfs/316: test send / receive
+References: <1376414658-4563-1-git-send-email-list.xfs@jan-o-sch.net>
+	<520A7BEC.3010301@sandeen.net>
+In-Reply-To: <520A7BEC.3010301@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,38 +22,57 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Sterba <dsterba@suse.cz>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jan Schmidt <list.xfs@jan-o-sch.net>, linux-btrfs@vger.kernel.org, sbehrens@giantdisaster.de, xfs@oss.sgi.com
 
-On 08/06/2013 07:57 AM, David Sterba wrote:
-> Current numbering is inheried from the single testsuite series. There
-> are only 6 btrfs-specific tests and it makes more sense to start adding
-> new ones at a more natural place than 300-something. There's no overlap
-> with the old and new numbers and I hope there' will be no confusion when
-> referencing them.
+On 08/13/2013 01:33 PM, Eric Sandeen wrote:
+> On 8/13/13 12:24 PM, Jan Schmidt wrote:
+>> These two patches add the announced tests for btrfs send / receive. As
+>> requested, the fssum tool is now included.
 >
-> Signed-off-by: David Sterba <dsterba@suse.cz>
-
-Thanks David, this has been committed.
+>
+> Thanks for the updates.
+>
+> Both:
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+>
+Thanks Jan, this has been committed.
 
 --Rich
 
-commit aab6d4e47d51b5cf4e5fc4a15a5dee80fb72aab4
-Author: David Sterba <dsterba@suse.cz>
-Date:   Tue Aug 13 16:16:27 2013 -0500
+commit af86f5668eb164d1db52d1bf65673ba51d6fc75a
+Author: Jan Schmidt <list.xfs@jan-o-sch.net>
+Date:   Tue Aug 13 17:24:18 2013 +0000
 
-     xfstests: renumber existing btrfs tests to start with 1
+     xfstests btrfs/007: test send / receive
 
-     Current numbering is inheried from the single testsuite series. There
-     are only 6 btrfs-specific tests and it makes more sense to start adding
-     new ones at a more natural place than 300-something. There's no overlap
-     with the old and new numbers and I hope there' will be no confusion 
-when
-     referencing them.
+     Basic send / receive functionality test for btrfs. Requires current
+     version of fsstress built (-x support). Relies on fssum tool but can
+     skip the test if it failed to build.
 
-     Signed-off-by: David Sterba <dsterba@suse.cz>
+     Signed-off-by: Jan Schmidt <list.xfs@jan-o-sch.net>
+     Reviewed-by: Josef Bacik <jbacik@fusionio.com>
      Reviewed-by: Eric Sandeen <sandeen@redhat.com>
      Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+
+     [rjohnston: renumbered test from 316 to 007]
+
+commit df0fd18101b625aad690d4cd3bb4ba7e7d1d99dc
+Author: Jan Schmidt <list.xfs@jan-o-sch.net>
+Date:   Tue Aug 13 17:24:17 2013 +0000
+
+     xfstests: add fssum tool
+
+     fssum is a tool to build a recursive checksum for a file system. 
+The home
+     repository of fssum is
+
+         git://git.kernel.org/pub/scm/linux/kernel/git/arne/far-progs.git
+
+     Signed-off-by: Jan Schmidt <list.xfs@jan-o-sch.net>
+     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+
 
 
 _______________________________________________
