@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4459F29DFB
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:31:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AAE3CAC006
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:31:26 -0700 (PDT)
-Received: from mx1.vr-web.de (mx0.vr-web.de [195.200.35.198]) by cuda.sgi.com
-	with ESMTP id 5l0DMOzDm4qOyBE5 for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 08:31:25 -0700 (PDT)
-Message-ID: <520A5132.6090608@allmail.net>
-Date: Tue, 13 Aug 2013 17:30:58 +0200
-From: Michael Maier <m1278468@allmail.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8F3A77F5D
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:42:36 -0500 (CDT)
+Message-ID: <520A53E8.6030604@sgi.com>
+Date: Tue, 13 Aug 2013 10:42:32 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Failure growing xfs with linux 3.10.5
-References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
-	<52090C6C.6060604@allmail.net> <20130813000453.GQ12779@dastard>
-In-Reply-To: <20130813000453.GQ12779@dastard>
+Subject: Re: ***** SUSPECTED SPAM ***** Re: [PATCH 48/49] xfs: Add read-only
+	support for dirent filetype field
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-49-git-send-email-david@fromorbit.com>
+	<51F80FA8.4060304@sgi.com> <20130812005905.GK12779@dastard>
+	<5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
+In-Reply-To: <20130813005024.GS12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,154 +21,182 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> [ re-ccing the list, because finding this is in everyone's interest ]
-> 
-> On Mon, Aug 12, 2013 at 06:25:16PM +0200, Michael Maier wrote:
->> Eric Sandeen wrote:
->>> On 8/11/13 2:11 AM, Michael Maier wrote:
->>>> Hello!
+On 08/12/13 19:50, Dave Chinner wrote:
+> On Mon, Aug 12, 2013 at 08:25:23AM -0500, Mark Tinguely wrote:
+>> On 08/11/13 19:59, Dave Chinner wrote:
+>>> On Tue, Jul 30, 2013 at 02:10:32PM -0500, Mark Tinguely wrote:
+>>>> On 07/19/13 01:25, Dave Chinner wrote:
+>>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>>
+>>>>> Add support for the file type field in directory entries so that
+>>>>> readdir can return the type of the inode the dirent points to to
+>>>>> userspace without first having to read the inode off disk.
+>>>>>
+>>>>> The encoding of the type field is a single byte that is added to the
+>>>>> end of the directory entry name length. For all intents and
+>>>>> purposes, it appends a "hidden" byte to the name field which
+>>>>> contains the type information. As the directory entry is already of
+>>>>> dynamic size, helpers are already required to access and decode the
+>>>>> direct entry structures.
+>>>>>
+>>>>> Hence the relevent extraction and iteration helpers are updated to
+>>>>> understand the hidden byte.  Helpers for reading and writing the
+>>>>> filetype field from the directory entries are also added. Only the
+>>>>> read helpers are used by this patch.  It also adds all the code
+>>>>> necessary to read the type information out of the dirents on disk.
+>>>>>
+>>>>> Further we add the superblock feature bit and helpers to indicate
+>>>>> that we understand the on-disk format change. This is not a
+>>>>> compatible change - existing kernels cannot read the new format
+>>>>> successfully - so an incompatible feature flag is added. We don't
+>>>>> yet allow filesystems to mount with this flag yet - that will be
+>>>>> added once write support is added.
+>>>>>
+>>>>> Finally, the code to take the type from the VFS, convert it to an
+>>>>> XFS on-disk type and put it into the xfs_name structures passed
+>>>>> around is added, but the directory code does not use this field yet.
+>>>>> That will be in the next patch.
+>>>>>
+>>>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>>>> ---
+>>>>>
 >>>>
->>>> I think I'm facing the same problem as already described here:
->>>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/54428
+>>>>> +static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+>>>>> +{
+>>>>> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5&&
+>>>>> +		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
+>>>>>   }
+>>>>>
+>>>>
+>>>> This feature should support inode version 2 and 3.
 >>>
->>> Maybe you can try the tracing Dave suggested in that thread?
->>> It certainly does look similar.
+>>> Has nothing to do with the inode version number - it has to do with
+>>> the directory structure being modified.
+>>>
+>>> We're changing the directory structure for CRCs, and this builds on
+>>> top of that. It is essentially part of the V3 directory format, and
+>>> should be treated as such. Suggesting that we retrofit and support a
+>>> modified v2 directory format is close to insane - instead of only
+>>> having to test v2 vs v3 directory formats, you're suggesting we
+>>> support v2 vs v2+dtype vs v3 vs v3+dtype. We simply do not have the
+>>> resources to adequately test and support such an explosion of
+>>> filesystem configurations.
+>>>
+>>> We've had this discussion before - new on-disk features go into the
+>>> v5 superblock format - the v4 superblock format from this point
+>>> onwards is essentially legacy support from an upstream development
+>>> perspective.  Upstream development is about moving forward as
+>>> quickly and cleanly as possible - quadrupling the test matrix for
+>>> every minor on-disk change is simply not something we can sustain,
+>>> and that's why I'm pushing back *hard* on any suggestion that we
+>>> shoul dbe supporting new on-disk format changes on both v4 and v5
+>>> superblocks formats. v5 is the future and so all new features need
+>>> to target v5 filesystem formats and ignore the restrictions that v4
+>>> filesystem formats might place on them.
+>>>
+>>> That said, there's nothing to stop anyone from backporting such a
+>>> feature to an older kernel and maintaining it themselves - it's open
+>>> source software. But the idea that development should be constrained
+>>> by having to support both old and new formats is wrong - the old v4
+>>> format should be considered stable and we need think very hard about
+>>> changing it at all now, especially as much of the development focus
+>>> is now shifting to taking advantage of the additions to the v5
+>>> format....
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
 >>
->> I attached a trace report while executing xfs_growfs /mnt on linux 3.10.5 (does not happen with 3.9.8).
->>
->> xfs_growfs /mnt
->> meta-data=/dev/mapper/backupMy-daten3 isize=256    agcount=42, agsize=7700480 blks
->>          =                       sectsz=512   attr=2
->> data     =                       bsize=4096   blocks=319815680, imaxpct=25
->>          =                       sunit=0      swidth=0 blks
->> naming   =version 2              bsize=4096   ascii-ci=0
->> log      =internal               bsize=4096   blocks=60160, version=2
->>          =                       sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
->> data blocks changed from 319815680 to 346030080
->>
->> The entry in messages was:
->>
->> Aug 12 18:09:50 dualc kernel: [  257.368030] ffff8801e8dbd400: 58 46 53 42 00 00 10 00 00 00 00 00 13 10 00 00  XFSB............
->> Aug 12 18:09:50 dualc kernel: [  257.368037] ffff8801e8dbd410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->> Aug 12 18:09:50 dualc kernel: [  257.368042] ffff8801e8dbd420: 46 91 c6 80 a9 a9 4d 8c 8f e2 18 fd e8 7f 66 e1  F.....M.......f.
->> Aug 12 18:09:50 dualc kernel: [  257.368045] ffff8801e8dbd430: 00 00 00 00 04 00 00 04 00 00 00 00 00 00 00 80  ................
->> Aug 12 18:09:50 dualc kernel: [  257.368051] XFS (dm-33): Internal error xfs_sb_read_verify at line 730 of file
->> /daten2/tmp/rpm/BUILD/kernel-desktop-3.10.5/linux-3.10/fs/xfs/xfs_mount.c.  Caller 0xffffffffa099a2fd
-> .....
->> Aug 12 18:09:50 dualc kernel: [  257.368533] XFS (dm-33): Corruption detected. Unmount and run xfs_repair
->> Aug 12 18:09:50 dualc kernel: [  257.368611] XFS (dm-33): metadata I/O error: block 0x3ac00000 ("xfs_trans_read_buf_map") error 117 numblks 1
->> Aug 12 18:09:50 dualc kernel: [  257.368623] XFS (dm-33): error 117 reading secondary superblock for ag 16
-> 
-> Ok, so that's reading the secondary superblock for AG 16. You're
-> growing the filesystem from 42 to 45 AGs, so this problem is not
-> related to the actual grow operation - it's tripping over a problem
-> that already exists on disk before the grow operation is started.
-> i.e. this is likely to be a real corruption being seen, and it
-> happened some time in the distant past and so we probably won't ever
-> be able to pinpoint the cause of the problem.
-> 
-> That said, let's have a look at the broken superblock. Can you post
-> the output of the commands:
-> 
-> # xfs_db -r -c "sb 16" -c p <dev>
+>> I guess we need more time to argue this out. It is not going into
+>> Linux 3.12 as a crc feature only.
+>
+> Seriously?
 
-done after the failed growfs mentioned above:
+yes seriously.
 
-magicnum = 0x58465342
-blocksize = 4096
-dblocks = 319815680
-rblocks = 0
-rextents = 0
-uuid = 4691c680-a9a9-4d8c-8fe2-18fde87f66e1
-logstart = 67108868
-rootino = 128
-rbmino = 129
-rsumino = 130
-rextsize = 1
-agblocks = 7700480
-agcount = 42
-rbmblocks = 0
-logblocks = 60160
-versionnum = 0xb4a4
-sectsize = 512
-inodesize = 256
-inopblock = 16
-fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog = 12
-sectlog = 9
-inodelog = 8
-inopblog = 4
-agblklog = 23
-rextslog = 0
-inprogress = 0
-imax_pct = 25
-icount = 6464
-ifree = 631
-fdblocks = 1124026
-frextents = 0
-uquotino = 0
-gquotino = 0
-qflags = 0
-flags = 0
-shared_vn = 0
-inoalignmt = 2
-unit = 0
-width = 0
-dirblklog = 0
-logsectlog = 0
-logsectsize = 0
-logsunit = 1
-features2 = 0xa
-bad_features2 = 0xa
+>
+> This was *always* intended as a feature that went along with the v3
+> directory modifications. For example, see slide 40 of this
+> presentation:
+>
+> http://xfs.org/images/d/d1/Xfs-scalability-lca2012.pdf
+>
+> the d_type field is listed alongside  version counters, inode create
+> times, and unlinked list logging via inode items....
+>
+> The only reason this has been done as a feature bit is because I
+> didn't have it done in time to included it under the v5 superblock
+> version change.
+>
+> The directory format for v4 filesystems is not going to change. We
+> do not have the resources to test it adequately, nor do we have the
+> resources to support it adequately. We're already taking on a huge
+> amount of risk with the v5 superblock changes, and our fallback
+> position is that v4 superblock formats are unchanged and so
+> unaffected by the format changes made for v5. Pushing format changes
+> intended only for v5 fielsystems back into v4 filesystems jeopodises
+> that fallback position and exposes all existing filesystems to
+> increased risk.
+>
+> And that is a risk I'm not willing to take on behalf of upstream
+> kernel users. Those that move to CRC enabled filesystems know the
+> risks of being early adopters and accept that there may be problems
+> encountered. THose that are using v4 filesystems expect that there
+> are no risky, destabilising changes made to the on-disk format, yet
+> that's exactly what you are suggesting we do.
+>
+> I'll repeat again what I've said all along - new on-disk format
+> changes for upstream kernels need to be done on v5 filesystems as
+> the v4 format is now considered stable and in maintenance mode. It
+> takes months to to test and stabilise format changes and such
+> changes do not align to the goals of maintaining a stable code base.
+>
+> This is the same situationas when SGI changed from v3 superblocks to
+> v4 superblocks back in the Irix 6.1/6.2 days. All new features
+> targetted v4 superblocks, as the release process would result in all
+> platforms shipping with v4 superblocks for all new filesystems with
+> the next release a year later (6.5).
+>
+> This is exactly the same situation - upstream development is solely
+> focussed on future releases, and as such needs to make decisions
+> based on what is best for us in the medium to long term. The v4
+> superblocks have lasted for 15 years, but we are now at a similar
+> line in the sand - we have a major format and focus shift with v5
+> superblocks and that's where we need to be focussing our development
+> direction and decisions.
+>
+> Looking backwards by requiring new features to be chained to the old
+> format is a bad direction to be taking - it compromises what we can
+> do in the long term based on those features, and in the short term
+> requires more resources to develop and test the new features. It's
+> simply the wrong direction to be taking for upstream development.
+>
+> This is why I'm pushing back hard on any suggestions that we target
+> new features on v4 superblocks - it's a development dead end and
+> therefore essentially a waste of upstream development resources....
 
-> 
-> and
-> 
-> # xfs_db -r -c "sb 16" -c "type data" -c p <dev>
+v4 is hardly dead end. Feature bits can keep the filesystem stable.
 
-000: 58465342 00001000 00000000 13100000 00000000 00000000 00000000 00000000
-020: 4691c680 a9a94d8c 8fe218fd e87f66e1 00000000 04000004 00000000 00000080
-040: 00000000 00000081 00000000 00000082 00000001 00758000 0000002a 00000000
-060: 0000eb00 b4a40200 01000010 00000000 00000000 00000000 0c090804 17000019
-080: 00000000 00001940 00000000 00000277 00000000 001126ba 00000000 00000000
-0a0: 00000000 00000000 00000000 00000000 00000000 00000002 00000000 00000000
-0c0: 00000000 00000001 0000000a 0000000a 8f980320 73987e9e db829704 ef73fe2e
-0e0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-100: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-120: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-140: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-160: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-180: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-1a0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-1c0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-1e0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 
-> so we can see the exact contents of that superblock?
-> 
-> FWIW, how many times has this filesystem ben grown?
+v5 superblock is experimental and is not the automatically the default 
+and only version.
 
-I can't say for sure, about 4 or 5 times?
+Geoffrey has been expressing concerns about v5 and I agree with them. We 
+came to the party too late, and despite our concerns, SGI has worked 
+hard to get the crc pieces reviewed, tested and committed. The concerns 
+are still there.
 
-> Did it start
-> with only 32 AGs (i.e. 10TB in size)?
+Yes, I am serious. v4 is not dead and should get new features where 
+appropriate.
 
-10TB? No. The device just has 3 TB. You most probably meant 10GB?
-I'm not sure, but it definitely started with > 100GB.
+--Mark.
 
-
-Thanks,
-kind regards,
-Michael
 
 _______________________________________________
 xfs mailing list
