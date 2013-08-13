@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 23D4F29DFB
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 09:55:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 07527304043
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 07:55:28 -0700 (PDT)
-Received: from mx1.vr-web.de (mx0.vr-web.de [195.200.35.198]) by cuda.sgi.com
-	with ESMTP id DEEmFmrkXXlkNuq4 for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 07:55:27 -0700 (PDT)
-Message-ID: <520A48C4.6060801@allmail.net>
-Date: Tue, 13 Aug 2013 16:55:00 +0200
-From: Michael Maier <m1278468@allmail.net>
+	by oss.sgi.com (Postfix) with ESMTP id 8D0B37F54
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:03:23 -0500 (CDT)
+Message-ID: <520A4AB7.1080207@sgi.com>
+Date: Tue, 13 Aug 2013 10:03:19 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Failure growing xfs with linux 3.10.5
-References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
-	<5209126F.5020204@allmail.net> <20130813005414.GT12779@dastard>
-In-Reply-To: <20130813005414.GT12779@dastard>
+Subject: Re: [PATCH 50/50] xfs: use reference counts to free clean buffer items
+References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
+	<1376304611-22994-51-git-send-email-david@fromorbit.com>
+In-Reply-To: <1376304611-22994-51-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,45 +18,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Mon, Aug 12, 2013 at 06:50:55PM +0200, Michael Maier wrote:
->> Meanwhile, I faced another problem on another xfs-file system with linux
->> 3.10.5 which I never saw before. During writing a few bytes to disc, I
->> got "disc full" and the writing failed.
->>
->> At the same time, df reported 69G of free space! I ran xfs_repair -n and
->> got:
->>
->>
->> xfs_repair -n /dev/mapper/raid0-daten2
->> Phase 1 - find and verify superblock...
->> Phase 2 - using internal log
->>         - scan filesystem freespace and inode maps...
->> sb_ifree 591, counted 492
->> ^^^^^^^^^^^^^^^^^^^^^^^^^
->> What does this mean? How can I get rid of it w/o loosing data? This file
->> system was created a few days ago and never resized.
-> 
-> Superblock inode counting is lazy - it can get out of sync in after
-> an unclean shutdown, but generally mounting a dirty filesystem will
-> result in it being recalculated rather than trusted to be correct.
-> So there's nothing to worry about here.
+On 08/12/13 05:50, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> When a transaction is cancelled and the buffer log item is clean in
+> the transaction, the buffer log item is unconditionally freed. If
+> the log item is in the AIL, however, this leads to a use after free
+> condition as the item still has other users.
+>
+> In this case, xfs_buf_item_relse() should only be called on clean
+> buffer items if the reference count has dropped to zero. This
+> ensures only the last user frees the item.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/xfs_buf_item.c | 6 ++----
+>   1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 9358504..3a944b1 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -613,11 +613,9 @@ xfs_buf_item_unlock(
+>   			}
+>   		}
+>   	}
+> -	if (clean)
+> -		xfs_buf_item_relse(bp);
+> -	else if (aborted) {
+> +	if (clean || aborted) {
+>   		if (atomic_dec_and_test(&bip->bli_refcount)) {
+> -			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+> +			ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
+>   			xfs_buf_item_relse(bp);
+>   		}
+>   	} else
 
-When will it be self healed? I still can see it today after 4 remounts!
-This is strange and I can't use the free space, which I need! How can it
-be forced to be repaired w/o data loss?
+why is a clean buffer on the AIL? Racing with a completion handler?
 
+rather than this:
 
-Thanks,
-kind regards,
-Michael
+	if (clean || aborted) {
+		if (atomic_dec_and_test(&bip->bli_refcount)) {
+			ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
+			xfs_buf_item_relse(bp);
+		}
+	} else
+		atomic_dec(&bip->bli_refcount);
+
+why not fold it into this:
+
+	if (atomic_dec_and_test(&bip->bli_refcount)) {
+		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
+		xfs_buf_item_relse(bp);
+	}
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
