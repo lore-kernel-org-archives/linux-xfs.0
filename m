@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D2A9029DFB
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:12:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 95752304039
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:12:25 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id c3T9WlaCpDJQJDvF for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 08:12:24 -0700 (PDT)
-Message-ID: <520A4CCE.8010900@sandeen.net>
-Date: Tue, 13 Aug 2013 10:12:14 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 8A3EB29DFB
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:28:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 740EB304032
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:28:29 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id DL7U6LQjA2WcqIhs (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Aug 2013 08:28:24 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim1.fusionio.com (Postfix) with ESMTP id 2739F7C06A1
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 09:28:24 -0600 (MDT)
+Date: Tue, 13 Aug 2013 11:28:22 -0400
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: Re: [PATCH v3 1/2] xfstests: add fssum tool
+Message-ID: <20130813152822.GG2150@localhost.localdomain>
+References: <1375949833-1104-1-git-send-email-list.xfs@jan-o-sch.net>
+	<1375949833-1104-2-git-send-email-list.xfs@jan-o-sch.net>
+	<5203D827.3050909@sandeen.net> <20130812011539.GM12779@dastard>
+	<BB446B35-F3DA-462E-9E2C-9E4B780BC6B9@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: call roundup_64() to calculate the min_logblks
-References: <5209C4D0.5050203@oracle.com> <20130813065355.GB6023@dastard>
-	<5209E589.7080304@oracle.com>
-In-Reply-To: <5209E589.7080304@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <BB446B35-F3DA-462E-9E2C-9E4B780BC6B9@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +35,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: kbuild test robot <fengguang.wu@intel.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jan Schmidt <list.xfs@jan-o-sch.net>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "sbehrens@giantdisaster.de" <sbehrens@giantdisaster.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 8/13/13 2:51 AM, Jeff Liu wrote:
-> On 08/13/2013 02:53 PM, Dave Chinner wrote:
+On Sun, Aug 11, 2013 at 09:54:41PM -0500, Eric Sandeen wrote:
+> On Aug 11, 2013, at 8:15 PM, Dave Chinner <david@fromorbit.com> wrote:
 > 
->> On Tue, Aug 13, 2013 at 01:32:00PM +0800, Jeff Liu wrote:
->>> From: Jie Liu <jeff.liu@oracle.com>
->>>
->>> Replace roundup() with roundup_64() as we calculate min_logblks
->>> with 64-bit divisions.  Hence, call roundup() will cause the
->>> following error while compiling a 32-bit kernel:
->>>
->>> fs/built-in.o: In function `xfs_log_calc_minimum_size':
->>> fs/xfs/xfs_log_rlimit.c:140: undefined reference to `__udivdi3'
->>>
->>> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
->>> Cc: Dave Chinner <dchinner@redhat.com>
->>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->>
->> You beat me to it, Jeff. I got an email from Fengguang's build farm,
->> too. :)
+> > On Thu, Aug 08, 2013 at 12:40:55PM -0500, Eric Sandeen wrote:
+> >> On 8/8/13 3:17 AM, Jan Schmidt wrote:
+> >>> SUBDIRS =
+> >>> 
+> >>> LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
+> >>> 
+> >>> +OPT_LDLIBS = -lssl -lcrypto
+> >> 
+> >> Hm, new deps.  I guess it's not a huge problem, these should always
+> >> be available, right?
+> > 
+> > Please, let's keep crypto out of xfstests if we can. That's just
+> > going to add a nightmare of US export compliance garbage to any
+> > distro that wants to package and ship this....
+> > 
+> It's ssl that's (optionally) required for check summing I believe.  But it's optional if done properly...
 > 
-> Hi Dave,
-> 
-> I'm on a longer vacations these days(until next week).  I have asked
-> my friend for help checking our mailing list to watch if there's any
-> email for me before the leaving, so I got his phone call this morning
-> for this bug. :)
 
-Now that's dedication.  :)
+It doesn't build without -lcrypto for me, so either we have an external
+dependancy (which I'm fine with), or we add it to xfstests (which is what you
+wanted).  Does a config option alleviate your concerns?  And I it's just linking
+it in at build time, I don't think we have to work about export compliance as
+long as we aren't shipping actual crytpo stuff right?  Anybody who is going to
+be running this stuff is going to have libssl installed, which installs
+libcrypto (at least on my box) so I don't think it's a huge deal to have us
+linking it.  Thanks,
 
--Eric
-
->>
->> Your fix looks good.
->>
->> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Thanks for your quick review!
-> 
-> -Jeff
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Josef
 
 _______________________________________________
 xfs mailing list
