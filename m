@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF9247F8E
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 16:22:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BF1618F804C
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 14:22:45 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id rDUj7AoHky5de7zb for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 14:22:44 -0700 (PDT)
-Date: Tue, 13 Aug 2013 23:22:42 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/3] quota: Add a new quotactl command Q_XGETQSTATV
-Message-ID: <20130813212242.GA9158@quack.suse.cz>
-References: <1375828029-26360-1-git-send-email-sekharan@us.ibm.com>
-	<1375828029-26360-2-git-send-email-sekharan@us.ibm.com>
-	<520A9A2F.5090009@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D3B997F8E
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 16:28:37 -0500 (CDT)
+Date: Tue, 13 Aug 2013 16:28:34 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: ***** SUSPECTED SPAM *****  [PATCH 00/50] xfs: patches for 3.12
+Message-ID: <20130813212834.GD12719@sgi.com>
+References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
+	<20130812225513.GA12719@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <520A9A2F.5090009@sgi.com>
+In-Reply-To: <20130812225513.GA12719@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +23,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Jan Kara <jack@suse.cz>, Chandra Seetharaman <sekharan@us.ibm.com>, Abhijith Das <adas@redhat.com>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Steven Whitehouse <swhiteho@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-  Hi,
+On Mon, Aug 12, 2013 at 05:55:13PM -0500, Ben Myers wrote:
+> On Mon, Aug 12, 2013 at 08:49:21PM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > This is a rebase of the reviewed series of kernel patches I recently
+> > posted here:
+> > 
+> > http://oss.sgi.com/pipermail/xfs/2013-July/028207.html
+> > 
+> > It addresses all the review comments except for one from Christoph
+> > about the IOP_SIZE removal - I'll send a followup patch in a couple
+> > of days to remove all the rest of IOP_ macros...
+> > 
+> > The log space problems from the optimisations have been fixed - the
+> > fix went into patch 44 of this series, and cascaded through 45 and
+> > 46 as well. Those patches will need reviewing. The problematic
+> > workload has been running for 16 hours here without failure on a
+> > small (10MB) log, so AFAICT the problem is fixed.
+> > 
+> > There is one new patch - the fix to the use-after-free of clean
+> > buffer items when a transaction is cancelled - and that is at the
+> > end of the series.
+> 
+> Pulled in patches 1 through 42.
 
-  Neither me nor linux-fsdevel has been CCed on this change. Please do that
-next time. Now looking into the patch in xfs mailing list archive I have
-one comment: You declare:
-struct fs_quota_statv {
-	__s8			qs_version;	/* version for future changes */
-	__u8			qs_pad1;	/* pad for 16bit alignment */
-	__u16			qs_flags;	/* FS_QUOTA_.* flags */
-	__u32			qs_incoredqs;	/* number of dquots incore */
-	struct fs_qfilestatv	qs_uquota;	/* user quota information */
-	struct fs_qfilestatv	qs_gquota;	/* group quota information */
-	struct fs_qfilestatv	qs_pquota;	/* project quota information */
-	__s32			qs_btimelimit;  /* limit for blks timer */
-	__s32			qs_itimelimit;  /* limit for inodes timer */
-	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
-	__u16			qs_bwarnlimit;	/* limit for num warnings */
-	__u16			qs_iwarnlimit;	/* limit for num warnings */
-	__u64			qs_pad2[8];	/* for future proofing */
-};
-
-Now do you really need qs_pad2 field? Since the structure is properly
-versioned now, even its size can vary between versions, cannot it?
-Otherwise the patch looks fine.
-
-								Honza
-
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Pulled in 43 through 47.
 
 _______________________________________________
 xfs mailing list
