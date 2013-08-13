@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D25F97F55
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 02:51:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AE7058F8050
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 00:51:15 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ARIrfv1eGDKDFgfJ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 00:51:14 -0700 (PDT)
-Message-ID: <5209E589.7080304@oracle.com>
-Date: Tue, 13 Aug 2013 15:51:37 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3E0087F51
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:28:24 -0500 (CDT)
+Message-ID: <520A3474.3070501@sgi.com>
+Date: Tue, 13 Aug 2013 08:28:20 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: call roundup_64() to calculate the min_logblks
-References: <5209C4D0.5050203@oracle.com> <20130813065355.GB6023@dastard>
-In-Reply-To: <20130813065355.GB6023@dastard>
+Subject: Re: [PATCH 44/50] xfs: Reduce allocations during CIL insertion
+References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
+	<1376304611-22994-45-git-send-email-david@fromorbit.com>
+In-Reply-To: <1376304611-22994-45-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,47 +18,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: kbuild test robot <fengguang.wu@intel.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 08/13/2013 02:53 PM, Dave Chinner wrote:
+On 08/12/13 05:50, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Now that we have the size of the object before the formatting pass
+> is called, we can allocation the log vector and it's buffer in a
+> single allocation rather than two separate allocations.
+>
+> Store the size of the allocated buffer in the log vector so that
+> we potentially avoid allocation for future modifications of the
+> object.
+>
+> While touching this code, remove the IOP_FORMAT definition.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-> On Tue, Aug 13, 2013 at 01:32:00PM +0800, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> Replace roundup() with roundup_64() as we calculate min_logblks
->> with 64-bit divisions.  Hence, call roundup() will cause the
->> following error while compiling a 32-bit kernel:
->>
->> fs/built-in.o: In function `xfs_log_calc_minimum_size':
->> fs/xfs/xfs_log_rlimit.c:140: undefined reference to `__udivdi3'
->>
->> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
->> Cc: Dave Chinner <dchinner@redhat.com>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> 
-> You beat me to it, Jeff. I got an email from Fengguang's build farm,
-> too. :)
+...
 
-Hi Dave,
+>
+>   		/* Skip items which aren't dirty in this transaction. */
+> @@ -150,48 +178,39 @@ xlog_cil_prepare_log_vecs(
 
-I'm on a longer vacations these days(until next week).  I have asked
-my friend for help checking our mailing list to watch if there's any
-email for me before the leaving, so I got his phone call this morning
-for this bug. :)
+...
 
-> 
-> Your fix looks good.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> +		lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
 
-Thanks for your quick review!
+Looks good
 
--Jeff
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
