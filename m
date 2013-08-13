@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0F66C7F9D
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:10:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8CB81AC001
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 15:10:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dqkprAMRqmueGJla for
-	<xfs@oss.sgi.com>; Tue, 13 Aug 2013 15:10:38 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7DMAbBc006995
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 18:10:37 -0400
-Received: from laptop.bfoster (vpn-52-106.rdu2.redhat.com [10.10.52.106])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r7DMAaGe013675
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 18:10:37 -0400
-Message-ID: <520AAE10.6080003@redhat.com>
-Date: Tue, 13 Aug 2013 18:07:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: ***** SUSPECTED SPAM ***** [RFD 06/17] xfs: partial inode chunk
-	allocation
-References: <1376313607-28133-1-git-send-email-david@fromorbit.com>
-	<1376313607-28133-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1376313607-28133-7-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3F66829E14
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:15:12 -0500 (CDT)
+Received: from eagdhcp-232-140.americas.sgi.com
+	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BF32304032
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 15:15:09 -0700 (PDT)
+Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r7DMF8Oj006047
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:15:08 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20130813221739.031858865@sgi.com>
+Date: Tue, 13 Aug 2013 17:13:31 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfsprogs: fix inode crash in xfs_repair
+Content-Disposition: inline;
+	filename=xfs_progs-fix-repair-crash-new-ichunk.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,64 +25,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 08/12/2013 09:19 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When a filesystem ages or when certain workloads dominate the storage capacity
-> of the filesystem, it can become difficult to find contiguous free space in the
-> filesystem and hence inode allocation can fail long before the filesystem is out
-> of space.
-> 
-...
-> ---
+Adding the lost+found in phase 6 could allocate an inode from
+a new inode chunk. That newly created chunk was not around in
+the scan phase, and is not in the avl tree which will result
+in a NULL dereference.
 
-The issue outlined above is something that was observed with workloads
-running against swift (object storage) on top of gluster (distributed
-storage) on top of XFS with larger than default inode sizes (512b, 1k).
-Unfortunately, I don't have any specific data to describe the workload.
-If I recall correctly, the end result was free space fragmentation
-leading to premature ENOSPC on inode allocation due to unavailability of
-sufficiently sized extents for inode chunks.
+This patch adds the newly created inode chunk and inodes as if
+found in the scan phase.
 
-After a brief irc conversation, Dave suggested that the immediately
-previous item:
+Metadata dump available for future tests.
 
-[RFD 05/17] xfs: introduce a free inode allocation btree
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ repair/incore_ino.c |    2 +-
+ repair/phase6.c     |   15 +++++++++++++++
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-... tie in with and precede this partial chunk allocation work, so I'm
-going to try to pick off this new free inode btree and partial chunk
-allocation work. Just a heads up to the list to try and avoid any
-duplicate effort. :)
+Index: b/repair/incore_ino.c
+===================================================================
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -700,7 +700,7 @@ get_inode_parent(ino_tree_node_t *irec,
+ 	return(0LL);
+ }
+ 
+-static void
++void
+ alloc_ex_data(ino_tree_node_t *irec)
+ {
+ 	parent_list_t 	*ptbl;
+Index: b/repair/phase6.c
+===================================================================
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -930,6 +930,21 @@ mk_orphanage(xfs_mount_t *mp)
+ 	irec = find_inode_rec(mp,
+ 			XFS_INO_TO_AGNO(mp, ino),
+ 			XFS_INO_TO_AGINO(mp, ino));
++
++	if (irec == NULL && XFS_INO_TO_AGNO(mp, ino) < mp->m_sb.sb_agcount &&
++	    ip != NULL && ip->i_d.di_magic == XFS_DINODE_MAGIC) {
++
++		/*
++		 * add the newly allocated inode chunk to the avl tree.
++		 */
++		irec = set_inode_free_alloc(mp, XFS_INO_TO_AGNO(mp, ino),
++					    XFS_INO_TO_AGINO(mp, ino));
++		alloc_ex_data(irec);
++
++		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)
++			set_inode_free(irec, i);
++	}
++
+ 	ino_offset = get_inode_offset(mp, ino, irec);
+ 
+ 	/*
 
-Thanks again for writing this up, Dave.
-
-Brian
-
->  fs/xfs/xfs_ialloc_btree.h | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_ialloc_btree.h b/fs/xfs/xfs_ialloc_btree.h
-> index 3ac36b76..75ee794 100644
-> --- a/fs/xfs/xfs_ialloc_btree.h
-> +++ b/fs/xfs/xfs_ialloc_btree.h
-> @@ -48,7 +48,9 @@ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
->   */
->  typedef struct xfs_inobt_rec {
->  	__be32		ir_startino;	/* starting inode number */
-> -	__be32		ir_freecount;	/* count of free inodes (set bits) */
-> +	__be16		ir_alloc_mask;
-> +	__u8		ir_pad;
-> +	__u8		ir_freecount;
->  	__be64		ir_free;	/* free inode mask */
->  } xfs_inobt_rec_t;
->  
-> 
 
 _______________________________________________
 xfs mailing list
