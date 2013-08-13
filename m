@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8D0B37F54
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:03:23 -0500 (CDT)
-Message-ID: <520A4AB7.1080207@sgi.com>
-Date: Tue, 13 Aug 2013 10:03:19 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id D2A9029DFB
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:12:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 95752304039
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:12:25 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id c3T9WlaCpDJQJDvF for <xfs@oss.sgi.com>;
+	Tue, 13 Aug 2013 08:12:24 -0700 (PDT)
+Message-ID: <520A4CCE.8010900@sandeen.net>
+Date: Tue, 13 Aug 2013 10:12:14 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 50/50] xfs: use reference counts to free clean buffer items
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<1376304611-22994-51-git-send-email-david@fromorbit.com>
-In-Reply-To: <1376304611-22994-51-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: call roundup_64() to calculate the min_logblks
+References: <5209C4D0.5050203@oracle.com> <20130813065355.GB6023@dastard>
+	<5209E589.7080304@oracle.com>
+In-Reply-To: <5209E589.7080304@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,69 +24,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: kbuild test robot <fengguang.wu@intel.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 08/12/13 05:50, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> When a transaction is cancelled and the buffer log item is clean in
-> the transaction, the buffer log item is unconditionally freed. If
-> the log item is in the AIL, however, this leads to a use after free
-> condition as the item still has other users.
->
-> In this case, xfs_buf_item_relse() should only be called on clean
-> buffer items if the reference count has dropped to zero. This
-> ensures only the last user frees the item.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
->   fs/xfs/xfs_buf_item.c | 6 ++----
->   1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 9358504..3a944b1 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -613,11 +613,9 @@ xfs_buf_item_unlock(
->   			}
->   		}
->   	}
-> -	if (clean)
-> -		xfs_buf_item_relse(bp);
-> -	else if (aborted) {
-> +	if (clean || aborted) {
->   		if (atomic_dec_and_test(&bip->bli_refcount)) {
-> -			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
-> +			ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
->   			xfs_buf_item_relse(bp);
->   		}
->   	} else
+On 8/13/13 2:51 AM, Jeff Liu wrote:
+> On 08/13/2013 02:53 PM, Dave Chinner wrote:
+> 
+>> On Tue, Aug 13, 2013 at 01:32:00PM +0800, Jeff Liu wrote:
+>>> From: Jie Liu <jeff.liu@oracle.com>
+>>>
+>>> Replace roundup() with roundup_64() as we calculate min_logblks
+>>> with 64-bit divisions.  Hence, call roundup() will cause the
+>>> following error while compiling a 32-bit kernel:
+>>>
+>>> fs/built-in.o: In function `xfs_log_calc_minimum_size':
+>>> fs/xfs/xfs_log_rlimit.c:140: undefined reference to `__udivdi3'
+>>>
+>>> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+>>> Cc: Dave Chinner <dchinner@redhat.com>
+>>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>>
+>> You beat me to it, Jeff. I got an email from Fengguang's build farm,
+>> too. :)
+> 
+> Hi Dave,
+> 
+> I'm on a longer vacations these days(until next week).  I have asked
+> my friend for help checking our mailing list to watch if there's any
+> email for me before the leaving, so I got his phone call this morning
+> for this bug. :)
 
-why is a clean buffer on the AIL? Racing with a completion handler?
+Now that's dedication.  :)
 
-rather than this:
+-Eric
 
-	if (clean || aborted) {
-		if (atomic_dec_and_test(&bip->bli_refcount)) {
-			ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
-			xfs_buf_item_relse(bp);
-		}
-	} else
-		atomic_dec(&bip->bli_refcount);
-
-why not fold it into this:
-
-	if (atomic_dec_and_test(&bip->bli_refcount)) {
-		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
-		xfs_buf_item_relse(bp);
-	}
-
---Mark.
+>>
+>> Your fix looks good.
+>>
+>> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Thanks for your quick review!
+> 
+> -Jeff
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
