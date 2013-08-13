@@ -1,16 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5BAD77F9B
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:00:26 -0500 (CDT)
-Message-ID: <520AAC79.1030608@sgi.com>
-Date: Tue, 13 Aug 2013 17:00:25 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0F66C7F9D
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 17:10:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8CB81AC001
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 15:10:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id dqkprAMRqmueGJla for
+	<xfs@oss.sgi.com>; Tue, 13 Aug 2013 15:10:38 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7DMAbBc006995
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 18:10:37 -0400
+Received: from laptop.bfoster (vpn-52-106.rdu2.redhat.com [10.10.52.106])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r7DMAaGe013675
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 18:10:37 -0400
+Message-ID: <520AAE10.6080003@redhat.com>
+Date: Tue, 13 Aug 2013 18:07:12 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 50/50] xfs: use reference counts to free clean buffer items
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<1376304611-22994-51-git-send-email-david@fromorbit.com>
-	<520A4AB7.1080207@sgi.com> <20130813214648.GC6023@dastard>
-In-Reply-To: <20130813214648.GC6023@dastard>
+Subject: Re: ***** SUSPECTED SPAM ***** [RFD 06/17] xfs: partial inode chunk
+	allocation
+References: <1376313607-28133-1-git-send-email-david@fromorbit.com>
+	<1376313607-28133-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1376313607-28133-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,68 +35,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 08/13/13 16:46, Dave Chinner wrote:
-> On Tue, Aug 13, 2013 at 10:03:19AM -0500, Mark Tinguely wrote:
->> On 08/12/13 05:50, Dave Chinner wrote:
->>> From: Dave Chinner<dchinner@redhat.com>
->>>
->>> When a transaction is cancelled and the buffer log item is clean in
-
+On 08/12/2013 09:19 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When a filesystem ages or when certain workloads dominate the storage capacity
+> of the filesystem, it can become difficult to find contiguous free space in the
+> filesystem and hence inode allocation can fail long before the filesystem is out
+> of space.
+> 
 ...
+> ---
 
->>
->> why is a clean buffer on the AIL? Racing with a completion handler?
->
-> "clean" means that it wasn't dirtied in the transaction - it can be
-> in the AIL and holding a reference count that way.
+The issue outlined above is something that was observed with workloads
+running against swift (object storage) on top of gluster (distributed
+storage) on top of XFS with larger than default inode sizes (512b, 1k).
+Unfortunately, I don't have any specific data to describe the workload.
+If I recall correctly, the end result was free space fragmentation
+leading to premature ENOSPC on inode allocation due to unavailability of
+sufficiently sized extents for inode chunks.
 
-I am wondering because it should not have made it into the CIL if it was 
-not dirtied in a transaction - at least according to the the log item 
-descriptor flag at least.
+After a brief irc conversation, Dave suggested that the immediately
+previous item:
 
->
->> rather than this:
->>
->> 	if (clean || aborted) {
->> 		if (atomic_dec_and_test(&bip->bli_refcount)) {
->> 			ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
->> 			xfs_buf_item_relse(bp);
->> 		}
->> 	} else
->> 		atomic_dec(&bip->bli_refcount);
->>
->> why not fold it into this:
->>
->> 	if (atomic_dec_and_test(&bip->bli_refcount)) {
->> 		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
->> 		xfs_buf_item_relse(bp);
->> 	}
->
-> Basically, the code as it stands documents the different exit
-> conditions of a transaction commit. If the item was logged, we
-> expect it to continue existing and something else will free it.  If
-> we change it, we lose awareness that there are different exit
-> criteria, and it risks introducing a use after free if there is ever
-> a race condition w.r.t. unpinning the item in an async CIL commit.
->
-> I'm not saying that there is a problem here, just that the code as
-> it stands will not free the item in this case. The stale buffer
-> handling has similar requirements (i.e. decrement without freeing so
-> the unpin on log IO completion will free it) and there's a comment in
-> xfs_log_commit_cil() related to avoiding such race conditions.
->
-> So I'd prefer to leave it as it stands...
+[RFD 05/17] xfs: introduce a free inode allocation btree
 
-okay with me.
+... tie in with and precede this partial chunk allocation work, so I'm
+going to try to pick off this new free inode btree and partial chunk
+allocation work. Just a heads up to the list to try and avoid any
+duplicate effort. :)
 
---Mark.
+Thanks again for writing this up, Dave.
+
+Brian
+
+>  fs/xfs/xfs_ialloc_btree.h | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_ialloc_btree.h b/fs/xfs/xfs_ialloc_btree.h
+> index 3ac36b76..75ee794 100644
+> --- a/fs/xfs/xfs_ialloc_btree.h
+> +++ b/fs/xfs/xfs_ialloc_btree.h
+> @@ -48,7 +48,9 @@ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
+>   */
+>  typedef struct xfs_inobt_rec {
+>  	__be32		ir_startino;	/* starting inode number */
+> -	__be32		ir_freecount;	/* count of free inodes (set bits) */
+> +	__be16		ir_alloc_mask;
+> +	__u8		ir_pad;
+> +	__u8		ir_freecount;
+>  	__be64		ir_free;	/* free inode mask */
+>  } xfs_inobt_rec_t;
+>  
+> 
 
 _______________________________________________
 xfs mailing list
