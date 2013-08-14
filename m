@@ -1,17 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C2C3A7FC3
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 08:26:24 -0500 (CDT)
-Message-ID: <520B857C.9050607@sgi.com>
-Date: Wed, 14 Aug 2013 08:26:20 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 9B92E7FC7
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 08:33:04 -0500 (CDT)
+Message-ID: <520B870F.8040808@sgi.com>
+Date: Wed, 14 Aug 2013 08:33:03 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 50/50] xfs: use reference counts to free clean buffer items
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<1376304611-22994-51-git-send-email-david@fromorbit.com>
-	<520A4AB7.1080207@sgi.com> <20130813214648.GC6023@dastard>
-	<520AAC79.1030608@sgi.com> <20130814035738.GD6023@dastard>
-In-Reply-To: <20130814035738.GD6023@dastard>
+Subject: Re: [PATCH] xfsprogs: fix inode crash in xfs_repair
+References: <20130813221739.031858865@sgi.com> <20130814064013.GC12779@dastard>
+In-Reply-To: <20130814064013.GC12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,42 +24,73 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 08/13/13 22:57, Dave Chinner wrote:
-> On Tue, Aug 13, 2013 at 05:00:25PM -0500, Mark Tinguely wrote:
->> On 08/13/13 16:46, Dave Chinner wrote:
->>> On Tue, Aug 13, 2013 at 10:03:19AM -0500, Mark Tinguely wrote:
->>>> On 08/12/13 05:50, Dave Chinner wrote:
->>>>> From: Dave Chinner<dchinner@redhat.com>
->>>>>
->>>>> When a transaction is cancelled and the buffer log item is clean in
+On 08/14/13 01:40, Dave Chinner wrote:
+> On Tue, Aug 13, 2013 at 05:13:31PM -0500, Mark Tinguely wrote:
+>> Adding the lost+found in phase 6 could allocate an inode from
+>> a new inode chunk. That newly created chunk was not around in
+>> the scan phase, and is not in the avl tree which will result
+>> in a NULL dereference.
 >>
->> ...
+>> This patch adds the newly created inode chunk and inodes as if
+>> found in the scan phase.
 >>
->>>>
->>>> why is a clean buffer on the AIL? Racing with a completion handler?
->>>
->>> "clean" means that it wasn't dirtied in the transaction - it can be
->>> in the AIL and holding a reference count that way.
+>> Metadata dump available for future tests.
 >>
->> I am wondering because it should not have made it into the CIL if it
->> was not dirtied in a transaction - at least according to the the log
->> item descriptor flag at least.
+>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>> ---
+>>   repair/incore_ino.c |    2 +-
+>>   repair/phase6.c     |   15 +++++++++++++++
+>>   2 files changed, 16 insertions(+), 1 deletion(-)
+>>
+>> Index: b/repair/incore_ino.c
+>> ===================================================================
+>> --- a/repair/incore_ino.c
+>> +++ b/repair/incore_ino.c
+>> @@ -700,7 +700,7 @@ get_inode_parent(ino_tree_node_t *irec,
+>>   	return(0LL);
+>>   }
+>>
+>> -static void
+>> +void
+>>   alloc_ex_data(ino_tree_node_t *irec)
+>>   {
+>>   	parent_list_t 	*ptbl;
+>> Index: b/repair/phase6.c
+>> ===================================================================
+>> --- a/repair/phase6.c
+>> +++ b/repair/phase6.c
+>> @@ -930,6 +930,21 @@ mk_orphanage(xfs_mount_t *mp)
+>>   	irec = find_inode_rec(mp,
+>>   			XFS_INO_TO_AGNO(mp, ino),
+>>   			XFS_INO_TO_AGINO(mp, ino));
+>> +
+>> +	if (irec == NULL&&  XFS_INO_TO_AGNO(mp, ino)<  mp->m_sb.sb_agcount&&
+>> +	    ip != NULL&&  ip->i_d.di_magic == XFS_DINODE_MAGIC) {
 >
-> CIL != AIL. IOWs, the bli_refcount going to zero doesn't always
-> mean the bli should be freed. All a zero value means is that it is
-> not tracked by any transaction. If the item is not going to be
-> placed in the AIL (or not already in the AIL) then it can be
-> released (freed). Clean or aborted items are not going into the AIL,
-> so they can be freed immeidately. Everything else needs to avoid
-> freeing the item until the correct state is reached, even if the ref
-> count goes to zero.
+> I don't understand this check.
+>
+> We've already dereferenced ip several lines above to increment the
+> link count and get the inode number stored in ino, so the ip != NULL
+> is unnecessary.
+>
+> We've just allocated the inode, so why would the magic number be
+> wrong? And why would the inode number lie in a non-existent
+> allocation group?
 >
 
-yep.
+just being being paranoid.
 
-You are saying that the problem is releasing a buffer that is clean and 
-also in the AIL, I am just trying to figure out if you are fixing a 
-symptom or the problem.
+>> +		/*
+>> +		 * add the newly allocated inode chunk to the avl tree.
+>> +		 */
+>
+> I can see from the code we are allocating and irec, inserting it
+> into the AVL tree and marking all the inodes in the chunk as free.
+> The comment should explain *why* we need to do this.
+>
+> Cheers,
+>
+> Dave.
 
 --Mark.
 
