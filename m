@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2683D7F98
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 01:41:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1007E8F808E
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 23:41:26 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2DC377F98
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 01:42:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 17849304039
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 23:42:44 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Wqkg7MgQ0bHjfHho for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 23:41:24 -0700 (PDT)
-Date: Wed, 14 Aug 2013 16:41:21 +1000
+	t8huf9TGY8zf6aXO for <xfs@oss.sgi.com>;
+	Tue, 13 Aug 2013 23:42:42 -0700 (PDT)
+Date: Wed, 14 Aug 2013 16:42:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 50/50] xfs: use reference counts to free clean buffer items
-Message-ID: <20130814064121.GD12779@dastard>
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<1376304611-22994-51-git-send-email-david@fromorbit.com>
-	<520A4AB7.1080207@sgi.com> <20130813214648.GC6023@dastard>
-	<520AAC79.1030608@sgi.com> <20130814035738.GD6023@dastard>
-	<CAEH94Lir_YKgCLntOWrmhVsntR_wdJ4QcvtYYO+xPiNzxPKHFg@mail.gmail.com>
+Subject: Re: [PATCH v3] xfs: introduce object readahead to log recovery
+Message-ID: <20130814064239.GE12779@dastard>
+References: <1375260165-8773-1-git-send-email-zwu.kernel@gmail.com>
+	<20130814053523.GY12779@dastard>
+	<CAEH94LjeZHJ1uv7qCzVywq6rqkjisZ66+Y2+dXG64+Af6PXyEw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAEH94Lir_YKgCLntOWrmhVsntR_wdJ4QcvtYYO+xPiNzxPKHFg@mail.gmail.com>
+In-Reply-To: <CAEH94LjeZHJ1uv7qCzVywq6rqkjisZ66+Y2+dXG64+Af6PXyEw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,38 +32,69 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfstests <xfs@oss.sgi.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-On Wed, Aug 14, 2013 at 12:12:36PM +0800, Zhi Yong Wu wrote:
-> On Wed, Aug 14, 2013 at 11:57 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, Aug 13, 2013 at 05:00:25PM -0500, Mark Tinguely wrote:
-> >> On 08/13/13 16:46, Dave Chinner wrote:
-> >> >On Tue, Aug 13, 2013 at 10:03:19AM -0500, Mark Tinguely wrote:
-> >> >>On 08/12/13 05:50, Dave Chinner wrote:
-> >> >>>From: Dave Chinner<dchinner@redhat.com>
-> >> >>>
-> >> >>>When a transaction is cancelled and the buffer log item is clean in
+On Wed, Aug 14, 2013 at 01:59:02PM +0800, Zhi Yong Wu wrote:
+> On Wed, Aug 14, 2013 at 1:35 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Jul 31, 2013 at 04:42:45PM +0800, zwu.kernel@gmail.com wrote:
+> >> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 > >>
-> >> ...
+> >>   It can take a long time to run log recovery operation because it is
+> >> single threaded and is bound by read latency. We can find that it took
+> >> most of the time to wait for the read IO to occur, so if one object
+> >> readahead is introduced to log recovery, it will obviously reduce the
+> >> log recovery time.
 > >>
-> >> >>
-> >> >>why is a clean buffer on the AIL? Racing with a completion handler?
-> >> >
-> >> >"clean" means that it wasn't dirtied in the transaction - it can be
-> >> >in the AIL and holding a reference count that way.
+> >> Log recovery time stat:
 > >>
-> >> I am wondering because it should not have made it into the CIL if it
-> >> was not dirtied in a transaction - at least according to the the log
-> >> item descriptor flag at least.
+> >>           w/o this patch        w/ this patch
+> >>
+> >> real:        0m15.023s             0m7.802s
+> >> user:        0m0.001s              0m0.001s
+> >> sys:         0m0.246s              0m0.107s
 > >
-> > CIL != AIL. IOWs, the bli_refcount going to zero doesn't always
-> By the way, can you explain what the difference is between CIL and AIL?
+> > This version works as advertised as well.
+> >
+> >> @@ -3216,6 +3351,18 @@ xlog_recover_commit_trans(
+> >>                       goto out;
+> >>       }
+> >>
+> >> +     if (!list_empty(&ra_list)) {
+> >> +             error = xlog_recover_items_pass2(log, trans,
+> >> +                             &buffer_list, &ra_list);
+> >> +             if (error)
+> >> +                     goto out;
+> >> +
+> >> +             list_splice_tail_init(&ra_list, &done_list);
+> >> +     }
+> >> +
+> >> +     if (!list_empty(&done_list))
+> >> +             list_splice_init(&done_list, &trans->r_itemq);
+> >> +
+> >>       xlog_recover_free_trans(trans);
+> >
+> > I think this still leaks the trans structure when an error occurs.
+> > Indeed, I think this is a pre-existing leak, as the current code
+> > will skip freeing the trans structure on item recovery failure and
+> > nothing else frees it.  So it appears to me to be busted before this
+> > patch is added.
+> Yes, i also found this and think so.
+> >
+> > Hence on a xlog_recover_items_pass2() error we need to splice the
+> > ra-list to the done_list and free trans. i.e. the "if (error) goto
+> > out;" lines in the above hunk do not need to be there, and the
+> > "out:" label moved to above the call to xlog_recover_free_trans() so
+> > the main loop does the right thing when an error occurs.
+> Do you need to draft one patch to fix trans leaking? or can it be
+> fixed in this patch?
 
-Documentation/filesystems/xfs-delayed-logging-design.txt
+Just fix it in this patch - the above paragraph explains how to fix
+it....
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
