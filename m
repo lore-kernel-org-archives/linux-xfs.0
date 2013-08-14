@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9142B7F4E
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 16:26:54 -0500 (CDT)
-Message-ID: <520BF641.6000100@sgi.com>
-Date: Wed, 14 Aug 2013 16:27:29 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4E2F07F6A
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 16:27:03 -0500 (CDT)
+Message-ID: <520BF64A.2090004@sgi.com>
+Date: Wed, 14 Aug 2013 16:27:38 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
+Subject: Re: [PATCH 2/2] xfsprogs: Start using pquotaino from on-disk
+	superblock
 References: <1375385101-3673-1-git-send-email-sekharan@us.ibm.com>
-	<1375385101-3673-2-git-send-email-sekharan@us.ibm.com>
-In-Reply-To: <1375385101-3673-2-git-send-email-sekharan@us.ibm.com>
+	<1375385101-3673-3-git-send-email-sekharan@us.ibm.com>
+In-Reply-To: <1375385101-3673-3-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,35 +27,44 @@ To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
 On 08/01/2013 02:25 PM, Chandra Seetharaman wrote:
-> Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-> start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
->
-> On disk version still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
+> Start using the new field sb_pquotino from the on-disk superblock if the
+> version of the superblock supports separate pquotino.
 >
 > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 > ---
->   db/check.c          |    8 +++---
->   include/xfs_quota.h |   59 ++++++++++++++++++++++++++------------------------
->   libxfs/xfs_mount.c  |   52 ++++++++++++++++++++++++++++++++++++++++++++
->   repair/versions.c   |   18 +++------------
->   repair/xfs_repair.c |    5 +--
->   5 files changed, 93 insertions(+), 49 deletions(-)
+>   db/check.c          |   12 +++++++-----
+>   db/dquot.c          |   11 +++++++----
+>   db/frag.c           |    3 ++-
+>   db/inode.c          |    3 ++-
+>   db/metadump.c       |    5 ++++-
+>   include/xfs_sb.h    |    5 +++++
+>   libxfs/xfs_mount.c  |   42 ++++++++++++++++++++++++++++++++++++++++++
+>   mkfs/xfs_mkfs.c     |    2 +-
+>   repair/agheader.c   |   13 +++++++++++++
+>   repair/dinode.c     |    9 +++++++++
+>   repair/dir2.c       |    5 +++++
+>   repair/globals.h    |    1 +
+>   repair/phase4.c     |   29 ++++++++++++++++++++++-------
+>   repair/phase6.c     |    9 +++++++++
+>   repair/sb.c         |    3 +++
+>   repair/versions.c   |    5 +++++
+>   repair/xfs_repair.c |    2 +-
+>   17 files changed, 138 insertions(+), 21 deletions(-)
 >
 
 Thanks for the patch Chandra, this has been committed.
 
 --Rich
 
-commit 342aef1ec0ecada8ba69ea73db10e20c4f9efdf4
+commit 0340d706861a68205393b83e3a816e88383a05fa
 Author: Chandra Seetharaman <sekharan@us.ibm.com>
-Date:   Thu Aug 1 19:25:00 2013 +0000
+Date:   Thu Aug 1 19:25:01 2013 +0000
 
-     xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
+     xfsprogs: Start using pquotaino from on-disk superblock
 
-     Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-     start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
-
-     On disk version still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
+     Start using the new field sb_pquotino from the on-disk superblock 
+if the
+     version of the superblock supports separate pquotino.
 
      Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
      Reviewed-by: Rich Johnston <rjohnston@sgi.com>
