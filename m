@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CF21D7F74
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 15:26:32 -0500 (CDT)
-Message-ID: <520BE81E.1040408@sgi.com>
-Date: Wed, 14 Aug 2013 15:27:10 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 04BCA7F78
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 15:47:25 -0500 (CDT)
+Message-ID: <520BED03.6040707@sgi.com>
+Date: Wed, 14 Aug 2013 15:48:03 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add regression test for kernel bz 60673
-References: <1375892154-11548-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1375892154-11548-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstests: btrfs/003: regression test for subvol delete V3
+References: <1376510872-9951-1-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1376510872-9951-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,28 +24,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: Josef Bacik <jbacik@fusionio.com>
 Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 08/07/2013 11:15 AM, Josef Bacik wrote:
-> There was a problem with send trying to overwrite a file that wasn't actually
-> the same.  This is a test to check this particular case where receive fails when
-> it should succeed properly.  I tested this to verify it fails without my fix and
-> passes with my fix.  Thanks,
+On 08/14/2013 03:07 PM, Josef Bacik wrote:
+> We were allowing users to delete their default subvolume, which is problematic.
+> This test is a regression test to make sure we don't let that happen in the
+> future.  Thanks,
 >
 > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 > ---
->   tests/btrfs/001     |  110 +++++++++++++++++++++++++++++++++++++++++++++++++++
->   tests/btrfs/001.out |    2 +
->   tests/btrfs/group   |    1 +
->   3 files changed, 113 insertions(+), 0 deletions(-)
->   create mode 100755 tests/btrfs/001
->   create mode 100644 tests/btrfs/001.out
->
-Looks good but should have the btrfs folks look at this.
+> V2->V3: remove comment and abstract out the subvolid logic as per Eric's
+>    suggestions
+> V1->V2: address the comments made by Eric Sandeen.
 
-Note: The btrfs test numbers have been renumbered please update your 
-xfstests git tree for future patches and updates.
+Thanks for the patch Josef, this has been committed.
 
-Thanks
 --Rich
+
+commit f3df3fab7d3870aab222512126b06668d7db5d71
+Author: Josef Bacik <jbacik@fusionio.com>
+Date:   Wed Aug 14 20:07:52 2013 +0000
+
+     xfstests: btrfs/009: regression test for subvol delete
+
+     We were allowing users to delete their default subvolume, which is 
+problematic.
+     This test is a regression test to make sure we don't let that 
+happen in the
+     future.  Thanks,
+
+     Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+
+     [rjohnston: renumbered test from 003 to 009]
 
 _______________________________________________
 xfs mailing list
