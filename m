@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A66C829E1B
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 00:53:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F17CAC003
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 22:53:19 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id AMh3FZCiQNuiPx3y
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 22:53:19 -0700 (PDT)
-Message-ID: <520B1B4F.9070800@hardwarefreak.com>
-Date: Wed, 14 Aug 2013 00:53:19 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7D03D29E1B
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 00:59:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0914CAC003
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 22:59:04 -0700 (PDT)
+Received: from mail-qa0-f48.google.com (mail-qa0-f48.google.com
+	[209.85.216.48]) by cuda.sgi.com with ESMTP id g43lwrAUD6L5KZMz
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 13 Aug 2013 22:59:03 -0700 (PDT)
+Received: by mail-qa0-f48.google.com with SMTP id o19so828388qap.0
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 22:59:02 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Failure growing xfs with linux 3.10.5
-References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
-	<52090C6C.6060604@allmail.net> <20130813000453.GQ12779@dastard>
-	<520A5132.6090608@allmail.net>
-In-Reply-To: <520A5132.6090608@allmail.net>
-Reply-To: stan@hardwarefreak.com
+In-Reply-To: <20130814053523.GY12779@dastard>
+References: <1375260165-8773-1-git-send-email-zwu.kernel@gmail.com>
+	<20130814053523.GY12779@dastard>
+Date: Wed, 14 Aug 2013 13:59:02 +0800
+Message-ID: <CAEH94LjeZHJ1uv7qCzVywq6rqkjisZ66+Y2+dXG64+Af6PXyEw@mail.gmail.com>
+Subject: Re: [PATCH v3] xfs: introduce object readahead to log recovery
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,169 +31,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Maier <m1278468@allmail.net>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-On 8/13/2013 10:30 AM, Michael Maier wrote:
-> Dave Chinner wrote:
->> [ re-ccing the list, because finding this is in everyone's interest ]
+On Wed, Aug 14, 2013 at 1:35 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Jul 31, 2013 at 04:42:45PM +0800, zwu.kernel@gmail.com wrote:
+>> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 >>
->> On Mon, Aug 12, 2013 at 06:25:16PM +0200, Michael Maier wrote:
->>> Eric Sandeen wrote:
->>>> On 8/11/13 2:11 AM, Michael Maier wrote:
->>>>> Hello!
->>>>>
->>>>> I think I'm facing the same problem as already described here:
->>>>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/54428
->>>>
->>>> Maybe you can try the tracing Dave suggested in that thread?
->>>> It certainly does look similar.
->>>
->>> I attached a trace report while executing xfs_growfs /mnt on linux 3.10.5 (does not happen with 3.9.8).
->>>
->>> xfs_growfs /mnt
-
-
->>>>>>>>> meta-data=/dev/mapper/backupMy-daten3 isize=256    agcount=42, agsize=7700480 blks
-
-
->>>          =                       sectsz=512   attr=2
->>> data     =                       bsize=4096   blocks=319815680, imaxpct=25
->>>          =                       sunit=0      swidth=0 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0
->>> log      =internal               bsize=4096   blocks=60160, version=2
->>>          =                       sectsz=512   sunit=0 blks, lazy-count=1
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
->>> data blocks changed from 319815680 to 346030080
->>>
->>> The entry in messages was:
->>>
->>> Aug 12 18:09:50 dualc kernel: [  257.368030] ffff8801e8dbd400: 58 46 53 42 00 00 10 00 00 00 00 00 13 10 00 00  XFSB............
->>> Aug 12 18:09:50 dualc kernel: [  257.368037] ffff8801e8dbd410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>> Aug 12 18:09:50 dualc kernel: [  257.368042] ffff8801e8dbd420: 46 91 c6 80 a9 a9 4d 8c 8f e2 18 fd e8 7f 66 e1  F.....M.......f.
->>> Aug 12 18:09:50 dualc kernel: [  257.368045] ffff8801e8dbd430: 00 00 00 00 04 00 00 04 00 00 00 00 00 00 00 80  ................
->>> Aug 12 18:09:50 dualc kernel: [  257.368051] XFS (dm-33): Internal error xfs_sb_read_verify at line 730 of file
->>> /daten2/tmp/rpm/BUILD/kernel-desktop-3.10.5/linux-3.10/fs/xfs/xfs_mount.c.  Caller 0xffffffffa099a2fd
->> .....
->>> Aug 12 18:09:50 dualc kernel: [  257.368533] XFS (dm-33): Corruption detected. Unmount and run xfs_repair
->>> Aug 12 18:09:50 dualc kernel: [  257.368611] XFS (dm-33): metadata I/O error: block 0x3ac00000 ("xfs_trans_read_buf_map") error 117 numblks 1
->>> Aug 12 18:09:50 dualc kernel: [  257.368623] XFS (dm-33): error 117 reading secondary superblock for ag 16
+>>   It can take a long time to run log recovery operation because it is
+>> single threaded and is bound by read latency. We can find that it took
+>> most of the time to wait for the read IO to occur, so if one object
+>> readahead is introduced to log recovery, it will obviously reduce the
+>> log recovery time.
 >>
->> Ok, so that's reading the secondary superblock for AG 16. You're
->> growing the filesystem from 42 to 45 AGs, so this problem is not
+>> Log recovery time stat:
+>>
+>>           w/o this patch        w/ this patch
+>>
+>> real:        0m15.023s             0m7.802s
+>> user:        0m0.001s              0m0.001s
+>> sys:         0m0.246s              0m0.107s
+>
+> This version works as advertised as well.
+>
+>> @@ -3216,6 +3351,18 @@ xlog_recover_commit_trans(
+>>                       goto out;
+>>       }
+>>
+>> +     if (!list_empty(&ra_list)) {
+>> +             error = xlog_recover_items_pass2(log, trans,
+>> +                             &buffer_list, &ra_list);
+>> +             if (error)
+>> +                     goto out;
+>> +
+>> +             list_splice_tail_init(&ra_list, &done_list);
+>> +     }
+>> +
+>> +     if (!list_empty(&done_list))
+>> +             list_splice_init(&done_list, &trans->r_itemq);
+>> +
+>>       xlog_recover_free_trans(trans);
+>
+> I think this still leaks the trans structure when an error occurs.
+> Indeed, I think this is a pre-existing leak, as the current code
+> will skip freeing the trans structure on item recovery failure and
+> nothing else frees it.  So it appears to me to be busted before this
+> patch is added.
+Yes, i also found this and think so.
+>
+> Hence on a xlog_recover_items_pass2() error we need to splice the
+> ra-list to the done_list and free trans. i.e. the "if (error) goto
+> out;" lines in the above hunk do not need to be there, and the
+> "out:" label moved to above the call to xlog_recover_free_trans() so
+> the main loop does the right thing when an error occurs.
+Do you need to draft one patch to fix trans leaking? or can it be
+fixed in this patch?
+or will you draft one patch?
 
-The AGs are ~30GB.  Going from 42 to 45 grows the XFS by 90GB.  Michael,
-how much were you attempting to grow?  Surely more than 90GB.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
->> related to the actual grow operation - it's tripping over a problem
->> that already exists on disk before the grow operation is started.
->> i.e. this is likely to be a real corruption being seen, and it
->> happened some time in the distant past and so we probably won't ever
->> be able to pinpoint the cause of the problem.
->>
->> That said, let's have a look at the broken superblock. Can you post
->> the output of the commands:
->>
->> # xfs_db -r -c "sb 16" -c p <dev>
-> 
-> done after the failed growfs mentioned above:
-> 
-> magicnum = 0x58465342
-> blocksize = 4096
-> dblocks = 319815680
-> rblocks = 0
-> rextents = 0
-> uuid = 4691c680-a9a9-4d8c-8fe2-18fde87f66e1
-> logstart = 67108868
-> rootino = 128
-> rbmino = 129
-> rsumino = 130
-> rextsize = 1
-> agblocks = 7700480
-> agcount = 42
-> rbmblocks = 0
-> logblocks = 60160
-> versionnum = 0xb4a4
-> sectsize = 512
-> inodesize = 256
-> inopblock = 16
-> fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-> blocklog = 12
-> sectlog = 9
-> inodelog = 8
-> inopblog = 4
-> agblklog = 23
-> rextslog = 0
-> inprogress = 0
-> imax_pct = 25
-> icount = 6464
-> ifree = 631
-> fdblocks = 1124026
-> frextents = 0
-> uquotino = 0
-> gquotino = 0
-> qflags = 0
-> flags = 0
-> shared_vn = 0
-> inoalignmt = 2
-> unit = 0
-> width = 0
-> dirblklog = 0
-> logsectlog = 0
-> logsectsize = 0
-> logsunit = 1
-> features2 = 0xa
-> bad_features2 = 0xa
-> 
->>
->> and
->>
->> # xfs_db -r -c "sb 16" -c "type data" -c p <dev>
-> 
-> 000: 58465342 00001000 00000000 13100000 00000000 00000000 00000000 00000000
-> 020: 4691c680 a9a94d8c 8fe218fd e87f66e1 00000000 04000004 00000000 00000080
-> 040: 00000000 00000081 00000000 00000082 00000001 00758000 0000002a 00000000
-> 060: 0000eb00 b4a40200 01000010 00000000 00000000 00000000 0c090804 17000019
-> 080: 00000000 00001940 00000000 00000277 00000000 001126ba 00000000 00000000
-> 0a0: 00000000 00000000 00000000 00000000 00000000 00000002 00000000 00000000
-> 0c0: 00000000 00000001 0000000a 0000000a 8f980320 73987e9e db829704 ef73fe2e
-> 0e0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 100: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 120: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 140: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 160: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 180: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 1a0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 1c0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
-> 1e0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
->>
->> so we can see the exact contents of that superblock?
->>
->> FWIW, how many times has this filesystem ben grown?
-> 
-> I can't say for sure, about 4 or 5 times?
-> 
->> Did it start
->> with only 32 AGs (i.e. 10TB in size)?
-> 
-> 10TB? No. The device just has 3 TB. You most probably meant 10GB?
-> I'm not sure, but it definitely started with > 100GB.
 
-According to your xfs_info output that I highlighted above, and assuming
-my math here is correct,
-
-(((7700480*4096)/1048576)*42)= 1,263,360 GB or ~1.23 TB
-
-this filesystem was 1.23 TB w/42 AGs before the grow operation.
-Assuming defaults were used during mkfs.xfs it would appear the initial
-size of this filesystem was ~120GB.  And it would appear it has been
-grown to ~10x its original size, and from 4 AGs to 42 AGs.  That seems
-like a lot of growth, to me.  And Dave states the latest grow operation
-was to 45 AGs, which would yield a ~1.32TB filesystem, not 3TB.
 
 -- 
-Stan
+Regards,
+
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
