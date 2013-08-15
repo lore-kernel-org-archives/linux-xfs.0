@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 949BB7CBE
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 16:59:01 -0500 (CDT)
-Message-ID: <520D4F4B.9010908@sgi.com>
-Date: Thu, 15 Aug 2013 16:59:39 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 094457F51
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 17:27:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DDE41304059
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 15:26:57 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	yX97mUs0yiYmneOE for <xfs@oss.sgi.com>;
+	Thu, 15 Aug 2013 15:26:56 -0700 (PDT)
+Date: Fri, 16 Aug 2013 08:26:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
+Message-ID: <20130815222650.GX6023@dastard>
+References: <20130815055338.GC23580@elgon.mountain>
+	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [v6] xfstests: add a new test case for ext4 indirect-based file
-References: <1368676359-2404-1-git-send-email-wenqing.lz@taobao.com>
-In-Reply-To: <1368676359-2404-1-git-send-email-wenqing.lz@taobao.com>
+Content-Disposition: inline
+In-Reply-To: <20130815143706.GI7153@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,49 +26,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "wenqing.lz" <gnehzuil.liu@gmail.com>
-Cc: Zheng Liu <wenqing.lz@taobao.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Liu <jeff.liu@oracle.com>, Dan Carpenter <dan.carpenter@oracle.com>
 
-This has not been reviewed since your second revision.
-It looks good except you need to remove the changes to tests/generic/255 
-and rebase against the latest tree.
+On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
+> Hey Dan & Jeff,
+> 
+> On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
+> > On 08/15/2013 01:53 PM, Dan Carpenter wrote:
+> > 
+> > > The "di_size" variable comes from the disk and it's a signed 64 bit.
+> > > We check the upper limit but we should check for negative numbers as
+> > > well.
+> > > 
+> > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > > 
+> > > diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+> > > index 123971b..849fc70 100644
+> > > --- a/fs/xfs/xfs_inode_fork.c
+> > > +++ b/fs/xfs/xfs_inode_fork.c
+> > > @@ -167,7 +167,8 @@ xfs_iformat_fork(
+> > >  			}
+> > >  
+> > >  			di_size = be64_to_cpu(dip->di_size);
+> > > -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+> > > +			if (unlikely(di_size < 0 ||
+> > 
+> > But the di_size is initialized to ZERO while allocating a new inode on disk.
+> > I wonder if that is better to ASSERT in this case because the current check
+> > is used to make sure that the item is inlined, or we don't need it at all.
+> 
+> Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
+> shutdown is more appropriate than an assert, because here we're reading the
+> inode from disk, as opposed to looking at a structure that is already incore
+> which we think we've initialized.  We want to handle unexpected inputs from
+> disk without crashing even if we are CONFIG_XFS_DEBUG.
 
-You can then include a:
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+There are lots of places where we only check di_size to be greater
+than some value, and don't check for it being less than zero. Hence
+I think that a better solution might be to di_size unsigned as that
+will catch "negative" sizes for all types of situations.
 
-Thanks
---Rich
+We've got the same problem in the userspace code as well and so
+treating the size as unsigned will stop such validation problems
+everywhere....
 
-On 05/15/2013 10:52 PM, wenqing.lz wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
->
-> After applied this commit (864688d3), xfstests #255 will not test a
-> file system that cannot support fallocate(2), such as a indirect-based
-> file in ext4.  So we need to add a new generic test case to test it.
->
-> The difference between #255 and this test case is only to use pwrite to
-> allocate blocks.  Other filesystems should survive in this test case.
-> In the mean time, a new argument '-u' is added into _test_generic_punch
-> not to run unwritten tests.
->
-And remove these 2 lines as they no longer apply.
-> Meanwhile this commit fixes a minor problem in #255 that testfile should
-> use $seq.$$ as testfile.
->
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
->
-> ---
-> changelog:
->   * rebase against the latest master of xfstests tree (Based-on Eric's patch).
->
->   common/punch          | 164 ++++++++++++++++++++++++++-----------------------
->   tests/generic/255     |   2 +-
+Cheers,
 
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
