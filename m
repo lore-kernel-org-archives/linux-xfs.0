@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 265257F69
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 38BAC7F6D
 	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EA5E58F8074
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AFA0304070
 	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:17 -0700 (PDT)
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v8 3/7] xfs: ioctl check for capabilities in the current user
-	namespace
-Date: Thu, 15 Aug 2013 14:08:00 -0400
-Message-Id: <1376590084-12888-4-git-send-email-dwight.engen@oracle.com>
+Subject: [PATCH v8 1/7] xfs: create wrappers for converting kuid_t to/from
+	uid_t
+Date: Thu, 15 Aug 2013 14:07:58 -0400
+Message-Id: <1376590084-12888-2-git-send-email-dwight.engen@oracle.com>
 In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
 References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,68 +28,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>
 
-Use inode_capable() to check if SUID|SGID bits should be cleared to match
-similar check in inode_change_ok().
-
-The check for CAP_LINUX_IMMUTABLE was not modified since all other file
-systems also check against init_user_ns rather than current_user_ns.
-
-Only allow changing of projid from init_user_ns.
-
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
 Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c  | 11 +++++++++--
- kernel/capability.c |  1 +
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_linux.h | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index e9c17e2..999c1ef 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1015,15 +1015,22 @@ xfs_ioctl_setattr(
- 	 * to the file owner ID, except in cases where the
- 	 * CAP_FSETID capability is applicable.
- 	 */
--	if (current_fsuid() != ip->i_d.di_uid && !capable(CAP_FOWNER)) {
-+	if (!inode_owner_or_capable(VFS_I(ip))) {
- 		code = XFS_ERROR(EPERM);
- 		goto error_return;
- 	}
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 3bc52b7..2dbabcb 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -191,6 +191,32 @@ typedef __uint64_t __psunsigned_t;
+ #define MAX(a,b)	(max(a,b))
+ #define howmany(x, y)	(((x)+((y)-1))/(y))
  
- 	/*
- 	 * Do a quota reservation only if projid is actually going to change.
-+	 * Only allow changing of projid from init_user_ns since it is a
-+	 * non user namespace aware identifier.
- 	 */
- 	if (mask & FSX_PROJID) {
-+		if (current_user_ns() != &init_user_ns) {
-+			code = XFS_ERROR(EINVAL);
-+			goto error_return;
-+		}
++/* Kernel uid/gid conversion. These are used to convert to/from the on disk
++ * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
++ * The conversion here is type only, the value will remain the same since we
++ * are converting to the init_user_ns. The uid is later mapped to a particular
++ * user namespace value when crossing the kernel/user boundary.
++ */
++static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
++{
++	return from_kuid(&init_user_ns, uid);
++}
 +
- 		if (XFS_IS_QUOTA_RUNNING(mp) &&
- 		    XFS_IS_PQUOTA_ON(mp) &&
- 		    xfs_get_projid(ip) != fa->fsx_projid) {
-@@ -1137,7 +1144,7 @@ xfs_ioctl_setattr(
- 		 * cleared upon successful return from chown()
- 		 */
- 		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
--		    !capable(CAP_FSETID))
-+		    !inode_capable(VFS_I(ip), CAP_FSETID))
- 			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
- 
- 		/*
-diff --git a/kernel/capability.c b/kernel/capability.c
-index f6c2ce5..a4b6744 100644
---- a/kernel/capability.c
-+++ b/kernel/capability.c
-@@ -464,3 +464,4 @@ bool inode_capable(const struct inode *inode, int cap)
- 
- 	return ns_capable(ns, cap) && kuid_has_mapping(ns, inode->i_uid);
- }
-+EXPORT_SYMBOL(inode_capable);
++static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
++{
++	return make_kuid(&init_user_ns, uid);
++}
++
++static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
++{
++	return from_kgid(&init_user_ns, gid);
++}
++
++static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
++{
++	return make_kgid(&init_user_ns, gid);
++}
++
+ /*
+  * Various platform dependent calls that don't fit anywhere else
+  */
 -- 
 1.8.1.4
 
