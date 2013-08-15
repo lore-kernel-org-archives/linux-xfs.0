@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5F5177F53
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 12:56:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 494908F8078
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 10:56:20 -0700 (PDT)
-Received: from mx1.vr-web.de (mx0.vr-web.de [195.200.35.198]) by cuda.sgi.com
-	with ESMTP id VzG8rl1lRpSGFSS4 for <xfs@oss.sgi.com>;
-	Thu, 15 Aug 2013 10:56:18 -0700 (PDT)
-Message-ID: <520D162B.5060901@allmail.net>
-Date: Thu, 15 Aug 2013 19:55:55 +0200
-From: Michael Maier <m1278468@allmail.net>
+	by oss.sgi.com (Postfix) with ESMTP id 7217D7F4E
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:04:04 -0500 (CDT)
+Date: Thu, 15 Aug 2013 13:04:00 -0500
+From: Geoffrey Wehrman <gwehrman@sgi.com>
+Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
+Message-ID: <20130815180400.GF3783@sgi.com>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-49-git-send-email-david@fromorbit.com>
+	<51F80FA8.4060304@sgi.com> <20130812005905.GK12779@dastard>
+	<5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
+	<520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
+	<20130814184729.GA4604@sgi.com> <520C6E39.7030501@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Failure growing xfs with linux 3.10.5
-References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
-	<52090C6C.6060604@allmail.net> <20130813000453.GQ12779@dastard>
-	<520A5132.6090608@allmail.net> <20130814062041.GB12779@dastard>
-	<520BAE48.1020605@allmail.net> <520D0D5D.4000309@sandeen.net>
-In-Reply-To: <520D0D5D.4000309@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <520C6E39.7030501@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,76 +27,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> On 8/14/13 11:20 AM, Michael Maier wrote:
->> Dave Chinner wrote:
-> 
-> ...
-> 
->>> If it makes you feel any better, the bug that caused this had been
->>> in the code for 15+ years and you are the first person I know of to
->>> have ever hit it....
->>
->> Probably the second one :-) See
->> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/54428
->>
->>> xfs_repair doesn't appear to have any checks in it to detect this
->>> situation or repair it - there are some conditions for zeroing the
->>> unused parts of a superblock, but they are focussed around detecting
->>> and correcting damage caused by a buggy Irix 6.5-beta mkfs from 15
->>> years ago.
->>
->> The _big problem_ is: xfs_repair not just doesn't repair it, but it
->> _causes data loss_ in some situations!
->>
-> 
-> So as far as I can tell at this point, a few things have happened to
-> result in this unfortunate situation.  Congratulations, you hit a
-> perfect storm.  :(
+On Thu, Aug 15, 2013 at 06:59:21AM +0100, Ric Wheeler wrote:
+| 
+| As much as the community admires your brave willingness to protect us from 
+| code that was entirely developed by Dave, that is not really how the 
+| upstream kernel works.
+| 
+| Dave is pretty much without equal in moving XFS along these days and this 
+| is a key feature that we are depending on.
+| 
+| Please don't try to create hurdles to other people getting work into 
+| upstream, that kind of thing will lead to a fork of the XFS code base and 
+| ultimately that will be harder for all of us.
+| 
+| It sounds like what you really should look at doing is to work inside of 
+| SGI to create a private, internal branch of the upstream code that you 
+| deliver in your product. Upstream code is all about innovation and new 
+| features, we don't let vendor specific, non-upstream branches become the 
+| place for hardening our code.
 
-I can appease you - as it "only" hit my backup device and because I
-noticed the problem before I really needed it: I didn't hit any data
-loss over all, because the original data is ok and I repeated the backup
-w/ the fixed FS now!
+I agree Dave is a gifted, dedicated, passionate and prolific contributor
+to the XFS community.  His contributions are greatly appreciated as are
+the contributions of all other members of the XFS community.  Dave does
+stand out as the most significant code contributor to the project.  He
+has played a significant role moving XFS forward both from within SGI
+and from outside SGI.  This does not place his contributions beyond
+review or discussion however.
 
-> 1) prior resize operations populated unused portions of backup sbs w/ junk
-> 2) newer kernels fail to verify superblocks in this state
-> 3) during your growfs under 3.10, that verification failure aborted
->    backup superblock updates, leaving many unmodified
-> 4a) xfs_repair doesn't find or fix the junk in the backup sbs, and
-> 4b) when running, it looks for the superblocks which are "most matching"
->     other superblocks on the disk, and takes that version as correct.
-> 
-> So you had 16 superblocks (0-15) which were correct after the growfs.
-> But 16 didn't verify and was aborted, so nothing was updated after that.
-> This means that 16 onward have the wrong number of AGs and disk blocks;
-> i.e. they are the pre-growfs size, and there are 26 of them.
-> 
-> Today, xfs_repair sees this 26-to-16 vote, and decides that the 26
-> matching superblocks "win," rewrites the first superblock with this
-> geometry, and uses that to verify the rest of the filesytem.  Hence
-> anything post-growfs looks out of bounds, and gets nuked.
-> 
-> So right now, I'm thinking that the "proper geometry" heuristic should
-> be adjusted, but how to do that in general, I'm not sure.  Weighting
-> sb 0 heavily, especially if it matches many subsequent superblocks,
-> seems somewhat reasonable.
+My objection to the current readdir filetype field feature code is that
+the feature is not being made available to mainstream XFS users, only
+to those willing to run experimental code.  Dave has clearly stated that
+he will not do the back-porting work.  I am not expecting Dave to do the
+back-porting work.  Mark has volunteered to fill the back-porting role.
+Th porting work cannot be completed as the feature is not yet complete.
+The associated user space code changes have not been submitted,
+and tests to validate the new feature have not been submitted.  I do
+not consider this to be an unreasonable request, even if there were
+back-porting required.
 
-This would have been my next question! I repaired it w/ the git
-xfs_repair on the already reduced to original size FS. I think, if I
-would have done the same w/ the grown FS, the FS most probably would be
-reduced to the size before the growing.
-
-Wouldn't it be better to not grow at all if there are problems detected?
-Means: Don't do the check after the growing, but before? Ok, I could
-have done it myself ... . From now on, I will do it like this!
+If Red Hat is depending on the readdir filetype field feature from Dave
+and do not wish to wait for the feature to be completed before pulling
+in the code, then perhaps Red Hat should create a internal branch of
+the upstream code that you can deliver in your products.  The upstream
+code should be stable and fully functional, not a place for incomplete,
+partially tested, half finished work.
 
 
-Thanks,
-Michael
+-- 
+Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
 
 _______________________________________________
 xfs mailing list
