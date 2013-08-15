@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7217D7F4E
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:04:04 -0500 (CDT)
-Date: Thu, 15 Aug 2013 13:04:00 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
-Message-ID: <20130815180400.GF3783@sgi.com>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-49-git-send-email-david@fromorbit.com>
-	<51F80FA8.4060304@sgi.com> <20130812005905.GK12779@dastard>
-	<5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
-	<520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
-	<20130814184729.GA4604@sgi.com> <520C6E39.7030501@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <520C6E39.7030501@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BF8BB7F52
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AF09A304053
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:12 -0700 (PDT)
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH v8 6/7] xfs: add capability check to free eofblocks ioctl
+Date: Thu, 15 Aug 2013 14:08:03 -0400
+Message-Id: <1376590084-12888-7-git-send-email-dwight.engen@oracle.com>
+In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,61 +19,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>
 
-On Thu, Aug 15, 2013 at 06:59:21AM +0100, Ric Wheeler wrote:
-| 
-| As much as the community admires your brave willingness to protect us from 
-| code that was entirely developed by Dave, that is not really how the 
-| upstream kernel works.
-| 
-| Dave is pretty much without equal in moving XFS along these days and this 
-| is a key feature that we are depending on.
-| 
-| Please don't try to create hurdles to other people getting work into 
-| upstream, that kind of thing will lead to a fork of the XFS code base and 
-| ultimately that will be harder for all of us.
-| 
-| It sounds like what you really should look at doing is to work inside of 
-| SGI to create a private, internal branch of the upstream code that you 
-| deliver in your product. Upstream code is all about innovation and new 
-| features, we don't let vendor specific, non-upstream branches become the 
-| place for hardening our code.
+Check for CAP_SYS_ADMIN since the caller can truncate preallocated
+blocks from files they do not own nor have write access to. A more
+fine grained access check was considered: require the caller to
+specify their own uid/gid and to use inode_permission to check for
+write, but this would not catch the case of an inode not reachable
+via path traversal from the callers mount namespace.
 
-I agree Dave is a gifted, dedicated, passionate and prolific contributor
-to the XFS community.  His contributions are greatly appreciated as are
-the contributions of all other members of the XFS community.  Dave does
-stand out as the most significant code contributor to the project.  He
-has played a significant role moving XFS forward both from within SGI
-and from outside SGI.  This does not place his contributions beyond
-review or discussion however.
+Add check for read-only filesystem to free eofblocks ioctl.
 
-My objection to the current readdir filetype field feature code is that
-the feature is not being made available to mainstream XFS users, only
-to those willing to run experimental code.  Dave has clearly stated that
-he will not do the back-porting work.  I am not expecting Dave to do the
-back-porting work.  Mark has volunteered to fill the back-porting role.
-Th porting work cannot be completed as the feature is not yet complete.
-The associated user space code changes have not been submitted,
-and tests to validate the new feature have not been submitted.  I do
-not consider this to be an unreasonable request, even if there were
-back-porting required.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-If Red Hat is depending on the readdir filetype field feature from Dave
-and do not wish to wait for the feature to be completed before pulling
-in the code, then perhaps Red Hat should create a internal branch of
-the upstream code that you can deliver in your products.  The upstream
-code should be stable and fully functional, not a place for incomplete,
-partially tested, half finished work.
-
-
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 20b4c7a..bdebc21 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1723,6 +1723,12 @@ xfs_file_ioctl(
+ 		struct xfs_fs_eofblocks eofb;
+ 		struct xfs_eofblocks keofb;
+ 
++		if (!capable(CAP_SYS_ADMIN))
++			return -EPERM;
++
++		if (mp->m_flags & XFS_MOUNT_RDONLY)
++			return -XFS_ERROR(EROFS);
++
+ 		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+ 			return -XFS_ERROR(EFAULT);
+ 
 -- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
