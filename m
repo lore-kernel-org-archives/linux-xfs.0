@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AD3E37F51
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 17:40:30 -0500 (CDT)
-Date: Thu, 15 Aug 2013 17:40:29 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
-Message-ID: <20130815224029.GO12719@sgi.com>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-49-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6AF0F7F51
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Aug 2013 17:41:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0635FAC003
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Aug 2013 15:41:55 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HsmKi1mWC7IQi8If for
+	<linux-xfs@oss.sgi.com>; Thu, 15 Aug 2013 15:41:52 -0700 (PDT)
+Message-ID: <520D592D.4040600@redhat.com>
+Date: Thu, 15 Aug 2013 17:41:49 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1374215120-7271-49-git-send-email-david@fromorbit.com>
+Subject: [PATCH, RFC] xfs: be more forgiving of a v4 secondary sb w/ junk
+	in v5 fields
+References: <520D1BA3.1050500@redhat.com> <20130815210018.GR6023@dastard>
+	<520D44E7.1000905@sandeen.net>
+In-Reply-To: <520D44E7.1000905@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,65 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Mark Tinguely <tinguely@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, Ric Wheeler <rwheeler@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-Hey Gents,
+Today, if xfs_sb_read_verify encounters a v4 superblock
+with junk past v4 fields which includes data in sb_crc,
+it will be treated as a failing checksum and significant
+corruption.
 
-On Fri, Jul 19, 2013 at 04:25:19PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Add support for the file type field in directory entries so that
-> readdir can return the type of the inode the dirent points to to
-> userspace without first having to read the inode off disk.
-> 
-> The encoding of the type field is a single byte that is added to the
-> end of the directory entry name length. For all intents and
-> purposes, it appends a "hidden" byte to the name field which
-> contains the type information. As the directory entry is already of
-> dynamic size, helpers are already required to access and decode the
-> direct entry structures.
-> 
-> Hence the relevent extraction and iteration helpers are updated to
-> understand the hidden byte.  Helpers for reading and writing the
-> filetype field from the directory entries are also added. Only the
-> read helpers are used by this patch.  It also adds all the code
-> necessary to read the type information out of the dirents on disk.
-> 
-> Further we add the superblock feature bit and helpers to indicate
-> that we understand the on-disk format change. This is not a
-> compatible change - existing kernels cannot read the new format
-> successfully - so an incompatible feature flag is added. We don't
-> yet allow filesystems to mount with this flag yet - that will be
-> added once write support is added.
-> 
-> Finally, the code to take the type from the VFS, convert it to an
-> XFS on-disk type and put it into the xfs_name structures passed
-> around is added, but the directory code does not use this field yet.
-> That will be in the next patch.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+There are known prior bugs which leave junk at the end
+of the superblock; we don't need to actually fail the
+verification in this case if other checks pan out ok.
 
-After some discussion during our weekly call I believe we have come to an
-agreement regarding this feature.  I wrote some things down:
+So if this is a secondary superblock, and the primary
+superblock is not V5, don't treat this as a serious
+checksum failure.
 
-* Eric volunteered to do an xfstest
-* xfs_repair, Dave said he was working on this
-* v4 support in the kernel to be done by Mark
-* v4 support for mkfs.xfs to be done by Mark
-* Plan for 3.13
+We should probably check the garbage condition as
+we do in xfs_repair, and possibly warn about it
+or self-heal, but that's a different scope of work.
 
-With uncharacteristic promptness I have posted 'full' meeting notes here:
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-http://www.xfs.org/index.php/Meeting_notes_for_2013#Meeting_of_Aug_15
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2b0ba35..5ce25ae 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -769,8 +769,12 @@ xfs_sb_read_verify(
+ 
+ 		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
+ 				      offsetof(struct xfs_sb, sb_crc))) {
+-			error = EFSCORRUPTED;
+-			goto out_error;
++			/* Only fail here for a real V5 filesystem */
++			if (bp->b_bn != XFS_SB_DADDR &&
++			    xfs_sb_version_hascrc(&mp->m_sb)) {
++				error = EFSCORRUPTED;
++				goto out_error;
++			}
+ 		}
+ 	}
+ 	error = xfs_sb_verify(bp, true);
 
-With that I hope that we can move on and put the flames to rest for awhile.  At
-this point I believe the rest of this series is all applied.  I'll push patch
-50 tomorrow.  We'll be pulling in work from Chandra, Dwight, and Zwu shortly.
-Thanks to Eric for playing the Ambassador.
-
-Regards,
-	Ben
 
 _______________________________________________
 xfs mailing list
