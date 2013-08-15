@@ -1,11 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ACAB77CBE
-	for <linux-xfs@oss.sgi.com>; Thu, 15 Aug 2013 14:45:34 -0500 (CDT)
-Date: Thu, 15 Aug 2013 14:45:31 -0500
-From: Ben Myers <bpm@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E64E77CBE
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Aug 2013 16:00:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B78138F8033
+	for <linux-xfs@oss.sgi.com>; Thu, 15 Aug 2013 14:00:24 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	fi8RFwuzVD1F6JBb for <linux-xfs@oss.sgi.com>;
+	Thu, 15 Aug 2013 14:00:23 -0700 (PDT)
+Date: Fri, 16 Aug 2013 07:00:18 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH, RFC] xfs: don't verify checksum on non-V5 superblocks
-Message-ID: <20130815194531.GL12719@sgi.com>
+Message-ID: <20130815210018.GR6023@dastard>
 References: <520D1BA3.1050500@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -37,32 +44,36 @@ On Thu, Aug 15, 2013 at 01:19:15PM -0500, Eric Sandeen wrote:
 > I'm not sure of the point of trying to validate a non-V5 superblock;
 > is there one?  Shouldn't this || be an &&?  (Can sb_crc validly be
 > 0 for a V5 SB?)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-This looks good to me.
-Reviewed-by: Ben Myers <bpm@sgi.com>
+I don't think so.
 
-> --- 
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 2b0ba35..5ca299b 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -764,7 +764,7 @@ xfs_sb_read_verify(
->  	 */
->  	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC) &&
->  	    (((be16_to_cpu(dsb->sb_versionnum) & XFS_SB_VERSION_NUMBITS) ==
-> -						XFS_SB_VERSION_5) ||
-> +						XFS_SB_VERSION_5) &&
->  	     dsb->sb_crc != 0)) {
->  
->  		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+As I mentioned on the call, the reason for this check is that if we
+have a CRC set and a non-v5 superblock version, we may have a
+corrupt superblock with bit errors in it. In this case, we check the
+CRC to determine if the superblock is intact. If the CRC validates,
+then it means that we wrote a bad superblock to disk (i.e. a code
+bug). If it doesn't validate, then the superblock is in a corrupt
+state because all fields not understood by the v4 superblock should
+be zero.
+
+That's why if the checksum fails we are returning EFSCORRUPTED.
+
+The problem we see here is not the validation of the primary
+superblock - it's the secondary superblocks that have been written
+by growfs that are the problem. We already know that we are
+verifying a secondary superblock by the "check_inprogress"
+parameter. Hence if we get this problem on a secondary superblock we
+can verify it against the primary superblock via the struct
+xfs_mount (i.e. mp->m_sb.sb_versionnum) and determine whether we do
+indeed have a v4 or v5 superblock and hence determine whether we
+should error out or just warn about it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
