@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7F57E7CBE
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 10:47:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5F901304064
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 08:47:49 -0700 (PDT)
-Date: Thu, 15 Aug 2013 18:47:33 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
-Message-ID: <20130815154733.GB26086@mwanda>
-References: <20130815055338.GC23580@elgon.mountain>
-	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6BA0A7CBE
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:33:13 -0500 (CDT)
+Message-ID: <520D02ED.7000109@sgi.com>
+Date: Thu, 15 Aug 2013 11:33:49 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130815143706.GI7153@sgi.com>
+Subject: Re: [PATCH] xfstests: fix _mount_ops_filter() to support $TEST_DIR
+	containing -o
+References: <1372801497-3941-1-git-send-email-koen.de.wit@oracle.com>
+In-Reply-To: <1372801497-3941-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,54 +18,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Jeff Liu <jeff.liu@oracle.com>, Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Koen De Wit <koen.de.wit@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
-> Hey Dan & Jeff,
-> 
-> On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
-> > On 08/15/2013 01:53 PM, Dan Carpenter wrote:
-> > 
-> > > The "di_size" variable comes from the disk and it's a signed 64 bit.
-> > > We check the upper limit but we should check for negative numbers as
-> > > well.
-> > > 
-> > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-> > > index 123971b..849fc70 100644
-> > > --- a/fs/xfs/xfs_inode_fork.c
-> > > +++ b/fs/xfs/xfs_inode_fork.c
-> > > @@ -167,7 +167,8 @@ xfs_iformat_fork(
-> > >  			}
-> > >  
-> > >  			di_size = be64_to_cpu(dip->di_size);
-> > > -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
-> > > +			if (unlikely(di_size < 0 ||
-> > 
-> > But the di_size is initialized to ZERO while allocating a new inode on disk.
-> > I wonder if that is better to ASSERT in this case because the current check
-> > is used to make sure that the item is inlined, or we don't need it at all.
-> 
-> Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
-> shutdown is more appropriate than an assert, because here we're reading the
-> inode from disk, as opposed to looking at a structure that is already incore
-> which we think we've initialized.  We want to handle unexpected inputs from
-> disk without crashing even if we are CONFIG_XFS_DEBUG.
-> 
-> How did you come across this one?
-> 
+On 07/02/2013 04:44 PM, Koen De Wit wrote:
+> If multiple mount options are given with multiple -o parameters,
+> _mount_ops_filter concatenates them by replacing all -o's with a comma
+> (except for the first -o).
+>
+> If $TEST_DIR contains "-o" (e.g. /mnt/test-os/) you get errors like this:
+>
+>     # ./check generic/002
+>       mount: mount point /mnt/test,s/ does not exist
+>       common/rc: retrying test device mount with external set
+>       mount: mount point /mnt/test,s/ does not exist
+>       common/rc: could not mount /dev/sdc3 on /mnt/test-os/
+>
+> Fix it by only replacing -o's that are preceded by at least one space.
+>
+> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+> ---
+>   common/rc |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/common/rc b/common/rc
+> index fe6bbfc..2a3c040 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -260,7 +260,7 @@ _mount_ops_filter()
+>       # the sed script replaces all -o's (except the first) with a comma
+>       # not required for linux, but won't hurt
+>
+> -    echo $params | sed -e 's/[[:space:]]*-o[[:space:]]*/UnIqUe/1; s/[[:space:]]*-o[[:space:]]*/,/g; s/UnIqUe/ -o /1' \
+> +    echo $params | sed -e 's/[[:space:]]\+-o[[:space:]]*/UnIqUe/1; s/[[:space:]]\+-o[[:space:]]*/,/g; s/UnIqUe/ -o /1' \
+>           | sed -e 's/dmapi/dmi/' \
+>           | $PERL_PROG -ne "s#mtpt=[^,|^\n|^\s]*#mtpt=$FS_ESCAPED\1\2#; print;"
+>
+>
+Sorry Koen I did not see this had been reviewed, thanks for the patch.
+It has been committed.
 
-These are static checker things...  It's too false positive prone to
-push on the real world yet.
+--Rich
 
-regards,
-dan carpenter
+commit 74357dea4a975d2942163a2df7a527b57c46650b
+Author: Koen De Wit <koen.de.wit@oracle.com>
+Date:   Tue Jul 2 21:44:57 2013 +0000
+
+     xfstests: fix _mount_ops_filter() to support $TEST_DIR containing -o
+
 
 _______________________________________________
 xfs mailing list
