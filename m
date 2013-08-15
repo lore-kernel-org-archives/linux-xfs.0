@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA4E129DFB
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 19:02:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7C23B8F8066
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 17:02:50 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	QhFCnvs5gDYzMKvk for <xfs@oss.sgi.com>;
-	Wed, 14 Aug 2013 17:02:48 -0700 (PDT)
-Date: Thu, 15 Aug 2013 10:02:25 +1000
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A24C629DFB
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 19:33:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 21DB9AC002
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 17:33:43 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	DnfABjcqGkqWzioE for <xfs@oss.sgi.com>;
+	Wed, 14 Aug 2013 17:33:41 -0700 (PDT)
+Date: Thu, 15 Aug 2013 10:33:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair deletes files after power cut
-Message-ID: <20130815000225.GH6023@dastard>
-References: <345BE8CDF5F1514CB9B5CB3FFFA9B65920197D@xmb-aln-x14.cisco.com>
+Subject: Re: [PATCH] xfsprogs: fix inode crash in xfs_repair
+Message-ID: <20130815003313.GJ6023@dastard>
+References: <20130813221739.031858865@sgi.com> <20130814064013.GC12779@dastard>
+	<520B870F.8040808@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <345BE8CDF5F1514CB9B5CB3FFFA9B65920197D@xmb-aln-x14.cisco.com>
+In-Reply-To: <520B870F.8040808@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,128 +30,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Semion Zak (sezak)" <sezak@cisco.com>
-Cc: "xtv-fs-group-nds-dg(mailer list)" <xtv-fs-group-nds-dg@cisco.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 14, 2013 at 01:06:08PM +0000, Semion Zak (sezak) wrote:
-> Hello,
-> 
-> 
-> 
-> There is a problem in XFS: xfs_repair deletes files after power
-> cut because of "data fork in rt inode x claims used rt block y"
+On Wed, Aug 14, 2013 at 08:33:03AM -0500, Mark Tinguely wrote:
+> On 08/14/13 01:40, Dave Chinner wrote:
+> >On Tue, Aug 13, 2013 at 05:13:31PM -0500, Mark Tinguely wrote:
+> >>Adding the lost+found in phase 6 could allocate an inode from
+> >>a new inode chunk. That newly created chunk was not around in
+> >>the scan phase, and is not in the avl tree which will result
+> >>in a NULL dereference.
+> >>
+> >>This patch adds the newly created inode chunk and inodes as if
+> >>found in the scan phase.
+> >>
+> >>Metadata dump available for future tests.
+> >>
+> >>Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+> >>---
+> >>  repair/incore_ino.c |    2 +-
+> >>  repair/phase6.c     |   15 +++++++++++++++
+> >>  2 files changed, 16 insertions(+), 1 deletion(-)
+> >>
+> >>Index: b/repair/incore_ino.c
+> >>===================================================================
+> >>--- a/repair/incore_ino.c
+> >>+++ b/repair/incore_ino.c
+> >>@@ -700,7 +700,7 @@ get_inode_parent(ino_tree_node_t *irec,
+> >>  	return(0LL);
+> >>  }
+> >>
+> >>-static void
+> >>+void
+> >>  alloc_ex_data(ino_tree_node_t *irec)
+> >>  {
+> >>  	parent_list_t 	*ptbl;
+> >>Index: b/repair/phase6.c
+> >>===================================================================
+> >>--- a/repair/phase6.c
+> >>+++ b/repair/phase6.c
+> >>@@ -930,6 +930,21 @@ mk_orphanage(xfs_mount_t *mp)
+> >>  	irec = find_inode_rec(mp,
+> >>  			XFS_INO_TO_AGNO(mp, ino),
+> >>  			XFS_INO_TO_AGINO(mp, ino));
+> >>+
+> >>+	if (irec == NULL&&  XFS_INO_TO_AGNO(mp, ino)<  mp->m_sb.sb_agcount&&
+> >>+	    ip != NULL&&  ip->i_d.di_magic == XFS_DINODE_MAGIC) {
 
-What's it supposed to do with it if it is corrupt?
+BTW, Mark, you're mailer is doing weird things to whitespace in code
+when it's quoting quoted code.
 
-> Scenario:
+> >I don't understand this check.
+> >
+> >We've already dereferenced ip several lines above to increment the
+> >link count and get the inode number stored in ino, so the ip != NULL
+> >is unnecessary.
+> >
+> >We've just allocated the inode, so why would the magic number be
+> >wrong? And why would the inode number lie in a non-existent
+> >allocation group?
+> >
 > 
-> Empty XFS partition and real-time partition with extent size 3008
-> sectors.
+> just being being paranoid.
 
-Umm, 3008 sectors for the rt extent size? that's extremely weird
-even for a RT device....
-> 
-> 1. In a loop simultaneously:
-> 
-> a. 2 threads simultaneously write 1 stream file in real time
-> partition
-> 
-> b. 1 thread writes 3 files into data partition.
-> 
-> c. 1 thread makes holes in the stream files
-> 
-> d. In the middle of the loop switch off the disk power.
-
-So you're power failing a drive which has write caches turned on,
-
-
-> 
-> 2. Drop caches ("echo 3>/proc/sys/vm/drop_caches")
-> 
-> 3. Unmount XFS
-> 
-> 4. Switch the disk power on
-> 
-> 5. Mount XFS (to replay log)
-> 
-> 6. Unmount XFS
-> 
-> 7. Repair XFS
-> 
-> 8. Mount XFS
-> 
-> 
-> 
-> After the first mount (step 5) stream file exist in real time
-> partition.
-
-No, the inode and it's metadata exist in the data partition. Only
-the file data is in the realtime partition. The corruption is in the
-metadata, not the realtime device.
-
-> The only file in RT partition 0.STR:
-> 
-> /rt/000000R0.DIR/0.STR:
-> 
->                0: [0..144383]: hole
->                1: [144384..147391]: 607625024..607628031
->                2: [147392..291775]: hole
->                3: [291776..294783]: 607772416..607775423
->                4: [294784..436159]: hole
->                5: [436160..439167]: 607916800..607919807
->                6: [439168..583551]: hole
->                7: [583552..586559]: 608064192..608067199
->                8: [586560..727935]: hole
->                9: [727936..730943]: 608208576..608211583
->                10: [730944..875327]: hole
->                11: [875328..878335]: 608355968..608358975
->                12: [878336..1019711]: hole
->                13: [1019712..1022719]: 608500352..608503359
->                14: [1022720..1167103]: hole
->                15: [1167104..1170111]: 608647744..608650751
->                16: [1170112..1311487]: hole
->                17: [1311488..1314495]: 608792128..608795135
->                18: [1314496..1458879]: hole
->                19: [1458880..1461887]: 608939520..608942527
->                20: [1461888..1603263]: hole
->                21: [1603264..1606271]: 609083904..609086911
->                22: [1606272..1750655]: hole
->                23: [1750656..1753663]: 609231296..609234303
->                24: [1753664..1895039]: hole
->                25: [1895040..1898047]: 609375680..609378687
->                26: [1898048..2042431]: hole
->                27: [2042432..2045439]: 609523072..609526079
->                28: [2045440..2186815]: hole
->                29: [2186816..2189823]: 609667456..609670463
->                30: [2189824..2334207]: hole
->                31: [2334208..2334719]: 609814848..609815359
->                32: [2334720..3853247]: 609815360..611333887
-> 
-> The only strange thing is that 2 the last extents are contiguous
-> and could be united into 1 extent.
-
-And that will, most likely, be what xfs_repair is barfing on. The
-end of extent 31 is not aligned to the rt extent size, and so the
-block starting extent 32 overlaps a rt extent already claimed by
-extent 31.
-
-So, there is an inconsistency in the extent map, and so xfs_repair
-is correct in saying it's broken and trashing the file.
-
-This all sounds very familiar. I'm pretty sure this has been hit
-before, and I thought we fixed it. Oh:
-
-http://oss.sgi.com/archives/xfs/2012-09/msg00287.html
-
-Can you see if this patch:
-
-http://oss.sgi.com/archives/xfs/2012-09/msg00481.html
-
-stops repair from removing the file?
-
-It would appear that followup patches that fixed the kernel code
-were never posted, and so the problem still exists in the kernel
-code.
+It's the same code as in the kernel - if is that broken that it
+can't tell it didn't allocate a real inode, then we've got bigger
+problems. We design the code to return an error when it fails so we
+don't have to robustly check every possible error condition at every
+call site. So really the only check needed is "if (!irec) {...}"
 
 Cheers,
 
