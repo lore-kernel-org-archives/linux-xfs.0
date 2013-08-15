@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 38BAC7F6D
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AFA0304070
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:17 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3B80E7F7E
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AEF5FAC003
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:25 -0700 (PDT)
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v8 1/7] xfs: create wrappers for converting kuid_t to/from
-	uid_t
-Date: Thu, 15 Aug 2013 14:07:58 -0400
-Message-Id: <1376590084-12888-2-git-send-email-dwight.engen@oracle.com>
+Subject: [PATCH v8 2/7] xfs: convert kuid_t to/from uid_t in ACLs
+Date: Thu, 15 Aug 2013 14:07:59 -0400
+Message-Id: <1376590084-12888-3-git-send-email-dwight.engen@oracle.com>
 In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
 References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,50 +27,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>
 
+Change permission check for setting ACL to use inode_owner_or_capable()
+which will additionally allow a CAP_FOWNER user in a user namespace to
+be able to set an ACL on an inode covered by the user namespace mapping.
+
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
 Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 ---
- fs/xfs/xfs_linux.h | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ fs/xfs/xfs_acl.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 3bc52b7..2dbabcb 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -191,6 +191,32 @@ typedef __uint64_t __psunsigned_t;
- #define MAX(a,b)	(max(a,b))
- #define howmany(x, y)	(((x)+((y)-1))/(y))
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 2f77db8..6951896 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -70,14 +70,15 @@ xfs_acl_from_disk(
  
-+/* Kernel uid/gid conversion. These are used to convert to/from the on disk
-+ * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
-+ * The conversion here is type only, the value will remain the same since we
-+ * are converting to the init_user_ns. The uid is later mapped to a particular
-+ * user namespace value when crossing the kernel/user boundary.
-+ */
-+static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
-+{
-+	return from_kuid(&init_user_ns, uid);
-+}
+ 		switch (acl_e->e_tag) {
+ 		case ACL_USER:
++			acl_e->e_uid = xfs_uid_to_kuid(be32_to_cpu(ace->ae_id));
++			break;
+ 		case ACL_GROUP:
+-			acl_e->e_id = be32_to_cpu(ace->ae_id);
++			acl_e->e_gid = xfs_gid_to_kgid(be32_to_cpu(ace->ae_id));
+ 			break;
+ 		case ACL_USER_OBJ:
+ 		case ACL_GROUP_OBJ:
+ 		case ACL_MASK:
+ 		case ACL_OTHER:
+-			acl_e->e_id = ACL_UNDEFINED_ID;
+ 			break;
+ 		default:
+ 			goto fail;
+@@ -103,7 +104,18 @@ xfs_acl_to_disk(struct xfs_acl *aclp, const struct posix_acl *acl)
+ 		acl_e = &acl->a_entries[i];
+ 
+ 		ace->ae_tag = cpu_to_be32(acl_e->e_tag);
+-		ace->ae_id = cpu_to_be32(acl_e->e_id);
++		switch (acl_e->e_tag) {
++		case ACL_USER:
++			ace->ae_id = cpu_to_be32(xfs_kuid_to_uid(acl_e->e_uid));
++			break;
++		case ACL_GROUP:
++			ace->ae_id = cpu_to_be32(xfs_kgid_to_gid(acl_e->e_gid));
++			break;
++		default:
++			ace->ae_id = cpu_to_be32(ACL_UNDEFINED_ID);
++			break;
++		}
 +
-+static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
-+{
-+	return make_kuid(&init_user_ns, uid);
-+}
-+
-+static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
-+{
-+	return from_kgid(&init_user_ns, gid);
-+}
-+
-+static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
-+{
-+	return make_kgid(&init_user_ns, gid);
-+}
-+
- /*
-  * Various platform dependent calls that don't fit anywhere else
-  */
+ 		ace->ae_perm = cpu_to_be16(acl_e->e_perm);
+ 	}
+ }
+@@ -362,7 +374,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
+ 		return -EINVAL;
+ 	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
+ 		return value ? -EACCES : 0;
+-	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
++	if (!inode_owner_or_capable(inode))
+ 		return -EPERM;
+ 
+ 	if (!value)
 -- 
 1.8.1.4
 
