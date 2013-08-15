@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 094457F51
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 17:27:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DDE41304059
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 15:26:57 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	yX97mUs0yiYmneOE for <xfs@oss.sgi.com>;
-	Thu, 15 Aug 2013 15:26:56 -0700 (PDT)
-Date: Fri, 16 Aug 2013 08:26:50 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
-Message-ID: <20130815222650.GX6023@dastard>
-References: <20130815055338.GC23580@elgon.mountain>
-	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AD3E37F51
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 17:40:30 -0500 (CDT)
+Date: Thu, 15 Aug 2013 17:40:29 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
+Message-ID: <20130815224029.GO12719@sgi.com>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-49-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130815143706.GI7153@sgi.com>
+In-Reply-To: <1374215120-7271-49-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +23,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Liu <jeff.liu@oracle.com>, Dan Carpenter <dan.carpenter@oracle.com>
+To: xfs@oss.sgi.com
+Cc: Mark Tinguely <tinguely@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, Ric Wheeler <rwheeler@redhat.com>
 
-On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
-> Hey Dan & Jeff,
+Hey Gents,
+
+On Fri, Jul 19, 2013 at 04:25:19PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
-> > On 08/15/2013 01:53 PM, Dan Carpenter wrote:
-> > 
-> > > The "di_size" variable comes from the disk and it's a signed 64 bit.
-> > > We check the upper limit but we should check for negative numbers as
-> > > well.
-> > > 
-> > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-> > > index 123971b..849fc70 100644
-> > > --- a/fs/xfs/xfs_inode_fork.c
-> > > +++ b/fs/xfs/xfs_inode_fork.c
-> > > @@ -167,7 +167,8 @@ xfs_iformat_fork(
-> > >  			}
-> > >  
-> > >  			di_size = be64_to_cpu(dip->di_size);
-> > > -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
-> > > +			if (unlikely(di_size < 0 ||
-> > 
-> > But the di_size is initialized to ZERO while allocating a new inode on disk.
-> > I wonder if that is better to ASSERT in this case because the current check
-> > is used to make sure that the item is inlined, or we don't need it at all.
+> Add support for the file type field in directory entries so that
+> readdir can return the type of the inode the dirent points to to
+> userspace without first having to read the inode off disk.
 > 
-> Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
-> shutdown is more appropriate than an assert, because here we're reading the
-> inode from disk, as opposed to looking at a structure that is already incore
-> which we think we've initialized.  We want to handle unexpected inputs from
-> disk without crashing even if we are CONFIG_XFS_DEBUG.
+> The encoding of the type field is a single byte that is added to the
+> end of the directory entry name length. For all intents and
+> purposes, it appends a "hidden" byte to the name field which
+> contains the type information. As the directory entry is already of
+> dynamic size, helpers are already required to access and decode the
+> direct entry structures.
+> 
+> Hence the relevent extraction and iteration helpers are updated to
+> understand the hidden byte.  Helpers for reading and writing the
+> filetype field from the directory entries are also added. Only the
+> read helpers are used by this patch.  It also adds all the code
+> necessary to read the type information out of the dirents on disk.
+> 
+> Further we add the superblock feature bit and helpers to indicate
+> that we understand the on-disk format change. This is not a
+> compatible change - existing kernels cannot read the new format
+> successfully - so an incompatible feature flag is added. We don't
+> yet allow filesystems to mount with this flag yet - that will be
+> added once write support is added.
+> 
+> Finally, the code to take the type from the VFS, convert it to an
+> XFS on-disk type and put it into the xfs_name structures passed
+> around is added, but the directory code does not use this field yet.
+> That will be in the next patch.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-There are lots of places where we only check di_size to be greater
-than some value, and don't check for it being less than zero. Hence
-I think that a better solution might be to di_size unsigned as that
-will catch "negative" sizes for all types of situations.
+After some discussion during our weekly call I believe we have come to an
+agreement regarding this feature.  I wrote some things down:
 
-We've got the same problem in the userspace code as well and so
-treating the size as unsigned will stop such validation problems
-everywhere....
+* Eric volunteered to do an xfstest
+* xfs_repair, Dave said he was working on this
+* v4 support in the kernel to be done by Mark
+* v4 support for mkfs.xfs to be done by Mark
+* Plan for 3.13
 
-Cheers,
+With uncharacteristic promptness I have posted 'full' meeting notes here:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+http://www.xfs.org/index.php/Meeting_notes_for_2013#Meeting_of_Aug_15
+
+With that I hope that we can move on and put the flames to rest for awhile.  At
+this point I believe the rest of this series is all applied.  I'll push patch
+50 tomorrow.  We'll be pulling in work from Chandra, Dwight, and Zwu shortly.
+Thanks to Eric for playing the Ambassador.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
