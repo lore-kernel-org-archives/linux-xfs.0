@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F245B7F51
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 12:39:34 -0500 (CDT)
-Date: Thu, 15 Aug 2013 12:39:31 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
-Message-ID: <20130815173931.GE3783@sgi.com>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-49-git-send-email-david@fromorbit.com>
-	<51F80FA8.4060304@sgi.com> <20130812005905.GK12779@dastard>
-	<5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
-	<520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
-	<20130814184729.GA4604@sgi.com> <20130815042210.GN6023@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5F5177F53
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 12:56:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 494908F8078
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 10:56:20 -0700 (PDT)
+Received: from mx1.vr-web.de (mx0.vr-web.de [195.200.35.198]) by cuda.sgi.com
+	with ESMTP id VzG8rl1lRpSGFSS4 for <xfs@oss.sgi.com>;
+	Thu, 15 Aug 2013 10:56:18 -0700 (PDT)
+Message-ID: <520D162B.5060901@allmail.net>
+Date: Thu, 15 Aug 2013 19:55:55 +0200
+From: Michael Maier <m1278468@allmail.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130815042210.GN6023@dastard>
+Subject: Re: Failure growing xfs with linux 3.10.5
+References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
+	<52090C6C.6060604@allmail.net> <20130813000453.GQ12779@dastard>
+	<520A5132.6090608@allmail.net> <20130814062041.GB12779@dastard>
+	<520BAE48.1020605@allmail.net> <520D0D5D.4000309@sandeen.net>
+In-Reply-To: <520D0D5D.4000309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,194 +30,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 15, 2013 at 02:22:10PM +1000, Dave Chinner wrote:
-| On Wed, Aug 14, 2013 at 01:47:30PM -0500, Geoffrey Wehrman wrote:
-| > On Wed, Aug 14, 2013 at 05:50:42PM +1000, Dave Chinner wrote:
-| > | On Tue, Aug 13, 2013 at 10:42:32AM -0500, Mark Tinguely wrote:
-| > | > On 08/12/13 19:50, Dave Chinner wrote:
-| > | > >On Mon, Aug 12, 2013 at 08:25:23AM -0500, Mark Tinguely wrote:
-| > | > >>On 08/11/13 19:59, Dave Chinner wrote:
-| > | > >>>On Tue, Jul 30, 2013 at 02:10:32PM -0500, Mark Tinguely wrote:
-| > | > >>>>On 07/19/13 01:25, Dave Chinner wrote:
-| > | > >>>>>From: Dave Chinner<dchinner@redhat.com>
-| > | > >>>>>
-| > | > >>>>>Add support for the file type field in directory entries so that
-| > | > >>>>>readdir can return the type of the inode the dirent points to to
-| > | > >>>>>userspace without first having to read the inode off disk.
-| > | .....
-| > | > >>>>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
-| > | > >>>>>---
-| > | > >>>>>
-| > | > >>>>
-| > | > >>>>>+static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
-| > | > >>>>>+{
-| > | > >>>>>+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5&&
-| > | > >>>>>+		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
-| > | > >>>>>  }
-| > | > >>>>>
-| > | > >>>>
-| > | > >>>>This feature should support inode version 2 and 3.
-| > | > >>>
-| > | > >>>Has nothing to do with the inode version number - it has to do with
-| > | > >>>the directory structure being modified.
-| > | > >>>
-| > | > >>>We're changing the directory structure for CRCs, and this builds on
-| > | > >>>top of that. It is essentially part of the V3 directory format, and
-| > | > >>>should be treated as such. Suggesting that we retrofit and support a
-| > | > >>>modified v2 directory format is close to insane - instead of only
-| > | > >>>having to test v2 vs v3 directory formats, you're suggesting we
-| > | > >>>support v2 vs v2+dtype vs v3 vs v3+dtype. We simply do not have the
-| > | > >>>resources to adequately test and support such an explosion of
-| > | > >>>filesystem configurations.
-| > | > >>>
-| > | > >>>We've had this discussion before - new on-disk features go into the
-| > | > >>>v5 superblock format - the v4 superblock format from this point
-| > | > >>>onwards is essentially legacy support from an upstream development
-| > | > >>>perspective.
-| > | ....
-| > | > >>>That said, there's nothing to stop anyone from backporting such a
-| > | > >>>feature to an older kernel and maintaining it themselves - it's open
-| > | > >>>source software. But the idea that development should be constrained
-| > | > >>>by having to support both old and new formats is wrong - the old v4
-| > | > >>>format should be considered stable and we need think very hard about
-| > | > >>>changing it at all now, especially as much of the development focus
-| > | > >>>is now shifting to taking advantage of the additions to the v5
-| > | > >>>format....
-| > | > >>
-| > | > >>I guess we need more time to argue this out. It is not going into
-| > | > >>Linux 3.12 as a crc feature only.
-| > | > >
-| > | > >Seriously?
-| > | > 
-| > | > yes seriously.
-| > | 
-| > | Great, another random roadblock from the XFS maintainers to deal
-| > | with.
-| > 
-| > The addition of the file type field to directory entries is a great
-| > new feature.  Your implementation of adding a "hidden" byte to the name
-| > field is especially clever.
-| 
-| Then go thank Christoph for that - I'm pretty sure he came up with
-| the idea one night when we drinking in a bar somewhere a few years
-| ago...
-| 
-| > This is a feature that can benefit both
-| > dir2 and dir3 format filesystems and is completely independent of your
-| > CRC and self describing metadata feature work.  I understand that you
-| > are not interested in porting the capability to dir2 format filesystems
-| > yourself and do not have the resources to provide the associated testing
-| > and support.
-| 
-| Yes, I've been pretty clear about that.
-| 
-| > Myself and others within SGI have discussed these issues,
-| 
-| But not with the community.
+Eric Sandeen wrote:
+> On 8/14/13 11:20 AM, Michael Maier wrote:
+>> Dave Chinner wrote:
+> 
+> ...
+> 
+>>> If it makes you feel any better, the bug that caused this had been
+>>> in the code for 15+ years and you are the first person I know of to
+>>> have ever hit it....
+>>
+>> Probably the second one :-) See
+>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/54428
+>>
+>>> xfs_repair doesn't appear to have any checks in it to detect this
+>>> situation or repair it - there are some conditions for zeroing the
+>>> unused parts of a superblock, but they are focussed around detecting
+>>> and correcting damage caused by a buggy Irix 6.5-beta mkfs from 15
+>>> years ago.
+>>
+>> The _big problem_ is: xfs_repair not just doesn't repair it, but it
+>> _causes data loss_ in some situations!
+>>
+> 
+> So as far as I can tell at this point, a few things have happened to
+> result in this unfortunate situation.  Congratulations, you hit a
+> perfect storm.  :(
 
-The community discussion is being held here.  I'm being open about the
-discussion we held off-line.
+I can appease you - as it "only" hit my backup device and because I
+noticed the problem before I really needed it: I didn't hit any data
+loss over all, because the original data is ok and I repeated the backup
+w/ the fixed FS now!
 
-| So the SGI hivemind decided something behind closed doors, and
-| you're expecting us to just swallow that decision and not question
-| it?
+> 1) prior resize operations populated unused portions of backup sbs w/ junk
+> 2) newer kernels fail to verify superblocks in this state
+> 3) during your growfs under 3.10, that verification failure aborted
+>    backup superblock updates, leaving many unmodified
+> 4a) xfs_repair doesn't find or fix the junk in the backup sbs, and
+> 4b) when running, it looks for the superblocks which are "most matching"
+>     other superblocks on the disk, and takes that version as correct.
+> 
+> So you had 16 superblocks (0-15) which were correct after the growfs.
+> But 16 didn't verify and was aborted, so nothing was updated after that.
+> This means that 16 onward have the wrong number of AGs and disk blocks;
+> i.e. they are the pre-growfs size, and there are 26 of them.
+> 
+> Today, xfs_repair sees this 26-to-16 vote, and decides that the 26
+> matching superblocks "win," rewrites the first superblock with this
+> geometry, and uses that to verify the rest of the filesytem.  Hence
+> anything post-growfs looks out of bounds, and gets nuked.
+> 
+> So right now, I'm thinking that the "proper geometry" heuristic should
+> be adjusted, but how to do that in general, I'm not sure.  Weighting
+> sb 0 heavily, especially if it matches many subsequent superblocks,
+> seems somewhat reasonable.
 
-I am not expecting you to swallow anything.  I am stating my position
-on this features and letting the community know that there are others
-in the community who concur.  Mark, Ben, Rich, and Troy were all part
-of this groups.  We are all members of the XFS community and are
-participating in the community discussion.
+This would have been my next question! I repaired it w/ the git
+xfs_repair on the already reduced to original size FS. I think, if I
+would have done the same w/ the grown FS, the FS most probably would be
+reduced to the size before the growing.
 
-| > and we are willing to take on the work ourselves rather than have this
-| > feature go only into v5 superblock filesystems where the feature is only
-| > accessible to those who are willing to risk using experimental code.
-| 
-| Great. So Ben's going to merge the patches then?
-| 
-| > Given that SGI will be doing the work to support the file type field
-| > in dir2 format filesystems, it doesn't make sense to add the code to
-| > v5 filesystems until all of the work is complete as there could be
-| > additional considerations for the on disk changes.
-| 
-| <groan>
-| 
-| No, you're saying that merging is now dependent on whenever SGI gets
-| around to doing v4 support work?
-| 
-| So, what's the plan of action here?  Who is going to do that work?
-| How long is it going to take them? Are we talking about a delay of
-| couple of days, a few weeks, or months?
-
-Mark has volunteered to do the work, and is committed to having it ready
-for the 3.13 merge window.
-
-| But let's address the core premise being asserted here by the SGI
-| hivemind - that we can't add a v5 feature until it's also made for
-| v4 filesystems.  I've said it time and time again: the v5 format
-| will not be compromised by having to cater for supporting v4
-| structures. I've been saying this for over 3 years. Indeed, in that
-| presentation at LCA 18 months ago: I said on slide 36:
-| 
-| " * No attempt to provide backwards or forwards
-|     compatibility for format changes.
-| 
-| 	* Avoids compromising the new on-disk format design"
-| 
-| This still holds true. This directory format change is designed
-| specifically for v5 superblocks formats, and the process you are
-| insisting on is that that we should compromise the format change so
-| that we can support the same feature on v4 filesystems.  This is the
-| complete antithesis of the design and architectural principles that
-| have been guiding our work over the past 3 years, and I'm not about
-| to compromise on it now because it's a matter of *principle*.
-| 
-| This should not come as a surprise to anyone at SGI, but we've been
-| open and clear about the processes that we have using to design new
-| features for a quite a long time now. If SGI disagrees with the
-| processes and principles we strive to acheive, then perhaps we need
-| to have a different discussion.....
-
-I'm not asking for any compromise in the on-disk format change.  My
-wording wasn't the best.  It was not the on-disk format change that may be
-affected.  Rather it is the code to support the on-disk format change that
-will likely be affected.  I'm not asking you to make any changes to your
-code at this time or to provide backward compatibility code.  Mark will
-provide the code which support both v4 and v5 superblock filesystems.
-I do expect that you will not object to Mark's code under the principle
-of not allowing any features to be added to v4 superblock filesystems.
-
-| > We also noted that this feature should not be added to the kernel until
-| > userspace code is available to support this feature.  Specifically,
-| > xfs_repair needs to validate and if needed repair the the file type field.
-| 
-| Sure. I've been waiting for review of the code first so that any
-| nasty problems could be dealt with without having to double handle
-| the code changes in userspace. Instead of review, all I've got from
-| SGI is two weeks of silence and then a "get stuffed until you do v4
-| support as well" response.
-| 
-| I'll send the patches for repair support on top of that stack
-| tomorrow, and then this is not longer a barrier to merging it. Will
-| you merge it then?
-| 
-| > Also, tests are needed to validate the new functionality.
-| 
-| They can be written now that xfs_io readdir support hase been
-| merged. Though I've already done manual tests with the getdents
-| example code from the getdents(2) man page so I know it does
-| actually work correctly...
-
-When the repair support is ready, xfs_db support is ready, and tests
-are ready, then there will be no objection to merging the feature.
-I realize that I have not mentioned xfs_db support earlier, but that is
-another important capability which needs to be included with this feature.
+Wouldn't it be better to not grow at all if there are problems detected?
+Means: Don't do the check after the growing, but before? Ok, I could
+have done it myself ... . From now on, I will do it like this!
 
 
--- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
+Thanks,
+Michael
 
 _______________________________________________
 xfs mailing list
