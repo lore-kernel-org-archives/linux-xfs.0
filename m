@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 829E029DFB
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 19:58:14 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4314F29DFB
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 21:26:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 169A4AC001
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 17:58:14 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	6nTohH6Kc1OKuCKc for <xfs@oss.sgi.com>;
-	Wed, 14 Aug 2013 17:58:12 -0700 (PDT)
-Date: Thu, 15 Aug 2013 10:58:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Failure growing xfs with linux 3.10.5
-Message-ID: <20130815005809.GL6023@dastard>
-References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
-	<5209126F.5020204@allmail.net> <20130813005414.GT12779@dastard>
-	<520A48C4.6060801@allmail.net> <20130814054332.GA12779@dastard>
-	<520B9F3E.6030805@allmail.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 159118F804B
+	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 19:26:45 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9dUmTNs8gKBHfrTt for
+	<xfs@oss.sgi.com>; Wed, 14 Aug 2013 19:26:45 -0700 (PDT)
+Message-ID: <520C3C60.3090500@redhat.com>
+Date: Wed, 14 Aug 2013 21:26:40 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <520B9F3E.6030805@allmail.net>
+Subject: [PATCH] xfs_repair: zero out unused parts of superblocks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,82 +25,177 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Maier <m1278468@allmail.net>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, Michael Maier <m1278468@allmail.net>
 
-On Wed, Aug 14, 2013 at 05:16:14PM +0200, Michael Maier wrote:
-> Dave Chinner wrote:
-> > On Tue, Aug 13, 2013 at 04:55:00PM +0200, Michael Maier wrote:
-> >> Dave Chinner wrote:
-> >>> On Mon, Aug 12, 2013 at 06:50:55PM +0200, Michael Maier wrote:
-> >>>> Meanwhile, I faced another problem on another xfs-file system with linux
-> >>>> 3.10.5 which I never saw before. During writing a few bytes to disc, I
-> >>>> got "disc full" and the writing failed.
-> >>>>
-> >>>> At the same time, df reported 69G of free space! I ran xfs_repair -n and
-> >>>> got:
-> >>>>
-> >>>>
-> >>>> xfs_repair -n /dev/mapper/raid0-daten2
-> >>>> Phase 1 - find and verify superblock...
-> >>>> Phase 2 - using internal log
-> >>>>         - scan filesystem freespace and inode maps...
-> >>>> sb_ifree 591, counted 492
-> >>>> ^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>>> What does this mean? How can I get rid of it w/o loosing data? This file
-> >>>> system was created a few days ago and never resized.
-> >>>
-> >>> Superblock inode counting is lazy - it can get out of sync in after
-> >>> an unclean shutdown, but generally mounting a dirty filesystem will
-> >>> result in it being recalculated rather than trusted to be correct.
-> >>> So there's nothing to worry about here.
-> >>
-> >> When will it be self healed?
-> > 
-> > that depends on whether there's actually a problem. Like I said in
-> > the part you snipped off - if you ran xfs_repair -n on filesystem
-> > that needs log recovery that accounting difference is expected.
-> 
-> I know, that option -n doesn't do anything. It was intended, because
-> xfs_repair destroyed a lot of data when applied at the other problem I
-> have _and_ it repaired nothing at the same time!
+Prior to:
+1375cb65 xfs: growfs: don't read garbage for new secondary superblocks
 
-xfs_repair will remove files it cannot repair because their metadata
-is are too corrupted to repair or cannot be repaired safely. That's
-always been the case for any filesystem repair tool - all they
-guarantee is that the filesystem will be consistent after they are
-run. Repairing a corrupted filesystem almost always results in some
-form of data loss occurring....
+we ran the risk of allowing garbage in secondary superblocks
+beyond the in-use sb fields.  With kernels 3.10 and beyond, the
+verifiers will kick these out as invalid, but xfs_repair does
+not detect or repair this condition.
 
-If there is nothing wrong with the filesystem except the accouting
-is wrong, then it will fix the accounting problem in phase 5 when
-run without the -n parameter.
+There is superblock stale-data zeroing code, but it is under a
+narrow conditional - the bug addressed in the above commit did not
+meet that conditional.  So change this to check unconditionally.
 
-> >> This is strange and I can't use the free space, which I need! How can it
-> >> be forced to be repaired w/o data loss?
-> > 
-> > The above is complaining about a free inode count mismatch, not a
-> > problem about free space being wrong. What problem are you actually
-> > having?
-> 
-> The application, which wanted to write a few bytes gets a "disk full"
-> error although df -h reports 69GB of free space.
+Further, the checking code was looking at the in-memory
+superblock buffer, which was zeroed prior to population, and
+would therefore never possibly show any stale data beyond the
+last up-rev superblock field.
 
-That's not necessarily a corruption, though, and most likely isn't
-related to the accounting issue xfs_repair is reporting. Indeed,
-this is typically a sign of being unable to allocate an inode
-because there is insufficient contiguous free space in the
-filesystem to allocate a new inode chunk. What does your free space
-histogram look like?
+So instead, check the disk buffer for this garbage condition.
 
-# xfs_db -r -c "freesp -s" <dev>
+If we detect garbage, we must zero out both the in-memory sb
+and the disk buffer; the former may contain unused data
+in up-rev sb fields which will be written back out; the latter
+may contain garbage beyond all fields, which won't be updated
+when we translate the in-memory sb back to disk.
 
-Cheers,
+The V4 superblock case was zeroing out the sb_bad_features2
+field; we also fix that to leave that field alone.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Lastly, use offsetof() instead of the tortured (__psint_t)
+casts & pointer math.
+
+Reported-by: Michael Maier <m1278468@allmail.net>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+Michael - this will need slight tweaking to apply against
+older xfsprogs.
+
+Also:
+
+With more of Dave's changes, I think we can swap out:
+
+		size = offsetof(xfs_sb_t, sb_lsn)
+			+ sizeof(sb->sb_lsn);
+for
+		size = xfs_sb_info[XFS_SBS_LSN + 1].offset;
+
+but this version is a bit easier to backport, and works in the
+current git tree...
+
+diff --git a/repair/agheader.c b/repair/agheader.c
+index b0f38ba..53e47b6 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -256,60 +256,63 @@ secondary_sb_wack(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
+ 	rval = do_bzero = 0;
+ 
+ 	/*
+-	 * mkfs's that stamped a feature bit besides the ones in the mask
+-	 * (e.g. were pre-6.5 beta) could leave garbage in the secondary
+-	 * superblock sectors.  Anything stamping the shared fs bit or better
+-	 * into the secondaries is ok and should generate clean secondary
+-	 * superblock sectors.  so only run the zero check on the
+-	 * potentially garbaged secondaries.
++	 * Check for garbage beyond the last valid field.
++	 * Use field addresses instead so this code will still
++	 * work against older filesystems when the superblock
++	 * gets rev'ed again with new fields appended.
++	 *
++	 * size is the size of data which is valid for this sb.
+ 	 */
+-	if (pre_65_beta ||
+-	    (sb->sb_versionnum & XR_GOOD_SECSB_VNMASK) == 0 ||
+-	    sb->sb_versionnum < XFS_SB_VERSION_4)  {
+-		/*
+-		 * Check for garbage beyond the last field.
+-		 * Use field addresses instead so this code will still
+-		 * work against older filesystems when the superblock
+-		 * gets rev'ed again with new fields appended.
+-		 */
+-		if (xfs_sb_version_hasmorebits(sb))
+-			size = (__psint_t)&sb->sb_features2
+-				+ sizeof(sb->sb_features2) - (__psint_t)sb;
+-		else if (xfs_sb_version_haslogv2(sb))
+-			size = (__psint_t)&sb->sb_logsunit
+-				+ sizeof(sb->sb_logsunit) - (__psint_t)sb;
+-		else if (xfs_sb_version_hassector(sb))
+-			size = (__psint_t)&sb->sb_logsectsize
+-				+ sizeof(sb->sb_logsectsize) - (__psint_t)sb;
+-		else if (xfs_sb_version_hasdirv2(sb))
+-			size = (__psint_t)&sb->sb_dirblklog
+-				+ sizeof(sb->sb_dirblklog) - (__psint_t)sb;
+-		else
+-			size = (__psint_t)&sb->sb_width
+-				+ sizeof(sb->sb_width) - (__psint_t)sb;
+-		for (ip = (char *)((__psint_t)sb + size);
+-		     ip < (char *)((__psint_t)sb + mp->m_sb.sb_sectsize);
+-		     ip++)  {
+-			if (*ip)  {
+-				do_bzero = 1;
+-				break;
+-			}
+-		}
+-
+-		if (do_bzero)  {
+-			rval |= XR_AG_SB_SEC;
+-			if (!no_modify)  {
+-				do_warn(
+-		_("zeroing unused portion of %s superblock (AG #%u)\n"),
+-					!i ? _("primary") : _("secondary"), i);
+-				memset((void *)((__psint_t)sb + size), 0,
+-					mp->m_sb.sb_sectsize - size);
+-			} else
+-				do_warn(
+-		_("would zero unused portion of %s superblock (AG #%u)\n"),
+-					!i ? _("primary") : _("secondary"), i);
++	if (xfs_sb_version_hascrc(sb))
++		size = offsetof(xfs_sb_t, sb_lsn)
++			+ sizeof(sb->sb_lsn);
++	else if (xfs_sb_version_hasmorebits(sb))
++		size = offsetof(xfs_sb_t, sb_bad_features2)
++			+ sizeof(sb->sb_bad_features2);
++	else if (xfs_sb_version_haslogv2(sb))
++		size = offsetof(xfs_sb_t, sb_logsunit)
++			+ sizeof(sb->sb_logsunit);
++	else if (xfs_sb_version_hassector(sb))
++		size = offsetof(xfs_sb_t, sb_logsectsize)
++			+ sizeof(sb->sb_logsectsize);
++	else if (xfs_sb_version_hasdirv2(sb))
++		size = offsetof(xfs_sb_t, sb_dirblklog)
++			+ sizeof(sb->sb_dirblklog);
++	else
++		size = offsetof(xfs_sb_t, sb_width)
++			+ sizeof(sb->sb_width);
++
++	/* Check the buffer we read from disk for garbage outside size */
++	for (ip = XFS_BUF_PTR(sbuf) + size;
++	     ip < XFS_BUF_PTR(sbuf) + mp->m_sb.sb_sectsize;
++	     ip++)  {
++		if (*ip)  {
++			do_bzero = 1;
++			break;
+ 		}
+ 	}
++	if (do_bzero)  {
++		rval |= XR_AG_SB_SEC;
++		if (!no_modify)  {
++			do_warn(
++	_("zeroing unused portion of %s superblock (AG #%u)\n"),
++				!i ? _("primary") : _("secondary"), i);
++			/*
++			 * zero both the in-memory sb and the disk buffer,
++			 * because the former was read from disk and
++			 * may contain newer version fields that shouldn't
++			 * be set, and the latter is never updated past
++			 * the last field - just zap them both.
++			 */
++			memset((void *)((__psint_t)sb + size), 0,
++				mp->m_sb.sb_sectsize - size);
++			memset(XFS_BUF_PTR(sbuf) + size, 0,
++				mp->m_sb.sb_sectsize - size);
++		} else
++			do_warn(
++	_("would zero unused portion of %s superblock (AG #%u)\n"),
++				!i ? _("primary") : _("secondary"), i);
++	}
+ 
+ 	/*
+ 	 * now look for the fields we can manipulate directly.
 
 _______________________________________________
 xfs mailing list
