@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3B80E7F7E
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AEF5FAC003
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:25 -0700 (PDT)
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v8 2/7] xfs: convert kuid_t to/from uid_t in ACLs
-Date: Thu, 15 Aug 2013 14:07:59 -0400
-Message-Id: <1376590084-12888-3-git-send-email-dwight.engen@oracle.com>
-In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
-References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 352FC7F50
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:14:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0FF6B304039
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:14:29 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id x2MK9nArDwBYwCER for <xfs@oss.sgi.com>;
+	Thu, 15 Aug 2013 11:14:29 -0700 (PDT)
+Message-ID: <520D1A82.1000709@sandeen.net>
+Date: Thu, 15 Aug 2013 13:14:26 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Failure growing xfs with linux 3.10.5
+References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
+	<52090C6C.6060604@allmail.net> <20130813000453.GQ12779@dastard>
+	<520A5132.6090608@allmail.net> <20130814062041.GB12779@dastard>
+	<520BAE48.1020605@allmail.net> <520D0D5D.4000309@sandeen.net>
+	<520D162B.5060901@allmail.net>
+In-Reply-To: <520D162B.5060901@allmail.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,78 +27,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>
+To: Michael Maier <m1278468@allmail.net>
+Cc: xfs@oss.sgi.com
 
-Change permission check for setting ACL to use inode_owner_or_capable()
-which will additionally allow a CAP_FOWNER user in a user namespace to
-be able to set an ACL on an inode covered by the user namespace mapping.
+On 8/15/13 12:55 PM, Michael Maier wrote:
+> Eric Sandeen wrote:
+>> On 8/14/13 11:20 AM, Michael Maier wrote:
+>>> Dave Chinner wrote:
+>>
+>> ...
+>>
+>>>> If it makes you feel any better, the bug that caused this had been
+>>>> in the code for 15+ years and you are the first person I know of to
+>>>> have ever hit it....
+>>>
+>>> Probably the second one :-) See
+>>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/54428
+>>>
+>>>> xfs_repair doesn't appear to have any checks in it to detect this
+>>>> situation or repair it - there are some conditions for zeroing the
+>>>> unused parts of a superblock, but they are focussed around detecting
+>>>> and correcting damage caused by a buggy Irix 6.5-beta mkfs from 15
+>>>> years ago.
+>>>
+>>> The _big problem_ is: xfs_repair not just doesn't repair it, but it
+>>> _causes data loss_ in some situations!
+>>>
+>>
+>> So as far as I can tell at this point, a few things have happened to
+>> result in this unfortunate situation.  Congratulations, you hit a
+>> perfect storm.  :(
+> 
+> I can appease you - as it "only" hit my backup device and because I
+> noticed the problem before I really needed it: I didn't hit any data
+> loss over all, because the original data is ok and I repeated the backup
+> w/ the fixed FS now!
+> 
+>> 1) prior resize operations populated unused portions of backup sbs w/ junk
+>> 2) newer kernels fail to verify superblocks in this state
+>> 3) during your growfs under 3.10, that verification failure aborted
+>>    backup superblock updates, leaving many unmodified
+>> 4a) xfs_repair doesn't find or fix the junk in the backup sbs, and
+>> 4b) when running, it looks for the superblocks which are "most matching"
+>>     other superblocks on the disk, and takes that version as correct.
+>>
+>> So you had 16 superblocks (0-15) which were correct after the growfs.
+>> But 16 didn't verify and was aborted, so nothing was updated after that.
+>> This means that 16 onward have the wrong number of AGs and disk blocks;
+>> i.e. they are the pre-growfs size, and there are 26 of them.
+>>
+>> Today, xfs_repair sees this 26-to-16 vote, and decides that the 26
+>> matching superblocks "win," rewrites the first superblock with this
+>> geometry, and uses that to verify the rest of the filesytem.  Hence
+>> anything post-growfs looks out of bounds, and gets nuked.
+>>
+>> So right now, I'm thinking that the "proper geometry" heuristic should
+>> be adjusted, but how to do that in general, I'm not sure.  Weighting
+>> sb 0 heavily, especially if it matches many subsequent superblocks,
+>> seems somewhat reasonable.
+> 
+> This would have been my next question! I repaired it w/ the git
+> xfs_repair on the already reduced to original size FS. I think, if I
+> would have done the same w/ the grown FS, the FS most probably would be
+> reduced to the size before the growing.
+> 
+> Wouldn't it be better to not grow at all if there are problems detected?
+> Means: Don't do the check after the growing, but before? Ok, I could
+> have done it myself ... . From now on, I will do it like this!
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
-Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
----
- fs/xfs/xfs_acl.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+well, see the next couple patches I'm about to send to the list ... ;)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 2f77db8..6951896 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -70,14 +70,15 @@ xfs_acl_from_disk(
- 
- 		switch (acl_e->e_tag) {
- 		case ACL_USER:
-+			acl_e->e_uid = xfs_uid_to_kuid(be32_to_cpu(ace->ae_id));
-+			break;
- 		case ACL_GROUP:
--			acl_e->e_id = be32_to_cpu(ace->ae_id);
-+			acl_e->e_gid = xfs_gid_to_kgid(be32_to_cpu(ace->ae_id));
- 			break;
- 		case ACL_USER_OBJ:
- 		case ACL_GROUP_OBJ:
- 		case ACL_MASK:
- 		case ACL_OTHER:
--			acl_e->e_id = ACL_UNDEFINED_ID;
- 			break;
- 		default:
- 			goto fail;
-@@ -103,7 +104,18 @@ xfs_acl_to_disk(struct xfs_acl *aclp, const struct posix_acl *acl)
- 		acl_e = &acl->a_entries[i];
- 
- 		ace->ae_tag = cpu_to_be32(acl_e->e_tag);
--		ace->ae_id = cpu_to_be32(acl_e->e_id);
-+		switch (acl_e->e_tag) {
-+		case ACL_USER:
-+			ace->ae_id = cpu_to_be32(xfs_kuid_to_uid(acl_e->e_uid));
-+			break;
-+		case ACL_GROUP:
-+			ace->ae_id = cpu_to_be32(xfs_kgid_to_gid(acl_e->e_gid));
-+			break;
-+		default:
-+			ace->ae_id = cpu_to_be32(ACL_UNDEFINED_ID);
-+			break;
-+		}
-+
- 		ace->ae_perm = cpu_to_be16(acl_e->e_perm);
- 	}
- }
-@@ -362,7 +374,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 		return -EINVAL;
- 	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
- 		return value ? -EACCES : 0;
--	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
-+	if (!inode_owner_or_capable(inode))
- 		return -EPERM;
- 
- 	if (!value)
--- 
-1.8.1.4
+but a check prior wouldn't have helped you, because repair didn't detect
+the problem that growfs choked on.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
