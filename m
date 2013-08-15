@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E1DEC7F51
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:50:12 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0FB847F55
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 12:04:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CAF7B8F8040
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 09:50:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gFyEri2xsZVnk7T2 for <xfs@oss.sgi.com>;
-	Thu, 15 Aug 2013 09:50:11 -0700 (PDT)
-Message-ID: <520D06C0.3040207@sandeen.net>
-Date: Thu, 15 Aug 2013 11:50:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8383EAC003
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 10:04:49 -0700 (PDT)
+Received: from mx1.vr-web.de (mx0.vr-web.de [195.200.35.198]) by cuda.sgi.com
+	with ESMTP id kHHxEq0a0jfhi8Wj for <xfs@oss.sgi.com>;
+	Thu, 15 Aug 2013 10:04:46 -0700 (PDT)
+Message-ID: <520D0A15.1050304@allmail.net>
+Date: Thu, 15 Aug 2013 19:04:21 +0200
+From: Michael Maier <m1278468@allmail.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-49-git-send-email-david@fromorbit.com>
-	<51F80FA8.4060304@sgi.com> <20130812005905.GK12779@dastard>
-	<5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
-	<520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
-	<20130814184729.GA4604@sgi.com>
-In-Reply-To: <20130814184729.GA4604@sgi.com>
+Subject: Re: [PATCH] xfs_repair: zero out unused parts of superblocks
+References: <520C3C60.3090500@redhat.com>
+In-Reply-To: <520C3C60.3090500@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,131 +23,293 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Geoffrey Wehrman <gwehrman@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 8/14/13 1:47 PM, Geoffrey Wehrman wrote:
-> On Wed, Aug 14, 2013 at 05:50:42PM +1000, Dave Chinner wrote:
-> | On Tue, Aug 13, 2013 at 10:42:32AM -0500, Mark Tinguely wrote:
-> | > On 08/12/13 19:50, Dave Chinner wrote:
-> | > >On Mon, Aug 12, 2013 at 08:25:23AM -0500, Mark Tinguely wrote:
-> | > >>On 08/11/13 19:59, Dave Chinner wrote:
-> | > >>>On Tue, Jul 30, 2013 at 02:10:32PM -0500, Mark Tinguely wrote:
-> | > >>>>On 07/19/13 01:25, Dave Chinner wrote:
-> | > >>>>>From: Dave Chinner<dchinner@redhat.com>
-> | > >>>>>
-> | > >>>>>Add support for the file type field in directory entries so that
-> | > >>>>>readdir can return the type of the inode the dirent points to to
-> | > >>>>>userspace without first having to read the inode off disk.
-> | .....
-> | > >>>>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> | > >>>>>---
-> | > >>>>>
-> | > >>>>
-> | > >>>>>+static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
-> | > >>>>>+{
-> | > >>>>>+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5&&
-> | > >>>>>+		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
-> | > >>>>>  }
-> | > >>>>>
-> | > >>>>
-> | > >>>>This feature should support inode version 2 and 3.
-> | > >>>
-> | > >>>Has nothing to do with the inode version number - it has to do with
-> | > >>>the directory structure being modified.
-> | > >>>
-> | > >>>We're changing the directory structure for CRCs, and this builds on
-> | > >>>top of that. It is essentially part of the V3 directory format, and
-> | > >>>should be treated as such. Suggesting that we retrofit and support a
-> | > >>>modified v2 directory format is close to insane - instead of only
-> | > >>>having to test v2 vs v3 directory formats, you're suggesting we
-> | > >>>support v2 vs v2+dtype vs v3 vs v3+dtype. We simply do not have the
-> | > >>>resources to adequately test and support such an explosion of
-> | > >>>filesystem configurations.
-> | > >>>
-> | > >>>We've had this discussion before - new on-disk features go into the
-> | > >>>v5 superblock format - the v4 superblock format from this point
-> | > >>>onwards is essentially legacy support from an upstream development
-> | > >>>perspective.
-> | ....
-> | > >>>That said, there's nothing to stop anyone from backporting such a
-> | > >>>feature to an older kernel and maintaining it themselves - it's open
-> | > >>>source software. But the idea that development should be constrained
-> | > >>>by having to support both old and new formats is wrong - the old v4
-> | > >>>format should be considered stable and we need think very hard about
-> | > >>>changing it at all now, especially as much of the development focus
-> | > >>>is now shifting to taking advantage of the additions to the v5
-> | > >>>format....
-> | > >>
-> | > >>I guess we need more time to argue this out. It is not going into
-> | > >>Linux 3.12 as a crc feature only.
-> | > >
-> | > >Seriously?
-> | > 
-> | > yes seriously.
-> | 
-> | Great, another random roadblock from the XFS maintainers to deal
-> | with.
-> 
-> The addition of the file type field to directory entries is a great
-> new feature.  Your implementation of adding a "hidden" byte to the name
-> field is especially clever.  This is a feature that can benefit both
-> dir2 and dir3 format filesystems and is completely independent of your
-> CRC and self describing metadata feature work.  I understand that you
-> are not interested in porting the capability to dir2 format filesystems
-> yourself and do not have the resources to provide the associated testing
-> and support.  Myself and others within SGI have discussed these issues,
-> and we are willing to take on the work ourselves rather than have this
-> feature go only into v5 superblock filesystems where the feature is only
-> accessible to those who are willing to risk using experimental code.
-> Given that SGI will be doing the work to support the file type field
-> in dir2 format filesystems, it doesn't make sense to add the code to
-> v5 filesystems until all of the work is complete as there could be
-> additional considerations for the on disk changes.
-> 
-> We also noted that this feature should not be added to the kernel until
-> userspace code is available to support this feature.  Specifically,
-> xfs_repair needs to validate and if needed repair the the file type field.
-> Also, tests are needed to validate the new functionality.  While I
-> expect that you will provide this support for v5 superblock and dir3
-> filesystems, one of us at SGI will extend the support to v4 superblock
-> and dir2 filesystems.
+Eric Sandeen wrote:
+> Prior to:
+> 1375cb65 xfs: growfs: don't read garbage for new secondary superblocks
+> =
 
-These requirements are very, very late in the process.  Dave's work has
-been discussed for a long time in public, with plenty of time for input
-and cooperation and coordination.
+> we ran the risk of allowing garbage in secondary superblocks
+> beyond the in-use sb fields.  With kernels 3.10 and beyond, the
+> verifiers will kick these out as invalid, but xfs_repair does
+> not detect or repair this condition.
+> =
 
-If the type field is critical to SGI on V4 superblocks, I'd have expected
-to see patches from SGI by now, either prior to, or in coordination with,
-Dave's work.  So it's hard for me to tell if this is a strategic requirement
-for you, or an effort to delay the CRC work which you seem to be uneasy with.
-Indeed, you floated this as a requirement many weeks (months?) ago, but as far
-as I know, no actual work or patches or proposals to implement it have been
-forthcoming from SGI.
+> There is superblock stale-data zeroing code, but it is under a
+> narrow conditional - the bug addressed in the above commit did not
+> meet that conditional.  So change this to check unconditionally.
+> =
 
-I apologize for not being up to speed on the technical details of what it
-might take, but I figure surely SGI is on top of it, if you're signing up
-to do the work.
+> Further, the checking code was looking at the in-memory
+> superblock buffer, which was zeroed prior to population, and
+> would therefore never possibly show any stale data beyond the
+> last up-rev superblock field.
+> =
 
-So I'd propose (and the guys in the trenches can bang this around) that if
-you are serious about this, you commit to producing patches which address your
-stated requirements without negatively affecting Dave's V5 design, with all
-necessary retesting, any of Dave's outstanding patches rebased as necessary,
-and everything ready for upstream integration on the original schedule.
+> So instead, check the disk buffer for this garbage condition.
+> =
 
-You've had plenty of time to do this, but it's not been done AFAICT.
-I think you need to get busy and back up your words with patches pronto, or drop
-the above stated requirement; perhaps there is a way to add the support to V4
-superblocks retroactively if you miss this window.
+> If we detect garbage, we must zero out both the in-memory sb
+> and the disk buffer; the former may contain unused data
+> in up-rev sb fields which will be written back out; the latter
+> may contain garbage beyond all fields, which won't be updated
+> when we translate the in-memory sb back to disk.
+> =
 
-There may well be technical hurdles I'm not aware of, but I think we need to see
-SGI's proposed implementation to be able to discuss that efficiently.
+> The V4 superblock case was zeroing out the sb_bad_features2
+> field; we also fix that to leave that field alone.
+> =
 
--Eric
+> Lastly, use offsetof() instead of the tortured (__psint_t)
+> casts & pointer math.
+> =
+
+> Reported-by: Michael Maier <m1278468@allmail.net>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> =
+
+> Michael - this will need slight tweaking to apply against
+> older xfsprogs.
+> =
+
+> Also:
+> =
+
+> With more of Dave's changes, I think we can swap out:
+> =
+
+> 		size =3D offsetof(xfs_sb_t, sb_lsn)
+> 			+ sizeof(sb->sb_lsn);
+> for
+> 		size =3D xfs_sb_info[XFS_SBS_LSN + 1].offset;
+> =
+
+> but this version is a bit easier to backport, and works in the
+> current git tree...
+
+I tested with current git tree and it worked as expected for me!
+Afterwards I was able to run xfs_growfs (from 3.1.11) w/o any problem.
+
+Please excuse me - forgot to set the english locale before starting.
+Hope you can guess what it should be in english :-).
+
+
+Phase 1 - Superblock finden und =FCberpr=FCfen...
+Schreiben ver=E4ndert prim=E4ren Superblock
+Phase 2 - ein internes Protokoll benutzen
+        - Null-Protokoll...
+        - freier Speicher und Inode-Karten des Dateisystems werden
+gescannt...
+ungenutzten Anteil des =BBprim=E4r=AB-Superblocks nullen (AG #0)
+prim=E4re/sekund=E4rer Superblock-1-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 1 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-2-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 2 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-3-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 3 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-4-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 4 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-5-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 5 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-6-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 6 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-7-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 7 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-8-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 8 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-9-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 9 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-10-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 10 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-11-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 11 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-12-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 12 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-13-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 13 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-14-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 14 wird zur=FCckgesetzt
+prim=E4re/sekund=E4rer Superblock-15-Konflikt - AG-Superblock-Geometrie-Info
+hat einen Konflikt mit der
+Dateisystem-Geometrie
+falscher sb f=FCr ag 15 wird zur=FCckgesetzt
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #16)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #17)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #18)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #19)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #20)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #21)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #22)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #23)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #24)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #25)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #26)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #27)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #28)
+xfs_sb_read_verify: XFS_CORRUPTION_ERROR
+ungenutzten Anteil des =BBsekund=E4r=AB-Superblocks nullen (AG #29)
+invalid start block 4096000 in record 1 of bno btree block 41/1
+invalid start block 4096000 in record 1 of cnt btree block 41/2
+agf_freeblks 3604481, gez=E4hlt 1 in ag 41
+agf_longest 3604480, gez=E4hlt 1 in ag 41
+sb_icount 0, counted 6528
+sb_ifree 0, counted 669
+sb_fdblocks 0, counted 80515
+        - Wurzel-Inode-St=FCck gefunden
+Phase 3 - f=FCr jedes AG...
+        - agi unverkn=FCpfte Listen werden gescannt und bereinigt...
+        - bekannte Inodes werden behandelt und Inode-Entdeckung wird
+durchgef=FChrt...
+        - agno =3D 0
+        - agno =3D 1
+        - agno =3D 2
+        - agno =3D 3
+        - agno =3D 4
+        - agno =3D 5
+        - agno =3D 6
+        - agno =3D 7
+        - agno =3D 8
+        - agno =3D 9
+        - agno =3D 10
+        - agno =3D 11
+        - agno =3D 12
+        - agno =3D 13
+        - agno =3D 14
+        - agno =3D 15
+        - agno =3D 16
+        - agno =3D 17
+        - agno =3D 18
+        - agno =3D 19
+        - agno =3D 20
+        - agno =3D 21
+        - agno =3D 22
+        - agno =3D 23
+        - agno =3D 24
+        - agno =3D 25
+        - agno =3D 26
+        - agno =3D 27
+        - agno =3D 28
+        - agno =3D 29
+        - agno =3D 30
+        - agno =3D 31
+        - agno =3D 32
+        - agno =3D 33
+        - agno =3D 34
+        - agno =3D 35
+        - agno =3D 36
+        - agno =3D 37
+        - agno =3D 38
+        - agno =3D 39
+        - agno =3D 40
+        - agno =3D 41
+        - neu entdeckte Inodes werden behandelt...
+Phase 4 - auf doppelte Bl=F6cke =FCberpr=FCfen...
+        - Liste mit doppeltem Ausma=DF wird eingerichtet...
+        - es wird gepr=FCft ob Inodes Blocks doppelt beanspruchen...
+        - agno =3D 0
+        - agno =3D 2
+        - agno =3D 1
+        - agno =3D 4
+        - agno =3D 3
+        - agno =3D 6
+        - agno =3D 7
+        - agno =3D 5
+        - agno =3D 8
+        - agno =3D 9
+        - agno =3D 10
+        - agno =3D 11
+        - agno =3D 12
+        - agno =3D 13
+        - agno =3D 14
+        - agno =3D 15
+        - agno =3D 16
+        - agno =3D 17
+        - agno =3D 18
+        - agno =3D 19
+        - agno =3D 20
+        - agno =3D 21
+        - agno =3D 22
+        - agno =3D 23
+        - agno =3D 24
+        - agno =3D 25
+        - agno =3D 26
+        - agno =3D 27
+        - agno =3D 29
+        - agno =3D 30
+        - agno =3D 28
+        - agno =3D 31
+        - agno =3D 33
+        - agno =3D 32
+        - agno =3D 34
+        - agno =3D 35
+        - agno =3D 36
+        - agno =3D 38
+        - agno =3D 37
+        - agno =3D 40
+        - agno =3D 39
+        - agno =3D 41
+Phase 5 - AG-K=F6pfe und B=E4ume werden erneut gebildet...
+        - Superblock wird zur=FCckgesetzt...
+Phase 6 - Inode-Verbindbarkeit wird gepr=FCft...
+        - Inhalte der Echtzeit-Bitmaps und Zusammenfassungs-Inodes
+werden zur=FCckgesetzt
+        - Dateisystem wird durchquert ...
+        - durchqueren beendet ...
+        - nicht verbundene Inodes werden nach lost+found verschoben ...
+Phase 7 - Verweisanzahl wird gepr=FCft und berichtigt...
+erledigt
+
+
+Thanks,
+kind regards,
+Michael
 
 _______________________________________________
 xfs mailing list
