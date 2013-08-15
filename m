@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D49567F54
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B5C07304053
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:10 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 265257F69
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EA5E58F8074
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:17 -0700 (PDT)
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v8 0/7] userns: Convert xfs to use kuid_t/kgid_t where
-	appropriate
-Date: Thu, 15 Aug 2013 14:07:57 -0400
-Message-Id: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+Subject: [PATCH v8 3/7] xfs: ioctl check for capabilities in the current user
+	namespace
+Date: Thu, 15 Aug 2013 14:08:00 -0400
+Message-Id: <1376590084-12888-4-git-send-email-dwight.engen@oracle.com>
+In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,77 +26,70 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Ben Myers <bpm@sgi.com>
+Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>
 
-Hi All,
+Use inode_capable() to check if SUID|SGID bits should be cleared to match
+similar check in inode_change_ok().
 
-This patchset adds USER_NS support to XFS. It has been rebased on top
-of 2c2bcc07 git://oss.sgi.com/xfs/xfs.git master branch.
+The check for CAP_LINUX_IMMUTABLE was not modified since all other file
+systems also check against init_user_ns rather than current_user_ns.
 
-The patches do not convert the id's returned from bulkstat, since bulkstat
-cannot be called from inside a userns right now anyway since the caller
-must be CAP_SYS_ADMIN in init_user_ns. Similar checks ensure that
-open_by_handle, and changing of projid can also only be called from
-init_user_ns.
+Only allow changing of projid from init_user_ns.
 
-Changes since v7 patchset
-- 0003 only allow setting of projid from init_user_ns
-- 0006 change readonly check from IS_RDONLY to xfs style
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c  | 11 +++++++++--
+ kernel/capability.c |  1 +
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-Changes since v6 patchset (addressing Dave's comments)
-- 0006 just do a capable(CAP_SYS_ADMIN) check for XFS_IOC_FREE_EOFBLOCKS
-
-Changes since v5 patchset (addressing Brian's comments,
-only 0005 and 0006 are changed):
- - 0005 put all eofblocks validation in xfs_fs_eofblocks_from_user()
- - 0006 don't export internal flag, add K to internal flag name,
-   start internal flags bits at msb (with the intention that other internal
-   flags would be in descending order) and ensure that it doesn't
-accidentally
-   collide with external flags
-
-Changes since v4 patchset (addressing Dave's comments):
- - add parenthesis in if with binary and logical and (EOFBLOCKS flags)
- - rename xfs_fs_eofblocks_to_internal -> xfs_fs_eofblocks_from_user and
-   move conversion validation into it
- - fix negative error returns from XFS_IOC_FREE_EOFBLOCKS
- - add check for read-only filesystem to XFS_IOC_FREE_EOFBLOCKS
-
-Changes since v3 patchset:
- - export inode_capable() for building xfs as a module
- - implement Brian's proposal for an internal flag to indicate to
-   xfs_inode_free_eofblocks() that it should do a permission check.
-   ioctl callers will always set this flag, which is simpler than
-   making them specify XFS_EOF_FLAGS_UID or XFS_EOF_FLAGS_GID,
-   internal callers can leave it unset so no permission checking is
-   done
- - take Brian's suggestion on moving the policy from the conversion
-   function into the ioctl code, and moving stuff to xfs_icache.h
-
-Dwight Engen (7):
-  xfs: create wrappers for converting kuid_t to/from uid_t
-  xfs: convert kuid_t to/from uid_t in ACLs
-  xfs: ioctl check for capabilities in the current user namespace
-  xfs: convert kuid_t to/from uid_t for internal structures
-  xfs: create internal eofblocks structure with kuid_t types
-  xfs: add capability check to free eofblocks ioctl
-  enable building user namespace with xfs
-
- fs/xfs/xfs_acl.c     | 20 ++++++++++++++++----
- fs/xfs/xfs_fs.h      |  2 +-
- fs/xfs/xfs_icache.c  | 12 ++++++------
- fs/xfs/xfs_icache.h  | 43 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.c   |  9 +++++----
- fs/xfs/xfs_ioctl.c   | 35 +++++++++++++++++++++--------------
- fs/xfs/xfs_iops.c    | 38 ++++++++++++++++++++------------------
- fs/xfs/xfs_linux.h   | 26 ++++++++++++++++++++++++++
- fs/xfs/xfs_qm.c      | 10 +++++-----
- fs/xfs/xfs_quota.h   | 11 ++++++-----
- fs/xfs/xfs_symlink.c |  7 +++++--
- init/Kconfig         | 13 -------------
- kernel/capability.c  |  1 +
- 13 files changed, 155 insertions(+), 72 deletions(-)
-
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index e9c17e2..999c1ef 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1015,15 +1015,22 @@ xfs_ioctl_setattr(
+ 	 * to the file owner ID, except in cases where the
+ 	 * CAP_FSETID capability is applicable.
+ 	 */
+-	if (current_fsuid() != ip->i_d.di_uid && !capable(CAP_FOWNER)) {
++	if (!inode_owner_or_capable(VFS_I(ip))) {
+ 		code = XFS_ERROR(EPERM);
+ 		goto error_return;
+ 	}
+ 
+ 	/*
+ 	 * Do a quota reservation only if projid is actually going to change.
++	 * Only allow changing of projid from init_user_ns since it is a
++	 * non user namespace aware identifier.
+ 	 */
+ 	if (mask & FSX_PROJID) {
++		if (current_user_ns() != &init_user_ns) {
++			code = XFS_ERROR(EINVAL);
++			goto error_return;
++		}
++
+ 		if (XFS_IS_QUOTA_RUNNING(mp) &&
+ 		    XFS_IS_PQUOTA_ON(mp) &&
+ 		    xfs_get_projid(ip) != fa->fsx_projid) {
+@@ -1137,7 +1144,7 @@ xfs_ioctl_setattr(
+ 		 * cleared upon successful return from chown()
+ 		 */
+ 		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID))
++		    !inode_capable(VFS_I(ip), CAP_FSETID))
+ 			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+ 
+ 		/*
+diff --git a/kernel/capability.c b/kernel/capability.c
+index f6c2ce5..a4b6744 100644
+--- a/kernel/capability.c
++++ b/kernel/capability.c
+@@ -464,3 +464,4 @@ bool inode_capable(const struct inode *inode, int cap)
+ 
+ 	return ns_capable(ns, cap) && kuid_has_mapping(ns, inode->i_uid);
+ }
++EXPORT_SYMBOL(inode_capable);
 -- 
 1.8.1.4
 
