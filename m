@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 49EFD7F3F
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 00:59:39 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 641887CBE
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 05:10:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D4C8AAC002
-	for <xfs@oss.sgi.com>; Wed, 14 Aug 2013 22:59:35 -0700 (PDT)
-Message-ID: <520C6E39.7030501@redhat.com>
-Date: Thu, 15 Aug 2013 06:59:21 +0100
-From: Ric Wheeler <rwheeler@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 34F75304070
+	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 03:10:26 -0700 (PDT)
+Message-ID: <520CA923.4060409@oracle.com>
+Date: Thu, 15 Aug 2013 18:10:43 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-49-git-send-email-david@fromorbit.com>
-	<51F80FA8.4060304@sgi.com> <20130812005905.GK12779@dastard>
-	<5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
-	<520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
-	<20130814184729.GA4604@sgi.com>
-In-Reply-To: <20130814184729.GA4604@sgi.com>
+Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
+References: <20130815055338.GC23580@elgon.mountain>
+In-Reply-To: <20130815055338.GC23580@elgon.mountain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,122 +20,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Geoffrey Wehrman <gwehrman@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 08/14/2013 07:47 PM, Geoffrey Wehrman wrote:
-> On Wed, Aug 14, 2013 at 05:50:42PM +1000, Dave Chinner wrote:
-> | On Tue, Aug 13, 2013 at 10:42:32AM -0500, Mark Tinguely wrote:
-> | > On 08/12/13 19:50, Dave Chinner wrote:
-> | > >On Mon, Aug 12, 2013 at 08:25:23AM -0500, Mark Tinguely wrote:
-> | > >>On 08/11/13 19:59, Dave Chinner wrote:
-> | > >>>On Tue, Jul 30, 2013 at 02:10:32PM -0500, Mark Tinguely wrote:
-> | > >>>>On 07/19/13 01:25, Dave Chinner wrote:
-> | > >>>>>From: Dave Chinner<dchinner@redhat.com>
-> | > >>>>>
-> | > >>>>>Add support for the file type field in directory entries so that
-> | > >>>>>readdir can return the type of the inode the dirent points to to
-> | > >>>>>userspace without first having to read the inode off disk.
-> | .....
-> | > >>>>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> | > >>>>>---
-> | > >>>>>
-> | > >>>>
-> | > >>>>>+static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
-> | > >>>>>+{
-> | > >>>>>+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5&&
-> | > >>>>>+		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
-> | > >>>>>  }
-> | > >>>>>
-> | > >>>>
-> | > >>>>This feature should support inode version 2 and 3.
-> | > >>>
-> | > >>>Has nothing to do with the inode version number - it has to do with
-> | > >>>the directory structure being modified.
-> | > >>>
-> | > >>>We're changing the directory structure for CRCs, and this builds on
-> | > >>>top of that. It is essentially part of the V3 directory format, and
-> | > >>>should be treated as such. Suggesting that we retrofit and support a
-> | > >>>modified v2 directory format is close to insane - instead of only
-> | > >>>having to test v2 vs v3 directory formats, you're suggesting we
-> | > >>>support v2 vs v2+dtype vs v3 vs v3+dtype. We simply do not have the
-> | > >>>resources to adequately test and support such an explosion of
-> | > >>>filesystem configurations.
-> | > >>>
-> | > >>>We've had this discussion before - new on-disk features go into the
-> | > >>>v5 superblock format - the v4 superblock format from this point
-> | > >>>onwards is essentially legacy support from an upstream development
-> | > >>>perspective.
-> | ....
-> | > >>>That said, there's nothing to stop anyone from backporting such a
-> | > >>>feature to an older kernel and maintaining it themselves - it's open
-> | > >>>source software. But the idea that development should be constrained
-> | > >>>by having to support both old and new formats is wrong - the old v4
-> | > >>>format should be considered stable and we need think very hard about
-> | > >>>changing it at all now, especially as much of the development focus
-> | > >>>is now shifting to taking advantage of the additions to the v5
-> | > >>>format....
-> | > >>
-> | > >>I guess we need more time to argue this out. It is not going into
-> | > >>Linux 3.12 as a crc feature only.
-> | > >
-> | > >Seriously?
-> | >
-> | > yes seriously.
-> |
-> | Great, another random roadblock from the XFS maintainers to deal
-> | with.
+On 08/15/2013 01:53 PM, Dan Carpenter wrote:
+
+> The "di_size" variable comes from the disk and it's a signed 64 bit.
+> We check the upper limit but we should check for negative numbers as
+> well.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+> index 123971b..849fc70 100644
+> --- a/fs/xfs/xfs_inode_fork.c
+> +++ b/fs/xfs/xfs_inode_fork.c
+> @@ -167,7 +167,8 @@ xfs_iformat_fork(
+>  			}
+>  
+>  			di_size = be64_to_cpu(dip->di_size);
+> -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+> +			if (unlikely(di_size < 0 ||
+
+But the di_size is initialized to ZERO while allocating a new inode on disk.
+I wonder if that is better to ASSERT in this case because the current check
+is used to make sure that the item is inlined, or we don't need it at all.
+
+> +				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+>  				xfs_warn(ip->i_mount,
+>  			"corrupt inode %Lu (bad size %Ld for local inode).",
+>  					(unsigned long long) ip->i_ino,
 >
-> The addition of the file type field to directory entries is a great
-> new feature.  Your implementation of adding a "hidden" byte to the name
-> field is especially clever.  This is a feature that can benefit both
-> dir2 and dir3 format filesystems and is completely independent of your
-> CRC and self describing metadata feature work.  I understand that you
-> are not interested in porting the capability to dir2 format filesystems
-> yourself and do not have the resources to provide the associated testing
-> and support.  Myself and others within SGI have discussed these issues,
-> and we are willing to take on the work ourselves rather than have this
-> feature go only into v5 superblock filesystems where the feature is only
-> accessible to those who are willing to risk using experimental code.
-> Given that SGI will be doing the work to support the file type field
-> in dir2 format filesystems, it doesn't make sense to add the code to
-> v5 filesystems until all of the work is complete as there could be
-> additional considerations for the on disk changes.
->
-> We also noted that this feature should not be added to the kernel until
-> userspace code is available to support this feature.  Specifically,
-> xfs_repair needs to validate and if needed repair the the file type field.
-> Also, tests are needed to validate the new functionality.  While I
-> expect that you will provide this support for v5 superblock and dir3
-> filesystems, one of us at SGI will extend the support to v4 superblock
-> and dir2 filesystems.
 
-Hi Geoffrey,
-
-As much as the community admires your brave willingness to protect us from code 
-that was entirely developed by Dave, that is not really how the upstream kernel 
-works.
-
-Dave is pretty much without equal in moving XFS along these days and this is a 
-key feature that we are depending on.
-
-Please don't try to create hurdles to other people getting work into upstream, 
-that kind of thing will lead to a fork of the XFS code base and ultimately that 
-will be harder for all of us.
-
-It sounds like what you really should look at doing is to work inside of SGI to 
-create a private, internal branch of the upstream code that you deliver in your 
-product. Upstream code is all about innovation and new features, we don't let 
-vendor specific, non-upstream branches become the place for hardening our code.
-
-Best regards,
-
-Ric
-
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
