@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C6A817F53
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 17:57:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 604E8AC003
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 15:57:17 -0700 (PDT)
-Received: from mail-ob0-f176.google.com (mail-ob0-f176.google.com
-	[209.85.214.176]) by cuda.sgi.com with ESMTP id
-	NVPAqPKeAIEKf4qo (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 18 Aug 2013 15:57:16 -0700 (PDT)
-Received: by mail-ob0-f176.google.com with SMTP id uz19so4216823obc.21
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 15:57:15 -0700 (PDT)
-Message-ID: <52115146.6070507@gmail.com>
-Date: Sun, 18 Aug 2013 18:57:10 -0400
-From: Joe Landman <joe.landman@gmail.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1492E7CBF
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 18:21:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0146B8F8033
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 16:21:37 -0700 (PDT)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	8mKgumuYS3aEFJq2 for <xfs@oss.sgi.com>;
+	Sun, 18 Aug 2013 16:21:36 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id ED8E11F00526
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 19:21:35 -0400 (EDT)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id 5LajqesYYV0h for <xfs@oss.sgi.com>;
+	Sun, 18 Aug 2013 19:21:31 -0400 (EDT)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id 897AA1F00523
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 19:21:31 -0400 (EDT)
+Date: Sun, 18 Aug 2013 19:21:31 -0400 (EDT)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <24872711.4036.1376868091485.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <52115146.6070507@gmail.com>
 Subject: Re: XFS recovery resumes...
-References: <240990.4028.1376863911761.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <240990.4028.1376863911761.JavaMail.root@benjamin.baylink.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,94 +33,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 08/18/2013 06:11 PM, Jay Ashworth wrote:
-> ----- Original Message -----
->> From: "Joe Landman" <joe.landman@gmail.com>
->
->>> You need at least 497MB RAM to run with prefetching enabled.
->>
->> ^^^^^
->>
->> This is 1/2 GB ram, and you didn't specify the memory options of the
->> xfs_repair ... so I'm going to guess at this point that you ran out of
->> ram. Paging while running xfs_repair is no fun.
->>
->> How much ram do you have in this box? Next question is, is this an ECC
->> memory box?
->
-> 512M.  It's a *very* old KT6V based board, and when we tried to expand
-> it several years back, it went bat-guano with any more than half a gig.
+----- Original Message -----
+> From: "Joe Landman" <joe.landman@gmail.com>
 
-Ahhh .... ok.  Got it.
+> Ok. I've had power supplies take down memory in the past. You might be
+> hitting a bad memory cell courtesy of the PS.
 
+Possibly, though see below.
 
->
->> Not sure if you are hitting a bug as much as running into something
->> else like a hardware limit (RAM) or a memory stick issue.
->
-> Well, the upstream cause was a 7 year old Antec power supply that
-> finally died, about a month ago, slowly.
+> >> Do you have EDAC (or mcelog) on? Any errors from this?
+> >
+> > I don't have mcelog on, and no, the memory isn't registered, but a
+> > 4-pass run of Memtest+ came up clean, so I'm speculating that the
+> 
+> Not registered (which is just buffered), but ECC. ECC does a parity
+> computation on some number of bits, and provides you a rough "good/bad"
+> binary state of a particular area of memory. If the parity bits stored
+> don't match what is computed on read, then odds are that something is
+> wrong. Its not foolproof, but its a good mechanism to catch potential
+> errors.
 
-Ok.  I've had power supplies take down memory in the past.  You might be 
-hitting a bad memory cell courtesy of the PS.
+Sure.  In my experience, all ECC is registered/buffered, and no non-ECC
+is, so I use it as shorthand.  No possible chance this northbridge would
+do ECC, no.  :-)
 
->
->> Do you have EDAC (or mcelog) on? Any errors from this?
->
-> I don't have mcelog on, and no, the memory isn't registered, but a
-> 4-pass run of Memtest+ came up clean, so I'm speculating that the
+> We've had cases where Memtest(*) reported everything fine, yet I was
+> able to generate ECC errors in a few minutes by running a memory
+> intensive app. Memtest does do some hardware exercise, but its not
+> usually hitting memory the way apps do. That difference can be
+> significant. This is in part why the day job stopped using memtest for
+> testing a number of years ago. We now run heavy duty electronic
+> structure codes, and pi/e/... computations for burn in.
 
-Not registered (which is just buffered), but ECC.  ECC does a parity 
-computation on some number of bits, and provides you a rough "good/bad" 
-binary state of a particular area of memory.  If the parity bits stored 
-don't match what is computed on read, then odds are that something is 
-wrong.  Its not foolproof, but its a good mechanism to catch potential 
-errors.
+Fair point.  I did also run the non-+ version of Memtest, which I
+understand uses a different algorithm, and a couple other things
+I found on the UBCD, so I'm *relatively* confident I don't have a
+running RAM problem, though as you say, not 100%.
+ 
+> > *continuing* problem isn't hardware; I'm pretty sure it was just the
+> > failing 12V rail on the dying PS. I just have to clean up after it
+> > enough to get *one* of these 2 drives cleaned off, then I can make a
+> > new FS, and play musical files.
+> 
+> Ahhh ...
+> 
+> I was running a Plex server on an old machine for a while. I had to
+> shift over to a beefier box with ECC ram and more CPUs. Right now my
+> Plex server has 8 cpus, 24 GB RAM, and about 1TB of disk (old). Once
+> you start doing recoding on the fly (multi-resolution output), you
+> need the ram and processor power.
+> 
+> >
+> > Or, I may just go grab a 3TB external after all. :-)
+> 
+> If you do that, and you still hit the error, chances are you might
+> need to swap out your MB and CPU/RAM to something newer (not to mention the
+> PS). I'd recommend ECC based systems if at all possible. Xfs can and
+> will get very unhappy if bits are flipped on its data structures while
+> you are making changes to the file system.
 
-We've had cases where Memtest(*) reported everything fine, yet I was 
-able to generate ECC errors in a few minutes by running a memory 
-intensive app.  Memtest does do some hardware exercise, but its not 
-usually hitting memory the way apps do.  That difference can be 
-significant.  This is in part why the day job stopped using memtest for 
-testing a number of years ago.  We now run heavy duty electronic 
-structure codes, and pi/e/... computations for burn in.
+As it happens, Dave helped me clean up a mess 4 or 5 years ago, where
+a *wire opened up* on the PATA cable, and all my data structures had
+a missing bit.  Ghod was that a mess.
 
-> *continuing* problem isn't hardware; I'm pretty sure it was just the
-> failing 12V rail on the dying PS.  I just have to clean up after it
-> enough to get *one* of these 2 drives cleaned off, then I can make a
-> new FS, and play musical files.
+We did end up getting the drive.  So assuming I can reliably read the
+big drive (I have a 3T, a 2T, and a 1T all with different problems),
+I'm going to move all the files from it to the new 3T I just bought,
+and then play musical files down the chain one at a time.
 
-Ahhh ...
+Thank ghod the new season hasn't started yet.  ;-)
 
-I was running a Plex server on an old machine for a while.  I had to 
-shift over to a beefier box with ECC ram and more CPUs.  Right now my 
-Plex server has 8 cpus, 24 GB RAM, and about 1TB of disk (old).  Once 
-you start doing recoding on the fly (multi-resolution output), you need 
-the ram and processor power.
+Thanks for the help, Joe. 
 
->
-> Or, I may just go grab a 3TB external after all.  :-)
+Oh, and the script that Stan was so worried about?  It's all 
+rm and mv commands.  5859 of them.
 
-If you do that, and you still hit the error, chances are you might need 
-to swap out your MB and CPU/RAM to something newer (not to mention the 
-PS).  I'd recommend ECC based systems if at all possible.  Xfs can and 
-will get very unhappy if bits are flipped on its data structures while 
-you are making changes to the file system.
-
---
-
-Joe
-
->
-> Cheers,
-> -- jra
->
+Cheers,
+-- jra
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
 
 _______________________________________________
 xfs mailing list
