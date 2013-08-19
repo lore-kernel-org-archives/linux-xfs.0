@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0B6A27F98
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 14:37:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CF9AE304043
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:36:56 -0700 (PDT)
-Received: from mail-qa0-f45.google.com (mail-qa0-f45.google.com
-	[209.85.216.45]) by cuda.sgi.com with ESMTP id aeilQMyA4ZVCltGF
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:36:52 -0700 (PDT)
-Received: by mail-qa0-f45.google.com with SMTP id l18so2030544qak.4
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:36:51 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6FD507F99
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 14:54:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5AF968F8039
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:54:32 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id m1otfJl4vPd1UQIj
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:54:28 -0700 (PDT)
+Message-ID: <521277F0.5060906@hardwarefreak.com>
+Date: Mon, 19 Aug 2013 14:54:24 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <52126391.8050800@sgi.com>
-References: <1376277303-29455-1-git-send-email-zwu.kernel@gmail.com>
-	<1376277303-29455-7-git-send-email-zwu.kernel@gmail.com>
-	<52126391.8050800@sgi.com>
-Date: Tue, 20 Aug 2013 03:36:51 +0800
-Message-ID: <CAEH94LhPii3r06=Sn54L4z=3Vhz0=LZDamV685D0ti2Rg5vt_g@mail.gmail.com>
-Subject: Re: [PATCH 06/12] xfs: fix the comment of
-	xfs_extent_busy_update_extent()
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: Re: [PATCH] xfstests: 091, 240, 268 fix for xfs on 4k sector hard
+	drive
+References: <20130724143208.34b77534@oracle.com>
+	<20130724235739.GR19986@dastard>
+	<51F0AB56.7020705@hardwarefreak.com> <520D1BD8.9090208@gmail.com>
+	<520D64A9.1060209@hardwarefreak.com>
+In-Reply-To: <520D64A9.1060209@hardwarefreak.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,49 +32,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
+To: stan@hardwarefreak.com
+Cc: Ric Wheeler <ricwheeler@gmail.com>, Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
 
-On Tue, Aug 20, 2013 at 2:27 AM, Mark Tinguely <tinguely@sgi.com> wrote:
-> On 08/11/13 22:14, zwu.kernel@gmail.com wrote:
+Hi Ric,
+
+Can you point me in the general direction of these native 4K sector SAS
+drives?  A vendor at least?  Thus far I'm unable to locate them.
+
+Thanks.
+
+Stan
+
+
+On 8/15/2013 6:30 PM, Stan Hoeppner wrote:
+> On 8/15/2013 1:20 PM, Ric Wheeler wrote:
+>> On 07/25/2013 05:36 AM, Stan Hoeppner wrote:
+>>> AFAIK there are no native 4K sector drives on the market yet.  All of
+>>> the currently shipping models with physical 4K sectors are "Advanced
+>>> Format" drives.  The Advanced Format standard specifies 4K physical
+>>> sectors -internal- to the drive, but with traditional 512B LBA
+>>> addressing.
 >>
->> From: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
->>
->> Signed-off-by: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
->> ---
->>   fs/xfs/xfs_extent_busy.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
->> index 85e9f87..4ad8fee 100644
->> --- a/fs/xfs/xfs_extent_busy.c
->> +++ b/fs/xfs/xfs_extent_busy.c
->> @@ -147,7 +147,7 @@ xfs_extent_busy_search(
->>    * extent.  If the overlap covers the beginning, the end, or all of the
->> busy
->>    * extent, the overlapping portion can be made unbusy and used for the
->>    * allocation.  We can't split a busy extent because we can't modify a
->> - * transaction/CIL context busy list, but we can update an entries block
->> + * transaction/CIL context busy list, but we can update an entrie's block
->
->
->                                                               ^^^^^^
->                                                  changed that to entry's
-Good catch, thanks.
->
->>    * number or length.
->>    *
->>    * Returns true if the extent can safely be reused, or false if the
->> search
->
->
-
-
-
--- 
-Regards,
-
-Zhi Yong Wu
+>> There are some (SAS) drives that do only 4K sectors. Not sure how
+>> popular they are,
+> 
+> Google returns nothing on native 4KB drives at any drive vendor site,
+> other than two transition documents at Seagate and Toshiba extolling the
+> benefits of 512e technology.
+> 
+> I can't find a press release.  If native 4KB drives are indeed
+> available, the vendors sure don't appear too eager to tell the world
+> about them.  The drives of which you speak, are these engineering
+> samples, OEM production only (EMC/IBM/etc), or general availability?
+> 
+> Which vendor makes the drives of which you speak?
 
 _______________________________________________
 xfs mailing list
