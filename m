@@ -1,30 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1492E7CBF
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 18:21:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0146B8F8033
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 16:21:37 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8F6757F59
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 22:55:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A23A304032
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 20:55:24 -0700 (PDT)
 Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
 	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	8mKgumuYS3aEFJq2 for <xfs@oss.sgi.com>;
-	Sun, 18 Aug 2013 16:21:36 -0700 (PDT)
+	hzWYTtZwnHPYqOI2 for <xfs@oss.sgi.com>;
+	Sun, 18 Aug 2013 20:55:22 -0700 (PDT)
 Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id ED8E11F00526
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 19:21:35 -0400 (EDT)
+	by benjamin.baylink.com (Postfix) with ESMTP id 3FAA21F003F5
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 23:55:22 -0400 (EDT)
 Received: from benjamin.baylink.com ([127.0.0.1])
 	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id 5LajqesYYV0h for <xfs@oss.sgi.com>;
-	Sun, 18 Aug 2013 19:21:31 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id 897AA1F00523
-	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 19:21:31 -0400 (EDT)
-Date: Sun, 18 Aug 2013 19:21:31 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <24872711.4036.1376868091485.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <52115146.6070507@gmail.com>
-Subject: Re: XFS recovery resumes...
+	port 10024) with ESMTP id zoWmBprgEIRl for <xfs@oss.sgi.com>;
+	Sun, 18 Aug 2013 23:55:20 -0400 (EDT)
+Received: from 145-169-1-30.pools.spcsdns.net (66-87-123-145.pools.spcsdns.net
+	[66.87.123.145])
+	by benjamin.baylink.com (Postfix) with ESMTPSA id 5FE2E1F003E7
+	for <xfs@oss.sgi.com>; Sun, 18 Aug 2013 23:55:20 -0400 (EDT)
+References: <11558272.4016.1376861936621.JavaMail.root@benjamin.baylink.com>
+	<5211455B.3000409@hardwarefreak.com>
+In-Reply-To: <5211455B.3000409@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: Re: XFS recovery resumes...
+From: Jay Ashworth <jra@baylink.com>
+Date: Sun, 18 Aug 2013 23:55:18 -0400
+Message-ID: <6f8bb504-c786-4bc0-9327-ee58a40d99e2@email.android.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,96 +36,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9015677013621210074=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
------ Original Message -----
-> From: "Joe Landman" <joe.landman@gmail.com>
+--===============9015677013621210074==
+Content-Type: multipart/alternative; boundary="----G8X6HRAC0KEWMQ1WIFD7AIY4DDY0U2"
 
-> Ok. I've had power supplies take down memory in the past. You might be
-> hitting a bad memory cell courtesy of the PS.
+------G8X6HRAC0KEWMQ1WIFD7AIY4DDY0U2
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Possibly, though see below.
+Still the same outage from 2 weeks ago, Stan; my script had nothing to do with breaking the FSs. Was a zorched power supply, almost certainly. 
 
-> >> Do you have EDAC (or mcelog) on? Any errors from this?
-> >
-> > I don't have mcelog on, and no, the memory isn't registered, but a
-> > 4-pass run of Memtest+ came up clean, so I'm speculating that the
-> 
-> Not registered (which is just buffered), but ECC. ECC does a parity
-> computation on some number of bits, and provides you a rough "good/bad"
-> binary state of a particular area of memory. If the parity bits stored
-> don't match what is computed on read, then odds are that something is
-> wrong. Its not foolproof, but its a good mechanism to catch potential
-> errors.
+And in fact, after 32 years adminning *nix boxes for a living, yes, I do expect that if any userland program can /corrupt/ FS internals without twiddling with /dev/sdX, either the FS is broken or the hardware is.
 
-Sure.  In my experience, all ECC is registered/buffered, and no non-ECC
-is, so I use it as shorthand.  No possible chance this northbridge would
-do ECC, no.  :-)
-
-> We've had cases where Memtest(*) reported everything fine, yet I was
-> able to generate ECC errors in a few minutes by running a memory
-> intensive app. Memtest does do some hardware exercise, but its not
-> usually hitting memory the way apps do. That difference can be
-> significant. This is in part why the day job stopped using memtest for
-> testing a number of years ago. We now run heavy duty electronic
-> structure codes, and pi/e/... computations for burn in.
-
-Fair point.  I did also run the non-+ version of Memtest, which I
-understand uses a different algorithm, and a couple other things
-I found on the UBCD, so I'm *relatively* confident I don't have a
-running RAM problem, though as you say, not 100%.
- 
-> > *continuing* problem isn't hardware; I'm pretty sure it was just the
-> > failing 12V rail on the dying PS. I just have to clean up after it
-> > enough to get *one* of these 2 drives cleaned off, then I can make a
-> > new FS, and play musical files.
-> 
-> Ahhh ...
-> 
-> I was running a Plex server on an old machine for a while. I had to
-> shift over to a beefier box with ECC ram and more CPUs. Right now my
-> Plex server has 8 cpus, 24 GB RAM, and about 1TB of disk (old). Once
-> you start doing recoding on the fly (multi-resolution output), you
-> need the ram and processor power.
-> 
-> >
-> > Or, I may just go grab a 3TB external after all. :-)
-> 
-> If you do that, and you still hit the error, chances are you might
-> need to swap out your MB and CPU/RAM to something newer (not to mention the
-> PS). I'd recommend ECC based systems if at all possible. Xfs can and
-> will get very unhappy if bits are flipped on its data structures while
-> you are making changes to the file system.
-
-As it happens, Dave helped me clean up a mess 4 or 5 years ago, where
-a *wire opened up* on the PATA cable, and all my data structures had
-a missing bit.  Ghod was that a mess.
-
-We did end up getting the drive.  So assuming I can reliably read the
-big drive (I have a 3T, a 2T, and a 1T all with different problems),
-I'm going to move all the files from it to the new 3T I just bought,
-and then play musical files down the chain one at a time.
-
-Thank ghod the new season hasn't started yet.  ;-)
-
-Thanks for the help, Joe. 
-
-Oh, and the script that Stan was so worried about?  It's all 
-rm and mv commands.  5859 of them.
+In this case I'm quite certain it /was/ the hardware, and 85-90% confident it's fixed now.
 
 Cheers,
--- jra
+-jra
 -- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
+Sent from my Android phone with K-9 Mail. Please excuse my brevity.
+
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
+
+On 8/18/2013 4:38 PM, Jay Ashworth wrote:
+> I'm trying to dedupe the two large XFS filesystems on which I have DVR 
+> recordings, so that I can walk around amongst the available HDDs and create
+> new filesystems under everything.
+> 
+> Every time I rm a file, the filesystem blows up, and the driver shuts it
+> down. 
+> 
+> Some background:
+> 
+> At the moment, I have 2 devices, /dev/sdd1 mounted on /appl/media4, and
+> /dev/sda1 mounted on /appl/media5, and a large script, created by hand-
+> hacking the output of a perl dupe finder script.
+> 
+> The large script was mangled so that it would remove anything that was a 
+> dupe from media4, unless the file was an unlabeled lost+found on media5,
+> and had a name on media4. In that case, I removed the file on media5, and
+> then moved it from media4 to media5.
+> 
+> After the hand-hacking on the script, I sorted it to do all the rm's first,
+> and then all the mv's, to make sure free space when up before it went down.
+> 
+> And, of course, when I ran the script, it caused the XFS driver to cough and
+> die, leading to error 5s and gnashing of teeth.
+
+If this script is the catalyst of your XFS problems, it seems logical
+that you would include said script in your trouble report, yet you did
+not. It's a bit foolish to assume you can't break a Linux subsystem
+with a poorly written program and/or in combination with a platform that
+isn't up to the task being asked of it. As Joe mentioned having too
+little RAM could be part of this problem.
+
+-- 
+Stan
+
+
+
+------G8X6HRAC0KEWMQ1WIFD7AIY4DDY0U2
+Content-Type: text/html;
+ charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html><head></head><body>Still the same outage from 2 weeks ago, Stan; my script had nothing to do with breaking the FSs.  Was a zorched power supply, almost certainly. <br>
+<br>
+And in fact, after 32 years adminning *nix boxes for a living, yes, I do expect that if any userland program can /corrupt/ FS internals without twiddling with /dev/sdX, either the FS is broken or the hardware is.<br>
+<br>
+In this case I&#39;m quite certain it /was/ the hardware, and 85-90% confident it&#39;s fixed now.<br>
+<br>
+Cheers,<br>
+-jra<br>
+-- <br>
+Sent from my Android phone with K-9 Mail. Please excuse my brevity.<br><br><div class="gmail_quote">Stan Hoeppner &lt;stan@hardwarefreak.com&gt; wrote:<blockquote class="gmail_quote" style="margin: 0pt 0pt 0pt 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;">
+<pre style="white-space: pre-wrap; word-wrap:break-word; font-family: monospace">On 8/18/2013 4:38 PM, Jay Ashworth wrote:<br />&gt; I'm trying to dedupe the two large XFS filesystems on which I have DVR <br />&gt; recordings, so that I can walk around amongst the available HDDs and create<br />&gt; new filesystems under everything.<br />&gt; <br />&gt; Every time I rm a file, the filesystem blows up, and the driver shuts it<br />&gt; down.  <br />&gt; <br />&gt; Some background:<br />&gt; <br />&gt; At the moment, I have 2 devices, /dev/sdd1 mounted on /appl/media4, and<br />&gt; /dev/sda1 mounted on /appl/media5, and a large script, created by hand-<br />&gt; hacking the output of a perl dupe finder script.<br />&gt; <br />&gt; The large script was mangled so that it would remove anything that was a <br />&gt; dupe from media4, unless the file was an unlabeled lost+found on media5,<br />&gt; and had a name on media4.  In that case, I removed the file on media5, and<br />&gt
+ 
+ ; then
+moved it from media4 to media5.<br />&gt; <br />&gt; After the hand-hacking on the script, I sorted it to do all the rm's first,<br />&gt; and then all the mv's, to make sure free space when up before it went down.<br />&gt; <br />&gt; And, of course, when I ran the script, it caused the XFS driver to cough and<br />&gt; die, leading to error 5s and gnashing of teeth.<br /><br />If this script is the catalyst of your XFS problems, it seems logical<br />that you would include said script in your trouble report, yet you did<br />not.  It's a bit foolish to assume you can't break a Linux subsystem<br />with a poorly written program and/or in combination with a platform that<br />isn't up to the task being asked of it.  As Joe mentioned having too<br />little RAM could be part of this problem.<br /><br />-- <br />Stan<br /><br /><br /></pre></blockquote></div></body></html>
+------G8X6HRAC0KEWMQ1WIFD7AIY4DDY0U2--
+
+
+--===============9015677013621210074==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9015677013621210074==--
