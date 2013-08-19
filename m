@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 42BCB7F91
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 13:48:16 -0500 (CDT)
-Date: Mon, 19 Aug 2013 13:48:15 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
-Message-ID: <20130819184815.GA24096@sgi.com>
-References: <5208E243.9080403@sgi.com> <20130813005024.GS12779@dastard>
-	<520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
-	<20130814184729.GA4604@sgi.com> <520C6E39.7030501@redhat.com>
-	<20130815180400.GF3783@sgi.com> <520D4B1B.4080602@redhat.com>
-	<20130816140811.GA30422@sgi.com> <20130819052813.GA6023@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0B6A27F98
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 14:37:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CF9AE304043
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:36:56 -0700 (PDT)
+Received: from mail-qa0-f45.google.com (mail-qa0-f45.google.com
+	[209.85.216.45]) by cuda.sgi.com with ESMTP id aeilQMyA4ZVCltGF
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:36:52 -0700 (PDT)
+Received: by mail-qa0-f45.google.com with SMTP id l18so2030544qak.4
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 12:36:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130819052813.GA6023@dastard>
+In-Reply-To: <52126391.8050800@sgi.com>
+References: <1376277303-29455-1-git-send-email-zwu.kernel@gmail.com>
+	<1376277303-29455-7-git-send-email-zwu.kernel@gmail.com>
+	<52126391.8050800@sgi.com>
+Date: Tue, 20 Aug 2013 03:36:51 +0800
+Message-ID: <CAEH94LhPii3r06=Sn54L4z=3Vhz0=LZDamV685D0ti2Rg5vt_g@mail.gmail.com>
+Subject: Re: [PATCH 06/12] xfs: fix the comment of
+	xfs_extent_busy_update_extent()
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,28 +33,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
 
-On Mon, Aug 19, 2013 at 03:28:13PM +1000, Dave Chinner wrote:
-| Participation requires being open about what you are doing. Posting
-| designs and ideas for comment, communicating your vision for the
-| future, posting code early and often, etc. That enables others to
-| participate at every stage and means that problems/issues are caught
-| early and rejection/acceptance occurs long before final code is
-| written. That's the way open source software is developed and most
-| of the XFS developer community understand that.
+On Tue, Aug 20, 2013 at 2:27 AM, Mark Tinguely <tinguely@sgi.com> wrote:
+> On 08/11/13 22:14, zwu.kernel@gmail.com wrote:
+>>
+>> From: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
+>>
+>> Signed-off-by: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
+>> ---
+>>   fs/xfs/xfs_extent_busy.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+>> index 85e9f87..4ad8fee 100644
+>> --- a/fs/xfs/xfs_extent_busy.c
+>> +++ b/fs/xfs/xfs_extent_busy.c
+>> @@ -147,7 +147,7 @@ xfs_extent_busy_search(
+>>    * extent.  If the overlap covers the beginning, the end, or all of the
+>> busy
+>>    * extent, the overlapping portion can be made unbusy and used for the
+>>    * allocation.  We can't split a busy extent because we can't modify a
+>> - * transaction/CIL context busy list, but we can update an entries block
+>> + * transaction/CIL context busy list, but we can update an entrie's block
+>
+>
+>                                                               ^^^^^^
+>                                                  changed that to entry's
+Good catch, thanks.
+>
+>>    * number or length.
+>>    *
+>>    * Returns true if the extent can safely be reused, or false if the
+>> search
+>
+>
 
-This is a statement we can all agree on.
-
-| Except, it appears, the maintainers.
-
-Don't blame the maintainer.  I am not the maintainer.  Send your insults
-my way, not to the maintainer.
 
 
 -- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
+Regards,
+
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
