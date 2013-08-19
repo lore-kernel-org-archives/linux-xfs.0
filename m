@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 077BB7F5A
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 18:28:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C662B30406B
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 16:28:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 3o2EFQPXAeiExTKF for <xfs@oss.sgi.com>;
-	Mon, 19 Aug 2013 16:28:31 -0700 (PDT)
-Message-ID: <5212AA1D.3000809@sandeen.net>
-Date: Mon, 19 Aug 2013 18:28:29 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 949587F82
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 18:41:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1E3FEAC001
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 16:41:05 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	R5u7Jfb0T9alMnF2 for <xfs@oss.sgi.com>;
+	Mon, 19 Aug 2013 16:41:04 -0700 (PDT)
+Date: Tue, 20 Aug 2013 09:40:57 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
+Message-ID: <20130819234057.GB6023@dastard>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 	<20130819201940.516942026@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <20130819201940.516942026@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,40 +33,81 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 8/19/13 3:19 PM, Mark Tinguely wrote:
+On Mon, Aug 19, 2013 at 03:19:36PM -0500, Mark Tinguely wrote:
+> Add XFS superblock v4 support for the file type field in the
+> directory entry feature.
+> 
+> This support adds a feature bit for version 4 superblocks and
+> leaves the original superblock 5 incompatibility bit.
+> 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+>  fs/xfs/xfs_sb.h |   10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> Index: b/fs/xfs/xfs_sb.h
+> ===================================================================
+> --- a/fs/xfs/xfs_sb.h
+> +++ b/fs/xfs/xfs_sb.h
+> @@ -84,11 +84,13 @@ struct xfs_trans;
+>  #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
+>  #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
+>  #define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
+> +#define XFS_SB_VERSION2_FTYPE		0x00000200	/* inode type in dir */
+>  
+>  #define	XFS_SB_VERSION2_OKREALFBITS	\
+>  	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
+>  	 XFS_SB_VERSION2_ATTR2BIT	| \
+> -	 XFS_SB_VERSION2_PROJID32BIT)
+> +	 XFS_SB_VERSION2_PROJID32BIT	| \
+> +	 XFS_SB_VERSION2_FTYPE)
+>  #define	XFS_SB_VERSION2_OKSASHFBITS	\
+>  	(0)
+>  #define XFS_SB_VERSION2_OKREALBITS	\
+> @@ -631,8 +633,10 @@ static inline int xfs_sb_version_has_pqu
+>  
+>  static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+>  {
+> -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> -		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
+> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE)) ||
+> +	       (xfs_sb_version_hasmorebits(sbp) &&
+> +		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+>  }
 
-<an attachment that doesn't show up on reply, moving d_type support to v4 superblocks ;) >
+Ok, that's the 5 lines of kernel code I mentioned it would take to
+enable it. Like I said, the code to enable it is the simple part.
 
-Thanks, Mark!
+There's a fair bit more to getting it into releaseable state, though:
 
-Has you been able to test this at all?
+	- XFS_IOC_FSGEOM support to export the feature bit to
+	  userspace. It needs to be consistent across v4/v5
+	  filesystems, too.
+	- xfs_db support:
+		- needs to understand the feature bit in the version
+		  command
+		- both v4/v5 need to output the new feature bit text
+		  to say it's enabled
+		- all the dtype stuff is plumbed directly into the
+		  v3 directory decoding, not the v2 directory
+		  decoding. New display fields will have to be added
+		  to the v2 directory decoding and display made
+		  conditional on the XFS_SB_VERSION2_FTYPE bit being
+		  set.
+	- xfs_info needs to output the state of support, consistent
+	  for v4/v5
+	- mkfs.xfs needs a new command line option to turn the
+	  feature on, new output to indicate it's state. output
+	  needs to be consistent for v4/v5, but the command line
+	  option is only valid for v4 superblock filesystems
 
-I do still owe a promised xfstest - but for that, we'll need at least mkfs
-& xfs_repair support.
+Cheers,
 
-Did you patch up mkfs to do basic tests of your kernelspace patch?
-
-Talking to Dave, he reminds me of a few things this needs, if it's
-going to be complete & compatible on V4:
-
-* mkfs.xfs commandline option support & manpage updates
-* xfs_db support (including version friendly-text output)
-* XFS_IOC_FSGEOM support so that xfs_info can report the difference
-* xfs_repair needs to know that it's a valid feature on V4
-
-Some of that may overlap w/ things still needed on V5, but some is unique
-to allowing it on V4.
-
-Mark, do you plan to do some of those unique-to-V4 parts, too?
-
-As an aside: I would support getting this feature onto V4 superblocks,
-after we have confidence that all the bits are done, tested, and robust.
-
-I still would really like to see it go forward in parallel on V5, and
-not be blocked by the extra work needed for proper V4 integration.
-
-Thanks,
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
