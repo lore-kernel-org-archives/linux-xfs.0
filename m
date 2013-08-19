@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 234CD7F82
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 17:21:30 -0500 (CDT)
-Date: Mon, 19 Aug 2013 17:21:29 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: Register hotcpu notifier after initialization
-Message-ID: <20130819222129.GA5262@sgi.com>
-References: <1376945804-29508-1-git-send-email-richard@nod.at>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 077BB7F5A
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 18:28:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C662B30406B
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 16:28:32 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 3o2EFQPXAeiExTKF for <xfs@oss.sgi.com>;
+	Mon, 19 Aug 2013 16:28:31 -0700 (PDT)
+Message-ID: <5212AA1D.3000809@sandeen.net>
+Date: Mon, 19 Aug 2013 18:28:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1376945804-29508-1-git-send-email-richard@nod.at>
+Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
+References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
+	<20130819201940.516942026@sgi.com>
+In-Reply-To: <20130819201940.516942026@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,20 +28,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Richard Weinberger <richard@nod.at>
-Cc: elder@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 19, 2013 at 10:56:44PM +0200, Richard Weinberger wrote:
-> Currently the code initializizes mp->m_icsb_mutex and other things
-> _after_ register_hotcpu_notifier().
-> As the notifier takes mp->m_icsb_mutex it can happen
-> that it takes the lock before it's initialization.
-> 
-> Signed-off-by: Richard Weinberger <richard@nod.at>
+On 8/19/13 3:19 PM, Mark Tinguely wrote:
 
-Looks good.  Thanks Richard.
+<an attachment that doesn't show up on reply, moving d_type support to v4 superblocks ;) >
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Thanks, Mark!
+
+Has you been able to test this at all?
+
+I do still owe a promised xfstest - but for that, we'll need at least mkfs
+& xfs_repair support.
+
+Did you patch up mkfs to do basic tests of your kernelspace patch?
+
+Talking to Dave, he reminds me of a few things this needs, if it's
+going to be complete & compatible on V4:
+
+* mkfs.xfs commandline option support & manpage updates
+* xfs_db support (including version friendly-text output)
+* XFS_IOC_FSGEOM support so that xfs_info can report the difference
+* xfs_repair needs to know that it's a valid feature on V4
+
+Some of that may overlap w/ things still needed on V5, but some is unique
+to allowing it on V4.
+
+Mark, do you plan to do some of those unique-to-V4 parts, too?
+
+As an aside: I would support getting this feature onto V4 superblocks,
+after we have confidence that all the bits are done, tested, and robust.
+
+I still would really like to see it go forward in parallel on V5, and
+not be blocked by the extra work needed for proper V4 integration.
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
