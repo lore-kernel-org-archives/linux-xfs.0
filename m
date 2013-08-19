@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0DAE97F78
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 13:20:12 -0500 (CDT)
-Date: Mon, 19 Aug 2013 13:20:08 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v8 0/7] userns: Convert xfs to use kuid_t/kgid_t where
-	appropriate
-Message-ID: <20130819182008.GP12719@sgi.com>
-References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 49E407F8B
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 13:27:30 -0500 (CDT)
+Message-ID: <52126391.8050800@sgi.com>
+Date: Mon, 19 Aug 2013 13:27:29 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+Subject: Re: [PATCH 06/12] xfs: fix the comment of
+	xfs_extent_busy_update_extent()
+References: <1376277303-29455-1-git-send-email-zwu.kernel@gmail.com>
+	<1376277303-29455-7-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <1376277303-29455-7-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,24 +19,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: xfs@oss.sgi.com
+To: zwu.kernel@gmail.com
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On Thu, Aug 15, 2013 at 02:07:57PM -0400, Dwight Engen wrote:
-> This patchset adds USER_NS support to XFS. It has been rebased on top
-> of 2c2bcc07 git://oss.sgi.com/xfs/xfs.git master branch.
-> 
-> The patches do not convert the id's returned from bulkstat, since bulkstat
-> cannot be called from inside a userns right now anyway since the caller
-> must be CAP_SYS_ADMIN in init_user_ns. Similar checks ensure that
-> open_by_handle, and changing of projid can also only be called from
-> init_user_ns.
+On 08/11/13 22:14, zwu.kernel@gmail.com wrote:
+> From: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
+>
+> Signed-off-by: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
+> ---
+>   fs/xfs/xfs_extent_busy.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 85e9f87..4ad8fee 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -147,7 +147,7 @@ xfs_extent_busy_search(
+>    * extent.  If the overlap covers the beginning, the end, or all of the busy
+>    * extent, the overlapping portion can be made unbusy and used for the
+>    * allocation.  We can't split a busy extent because we can't modify a
+> - * transaction/CIL context busy list, but we can update an entries block
+> + * transaction/CIL context busy list, but we can update an entrie's block
 
-Thanks kindly Dwight.  I have applied this series.
+                                                               ^^^^^^
+						 changed that to entry's
+>    * number or length.
+>    *
+>    * Returns true if the extent can safely be reused, or false if the search
 
 _______________________________________________
 xfs mailing list
