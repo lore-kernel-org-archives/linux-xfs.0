@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4FF367F82
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 10:32:28 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6619A7F82
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 11:05:54 -0500 (CDT)
 Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D15C8F8035
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 08:32:25 -0700 (PDT)
-Message-ID: <52123AB7.3070902@sgi.com>
-Date: Mon, 19 Aug 2013 10:33:11 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3D24AC007
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 09:05:50 -0700 (PDT)
+Message-ID: <5212428C.6040305@sgi.com>
+Date: Mon, 19 Aug 2013 11:06:36 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] v2 xfsprogs: fix inode crash in xfs_repair
@@ -27,9 +27,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Looks good.
+Thanks for the patch Mark, it has been committed.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+--Rich
+
+commit 3ac87fbf6ac29494dc46134323733551aac1737c
+Author: Mark Tinguely <tinguely@sgi.com>
+Date:   Fri Aug 16 18:12:43 2013 +0000
+
+     xfsprogs: fix inode crash in xfs_repair
+
+     Adding the lost+found in phase 6 could allocate an inode from
+     a new inode chunk. Since this chunk was not around in phase 3
+     when the inode chunks are verificated and added to the avl tree,
+     the avl tree look up will return a NULL pointer. This results
+     in a NULL defererence and segmentation fault.
+
+     Add the newly created inode chunk as if found in the chunk
+     verification phase.
+
+     Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
