@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8A59F7F6F
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 04:08:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5AA7F304043
-	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 02:08:45 -0700 (PDT)
-Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.141]) by
-	cuda.sgi.com with ESMTP id X8BzHslOPBbGM3Ys (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 474EF7F77
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 04:24:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 264598F8039
+	for <xfs@oss.sgi.com>; Mon, 19 Aug 2013 02:24:02 -0700 (PDT)
+Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.139]) by
+	cuda.sgi.com with ESMTP id blopEXhA9Wdq4BUO (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 19 Aug 2013 02:08:43 -0700 (PDT)
+	Mon, 19 Aug 2013 02:23:59 -0700 (PDT)
 From: Stefan Behrens <sbehrens@giantdisaster.de>
-Subject: [PATCH V2] xfstests: don't remove the two first devices from
+Subject: [PATCH V3] xfstests: don't remove the two first devices from
 	SCRATCH_DEV_POOL
-Date: Mon, 19 Aug 2013 11:08:37 +0200
-Message-Id: <1376903317-28006-1-git-send-email-sbehrens@giantdisaster.de>
+Date: Mon, 19 Aug 2013 11:23:54 +0200
+Message-Id: <1376904234-2553-1-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -49,12 +49,18 @@ V1 -> V2:
 - fixed a missing adaption to the new way to deal with SCRATCH_DEV_POOL
   in  _test_replace() in tests/btrfs/003.
 
+V2 -> V3:
+- V2 was the result of a git rebase mistake (a user error), forget it,
+  sorry. V3 now contains the correct fix for a missing adaption to the
+  new way to deal with SCRATCH_DEV_POOL in _test_replace() in
+  tests/btrfs/003.
+
  common/config   |  3 +--
  common/rc       | 12 ++++++++++++
  tests/btrfs/002 |  3 ++-
- tests/btrfs/003 | 18 +++++++++---------
+ tests/btrfs/003 | 16 ++++++++--------
  tests/btrfs/006 |  4 ++--
- 5 files changed, 26 insertions(+), 14 deletions(-)
+ 5 files changed, 25 insertions(+), 13 deletions(-)
 
 diff --git a/common/config b/common/config
 index 67c1498..1bc9233 100644
@@ -115,7 +121,7 @@ index 03e9137..f4389ae 100755
  
  # Create and save sha256sum
 diff --git a/tests/btrfs/003 b/tests/btrfs/003
-index 5c88651..a23d3a0 100755
+index 5c88651..262b1d5 100755
 --- a/tests/btrfs/003
 +++ b/tests/btrfs/003
 @@ -58,7 +58,7 @@ rm -f $seqres.full
@@ -168,11 +174,10 @@ index 5c88651..a23d3a0 100755
  	local DEVHTL=""
  
 -	# exclude the last disk in the disk pool
--	n=$(($n-1))
--	ds=${devs[@]:0:$n}
 +	# exclude the first and the last disk in the disk pool
-+	n=$(($n-2))
-+	ds=${devs[@]:1:$n}
+ 	n=$(($n-1))
+-	ds=${devs[@]:0:$n}
++	ds=${devs[@]:1:$(($n-1))}
  
  	export MKFS_OPTIONS="-m raid1 -d raid1"
  	_scratch_mkfs "$ds" >> $seqres.full 2>&1 || _fail "tr: mkfs failed"
