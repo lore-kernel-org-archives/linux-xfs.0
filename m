@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A97577FC3
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 03:17:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id EAD0B7FC7
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 04:15:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6819C30407A
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 01:17:01 -0700 (PDT)
-Received: from mail-qa0-f45.google.com (mail-qa0-f45.google.com
-	[209.85.216.45]) by cuda.sgi.com with ESMTP id mgGgEGtG5eYS3BRR
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 20 Aug 2013 01:17:00 -0700 (PDT)
-Received: by mail-qa0-f45.google.com with SMTP id l18so2332665qak.4
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 01:16:59 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AA97B30407A
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 02:15:02 -0700 (PDT)
+Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.162]) by
+	cuda.sgi.com with ESMTP id Wd5VI5UNCDAVSejx (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 20 Aug 2013 02:14:57 -0700 (PDT)
+Message-ID: <5213338D.3000205@giantdisaster.de>
+Date: Tue, 20 Aug 2013 11:14:53 +0200
+From: Stefan Behrens <sbehrens@giantdisaster.de>
 MIME-Version: 1.0
-In-Reply-To: <1376313607-28133-12-git-send-email-david@fromorbit.com>
-References: <1376313607-28133-1-git-send-email-david@fromorbit.com>
-	<1376313607-28133-12-git-send-email-david@fromorbit.com>
-Date: Tue, 20 Aug 2013 16:16:59 +0800
-Message-ID: <CAEH94Lie4UoVBicXohLwOVMWtcuu+fNnkBhK+QV8kV+k0AaB0A@mail.gmail.com>
-Subject: Re: ***** SUSPECTED SPAM ***** [RFD 11/17] xfs: factor xfs_create to
-	prepare for O_TMPFILE
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: Re: [PATCH] xfstests: add regression test for kernel bz 60673 V2
+References: <1376945597-2202-1-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1376945597-2202-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,82 +28,175 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfstests <xfs@oss.sgi.com>
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-HI,
+On Mon, 19 Aug 2013 16:53:17 -0400, Josef Bacik wrote:
+> There was a problem with send trying to overwrite a file that wasn't actually
+> the same.  This is a test to check this particular case where receive fails when
+> it should succeed properly.  I tested this to verify it fails without my fix and
+> passes with my fix.  Thanks,
 
-I'd like to pick off this item and its following 2 items, please avoid
-the duplicated work, thanks.
+I tested this xfstest but for me it passes with and without the fix
+("Btrfs: check our parent dir when doing a compare send").
 
-[RFD 11/17] xfs: factor xfs_create to prepare for O_TMPFILE,
-[RFD 12/17] xfs: add tmpfile methods
-[RFD 13/17] xfs: allow linkat() on O_TMPFILE files
 
-On Mon, Aug 12, 2013 at 9:20 PM, Dave Chinner <david@fromorbit.com> wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> O_TMPFILE support requires allocating an inode that is not attached to the
-> a current namespace - it's anonymous. The current inode allocation code runs
-> through xfs_create() which requires a parent inode and a name to be passed to
-> it. for O_TMPFILE, we do not have a parent inode or a name so we cannot use
-> the same calling conventions as xfs_create() to allocate a inode.
->
-> In this case, the inode is anonymous, so it is a property of the allocation
-> group it is allocated to, not the namespace. Hence all we really need to pass
-> from the VFS is a struct xfs_mount and the struct xfs_inode pointer that we
-> return the allocated inode in.
->
-> The allocation of the inode requires a different log reservation to mkdir/create
-> as there is no directory modification taking place, though we still need to
-> reserve/account quotas appropriately. We do not need to check if we can add the
-> entry to the directory, either.
->
-> Hence the majority of the inode allocation code is similar to that in
-> xfs_create, and so can be factored out of xfs_create() and reused.
->
-> The fact that a parent inode does not exist follows into xfs_dir_ialloc() and
-> xfs_ialloc(), too. xfs_dir_ialloc() does not actually use the parent inode, just
-> passes it through to xfs_ialloc(). xfs_ialloc() can handle a null parent inode,
-> but it results in a target inode number of 0 and so allocation will always
-> target AG 0, This will effectively serialise O_TMPFILE allocation and removal.
->
-> Hence we should separate the parent inode from the allocation target inode all
-> the way down to xfs_dialloc() while factoring this code. This will allow us to
-> use a separate AG rotor to direct allocation of temporary files around different
-> AGs, allowing them to the allocated and removed concurrently.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 > ---
->  fs/xfs/xfs_iops.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 96dda62..9c20a2c 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -112,6 +112,7 @@ xfs_cleanup_inode(
->         iput(inode);
->  }
->
-> +/* how much of this does tmpfile need? */
->  STATIC int
->  xfs_vn_mknod(
->         struct inode    *dir,
-> --
-> 1.8.3.2
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> V1->V2: rebased onto newest xfstests and renumbered
+> 
+>  tests/btrfs/010     |  110 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/btrfs/010.out |    2 +
+>  tests/btrfs/group   |    1 +
+>  3 files changed, 113 insertions(+), 0 deletions(-)
+>  create mode 100644 tests/btrfs/010
+>  create mode 100644 tests/btrfs/010.out
+> 
+> diff --git a/tests/btrfs/010 b/tests/btrfs/010
+> new file mode 100644
+> index 0000000..f8258bf
+> --- /dev/null
+> +++ b/tests/btrfs/010
+> @@ -0,0 +1,110 @@
+> +#! /bin/bash
+> +# FS QA Test No. btrfs/010
+> +#
+> +# btrfs send ENOENT regression test, kernel bugzilla 60673
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Fusion IO.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +tmp_dir=send_temp_$seq
+> +
+> +status=1	# failure is the default!
+> +
+> +_cleanup()
+> +{
+> +	$BTRFS_UTIL_PROG subvol del $TEST_DIR/$tmp_dir/snap1 > /dev/null 2>&1
+> +	$BTRFS_UTIL_PROG subvol del $TEST_DIR/$tmp_dir/snap2 > /dev/null 2>&1
+> +	$BTRFS_UTIL_PROG subvol del $TEST_DIR/$tmp_dir/send > /dev/null 2>&1
+> +	rm -rf $TEST_DIR/$tmp_dir
+> +	rm -f $tmp.*
+> +}
+> +
+> +trap "_cleanup ; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +_require_scratch
+> +
+
+rm -f $seqres.full
 
 
+> +_scratch_mkfs > /dev/null 2>&1
+> +
+> +#receive needs to be able to setxattrs, including the selinux context, if we use
+> +#the normal nfs context thing it screws up our ability to set the
+> +#security.selinux xattrs so we need to disable this for this test
+> +export SELINUX_MOUNT_OPTIONS=""
+> +
+> +_scratch_mount
+> +
+> +mkdir $TEST_DIR/$tmp_dir
+> +$BTRFS_UTIL_PROG subvol create $TEST_DIR/$tmp_dir/send \
+> +	> $seqres.full 2>&1 || _fail "failed subvol create"
+> +
+> +cd $TEST_DIR/$tmp_dir/send
+> +
+> +mkdir test
+> +touch test/baz
+> +touch test/blah
+> +mkdir test/foo
+> +touch test/foo/bar
+> +
+> +# cd out in case any of this fails
+> +cd /
+> +
+> +$BTRFS_UTIL_PROG subvol snap -r $TEST_DIR/$tmp_dir/send \
+> +	$TEST_DIR/$tmp_dir/snap1 >> $seqres.full 2>&1 || _fail "failed snap1"
+> +
+> +$BTRFS_UTIL_PROG send -f $TEST_DIR/$tmp_dir/send1.dump \
+> +	$TEST_DIR/$tmp_dir/snap1 >> $seqres.full 2>&1 || _fail "failed send"
+> +
+> +$BTRFS_UTIL_PROG receive -f $TEST_DIR/$tmp_dir/send1.dump $SCRATCH_MNT \
+> +	>> $seqres.full 2>&1 || _fail "failed receive"
+> +
+> +#recreate everything exactly the way it was exceptn in a different order so we
 
--- 
-Regards,
+"except"
 
-Zhi Yong Wu
+
+> +#get different inode numbers
+> +cd $TEST_DIR/$tmp_dir/send
+> +rm -rf test
+> +mkdir test
+> +touch test/baz
+> +mkdir test/foo
+> +touch test/foo/bar
+> +touch test/blah
+> +cd /
+> +
+> +$BTRFS_UTIL_PROG subvol snap -r $TEST_DIR/$tmp_dir/send \
+> +	$TEST_DIR/$tmp_dir/snap2 >> $seqres.full 2>&1 || _fail "failed snap2"
+> +
+> +$BTRFS_UTIL_PROG send -f $TEST_DIR/$tmp_dir/send2.dump \
+> +	$TEST_DIR/$tmp_dir/snap2 -p $TEST_DIR/$tmp_dir/snap1 \
+> +	>> $seqres.full 2>&1 || _fail "failed second send"
+> +
+> +$BTRFS_UTIL_PROG receive -f $TEST_DIR/$tmp_dir/send2.dump $SCRATCH_MNT \
+> +	>> $seqres.full 2>&1 || _fail "failed second receive"
+> +
+> +echo "Silence is golden"
+> +status=0 ; exit
+> diff --git a/tests/btrfs/010.out b/tests/btrfs/010.out
+> new file mode 100644
+> index 0000000..1d83a8d
+> --- /dev/null
+> +++ b/tests/btrfs/010.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 010
+> +Silence is golden
+> diff --git a/tests/btrfs/group b/tests/btrfs/group
+> index 9eabadc..42a733e 100644
+> --- a/tests/btrfs/group
+> +++ b/tests/btrfs/group
+> @@ -12,3 +12,4 @@
+>  007 auto rw metadata
+>  008 auto quick
+>  009 auto quick
+> +010 auto quick
+
+Everything looks good except that the test doesn't fail for me when I
+revert the commit for the bugzilla 60673.
 
 _______________________________________________
 xfs mailing list
