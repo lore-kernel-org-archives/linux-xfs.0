@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 816B07FCE
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:45:40 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 735707FB8
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 11:01:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 69CF83040BC
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 07:45:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 88X0178YF9RVfgkf for <xfs@oss.sgi.com>;
-	Tue, 20 Aug 2013 07:45:39 -0700 (PDT)
-Message-ID: <52138111.1030109@sandeen.net>
-Date: Tue, 20 Aug 2013 09:45:37 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E85D8F8037
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:01:06 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id FcFvrzlSxvGfFvKP for <xfs@oss.sgi.com>;
+	Tue, 20 Aug 2013 09:01:04 -0700 (PDT)
+Date: Tue, 20 Aug 2013 18:00:57 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 3/5] mm: Notify filesystems when it's time to apply a
+	deferred cmtime update
+Message-ID: <20130820160057.GC2862@quack.suse.cz>
+References: <cover.1376679411.git.luto@amacapital.net>
+	<ec267e95fd21891986373c7af1c72b4c8b507332.1376679411.git.luto@amacapital.net>
+	<20130820023615.GE6023@dastard>
+	<CALCETrV-Toj-NGpmWnmoUbCwrMUXOSbjQdYsSVuTiH+2dEgPTQ@mail.gmail.com>
+	<20130820040814.GH6023@dastard>
+	<CALCETrWreWBwKdKS2w=fS+MwdaZv1eEsKjYo=P9eeXe7fZS6Jw@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<20130819201940.516942026@sgi.com>
-	<5212AA1D.3000809@sandeen.net> <52137D3D.8060205@sgi.com>
-In-Reply-To: <52137D3D.8060205@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <CALCETrWreWBwKdKS2w=fS+MwdaZv1eEsKjYo=P9eeXe7fZS6Jw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,141 +34,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Tim Chen <tim.c.chen@linux.intel.com>
 
-On 8/20/13 9:29 AM, Mark Tinguely wrote:
-> On 08/19/13 18:28, Eric Sandeen wrote:
->> On 8/19/13 3:19 PM, Mark Tinguely wrote:
->> 
->> <an attachment that doesn't show up on reply, moving d_type support
->> to v4 superblocks ;)>
->> 
->> Thanks, Mark!
->> 
->> Has you been able to test this at all?
-
-Hi Mark -
-
-> There is no test for this feature. 
-
-no xfstest, I know.  :)
-
-> Yes I did my version of testing.
-> First adding each type of inode type and verifying it. Then fsstress
-> testing using the same seed for sb v4+feature, v4 plain, v5+feature.
-> The resulting directory and checked with xfs_db. fsstress was chosen
-> because how it manipulate directory items.
+On Mon 19-08-13 21:14:44, Andy Lutomirski wrote:
+> >> I could require ->writepages *and* ->flush_cmtime to handle the time
+> >> update, but that would complicate non-transactional filesystems.
+> >> Those filesystems should just flush cmtime at the end of writepages.
+> >
+> > do_writepages() is the wrong place to do such updates - we can get
+> > writeback directly through .writepage, so the time updates need to
+> > be in .writepage. That first .writepage call will clear the bit on
+> > the mapping, so it's only done on the first call to .writepage on
+> > the given mapping.
 > 
->> 
->> I do still owe a promised xfstest - but for that, we'll need at
->> least mkfs &  xfs_repair support.
->> 
-> 
-> Dave made changes so that xfs_repair will run (find the correct
-> directory items) but the feature verification and repairs has not
-> been done, so technically this is an incomplete feature.
+> Last time I checked, all the paths that actually needed the timestamp
+> update went through .writepages.  I'll double-check.
+  kswapd can call just .writepage to do the writeout so timestamp update
+should be handled there as well. Otherwise all pages in a mapping can be
+cleaned without timestamp being updated.
 
-Right, but Dave's patches only recognize it as a valid feature
-on V5 superblocks; V4 will take a bit more logic, won't it?
-Won't repair see this as an invalid feature flag on V4 even
-with Dave's patches?
+Which btw made me realize that even your scheme doesn't completely make
+sure timestamp is updated after mmap write - if you have pages 0 and 1, you
+write to both of them - CMTIME flag gets set. Then fsync_range(fd, 0, 4096)
+is called. We write the page 0, writeprotect it, update timestamps. But
+page 1 is still writeable so writes to it won't set CMTIME flag, neither
+update the timestamp... Not that I think this can be reasonably solved but
+it is a food for thought.
 
->> Did you patch up mkfs to do basic tests of your kernelspace patch?
-> 
-> yes. to the directory area in mkfs per suggestion.
-> 
-> The tests run the same on the v5 and v4 - ummm, it is the same
-> directory code. see above.
-> 
->> 
->> Talking to Dave, he reminds me of a few things this needs, if it's 
->> going to be complete&  compatible on V4:
->> 
->> * mkfs.xfs commandline option support&  manpage updates
-> 
-> yes
-> 
->> * xfs_db support (including version friendly-text output)
-> 
-> yes, xfsprogs v4/v5 uses the same directory code, Dave's patches
-> support xfs_db. It works for v4/v5.
-
-ok
-
-> 
->> * XFS_IOC_FSGEOM support so that xfs_info can report the
->> difference * xfs_repair needs to know that it's a valid feature on
->> V4
-> 
-> okay, it will run xfs_repair to the same level as v5. AND ...As
-> pointed out, there is no xfs_repair support to verify/correct the
-> feature in v5 and therefore v4 - (again it is the same directory
-> code). As is, this feature is incomplete. That could keep the kernel
-> portion from moving forward.
-> 
->> Some of that may overlap w/ things still needed on V5, but some is
->> unique to allowing it on V4.
->> 
->> Mark, do you plan to do some of those unique-to-V4 parts, too?
-> 
-> Yes.
-
-Ok, cool.
-
->> 
->> As an aside: I would support getting this feature onto V4
->> superblocks, after we have confidence that all the bits are done,
->> tested, and robust.
->> 
->> I still would really like to see it go forward in parallel on V5,
->> and not be blocked by the extra work needed for proper V4
->> integration.
->> 
-> 
-> understood - now documented.  Hi Linus.
-
-I'm Eric ;)
-
-> This feature uses shared directory code. It has to be turned on using
-> a mkfs to be used. No one will accidentally get this feature.
-> 
-> The feature and implementation are good. The directory code is common
-> - the feature added changes to that directory code. If the
-> implementation is bad it will trash the v4/v5 directories the same -
-> no matter if the feature is turned on or off. If you are so afraid of
-> the common code may break any directories, then this feature should
-> be held back for more testing.
-
-I'm not overly fearful...
-
-> All that I insist is this nice feature be added to the mainstream
-> filesystem at the same time as the experimental filesystem. There is
-> NO TECHNICAL reason that this feature is not supported mainstream
-> filesystem.
-
-No, not technical... (although, there is also no technical reason that
-V4 and V5 must go in at the same time, so we're into the realm of
-opinion & preference here)
-
-One reason I'd argue for V5 potentially prior to V4 is that V4 requires
-a few more code changes over and above V5.  If those V4 changes lag,
-it it might make sense to separate them.  If they don't lag, great.
-
-> I repeat, if you have technical concerns for the feature's
-> implementation and its impact on v4 filesystems because it uses
-> common directory code, then it should be held back for more testing.
-
-I'm not trying to pick a fight.  I just want to make sure that all
-the new work unique to having it on V4 is identified & owned...
-
-Thanks,
--Eric
-
->> Thanks, -Eric
-> 
-> --Mark.
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
