@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12204-g5d5e3d5
-Message-Id: <20130820221644.4B51C7F91@oss.sgi.com>
-Date: Tue, 20 Aug 2013 17:16:43 -0500 (CDT)
+Message-Id: <20130820221654.C9E197FBA@oss.sgi.com>
+Date: Tue, 20 Aug 2013 17:16:54 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   5d5e3d5 xfs: Add support for the Q_XGETQSTATV
       from  c2bfbc9b485a750b6af4a97ff3ad22b576e74d20 (commit)
 
