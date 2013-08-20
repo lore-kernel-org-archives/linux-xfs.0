@@ -1,32 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 450387FDF
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 14:27:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3296D3040D5
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 12:27:53 -0700 (PDT)
-Received: from mail-ve0-f175.google.com (mail-ve0-f175.google.com
-	[209.85.128.175]) by cuda.sgi.com with ESMTP id
-	DOO4tFjkBxMkyhvN (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Aug 2013 12:27:52 -0700 (PDT)
-Received: by mail-ve0-f175.google.com with SMTP id oy10so673786veb.20
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 12:27:51 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B55157FDF
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 14:28:49 -0500 (CDT)
+Date: Tue, 20 Aug 2013 14:28:44 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: linux-next: build failure after merge of the final tree
+Message-ID: <20130820192844.GC5262@sgi.com>
+References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
+	<20130820120702.000b044e@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <CALCETrXotDRKV8FtLn3g_9g_yOVceHzKpwXMAH+w7tBZ1P2F7A@mail.gmail.com>
-References: <cover.1376679411.git.luto@amacapital.net>
-	<ec267e95fd21891986373c7af1c72b4c8b507332.1376679411.git.luto@amacapital.net>
-	<20130820023615.GE6023@dastard>
-	<CALCETrV-Toj-NGpmWnmoUbCwrMUXOSbjQdYsSVuTiH+2dEgPTQ@mail.gmail.com>
-	<20130820040814.GH6023@dastard>
-	<CALCETrWreWBwKdKS2w=fS+MwdaZv1eEsKjYo=P9eeXe7fZS6Jw@mail.gmail.com>
-	<20130820160057.GC2862@quack.suse.cz>
-	<CALCETrXotDRKV8FtLn3g_9g_yOVceHzKpwXMAH+w7tBZ1P2F7A@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 20 Aug 2013 12:27:31 -0700
-Message-ID: <CALCETrXqZ3Fgp9JHRJZCRfW-+qq2T_xw7Y_xyn2i=xK5+pdZoQ@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] mm: Notify filesystems when it's time to apply a
-	deferred cmtime update
+Content-Disposition: inline
+In-Reply-To: <20130820120702.000b044e@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,39 +23,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Tim Chen <tim.c.chen@linux.intel.com>
+To: Dwight Engen <dwight.engen@oracle.com>, Jeremy Kerr <jk@ozlabs.org>
+Cc: cbe-oss-dev@lists.ozlabs.org, Stephen Rothwell <sfr@canb.auug.org.au>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Gao feng <gaofeng@cn.fujitsu.com>, linuxppc-dev@lists.ozlabs.org
 
-On Tue, Aug 20, 2013 at 9:42 AM, Andy Lutomirski <luto@amacapital.net> wrote:
-> On Tue, Aug 20, 2013 at 9:00 AM, Jan Kara <jack@suse.cz> wrote:
->> On Mon 19-08-13 21:14:44, Andy Lutomirski wrote:
->>> >> I could require ->writepages *and* ->flush_cmtime to handle the time
->>> >> update, but that would complicate non-transactional filesystems.
->>> >> Those filesystems should just flush cmtime at the end of writepages.
->>> >
->>> > do_writepages() is the wrong place to do such updates - we can get
->>> > writeback directly through .writepage, so the time updates need to
->>> > be in .writepage. That first .writepage call will clear the bit on
->>> > the mapping, so it's only done on the first call to .writepage on
->>> > the given mapping.
->>>
->>> Last time I checked, all the paths that actually needed the timestamp
->>> update went through .writepages.  I'll double-check.
->>   kswapd can call just .writepage to do the writeout so timestamp update
->> should be handled there as well. Otherwise all pages in a mapping can be
->> cleaned without timestamp being updated.
->
-> OK, I'll fix that.
+Hi Jeremy,
 
-This is a bit ugly.  mpage_writepages and generic_writepages both call
-->writepage.  If writepage starts checking cmtime, then writepages
-will do multiple timestamp updates on filesystems that use this code.
+Apologies for breaking your build...
 
-I can modify vmscan and migrate to flush cmtime -- they seem to be the
-only callers of ->writepage that aren't themselves called from
-->writepages.
+On Tue, Aug 20, 2013 at 12:07:02PM -0400, Dwight Engen wrote:
+> On Tue, 20 Aug 2013 17:20:52 +1000
+> Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> > After merging the final tree, today's linux-next build (powerpc
+> > allyesconfig) failed like this:
+> > 
+> > arch/powerpc/platforms/cell/spufs/inode.c: In function
+> > 'spufs_parse_options':
+> > arch/powerpc/platforms/cell/spufs/inode.c:623:16: error: incompatible
+> > types when assigning to type 'kuid_t' from type 'int' root->i_uid =
+> > option; ^ arch/powerpc/platforms/cell/spufs/inode.c:628:16: error:
+> > incompatible types when assigning to type 'kgid_t' from type 'int'
+> > root->i_gid = option; ^
+> > 
+> > Caused by commit d6970d4b726c ("enable building user namespace with
+> > xfs") from the xfs tree (that was fun to find :-)).
+> > 
+> > I have reverted that commit for today.  It could probably be replaced
+> > with a patch that just changed XFS_FS to SPU_FS in the
+> > UIDGID_CONVERTED config dependency - or someone could fix up SPU_FS.
+> 
+> Hi, (already sent this email based on Intel's kbuild robot this
+> morning, sorry for the dup to those who already got it). 
+> 
+> Yep this looks to me like SPU_FS should have been in the list of
+> stuff that had not been UIDGID_CONVERTED, but reviving
+> UIDGID_CONVERTED and adding SPU_FS to it won't work for
+> non powerpc arch because SPU_FS = n won't be defined. The following can
+> be used to mark it as incompatible with USER_NS:
+> 
+> diff --git a/arch/powerpc/platforms/cell/Kconfig
+> b/arch/powerpc/platforms/cell/Kconfig index 9978f59..fcf8336 100644
+> --- a/arch/powerpc/platforms/cell/Kconfig
+> +++ b/arch/powerpc/platforms/cell/Kconfig
+> @@ -61,6 +61,7 @@ config SPU_FS
+>         tristate "SPU file system"
+>         default m
+>         depends on PPC_CELL
+> +       depends on USER_NS=n
+>         select SPU_BASE
+>         select MEMORY_HOTPLUG
+>         help
+> 
+> Or if the rest of spufs is already okay for user namespace (I have not
+> checked it, but this seems to be the only place it is dealing with
+> uid/gid), then the following will fix these particular errors
+> (cross-compile tested, but I don't have a powerpc to run test on):
+> 
+> diff --git a/arch/powerpc/platforms/cell/spufs/inode.c b/arch/powerpc/platforms/cell/spufs/inode.c
+> index f390042..90fb308 100644
+> --- a/arch/powerpc/platforms/cell/spufs/inode.c
+> +++ b/arch/powerpc/platforms/cell/spufs/inode.c
+> @@ -620,12 +620,12 @@ spufs_parse_options(struct super_block *sb, char *options, struct inode *root)
+>                 case Opt_uid:
+>                         if (match_int(&args[0], &option))
+>                                 return 0;
+> -                       root->i_uid = option;
+> +                       root->i_uid = make_kuid(&init_user_ns, option);
+>                         break;
+>                 case Opt_gid:
+>                         if (match_int(&args[0], &option))
+>                                 return 0;
+> -                       root->i_gid = option;
+> +                       root->i_gid = make_kgid(&init_user_ns, option);
+>                         break;
+>                 case Opt_mode:
+>                         if (match_octal(&args[0], &option))
 
---Andy
+I'd prefer not to break Stephen's tree two days in a row.  We could just revert
+d6970d4b726c in the xfs tree for the time being as Stephen has done, but given
+the choice would prefer the fix.  Do you have a preference between the two
+approaches that Dwight has posted?  The first seems more conservative...
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
