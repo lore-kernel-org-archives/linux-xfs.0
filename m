@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 15DF67FCE
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 11:42:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DB8A38F8033
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:42:56 -0700 (PDT)
-Received: from mail-vb0-f54.google.com (mail-vb0-f54.google.com
-	[209.85.212.54]) by cuda.sgi.com with ESMTP id a9V2ji3t0ldD3i0U
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:42:55 -0700 (PDT)
-Received: by mail-vb0-f54.google.com with SMTP id q14so378483vbe.13
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:42:54 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 20A167FDB
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 13:28:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9EC7DAC003
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 11:28:20 -0700 (PDT)
+Message-ID: <5213B526.5000600@redhat.com>
+Date: Tue, 20 Aug 2013 14:27:50 -0400
+From: Ric Wheeler <rwheeler@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20130820160057.GC2862@quack.suse.cz>
-References: <cover.1376679411.git.luto@amacapital.net>
-	<ec267e95fd21891986373c7af1c72b4c8b507332.1376679411.git.luto@amacapital.net>
-	<20130820023615.GE6023@dastard>
-	<CALCETrV-Toj-NGpmWnmoUbCwrMUXOSbjQdYsSVuTiH+2dEgPTQ@mail.gmail.com>
-	<20130820040814.GH6023@dastard>
-	<CALCETrWreWBwKdKS2w=fS+MwdaZv1eEsKjYo=P9eeXe7fZS6Jw@mail.gmail.com>
-	<20130820160057.GC2862@quack.suse.cz>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 20 Aug 2013 09:42:34 -0700
-Message-ID: <CALCETrXotDRKV8FtLn3g_9g_yOVceHzKpwXMAH+w7tBZ1P2F7A@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] mm: Notify filesystems when it's time to apply a
-	deferred cmtime update
+Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
+References: <520A53E8.6030604@sgi.com> <20130814075042.GE6023@dastard>
+	<20130814184729.GA4604@sgi.com> <520C6E39.7030501@redhat.com>
+	<20130815180400.GF3783@sgi.com> <520D4B1B.4080602@redhat.com>
+	<20130816140811.GA30422@sgi.com> <20130819052813.GA6023@dastard>
+	<20130819184815.GA24096@sgi.com> <20130820022325.GC6023@dastard>
+	<20130820143035.GB21663@sgi.com>
+In-Reply-To: <20130820143035.GB21663@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,48 +25,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Tim Chen <tim.c.chen@linux.intel.com>
+To: Geoffrey Wehrman <gwehrman@sgi.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On Tue, Aug 20, 2013 at 9:00 AM, Jan Kara <jack@suse.cz> wrote:
-> On Mon 19-08-13 21:14:44, Andy Lutomirski wrote:
->> >> I could require ->writepages *and* ->flush_cmtime to handle the time
->> >> update, but that would complicate non-transactional filesystems.
->> >> Those filesystems should just flush cmtime at the end of writepages.
->> >
->> > do_writepages() is the wrong place to do such updates - we can get
->> > writeback directly through .writepage, so the time updates need to
->> > be in .writepage. That first .writepage call will clear the bit on
->> > the mapping, so it's only done on the first call to .writepage on
->> > the given mapping.
->>
->> Last time I checked, all the paths that actually needed the timestamp
->> update went through .writepages.  I'll double-check.
->   kswapd can call just .writepage to do the writeout so timestamp update
-> should be handled there as well. Otherwise all pages in a mapping can be
-> cleaned without timestamp being updated.
+On 08/20/2013 10:30 AM, Geoffrey Wehrman wrote:
+> The problem is that the maintainer (Ben) listens to all interested parties
+> and does not take direction exclusively from you, Red Hat, SuSE, SGI, IBM,
+> Oracle, or anyone else.  He is caught in the middle.  Let's be open here.
+> The current conflict is the result of me insisting that your plan and
+> vision on a specific feature is not in the best interest of the community
+> and you do not like the direction I have presented.  It is great that
+> you have a vision, but not everyone agrees with your vision.  You are
+> definitely the most significant current contributor of code to XFS.
+> Of your recent patch set, 49 of 50 patches were accepted.  And the one
+> patch that was not accepted, I asked for you to rework.  You refused.
+> Mark agreed to rework your patch, and because of this Ben is accused
+> of making conflicting decisions based on how each change impacts SGI's
+> internal products, not what is in the best interests of the XFS community.
+> Last time I checked, SGI was an active member of the XFS community even
+> by your definition.  Even so, I believe that the change I am requesting
+> will benefit the entire XFS community, not just SGI.  The problem I see
+> here is that you are unwilling to compromise on your vision or on your
+> interpretation of what is best for the community.
+Getting someone to rework a patch is a burden on the one making the request - 
+you have to convince them (or the broader list) that you have merit in your 
+requested changes.
 
-OK, I'll fix that.
+Usually, the best way to influence an upstream discussion is through submission 
+of patches or sharing testing results. It can also be helpful to frame a request 
+with a solid "this is what our customers need" type of request.
 
->
-> Which btw made me realize that even your scheme doesn't completely make
-> sure timestamp is updated after mmap write - if you have pages 0 and 1, you
-> write to both of them - CMTIME flag gets set. Then fsync_range(fd, 0, 4096)
-> is called. We write the page 0, writeprotect it, update timestamps. But
-> page 1 is still writeable so writes to it won't set CMTIME flag, neither
-> update the timestamp... Not that I think this can be reasonably solved but
-> it is a food for thought.
+Regards,
 
-This should already work.  AS_CMTIME is set when the pte goes from
-dirty to clean, not when the pte goes from wp to writable.  So
-whenever clear_page_dirty_for_io is called on page 1, AS_CMTIME will
-be set and a subsequent writepages call will update the timestamp.
-
---Andy
+Ric
 
 _______________________________________________
 xfs mailing list
