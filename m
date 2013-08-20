@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5D1487F6F
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 11:07:49 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 651C67F6F
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 11:11:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C449CAC006
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:07:45 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 8OAarZepDqigAk30 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Aug 2013 09:07:44 -0700 (PDT)
-Date: Tue, 20 Aug 2013 12:07:02 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: linux-next: build failure after merge of the final tree
-Message-ID: <20130820120702.000b044e@oracle.com>
-In-Reply-To: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
-References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
-Mime-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F0758F8035
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 09:11:00 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id NCkvlhZAvFFGYZg7 for <xfs@oss.sgi.com>;
+	Tue, 20 Aug 2013 09:10:58 -0700 (PDT)
+Date: Tue, 20 Aug 2013 18:10:55 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 2/5] fs: Add inode_update_time_writable
+Message-ID: <20130820161055.GD2862@quack.suse.cz>
+References: <cover.1376679411.git.luto@amacapital.net>
+	<a27accc2d9460b7ef194a203f305a18dafe926e8.1376679411.git.luto@amacapital.net>
+	<20130820022822.GD6023@dastard>
+	<CALCETrVE2G4x9mL0-o1FDQPfc=qZzw10Cx6AgOdhwphSaCmyzw@mail.gmail.com>
+	<20130820033329.GG6023@dastard>
+	<CALCETrVrSiXCt5+2801C+QA6B1jzb0K3VHT6w8sVf_VXrz16Bw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CALCETrVrSiXCt5+2801C+QA6B1jzb0K3VHT6w8sVf_VXrz16Bw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,78 +33,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: cbe-oss-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Gao feng <gaofeng@cn.fujitsu.com>, linuxppc-dev@lists.ozlabs.org, Jeremy Kerr <jk@ozlabs.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Tim Chen <tim.c.chen@linux.intel.com>
 
-On Tue, 20 Aug 2013 17:20:52 +1000
-Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-
-> Hi all,
+On Mon 19-08-13 21:07:49, Andy Lutomirski wrote:
+> On Mon, Aug 19, 2013 at 8:33 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Aug 19, 2013 at 08:20:12PM -0700, Andy Lutomirski wrote:
+> >> On Mon, Aug 19, 2013 at 7:28 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >> > On Fri, Aug 16, 2013 at 04:22:09PM -0700, Andy Lutomirski wrote:
+> >> >> This is like file_update_time, except that it acts on a struct inode *
+> >> >> instead of a struct file *.
+> >> >>
+> >> >> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+> >> >> ---
+> >> >>  fs/inode.c         | 72 ++++++++++++++++++++++++++++++++++++++++++------------
+> >> >>  include/linux/fs.h |  1 +
+> >> >>  2 files changed, 58 insertions(+), 15 deletions(-)
+> >> >>
+> >>
+> >> [...]
+> >>
+> >> >> +
+> >> >> +int inode_update_time_writable(struct inode *inode)
+> >> >> +{
+> >> >> +     struct timespec now;
+> >> >> +     int sync_it = prepare_update_cmtime(inode, &now);
+> >> >> +     int ret;
+> >> >> +
+> >> >> +     if (!sync_it)
+> >> >> +             return 0;
+> >> >> +
+> >> >> +     /* sb_start_pagefault and update_time can both sleep. */
+> >> >> +     sb_start_pagefault(inode->i_sb);
+> >> >> +     ret = update_time(inode, &now, sync_it);
+> >> >> +     sb_end_pagefault(inode->i_sb);
+> >> >
+> >> > This gets called from the writeback path - you can't use
+> >> > sb_start_pagefault/sb_end_pagefault in that path.
+> >>
+> >> The race I'm worried about is:
+> >>
+> >>  - mmap
+> >>  - write to the mapping
+> >>  - remount ro
+> >>  - flush_cmtime -> inode_update_time_writable
+> >
+> > sb_start_pagefault() is for filesystem freeze protection, not
+> > remount-ro protection. If you freeze the filesystem, then we stop
+> > writes and pagefaults by making sb_start_pagefault/sb_start_write
+> > block, and then run writeback to clean all the pages.  If writeback
+> > then blocks on sb_start_pagefault(), we've got a deadlock.
+> >
+> >> This may be impossible, in which case I'm okay, but it's nice to have
+> >> a sanity check.  I'll see if I can figure out how to do that.
+> >
+> > The process of remount-ro should flush the dirty pages - the inode
+> > and page has been marked dirty by page_mkwrite(), after all.
 > 
-> After merging the final tree, today's linux-next build (powerpc
-> allyesconfig) failed like this:
+> Hmm.  We can land in here from writeback, in which case the time
+> should be updated unconditionally.  We can also land in here from
+> msync(MS_ASYNC) or munmap.  munmap at least shouldn't block.
 > 
-> arch/powerpc/platforms/cell/spufs/inode.c: In function
-> 'spufs_parse_options':
-> arch/powerpc/platforms/cell/spufs/inode.c:623:16: error: incompatible
-> types when assigning to type 'kuid_t' from type 'int' root->i_uid =
-> option; ^ arch/powerpc/platforms/cell/spufs/inode.c:628:16: error:
-> incompatible types when assigning to type 'kgid_t' from type 'int'
-> root->i_gid = option; ^
+> The nasty case is if a page is dirtied, then the frozen level is set
+> to SB_FREEZE_PAGEFAULT, and then userspace calls munmap or msync
+> *before* writepages gets called.  In this case, blocking until the fs
+> is unfrozen is probably impolite, and returning without updating the
+> time is questionable.
 > 
-> Caused by commit d6970d4b726c ("enable building user namespace with
-> xfs") from the xfs tree (that was fun to find :-)).
-> 
-> I have reverted that commit for today.  It could probably be replaced
-> with a patch that just changed XFS_FS to SPU_FS in the
-> UIDGID_CONVERTED config dependency - or someone could fix up SPU_FS.
+> Removing the check entirely may add a new race, though: what if
+> .flush_cmtime has called mapping_test_clear_cmtime but hasn't gotten
+> to updating the time yet when freezing finishes?  This could be
+> prevented by changing generic_flush_cmtime to do __sb_start_write(sb,
+> SB_FREEZE_FS, false) and doing nothing if the fs is already frozen.
+  I think it should be a responsibility of the caller of .flush_cmtime (as
+is the case of update_time()) to handle freeze protection if needed. As
+Dave told you, writeback path mustn't actually take it. OTOH things like
+munmap() or msync() need to get it because we must avoid changing the
+filesystem when it is frozen and these calls can happen when fs is frozen.
 
-Hi, (already sent this email based on Intel's kbuild robot this
-morning, sorry for the dup to those who already got it). 
-
-Yep this looks to me like SPU_FS should have been in the list of
-stuff that had not been UIDGID_CONVERTED, but reviving
-UIDGID_CONVERTED and adding SPU_FS to it won't work for
-non powerpc arch because SPU_FS = n won't be defined. The following can
-be used to mark it as incompatible with USER_NS:
-
-diff --git a/arch/powerpc/platforms/cell/Kconfig
-b/arch/powerpc/platforms/cell/Kconfig index 9978f59..fcf8336 100644
---- a/arch/powerpc/platforms/cell/Kconfig
-+++ b/arch/powerpc/platforms/cell/Kconfig
-@@ -61,6 +61,7 @@ config SPU_FS
-        tristate "SPU file system"
-        default m
-        depends on PPC_CELL
-+       depends on USER_NS=n
-        select SPU_BASE
-        select MEMORY_HOTPLUG
-        help
-
-Or if the rest of spufs is already okay for user namespace (I have not
-checked it, but this seems to be the only place it is dealing with
-uid/gid), then the following will fix these particular errors
-(cross-compile tested, but I don't have a powerpc to run test on):
-
-diff --git a/arch/powerpc/platforms/cell/spufs/inode.c b/arch/powerpc/platforms/cell/spufs/inode.c
-index f390042..90fb308 100644
---- a/arch/powerpc/platforms/cell/spufs/inode.c
-+++ b/arch/powerpc/platforms/cell/spufs/inode.c
-@@ -620,12 +620,12 @@ spufs_parse_options(struct super_block *sb, char *options, struct inode *root)
-                case Opt_uid:
-                        if (match_int(&args[0], &option))
-                                return 0;
--                       root->i_uid = option;
-+                       root->i_uid = make_kuid(&init_user_ns, option);
-                        break;
-                case Opt_gid:
-                        if (match_int(&args[0], &option))
-                                return 0;
--                       root->i_gid = option;
-+                       root->i_gid = make_kgid(&init_user_ns, option);
-                        break;
-                case Opt_mode:
-                        if (match_octal(&args[0], &option))
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
