@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 58B3F29E18
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 12:03:40 -0500 (CDT)
-Date: Wed, 21 Aug 2013 12:03:36 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
-Message-ID: <20130821170336.GJ5262@sgi.com>
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<20130819201940.516942026@sgi.com> <5212AA1D.3000809@sandeen.net>
-	<52137D3D.8060205@sgi.com> <20130821000624.GO6023@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 525E97FDB
+	for <linux-xfs@oss.sgi.com>; Wed, 21 Aug 2013 12:13:31 -0500 (CDT)
+Message-ID: <5214F569.9020605@sgi.com>
+Date: Wed, 21 Aug 2013 12:14:17 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130821000624.GO6023@dastard>
+Subject: Re: [PATCH] xfs_repair: add prototype for alloc_ex_data()
+References: <5213F849.7080308@redhat.com> <5214CE82.3040707@sgi.com>
+	<5214DCAA.9090703@sandeen.net>
+In-Reply-To: <5214DCAA.9090703@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,83 +18,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>, Mark Tinguely <tinguely@sgi.com>
 
-Hi Dave,
-
-On Wed, Aug 21, 2013 at 10:06:24AM +1000, Dave Chinner wrote:
-> On Tue, Aug 20, 2013 at 09:29:17AM -0500, Mark Tinguely wrote:
-> > I repeat, if you have technical concerns for the feature's
-> > implementation and its impact on v4 filesystems because it uses
-> > common directory code, then it should be held back for more testing.
-> 
-> I missed this comment. Mark, I'm really concerned that SGI is taking
-> the stance that the dtype code is fully working unless otherwise
-> proven to have problems.  That is a dangerous approach to take for
-> new code and new on-disk formats - it should be considered with
-> suspicion and paranoia until enough testing has been done to negate
-> those concerns.
-> 
-> The reason I only proposed this for v5 superblocks is to enable
-> wider testing and get us to the point where we are not concerned
-> anymore about it before we say it is ready for production
-> deployment.
-> 
-> I have technical concerns that arise once the feature bit it
-> enabled, not when it is disabled. Those technical concerns center
-> around off-by-one and alignment issues as a result of increasing the
-> dirent size when the feature bit is enabled - they pack differently
-> into the directory structure and hence will exercise allocation,
-> freespace and logging differently.
-> 
-> See my previous comments about how hard the directory code is to
-> test and validate - that's why I want to enable in V5 first so we
-> can shake out problems over a wider (but still constrained) user
-> base that understand that EXPERIMENTAL means that they might still
-> be corruption bugs lurking.
-
-I understand the sentiment that it would be nice to get this into v5 for some
-early initial testing.  However, we agreed to take in the crc work as
-experimental on the condition that it does not regress v4 superblocks, and with
-the knowledge that it might take awhile to be completed.  It's still unfinished
-and that's ok.  We knew that was coming.  But this was an agreement made for
-one feature only.  We did not agree that the v5 superblock would become a
-dumping ground for unrelated and incomplete features to get early testing.
-
-> Again, as I've said all along - enabling the feature on v4
-> filesystems is not a technical problem - it's a process and support
-> problem. If I thought that this code was ready for widespread
-> production deployment then I would have no hesitation to add v4
-> support, but it's simply not at that stage yet. We need wider test
-> and deployment coverage to get the new feature to that stage.
+On 08/21/2013 10:28 AM, Eric Sandeen wrote:
+> On 8/21/13 9:28 AM, Mark Tinguely wrote:
+>> On 08/20/13 18:14, Eric Sandeen wrote:
+>>> 3ac87fbf xfsprogs: fix inode crash in xfs_repair
+>>>
+>>> un-static'd alloc_ex_data and used it in phase6.c,
+>>> but didn't put a prototype in a header, so:
+>>>
+>>>    phase6.c: In function =91mk_orphanage=92:
+>>>    phase6.c:943: warning: implicit declaration of function =91alloc_ex_=
+data=92
+>>>
+>>> Fix it...
+>>>
+>>> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+>>> ---
+>>
+>>
+>> Thanks and sorry. I knew it and hoped to get it in before it got committ=
+ed.
 >
-> Which leads to the "then it should be held back for more testing"
-> comment. We've discussed this before - almost a year ago now - when
-> SGI stated that they wouldn't accept any new code in the xfsdev tree
-> unless it was proven to be regression free. That was unacceptable
-> then and to apply it to the v5 dirent code is no different.
-> 
-> We need wider testing of these changes before it is production
-> ready, and so holding it back until it's proven to be OK for
-> production deployment in v4 filesystems is placing us in a catch-22
-> and as such is a similarly an unacceptable outcome.
+> Eh, it happens.
+>
+> Minor demerit for Rich for not catching it before commit, either ;)
 
-If this needs more testing I'm all for it.  We should make it a Kconfig option
-marked as experimental in it's own right, finish the userspace work, and then
-set about pulling it in.  Marking the feature bit as experimental in mkfs with
-a warning also seems like an good idea to me...  And if you're that concerned
-about it then I'd really like to see them both.  But marking it experimental
-doesn't magically mean that we'll pull in another incomplete feature.  My
-impression is we're likely to go to -rc7, so I think chances are good this work
-can be finished in time for 3.12.
+***rjohnston: hides head in shame and vows to improve
 
-Regards,
-	Ben
+>
+> -Eric (who has never, NEVER made a mistake like that)
+>
+>>
+>> --Mark.
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
