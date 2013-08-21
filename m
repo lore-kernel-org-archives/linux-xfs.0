@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0F8DB7CBF
-	for <linux-xfs@oss.sgi.com>; Tue, 20 Aug 2013 19:07:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 80467AC002
-	for <linux-xfs@oss.sgi.com>; Tue, 20 Aug 2013 17:07:10 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	N3IvszEAky7U9wYR for <linux-xfs@oss.sgi.com>;
-	Tue, 20 Aug 2013 17:07:08 -0700 (PDT)
-Date: Wed, 21 Aug 2013 10:07:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: add prototype for alloc_ex_data()
-Message-ID: <20130821000704.GP6023@dastard>
-References: <5213F849.7080308@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5213F849.7080308@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48C7A7FC2
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 19:22:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2668C8F8033
+	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 17:22:51 -0700 (PDT)
+Received: from members.tip.net.au (haggis.pcug.org.au [203.10.76.10]) by
+	cuda.sgi.com with ESMTP id t7AaSgBEbFG4gDVj for
+	<xfs@oss.sgi.com>; Tue, 20 Aug 2013 17:22:50 -0700 (PDT)
+Date: Wed, 21 Aug 2013 10:22:46 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: linux-next: build failure after merge of the final tree
+Message-Id: <20130821102246.4e3c4c8fe549d8c7760da96d@canb.auug.org.au>
+In-Reply-To: <20130820192844.GC5262@sgi.com>
+References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
+	<20130820120702.000b044e@oracle.com>
+	<20130820192844.GC5262@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,31 +25,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============6071519106055482795=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Mark Tinguely <tinguely@sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: cbe-oss-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dwight Engen <dwight.engen@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Jeremy Kerr <jk@ozlabs.org>, linuxppc-dev@lists.ozlabs.org, Gao feng <gaofeng@cn.fujitsu.com>
 
-T24gVHVlLCBBdWcgMjAsIDIwMTMgYXQgMDY6MTQ6MTdQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IDNhYzg3ZmJmIHhmc3Byb2dzOiBmaXggaW5vZGUgY3Jhc2ggaW4geGZzX3JlcGFpcgo+
-IAo+IHVuLXN0YXRpYydkIGFsbG9jX2V4X2RhdGEgYW5kIHVzZWQgaXQgaW4gcGhhc2U2LmMsCj4g
-YnV0IGRpZG4ndCBwdXQgYSBwcm90b3R5cGUgaW4gYSBoZWFkZXIsIHNvOgo+IAo+ICBwaGFzZTYu
-YzogSW4gZnVuY3Rpb24g4oCYbWtfb3JwaGFuYWdl4oCZOgo+ICBwaGFzZTYuYzo5NDM6IHdhcm5p
-bmc6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mIGZ1bmN0aW9uIOKAmGFsbG9jX2V4X2RhdGHigJkK
-PiAKPiBGaXggaXQuLi4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5A
-cmVkaGF0LmNvbT4KPiAtLS0KPiAKPiBkaWZmIC0tZ2l0IGEvcmVwYWlyL2luY29yZS5oIGIvcmVw
-YWlyL2luY29yZS5oCj4gaW5kZXggOGE1NzhiNS4uMzhjYWE2ZCAxMDA2NDQKPiAtLS0gYS9yZXBh
-aXIvaW5jb3JlLmgKPiArKysgYi9yZXBhaXIvaW5jb3JlLmgKPiBAQCAtNDgzLDYgKzQ4MywxMSBA
-QCB2b2lkCQlzZXRfaW5vZGVfcGFyZW50KGlub190cmVlX25vZGVfdCAqaXJlYywgaW50IGlub19v
-ZmZzZXQsCj4gIHhmc19pbm9fdAlnZXRfaW5vZGVfcGFyZW50KGlub190cmVlX25vZGVfdCAqaXJl
-YywgaW50IGlub19vZmZzZXQpOwo+ICAKPiAgLyoKPiArICogQWxsb2NhdGUgZXh0cmEgaW5vZGUg
-ZGF0YQo+ICsgKi8KPiArdm9pZAkJYWxsb2NfZXhfZGF0YShpbm9fdHJlZV9ub2RlX3QgKmlyZWMp
-Owo+ICsKPiArLyoKPiAgICogYm1hcCBjdXJzb3IgZm9yIHRyYWNraW5nIGFuZCBmaXhpbmcgYm1h
-cCBidHJlZXMuICBBbGwgeGZzIGJ0cmVlcyBudW1iZXIKPiAgICogdGhlIGxldmVscyB3aXRoIDAg
-YmVpbmcgdGhlIGxlYWYgYW5kIGV2ZXJ5IGxldmVsIHVwIGJlaW5nIDEgZ3JlYXRlci4KPiAgICov
-CgpMb29rcyBnb29kLgoKUmV2aWV3ZWQtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0
-LmNvbT4KCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
-b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+--===============6071519106055482795==
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Wed__21_Aug_2013_10_22_46_+1000_EeAL.9Y2BRkRXAed"
+
+--Signature=_Wed__21_Aug_2013_10_22_46_+1000_EeAL.9Y2BRkRXAed
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Ben,
+
+On Tue, 20 Aug 2013 14:28:44 -0500 Ben Myers <bpm@sgi.com> wrote:
+>
+> I'd prefer not to break Stephen's tree two days in a row.  We could just =
+revert
+> d6970d4b726c in the xfs tree for the time being as Stephen has done, but =
+given
+> the choice would prefer the fix.  Do you have a preference between the two
+> approaches that Dwight has posted?  The first seems more conservative...
+
+I will automatically revert that commit when I merge the xfs tree until
+some other solution is forthcoming (so you don't have to do the revert in
+the xfs tree).  This does need to be fixed fairly soon, though.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+--Signature=_Wed__21_Aug_2013_10_22_46_+1000_EeAL.9Y2BRkRXAed
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBCAAGBQJSFAhWAAoJEECxmPOUX5FEoQEP/1hWbSlulJwAxE5gM1Z5Sx2S
+yniC9fDmRFaPz69pVNy+9CsF1JJvsT6eu1hDd4wb1F8wjBGK2AiE60uAkBTwBIXw
+zS8/IBfRclEMxxZH7Jx95chFTr3CaqT5z+APhw4tpSurMr38wi94UTY9+m5KdylW
+odgp3cjD4hXfchikf0Pg4zA+yH11vTTmh63QV3IExOHFATRCI5wFGd2BGbb6hNzo
+e6t7h6maWqRjYEuyz9kSCxtgQzHeAIrFPuNUA/N42kJ3EFvYhVERAqwMJgeqYYRs
+S/9hz599YtSJrQZ7gvTVqpVu2AQ4jBaioWKGFlWZ8tsZmhhykLY9T+yOjHMLmBS0
+k9+7Q7ehDBlEHF4v9ZIs1OciQ7cT8SpvH7La+9759ofdCGl7PtjFfTfoGnGj62j/
+DwAD1cUtbxZ/JcEERqWNfZ60i3HTRWkt3xw0oU4fMuQ3HcWIfwrSY4J0+h2cJBGC
+OK/cU4JNKKZRg6H8w4zne7uTkljkO9MmrF3nQ4FatUgcSLnY5frkzhaP238P4Hgu
+3ZWKyBoL34k9tYYuS/cvOqrn3wI8Xm/viqZNoK1pnVmHR49f/3dHv0tCoMROROZa
+F76/j9qMi8gY3vhi9sEhBDkWZXDLgyoprcJaCXvmkU/ridGcQmnIm7UcdssySaHO
+aMCnucNRR2B0iW65vxV1
+=KhY3
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__21_Aug_2013_10_22_46_+1000_EeAL.9Y2BRkRXAed--
+
+
+--===============6071519106055482795==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6071519106055482795==--
