@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 778957FE6
-	for <linux-xfs@oss.sgi.com>; Wed, 21 Aug 2013 10:28:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 644FE3040A4
-	for <linux-xfs@oss.sgi.com>; Wed, 21 Aug 2013 08:28:44 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id hHhCU8ZWCOyrFYim for <linux-xfs@oss.sgi.com>;
-	Wed, 21 Aug 2013 08:28:43 -0700 (PDT)
-Message-ID: <5214DCAA.9090703@sandeen.net>
-Date: Wed, 21 Aug 2013 10:28:42 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DA8687FF3
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 10:54:19 -0500 (CDT)
+Date: Wed, 21 Aug 2013 10:54:16 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: linux-next: build failure after merge of the final tree
+Message-ID: <20130821155416.GH5262@sgi.com>
+References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
+	<20130820120702.000b044e@oracle.com>
+	<20130820192844.GC5262@sgi.com>
+	<20130821102246.4e3c4c8fe549d8c7760da96d@canb.auug.org.au>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: add prototype for alloc_ex_data()
-References: <5213F849.7080308@redhat.com> <5214CE82.3040707@sgi.com>
-In-Reply-To: <5214CE82.3040707@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130821102246.4e3c4c8fe549d8c7760da96d@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,52 +21,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: cbe-oss-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dwight Engen <dwight.engen@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Jeremy Kerr <jk@ozlabs.org>, linuxppc-dev@lists.ozlabs.org, Gao feng <gaofeng@cn.fujitsu.com>
 
-On 8/21/13 9:28 AM, Mark Tinguely wrote:
-> On 08/20/13 18:14, Eric Sandeen wrote:
->> 3ac87fbf xfsprogs: fix inode crash in xfs_repair
->>
->> un-static'd alloc_ex_data and used it in phase6.c,
->> but didn't put a prototype in a header, so:
->>
->>   phase6.c: In function =91mk_orphanage=92:
->>   phase6.c:943: warning: implicit declaration of function =91alloc_ex_da=
-ta=92
->>
->> Fix it...
->>
->> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
->> ---
-> =
+Hey Stephen,
 
-> =
+On Wed, Aug 21, 2013 at 10:22:46AM +1000, Stephen Rothwell wrote:
+> On Tue, 20 Aug 2013 14:28:44 -0500 Ben Myers <bpm@sgi.com> wrote:
+> > I'd prefer not to break Stephen's tree two days in a row.  We could just revert
+> > d6970d4b726c in the xfs tree for the time being as Stephen has done, but given
+> > the choice would prefer the fix.  Do you have a preference between the two
+> > approaches that Dwight has posted?  The first seems more conservative...
+> 
+> I will automatically revert that commit when I merge the xfs tree until
+> some other solution is forthcoming (so you don't have to do the revert in
+> the xfs tree).
 
-> Thanks and sorry. I knew it and hoped to get it in before it got committe=
-d.
+Gah.  That makes sense.  ;)
 
-Eh, it happens.
+> This does need to be fixed fairly soon, though.
 
-Minor demerit for Rich for not catching it before commit, either ;)
+Agreed, thanks.
 
--Eric (who has never, NEVER made a mistake like that)
-
-> =
-
-> --Mark.
-> =
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> =
-
+-Ben
 
 _______________________________________________
 xfs mailing list
