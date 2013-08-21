@@ -1,27 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 279877FDB
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 12:31:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0F3E68F8040
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 10:31:22 -0700 (PDT)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id 75gDycGhvszU6ZQe (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 Aug 2013 10:31:21 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id 354EB7C042D
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 11:31:21 -0600 (MDT)
-Date: Wed, 21 Aug 2013 13:31:19 -0400
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [PATCH] xfstests: btrfs/003: stat the dev we're removing to make
-	sure its' really gone
-Message-ID: <20130821173119.GN3990@localhost.localdomain>
-References: <1377101015-3070-1-git-send-email-jbacik@fusionio.com>
-	<5214EE7F.8090507@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 6599A7FFD
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 12:44:11 -0500 (CDT)
+Date: Wed, 21 Aug 2013 12:44:10 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/3] Add a new quotactl command to support 3 quota
+	types in XFS
+Message-ID: <20130821174410.GC7153@sgi.com>
+References: <1375828029-26360-1-git-send-email-sekharan@us.ibm.com>
+	<20130820222528.GG5262@sgi.com> <1377088082.2738.19.camel@menhir>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5214EE7F.8090507@sandeen.net>
+In-Reply-To: <1377088082.2738.19.camel@menhir>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,43 +24,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
+To: Steven Whitehouse <swhiteho@redhat.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Abhijith Das <adas@redhat.com>, Jan Kara <jack@suse.cz>, Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-On Wed, Aug 21, 2013 at 11:44:47AM -0500, Eric Sandeen wrote:
-> On 8/21/13 11:03 AM, Josef Bacik wrote:
-> > I've been periodically failing btrfs/003 because my box sometimes takes a little
-> > longer to unregister the device when we remove it and so the output from btrfs
-> > dev show doesn't match what we are wanting since it still sees the device.  To
-> > fix this just stat and sleep if we still see the device node and only continue
-> > once udev or whatever actually removes the device node so that we don't get
-> > random failures.  Thanks,
+Hi Steven,
+
+On Wed, Aug 21, 2013 at 01:28:02PM +0100, Steven Whitehouse wrote:
+> Hi,
+> 
+> On Tue, 2013-08-20 at 17:25 -0500, Ben Myers wrote:
+> > Hi Chandra,
 > > 
-> > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-> > ---
-> >  tests/btrfs/003 |    6 ++++++
-> >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > On Tue, Aug 06, 2013 at 05:27:06PM -0500, Chandra Seetharaman wrote:
+> > > XFS now supports simultaneous use of 3 quota types (user, group,
+> > > and project).
+> > > 
+> > > In order to support this a new quotactl command is introduced
+> > > in this patch series.
 > > 
-> > diff --git a/tests/btrfs/003 b/tests/btrfs/003
-> > index 5c88651..dba1a32 100755
-> > --- a/tests/btrfs/003
-> > +++ b/tests/btrfs/003
-> > @@ -145,6 +145,12 @@ _test_replace()
-> >  	_devmgt_remove ${DEVHTL}
-> >  	dev_removed=1
-> >  
+> > I've applied patches 1 and 2 at git://oss.sgi.com/xfs/xfs.git, master branch.
+> > I think patch 3 should go through the gfs2 tree.
+> > 
+> > Steven, I think if you want to pull in patch 3 you'll also need patch 1.  Maybe
+> > the easiest way is to cherry pick it from the xfs tree?  If you do we'll have a
+> > trivial merge conflict.  Anyway, it's af30cb446dd5 if you want.
+> > 
+> > Thanks,
+> > 	Ben
 > 
-> This should probably go into _devmgt_remove,
-> and possibly the reverse in _devmgmt_add as well, with
-> a comment explaining what it's doing?
-> 
-> Otherwise someone else will run into the same problem down the line.
-> 
+> I think it would be better if all the patches went through the same tree
+> to save issues with dependencies. I don't mind if you want to put the
+> gfs2 patches in the xfs tree to keep everything in the same place. There
+> are no current quota changes in the gfs2 tree, so there should not be a
+> conflict due to that.
 
-No, the next guy will have to go as much pain and annoyance as I did to make
-sure he is worthy of the fix.  Thanks,
+Ok, we'll take that route.  Thanks.
 
-Josef
+> Also, it would be good if Christoph's comments could be addressed too,
+
+Agreed.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
