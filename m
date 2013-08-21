@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DA8687FF3
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 10:54:19 -0500 (CDT)
-Date: Wed, 21 Aug 2013 10:54:16 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D82ED7F73
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 10:56:57 -0500 (CDT)
+Date: Wed, 21 Aug 2013 10:56:54 -0500
 From: Ben Myers <bpm@sgi.com>
 Subject: Re: linux-next: build failure after merge of the final tree
-Message-ID: <20130821155416.GH5262@sgi.com>
+Message-ID: <20130821155654.GI5262@sgi.com>
 References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
 	<20130820120702.000b044e@oracle.com>
-	<20130820192844.GC5262@sgi.com>
-	<20130821102246.4e3c4c8fe549d8c7760da96d@canb.auug.org.au>
+	<201308202246.30869.arnd@arndb.de>
+	<20130821010822.220f592a@oracle.com> <52145E6C.80404@ozlabs.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130821102246.4e3c4c8fe549d8c7760da96d@canb.auug.org.au>
+In-Reply-To: <52145E6C.80404@ozlabs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +25,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: cbe-oss-dev@lists.ozlabs.org, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dwight Engen <dwight.engen@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Jeremy Kerr <jk@ozlabs.org>, linuxppc-dev@lists.ozlabs.org, Gao feng <gaofeng@cn.fujitsu.com>
+To: Jeremy Kerr <jk@ozlabs.org>
+Cc: cbe-oss-dev@lists.ozlabs.org, Stephen Rothwell <sfr@canb.auug.org.au>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dwight Engen <dwight.engen@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Gao feng <gaofeng@cn.fujitsu.com>, linuxppc-dev@lists.ozlabs.org
 
-Hey Stephen,
+Hey Dwight,
 
-On Wed, Aug 21, 2013 at 10:22:46AM +1000, Stephen Rothwell wrote:
-> On Tue, 20 Aug 2013 14:28:44 -0500 Ben Myers <bpm@sgi.com> wrote:
-> > I'd prefer not to break Stephen's tree two days in a row.  We could just revert
-> > d6970d4b726c in the xfs tree for the time being as Stephen has done, but given
-> > the choice would prefer the fix.  Do you have a preference between the two
-> > approaches that Dwight has posted?  The first seems more conservative...
+On Wed, Aug 21, 2013 at 02:30:04PM +0800, Jeremy Kerr wrote:
+> > Yes, I agree. The other filesystems that take an Opt_uid as well do use
+> > current_user_ns() and not init_user_ns. They also do a uid_valid()
+> > check and fail the mount (or fallback to GLOBAL_ROOT_UID). So I think
+> > that would look like this:
 > 
-> I will automatically revert that commit when I merge the xfs tree until
-> some other solution is forthcoming (so you don't have to do the revert in
-> the xfs tree).
+> Looks good to me. Builds and mounts as expected.
+> 
+> Acked-by: Jeremy Kerr <jk@ozlabs.org>
 
-Gah.  That makes sense.  ;)
+Could you repost this patch with the right subject and a commit header?  Given
+Jeremy's Ack I think we could proceed to pull this in.
 
-> This does need to be fixed fairly soon, though.
-
-Agreed, thanks.
-
--Ben
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
