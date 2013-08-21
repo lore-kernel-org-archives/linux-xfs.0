@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E761F8016
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 13:31:21 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F0B3A7FB4
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 13:36:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 712D4AC001
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 11:31:21 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 6DsTnTM1A4nxQd71 for <xfs@oss.sgi.com>;
-	Wed, 21 Aug 2013 11:31:19 -0700 (PDT)
-Message-ID: <52150775.1050705@sandeen.net>
-Date: Wed, 21 Aug 2013 13:31:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: add the lseek() SEEK_DATA/SEEK_HOLE support
-References: <20130816205409.976658624@sgi.com> <5213F6AF.8070107@sandeen.net>
-	<5214CB5C.4050608@sgi.com> <5214EAAC.80800@sandeen.net>
-	<5214F050.7060402@sgi.com>
-In-Reply-To: <5214F050.7060402@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DA80E30408C
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 11:36:29 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id fBWoyjwi0OokzxqX (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 21 Aug 2013 11:36:29 -0700 (PDT)
+Date: Wed, 21 Aug 2013 14:33:51 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH] powerpc/spufs: convert userns uid/gid mount options to
+	kuid/kgid
+Message-ID: <20130821143351.5840d556@oracle.com>
+In-Reply-To: <20130821155654.GI5262@sgi.com>
+References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
+	<20130820120702.000b044e@oracle.com>
+	<201308202246.30869.arnd@arndb.de>
+	<20130821010822.220f592a@oracle.com> <52145E6C.80404@ozlabs.org>
+	<20130821155654.GI5262@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,144 +33,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: cbe-oss-dev@lists.ozlabs.org, Stephen Rothwell <sfr@canb.auug.org.au>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Jeremy Kerr <jk@ozlabs.org>, linuxppc-dev@lists.ozlabs.org, Gao feng <gaofeng@cn.fujitsu.com>
 
-On 8/21/13 11:52 AM, Mark Tinguely wrote:
-...
+Acked-by: Jeremy Kerr <jk@ozlabs.org>
+Tested-by: Jeremy Kerr <jk@ozlabs.org>
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ arch/powerpc/platforms/cell/spufs/inode.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
->> I think it makes sense to build it&  locally define if necessary.
->> On my RHEL6 root w/ an upstream devel kernel seek.c wouldn't have
->> built, even though it'd have worked perfectly w/ a local define.
->>
+diff --git a/arch/powerpc/platforms/cell/spufs/inode.c b/arch/powerpc/platforms/cell/spufs/inode.c
+index f390042..87ba7cf 100644
+--- a/arch/powerpc/platforms/cell/spufs/inode.c
++++ b/arch/powerpc/platforms/cell/spufs/inode.c
+@@ -620,12 +620,16 @@ spufs_parse_options(struct super_block *sb, char *options, struct inode *root)
+ 		case Opt_uid:
+ 			if (match_int(&args[0], &option))
+ 				return 0;
+-			root->i_uid = option;
++			root->i_uid = make_kuid(current_user_ns(), option);
++			if (!uid_valid(root->i_uid))
++				return 0;
+ 			break;
+ 		case Opt_gid:
+ 			if (match_int(&args[0], &option))
+ 				return 0;
+-			root->i_gid = option;
++			root->i_gid = make_kgid(current_user_ns(), option);
++			if (!gid_valid(root->i_gid))
++				return 0;
+ 			break;
+ 		case Opt_mode:
+ 			if (match_octal(&args[0], &option))
+-- 
+1.8.1.4
+
+On Wed, 21 Aug 2013 10:56:54 -0500
+Ben Myers <bpm@sgi.com> wrote:
+
+> Hey Dwight,
 > 
-> yes, needed anyway if removing linux/fs.h
-
-lseek only should need:
-
-       #include <sys/types.h>
-       #include <unistd.h>
-
-right; those may internally get to linux/fs.h but it shouldn't be
-directly required, I'd expect.  Oh!  it needs
-
-#define _GNU_SOURCE
-
-first, to get it - but xfsprogs build does that already.
-
->> So let me just think out loud here w/ examples.
->>
->> For a 1M 100% nonsparse file we get:
->>
->> # io/xfs_io -c "seek -ar 0" alldata
->> Type    offset
->> DATA    0
->> HOLE    1048576
+> On Wed, Aug 21, 2013 at 02:30:04PM +0800, Jeremy Kerr wrote:
+> > > Yes, I agree. The other filesystems that take an Opt_uid as well
+> > > do use current_user_ns() and not init_user_ns. They also do a
+> > > uid_valid() check and fail the mount (or fallback to
+> > > GLOBAL_ROOT_UID). So I think that would look like this:
+> > 
+> > Looks good to me. Builds and mounts as expected.
+> > 
+> > Acked-by: Jeremy Kerr <jk@ozlabs.org>
 > 
-> or this could be HOLE EOF depends on the version.
+> Could you repost this patch with the right subject and a commit
+> header?  Given Jeremy's Ack I think we could proceed to pull this in.
 
-xfs version?  Just for my own education, which version does that?
+Sure, I just wanted to make sure someone had tested it first, which it
+looks like Jeremy did, thanks.
 
->> DATA    EOF
->>
->> For a 1M 100% sparse file (i_size and no blocks at all) we get:
->>
->> # io/xfs_io -c "seek -ar 0" allsparse
->> Type    offset
->> HOLE    0
->> DATA    EOF
->>
->> For a 1M file w/ only the first 512k w/ data, then hole,
->> we get:
->>
->> # io/xfs_io -c "seek -ar 0" endhole
->> Type    offset
->> DATA    0
->> HOLE    524288
->> DATA    EOF
->>
->> For a 1M file w/ 512k of hole and then 512k w/ data, we get:
->>
->> # io/xfs_io -c "seek -ar 0" starthole
->> Type    offset
->> HOLE    0
->> DATA    524288
->> HOLE    1048576
->> DATA    EOF
->>
->> So in each case, the "DATA  EOF" at the end seems odd to me.
->>
->> And in each case above, the output is unique w/o the EOF flag
->> anwyway, right?
-> 
-> ... or we will get "HOLE EOF"
-> 
-> There are different versions of XFS seek_data and they will
-> detect/report the start of data and holes differently so output
-> parsing will be a bear. The existing C code sends the 2 different
-> value numbers that could be reported.
-
-are they ... both correct?  If one is a bug, it can just be a bug, right?
-I'm sorry I'm not up on the history.
-
-> The later, advance dirty page detection is more fine tuned. Jeff and
-> I had C tests for this feature that I turned into a xfstest; it was
-> suggested that the C test become xfs_io call, and then 5 versions
-> later, we have this ...
-
-6 versions.  :D
-
-> 
->>
->> I'm probably missing it; in what cases is the EOF record
->> useful?  It just seems beyond the scope of SEEK_HOLE/SEEK_DATA.
->> (i.e. EOF is SEEK_END)
->>
->> If the EOF is really helpful, maybe it is possible instead to do something like:
->>
->> # io/xfs_io -c "seek -ar 0" starthole
->> Type    offset
->> HOLE    0
->> DATA    524288
->> EOF    1048575
->> HOLE    1048576
->>
->> That makes more intuitive sense to me if you really need the EOF
->> record, but I dunno, what do you think?
->>
-> I can drop the table header.
-> 
-> We can leave off the implied eof - there will be cases where there is no entries.
-
-Well, whatever you think, I guess.  Given that the interface is _defined_ as having
-an implicit hole past EOF, saying "DATA EOF" just hurts my brain.
-
-Maybe the guiding principle should be: this is a tool to exercise lseek for
-SEEK_DATA / SEEK_HOLE.  It should report the results of those ops, and no
-more; just present what the requested call(s) said.  If you really want to know
-where EOF is, use stat?
-
-(Since the command is just called "seek" maybe some day it will grow
--e -s -c options for SEEK_END, SEEK_SET, and SEEK_CUR as well, to be
-able to exercise every "whence" - and then if you want to know EOF,
-just send it SEEK_END and see what it returns)
-
->>>> I guess "DATA" doesn't get replaced by "0" ?  Sorry, I failed cpp 101.
->>>> It prints the right thing so I guess not.  ;)
->>>>
->>>
->>> :) no the defines are subscripts = see "current ="
->>
->> I did see that, I just wasn't sure if it'd replace it in literal
->> strings, but apparently not.
->>
-> 
-> nope, strings are safe - did Coverity complain?
-
-No, just my dumb brain.
-
-
--Eric
+> Regards,
+> 	Ben
 
 _______________________________________________
 xfs mailing list
