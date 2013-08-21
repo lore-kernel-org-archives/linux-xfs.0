@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C72A4800E
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 01:30:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B231E304077
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 23:30:09 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [203.10.76.45]) by cuda.sgi.com with
-	ESMTP id kkxdL2wWOOukFc27 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Aug 2013 23:30:08 -0700 (PDT)
-Message-ID: <52145E6C.80404@ozlabs.org>
-Date: Wed, 21 Aug 2013 14:30:04 +0800
-From: Jeremy Kerr <jk@ozlabs.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E49687FFD
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 08:02:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C0BB28F8035
+	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 06:02:03 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 1AFXIPz513USFuv5 for <xfs@oss.sgi.com>;
+	Wed, 21 Aug 2013 06:02:02 -0700 (PDT)
+Date: Wed, 21 Aug 2013 15:01:52 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/3] quota: Add a new quotactl command Q_XGETQSTATV
+Message-ID: <20130821130152.GA9709@quack.suse.cz>
+References: <1375828029-26360-1-git-send-email-sekharan@us.ibm.com>
+	<1375828029-26360-2-git-send-email-sekharan@us.ibm.com>
+	<20130821064357.GA8822@infradead.org>
 MIME-Version: 1.0
-Subject: Re: linux-next: build failure after merge of the final tree
-References: <20130820172052.1f0d89ddf6a1a40ef70333fd@canb.auug.org.au>
-	<20130820120702.000b044e@oracle.com>
-	<201308202246.30869.arnd@arndb.de>
-	<20130821010822.220f592a@oracle.com>
-In-Reply-To: <20130821010822.220f592a@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20130821064357.GA8822@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,24 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: cbe-oss-dev@lists.ozlabs.org, Stephen Rothwell <sfr@canb.auug.org.au>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Gao feng <gaofeng@cn.fujitsu.com>, linuxppc-dev@lists.ozlabs.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, Chandra Seetharaman <sekharan@us.ibm.com>, Abhijith Das <adas@redhat.com>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Steven Whitehouse <swhiteho@redhat.com>
 
-Hi all,
+On Tue 20-08-13 23:43:57, Christoph Hellwig wrote:
+> Sorry for being late to the game, but I don not like the in-kernel
+> interface here at all.  Given that Q_XGETQSTATV is a strict superset
+> of Q_XGETQSTAT there is no need for the second method - just always
+> fill out the larger in-kernel structure and only copy the smaller
+> information to userspace for the Q_XGETSTAT case.  That keeps the amount
+> of code required in the implementations of the methods low and follows
+> the model used elsewhere in the kernel (e.g. stat and statfs)
+  Well, the trouble is with gquota vs pquota - previously we report in
+qs_gquota field either group quotas or project quotas depending on what is
+turned on. Generic quota code doesn't know this so xfs get_xstatev() would
+have to recognize whether it is being called from the old Q_XGETSTAT
+quotactl or from the new Q_XGETSTATV quotactl to know where to fill in
+project quotas. And at that point you somewhat loose the elegancy of using
+one interface - we could set qs_version to some special value so that
+.get_xstatev() recognizes this and does the magic but that doesn't seem very
+different from the extra call...
 
-> Yes, I agree. The other filesystems that take an Opt_uid as well do use
-> current_user_ns() and not init_user_ns. They also do a uid_valid()
-> check and fail the mount (or fallback to GLOBAL_ROOT_UID). So I think
-> that would look like this:
+Some duplication could be certainly avoided within XFS itself.
 
-Looks good to me. Builds and mounts as expected.
-
-Acked-by: Jeremy Kerr <jk@ozlabs.org>
-
-Cheers,
-
-
-Jeremy
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
