@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12208-g3e3c51c
-Message-Id: <20130822155055.6AB637F9E@oss.sgi.com>
-Date: Thu, 22 Aug 2013 10:50:54 -0500 (CDT)
+Message-Id: <20130822155111.62EF17FAF@oss.sgi.com>
+Date: Thu, 22 Aug 2013 10:51:10 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   3e3c51c xfs: add xfs sb v4 support for dirent filetype field
   1c55cec xfs: Add write support for dirent filetype field
   0cb9776 xfs: Add read-only support for dirent filetype field
