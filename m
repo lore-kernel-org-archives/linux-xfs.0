@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE1D47FB1
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 09:05:30 -0500 (CDT)
-Message-ID: <52161AAA.1070107@sgi.com>
-Date: Thu, 22 Aug 2013 09:05:30 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 845F87F84
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 10:07:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 06913AC008
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 08:07:20 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [64.9.206.49]) by cuda.sgi.com
+	with ESMTP id mbuOZxjmgnmM20kB for <xfs@oss.sgi.com>;
+	Thu, 22 Aug 2013 08:07:19 -0700 (PDT)
+Date: Thu, 22 Aug 2013 11:07:17 -0400
+From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
+	(mode:0x250)
+Message-ID: <20130822150717.GB2714@poseidon.cudanet.local>
+References: <20130821152458.GD986@poseidon.cudanet.local>
+	<20130822022544.GS6023@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_db: add header to freesp -d output
-References: <521541EF.1000604@redhat.com>
-In-Reply-To: <521541EF.1000604@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20130822022544.GS6023@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,53 +26,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 08/21/13 17:40, Eric Sandeen wrote:
-> Today, xfs_db's freesp -d command dumps out a bunch of numbers:
->
-> # xfs_db -c "freesp -d" /dev/sdb1
->         0        4        1
->         0        5        1
->         0        6        1
->         0        7        1
->         0       12   174772
-> ...
->
-> which are not useful to the non-code-reading user.
-> Add some headers:
->
-> # xfs_db -c "freesp -d" /dev/sdb1
->      agno    agbno      len
->         0        4        1
->         0        5        1
->         0        6        1
->         0        7        1
->         0       12   174772
-> ...
->
-> so there's at least some context.
->
-> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> ---
->
-> p.s. - If folks want different strings, I'm game.
-
-
-Seems like just yesterday, some reviewer was concerned about the 
-verbosity of table headers... wait it was yesterday! Gawd, I love irony.
-:)
-
-Geoffrey comment len -> length is fine too.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBBdWcgMjIsIDIwMTMgYXQgMTI6MjU6NDRQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFdlZCwgQXVnIDIxLCAyMDEzIGF0IDExOjI0OjU4QU0gLTA0MDAsIEpvc2VmICdK
+ZWZmJyBTaXBlayB3cm90ZToKPiA+IFdlJ3ZlIHN0YXJ0ZWQgZXhwZXJpbWVudGluZyB3aXRoIGxh
+cmdlciBkaXJlY3RvcnkgYmxvY2sgc2l6ZXMgdG8gYXZvaWQKPiA+IGRpcmVjdG9yeSBmcmFnbWVu
+dGF0aW9uLiAgRXZlcnl0aGluZyBzZWVtcyB0byB3b3JrIGZpbmUsIGV4Y2VwdCB0aGF0IHRoZSBs
+b2cKPiA+IGlzIHNwYW1tZWQgd2l0aCB0aGVzZSBsb3ZlbHkgZGVidWcgbWVzc2FnZXM6Cj4gPiAK
+PiA+IAlYRlM6IHBvc3NpYmxlIG1lbW9yeSBhbGxvY2F0aW9uIGRlYWRsb2NrIGluIGttZW1fYWxs
+b2MgKG1vZGU6MHgyNTApCj4gPiAKPiA+IEZyb20gbG9va2luZyBhdCB0aGUgY29kZSwgaXQgbG9v
+a3MgbGlrZSB0aGF0IGVhY2ggb2YgdGhvc2UgbWVzc2FnZXMgKHRoZXJlCj4gPiBhcmUgdGhvdXNh
+bmRzKSBlcXVhdGVzIHRvIDEwMCB0cmlwcyB0aHJvdWdoIHRoZSBsb29wLiAgTXkgZ3Vlc3MgaXMg
+dGhhdCB0aGUKPiA+IGxhcmdlciBibG9ja3MgcmVxdWlyZSBtdWx0aS1wYWdlIGFsbG9jYXRpb25z
+IHdoaWNoIGFyZSBoYXJkZXIgdG8gc2F0aXNmeS4KPiA+IFRoaXMgaXMgd2l0aCAzLjEwIGtlcm5l
+bC4KPiAKPiBObywgbGFyZ2VyIGJsb2NrcyBzaW1wbHkgcmVxdWlyZSBtb3JlIHNpbmdsZSBwYWdl
+cy4gVGhlIGJ1ZmZlciBjYWNoZQo+IGRvZXMgbm90IHJlcXVpcmUgbXVsdGktcGFnZSBhbGxvY2F0
+aW9uIGF0IGFsbC4gU28sIG1vZGUgPSAweDI1MCwKPiB3aGljaCBtZWFucyBfX19HRlBfTk9XQVJO
+IHwgX19fR0ZQX0lPIHwgX19fR0ZQX1dBSVQgd2hpY2ggaXMgYWxzbwo+IGtub3duIGFzIGEgR0ZQ
+X05PRlMgYWxsb2NhdGlvbiBjb250ZXh0LgoKRG9oISAgTm90IHN1cmUgd2h5IEkgZGlkbid0IHJl
+bWVtYmVyIHRoZSBmYWN0IHRoYXQgZGlyZWN0b3JpZXMgYXJlIG5vCmRpZmZlcmVudCBmcm9tIHJl
+Z3VsYXIgZmlsZXMuLi4KCi4uLgo+ID4gL3Byb2Mvc2xhYmluZm86IGh0dHBzOi8vd3d3LmNvcHku
+Y29tL3MvMXgxeVpGallPMkVJL3NsYWIudHh0Cj4gCj4gSG1tbS4gWW91J3JlIHVzaW5nIGZpbGVz
+dHJlYW1zLiBUaGF0J3MgdW51c3VhbC4KClJpZ2h0LiAgSSBrZWVwIGZvcmdldHRpbmcgYWJvdXQg
+dGhhdC4KCj4gPiBzeXNycSBtIG91dHB1dDogaHR0cHM6Ly93d3cuY29weS5jb20vcy9tWWZNWWZK
+SmwyRUIvc3lzcnEtbS50eHQKPiAKPiAyNzc2NDQwMSB0b3RhbCBwYWdlY2FjaGUgcGFnZXMKPiAK
+PiB3aGljaCBpbmRpY2F0ZXMgdGhhdCB5b3UndmUgZ290IGNsb3NlIHRvIDExMEdCIG9mIHBhZ2Vz
+IGluIHRoZSBwYWdlCj4gY2FjaGUuIEhtbW0sIGFuZCAyNC0yNUdCIG9mIGRpcnR5IHBhZ2VzIGlu
+IG1lbW9yeS4KPiAKPiBZb3Uga25vdywgSSdkIGJlIHN1c3BlY3RpbmcgYSBtZW1vcnkgcmVjbGFp
+bSBwcm9ibGVtIGhlcmUgdG8gZG8gd2l0aAo+IGhhdmluZyBsYXJnZSBhbW91bnRzIG9mIGRpcnR5
+IG1lbW9yeSBpbiB0aGUgcGFnZSBjYWNoZS4gSSBkb24ndAo+IHRoaW5rIHRoZSB1bmRlcmx5aW5n
+IGNhdXNlIGlzIGdvaW5nIHRvIGJlIHRoZSBmaWxlc3lzdGVtIGNvZGUsIGFzCj4gdGhlIHdhcm5p
+bmcgc2hvdWxkIG5ldmVyIGJlIGVtaXR0ZWQgaWYgbWVtb3J5IHJlY2xhaW0gaXMgbWFraW5nCj4g
+cHJvZ3Jlc3MuIFBlcmhhcHMgeW91IGNvdWxkIHRyeSBsb3dlcmluZyBhbGwgdGhlIGRpcnR5IG1l
+bW9yeQo+IHRocmVzaG9sZHMgdG8gc2VlIGlmIHRoYXQgYWxsb3dzIG1lbW9yeSByZWNsYWltIHRv
+IG1ha2UgbW9yZQo+IHByb2dyZXNzIGJlY2F1c2UgdGhlcmUgYXJlIGZld2VyIGRpcnR5IHBhZ2Vz
+IGluIG1lbW9yeS4uLgoKWWVwLiAgVGhpcyBtYWtlcyBwZXJmZWN0IHNlbnNlLiAgQW11c2luZ2x5
+IGVub3VnaCwgd2UgZG9uJ3QgcmVhZCBtdWNoIG9mIHRoZQpkYXRhIHNvIHJlYWxseSB0aGUgcGFn
+ZWNhY2hlIGlzIHN1cHBvc2VkIHRvIGJ1ZmZlciB0aGUgd3JpdGVzIGJlY2F1c2UgSS9PIGlzCnNs
+b3cuICBXZSdsbCBwbGF5IHdpdGggdGhlIGRpcnR5IG1lbW9yeSB0aHJlc2hvbGRzIGFuZCBzZWUg
+aWYgdGhhdCBoZWxwcy4KClRoYW5rcyEKCkplZmYuCgotLSAKQWxsIHBhcnRzIHNob3VsZCBnbyB0
+b2dldGhlciB3aXRob3V0IGZvcmNpbmcuICBZb3UgbXVzdCByZW1lbWJlciB0aGF0IHRoZQpwYXJ0
+cyB5b3UgYXJlIHJlYXNzZW1ibGluZyB3ZXJlIGRpc2Fzc2VtYmxlZCBieSB5b3UuICBUaGVyZWZv
+cmUsIGlmIHlvdQpjYW7igJl0IGdldCB0aGVtIHRvZ2V0aGVyIGFnYWluLCB0aGVyZSBtdXN0IGJl
+IGEgcmVhc29uLiAgQnkgYWxsIG1lYW5zLCBkbyBub3QKdXNlIGEgaGFtbWVyLgoJCeKAlCBJQk0g
+TWFudWFsLCAxOTI1CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMK
