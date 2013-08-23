@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4003629DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 11:38:32 -0500 (CDT)
-Date: Fri, 23 Aug 2013 11:38:28 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfsprogs: fix Out-of-bounds access in repair/dinode.c
-Message-ID: <20130823163828.GS5262@sgi.com>
-References: <1376287861.2822.13.camel@ThinkPad-T5421>
-	<5214EFFF.4060105@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B3A5129DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 11:53:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5009AAC007
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 09:53:07 -0700 (PDT)
+Message-ID: <5217929F.5050008@redhat.com>
+Date: Fri, 23 Aug 2013 12:49:35 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5214EFFF.4060105@sgi.com>
+Subject: Re: XFS: Assertion failed: first <= last && last <
+	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
+References: <52165830.8050006@redhat.com> <52176134.6090905@sgi.com>
+	<5217640F.7050900@redhat.com> <52176A2C.9060708@sgi.com>
+In-Reply-To: <52176A2C.9060708@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,66 +26,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>, Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hey Rich and Li Zhong,
+On 08/23/2013 09:57 AM, Mark Tinguely wrote:
+> On 08/23/13 08:30, Brian Foster wrote:
+>> On 08/23/2013 09:18 AM, Mark Tinguely wrote:
+>>> On 08/22/13 13:28, Brian Foster wrote:
+>>>> Hi all,
+>>>>
+>>>> I hit an assert on a debug kernel while beating on some finobt work and
+>>>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
+>>>> hit it through a couple different paths, first while running
+>>>> fsstress on
+>>>> a CRC enabled filesystem (with otherwise default mkfs options):
+>>>>
+>>>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
+>>>> hosted on a single spindle desktop box).
+>>>
+>>> Eeek.
+>>>
+>>> So both crashes are directory related. What is the top XFS kernel commit
+>>> for these tests?
+>>>
+>>
+>> Hi Mark,
+>>
+>> It was the latest from at some point yesterday. I don't think I've
+>> pulled since, so I'm at:
+>>
+>> 3e3c51ce xfs: add xfs sb v4 support for dirent filetype field
+>>
+>>> Have you seen this on earlier versions of the kernel?
+>>>
+>>
+>> Well I hit an issue first on my dev. branch for finobt hacking, which is
+>> currently based on a slightly older commit:
+>>
+>> 2c2bcc07 xfs: call roundup_64() to calculate the min_logblks
+>>
+>> Unfortunately I don't have the precise error/stack from that failure on
+>> hand to double check whether it's the exact same failure. I can try to
+>> regenerate it a bit later today.
+>>
+>> Brian
+>>
+>>> Thanks,
+>>>
+>>> --Mark.
+>>
+> Good, I just want to make sure the common directory mods for the file
+> type patch was not the cause. I will try to recreate it too.
+> 
 
-On Wed, Aug 21, 2013 at 11:51:11AM -0500, Rich Johnston wrote:
-> Looks good, thanks for the patch Li Zhong. it has been committed.
-> 
-> --Rich
-> 
-> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-> 
-> commit e7c05095f5baa9cd2e35a6de03d7dd9f51dd3910
-> Author: Li Zhong <zhong@linux.vnet.ibm.com>
-> Date:   Mon Aug 12 06:11:01 2013 +0000
-> 
->     xfsprogs: fix Out-of-bounds access in repair/dinode.c
-> 
-> On 08/12/2013 01:11 AM, Li Zhong wrote:
-> >Following is reported by coverity in bug 1061528:
-> >
-> >187                        __dirty_no_modify_ret(dirty);
-> >
-> >CID 1061528 (#1 of 1): Out-of-bounds access (OVERRUN)53. overrun-buffer-arg: Overrunning array "dinoc->di_pad" of 6 bytes by passing it to a function which accesses it at byte offset 15 using argument "16UL".
-> >188                        memset(dinoc->di_pad, 0, 16);
-> >
-> >It seems that di_pad here should be di_pad2, as sekharan pointed out.
-> >
-> >Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
-> >---
-> >  repair/dinode.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> >diff --git a/repair/dinode.c b/repair/dinode.c
-> >index e607f0b..94bf2f8 100644
-> >--- a/repair/dinode.c
-> >+++ b/repair/dinode.c
-> >@@ -183,9 +183,9 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
-> >  	}
-> >
-> >  	for (i = 0; i < 16; i++) {
-> >-		if (dinoc->di_pad[i] != 0) {
-> >+		if (dinoc->di_pad2[i] != 0) {
-> >  			__dirty_no_modify_ret(dirty);
-> >-			memset(dinoc->di_pad, 0, 16);
-> >+			memset(dinoc->di_pad2, 0, 16);
-> >  			break;
-> >  		}
-> >  	}
+And just to confirm, I can hit the assert from both tests on a 2c2bcc07
+kernel (pre-dirent ftype change).
 
-We also discussed this issue a bit in this thread:
-http://oss.sgi.com/archives/xfs/2013-08/msg00228.html
+Brian
 
-Looks like the loop itself is incorrect and should be removed, and Eric has
-suggested that the conditional be changed to a memcmp in case the size of the
-pad changes in the future.  Would either of you care to spin up another patch
-to clean it up?
-
-Thanks,
-	Ben
+> Thanks.
+> 
+> --Mark.
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
