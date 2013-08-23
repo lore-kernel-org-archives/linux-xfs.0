@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B3A5129DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 11:53:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5009AAC007
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 09:53:07 -0700 (PDT)
-Message-ID: <5217929F.5050008@redhat.com>
-Date: Fri, 23 Aug 2013 12:49:35 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4AB9129DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 12:36:17 -0500 (CDT)
+Date: Fri, 23 Aug 2013 12:36:13 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
+Message-ID: <20130823173613.GT5262@sgi.com>
+References: <20130815055338.GC23580@elgon.mountain>
+	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
+	<20130815222650.GX6023@dastard>
 MIME-Version: 1.0
-Subject: Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-References: <52165830.8050006@redhat.com> <52176134.6090905@sgi.com>
-	<5217640F.7050900@redhat.com> <52176A2C.9060708@sgi.com>
-In-Reply-To: <52176A2C.9060708@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130815222650.GX6023@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,73 +24,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Liu <jeff.liu@oracle.com>
 
-On 08/23/2013 09:57 AM, Mark Tinguely wrote:
-> On 08/23/13 08:30, Brian Foster wrote:
->> On 08/23/2013 09:18 AM, Mark Tinguely wrote:
->>> On 08/22/13 13:28, Brian Foster wrote:
->>>> Hi all,
->>>>
->>>> I hit an assert on a debug kernel while beating on some finobt work and
->>>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
->>>> hit it through a couple different paths, first while running
->>>> fsstress on
->>>> a CRC enabled filesystem (with otherwise default mkfs options):
->>>>
->>>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
->>>> hosted on a single spindle desktop box).
->>>
->>> Eeek.
->>>
->>> So both crashes are directory related. What is the top XFS kernel commit
->>> for these tests?
->>>
->>
->> Hi Mark,
->>
->> It was the latest from at some point yesterday. I don't think I've
->> pulled since, so I'm at:
->>
->> 3e3c51ce xfs: add xfs sb v4 support for dirent filetype field
->>
->>> Have you seen this on earlier versions of the kernel?
->>>
->>
->> Well I hit an issue first on my dev. branch for finobt hacking, which is
->> currently based on a slightly older commit:
->>
->> 2c2bcc07 xfs: call roundup_64() to calculate the min_logblks
->>
->> Unfortunately I don't have the precise error/stack from that failure on
->> hand to double check whether it's the exact same failure. I can try to
->> regenerate it a bit later today.
->>
->> Brian
->>
->>> Thanks,
->>>
->>> --Mark.
->>
-> Good, I just want to make sure the common directory mods for the file
-> type patch was not the cause. I will try to recreate it too.
-> 
+Dan,
 
-And just to confirm, I can hit the assert from both tests on a 2c2bcc07
-kernel (pre-dirent ftype change).
+On Fri, Aug 16, 2013 at 08:26:50AM +1000, Dave Chinner wrote:
+> On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
+> > Hey Dan & Jeff,
+> > 
+> > On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
+> > > On 08/15/2013 01:53 PM, Dan Carpenter wrote:
+> > > 
+> > > > The "di_size" variable comes from the disk and it's a signed 64 bit.
+> > > > We check the upper limit but we should check for negative numbers as
+> > > > well.
+> > > > 
+> > > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+> > > > index 123971b..849fc70 100644
+> > > > --- a/fs/xfs/xfs_inode_fork.c
+> > > > +++ b/fs/xfs/xfs_inode_fork.c
+> > > > @@ -167,7 +167,8 @@ xfs_iformat_fork(
+> > > >  			}
+> > > >  
+> > > >  			di_size = be64_to_cpu(dip->di_size);
+> > > > -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+> > > > +			if (unlikely(di_size < 0 ||
+> > > 
+> > > But the di_size is initialized to ZERO while allocating a new inode on disk.
+> > > I wonder if that is better to ASSERT in this case because the current check
+> > > is used to make sure that the item is inlined, or we don't need it at all.
+> > 
+> > Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
+> > shutdown is more appropriate than an assert, because here we're reading the
+> > inode from disk, as opposed to looking at a structure that is already incore
+> > which we think we've initialized.  We want to handle unexpected inputs from
+> > disk without crashing even if we are CONFIG_XFS_DEBUG.
+> 
+> There are lots of places where we only check di_size to be greater
+> than some value, and don't check for it being less than zero. Hence
+> I think that a better solution might be to di_size unsigned as that
+> will catch "negative" sizes for all types of situations.
 
-Brian
+What do you say to making di_size unsigned?  Any interest?
 
-> Thanks.
-> 
-> --Mark.
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
