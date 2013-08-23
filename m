@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 533DC29DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:32:30 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0733329DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:33:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 304038F8033
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 11:32:30 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id dUr7qa5JpFSd64rG (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CD3B8304053
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 11:33:41 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id kIV5zTXb2RrLuTCp (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Aug 2013 11:32:29 -0700 (PDT)
+	Fri, 23 Aug 2013 11:33:40 -0700 (PDT)
 Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 813E89A0359
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 12:32:28 -0600 (MDT)
-Date: Fri, 23 Aug 2013 14:32:26 -0400
+	by dkim1.fusionio.com (Postfix) with ESMTP id 254567C0444
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 12:33:40 -0600 (MDT)
+Date: Fri, 23 Aug 2013 14:33:38 -0400
 From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [PATCH V4] xfstests: don't remove the two first devices from
-	SCRATCH_DEV_POOL
-Message-ID: <20130823183226.GE29654@localhost.localdomain>
+Subject: Re: [PATCH] xfstest: fix btrfs/006 for 10+ devices in SCRATCH_DEV_POOL
+Message-ID: <20130823183338.GF29654@localhost.localdomain>
 References: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
+	<1377263233-8903-4-git-send-email-sbehrens@giantdisaster.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
+In-Reply-To: <1377263233-8903-4-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,21 +36,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Stefan Behrens <sbehrens@giantdisaster.de>
 Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Aug 23, 2013 at 03:07:10PM +0200, Stefan Behrens wrote:
-> Since common/config is executed twice, if SCRATCH_DEV_POOL is configured
-> via the environment, the current code removes the first device entry twice
-> which means that you lose the second device for the test.
+On Fri, Aug 23, 2013 at 03:07:13PM +0200, Stefan Behrens wrote:
+> One problem was the output of "uniq -c" which added spaces depending
+> on the size of the count value (e.g. one space less for 10+ devices).
 > 
-> The fix is to not remove anything from SCRATCH_DEV_POOL anymore.
-> That used to be done (I can only guess) to allow to pass the
-> SCRATCH_DEV_POOL as an argument to _scratch_mkfs. Since _scratch_mkfs adds
-> the SCRATCH_DEV, the pool mustn't contain that device anymore.
-> 
-> A new function _scratch_pool_mkfs is introduced that does the expected
-> thing.
+> The second problem was that "btrfs fi show" was doing the same:
+> "devid %4llu size %s used %s path %s".
 > 
 
-This didn't break anything and makes sense
+Got 11 devices together and this works
 
 Reviewed-by: Josef Bacik <jbacik@fusionio.com>
 
