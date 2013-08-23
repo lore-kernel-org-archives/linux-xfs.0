@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A53E329E13
+	by oss.sgi.com (Postfix) with ESMTP id C577E29E14
 	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 08:07:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 28141AC00B
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3ED32AC00C
 	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 06:07:18 -0700 (PDT)
-Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.141]) by
-	cuda.sgi.com with ESMTP id 57HkQO9TmsMEtebx (version=TLSv1
+Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.136]) by
+	cuda.sgi.com with ESMTP id LGnhzTCVmICSbIwu (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Aug 2013 06:07:17 -0700 (PDT)
+	Fri, 23 Aug 2013 06:07:16 -0700 (PDT)
 From: Stefan Behrens <sbehrens@giantdisaster.de>
-Subject: [PATCH] xfstests: update _filter_size() for Btrfs
-Date: Fri, 23 Aug 2013 15:07:12 +0200
-Message-Id: <1377263233-8903-3-git-send-email-sbehrens@giantdisaster.de>
-In-Reply-To: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
-References: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
+Subject: [PATCH V4] xfstests: don't remove the two first devices from
+	SCRATCH_DEV_POOL
+Date: Fri, 23 Aug 2013 15:07:10 +0200
+Message-Id: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,31 +30,180 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-btrfs@vger.kernel.org
 
-From: root <root@qvarne.iata>
+Since common/config is executed twice, if SCRATCH_DEV_POOL is configured
+via the environment, the current code removes the first device entry twice
+which means that you lose the second device for the test.
 
-The btrfs-progs tools changed the output:
-- 100GiB instead of 100GB
+The fix is to not remove anything from SCRATCH_DEV_POOL anymore.
+That used to be done (I can only guess) to allow to pass the
+SCRATCH_DEV_POOL as an argument to _scratch_mkfs. Since _scratch_mkfs adds
+the SCRATCH_DEV, the pool mustn't contain that device anymore.
 
-xfstest btrfs/006 is one that failed due to this change.
+A new function _scratch_pool_mkfs is introduced that does the expected
+thing.
 
 Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
 ---
- common/filter | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+V1 -> V2:
+- rebased.
+- fixed a missing adaption to the new way to deal with SCRATCH_DEV_POOL
+  in  _test_replace() in tests/btrfs/003.
 
-diff --git a/common/filter b/common/filter
-index dbb1674..ee738ca 100644
---- a/common/filter
-+++ b/common/filter
-@@ -262,7 +262,7 @@ _filter_uuid()
- # Filter out sizes like 6.14MB etc
- _filter_size()
- {
--	sed -e "s/[0-9\.]\+\s\?[b|k|m|g|t][b]\?/<SIZE>/ig"
-+	sed -e "s/[0-9\.]\+\s\?[b|k|m|g|t][i]\?[b]\?/<SIZE>/ig"
+V2 -> V3:
+- V2 was the result of a git rebase mistake (a user error), forget it,
+  sorry. V3 now contains the correct fix for a missing adaption to the
+  new way to deal with SCRATCH_DEV_POOL in _test_replace() in
+  tests/btrfs/003.
+
+V3 -> V4:
+- rebased, because it didn't apply cleanly anymore today.
+
+ common/config   |  1 -
+ common/rc       | 12 ++++++++++++
+ tests/btrfs/002 |  3 ++-
+ tests/btrfs/003 | 16 ++++++++--------
+ tests/btrfs/006 |  4 ++--
+ 5 files changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/common/config b/common/config
+index 39dd469..586870b 100644
+--- a/common/config
++++ b/common/config
+@@ -267,7 +267,6 @@ get_next_config() {
+ 			exit 1
+ 		fi
+ 		SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
+-		SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | awk '{ ORS=" "; for (i = 2; i <= NF; i++) print $i}'`
+ 	fi
+ 
+ 	echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
+diff --git a/common/rc b/common/rc
+index ae80b12..77e96c4 100644
+--- a/common/rc
++++ b/common/rc
+@@ -550,6 +550,18 @@ _scratch_mkfs()
+     esac
  }
  
- # Convert string read from stdin like 128K to bytes and print it to stdout
++_scratch_pool_mkfs()
++{
++    case $FSTYP in
++    btrfs)
++	$MKFS_BTRFS_PROG $MKFS_OPTIONS $* $SCRATCH_DEV_POOL > /dev/null
++	;;
++    *)
++	echo "_scratch_pool_mkfs is not implemented for $FSTYP" 1>&2
++	;;
++    esac
++}
++
+ # Create fs of certain size on scratch device
+ # _scratch_mkfs_sized <size in bytes> [optional blocksize]
+ _scratch_mkfs_sized()
+diff --git a/tests/btrfs/002 b/tests/btrfs/002
+index 03e9137..f4389ae 100755
+--- a/tests/btrfs/002
++++ b/tests/btrfs/002
+@@ -45,8 +45,9 @@ _need_to_be_root
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_scratch_dev_pool
+ 
+-_scratch_mkfs $SCRATCH_DEV_POOL > /dev/null 2>&1 || _fail "mkfs failed"
++_scratch_pool_mkfs > /dev/null 2>&1 || _fail "mkfs failed"
+ _scratch_mount
+ 
+ # Create and save sha256sum
+diff --git a/tests/btrfs/003 b/tests/btrfs/003
+index 5c88651..262b1d5 100755
+--- a/tests/btrfs/003
++++ b/tests/btrfs/003
+@@ -58,7 +58,7 @@ rm -f $seqres.full
+ _test_raid0()
+ {
+ 	export MKFS_OPTIONS="-m raid0 -d raid0"
+-	_scratch_mkfs $SCRATCH_DEV_POOL >> $seqres.full 2>&1 || _fail "mkfs failed"
++	_scratch_pool_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ 	_scratch_mount
+ 	dirp=`mktemp -duq $SCRATCH_MNT/dir.XXXXXX`
+ 	_populate_fs -n 1 -f 20 -d 10 -r $dirp -s 10
+@@ -68,7 +68,7 @@ _test_raid0()
+ _test_raid1()
+ {
+ 	export MKFS_OPTIONS="-m raid1 -d raid1"
+-	_scratch_mkfs $SCRATCH_DEV_POOL >> $seqres.full 2>&1 || _fail "mkfs failed"
++	_scratch_pool_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ 	_scratch_mount
+ 	dirp=`mktemp -duq $SCRATCH_MNT/dir.XXXXXX`
+ 	_populate_fs -n 1 -f 20 -d 10 -r $dirp -s 10
+@@ -78,7 +78,7 @@ _test_raid1()
+ _test_raid10()
+ {
+ 	export MKFS_OPTIONS="-m raid10 -d raid10"
+-	_scratch_mkfs $SCRATCH_DEV_POOL >> $seqres.full 2>&1 || _fail "mkfs failed"
++	_scratch_pool_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ 	_scratch_mount
+ 	dirp=`mktemp -duq $SCRATCH_MNT/dir.XXXXXX`
+ 	_populate_fs -n 1 -f 20 -d 10 -r $dirp -s 10
+@@ -88,7 +88,7 @@ _test_raid10()
+ _test_single()
+ {
+ 	export MKFS_OPTIONS="-m single -d single"
+-	_scratch_mkfs $SCRATCH_DEV_POOL >> $seqres.full 2>&1 || _fail "mkfs failed"
++	_scratch_pool_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ 	_scratch_mount
+ 	dirp=`mktemp -duq $SCRATCH_MNT/dir.XXXXXX`
+ 	_populate_fs -n 1 -f 20 -d 10 -r $dirp -s 10
+@@ -108,7 +108,7 @@ _test_add()
+ 	_scratch_mount
+ 	dirp=`mktemp -duq $SCRATCH_MNT/dir.XXXXXX`
+ 	_populate_fs -n 1 -f 20 -d 10 -r $dirp -s 10
+-	for i in `seq 1 $n`; do
++	for i in `seq 2 $n`; do
+ 		$BTRFS_UTIL_PROG device add ${devs[$i]} $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "device add failed"
+ 	done
+ 	$BTRFS_UTIL_PROG filesystem balance $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "balance failed"
+@@ -124,9 +124,9 @@ _test_replace()
+ 	local d
+ 	local DEVHTL=""
+ 
+-	# exclude the last disk in the disk pool
++	# exclude the first and the last disk in the disk pool
+ 	n=$(($n-1))
+-	ds=${devs[@]:0:$n}
++	ds=${devs[@]:1:$(($n-1))}
+ 
+ 	export MKFS_OPTIONS="-m raid1 -d raid1"
+ 	_scratch_mkfs "$ds" >> $seqres.full 2>&1 || _fail "tr: mkfs failed"
+@@ -164,7 +164,7 @@ _test_replace()
+ 
+ _test_remove()
+ {
+-	_scratch_mkfs "$SCRATCH_DEV_POOL" >> $seqres.full 2>&1 || _fail "mkfs failed"
++	_scratch_pool_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ 	_scratch_mount
+ 	dirp=`mktemp -duq $SCRATCH_MNT/dir.XXXXXX`
+ 	_populate_fs -n 1 -f 20 -d 10 -r $dirp -s 10
+diff --git a/tests/btrfs/006 b/tests/btrfs/006
+index 9f7beff..715fd80 100755
+--- a/tests/btrfs/006
++++ b/tests/btrfs/006
+@@ -53,12 +53,12 @@ rm -f $seqres.full
+ 
+ FIRST_POOL_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
+ LAST_POOL_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $NF}'`
+-TOTAL_DEVS=`echo $SCRATCH_DEV $SCRATCH_DEV_POOL | wc -w`
++TOTAL_DEVS=`echo $SCRATCH_DEV_POOL | wc -w`
+ LABEL=TestLabel.$seq
+ 
+ echo "Scratch $SCRATCH_DEV First $FIRST_POOL_DEV last $LAST_POOL_DEV Total $TOTAL_DEVS" > $seqres.full
+ 
+-_scratch_mkfs $SCRATCH_DEV_POOL >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_pool_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ 
+ # These have to be done unmounted...?
+ echo "== Set filesystem label to $LABEL"
 -- 
 1.8.3.4
 
