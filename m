@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA1D529DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 10:45:34 -0500 (CDT)
-Date: Fri, 23 Aug 2013 10:45:34 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4003629DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 11:38:32 -0500 (CDT)
+Date: Fri, 23 Aug 2013 11:38:28 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: Power loss and zero-length files
-Message-ID: <20130823154534.GM7153@sgi.com>
-References: <CAGwuE-p8=UwpGUhgpqkWn4U4jU-KnfC3C19Kqqv7uYLJvubxgQ@mail.gmail.com>
-	<20130823152058.GR5262@sgi.com>
-	<CAGwuE-q5r51t43SxDryReN1EN-w=YLR9ehtWxbhDeRjw3J9AAA@mail.gmail.com>
+Subject: Re: [PATCH] xfsprogs: fix Out-of-bounds access in repair/dinode.c
+Message-ID: <20130823163828.GS5262@sgi.com>
+References: <1376287861.2822.13.camel@ThinkPad-T5421>
+	<5214EFFF.4060105@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAGwuE-q5r51t43SxDryReN1EN-w=YLR9ehtWxbhDeRjw3J9AAA@mail.gmail.com>
+In-Reply-To: <5214EFFF.4060105@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,96 +23,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Robert Widmer <robertwidmer@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>, Li Zhong <zhong@linux.vnet.ibm.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
-On Fri, Aug 23, 2013 at 11:27:19AM -0400, Robert Widmer wrote:
-> On Fri, Aug 23, 2013 at 11:20 AM, Ben Myers <bpm@sgi.com> wrote:
-> >
-> > Hey Robert,
-> >
-> > On Fri, Aug 23, 2013 at 10:59:50AM -0400, Robert Widmer wrote:
-> > > I had a script that updated several files on an XFS filesystem using "sed
-> > > -i", and someone decided to power cycle the box without a sync after
-> > > running the script, and found that all the files that were updated were now
-> > > zero-length.
-> >
-> > How did they power cycle the box?  With a 'shutdown -h now' you shouldn't have
-> > this behavior, but resetting or unplugging the machine is a different matter.
+Hey Rich and Li Zhong,
+
+On Wed, Aug 21, 2013 at 11:51:11AM -0500, Rich Johnston wrote:
+> Looks good, thanks for the patch Li Zhong. it has been committed.
 > 
-> The person ran the script, unplugged the machine (instead of shutting
-> it down like they were told), and boxed it up.
-
-lol  ;)
-
-> > > Curious, I ran the following script to try and isolate the behavior:
-> > >
-> > >
-> > > #!/usr/bin/perl
-> > >
-> > > my $dir = "/home/$ENV{USER}/XFSTest";
-> > > mkdir $dir;
-> > > chdir $dir;
-> > >
-> > > my $filecount = 100;
-> > > my $tmpfile = 'file.tmp';
-> > >
-> > > while (1) {
-> > >     for (my $i=0; $i<$filecount; $i++) {
-> > > my $filename = "file.$i";
-> > > open(OUT, ">", $tmpfile);
-> > >         print OUT "Time:".localtime."\n";
-> > >         close OUT;
-> > > rename $tmpfile, $filename;
-> > >     }
-> > > }
-> > >
-> > >
-> > > On the following release/kernels in a VM:
-> > >
-> > > Fedora 16 w/kernel 3.1.0-7.fc16.x86_64
-> > > Fedora 16 w/kernel 3.6.11-4.fc16.x86_64
-> > > Fedora 19 w/kernel 3.10-7.200.fc19.x86_64
-> > > Ubuntu 13.04 w/kernel 3.8.0-19-generic
-> > >
-> > >
-> > > And after a power cycle, all the files are zero-length with no extents.
-> > >
-> > > (CentOS 6.4 w/kernel 2.6.32-358.14.1.el6.centos.plus.x86_64 has the binary
-> > > NULLS)
-> > >
-> > > Barriers are not disabled and drive cache:
-> > > [    2.145011] sd 2:0:0:0: [sda] Cache data unavailable
-> > > [    2.145013] sd 2:0:0:0: [sda] Assuming drive cache: write through
-> > >
-> > >
-> > > The closest thing I can find in the documentation is the XFS FAQ which
-> > > mentions "you are looking at an inode which was flushed out, but whose data
-> > > was not", which seems to indicate that the inode writes and data writes are
-> > > not done in order, but nothing explicitly documents this.
-> >
-> > You have it correct.  The inode writes are a separate from the data writes.
-> >
-> > > Is this expected behavior?
-> > >
-> > > I've added a sync to the end of my script to try and ensure this does not
-> > > happen again, and losing some amount of data after a power loss is
-> > > expected, but it seems counter-intuitive that the inode/data writes are not
-> > > done in order and that rapid file changes can result in such a large number
-> > > of files being zero-length.
-> >
-> > For a reset or hard power cycle this is the expected behavior.  The inode will
-> > have been logged when it was created and is likely to be written out before the
-> > data.  Unless you issue an fsync, the data will be sitting around in cache
-> > until the kernel decides to write the pages out, and only then is the size
-> > updated.  Adding the fsync is the right thing to do.  ;)
+> --Rich
 > 
-> Okey dokey, I'll be more vigilant in making sure my changes are
-> synced. Thanks for the quick response.
+> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+> 
+> commit e7c05095f5baa9cd2e35a6de03d7dd9f51dd3910
+> Author: Li Zhong <zhong@linux.vnet.ibm.com>
+> Date:   Mon Aug 12 06:11:01 2013 +0000
+> 
+>     xfsprogs: fix Out-of-bounds access in repair/dinode.c
+> 
+> On 08/12/2013 01:11 AM, Li Zhong wrote:
+> >Following is reported by coverity in bug 1061528:
+> >
+> >187                        __dirty_no_modify_ret(dirty);
+> >
+> >CID 1061528 (#1 of 1): Out-of-bounds access (OVERRUN)53. overrun-buffer-arg: Overrunning array "dinoc->di_pad" of 6 bytes by passing it to a function which accesses it at byte offset 15 using argument "16UL".
+> >188                        memset(dinoc->di_pad, 0, 16);
+> >
+> >It seems that di_pad here should be di_pad2, as sekharan pointed out.
+> >
+> >Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+> >---
+> >  repair/dinode.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> >diff --git a/repair/dinode.c b/repair/dinode.c
+> >index e607f0b..94bf2f8 100644
+> >--- a/repair/dinode.c
+> >+++ b/repair/dinode.c
+> >@@ -183,9 +183,9 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+> >  	}
+> >
+> >  	for (i = 0; i < 16; i++) {
+> >-		if (dinoc->di_pad[i] != 0) {
+> >+		if (dinoc->di_pad2[i] != 0) {
+> >  			__dirty_no_modify_ret(dirty);
+> >-			memset(dinoc->di_pad, 0, 16);
+> >+			memset(dinoc->di_pad2, 0, 16);
+> >  			break;
+> >  		}
+> >  	}
 
-No problem.  Good luck!  
+We also discussed this issue a bit in this thread:
+http://oss.sgi.com/archives/xfs/2013-08/msg00228.html
 
--Ben
+Looks like the loop itself is incorrect and should be removed, and Eric has
+suggested that the conditional be changed to a memcmp in case the size of the
+pad changes in the future.  Would either of you care to spin up another patch
+to clean it up?
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
