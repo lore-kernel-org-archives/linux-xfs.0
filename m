@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 872D729DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 14:33:29 -0500 (CDT)
-Date: Fri, 23 Aug 2013 14:33:25 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DE61829DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 15:11:50 -0500 (CDT)
+Date: Fri, 23 Aug 2013 15:11:46 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v4] xfs: introduce object readahead to log recovery
-Message-ID: <20130823193325.GV5262@sgi.com>
-References: <1376464563-27821-1-git-send-email-zwu.kernel@gmail.com>
+Subject: Re: [PATCH] Fix wrong flag ASSERT in xfs_attr_shortform_getvalue
+Message-ID: <20130823201146.GW5262@sgi.com>
+References: <4F75DE2B.7030807@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1376464563-27821-1-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <4F75DE2B.7030807@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,33 +22,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: zwu.kernel@gmail.com
-Cc: linux-fsdevel@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Aug 14, 2013 at 03:16:03PM +0800, zwu.kernel@gmail.com wrote:
-> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> 
->   It can take a long time to run log recovery operation because it is
-> single threaded and is bound by read latency. We can find that it took
-> most of the time to wait for the read IO to occur, so if one object
-> readahead is introduced to log recovery, it will obviously reduce the
-> log recovery time.
-> 
-> Log recovery time stat:
-> 
->           w/o this patch        w/ this patch
-> 
-> real:        0m15.023s             0m7.802s
-> user:        0m0.001s              0m0.001s
-> sys:         0m0.246s              0m0.107s
-> 
-> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+Hey Eric,
 
-Looks good.
+On Fri, Mar 30, 2012 at 11:24:11AM -0500, Eric Sandeen wrote:
+> This ASSERT is testing an if_flags flag value against
+> a di_aformat enum value.  di_aformat is never assigned
+> XFS_IFINLINE.
+> 
+> This happens to work for now, because XFS_IFINLINE has
+> the same value as XFS_DINODE_FMT_LOCAL, and that's tested
+> just before we call this function.
+> 
+> However, I think the intention is to assert that we have
+> read in the data, i.e. XFS_IFINLINE on if_flags, before
+> we use if_data.  This is done in other places through the
+> code as well.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Looks like this one fell through the cracks.  You still interested in merging
+it?
 
-Applied.
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
