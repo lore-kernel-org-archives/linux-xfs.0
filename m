@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B5DD729DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 15:41:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A29D5304043
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:41:37 -0700 (PDT)
-Received: from mail-qc0-f177.google.com (mail-qc0-f177.google.com
-	[209.85.216.177]) by cuda.sgi.com with ESMTP id
-	J4Bfl0JHHGVUU4SJ (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Aug 2013 13:41:36 -0700 (PDT)
-Received: by mail-qc0-f177.google.com with SMTP id b10so598510qcw.36
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:41:36 -0700 (PDT)
-Date: Fri, 23 Aug 2013 16:41:32 -0400
-From: Eric Whitney <enwlinux@gmail.com>
-Subject: [PATCH] xfstests: only run generic/300 on filesystems supporting
-	fallocate()
-Message-ID: <20130823204132.GB3778@wallace>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 52FEC29DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 17:32:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 310E98F8033
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 15:32:27 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id MVSiWZKStHZrtF18
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 15:32:27 -0700 (PDT)
+Message-ID: <5217E2FA.1030008@hardwarefreak.com>
+Date: Fri, 23 Aug 2013 17:32:26 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: Power loss and zero-length files
+References: <CAGwuE-p8=UwpGUhgpqkWn4U4jU-KnfC3C19Kqqv7uYLJvubxgQ@mail.gmail.com>
+	<20130823152058.GR5262@sgi.com>
+	<CAGwuE-q5r51t43SxDryReN1EN-w=YLR9ehtWxbhDeRjw3J9AAA@mail.gmail.com>
+	<20130823154534.GM7153@sgi.com>
+In-Reply-To: <20130823154534.GM7153@sgi.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +31,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>
+Cc: Robert Widmer <robertwidmer@gmail.com>, xfs@oss.sgi.com
 
-Generic/300 fails when run on a test filesystem that does not support
-fallocate(), as in the case of an ext4 filesystem created without the
-extent feature.  It uses fio's falloc ioengine to generate part of its
-I/O load.
+On 8/23/2013 10:45 AM, Ben Myers wrote:
+> On Fri, Aug 23, 2013 at 11:27:19AM -0400, Robert Widmer wrote:
+>> On Fri, Aug 23, 2013 at 11:20 AM, Ben Myers <bpm@sgi.com> wrote:
 
-Verify that the test filesystem supports fallocate() before proceeding
-with the test.  Also, delete any pre-existing test output to avoid
-confusion with old results.
+>> The person ran the script, unplugged the machine (instead of shutting
+>> it down like they were told), and boxed it up.
+> 
+> lol  ;)
 
-Signed-off-by: Eric Whitney <enwlinux@gmail.com>
----
- tests/generic/300 |    3 +++
- 1 file changed, 3 insertions(+)
+Yeah, that's pretty ignorant.  Reminds me of this thread in March:
 
-diff --git a/tests/generic/300 b/tests/generic/300
-index 7c60728..1ac763b 100755
---- a/tests/generic/300
-+++ b/tests/generic/300
-@@ -43,6 +43,9 @@ _supported_fs generic
- _supported_os Linux
- _need_to_be_root
- _require_scratch
-+_require_xfs_io_falloc
-+
-+rm -f $seqres.full
- 
- NUM_JOBS=$((4*LOAD_FACTOR))
- BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+http://oss.sgi.com/archives/xfs/2013-03/msg00152.html
+
+But "we" (IT industry) shot ourselves in the foot when we began using
+the word "appliance".  No wonder then that some people literally treat
+them as such.
+
 -- 
-1.7.10.4
+Stan
 
 _______________________________________________
 xfs mailing list
