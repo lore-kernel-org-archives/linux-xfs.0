@@ -1,9 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. for-linus-v3.11-rc1-2-12211-g00574da
-Message-Id: <20130823202525.E17B029E0E@oss.sgi.com>
-Date: Fri, 23 Aug 2013 15:25:24 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B5DD729DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 15:41:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A29D5304043
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:41:37 -0700 (PDT)
+Received: from mail-qc0-f177.google.com (mail-qc0-f177.google.com
+	[209.85.216.177]) by cuda.sgi.com with ESMTP id
+	J4Bfl0JHHGVUU4SJ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Aug 2013 13:41:36 -0700 (PDT)
+Received: by mail-qc0-f177.google.com with SMTP id b10so598510qcw.36
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:41:36 -0700 (PDT)
+Date: Fri, 23 Aug 2013 16:41:32 -0400
+From: Eric Whitney <enwlinux@gmail.com>
+Subject: [PATCH] xfstests: only run generic/300 on filesystems supporting
+	fallocate()
+Message-ID: <20130823204132.GB3778@wallace>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,102 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+Generic/300 fails when run on a test filesystem that does not support
+fallocate(), as in the case of an ext4 filesystem created without the
+extent feature.  It uses fio's falloc ioengine to generate part of its
+I/O load.
 
-The branch, for-next has been updated
-  00574da xfs: introduce object readahead to log recovery
-  8d1d408 xfs: Simplify xfs_ail_min() with list_first_entry_or_null()
-  46677e6 xfs: Register hotcpu notifier after initialization
-      from  3e3c51cee9a07d67e3910cc514867b56ac60ec94 (commit)
+Verify that the test filesystem supports fallocate() before proceeding
+with the test.  Also, delete any pre-existing test output to avoid
+confusion with old results.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+Signed-off-by: Eric Whitney <enwlinux@gmail.com>
+---
+ tests/generic/300 |    3 +++
+ 1 file changed, 3 insertions(+)
 
-- Log -----------------------------------------------------------------
-commit 00574da199291751bfaaee15ad0f42a7144276ad
-Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-Date:   Wed Aug 14 15:16:03 2013 +0800
-
-    xfs: introduce object readahead to log recovery
-    
-      It can take a long time to run log recovery operation because it is
-    single threaded and is bound by read latency. We can find that it took
-    most of the time to wait for the read IO to occur, so if one object
-    readahead is introduced to log recovery, it will obviously reduce the
-    log recovery time.
-    
-    Log recovery time stat:
-    
-              w/o this patch        w/ this patch
-    
-    real:        0m15.023s             0m7.802s
-    user:        0m0.001s              0m0.001s
-    sys:         0m0.246s              0m0.107s
-    
-    Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 8d1d40832b1c53ae73931f1b536ce1ab7375b3c8
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Thu Aug 15 13:08:35 2013 +0800
-
-    xfs: Simplify xfs_ail_min() with list_first_entry_or_null()
-    
-    At xfs_ail_min(), we do check if the AIL list is empty or not before
-    returning the first item in it with list_empty() and list_first_entry().
-    
-    This can be simplified a bit with a new list operation routine that is
-    the list_first_entry_or_null() which has been introduced by:
-    
-    commit 6d7581e62f8be462440d7b22c6361f7c9fa4902b
-        list: introduce list_first_entry_or_null
-    
-    v2: make xfs_ail_min() as a static inline function and move it to
-        xfs_trans_priv.h as per Dave Chinner's comments.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 46677e679fba8c2db7c94a7142ad9abb72192ebc
-Author: Richard Weinberger <richard@nod.at>
-Date:   Mon Aug 19 22:56:44 2013 +0200
-
-    xfs: Register hotcpu notifier after initialization
-    
-    Currently the code initializizes mp->m_icsb_mutex and other things
-    _after_ register_hotcpu_notifier().
-    As the notifier takes mp->m_icsb_mutex it can happen
-    that it takes the lock before it's initialization.
-    
-    Signed-off-by: Richard Weinberger <richard@nod.at>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_log_recover.c | 159 ++++++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_mount.c       |  13 ++--
- fs/xfs/xfs_trans_ail.c   |  14 -----
- fs/xfs/xfs_trans_priv.h  |  12 ++++
- 4 files changed, 171 insertions(+), 27 deletions(-)
-
-
-hooks/post-receive
+diff --git a/tests/generic/300 b/tests/generic/300
+index 7c60728..1ac763b 100755
+--- a/tests/generic/300
++++ b/tests/generic/300
+@@ -43,6 +43,9 @@ _supported_fs generic
+ _supported_os Linux
+ _need_to_be_root
+ _require_scratch
++_require_xfs_io_falloc
++
++rm -f $seqres.full
+ 
+ NUM_JOBS=$((4*LOAD_FACTOR))
+ BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
 -- 
-XFS development tree
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
