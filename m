@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D6C629DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 08:34:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7B0908F8033
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 06:34:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YjGIOj3mCHXQanip for <xfs@oss.sgi.com>;
-	Fri, 23 Aug 2013 06:34:11 -0700 (PDT)
-References: <20130822213148.224998379@sgi.com> <52169488.2040303@sandeen.net>
-	<521762F4.4050603@sgi.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <521762F4.4050603@sgi.com>
-Message-Id: <08C24AC4-BA56-41C5-BC5C-0DBE2A5C1033@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs_io: v7 add the lseek() SEEK_DATA/SEEK_HOLE support
-Date: Fri, 23 Aug 2013 08:34:08 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8DD9E29E0E
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 08:34:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 26A1CAC005
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 06:34:29 -0700 (PDT)
+Message-ID: <5217640F.7050900@redhat.com>
+Date: Fri, 23 Aug 2013 09:30:55 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
+Subject: Re: XFS: Assertion failed: first <= last && last <
+	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
+References: <52165830.8050006@redhat.com> <52176134.6090905@sgi.com>
+In-Reply-To: <52176134.6090905@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +26,50 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
-Cc: Rich Johnston <rjohnston@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Aug 23, 2013, at 8:26 AM, Mark Tinguely <tinguely@sgi.com> wrote:
+On 08/23/2013 09:18 AM, Mark Tinguely wrote:
+> On 08/22/13 13:28, Brian Foster wrote:
+>> Hi all,
+>>
+>> I hit an assert on a debug kernel while beating on some finobt work and
+>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
+>> hit it through a couple different paths, first while running fsstress on
+>> a CRC enabled filesystem (with otherwise default mkfs options):
+>>
+>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
+>> hosted on a single spindle desktop box).
+> 
+> Eeek.
+> 
+> So both crashes are directory related. What is the top XFS kernel commit
+> for these tests?
+> 
 
-> On 08/22/13 17:45, Eric Sandeen wrote:
->> On 8/22/13 4:31 PM, Mark Tinguely wrote:
->> 
->>> Add the lseek SEEK_DATA/SEEK_HOLE support into xfs_io.
->>> The result from the lseek() call will be printed to the output.
->>> For example:
->>> 
->>> xfs_io>  seek -h 609k
->>> HOLE    630784
->>> 
->>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->>> ---
->>>  version 7 or 8 - Eric what number is this?
->> 
->> Go for 13, for luck!
->> 
->> I think this looks ok, I won't torture you any longer.  If there's anything
->> to fix up when it really gets used in earnest we can do it then.
->> 
->> (it crossed my mind that for the "-r" and "-a" invocations it might be good to print
->> out the offset which was sent for each SEEK_* "whence," but *shrug*)
->> 
->> Thanks for all the iterations,
->> 
->> Reviewed-by: Eric Sandeen<sandeen@redhat.com>
-> 
-> Rich, hold off on commit, I can quickly add the whence. We can see how she sails.
-> 
-Was just an idle thought... See if it makes sense I guess...
+Hi Mark,
 
-Thanks,
-Eric
+It was the latest from at some point yesterday. I don't think I've
+pulled since, so I'm at:
 
-> --Mark
+3e3c51ce xfs: add xfs sb v4 support for dirent filetype field
+
+> Have you seen this on earlier versions of the kernel?
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+
+Well I hit an issue first on my dev. branch for finobt hacking, which is
+currently based on a slightly older commit:
+
+2c2bcc07 xfs: call roundup_64() to calculate the min_logblks
+
+Unfortunately I don't have the precise error/stack from that failure on
+hand to double check whether it's the exact same failure. I can try to
+regenerate it a bit later today.
+
+Brian
+
+> Thanks,
 > 
+> --Mark.
 
 _______________________________________________
 xfs mailing list
