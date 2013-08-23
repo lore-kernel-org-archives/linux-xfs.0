@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3F63A7F6D
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 19:03:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B4B54AC001
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:49 -0700 (PDT)
-Received: from mail-pb0-f42.google.com (mail-pb0-f42.google.com
-	[209.85.160.42]) by cuda.sgi.com with ESMTP id 5Lk3DkXDPBAkPF2g
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:48 -0700 (PDT)
-Received: by mail-pb0-f42.google.com with SMTP id un15so2498718pbc.1
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:48 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5629D7F75
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 19:03:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 467CC30408D
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:54 -0700 (PDT)
+Received: from mail-pd0-f179.google.com (mail-pd0-f179.google.com
+	[209.85.192.179]) by cuda.sgi.com with ESMTP id
+	9XB1pMj2tLOy9K50 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 22 Aug 2013 17:03:53 -0700 (PDT)
+Received: by mail-pd0-f179.google.com with SMTP id v10so2585139pde.10
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:53 -0700 (PDT)
 From: Andy Lutomirski <luto@amacapital.net>
-Subject: [PATCH v4 6/7] btrfs: Defer mmap cmtime updates
-Date: Thu, 22 Aug 2013 17:03:22 -0700
-Message-Id: <7d32564366be185ce9a1a8030af394bdfd266c7a.1377193658.git.luto@amacapital.net>
+Subject: [PATCH v4 7/7] xfs: Defer mmap cmtime updates
+Date: Thu, 22 Aug 2013 17:03:23 -0700
+Message-Id: <67df6fbc92d9b92a8301b4ad72e2a760d5e662df.1377193658.git.luto@amacapital.net>
 In-Reply-To: <cover.1377193658.git.luto@amacapital.net>
 References: <cover.1377193658.git.luto@amacapital.net>
 In-Reply-To: <cover.1377193658.git.luto@amacapital.net>
@@ -35,78 +36,44 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andy Lutomirski <luto@amacapital.net>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Tim Chen <tim.c.chen@linux.intel.com>
 
+This involves a change to block_page_mkwrite.  xfs is the only user.
+
 Signed-off-by: Andy Lutomirski <luto@amacapital.net>
 ---
- fs/btrfs/extent_io.c |  1 +
- fs/btrfs/inode.c     | 32 ++++++++++++++++----------------
- 2 files changed, 17 insertions(+), 16 deletions(-)
+ fs/buffer.c       | 7 -------
+ fs/xfs/xfs_aops.c | 1 +
+ 2 files changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index fe443fe..dc2f851 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -3756,6 +3756,7 @@ int extent_writepages(struct extent_io_tree *tree,
- 				       __extent_writepage, &epd,
- 				       flush_write_bio);
- 	flush_epd_write_bio(&epd);
-+	mapping_flush_cmtime(mapping);
- 	return ret;
- }
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 4d74335..408677c 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2431,13 +2431,6 @@ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
  
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 021694c..fc51380 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -7499,10 +7499,8 @@ int btrfs_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
- 
- 	sb_start_pagefault(inode->i_sb);
- 	ret  = btrfs_delalloc_reserve_space(inode, PAGE_CACHE_SIZE);
--	if (!ret) {
--		ret = file_update_time(vma->vm_file);
-+	if (!ret)
- 		reserved = 1;
--	}
- 	if (ret) {
- 		if (ret == -ENOMEM)
- 			ret = VM_FAULT_OOM;
-@@ -8711,22 +8709,24 @@ static struct extent_io_ops btrfs_extent_io_ops = {
-  * For now we're avoiding this by dropping bmap.
-  */
- static const struct address_space_operations btrfs_aops = {
--	.readpage	= btrfs_readpage,
--	.writepage	= btrfs_writepage,
--	.writepages	= btrfs_writepages,
--	.readpages	= btrfs_readpages,
--	.direct_IO	= btrfs_direct_IO,
--	.invalidatepage = btrfs_invalidatepage,
--	.releasepage	= btrfs_releasepage,
--	.set_page_dirty	= btrfs_set_page_dirty,
--	.error_remove_page = generic_error_remove_page,
-+	.readpage		= btrfs_readpage,
-+	.writepage		= btrfs_writepage,
-+	.writepages		= btrfs_writepages,
+ 	sb_start_pagefault(sb);
+-
+-	/*
+-	 * Update file times before taking page lock. We may end up failing the
+-	 * fault so this update may be superfluous but who really cares...
+-	 */
+-	file_update_time(vma->vm_file);
+-
+ 	ret = __block_page_mkwrite(vma, vmf, get_block);
+ 	sb_end_pagefault(sb);
+ 	return block_page_mkwrite_return(ret);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 596ec71..aa8fbcf 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1668,6 +1668,7 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.readpages		= xfs_vm_readpages,
+ 	.writepage		= xfs_vm_writepage,
+ 	.writepages		= xfs_vm_writepages,
 +	.update_cmtime_deferred	= generic_update_cmtime_deferred,
-+	.readpages		= btrfs_readpages,
-+	.direct_IO		= btrfs_direct_IO,
-+	.invalidatepage		= btrfs_invalidatepage,
-+	.releasepage		= btrfs_releasepage,
-+	.set_page_dirty		= btrfs_set_page_dirty,
-+	.error_remove_page	= generic_error_remove_page,
- };
- 
- static const struct address_space_operations btrfs_symlink_aops = {
--	.readpage	= btrfs_readpage,
--	.writepage	= btrfs_writepage,
--	.invalidatepage = btrfs_invalidatepage,
--	.releasepage	= btrfs_releasepage,
-+	.readpage		= btrfs_readpage,
-+	.writepage		= btrfs_writepage,
-+	.update_cmtime_deferred	= generic_update_cmtime_deferred,
-+	.invalidatepage 	= btrfs_invalidatepage,
-+	.releasepage		= btrfs_releasepage,
- };
- 
- static const struct inode_operations btrfs_file_inode_operations = {
+ 	.releasepage		= xfs_vm_releasepage,
+ 	.invalidatepage		= xfs_vm_invalidatepage,
+ 	.write_begin		= xfs_vm_write_begin,
 -- 
 1.8.3.1
 
