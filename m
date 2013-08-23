@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12211-g00574da
-Message-Id: <20130823202510.A399C29DFB@oss.sgi.com>
-Date: Fri, 23 Aug 2013 15:25:09 -0500 (CDT)
+Message-Id: <20130823202525.E17B029E0E@oss.sgi.com>
+Date: Fri, 23 Aug 2013 15:25:24 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   00574da xfs: introduce object readahead to log recovery
   8d1d408 xfs: Simplify xfs_ail_min() with list_first_entry_or_null()
   46677e6 xfs: Register hotcpu notifier after initialization
