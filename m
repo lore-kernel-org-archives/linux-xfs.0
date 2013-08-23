@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 58EDD7F5A
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 19:03:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A41B304064
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:47 -0700 (PDT)
-Received: from mail-pb0-f54.google.com (mail-pb0-f54.google.com
-	[209.85.160.54]) by cuda.sgi.com with ESMTP id knsof1YX4hwjXUJr
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3F63A7F6D
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 19:03:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4B54AC001
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:49 -0700 (PDT)
+Received: from mail-pb0-f42.google.com (mail-pb0-f42.google.com
+	[209.85.160.42]) by cuda.sgi.com with ESMTP id 5Lk3DkXDPBAkPF2g
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:46 -0700 (PDT)
-Received: by mail-pb0-f54.google.com with SMTP id ro12so2491013pbb.27
-	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:45 -0700 (PDT)
+	<xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:48 -0700 (PDT)
+Received: by mail-pb0-f42.google.com with SMTP id un15so2498718pbc.1
+	for <xfs@oss.sgi.com>; Thu, 22 Aug 2013 17:03:48 -0700 (PDT)
 From: Andy Lutomirski <luto@amacapital.net>
-Subject: [PATCH v4 5/7] ext4: Defer mmap cmtime updates
-Date: Thu, 22 Aug 2013 17:03:21 -0700
-Message-Id: <a1e8b33cb80c0b5f6b437f35f298031c6b29c212.1377193658.git.luto@amacapital.net>
+Subject: [PATCH v4 6/7] btrfs: Defer mmap cmtime updates
+Date: Thu, 22 Aug 2013 17:03:22 -0700
+Message-Id: <7d32564366be185ce9a1a8030af394bdfd266c7a.1377193658.git.luto@amacapital.net>
 In-Reply-To: <cover.1377193658.git.luto@amacapital.net>
 References: <cover.1377193658.git.luto@amacapital.net>
 In-Reply-To: <cover.1377193658.git.luto@amacapital.net>
@@ -37,74 +37,76 @@ Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, xf
 
 Signed-off-by: Andy Lutomirski <luto@amacapital.net>
 ---
- fs/ext4/inode.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ fs/btrfs/extent_io.c |  1 +
+ fs/btrfs/inode.c     | 32 ++++++++++++++++----------------
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index dd32a2e..2cb2961 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -2382,8 +2382,11 @@ static int ext4_writepages(struct address_space *mapping,
- 	 * a transaction for special inodes like journal inode on last iput()
- 	 * because that could violate lock ordering on umount
- 	 */
--	if (!mapping->nrpages || !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
-+	if (!mapping->nrpages ||
-+	    !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
-+		mapping_flush_cmtime(mapping);
- 		return 0;
-+	}
- 
- 	if (ext4_should_journal_data(inode)) {
- 		struct blk_plug plug;
-@@ -2391,6 +2394,7 @@ static int ext4_writepages(struct address_space *mapping,
- 
- 		blk_start_plug(&plug);
- 		ret = write_cache_pages(mapping, wbc, __writepage, mapping);
-+		mapping_flush_cmtime(mapping);
- 		blk_finish_plug(&plug);
- 		return ret;
- 	}
-@@ -2525,6 +2529,7 @@ retry:
- 		if (ret)
- 			break;
- 	}
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index fe443fe..dc2f851 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -3756,6 +3756,7 @@ int extent_writepages(struct extent_io_tree *tree,
+ 				       __extent_writepage, &epd,
+ 				       flush_write_bio);
+ 	flush_epd_write_bio(&epd);
 +	mapping_flush_cmtime(mapping);
- 	blk_finish_plug(&plug);
- 	if (!ret && !cycled) {
- 		cycled = 1;
-@@ -3238,6 +3243,7 @@ static const struct address_space_operations ext4_aops = {
- 	.writepages		= ext4_writepages,
- 	.write_begin		= ext4_write_begin,
- 	.write_end		= ext4_write_end,
-+	.update_cmtime_deferred	= generic_update_cmtime_deferred,
- 	.bmap			= ext4_bmap,
- 	.invalidatepage		= ext4_invalidatepage,
- 	.releasepage		= ext4_releasepage,
-@@ -3254,6 +3260,7 @@ static const struct address_space_operations ext4_journalled_aops = {
- 	.writepages		= ext4_writepages,
- 	.write_begin		= ext4_write_begin,
- 	.write_end		= ext4_journalled_write_end,
-+	.update_cmtime_deferred	= generic_update_cmtime_deferred,
- 	.set_page_dirty		= ext4_journalled_set_page_dirty,
- 	.bmap			= ext4_bmap,
- 	.invalidatepage		= ext4_journalled_invalidatepage,
-@@ -3270,6 +3277,7 @@ static const struct address_space_operations ext4_da_aops = {
- 	.writepages		= ext4_writepages,
- 	.write_begin		= ext4_da_write_begin,
- 	.write_end		= ext4_da_write_end,
-+	.update_cmtime_deferred	= generic_update_cmtime_deferred,
- 	.bmap			= ext4_bmap,
- 	.invalidatepage		= ext4_da_invalidatepage,
- 	.releasepage		= ext4_releasepage,
-@@ -5025,7 +5033,6 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	int retries = 0;
+ 	return ret;
+ }
+ 
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 021694c..fc51380 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -7499,10 +7499,8 @@ int btrfs_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
  
  	sb_start_pagefault(inode->i_sb);
--	file_update_time(vma->vm_file);
- 	/* Delalloc case is easy... */
- 	if (test_opt(inode->i_sb, DELALLOC) &&
- 	    !ext4_should_journal_data(inode) &&
+ 	ret  = btrfs_delalloc_reserve_space(inode, PAGE_CACHE_SIZE);
+-	if (!ret) {
+-		ret = file_update_time(vma->vm_file);
++	if (!ret)
+ 		reserved = 1;
+-	}
+ 	if (ret) {
+ 		if (ret == -ENOMEM)
+ 			ret = VM_FAULT_OOM;
+@@ -8711,22 +8709,24 @@ static struct extent_io_ops btrfs_extent_io_ops = {
+  * For now we're avoiding this by dropping bmap.
+  */
+ static const struct address_space_operations btrfs_aops = {
+-	.readpage	= btrfs_readpage,
+-	.writepage	= btrfs_writepage,
+-	.writepages	= btrfs_writepages,
+-	.readpages	= btrfs_readpages,
+-	.direct_IO	= btrfs_direct_IO,
+-	.invalidatepage = btrfs_invalidatepage,
+-	.releasepage	= btrfs_releasepage,
+-	.set_page_dirty	= btrfs_set_page_dirty,
+-	.error_remove_page = generic_error_remove_page,
++	.readpage		= btrfs_readpage,
++	.writepage		= btrfs_writepage,
++	.writepages		= btrfs_writepages,
++	.update_cmtime_deferred	= generic_update_cmtime_deferred,
++	.readpages		= btrfs_readpages,
++	.direct_IO		= btrfs_direct_IO,
++	.invalidatepage		= btrfs_invalidatepage,
++	.releasepage		= btrfs_releasepage,
++	.set_page_dirty		= btrfs_set_page_dirty,
++	.error_remove_page	= generic_error_remove_page,
+ };
+ 
+ static const struct address_space_operations btrfs_symlink_aops = {
+-	.readpage	= btrfs_readpage,
+-	.writepage	= btrfs_writepage,
+-	.invalidatepage = btrfs_invalidatepage,
+-	.releasepage	= btrfs_releasepage,
++	.readpage		= btrfs_readpage,
++	.writepage		= btrfs_writepage,
++	.update_cmtime_deferred	= generic_update_cmtime_deferred,
++	.invalidatepage 	= btrfs_invalidatepage,
++	.releasepage		= btrfs_releasepage,
+ };
+ 
+ static const struct inode_operations btrfs_file_inode_operations = {
 -- 
 1.8.3.1
 
