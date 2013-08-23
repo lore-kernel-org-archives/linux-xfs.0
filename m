@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4679129DFB
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:01:06 -0500 (CDT)
-Message-ID: <5217A35D.1090609@sgi.com>
-Date: Fri, 23 Aug 2013 13:01:01 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A06A129DFB
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 13:06:34 -0500 (CDT)
+Date: Fri, 23 Aug 2013 13:06:30 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v2] xfs: Simplify xfs_ail_min() with
+	list_first_entry_or_null()
+Message-ID: <20130823180630.GU5262@sgi.com>
+References: <520C6253.6080809@oracle.com>
 MIME-Version: 1.0
-Subject: Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-References: <52165830.8050006@redhat.com> <52176134.6090905@sgi.com>
-	<5217640F.7050900@redhat.com> <52176A2C.9060708@sgi.com>
-	<5217929F.5050008@redhat.com>
-In-Reply-To: <5217929F.5050008@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <520C6253.6080809@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,78 +19,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 08/23/13 11:49, Brian Foster wrote:
-> On 08/23/2013 09:57 AM, Mark Tinguely wrote:
->> On 08/23/13 08:30, Brian Foster wrote:
->>> On 08/23/2013 09:18 AM, Mark Tinguely wrote:
->>>> On 08/22/13 13:28, Brian Foster wrote:
->>>>> Hi all,
->>>>>
->>>>> I hit an assert on a debug kernel while beating on some finobt work and
->>>>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
->>>>> hit it through a couple different paths, first while running
->>>>> fsstress on
->>>>> a CRC enabled filesystem (with otherwise default mkfs options):
->>>>>
->>>>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
->>>>> hosted on a single spindle desktop box).
->>>>
->>>> Eeek.
->>>>
->>>> So both crashes are directory related. What is the top XFS kernel commit
->>>> for these tests?
->>>>
->>>
->>> Hi Mark,
->>>
->>> It was the latest from at some point yesterday. I don't think I've
->>> pulled since, so I'm at:
->>>
->>> 3e3c51ce xfs: add xfs sb v4 support for dirent filetype field
->>>
->>>> Have you seen this on earlier versions of the kernel?
->>>>
->>>
->>> Well I hit an issue first on my dev. branch for finobt hacking, which is
->>> currently based on a slightly older commit:
->>>
->>> 2c2bcc07 xfs: call roundup_64() to calculate the min_logblks
->>>
->>> Unfortunately I don't have the precise error/stack from that failure on
->>> hand to double check whether it's the exact same failure. I can try to
->>> regenerate it a bit later today.
->>>
->>> Brian
->>>
->>>> Thanks,
->>>>
->>>> --Mark.
->>>
->> Good, I just want to make sure the common directory mods for the file
->> type patch was not the cause. I will try to recreate it too.
->>
->
-> And just to confirm, I can hit the assert from both tests on a 2c2bcc07
-> kernel (pre-dirent ftype change).
->
-> Brian
+On Thu, Aug 15, 2013 at 01:08:35PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> At xfs_ail_min(), we do check if the AIL list is empty or not before
+> returning the first item in it with list_empty() and list_first_entry().
+> 
+> This can be simplified a bit with a new list operation routine that is
+> the list_first_entry_or_null() which has been introduced by:
+> 
+> commit 6d7581e62f8be462440d7b22c6361f7c9fa4902b
+>     list: introduce list_first_entry_or_null
+> 
+> v2: make xfs_ail_min() as a static inline function and move it to
+>     xfs_trans_priv.h as per Dave Chinner's comments.
+> 
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-Suspected as much, but thank-you for the confirmation.
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-I guess the next bi-section would be Linux 3.11 to make sure the 
-user/kernel sync did not introduce anything. I thought those moves were 
-clean.
-
-I will shut up and try to help bisect.
-
---Mark.
+Applied.  Thanks Jeff.
 
 _______________________________________________
 xfs mailing list
