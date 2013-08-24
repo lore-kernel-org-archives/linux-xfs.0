@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9533429DFD
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 23:07:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 742318F8037
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 21:07:50 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id JDPNOXwYyz7RY42H
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 21:07:50 -0700 (PDT)
-Message-ID: <52183194.2060008@hardwarefreak.com>
-Date: Fri, 23 Aug 2013 23:07:48 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 62F157F37
+	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 06:15:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E7E3AC003
+	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 04:15:11 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id jbYT8F3Hu4FV0Vf1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 24 Aug 2013 04:15:11 -0700 (PDT)
+Date: Sat, 24 Aug 2013 04:15:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Power loss and zero-length files
+Message-ID: <20130824111509.GA25684@infradead.org>
+References: <CAGwuE-p8=UwpGUhgpqkWn4U4jU-KnfC3C19Kqqv7uYLJvubxgQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: does having ~Ncore+1? kworkers flushing XFS to 1 disk improve
-	throughput?
-References: <52181B69.6060707@tlinx.org>
-In-Reply-To: <52181B69.6060707@tlinx.org>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <CAGwuE-p8=UwpGUhgpqkWn4U4jU-KnfC3C19Kqqv7uYLJvubxgQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +29,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Robert Widmer <robertwidmer@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On 8/23/2013 9:33 PM, Linda Walsh wrote:
+On Fri, Aug 23, 2013 at 10:59:50AM -0400, Robert Widmer wrote:
+> I had a script that updated several files on an XFS filesystem using "sed
+> -i", and someone decided to power cycle the box without a sync after
+> running the script, and found that all the files that were updated were now
+> zero-length.
 
-> So what are all the kworkers doing and does having 6 of them
-> do things at the same time really help disk-throughput?
+>From looking at the scripts this looks expected.
+
+> Curious, I ran the following script to try and isolate the behavior:
 > 
-> Seems like they would conflict w/each other, cause
-> disk contention, and extra fragmentation as they
-> do things?  If they were all writing to separate
-> disks, that would make sense, but do that many kworker
-> threads need to be finishing out disk I/O on 1 disk?
+> 
+> #!/usr/bin/perl
+> 
+> my $dir = "/home/$ENV{USER}/XFSTest";
+> mkdir $dir;
+> chdir $dir;
+> 
+> my $filecount = 100;
+> my $tmpfile = 'file.tmp';
+> 
+> while (1) {
+>     for (my $i=0; $i<$filecount; $i++) {
+> my $filename = "file.$i";
+> open(OUT, ">", $tmpfile);
+>         print OUT "Time:".localtime."\n";
+>         close OUT;
+> rename $tmpfile, $filename;
+>     }
+> }
 
-https://raw.github.com/torvalds/linux/master/Documentation/workqueue.txt
+there is nothing flushing out the data to disk, so if the xfs metadata
+commit interval is faster than the the VM dirty writeback time the above
+is what you get.  Try doing the perl exquivalent of a fsync/fdatasync on
+the OUT fd and things should be on disk.
 
--- 
-Stan
+> Barriers are not disabled and drive cache:
+> [    2.145011] sd 2:0:0:0: [sda] Cache data unavailable
+> [    2.145013] sd 2:0:0:0: [sda] Assuming drive cache: write through
 
+What kind of disk is this?  You said VM above, so I'd be curious what
+kind of VM doesn't support the scsi caching mode pages.
 
 _______________________________________________
 xfs mailing list
