@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 08DBA29DFD
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 21:35:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA4B6304051
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 19:35:33 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9533429DFD
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 23:07:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 742318F8037
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 21:07:50 -0700 (PDT)
 Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id FNAKDZDurUxkbkBs
-	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 19:35:32 -0700 (PDT)
-Message-ID: <52181BF3.5050002@hardwarefreak.com>
-Date: Fri, 23 Aug 2013 21:35:31 -0500
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id JDPNOXwYyz7RY42H
+	for <xfs@oss.sgi.com>; Fri, 23 Aug 2013 21:07:50 -0700 (PDT)
+Message-ID: <52183194.2060008@hardwarefreak.com>
+Date: Fri, 23 Aug 2013 23:07:48 -0500
 From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Power loss and zero-length files
-References: <CAGwuE-p8=UwpGUhgpqkWn4U4jU-KnfC3C19Kqqv7uYLJvubxgQ@mail.gmail.com>
-	<20130823152058.GR5262@sgi.com>
-	<CAGwuE-q5r51t43SxDryReN1EN-w=YLR9ehtWxbhDeRjw3J9AAA@mail.gmail.com>
-	<20130823154534.GM7153@sgi.com>
-	<5217E2FA.1030008@hardwarefreak.com>
-	<20130823225035.GQ7153@sgi.com>
-In-Reply-To: <20130823225035.GQ7153@sgi.com>
+Subject: Re: does having ~Ncore+1? kworkers flushing XFS to 1 disk improve
+	throughput?
+References: <52181B69.6060707@tlinx.org>
+In-Reply-To: <52181B69.6060707@tlinx.org>
 Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,54 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Robert Widmer <robertwidmer@gmail.com>, xfs@oss.sgi.com
+To: Linda Walsh <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 8/23/2013 5:50 PM, Ben Myers wrote:
-> Hey Stan,
-> 
-> On Fri, Aug 23, 2013 at 05:32:26PM -0500, Stan Hoeppner wrote:
->> On 8/23/2013 10:45 AM, Ben Myers wrote:
->>> On Fri, Aug 23, 2013 at 11:27:19AM -0400, Robert Widmer wrote:
->>>> On Fri, Aug 23, 2013 at 11:20 AM, Ben Myers <bpm@sgi.com> wrote:
->>
->>>> The person ran the script, unplugged the machine (instead of shutting
->>>> it down like they were told), and boxed it up.
->>>
->>> lol  ;)
->>
->> Yeah, that's pretty ignorant.  Reminds me of this thread in March:
->>
->> http://oss.sgi.com/archives/xfs/2013-03/msg00152.html
->>
->> But "we" (IT industry) shot ourselves in the foot when we began using
->> the word "appliance".  No wonder then that some people literally treat
->> them as such.
-> 
-> On the other foot, it's probably not such an unreasonable expectation for
-> someone coming from a different background to expect that once it *looks* done
-> it actually *is* done.
-> 
-> It's as if you were to take me scuba diving, or drag racing... I have zero
-> expertise and I'd probably be doing all the silly ignorant things too.
-> 
-> Or... maybe the tech was just in a hurry and didn't think all the way through
-> the consequences.  I've been there.  ;)
+On 8/23/2013 9:33 PM, Linda Walsh wrote:
 
-I think the problem in many of these cases is that the people using the
-hardware are not technicians, at least in the traditional sense.  So
-when 'we' use the word appliance they treat the hardware like a TV or
-DVD player.  With either, pulling the plug while it's running has no
-detrimental effect.
+> So what are all the kworkers doing and does having 6 of them
+> do things at the same time really help disk-throughput?
+> 
+> Seems like they would conflict w/each other, cause
+> disk contention, and extra fragmentation as they
+> do things?  If they were all writing to separate
+> disks, that would make sense, but do that many kworker
+> threads need to be finishing out disk I/O on 1 disk?
 
-The SCUBA and drag racing analogies don't really fit here as you're
-completely out of your element.  And acquiring the skills to do either
-requires many weeks of training, time in the water or behind the wheel.
- "shutdown -h now <ENTER>" requires no training, but just reading one
-line on an instruction sheet and typing it in. ;)
+https://raw.github.com/torvalds/linux/master/Documentation/workqueue.txt
 
 -- 
 Stan
+
 
 _______________________________________________
 xfs mailing list
