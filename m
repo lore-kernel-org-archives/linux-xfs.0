@@ -1,28 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 93C0D7CBE
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 00:18:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 11377AC001
-	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 22:18:48 -0700 (PDT)
-Received: from mail-yh0-f43.google.com (mail-yh0-f43.google.com
-	[209.85.213.43]) by cuda.sgi.com with ESMTP id COzgz2V2Uq5nOvZz
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 24 Aug 2013 22:18:46 -0700 (PDT)
-Received: by mail-yh0-f43.google.com with SMTP id z20so559048yhz.2
-	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 22:18:45 -0700 (PDT)
-Message-ID: <521993AA.7010301@gmail.com>
-Date: Sun, 25 Aug 2013 01:18:34 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 481277F4E
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 10:06:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C9AB5AC001
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 08:06:19 -0700 (PDT)
+Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141]) by
+	cuda.sgi.com with ESMTP id TGVK6M0d7TWdQp6d (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 Aug 2013 08:06:17 -0700 (PDT)
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	Only! Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <chandan@linux.vnet.ibm.com>;
+	Mon, 26 Aug 2013 01:02:58 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id BE5D12BB0055
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 01:06:08 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r7PEnuZ149283086
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:49:57 +1000
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r7PF67fH032152 for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 01:06:07 +1000
+From: chandan <chandan@linux.vnet.ibm.com>
+Subject: [PATCH] xfstests: generic/255: Execute only if blocksize <= 4096
+Date: Sun, 25 Aug 2013 20:36 +0530
+Message-ID: <2909046.09LYLQvZ6q@localhost.localdomain>
 MIME-Version: 1.0
-Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<20130819201940.516942026@sgi.com>
-	<5212AA1D.3000809@sandeen.net> <52137D3D.8060205@sgi.com>
-	<20130821000624.GO6023@dastard> <20130821170336.GJ5262@sgi.com>
-	<20130822020226.GR6023@dastard> <20130822161456.GB23510@sgi.com>
-	<20130822181910.GP5262@sgi.com>
-In-Reply-To: <20130822181910.GP5262@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,43 +41,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: sekharan@linux.vnet.ibm.com
 
-On 08/22/2013 02:19 PM, Ben Myers wrote:
-> Gents,
-> 
-> On Thu, Aug 22, 2013 at 11:14:56AM -0500, Geoffrey Wehrman wrote:
->> On Thu, Aug 22, 2013 at 12:02:26PM +1000, Dave Chinner wrote:
->> | I'm very, very, very unhappy about how this situation is unfolding.
->>
->> As am I.
-> 
-> Mark provided some mkfs code to test the v4 feature bit with, and it
-> worked fine for me.
-> 
-> Given that we are protected by a feature bit, I feel that pulling in the
-> v4 feature is considerably less risky than what we did in 3.10, with
-> Dave still cleaning up his mess in -rc6, so go ahead and call me
-> reckless:  I've pulled in both v4 and v5 versions of this code.
-> 
-> Mark, please post your mkfs code ASAP, even though Dave hasn't reposted
-> his userspace series yet.
-> 
-> Everybody gets his code in and nobody is happy.
-> 
-> -Ben
+The patch adds the function _require_le_4k_blocksize to perform the
+block size check on $TEST_DEV and $SCRATCH_DEV.
 
-Mark's v4 dirent patches seem to work on 32-bit x86.  I happen to agree 
-100% with Dave on this issue.  However, lacking a dirent test and 
-xfs_db skills, I threw everything else and the kitchen sink at 
-v4-dirent XFS and did not find any evidence to back up Dave's argument. 
-So I'll tip my cap to Mark for his insight on the matter, hoping that 
-his testing skills are fine as always.
+Signed-off-by: chandan <chandan@linux.vnet.ibm.com>
+---
+ common/rc         | 10 ++++++++++
+ tests/generic/255 |  1 +
+ 2 files changed, 11 insertions(+)
 
-Thanks!
+diff --git a/common/rc b/common/rc
+index ae80b12..d8ee132 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2106,6 +2106,16 @@ _require_dumpe2fs()
+ 	fi
+ }
+ 
++_require_le_4k_blocksize()
++{
++	test_dev_bs=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
++	scratch_dev_bs=`stat -f $SCRATCH_DEV | grep "Block size" | cut -d " " -f3`
++
++	if (( $test_dev_bs > 4096 || $scratch_dev_bs > 4096 )); then
++		_notrun "This test requires a filesystem with a block size less than or equal to 4k."
++	fi
++}
++
+ _create_loop_device()
+ {
+ 	file=$1
+diff --git a/tests/generic/255 b/tests/generic/255
+index dd329b4..763e861 100755
+--- a/tests/generic/255
++++ b/tests/generic/255
+@@ -49,6 +49,7 @@ _supported_os Linux
+ _require_xfs_io_falloc_punch
+ _require_xfs_io_falloc
+ _require_xfs_io_fiemap
++_require_le_4k_blocksize
+ 
+ testfile=$TEST_DIR/255.$$
+ 
+-- 
+1.8.3.1
 
-Michael
 
 _______________________________________________
 xfs mailing list
