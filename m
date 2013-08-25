@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B28E429DFB
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 15:27:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FC0CAC004
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 13:27:27 -0700 (PDT)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	GrYAsTRTICXr5z9h for <xfs@oss.sgi.com>;
-	Sun, 25 Aug 2013 13:27:25 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id 532541F00166
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 16:27:25 -0400 (EDT)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id E23eCXsSiods for <xfs@oss.sgi.com>;
-	Sun, 25 Aug 2013 16:27:20 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id E35AB1F00164
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 16:27:20 -0400 (EDT)
-Date: Sun, 25 Aug 2013 16:27:20 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <17070299.5038.1377462440867.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <521A42AA.6050704@hardwarefreak.com>
-Subject: Re: XFS recovery resumes...
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E93607F4E
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 18:21:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C2356304043
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 16:21:31 -0700 (PDT)
+Received: from mail-gh0-f176.google.com (mail-gh0-f176.google.com
+	[209.85.160.176]) by cuda.sgi.com with ESMTP id
+	lfanNjL7rbfUcDqJ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 Aug 2013 16:21:30 -0700 (PDT)
+Received: by mail-gh0-f176.google.com with SMTP id z17so680600ghb.7
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 16:21:30 -0700 (PDT)
+Message-ID: <521A9173.5070502@gmail.com>
+Date: Sun, 25 Aug 2013 19:21:23 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
+References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
+	<20130819201940.516942026@sgi.com>
+	<5212AA1D.3000809@sandeen.net> <52137D3D.8060205@sgi.com>
+	<20130821000624.GO6023@dastard> <20130821170336.GJ5262@sgi.com>
+	<20130822020226.GR6023@dastard> <20130822161456.GB23510@sgi.com>
+	<20130822181910.GP5262@sgi.com> <521993AA.7010301@gmail.com>
+In-Reply-To: <521993AA.7010301@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,57 +32,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
------ Original Message -----
-> The board has VGA, DVI, and HDMI, so you should be covered six ways to
-> Sunday with flat panel displays. If this Philips is an older "fork lift
-> required" 37" CRT then it probably only has composite, Svideo, maybe
-> component.
+On 8/25/2013 1:18 AM, Michael L. Semon wrote:
+> On 08/22/2013 02:19 PM, Ben Myers wrote:
+>> Gents,
+>>
+>> On Thu, Aug 22, 2013 at 11:14:56AM -0500, Geoffrey Wehrman wrote:
+>>> On Thu, Aug 22, 2013 at 12:02:26PM +1000, Dave Chinner wrote:
+>>> | I'm very, very, very unhappy about how this situation is unfolding.
+>>>
+>>> As am I.
+>>
+>> Mark provided some mkfs code to test the v4 feature bit with, and it
+>> worked fine for me.
+>>
+>> Given that we are protected by a feature bit, I feel that pulling in the
+>> v4 feature is considerably less risky than what we did in 3.10, with
+>> Dave still cleaning up his mess in -rc6, so go ahead and call me
+>> reckless:  I've pulled in both v4 and v5 versions of this code.
+>>
+>> Mark, please post your mkfs code ASAP, even though Dave hasn't reposted
+>> his userspace series yet.
+>>
+>> Everybody gets his code in and nobody is happy.
+>>
+>> -Ben
+>
+> Mark's v4 dirent patches seem to work on 32-bit x86.  I happen to agree
+> 100% with Dave on this issue.  However, lacking a dirent test and
+> xfs_db skills, I threw everything else and the kitchen sink at
+> v4-dirent XFS and did not find any evidence to back up Dave's argument.
+> So I'll tip my cap to Mark for his insight on the matter, hoping that
+> his testing skills are fine as always.
+>
+> Thanks!
+>
+> Michael
+>
 
-I *think* it has HDMI in, I just didn't have any HDMI capable VGA
-cards at the time, so I moved on to something else in my head.
+BTW, are there any xfstests results times for dirent vs. non-dirent 
+code?  For whatever reason, generic/068 is posting noticeably worse 
+numbers for v4-dirent XFS than for both v4 XFS and v5-dirent CRC XFS.
 
+I'm running the tests myself as well, but it will take a while to run 
+them for v4 XFS, v4-dirent XFS, v4-dirent-512b-inode XFS, and 
+v5-dirent-CRC XFS...which kinda speaks to Dave's point about supporting 
+a matrix of filesystems, but I wasn't meaning it that way...
 
-> > Well, oddly, it's up to about 1.4TB moved now overnight, and not a
-> > whisper
-> > of an error in any channel. It does need to be replaced, but the
-> > question
-> > is can I make it limp along reliably until she gets another job...
-> 
-> Just keep fingers/toes crossed. That mobo is nearly 10 years old,
-> never handled RAM correctly. You suffered a PSU failure which apparently
-> damaged something to some degree. But you now know there are relatively
-> inexpensive upgrade options available with the features you need, and
-> you can begin planning, while not in "emergency mode" with sis
-> hounding you every day to fix it. ;)
+Thanks again!
 
-This is the second Major Catastrophe in about 8 years, so we've gotten
-settled a bit that she takes second position if she can't pay my rate. :-)
-
-But yes, an upgrade was planned; I just wanted to upgrade the damn tuners
-first...  
-
-Thanks for the homework with NewEgg; I don't mind buying stuff from 
-them as long as it isn't HDDs.  They can't pack worth a crap; it's
-Received Wisdom on the MythTV mailing list that you *never* buy 
-drives from them, if you want them to last more than a year.
-
-My endgame is to replace the entire backend with an HP DL180g6, which
-has 12 SAS/SATA tray slots on the front, and proper cooling.  But that,
-too, is down the road a bit.
-
-Cheers,
--- jra
--- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
+Michael
 
 _______________________________________________
 xfs mailing list
