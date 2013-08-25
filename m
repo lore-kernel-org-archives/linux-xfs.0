@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7CDE27CBE
-	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 19:41:14 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B6E9E7CBE
+	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 22:41:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C2A4304039
-	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 17:41:14 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 46066AC001
+	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 20:41:36 -0700 (PDT)
 Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
 	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	71oaIda0I9HlttzM for <xfs@oss.sgi.com>;
-	Sat, 24 Aug 2013 17:41:10 -0700 (PDT)
+	TOJtkzRPH62xpHS7 for <xfs@oss.sgi.com>;
+	Sat, 24 Aug 2013 20:41:31 -0700 (PDT)
 Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id D52411F002E9
-	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 20:41:09 -0400 (EDT)
+	by benjamin.baylink.com (Postfix) with ESMTP id 5142C1F00568
+	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 23:41:31 -0400 (EDT)
 Received: from benjamin.baylink.com ([127.0.0.1])
 	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id 9lDyMG361x11 for <xfs@oss.sgi.com>;
-	Sat, 24 Aug 2013 20:41:05 -0400 (EDT)
+	port 10024) with ESMTP id 32bfeS6QHY0N for <xfs@oss.sgi.com>;
+	Sat, 24 Aug 2013 23:41:26 -0400 (EDT)
 Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id 7111F1F0029C
-	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 20:41:05 -0400 (EDT)
-Date: Sat, 24 Aug 2013 20:41:05 -0400 (EDT)
+	by benjamin.baylink.com (Postfix) with ESMTP id E1E891F004EF
+	for <xfs@oss.sgi.com>; Sat, 24 Aug 2013 23:41:26 -0400 (EDT)
+Date: Sat, 24 Aug 2013 23:41:26 -0400 (EDT)
 From: Jay Ashworth <jra@baylink.com>
-Message-ID: <4336525.4942.1377391265287.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <52194911.3050606@gmail.com>
+Message-ID: <22593430.4954.1377402086863.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <4336525.4942.1377391265287.JavaMail.root@benjamin.baylink.com>
 Subject: Re: Default mkfs parms for my DVR drive
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,48 +39,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
----- Original Message -----
-> From: "Joe Landman" <joe.landman@gmail.com>
+----- Original Message -----
+> From: "Jay Ashworth" <jra@baylink.com>
 
-> Dave, Eric, and the rest of the xfs team will tell you "use the defaults
-> Luke". For 99 and 44/100ths percent of users, this is the right choice.
-
-Well, if I can't; they're the ones who screwed up.  :-)
-
-> I am guessing that some of the delay may be the speed of the interface
-> to the disk ... but even then 3 minutes sounds long, unless something
-> else is hitting the disk at the same time.
+> And this latest rsync has gotten 78G and then paused; 80G and then
+> paused....
 > 
-> Which kernel version btw? A quick 'uname -a' is a good thing.
-
-Ok, ok; this isn't the same thread anymore.  :-)
-
-Linux duckling 3.4.47-2.38-default #1 SMP Fri May 31 20:17:40 UTC 2013 (3961086) i686 athlon i386 GNU/Linux
-
-> Your hardware could also be somewhat slow ... Could you do an
+> 84G and then paused...
 > 
-> lshw -class disk -class storage
+> 5 min LA 1.9, and the rsync is the top process.
+> 
+> I have smartd running; no errors yet.
+> 
+> Still watching...
 
-It probably is.
+Well, it's now up to 377GB, and it hasn't crashed yet.  Since the original
+FSs and the new one were mkfs'd by different versions of the mkfs program,
+I suppose it's possible that might have contributed to the crash in some
+perverted way that running badblocks -w in the middle would definitely
+prevent.  
 
-It's an old Athlon, MSI MS-7021, KT6V chipset; 512M of DDR... maybe that's
-DDR 2; it won't run right with more.
-
-I don't seem to have lshw.
-
-Or, oddly, hwconfig.  It's got 3 Seagate ST3000DM001s, 2 on a SiI 7114 PCI
-with a pair of Fujitsu Deskstars, 2T and 1T; 40G Samsung boot on the mobo SATA;
-the third 3000 is in a USB 2 enclosure.
-
-And this latest rsync has gotten 78G and then paused; 80G and then paused....
-
-84G and then paused...
-
-5 min LA 1.9, and the rsync is the top process.
-
-I have smartd running; no errors yet.
-
-Still watching...
+We'll see if it survives the night.
 
 Cheers,
 -- jra
