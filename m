@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 57BE67F52
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:45:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DAB3FAC001
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 22:45:22 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id Za1j3AXMrzUtRrHs
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 22:45:22 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id CEF9C6C169
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:45:21 -0500 (CDT)
-Message-ID: <521AEB6E.4040101@hardwarefreak.com>
-Date: Mon, 26 Aug 2013 00:45:18 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id D826C7F3F
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 08:36:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7457EAC001
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 06:36:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id OUkN9g3mQLgDHHqs for
+	<xfs@oss.sgi.com>; Mon, 26 Aug 2013 06:36:35 -0700 (PDT)
+Message-ID: <521B59C7.1080803@redhat.com>
+Date: Mon, 26 Aug 2013 09:36:07 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: XFS recovery resumes...
-References: <17070299.5038.1377462440867.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <17070299.5038.1377462440867.JavaMail.root@benjamin.baylink.com>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [PATCH] Re: XFS: Assertion failed: first <= last && last <
+	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
+References: <52165830.8050006@redhat.com> <20130826041330.GU6023@dastard>
+In-Reply-To: <20130826041330.GU6023@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,45 +28,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 8/25/2013 3:27 PM, Jay Ashworth wrote:
-...
-> But yes, an upgrade was planned; I just wanted to upgrade the damn tuners
-> first...  
+On 08/26/2013 12:13 AM, Dave Chinner wrote:
+> On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
+>> Hi all,
+>>
+>> I hit an assert on a debug kernel while beating on some finobt work and
+>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
+>> hit it through a couple different paths, first while running fsstress on
+>> a CRC enabled filesystem (with otherwise default mkfs options):
+>>
+>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
+>> hosted on a single spindle desktop box).
+>>
+>> crc=1
+>> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
+>>
+>> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
+> 
+> Directory buffer overrun.
+> 
+>>  [<ffffffffa031d549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
+>>  [<ffffffffa02e7c1c>] xfs_da3_node_add+0x11c/0x210 [xfs]
+>>  [<ffffffffa02ea703>] xfs_da3_node_split+0xc3/0x230 [xfs]
+>>  [<ffffffffa02eaa18>] xfs_da3_split+0x1a8/0x410 [xfs]
+>>  [<ffffffffa02f743f>] xfs_dir2_node_addname+0x47f/0xde0 [xfs]
+> 
+> During a split.
+> 
+> Easily reproduced with "seq 200000 | xargs touch" as Michael Semon
+> reported last week.
+> 
+> The fix demonstrates my concerns about modifying directory code -
+> the CRC changes missed a *fundamental* directory format definition,
+> and we've only just tripped over it....
+> 
+>> rm -rf /mnt/test
+>>
+>> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
+> 
+> Directory buffer overrun.
+> 
+>>  [<ffffffffa032b549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
+>>  [<ffffffffa02f61ff>] xfs_da3_node_unbalance+0xef/0x1d0 [xfs]
+>>  [<ffffffffa02f98b0>] xfs_da3_join+0x240/0x290 [xfs]
+>>  [<ffffffffa030659b>] xfs_dir2_node_removename+0x69b/0x8b0 [xfs]
+> 
+> During a merge. Not sure why that is happening on a v4 filesystem.
+> V5 filesystem, yes, due to the above bug but v4 should not be
+> affected.
+> 
 
-I'm not really into the DIY DVR scene, but I'd think with over the air,
-cable, and sat all being digital now that you should be able to get a
-single board to do the job, multi-channel simultaneous recording and all.
+Interesting, thanks Dave. FWIW, I no longer reproduce the assert in
+either scenario with this patch applied. I also don't see how it would
+make a difference for a v4 superblock filesystem. Perhaps that
+particular test was bogus. I haven't heard if Mark happened to reproduce
+that one. Regardless, consider it:
 
-> Thanks for the homework with NewEgg; 
+Tested-by: Brian Foster <bfoster@redhat.com>
 
-No problem.  I have a rep to maintain after all.  Maybe you didn't
-notice the right hand side of my email address. :)
+(xfs: fix calculation of the number of node entries in a dir3 node)
 
-> I don't mind buying stuff from 
-> them as long as it isn't HDDs.  They can't pack worth a crap; it's
-> Received Wisdom on the MythTV mailing list that you *never* buy 
-> drives from them, if you want them to last more than a year.
+Brian
 
-Hadn't heard that before.  I've never had a problem with any of the
-spinning drives I purchased from them.  I had a Corsair SSD die after ~4
-months, no fault of Newegg.  Of the few grand I've spent with them since
-2003, on parts for many new systems, repairs and upgrades, the only
-other problem I've had was a $20 four channel fan controller w/one dead
-channel outta the box.
-
-> My endgame is to replace the entire backend with an HP DL180g6, which
-> has 12 SAS/SATA tray slots on the front, and proper cooling.  But that,
-> too, is down the road a bit.
-
-Are you still talking about your sister's DVR here?  Build another PC
-and spend some of the $$ you'd save on a 65" Panasonic Plasma.  Save the
-rest for a rainy day.  The DL180G6 (discontinued BTW) with a handful of
-drives will cost more than the PC and plasma TV combined.
-
--- 
-Stan
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
