@@ -1,29 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E93607F4E
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 18:21:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C2356304043
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 16:21:31 -0700 (PDT)
-Received: from mail-gh0-f176.google.com (mail-gh0-f176.google.com
-	[209.85.160.176]) by cuda.sgi.com with ESMTP id
-	lfanNjL7rbfUcDqJ (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 Aug 2013 16:21:30 -0700 (PDT)
-Received: by mail-gh0-f176.google.com with SMTP id z17so680600ghb.7
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 16:21:30 -0700 (PDT)
-Message-ID: <521A9173.5070502@gmail.com>
-Date: Sun, 25 Aug 2013 19:21:23 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
-References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<20130819201940.516942026@sgi.com>
-	<5212AA1D.3000809@sandeen.net> <52137D3D.8060205@sgi.com>
-	<20130821000624.GO6023@dastard> <20130821170336.GJ5262@sgi.com>
-	<20130822020226.GR6023@dastard> <20130822161456.GB23510@sgi.com>
-	<20130822181910.GP5262@sgi.com> <521993AA.7010301@gmail.com>
-In-Reply-To: <521993AA.7010301@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 71B4929DFB
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 21:15:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 40B19304043
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 19:15:39 -0700 (PDT)
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140]) by
+	cuda.sgi.com with ESMTP id sjx9PZcEUaN7rzNA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 Aug 2013 19:15:37 -0700 (PDT)
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	Only! Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
+	Mon, 26 Aug 2013 12:01:58 +1000
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id C44BD2CE8056
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 12:15:32 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r7Q1xSnr66912272
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:59:29 +1000
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r7Q2FUUK001733 for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 12:15:30 +1000
+Message-ID: <1377483327.2834.7.camel@ThinkPad-T5421>
+Subject: Re: [PATCH] xfsprogs: fix Out-of-bounds access in repair/dinode.c
+From: Li Zhong <zhong@linux.vnet.ibm.com>
+Date: Mon, 26 Aug 2013 10:15:27 +0800
+In-Reply-To: <20130823163828.GS5262@sgi.com>
+References: <1376287861.2822.13.camel@ThinkPad-T5421>
+	<5214EFFF.4060105@sgi.com> <20130823163828.GS5262@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,61 +40,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Rich Johnston <rjohnston@sgi.com>, Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
-On 8/25/2013 1:18 AM, Michael L. Semon wrote:
-> On 08/22/2013 02:19 PM, Ben Myers wrote:
->> Gents,
->>
->> On Thu, Aug 22, 2013 at 11:14:56AM -0500, Geoffrey Wehrman wrote:
->>> On Thu, Aug 22, 2013 at 12:02:26PM +1000, Dave Chinner wrote:
->>> | I'm very, very, very unhappy about how this situation is unfolding.
->>>
->>> As am I.
->>
->> Mark provided some mkfs code to test the v4 feature bit with, and it
->> worked fine for me.
->>
->> Given that we are protected by a feature bit, I feel that pulling in the
->> v4 feature is considerably less risky than what we did in 3.10, with
->> Dave still cleaning up his mess in -rc6, so go ahead and call me
->> reckless:  I've pulled in both v4 and v5 versions of this code.
->>
->> Mark, please post your mkfs code ASAP, even though Dave hasn't reposted
->> his userspace series yet.
->>
->> Everybody gets his code in and nobody is happy.
->>
->> -Ben
->
-> Mark's v4 dirent patches seem to work on 32-bit x86.  I happen to agree
-> 100% with Dave on this issue.  However, lacking a dirent test and
-> xfs_db skills, I threw everything else and the kitchen sink at
-> v4-dirent XFS and did not find any evidence to back up Dave's argument.
-> So I'll tip my cap to Mark for his insight on the matter, hoping that
-> his testing skills are fine as always.
->
-> Thanks!
->
-> Michael
->
+On Fri, 2013-08-23 at 11:38 -0500, Ben Myers wrote:
+> Hey Rich and Li Zhong,
+> 
+> On Wed, Aug 21, 2013 at 11:51:11AM -0500, Rich Johnston wrote:
+> > Looks good, thanks for the patch Li Zhong. it has been committed.
+> > 
+> > --Rich
+> > 
+> > Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+> > 
+> > commit e7c05095f5baa9cd2e35a6de03d7dd9f51dd3910
+> > Author: Li Zhong <zhong@linux.vnet.ibm.com>
+> > Date:   Mon Aug 12 06:11:01 2013 +0000
+> > 
+> >     xfsprogs: fix Out-of-bounds access in repair/dinode.c
+> > 
+> > On 08/12/2013 01:11 AM, Li Zhong wrote:
+> > >Following is reported by coverity in bug 1061528:
+> > >
+> > >187                        __dirty_no_modify_ret(dirty);
+> > >
+> > >CID 1061528 (#1 of 1): Out-of-bounds access (OVERRUN)53. overrun-buffer-arg: Overrunning array "dinoc->di_pad" of 6 bytes by passing it to a function which accesses it at byte offset 15 using argument "16UL".
+> > >188                        memset(dinoc->di_pad, 0, 16);
+> > >
+> > >It seems that di_pad here should be di_pad2, as sekharan pointed out.
+> > >
+> > >Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+> > >---
+> > >  repair/dinode.c | 4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > >
+> > >diff --git a/repair/dinode.c b/repair/dinode.c
+> > >index e607f0b..94bf2f8 100644
+> > >--- a/repair/dinode.c
+> > >+++ b/repair/dinode.c
+> > >@@ -183,9 +183,9 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+> > >  	}
+> > >
+> > >  	for (i = 0; i < 16; i++) {
+> > >-		if (dinoc->di_pad[i] != 0) {
+> > >+		if (dinoc->di_pad2[i] != 0) {
+> > >  			__dirty_no_modify_ret(dirty);
+> > >-			memset(dinoc->di_pad, 0, 16);
+> > >+			memset(dinoc->di_pad2, 0, 16);
+> > >  			break;
+> > >  		}
+> > >  	}
+> 
+> We also discussed this issue a bit in this thread:
+> http://oss.sgi.com/archives/xfs/2013-08/msg00228.html
+> 
+> Looks like the loop itself is incorrect and should be removed, and Eric has
+> suggested that the conditional be changed to a memcmp in case the size of the
+> pad changes in the future.  Would either of you care to spin up another patch
+> to clean it up?
 
-BTW, are there any xfstests results times for dirent vs. non-dirent 
-code?  For whatever reason, generic/068 is posting noticeably worse 
-numbers for v4-dirent XFS than for both v4 XFS and v5-dirent CRC XFS.
+Hi Ben, 
 
-I'm running the tests myself as well, but it will take a while to run 
-them for v4 XFS, v4-dirent XFS, v4-dirent-512b-inode XFS, and 
-v5-dirent-CRC XFS...which kinda speaks to Dave's point about supporting 
-a matrix of filesystems, but I wasn't meaning it that way...
+If I understand correctly, we need to change 16 to be a sizeof the
+di_pad2 array(like the fix attached below)? 
 
-Thanks again!
+It seems to me that the loop is needed to check all of the 16 entries in
+the array? 
 
-Michael
+Thanks, Zhong
+
+---
+diff --git a/repair/dinode.c b/repair/dinode.c
+index b2b9a95..7469fc8 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -182,10 +182,10 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_uuid);
+ 	}
+ 
+-	for (i = 0; i < 16; i++) {
++	for (i = 0; i < sizeof(dinoc->di_pad2)/sizeof(dinoc->di_pad2[0]); i++) {
+ 		if (dinoc->di_pad2[i] != 0) {
+ 			__dirty_no_modify_ret(dirty);
+-			memset(dinoc->di_pad2, 0, 16);
++			memset(dinoc->di_pad2, 0, sizeof(dinoc->di_pad2));
+ 			break;
+ 		}
+ 	}
+
+
+
+
+
+
 
 _______________________________________________
 xfs mailing list
