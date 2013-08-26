@@ -1,23 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EEF1E7F50
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 23:13:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DD1E6304032
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 21:13:36 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oUrEAJUibbL8ioll for <xfs@oss.sgi.com>;
-	Sun, 25 Aug 2013 21:13:35 -0700 (PDT)
-Date: Mon, 26 Aug 2013 14:13:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-Message-ID: <20130826041330.GU6023@dastard>
-References: <52165830.8050006@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DC8887F52
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:38:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BBB9A8F8033
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 22:38:33 -0700 (PDT)
+Received: from e28smtp07.in.ibm.com (e28smtp07.in.ibm.com [122.248.162.7]) by
+	cuda.sgi.com with ESMTP id FeYayhBsmkay0jzu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 Aug 2013 22:38:31 -0700 (PDT)
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	Only! Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <chandan@linux.vnet.ibm.com>;
+	Mon, 26 Aug 2013 10:59:18 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 44559394004E
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:08:15 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r7Q5e1gT37748806
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:10:01 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	r7Q5cO7I020394 for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:08:25 +0530
+From: chandan <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH] xfstests: generic/255: Execute only if blocksize <= 4096
+Date: Mon, 26 Aug 2013 11:08:24 +0530
+Message-ID: <44437668.FEX1DiRokR@localhost.localdomain>
+In-Reply-To: <521A36C6.40006@sandeen.net>
+References: <2909046.09LYLQvZ6q@localhost.localdomain>
+	<521A36C6.40006@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52165830.8050006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,138 +44,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sekharan@linux.vnet.ibm.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
-> Hi all,
+On Sunday, August 25, 2013 11:54:30 AM Eric Sandeen wrote:
+> Can you explain why this is necessary?
 > 
-> I hit an assert on a debug kernel while beating on some finobt work and
-> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
-> hit it through a couple different paths, first while running fsstress on
-> a CRC enabled filesystem (with otherwise default mkfs options):
-> 
-> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
-> hosted on a single spindle desktop box).
-> 
-> crc=1
-> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
-> 
-> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
+> What failures do you see, on what filesystems?
 
-Directory buffer overrun.
+generic/255 currently fails on Btrfs on a ppc64 machine with 64k page size and
+hence 64k block size.
 
->  [<ffffffffa031d549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
->  [<ffffffffa02e7c1c>] xfs_da3_node_add+0x11c/0x210 [xfs]
->  [<ffffffffa02ea703>] xfs_da3_node_split+0xc3/0x230 [xfs]
->  [<ffffffffa02eaa18>] xfs_da3_split+0x1a8/0x410 [xfs]
->  [<ffffffffa02f743f>] xfs_dir2_node_addname+0x47f/0xde0 [xfs]
+generic/255 has been written to test the corner cases for 4k block size. I did
+try to make it work with variable sized block sizes, But I got stuck
+working with md5sum (since we would need two sets of md5sums, due to
+_test_generic_punch() being invoked with and without '-k' option per block
+size). 
 
-During a split.
+Since 4k block size support for Btrfs on ppc64 is already being worked on, I
+think its better to prevent execution of generic/255 for block sizes greater
+than 4k.
 
-Easily reproduced with "seq 200000 | xargs touch" as Michael Semon
-reported last week.
+Apologies for not including the above description in the patch.
 
-The fix demonstrates my concerns about modifying directory code -
-the CRC changes missed a *fundamental* directory format definition,
-and we've only just tripped over it....
-
-> rm -rf /mnt/test
-> 
-> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
-
-Directory buffer overrun.
-
->  [<ffffffffa032b549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
->  [<ffffffffa02f61ff>] xfs_da3_node_unbalance+0xef/0x1d0 [xfs]
->  [<ffffffffa02f98b0>] xfs_da3_join+0x240/0x290 [xfs]
->  [<ffffffffa030659b>] xfs_dir2_node_removename+0x69b/0x8b0 [xfs]
-
-During a merge. Not sure why that is happening on a v4 filesystem.
-V5 filesystem, yes, due to the above bug but v4 should not be
-affected.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-xfs: fix calculation of the number of node entries in a dir3 node
-
-From: Dave Chinner <dchinner@redhat.com>
-
-The calculation doesn't take into account the size of the dir v3
-header, so overestimates the hash entries in a node. This causes
-directory buffer overruns when splitting and merging nodes.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_da_btree.h | 11 +++++++++--
- fs/xfs/xfs_dir2.c     | 16 ++++++++++------
- 2 files changed, 19 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
-index 8cdc77b..b1f2679 100644
---- a/fs/xfs/xfs_da_btree.h
-+++ b/fs/xfs/xfs_da_btree.h
-@@ -133,12 +133,19 @@ extern void xfs_da3_node_hdr_to_disk(struct xfs_da_intnode *to,
- 				     struct xfs_da3_icnode_hdr *from);
- 
- static inline int
--xfs_da3_node_hdr_size(struct xfs_da_intnode *dap)
-+__xfs_da3_node_hdr_size(bool v3)
- {
--	if (dap->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC))
-+	if (v3)
- 		return sizeof(struct xfs_da3_node_hdr);
- 	return sizeof(struct xfs_da_node_hdr);
- }
-+static inline int
-+xfs_da3_node_hdr_size(struct xfs_da_intnode *dap)
-+{
-+	bool	v3 = dap->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC);
-+
-+	return __xfs_da3_node_hdr_size(v3);
-+}
- 
- static inline struct xfs_da_node_entry *
- xfs_da3_node_tree_p(struct xfs_da_intnode *dap)
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index d3ff96c..edf203a 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -90,6 +90,9 @@ void
- xfs_dir_mount(
- 	xfs_mount_t	*mp)
- {
-+	int	nodehdr_size;
-+
-+
- 	ASSERT(xfs_sb_version_hasdirv2(&mp->m_sb));
- 	ASSERT((1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) <=
- 	       XFS_MAX_BLOCKSIZE);
-@@ -98,12 +101,13 @@ xfs_dir_mount(
- 	mp->m_dirdatablk = xfs_dir2_db_to_da(mp, XFS_DIR2_DATA_FIRSTDB(mp));
- 	mp->m_dirleafblk = xfs_dir2_db_to_da(mp, XFS_DIR2_LEAF_FIRSTDB(mp));
- 	mp->m_dirfreeblk = xfs_dir2_db_to_da(mp, XFS_DIR2_FREE_FIRSTDB(mp));
--	mp->m_attr_node_ents =
--		(mp->m_sb.sb_blocksize - (uint)sizeof(xfs_da_node_hdr_t)) /
--		(uint)sizeof(xfs_da_node_entry_t);
--	mp->m_dir_node_ents =
--		(mp->m_dirblksize - (uint)sizeof(xfs_da_node_hdr_t)) /
--		(uint)sizeof(xfs_da_node_entry_t);
-+
-+	nodehdr_size = __xfs_da3_node_hdr_size(xfs_sb_version_hascrc(&mp->m_sb));
-+	mp->m_attr_node_ents = (mp->m_sb.sb_blocksize - nodehdr_size) /
-+				(uint)sizeof(xfs_da_node_entry_t);
-+	mp->m_dir_node_ents = (mp->m_dirblksize - nodehdr_size) /
-+				(uint)sizeof(xfs_da_node_entry_t);
-+
- 	mp->m_dir_magicpct = (mp->m_dirblksize * 37) / 100;
- 	if (xfs_sb_version_hasasciici(&mp->m_sb))
- 		mp->m_dirnameops = &xfs_ascii_ci_nameops;
+- chandan
 
 _______________________________________________
 xfs mailing list
