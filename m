@@ -1,37 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC8887F52
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:38:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BBB9A8F8033
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 22:38:33 -0700 (PDT)
-Received: from e28smtp07.in.ibm.com (e28smtp07.in.ibm.com [122.248.162.7]) by
-	cuda.sgi.com with ESMTP id FeYayhBsmkay0jzu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 Aug 2013 22:38:31 -0700 (PDT)
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <chandan@linux.vnet.ibm.com>;
-	Mon, 26 Aug 2013 10:59:18 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 44559394004E
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:08:15 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r7Q5e1gT37748806
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:10:01 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r7Q5cO7I020394 for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:08:25 +0530
-From: chandan <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH] xfstests: generic/255: Execute only if blocksize <= 4096
-Date: Mon, 26 Aug 2013 11:08:24 +0530
-Message-ID: <44437668.FEX1DiRokR@localhost.localdomain>
-In-Reply-To: <521A36C6.40006@sandeen.net>
-References: <2909046.09LYLQvZ6q@localhost.localdomain>
-	<521A36C6.40006@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 57BE67F52
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:45:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DAB3FAC001
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 22:45:22 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id Za1j3AXMrzUtRrHs
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 22:45:22 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id CEF9C6C169
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 00:45:21 -0500 (CDT)
+Message-ID: <521AEB6E.4040101@hardwarefreak.com>
+Date: Mon, 26 Aug 2013 00:45:18 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: Re: XFS recovery resumes...
+References: <17070299.5038.1377462440867.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <17070299.5038.1377462440867.JavaMail.root@benjamin.baylink.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,30 +31,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sekharan@linux.vnet.ibm.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sunday, August 25, 2013 11:54:30 AM Eric Sandeen wrote:
-> Can you explain why this is necessary?
-> 
-> What failures do you see, on what filesystems?
+On 8/25/2013 3:27 PM, Jay Ashworth wrote:
+...
+> But yes, an upgrade was planned; I just wanted to upgrade the damn tuners
+> first...  
 
-generic/255 currently fails on Btrfs on a ppc64 machine with 64k page size and
-hence 64k block size.
+I'm not really into the DIY DVR scene, but I'd think with over the air,
+cable, and sat all being digital now that you should be able to get a
+single board to do the job, multi-channel simultaneous recording and all.
 
-generic/255 has been written to test the corner cases for 4k block size. I did
-try to make it work with variable sized block sizes, But I got stuck
-working with md5sum (since we would need two sets of md5sums, due to
-_test_generic_punch() being invoked with and without '-k' option per block
-size). 
+> Thanks for the homework with NewEgg; 
 
-Since 4k block size support for Btrfs on ppc64 is already being worked on, I
-think its better to prevent execution of generic/255 for block sizes greater
-than 4k.
+No problem.  I have a rep to maintain after all.  Maybe you didn't
+notice the right hand side of my email address. :)
 
-Apologies for not including the above description in the patch.
+> I don't mind buying stuff from 
+> them as long as it isn't HDDs.  They can't pack worth a crap; it's
+> Received Wisdom on the MythTV mailing list that you *never* buy 
+> drives from them, if you want them to last more than a year.
 
-- chandan
+Hadn't heard that before.  I've never had a problem with any of the
+spinning drives I purchased from them.  I had a Corsair SSD die after ~4
+months, no fault of Newegg.  Of the few grand I've spent with them since
+2003, on parts for many new systems, repairs and upgrades, the only
+other problem I've had was a $20 four channel fan controller w/one dead
+channel outta the box.
+
+> My endgame is to replace the entire backend with an HP DL180g6, which
+> has 12 SAS/SATA tray slots on the front, and proper cooling.  But that,
+> too, is down the road a bit.
+
+Are you still talking about your sister's DVR here?  Build another PC
+and spend some of the $$ you'd save on a 65" Panasonic Plasma.  Save the
+rest for a rainy day.  The DL180G6 (discontinued BTW) with a handful of
+drives will cost more than the PC and plasma TV combined.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
