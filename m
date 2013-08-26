@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12213-g0d0ab12
-Message-Id: <20130826164021.0DD937F3F@oss.sgi.com>
-Date: Mon, 26 Aug 2013 11:40:20 -0500 (CDT)
+Message-Id: <20130826164030.AF2097F56@oss.sgi.com>
+Date: Mon, 26 Aug 2013 11:40:30 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   0d0ab12 xfs: check for underflow in xfs_iformat_fork()
   98f7462 xfs: xfs_dir3_sfe_put_ino can be static
       from  00574da199291751bfaaee15ad0f42a7144276ad (commit)
