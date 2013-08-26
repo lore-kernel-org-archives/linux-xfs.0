@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 416347F3F
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 10:00:25 -0500 (CDT)
-Message-ID: <521B6D88.30608@sgi.com>
-Date: Mon, 26 Aug 2013 10:00:24 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 490317F50
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 10:40:52 -0500 (CDT)
+Message-ID: <521B7700.2090803@sgi.com>
+Date: Mon, 26 Aug 2013 10:40:48 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-References: <52165830.8050006@redhat.com> <20130826041330.GU6023@dastard>
-	<521B59C7.1080803@redhat.com>
-In-Reply-To: <521B59C7.1080803@redhat.com>
+Subject: Re: [PATCH 51/50] xfs: add xfs sb v4 support for dirent filetype field
+References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
+	<20130819201940.516942026@sgi.com>
+	<5212AA1D.3000809@sandeen.net> <52137D3D.8060205@sgi.com>
+	<20130821000624.GO6023@dastard> <20130821170336.GJ5262@sgi.com>
+	<20130822020226.GR6023@dastard> <20130822161456.GB23510@sgi.com>
+	<20130822181910.GP5262@sgi.com> <521993AA.7010301@gmail.com>
+In-Reply-To: <521993AA.7010301@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,85 +26,48 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: Ben Myers <bpm@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On 08/26/13 08:36, Brian Foster wrote:
-> On 08/26/2013 12:13 AM, Dave Chinner wrote:
->> On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
->>> Hi all,
+On 08/25/13 00:18, Michael L. Semon wrote:
+> On 08/22/2013 02:19 PM, Ben Myers wrote:
+>> Gents,
+>>
+>> On Thu, Aug 22, 2013 at 11:14:56AM -0500, Geoffrey Wehrman wrote:
+>>> On Thu, Aug 22, 2013 at 12:02:26PM +1000, Dave Chinner wrote:
+>>> | I'm very, very, very unhappy about how this situation is unfolding.
 >>>
->>> I hit an assert on a debug kernel while beating on some finobt work and
->>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
->>> hit it through a couple different paths, first while running fsstress on
->>> a CRC enabled filesystem (with otherwise default mkfs options):
->>>
->>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
->>> hosted on a single spindle desktop box).
->>>
->>> crc=1
->>> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
->>>
->>> XFS: Assertion failed: first<= last&&  last<  BBTOB(bp->b_length),
+>>> As am I.
 >>
->> Directory buffer overrun.
+>> Mark provided some mkfs code to test the v4 feature bit with, and it
+>> worked fine for me.
 >>
->>>   [<ffffffffa031d549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
->>>   [<ffffffffa02e7c1c>] xfs_da3_node_add+0x11c/0x210 [xfs]
->>>   [<ffffffffa02ea703>] xfs_da3_node_split+0xc3/0x230 [xfs]
->>>   [<ffffffffa02eaa18>] xfs_da3_split+0x1a8/0x410 [xfs]
->>>   [<ffffffffa02f743f>] xfs_dir2_node_addname+0x47f/0xde0 [xfs]
+>> Given that we are protected by a feature bit, I feel that pulling in the
+>> v4 feature is considerably less risky than what we did in 3.10, with
+>> Dave still cleaning up his mess in -rc6, so go ahead and call me
+>> reckless:  I've pulled in both v4 and v5 versions of this code.
 >>
->> During a split.
+>> Mark, please post your mkfs code ASAP, even though Dave hasn't reposted
+>> his userspace series yet.
 >>
->> Easily reproduced with "seq 200000 | xargs touch" as Michael Semon
->> reported last week.
+>> Everybody gets his code in and nobody is happy.
 >>
->> The fix demonstrates my concerns about modifying directory code -
->> the CRC changes missed a *fundamental* directory format definition,
->> and we've only just tripped over it....
-
-I agree. As we see here, bugs in common directory code effect all 
-filesystems. It may not matter if the feature the code was written for 
-is enabled or not.
-
->>> rm -rf /mnt/test
->>>
->>> XFS: Assertion failed: first<= last&&  last<  BBTOB(bp->b_length),
->>
->> Directory buffer overrun.
->>
->>>   [<ffffffffa032b549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
->>>   [<ffffffffa02f61ff>] xfs_da3_node_unbalance+0xef/0x1d0 [xfs]
->>>   [<ffffffffa02f98b0>] xfs_da3_join+0x240/0x290 [xfs]
->>>   [<ffffffffa030659b>] xfs_dir2_node_removename+0x69b/0x8b0 [xfs]
->>
->> During a merge. Not sure why that is happening on a v4 filesystem.
->> V5 filesystem, yes, due to the above bug but v4 should not be
->> affected.
->>
+>> -Ben
 >
-> Interesting, thanks Dave. FWIW, I no longer reproduce the assert in
-> either scenario with this patch applied. I also don't see how it would
-> make a difference for a v4 superblock filesystem. Perhaps that
-> particular test was bogus. I haven't heard if Mark happened to reproduce
-> that one. Regardless, consider it:
+> Mark's v4 dirent patches seem to work on 32-bit x86.  I happen to agree
+> 100% with Dave on this issue.  However, lacking a dirent test and
+> xfs_db skills, I threw everything else and the kitchen sink at
+> v4-dirent XFS and did not find any evidence to back up Dave's argument.
+> So I'll tip my cap to Mark for his insight on the matter, hoping that
+> his testing skills are fine as always.
 >
-> Tested-by: Brian Foster<bfoster@redhat.com>
+> Thanks!
 >
-> (xfs: fix calculation of the number of node entries in a dir3 node)
+> Michael
+>
 
-I got the XFS v4 to assert on the remove in Linux 3.10 and 3.11.
-
-With the patch, a shorter test on Linux 3.10 did not assert. I will do 
-the full test on Linux 3.10/3.11, review and report back.
-
->
-> Brian
->
->> Cheers,
->>
->> Dave.
+Thanks for your thoughts on the subject and tests. In the end, we all 
+want XFS to continue to succeed.
 
 --Mark.
 
