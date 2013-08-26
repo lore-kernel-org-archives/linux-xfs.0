@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D826C7F3F
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 08:36:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7457EAC001
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 06:36:36 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2F88E7F3F
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 09:29:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B2019AC005
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 07:29:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OUkN9g3mQLgDHHqs for
-	<xfs@oss.sgi.com>; Mon, 26 Aug 2013 06:36:35 -0700 (PDT)
-Message-ID: <521B59C7.1080803@redhat.com>
-Date: Mon, 26 Aug 2013 09:36:07 -0400
-From: Brian Foster <bfoster@redhat.com>
+	cuda.sgi.com with ESMTP id mJlexpbgD7fTVma7 for
+	<xfs@oss.sgi.com>; Mon, 26 Aug 2013 07:29:36 -0700 (PDT)
+Message-ID: <521B664B.7030404@redhat.com>
+Date: Mon, 26 Aug 2013 09:29:31 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-References: <52165830.8050006@redhat.com> <20130826041330.GU6023@dastard>
-In-Reply-To: <20130826041330.GU6023@dastard>
+Subject: Re: [PATCH] xfstests: generic/255: Execute only if blocksize <= 4096
+References: <2909046.09LYLQvZ6q@localhost.localdomain>
+	<521A36C6.40006@sandeen.net>
+	<44437668.FEX1DiRokR@localhost.localdomain>
+In-Reply-To: <44437668.FEX1DiRokR@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,75 +29,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: chandan <chandan@linux.vnet.ibm.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, sekharan@linux.vnet.ibm.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 08/26/2013 12:13 AM, Dave Chinner wrote:
-> On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
->> Hi all,
+On 8/26/13 12:38 AM, chandan wrote:
+> On Sunday, August 25, 2013 11:54:30 AM Eric Sandeen wrote:
+>> Can you explain why this is necessary?
 >>
->> I hit an assert on a debug kernel while beating on some finobt work and
->> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
->> hit it through a couple different paths, first while running fsstress on
->> a CRC enabled filesystem (with otherwise default mkfs options):
->>
->> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
->> hosted on a single spindle desktop box).
->>
->> crc=1
->> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
->>
->> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
+>> What failures do you see, on what filesystems?
 > 
-> Directory buffer overrun.
+> generic/255 currently fails on Btrfs on a ppc64 machine with 64k page size and
+> hence 64k block size.
 > 
->>  [<ffffffffa031d549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
->>  [<ffffffffa02e7c1c>] xfs_da3_node_add+0x11c/0x210 [xfs]
->>  [<ffffffffa02ea703>] xfs_da3_node_split+0xc3/0x230 [xfs]
->>  [<ffffffffa02eaa18>] xfs_da3_split+0x1a8/0x410 [xfs]
->>  [<ffffffffa02f743f>] xfs_dir2_node_addname+0x47f/0xde0 [xfs]
+> generic/255 has been written to test the corner cases for 4k block size. I did
+> try to make it work with variable sized block sizes, But I got stuck
+> working with md5sum (since we would need two sets of md5sums, due to
+> _test_generic_punch() being invoked with and without '-k' option per block
+> size). 
 > 
-> During a split.
+> Since 4k block size support for Btrfs on ppc64 is already being worked on, I
+> think its better to prevent execution of generic/255 for block sizes greater
+> than 4k.
 > 
-> Easily reproduced with "seq 200000 | xargs touch" as Michael Semon
-> reported last week.
-> 
-> The fix demonstrates my concerns about modifying directory code -
-> the CRC changes missed a *fundamental* directory format definition,
-> and we've only just tripped over it....
-> 
->> rm -rf /mnt/test
->>
->> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
-> 
-> Directory buffer overrun.
-> 
->>  [<ffffffffa032b549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
->>  [<ffffffffa02f61ff>] xfs_da3_node_unbalance+0xef/0x1d0 [xfs]
->>  [<ffffffffa02f98b0>] xfs_da3_join+0x240/0x290 [xfs]
->>  [<ffffffffa030659b>] xfs_dir2_node_removename+0x69b/0x8b0 [xfs]
-> 
-> During a merge. Not sure why that is happening on a v4 filesystem.
-> V5 filesystem, yes, due to the above bug but v4 should not be
-> affected.
-> 
+> Apologies for not including the above description in the patch.
 
-Interesting, thanks Dave. FWIW, I no longer reproduce the assert in
-either scenario with this patch applied. I also don't see how it would
-make a difference for a v4 superblock filesystem. Perhaps that
-particular test was bogus. I haven't heard if Mark happened to reproduce
-that one. Regardless, consider it:
+It happens.  ;)
 
-Tested-by: Brian Foster <bfoster@redhat.com>
+To be honest I haven't really looked at how _test_generic_punch & generic/255
+works lately.
 
-(xfs: fix calculation of the number of node entries in a dir3 node)
+Just as a sanity check, does it also fail on xfs for 64k block sizes on ppc64?
 
-Brian
-
-> Cheers,
-> 
-> Dave.
-> 
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
