@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9EE9E7F3F
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 09:37:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 74C258F8049
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 07:37:33 -0700 (PDT)
-Date: Mon, 26 Aug 2013 17:37:15 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
-Message-ID: <20130826143714.GA6329@mwanda>
-References: <20130815055338.GC23580@elgon.mountain>
-	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
-	<20130815222650.GX6023@dastard> <20130823173613.GT5262@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 416347F3F
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 10:00:25 -0500 (CDT)
+Message-ID: <521B6D88.30608@sgi.com>
+Date: Mon, 26 Aug 2013 10:00:24 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130823173613.GT5262@sgi.com>
+Subject: Re: [PATCH] Re: XFS: Assertion failed: first <= last && last <
+	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
+References: <52165830.8050006@redhat.com> <20130826041330.GU6023@dastard>
+	<521B59C7.1080803@redhat.com>
+In-Reply-To: <521B59C7.1080803@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +19,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jeff Liu <jeff.liu@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 23, 2013 at 12:36:13PM -0500, Ben Myers wrote:
-> Dan,
-> 
-> On Fri, Aug 16, 2013 at 08:26:50AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
-> > > Hey Dan & Jeff,
-> > > 
-> > > On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
-> > > > On 08/15/2013 01:53 PM, Dan Carpenter wrote:
-> > > > 
-> > > > > The "di_size" variable comes from the disk and it's a signed 64 bit.
-> > > > > We check the upper limit but we should check for negative numbers as
-> > > > > well.
-> > > > > 
-> > > > > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-> > > > > index 123971b..849fc70 100644
-> > > > > --- a/fs/xfs/xfs_inode_fork.c
-> > > > > +++ b/fs/xfs/xfs_inode_fork.c
-> > > > > @@ -167,7 +167,8 @@ xfs_iformat_fork(
-> > > > >  			}
-> > > > >  
-> > > > >  			di_size = be64_to_cpu(dip->di_size);
-> > > > > -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
-> > > > > +			if (unlikely(di_size < 0 ||
-> > > > 
-> > > > But the di_size is initialized to ZERO while allocating a new inode on disk.
-> > > > I wonder if that is better to ASSERT in this case because the current check
-> > > > is used to make sure that the item is inlined, or we don't need it at all.
-> > > 
-> > > Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
-> > > shutdown is more appropriate than an assert, because here we're reading the
-> > > inode from disk, as opposed to looking at a structure that is already incore
-> > > which we think we've initialized.  We want to handle unexpected inputs from
-> > > disk without crashing even if we are CONFIG_XFS_DEBUG.
-> > 
-> > There are lots of places where we only check di_size to be greater
-> > than some value, and don't check for it being less than zero. Hence
-> > I think that a better solution might be to di_size unsigned as that
-> > will catch "negative" sizes for all types of situations.
-> 
-> What do you say to making di_size unsigned?  Any interest?
-> 
+On 08/26/13 08:36, Brian Foster wrote:
+> On 08/26/2013 12:13 AM, Dave Chinner wrote:
+>> On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
+>>> Hi all,
+>>>
+>>> I hit an assert on a debug kernel while beating on some finobt work and
+>>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
+>>> hit it through a couple different paths, first while running fsstress on
+>>> a CRC enabled filesystem (with otherwise default mkfs options):
+>>>
+>>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
+>>> hosted on a single spindle desktop box).
+>>>
+>>> crc=1
+>>> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
+>>>
+>>> XFS: Assertion failed: first<= last&&  last<  BBTOB(bp->b_length),
+>>
+>> Directory buffer overrun.
+>>
+>>>   [<ffffffffa031d549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
+>>>   [<ffffffffa02e7c1c>] xfs_da3_node_add+0x11c/0x210 [xfs]
+>>>   [<ffffffffa02ea703>] xfs_da3_node_split+0xc3/0x230 [xfs]
+>>>   [<ffffffffa02eaa18>] xfs_da3_split+0x1a8/0x410 [xfs]
+>>>   [<ffffffffa02f743f>] xfs_dir2_node_addname+0x47f/0xde0 [xfs]
+>>
+>> During a split.
+>>
+>> Easily reproduced with "seq 200000 | xargs touch" as Michael Semon
+>> reported last week.
+>>
+>> The fix demonstrates my concerns about modifying directory code -
+>> the CRC changes missed a *fundamental* directory format definition,
+>> and we've only just tripped over it....
 
-I'm not the right person to change "lots of places".  Some of these
-are probably subtle.  Just give me the reported-by and I'm happy.
+I agree. As we see here, bugs in common directory code effect all 
+filesystems. It may not matter if the feature the code was written for 
+is enabled or not.
 
-regards,
-dan carpenter
+>>> rm -rf /mnt/test
+>>>
+>>> XFS: Assertion failed: first<= last&&  last<  BBTOB(bp->b_length),
+>>
+>> Directory buffer overrun.
+>>
+>>>   [<ffffffffa032b549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
+>>>   [<ffffffffa02f61ff>] xfs_da3_node_unbalance+0xef/0x1d0 [xfs]
+>>>   [<ffffffffa02f98b0>] xfs_da3_join+0x240/0x290 [xfs]
+>>>   [<ffffffffa030659b>] xfs_dir2_node_removename+0x69b/0x8b0 [xfs]
+>>
+>> During a merge. Not sure why that is happening on a v4 filesystem.
+>> V5 filesystem, yes, due to the above bug but v4 should not be
+>> affected.
+>>
+>
+> Interesting, thanks Dave. FWIW, I no longer reproduce the assert in
+> either scenario with this patch applied. I also don't see how it would
+> make a difference for a v4 superblock filesystem. Perhaps that
+> particular test was bogus. I haven't heard if Mark happened to reproduce
+> that one. Regardless, consider it:
+>
+> Tested-by: Brian Foster<bfoster@redhat.com>
+>
+> (xfs: fix calculation of the number of node entries in a dir3 node)
+
+I got the XFS v4 to assert on the remove in Linux 3.10 and 3.11.
+
+With the patch, a shorter test on Linux 3.10 did not assert. I will do 
+the full test on Linux 3.10/3.11, review and report back.
+
+>
+> Brian
+>
+>> Cheers,
+>>
+>> Dave.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
