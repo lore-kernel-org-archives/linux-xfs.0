@@ -1,13 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C94727F3F
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 15:47:30 -0500 (CDT)
-Date: Mon, 26 Aug 2013 15:47:30 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH] xfs: don't leak root inode reference
-Message-ID: <20130826204730.GZ7153@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 2C97B7F3F
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 16:03:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0E78C8F8033
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 14:03:34 -0700 (PDT)
+Date: Mon, 26 Aug 2013 22:03:32 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] xfs: don't leak root inode reference
+Message-ID: <20130826210332.GF27005@ZenIV.linux.org.uk>
+References: <20130826204730.GZ7153@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20130826204730.GZ7153@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,46 +25,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Al Viro <viro@zeniv.linux.org.uk>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Looks like in 48fde701 we removed the iput of the root inode in
-xfs_fs_fill_super for the error case.  Add it back.
+On Mon, Aug 26, 2013 at 03:47:30PM -0500, Ben Myers wrote:
+> Looks like in 48fde701 we removed the iput of the root inode in
+> xfs_fs_fill_super for the error case.  Add it back.
+>  	if (is_bad_inode(root)) {
+>  		error = EINVAL;
+> -		goto out_unmount;
+> +		goto out_iput;
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+This one makes sense
 
----
- fs/xfs/xfs_super.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+>  	}
+>  	sb->s_root = d_make_root(root);
+>  	if (!sb->s_root) {
+>  		error = ENOMEM;
+> -		goto out_unmount;
+> +		goto out_iput;
 
-Index: b/fs/xfs/xfs_super.c
-===================================================================
---- a/fs/xfs/xfs_super.c	2013-08-26 15:36:09.170848579 -0500
-+++ b/fs/xfs/xfs_super.c	2013-08-26 15:40:19.450817933 -0500
-@@ -1493,12 +1493,12 @@ xfs_fs_fill_super(
- 	}
- 	if (is_bad_inode(root)) {
- 		error = EINVAL;
--		goto out_unmount;
-+		goto out_iput;
- 	}
- 	sb->s_root = d_make_root(root);
- 	if (!sb->s_root) {
- 		error = ENOMEM;
--		goto out_unmount;
-+		goto out_iput;
- 	}
- 
- 	return 0;
-@@ -1519,6 +1519,8 @@ out_destroy_workqueues:
-  out:
- 	return -error;
- 
-+ out_iput:
-+	iput(root);
-  out_unmount:
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
+
+... this one, OTOH, is simply wrong - take a look at what d_make_root()
+does on failure.
 
 _______________________________________________
 xfs mailing list
