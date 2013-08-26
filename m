@@ -1,37 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 71B4929DFB
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 21:15:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 40B19304043
-	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 19:15:39 -0700 (PDT)
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140]) by
-	cuda.sgi.com with ESMTP id sjx9PZcEUaN7rzNA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 Aug 2013 19:15:37 -0700 (PDT)
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Mon, 26 Aug 2013 12:01:58 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id C44BD2CE8056
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 12:15:32 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r7Q1xSnr66912272
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 11:59:29 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r7Q2FUUK001733 for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 12:15:30 +1000
-Message-ID: <1377483327.2834.7.camel@ThinkPad-T5421>
-Subject: Re: [PATCH] xfsprogs: fix Out-of-bounds access in repair/dinode.c
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Mon, 26 Aug 2013 10:15:27 +0800
-In-Reply-To: <20130823163828.GS5262@sgi.com>
-References: <1376287861.2822.13.camel@ThinkPad-T5421>
-	<5214EFFF.4060105@sgi.com> <20130823163828.GS5262@sgi.com>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id EEF1E7F50
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 23:13:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DD1E6304032
+	for <xfs@oss.sgi.com>; Sun, 25 Aug 2013 21:13:36 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	oUrEAJUibbL8ioll for <xfs@oss.sgi.com>;
+	Sun, 25 Aug 2013 21:13:35 -0700 (PDT)
+Date: Mon, 26 Aug 2013 14:13:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] Re: XFS: Assertion failed: first <= last && last <
+	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
+Message-ID: <20130826041330.GU6023@dastard>
+References: <52165830.8050006@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52165830.8050006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,99 +30,138 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Rich Johnston <rjohnston@sgi.com>, Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, 2013-08-23 at 11:38 -0500, Ben Myers wrote:
-> Hey Rich and Li Zhong,
+On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
+> Hi all,
 > 
-> On Wed, Aug 21, 2013 at 11:51:11AM -0500, Rich Johnston wrote:
-> > Looks good, thanks for the patch Li Zhong. it has been committed.
-> > 
-> > --Rich
-> > 
-> > Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-> > 
-> > commit e7c05095f5baa9cd2e35a6de03d7dd9f51dd3910
-> > Author: Li Zhong <zhong@linux.vnet.ibm.com>
-> > Date:   Mon Aug 12 06:11:01 2013 +0000
-> > 
-> >     xfsprogs: fix Out-of-bounds access in repair/dinode.c
-> > 
-> > On 08/12/2013 01:11 AM, Li Zhong wrote:
-> > >Following is reported by coverity in bug 1061528:
-> > >
-> > >187                        __dirty_no_modify_ret(dirty);
-> > >
-> > >CID 1061528 (#1 of 1): Out-of-bounds access (OVERRUN)53. overrun-buffer-arg: Overrunning array "dinoc->di_pad" of 6 bytes by passing it to a function which accesses it at byte offset 15 using argument "16UL".
-> > >188                        memset(dinoc->di_pad, 0, 16);
-> > >
-> > >It seems that di_pad here should be di_pad2, as sekharan pointed out.
-> > >
-> > >Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
-> > >---
-> > >  repair/dinode.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > >
-> > >diff --git a/repair/dinode.c b/repair/dinode.c
-> > >index e607f0b..94bf2f8 100644
-> > >--- a/repair/dinode.c
-> > >+++ b/repair/dinode.c
-> > >@@ -183,9 +183,9 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
-> > >  	}
-> > >
-> > >  	for (i = 0; i < 16; i++) {
-> > >-		if (dinoc->di_pad[i] != 0) {
-> > >+		if (dinoc->di_pad2[i] != 0) {
-> > >  			__dirty_no_modify_ret(dirty);
-> > >-			memset(dinoc->di_pad, 0, 16);
-> > >+			memset(dinoc->di_pad2, 0, 16);
-> > >  			break;
-> > >  		}
-> > >  	}
+> I hit an assert on a debug kernel while beating on some finobt work and
+> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of today. I
+> hit it through a couple different paths, first while running fsstress on
+> a CRC enabled filesystem (with otherwise default mkfs options):
 > 
-> We also discussed this issue a bit in this thread:
-> http://oss.sgi.com/archives/xfs/2013-08/msg00228.html
+> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
+> hosted on a single spindle desktop box).
 > 
-> Looks like the loop itself is incorrect and should be removed, and Eric has
-> suggested that the conditional be changed to a memcmp in case the size of the
-> pad changes in the future.  Would either of you care to spin up another patch
-> to clean it up?
+> crc=1
+> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
+> 
+> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
 
-Hi Ben, 
+Directory buffer overrun.
 
-If I understand correctly, we need to change 16 to be a sizeof the
-di_pad2 array(like the fix attached below)? 
+>  [<ffffffffa031d549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
+>  [<ffffffffa02e7c1c>] xfs_da3_node_add+0x11c/0x210 [xfs]
+>  [<ffffffffa02ea703>] xfs_da3_node_split+0xc3/0x230 [xfs]
+>  [<ffffffffa02eaa18>] xfs_da3_split+0x1a8/0x410 [xfs]
+>  [<ffffffffa02f743f>] xfs_dir2_node_addname+0x47f/0xde0 [xfs]
 
-It seems to me that the loop is needed to check all of the 16 entries in
-the array? 
+During a split.
 
-Thanks, Zhong
+Easily reproduced with "seq 200000 | xargs touch" as Michael Semon
+reported last week.
 
+The fix demonstrates my concerns about modifying directory code -
+the CRC changes missed a *fundamental* directory format definition,
+and we've only just tripped over it....
+
+> rm -rf /mnt/test
+> 
+> XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length),
+
+Directory buffer overrun.
+
+>  [<ffffffffa032b549>] xfs_trans_log_buf+0x89/0x1b0 [xfs]
+>  [<ffffffffa02f61ff>] xfs_da3_node_unbalance+0xef/0x1d0 [xfs]
+>  [<ffffffffa02f98b0>] xfs_da3_join+0x240/0x290 [xfs]
+>  [<ffffffffa030659b>] xfs_dir2_node_removename+0x69b/0x8b0 [xfs]
+
+During a merge. Not sure why that is happening on a v4 filesystem.
+V5 filesystem, yes, due to the above bug but v4 should not be
+affected.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: fix calculation of the number of node entries in a dir3 node
+
+From: Dave Chinner <dchinner@redhat.com>
+
+The calculation doesn't take into account the size of the dir v3
+header, so overestimates the hash entries in a node. This causes
+directory buffer overruns when splitting and merging nodes.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
-diff --git a/repair/dinode.c b/repair/dinode.c
-index b2b9a95..7469fc8 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -182,10 +182,10 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
- 		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_uuid);
- 	}
+ fs/xfs/xfs_da_btree.h | 11 +++++++++--
+ fs/xfs/xfs_dir2.c     | 16 ++++++++++------
+ 2 files changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
+index 8cdc77b..b1f2679 100644
+--- a/fs/xfs/xfs_da_btree.h
++++ b/fs/xfs/xfs_da_btree.h
+@@ -133,12 +133,19 @@ extern void xfs_da3_node_hdr_to_disk(struct xfs_da_intnode *to,
+ 				     struct xfs_da3_icnode_hdr *from);
  
--	for (i = 0; i < 16; i++) {
-+	for (i = 0; i < sizeof(dinoc->di_pad2)/sizeof(dinoc->di_pad2[0]); i++) {
- 		if (dinoc->di_pad2[i] != 0) {
- 			__dirty_no_modify_ret(dirty);
--			memset(dinoc->di_pad2, 0, 16);
-+			memset(dinoc->di_pad2, 0, sizeof(dinoc->di_pad2));
- 			break;
- 		}
- 	}
-
-
-
-
-
-
+ static inline int
+-xfs_da3_node_hdr_size(struct xfs_da_intnode *dap)
++__xfs_da3_node_hdr_size(bool v3)
+ {
+-	if (dap->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC))
++	if (v3)
+ 		return sizeof(struct xfs_da3_node_hdr);
+ 	return sizeof(struct xfs_da_node_hdr);
+ }
++static inline int
++xfs_da3_node_hdr_size(struct xfs_da_intnode *dap)
++{
++	bool	v3 = dap->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC);
++
++	return __xfs_da3_node_hdr_size(v3);
++}
+ 
+ static inline struct xfs_da_node_entry *
+ xfs_da3_node_tree_p(struct xfs_da_intnode *dap)
+diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+index d3ff96c..edf203a 100644
+--- a/fs/xfs/xfs_dir2.c
++++ b/fs/xfs/xfs_dir2.c
+@@ -90,6 +90,9 @@ void
+ xfs_dir_mount(
+ 	xfs_mount_t	*mp)
+ {
++	int	nodehdr_size;
++
++
+ 	ASSERT(xfs_sb_version_hasdirv2(&mp->m_sb));
+ 	ASSERT((1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) <=
+ 	       XFS_MAX_BLOCKSIZE);
+@@ -98,12 +101,13 @@ xfs_dir_mount(
+ 	mp->m_dirdatablk = xfs_dir2_db_to_da(mp, XFS_DIR2_DATA_FIRSTDB(mp));
+ 	mp->m_dirleafblk = xfs_dir2_db_to_da(mp, XFS_DIR2_LEAF_FIRSTDB(mp));
+ 	mp->m_dirfreeblk = xfs_dir2_db_to_da(mp, XFS_DIR2_FREE_FIRSTDB(mp));
+-	mp->m_attr_node_ents =
+-		(mp->m_sb.sb_blocksize - (uint)sizeof(xfs_da_node_hdr_t)) /
+-		(uint)sizeof(xfs_da_node_entry_t);
+-	mp->m_dir_node_ents =
+-		(mp->m_dirblksize - (uint)sizeof(xfs_da_node_hdr_t)) /
+-		(uint)sizeof(xfs_da_node_entry_t);
++
++	nodehdr_size = __xfs_da3_node_hdr_size(xfs_sb_version_hascrc(&mp->m_sb));
++	mp->m_attr_node_ents = (mp->m_sb.sb_blocksize - nodehdr_size) /
++				(uint)sizeof(xfs_da_node_entry_t);
++	mp->m_dir_node_ents = (mp->m_dirblksize - nodehdr_size) /
++				(uint)sizeof(xfs_da_node_entry_t);
++
+ 	mp->m_dir_magicpct = (mp->m_dirblksize * 37) / 100;
+ 	if (xfs_sb_version_hasasciici(&mp->m_sb))
+ 		mp->m_dirnameops = &xfs_ascii_ci_nameops;
 
 _______________________________________________
 xfs mailing list
