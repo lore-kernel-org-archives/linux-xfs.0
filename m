@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6A3217F3F
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 17:11:59 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 99AF57F3F
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 20:39:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DDC38AC006
-	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 15:11:55 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	sR137SrbkYhaByI8 for <xfs@oss.sgi.com>;
-	Mon, 26 Aug 2013 15:11:53 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 86AA68F8035
+	for <xfs@oss.sgi.com>; Mon, 26 Aug 2013 18:39:44 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	C2yWW7iHbwB15tHS for <xfs@oss.sgi.com>;
+	Mon, 26 Aug 2013 18:39:42 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VE4zt-0000hV-RM
-	for xfs@oss.sgi.com; Tue, 27 Aug 2013 08:10:53 +1000
+	(envelope-from <dave@fromorbit.com>) id 1VE8Ft-00019l-Ip
+	for xfs@oss.sgi.com; Tue, 27 Aug 2013 11:39:37 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VE4zt-0005zY-Q7
-	for xfs@oss.sgi.com; Tue, 27 Aug 2013 08:10:53 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VE8Ft-0006Ki-Hv
+	for xfs@oss.sgi.com; Tue, 27 Aug 2013 11:39:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: don't account buffer cancellation during log recovery
-	readahead
-Date: Tue, 27 Aug 2013 08:10:53 +1000
-Message-Id: <1377555053-23000-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: inode buffers may not be valid during recovery readahead
+Date: Tue, 27 Aug 2013 11:39:37 +1000
+Message-Id: <1377567577-24312-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,139 +37,132 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When doing readhaead in log recovery, we check to see if buffers are
-cancelled before doing readahead. If we find a cancelled buffer,
-however, we always decrement the reference count we have on it, and
-that means that readahead is causing a double decrement of the
-cancelled buffer reference count.
+CRC enabled filesystems fail log recovery with 100% reliability on
+xfstests xfs/085 with the following failure:
 
-This results in log recovery *replaying cancelled buffers* as the
-actual recovery pass does not find the cancelled buffer entry in the
-commit phase of the second pass across a transaction. On debug
-kernels, this results in an ASSERT failure like so:
+XFS (vdb): Mounting Filesystem
+XFS (vdb): Starting recovery (logdev: internal)
+XFS (vdb): Corruption detected. Unmount and run xfs_repair
+XFS (vdb): bad inode magic/vsn daddr 144 #0 (magic=0)
+XFS: Assertion failed: 0, file: fs/xfs/xfs_inode_buf.c, line: 95
 
-XFS: Assertion failed: !(flags & XFS_BLF_CANCEL), file: fs/xfs/xfs_log_recover.c, line: 1815
+The problem is that the inode buffer has not been recovered before
+the readahead on the inode buffer is issued. The checkpoint being
+recovered actually allocates the inode chunk we are doing readahead
+from, so what comes from disk during readahead is essentially
+random and the verifier barfs on it.
 
-xfstests generic/311 reproduces this ASSERT failure with 100%
-reproducability.
-
-Fix it by making readahead only peek at the buffer cancelled state
-rather than the full accounting that xlog_check_buffer_cancelled()
-does.
+This inode buffer readahead problem affects non-crc filesystems,
+too, but xfstests does not trigger it at all on such
+configurations....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 61 +++++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_inode_buf.c   | 36 +++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_inode_buf.h   |  1 +
+ fs/xfs/xfs_log_recover.c |  2 +-
+ 3 files changed, 35 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 64e530e..90b756f 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1769,19 +1769,11 @@ xlog_recover_buffer_pass1(
+diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
+index 38fe509..e011d59 100644
+--- a/fs/xfs/xfs_inode_buf.c
++++ b/fs/xfs/xfs_inode_buf.c
+@@ -61,9 +61,22 @@ xfs_inobp_check(
+ }
+ #endif
  
- /*
-  * Check to see whether the buffer being recovered has a corresponding
-- * entry in the buffer cancel record table.  If it does then return 1
-- * so that it will be cancelled, otherwise return 0.  If the buffer is
-- * actually a buffer cancel item (XFS_BLF_CANCEL is set), then decrement
-- * the refcount on the entry in the table and remove it from the table
-- * if this is the last reference.
-- *
-- * We remove the cancel record from the table when we encounter its
-- * last occurrence in the log so that if the same buffer is re-used
-- * again after its last cancellation we actually replay the changes
-- * made at that point.
-+ * entry in the buffer cancel record table. If it is, return the cancel
-+ * buffer structure to the caller.
-  */
--STATIC int
--xlog_check_buffer_cancelled(
-+STATIC struct xfs_buf_cancel *
-+xlog_peek_buffer_cancelled(
- 	struct xlog		*log,
- 	xfs_daddr_t		blkno,
- 	uint			len,
-@@ -1790,22 +1782,16 @@ xlog_check_buffer_cancelled(
- 	struct list_head	*bucket;
- 	struct xfs_buf_cancel	*bcp;
- 
--	if (log->l_buf_cancel_table == NULL) {
--		/*
--		 * There is nothing in the table built in pass one,
--		 * so this buffer must not be cancelled.
--		 */
-+	if (!log->l_buf_cancel_table) {
-+		/* empty table means no cancelled buffers in the log */
- 		ASSERT(!(flags & XFS_BLF_CANCEL));
--		return 0;
-+		return NULL;
- 	}
- 
--	/*
--	 * Search for an entry in the  cancel table that matches our buffer.
--	 */
- 	bucket = XLOG_BUF_CANCEL_BUCKET(log, blkno);
- 	list_for_each_entry(bcp, bucket, bc_list) {
- 		if (bcp->bc_blkno == blkno && bcp->bc_len == len)
--			goto found;
-+			return bcp;
- 	}
- 
- 	/*
-@@ -1813,9 +1799,32 @@ xlog_check_buffer_cancelled(
- 	 * that the buffer is NOT cancelled.
- 	 */
- 	ASSERT(!(flags & XFS_BLF_CANCEL));
--	return 0;
-+	return NULL;
++/*
++ * If we are doing readahead on an inode buffer, we might be in log recovery
++ * reading an inode allocation buffer that hasn't yet been replayed, and hence
++ * has not had the inode cores stamped into it. Hence for readahead, the buffer
++ * may be potentially invalid.
++ *
++ * If the readahead buffer is invalid, we don't want to mark it with an error,
++ * but we do want to clear the DONE status of the buffer so that a followup read
++ * will re-read it from disk. This will ensure that we don't get an unnecessary
++ * warnings during log recovery and we don't get unnecssary panics on debug
++ * kernels.
++ */
+ static void
+ xfs_inode_buf_verify(
+-	struct xfs_buf	*bp)
++	struct xfs_buf	*bp,
++	bool		readahead)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	int		i;
+@@ -84,6 +97,11 @@ xfs_inode_buf_verify(
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
++			if (readahead) {
++				bp->b_flags &= ~XBF_DONE;
++				return;
++			}
++
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+ 					     mp, dip);
+@@ -104,14 +122,21 @@ static void
+ xfs_inode_buf_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
 +}
 +
-+/*
-+ * If the buffer is being cancelled then return 1 so that it will be cancelled,
-+ * otherwise return 0.  If the buffer is actually a buffer cancel item
-+ * (XFS_BLF_CANCEL is set), then decrement the refcount on the entry in the
-+ * table and remove it from the table if this is the last reference.
-+ *
-+ * We remove the cancel record from the table when we encounter its last
-+ * occurrence in the log so that if the same buffer is re-used again after its
-+ * last cancellation we actually replay the changes made at that point.
-+ */
-+STATIC int
-+xlog_check_buffer_cancelled(
-+	struct xlog		*log,
-+	xfs_daddr_t		blkno,
-+	uint			len,
-+	ushort			flags)
++static void
++xfs_inode_buf_readahead_verify(
++	struct xfs_buf	*bp)
 +{
-+	struct xfs_buf_cancel	*bcp;
++	xfs_inode_buf_verify(bp, true);
+ }
+ 
+ static void
+ xfs_inode_buf_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
+ }
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ops = {
+@@ -119,6 +144,11 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+ 
++const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
++	.verify_read = xfs_inode_buf_readahead_verify,
++	.verify_write = xfs_inode_buf_write_verify,
++};
 +
-+	bcp = xlog_peek_buffer_cancelled(log, blkno, len, flags);
-+	if (!bcp)
-+		return 0;
  
--found:
- 	/*
- 	 * We've go a match, so return 1 so that the recovery of this buffer
- 	 * is cancelled.  If this buffer is actually a buffer cancel log
-@@ -3127,7 +3136,7 @@ xlog_recover_buffer_ra_pass2(
- 	struct xfs_buf_log_format	*buf_f = item->ri_buf[0].i_addr;
- 	struct xfs_mount		*mp = log->l_mp;
+ /*
+  * This routine is called to map an inode to the buffer containing the on-disk
+diff --git a/fs/xfs/xfs_inode_buf.h b/fs/xfs/xfs_inode_buf.h
+index aae9fc4..599e6c0 100644
+--- a/fs/xfs/xfs_inode_buf.h
++++ b/fs/xfs/xfs_inode_buf.h
+@@ -48,5 +48,6 @@ void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+ #endif /* DEBUG */
  
--	if (xlog_check_buffer_cancelled(log, buf_f->blf_blkno,
-+	if (xlog_peek_buffer_cancelled(log, buf_f->blf_blkno,
- 			buf_f->blf_len, buf_f->blf_flags)) {
- 		return;
- 	}
-@@ -3156,7 +3165,7 @@ xlog_recover_inode_ra_pass2(
- 			return;
- 	}
+ extern const struct xfs_buf_ops xfs_inode_buf_ops;
++extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
  
--	if (xlog_check_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
-+	if (xlog_peek_buffer_cancelled(log, ilfp->ilf_blkno, ilfp->ilf_len, 0))
+ #endif	/* __XFS_INODE_BUF_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 90b756f..ac9c18b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3169,7 +3169,7 @@ xlog_recover_inode_ra_pass2(
  		return;
  
  	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+-				ilfp->ilf_len, &xfs_inode_buf_ops);
++				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
+ }
+ 
+ STATIC void
 -- 
 1.8.3.2
 
