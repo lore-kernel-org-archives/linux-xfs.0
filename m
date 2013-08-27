@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5AD5F7F37
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 16:25:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4999E30404E
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 14:25:59 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id VRn3i0Vt0uTaOvMv for <xfs@oss.sgi.com>;
-	Tue, 27 Aug 2013 14:25:58 -0700 (PDT)
-Message-ID: <521D1965.20009@sandeen.net>
-Date: Tue, 27 Aug 2013 16:25:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5B4DB29E02
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 16:26:02 -0500 (CDT)
+Date: Tue, 27 Aug 2013 16:25:58 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH v2] xfs: don't leak root inode reference
+Message-ID: <20130827212558.GY5262@sgi.com>
+References: <20130826204730.GZ7153@sgi.com>
+ <20130826212423.GX6023@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: check correct status variable for xfs_inobt_get_rec()
-	call
-References: <1377638145-18800-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1377638145-18800-1-git-send-email-bfoster@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20130826212423.GX6023@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,42 +23,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-On 8/27/13 4:15 PM, Brian Foster wrote:
-> The call to xfs_inobt_get_rec() in xfs_dialloc_ag() passes 'j' as
-> the output status variable. The immediately following
-> XFS_WANT_CORRUPTED_GOTO() checks the value of 'i,' which is from
-> the previous lookup call and has already been checked. Fix the
-> corruption check to use 'j.'
+On Tue, Aug 27, 2013 at 07:24:23AM +1000, Dave Chinner wrote:
+> On Mon, Aug 26, 2013 at 03:47:30PM -0500, Ben Myers wrote:
+> > Looks like in 48fde701 we removed the iput of the root inode in
+> > xfs_fs_fill_super for the error case.  Add it back.
+> > 
+> > Signed-off-by: Ben Myers <bpm@sgi.com>
+> > 
+> > ---
+> >  fs/xfs/xfs_super.c |    6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > Index: b/fs/xfs/xfs_super.c
+> > ===================================================================
+> > --- a/fs/xfs/xfs_super.c	2013-08-26 15:36:09.170848579 -0500
+> > +++ b/fs/xfs/xfs_super.c	2013-08-26 15:40:19.450817933 -0500
+> > @@ -1493,12 +1493,12 @@ xfs_fs_fill_super(
+> >  	}
+> >  	if (is_bad_inode(root)) {
+> >  		error = EINVAL;
+> > -		goto out_unmount;
+> > +		goto out_iput;
+> >  	}
+> >  	sb->s_root = d_make_root(root);
+> >  	if (!sb->s_root) {
+> >  		error = ENOMEM;
+> > -		goto out_unmount;
+> > +		goto out_iput;
+> >  	}
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-whoops!  That's been there a while, good catch.
-
-It's harmless in the non-corruption case, but misses the corruption case...
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/xfs_ialloc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> That's wrong. d_make_root() drops the reference to the inode on
+> failure itself, and so the change in 48fde701 is correct and valid.
 > 
-> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-> index 6bee95d..ccf2fb1 100644
-> --- a/fs/xfs/xfs_ialloc.c
-> +++ b/fs/xfs/xfs_ialloc.c
-> @@ -729,7 +729,7 @@ xfs_dialloc_ag(
->  		error = xfs_inobt_get_rec(cur, &rec, &j);
->  		if (error)
->  			goto error0;
-> -		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-> +		XFS_WANT_CORRUPTED_GOTO(j == 1, error0);
->  
->  		if (rec.ir_freecount > 0) {
->  			/*
+> The leak on bad inodes (which, AFAICT, can never happen on XFS) has
+> been around a lot longer than Al's change - this commit introduced
+> it:
 > 
+> 	2bcf6e9 xfs: start periodic workers later
+> 
+> with this hunk:
+> 
+>         if (is_bad_inode(root)) {
+>                 error = EINVAL;
+> -               goto fail_vnrele;
+> +               goto out_syncd_stop;
+>         }
+
+Thanks Gents.  Here's another try:
+
+xfs: don't leak root inode reference
+
+Looks like in 2bcf6e9 we removed the iput of the root inode in
+xfs_fs_fill_super for the is_bad_inode error case.  Add it back.
+
+Signed-off-by: Ben Myers <bpm@sgi.com>
+
+---
+
+ fs/xfs/xfs_super.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Index: b/fs/xfs/xfs_super.c
+===================================================================
+--- a/fs/xfs/xfs_super.c	2013-08-26 15:43:55.530817462 -0500
++++ b/fs/xfs/xfs_super.c	2013-08-27 16:20:50.100857436 -0500
+@@ -1493,7 +1493,7 @@ xfs_fs_fill_super(
+ 	}
+ 	if (is_bad_inode(root)) {
+ 		error = EINVAL;
+-		goto out_unmount;
++		goto out_iput;
+ 	}
+ 	sb->s_root = d_make_root(root);
+ 	if (!sb->s_root) {
+@@ -1519,6 +1519,8 @@ out_destroy_workqueues:
+  out:
+ 	return -error;
+ 
++ out_iput:
++	iput(root);
+  out_unmount:
+ 	xfs_filestream_unmount(mp);
+ 	xfs_unmountfs(mp);
 
 _______________________________________________
 xfs mailing list
