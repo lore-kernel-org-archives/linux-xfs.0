@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 79ACD7CBF
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 16:45:34 -0500 (CDT)
-Date: Tue, 27 Aug 2013 16:45:34 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: fix bad dquot buffer size in log recovery readahead
-Message-ID: <20130827214534.GZ5262@sgi.com>
-References: <1377573943-25770-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3D7BD7CBF
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 17:08:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CCCA8AC010
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 15:08:40 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	qao3N3FrtxMIoq0W for <xfs@oss.sgi.com>;
+	Tue, 27 Aug 2013 15:08:39 -0700 (PDT)
+Date: Wed, 28 Aug 2013 08:08:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: don't leak root inode reference
+Message-ID: <20130827220833.GY6023@dastard>
+References: <20130826204730.GZ7153@sgi.com> <20130826212423.GX6023@dastard>
+	<20130827212558.GY5262@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1377573943-25770-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130827212558.GY5262@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,30 +30,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-On Tue, Aug 27, 2013 at 01:25:43PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Aug 27, 2013 at 04:25:58PM -0500, Ben Myers wrote:
+> On Tue, Aug 27, 2013 at 07:24:23AM +1000, Dave Chinner wrote:
+> > On Mon, Aug 26, 2013 at 03:47:30PM -0500, Ben Myers wrote:
+> > > Looks like in 48fde701 we removed the iput of the root inode in
+> > > xfs_fs_fill_super for the error case.  Add it back.
+> > > 
+> > > Signed-off-by: Ben Myers <bpm@sgi.com>
+> > > 
+> > > ---
+> > >  fs/xfs/xfs_super.c |    6 ++++--
+> > >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > > 
+> > > Index: b/fs/xfs/xfs_super.c
+> > > ===================================================================
+> > > --- a/fs/xfs/xfs_super.c	2013-08-26 15:36:09.170848579 -0500
+> > > +++ b/fs/xfs/xfs_super.c	2013-08-26 15:40:19.450817933 -0500
+> > > @@ -1493,12 +1493,12 @@ xfs_fs_fill_super(
+> > >  	}
+> > >  	if (is_bad_inode(root)) {
+> > >  		error = EINVAL;
+> > > -		goto out_unmount;
+> > > +		goto out_iput;
+> > >  	}
+> > >  	sb->s_root = d_make_root(root);
+> > >  	if (!sb->s_root) {
+> > >  		error = ENOMEM;
+> > > -		goto out_unmount;
+> > > +		goto out_iput;
+> > >  	}
+> > 
+> > That's wrong. d_make_root() drops the reference to the inode on
+> > failure itself, and so the change in 48fde701 is correct and valid.
+> > 
+> > The leak on bad inodes (which, AFAICT, can never happen on XFS) has
+> > been around a lot longer than Al's change - this commit introduced
+> > it:
+> > 
+> > 	2bcf6e9 xfs: start periodic workers later
+> > 
+> > with this hunk:
+> > 
+> >         if (is_bad_inode(root)) {
+> >                 error = EINVAL;
+> > -               goto fail_vnrele;
+> > +               goto out_syncd_stop;
+> >         }
 > 
-> xfstests xfs/087 fails 100% reliably with this assert:
+> Thanks Gents.  Here's another try:
 > 
-> XFS (vdb): Mounting Filesystem
-> XFS (vdb): Starting recovery (logdev: internal)
-> XFS: Assertion failed: bp->b_flags & XBF_STALE, file: fs/xfs/xfs_buf.c, line: 548
+> xfs: don't leak root inode reference
 > 
-> while trying to read a dquot buffer in xlog_recover_dquot_ra_pass2().
+> Looks like in 2bcf6e9 we removed the iput of the root inode in
+> xfs_fs_fill_super for the is_bad_inode error case.  Add it back.
 > 
-> The issue is that the buffer length to read that is passed to
-> xfs_buf_readahead is in units of filesystem blocks, not disk blocks.
-> (i.e. FSB, not daddr). Fix it but putting the correct conversion in
-> place.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Looks good.
+I don't think this is right, either.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+As I said in my previous reply, I don't think that XFS can ever see
+a bad inode. The fact is that we're grabbing mp->m_rootip, which is
+we already have a reference to and is in cache and validated thanks
+to an xfs_iget() call in xfs_mountfs().  If we fail validation when
+reading the root inode into cache then xfs_mountfs() will fail and
+we won't ever get to this check.
+
+Further, XFS never marks inodes bad - even on a failed lookup or a
+shut down filesystem - and so AFAICT we cannot ever see the root
+inode (or any other XFS inode) as a bad inode.
+
+Hence I think that the is_bad_inode(root) check should just go away.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
