@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C2EF57CBF
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 17:47:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ADB7A304048
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 15:47:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 86F7C7CBF
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 19:00:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E897AAC006
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 16:59:59 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dmCg9LlyWvFFOR57 for <xfs@oss.sgi.com>;
-	Tue, 27 Aug 2013 15:47:26 -0700 (PDT)
-Date: Wed, 28 Aug 2013 08:47:22 +1000
+	VwkBWCKtHqyvRaXt for <xfs@oss.sgi.com>;
+	Tue, 27 Aug 2013 16:59:54 -0700 (PDT)
+Date: Wed, 28 Aug 2013 09:59:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: check correct status variable for
-	xfs_inobt_get_rec() call
-Message-ID: <20130827224722.GZ6023@dastard>
-References: <1377638145-18800-1-git-send-email-bfoster@redhat.com>
+Subject: Re: XFS recovery resumes...
+Message-ID: <20130827235949.GA6023@dastard>
+References: <29874428.3384.1376259762936.JavaMail.root@benjamin.baylink.com>
+	<21672216.3390.1376260599697.JavaMail.root@benjamin.baylink.com>
+	<CAAxjCEz42u8rUZfDtw==-Eo0LoTx_u4Ex2_qJZH-r5P14G159w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1377638145-18800-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <CAAxjCEz42u8rUZfDtw==-Eo0LoTx_u4Ex2_qJZH-r5P14G159w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: Jay Ashworth <jra@baylink.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-On Tue, Aug 27, 2013 at 05:15:45PM -0400, Brian Foster wrote:
-> The call to xfs_inobt_get_rec() in xfs_dialloc_ag() passes 'j' as
-> the output status variable. The immediately following
-> XFS_WANT_CORRUPTED_GOTO() checks the value of 'i,' which is from
-> the previous lookup call and has already been checked. Fix the
-> corruption check to use 'j.'
+On Thu, Aug 22, 2013 at 11:16:18AM +0200, Stefan Ring wrote:
+> On Mon, Aug 12, 2013 at 12:36 AM, Jay Ashworth <jra@baylink.com> wrote:
+> > (and I apologize that I can't copy that in; I was running under screen, and
+> > it doesn't cooperate with scrollback well).
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Running inside screen is perfect for conserving scrollback, although
+> actually getting it out is a bit tedious:
+> 
+> - Enter copy mode: Ctrl-a Ctrl-[ (moving around: Pg-Up/Pg-Down via
+> Ctrl-B/Ctrl-F)
+> - Mark a selection: SPC + moving up or down
+> - Yank: Y
+> - Write to file: Ctrl-a :writebuf /tmp/scrlog
+> 
+> I also tend to have this in my ~/.screenrc:
+> 
+> defscrollback 20000
 
-Looks good.
+Add this to your ~/.screenrc:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+termcapinfo xterm|xterms|xs|rxvt ti@:te@
 
+And screen will write to the terminal's scrollback buffer rather
+than it's own internal buffer.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
