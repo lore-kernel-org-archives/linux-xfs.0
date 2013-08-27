@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5A647CBF
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 08:05:00 -0500 (CDT)
-Message-ID: <521CA3F8.7070805@sgi.com>
-Date: Tue, 27 Aug 2013 08:04:56 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7F4BA7CBF
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 11:46:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 06C1BAC008
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 09:46:55 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id kQalLikTfqYEmiF7 for <xfs@oss.sgi.com>;
+	Tue, 27 Aug 2013 09:46:54 -0700 (PDT)
+Message-ID: <521CD7FC.1080706@sandeen.net>
+Date: Tue, 27 Aug 2013 11:46:52 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-References: <52165830.8050006@redhat.com> <20130826041330.GU6023@dastard>
-	<521B59C7.1080803@redhat.com> <521B6D88.30608@sgi.com>
-	<20130826210445.GW6023@dastard> <521BC64A.6040005@sgi.com>
-In-Reply-To: <521BC64A.6040005@sgi.com>
+Subject: Re: [PATCH] xfstests: generic/255: Execute only if blocksize <= 4096
+References: <2909046.09LYLQvZ6q@localhost.localdomain>
+	<44437668.FEX1DiRokR@localhost.localdomain>
+	<521B664B.7030404@redhat.com>
+	<3942763.p7a9her5Nt@localhost.localdomain>
+In-Reply-To: <3942763.p7a9her5Nt@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,52 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: chandan <chandan@linux.vnet.ibm.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, sekharan@linux.vnet.ibm.com, xfs@oss.sgi.com
 
-On 08/26/13 16:19, Mark Tinguely wrote:
-> On 08/26/13 16:04, Dave Chinner wrote:
->> On Mon, Aug 26, 2013 at 10:00:24AM -0500, Mark Tinguely wrote:
->>> On 08/26/13 08:36, Brian Foster wrote:
->>>> On 08/26/2013 12:13 AM, Dave Chinner wrote:
->>>>> On Thu, Aug 22, 2013 at 02:28:00PM -0400, Brian Foster wrote:
->>>>>> Hi all,
->>>>>>
->>>>>> I hit an assert on a debug kernel while beating on some finobt
->>>>>> work and
->>>>>> eventually reproduced it on unmodified/TOT xfs/xfsprogs as of
->>>>>> today. I
->>>>>> hit it through a couple different paths, first while running
->>>>>> fsstress on
->>>>>> a CRC enabled filesystem (with otherwise default mkfs options):
->>>>>>
->>>>>> (These tests are running on a 4p, 4GB VM against a 100GB virtio disk,
->>>>>> hosted on a single spindle desktop box).
->>>>>>
->>>>>> crc=1
->>>>>> fsstress -z -fsymlink=1 -n99999999 -p4 -d /mnt/test
->>>>>>
->>>>>> XFS: Assertion failed: first<= last&& last< BBTOB(bp->b_length),
->>>>>
->>>>> Directory buffer overrun.
+On 8/27/13 7:16 AM, chandan wrote:
+> On Monday, August 26, 2013 09:29:31 AM Eric Sandeen wrote:
+>>
+>> Just as a sanity check, does it also fail on xfs for 64k block sizes on ppc64?
+>>
+> 
+> Yes, it does fail as shown below:
+> 
 
-> A full test still asserts on the remove with the patched Linux 3.10 - I
-> am about 50% into the retest of Linux 3.10 and then I was planning to
-> move back to Linux 3.9.
->
-> kdump did not work, so I have no vmcore and therefore no productive
-> information.
->
+(removing linux-btrfs for now):
 
-Confirmed the Linux 3.10 asserts. Linux 3.9 does not assert.
+Hohum, I get failures on 2k and even 4k blocksize xfs (and ext4) on ppc64 as well.
+(this was on a 3.10 kernel)
 
-I will fix the kdump and try to catch a Linux 3.10 assert.
+Have you seen this?
 
---Mark.
+I guess I'm a little reluctant to restrict the test to <=4k until we understand
+what all the issues are and at least see it passing on the smaller block
+sizes... do they work for you?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
