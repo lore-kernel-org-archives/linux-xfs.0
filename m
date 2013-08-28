@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 992347F37
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 10:11:59 -0500 (CDT)
-Received: from xmail.sgi.com (pv-excas3-dc21.corp.sgi.com [137.38.106.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 87A158F8039
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 08:11:56 -0700 (PDT)
-Message-ID: <521E133B.9050005@sgi.com>
-Date: Wed, 28 Aug 2013 10:11:55 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0BD707F37
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 10:18:58 -0500 (CDT)
+Message-ID: <521E14DD.1060808@sgi.com>
+Date: Wed, 28 Aug 2013 10:18:53 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
-References: <20130823174827.282748719@sgi.com>
-In-Reply-To: <20130823174827.282748719@sgi.com>
+Subject: Re: [PATCH V4] xfstests: don't remove the two first devices from
+	SCRATCH_DEV_POOL
+References: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
+In-Reply-To: <1377263233-8903-1-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +23,17 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-Thanks for the patch Mark it has been committed.
+Thanks for the patch Stefan, it has been committed.
 
-Thanks
 --Rich
 
-commit b169249b1257d2a127484896a4a4ab2faf17f747
-Author: Mark Tinguely <tinguely@sgi.com>
-Date:   Fri Aug 23 17:48:23 2013 +0000
+commit f1dce456c594a784afb723d1bc7c09056ab3d9d9
+Author: Stefan Behrens <sbehrens@giantdisaster.de>
+Date:   Fri Aug 23 13:07:10 2013 +0000
 
-     xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
+     xfstests: don't remove the two first devices from SCRATCH_DEV_POOL
 
 _______________________________________________
 xfs mailing list
