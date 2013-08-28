@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ABBCA7F37
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 04:16:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9731C304032
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 02:16:23 -0700 (PDT)
-Message-ID: <521DC001.8020406@oracle.com>
-Date: Wed, 28 Aug 2013 17:16:49 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
-References: <20130815055338.GC23580@elgon.mountain>
-	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
-	<20130815222650.GX6023@dastard> <20130823173613.GT5262@sgi.com>
-	<20130826143714.GA6329@mwanda> <20130826161252.GV7153@sgi.com>
-In-Reply-To: <20130826161252.GV7153@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E1AF07F37
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 06:12:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6EB73AC015
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 04:12:11 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	ShHcA7OzGHjrh3AE for <xfs@oss.sgi.com>;
+	Wed, 28 Aug 2013 04:12:09 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VEdfP-0004vv-Cb
+	for xfs@oss.sgi.com; Wed, 28 Aug 2013 21:12:03 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VEdfP-0001fs-BQ
+	for xfs@oss.sgi.com; Wed, 28 Aug 2013 21:12:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: finish removing IOP_* macros.
+Date: Wed, 28 Aug 2013 21:12:03 +1000
+Message-Id: <1377688323-6404-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,75 +28,153 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 08/27/2013 12:12 AM, Ben Myers wrote:
+From: Dave Chinner <dchinner@redhat.com>
 
-> Hey Dan,
-> 
-> On Mon, Aug 26, 2013 at 05:37:15PM +0300, Dan Carpenter wrote:
->> On Fri, Aug 23, 2013 at 12:36:13PM -0500, Ben Myers wrote:
->>> Dan,
->>>
->>> On Fri, Aug 16, 2013 at 08:26:50AM +1000, Dave Chinner wrote:
->>>> On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
->>>>> Hey Dan & Jeff,
->>>>>
->>>>> On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
->>>>>> On 08/15/2013 01:53 PM, Dan Carpenter wrote:
->>>>>>
->>>>>>> The "di_size" variable comes from the disk and it's a signed 64 bit.
->>>>>>> We check the upper limit but we should check for negative numbers as
->>>>>>> well.
->>>>>>>
->>>>>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->>>>>>>
->>>>>>> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
->>>>>>> index 123971b..849fc70 100644
->>>>>>> --- a/fs/xfs/xfs_inode_fork.c
->>>>>>> +++ b/fs/xfs/xfs_inode_fork.c
->>>>>>> @@ -167,7 +167,8 @@ xfs_iformat_fork(
->>>>>>>  			}
->>>>>>>  
->>>>>>>  			di_size = be64_to_cpu(dip->di_size);
->>>>>>> -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
->>>>>>> +			if (unlikely(di_size < 0 ||
->>>>>>
->>>>>> But the di_size is initialized to ZERO while allocating a new inode on disk.
->>>>>> I wonder if that is better to ASSERT in this case because the current check
->>>>>> is used to make sure that the item is inlined, or we don't need it at all.
->>>>>
->>>>> Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
->>>>> shutdown is more appropriate than an assert, because here we're reading the
->>>>> inode from disk, as opposed to looking at a structure that is already incore
->>>>> which we think we've initialized.  We want to handle unexpected inputs from
->>>>> disk without crashing even if we are CONFIG_XFS_DEBUG.
->>>>
->>>> There are lots of places where we only check di_size to be greater
->>>> than some value, and don't check for it being less than zero. Hence
->>>> I think that a better solution might be to di_size unsigned as that
->>>> will catch "negative" sizes for all types of situations.
->>>
->>> What do you say to making di_size unsigned?  Any interest?
->>>
->>
->> I'm not the right person to change "lots of places".  Some of these
->> are probably subtle.  Just give me the reported-by and I'm happy.
-> 
-> I'll apply this for now, and we'll see if someone is interested enough to pick
-> up the rest.
+In optimising the CIL operations, some of the IOP_* macros for
+calling log item operations were removed. Remove the rest of them as
+Christoph requested.
 
-Hi Ben,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans.c     | 23 +++++++++++++----------
+ fs/xfs/xfs_trans.h     |  8 +-------
+ fs/xfs/xfs_trans_ail.c |  4 ++--
+ fs/xfs/xfs_trans_buf.c |  2 +-
+ 4 files changed, 17 insertions(+), 20 deletions(-)
 
-I just back from a longer vacation, will take care of the rest.
-
-Thanks,
--Jeff
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index b986400..5411e01 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -716,10 +716,10 @@ xfs_trans_free_items(
+ 		lip->li_desc = NULL;
+ 
+ 		if (commit_lsn != NULLCOMMITLSN)
+-			IOP_COMMITTING(lip, commit_lsn);
++			lip->li_ops->iop_committing(lip, commit_lsn);
+ 		if (flags & XFS_TRANS_ABORT)
+ 			lip->li_flags |= XFS_LI_ABORTED;
+-		IOP_UNLOCK(lip);
++		lip->li_ops->iop_unlock(lip);
+ 
+ 		xfs_trans_free_item_desc(lidp);
+ 	}
+@@ -739,8 +739,11 @@ xfs_log_item_batch_insert(
+ 	/* xfs_trans_ail_update_bulk drops ailp->xa_lock */
+ 	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
+ 
+-	for (i = 0; i < nr_items; i++)
+-		IOP_UNPIN(log_items[i], 0);
++	for (i = 0; i < nr_items; i++) {
++		struct xfs_log_item *lip = log_items[i];
++
++		lip->li_ops->iop_unpin(lip, 0);
++	}
+ }
+ 
+ /*
+@@ -750,11 +753,11 @@ xfs_log_item_batch_insert(
+  *
+  * If we are called with the aborted flag set, it is because a log write during
+  * a CIL checkpoint commit has failed. In this case, all the items in the
+- * checkpoint have already gone through IOP_COMMITED and IOP_UNLOCK, which
++ * checkpoint have already gone through iop_commited and iop_unlock, which
+  * means that checkpoint commit abort handling is treated exactly the same
+  * as an iclog write error even though we haven't started any IO yet. Hence in
+- * this case all we need to do is IOP_COMMITTED processing, followed by an
+- * IOP_UNPIN(aborted) call.
++ * this case all we need to do is iop_committed processing, followed by an
++ * iop_unpin(aborted) call.
+  *
+  * The AIL cursor is used to optimise the insert process. If commit_lsn is not
+  * at the end of the AIL, the insert cursor avoids the need to walk
+@@ -787,7 +790,7 @@ xfs_trans_committed_bulk(
+ 
+ 		if (aborted)
+ 			lip->li_flags |= XFS_LI_ABORTED;
+-		item_lsn = IOP_COMMITTED(lip, commit_lsn);
++		item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
+ 
+ 		/* item_lsn of -1 means the item needs no further processing */
+ 		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
+@@ -799,7 +802,7 @@ xfs_trans_committed_bulk(
+ 		 */
+ 		if (aborted) {
+ 			ASSERT(XFS_FORCED_SHUTDOWN(ailp->xa_mount));
+-			IOP_UNPIN(lip, 1);
++			lip->li_ops->iop_unpin(lip, 1);
+ 			continue;
+ 		}
+ 
+@@ -817,7 +820,7 @@ xfs_trans_committed_bulk(
+ 				xfs_trans_ail_update(ailp, lip, item_lsn);
+ 			else
+ 				spin_unlock(&ailp->xa_lock);
+-			IOP_UNPIN(lip, 0);
++			lip->li_ops->iop_unpin(lip, 0);
+ 			continue;
+ 		}
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 4786170..09cf40b 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -77,14 +77,8 @@ struct xfs_item_ops {
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
+ };
+ 
+-#define IOP_UNPIN(ip, remove)	(*(ip)->li_ops->iop_unpin)(ip, remove)
+-#define IOP_PUSH(ip, list)	(*(ip)->li_ops->iop_push)(ip, list)
+-#define IOP_UNLOCK(ip)		(*(ip)->li_ops->iop_unlock)(ip)
+-#define IOP_COMMITTED(ip, lsn)	(*(ip)->li_ops->iop_committed)(ip, lsn)
+-#define IOP_COMMITTING(ip, lsn) (*(ip)->li_ops->iop_committing)(ip, lsn)
+-
+ /*
+- * Return values for the IOP_PUSH() routines.
++ * Return values for the iop_push() routines.
+  */
+ #define XFS_ITEM_SUCCESS	0
+ #define XFS_ITEM_PINNED		1
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 0e7df03..21c6d7d 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -379,11 +379,11 @@ xfsaild_push(
+ 		int	lock_result;
+ 
+ 		/*
+-		 * Note that IOP_PUSH may unlock and reacquire the AIL lock.  We
++		 * Note that iop_push may unlock and reacquire the AIL lock.  We
+ 		 * rely on the AIL cursor implementation to be able to deal with
+ 		 * the dropped lock.
+ 		 */
+-		lock_result = IOP_PUSH(lip, &ailp->xa_buf_list);
++		lock_result = lip->li_ops->iop_push(lip, &ailp->xa_buf_list);
+ 		switch (lock_result) {
+ 		case XFS_ITEM_SUCCESS:
+ 			XFS_STATS_INC(xs_push_ail_success);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index aa5a04b..8c75b8f 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -505,7 +505,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+ 
+ /*
+  * Mark the buffer as not needing to be unlocked when the buf item's
+- * IOP_UNLOCK() routine is called.  The buffer must already be locked
++ * iop_unlock() routine is called.  The buffer must already be locked
+  * and associated with the given transaction.
+  */
+ /* ARGSUSED */
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
