@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DFA3E7CBF
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 19:20:04 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EC1477F37
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 01:10:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 49746AC006
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 17:20:01 -0700 (PDT)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	JGBNy50yNV8ld0bL for <xfs@oss.sgi.com>;
-	Tue, 27 Aug 2013 17:19:56 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id CF0581F003E6
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 20:19:55 -0400 (EDT)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id ooFTv80RgQ+a for <xfs@oss.sgi.com>;
-	Tue, 27 Aug 2013 20:19:51 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id AD0E71F00325
-	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 20:19:51 -0400 (EDT)
-Date: Tue, 27 Aug 2013 20:19:51 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <28029362.5290.1377649191638.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <20130827235949.GA6023@dastard>
-Subject: Re: XFS recovery resumes...
-MIME-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D78808F804B
+	for <xfs@oss.sgi.com>; Tue, 27 Aug 2013 23:10:44 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	XjEY1Uiiyg9P3jzH for <xfs@oss.sgi.com>;
+	Tue, 27 Aug 2013 23:10:39 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VEYxf-0004MO-8d
+	for xfs@oss.sgi.com; Wed, 28 Aug 2013 16:10:35 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VEYxf-00015o-7n
+	for xfs@oss.sgi.com; Wed, 28 Aug 2013 16:10:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: inode log reservations are too small
+Date: Wed, 28 Aug 2013 16:10:35 +1000
+Message-Id: <1377670235-4168-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,30 +28,283 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-> Add this to your ~/.screenrc:
-> 
-> termcapinfo xterm|xterms|xs|rxvt ti@:te@
-> 
-> And screen will write to the terminal's scrollback buffer rather
-> than it's own internal buffer.
+We've been seeing occasional problems with log space leaks and
+transaction underruns such as this for some time:
 
-Well, sure, but only from whatever screen is active, and they'll all
-get mixed together.  There's no real good answer to it...
--- j
+ XFS (dm-0): xlog_write: reservation summary:
+   trans type  = FSYNC_TS (36)
+   unit res    = 2740 bytes
+   current res = -4 bytes
+   total reg   = 0 bytes (o/flow = 0 bytes)
+   ophdrs      = 0 (ophdr space = 0 bytes)
+   ophdr + reg = 0 bytes
+   num regions = 0
+
+Turns out that xfstests generic/311 is reliably reproducing this
+problem with the test it runs at sequence 16 of it execution. It is
+a 100% reliable reproducer with the mkfs configuration of "-b
+size=1024 -m crc=1" on a 10GB scratch device.
+
+The problem? Inode forks in btree format are logged in memory
+format, not disk format (i.e. bmbt format, not bmdr format). That
+means there is a btree block header being logged, when such a
+structure is never written to the inode fork in bmdr format. The
+bmdr header in the inode is only 4 bytes, while the bmbt header is
+24 bytes for v4 filesystems and 72 bytes for v5 filesystems.
+
+We currently reserve the inode size plus the rounded up overhead of
+a logging a buffer, which is 128 bytes. That means the reservation
+for a 512 byte inode is 640 bytes. What we can actually log is:
+
+	inode core, data and attr fork = 512 bytes
+	inode log format + log op header = 56 + 12 = 68 bytes
+	data fork bmbt hdr = 24/72 bytes
+	attr fork bmbt hdr = 24/72 bytes
+
+So, for a v2 inodes we can log at least 628 bytes, but if we split that
+inode over the end of the log across log buffers, we need to also
+another log op header, which takes us to 640 bytes. If there's
+another reservation taken out of this that I haven't taken into
+account (perhaps multiple iclog splits?) or I haven't corectly
+calculated the bmbt format space used (entirely possible), then
+we will overun it.
+
+For v3 inodes the maximum is actually 724 bytes, and even a
+single maximally sized btree format fork can blow it (652 bytes).
+And that's exactly what is happening with the FSYNC_TS transaction
+in the above output - it's consumed 644 bytes of space after the CIL
+context took the space reserved for it (2100 bytes).
+
+This problem has always been present in the XFS code - the btree
+format inode forks have always been logged in this manner. Hence
+there has always been the possibility of an overrun with such a
+transaction. The CRC code has just exposed it frequently enough to
+be able to debug and understand the root cause....
+
+So, let's fix all the inode log space reservations.
+
+[ I'm so glad we spent the effort to clean up the transaction
+  reservation code. This is an easy fix now. ]
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans_resv.c | 72 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 53 insertions(+), 19 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index 24110f3..69bcba2 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -73,6 +73,39 @@ xfs_calc_buf_res(
+ }
+ 
+ /*
++ * Logging inodes is really tricksy. They are logged in memory format,
++ * which means that what we write into the log doesn't directory translate into
++ * the amount of space they use on disk.
++ *
++ * Case in point - btree format forks in memory format use more space than the
++ * on-disk format. In memory, the buffer contains a normal btree block header so
++ * the btree code can treat it as though it is just another generic buffer.
++ * However, when we write it to the inode fork, we don't write all of this
++ * header as it isn't needed. e.g. the root is only ever in the inode, so
++ * there's no need for sibling pointers which would waste 16 bytes of space.
++ *
++ * Hence when we have an inode with a maximally sized btree format fork, then
++ * amount of information we actually log is greater than the size of the inode
++ * on disk. Hence we need an inode reservation function that calculates all this
++ * correctly. So, we log:
++ *
++ * - log op headers for object
++ * - inode log format object
++ * - the entire inode contents (core + 2 forks)
++ * - two bmap btree block headers
++ */
++STATIC uint
++xfs_calc_inode_res(
++	struct xfs_mount	*mp,
++	uint			ninodes)
++{
++	return ninodes * (sizeof(struct xlog_op_header) +
++			  sizeof(struct xfs_inode_log_format) +
++			  mp->m_sb.sb_inodesize +
++			  2 * XFS_BMBT_BLOCK_LEN(mp));
++}
++
++/*
+  * Various log reservation values.
+  *
+  * These are based on the size of the file system block because that is what
+@@ -111,7 +144,7 @@ xfs_calc_write_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+@@ -140,7 +173,7 @@ xfs_calc_itruncate_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+@@ -170,7 +203,7 @@ xfs_calc_rename_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(4, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 4) +
+ 		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+@@ -195,7 +228,7 @@ xfs_calc_link_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 2) +
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+@@ -220,7 +253,7 @@ xfs_calc_remove_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 2) +
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+@@ -247,7 +280,7 @@ STATIC uint
+ xfs_calc_create_resv_modify(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++	return xfs_calc_inode_res(mp, 2) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+ 		(uint)XFS_FSB_TO_B(mp, 1) +
+ 		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+@@ -357,7 +390,7 @@ xfs_calc_ifree_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+ 		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+@@ -378,9 +411,8 @@ xfs_calc_ichange_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		mp->m_sb.sb_inodesize +
+-		mp->m_sb.sb_sectsize +
+-		512;
++		xfs_calc_inode_res(mp, 1) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+ 
+ }
+ 
+@@ -416,7 +448,7 @@ xfs_calc_growrtalloc_reservation(
+ 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+@@ -448,7 +480,7 @@ xfs_calc_growrtfree_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 2) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_blocksize) +
+ 		xfs_calc_buf_res(1, mp->m_rsumsize);
+ }
+@@ -461,7 +493,7 @@ STATIC uint
+ xfs_calc_swrite_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
++	return xfs_calc_inode_res(mp, 1);
+ }
+ 
+ /*
+@@ -469,9 +501,10 @@ xfs_calc_swrite_reservation(
+  *	inode
+  */
+ STATIC uint
+-xfs_calc_writeid_reservation(xfs_mount_t *mp)
++xfs_calc_writeid_reservation(
++	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
++	return xfs_calc_inode_res(mp, 1);
+ }
+ 
+ /*
+@@ -487,7 +520,7 @@ xfs_calc_addafork_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, mp->m_dirblksize) +
+ 		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
+@@ -511,7 +544,7 @@ STATIC uint
+ xfs_calc_attrinval_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++	return MAX((xfs_calc_inode_res(mp, 1) +
+ 		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+ 				     XFS_FSB_TO_B(mp, 1))),
+ 		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+@@ -535,7 +568,7 @@ xfs_calc_attrsetm_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
+ }
+@@ -575,7 +608,7 @@ xfs_calc_attrrm_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     (uint)XFS_FSB_TO_B(mp,
+@@ -627,6 +660,7 @@ STATIC uint
+ xfs_calc_qm_dqalloc_reservation(
+ 	struct xfs_mount	*mp)
+ {
++	ASSERT(M_RES(mp)->tr_write.tr_logres);
+ 	return M_RES(mp)->tr_write.tr_logres +
+ 		xfs_calc_buf_res(1,
+ 			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
 -- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
