@@ -1,38 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 850407F37
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 03:14:25 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ABBCA7F37
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 04:16:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D1EFFAC00C
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 01:14:21 -0700 (PDT)
-Received: from e28smtp08.in.ibm.com (e28smtp08.in.ibm.com [122.248.162.8]) by
-	cuda.sgi.com with ESMTP id LH87OwiftPsIX2tv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 28 Aug 2013 01:14:19 -0700 (PDT)
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <chandan@linux.vnet.ibm.com>;
-	Wed, 28 Aug 2013 13:32:54 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 718F9E0057
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 13:44:47 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r7S8Fn5M35913844
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 13:45:49 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r7S8E97g018580 for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 13:44:10 +0530
-From: chandan <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH] xfstests: generic/255: Execute only if blocksize <= 4096
-Date: Wed, 28 Aug 2013 13:44:09 +0530
-Message-ID: <8507420.Xnl9a5Gq1S@localhost.localdomain>
-In-Reply-To: <521CD7FC.1080706@sandeen.net>
-References: <2909046.09LYLQvZ6q@localhost.localdomain>
-	<3942763.p7a9her5Nt@localhost.localdomain>
-	<521CD7FC.1080706@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9731C304032
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 02:16:23 -0700 (PDT)
+Message-ID: <521DC001.8020406@oracle.com>
+Date: Wed, 28 Aug 2013 17:16:49 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
+Subject: Re: [patch] xfs: check for underflow in xfs_iformat_fork()
+References: <20130815055338.GC23580@elgon.mountain>
+	<520CA923.4060409@oracle.com> <20130815143706.GI7153@sgi.com>
+	<20130815222650.GX6023@dastard> <20130823173613.GT5262@sgi.com>
+	<20130826143714.GA6329@mwanda> <20130826161252.GV7153@sgi.com>
+In-Reply-To: <20130826161252.GV7153@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -45,45 +27,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, sekharan@linux.vnet.ibm.com, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tuesday, August 27, 2013 11:46:52 AM Eric Sandeen wrote:
-> On 8/27/13 7:16 AM, chandan wrote:
-> > On Monday, August 26, 2013 09:29:31 AM Eric Sandeen wrote:
-> >>
-> >> Just as a sanity check, does it also fail on xfs for 64k block sizes on ppc64?
-> >>
-> > 
-> > Yes, it does fail as shown below:
-> > 
-> 
-> (removing linux-btrfs for now):
-> 
-> Hohum, I get failures on 2k and even 4k blocksize xfs (and ext4) on ppc64 as well.
-> (this was on a 3.10 kernel)
-> 
-> Have you seen this?
-> 
-> I guess I'm a little reluctant to restrict the test to <=4k until we understand
-> what all the issues are and at least see it passing on the smaller block
-> sizes... do they work for you?
-> 
-> -Eric
->
+On 08/27/2013 12:12 AM, Ben Myers wrote:
 
-Eric,
+> Hey Dan,
+> 
+> On Mon, Aug 26, 2013 at 05:37:15PM +0300, Dan Carpenter wrote:
+>> On Fri, Aug 23, 2013 at 12:36:13PM -0500, Ben Myers wrote:
+>>> Dan,
+>>>
+>>> On Fri, Aug 16, 2013 at 08:26:50AM +1000, Dave Chinner wrote:
+>>>> On Thu, Aug 15, 2013 at 09:37:06AM -0500, Ben Myers wrote:
+>>>>> Hey Dan & Jeff,
+>>>>>
+>>>>> On Thu, Aug 15, 2013 at 06:10:43PM +0800, Jeff Liu wrote:
+>>>>>> On 08/15/2013 01:53 PM, Dan Carpenter wrote:
+>>>>>>
+>>>>>>> The "di_size" variable comes from the disk and it's a signed 64 bit.
+>>>>>>> We check the upper limit but we should check for negative numbers as
+>>>>>>> well.
+>>>>>>>
+>>>>>>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>>>>>>
+>>>>>>> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+>>>>>>> index 123971b..849fc70 100644
+>>>>>>> --- a/fs/xfs/xfs_inode_fork.c
+>>>>>>> +++ b/fs/xfs/xfs_inode_fork.c
+>>>>>>> @@ -167,7 +167,8 @@ xfs_iformat_fork(
+>>>>>>>  			}
+>>>>>>>  
+>>>>>>>  			di_size = be64_to_cpu(dip->di_size);
+>>>>>>> -			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+>>>>>>> +			if (unlikely(di_size < 0 ||
+>>>>>>
+>>>>>> But the di_size is initialized to ZERO while allocating a new inode on disk.
+>>>>>> I wonder if that is better to ASSERT in this case because the current check
+>>>>>> is used to make sure that the item is inlined, or we don't need it at all.
+>>>>>
+>>>>> Hmm.  Dan's additional check looks good to me.  In this case I'd say the forced
+>>>>> shutdown is more appropriate than an assert, because here we're reading the
+>>>>> inode from disk, as opposed to looking at a structure that is already incore
+>>>>> which we think we've initialized.  We want to handle unexpected inputs from
+>>>>> disk without crashing even if we are CONFIG_XFS_DEBUG.
+>>>>
+>>>> There are lots of places where we only check di_size to be greater
+>>>> than some value, and don't check for it being less than zero. Hence
+>>>> I think that a better solution might be to di_size unsigned as that
+>>>> will catch "negative" sizes for all types of situations.
+>>>
+>>> What do you say to making di_size unsigned?  Any interest?
+>>>
+>>
+>> I'm not the right person to change "lots of places".  Some of these
+>> are probably subtle.  Just give me the reported-by and I'm happy.
+> 
+> I'll apply this for now, and we'll see if someone is interested enough to pick
+> up the rest.
 
-I have posted a patch that fixes _test_generic_punch() to obtain the correct
-block size. With that patch applied, the code works for 4k blocksize for
-both xfs and ext4.
+Hi Ben,
 
-Even the with the above mentioned fix applied, the code doesn't work with
-block sizes != 4k. The extent ranges in 255.out were obtained for 4k block
-sizes and hence they don't work for other block sizes. I will repost the
-patch to restrict execution of generic/255 only when the block size is 4k.
+I just back from a longer vacation, will take care of the rest.
 
-- chandan
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
