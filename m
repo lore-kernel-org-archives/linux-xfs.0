@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E15007F37
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 09:50:36 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 992347F37
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 10:11:59 -0500 (CDT)
 Received: from xmail.sgi.com (pv-excas3-dc21.corp.sgi.com [137.38.106.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BD8CD8F804B
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 07:50:36 -0700 (PDT)
-Message-ID: <521E0E3B.9020004@sgi.com>
-Date: Wed, 28 Aug 2013 09:50:35 -0500
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 87A158F8039
+	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 08:11:56 -0700 (PDT)
+Message-ID: <521E133B.9050005@sgi.com>
+Date: Wed, 28 Aug 2013 10:11:55 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
@@ -26,9 +26,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Wow V8 I miss those.  Looks Good.
+Thanks for the patch Mark it has been committed.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+Thanks
+--Rich
+
+commit b169249b1257d2a127484896a4a4ab2faf17f747
+Author: Mark Tinguely <tinguely@sgi.com>
+Date:   Fri Aug 23 17:48:23 2013 +0000
+
+     xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
 
 _______________________________________________
 xfs mailing list
