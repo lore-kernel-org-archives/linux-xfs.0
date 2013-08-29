@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D92867F5F
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 10:56:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A5808304066
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 08:56:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4CHWADgBdDD2eYAp for <xfs@oss.sgi.com>;
-	Thu, 29 Aug 2013 08:56:23 -0700 (PDT)
-Message-ID: <521F6F24.2030101@sandeen.net>
-Date: Thu, 29 Aug 2013 10:56:20 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs: add noalign option to usage()
-References: <1377789991-17236-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1377789991-17236-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 42C4D7F55
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 11:03:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31DF68F8035
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 09:03:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id bGmAvZdeZU4azjCk for
+	<xfs@oss.sgi.com>; Thu, 29 Aug 2013 09:03:15 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7TG3E8G021807
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 12:03:14 -0400
+Received: from orion.redhat.com (ovpn-113-170.phx2.redhat.com [10.3.113.170])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id r7TG3DtF021624
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 12:03:14 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH v2] mkfs: add noalign option to usage()
+Date: Thu, 29 Aug 2013 13:03:10 -0300
+Message-Id: <1377792190-21220-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,51 +29,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 8/29/13 10:26 AM, Carlos Maiolino wrote:
-> Although it has been added to manpage, there is no information about the
-> existence of noalign option into the usage().
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 4bdacee..65630d4 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3033,7 +3033,7 @@ usage( void )
->  /* metadata */		[-m crc=[0|1]\n\
->  /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
->  			    (sunit=value,swidth=value|su=num,sw=num),\n\
-> -			    sectlog=n|sectsize=num\n\
-> +			    noalign, sectlog=n|sectsize=num\n\
+Although it has been added to manpage, there is no information about the
+existence of noalign option into the usage().
 
-SUPER nitpick, but other options don't have a space after the comma.
+Changelog:
 
-And noalign is exclusive to sunit/sw options (right?), so maybe the
-output should look like:
+V2: Remove space in comma separated options
 
-/* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,
-			    (sunit=value,swidth=value|su=num,sw=num|noalign),
-			    sectlog=n|sectsize=num
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-also: I think it's hilarious that we emit C comment strings in usage() ;)
-
--Eric
-
->  /* force overwrite */	[-f]\n\
->  /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
->  			    projid32bit=0|1]\n\
-> 
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 4bdacee..ef1d758 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3033,7 +3033,7 @@ usage( void )
+ /* metadata */		[-m crc=[0|1]\n\
+ /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+ 			    (sunit=value,swidth=value|su=num,sw=num),\n\
+-			    sectlog=n|sectsize=num\n\
++			    noalign,sectlog=n|sectsize=num\n\
+ /* force overwrite */	[-f]\n\
+ /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+ 			    projid32bit=0|1]\n\
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
