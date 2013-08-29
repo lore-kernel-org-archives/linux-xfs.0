@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 79C997F62
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 11:14:41 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 30C257F67
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 11:35:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2507AAC009
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 09:14:38 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0E919304048
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 09:34:56 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ZZeU49bIFuPF5oKO for <xfs@oss.sgi.com>;
-	Thu, 29 Aug 2013 09:14:37 -0700 (PDT)
-Message-ID: <521F736B.2000009@sandeen.net>
-Date: Thu, 29 Aug 2013 11:14:35 -0500
+	ESMTP id RqMgNIW0bYMJFTAX for <xfs@oss.sgi.com>;
+	Thu, 29 Aug 2013 09:34:55 -0700 (PDT)
+Message-ID: <521F782E.2030400@sandeen.net>
+Date: Thu, 29 Aug 2013 11:34:54 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: btrfs/003: regression test for subvol delete V2
-References: <1376422458-2339-1-git-send-email-jbacik@fusionio.com>
-	<520A8B1D.60307@redhat.com> <20130829132158.GI23113@twin.jikos.cz>
-In-Reply-To: <20130829132158.GI23113@twin.jikos.cz>
+Subject: Re: [PATCH v2] mkfs: add noalign option to usage()
+References: <1377792190-21220-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1377792190-21220-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,61 +27,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: dsterba@suse.cz, Eric Sandeen <sandeen@redhat.com>, Josef Bacik <jbacik@fusionio.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 8/29/13 8:21 AM, David Sterba wrote:
-> On Tue, Aug 13, 2013 at 02:38:05PM -0500, Eric Sandeen wrote:
->>> +. ./common/rc
->>> +. ./common/filter
->>> +
->>> +# real QA test starts here
->>> +_supported_fs btrfs
->>> +_supported_os Linux
->>> +_require_scratch
->>> +
->>> +_scratch_mkfs > /dev/null 2>&1
->>> +_scratch_mount
->>> +
->>> +# This will be set to subvolid 256.  If this ever changes in the future for
->>> +# whatever reason we'll have to pull the subvolid out of the subvol list command
->>> +# but since it's a newly mkfs'ed fs we should be fine with this.
->>
->> . . . and then you grab it out of the subvol list command anyway ;)
->>
->> So really this comment should go, and it sure would be nice to have 
->> a btrfs_get_subvolid() helper for future generations...
+On 8/29/13 11:03 AM, Carlos Maiolino wrote:
+> Although it has been added to manpage, there is no information about the
+> existence of noalign option into the usage().
 > 
-> This is available in the 'btrfs subvol show /subvol':
+> Changelog:
 > 
-> # btrfs subvol show subv1
-> /mnt/a15/subv1
->         Name:                   subv1
->         uuid:                   cf010ad0-38bf-7a42-88be-3360f68cd335
->         Parent uuid:            e6543f70-5d38-1845-b976-d18095860bdf
->         Creation time:          2013-08-29 15:18:18
->         Object ID:              258
->         Generation (Gen):       6
->         Gen at creation:        6
->         Parent:                 5
->         Top Level:              5
->         Flags:                  readonly
->         Snapshot(s):
+> V2: Remove space in comma separated options
 > 
-> Though it involves grep as well.
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 4bdacee..ef1d758 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3033,7 +3033,7 @@ usage( void )
+>  /* metadata */		[-m crc=[0|1]\n\
+>  /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+>  			    (sunit=value,swidth=value|su=num,sw=num),\n\
+> -			    sectlog=n|sectsize=num\n\
+> +			    noalign,sectlog=n|sectsize=num\n\
 
-Ok, yeah, I just meant an xfstests helper routine, sorry.
+I'd really rather see it as I suggested, for clarity.
 
-I guess it could use the above, or subvol list as Josef
-has done.
+su/sw vs. sunit/swidth vs. noalign are mutually exclusive.
+
+su/sw & sunit/swidth are shown to be so via the (A|B) notation.
+
+Adding noalign outside the (A|B) makes it look like it can be specified in
+addition to alignment options, which really makes no sense.
+
+Can you do:
+
+-  			    (sunit=value,swidth=value|su=num,sw=num),\n\
++  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+
+instead?
 
 -Eric
 
-> david
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+>  /* force overwrite */	[-f]\n\
+>  /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+>  			    projid32bit=0|1]\n\
 > 
 
 _______________________________________________
