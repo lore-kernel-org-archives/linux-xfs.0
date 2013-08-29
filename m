@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 361997F53
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 08:22:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0A76AC009
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 06:22:04 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 2E5hmxmXYn0PfaaP for <xfs@oss.sgi.com>;
-	Thu, 29 Aug 2013 06:21:59 -0700 (PDT)
-Date: Thu, 29 Aug 2013 15:21:58 +0200
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH] xfstests: btrfs/003: regression test for subvol delete V2
-Message-ID: <20130829132158.GI23113@twin.jikos.cz>
-References: <1376422458-2339-1-git-send-email-jbacik@fusionio.com>
-	<520A8B1D.60307@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id D87A07F55
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 10:13:28 -0500 (CDT)
+Date: Thu, 29 Aug 2013 10:13:24 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: don't account buffer cancellation during log
+	recovery readahead
+Message-ID: <20130829151324.GB5262@sgi.com>
+References: <1377555053-23000-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <520A8B1D.60307@redhat.com>
-Reply-To: dsterba@suse.cz
+In-Reply-To: <1377555053-23000-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,49 +23,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 13, 2013 at 02:38:05PM -0500, Eric Sandeen wrote:
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_fs btrfs
-> > +_supported_os Linux
-> > +_require_scratch
-> > +
-> > +_scratch_mkfs > /dev/null 2>&1
-> > +_scratch_mount
-> > +
-> > +# This will be set to subvolid 256.  If this ever changes in the future for
-> > +# whatever reason we'll have to pull the subvolid out of the subvol list command
-> > +# but since it's a newly mkfs'ed fs we should be fine with this.
+On Tue, Aug 27, 2013 at 08:10:53AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> . . . and then you grab it out of the subvol list command anyway ;)
+> When doing readhaead in log recovery, we check to see if buffers are
+> cancelled before doing readahead. If we find a cancelled buffer,
+> however, we always decrement the reference count we have on it, and
+> that means that readahead is causing a double decrement of the
+> cancelled buffer reference count.
 > 
-> So really this comment should go, and it sure would be nice to have 
-> a btrfs_get_subvolid() helper for future generations...
+> This results in log recovery *replaying cancelled buffers* as the
+> actual recovery pass does not find the cancelled buffer entry in the
+> commit phase of the second pass across a transaction. On debug
+> kernels, this results in an ASSERT failure like so:
+> 
+> XFS: Assertion failed: !(flags & XFS_BLF_CANCEL), file: fs/xfs/xfs_log_recover.c, line: 1815
+> 
+> xfstests generic/311 reproduces this ASSERT failure with 100%
+> reproducability.
+> 
+> Fix it by making readahead only peek at the buffer cancelled state
+> rather than the full accounting that xlog_check_buffer_cancelled()
+> does.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-This is available in the 'btrfs subvol show /subvol':
-
-# btrfs subvol show subv1
-/mnt/a15/subv1
-        Name:                   subv1
-        uuid:                   cf010ad0-38bf-7a42-88be-3360f68cd335
-        Parent uuid:            e6543f70-5d38-1845-b976-d18095860bdf
-        Creation time:          2013-08-29 15:18:18
-        Object ID:              258
-        Generation (Gen):       6
-        Gen at creation:        6
-        Parent:                 5
-        Top Level:              5
-        Flags:                  readonly
-        Snapshot(s):
-
-Though it involves grep as well.
-
-david
+Nice work Dave!
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
