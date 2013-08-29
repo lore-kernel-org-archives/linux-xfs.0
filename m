@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 214B77F37
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 03:30:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 825F07F3F
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 06:09:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 080B18F8033
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 01:30:06 -0700 (PDT)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id 9iC5apniYJ4fz9D7 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Thu, 29 Aug 2013 01:30:05 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1VExcB-0006nL-OF
-	for linux-xfs@oss.sgi.com; Thu, 29 Aug 2013 10:30:03 +0200
-Received: from 124-254-118-11-static.bb.ispone.net.au ([124.254.118.11])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 10:30:03 +0200
-Received: from chris by 124-254-118-11-static.bb.ispone.net.au with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 10:30:03 +0200
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: [PATCH] xfs: inode log reservations are too small
-Date: Thu, 29 Aug 2013 08:20:29 +0000 (UTC)
-Message-ID: <slrnl1u12l.seg.chris@chris.onthe.net.au>
-References: <1377670235-4168-1-git-send-email-david@fromorbit.com>
-Reply-To: chris@onthe.net.au
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 703DE8F8050
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 04:09:05 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 5UZ5mUXE5Mvov7be for <xfs@oss.sgi.com>;
+	Thu, 29 Aug 2013 04:09:04 -0700 (PDT)
+Received: from relay1.suse.de (unknown [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 834AEA52BF
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 13:09:03 +0200 (CEST)
+From: David Sterba <dsterba@suse.cz>
+Subject: [PATCH] xfstests: accept tests/ prefix for test name on commandline
+Date: Thu, 29 Aug 2013 13:09:01 +0200
+Message-Id: <1377774541-10120-1-git-send-email-dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,30 +28,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: David Sterba <dsterba@suse.cz>
 
-On 2013-08-28, Dave Chinner <david@fromorbit.com> wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> We've been seeing occasional problems with log space leaks and
-> transaction underruns such as this for some time:
+Just for convenience to let tab completion or shell globs work (files
+that are not in the group file are ignored).
 
-[ snip]
+Signed-off-by: David Sterba <dsterba@suse.cz>
+---
+ check | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-> index 24110f3..69bcba2 100644
-> --- a/fs/xfs/xfs_trans_resv.c
-> +++ b/fs/xfs/xfs_trans_resv.c
-> @@ -73,6 +73,39 @@ xfs_calc_buf_res(
->  }
->  
->  /*
-> + * Logging inodes is really tricksy. They are logged in memory format,
-> + * which means that what we write into the log doesn't directory translate into
-
-directory => directly
-
-Chris
+diff --git a/check b/check
+index 4085eae..51b1d8e 100755
+--- a/check
++++ b/check
+@@ -235,12 +235,13 @@ if $have_test_arg; then
+ 			exit $status
+ 			;;
+ 		*)	test_dir=`dirname $1`
++			test_dir=${test_dir#$SRC_DIR/*}
+ 			test_name=`basename $1`
+ 			group_file=$SRC_DIR/$test_dir/group
+ 
+ 			if egrep "^$test_name" $group_file >/dev/null ; then
+ 				# in group file ... OK
+-				echo $SRC_DIR/$1 >>$tmp.list
++				echo $SRC_DIR/$test_dir/$test_name >>$tmp.list
+ 			else
+ 				# oops
+ 				echo "$1 - unknown test, ignored"
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
