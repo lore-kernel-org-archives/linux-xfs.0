@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 589D37F37
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 01:09:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 414D3304048
-	for <xfs@oss.sgi.com>; Wed, 28 Aug 2013 23:09:22 -0700 (PDT)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id nfcopfckyRhYbm71
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Aug 2013 23:09:17 -0700 (PDT)
-Received: from c-67-165-243-162.hsd1.co.comcast.net ([67.165.243.162]:54659
-	helo=[192.168.1.126])
-	by slmp-550-94.slc.westdc.net with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.80.1) (envelope-from <lists@colorremedies.com>)
-	id 1VEvPw-004AzM-Co
-	for xfs@oss.sgi.com; Thu, 29 Aug 2013 00:09:16 -0600
-From: Chris Murphy <lists@colorremedies.com>
-Subject: higher agcount on LVM2 thinp volumes
-Message-Id: <321D1F95-5603-4571-A445-A267DA5F670F@colorremedies.com>
-Date: Thu, 29 Aug 2013 00:09:13 -0600
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 214B77F37
+	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 03:30:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 080B18F8033
+	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 01:30:06 -0700 (PDT)
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id 9iC5apniYJ4fz9D7 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Thu, 29 Aug 2013 01:30:05 -0700 (PDT)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1VExcB-0006nL-OF
+	for linux-xfs@oss.sgi.com; Thu, 29 Aug 2013 10:30:03 +0200
+Received: from 124-254-118-11-static.bb.ispone.net.au ([124.254.118.11])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 10:30:03 +0200
+Received: from chris by 124-254-118-11-static.bb.ispone.net.au with local
+	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Thu, 29 Aug 2013 10:30:03 +0200
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: Re: [PATCH] xfs: inode log reservations are too small
+Date: Thu, 29 Aug 2013 08:20:29 +0000 (UTC)
+Message-ID: <slrnl1u12l.seg.chris@chris.onthe.net.au>
+References: <1377670235-4168-1-git-send-email-david@fromorbit.com>
+Reply-To: chris@onthe.net.au
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +33,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
+On 2013-08-28, Dave Chinner <david@fromorbit.com> wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> We've been seeing occasional problems with log space leaks and
+> transaction underruns such as this for some time:
 
-Is it expected when formatting, using defaults, that a thinp volume compared to either a conventional LV or partition of the same size, should have a higher agcount?
+[ snip]
 
+> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+> index 24110f3..69bcba2 100644
+> --- a/fs/xfs/xfs_trans_resv.c
+> +++ b/fs/xfs/xfs_trans_resv.c
+> @@ -73,6 +73,39 @@ xfs_calc_buf_res(
+>  }
+>  
+>  /*
+> + * Logging inodes is really tricksy. They are logged in memory format,
+> + * which means that what we write into the log doesn't directory translate into
 
-HDD, GPT partitioned, 100GB partition size:
+directory => directly
 
-[root@f19s ~]# mkfs.xfs /dev/sda7
-meta-data=/dev/sda7              isize=256    agcount=4, agsize=6553600 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=4096   blocks=26214400, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Chris
 
-
-A 400GB partition, made into PV, PV added to VG, and all extents put into a thinpool volume, a 100GB virtual sized LV:
-
-[root@f19s ~]# mkfs.xfs /dev/mapper/vg1-data
-meta-data=/dev/mapper/vg1-data   isize=256    agcount=16, agsize=1638400 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=4096   blocks=26214400, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-
-
-I get agcount=4 on a conventional LV as well. Why agcount=16 on thinp?
-
-
-Chris Murphy
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
