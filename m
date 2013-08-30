@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE4927F5D
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 12:10:00 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DE1017F3F
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 12:55:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BD8138F8049
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:09:57 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xe8YThHBbqhsKFCg for
-	<xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:09:56 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7UH9tAh026787
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 13:09:55 -0400
-Received: from orion.redhat.com (ovpn-113-170.phx2.redhat.com [10.3.113.170])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with
-	ESMTP id r7UH9re0018355
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 13:09:54 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH V3] mkfs: add noalign option to usage()
-Date: Fri, 30 Aug 2013 14:09:50 -0300
-Message-Id: <1377882590-22852-1-git-send-email-cmaiolino@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E377FAC00A
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:55:44 -0700 (PDT)
+Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
+	[50.115.112.57]) by cuda.sgi.com with ESMTP id pOqLiWPsjkKFsTkD
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:55:50 -0700 (PDT)
+Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+Subject: Re: higher agcount on LVM2 thinp volumes
+From: Chris Murphy <lists@colorremedies.com>
+In-Reply-To: <20130830033800.GX12779@dastard>
+Date: Fri, 30 Aug 2013 11:55:50 -0600
+Message-Id: <F4A27AB5-EDCA-42A3-8D9D-D5F0B992630A@colorremedies.com>
+References: <321D1F95-5603-4571-A445-A267DA5F670F@colorremedies.com>
+	<521FF8F4.9040009@hardwarefreak.com>
+	<DD759368-581C-4C94-BC5E-E6EC3A83FC61@colorremedies.com>
+	<20130830025819.GB23571@dastard>
+	<B40ABF48-E2CB-4C02-9DF9-B68BB84341C3@colorremedies.com>
+	<20130830033800.GX12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +29,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-
-Although it has been added to manpage, there is no information about the
-existence of noalign option into the usage().
-
-Changelog:
-
-V2: Remove space in comma separated options
-V3: Aligned the option together with another alignment options to make mutual
-    exclusive options more visible
+To: Dave Chinner <david@fromorbit.com>
+Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
 
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- mkfs/xfs_mkfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Aug 29, 2013, at 9:38 PM, Dave Chinner <david@fromorbit.com> wrote:
+> =
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 4bdacee..b0c3ce5 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3032,7 +3032,7 @@ usage( void )
- /* blocksize */		[-b log=n|size=num]\n\
- /* metadata */		[-m crc=[0|1]\n\
- /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
--			    (sunit=value,swidth=value|su=num,sw=num),\n\
-+			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
- 			    sectlog=n|sectsize=num\n\
- /* force overwrite */	[-f]\n\
- /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
--- 
-1.8.1.4
+> So, what dm-thinp is trying to tell us is that the minimum
+> *physical* IO size is 512 bytes (i.e. /sys/.../physical_block_size)
+> but the efficient IO size is 256k. So dm-thinp is exposing the
+> information incorrectly. What it shoul dbe doing is setting both the
+> minimum_io_size and the optimal_io_size to the same value of 256k=85
 
+Should I file a bug? Against lvm2?
+
+
+
+Chris Murphy
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
