@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 098F57F53
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 22:38:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B260430404E
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 20:38:03 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2QP16OvztQccJpQr for <xfs@oss.sgi.com>;
-	Thu, 29 Aug 2013 20:38:02 -0700 (PDT)
-Date: Fri, 30 Aug 2013 13:38:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: higher agcount on LVM2 thinp volumes
-Message-ID: <20130830033800.GX12779@dastard>
-References: <321D1F95-5603-4571-A445-A267DA5F670F@colorremedies.com>
-	<521FF8F4.9040009@hardwarefreak.com>
-	<DD759368-581C-4C94-BC5E-E6EC3A83FC61@colorremedies.com>
-	<20130830025819.GB23571@dastard>
-	<B40ABF48-E2CB-4C02-9DF9-B68BB84341C3@colorremedies.com>
+	by oss.sgi.com (Postfix) with ESMTP id E2A267F53
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 22:55:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CDC6E304039
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 20:55:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ll9G0X5RHGqDtJWn for
+	<xfs@oss.sgi.com>; Thu, 29 Aug 2013 20:55:18 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7U3tHbk030925
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 23:55:17 -0400
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r7U3tGb8022891
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 23:55:17 -0400
+Message-ID: <522017A4.8060400@redhat.com>
+Date: Thu, 29 Aug 2013 22:55:16 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <B40ABF48-E2CB-4C02-9DF9-B68BB84341C3@colorremedies.com>
+Subject: [PATCH] xfsprogs: avoid array overflow in pf_batch_read()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,79 +36,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Murphy <lists@colorremedies.com>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Aug 29, 2013 at 09:21:15PM -0600, Chris Murphy wrote:
-> 
-> On Aug 29, 2013, at 8:58 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > 
-> > Check the contents of
-> > /sys/block/<dev>/queue/{minimum,optimal}_io_size for the single
-> > device, the standard LV and the thinp device.
-> 
-> physical device:
-> 
-> [root@f19s ~]# cat /sys/block/sda/queue/minimum_io_size 
-> 512
-> [root@f19s ~]# cat /sys/block/sda/queue/optimal_io_size 
-> 0
-> 
-> conventional LV on that physical device:
->      
-> [root@f19s ~]# cat /sys/block/dm-0/queue/minimum_io_size 
-> 512
-> [root@f19s ~]# cat /sys/block/dm-0/queue/optimal_io_size 
-> 0
-> 
-> 
-> thinp pool and LV:
-> 
-> lrwxrwxrwx. 1 root root       7 Aug 29 20:46 vg1-thinp -> ../dm-3
-> 
-> [root@f19s ~]# cat /sys/block/dm-3/queue/minimum_io_size 
-> 512
-> [root@f19s ~]# cat /sys/block/dm-3/queue/optimal_io_size 
-> 262144
-> [root@f19s ~]# 
-> 
-> lrwxrwxrwx. 1 root root       7 Aug 29 20:47 vg1-data -> ../dm-4
-> 
-> [root@f19s ~]# cat /sys/block/dm-4/queue/minimum_io_size 
-> 512
-> [root@f19s ~]# cat /sys/block/dm-4/queue/optimal_io_size 
-> 262144
+The while loop in pf_batch_read, and the code preceeding it, is really...
+quite a thing.  I'd love to rewrite it, but I haven't yet found
+a particularly cleaner way.
 
-Yup, there's the problem - minimum_io_size is 512 bytes, which is
-too small for a stripe unit to be set to. Hence sunit/swidth get set
-to zero.
+It cleverly hides the fact that we might increment "num" past the
+last index of bplist[] and then assign to it.  This corrupts memory.
 
-The problem here is that minimum_io_size is not the minimum IO size
-that can be done, but the minimum IO size that is *efficient*. For
-example, my workstation has a MD RAID0 device with a 512k chunk size
-and two drives:
+Rather than major surgery for now, just go for the simple fix,
+and break out of the loop if we've increased "num" past the
+last index.
 
-$ cat /sys/block/md0/queue/minimum_io_size 
-524288
-$ cat /sys/block/md0/queue/optimal_io_size 
-1048576
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Here we see the minimum *efficient* IO size is the stripe chunk size
-(i.e. what gets written to a single disk) and the optimal is an IO
-that hits all disks at once.
-
-So, what dm-thinp is trying to tell us is that the minimum
-*physical* IO size is 512 bytes (i.e. /sys/.../physical_block_size)
-but the efficient IO size is 256k. So dm-thinp is exposing the
-information incorrectly. What it shoul dbe doing is setting both the
-minimum_io_size and the optimal_io_size to the same value of 256k...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 7529f5d..d3491da 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -429,6 +429,8 @@ pf_batch_read(
+ 			if (which != PF_META_ONLY ||
+ 			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
+ 				num++;
++			if (num == MAX_BUFS)
++				break;
+ 			bplist[num] = btree_lookup_next(args->io_queue, &fsbno);
+ 		}
+ 		if (!num)
 
 _______________________________________________
 xfs mailing list
