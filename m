@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E2A267F53
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 22:55:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CDC6E304039
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 20:55:18 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ll9G0X5RHGqDtJWn for
-	<xfs@oss.sgi.com>; Thu, 29 Aug 2013 20:55:18 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7U3tHbk030925
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 23:55:17 -0400
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r7U3tGb8022891
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 23:55:17 -0400
-Message-ID: <522017A4.8060400@redhat.com>
-Date: Thu, 29 Aug 2013 22:55:16 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: avoid array overflow in pf_batch_read()
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E6B457F37
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 01:21:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D4F318F8049
+	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 23:21:33 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	5Uwg1qDhw8vBBFou for <xfs@oss.sgi.com>;
+	Thu, 29 Aug 2013 23:21:32 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VFI5D-0001bQ-Gj
+	for xfs@oss.sgi.com; Fri, 30 Aug 2013 16:21:23 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VFI5D-0008Iy-G4
+	for xfs@oss.sgi.com; Fri, 30 Aug 2013 16:21:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: dtype changed xfs_dir2_sfe_put_ino to
+	xfs_dir3_sfe_put_ino
+Date: Fri, 30 Aug 2013 16:21:20 +1000
+Message-Id: <1377843681-31878-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1377843681-31878-1-git-send-email-david@fromorbit.com>
+References: <1377843681-31878-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,39 +31,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-The while loop in pf_batch_read, and the code preceeding it, is really...
-quite a thing.  I'd love to rewrite it, but I haven't yet found
-a particularly cleaner way.
+From: Dave Chinner <dchinner@redhat.com>
 
-It cleverly hides the fact that we might increment "num" past the
-last index of bplist[] and then assign to it.  This corrupts memory.
+So fix up the export in xfs_dir2.h that is needed by userspace.
 
-Rather than major surgery for now, just go for the simple fix,
-and break out of the loop if we've increased "num" past the
-last index.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
+ fs/xfs/xfs_dir2.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 7529f5d..d3491da 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -429,6 +429,8 @@ pf_batch_read(
- 			if (which != PF_META_ONLY ||
- 			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
- 				num++;
-+			if (num == MAX_BUFS)
-+				break;
- 			bplist[num] = btree_lookup_next(args->io_queue, &fsbno);
- 		}
- 		if (!num)
+diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
+index 768ddad..9910401 100644
+--- a/fs/xfs/xfs_dir2.h
++++ b/fs/xfs/xfs_dir2.h
+@@ -70,8 +70,9 @@ extern void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *sfp,
+ 		xfs_ino_t ino);
+ extern xfs_ino_t xfs_dir3_sfe_get_ino(struct xfs_mount *mp,
+ 		struct xfs_dir2_sf_hdr *sfp, struct xfs_dir2_sf_entry *sfep);
+-extern void xfs_dir2_sfe_put_ino( struct xfs_dir2_sf_hdr *,
+-		struct xfs_dir2_sf_entry *sfep, xfs_ino_t ino);
++extern void xfs_dir3_sfe_put_ino(struct xfs_mount *mp,
++		struct xfs_dir2_sf_hdr *hdr, struct xfs_dir2_sf_entry *sfep,
++		xfs_ino_t ino);
+ 
+ extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+ extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
