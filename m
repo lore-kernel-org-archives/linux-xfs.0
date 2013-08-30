@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DE1017F3F
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 12:55:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E377FAC00A
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:55:44 -0700 (PDT)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id pOqLiWPsjkKFsTkD
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:55:50 -0700 (PDT)
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
-Subject: Re: higher agcount on LVM2 thinp volumes
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <20130830033800.GX12779@dastard>
-Date: Fri, 30 Aug 2013 11:55:50 -0600
-Message-Id: <F4A27AB5-EDCA-42A3-8D9D-D5F0B992630A@colorremedies.com>
-References: <321D1F95-5603-4571-A445-A267DA5F670F@colorremedies.com>
-	<521FF8F4.9040009@hardwarefreak.com>
-	<DD759368-581C-4C94-BC5E-E6EC3A83FC61@colorremedies.com>
-	<20130830025819.GB23571@dastard>
-	<B40ABF48-E2CB-4C02-9DF9-B68BB84341C3@colorremedies.com>
-	<20130830033800.GX12779@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1987B7F3F
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 13:15:24 -0500 (CDT)
+Date: Fri, 30 Aug 2013 13:15:20 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: inode buffers may not be valid during recovery
+	readahead
+Message-ID: <20130830181520.GD1935@sgi.com>
+References: <1377567577-24312-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1377567577-24312-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +19,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
+Dave,
 
-On Aug 29, 2013, at 9:38 PM, Dave Chinner <david@fromorbit.com> wrote:
-> =
+On Tue, Aug 27, 2013 at 11:39:37AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> CRC enabled filesystems fail log recovery with 100% reliability on
+> xfstests xfs/085 with the following failure:
 
-> So, what dm-thinp is trying to tell us is that the minimum
-> *physical* IO size is 512 bytes (i.e. /sys/.../physical_block_size)
-> but the efficient IO size is 256k. So dm-thinp is exposing the
-> information incorrectly. What it shoul dbe doing is setting both the
-> minimum_io_size and the optimal_io_size to the same value of 256k=85
+Unfortunately I have not been able to hit this one... not sure why.
 
-Should I file a bug? Against lvm2?
+> XFS (vdb): Mounting Filesystem
+> XFS (vdb): Starting recovery (logdev: internal)
+> XFS (vdb): Corruption detected. Unmount and run xfs_repair
+> XFS (vdb): bad inode magic/vsn daddr 144 #0 (magic=0)
+> XFS: Assertion failed: 0, file: fs/xfs/xfs_inode_buf.c, line: 95
+> 
+> The problem is that the inode buffer has not been recovered before
+> the readahead on the inode buffer is issued. The checkpoint being
+> recovered actually allocates the inode chunk we are doing readahead
+> from, so what comes from disk during readahead is essentially
+> random and the verifier barfs on it.
+> 
+> This inode buffer readahead problem affects non-crc filesystems,
+> too, but xfstests does not trigger it at all on such
+> configurations....
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
+I've been mulling this one over for a bit, and I'm not quite sure this
+is correct:
 
+My feeling is that in light of commit 9222a9cf, if we do take part of a
+buffer back in time, the write verifier should fail.  I think for a v2
+inode the read and write verifiers should both be disabled for the
+duration of recovery.  For v3 inodes, I suspect the current situation
+where we do use write verifiers is broken in the same way, at least
+until we pull in 'xfs: prevent transient corrupt states during log
+recovery', which, as you say, won't fix the problem for the v2 inode.
 
-Chris Murphy
+I'll pull this in and send a patch to that effect.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+Regards,
+	Ben
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
