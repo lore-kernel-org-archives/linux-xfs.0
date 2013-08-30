@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F13537F53
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 13:38:34 -0500 (CDT)
-Date: Fri, 30 Aug 2013 13:38:34 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 03AB37F5D
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 13:38:55 -0500 (CDT)
+Date: Fri, 30 Aug 2013 13:38:51 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: don't account buffer cancellation during log
-	recovery readahead
-Message-ID: <20130830183834.GE1935@sgi.com>
-References: <1377555053-23000-1-git-send-email-david@fromorbit.com>
-	<20130829151324.GB5262@sgi.com>
+Subject: Re: [PATCH] xfs: fix bad dquot buffer size in log recovery readahead
+Message-ID: <20130830183851.GF1935@sgi.com>
+References: <1377573943-25770-1-git-send-email-david@fromorbit.com>
+	<20130827214534.GZ5262@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130829151324.GB5262@sgi.com>
+In-Reply-To: <20130827214534.GZ5262@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +26,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 29, 2013 at 10:13:24AM -0500, Ben Myers wrote:
-> On Tue, Aug 27, 2013 at 08:10:53AM +1000, Dave Chinner wrote:
+On Tue, Aug 27, 2013 at 04:45:34PM -0500, Ben Myers wrote:
+> On Tue, Aug 27, 2013 at 01:25:43PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > When doing readhaead in log recovery, we check to see if buffers are
-> > cancelled before doing readahead. If we find a cancelled buffer,
-> > however, we always decrement the reference count we have on it, and
-> > that means that readahead is causing a double decrement of the
-> > cancelled buffer reference count.
+> > xfstests xfs/087 fails 100% reliably with this assert:
 > > 
-> > This results in log recovery *replaying cancelled buffers* as the
-> > actual recovery pass does not find the cancelled buffer entry in the
-> > commit phase of the second pass across a transaction. On debug
-> > kernels, this results in an ASSERT failure like so:
+> > XFS (vdb): Mounting Filesystem
+> > XFS (vdb): Starting recovery (logdev: internal)
+> > XFS: Assertion failed: bp->b_flags & XBF_STALE, file: fs/xfs/xfs_buf.c, line: 548
 > > 
-> > XFS: Assertion failed: !(flags & XFS_BLF_CANCEL), file: fs/xfs/xfs_log_recover.c, line: 1815
+> > while trying to read a dquot buffer in xlog_recover_dquot_ra_pass2().
 > > 
-> > xfstests generic/311 reproduces this ASSERT failure with 100%
-> > reproducability.
-> > 
-> > Fix it by making readahead only peek at the buffer cancelled state
-> > rather than the full accounting that xlog_check_buffer_cancelled()
-> > does.
+> > The issue is that the buffer length to read that is passed to
+> > xfs_buf_readahead is in units of filesystem blocks, not disk blocks.
+> > (i.e. FSB, not daddr). Fix it but putting the correct conversion in
+> > place.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Nice work Dave!
+> Looks good.
+> 
 > Reviewed-by: Ben Myers <bpm@sgi.com>
 
-Applied this one.
+Also applied this one...
 
 _______________________________________________
 xfs mailing list
