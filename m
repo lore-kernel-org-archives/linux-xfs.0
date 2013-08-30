@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C7607F55
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 01:21:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CCEBB7F37
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 06:06:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BD740AC008
-	for <xfs@oss.sgi.com>; Thu, 29 Aug 2013 23:21:33 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Fo3brGQnAEAis10B for <xfs@oss.sgi.com>;
-	Thu, 29 Aug 2013 23:21:28 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VFI5D-0001bR-HE
-	for xfs@oss.sgi.com; Fri, 30 Aug 2013 16:21:23 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VFI5D-0008J3-Ga
-	for xfs@oss.sgi.com; Fri, 30 Aug 2013 16:21:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: XFS_MOUNT_QUOTA_ALL needed by userspace
-Date: Fri, 30 Aug 2013 16:21:21 +1000
-Message-Id: <1377843681-31878-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1377843681-31878-1-git-send-email-david@fromorbit.com>
-References: <1377843681-31878-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0B66BAC00E
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 04:06:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ZVFxSCqASsxWAaph for
+	<xfs@oss.sgi.com>; Fri, 30 Aug 2013 04:06:21 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7UB6KIv023550
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 07:06:21 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests ext4/306: regression test for ext4 resize with
+	non-extent files
+Date: Fri, 30 Aug 2013 19:06:07 +0800
+Message-Id: <1377860767-13304-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,54 +32,149 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eric Sandeen <esandeen@redhat.com>, Eryu Guan <eguan@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Eric Sandeen <esandeen@redhat.com>
 
-So move it to a header file shared with userspace.
+Regression test for:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+c5c72d8 ext4: fix online resizing for ext3-compat file systems
+
+Signed-off-by: Eric Sandeen <esandeen@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- fs/xfs/xfs_log_format.h | 6 ++++++
- fs/xfs/xfs_quota.h      | 7 -------
- 2 files changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
-index 5b7ba98..ca7e28a 100644
---- a/fs/xfs/xfs_log_format.h
-+++ b/fs/xfs/xfs_log_format.h
-@@ -825,6 +825,12 @@ typedef struct xfs_qoff_logformat {
- #define XFS_ALL_QUOTA_CHKD	\
- 		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
- 
-+#define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
-+				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-+				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
-+				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
-+				 XFS_PQUOTA_CHKD)
+This test is originally written by Eric and doesn't get merged. I did
+minor update and resent.
+
+V2: s/dangerous/auto/
+V3: remove "Silence is golden" output since it's not silent
+
+ tests/ext4/306     | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/306.out | 13 +++++++++
+ tests/ext4/group   |  1 +
+ 3 files changed, 96 insertions(+)
+ create mode 100755 tests/ext4/306
+ create mode 100644 tests/ext4/306.out
+
+diff --git a/tests/ext4/306 b/tests/ext4/306
+new file mode 100755
+index 0000000..398c4c0
+--- /dev/null
++++ b/tests/ext4/306
+@@ -0,0 +1,82 @@
++#! /bin/bash
++# FS QA Test No. ext4/306
++#
++# Test that blocks are available to non-extent files after a resize2fs
++# Regression test for commit:
++# c5c72d8 ext4: fix online resizing for ext3-compat file systems
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
 +
- /*
-  * Inode create log item structure
-  *
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index 66522da..e7d84d2 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -48,13 +48,6 @@ struct xfs_trans;
- 	 (XFS_IS_PQUOTA_ON(mp) && \
- 		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
- 
--#define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
--				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
--				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
--				 XFS_PQUOTA_CHKD)
--
--
- /*
-  * The structure kept inside the xfs_trans_t keep track of dquot changes
-  * within a transaction and apply them later.
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++PIDS=""
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    _scratch_unmount
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs ext4
++_supported_os Linux
++
++_require_scratch
++
++# This needs to mount ext3; might require ext3 driver, or ext4
++# might handle it itself.  Find out if we have it one way or another.
++modprobe ext3 > /dev/null 2>&1
++grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
++
++rm -f $seqres.full
++
++# Make a small ext3 fs, (extents disabled) & mount it
++yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
++_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
++# Create a small non-extent-based file
++echo "Create 1m testfile1"
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
++echo "Create testfile2 to fill the fs"
++# A large non-extent-based file filling the fs; this will run out & fail
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
++
++# Remount as ext4
++_scratch_unmount
++_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
++df -h $SCRATCH_MNT >> $seqres.full
++
++# Grow it by 512m
++echo "Resize to 1g"
++resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
++df -h $SCRATCH_MNT >> $seqres.full
++
++# See if we can add more blocks to the files
++echo "append 2m to testfile1"
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
++echo "append 2m to testfile2"
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
++
++status=0
++exit
+diff --git a/tests/ext4/306.out b/tests/ext4/306.out
+new file mode 100644
+index 0000000..ee6c90c
+--- /dev/null
++++ b/tests/ext4/306.out
+@@ -0,0 +1,13 @@
++QA output created by 306
++Create 1m testfile1
++wrote 1048576/1048576 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Create testfile2 to fill the fs
++pwrite64: No space left on device
++Resize to 1g
++append 2m to testfile1
++wrote 2097152/2097152 bytes at offset 1048576
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++append 2m to testfile2
++wrote 2097152/2097152 bytes at offset 536870912
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 53af708..7e1a68b 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -9,3 +9,4 @@
+ 303 aio dangerous ioctl rw stress
+ 304 aio dangerous ioctl rw stress
+ 305 auto
++306 auto rw resize quick
 -- 
-1.8.3.2
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
