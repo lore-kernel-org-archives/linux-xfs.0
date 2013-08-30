@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 890077F55
-	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 09:56:46 -0500 (CDT)
-Date: Fri, 30 Aug 2013 09:56:45 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] Re: XFS: Assertion failed: first <= last && last <
-	BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
-Message-ID: <20130830145645.GA1935@sgi.com>
-References: <52165830.8050006@redhat.com> <20130826041330.GU6023@dastard>
-	<521F4096.9040707@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 72EA07F56
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 10:53:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FE388F8033
+	for <xfs@oss.sgi.com>; Fri, 30 Aug 2013 08:53:06 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id cAhtYFS3t9gEzdKI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 30 Aug 2013 08:53:05 -0700 (PDT)
+Date: Fri, 30 Aug 2013 16:53:01 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 0/2 v2] Fix O_SYNC AIO DIO
+Message-ID: <20130830155301.GB13318@ZenIV.linux.org.uk>
+References: <1376471456-11966-1-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <521F4096.9040707@sgi.com>
+In-Reply-To: <1376471456-11966-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,32 +29,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Aug 29, 2013 at 07:37:42AM -0500, Mark Tinguely wrote:
-> On 08/25/13 23:13, Dave Chinner wrote:
-> >xfs: fix calculation of the number of node entries in a dir3 node
-> >
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >The calculation doesn't take into account the size of the dir v3
-> >header, so overestimates the hash entries in a node. This causes
-> >directory buffer overruns when splitting and merging nodes.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >---
+On Wed, Aug 14, 2013 at 11:10:54AM +0200, Jan Kara wrote:
+>   Hello,
 > 
-> Makes sense to me for the inode v3 assert.
+>   this is second iteration of patches to fix handling of O_SYNC AIO DIO.
+> Since previous version I've addressed Dave's comments:
+>  - slightly expanded changelog of the first patch
+>  - workqueue is now created with parameters allowing paralelism
+>  - workqueue name contains sb->s_id
+>  - workqueue is created on demand (I decided to do this to reduce the overhead
+>    in unnecessary cases)
 > 
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> 
-> The remove assert with the same test must be in common code; it can
-> be triggered in both versions of the inode (Linux 3.10 - TOT). The
-> assert on the remove may require the test to be run until the
-> filesystem is full before doing the remove.
+> The patchset survives xfstests run for ext4 & xfs so it should be sane. Since
+> this touches several filesystems (although only ext4 & xfs are non-trivial),
+> the question is who should carry these patches. Maybe Al? But since xfs and
+> ext4 changes are non-trivial, I'd like to have a review from their
+> developers...
 
-Applied.
+Looks sane, except that I'd probably put destroying the queue after
+evict_inodes(), next to ->put_super() call.
+
+Said that, there's another interesting problem in the code affected by that
+sucker: generic_file_aio_write() might very well sync the wrong range.
+Consider O_APPEND case; __generic_file_aio_write() will call
+generic_write_checks(), which will update its copy of pos, and proceed to
+write starting from there.  All right and proper, but then we return into
+generic_file_aio_write() and sync the range of the right length, starting
+at the *original* value of pos...
 
 _______________________________________________
 xfs mailing list
