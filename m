@@ -1,16 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4B2687F76
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 13:08:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2C071304070
-	for <xfs@oss.sgi.com>; Thu, 15 Aug 2013 11:08:25 -0700 (PDT)
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v8 7/7] enable building user namespace with xfs
-Date: Thu, 15 Aug 2013 14:08:04 -0400
-Message-Id: <1376590084-12888-8-git-send-email-dwight.engen@oracle.com>
-In-Reply-To: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
-References: <1376590084-12888-1-git-send-email-dwight.engen@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 16AE229DFB
+	for <xfs@oss.sgi.com>; Sun,  1 Sep 2013 19:32:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E9F778F8049
+	for <xfs@oss.sgi.com>; Sun,  1 Sep 2013 17:32:18 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	J9GssHD3ZmnOPmjF for <xfs@oss.sgi.com>;
+	Sun, 01 Sep 2013 17:32:17 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VGI3p-00088o-A5
+	for xfs@oss.sgi.com; Mon, 02 Sep 2013 10:32:05 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VGI3p-0004qK-9K
+	for xfs@oss.sgi.com; Mon, 02 Sep 2013 10:32:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: ensure we copy buffer type in da btree root splits
+Date: Mon,  2 Sep 2013 10:32:01 +1000
+Message-Id: <1378081921-18570-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378081921-18570-1-git-send-email-david@fromorbit.com>
+References: <1378081921-18570-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,50 +36,41 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
-Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
+
+When splitting the root of the da btree, we shuffled data between
+buffers and the structures that track them. At one point, we copy
+data and state from one buffer to another, including the ops
+aasociated with the buffer. When we do this, we also need to copy
+the buffer type associated with the buf log item so that the buffer
+is logged correctly. If we don't do that, log recovery won't
+recognise it and hence it won't recalculate the CRC on the buffer
+after recovery. This leads to a directory block that can't be read
+after recovery has run.
+
+Found by inspection after finding the same problem with remote
+symlink buffers.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- init/Kconfig | 13 -------------
- 1 file changed, 13 deletions(-)
+ fs/xfs/xfs_da_btree.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 247084b..a7bcd87 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1106,7 +1106,6 @@ config IPC_NS
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index d4e59a4..069537c 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -635,6 +635,7 @@ xfs_da3_root_split(
+ 	xfs_trans_log_buf(tp, bp, 0, size - 1);
  
- config USER_NS
- 	bool "User namespace"
--	depends on UIDGID_CONVERTED
- 	select UIDGID_STRICT_TYPE_CHECKS
+ 	bp->b_ops = blk1->bp->b_ops;
++	xfs_trans_buf_copy_type(bp, blk1->bp);
+ 	blk1->bp = bp;
+ 	blk1->blkno = blkno;
  
- 	default n
-@@ -1140,20 +1139,8 @@ config NET_NS
- 
- endif # NAMESPACES
- 
--config UIDGID_CONVERTED
--	# True if all of the selected software conmponents are known
--	# to have uid_t and gid_t converted to kuid_t and kgid_t
--	# where appropriate and are otherwise safe to use with
--	# the user namespace.
--	bool
--	default y
--
--	# Filesystems
--	depends on XFS_FS = n
--
- config UIDGID_STRICT_TYPE_CHECKS
- 	bool "Require conversions between uid/gids and their internal representation"
--	depends on UIDGID_CONVERTED
- 	default n
- 	help
- 	 While the nececessary conversions are being added to all subsystems this option allows
 -- 
-1.8.1.4
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
