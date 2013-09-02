@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F338F7F52
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 11:03:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D9B4B8F8040
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 09:03:40 -0700 (PDT)
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id mBxm0YvVeJiybUAa
+	by oss.sgi.com (Postfix) with ESMTP id B1DEE7F52
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 11:03:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A15FC8F8040
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 09:03:38 -0700 (PDT)
+Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
+	[209.85.220.48]) by cuda.sgi.com with ESMTP id pRPIaekkt05XhbuI
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
 	<xfs@oss.sgi.com>; Mon, 02 Sep 2013 09:03:37 -0700 (PDT)
-Received: by mail-pb0-f53.google.com with SMTP id up15so4863041pbc.26
-	for <xfs@oss.sgi.com>; Mon, 02 Sep 2013 09:03:36 -0700 (PDT)
+Received: by mail-pa0-f48.google.com with SMTP id kp13so5300927pab.7
+	for <xfs@oss.sgi.com>; Mon, 02 Sep 2013 09:03:37 -0700 (PDT)
 Date: Tue, 03 Sep 2013 00:03:29 +0800
 From: Wang Shilong <wangshilong1991@gmail.com>
-Subject: Re:  [v2, 6/7] xfstest: Add test case to test multiple collapse range
-	call
-Message-ID: <5224b6d1.kHB8BmSmsG/UJ0Oj%wangshilong1991@gmail.com>
+Subject: Re:  [v2, 4/7] xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE
+	for fallocate
+Message-ID: <5224b6d1.ZoJRPU29rGaeSvHy%wangshilong1991@gmail.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,22 +33,15 @@ To: NamJae Jeon <linkinjeon@gmail.com>
 Cc: david@fromorbit.comlinux-fsdevel, elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, Wang Shilong <wangshilong1991@gmail.com>, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, a.sangwan@samsung.com, linux-ext4@vger.kernel.org, ""@vger.kernel.org, viro@zeniv.linux.org.uk
 
 Hello, Using checkpatch.pl, i get the following warnings(errors):
-ERROR: trailing whitespace
-#97: FILE: tests/shared/317:56:
-+^I^I^Iprint $1, $2, $3; $
+ERROR: space required before the open parenthesis '('
+#79: FILE: io/prealloc.c:223:
++	if(!offset_length(argv[1], argv[2], &segment))
 
-ERROR: trailing whitespace
-#99: FILE: tests/shared/317:58:
-+^I^I}   $
+WARNING: line over 80 characters
+#104: FILE: io/prealloc.c:315:
++		_("de-allocates space and nullify the hole by shifting extents into it");
 
-ERROR: trailing whitespace
-#122: FILE: tests/shared/317:81:
-+# Collapse alternate blocks $
-
-total: 3 errors, 0 warnings, 185 lines checked
-
-NOTE: whitespace errors detected, you may wish to use scripts/cleanpatch or
-      scripts/cleanfile
+total: 1 errors, 1 warnings, 81 lines checked
 
 patch has style problems, please review.
 
