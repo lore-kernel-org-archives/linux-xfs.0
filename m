@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12223-g914ed44
-Message-Id: <20130902004011.8E4A929DFB@oss.sgi.com>
-Date: Sun,  1 Sep 2013 19:40:10 -0500 (CDT)
+Message-Id: <20130902004029.A83B029DFB@oss.sgi.com>
+Date: Sun,  1 Sep 2013 19:40:28 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   914ed44 Fix wrong flag ASSERT in xfs_attr_shortform_getvalue
   904c17e xfs: finish removing IOP_* macros.
   2395670 xfs: inode log reservations are too small
