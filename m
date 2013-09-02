@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1BCB97F52
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 05:10:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B9796AC002
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 03:10:56 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 861377F52
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 05:15:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6EBFA8F804C
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 03:15:16 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	7lsuTBdo1MBebwig for <xfs@oss.sgi.com>;
-	Mon, 02 Sep 2013 03:10:55 -0700 (PDT)
-Date: Mon, 2 Sep 2013 20:09:57 +1000
+	NmWiij9H9N1L0rfS for <xfs@oss.sgi.com>;
+	Mon, 02 Sep 2013 03:15:15 -0700 (PDT)
+Date: Mon, 2 Sep 2013 20:14:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix some minor sparse warnings
-Message-ID: <20130902100957.GE12779@dastard>
-References: <1378092179-24973-1-git-send-email-david@fromorbit.com>
-	<1378092179-24973-3-git-send-email-david@fromorbit.com>
-	<20130902081954.GD11210@infradead.org>
+Subject: Re: [PATCH] xfsprogs: avoid array overflow in pf_batch_read()
+Message-ID: <20130902101458.GF12779@dastard>
+References: <522017A4.8060400@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130902081954.GD11210@infradead.org>
+In-Reply-To: <522017A4.8060400@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,24 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Sep 02, 2013 at 01:19:54AM -0700, Christoph Hellwig wrote:
-> > --- a/fs/xfs/xfs_dquot_item.c
-> > +++ b/fs/xfs/xfs_dquot_item.c
-> > @@ -143,6 +143,8 @@ STATIC uint
-> >  xfs_qm_dquot_logitem_push(
-> >  	struct xfs_log_item	*lip,
-> >  	struct list_head	*buffer_list)
-> > +	__releases(&lip->li_ailp->xa_lock)
-> > +	__acquires(&lip->li_ailp->xa_lock)
-> >  {
+On Thu, Aug 29, 2013 at 10:55:16PM -0500, Eric Sandeen wrote:
+> The while loop in pf_batch_read, and the code preceeding it, is really...
+> quite a thing.  I'd love to rewrite it, but I haven't yet found
+> a particularly cleaner way.
 > 
-> Having these markers indented the same amount as the parameters isn't
-> very readable.  Maybe give them another tab level?
+> It cleverly hides the fact that we might increment "num" past the
+> last index of bplist[] and then assign to it.  This corrupts memory.
+> 
+> Rather than major surgery for now, just go for the simple fix,
+> and break out of the loop if we've increased "num" past the
+> last index.
 
-Sure. Can do.
+looks good.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 -- 
 Dave Chinner
