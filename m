@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E1227F61
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 05:53:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FB388F8052
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 03:53:09 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 183DA7F52
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 06:01:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DE4DF8F8049
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 04:01:39 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	vNC7ooPMZloe9p9K for <xfs@oss.sgi.com>;
-	Mon, 02 Sep 2013 03:53:06 -0700 (PDT)
+	RPfX7GKxL8xNoGUJ for <xfs@oss.sgi.com>;
+	Mon, 02 Sep 2013 04:01:35 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VGRkk-0000sb-G4
-	for xfs@oss.sgi.com; Mon, 02 Sep 2013 20:53:02 +1000
+	(envelope-from <dave@fromorbit.com>) id 1VGRsx-0000uj-LU
+	for xfs@oss.sgi.com; Mon, 02 Sep 2013 21:01:31 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VGRkk-0008Au-Ex
-	for xfs@oss.sgi.com; Mon, 02 Sep 2013 20:53:02 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VGRsx-0008G0-KF
+	for xfs@oss.sgi.com; Mon, 02 Sep 2013 21:01:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: factor all the kmalloc-or-vmalloc fallback
-	allocations
-Date: Mon,  2 Sep 2013 20:53:00 +1000
-Message-Id: <1378119180-31380-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378119180-31380-1-git-send-email-david@fromorbit.com>
-References: <1378119180-31380-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] [RFC] xfstests: add fsstress/recovery test for XFS
+Date: Mon,  2 Sep 2013 21:01:31 +1000
+Message-Id: <1378119691-31708-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,299 +37,151 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We have quite a few places now where we do:
+This has found several issues with recovery on CRC based
+filesystems. It is based on a test case for a dir3 assert failure
+provided by Michael L Semon.
 
-	x = kmem_zalloc(large size)
-	if (!x)
-		x = kmem_zalloc_large(large size)
-
-and do a similar dance when freeing the memory. kmem_free() already
-does the correct freeing dance, and kmem_zalloc_large() is only ever
-called in these constructs, so just factor it all into
-kmem_zalloc_large() and kmem_free().
+This is an RFC at the moment, because I haven't yet seen it run
+through to completion as an xfstest. e.g. it just threw an assert
+I've never seen before - xfs_buf_stale() being called on an unlocked
+buffer through xfsdbstrat via preallocation....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/kmem.c          | 15 ++++++++++++---
- fs/xfs/kmem.h          |  9 +--------
- fs/xfs/xfs_acl.c       | 28 ++++++++--------------------
- fs/xfs/xfs_bmap_util.c | 15 ++++-----------
- fs/xfs/xfs_ioctl.c     | 34 +++++++++++-----------------------
- fs/xfs/xfs_ioctl32.c   | 18 ++++++------------
- fs/xfs/xfs_itable.c    |  2 +-
- 7 files changed, 43 insertions(+), 78 deletions(-)
+ tests/xfs/300     | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/300.out |   1 +
+ tests/xfs/group   |   1 +
+ 3 files changed, 107 insertions(+)
+ create mode 100644 tests/xfs/300
+ create mode 100644 tests/xfs/300.out
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 4a7286c..a02cfb9 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -27,8 +27,6 @@
- 
- /*
-  * Greedy allocation.  May fail and may return vmalloced memory.
-- *
-- * Must be freed using kmem_free_large.
-  */
- void *
- kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-@@ -36,7 +34,7 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
- 	void		*ptr;
- 	size_t		kmsize = maxsize;
- 
--	while (!(ptr = kmem_zalloc_large(kmsize))) {
-+	while (!(ptr = vzalloc(kmsize))) {
- 		if ((kmsize >>= 1) <= minsize)
- 			kmsize = minsize;
- 	}
-@@ -75,6 +73,17 @@ kmem_zalloc(size_t size, xfs_km_flags_t flags)
- 	return ptr;
- }
- 
-+void *
-+kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+diff --git a/tests/xfs/300 b/tests/xfs/300
+new file mode 100644
+index 0000000..fcf00bf
+--- /dev/null
++++ b/tests/xfs/300
+@@ -0,0 +1,105 @@
++#!/bin/bash
++# FS QA Test No. xfs/300
++#
++# Basic log recovery stress test - do lots of stuff, shut down in the middle of
++# it and check that recovery runs to completion and everything can be
++# successfully removed afterwards..
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++_cleanup()
 +{
-+	void	*ptr;
-+
-+	ptr = kmem_zalloc(size, flags | KM_MAYFAIL);
-+	if (ptr)
-+		return ptr;
-+	return vzalloc(size);
++	cd /
++	umount $SCRATCH_MNT 2>/dev/null
++	rm -f $tmp.*
 +}
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
- void
- kmem_free(const void *ptr)
- {
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index b2f2620..3a7371c 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -57,17 +57,10 @@ kmem_flags_convert(xfs_km_flags_t flags)
- 
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
- extern void *kmem_zalloc(size_t, xfs_km_flags_t);
-+extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
- extern void *kmem_realloc(const void *, size_t, size_t, xfs_km_flags_t);
- extern void  kmem_free(const void *);
- 
--static inline void *kmem_zalloc_large(size_t size)
--{
--	return vzalloc(size);
--}
--static inline void kmem_free_large(void *ptr)
--{
--	vfree(ptr);
--}
- 
- extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
- 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 4ea73cc..0e2f37e 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -152,12 +152,9 @@ xfs_get_acl(struct inode *inode, int type)
- 	 * go out to the disk.
- 	 */
- 	len = XFS_ACL_MAX_SIZE(ip->i_mount);
--	xfs_acl = kmem_zalloc(len, KM_SLEEP | KM_MAYFAIL);
--	if (!xfs_acl) {
--		xfs_acl = kmem_zalloc_large(len);
--		if (!xfs_acl)
--			return ERR_PTR(-ENOMEM);
--	}
-+	xfs_acl = kmem_zalloc_large(len, KM_SLEEP);
-+	if (!xfs_acl)
-+		return ERR_PTR(-ENOMEM);
- 
- 	error = -xfs_attr_get(ip, ea_name, (unsigned char *)xfs_acl,
- 							&len, ATTR_ROOT);
-@@ -181,10 +178,7 @@ xfs_get_acl(struct inode *inode, int type)
- out_update_cache:
- 	set_cached_acl(inode, type, acl);
- out:
--	if (is_vmalloc_addr(xfs_acl))
--		kmem_free_large(xfs_acl);
--	else
--		kfree(xfs_acl);
-+	kmem_free(xfs_acl);
- 	return acl;
- }
- 
-@@ -215,12 +209,9 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- 		struct xfs_acl *xfs_acl;
- 		int len = XFS_ACL_MAX_SIZE(ip->i_mount);
- 
--		xfs_acl = kmem_zalloc(len, KM_SLEEP | KM_MAYFAIL);
--		if (!xfs_acl) {
--			xfs_acl = kmem_zalloc_large(len);
--			if (!xfs_acl)
--				return -ENOMEM;
--		}
-+		xfs_acl = kmem_zalloc_large(len, KM_SLEEP);
-+		if (!xfs_acl)
-+			return -ENOMEM;
- 
- 		xfs_acl_to_disk(xfs_acl, acl);
- 
-@@ -231,10 +222,7 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- 		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
- 				len, ATTR_ROOT);
- 
--		if (is_vmalloc_addr(xfs_acl))
--			kmem_free_large(xfs_acl);
--		else
--			kfree(xfs_acl);
-+		kmem_free(xfs_acl);
- 	} else {
- 		/*
- 		 * A NULL ACL argument means we want to remove the ACL.
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c6dc551..97f952c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -612,13 +612,9 @@ xfs_getbmap(
- 
- 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
- 		return XFS_ERROR(ENOMEM);
--	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
--	if (!out) {
--		out = kmem_zalloc_large(bmv->bmv_count *
--					sizeof(struct getbmapx));
--		if (!out)
--			return XFS_ERROR(ENOMEM);
--	}
-+	out = kmem_zalloc_large(bmv->bmv_count * sizeof(struct getbmapx), 0);
-+	if (!out)
-+		return XFS_ERROR(ENOMEM);
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
-@@ -754,10 +750,7 @@ xfs_getbmap(
- 			break;
- 	}
- 
--	if (is_vmalloc_addr(out))
--		kmem_free_large(out);
--	else
--		kmem_free(out);
-+	kmem_free(out);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 21d9c9df..668e8f4 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -456,12 +456,9 @@ xfs_attrlist_by_handle(
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	kbuf = kmem_zalloc(al_hreq.buflen, KM_SLEEP | KM_MAYFAIL);
--	if (!kbuf) {
--		kbuf = kmem_zalloc_large(al_hreq.buflen);
--		if (!kbuf)
--			goto out_dput;
--	}
-+	kbuf = kmem_zalloc_large(al_hreq.buflen, KM_SLEEP);
-+	if (!kbuf)
-+		goto out_dput;
- 
- 	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
- 	error = -xfs_attr_list(XFS_I(dentry->d_inode), kbuf, al_hreq.buflen,
-@@ -472,12 +469,9 @@ xfs_attrlist_by_handle(
- 	if (copy_to_user(al_hreq.buffer, kbuf, al_hreq.buflen))
- 		error = -EFAULT;
- 
-- out_kfree:
--	if (is_vmalloc_addr(kbuf))
--		kmem_free_large(kbuf);
--	else
--		kmem_free(kbuf);
-- out_dput:
-+out_kfree:
-+	kmem_free(kbuf);
-+out_dput:
- 	dput(dentry);
- 	return error;
- }
-@@ -495,12 +489,9 @@ xfs_attrmulti_attr_get(
- 
- 	if (*len > XATTR_SIZE_MAX)
- 		return EINVAL;
--	kbuf = kmem_zalloc(*len, KM_SLEEP | KM_MAYFAIL);
--	if (!kbuf) {
--		kbuf = kmem_zalloc_large(*len);
--		if (!kbuf)
--			return ENOMEM;
--	}
-+	kbuf = kmem_zalloc_large(*len, KM_SLEEP);
-+	if (!kbuf)
-+		return ENOMEM;
- 
- 	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
- 	if (error)
-@@ -509,11 +500,8 @@ xfs_attrmulti_attr_get(
- 	if (copy_to_user(ubuf, kbuf, *len))
- 		error = EFAULT;
- 
-- out_kfree:
--	if (is_vmalloc_addr(kbuf))
--		kmem_free_large(kbuf);
--	else
--		kmem_free(kbuf);
-+out_kfree:
-+	kmem_free(kbuf);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index d3ab953..f671f7e 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -371,12 +371,9 @@ xfs_compat_attrlist_by_handle(
- 		return PTR_ERR(dentry);
- 
- 	error = -ENOMEM;
--	kbuf = kmem_zalloc(al_hreq.buflen, KM_SLEEP | KM_MAYFAIL);
--	if (!kbuf) {
--		kbuf = kmem_zalloc_large(al_hreq.buflen);
--		if (!kbuf)
--			goto out_dput;
--	}
-+	kbuf = kmem_zalloc_large(al_hreq.buflen, KM_SLEEP);
-+	if (!kbuf)
-+		goto out_dput;
- 
- 	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
- 	error = -xfs_attr_list(XFS_I(dentry->d_inode), kbuf, al_hreq.buflen,
-@@ -387,12 +384,9 @@ xfs_compat_attrlist_by_handle(
- 	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
- 		error = -EFAULT;
- 
-- out_kfree:
--	if (is_vmalloc_addr(kbuf))
--		kmem_free_large(kbuf);
--	else
--		kmem_free(kbuf);
-- out_dput:
-+out_kfree:
-+	kmem_free(kbuf);
-+out_dput:
- 	dput(dentry);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 8a67d53..084b3e1 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -495,7 +495,7 @@ xfs_bulkstat(
- 	/*
- 	 * Done, we're either out of filesystem or space to put the data.
- 	 */
--	kmem_free_large(irbuf);
-+	kmem_free(irbuf);
- 	*ubcountp = ubelem;
- 	/*
- 	 * Found some inodes, return them now and return the error next time.
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++
++rm -f $seqres.full
++
++_scratch_mkfs > $seqres.full 2>&1
++umount $SCRATCH_MNT
++
++SLEEP_TIME=$((30 * $TIME_FACTOR))
++PROCS=$((2 * LOAD_FACTOR))
++
++load_dir=$SCRATCH_MNT/test
++
++# let this run for a while
++$FSSTRESS_PROG -n10000000 -p $PROCS -d $load_dir >> $seqres.full 2>&1 &
++sleep $SLEEP_TIME
++killall -9 fsstress
++wait
++sync
++umount $SCRATCH_MNT
++
++# now mount again, run the load again, this time with a shutdown.
++umount $SCRATCH_MNT
++_scratch_mount
++$XFS_FSR_PROG -v $load_dir >> $seqres.full 2>&1
++$FSSTRESS_PROG -n10000000 -p $PROCS -d $load_dir >> $seqres.full 2>&1 &
++sleep $SLEEP_TIME
++sync
++
++# now shutdown and unmount
++sleep 5
++$here/src/godown $load_dir
++killall -9 fsstress
++wait
++
++# for some reason fsstress processes manage to live on beyond the wait?
++sleep 5
++umount $SCRATCH_MNT
++
++# now recover, check the filesystem for consistency
++xfs_logprint -t $TEST_DEV | head -20
++_scratch_mount
++umount $SCRATCH_MNT
++_check_scratch_fs
++
++# now clean up.
++_scratch_mount
++for d in $load_dir/*; do
++        rm -rf $d > /dev/null 2>&1 &
++done
++wait
++umount $SCRATCH_MNT
++_check_scratch_fs
++
++status=0
++exit
+diff --git a/tests/xfs/300.out b/tests/xfs/300.out
+new file mode 100644
+index 0000000..7903b62
+--- /dev/null
++++ b/tests/xfs/300.out
+@@ -0,0 +1 @@
++QA output created by 300
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 352a4c5..3f1702a 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -179,3 +179,4 @@
+ 297 auto freeze
+ 298 auto attr symlink quick
+ 299 auto quota
++300 auto stress log metadata repair
 -- 
 1.8.3.2
 
