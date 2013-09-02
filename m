@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B1DEE7F52
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 11:03:41 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 814647F52
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 11:03:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A15FC8F8040
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 03BA0AC002
 	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 09:03:38 -0700 (PDT)
-Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
-	[209.85.220.48]) by cuda.sgi.com with ESMTP id pRPIaekkt05XhbuI
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Sep 2013 09:03:37 -0700 (PDT)
-Received: by mail-pa0-f48.google.com with SMTP id kp13so5300927pab.7
+Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
+	[209.85.192.173]) by cuda.sgi.com with ESMTP id
+	KQARZaXE09IVR0lF (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Sep 2013 09:03:38 -0700 (PDT)
+Received: by mail-pd0-f173.google.com with SMTP id p10so4915322pdj.32
 	for <xfs@oss.sgi.com>; Mon, 02 Sep 2013 09:03:37 -0700 (PDT)
-Date: Tue, 03 Sep 2013 00:03:29 +0800
+Date: Tue, 03 Sep 2013 00:03:28 +0800
 From: Wang Shilong <wangshilong1991@gmail.com>
-Subject: Re:  [v2, 4/7] xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE
+Subject: Re:  [v4, 4/7] xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE
 	for fallocate
-Message-ID: <5224b6d1.ZoJRPU29rGaeSvHy%wangshilong1991@gmail.com>
+Message-ID: <5224b6d0.wO06bsCiIYkyKFs2%wangshilong1991@gmail.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
