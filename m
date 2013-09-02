@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 396707F55
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 03:18:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D6327AC003
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 01:18:44 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id iACnK8MKkguene7B (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Sep 2013 01:18:43 -0700 (PDT)
-Date: Mon, 2 Sep 2013 01:18:43 -0700
+	by oss.sgi.com (Postfix) with ESMTP id 14F9A7F55
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 03:19:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94A95AC002
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 01:19:56 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id r66SyCIzq5InhfqQ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Sep 2013 01:19:55 -0700 (PDT)
+Date: Mon, 2 Sep 2013 01:19:54 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: fix endian warning in xlog_recover_get_buf_lsn()
-Message-ID: <20130902081843.GC11210@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix some minor sparse warnings
+Message-ID: <20130902081954.GD11210@infradead.org>
 References: <1378092179-24973-1-git-send-email-david@fromorbit.com>
-	<1378092179-24973-2-git-send-email-david@fromorbit.com>
+	<1378092179-24973-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1378092179-24973-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378092179-24973-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,22 +33,20 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Sep 02, 2013 at 01:22:58PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> sparse reports:
-> 
-> fs/xfs/xfs_log_recover.c:2017:24: sparse: cast to restricted __be64
-> 
-> Because I used the wrong structure for the on-disk superblock cast
-> in 50d5c8d ("xfs: check LSN ordering for v5 superblocks during
-> recovery"). Fix it.
-> 
-> Reported-by: kbuild test robot
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> --- a/fs/xfs/xfs_dquot_item.c
+> +++ b/fs/xfs/xfs_dquot_item.c
+> @@ -143,6 +143,8 @@ STATIC uint
+>  xfs_qm_dquot_logitem_push(
+>  	struct xfs_log_item	*lip,
+>  	struct list_head	*buffer_list)
+> +	__releases(&lip->li_ailp->xa_lock)
+> +	__acquires(&lip->li_ailp->xa_lock)
+>  {
 
+Having these markers indented the same amount as the parameters isn't
+very readable.  Maybe give them another tab level?
 
-Looks good,
+Otherwise looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
