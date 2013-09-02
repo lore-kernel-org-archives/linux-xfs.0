@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E5C947F55
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 09:29:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B83FE30407F
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 07:29:48 -0700 (PDT)
-Received: from mail-pb0-f49.google.com (mail-pb0-f49.google.com
-	[209.85.160.49]) by cuda.sgi.com with ESMTP id ZYO1LBwRkFL8QYa9
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 390367F55
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 09:30:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 19A518F8052
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 07:30:03 -0700 (PDT)
+Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
+	[209.85.220.48]) by cuda.sgi.com with ESMTP id LqCyUX1LnLnQ1cMt
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Sep 2013 07:29:47 -0700 (PDT)
-Received: by mail-pb0-f49.google.com with SMTP id xb4so4795196pbc.36
-	for <xfs@oss.sgi.com>; Mon, 02 Sep 2013 07:29:47 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 02 Sep 2013 07:30:01 -0700 (PDT)
+Received: by mail-pa0-f48.google.com with SMTP id kp13so5256010pab.35
+	for <xfs@oss.sgi.com>; Mon, 02 Sep 2013 07:30:00 -0700 (PDT)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v4 4/7] xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE
-	for fallocate
-Date: Mon,  2 Sep 2013 23:29:38 +0900
-Message-Id: <1378132178-2753-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v2 5/7] xfstest: Add test case to check various corner cases
+	for collapsing range
+Date: Mon,  2 Sep 2013 23:29:52 +0900
+Message-Id: <1378132192-2787-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,110 +34,631 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, l
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-Add support FALLOC_FL_COLLAPSE_RANGE for fallocate.
+This patch checks various corner cases for collapsing a range.
+This patch is based on generic/255 test case which checks various corner
+cases for punch hole.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- io/prealloc.c     |   39 ++++++++++++++++++++++++++++++++++++++-
- man/man8/xfs_io.8 |    6 ++++++
- 2 files changed, 44 insertions(+), 1 deletion(-)
+ common/collapse      |  264 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ common/rc            |   14 +++
+ tests/shared/316     |   70 +++++++++++++
+ tests/shared/316.out |  221 ++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/group   |    2 +-
+ 5 files changed, 570 insertions(+), 1 deletion(-)
+ create mode 100644 common/collapse
+ create mode 100644 tests/shared/316
+ create mode 100644 tests/shared/316.out
 
-diff --git a/io/prealloc.c b/io/prealloc.c
-index 8380646..e7ff940 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -29,6 +29,10 @@
- #define FALLOC_FL_PUNCH_HOLE	0x02
- #endif
- 
-+#ifndef FALLOC_FL_COLLAPSE_RANGE
-+#define FALLOC_FL_COLLAPSE_RANGE 0x08
-+#endif
+diff --git a/common/collapse b/common/collapse
+new file mode 100644
+index 0000000..dd3be5e
+--- /dev/null
++++ b/common/collapse
+@@ -0,0 +1,264 @@
++##/bin/bash
++#
++# Copyright (c) 2013 Samsung Electronics.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++# Test procedure for checking collapse range feature
 +
- static cmdinfo_t allocsp_cmd;
- static cmdinfo_t freesp_cmd;
- static cmdinfo_t resvsp_cmd;
-@@ -37,6 +41,7 @@ static cmdinfo_t zero_cmd;
- #if defined(HAVE_FALLOCATE)
- static cmdinfo_t falloc_cmd;
- static cmdinfo_t fpunch_cmd;
-+static cmdinfo_t fcollapse_cmd;
- #endif
- 
- static int
-@@ -159,8 +164,11 @@ fallocate_f(
- 	int		mode = 0;
- 	int		c;
- 
--	while ((c = getopt(argc, argv, "kp")) != EOF) {
-+	while ((c = getopt(argc, argv, "ckp")) != EOF) {
- 		switch (c) {
-+		case 'c':
-+			mode = FALLOC_FL_COLLAPSE_RANGE;
-+			break;
- 		case 'k':
- 			mode = FALLOC_FL_KEEP_SIZE;
- 			break;
-@@ -203,6 +211,25 @@ fpunch_f(
- 	}
- 	return 0;
- }
-+
-+static int
-+fcollapse_f(
-+	int		argc,
-+	char		**argv)
++# Test different corner cases for collapsing a range:
++#
++#	1. into a hole
++#	2. into allocated space
++#	3. into unwritten space
++#	4. hole -> data
++#	5. hole -> unwritten
++#	6. data -> hole
++#	7. data -> unwritten
++#	8. unwritten -> hole
++#	9. unwritten -> data
++#	10. hole -> data -> hole
++#	11. data -> hole -> data
++#	12. unwritten -> data -> unwritten
++#	13. data -> unwritten -> data
++#	14. data -> hole @ EOF
++#	15. data -> hole @ 0
++#	16. data -> cache cold ->hole
++#
++# Test file is removed, created and sync'd between tests.
++#
++# Use -k flag to keep the file between tests.  This will
++# test the handling of pre-existing holes.
++#
++# Use the -d flag to not sync the file between tests.
++# This will test the handling of delayed extents
++#
++_test_generic_collapse()
 +{
-+	xfs_flock64_t	segment;
-+	int		mode = FALLOC_FL_COLLAPSE_RANGE;
 +
-+	if(!offset_length(argv[1], argv[2], &segment))
-+		return 0;
++	remove_testfile=1
++	sync_cmd="-c fsync"
++	OPTIND=1
++	while getopts 'dk' OPTION
++	do
++		case $OPTION in
++		k)	remove_testfile=
++		;;
++		d)	sync_cmd=
++		;;
++		?)	echo Invalid flag
++		exit 1
++		;;
++		esac
++	done
++	shift $(($OPTIND - 1))
 +
-+	if (fallocate(file->fd, mode,
-+			segment.l_start, segment.l_len)) {
-+		perror("fallocate");
-+		return 0;
-+	}
-+	return 0;
++	alloc_cmd=$1
++	collapse_cmd=$2
++	punch_cmd=$3
++	map_cmd=$4
++	filter_cmd=$5
++	testfile=$6
++
++	echo "	1. into a hole"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	2. into allocated space"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 0 80k" $sync_cmd \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	3. into unwritten space"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 0 80k" \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	4. hole -> data"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 32k 32k" $sync_cmd \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	5. hole -> unwritten"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 32k 32k" \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	6. data -> hole"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 0 32k" $sync_cmd \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	7. data -> unwritten"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 0 32k" $sync_cmd \
++		-c "$alloc_cmd 32k 32k" \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	8. unwritten -> hole"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 0 32k" \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	9. unwritten -> data"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 0 32k" \
++		-c "pwrite 32k 32k" $sync_cmd \
++		-c "$collapse_cmd 16k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	10. hole -> data -> hole"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 32k 16k" $sync_cmd \
++		-c "$collapse_cmd 16k 48k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	11. data -> hole -> data"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 0 80k" \
++		-c "pwrite 0 32k" \
++		-c "pwrite 48k 32k" $sync_cmd \
++		-c "$punch_cmd 32k 16k" \
++		-c "$collapse_cmd 8k 48k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	12. unwritten -> data -> unwritten"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 0 80k" \
++		-c "pwrite 32k 16k" $sync_cmd \
++		-c "$collapse_cmd 16k 48k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	13. data -> unwritten -> data"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "$alloc_cmd 0 80k" \
++		-c "pwrite 0k 32k" $sync_cmd \
++		-c "pwrite 48k 32k" -c "fsync" \
++		-c "$collapse_cmd 16k 48k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	14. data -> hole @ EOF"
++	rm -f $testfile
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 0 80k" $sync_cmd \
++		-c "$collapse_cmd 48k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	15. data -> hole @ 0"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++	fi
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 0 80k" $sync_cmd \
++		-c "$collapse_cmd 0k 32k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
++
++	echo "	16. data -> cache cold ->hole"
++	if [ "$remove_testfile" ]; then
++		rm -f $testfile
++		rm -f $testfile.2
++	else
++		cp $testfile $testfile.2
++	fi
++	$XFS_IO_PROG -f -c "truncate 48k" \
++		-c "pwrite 0k 48k" -c "fsync" $testfile.2 \
++		> /dev/null
++	$XFS_IO_PROG -f -c "truncate 80k" \
++		-c "pwrite 0 80k" $sync_cmd \
++		-c "$collapse_cmd 0k 32k" \
++		-c "fadvise -d" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	diff $testfile $testfile.2
++	[ $? -ne 0 ] && die_now
++	rm -f $testfile.2
++	_md5_checksum $testfile
++
 +}
- #endif	/* HAVE_FALLOCATE */
- 
- void
-@@ -277,5 +304,15 @@ prealloc_init(void)
- 	fpunch_cmd.oneline =
- 		_("de-allocates space assocated with part of a file via fallocate");
- 	add_command(&fpunch_cmd);
-+
-+	fcollapse_cmd.name = "fcollapse";
-+	fcollapse_cmd.cfunc = fcollapse_f;
-+	fcollapse_cmd.argmin = 2;
-+	fcollapse_cmd.argmax = 2;
-+	fcollapse_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	fcollapse_cmd.args = _("off len");
-+	fcollapse_cmd.oneline =
-+		_("de-allocates space and nullify the hole by shifting extents into it");
-+	add_command(&fcollapse_cmd);
- #endif	/* HAVE_FALLOCATE */
+diff --git a/common/rc b/common/rc
+index 77e96c4..1779eed 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1248,6 +1248,20 @@ _require_xfs_io_falloc_punch()
+ 		_notrun "xfs_io fallocate punch command failed (no fs support?)"
  }
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 767b50e..9543b20 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -380,6 +380,12 @@ will set the FALLOC_FL_KEEP_SIZE flag as described in
- .PD
- .RE
- .TP
-+.BI fcollapse " offset length"
-+Call fallocate with FALLOC_FL_COLLAPSE_RANGE flag as described in the
-+.BR fallocate (2)
-+manual page to de-allocates blocks and eliminates the hole created in this process
-+by shifting data blocks into the hole.
-+.TP
- .BI fpunch " offset length"
- Punches (de-allocates) blocks in the file by calling fallocate with 
- the FALLOC_FL_PUNCH_HOLE flag as described in the
+ 
++# check that xfs_io, kernel and filesystem all support fallocate with collapse
++# range
++_require_xfs_io_falloc_collapse()
++{
++	testfile=$TEST_DIR/$$.falloc
++	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
++		-c "fcollapse 4k 8k" $testfile 2>&1`
++	rm -f $testfile 2>&1 > /dev/null
++	echo $testio | grep -q "not found" && \
++		_notrun "xfs_io fallocate collapse range support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "xfs_io fallocate collapse range failed (no fs support?)"
++}
++
+ # check that xfs_io, kernel and filesystem support fiemap
+ _require_xfs_io_fiemap()
+ {
+diff --git a/tests/shared/316 b/tests/shared/316
+new file mode 100644
+index 0000000..66a8489
+--- /dev/null
++++ b/tests/shared/316
+@@ -0,0 +1,70 @@
++#! /bin/bash
++# FS QA Test No. 316
++#
++# Test fallocate collapse range
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Samsung Electronics.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++# we need to include common/punch to get defination fo filter functions
++. ./common/rc
++. ./common/filter
++. ./common/punch
++. ./common/collapse
++
++# real QA test starts here
++_supported_fs xfs ext4
++_supported_os Linux
++
++_require_xfs_io_falloc_punch
++_require_xfs_io_falloc
++_require_xfs_io_fiemap
++_require_xfs_io_falloc_collapse
++
++testfile=$TEST_DIR/316.$$
++
++# Standard collapse range tests
++_test_generic_collapse falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
++
++# Delayed allocation collapse range tests
++_test_generic_collapse -d falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
++
++# Multi collapse tests
++_test_generic_collapse -k falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
++
++# Delayed allocation multi collapse range tests
++_test_generic_collapse -d -k falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
++
++status=0 ; exit
+diff --git a/tests/shared/316.out b/tests/shared/316.out
+new file mode 100644
+index 0000000..09ebf0d
+--- /dev/null
++++ b/tests/shared/316.out
+@@ -0,0 +1,221 @@
++QA output created by 316
++	1. into a hole
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	2. into allocated space
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	3. into unwritten space
++0: [0..95]: extent
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	4. hole -> data
++0: [0..31]: hole
++1: [32..63]: extent
++2: [64..95]: hole
++d8f51c20223dbce5c7c90db87bc221b0
++	5. hole -> unwritten
++0: [0..31]: hole
++1: [32..63]: extent
++2: [64..95]: hole
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	6. data -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	7. data -> unwritten
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	8. unwritten -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	9. unwritten -> data
++0: [0..63]: extent
++1: [64..95]: hole
++d8f51c20223dbce5c7c90db87bc221b0
++	10. hole -> data -> hole
++bb7df04e1b0a2570657527a7e108ae23
++	11. data -> hole -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	12. unwritten -> data -> unwritten
++0: [0..63]: extent
++bb7df04e1b0a2570657527a7e108ae23
++	13. data -> unwritten -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	14. data -> hole @ EOF
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	15. data -> hole @ 0
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	16. data -> cache cold ->hole
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	1. into a hole
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	2. into allocated space
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	3. into unwritten space
++0: [0..95]: extent
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	4. hole -> data
++0: [0..31]: hole
++1: [32..63]: extent
++2: [64..95]: hole
++d8f51c20223dbce5c7c90db87bc221b0
++	5. hole -> unwritten
++0: [0..31]: hole
++1: [32..63]: extent
++2: [64..95]: hole
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	6. data -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	7. data -> unwritten
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	8. unwritten -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f4f35d60b3cc18aaa6d8d92f0cd3708a
++	9. unwritten -> data
++0: [0..63]: extent
++1: [64..95]: hole
++d8f51c20223dbce5c7c90db87bc221b0
++	10. hole -> data -> hole
++bb7df04e1b0a2570657527a7e108ae23
++	11. data -> hole -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	12. unwritten -> data -> unwritten
++0: [0..63]: extent
++bb7df04e1b0a2570657527a7e108ae23
++	13. data -> unwritten -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	14. data -> hole @ EOF
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	15. data -> hole @ 0
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	16. data -> cache cold ->hole
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	1. into a hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	2. into allocated space
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	3. into unwritten space
++0: [0..95]: extent
++f07217d5ac7ffa15dd8910c4aa912674
++	4. hole -> data
++0: [0..63]: extent
++1: [64..95]: hole
++e5c94f6299822646f9f57aeacd8bdc01
++	5. hole -> unwritten
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	6. data -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	7. data -> unwritten
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	8. unwritten -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	9. unwritten -> data
++0: [0..63]: extent
++1: [64..95]: hole
++e5c94f6299822646f9f57aeacd8bdc01
++	10. hole -> data -> hole
++0: [0..31]: extent
++1: [32..63]: hole
++76cc863b386460b228a493933813a6a0
++	11. data -> hole -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	12. unwritten -> data -> unwritten
++0: [0..63]: extent
++76cc863b386460b228a493933813a6a0
++	13. data -> unwritten -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	14. data -> hole @ EOF
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	15. data -> hole @ 0
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	16. data -> cache cold ->hole
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	1. into a hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	2. into allocated space
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	3. into unwritten space
++0: [0..95]: extent
++f07217d5ac7ffa15dd8910c4aa912674
++	4. hole -> data
++0: [0..63]: extent
++1: [64..95]: hole
++e5c94f6299822646f9f57aeacd8bdc01
++	5. hole -> unwritten
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	6. data -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	7. data -> unwritten
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	8. unwritten -> hole
++0: [0..31]: extent
++1: [32..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
++	9. unwritten -> data
++0: [0..63]: extent
++1: [64..95]: hole
++e5c94f6299822646f9f57aeacd8bdc01
++	10. hole -> data -> hole
++0: [0..31]: extent
++1: [32..63]: hole
++76cc863b386460b228a493933813a6a0
++	11. data -> hole -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	12. unwritten -> data -> unwritten
++0: [0..63]: extent
++76cc863b386460b228a493933813a6a0
++	13. data -> unwritten -> data
++0: [0..63]: extent
++0f0151cbed83e4bf6e5bde26e82ab115
++	14. data -> hole @ EOF
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	15. data -> hole @ 0
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
++	16. data -> cache cold ->hole
++0: [0..95]: extent
++f1894a71ac539f6f90426d98a4990a47
+diff --git a/tests/shared/group b/tests/shared/group
+index 0ad640b..3a69294 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -11,4 +11,4 @@
+ 289 auto quick
+ 298 auto trim
+ 305 aio dangerous enospc rw stress
+-
++316 auto quick collapse
 -- 
 1.7.9.5
 
