@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D00EB7F52
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 06:46:35 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EFA577F52
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 09:28:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F9C9AC002
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 04:46:35 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EcgH4h6c50hah0IJ for <xfs@oss.sgi.com>;
-	Mon, 02 Sep 2013 04:46:33 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VGSaV-0000zk-LD
-	for xfs@oss.sgi.com; Mon, 02 Sep 2013 21:46:31 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VGSaV-0000G6-KO
-	for xfs@oss.sgi.com; Mon, 02 Sep 2013 21:46:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH V2] xfstests: add fsstress/recovery test for XFS
-Date: Mon,  2 Sep 2013 21:46:31 +1000
-Message-Id: <1378122391-962-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DEE3A30404E
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 07:28:51 -0700 (PDT)
+Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
+	[209.85.220.49]) by cuda.sgi.com with ESMTP id 0x5cmN4CHH9UcGYd
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 02 Sep 2013 07:28:50 -0700 (PDT)
+Received: by mail-pa0-f49.google.com with SMTP id ld10so5256160pab.36
+	for <xfs@oss.sgi.com>; Mon, 02 Sep 2013 07:28:50 -0700 (PDT)
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH v2 0/7] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE) for
+	fallocate
+Date: Mon,  2 Sep 2013 23:28:38 +0900
+Message-Id: <1378132118-2617-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,156 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: viro@zeniv.linux.org.uk, mtk.manpages@gmail.com, tytso@mit.edu, adilger.kernel@dilger.ca, bpm@sgi.com, elder@kernel.org, hch@infradead.org, david@fromorbit.com
+Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This has found several issues with recovery on CRC based
-filesystems. It is based on a test case for a dir3 assert failure
-provided by Michael L Semon.
+This patch series is in response of the following post:
+http://lwn.net/Articles/556136/
+"ext4: introduce two new ioctls"
 
-The test seems to pass now fine with or without CRCs enabled with
-all the kernel patches I've posted over the past day.
+Dave chinner suggested that truncate_block_range (which was one of the ioctls name)
+should be an fallocate operation and not any fs specific ioctl, hence
+we add this functionality to fallocate.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- tests/xfs/300     | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/300.out |   2 ++
- tests/xfs/group   |   1 +
- 3 files changed, 108 insertions(+)
- create mode 100644 tests/xfs/300
- create mode 100644 tests/xfs/300.out
+This patch series introduces new flag FALLOC_FL_COLLAPSE_RANGE for fallocate
+and implements it for XFS and Ext4.
 
-diff --git a/tests/xfs/300 b/tests/xfs/300
-new file mode 100644
-index 0000000..38ecd65
---- /dev/null
-+++ b/tests/xfs/300
-@@ -0,0 +1,105 @@
-+#!/bin/bash
-+# FS QA Test No. xfs/300
-+#
-+# Basic log recovery stress test - do lots of stuff, shut down in the middle of
-+# it and check that recovery runs to completion and everything can be
-+# successfully removed afterwards..
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+_cleanup()
-+{
-+	cd /
-+	umount $SCRATCH_MNT 2>/dev/null
-+	rm -f $tmp.*
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount
-+
-+SLEEP_TIME=$((30 * $TIME_FACTOR))
-+PROCS=$((2 * LOAD_FACTOR))
-+
-+load_dir=$SCRATCH_MNT/test
-+
-+# let this run for a while
-+$FSSTRESS_PROG -n10000000 -p $PROCS -d $load_dir >> $seqres.full 2>&1 &
-+sleep $SLEEP_TIME
-+killall -q $FSSTRESS_PROG
-+wait
-+sync
-+umount $SCRATCH_MNT
-+
-+# now mount again, run the load again, this time with a shutdown.
-+_scratch_mount
-+$XFS_FSR_PROG -v $load_dir >> $seqres.full 2>&1
-+$FSSTRESS_PROG -n10000000 -p $PROCS -d $load_dir >> $seqres.full 2>&1 &
-+sleep $SLEEP_TIME
-+sync
-+
-+# now shutdown and unmount
-+sleep 5
-+$here/src/godown $load_dir
-+killall -q $FSSTRESS_PROG
-+wait
-+
-+# for some reason fsstress processes manage to live on beyond the wait?
-+sleep 5
-+umount $SCRATCH_MNT
-+
-+# now recover, check the filesystem for consistency
-+_scratch_mount
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+# now clean up.
-+_scratch_mount
-+for d in $load_dir/*; do
-+        rm -rf $d > /dev/null 2>&1 &
-+done
-+wait
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+echo "No output is good. Failures are loud."
-+
-+status=0
-+exit
-diff --git a/tests/xfs/300.out b/tests/xfs/300.out
-new file mode 100644
-index 0000000..c763112
---- /dev/null
-+++ b/tests/xfs/300.out
-@@ -0,0 +1,2 @@
-+QA output created by 300
-+No output is good. Failures are loud.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 352a4c5..3f1702a 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -179,3 +179,4 @@
- 297 auto freeze
- 298 auto attr symlink quick
- 299 auto quota
-+300 auto stress log metadata repair
+The semantics of this flag are following:
+1) It collapses the range lying between offset and length by removing any data
+   blocks which are present in this range and than updates all the logical
+   offsets of extents beyond "offset + len" to nullify the hole created by
+   removing blocks. In short, it does not leave a hole.
+2) It should be used exclusively. No other fallocate flag in combination.
+3) Offset and length supplied to fallocate should be fs block size aligned.
+
+This new functionality of collapsing range could be used by media editing tools
+which does non linear editing to quickly purge and edit parts of a media file.
+This will immensely improve the performance of these operations.
+The limitation of fs block size aligned offsets can be easily handled
+by media codecs which are encapsulated in a conatiner as they have to
+just change the offset to next keyframe value to match the proper alignment.
+
+Change log
+v2:
+ Fix review points from Dave Chinner.
+  - merge adjacent extents
+  - fix journal log usage.
+  - change reasonable function name.
+  - update xfsio, xfstest, manpage
+  - etc.
+
+Namjae Jeon (7):
+  fs: add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
+  xfs: add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
+  ext4: add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
+  xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+  xfstest: Add test case to check various corner cases for collapsing range
+  xfstest: Add test case to test multiple collapse range call
+  manpage: update FALLOC_FL_COLLAPSE_RANGE flag in fallocate
+
 -- 
-1.8.3.2
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
