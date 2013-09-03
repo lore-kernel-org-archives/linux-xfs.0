@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A7DE47CBF
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 16:17:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7FB00304077
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 14:17:05 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	aEEr0ta9qBHR47aF for <xfs@oss.sgi.com>;
-	Tue, 03 Sep 2013 14:17:03 -0700 (PDT)
-Date: Wed, 4 Sep 2013 07:16:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: fix some new memory allocation failures
-Message-ID: <20130903211643.GG23571@dastard>
-References: <1378119180-31380-1-git-send-email-david@fromorbit.com>
-	<5224C4E9.8080604@sgi.com> <20130902222004.GI12779@dastard>
-	<5225DF07.4080509@sgi.com> <20130903200401.GF23571@dastard>
-	<52264AA0.4010501@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8BD927F4E
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 17:17:15 -0500 (CDT)
+Date: Tue, 3 Sep 2013 17:17:12 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: inode buffers may not be valid during recovery
+	readahead
+Message-ID: <20130903221712.GN1935@sgi.com>
+References: <1377567577-24312-1-git-send-email-david@fromorbit.com>
+	<20130830181520.GD1935@sgi.com> <20130831061420.GY12779@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52264AA0.4010501@sgi.com>
+In-Reply-To: <20130831061420.GY12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,125 +24,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 03, 2013 at 03:46:24PM -0500, Mark Tinguely wrote:
-> On 09/03/13 15:04, Dave Chinner wrote:
-> >On Tue, Sep 03, 2013 at 08:07:19AM -0500, Mark Tinguely wrote:
-> >>On 09/02/13 17:20, Dave Chinner wrote:
-> >>>On Mon, Sep 02, 2013 at 12:03:37PM -0500, Mark Tinguely wrote:
-> >>>>On 09/02/13 05:52, Dave Chinner wrote:
-> >>>>>Hi folks,
-> >>>>>
-> >>>>>These failures are a result of order-4 allocations being done on v5
-> >>>>>filesystems to support the large ACL count xattrs. The first patch
-> >>>>>puts out usual falbback to vmalloc workaround in place. The second
-> >>>>>patch factors all the places we now have this fallback-to-vmalloc
-> >>>>>and makes it transparent to the callers.
-> >>>>>
-> >>>>>Cheers,
-> >>>>>
-> >>>>>Dave.
-> >>>>
-> >>>>Thanks for clean up. Broken record time: Do we really need order
-> >>>>allocation in the filesystem? Esp in xfs_ioctl.c.
-> >>>
-> >>>I don't understand your question. Are you asking why we need high
-> >>>order allocation?
-> >>>
-> >>>Cheers,
-> >>>
-> >>>Dave.
-> >>
-> >>In patch 2, why not drop the physically contiguous allocation
-> >>attempt and just do the virtually contiguous allocation?
-> >
-> >Because:
-> >
-> >	a) virtual memory space is extremely limited on some
-> >	platforms - we regularly get people reporting that they've
-> >	exhausted vmalloc space on 32 bit systems.
-> >	b) when there is free contiguous memory, allocating that
-> >	contiguous memory is much faster than allocating
-> >	virtual memory.
-> >	c) virtual memory access is slower than physical memory
-> >	access and it puts pressure on the page tables.
-> >
-> >IOWs, we want to avoid allocating virtual memory if at all possible.
-> >
-> >Cheers,
-> >
-> >Dave.
+Hi Dave,
+
+On Sat, Aug 31, 2013 at 04:14:20PM +1000, Dave Chinner wrote:
+> On Fri, Aug 30, 2013 at 01:15:20PM -0500, Ben Myers wrote:
+> > Dave,
+> > 
+> > On Tue, Aug 27, 2013 at 11:39:37AM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > CRC enabled filesystems fail log recovery with 100% reliability on
+> > > xfstests xfs/085 with the following failure:
+> > 
+> > Unfortunately I have not been able to hit this one... not sure why.
+> > 
+> > > XFS (vdb): Mounting Filesystem
+> > > XFS (vdb): Starting recovery (logdev: internal)
+> > > XFS (vdb): Corruption detected. Unmount and run xfs_repair
+> > > XFS (vdb): bad inode magic/vsn daddr 144 #0 (magic=0)
+> > > XFS: Assertion failed: 0, file: fs/xfs/xfs_inode_buf.c, line: 95
+> > > 
+> > > The problem is that the inode buffer has not been recovered before
+> > > the readahead on the inode buffer is issued. The checkpoint being
+> > > recovered actually allocates the inode chunk we are doing readahead
+> > > from, so what comes from disk during readahead is essentially
+> > > random and the verifier barfs on it.
+> > > 
+> > > This inode buffer readahead problem affects non-crc filesystems,
+> > > too, but xfstests does not trigger it at all on such
+> > > configurations....
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > I've been mulling this one over for a bit, and I'm not quite sure this
+> > is correct:
+> > 
+> > My feeling is that in light of commit 9222a9cf, if we do take part of a
+> > buffer back in time, the write verifier should fail.
 > 
-> Ummm, It is all virtual memory it all runs through page tables. The
-> MMU works on virtual addresses.
+> I don't see the connection between 9222a9cf ("xfs: don't shutdown
+> log recovery on validation errors") and this issue. 9222a9cf works
+> around are a longstanding architectural deficiency of log
+> recovery, while this is a completely new problem introduced by the
+> inode buffer readahead in log recovery.
 
-Sure, but there's a massive difference between kmalloc and
-vmalloc()'d memory...
+Commit 9222a9cf left buffer operations for inodes clear in the v2 inode case:
 
-> It appears Linux has a special range of kernel virtual memory for
-> the physical contiguous allocations and range for sparse memory
-> allocation.
+@@ -1845,7 +1845,13 @@ xlog_recover_do_inode_buffer(
+        xfs_agino_t             *buffer_nextp;
 
-... kernel memory is directly mapped as there is a 1:!  relationship
-between the virtual address of kernel memory and the physical
-location of the memory. vmalloc memory has an arbitrary virtual to
-physical mapping that has to be looked in a separate structure on
-every page fault, same as for any userspace page fault. vmalloc
-space can become fragmented, be exhausted, etc, just like kmalloc
-memory can be. Indeed, there are situations where vmalloc can fail
-yet kmalloc will succeed...
+        trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
+-       bp->b_ops = &xfs_inode_buf_ops;
++
++       /*
++        * Post recovery validation only works properly on CRC enabled
++        * filesystems.
++        */
++       if (xfs_sb_version_hascrc(&mp->m_sb))
++               bp->b_ops = &xfs_inode_buf_ops;
 
-> XFS does not need the physical space that backs the kernel virtual
-> address to be contiguous - other parts of the kernel do. Why put
-> pressure on the drivers that need order allocations when we do not
-> need it?
+xlog_recover_commit_trans
+  xlog_recover_items_pass2
+    xlog_recover_buffer_pass2
+      xlog_recover_do_inode_buffer
+        if (xfs_sb_version_hascrc(&mp->m_sb))
+		bp->b_ops = &xfs_inode_buf_ops;
 
-Let's just quote Linus from 2003, shall we:
+My concern is that with the readahead we have:
 
-http://yarchive.net/comp/linux/vmalloc.html
+xlog_recover_commit_trans
+  . xlog_recover_ra_pass2
+  .   xlog_recover_inode_ra_pass2
+  .     xfs_buf_readahead
+  .       xfs_buf_readahead_map
+  .         xfs_buf_read_map
+  .           if (!XFS_BUF_ISDONE(bp))
+  .			bp->b_ops = ops;
+  xlog_recover_items_pass2
+    xlog_recover_buffer_pass2
+      xlog_recover_do_inode_buffer
+        if (xfs_sb_version_hascrc(&mp->m_sb))
+		bp->b_ops = &xfs_inode_buf_ops;
 
-| > I think it'd make more sense to only use vmalloc when it's explicitly
-| > too big for kmalloc - or simply switch on num_online_cpus > 100 or
-| > whatever a sensible cutoff is (ie nobody but you would ever see this ;-))
-| 
-| No, please please please don't do these things.
-| 
-| vmalloc() is NOT SOMETHING YOU SHOULD EVER USE! It's only valid for when
-| you _need_ a big array, and you don't have any choice. It's slow, and it's
-| a very restricted resource: it's a global resource that is literally
-| restricted to a few tens of megabytes. It should be _very_ carefully used.
-| 
-| There are basically no valid new uses of it. There's a few valid legacy
-| users (I think the file descriptor array), and there are some drivers that
-| use it (which is crap, but drivers are drivers), and it's _really_ valid
-| only for modules. Nothing else.
-| 
-| Basically: if you think you need more memory than a kmalloc() can give,
-| you need to re-organize your data structures. To either not need a big
-| area, or to be able to allocate it in chunks.
-| 
-| 		Linus 
+Looks like we can set b_ops in xfs_buf_read_map in the v2 inode case and it
+would remain set through recovery when we intend it to be clear.  If we needed
+to b_ops to be clear in commit 9222a9cf, I think it should also be clear in the
+readahead case.
 
-Linus will say exactly the same thing today....
+Here's what I suggest:
 
-And that doesn't take into account that vmalloc() or vm_map_ram()
-inside an XFS transaction context can deadlock as page table entries
-use GFP_KERNEL allocation, and this can happen in a GFP_NOFS context
-in XFS...
+---
+ fs/xfs/xfs_log_recover.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Seriously, there are excellent reasons for vmalloc being considered
-a bad thing and hence it's use is actively discouraged across
-the entire kernel space. We only use it where absolutely necessary
-to function correctly.
+Index: b/fs/xfs/xfs_log_recover.c
+===================================================================
+--- a/fs/xfs/xfs_log_recover.c	2013-09-03 16:57:51.534388540 -0500
++++ b/fs/xfs/xfs_log_recover.c	2013-09-03 16:59:13.784398092 -0500
+@@ -3309,7 +3309,9 @@ xlog_recover_inode_ra_pass2(
+ 		return;
+ 
+ 	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+-				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
++				ilfp->ilf_len,
++				xfs_sb_version_hascrc(&mp->m_sb) ?
++					&xfs_inode_buf_ra_ops : NULL);
+ }
+ 
+ STATIC void
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
