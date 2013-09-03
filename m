@@ -1,15 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 376027F4E
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 08:07:23 -0500 (CDT)
-Message-ID: <5225DF07.4080509@sgi.com>
-Date: Tue, 03 Sep 2013 08:07:19 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 0/2] xfs: fix some new memory allocation failures
-References: <1378119180-31380-1-git-send-email-david@fromorbit.com>
-	<5224C4E9.8080604@sgi.com> <20130902222004.GI12779@dastard>
-In-Reply-To: <20130902222004.GI12779@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 87B797F52
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 13:25:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C017304087
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 11:25:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lyBEgLnQBmqPWUwM for
+	<xfs@oss.sgi.com>; Tue, 03 Sep 2013 11:25:47 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r83IPkVx027297
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 3 Sep 2013 14:25:46 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r83IPkTC020563
+	for <xfs@oss.sgi.com>; Tue, 3 Sep 2013 14:25:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [RFC PATCH 01/11] xfs: refactor xfs_ialloc_btree.c to support
+	multiple inobt numbers
+Date: Tue,  3 Sep 2013 14:24:58 -0400
+Message-Id: <1378232708-57156-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
+References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,46 +32,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 09/02/13 17:20, Dave Chinner wrote:
-> On Mon, Sep 02, 2013 at 12:03:37PM -0500, Mark Tinguely wrote:
->> On 09/02/13 05:52, Dave Chinner wrote:
->>> Hi folks,
->>>
->>> These failures are a result of order-4 allocations being done on v5
->>> filesystems to support the large ACL count xattrs. The first patch
->>> puts out usual falbback to vmalloc workaround in place. The second
->>> patch factors all the places we now have this fallback-to-vmalloc
->>> and makes it transparent to the callers.
->>>
->>> Cheers,
->>>
->>> Dave.
->>
->> Thanks for clean up. Broken record time: Do we really need order
->> allocation in the filesystem? Esp in xfs_ioctl.c.
->
-> I don't understand your question. Are you asking why we need high
-> order allocation?
->
-> Cheers,
->
-> Dave.
+The introduction of the free inode btree (finobt) requires that
+xfs_ialloc_btree.c handle multiple trees. Refactor xfs_ialloc_btree.c
+so the caller specifies the btree type on cursor initialization to
+prepare for addition of the finobt.
 
-In patch 2, why not drop the physically contiguous allocation attempt 
-and just do the virtually contiguous allocation?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_ialloc.c       | 8 ++++----
+ fs/xfs/xfs_ialloc_btree.c | 8 +++++---
+ fs/xfs/xfs_ialloc_btree.h | 3 ++-
+ fs/xfs/xfs_itable.c       | 6 ++++--
+ 4 files changed, 15 insertions(+), 10 deletions(-)
 
-Things that now call kmem_zalloc_large() do not need a physically 
-contiguous memory, it will simplify the allocation, it will leave the 
-physically contiguous pieces for other Linux code that really need it.
-
---Mark.
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index ccf2fb1..524aa88 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -455,7 +455,7 @@ xfs_ialloc_ag_alloc(
+ 	/*
+ 	 * Insert records describing the new inode chunk into the btree.
+ 	 */
+-	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	for (thisino = newino;
+ 	     thisino < newino + newlen;
+ 	     thisino += XFS_INODES_PER_CHUNK) {
+@@ -701,7 +701,7 @@ xfs_dialloc_ag(
+ 	ASSERT(pag->pagi_freecount > 0);
+ 
+  restart_pagno:
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	/*
+ 	 * If pagino is 0 (this is the root inode allocation) use newino.
+ 	 * This must work because we've just allocated some.
+@@ -1163,7 +1163,7 @@ xfs_difree(
+ 	/*
+ 	 * Initialize the cursor.
+ 	 */
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 
+ 	error = xfs_check_agi_freecount(cur, agi);
+ 	if (error)
+@@ -1294,7 +1294,7 @@ xfs_imap_lookup(
+ 	 * we have a record, we need to ensure it contains the inode number
+ 	 * we are looking up.
+ 	 */
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
+ 	if (!error) {
+ 		if (i)
+diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+index 5448eb6..0cdb88b 100644
+--- a/fs/xfs/xfs_ialloc_btree.c
++++ b/fs/xfs/xfs_ialloc_btree.c
+@@ -50,7 +50,8 @@ xfs_inobt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_inobt_init_cursor(cur->bc_mp, cur->bc_tp,
+-			cur->bc_private.a.agbp, cur->bc_private.a.agno);
++			cur->bc_private.a.agbp, cur->bc_private.a.agno,
++			cur->bc_btnum);
+ }
+ 
+ STATIC void
+@@ -324,7 +325,8 @@ xfs_inobt_init_cursor(
+ 	struct xfs_mount	*mp,		/* file system mount point */
+ 	struct xfs_trans	*tp,		/* transaction pointer */
+ 	struct xfs_buf		*agbp,		/* buffer for agi structure */
+-	xfs_agnumber_t		agno)		/* allocation group number */
++	xfs_agnumber_t		agno,		/* allocation group number */
++	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
+ {
+ 	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
+ 	struct xfs_btree_cur	*cur;
+@@ -334,7 +336,7 @@ xfs_inobt_init_cursor(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_nlevels = be32_to_cpu(agi->agi_level);
+-	cur->bc_btnum = XFS_BTNUM_INO;
++	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 
+ 	cur->bc_ops = &xfs_inobt_ops;
+diff --git a/fs/xfs/xfs_ialloc_btree.h b/fs/xfs/xfs_ialloc_btree.h
+index 3ac36b76..ce7a62b 100644
+--- a/fs/xfs/xfs_ialloc_btree.h
++++ b/fs/xfs/xfs_ialloc_btree.h
+@@ -107,7 +107,8 @@ typedef __be32 xfs_inobt_ptr_t;
+ 		 ((index) - 1) * sizeof(xfs_inobt_ptr_t)))
+ 
+ extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
+-		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
++		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t,
++		xfs_btnum_t);
+ extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
+ 
+ extern const struct xfs_buf_ops xfs_inobt_buf_ops;
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index b93e14b..e720f8b 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -275,7 +275,8 @@ xfs_bulkstat(
+ 		/*
+ 		 * Allocate and initialize a btree cursor for ialloc btree.
+ 		 */
+-		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno);
++		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
++					    XFS_BTNUM_INO);
+ 		irbp = irbuf;
+ 		irbufend = irbuf + nirbuf;
+ 		end_of_ag = 0;
+@@ -625,7 +626,8 @@ xfs_inumbers(
+ 				agino = 0;
+ 				continue;
+ 			}
+-			cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno);
++			cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
++						    XFS_BTNUM_INO);
+ 			error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE,
+ 						 &tmp);
+ 			if (error) {
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
