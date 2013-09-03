@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9C1C17F3F
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 14:12:04 -0500 (CDT)
-Date: Tue, 3 Sep 2013 14:12:01 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 33B6D7F3F
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 14:35:45 -0500 (CDT)
+Date: Tue, 3 Sep 2013 14:35:41 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/2] xfs: defrag support for v5 filesystems
-Message-ID: <20130903191201.GL1935@sgi.com>
-References: <1377822225-17621-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: dtype changed xfs_dir2_sfe_put_ino to
+	xfs_dir3_sfe_put_ino
+Message-ID: <20130903193541.GM1935@sgi.com>
+References: <1377843681-31878-1-git-send-email-david@fromorbit.com>
+	<1377843681-31878-2-git-send-email-david@fromorbit.com>
+	<20130902021559.GC23571@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1377822225-17621-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130902021559.GC23571@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +28,67 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hey Dave,
+Hi Dave,
 
-On Fri, Aug 30, 2013 at 10:23:43AM +1000, Dave Chinner wrote:
-> Hi folks,
+On Mon, Sep 02, 2013 at 12:15:59PM +1000, Dave Chinner wrote:
+> On Fri, Aug 30, 2013 at 04:21:20PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > So fix up the export in xfs_dir2.h that is needed by userspace.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> The following 2 patches implement the BMBT owner change transaction
-> that is necessary to enable the XFS_IOC_SWAPEXT ioctl to operate on
-> v5 filesystems correctly. The first patch implements the
-> transactional runtime change, and the second patch implements the
-> recovery of that change.
+> Well, this patch now causes a compilation failure.  Why?
+> xfs_dir3_sfe_put_ino() got marked as static because it didn't have a
+> matching export.
 > 
-> Both the run time and recovery code use the same mechanism for
-> changing the owner field in all the blocks in the BMBT on an inode,
-> and even though XFS_IOC_SWAPEXT only swaps the data fork, the code
-> has been written to be fork neutral so if we even need to swap
-> attribute forks it should just work for that, too.
+> Perhaps we should be a little less hasty in merging auto-generated
+> patches from random build-farms? The patch was wrong - fixing the
+> prototype like in v1 of this patch was the correct thing to do....
 > 
-> Further, because the BMBT code uses the generic btree
-> infrastructure, the btree modification is done as a generic function
-> as well and so should work for all types of btrees supported by the
-> generic code. Hence if the need arises we can easily change the
-> owner of any btree that uses the generic code.
+> So, the updated patch below adds the revert.
 > 
-> The testing carried out is documented in the description of the
-> second patch.
+> Cheers,
 > 
-> AFAIA, this is the only remaining feature that the kernel v5
-> filesystem implementation didn't support. Hence, with this patchset,
-> there are no more feature checkboxes that need to be ticked that
-> would prevent us from removing the experimental tag from it. Testing
-> is the only remaining gate to removing the tag from the kernel
-> code...
+> Dave.
+> 
+> PS: Ben, when you merge a patch from a reply in an email thread,
+> can you please pull the commit subject line from the patch, not the
+> title of the email thread? One of the recent commits got it wrong.
+> i.e. commit 3780437 
+> 
+> "XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length), file:"
+> 
+> should have had the title
+> 
+> "xfs: fix calculation of the number of node entries in a dir3 node"
 
-I believe there is still the discussion surrounding being able to use
-the self describing metadata without enabling crcs that needs to be
-resolved before removing the experimental tag.  Some customers will want
-to use features such as t10-dif and won't want to calculate two separate
-crcs.  Normally that discussion probably needn't gate the removal of the
-experimental tag, but unfortunately there will be some compatability
-issues surrounding an additional feature bit and modification of mkfs
-that we should probably iron out first.
+I'll keep an eye out, thanks.
 
-Other than that discussion, I think we're about on the same page...
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: dtype changed xfs_dir2_sfe_put_ino to xfs_dir3_sfe_put_ino
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> So fix up the export in xfs_dir2.h that is needed by userspace.
+> 
+> <sigh>
+> 
+> Now xfs_dir3_sfe_put_ino has been made static. Revert 98f7462 ("xfs:
+> xfs_dir3_sfe_put_ino can be static") to being non static so that the
+> code shared with userspace is identical again.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Regards,
+Ah.. sorry I missed that it's used in your userspace series.  Could you repost
+your userspace series soon?
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+Thanks,
 	Ben
 
 _______________________________________________
