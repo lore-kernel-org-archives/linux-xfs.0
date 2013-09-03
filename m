@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 799CE7F4E
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 06:47:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 68EF48F804B
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 22A7A7F4E
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 06:47:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B5592AC001
 	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 04:47:51 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	9oIqu4ziiF8Inl7W for <xfs@oss.sgi.com>;
-	Tue, 03 Sep 2013 04:47:49 -0700 (PDT)
+	uh5FkGFVWUT2GYRA for <xfs@oss.sgi.com>;
+	Tue, 03 Sep 2013 04:47:50 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VGp5B-0003Va-27
+	(envelope-from <dave@fromorbit.com>) id 1VGp5B-0003VY-0y
 	for xfs@oss.sgi.com; Tue, 03 Sep 2013 21:47:41 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VGp5B-0005MV-1R
+	(envelope-from <dave@disappointment.disaster>) id 1VGp5B-0005MN-03
 	for xfs@oss.sgi.com; Tue, 03 Sep 2013 21:47:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: don't assert fail on bad inode numbers
-Date: Tue,  3 Sep 2013 21:47:38 +1000
-Message-Id: <1378208858-20557-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378208858-20557-1-git-send-email-david@fromorbit.com>
-References: <1378208858-20557-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: more shutdown-related fixes
+Date: Tue,  3 Sep 2013 21:47:36 +1000
+Message-Id: <1378208858-20557-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,47 +35,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Let the inode verifier do it's work by returning an error when we
-fail to find correct magic numbers in an inode buffer.
+More fixes as a result of forced shutdown testing. The first is
+fixing yet another hole in the buf log item freein logic when a
+transaction is aborted, and the other removes the asserts from the
+inode buffer checking so that verifiers return errors rather than
+crashing the system.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode_buf.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
-index 3d25c9a..63382d3 100644
---- a/fs/xfs/xfs_inode_buf.c
-+++ b/fs/xfs/xfs_inode_buf.c
-@@ -53,9 +53,8 @@ xfs_inobp_check(
- 					i * mp->m_sb.sb_inodesize);
- 		if (!dip->di_next_unlinked)  {
- 			xfs_alert(mp,
--	"Detected bogus zero next_unlinked field in incore inode buffer 0x%p.",
--				bp);
--			ASSERT(dip->di_next_unlinked);
-+	"Detected bogus zero next_unlinked field in inode %d buffer 0x%llx.",
-+				i, (long long)bp->b_bn);
- 		}
- 	}
- }
-@@ -106,11 +105,10 @@ xfs_inode_buf_verify(
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
- 					     mp, dip);
- #ifdef DEBUG
--			xfs_emerg(mp,
-+			xfs_alert(mp,
- 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
- 				(unsigned long long)bp->b_bn, i,
- 				be16_to_cpu(dip->di_magic));
--			ASSERT(0);
- #endif
- 		}
- 	}
--- 
-1.8.3.2
+Dave.
 
 _______________________________________________
 xfs mailing list
