@@ -1,9 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. for-linus-v3.11-rc1-2-12225-g1d03c6f
-Message-Id: <20130903222015.5C15A7F59@oss.sgi.com>
-Date: Tue,  3 Sep 2013 17:20:14 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C14547F4E
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 17:21:31 -0500 (CDT)
+Date: Tue, 3 Sep 2013 17:21:28 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/2] xfs: minor cleanups for userspace sanity
+Message-ID: <20130903222128.GO1935@sgi.com>
+References: <1377843681-31878-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1377843681-31878-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,70 +18,19 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Fri, Aug 30, 2013 at 04:21:19PM +1000, Dave Chinner wrote:
+> These are just a couple of small patches that fix up minor issues to
+> do with syncing code to userspace. Trivial, no compiled code impact
+> at all.
 
-The branch, for-next has been updated
-  1d03c6f xfs: XFS_MOUNT_QUOTA_ALL needed by userspace
-  50fc5f7 xfs: dtype changed xfs_dir2_sfe_put_ino to xfs_dir3_sfe_put_ino
-      from  914ed44b17dc30ce0d783e8e23fce58a1a92412c (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit 1d03c6fa88af35e55047a1f2ab116f0fdf2f55aa
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Aug 30 16:21:21 2013 +1000
-
-    xfs: XFS_MOUNT_QUOTA_ALL needed by userspace
-    
-    So move it to a header file shared with userspace.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 50fc5f7accfeaaaa1bba07725f26945cf8033bb7
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Mon Sep 2 12:15:59 2013 +1000
-
-    xfs: dtype changed xfs_dir2_sfe_put_ino to xfs_dir3_sfe_put_ino
-    
-    So fix up the export in xfs_dir2.h that is needed by userspace.
-    
-    <sigh>
-    
-    Now xfs_dir3_sfe_put_ino has been made static. Revert 98f7462 ("xfs:
-    xfs_dir3_sfe_put_ino can be static") to being non static so that the
-    code shared with userspace is identical again.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_dir2.h       | 5 +++--
- fs/xfs/xfs_dir2_sf.c    | 2 +-
- fs/xfs/xfs_log_format.h | 6 ++++++
- fs/xfs/xfs_quota.h      | 7 -------
- 4 files changed, 10 insertions(+), 10 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
+Applied these two.
 
 _______________________________________________
 xfs mailing list
