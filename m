@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F077B7F3F
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 14:02:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DF2E730407A
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 12:02:17 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 5SvXn6d1K5tEOTJ1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Sep 2013 12:02:12 -0700 (PDT)
-Date: Tue, 3 Sep 2013 12:02:10 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/2] xfs: more shutdown-related fixes
-Message-ID: <20130903190210.GA23072@infradead.org>
-References: <1378208858-20557-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9C1C17F3F
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 14:12:04 -0500 (CDT)
+Date: Tue, 3 Sep 2013 14:12:01 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/2] xfs: defrag support for v5 filesystems
+Message-ID: <20130903191201.GL1935@sgi.com>
+References: <1377822225-17621-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1378208858-20557-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1377822225-17621-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +25,52 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 03, 2013 at 09:47:36PM +1000, Dave Chinner wrote:
+Hey Dave,
+
+On Fri, Aug 30, 2013 at 10:23:43AM +1000, Dave Chinner wrote:
 > Hi folks,
 > 
-> More fixes as a result of forced shutdown testing. The first is
-> fixing yet another hole in the buf log item freein logic when a
-> transaction is aborted, and the other removes the asserts from the
-> inode buffer checking so that verifiers return errors rather than
-> crashing the system.
+> The following 2 patches implement the BMBT owner change transaction
+> that is necessary to enable the XFS_IOC_SWAPEXT ioctl to operate on
+> v5 filesystems correctly. The first patch implements the
+> transactional runtime change, and the second patch implements the
+> recovery of that change.
+> 
+> Both the run time and recovery code use the same mechanism for
+> changing the owner field in all the blocks in the BMBT on an inode,
+> and even though XFS_IOC_SWAPEXT only swaps the data fork, the code
+> has been written to be fork neutral so if we even need to swap
+> attribute forks it should just work for that, too.
+> 
+> Further, because the BMBT code uses the generic btree
+> infrastructure, the btree modification is done as a generic function
+> as well and so should work for all types of btrees supported by the
+> generic code. Hence if the need arises we can easily change the
+> owner of any btree that uses the generic code.
+> 
+> The testing carried out is documented in the description of the
+> second patch.
+> 
+> AFAIA, this is the only remaining feature that the kernel v5
+> filesystem implementation didn't support. Hence, with this patchset,
+> there are no more feature checkboxes that need to be ticked that
+> would prevent us from removing the experimental tag from it. Testing
+> is the only remaining gate to removing the tag from the kernel
+> code...
 
-Btw, I've been wondering for a while if we need a major change to how
-the buf item refcounting works.  All these little special cases in there
-are utterly non-intuitive.  I've not looked very deep yet, but a normal
-scheme where every reference to it increments the refcount, and we
-simply free it when that hits zero should work here as well.  We'd
-still need flags for the abort and clean conditions, but it would still
-be way simpler than what we have now.
+I believe there is still the discussion surrounding being able to use
+the self describing metadata without enabling crcs that needs to be
+resolved before removing the experimental tag.  Some customers will want
+to use features such as t10-dif and won't want to calculate two separate
+crcs.  Normally that discussion probably needn't gate the removal of the
+experimental tag, but unfortunately there will be some compatability
+issues surrounding an additional feature bit and modification of mkfs
+that we should probably iron out first.
+
+Other than that discussion, I think we're about on the same page...
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
