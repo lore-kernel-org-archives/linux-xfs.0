@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D3BAD7F54
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 19:07:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A6D468F8049
-	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 17:07:03 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 29F9C7F54
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 19:15:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 199CD8F804B
+	for <xfs@oss.sgi.com>; Mon,  2 Sep 2013 17:15:03 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	IA6PvU8p4MQD3TsG for <xfs@oss.sgi.com>;
-	Mon, 02 Sep 2013 17:07:01 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1VGe94-0002IT-RU
-	for xfs@oss.sgi.com; Tue, 03 Sep 2013 10:06:58 +1000
-Date: Tue, 3 Sep 2013 10:06:58 +1000
+	5fDNhzcSdi7BJIuS for <xfs@oss.sgi.com>;
+	Mon, 02 Sep 2013 17:15:01 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VGeGn-0002JA-HB
+	for xfs@oss.sgi.com; Tue, 03 Sep 2013 10:14:57 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VGeGn-0001zL-GO
+	for xfs@oss.sgi.com; Tue, 03 Sep 2013 10:14:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v2] xfs: check magic numbers in dir3 leaf verifier first
-Message-ID: <20130903000658.GJ12779@dastard>
-References: <1378119020-31299-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1378119020-31299-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/3] xfstests: Make 204 work with different block and inode
+	sizes.
+Date: Tue,  3 Sep 2013 10:14:55 +1000
+Message-Id: <1378167295-7566-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378167295-7566-1-git-send-email-david@fromorbit.com>
+References: <1378167295-7566-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,91 +31,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs: check magic numbers in dir3 leaf verifier first
-
 From: Dave Chinner <dchinner@redhat.com>
 
-Calling xfs_dir3_leaf_hdr_from_disk() in a verifier before
-validating the magic numbers in the buffer results in ASSERT
-failures due to mismatching magic numbers when a corruption occurs.
-Seeing as the verifier is supposed to catch the corruption and pass
-it back to the caller, having the verifier assert fail on error
-defeats the purpose of detecting the errors in the first place.
-
-Check the magic numbers direct from the buffer before decoding the
-header.
+Otherwise it fails with ENOSPC on CRC enabled filesystems because
+ofhte larger inode size.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
-v2: magic number size is 16 bits, not 32 bits. Was only wrong for v4
-filesystem checking, xfstests/204 triggered failure.
+ common/filter     | 10 +++++++++-
+ tests/generic/204 | 34 ++++++++++++++++++++++++++++++----
+ 2 files changed, 39 insertions(+), 5 deletions(-)
 
- fs/xfs/xfs_dir2_leaf.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 08984ee..fb57893 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -165,6 +165,7 @@ xfs_dir3_leaf_check_int(
- 	    (char *)&ents[hdr->count] > (char *)xfs_dir2_leaf_bests_p(ltp))
- 		return false;
- 
-+
- 	/* Check hash value order, count stale entries.  */
- 	for (i = stale = 0; i < hdr->count; i++) {
- 		if (i + 1 < hdr->count) {
-@@ -180,6 +181,11 @@ xfs_dir3_leaf_check_int(
- 	return true;
+diff --git a/common/filter b/common/filter
+index ee738ca..dc9e197 100644
+--- a/common/filter
++++ b/common/filter
+@@ -131,9 +131,17 @@ _filter_date()
  }
  
-+/*
-+ * We verify the magic numbers before decoding the leaf header so that on debug
-+ * kernels we don't get assertion failures in xfs_dir3_leaf_hdr_from_disk() due
-+ * to incorrect magic numbers.
-+ */
- static bool
- xfs_dir3_leaf_verify(
- 	struct xfs_buf		*bp,
-@@ -191,24 +197,25 @@ xfs_dir3_leaf_verify(
- 
- 	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
- 
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-+		__uint16_t		magic3;
- 
--		if ((magic == XFS_DIR2_LEAF1_MAGIC &&
--		     leafhdr.magic != XFS_DIR3_LEAF1_MAGIC) ||
--		    (magic == XFS_DIR2_LEAFN_MAGIC &&
--		     leafhdr.magic != XFS_DIR3_LEAFN_MAGIC))
--			return false;
-+		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
-+							 : XFS_DIR3_LEAFN_MAGIC;
- 
-+		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
-+			return false;
- 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_uuid))
- 			return false;
- 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
- 			return false;
- 	} else {
--		if (leafhdr.magic != magic)
-+		if (leaf->hdr.info.magic != cpu_to_be16(magic))
- 			return false;
- 	}
+ # prints filtered output on stdout, values (use eval) on stderr
+-# 
++# Non XFS filesystems always return a 4k block size and a 256 byte inode.
+ _filter_mkfs()
+ {
++    case $FSTYP in
++    xfs)
++	;;
++    *)
++	perl -e 'print STDERR "dbsize=4096\nisize=256\n"'
++	return ;;
++    esac
 +
-+	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	return xfs_dir3_leaf_check_int(mp, &leafhdr, leaf);
- }
+     set -
+     perl -ne '
+     if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
+diff --git a/tests/generic/204 b/tests/generic/204
+index a054c8f..598b805 100755
+--- a/tests/generic/204
++++ b/tests/generic/204
+@@ -28,6 +28,12 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	rm -f $tmp.*
++}
  
+ # get standard environment, filters and checks
+ . ./common/rc
+@@ -41,15 +47,35 @@ _require_scratch
+ 
+ rm -f $seqres.full
+ 
++# get the block size first
++_scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
++. $tmp.mkfs
++
+ SIZE=`expr 104 \* 1024 \* 1024`
+-_scratch_mkfs_sized $SIZE  &> /dev/null
++_scratch_mkfs_sized $SIZE $dbsize 2> /dev/null \
++		| _filter_mkfs 2> $tmp.mkfs > /dev/null
+ _scratch_mount
+ 
++. $tmp.mkfs
++
+ # fix the reserve block pool to a known size so that the enospc calculations
+-# work out correctly.
+-_scratch_resvblks 1024 >> $seqres.full 2>&1
++# work out correctly. Space usages is based 22500 files and 1024 reserved blocks
++# on a 4k block size 256 byte inode size filesystem.
++resv_blks=1024
++space=97920000
++
++# decrease files for inode size.
++#	22500 * (256 + 4k) = ~97MB
++#	files * (isize + bsize) = 97MB
++#	files = (97920000 / (isize + bsize))
++
++files=$((space / (isize + dbsize)))
++resv_blks=$((resv_blks * (4096 / dbsize)))
++
++echo files $files, resvblks $resv_blks >> $seqres.full
++_scratch_resvblks $resv_blks >> $seqres.full 2>&1
+ 
+-for i in `seq 1 22500`; do
++for i in `seq 1 $files`; do
+     echo -n > $SCRATCH_MNT/$i
+     echo XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX > $SCRATCH_MNT/$i
+ done
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
