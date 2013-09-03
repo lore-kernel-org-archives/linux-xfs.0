@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C43767F50
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 17:45:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 45BC0AC001
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 15:45:48 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 16E597F50
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 18:50:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 88E14AC002
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 16:50:34 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	MzTt9z7kEGXCrMIH for <xfs@oss.sgi.com>;
-	Tue, 03 Sep 2013 15:45:46 -0700 (PDT)
-Date: Wed, 4 Sep 2013 08:45:42 +1000
+	BACSW6Hr5fgKzM7y for <xfs@oss.sgi.com>;
+	Tue, 03 Sep 2013 16:50:29 -0700 (PDT)
+Date: Wed, 4 Sep 2013 09:50:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: defrag support for v5 filesystems
-Message-ID: <20130903224542.GH23571@dastard>
-References: <1377822225-17621-1-git-send-email-david@fromorbit.com>
-	<20130903191201.GL1935@sgi.com>
+Subject: Re: [PATCH] xfs: inode buffers may not be valid during recovery
+	readahead
+Message-ID: <20130903235023.GI23571@dastard>
+References: <1377567577-24312-1-git-send-email-david@fromorbit.com>
+	<20130830181520.GD1935@sgi.com> <20130831061420.GY12779@dastard>
+	<20130903221712.GN1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130903191201.GL1935@sgi.com>
+In-Reply-To: <20130903221712.GN1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,101 +35,109 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 03, 2013 at 02:12:01PM -0500, Ben Myers wrote:
-> Hey Dave,
+On Tue, Sep 03, 2013 at 05:17:12PM -0500, Ben Myers wrote:
+> Hi Dave,
 > 
-> On Fri, Aug 30, 2013 at 10:23:43AM +1000, Dave Chinner wrote:
-> > Hi folks,
+> On Sat, Aug 31, 2013 at 04:14:20PM +1000, Dave Chinner wrote:
+> > On Fri, Aug 30, 2013 at 01:15:20PM -0500, Ben Myers wrote:
+> > > Dave,
+> > > 
+> > > On Tue, Aug 27, 2013 at 11:39:37AM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > CRC enabled filesystems fail log recovery with 100% reliability on
+> > > > xfstests xfs/085 with the following failure:
+> > > 
+> > > Unfortunately I have not been able to hit this one... not sure why.
+> > > 
+> > > > XFS (vdb): Mounting Filesystem
+> > > > XFS (vdb): Starting recovery (logdev: internal)
+> > > > XFS (vdb): Corruption detected. Unmount and run xfs_repair
+> > > > XFS (vdb): bad inode magic/vsn daddr 144 #0 (magic=0)
+> > > > XFS: Assertion failed: 0, file: fs/xfs/xfs_inode_buf.c, line: 95
+> > > > 
+> > > > The problem is that the inode buffer has not been recovered before
+> > > > the readahead on the inode buffer is issued. The checkpoint being
+> > > > recovered actually allocates the inode chunk we are doing readahead
+> > > > from, so what comes from disk during readahead is essentially
+> > > > random and the verifier barfs on it.
+> > > > 
+> > > > This inode buffer readahead problem affects non-crc filesystems,
+> > > > too, but xfstests does not trigger it at all on such
+> > > > configurations....
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > I've been mulling this one over for a bit, and I'm not quite sure this
+> > > is correct:
+> > > 
+> > > My feeling is that in light of commit 9222a9cf, if we do take part of a
+> > > buffer back in time, the write verifier should fail.
 > > 
-> > The following 2 patches implement the BMBT owner change transaction
-> > that is necessary to enable the XFS_IOC_SWAPEXT ioctl to operate on
-> > v5 filesystems correctly. The first patch implements the
-> > transactional runtime change, and the second patch implements the
-> > recovery of that change.
-> > 
-> > Both the run time and recovery code use the same mechanism for
-> > changing the owner field in all the blocks in the BMBT on an inode,
-> > and even though XFS_IOC_SWAPEXT only swaps the data fork, the code
-> > has been written to be fork neutral so if we even need to swap
-> > attribute forks it should just work for that, too.
-> > 
-> > Further, because the BMBT code uses the generic btree
-> > infrastructure, the btree modification is done as a generic function
-> > as well and so should work for all types of btrees supported by the
-> > generic code. Hence if the need arises we can easily change the
-> > owner of any btree that uses the generic code.
-> > 
-> > The testing carried out is documented in the description of the
-> > second patch.
-> > 
-> > AFAIA, this is the only remaining feature that the kernel v5
-> > filesystem implementation didn't support. Hence, with this patchset,
-> > there are no more feature checkboxes that need to be ticked that
-> > would prevent us from removing the experimental tag from it. Testing
-> > is the only remaining gate to removing the tag from the kernel
-> > code...
+> > I don't see the connection between 9222a9cf ("xfs: don't shutdown
+> > log recovery on validation errors") and this issue. 9222a9cf works
+> > around are a longstanding architectural deficiency of log
+> > recovery, while this is a completely new problem introduced by the
+> > inode buffer readahead in log recovery.
 > 
-> I believe there is still the discussion surrounding being able to use
-> the self describing metadata without enabling crcs that needs to be
-> resolved before removing the experimental tag.
+> Commit 9222a9cf left buffer operations for inodes clear in the v2 inode case:
+....
 
-There is no discussion to be had here - CRCs are not optional on v5
-filesystems, nor is there any reason to make them optional. Please
-stop bring this up over and over again - you're just wasting my time
-by making me have to respond with the same answers over and over
-again.
+Ok, you need to make your review comments about the code directly in
+the context of the code you are commenting on. i.e. something like
+this:
 
-If people don't want CRCs, then we've still got a perfectly good v4
-filesystem format that they can use.
+>  		return;
+>  
+>  	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+> -				ilfp->ilf_len, &xfs_inode_buf_ops);
+> +				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
 
-> Some customers will want
-> to use features such as t10-dif and won't want to calculate two separate
-> crcs. 
+"verifiers shouldn't be set for v4 filesystems, see
+xlog_recover_do_inode_buffer()".
 
-This is a straw man argument.
+That would have made it obvious what you are commenting on. Indeed,
+that's a flaw in the original log readahead patch, and one that I
+didn't pick up when fixing the problem I sawi on v5 filesystems.
 
-T10-dif is a completely different layer of protection that is only
-useful for filesystem metadata if the CRC we calculate for the
-metadata is written into the T10-DIF CRC fields. This is the only
-way for us to get full end-to-end protection for metadata from
-T10-dif. i.e. we have to supply the CRCs ourselves before we issue
-the write IO, and verify it ourselves after a read IO.
+---
 
-Guess what we do right now with CRC support?
+As a process issue, Ben, you shouldn't be committing patches that
+haven't finished the review cycles. Both author and reviewer need to
+be satisfied the patch that is committed is good. This patch has a
+(now) obvious (to me) bug in it, but you committed it even though
+you thought it was wrong and commented as such. If I hadn't of said
+"I don't understand your review" even though you committed the patch
+this probably would have got dropped on the ground.
 
-That's right: the existing CRC infrastructure is ready to support
-integrated, end-to-end T10 CRCs for metadata in the filesystem. All
-that is missing is the block layer interfaces and a few changes to
-the CRC code to do iterative per-sector CRCs rather than
-per-filesystem object CRCs. Surprise you, it may, but I've actually
-considered how to implement T10-dif support as part of the overall
-metadata CRC infrastructure architecture...
+So, please don't commit patches while the review process is still
+running...
 
-Given that with T10-dif we still need calculate and verify the
-CRCs ourselves, why would we not also store it in the filesystem
-metadata at the same time? That would mean that tools like
-xfs_repair and xfs_db can also verify the metadata as being correct
-without needing to explicitly support T10-dif. Of course, if you
-want them to be able to repair or modify a filesystem with t10-dif
-enabled, we need feature bits and explicit userspace support, too.
+> Here's what I suggest:
+> 
+> ---
+>  fs/xfs/xfs_log_recover.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> Index: b/fs/xfs/xfs_log_recover.c
+> ===================================================================
+> --- a/fs/xfs/xfs_log_recover.c	2013-09-03 16:57:51.534388540 -0500
+> +++ b/fs/xfs/xfs_log_recover.c	2013-09-03 16:59:13.784398092 -0500
+> @@ -3309,7 +3309,9 @@ xlog_recover_inode_ra_pass2(
+>  		return;
+>  
+>  	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
+> -				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
+> +				ilfp->ilf_len,
+> +				xfs_sb_version_hascrc(&mp->m_sb) ?
+> +					&xfs_inode_buf_ra_ops : NULL);
 
-Hence, before making strawman arguments about how filesystem
-metadata CRCs will need to be turned off for t10-dif support,
-perhaps it would be better to first consider a design and prototype
-support for end-to-end T10-dif CRCs for filesystem metadata and
-share that with us?
-
-As I've said before, we do not make on disk format changes for
-strawmen or "potential" features that have not had design documents
-or code published - we make the changes when code arrives to
-implement the feature. So, until you have code for a feature that
-*fundamentally requires* CRCs to be disabled to function correctly,
-then the is not point even starting a discussion about making CRCs
-optional on v5 superblocks.
+That's fine. Please post it as a full patch with a commit message
+and a SOB....
 
 Cheers,
 
-Dave.
+Dave
 -- 
 Dave Chinner
 david@fromorbit.com
