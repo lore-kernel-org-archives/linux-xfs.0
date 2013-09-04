@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E94F29E57
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:37 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 17E8829E61
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F32A304039
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9D694AC003
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:37 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	7C5qEp9vc1kD4oF5 for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:35 -0700 (PDT)
+	RrxiAAOLOE52Z2EE for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:36 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dL-Aq
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dG-AN
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003uP-9q
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003uI-8n
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 40/55] xfs: make struct xfs_perag kernel only
-Date: Thu,  5 Sep 2013 08:05:44 +1000
-Message-Id: <1378332359-14737-41-git-send-email-david@fromorbit.com>
+Subject: [PATCH 39/55] xfs: move kernel specific type definitions to xfs.h
+Date: Thu,  5 Sep 2013 08:05:43 +1000
+Message-Id: <1378332359-14737-40-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,124 +39,63 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The struct xfs_perag has many kernel-only definitions in it,
-requiring a __KERNEL__ guard so userspace can use it to. Move it to
-xfs_mount.h so that it it kernel-only, and let userspace redefine
-it's own version of the structure containing only what it needs.
-This gets rid of another __KERNEL__ check in the XFS header files.
+xfs_types.h is shared with userspace, so having kernel specific
+types defined in it is problematic. Move all the kernel specific
+defines to xfs_linux.h so we can remove the __KERNEL__ guards from
+xfs_types.h
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxfs.h | 31 +++++++++++++++++++++++++++++++
- include/xfs_ag.h | 53 -----------------------------------------------------
- 2 files changed, 31 insertions(+), 53 deletions(-)
+ include/xfs_types.h | 36 ------------------------------------
+ 1 file changed, 36 deletions(-)
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 09d9015..086cb39 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -218,6 +218,37 @@ typedef struct xfs_mount {
- 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
- } xfs_mount_t;
+diff --git a/include/xfs_types.h b/include/xfs_types.h
+index 6ed6b26..ce44b18 100644
+--- a/include/xfs_types.h
++++ b/include/xfs_types.h
+@@ -18,42 +18,6 @@
+ #ifndef __XFS_TYPES_H__
+ #define	__XFS_TYPES_H__
  
-+/*
-+ * Per-ag incore structure, copies of information in agf and agi,
-+ * to improve the performance of allocation group selection.
-+ */
-+typedef struct xfs_perag {
-+	struct xfs_mount *pag_mount;	/* owner filesystem */
-+	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
-+	atomic_t	pag_ref;	/* perag reference count */
-+	char		pagf_init;	/* this agf's entry is initialized */
-+	char		pagi_init;	/* this agi's entry is initialized */
-+	char		pagf_metadata;	/* the agf is preferred to be metadata */
-+	char		pagi_inodeok;	/* The agi is ok for inodes */
-+	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
-+					/* # of levels in bno & cnt btree */
-+	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
-+	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
-+	xfs_extlen_t	pagf_longest;	/* longest free space */
-+	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
-+	xfs_agino_t	pagi_freecount;	/* number of free inodes */
-+	xfs_agino_t	pagi_count;	/* number of allocated inodes */
-+
-+	/*
-+	 * Inode allocation search lookup optimisation.
-+	 * If the pagino matches, the search for new inodes
-+	 * doesn't need to search the near ones again straight away
-+	 */
-+	xfs_agino_t	pagl_pagino;
-+	xfs_agino_t	pagl_leftrec;
-+	xfs_agino_t	pagl_rightrec;
-+	int		pagb_count;	/* pagb slots in use */
-+} xfs_perag_t;
- 
- #define LIBXFS_MOUNT_ROOTINOS		0x0001
- #define LIBXFS_MOUNT_DEBUGGER		0x0002
-diff --git a/include/xfs_ag.h b/include/xfs_ag.h
-index 317aa86..1cb740a 100644
---- a/include/xfs_ag.h
-+++ b/include/xfs_ag.h
-@@ -227,59 +227,6 @@ typedef struct xfs_agfl {
- } xfs_agfl_t;
- 
- /*
-- * Per-ag incore structure, copies of information in agf and agi,
-- * to improve the performance of allocation group selection.
-- */
--#define XFS_PAGB_NUM_SLOTS	128
--
--typedef struct xfs_perag {
--	struct xfs_mount *pag_mount;	/* owner filesystem */
--	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
--	atomic_t	pag_ref;	/* perag reference count */
--	char		pagf_init;	/* this agf's entry is initialized */
--	char		pagi_init;	/* this agi's entry is initialized */
--	char		pagf_metadata;	/* the agf is preferred to be metadata */
--	char		pagi_inodeok;	/* The agi is ok for inodes */
--	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
--					/* # of levels in bno & cnt btree */
--	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
--	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
--	xfs_extlen_t	pagf_longest;	/* longest free space */
--	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
--	xfs_agino_t	pagi_freecount;	/* number of free inodes */
--	xfs_agino_t	pagi_count;	/* number of allocated inodes */
--
--	/*
--	 * Inode allocation search lookup optimisation.
--	 * If the pagino matches, the search for new inodes
--	 * doesn't need to search the near ones again straight away
--	 */
--	xfs_agino_t	pagl_pagino;
--	xfs_agino_t	pagl_leftrec;
--	xfs_agino_t	pagl_rightrec;
 -#ifdef __KERNEL__
--	spinlock_t	pagb_lock;	/* lock for pagb_tree */
--	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
--
--	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
--
--	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
--	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
--	int		pag_ici_reclaimable;	/* reclaimable inodes */
--	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
--	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
--
--	/* buffer cache index */
--	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
--	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
--
--	/* for rcu-safe freeing */
--	struct rcu_head	rcu_head;
--#endif
--	int		pagb_count;	/* pagb slots in use */
--} xfs_perag_t;
 -
 -/*
-  * tags for inode radix tree
-  */
- #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
+- * Additional type declarations for XFS
+- */
+-typedef signed char		__int8_t;
+-typedef unsigned char		__uint8_t;
+-typedef signed short int	__int16_t;
+-typedef unsigned short int	__uint16_t;
+-typedef signed int		__int32_t;
+-typedef unsigned int		__uint32_t;
+-typedef signed long long int	__int64_t;
+-typedef unsigned long long int	__uint64_t;
+-
+-typedef __uint32_t		inst_t;		/* an instruction */
+-
+-typedef __s64			xfs_off_t;	/* <file offset> type */
+-typedef unsigned long long	xfs_ino_t;	/* <inode> type */
+-typedef __s64			xfs_daddr_t;	/* <disk address> type */
+-typedef char *			xfs_caddr_t;	/* <core address> type */
+-typedef __u32			xfs_dev_t;
+-typedef __u32			xfs_nlink_t;
+-
+-/* __psint_t is the same size as a pointer */
+-#if (BITS_PER_LONG == 32)
+-typedef __int32_t __psint_t;
+-typedef __uint32_t __psunsigned_t;
+-#elif (BITS_PER_LONG == 64)
+-typedef __int64_t __psint_t;
+-typedef __uint64_t __psunsigned_t;
+-#else
+-#error BITS_PER_LONG must be 32 or 64
+-#endif
+-
+-#endif	/* __KERNEL__ */
+-
+ typedef __uint32_t	prid_t;		/* project ID */
+ 
+ typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
 -- 
 1.8.3.2
 
