@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 000F829E48
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E444E8F8033
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:36 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E94F29E57
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F32A304039
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:37 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	OHb5hel55qPSsrET for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:34 -0700 (PDT)
+	7C5qEp9vc1kD4oF5 for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:35 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007df-H1
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dL-Aq
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003vL-Fp
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003uP-9q
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 48/55] xfs: Add write support for dirent filetype field
-Date: Thu,  5 Sep 2013 08:05:52 +1000
-Message-Id: <1378332359-14737-49-git-send-email-david@fromorbit.com>
+Subject: [PATCH 40/55] xfs: make struct xfs_perag kernel only
+Date: Thu,  5 Sep 2013 08:05:44 +1000
+Message-Id: <1378332359-14737-41-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,288 +39,124 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add support to propagate and add filetype values into the on-disk
-directs. This involves passing the filetype into the xfs_da_args
-structure along with the name and namelength for direct operations,
-and encoding it into the dirent at the same time we write the inode
-number into the dirent.
+The struct xfs_perag has many kernel-only definitions in it,
+requiring a __KERNEL__ guard so userspace can use it to. Move it to
+xfs_mount.h so that it it kernel-only, and let userspace redefine
+it's own version of the structure containing only what it needs.
+This gets rid of another __KERNEL__ check in the XFS header files.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_sb.h        |  3 ++-
- libxfs/xfs_dir2_block.c |  7 +++++++
- libxfs/xfs_dir2_data.c  |  2 ++
- libxfs/xfs_dir2_leaf.c  |  3 +++
- libxfs/xfs_dir2_node.c  |  3 +++
- libxfs/xfs_dir2_sf.c    | 35 +++++++++++++++++++++++++++--------
- 6 files changed, 44 insertions(+), 9 deletions(-)
+ include/libxfs.h | 31 +++++++++++++++++++++++++++++++
+ include/xfs_ag.h | 53 -----------------------------------------------------
+ 2 files changed, 31 insertions(+), 53 deletions(-)
 
-diff --git a/include/xfs_sb.h b/include/xfs_sb.h
-index 8721904..1d0839a 100644
---- a/include/xfs_sb.h
-+++ b/include/xfs_sb.h
-@@ -594,7 +594,8 @@ xfs_sb_has_ro_compat_feature(
- }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 09d9015..086cb39 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -218,6 +218,37 @@ typedef struct xfs_mount {
+ 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
+ } xfs_mount_t;
  
- #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
--#define XFS_SB_FEAT_INCOMPAT_ALL 0
-+#define XFS_SB_FEAT_INCOMPAT_ALL \
-+		(XFS_SB_FEAT_INCOMPAT_FTYPE)
- 
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
-diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
-index 615eea9..3e4bc53 100644
---- a/libxfs/xfs_dir2_block.c
-+++ b/libxfs/xfs_dir2_block.c
-@@ -530,6 +530,7 @@ xfs_dir2_block_addname(
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
- 	memcpy(dep->name, args->name, args->namelen);
-+	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
- 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	/*
-@@ -622,6 +623,7 @@ xfs_dir2_block_lookup(
- 	 * Fill in inode number, CI name if appropriate, release the block.
- 	 */
- 	args->inumber = be64_to_cpu(dep->inumber);
-+	args->filetype = xfs_dir3_dirent_get_ftype(mp, dep);
- 	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
- 	xfs_trans_brelse(args->trans, bp);
- 	return XFS_ERROR(error);
-@@ -854,6 +856,7 @@ xfs_dir2_block_replace(
- 	 * Change the inode number to the new value.
- 	 */
- 	dep->inumber = cpu_to_be64(args->inumber);
-+	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
- 	xfs_dir2_data_log_entry(args->trans, bp, dep);
- 	xfs_dir3_data_check(dp, bp);
- 	return 0;
-@@ -1140,6 +1143,7 @@ xfs_dir2_sf_to_block(
- 	dep->inumber = cpu_to_be64(dp->i_ino);
- 	dep->namelen = 1;
- 	dep->name[0] = '.';
-+	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
- 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(tp, bp, dep);
-@@ -1153,6 +1157,7 @@ xfs_dir2_sf_to_block(
- 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
- 	dep->namelen = 2;
- 	dep->name[0] = dep->name[1] = '.';
-+	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
- 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(tp, bp, dep);
-@@ -1200,6 +1205,8 @@ xfs_dir2_sf_to_block(
- 		dep = (xfs_dir2_data_entry_t *)((char *)hdr + newoffset);
- 		dep->inumber = cpu_to_be64(xfs_dir3_sfe_get_ino(mp, sfp, sfep));
- 		dep->namelen = sfep->namelen;
-+		xfs_dir3_dirent_put_ftype(mp, dep,
-+					xfs_dir3_sfe_get_ftype(mp, sfp, sfep));
- 		memcpy(dep->name, sfep->name, dep->namelen);
- 		tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 		*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index ea9ba91..189699f 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -133,6 +133,8 @@ __xfs_dir3_data_check(
- 		XFS_WANT_CORRUPTED_RETURN(
- 			be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) ==
- 					       (char *)dep - (char *)hdr);
-+		XFS_WANT_CORRUPTED_RETURN(
-+			xfs_dir3_dirent_get_ftype(mp, dep) < XFS_DIR3_FT_MAX);
- 		count++;
- 		lastfree = 0;
- 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 04ad083..7ec2f19 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -878,6 +878,7 @@ xfs_dir2_leaf_addname(
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
- 	memcpy(dep->name, args->name, dep->namelen);
-+	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
- 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	/*
-@@ -1207,6 +1208,7 @@ xfs_dir2_leaf_lookup(
- 	 * Return the found inode number & CI name if appropriate
- 	 */
- 	args->inumber = be64_to_cpu(dep->inumber);
-+	args->filetype = xfs_dir3_dirent_get_ftype(dp->i_mount, dep);
- 	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
- 	xfs_trans_brelse(tp, dbp);
- 	xfs_trans_brelse(tp, lbp);
-@@ -1537,6 +1539,7 @@ xfs_dir2_leaf_replace(
- 	 * Put the new inode number in, log it.
- 	 */
- 	dep->inumber = cpu_to_be64(args->inumber);
-+	xfs_dir3_dirent_put_ftype(dp->i_mount, dep, args->filetype);
- 	tp = args->trans;
- 	xfs_dir2_data_log_entry(tp, dbp, dep);
- 	xfs_dir3_leaf_check(dp->i_mount, lbp);
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 15b1eb6..6a245e5 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -798,6 +798,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 				xfs_trans_brelse(tp, state->extrablk.bp);
- 			args->cmpresult = cmp;
- 			args->inumber = be64_to_cpu(dep->inumber);
-+			args->filetype = xfs_dir3_dirent_get_ftype(mp, dep);
- 			*indexp = index;
- 			state->extravalid = 1;
- 			state->extrablk.bp = curbp;
-@@ -1989,6 +1990,7 @@ xfs_dir2_node_addname_int(
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
- 	memcpy(dep->name, args->name, dep->namelen);
-+	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
- 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(tp, dbp, dep);
-@@ -2209,6 +2211,7 @@ xfs_dir2_node_replace(
- 		 * Fill in the new inode number and log the entry.
- 		 */
- 		dep->inumber = cpu_to_be64(inum);
-+		xfs_dir3_dirent_put_ftype(state->mp, dep, args->filetype);
- 		xfs_dir2_data_log_entry(args->trans, state->extrablk.bp, dep);
- 		rval = 0;
- 	}
-diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
-index 2791d99..740cab0 100644
---- a/libxfs/xfs_dir2_sf.c
-+++ b/libxfs/xfs_dir2_sf.c
-@@ -316,6 +316,8 @@ xfs_dir2_block_to_sf(
- 			memcpy(sfep->name, dep->name, dep->namelen);
- 			xfs_dir3_sfe_put_ino(mp, sfp, sfep,
- 					     be64_to_cpu(dep->inumber));
-+			xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
-+					xfs_dir3_dirent_get_ftype(mp, dep));
- 
- 			sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
- 		}
-@@ -479,6 +481,8 @@ xfs_dir2_sf_addname_easy(
- 	xfs_dir2_sf_put_offset(sfep, offset);
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep, args->inumber);
-+	xfs_dir3_sfe_put_ftype(dp->i_mount, sfp, sfep, args->filetype);
++/*
++ * Per-ag incore structure, copies of information in agf and agi,
++ * to improve the performance of allocation group selection.
++ */
++typedef struct xfs_perag {
++	struct xfs_mount *pag_mount;	/* owner filesystem */
++	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
++	atomic_t	pag_ref;	/* perag reference count */
++	char		pagf_init;	/* this agf's entry is initialized */
++	char		pagi_init;	/* this agi's entry is initialized */
++	char		pagf_metadata;	/* the agf is preferred to be metadata */
++	char		pagi_inodeok;	/* The agi is ok for inodes */
++	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
++					/* # of levels in bno & cnt btree */
++	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
++	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
++	xfs_extlen_t	pagf_longest;	/* longest free space */
++	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
++	xfs_agino_t	pagi_freecount;	/* number of free inodes */
++	xfs_agino_t	pagi_count;	/* number of allocated inodes */
 +
- 	/*
- 	 * Update the header and inode.
- 	 */
-@@ -572,6 +576,7 @@ xfs_dir2_sf_addname_hard(
- 	xfs_dir2_sf_put_offset(sfep, offset);
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	xfs_dir3_sfe_put_ino(mp, sfp, sfep, args->inumber);
-+	xfs_dir3_sfe_put_ftype(mp, sfp, sfep, args->filetype);
- 	sfp->count++;
- #if XFS_BIG_INUMS
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
-@@ -808,6 +813,7 @@ xfs_dir2_sf_lookup(
- 	if (args->namelen == 1 && args->name[0] == '.') {
- 		args->inumber = dp->i_ino;
- 		args->cmpresult = XFS_CMP_EXACT;
-+		args->filetype = XFS_DIR3_FT_DIR;
- 		return XFS_ERROR(EEXIST);
- 	}
- 	/*
-@@ -817,6 +823,7 @@ xfs_dir2_sf_lookup(
- 	    args->name[0] == '.' && args->name[1] == '.') {
- 		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
- 		args->cmpresult = XFS_CMP_EXACT;
-+		args->filetype = XFS_DIR3_FT_DIR;
- 		return XFS_ERROR(EEXIST);
- 	}
- 	/*
-@@ -836,6 +843,8 @@ xfs_dir2_sf_lookup(
- 			args->cmpresult = cmp;
- 			args->inumber = xfs_dir3_sfe_get_ino(dp->i_mount,
- 							     sfp, sfep);
-+			args->filetype = xfs_dir3_sfe_get_ftype(dp->i_mount,
-+								sfp, sfep);
- 			if (cmp == XFS_CMP_EXACT)
- 				return XFS_ERROR(EEXIST);
- 			ci_sfep = sfep;
-@@ -1035,6 +1044,8 @@ xfs_dir2_sf_replace(
- #endif
- 				xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
- 						     args->inumber);
-+				xfs_dir3_sfe_put_ftype(dp->i_mount, sfp, sfep,
-+						       args->filetype);
- 				break;
- 			}
- 		}
-@@ -1101,10 +1112,12 @@ xfs_dir2_sf_toino4(
- 	int			oldsize;	/* old inode size */
- 	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
- 	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
-+	struct xfs_mount	*mp;
++	/*
++	 * Inode allocation search lookup optimisation.
++	 * If the pagino matches, the search for new inodes
++	 * doesn't need to search the near ones again straight away
++	 */
++	xfs_agino_t	pagl_pagino;
++	xfs_agino_t	pagl_leftrec;
++	xfs_agino_t	pagl_rightrec;
++	int		pagb_count;	/* pagb slots in use */
++} xfs_perag_t;
  
- 	trace_xfs_dir2_sf_toino4(args);
+ #define LIBXFS_MOUNT_ROOTINOS		0x0001
+ #define LIBXFS_MOUNT_DEBUGGER		0x0002
+diff --git a/include/xfs_ag.h b/include/xfs_ag.h
+index 317aa86..1cb740a 100644
+--- a/include/xfs_ag.h
++++ b/include/xfs_ag.h
+@@ -227,59 +227,6 @@ typedef struct xfs_agfl {
+ } xfs_agfl_t;
  
- 	dp = args->dp;
-+	mp = dp->i_mount;
- 
- 	/*
- 	 * Copy the old directory to the buffer.
-@@ -1142,13 +1155,15 @@ xfs_dir2_sf_toino4(
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
- 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
- 	     i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep),
--		  oldsfep = xfs_dir3_sf_nextentry(dp->i_mount, oldsfp, oldsfep)) {
-+	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep),
-+		  oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep)) {
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
--		xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
--			xfs_dir3_sfe_get_ino(dp->i_mount, oldsfp, oldsfep));
-+		xfs_dir3_sfe_put_ino(mp, sfp, sfep,
-+			xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep));
-+		xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
-+			xfs_dir3_sfe_get_ftype(mp, oldsfp, oldsfep));
- 	}
- 	/*
- 	 * Clean up the inode.
-@@ -1176,10 +1191,12 @@ xfs_dir2_sf_toino8(
- 	int			oldsize;	/* old inode size */
- 	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
- 	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
-+	struct xfs_mount	*mp;
- 
- 	trace_xfs_dir2_sf_toino8(args);
- 
- 	dp = args->dp;
-+	mp = dp->i_mount;
- 
- 	/*
- 	 * Copy the old directory to the buffer.
-@@ -1217,13 +1234,15 @@ xfs_dir2_sf_toino8(
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
- 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
- 	     i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep),
--		  oldsfep = xfs_dir3_sf_nextentry(dp->i_mount, oldsfp, oldsfep)) {
-+	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep),
-+		  oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep)) {
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
--		xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
--			xfs_dir3_sfe_get_ino(dp->i_mount, oldsfp, oldsfep));
-+		xfs_dir3_sfe_put_ino(mp, sfp, sfep,
-+			xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep));
-+		xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
-+			xfs_dir3_sfe_get_ftype(mp, oldsfp, oldsfep));
- 	}
- 	/*
- 	 * Clean up the inode.
+ /*
+- * Per-ag incore structure, copies of information in agf and agi,
+- * to improve the performance of allocation group selection.
+- */
+-#define XFS_PAGB_NUM_SLOTS	128
+-
+-typedef struct xfs_perag {
+-	struct xfs_mount *pag_mount;	/* owner filesystem */
+-	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
+-	atomic_t	pag_ref;	/* perag reference count */
+-	char		pagf_init;	/* this agf's entry is initialized */
+-	char		pagi_init;	/* this agi's entry is initialized */
+-	char		pagf_metadata;	/* the agf is preferred to be metadata */
+-	char		pagi_inodeok;	/* The agi is ok for inodes */
+-	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
+-					/* # of levels in bno & cnt btree */
+-	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
+-	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
+-	xfs_extlen_t	pagf_longest;	/* longest free space */
+-	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
+-	xfs_agino_t	pagi_freecount;	/* number of free inodes */
+-	xfs_agino_t	pagi_count;	/* number of allocated inodes */
+-
+-	/*
+-	 * Inode allocation search lookup optimisation.
+-	 * If the pagino matches, the search for new inodes
+-	 * doesn't need to search the near ones again straight away
+-	 */
+-	xfs_agino_t	pagl_pagino;
+-	xfs_agino_t	pagl_leftrec;
+-	xfs_agino_t	pagl_rightrec;
+-#ifdef __KERNEL__
+-	spinlock_t	pagb_lock;	/* lock for pagb_tree */
+-	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
+-
+-	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+-
+-	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
+-	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
+-	int		pag_ici_reclaimable;	/* reclaimable inodes */
+-	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
+-	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
+-
+-	/* buffer cache index */
+-	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
+-	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
+-
+-	/* for rcu-safe freeing */
+-	struct rcu_head	rcu_head;
+-#endif
+-	int		pagb_count;	/* pagb slots in use */
+-} xfs_perag_t;
+-
+-/*
+  * tags for inode radix tree
+  */
+ #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
 -- 
 1.8.3.2
 
