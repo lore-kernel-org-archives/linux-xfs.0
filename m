@@ -1,25 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 16E597F50
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 18:50:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 88E14AC002
-	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 16:50:34 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	BACSW6Hr5fgKzM7y for <xfs@oss.sgi.com>;
-	Tue, 03 Sep 2013 16:50:29 -0700 (PDT)
-Date: Wed, 4 Sep 2013 09:50:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: inode buffers may not be valid during recovery
-	readahead
-Message-ID: <20130903235023.GI23571@dastard>
-References: <1377567577-24312-1-git-send-email-david@fromorbit.com>
-	<20130830181520.GD1935@sgi.com> <20130831061420.GY12779@dastard>
-	<20130903221712.GN1935@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 13D417F52
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 21:41:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EFA34304082
+	for <xfs@oss.sgi.com>; Tue,  3 Sep 2013 19:41:21 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id CCywpB6ASRoDzc8O (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 03 Sep 2013 19:41:21 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r842fHEJ020398
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 4 Sep 2013 02:41:20 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r842fGcW011794
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 4 Sep 2013 02:41:17 GMT
+Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
+	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r842fG1C011789 for <xfs@oss.sgi.com>; Wed, 4 Sep 2013 02:41:16 GMT
+Message-ID: <52269DF4.5040305@oracle.com>
+Date: Wed, 04 Sep 2013 10:41:56 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130903221712.GN1935@sgi.com>
+Subject: [PATCH] xfs: Make the incore inode di_size to xfs_ufsize_t
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,115 +39,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Sep 03, 2013 at 05:17:12PM -0500, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Sat, Aug 31, 2013 at 04:14:20PM +1000, Dave Chinner wrote:
-> > On Fri, Aug 30, 2013 at 01:15:20PM -0500, Ben Myers wrote:
-> > > Dave,
-> > > 
-> > > On Tue, Aug 27, 2013 at 11:39:37AM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > CRC enabled filesystems fail log recovery with 100% reliability on
-> > > > xfstests xfs/085 with the following failure:
-> > > 
-> > > Unfortunately I have not been able to hit this one... not sure why.
-> > > 
-> > > > XFS (vdb): Mounting Filesystem
-> > > > XFS (vdb): Starting recovery (logdev: internal)
-> > > > XFS (vdb): Corruption detected. Unmount and run xfs_repair
-> > > > XFS (vdb): bad inode magic/vsn daddr 144 #0 (magic=0)
-> > > > XFS: Assertion failed: 0, file: fs/xfs/xfs_inode_buf.c, line: 95
-> > > > 
-> > > > The problem is that the inode buffer has not been recovered before
-> > > > the readahead on the inode buffer is issued. The checkpoint being
-> > > > recovered actually allocates the inode chunk we are doing readahead
-> > > > from, so what comes from disk during readahead is essentially
-> > > > random and the verifier barfs on it.
-> > > > 
-> > > > This inode buffer readahead problem affects non-crc filesystems,
-> > > > too, but xfstests does not trigger it at all on such
-> > > > configurations....
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > I've been mulling this one over for a bit, and I'm not quite sure this
-> > > is correct:
-> > > 
-> > > My feeling is that in light of commit 9222a9cf, if we do take part of a
-> > > buffer back in time, the write verifier should fail.
-> > 
-> > I don't see the connection between 9222a9cf ("xfs: don't shutdown
-> > log recovery on validation errors") and this issue. 9222a9cf works
-> > around are a longstanding architectural deficiency of log
-> > recovery, while this is a completely new problem introduced by the
-> > inode buffer readahead in log recovery.
-> 
-> Commit 9222a9cf left buffer operations for inodes clear in the v2 inode case:
-....
+From: Jie Liu <jeff.liu@oracle.com>
 
-Ok, you need to make your review comments about the code directly in
-the context of the code you are commenting on. i.e. something like
-this:
+Make the incore inode di_size to unsigned, this would be helpful
+to catch the negative sizes of it in many cases, so that we don't
+need to perform additional check for it being less than ZERO or not.
 
->  		return;
->  
->  	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
-> -				ilfp->ilf_len, &xfs_inode_buf_ops);
-> +				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
-
-"verifiers shouldn't be set for v4 filesystems, see
-xlog_recover_do_inode_buffer()".
-
-That would have made it obvious what you are commenting on. Indeed,
-that's a flaw in the original log readahead patch, and one that I
-didn't pick up when fixing the problem I sawi on v5 filesystems.
-
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
+ fs/xfs/xfs_inode_fork.c |    3 +--
+ fs/xfs/xfs_log_format.h |    2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-As a process issue, Ben, you shouldn't be committing patches that
-haven't finished the review cycles. Both author and reviewer need to
-be satisfied the patch that is committed is good. This patch has a
-(now) obvious (to me) bug in it, but you committed it even though
-you thought it was wrong and commented as such. If I hadn't of said
-"I don't understand your review" even though you committed the patch
-this probably would have got dropped on the ground.
-
-So, please don't commit patches while the review process is still
-running...
-
-> Here's what I suggest:
-> 
-> ---
->  fs/xfs/xfs_log_recover.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> Index: b/fs/xfs/xfs_log_recover.c
-> ===================================================================
-> --- a/fs/xfs/xfs_log_recover.c	2013-09-03 16:57:51.534388540 -0500
-> +++ b/fs/xfs/xfs_log_recover.c	2013-09-03 16:59:13.784398092 -0500
-> @@ -3309,7 +3309,9 @@ xlog_recover_inode_ra_pass2(
->  		return;
->  
->  	xfs_buf_readahead(mp->m_ddev_targp, ilfp->ilf_blkno,
-> -				ilfp->ilf_len, &xfs_inode_buf_ra_ops);
-> +				ilfp->ilf_len,
-> +				xfs_sb_version_hascrc(&mp->m_sb) ?
-> +					&xfs_inode_buf_ra_ops : NULL);
-
-That's fine. Please post it as a full patch with a commit message
-and a SOB....
-
-Cheers,
-
-Dave
+diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+index 02f1083..2b60a5a 100644
+--- a/fs/xfs/xfs_inode_fork.c
++++ b/fs/xfs/xfs_inode_fork.c
+@@ -167,8 +167,7 @@ xfs_iformat_fork(
+ 			}
+ 
+ 			di_size = be64_to_cpu(dip->di_size);
+-			if (unlikely(di_size < 0 ||
+-				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
++			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+ 				xfs_warn(ip->i_mount,
+ 			"corrupt inode %Lu (bad size %Ld for local inode).",
+ 					(unsigned long long) ip->i_ino,
+diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+index a49ab2c..2795fc5 100644
+--- a/fs/xfs/xfs_log_format.h
++++ b/fs/xfs/xfs_log_format.h
+@@ -547,7 +547,7 @@ typedef struct xfs_icdinode {
+ 	xfs_ictimestamp_t di_atime;	/* time last accessed */
+ 	xfs_ictimestamp_t di_mtime;	/* time last modified */
+ 	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+-	xfs_fsize_t	di_size;	/* number of bytes in file */
++	xfs_ufsize_t	di_size;	/* number of bytes in file */
+ 	xfs_drfsbno_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+ 	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
