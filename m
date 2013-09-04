@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A9DC429E85
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E32FAC005
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:52 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2F91829E02
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C3410AC005
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:58 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3Gf92S1UFSMHLnZW for <xfs@oss.sgi.com>;
+	DfdIX4gAnsCmjfwV for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:49 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007dG-Q6
-	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dl-1h
+	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003sP-PJ
-	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003tJ-11
+	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/55] xfs: separate out log format definitions
-Date: Thu,  5 Sep 2013 08:05:20 +1000
-Message-Id: <1378332359-14737-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 27/55] xfs: move inode fork definitions to a new header file
+Date: Thu,  5 Sep 2013 08:05:31 +1000
+Message-Id: <1378332359-14737-28-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,283 +39,212 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The on-disk format definitions for the log are spread randoms
-through a couple of header files. Consolidate it all in a single
-file that can be shared easily with userspace. This means that
-xfs_log.h and xfs_log_priv.h no longer need to be shared with
-userspace.
+The inode fork definitions are a combination of on-disk format
+definition and in-memory tracking and manipulation. They are both
+shared with userspace, so move them all into their own file so
+sharing is easy to do and track.  This removes all inode fork
+related information from xfs_inode.h.
+
+Do the same for the all the C code that currently resides in
+xfs_inode.c for the same reason.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile          |   4 +-
- include/libxfs.h          |   4 +-
- include/libxlog.h         |   6 -
- include/xfs_log.h         | 190 -------------
- include/xfs_log_format.h  | 178 ++++++++++++
- include/xfs_log_priv.h    | 692 ----------------------------------------------
- libxfs/rdwr.c             |   2 -
- libxlog/xfs_log_recover.c |   3 +
- 8 files changed, 186 insertions(+), 893 deletions(-)
- delete mode 100644 include/xfs_log.h
- create mode 100644 include/xfs_log_format.h
- delete mode 100644 include/xfs_log_priv.h
+ include/xfs_bmap_btree.h |    2 +
+ include/xfs_inode.h      |  134 +---
+ include/xfs_inode_fork.h |  171 +++++
+ libxfs/Makefile          |    7 +-
+ libxfs/xfs_inode.c       | 1878 +--------------------------------------------
+ libxfs/xfs_inode_fork.c  | 1890 ++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 2072 insertions(+), 2010 deletions(-)
+ create mode 100644 include/xfs_inode_fork.h
+ create mode 100644 libxfs/xfs_inode_fork.c
 
-diff --git a/include/Makefile b/include/Makefile
-index ba2c80d..efa3275 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -27,7 +27,9 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
- 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
- 	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
--	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
-+	xfs_log_format.h \
-+	xfs_log_recover.h \
-+	xfs_metadump.h \
- 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
- 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
+diff --git a/include/xfs_bmap_btree.h b/include/xfs_bmap_btree.h
+index 20d66b0..f1069bb 100644
+--- a/include/xfs_bmap_btree.h
++++ b/include/xfs_bmap_btree.h
+@@ -197,6 +197,8 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
+ #define XFS_BMDR_SPACE_CALC(nrecs) \
+ 	(int)(sizeof(xfs_bmdr_block_t) + \
+ 	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
++#define XFS_BMAP_BMDR_SPACE(bb) \
++	(XFS_BMDR_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
  
-diff --git a/include/libxfs.h b/include/libxfs.h
-index e776211..c9918cd 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -59,6 +59,8 @@
- #include <xfs/xfs_symlink.h>
- #include <xfs/xfs_icreate_item.h>
- 
-+#include <xfs/xfs_log_format.h>
-+
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
- #endif
-@@ -613,8 +615,6 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
- #include <xfs/xfs_attr_remote.h>
- #include <xfs/xfs_quota.h>
- #include <xfs/xfs_trans_space.h>
--#include <xfs/xfs_log.h>
--#include <xfs/xfs_log_priv.h>
- 
- #define XFS_INOBT_IS_FREE_DISK(rp,i)		\
- 			((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
-diff --git a/include/libxlog.h b/include/libxlog.h
-index ff711e9..961c4b5 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -53,12 +53,6 @@ struct xlog {
- #include <xfs/xfs_extfree_item.h>
- #include <xfs/xfs_icreate_item.h>
- 
--typedef union {
--	xlog_rec_header_t       hic_header;
--	xlog_rec_ext_header_t   hic_xheader;
--	char                    hic_sector[XLOG_HEADER_SIZE];
--} xlog_in_core_2_t;
--
  /*
-  * macros mapping kernel code to user code
-  */
-diff --git a/include/xfs_log.h b/include/xfs_log.h
-deleted file mode 100644
-index 70cc014..0000000
---- a/include/xfs_log.h
-+++ /dev/null
-@@ -1,190 +0,0 @@
+  * Maximum number of bmap btree levels.
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 1e92338..6ee8bb7 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -22,58 +22,7 @@ struct posix_acl;
+ struct xfs_dinode;
+ struct xfs_inode;
+ 
 -/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
+- * The following xfs_ext_irec_t struct introduces a second (top) level
+- * to the in-core extent allocation scheme. These structs are allocated
+- * in a contiguous block, creating an indirection array where each entry
+- * (irec) contains a pointer to a buffer of in-core extent records which
+- * it manages. Each extent buffer is 4k in size, since 4k is the system
+- * page size on Linux i386 and systems with larger page sizes don't seem
+- * to gain much, if anything, by using their native page size as the
+- * extent buffer size. Also, using 4k extent buffers everywhere provides
+- * a consistent interface for CXFS across different platforms.
 - *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- * There is currently no limit on the number of irec's (extent lists)
+- * allowed, so heavily fragmented files may require an indirection array
+- * which spans multiple system pages of memory. The number of extents
+- * which would require this amount of contiguous memory is very large
+- * and should not cause problems in the foreseeable future. However,
+- * if the memory needed for the contiguous array ever becomes a problem,
+- * it is possible that a third level of indirection may be required.
 - */
--#ifndef	__XFS_LOG_H__
--#define __XFS_LOG_H__
--
--/* get lsn fields */
--#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
--#define BLOCK_LSN(lsn) ((uint)(lsn))
--
--/* this is used in a spot where we might otherwise double-endian-flip */
--#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
--
--#ifdef __KERNEL__
--/*
-- * By comparing each component, we don't have to worry about extra
-- * endian issues in treating two 32 bit numbers as one 64 bit number
-- */
--static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
--{
--	if (CYCLE_LSN(lsn1) != CYCLE_LSN(lsn2))
--		return (CYCLE_LSN(lsn1)<CYCLE_LSN(lsn2))? -999 : 999;
--
--	if (BLOCK_LSN(lsn1) != BLOCK_LSN(lsn2))
--		return (BLOCK_LSN(lsn1)<BLOCK_LSN(lsn2))? -999 : 999;
--
--	return 0;
--}
--
--#define	XFS_LSN_CMP(x,y) _lsn_cmp(x,y)
+-typedef struct xfs_ext_irec {
+-	xfs_bmbt_rec_host_t *er_extbuf;	/* block of extent records */
+-	xfs_extnum_t	er_extoff;	/* extent offset in file */
+-	xfs_extnum_t	er_extcount;	/* number of extents in page/block */
+-} xfs_ext_irec_t;
 -
 -/*
-- * Macros, structures, prototypes for interface to the log manager.
+- * File incore extent information, present for each of data & attr forks.
 - */
+-#define	XFS_IEXT_BUFSZ		4096
+-#define	XFS_LINEAR_EXTS		(XFS_IEXT_BUFSZ / (uint)sizeof(xfs_bmbt_rec_t))
+-#define	XFS_INLINE_EXTS		2
+-#define	XFS_INLINE_DATA		32
+-typedef struct xfs_ifork {
+-	int			if_bytes;	/* bytes in if_u1 */
+-	int			if_real_bytes;	/* bytes allocated in if_u1 */
+-	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+-	short			if_broot_bytes;	/* bytes allocated for root */
+-	unsigned char		if_flags;	/* per-fork flags */
+-	union {
+-		xfs_bmbt_rec_host_t *if_extents;/* linear map file exts */
+-		xfs_ext_irec_t	*if_ext_irec;	/* irec map file exts */
+-		char		*if_data;	/* inline file data */
+-	} if_u1;
+-	union {
+-		xfs_bmbt_rec_host_t if_inline_ext[XFS_INLINE_EXTS];
+-						/* very small file extents */
+-		char		if_inline_data[XFS_INLINE_DATA];
+-						/* very small file data */
+-		xfs_dev_t	if_rdev;	/* dev number if special */
+-		uuid_t		if_uuid;	/* mount point value */
+-	} if_u2;
+-} xfs_ifork_t;
++#include "xfs_inode_fork.h"
+ 
+ /*
+  * Inode location information.  Stored in the inode and passed to
+@@ -114,57 +63,6 @@ struct xfs_imap {
+ #define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
+ #define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
+ 
+-/*
+- * Per-fork incore inode flags.
+- */
+-#define	XFS_IFINLINE	0x01	/* Inline data is read in */
+-#define	XFS_IFEXTENTS	0x02	/* All extent pointers are read in */
+-#define	XFS_IFBROOT	0x04	/* i_broot points to the bmap b-tree root */
+-#define	XFS_IFEXTIREC	0x08	/* Indirection array of extent blocks */
 -
 -/*
-- * Flags to xfs_log_done()
+- * Fork handling.
 - */
--#define XFS_LOG_REL_PERM_RESERV	0x1
 -
--/*
-- * Flags to xfs_log_force()
-- *
-- *	XFS_LOG_SYNC:	Synchronous force in-core log to disk
-- */
--#define XFS_LOG_SYNC		0x1
+-#define XFS_IFORK_Q(ip)			((ip)->i_d.di_forkoff != 0)
+-#define XFS_IFORK_BOFF(ip)		((int)((ip)->i_d.di_forkoff << 3))
 -
--#endif	/* __KERNEL__ */
+-#define XFS_IFORK_PTR(ip,w)		\
+-	((w) == XFS_DATA_FORK ? \
+-		&(ip)->i_df : \
+-		(ip)->i_afp)
+-#define XFS_IFORK_DSIZE(ip) \
+-	(XFS_IFORK_Q(ip) ? \
+-		XFS_IFORK_BOFF(ip) : \
+-		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version))
+-#define XFS_IFORK_ASIZE(ip) \
+-	(XFS_IFORK_Q(ip) ? \
+-		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version) - \
+-			XFS_IFORK_BOFF(ip) : \
+-		0)
+-#define XFS_IFORK_SIZE(ip,w) \
+-	((w) == XFS_DATA_FORK ? \
+-		XFS_IFORK_DSIZE(ip) : \
+-		XFS_IFORK_ASIZE(ip))
+-#define XFS_IFORK_FORMAT(ip,w) \
+-	((w) == XFS_DATA_FORK ? \
+-		(ip)->i_d.di_format : \
+-		(ip)->i_d.di_aformat)
+-#define XFS_IFORK_FMT_SET(ip,w,n) \
+-	((w) == XFS_DATA_FORK ? \
+-		((ip)->i_d.di_format = (n)) : \
+-		((ip)->i_d.di_aformat = (n)))
+-#define XFS_IFORK_NEXTENTS(ip,w) \
+-	((w) == XFS_DATA_FORK ? \
+-		(ip)->i_d.di_nextents : \
+-		(ip)->i_d.di_anextents)
+-#define XFS_IFORK_NEXT_SET(ip,w,n) \
+-	((w) == XFS_DATA_FORK ? \
+-		((ip)->i_d.di_nextents = (n)) : \
+-		((ip)->i_d.di_anextents = (n)))
+-#define XFS_IFORK_MAXEXT(ip, w) \
+-	(XFS_IFORK_SIZE(ip, w) / sizeof(xfs_bmbt_rec_t))
 -
+ 
+ #ifdef __KERNEL__
+ 
+@@ -515,35 +413,6 @@ int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ void		xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+ void		xfs_dinode_to_disk(struct xfs_dinode *,
+ 				   struct xfs_icdinode *);
+-void		xfs_idestroy_fork(struct xfs_inode *, int);
+-void		xfs_idata_realloc(struct xfs_inode *, int, int);
+-void		xfs_iroot_realloc(struct xfs_inode *, int, int);
+-int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
+-int		xfs_iextents_copy(struct xfs_inode *, xfs_bmbt_rec_t *, int);
 -
--/* Log Clients */
--#define XFS_TRANSACTION		0x69
--#define XFS_VOLUME		0x2
--#define XFS_LOG			0xaa
--
--
--/* Region types for iovec's i_type */
--#define XLOG_REG_TYPE_BFORMAT		1
--#define XLOG_REG_TYPE_BCHUNK		2
--#define XLOG_REG_TYPE_EFI_FORMAT	3
--#define XLOG_REG_TYPE_EFD_FORMAT	4
--#define XLOG_REG_TYPE_IFORMAT		5
--#define XLOG_REG_TYPE_ICORE		6
--#define XLOG_REG_TYPE_IEXT		7
--#define XLOG_REG_TYPE_IBROOT		8
--#define XLOG_REG_TYPE_ILOCAL		9
--#define XLOG_REG_TYPE_IATTR_EXT		10
--#define XLOG_REG_TYPE_IATTR_BROOT	11
--#define XLOG_REG_TYPE_IATTR_LOCAL	12
--#define XLOG_REG_TYPE_QFORMAT		13
--#define XLOG_REG_TYPE_DQUOT		14
--#define XLOG_REG_TYPE_QUOTAOFF		15
--#define XLOG_REG_TYPE_LRHEADER		16
--#define XLOG_REG_TYPE_UNMOUNT		17
--#define XLOG_REG_TYPE_COMMIT		18
--#define XLOG_REG_TYPE_TRANSHDR		19
--#define XLOG_REG_TYPE_ICREATE		20
--#define XLOG_REG_TYPE_MAX		20
--
--typedef struct xfs_log_iovec {
--	void		*i_addr;	/* beginning address of region */
--	int		i_len;		/* length in bytes of region */
--	uint		i_type;		/* type of region */
--} xfs_log_iovec_t;
--
--struct xfs_log_vec {
--	struct xfs_log_vec	*lv_next;	/* next lv in build list */
--	int			lv_niovecs;	/* number of iovecs in lv */
--	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
--	struct xfs_log_item	*lv_item;	/* owner */
--	char			*lv_buf;	/* formatted buffer */
--	int			lv_buf_len;	/* size of formatted buffer */
--};
--
--/*
-- * Structure used to pass callback function and the function's argument
-- * to the log manager.
-- */
--typedef struct xfs_log_callback {
--	struct xfs_log_callback	*cb_next;
--	void			(*cb_func)(void *, int);
--	void			*cb_arg;
--} xfs_log_callback_t;
--
--
--#ifdef __KERNEL__
--/* Log manager interfaces */
--struct xfs_mount;
--struct xlog_in_core;
--struct xlog_ticket;
--struct xfs_log_item;
--struct xfs_item_ops;
--struct xfs_trans;
--
--void	xfs_log_item_init(struct xfs_mount	*mp,
--			struct xfs_log_item	*item,
--			int			type,
--			const struct xfs_item_ops *ops);
--
--xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
--		       struct xlog_ticket *ticket,
--		       struct xlog_in_core **iclog,
--		       uint		flags);
--int	  _xfs_log_force(struct xfs_mount *mp,
--			 uint		flags,
--			 int		*log_forced);
--void	  xfs_log_force(struct xfs_mount	*mp,
--			uint			flags);
--int	  _xfs_log_force_lsn(struct xfs_mount *mp,
--			     xfs_lsn_t		lsn,
--			     uint		flags,
--			     int		*log_forced);
--void	  xfs_log_force_lsn(struct xfs_mount	*mp,
--			    xfs_lsn_t		lsn,
--			    uint		flags);
--int	  xfs_log_mount(struct xfs_mount	*mp,
--			struct xfs_buftarg	*log_target,
--			xfs_daddr_t		start_block,
--			int		 	num_bblocks);
--int	  xfs_log_mount_finish(struct xfs_mount *mp);
--xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
--xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
--void	  xfs_log_space_wake(struct xfs_mount *mp);
--int	  xfs_log_notify(struct xfs_mount	*mp,
--			 struct xlog_in_core	*iclog,
--			 xfs_log_callback_t	*callback_entry);
--int	  xfs_log_release_iclog(struct xfs_mount *mp,
--			 struct xlog_in_core	 *iclog);
--int	  xfs_log_reserve(struct xfs_mount *mp,
--			  int		   length,
--			  int		   count,
--			  struct xlog_ticket **ticket,
--			  __uint8_t	   clientid,
--			  bool		   permanent,
--			  uint		   t_type);
--int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
--int	  xfs_log_unmount_write(struct xfs_mount *mp);
--void      xfs_log_unmount(struct xfs_mount *mp);
--int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
--int	  xfs_log_need_covered(struct xfs_mount *mp);
--
--void	  xlog_iodone(struct xfs_buf *);
--
--struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
--void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
--
--int	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
--				xfs_lsn_t *commit_lsn, int flags);
--bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
--
--void	xfs_log_work_queue(struct xfs_mount *mp);
--void	xfs_log_worker(struct work_struct *work);
--void	xfs_log_quiesce(struct xfs_mount *mp);
--
--#endif
--#endif	/* __XFS_LOG_H__ */
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
+-xfs_bmbt_rec_host_t *xfs_iext_get_ext(xfs_ifork_t *, xfs_extnum_t);
+-void		xfs_iext_insert(struct xfs_inode *, xfs_extnum_t, xfs_extnum_t,
+-				xfs_bmbt_irec_t *, int);
+-void		xfs_iext_add(xfs_ifork_t *, xfs_extnum_t, int);
+-void		xfs_iext_add_indirect_multi(xfs_ifork_t *, int, xfs_extnum_t, int);
+-void		xfs_iext_remove(struct xfs_inode *, xfs_extnum_t, int, int);
+-void		xfs_iext_remove_inline(xfs_ifork_t *, xfs_extnum_t, int);
+-void		xfs_iext_remove_direct(xfs_ifork_t *, xfs_extnum_t, int);
+-void		xfs_iext_remove_indirect(xfs_ifork_t *, xfs_extnum_t, int);
+-void		xfs_iext_realloc_direct(xfs_ifork_t *, int);
+-void		xfs_iext_direct_to_inline(xfs_ifork_t *, xfs_extnum_t);
+-void		xfs_iext_inline_to_direct(xfs_ifork_t *, int);
+-void		xfs_iext_destroy(xfs_ifork_t *);
+-xfs_bmbt_rec_host_t *xfs_iext_bno_to_ext(xfs_ifork_t *, xfs_fileoff_t, int *);
+-xfs_ext_irec_t	*xfs_iext_bno_to_irec(xfs_ifork_t *, xfs_fileoff_t, int *);
+-xfs_ext_irec_t	*xfs_iext_idx_to_irec(xfs_ifork_t *, xfs_extnum_t *, int *, int);
+-void		xfs_iext_irec_init(xfs_ifork_t *);
+-xfs_ext_irec_t *xfs_iext_irec_new(xfs_ifork_t *, int);
+-void		xfs_iext_irec_remove(xfs_ifork_t *, int);
+-void		xfs_iext_irec_compact(xfs_ifork_t *);
+-void		xfs_iext_irec_compact_pages(xfs_ifork_t *);
+-void		xfs_iext_irec_compact_full(xfs_ifork_t *);
+-void		xfs_iext_irec_update_extoffs(xfs_ifork_t *, int, int);
+ bool		xfs_can_free_eofblocks(struct xfs_inode *, bool);
+ 
+ #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+@@ -554,7 +423,6 @@ void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+ #define	xfs_inobp_check(mp, bp)
+ #endif /* DEBUG */
+ 
+-extern struct kmem_zone	*xfs_ifork_zone;
+ extern struct kmem_zone	*xfs_inode_zone;
+ extern const struct xfs_buf_ops xfs_inode_buf_ops;
+ 
+diff --git a/include/xfs_inode_fork.h b/include/xfs_inode_fork.h
 new file mode 100644
-index 0000000..9f9aeb6
+index 0000000..28661a0
 --- /dev/null
-+++ b/include/xfs_log_format.h
-@@ -0,0 +1,178 @@
++++ b/include/xfs_inode_fork.h
+@@ -0,0 +1,171 @@
 +/*
 + * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
 + * All Rights Reserved.
@@ -333,899 +262,4000 @@ index 0000000..9f9aeb6
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+#ifndef	__XFS_LOG_FORMAT_H__
-+#define __XFS_LOG_FORMAT_H__
++#ifndef	__XFS_INODE_FORK_H__
++#define	__XFS_INODE_FORK_H__
 +
-+typedef __uint32_t xlog_tid_t;
-+
-+#define XLOG_MIN_ICLOGS		2
-+#define XLOG_MAX_ICLOGS		8
-+#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
-+#define XLOG_VERSION_1		1
-+#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
-+#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
-+#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
-+#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
-+#define XLOG_MAX_RECORD_BSIZE	(256*1024)
-+#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
-+#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
-+#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
-+#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
-+#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
-+                                 (log)->l_mp->m_sb.sb_logsunit)
-+#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
-+
-+#define XLOG_HEADER_SIZE	512
-+
-+#define XLOG_REC_SHIFT(log) \
-+	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
-+	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
-+#define XLOG_TOTAL_REC_SHIFT(log) \
-+	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
-+	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
-+
-+/* get lsn fields */
-+#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
-+#define BLOCK_LSN(lsn) ((uint)(lsn))
-+
-+/* this is used in a spot where we might otherwise double-endian-flip */
-+#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
-+
-+static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
-+{
-+	return ((xfs_lsn_t)cycle << 32) | block;
-+}
-+
-+static inline uint xlog_get_cycle(char *ptr)
-+{
-+	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
-+		return be32_to_cpu(*((__be32 *)ptr + 1));
-+	else
-+		return be32_to_cpu(*(__be32 *)ptr);
-+}
-+
-+/* Log Clients */
-+#define XFS_TRANSACTION		0x69
-+#define XFS_VOLUME		0x2
-+#define XFS_LOG			0xaa
-+
-+#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
-+
-+/* Region types for iovec's i_type */
-+#define XLOG_REG_TYPE_BFORMAT		1
-+#define XLOG_REG_TYPE_BCHUNK		2
-+#define XLOG_REG_TYPE_EFI_FORMAT	3
-+#define XLOG_REG_TYPE_EFD_FORMAT	4
-+#define XLOG_REG_TYPE_IFORMAT		5
-+#define XLOG_REG_TYPE_ICORE		6
-+#define XLOG_REG_TYPE_IEXT		7
-+#define XLOG_REG_TYPE_IBROOT		8
-+#define XLOG_REG_TYPE_ILOCAL		9
-+#define XLOG_REG_TYPE_IATTR_EXT		10
-+#define XLOG_REG_TYPE_IATTR_BROOT	11
-+#define XLOG_REG_TYPE_IATTR_LOCAL	12
-+#define XLOG_REG_TYPE_QFORMAT		13
-+#define XLOG_REG_TYPE_DQUOT		14
-+#define XLOG_REG_TYPE_QUOTAOFF		15
-+#define XLOG_REG_TYPE_LRHEADER		16
-+#define XLOG_REG_TYPE_UNMOUNT		17
-+#define XLOG_REG_TYPE_COMMIT		18
-+#define XLOG_REG_TYPE_TRANSHDR		19
-+#define XLOG_REG_TYPE_ICREATE		20
-+#define XLOG_REG_TYPE_MAX		20
++struct xfs_inode_log_item;
 +
 +/*
-+ * Flags to log operation header
++ * The following xfs_ext_irec_t struct introduces a second (top) level
++ * to the in-core extent allocation scheme. These structs are allocated
++ * in a contiguous block, creating an indirection array where each entry
++ * (irec) contains a pointer to a buffer of in-core extent records which
++ * it manages. Each extent buffer is 4k in size, since 4k is the system
++ * page size on Linux i386 and systems with larger page sizes don't seem
++ * to gain much, if anything, by using their native page size as the
++ * extent buffer size. Also, using 4k extent buffers everywhere provides
++ * a consistent interface for CXFS across different platforms.
 + *
-+ * The first write of a new transaction will be preceded with a start
-+ * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
-+ * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
-+ * the remainder of the current active in-core log, it is split up into
-+ * multiple regions.  Each partial region will be marked with a
-+ * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
-+ *
++ * There is currently no limit on the number of irec's (extent lists)
++ * allowed, so heavily fragmented files may require an indirection array
++ * which spans multiple system pages of memory. The number of extents
++ * which would require this amount of contiguous memory is very large
++ * and should not cause problems in the foreseeable future. However,
++ * if the memory needed for the contiguous array ever becomes a problem,
++ * it is possible that a third level of indirection may be required.
 + */
-+#define XLOG_START_TRANS	0x01	/* Start a new transaction */
-+#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
-+#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
-+#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
-+#define XLOG_END_TRANS		0x10	/* End a continued transaction */
-+#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
-+
-+
-+typedef struct xlog_op_header {
-+	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
-+	__be32	   oh_len;	/* bytes in data region		:  4 b */
-+	__u8	   oh_clientid;	/* who sent me this		:  1 b */
-+	__u8	   oh_flags;	/*				:  1 b */
-+	__u16	   oh_res2;	/* 32 bit align			:  2 b */
-+} xlog_op_header_t;
-+
-+
-+/* valid values for h_fmt */
-+#define XLOG_FMT_UNKNOWN  0
-+#define XLOG_FMT_LINUX_LE 1
-+#define XLOG_FMT_LINUX_BE 2
-+#define XLOG_FMT_IRIX_BE  3
-+
-+/* our fmt */
-+#ifdef XFS_NATIVE_HOST
-+#define XLOG_FMT XLOG_FMT_LINUX_BE
-+#else
-+#define XLOG_FMT XLOG_FMT_LINUX_LE
-+#endif
-+
-+typedef struct xlog_rec_header {
-+	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
-+	__be32	  h_cycle;	/* write cycle of log			:  4 */
-+	__be32	  h_version;	/* LR version				:  4 */
-+	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
-+	__be64	  h_lsn;	/* lsn of this LR			:  8 */
-+	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
-+	__le32	  h_crc;	/* crc of log record                    :  4 */
-+	__be32	  h_prev_block; /* block number to previous LR		:  4 */
-+	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
-+	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
-+	/* new fields */
-+	__be32    h_fmt;        /* format of log record                 :  4 */
-+	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
-+	__be32	  h_size;	/* iclog size				:  4 */
-+} xlog_rec_header_t;
-+
-+typedef struct xlog_rec_ext_header {
-+	__be32	  xh_cycle;	/* write cycle of log			: 4 */
-+	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
-+} xlog_rec_ext_header_t;
++typedef struct xfs_ext_irec {
++	xfs_bmbt_rec_host_t *er_extbuf;	/* block of extent records */
++	xfs_extnum_t	er_extoff;	/* extent offset in file */
++	xfs_extnum_t	er_extcount;	/* number of extents in page/block */
++} xfs_ext_irec_t;
 +
 +/*
-+ * Quite misnamed, because this union lays out the actual on-disk log buffer.
++ * File incore extent information, present for each of data & attr forks.
 + */
-+typedef union xlog_in_core2 {
-+	xlog_rec_header_t	hic_header;
-+	xlog_rec_ext_header_t	hic_xheader;
-+	char			hic_sector[XLOG_HEADER_SIZE];
-+} xlog_in_core_2_t;
++#define	XFS_IEXT_BUFSZ		4096
++#define	XFS_LINEAR_EXTS		(XFS_IEXT_BUFSZ / (uint)sizeof(xfs_bmbt_rec_t))
++#define	XFS_INLINE_EXTS		2
++#define	XFS_INLINE_DATA		32
++typedef struct xfs_ifork {
++	int			if_bytes;	/* bytes in if_u1 */
++	int			if_real_bytes;	/* bytes allocated in if_u1 */
++	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
++	short			if_broot_bytes;	/* bytes allocated for root */
++	unsigned char		if_flags;	/* per-fork flags */
++	union {
++		xfs_bmbt_rec_host_t *if_extents;/* linear map file exts */
++		xfs_ext_irec_t	*if_ext_irec;	/* irec map file exts */
++		char		*if_data;	/* inline file data */
++	} if_u1;
++	union {
++		xfs_bmbt_rec_host_t if_inline_ext[XFS_INLINE_EXTS];
++						/* very small file extents */
++		char		if_inline_data[XFS_INLINE_DATA];
++						/* very small file data */
++		xfs_dev_t	if_rdev;	/* dev number if special */
++		uuid_t		if_uuid;	/* mount point value */
++	} if_u2;
++} xfs_ifork_t;
 +
-+/* not an on-disk structure, but needed by log recovery in userspace */
-+typedef struct xfs_log_iovec {
-+	void		*i_addr;	/* beginning address of region */
-+	int		i_len;		/* length in bytes of region */
-+	uint		i_type;		/* type of region */
-+} xfs_log_iovec_t;
++/*
++ * Per-fork incore inode flags.
++ */
++#define	XFS_IFINLINE	0x01	/* Inline data is read in */
++#define	XFS_IFEXTENTS	0x02	/* All extent pointers are read in */
++#define	XFS_IFBROOT	0x04	/* i_broot points to the bmap b-tree root */
++#define	XFS_IFEXTIREC	0x08	/* Indirection array of extent blocks */
 +
-+#endif /* __XFS_LOG_FORMAT_H__ */
-diff --git a/include/xfs_log_priv.h b/include/xfs_log_priv.h
-deleted file mode 100644
-index 16d8d12..0000000
---- a/include/xfs_log_priv.h
-+++ /dev/null
-@@ -1,692 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef	__XFS_LOG_PRIV_H__
--#define __XFS_LOG_PRIV_H__
--
--struct xfs_buf;
--struct xlog;
--struct xlog_ticket;
--struct xfs_mount;
--
--/*
-- * Macros, structures, prototypes for internal log manager use.
-- */
--
--#define XLOG_MIN_ICLOGS		2
--#define XLOG_MAX_ICLOGS		8
--#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
--#define XLOG_VERSION_1		1
--#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
--#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
--#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
--#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
--#define XLOG_MAX_RECORD_BSIZE	(256*1024)
--#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
--#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
--#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
--#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
--#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
--                                 (log)->l_mp->m_sb.sb_logsunit)
--#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
--
--#define XLOG_HEADER_SIZE	512
--
--#define XLOG_REC_SHIFT(log) \
--	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
--	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
--#define XLOG_TOTAL_REC_SHIFT(log) \
--	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
--	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
--
--static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
--{
--	return ((xfs_lsn_t)cycle << 32) | block;
--}
--
--static inline uint xlog_get_cycle(char *ptr)
--{
--	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
--		return be32_to_cpu(*((__be32 *)ptr + 1));
--	else
--		return be32_to_cpu(*(__be32 *)ptr);
--}
--
--#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
--
--#ifdef __KERNEL__
--
--/*
-- * get client id from packed copy.
-- *
-- * this hack is here because the xlog_pack code copies four bytes
-- * of xlog_op_header containing the fields oh_clientid, oh_flags
-- * and oh_res2 into the packed copy.
-- *
-- * later on this four byte chunk is treated as an int and the
-- * client id is pulled out.
-- *
-- * this has endian issues, of course.
-- */
--static inline uint xlog_get_client_id(__be32 i)
--{
--	return be32_to_cpu(i) >> 24;
--}
--
--/*
-- * In core log state
-- */
--#define XLOG_STATE_ACTIVE    0x0001 /* Current IC log being written to */
--#define XLOG_STATE_WANT_SYNC 0x0002 /* Want to sync this iclog; no more writes */
--#define XLOG_STATE_SYNCING   0x0004 /* This IC log is syncing */
--#define XLOG_STATE_DONE_SYNC 0x0008 /* Done syncing to disk */
--#define XLOG_STATE_DO_CALLBACK \
--			     0x0010 /* Process callback functions */
--#define XLOG_STATE_CALLBACK  0x0020 /* Callback functions now */
--#define XLOG_STATE_DIRTY     0x0040 /* Dirty IC log, not ready for ACTIVE status*/
--#define XLOG_STATE_IOERROR   0x0080 /* IO error happened in sync'ing log */
--#define XLOG_STATE_ALL	     0x7FFF /* All possible valid flags */
--#define XLOG_STATE_NOTUSED   0x8000 /* This IC log not being used */
--#endif	/* __KERNEL__ */
--
--/*
-- * Flags to log operation header
-- *
-- * The first write of a new transaction will be preceded with a start
-- * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
-- * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
-- * the remainder of the current active in-core log, it is split up into
-- * multiple regions.  Each partial region will be marked with a
-- * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
-- *
-- */
--#define XLOG_START_TRANS	0x01	/* Start a new transaction */
--#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
--#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
--#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
--#define XLOG_END_TRANS		0x10	/* End a continued transaction */
--#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
--
--#ifdef __KERNEL__
--/*
-- * Flags to log ticket
-- */
--#define XLOG_TIC_INITED		0x1	/* has been initialized */
--#define XLOG_TIC_PERM_RESERV	0x2	/* permanent reservation */
--
--#define XLOG_TIC_FLAGS \
--	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
--	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
--
--#endif	/* __KERNEL__ */
--
--#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
--
--/*
-- * Flags for log structure
-- */
--#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
--#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
--#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
--					   shutdown */
--#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
--
--typedef __uint32_t xlog_tid_t;
--
--#ifdef __KERNEL__
--/*
-- * Below are states for covering allocation transactions.
-- * By covering, we mean changing the h_tail_lsn in the last on-disk
-- * log write such that no allocation transactions will be re-done during
-- * recovery after a system crash. Recovery starts at the last on-disk
-- * log write.
-- *
-- * These states are used to insert dummy log entries to cover
-- * space allocation transactions which can undo non-transactional changes
-- * after a crash. Writes to a file with space
-- * already allocated do not result in any transactions. Allocations
-- * might include space beyond the EOF. So if we just push the EOF a
-- * little, the last transaction for the file could contain the wrong
-- * size. If there is no file system activity, after an allocation
-- * transaction, and the system crashes, the allocation transaction
-- * will get replayed and the file will be truncated. This could
-- * be hours/days/... after the allocation occurred.
-- *
-- * The fix for this is to do two dummy transactions when the
-- * system is idle. We need two dummy transaction because the h_tail_lsn
-- * in the log record header needs to point beyond the last possible
-- * non-dummy transaction. The first dummy changes the h_tail_lsn to
-- * the first transaction before the dummy. The second dummy causes
-- * h_tail_lsn to point to the first dummy. Recovery starts at h_tail_lsn.
-- *
-- * These dummy transactions get committed when everything
-- * is idle (after there has been some activity).
-- *
-- * There are 5 states used to control this.
-- *
-- *  IDLE -- no logging has been done on the file system or
-- *		we are done covering previous transactions.
-- *  NEED -- logging has occurred and we need a dummy transaction
-- *		when the log becomes idle.
-- *  DONE -- we were in the NEED state and have committed a dummy
-- *		transaction.
-- *  NEED2 -- we detected that a dummy transaction has gone to the
-- *		on disk log with no other transactions.
-- *  DONE2 -- we committed a dummy transaction when in the NEED2 state.
-- *
-- * There are two places where we switch states:
-- *
-- * 1.) In xfs_sync, when we detect an idle log and are in NEED or NEED2.
-- *	We commit the dummy transaction and switch to DONE or DONE2,
-- *	respectively. In all other states, we don't do anything.
-- *
-- * 2.) When we finish writing the on-disk log (xlog_state_clean_log).
-- *
-- *	No matter what state we are in, if this isn't the dummy
-- *	transaction going out, the next state is NEED.
-- *	So, if we aren't in the DONE or DONE2 states, the next state
-- *	is NEED. We can't be finishing a write of the dummy record
-- *	unless it was committed and the state switched to DONE or DONE2.
-- *
-- *	If we are in the DONE state and this was a write of the
-- *		dummy transaction, we move to NEED2.
-- *
-- *	If we are in the DONE2 state and this was a write of the
-- *		dummy transaction, we move to IDLE.
-- *
-- *
-- * Writing only one dummy transaction can get appended to
-- * one file space allocation. When this happens, the log recovery
-- * code replays the space allocation and a file could be truncated.
-- * This is why we have the NEED2 and DONE2 states before going idle.
-- */
--
--#define XLOG_STATE_COVER_IDLE	0
--#define XLOG_STATE_COVER_NEED	1
--#define XLOG_STATE_COVER_DONE	2
--#define XLOG_STATE_COVER_NEED2	3
--#define XLOG_STATE_COVER_DONE2	4
--
--#define XLOG_COVER_OPS		5
--
--
--/* Ticket reservation region accounting */ 
--#define XLOG_TIC_LEN_MAX	15
--
--/*
-- * Reservation region
-- * As would be stored in xfs_log_iovec but without the i_addr which
-- * we don't care about.
-- */
--typedef struct xlog_res {
--	uint	r_len;	/* region length		:4 */
--	uint	r_type;	/* region's transaction type	:4 */
--} xlog_res_t;
--
--typedef struct xlog_ticket {
--	struct list_head   t_queue;	 /* reserve/write queue */
--	struct task_struct *t_task;	 /* task that owns this ticket */
--	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
--	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
--	int		   t_curr_res;	 /* current reservation in bytes : 4  */
--	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
--	char		   t_ocnt;	 /* original count		 : 1  */
--	char		   t_cnt;	 /* current count		 : 1  */
--	char		   t_clientid;	 /* who does this belong to;	 : 1  */
--	char		   t_flags;	 /* properties of reservation	 : 1  */
--	uint		   t_trans_type; /* transaction type             : 4  */
--
--        /* reservation array fields */
--	uint		   t_res_num;                    /* num in array : 4 */
--	uint		   t_res_num_ophdrs;		 /* num op hdrs  : 4 */
--	uint		   t_res_arr_sum;		 /* array sum    : 4 */
--	uint		   t_res_o_flow;		 /* sum overflow : 4 */
--	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
--} xlog_ticket_t;
--
--#endif
--
--
--typedef struct xlog_op_header {
--	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
--	__be32	   oh_len;	/* bytes in data region		:  4 b */
--	__u8	   oh_clientid;	/* who sent me this		:  1 b */
--	__u8	   oh_flags;	/*				:  1 b */
--	__u16	   oh_res2;	/* 32 bit align			:  2 b */
--} xlog_op_header_t;
--
--
--/* valid values for h_fmt */
--#define XLOG_FMT_UNKNOWN  0
--#define XLOG_FMT_LINUX_LE 1
--#define XLOG_FMT_LINUX_BE 2
--#define XLOG_FMT_IRIX_BE  3
--
--/* our fmt */
--#ifdef XFS_NATIVE_HOST
--#define XLOG_FMT XLOG_FMT_LINUX_BE
--#else
--#define XLOG_FMT XLOG_FMT_LINUX_LE
--#endif
--
--typedef struct xlog_rec_header {
--	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
--	__be32	  h_cycle;	/* write cycle of log			:  4 */
--	__be32	  h_version;	/* LR version				:  4 */
--	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
--	__be64	  h_lsn;	/* lsn of this LR			:  8 */
--	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
--	__le32	  h_crc;	/* crc of log record                    :  4 */
--	__be32	  h_prev_block; /* block number to previous LR		:  4 */
--	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
--	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
--	/* new fields */
--	__be32    h_fmt;        /* format of log record                 :  4 */
--	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
--	__be32	  h_size;	/* iclog size				:  4 */
--} xlog_rec_header_t;
--
--typedef struct xlog_rec_ext_header {
--	__be32	  xh_cycle;	/* write cycle of log			: 4 */
--	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
--} xlog_rec_ext_header_t;
--
--#ifdef __KERNEL__
--
--/*
-- * Quite misnamed, because this union lays out the actual on-disk log buffer.
-- */
--typedef union xlog_in_core2 {
--	xlog_rec_header_t	hic_header;
--	xlog_rec_ext_header_t	hic_xheader;
--	char			hic_sector[XLOG_HEADER_SIZE];
--} xlog_in_core_2_t;
--
--/*
-- * - A log record header is 512 bytes.  There is plenty of room to grow the
-- *	xlog_rec_header_t into the reserved space.
-- * - ic_data follows, so a write to disk can start at the beginning of
-- *	the iclog.
-- * - ic_forcewait is used to implement synchronous forcing of the iclog to disk.
-- * - ic_next is the pointer to the next iclog in the ring.
-- * - ic_bp is a pointer to the buffer used to write this incore log to disk.
-- * - ic_log is a pointer back to the global log structure.
-- * - ic_callback is a linked list of callback function/argument pairs to be
-- *	called after an iclog finishes writing.
-- * - ic_size is the full size of the header plus data.
-- * - ic_offset is the current number of bytes written to in this iclog.
-- * - ic_refcnt is bumped when someone is writing to the log.
-- * - ic_state is the state of the iclog.
-- *
-- * Because of cacheline contention on large machines, we need to separate
-- * various resources onto different cachelines. To start with, make the
-- * structure cacheline aligned. The following fields can be contended on
-- * by independent processes:
-- *
-- *	- ic_callback_*
-- *	- ic_refcnt
-- *	- fields protected by the global l_icloglock
-- *
-- * so we need to ensure that these fields are located in separate cachelines.
-- * We'll put all the read-only and l_icloglock fields in the first cacheline,
-- * and move everything else out to subsequent cachelines.
-- */
--typedef struct xlog_in_core {
--	wait_queue_head_t	ic_force_wait;
--	wait_queue_head_t	ic_write_wait;
--	struct xlog_in_core	*ic_next;
--	struct xlog_in_core	*ic_prev;
--	struct xfs_buf		*ic_bp;
--	struct xlog		*ic_log;
--	int			ic_size;
--	int			ic_offset;
--	int			ic_bwritecnt;
--	unsigned short		ic_state;
--	char			*ic_datap;	/* pointer to iclog data */
--
--	/* Callback structures need their own cacheline */
--	spinlock_t		ic_callback_lock ____cacheline_aligned_in_smp;
--	xfs_log_callback_t	*ic_callback;
--	xfs_log_callback_t	**ic_callback_tail;
--
--	/* reference counts need their own cacheline */
--	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
--	xlog_in_core_2_t	*ic_data;
--#define ic_header	ic_data->hic_header
--} xlog_in_core_t;
--
--/*
-- * The CIL context is used to aggregate per-transaction details as well be
-- * passed to the iclog for checkpoint post-commit processing.  After being
-- * passed to the iclog, another context needs to be allocated for tracking the
-- * next set of transactions to be aggregated into a checkpoint.
-- */
--struct xfs_cil;
--
--struct xfs_cil_ctx {
--	struct xfs_cil		*cil;
--	xfs_lsn_t		sequence;	/* chkpt sequence # */
--	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
--	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
--	struct xlog_ticket	*ticket;	/* chkpt ticket */
--	int			nvecs;		/* number of regions */
--	int			space_used;	/* aggregate size of regions */
--	struct list_head	busy_extents;	/* busy extents in chkpt */
--	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
--	xfs_log_callback_t	log_cb;		/* completion callback hook. */
--	struct list_head	committing;	/* ctx committing list */
--};
--
--/*
-- * Committed Item List structure
-- *
-- * This structure is used to track log items that have been committed but not
-- * yet written into the log. It is used only when the delayed logging mount
-- * option is enabled.
-- *
-- * This structure tracks the list of committing checkpoint contexts so
-- * we can avoid the problem of having to hold out new transactions during a
-- * flush until we have a the commit record LSN of the checkpoint. We can
-- * traverse the list of committing contexts in xlog_cil_push_lsn() to find a
-- * sequence match and extract the commit LSN directly from there. If the
-- * checkpoint is still in the process of committing, we can block waiting for
-- * the commit LSN to be determined as well. This should make synchronous
-- * operations almost as efficient as the old logging methods.
-- */
--struct xfs_cil {
--	struct xlog		*xc_log;
--	struct list_head	xc_cil;
--	spinlock_t		xc_cil_lock;
--	struct xfs_cil_ctx	*xc_ctx;
--	struct rw_semaphore	xc_ctx_lock;
--	struct list_head	xc_committing;
--	wait_queue_head_t	xc_commit_wait;
--	xfs_lsn_t		xc_current_sequence;
--	struct work_struct	xc_push_work;
--	xfs_lsn_t		xc_push_seq;
--};
--
--/*
-- * The amount of log space we allow the CIL to aggregate is difficult to size.
-- * Whatever we choose, we have to make sure we can get a reservation for the
-- * log space effectively, that it is large enough to capture sufficient
-- * relogging to reduce log buffer IO significantly, but it is not too large for
-- * the log or induces too much latency when writing out through the iclogs. We
-- * track both space consumed and the number of vectors in the checkpoint
-- * context, so we need to decide which to use for limiting.
-- *
-- * Every log buffer we write out during a push needs a header reserved, which
-- * is at least one sector and more for v2 logs. Hence we need a reservation of
-- * at least 512 bytes per 32k of log space just for the LR headers. That means
-- * 16KB of reservation per megabyte of delayed logging space we will consume,
-- * plus various headers.  The number of headers will vary based on the num of
-- * io vectors, so limiting on a specific number of vectors is going to result
-- * in transactions of varying size. IOWs, it is more consistent to track and
-- * limit space consumed in the log rather than by the number of objects being
-- * logged in order to prevent checkpoint ticket overruns.
-- *
-- * Further, use of static reservations through the log grant mechanism is
-- * problematic. It introduces a lot of complexity (e.g. reserve grant vs write
-- * grant) and a significant deadlock potential because regranting write space
-- * can block on log pushes. Hence if we have to regrant log space during a log
-- * push, we can deadlock.
-- *
-- * However, we can avoid this by use of a dynamic "reservation stealing"
-- * technique during transaction commit whereby unused reservation space in the
-- * transaction ticket is transferred to the CIL ctx commit ticket to cover the
-- * space needed by the checkpoint transaction. This means that we never need to
-- * specifically reserve space for the CIL checkpoint transaction, nor do we
-- * need to regrant space once the checkpoint completes. This also means the
-- * checkpoint transaction ticket is specific to the checkpoint context, rather
-- * than the CIL itself.
-- *
-- * With dynamic reservations, we can effectively make up arbitrary limits for
-- * the checkpoint size so long as they don't violate any other size rules.
-- * Recovery imposes a rule that no transaction exceed half the log, so we are
-- * limited by that.  Furthermore, the log transaction reservation subsystem
-- * tries to keep 25% of the log free, so we need to keep below that limit or we
-- * risk running out of free log space to start any new transactions.
-- *
-- * In order to keep background CIL push efficient, we will set a lower
-- * threshold at which background pushing is attempted without blocking current
-- * transaction commits.  A separate, higher bound defines when CIL pushes are
-- * enforced to ensure we stay within our maximum checkpoint size bounds.
-- * threshold, yet give us plenty of space for aggregation on large logs.
-- */
--#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
--#define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
--
--/*
-- * ticket grant locks, queues and accounting have their own cachlines
-- * as these are quite hot and can be operated on concurrently.
-- */
--struct xlog_grant_head {
--	spinlock_t		lock ____cacheline_aligned_in_smp;
--	struct list_head	waiters;
--	atomic64_t		grant;
--};
--
--/*
-- * The reservation head lsn is not made up of a cycle number and block number.
-- * Instead, it uses a cycle number and byte number.  Logs don't expect to
-- * overflow 31 bits worth of byte offset, so using a byte number will mean
-- * that round off problems won't occur when releasing partial reservations.
-- */
--struct xlog {
--	/* The following fields don't need locking */
--	struct xfs_mount	*l_mp;	        /* mount point */
--	struct xfs_ail		*l_ailp;	/* AIL log is working with */
--	struct xfs_cil		*l_cilp;	/* CIL log is working with */
--	struct xfs_buf		*l_xbuf;        /* extra buffer for log
--						 * wrapping */
--	struct xfs_buftarg	*l_targ;        /* buftarg of log */
--	struct delayed_work	l_work;		/* background flush work */
--	uint			l_flags;
--	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
--	struct list_head	*l_buf_cancel_table;
--	int			l_iclog_hsize;  /* size of iclog header */
--	int			l_iclog_heads;  /* # of iclog header sectors */
--	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
--	int			l_iclog_size;	/* size of log in bytes */
--	int			l_iclog_size_log; /* log power size of log */
--	int			l_iclog_bufs;	/* number of iclog buffers */
--	xfs_daddr_t		l_logBBstart;   /* start block of log */
--	int			l_logsize;      /* size of log in bytes */
--	int			l_logBBsize;    /* size of log in BB chunks */
--
--	/* The following block of fields are changed while holding icloglock */
--	wait_queue_head_t	l_flush_wait ____cacheline_aligned_in_smp;
--						/* waiting for iclog flush */
--	int			l_covered_state;/* state of "covering disk
--						 * log entries" */
--	xlog_in_core_t		*l_iclog;       /* head log queue	*/
--	spinlock_t		l_icloglock;    /* grab to change iclog state */
--	int			l_curr_cycle;   /* Cycle number of log writes */
--	int			l_prev_cycle;   /* Cycle number before last
--						 * block increment */
--	int			l_curr_block;   /* current logical log block */
--	int			l_prev_block;   /* previous logical log block */
--
--	/*
--	 * l_last_sync_lsn and l_tail_lsn are atomics so they can be set and
--	 * read without needing to hold specific locks. To avoid operations
--	 * contending with other hot objects, place each of them on a separate
--	 * cacheline.
--	 */
--	/* lsn of last LR on disk */
--	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
--	/* lsn of 1st LR with unflushed * buffers */
--	atomic64_t		l_tail_lsn ____cacheline_aligned_in_smp;
--
--	struct xlog_grant_head	l_reserve_head;
--	struct xlog_grant_head	l_write_head;
--
--	/* The following field are used for debugging; need to hold icloglock */
--#ifdef DEBUG
--	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
--#endif
--
--};
--
--#define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
--	((log)->l_buf_cancel_table + ((__uint64_t)blkno % XLOG_BC_TABLE_SIZE))
--
--#define XLOG_FORCED_SHUTDOWN(log)	((log)->l_flags & XLOG_IO_ERROR)
--
--/* common routines */
--extern int
--xlog_recover(
--	struct xlog		*log);
--extern int
--xlog_recover_finish(
--	struct xlog		*log);
--
--extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
--			    char *dp, int size);
--
--extern kmem_zone_t *xfs_log_ticket_zone;
--struct xlog_ticket *
--xlog_ticket_alloc(
--	struct xlog	*log,
--	int		unit_bytes,
--	int		count,
--	char		client,
--	bool		permanent,
--	xfs_km_flags_t	alloc_flags);
--
--
--static inline void
--xlog_write_adv_cnt(void **ptr, int *len, int *off, size_t bytes)
--{
--	*ptr += bytes;
--	*len -= bytes;
--	*off += bytes;
--}
--
--void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
--int
--xlog_write(
--	struct xlog		*log,
--	struct xfs_log_vec	*log_vector,
--	struct xlog_ticket	*tic,
--	xfs_lsn_t		*start_lsn,
--	struct xlog_in_core	**commit_iclog,
--	uint			flags);
--
--/*
-- * When we crack an atomic LSN, we sample it first so that the value will not
-- * change while we are cracking it into the component values. This means we
-- * will always get consistent component values to work from. This should always
-- * be used to sample and crack LSNs that are stored and updated in atomic
-- * variables.
-- */
--static inline void
--xlog_crack_atomic_lsn(atomic64_t *lsn, uint *cycle, uint *block)
--{
--	xfs_lsn_t val = atomic64_read(lsn);
--
--	*cycle = CYCLE_LSN(val);
--	*block = BLOCK_LSN(val);
--}
--
--/*
-- * Calculate and assign a value to an atomic LSN variable from component pieces.
-- */
--static inline void
--xlog_assign_atomic_lsn(atomic64_t *lsn, uint cycle, uint block)
--{
--	atomic64_set(lsn, xlog_assign_lsn(cycle, block));
--}
--
--/*
-- * When we crack the grant head, we sample it first so that the value will not
-- * change while we are cracking it into the component values. This means we
-- * will always get consistent component values to work from.
-- */
--static inline void
--xlog_crack_grant_head_val(int64_t val, int *cycle, int *space)
--{
--	*cycle = val >> 32;
--	*space = val & 0xffffffff;
--}
--
--static inline void
--xlog_crack_grant_head(atomic64_t *head, int *cycle, int *space)
--{
--	xlog_crack_grant_head_val(atomic64_read(head), cycle, space);
--}
--
--static inline int64_t
--xlog_assign_grant_head_val(int cycle, int space)
--{
--	return ((int64_t)cycle << 32) | space;
--}
--
--static inline void
--xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
--{
--	atomic64_set(head, xlog_assign_grant_head_val(cycle, space));
--}
--
--/*
-- * Committed Item List interfaces
-- */
--int
--xlog_cil_init(struct xlog *log);
--void
--xlog_cil_init_post_recovery(struct xlog *log);
--void
--xlog_cil_destroy(struct xlog *log);
--
--/*
-- * CIL force routines
-- */
--xfs_lsn_t
--xlog_cil_force_lsn(
--	struct xlog *log,
--	xfs_lsn_t sequence);
--
--static inline void
--xlog_cil_force(struct xlog *log)
--{
--	xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
--}
--
--/*
-- * Unmount record type is used as a pseudo transaction type for the ticket.
-- * It's value must be outside the range of XFS_TRANS_* values.
-- */
--#define XLOG_UNMOUNT_REC_TYPE	(-1U)
--
--/*
-- * Wrapper function for waiting on a wait queue serialised against wakeups
-- * by a spinlock. This matches the semantics of all the wait queues used in the
-- * log code.
-- */
--static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
--{
--	DECLARE_WAITQUEUE(wait, current);
--
--	add_wait_queue_exclusive(wq, &wait);
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	spin_unlock(lock);
--	schedule();
--	remove_wait_queue(wq, &wait);
--}
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_LOG_PRIV_H__ */
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 93beb23..92a90f1 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -17,8 +17,6 @@
-  */
++/*
++ * Fork handling.
++ */
++
++#define XFS_IFORK_Q(ip)			((ip)->i_d.di_forkoff != 0)
++#define XFS_IFORK_BOFF(ip)		((int)((ip)->i_d.di_forkoff << 3))
++
++#define XFS_IFORK_PTR(ip,w)		\
++	((w) == XFS_DATA_FORK ? \
++		&(ip)->i_df : \
++		(ip)->i_afp)
++#define XFS_IFORK_DSIZE(ip) \
++	(XFS_IFORK_Q(ip) ? \
++		XFS_IFORK_BOFF(ip) : \
++		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version))
++#define XFS_IFORK_ASIZE(ip) \
++	(XFS_IFORK_Q(ip) ? \
++		XFS_LITINO((ip)->i_mount, (ip)->i_d.di_version) - \
++			XFS_IFORK_BOFF(ip) : \
++		0)
++#define XFS_IFORK_SIZE(ip,w) \
++	((w) == XFS_DATA_FORK ? \
++		XFS_IFORK_DSIZE(ip) : \
++		XFS_IFORK_ASIZE(ip))
++#define XFS_IFORK_FORMAT(ip,w) \
++	((w) == XFS_DATA_FORK ? \
++		(ip)->i_d.di_format : \
++		(ip)->i_d.di_aformat)
++#define XFS_IFORK_FMT_SET(ip,w,n) \
++	((w) == XFS_DATA_FORK ? \
++		((ip)->i_d.di_format = (n)) : \
++		((ip)->i_d.di_aformat = (n)))
++#define XFS_IFORK_NEXTENTS(ip,w) \
++	((w) == XFS_DATA_FORK ? \
++		(ip)->i_d.di_nextents : \
++		(ip)->i_d.di_anextents)
++#define XFS_IFORK_NEXT_SET(ip,w,n) \
++	((w) == XFS_DATA_FORK ? \
++		((ip)->i_d.di_nextents = (n)) : \
++		((ip)->i_d.di_anextents = (n)))
++#define XFS_IFORK_MAXEXT(ip, w) \
++	(XFS_IFORK_SIZE(ip, w) / sizeof(xfs_bmbt_rec_t))
++
++int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
++void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
++				struct xfs_inode_log_item *, int,
++				struct xfs_buf *);
++void		xfs_idestroy_fork(struct xfs_inode *, int);
++void		xfs_idata_realloc(struct xfs_inode *, int, int);
++void		xfs_iroot_realloc(struct xfs_inode *, int, int);
++int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
++int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
++				  int);
++
++struct xfs_bmbt_rec_host *
++		xfs_iext_get_ext(struct xfs_ifork *, xfs_extnum_t);
++void		xfs_iext_insert(struct xfs_inode *, xfs_extnum_t, xfs_extnum_t,
++				struct xfs_bmbt_irec *, int);
++void		xfs_iext_add(struct xfs_ifork *, xfs_extnum_t, int);
++void		xfs_iext_add_indirect_multi(struct xfs_ifork *, int,
++					    xfs_extnum_t, int);
++void		xfs_iext_remove(struct xfs_inode *, xfs_extnum_t, int, int);
++void		xfs_iext_remove_inline(struct xfs_ifork *, xfs_extnum_t, int);
++void		xfs_iext_remove_direct(struct xfs_ifork *, xfs_extnum_t, int);
++void		xfs_iext_remove_indirect(struct xfs_ifork *, xfs_extnum_t, int);
++void		xfs_iext_realloc_direct(struct xfs_ifork *, int);
++void		xfs_iext_direct_to_inline(struct xfs_ifork *, xfs_extnum_t);
++void		xfs_iext_inline_to_direct(struct xfs_ifork *, int);
++void		xfs_iext_destroy(struct xfs_ifork *);
++struct xfs_bmbt_rec_host *
++		xfs_iext_bno_to_ext(struct xfs_ifork *, xfs_fileoff_t, int *);
++struct xfs_ext_irec *
++		xfs_iext_bno_to_irec(struct xfs_ifork *, xfs_fileoff_t, int *);
++struct xfs_ext_irec *
++		xfs_iext_idx_to_irec(struct xfs_ifork *, xfs_extnum_t *, int *,
++				     int);
++void		xfs_iext_irec_init(struct xfs_ifork *);
++struct xfs_ext_irec *
++		xfs_iext_irec_new(struct xfs_ifork *, int);
++void		xfs_iext_irec_remove(struct xfs_ifork *, int);
++void		xfs_iext_irec_compact(struct xfs_ifork *);
++void		xfs_iext_irec_compact_pages(struct xfs_ifork *);
++void		xfs_iext_irec_compact_full(struct xfs_ifork *);
++void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
++
++extern struct kmem_zone	*xfs_ifork_zone;
++
++#endif	/* __XFS_INODE_FORK_H__ */
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 64b5979..ed978f9 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -12,7 +12,12 @@ LT_AGE = 0
  
- #include <xfs/libxfs.h>
--#include <xfs/xfs_log.h>
--#include <xfs/xfs_log_priv.h>
- #include "init.h"
+ HFILES = xfs.h init.h xfs_dir2_priv.h crc32defs.h crc32table.h
+ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
+-	xfs_alloc.c xfs_ialloc.c xfs_inode.c xfs_btree.c xfs_alloc_btree.c \
++	xfs_alloc.c \
++	xfs_alloc_btree.c \
++	xfs_btree.c \
++	xfs_ialloc.c \
++	xfs_inode.c \
++	xfs_inode_fork.c \
+ 	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
+ 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
+ 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
+diff --git a/libxfs/xfs_inode.c b/libxfs/xfs_inode.c
+index d6513b9..7efe1b3 100644
+--- a/libxfs/xfs_inode.c
++++ b/libxfs/xfs_inode.c
+@@ -18,7 +18,6 @@
  
- #define BDSTRAT_SIZE	(256 * 1024)
-diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-index 9394988..f3cda77 100644
---- a/libxlog/xfs_log_recover.c
-+++ b/libxlog/xfs_log_recover.c
-@@ -26,6 +26,7 @@
- 	(0); \
- })
+ #include <xfs.h>
  
-+#define BLK_AVG(blk1, blk2)    ((blk1+blk2) >> 1)
+-kmem_zone_t *xfs_ifork_zone;
+ kmem_zone_t *xfs_inode_zone;
  
  /*
-  * Verify the given count of basic blocks is valid number of blocks
-@@ -1034,6 +1035,8 @@ xlog_recover_add_item(
- 	list_add_tail(&item->ri_list, head);
+@@ -27,38 +26,6 @@ kmem_zone_t *xfs_inode_zone;
+  */
+ #define	XFS_ITRUNC_MAX_EXTENTS	2
+ 
+-STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+-STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+-STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
+-
+-#ifdef DEBUG
+-/*
+- * Make sure that the extents in the given memory buffer
+- * are valid.
+- */
+-STATIC void
+-xfs_validate_extents(
+-	xfs_ifork_t		*ifp,
+-	int			nrecs,
+-	xfs_exntfmt_t		fmt)
+-{
+-	xfs_bmbt_irec_t		irec;
+-	xfs_bmbt_rec_host_t	rec;
+-	int			i;
+-
+-	for (i = 0; i < nrecs; i++) {
+-		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+-		rec.l0 = get_unaligned(&ep->l0);
+-		rec.l1 = get_unaligned(&ep->l1);
+-		xfs_bmbt_get_all(&rec, &irec);
+-		if (fmt == XFS_EXTFMT_NOSTATE)
+-			ASSERT(irec.br_state == XFS_EXT_NORM);
+-	}
+-}
+-#else /* DEBUG */
+-#define xfs_validate_extents(ifp, nrecs, fmt)
+-#endif /* DEBUG */
+-
+ /*
+  * Check that none of the inode's in the buffer have a next
+  * unlinked field of 0.
+@@ -193,351 +160,6 @@ xfs_imap_to_bp(
+ 	return 0;
  }
  
-+#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+-/*
+- * Move inode type and inode format specific information from the
+- * on-disk inode to the in-core inode.  For fifos, devs, and sockets
+- * this means set if_rdev to the proper value.  For files, directories,
+- * and symlinks this means to bring in the in-line data or extent
+- * pointers.  For a file in B-tree format, only the root is immediately
+- * brought in-core.  The rest will be in-lined in if_extents when it
+- * is first referenced (see xfs_iread_extents()).
+- */
+-STATIC int
+-xfs_iformat(
+-	xfs_inode_t		*ip,
+-	xfs_dinode_t		*dip)
+-{
+-	xfs_attr_shortform_t	*atp;
+-	int			size;
+-	int			error = 0;
+-	xfs_fsize_t             di_size;
+-
+-	if (unlikely(be32_to_cpu(dip->di_nextents) +
+-		     be16_to_cpu(dip->di_anextents) >
+-		     be64_to_cpu(dip->di_nblocks))) {
+-		xfs_warn(ip->i_mount,
+-			"corrupt dinode %Lu, extent total = %d, nblocks = %Lu.",
+-			(unsigned long long)ip->i_ino,
+-			(int)(be32_to_cpu(dip->di_nextents) +
+-			      be16_to_cpu(dip->di_anextents)),
+-			(unsigned long long)
+-				be64_to_cpu(dip->di_nblocks));
+-		XFS_CORRUPTION_ERROR("xfs_iformat(1)", XFS_ERRLEVEL_LOW,
+-				     ip->i_mount, dip);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	if (unlikely(dip->di_forkoff > ip->i_mount->m_sb.sb_inodesize)) {
+-		xfs_warn(ip->i_mount, "corrupt dinode %Lu, forkoff = 0x%x.",
+-			(unsigned long long)ip->i_ino,
+-			dip->di_forkoff);
+-		XFS_CORRUPTION_ERROR("xfs_iformat(2)", XFS_ERRLEVEL_LOW,
+-				     ip->i_mount, dip);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	if (unlikely((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) &&
+-		     !ip->i_mount->m_rtdev)) {
+-		xfs_warn(ip->i_mount,
+-			"corrupt dinode %Lu, has realtime flag set.",
+-			ip->i_ino);
+-		XFS_CORRUPTION_ERROR("xfs_iformat(realtime)",
+-				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	switch (ip->i_d.di_mode & S_IFMT) {
+-	case S_IFIFO:
+-	case S_IFCHR:
+-	case S_IFBLK:
+-	case S_IFSOCK:
+-		if (unlikely(dip->di_format != XFS_DINODE_FMT_DEV)) {
+-			XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
+-					      ip->i_mount, dip);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
+-		ip->i_d.di_size = 0;
+-		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
+-		break;
+-
+-	case S_IFREG:
+-	case S_IFLNK:
+-	case S_IFDIR:
+-		switch (dip->di_format) {
+-		case XFS_DINODE_FMT_LOCAL:
+-			/*
+-			 * no local regular files yet
+-			 */
+-			if (unlikely(S_ISREG(be16_to_cpu(dip->di_mode)))) {
+-				xfs_warn(ip->i_mount,
+-			"corrupt inode %Lu (local format for regular file).",
+-					(unsigned long long) ip->i_ino);
+-				XFS_CORRUPTION_ERROR("xfs_iformat(4)",
+-						     XFS_ERRLEVEL_LOW,
+-						     ip->i_mount, dip);
+-				return XFS_ERROR(EFSCORRUPTED);
+-			}
+-
+-			di_size = be64_to_cpu(dip->di_size);
+-			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+-				xfs_warn(ip->i_mount,
+-			"corrupt inode %Lu (bad size %Ld for local inode).",
+-					(unsigned long long) ip->i_ino,
+-					(long long) di_size);
+-				XFS_CORRUPTION_ERROR("xfs_iformat(5)",
+-						     XFS_ERRLEVEL_LOW,
+-						     ip->i_mount, dip);
+-				return XFS_ERROR(EFSCORRUPTED);
+-			}
+-
+-			size = (int)di_size;
+-			error = xfs_iformat_local(ip, dip, XFS_DATA_FORK, size);
+-			break;
+-		case XFS_DINODE_FMT_EXTENTS:
+-			error = xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
+-			break;
+-		case XFS_DINODE_FMT_BTREE:
+-			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
+-			break;
+-		default:
+-			XFS_ERROR_REPORT("xfs_iformat(6)", XFS_ERRLEVEL_LOW,
+-					 ip->i_mount);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
+-		break;
+-
+-	default:
+-		XFS_ERROR_REPORT("xfs_iformat(7)", XFS_ERRLEVEL_LOW, ip->i_mount);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-	if (error) {
+-		return error;
+-	}
+-	if (!XFS_DFORK_Q(dip))
+-		return 0;
+-
+-	ASSERT(ip->i_afp == NULL);
+-	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP | KM_NOFS);
+-
+-	switch (dip->di_aformat) {
+-	case XFS_DINODE_FMT_LOCAL:
+-		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+-		size = be16_to_cpu(atp->hdr.totsize);
+-
+-		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
+-			xfs_warn(ip->i_mount,
+-				"corrupt inode %Lu (bad attr fork size %Ld).",
+-				(unsigned long long) ip->i_ino,
+-				(long long) size);
+-			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
+-					     XFS_ERRLEVEL_LOW,
+-					     ip->i_mount, dip);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
+-
+-		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+-		break;
+-	case XFS_DINODE_FMT_EXTENTS:
+-		error = xfs_iformat_extents(ip, dip, XFS_ATTR_FORK);
+-		break;
+-	case XFS_DINODE_FMT_BTREE:
+-		error = xfs_iformat_btree(ip, dip, XFS_ATTR_FORK);
+-		break;
+-	default:
+-		error = XFS_ERROR(EFSCORRUPTED);
+-		break;
+-	}
+-	if (error) {
+-		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
+-		ip->i_afp = NULL;
+-		xfs_idestroy_fork(ip, XFS_DATA_FORK);
+-	}
+-	return error;
+-}
+-
+-/*
+- * The file is in-lined in the on-disk inode.
+- * If it fits into if_inline_data, then copy
+- * it there, otherwise allocate a buffer for it
+- * and copy the data there.  Either way, set
+- * if_data to point at the data.
+- * If we allocate a buffer for the data, make
+- * sure that its size is a multiple of 4 and
+- * record the real size in i_real_bytes.
+- */
+-STATIC int
+-xfs_iformat_local(
+-	xfs_inode_t	*ip,
+-	xfs_dinode_t	*dip,
+-	int		whichfork,
+-	int		size)
+-{
+-	xfs_ifork_t	*ifp;
+-	int		real_size;
+-
+-	/*
+-	 * If the size is unreasonable, then something
+-	 * is wrong and we just bail out rather than crash in
+-	 * kmem_alloc() or memcpy() below.
+-	 */
+-	if (unlikely(size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
+-		xfs_warn(ip->i_mount,
+-	"corrupt inode %Lu (bad size %d for local fork, size = %d).",
+-			(unsigned long long) ip->i_ino, size,
+-			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
+-		XFS_CORRUPTION_ERROR("xfs_iformat_local", XFS_ERRLEVEL_LOW,
+-				     ip->i_mount, dip);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	real_size = 0;
+-	if (size == 0)
+-		ifp->if_u1.if_data = NULL;
+-	else if (size <= sizeof(ifp->if_u2.if_inline_data))
+-		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
+-	else {
+-		real_size = roundup(size, 4);
+-		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP | KM_NOFS);
+-	}
+-	ifp->if_bytes = size;
+-	ifp->if_real_bytes = real_size;
+-	if (size)
+-		memcpy(ifp->if_u1.if_data, XFS_DFORK_PTR(dip, whichfork), size);
+-	ifp->if_flags &= ~XFS_IFEXTENTS;
+-	ifp->if_flags |= XFS_IFINLINE;
+-	return 0;
+-}
+-
+-/*
+- * The file consists of a set of extents all
+- * of which fit into the on-disk inode.
+- * If there are few enough extents to fit into
+- * the if_inline_ext, then copy them there.
+- * Otherwise allocate a buffer for them and copy
+- * them into it.  Either way, set if_extents
+- * to point at the extents.
+- */
+-STATIC int
+-xfs_iformat_extents(
+-	xfs_inode_t	*ip,
+-	xfs_dinode_t	*dip,
+-	int		whichfork)
+-{
+-	xfs_bmbt_rec_t	*dp;
+-	xfs_ifork_t	*ifp;
+-	int		nex;
+-	int		size;
+-	int		i;
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+-	size = nex * (uint)sizeof(xfs_bmbt_rec_t);
+-
+-	/*
+-	 * If the number of extents is unreasonable, then something
+-	 * is wrong and we just bail out rather than crash in
+-	 * kmem_alloc() or memcpy() below.
+-	 */
+-	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
+-		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
+-			(unsigned long long) ip->i_ino, nex);
+-		XFS_CORRUPTION_ERROR("xfs_iformat_extents(1)", XFS_ERRLEVEL_LOW,
+-				     ip->i_mount, dip);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	ifp->if_real_bytes = 0;
+-	if (nex == 0)
+-		ifp->if_u1.if_extents = NULL;
+-	else if (nex <= XFS_INLINE_EXTS)
+-		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
+-	else
+-		xfs_iext_add(ifp, 0, nex);
+-
+-	ifp->if_bytes = size;
+-	if (size) {
+-		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
+-		xfs_validate_extents(ifp, nex, XFS_EXTFMT_INODE(ip));
+-		for (i = 0; i < nex; i++, dp++) {
+-			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+-			ep->l0 = get_unaligned_be64(&dp->l0);
+-			ep->l1 = get_unaligned_be64(&dp->l1);
+-		}
+-		XFS_BMAP_TRACE_EXLIST(ip, nex, whichfork);
+-		if (whichfork != XFS_DATA_FORK ||
+-			XFS_EXTFMT_INODE(ip) == XFS_EXTFMT_NOSTATE)
+-				if (unlikely(xfs_check_nostate_extents(
+-				    ifp, 0, nex))) {
+-					XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+-							 XFS_ERRLEVEL_LOW,
+-							 ip->i_mount);
+-					return XFS_ERROR(EFSCORRUPTED);
+-				}
+-	}
+-	ifp->if_flags |= XFS_IFEXTENTS;
+-	return 0;
+-}
+-
+-/*
+- * The file has too many extents to fit into
+- * the inode, so they are in B-tree format.
+- * Allocate a buffer for the root of the B-tree
+- * and copy the root into it.  The i_extents
+- * field will remain NULL until all of the
+- * extents are read in (when they are needed).
+- */
+-STATIC int
+-xfs_iformat_btree(
+-	xfs_inode_t		*ip,
+-	xfs_dinode_t		*dip,
+-	int			whichfork)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	xfs_bmdr_block_t	*dfp;
+-	xfs_ifork_t		*ifp;
+-	/* REFERENCED */
+-	int			nrecs;
+-	int			size;
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+-	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
+-	nrecs = be16_to_cpu(dfp->bb_numrecs);
+-
+-	/*
+-	 * blow out if -- fork has less extents than can fit in
+-	 * fork (fork shouldn't be a btree format), root btree
+-	 * block has more records than can fit into the fork,
+-	 * or the number of extents is greater than the number of
+-	 * blocks.
+-	 */
+-	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <=
+-					XFS_IFORK_MAXEXT(ip, whichfork) ||
+-		     XFS_BMDR_SPACE_CALC(nrecs) >
+-					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+-		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
+-		xfs_warn(mp, "corrupt inode %Lu (btree).",
+-					(unsigned long long) ip->i_ino);
+-		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
+-					 mp, dip);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	ifp->if_broot_bytes = size;
+-	ifp->if_broot = kmem_alloc(size, KM_SLEEP | KM_NOFS);
+-	ASSERT(ifp->if_broot != NULL);
+-	/*
+-	 * Copy and convert from the on-disk structure
+-	 * to the in-memory structure.
+-	 */
+-	xfs_bmdr_to_bmbt(ip, dfp, XFS_DFORK_SIZE(dip, ip->i_mount, whichfork),
+-			 ifp->if_broot, size);
+-	ifp->if_flags &= ~XFS_IFEXTENTS;
+-	ifp->if_flags |= XFS_IFBROOT;
+-
+-	return 0;
+-}
+-
+ void
+ xfs_dinode_from_disk(
+ 	xfs_icdinode_t		*to,
+@@ -656,7 +278,6 @@ xfs_dinode_verify(
+ 		return false;
+ 	return true;
+ }
+-
+ void
+ xfs_dinode_calc_crc(
+ 	struct xfs_mount	*mp,
+@@ -714,13 +335,13 @@ xfs_iread(
+ 	/*
+ 	 * If the on-disk inode is already linked to a directory
+ 	 * entry, copy all of the inode into the in-core inode.
+-	 * xfs_iformat() handles copying in the inode format
++	 * xfs_iformat_fork() handles copying in the inode format
+ 	 * specific information.
+ 	 * Otherwise, just get the truly permanent information.
+ 	 */
+ 	if (dip->di_mode) {
+ 		xfs_dinode_from_disk(&ip->i_d, dip);
+-		error = xfs_iformat(ip, dip);
++		error = xfs_iformat_fork(ip, dip);
+ 		if (error)  {
+ #ifdef DEBUG
+ 			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
+@@ -796,1498 +417,3 @@ xfs_iread(
+ 	xfs_trans_brelse(tp, bp);
+ 	return error;
+ }
+-
+-/*
+- * Read in extents from a btree-format inode.
+- * Allocate and fill in if_extents.  Real work is done in xfs_bmap.c.
+- */
+-int
+-xfs_iread_extents(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*ip,
+-	int		whichfork)
+-{
+-	int		error;
+-	xfs_ifork_t	*ifp;
+-	xfs_extnum_t	nextents;
+-
+-	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
+-		XFS_ERROR_REPORT("xfs_iread_extents", XFS_ERRLEVEL_LOW,
+-				 ip->i_mount);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-	nextents = XFS_IFORK_NEXTENTS(ip, whichfork);
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-
+-	/*
+-	 * We know that the size is valid (it's checked in iformat_btree)
+-	 */
+-	ifp->if_bytes = ifp->if_real_bytes = 0;
+-	ifp->if_flags |= XFS_IFEXTENTS;
+-	xfs_iext_add(ifp, 0, nextents);
+-	error = xfs_bmap_read_extents(tp, ip, whichfork);
+-	if (error) {
+-		xfs_iext_destroy(ifp);
+-		ifp->if_flags &= ~XFS_IFEXTENTS;
+-		return error;
+-	}
+-	xfs_validate_extents(ifp, nextents, XFS_EXTFMT_INODE(ip));
+-	return 0;
+-}
+-
+-/*
+- * Reallocate the space for if_broot based on the number of records
+- * being added or deleted as indicated in rec_diff.  Move the records
+- * and pointers in if_broot to fit the new size.  When shrinking this
+- * will eliminate holes between the records and pointers created by
+- * the caller.  When growing this will create holes to be filled in
+- * by the caller.
+- *
+- * The caller must not request to add more records than would fit in
+- * the on-disk inode root.  If the if_broot is currently NULL, then
+- * if we adding records one will be allocated.  The caller must also
+- * not request that the number of records go below zero, although
+- * it can go to zero.
+- *
+- * ip -- the inode whose if_broot area is changing
+- * ext_diff -- the change in the number of records, positive or negative,
+- *	 requested for the if_broot array.
+- */
+-void
+-xfs_iroot_realloc(
+-	xfs_inode_t		*ip,
+-	int			rec_diff,
+-	int			whichfork)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	int			cur_max;
+-	xfs_ifork_t		*ifp;
+-	struct xfs_btree_block	*new_broot;
+-	int			new_max;
+-	size_t			new_size;
+-	char			*np;
+-	char			*op;
+-
+-	/*
+-	 * Handle the degenerate case quietly.
+-	 */
+-	if (rec_diff == 0) {
+-		return;
+-	}
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if (rec_diff > 0) {
+-		/*
+-		 * If there wasn't any memory allocated before, just
+-		 * allocate it now and get out.
+-		 */
+-		if (ifp->if_broot_bytes == 0) {
+-			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
+-			ifp->if_broot = kmem_alloc(new_size, KM_SLEEP | KM_NOFS);
+-			ifp->if_broot_bytes = (int)new_size;
+-			return;
+-		}
+-
+-		/*
+-		 * If there is already an existing if_broot, then we need
+-		 * to realloc() it and shift the pointers to their new
+-		 * location.  The records don't change location because
+-		 * they are kept butted up against the btree block header.
+-		 */
+-		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
+-		new_max = cur_max + rec_diff;
+-		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
+-		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
+-				XFS_BMAP_BROOT_SPACE_CALC(mp, cur_max),
+-				KM_SLEEP | KM_NOFS);
+-		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+-						     ifp->if_broot_bytes);
+-		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+-						     (int)new_size);
+-		ifp->if_broot_bytes = (int)new_size;
+-		ASSERT(ifp->if_broot_bytes <=
+-			XFS_IFORK_SIZE(ip, whichfork) + XFS_BROOT_SIZE_ADJ(ip));
+-		memmove(np, op, cur_max * (uint)sizeof(xfs_dfsbno_t));
+-		return;
+-	}
+-
+-	/*
+-	 * rec_diff is less than 0.  In this case, we are shrinking the
+-	 * if_broot buffer.  It must already exist.  If we go to zero
+-	 * records, just get rid of the root and clear the status bit.
+-	 */
+-	ASSERT((ifp->if_broot != NULL) && (ifp->if_broot_bytes > 0));
+-	cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
+-	new_max = cur_max + rec_diff;
+-	ASSERT(new_max >= 0);
+-	if (new_max > 0)
+-		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
+-	else
+-		new_size = 0;
+-	if (new_size > 0) {
+-		new_broot = kmem_alloc(new_size, KM_SLEEP | KM_NOFS);
+-		/*
+-		 * First copy over the btree block header.
+-		 */
+-		memcpy(new_broot, ifp->if_broot,
+-			XFS_BMBT_BLOCK_LEN(ip->i_mount));
+-	} else {
+-		new_broot = NULL;
+-		ifp->if_flags &= ~XFS_IFBROOT;
+-	}
+-
+-	/*
+-	 * Only copy the records and pointers if there are any.
+-	 */
+-	if (new_max > 0) {
+-		/*
+-		 * First copy the records.
+-		 */
+-		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
+-		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
+-		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
+-
+-		/*
+-		 * Then copy the pointers.
+-		 */
+-		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+-						     ifp->if_broot_bytes);
+-		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
+-						     (int)new_size);
+-		memcpy(np, op, new_max * (uint)sizeof(xfs_dfsbno_t));
+-	}
+-	kmem_free(ifp->if_broot);
+-	ifp->if_broot = new_broot;
+-	ifp->if_broot_bytes = (int)new_size;
+-	ASSERT(ifp->if_broot_bytes <=
+-		XFS_IFORK_SIZE(ip, whichfork) + XFS_BROOT_SIZE_ADJ(ip));
+-	return;
+-}
+-
+-
+-/*
+- * This is called when the amount of space needed for if_data
+- * is increased or decreased.  The change in size is indicated by
+- * the number of bytes that need to be added or deleted in the
+- * byte_diff parameter.
+- *
+- * If the amount of space needed has decreased below the size of the
+- * inline buffer, then switch to using the inline buffer.  Otherwise,
+- * use kmem_realloc() or kmem_alloc() to adjust the size of the buffer
+- * to what is needed.
+- *
+- * ip -- the inode whose if_data area is changing
+- * byte_diff -- the change in the number of bytes, positive or negative,
+- *	 requested for the if_data array.
+- */
+-void
+-xfs_idata_realloc(
+-	xfs_inode_t	*ip,
+-	int		byte_diff,
+-	int		whichfork)
+-{
+-	xfs_ifork_t	*ifp;
+-	int		new_size;
+-	int		real_size;
+-
+-	if (byte_diff == 0) {
+-		return;
+-	}
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	new_size = (int)ifp->if_bytes + byte_diff;
+-	ASSERT(new_size >= 0);
+-
+-	if (new_size == 0) {
+-		if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
+-			kmem_free(ifp->if_u1.if_data);
+-		}
+-		ifp->if_u1.if_data = NULL;
+-		real_size = 0;
+-	} else if (new_size <= sizeof(ifp->if_u2.if_inline_data)) {
+-		/*
+-		 * If the valid extents/data can fit in if_inline_ext/data,
+-		 * copy them from the malloc'd vector and free it.
+-		 */
+-		if (ifp->if_u1.if_data == NULL) {
+-			ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
+-		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
+-			ASSERT(ifp->if_real_bytes != 0);
+-			memcpy(ifp->if_u2.if_inline_data, ifp->if_u1.if_data,
+-			      new_size);
+-			kmem_free(ifp->if_u1.if_data);
+-			ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
+-		}
+-		real_size = 0;
+-	} else {
+-		/*
+-		 * Stuck with malloc/realloc.
+-		 * For inline data, the underlying buffer must be
+-		 * a multiple of 4 bytes in size so that it can be
+-		 * logged and stay on word boundaries.  We enforce
+-		 * that here.
+-		 */
+-		real_size = roundup(new_size, 4);
+-		if (ifp->if_u1.if_data == NULL) {
+-			ASSERT(ifp->if_real_bytes == 0);
+-			ifp->if_u1.if_data = kmem_alloc(real_size,
+-							KM_SLEEP | KM_NOFS);
+-		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
+-			/*
+-			 * Only do the realloc if the underlying size
+-			 * is really changing.
+-			 */
+-			if (ifp->if_real_bytes != real_size) {
+-				ifp->if_u1.if_data =
+-					kmem_realloc(ifp->if_u1.if_data,
+-							real_size,
+-							ifp->if_real_bytes,
+-							KM_SLEEP | KM_NOFS);
+-			}
+-		} else {
+-			ASSERT(ifp->if_real_bytes == 0);
+-			ifp->if_u1.if_data = kmem_alloc(real_size,
+-							KM_SLEEP | KM_NOFS);
+-			memcpy(ifp->if_u1.if_data, ifp->if_u2.if_inline_data,
+-				ifp->if_bytes);
+-		}
+-	}
+-	ifp->if_real_bytes = real_size;
+-	ifp->if_bytes = new_size;
+-	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+-}
+-
+-void
+-xfs_idestroy_fork(
+-	xfs_inode_t	*ip,
+-	int		whichfork)
+-{
+-	xfs_ifork_t	*ifp;
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if (ifp->if_broot != NULL) {
+-		kmem_free(ifp->if_broot);
+-		ifp->if_broot = NULL;
+-	}
+-
+-	/*
+-	 * If the format is local, then we can't have an extents
+-	 * array so just look for an inline data array.  If we're
+-	 * not local then we may or may not have an extents list,
+-	 * so check and free it up if we do.
+-	 */
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+-		if ((ifp->if_u1.if_data != ifp->if_u2.if_inline_data) &&
+-		    (ifp->if_u1.if_data != NULL)) {
+-			ASSERT(ifp->if_real_bytes != 0);
+-			kmem_free(ifp->if_u1.if_data);
+-			ifp->if_u1.if_data = NULL;
+-			ifp->if_real_bytes = 0;
+-		}
+-	} else if ((ifp->if_flags & XFS_IFEXTENTS) &&
+-		   ((ifp->if_flags & XFS_IFEXTIREC) ||
+-		    ((ifp->if_u1.if_extents != NULL) &&
+-		     (ifp->if_u1.if_extents != ifp->if_u2.if_inline_ext)))) {
+-		ASSERT(ifp->if_real_bytes != 0);
+-		xfs_iext_destroy(ifp);
+-	}
+-	ASSERT(ifp->if_u1.if_extents == NULL ||
+-	       ifp->if_u1.if_extents == ifp->if_u2.if_inline_ext);
+-	ASSERT(ifp->if_real_bytes == 0);
+-	if (whichfork == XFS_ATTR_FORK) {
+-		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
+-		ip->i_afp = NULL;
+-	}
+-}
+-
+-/*
+- * xfs_iextents_copy()
+- *
+- * This is called to copy the REAL extents (as opposed to the delayed
+- * allocation extents) from the inode into the given buffer.  It
+- * returns the number of bytes copied into the buffer.
+- *
+- * If there are no delayed allocation extents, then we can just
+- * memcpy() the extents into the buffer.  Otherwise, we need to
+- * examine each extent in turn and skip those which are delayed.
+- */
+-int
+-xfs_iextents_copy(
+-	xfs_inode_t		*ip,
+-	xfs_bmbt_rec_t		*dp,
+-	int			whichfork)
+-{
+-	int			copied;
+-	int			i;
+-	xfs_ifork_t		*ifp;
+-	int			nrecs;
+-	xfs_fsblock_t		start_block;
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+-	ASSERT(ifp->if_bytes > 0);
+-
+-	nrecs = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	XFS_BMAP_TRACE_EXLIST(ip, nrecs, whichfork);
+-	ASSERT(nrecs > 0);
+-
+-	/*
+-	 * There are some delayed allocation extents in the
+-	 * inode, so copy the extents one at a time and skip
+-	 * the delayed ones.  There must be at least one
+-	 * non-delayed extent.
+-	 */
+-	copied = 0;
+-	for (i = 0; i < nrecs; i++) {
+-		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
+-		start_block = xfs_bmbt_get_startblock(ep);
+-		if (isnullstartblock(start_block)) {
+-			/*
+-			 * It's a delayed allocation extent, so skip it.
+-			 */
+-			continue;
+-		}
+-
+-		/* Translate to on disk format */
+-		put_unaligned_be64(ep->l0, &dp->l0);
+-		put_unaligned_be64(ep->l1, &dp->l1);
+-		dp++;
+-		copied++;
+-	}
+-	ASSERT(copied != 0);
+-	xfs_validate_extents(ifp, copied, XFS_EXTFMT_INODE(ip));
+-
+-	return (copied * (uint)sizeof(xfs_bmbt_rec_t));
+-}
+-
+-/*
+- * Each of the following cases stores data into the same region
+- * of the on-disk inode, so only one of them can be valid at
+- * any given time. While it is possible to have conflicting formats
+- * and log flags, e.g. having XFS_ILOG_?DATA set when the fork is
+- * in EXTENTS format, this can only happen when the fork has
+- * changed formats after being modified but before being flushed.
+- * In these cases, the format always takes precedence, because the
+- * format indicates the current state of the fork.
+- */
+-/*ARGSUSED*/
+-void
+-xfs_iflush_fork(
+-	xfs_inode_t		*ip,
+-	xfs_dinode_t		*dip,
+-	xfs_inode_log_item_t	*iip,
+-	int			whichfork,
+-	xfs_buf_t		*bp)
+-{
+-	char			*cp;
+-	xfs_ifork_t		*ifp;
+-	xfs_mount_t		*mp;
+-
+-	static const short	brootflag[2] =
+-		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+-	static const short	dataflag[2] =
+-		{ XFS_ILOG_DDATA, XFS_ILOG_ADATA };
+-	static const short	extflag[2] =
+-		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+-
+-	if (!iip)
+-		return;
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	/*
+-	 * This can happen if we gave up in iformat in an error path,
+-	 * for the attribute fork.
+-	 */
+-	if (!ifp) {
+-		ASSERT(whichfork == XFS_ATTR_FORK);
+-		return;
+-	}
+-	cp = XFS_DFORK_PTR(dip, whichfork);
+-	mp = ip->i_mount;
+-	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+-	case XFS_DINODE_FMT_LOCAL:
+-		if ((iip->ili_fields & dataflag[whichfork]) &&
+-		    (ifp->if_bytes > 0)) {
+-			ASSERT(ifp->if_u1.if_data != NULL);
+-			ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+-			memcpy(cp, ifp->if_u1.if_data, ifp->if_bytes);
+-		}
+-		break;
+-
+-	case XFS_DINODE_FMT_EXTENTS:
+-		ASSERT((ifp->if_flags & XFS_IFEXTENTS) ||
+-		       !(iip->ili_fields & extflag[whichfork]));
+-		if ((iip->ili_fields & extflag[whichfork]) &&
+-		    (ifp->if_bytes > 0)) {
+-			ASSERT(xfs_iext_get_ext(ifp, 0));
+-			ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) > 0);
+-			(void)xfs_iextents_copy(ip, (xfs_bmbt_rec_t *)cp,
+-				whichfork);
+-		}
+-		break;
+-
+-	case XFS_DINODE_FMT_BTREE:
+-		if ((iip->ili_fields & brootflag[whichfork]) &&
+-		    (ifp->if_broot_bytes > 0)) {
+-			ASSERT(ifp->if_broot != NULL);
+-			ASSERT(ifp->if_broot_bytes <=
+-			       (XFS_IFORK_SIZE(ip, whichfork) +
+-				XFS_BROOT_SIZE_ADJ(ip)));
+-			xfs_bmbt_to_bmdr(mp, ifp->if_broot, ifp->if_broot_bytes,
+-				(xfs_bmdr_block_t *)cp,
+-				XFS_DFORK_SIZE(dip, mp, whichfork));
+-		}
+-		break;
+-
+-	case XFS_DINODE_FMT_DEV:
+-		if (iip->ili_fields & XFS_ILOG_DEV) {
+-			ASSERT(whichfork == XFS_DATA_FORK);
+-			xfs_dinode_put_rdev(dip, ip->i_df.if_u2.if_rdev);
+-		}
+-		break;
+-
+-	case XFS_DINODE_FMT_UUID:
+-		if (iip->ili_fields & XFS_ILOG_UUID) {
+-			ASSERT(whichfork == XFS_DATA_FORK);
+-			memcpy(XFS_DFORK_DPTR(dip),
+-			       &ip->i_df.if_u2.if_uuid,
+-			       sizeof(uuid_t));
+-		}
+-		break;
+-
+-	default:
+-		ASSERT(0);
+-		break;
+-	}
+-}
+-
+-/*
+- * Return a pointer to the extent record at file index idx.
+- */
+-xfs_bmbt_rec_host_t *
+-xfs_iext_get_ext(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	idx)		/* index of target extent */
+-{
+-	ASSERT(idx >= 0);
+-	ASSERT(idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t));
+-
+-	if ((ifp->if_flags & XFS_IFEXTIREC) && (idx == 0)) {
+-		return ifp->if_u1.if_ext_irec->er_extbuf;
+-	} else if (ifp->if_flags & XFS_IFEXTIREC) {
+-		xfs_ext_irec_t	*erp;		/* irec pointer */
+-		int		erp_idx = 0;	/* irec index */
+-		xfs_extnum_t	page_idx = idx;	/* ext index in target list */
+-
+-		erp = xfs_iext_idx_to_irec(ifp, &page_idx, &erp_idx, 0);
+-		return &erp->er_extbuf[page_idx];
+-	} else if (ifp->if_bytes) {
+-		return &ifp->if_u1.if_extents[idx];
+-	} else {
+-		return NULL;
+-	}
+-}
+-
+-/*
+- * Insert new item(s) into the extent records for incore inode
+- * fork 'ifp'.  'count' new items are inserted at index 'idx'.
+- */
+-void
+-xfs_iext_insert(
+-	xfs_inode_t	*ip,		/* incore inode pointer */
+-	xfs_extnum_t	idx,		/* starting index of new items */
+-	xfs_extnum_t	count,		/* number of inserted items */
+-	xfs_bmbt_irec_t	*new,		/* items to insert */
+-	int		state)		/* type of extent conversion */
+-{
+-	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
+-	xfs_extnum_t	i;		/* extent record index */
+-
+-	trace_xfs_iext_insert(ip, idx, new, state, _RET_IP_);
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+-	xfs_iext_add(ifp, idx, count);
+-	for (i = idx; i < idx + count; i++, new++)
+-		xfs_bmbt_set_all(xfs_iext_get_ext(ifp, i), new);
+-}
+-
+-/*
+- * This is called when the amount of space required for incore file
+- * extents needs to be increased. The ext_diff parameter stores the
+- * number of new extents being added and the idx parameter contains
+- * the extent index where the new extents will be added. If the new
+- * extents are being appended, then we just need to (re)allocate and
+- * initialize the space. Otherwise, if the new extents are being
+- * inserted into the middle of the existing entries, a bit more work
+- * is required to make room for the new extents to be inserted. The
+- * caller is responsible for filling in the new extent entries upon
+- * return.
+- */
+-void
+-xfs_iext_add(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	idx,		/* index to begin adding exts */
+-	int		ext_diff)	/* number of extents to add */
+-{
+-	int		byte_diff;	/* new bytes being added */
+-	int		new_size;	/* size of extents after adding */
+-	xfs_extnum_t	nextents;	/* number of extents in file */
+-
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	ASSERT((idx >= 0) && (idx <= nextents));
+-	byte_diff = ext_diff * sizeof(xfs_bmbt_rec_t);
+-	new_size = ifp->if_bytes + byte_diff;
+-	/*
+-	 * If the new number of extents (nextents + ext_diff)
+-	 * fits inside the inode, then continue to use the inline
+-	 * extent buffer.
+-	 */
+-	if (nextents + ext_diff <= XFS_INLINE_EXTS) {
+-		if (idx < nextents) {
+-			memmove(&ifp->if_u2.if_inline_ext[idx + ext_diff],
+-				&ifp->if_u2.if_inline_ext[idx],
+-				(nextents - idx) * sizeof(xfs_bmbt_rec_t));
+-			memset(&ifp->if_u2.if_inline_ext[idx], 0, byte_diff);
+-		}
+-		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
+-		ifp->if_real_bytes = 0;
+-	}
+-	/*
+-	 * Otherwise use a linear (direct) extent list.
+-	 * If the extents are currently inside the inode,
+-	 * xfs_iext_realloc_direct will switch us from
+-	 * inline to direct extent allocation mode.
+-	 */
+-	else if (nextents + ext_diff <= XFS_LINEAR_EXTS) {
+-		xfs_iext_realloc_direct(ifp, new_size);
+-		if (idx < nextents) {
+-			memmove(&ifp->if_u1.if_extents[idx + ext_diff],
+-				&ifp->if_u1.if_extents[idx],
+-				(nextents - idx) * sizeof(xfs_bmbt_rec_t));
+-			memset(&ifp->if_u1.if_extents[idx], 0, byte_diff);
+-		}
+-	}
+-	/* Indirection array */
+-	else {
+-		xfs_ext_irec_t	*erp;
+-		int		erp_idx = 0;
+-		int		page_idx = idx;
+-
+-		ASSERT(nextents + ext_diff > XFS_LINEAR_EXTS);
+-		if (ifp->if_flags & XFS_IFEXTIREC) {
+-			erp = xfs_iext_idx_to_irec(ifp, &page_idx, &erp_idx, 1);
+-		} else {
+-			xfs_iext_irec_init(ifp);
+-			ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-			erp = ifp->if_u1.if_ext_irec;
+-		}
+-		/* Extents fit in target extent page */
+-		if (erp && erp->er_extcount + ext_diff <= XFS_LINEAR_EXTS) {
+-			if (page_idx < erp->er_extcount) {
+-				memmove(&erp->er_extbuf[page_idx + ext_diff],
+-					&erp->er_extbuf[page_idx],
+-					(erp->er_extcount - page_idx) *
+-					sizeof(xfs_bmbt_rec_t));
+-				memset(&erp->er_extbuf[page_idx], 0, byte_diff);
+-			}
+-			erp->er_extcount += ext_diff;
+-			xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, ext_diff);
+-		}
+-		/* Insert a new extent page */
+-		else if (erp) {
+-			xfs_iext_add_indirect_multi(ifp,
+-				erp_idx, page_idx, ext_diff);
+-		}
+-		/*
+-		 * If extent(s) are being appended to the last page in
+-		 * the indirection array and the new extent(s) don't fit
+-		 * in the page, then erp is NULL and erp_idx is set to
+-		 * the next index needed in the indirection array.
+-		 */
+-		else {
+-			int	count = ext_diff;
+-
+-			while (count) {
+-				erp = xfs_iext_irec_new(ifp, erp_idx);
+-				erp->er_extcount = count;
+-				count -= MIN(count, (int)XFS_LINEAR_EXTS);
+-				if (count) {
+-					erp_idx++;
+-				}
+-			}
+-		}
+-	}
+-	ifp->if_bytes = new_size;
+-}
+-
+-/*
+- * This is called when incore extents are being added to the indirection
+- * array and the new extents do not fit in the target extent list. The
+- * erp_idx parameter contains the irec index for the target extent list
+- * in the indirection array, and the idx parameter contains the extent
+- * index within the list. The number of extents being added is stored
+- * in the count parameter.
+- *
+- *    |-------|   |-------|
+- *    |       |   |       |    idx - number of extents before idx
+- *    |  idx  |   | count |
+- *    |       |   |       |    count - number of extents being inserted at idx
+- *    |-------|   |-------|
+- *    | count |   | nex2  |    nex2 - number of extents after idx + count
+- *    |-------|   |-------|
+- */
+-void
+-xfs_iext_add_indirect_multi(
+-	xfs_ifork_t	*ifp,			/* inode fork pointer */
+-	int		erp_idx,		/* target extent irec index */
+-	xfs_extnum_t	idx,			/* index within target list */
+-	int		count)			/* new extents being added */
+-{
+-	int		byte_diff;		/* new bytes being added */
+-	xfs_ext_irec_t	*erp;			/* pointer to irec entry */
+-	xfs_extnum_t	ext_diff;		/* number of extents to add */
+-	xfs_extnum_t	ext_cnt;		/* new extents still needed */
+-	xfs_extnum_t	nex2;			/* extents after idx + count */
+-	xfs_bmbt_rec_t	*nex2_ep = NULL;	/* temp list for nex2 extents */
+-	int		nlists;			/* number of irec's (lists) */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-	nex2 = erp->er_extcount - idx;
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-
+-	/*
+-	 * Save second part of target extent list
+-	 * (all extents past */
+-	if (nex2) {
+-		byte_diff = nex2 * sizeof(xfs_bmbt_rec_t);
+-		nex2_ep = (xfs_bmbt_rec_t *) kmem_alloc(byte_diff, KM_NOFS);
+-		memmove(nex2_ep, &erp->er_extbuf[idx], byte_diff);
+-		erp->er_extcount -= nex2;
+-		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, -nex2);
+-		memset(&erp->er_extbuf[idx], 0, byte_diff);
+-	}
+-
+-	/*
+-	 * Add the new extents to the end of the target
+-	 * list, then allocate new irec record(s) and
+-	 * extent buffer(s) as needed to store the rest
+-	 * of the new extents.
+-	 */
+-	ext_cnt = count;
+-	ext_diff = MIN(ext_cnt, (int)XFS_LINEAR_EXTS - erp->er_extcount);
+-	if (ext_diff) {
+-		erp->er_extcount += ext_diff;
+-		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, ext_diff);
+-		ext_cnt -= ext_diff;
+-	}
+-	while (ext_cnt) {
+-		erp_idx++;
+-		erp = xfs_iext_irec_new(ifp, erp_idx);
+-		ext_diff = MIN(ext_cnt, (int)XFS_LINEAR_EXTS);
+-		erp->er_extcount = ext_diff;
+-		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, ext_diff);
+-		ext_cnt -= ext_diff;
+-	}
+-
+-	/* Add nex2 extents back to indirection array */
+-	if (nex2) {
+-		xfs_extnum_t	ext_avail;
+-		int		i;
+-
+-		byte_diff = nex2 * sizeof(xfs_bmbt_rec_t);
+-		ext_avail = XFS_LINEAR_EXTS - erp->er_extcount;
+-		i = 0;
+-		/*
+-		 * If nex2 extents fit in the current page, append
+-		 * nex2_ep after the new extents.
+-		 */
+-		if (nex2 <= ext_avail) {
+-			i = erp->er_extcount;
+-		}
+-		/*
+-		 * Otherwise, check if space is available in the
+-		 * next page.
+-		 */
+-		else if ((erp_idx < nlists - 1) &&
+-			 (nex2 <= (ext_avail = XFS_LINEAR_EXTS -
+-			  ifp->if_u1.if_ext_irec[erp_idx+1].er_extcount))) {
+-			erp_idx++;
+-			erp++;
+-			/* Create a hole for nex2 extents */
+-			memmove(&erp->er_extbuf[nex2], erp->er_extbuf,
+-				erp->er_extcount * sizeof(xfs_bmbt_rec_t));
+-		}
+-		/*
+-		 * Final choice, create a new extent page for
+-		 * nex2 extents.
+-		 */
+-		else {
+-			erp_idx++;
+-			erp = xfs_iext_irec_new(ifp, erp_idx);
+-		}
+-		memmove(&erp->er_extbuf[i], nex2_ep, byte_diff);
+-		kmem_free(nex2_ep);
+-		erp->er_extcount += nex2;
+-		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, nex2);
+-	}
+-}
+-
+-/*
+- * This is called when the amount of space required for incore file
+- * extents needs to be decreased. The ext_diff parameter stores the
+- * number of extents to be removed and the idx parameter contains
+- * the extent index where the extents will be removed from.
+- *
+- * If the amount of space needed has decreased below the linear
+- * limit, XFS_IEXT_BUFSZ, then switch to using the contiguous
+- * extent array.  Otherwise, use kmem_realloc() to adjust the
+- * size to what is needed.
+- */
+-void
+-xfs_iext_remove(
+-	xfs_inode_t	*ip,		/* incore inode pointer */
+-	xfs_extnum_t	idx,		/* index to begin removing exts */
+-	int		ext_diff,	/* number of extents to remove */
+-	int		state)		/* type of extent conversion */
+-{
+-	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
+-	xfs_extnum_t	nextents;	/* number of extents in file */
+-	int		new_size;	/* size of extents after removal */
+-
+-	trace_xfs_iext_remove(ip, idx, state, _RET_IP_);
+-
+-	ASSERT(ext_diff > 0);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	new_size = (nextents - ext_diff) * sizeof(xfs_bmbt_rec_t);
+-
+-	if (new_size == 0) {
+-		xfs_iext_destroy(ifp);
+-	} else if (ifp->if_flags & XFS_IFEXTIREC) {
+-		xfs_iext_remove_indirect(ifp, idx, ext_diff);
+-	} else if (ifp->if_real_bytes) {
+-		xfs_iext_remove_direct(ifp, idx, ext_diff);
+-	} else {
+-		xfs_iext_remove_inline(ifp, idx, ext_diff);
+-	}
+-	ifp->if_bytes = new_size;
+-}
+-
+-/*
+- * This removes ext_diff extents from the inline buffer, beginning
+- * at extent index idx.
+- */
+-void
+-xfs_iext_remove_inline(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	idx,		/* index to begin removing exts */
+-	int		ext_diff)	/* number of extents to remove */
+-{
+-	int		nextents;	/* number of extents in file */
+-
+-	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
+-	ASSERT(idx < XFS_INLINE_EXTS);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	ASSERT(((nextents - ext_diff) > 0) &&
+-		(nextents - ext_diff) < XFS_INLINE_EXTS);
+-
+-	if (idx + ext_diff < nextents) {
+-		memmove(&ifp->if_u2.if_inline_ext[idx],
+-			&ifp->if_u2.if_inline_ext[idx + ext_diff],
+-			(nextents - (idx + ext_diff)) *
+-			 sizeof(xfs_bmbt_rec_t));
+-		memset(&ifp->if_u2.if_inline_ext[nextents - ext_diff],
+-			0, ext_diff * sizeof(xfs_bmbt_rec_t));
+-	} else {
+-		memset(&ifp->if_u2.if_inline_ext[idx], 0,
+-			ext_diff * sizeof(xfs_bmbt_rec_t));
+-	}
+-}
+-
+-/*
+- * This removes ext_diff extents from a linear (direct) extent list,
+- * beginning at extent index idx. If the extents are being removed
+- * from the end of the list (ie. truncate) then we just need to re-
+- * allocate the list to remove the extra space. Otherwise, if the
+- * extents are being removed from the middle of the existing extent
+- * entries, then we first need to move the extent records beginning
+- * at idx + ext_diff up in the list to overwrite the records being
+- * removed, then remove the extra space via kmem_realloc.
+- */
+-void
+-xfs_iext_remove_direct(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	idx,		/* index to begin removing exts */
+-	int		ext_diff)	/* number of extents to remove */
+-{
+-	xfs_extnum_t	nextents;	/* number of extents in file */
+-	int		new_size;	/* size of extents after removal */
+-
+-	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
+-	new_size = ifp->if_bytes -
+-		(ext_diff * sizeof(xfs_bmbt_rec_t));
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-
+-	if (new_size == 0) {
+-		xfs_iext_destroy(ifp);
+-		return;
+-	}
+-	/* Move extents up in the list (if needed) */
+-	if (idx + ext_diff < nextents) {
+-		memmove(&ifp->if_u1.if_extents[idx],
+-			&ifp->if_u1.if_extents[idx + ext_diff],
+-			(nextents - (idx + ext_diff)) *
+-			 sizeof(xfs_bmbt_rec_t));
+-	}
+-	memset(&ifp->if_u1.if_extents[nextents - ext_diff],
+-		0, ext_diff * sizeof(xfs_bmbt_rec_t));
+-	/*
+-	 * Reallocate the direct extent list. If the extents
+-	 * will fit inside the inode then xfs_iext_realloc_direct
+-	 * will switch from direct to inline extent allocation
+-	 * mode for us.
+-	 */
+-	xfs_iext_realloc_direct(ifp, new_size);
+-	ifp->if_bytes = new_size;
+-}
+-
+-/*
+- * This is called when incore extents are being removed from the
+- * indirection array and the extents being removed span multiple extent
+- * buffers. The idx parameter contains the file extent index where we
+- * want to begin removing extents, and the count parameter contains
+- * how many extents need to be removed.
+- *
+- *    |-------|   |-------|
+- *    | nex1  |   |       |    nex1 - number of extents before idx
+- *    |-------|   | count |
+- *    |       |   |       |    count - number of extents being removed at idx
+- *    | count |   |-------|
+- *    |       |   | nex2  |    nex2 - number of extents after idx + count
+- *    |-------|   |-------|
+- */
+-void
+-xfs_iext_remove_indirect(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	idx,		/* index to begin removing extents */
+-	int		count)		/* number of extents to remove */
+-{
+-	xfs_ext_irec_t	*erp;		/* indirection array pointer */
+-	int		erp_idx = 0;	/* indirection array index */
+-	xfs_extnum_t	ext_cnt;	/* extents left to remove */
+-	xfs_extnum_t	ext_diff;	/* extents to remove in current list */
+-	xfs_extnum_t	nex1;		/* number of extents before idx */
+-	xfs_extnum_t	nex2;		/* extents after idx + count */
+-	int		page_idx = idx;	/* index in target extent list */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	erp = xfs_iext_idx_to_irec(ifp,  &page_idx, &erp_idx, 0);
+-	ASSERT(erp != NULL);
+-	nex1 = page_idx;
+-	ext_cnt = count;
+-	while (ext_cnt) {
+-		nex2 = MAX((erp->er_extcount - (nex1 + ext_cnt)), 0);
+-		ext_diff = MIN(ext_cnt, (erp->er_extcount - nex1));
+-		/*
+-		 * Check for deletion of entire list;
+-		 * xfs_iext_irec_remove() updates extent offsets.
+-		 */
+-		if (ext_diff == erp->er_extcount) {
+-			xfs_iext_irec_remove(ifp, erp_idx);
+-			ext_cnt -= ext_diff;
+-			nex1 = 0;
+-			if (ext_cnt) {
+-				ASSERT(erp_idx < ifp->if_real_bytes /
+-					XFS_IEXT_BUFSZ);
+-				erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-				nex1 = 0;
+-				continue;
+-			} else {
+-				break;
+-			}
+-		}
+-		/* Move extents up (if needed) */
+-		if (nex2) {
+-			memmove(&erp->er_extbuf[nex1],
+-				&erp->er_extbuf[nex1 + ext_diff],
+-				nex2 * sizeof(xfs_bmbt_rec_t));
+-		}
+-		/* Zero out rest of page */
+-		memset(&erp->er_extbuf[nex1 + nex2], 0, (XFS_IEXT_BUFSZ -
+-			((nex1 + nex2) * sizeof(xfs_bmbt_rec_t))));
+-		/* Update remaining counters */
+-		erp->er_extcount -= ext_diff;
+-		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, -ext_diff);
+-		ext_cnt -= ext_diff;
+-		nex1 = 0;
+-		erp_idx++;
+-		erp++;
+-	}
+-	ifp->if_bytes -= count * sizeof(xfs_bmbt_rec_t);
+-	xfs_iext_irec_compact(ifp);
+-}
+-
+-/*
+- * Create, destroy, or resize a linear (direct) block of extents.
+- */
+-void
+-xfs_iext_realloc_direct(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		new_size)	/* new size of extents */
+-{
+-	int		rnew_size;	/* real new size of extents */
+-
+-	rnew_size = new_size;
+-
+-	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC) ||
+-		((new_size >= 0) && (new_size <= XFS_IEXT_BUFSZ) &&
+-		 (new_size != ifp->if_real_bytes)));
+-
+-	/* Free extent records */
+-	if (new_size == 0) {
+-		xfs_iext_destroy(ifp);
+-	}
+-	/* Resize direct extent list and zero any new bytes */
+-	else if (ifp->if_real_bytes) {
+-		/* Check if extents will fit inside the inode */
+-		if (new_size <= XFS_INLINE_EXTS * sizeof(xfs_bmbt_rec_t)) {
+-			xfs_iext_direct_to_inline(ifp, new_size /
+-				(uint)sizeof(xfs_bmbt_rec_t));
+-			ifp->if_bytes = new_size;
+-			return;
+-		}
+-		if (!is_power_of_2(new_size)){
+-			rnew_size = roundup_pow_of_two(new_size);
+-		}
+-		if (rnew_size != ifp->if_real_bytes) {
+-			ifp->if_u1.if_extents =
+-				kmem_realloc(ifp->if_u1.if_extents,
+-						rnew_size,
+-						ifp->if_real_bytes, KM_NOFS);
+-		}
+-		if (rnew_size > ifp->if_real_bytes) {
+-			memset(&ifp->if_u1.if_extents[ifp->if_bytes /
+-				(uint)sizeof(xfs_bmbt_rec_t)], 0,
+-				rnew_size - ifp->if_real_bytes);
+-		}
+-	}
+-	/*
+-	 * Switch from the inline extent buffer to a direct
+-	 * extent list. Be sure to include the inline extent
+-	 * bytes in new_size.
+-	 */
+-	else {
+-		new_size += ifp->if_bytes;
+-		if (!is_power_of_2(new_size)) {
+-			rnew_size = roundup_pow_of_two(new_size);
+-		}
+-		xfs_iext_inline_to_direct(ifp, rnew_size);
+-	}
+-	ifp->if_real_bytes = rnew_size;
+-	ifp->if_bytes = new_size;
+-}
+-
+-/*
+- * Switch from linear (direct) extent records to inline buffer.
+- */
+-void
+-xfs_iext_direct_to_inline(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	nextents)	/* number of extents in file */
+-{
+-	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+-	ASSERT(nextents <= XFS_INLINE_EXTS);
+-	/*
+-	 * The inline buffer was zeroed when we switched
+-	 * from inline to direct extent allocation mode,
+-	 * so we don't need to clear it here.
+-	 */
+-	memcpy(ifp->if_u2.if_inline_ext, ifp->if_u1.if_extents,
+-		nextents * sizeof(xfs_bmbt_rec_t));
+-	kmem_free(ifp->if_u1.if_extents);
+-	ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
+-	ifp->if_real_bytes = 0;
+-}
+-
+-/*
+- * Switch from inline buffer to linear (direct) extent records.
+- * new_size should already be rounded up to the next power of 2
+- * by the caller (when appropriate), so use new_size as it is.
+- * However, since new_size may be rounded up, we can't update
+- * if_bytes here. It is the caller's responsibility to update
+- * if_bytes upon return.
+- */
+-void
+-xfs_iext_inline_to_direct(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		new_size)	/* number of extents in file */
+-{
+-	ifp->if_u1.if_extents = kmem_alloc(new_size, KM_NOFS);
+-	memset(ifp->if_u1.if_extents, 0, new_size);
+-	if (ifp->if_bytes) {
+-		memcpy(ifp->if_u1.if_extents, ifp->if_u2.if_inline_ext,
+-			ifp->if_bytes);
+-		memset(ifp->if_u2.if_inline_ext, 0, XFS_INLINE_EXTS *
+-			sizeof(xfs_bmbt_rec_t));
+-	}
+-	ifp->if_real_bytes = new_size;
+-}
+-
+-/*
+- * Resize an extent indirection array to new_size bytes.
+- */
+-STATIC void
+-xfs_iext_realloc_indirect(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		new_size)	/* new indirection array size */
+-{
+-	int		nlists;		/* number of irec's (ex lists) */
+-	int		size;		/* current indirection array size */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	size = nlists * sizeof(xfs_ext_irec_t);
+-	ASSERT(ifp->if_real_bytes);
+-	ASSERT((new_size >= 0) && (new_size != size));
+-	if (new_size == 0) {
+-		xfs_iext_destroy(ifp);
+-	} else {
+-		ifp->if_u1.if_ext_irec = (xfs_ext_irec_t *)
+-			kmem_realloc(ifp->if_u1.if_ext_irec,
+-				new_size, size, KM_NOFS);
+-	}
+-}
+-
+-/*
+- * Switch from indirection array to linear (direct) extent allocations.
+- */
+-STATIC void
+-xfs_iext_indirect_to_direct(
+-	 xfs_ifork_t	*ifp)		/* inode fork pointer */
+-{
+-	xfs_bmbt_rec_host_t *ep;	/* extent record pointer */
+-	xfs_extnum_t	nextents;	/* number of extents in file */
+-	int		size;		/* size of file extents */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	ASSERT(nextents <= XFS_LINEAR_EXTS);
+-	size = nextents * sizeof(xfs_bmbt_rec_t);
+-
+-	xfs_iext_irec_compact_pages(ifp);
+-	ASSERT(ifp->if_real_bytes == XFS_IEXT_BUFSZ);
+-
+-	ep = ifp->if_u1.if_ext_irec->er_extbuf;
+-	kmem_free(ifp->if_u1.if_ext_irec);
+-	ifp->if_flags &= ~XFS_IFEXTIREC;
+-	ifp->if_u1.if_extents = ep;
+-	ifp->if_bytes = size;
+-	if (nextents < XFS_LINEAR_EXTS) {
+-		xfs_iext_realloc_direct(ifp, size);
+-	}
+-}
+-
+-/*
+- * Free incore file extents.
+- */
+-void
+-xfs_iext_destroy(
+-	xfs_ifork_t	*ifp)		/* inode fork pointer */
+-{
+-	if (ifp->if_flags & XFS_IFEXTIREC) {
+-		int	erp_idx;
+-		int	nlists;
+-
+-		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
+-			xfs_iext_irec_remove(ifp, erp_idx);
+-		}
+-		ifp->if_flags &= ~XFS_IFEXTIREC;
+-	} else if (ifp->if_real_bytes) {
+-		kmem_free(ifp->if_u1.if_extents);
+-	} else if (ifp->if_bytes) {
+-		memset(ifp->if_u2.if_inline_ext, 0, XFS_INLINE_EXTS *
+-			sizeof(xfs_bmbt_rec_t));
+-	}
+-	ifp->if_u1.if_extents = NULL;
+-	ifp->if_real_bytes = 0;
+-	ifp->if_bytes = 0;
+-}
+-
+-/*
+- * Return a pointer to the extent record for file system block bno.
+- */
+-xfs_bmbt_rec_host_t *			/* pointer to found extent record */
+-xfs_iext_bno_to_ext(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_fileoff_t	bno,		/* block number to search for */
+-	xfs_extnum_t	*idxp)		/* index of target extent */
+-{
+-	xfs_bmbt_rec_host_t *base;	/* pointer to first extent */
+-	xfs_filblks_t	blockcount = 0;	/* number of blocks in extent */
+-	xfs_bmbt_rec_host_t *ep = NULL;	/* pointer to target extent */
+-	xfs_ext_irec_t	*erp = NULL;	/* indirection array pointer */
+-	int		high;		/* upper boundary in search */
+-	xfs_extnum_t	idx = 0;	/* index of target extent */
+-	int		low;		/* lower boundary in search */
+-	xfs_extnum_t	nextents;	/* number of file extents */
+-	xfs_fileoff_t	startoff = 0;	/* start offset of extent */
+-
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	if (nextents == 0) {
+-		*idxp = 0;
+-		return NULL;
+-	}
+-	low = 0;
+-	if (ifp->if_flags & XFS_IFEXTIREC) {
+-		/* Find target extent list */
+-		int	erp_idx = 0;
+-		erp = xfs_iext_bno_to_irec(ifp, bno, &erp_idx);
+-		base = erp->er_extbuf;
+-		high = erp->er_extcount - 1;
+-	} else {
+-		base = ifp->if_u1.if_extents;
+-		high = nextents - 1;
+-	}
+-	/* Binary search extent records */
+-	while (low <= high) {
+-		idx = (low + high) >> 1;
+-		ep = base + idx;
+-		startoff = xfs_bmbt_get_startoff(ep);
+-		blockcount = xfs_bmbt_get_blockcount(ep);
+-		if (bno < startoff) {
+-			high = idx - 1;
+-		} else if (bno >= startoff + blockcount) {
+-			low = idx + 1;
+-		} else {
+-			/* Convert back to file-based extent index */
+-			if (ifp->if_flags & XFS_IFEXTIREC) {
+-				idx += erp->er_extoff;
+-			}
+-			*idxp = idx;
+-			return ep;
+-		}
+-	}
+-	/* Convert back to file-based extent index */
+-	if (ifp->if_flags & XFS_IFEXTIREC) {
+-		idx += erp->er_extoff;
+-	}
+-	if (bno >= startoff + blockcount) {
+-		if (++idx == nextents) {
+-			ep = NULL;
+-		} else {
+-			ep = xfs_iext_get_ext(ifp, idx);
+-		}
+-	}
+-	*idxp = idx;
+-	return ep;
+-}
+-
+-/*
+- * Return a pointer to the indirection array entry containing the
+- * extent record for filesystem block bno. Store the index of the
+- * target irec in *erp_idxp.
+- */
+-xfs_ext_irec_t *			/* pointer to found extent record */
+-xfs_iext_bno_to_irec(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_fileoff_t	bno,		/* block number to search for */
+-	int		*erp_idxp)	/* irec index of target ext list */
+-{
+-	xfs_ext_irec_t	*erp = NULL;	/* indirection array pointer */
+-	xfs_ext_irec_t	*erp_next;	/* next indirection array entry */
+-	int		erp_idx;	/* indirection array index */
+-	int		nlists;		/* number of extent irec's (lists) */
+-	int		high;		/* binary search upper limit */
+-	int		low;		/* binary search lower limit */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	erp_idx = 0;
+-	low = 0;
+-	high = nlists - 1;
+-	while (low <= high) {
+-		erp_idx = (low + high) >> 1;
+-		erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-		erp_next = erp_idx < nlists - 1 ? erp + 1 : NULL;
+-		if (bno < xfs_bmbt_get_startoff(erp->er_extbuf)) {
+-			high = erp_idx - 1;
+-		} else if (erp_next && bno >=
+-			   xfs_bmbt_get_startoff(erp_next->er_extbuf)) {
+-			low = erp_idx + 1;
+-		} else {
+-			break;
+-		}
+-	}
+-	*erp_idxp = erp_idx;
+-	return erp;
+-}
+-
+-/*
+- * Return a pointer to the indirection array entry containing the
+- * extent record at file extent index *idxp. Store the index of the
+- * target irec in *erp_idxp and store the page index of the target
+- * extent record in *idxp.
+- */
+-xfs_ext_irec_t *
+-xfs_iext_idx_to_irec(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_extnum_t	*idxp,		/* extent index (file -> page) */
+-	int		*erp_idxp,	/* pointer to target irec */
+-	int		realloc)	/* new bytes were just added */
+-{
+-	xfs_ext_irec_t	*prev;		/* pointer to previous irec */
+-	xfs_ext_irec_t	*erp = NULL;	/* pointer to current irec */
+-	int		erp_idx;	/* indirection array index */
+-	int		nlists;		/* number of irec's (ex lists) */
+-	int		high;		/* binary search upper limit */
+-	int		low;		/* binary search lower limit */
+-	xfs_extnum_t	page_idx = *idxp; /* extent index in target list */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	ASSERT(page_idx >= 0);
+-	ASSERT(page_idx <= ifp->if_bytes / sizeof(xfs_bmbt_rec_t));
+-	ASSERT(page_idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t) || realloc);
+-
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	erp_idx = 0;
+-	low = 0;
+-	high = nlists - 1;
+-
+-	/* Binary search extent irec's */
+-	while (low <= high) {
+-		erp_idx = (low + high) >> 1;
+-		erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-		prev = erp_idx > 0 ? erp - 1 : NULL;
+-		if (page_idx < erp->er_extoff || (page_idx == erp->er_extoff &&
+-		     realloc && prev && prev->er_extcount < XFS_LINEAR_EXTS)) {
+-			high = erp_idx - 1;
+-		} else if (page_idx > erp->er_extoff + erp->er_extcount ||
+-			   (page_idx == erp->er_extoff + erp->er_extcount &&
+-			    !realloc)) {
+-			low = erp_idx + 1;
+-		} else if (page_idx == erp->er_extoff + erp->er_extcount &&
+-			   erp->er_extcount == XFS_LINEAR_EXTS) {
+-			ASSERT(realloc);
+-			page_idx = 0;
+-			erp_idx++;
+-			erp = erp_idx < nlists ? erp + 1 : NULL;
+-			break;
+-		} else {
+-			page_idx -= erp->er_extoff;
+-			break;
+-		}
+-	}
+-	*idxp = page_idx;
+-	*erp_idxp = erp_idx;
+-	return(erp);
+-}
+-
+-/*
+- * Allocate and initialize an indirection array once the space needed
+- * for incore extents increases above XFS_IEXT_BUFSZ.
+- */
+-void
+-xfs_iext_irec_init(
+-	xfs_ifork_t	*ifp)		/* inode fork pointer */
+-{
+-	xfs_ext_irec_t	*erp;		/* indirection array pointer */
+-	xfs_extnum_t	nextents;	/* number of extents in file */
+-
+-	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	ASSERT(nextents <= XFS_LINEAR_EXTS);
+-
+-	erp = kmem_alloc(sizeof(xfs_ext_irec_t), KM_NOFS);
+-
+-	if (nextents == 0) {
+-		ifp->if_u1.if_extents = kmem_alloc(XFS_IEXT_BUFSZ, KM_NOFS);
+-	} else if (!ifp->if_real_bytes) {
+-		xfs_iext_inline_to_direct(ifp, XFS_IEXT_BUFSZ);
+-	} else if (ifp->if_real_bytes < XFS_IEXT_BUFSZ) {
+-		xfs_iext_realloc_direct(ifp, XFS_IEXT_BUFSZ);
+-	}
+-	erp->er_extbuf = ifp->if_u1.if_extents;
+-	erp->er_extcount = nextents;
+-	erp->er_extoff = 0;
+-
+-	ifp->if_flags |= XFS_IFEXTIREC;
+-	ifp->if_real_bytes = XFS_IEXT_BUFSZ;
+-	ifp->if_bytes = nextents * sizeof(xfs_bmbt_rec_t);
+-	ifp->if_u1.if_ext_irec = erp;
+-
+-	return;
+-}
+-
+-/*
+- * Allocate and initialize a new entry in the indirection array.
+- */
+-xfs_ext_irec_t *
+-xfs_iext_irec_new(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		erp_idx)	/* index for new irec */
+-{
+-	xfs_ext_irec_t	*erp;		/* indirection array pointer */
+-	int		i;		/* loop counter */
+-	int		nlists;		/* number of irec's (ex lists) */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-
+-	/* Resize indirection array */
+-	xfs_iext_realloc_indirect(ifp, ++nlists *
+-				  sizeof(xfs_ext_irec_t));
+-	/*
+-	 * Move records down in the array so the
+-	 * new page can use erp_idx.
+-	 */
+-	erp = ifp->if_u1.if_ext_irec;
+-	for (i = nlists - 1; i > erp_idx; i--) {
+-		memmove(&erp[i], &erp[i-1], sizeof(xfs_ext_irec_t));
+-	}
+-	ASSERT(i == erp_idx);
+-
+-	/* Initialize new extent record */
+-	erp = ifp->if_u1.if_ext_irec;
+-	erp[erp_idx].er_extbuf = kmem_alloc(XFS_IEXT_BUFSZ, KM_NOFS);
+-	ifp->if_real_bytes = nlists * XFS_IEXT_BUFSZ;
+-	memset(erp[erp_idx].er_extbuf, 0, XFS_IEXT_BUFSZ);
+-	erp[erp_idx].er_extcount = 0;
+-	erp[erp_idx].er_extoff = erp_idx > 0 ?
+-		erp[erp_idx-1].er_extoff + erp[erp_idx-1].er_extcount : 0;
+-	return (&erp[erp_idx]);
+-}
+-
+-/*
+- * Remove a record from the indirection array.
+- */
+-void
+-xfs_iext_irec_remove(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		erp_idx)	/* irec index to remove */
+-{
+-	xfs_ext_irec_t	*erp;		/* indirection array pointer */
+-	int		i;		/* loop counter */
+-	int		nlists;		/* number of irec's (ex lists) */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-	if (erp->er_extbuf) {
+-		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1,
+-			-erp->er_extcount);
+-		kmem_free(erp->er_extbuf);
+-	}
+-	/* Compact extent records */
+-	erp = ifp->if_u1.if_ext_irec;
+-	for (i = erp_idx; i < nlists - 1; i++) {
+-		memmove(&erp[i], &erp[i+1], sizeof(xfs_ext_irec_t));
+-	}
+-	/*
+-	 * Manually free the last extent record from the indirection
+-	 * array.  A call to xfs_iext_realloc_indirect() with a size
+-	 * of zero would result in a call to xfs_iext_destroy() which
+-	 * would in turn call this function again, creating a nasty
+-	 * infinite loop.
+-	 */
+-	if (--nlists) {
+-		xfs_iext_realloc_indirect(ifp,
+-			nlists * sizeof(xfs_ext_irec_t));
+-	} else {
+-		kmem_free(ifp->if_u1.if_ext_irec);
+-	}
+-	ifp->if_real_bytes = nlists * XFS_IEXT_BUFSZ;
+-}
+-
+-/*
+- * This is called to clean up large amounts of unused memory allocated
+- * by the indirection array.  Before compacting anything though, verify
+- * that the indirection array is still needed and switch back to the
+- * linear extent list (or even the inline buffer) if possible.  The
+- * compaction policy is as follows:
+- *
+- *    Full Compaction: Extents fit into a single page (or inline buffer)
+- * Partial Compaction: Extents occupy less than 50% of allocated space
+- *      No Compaction: Extents occupy at least 50% of allocated space
+- */
+-void
+-xfs_iext_irec_compact(
+-	xfs_ifork_t	*ifp)		/* inode fork pointer */
+-{
+-	xfs_extnum_t	nextents;	/* number of extents in file */
+-	int		nlists;		/* number of irec's (ex lists) */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-
+-	if (nextents == 0) {
+-		xfs_iext_destroy(ifp);
+-	} else if (nextents <= XFS_INLINE_EXTS) {
+-		xfs_iext_indirect_to_direct(ifp);
+-		xfs_iext_direct_to_inline(ifp, nextents);
+-	} else if (nextents <= XFS_LINEAR_EXTS) {
+-		xfs_iext_indirect_to_direct(ifp);
+-	} else if (nextents < (nlists * XFS_LINEAR_EXTS) >> 1) {
+-		xfs_iext_irec_compact_pages(ifp);
+-	}
+-}
+-
+-/*
+- * Combine extents from neighboring extent pages.
+- */
+-void
+-xfs_iext_irec_compact_pages(
+-	xfs_ifork_t	*ifp)		/* inode fork pointer */
+-{
+-	xfs_ext_irec_t	*erp, *erp_next;/* pointers to irec entries */
+-	int		erp_idx = 0;	/* indirection array index */
+-	int		nlists;		/* number of irec's (ex lists) */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	while (erp_idx < nlists - 1) {
+-		erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-		erp_next = erp + 1;
+-		if (erp_next->er_extcount <=
+-		    (XFS_LINEAR_EXTS - erp->er_extcount)) {
+-			memcpy(&erp->er_extbuf[erp->er_extcount],
+-				erp_next->er_extbuf, erp_next->er_extcount *
+-				sizeof(xfs_bmbt_rec_t));
+-			erp->er_extcount += erp_next->er_extcount;
+-			/*
+-			 * Free page before removing extent record
+-			 * so er_extoffs don't get modified in
+-			 * xfs_iext_irec_remove.
+-			 */
+-			kmem_free(erp_next->er_extbuf);
+-			erp_next->er_extbuf = NULL;
+-			xfs_iext_irec_remove(ifp, erp_idx + 1);
+-			nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-		} else {
+-			erp_idx++;
+-		}
+-	}
+-}
+-
+-/*
+- * This is called to update the er_extoff field in the indirection
+- * array when extents have been added or removed from one of the
+- * extent lists. erp_idx contains the irec index to begin updating
+- * at and ext_diff contains the number of extents that were added
+- * or removed.
+- */
+-void
+-xfs_iext_irec_update_extoffs(
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		erp_idx,	/* irec index to update */
+-	int		ext_diff)	/* number of new extents */
+-{
+-	int		i;		/* loop counter */
+-	int		nlists;		/* number of irec's (ex lists */
+-
+-	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	for (i = erp_idx; i < nlists; i++) {
+-		ifp->if_u1.if_ext_irec[i].er_extoff += ext_diff;
+-	}
+-}
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+new file mode 100644
+index 0000000..1c006f9
+--- /dev/null
++++ b/libxfs/xfs_inode_fork.c
+@@ -0,0 +1,1890 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include <xfs.h>
 +
- STATIC int
- xlog_recover_add_to_cont_trans(
- 	struct xlog		*log,
++kmem_zone_t *xfs_ifork_zone;
++
++STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
++STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
++STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
++
++#ifdef DEBUG
++/*
++ * Make sure that the extents in the given memory buffer
++ * are valid.
++ */
++void
++xfs_validate_extents(
++	xfs_ifork_t		*ifp,
++	int			nrecs,
++	xfs_exntfmt_t		fmt)
++{
++	xfs_bmbt_irec_t		irec;
++	xfs_bmbt_rec_host_t	rec;
++	int			i;
++
++	for (i = 0; i < nrecs; i++) {
++		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
++		rec.l0 = get_unaligned(&ep->l0);
++		rec.l1 = get_unaligned(&ep->l1);
++		xfs_bmbt_get_all(&rec, &irec);
++		if (fmt == XFS_EXTFMT_NOSTATE)
++			ASSERT(irec.br_state == XFS_EXT_NORM);
++	}
++}
++#else /* DEBUG */
++#define xfs_validate_extents(ifp, nrecs, fmt)
++#endif /* DEBUG */
++
++
++/*
++ * Move inode type and inode format specific information from the
++ * on-disk inode to the in-core inode.  For fifos, devs, and sockets
++ * this means set if_rdev to the proper value.  For files, directories,
++ * and symlinks this means to bring in the in-line data or extent
++ * pointers.  For a file in B-tree format, only the root is immediately
++ * brought in-core.  The rest will be in-lined in if_extents when it
++ * is first referenced (see xfs_iread_extents()).
++ */
++int
++xfs_iformat_fork(
++	xfs_inode_t		*ip,
++	xfs_dinode_t		*dip)
++{
++	xfs_attr_shortform_t	*atp;
++	int			size;
++	int			error = 0;
++	xfs_fsize_t             di_size;
++
++	if (unlikely(be32_to_cpu(dip->di_nextents) +
++		     be16_to_cpu(dip->di_anextents) >
++		     be64_to_cpu(dip->di_nblocks))) {
++		xfs_warn(ip->i_mount,
++			"corrupt dinode %Lu, extent total = %d, nblocks = %Lu.",
++			(unsigned long long)ip->i_ino,
++			(int)(be32_to_cpu(dip->di_nextents) +
++			      be16_to_cpu(dip->di_anextents)),
++			(unsigned long long)
++				be64_to_cpu(dip->di_nblocks));
++		XFS_CORRUPTION_ERROR("xfs_iformat(1)", XFS_ERRLEVEL_LOW,
++				     ip->i_mount, dip);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	if (unlikely(dip->di_forkoff > ip->i_mount->m_sb.sb_inodesize)) {
++		xfs_warn(ip->i_mount, "corrupt dinode %Lu, forkoff = 0x%x.",
++			(unsigned long long)ip->i_ino,
++			dip->di_forkoff);
++		XFS_CORRUPTION_ERROR("xfs_iformat(2)", XFS_ERRLEVEL_LOW,
++				     ip->i_mount, dip);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	if (unlikely((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) &&
++		     !ip->i_mount->m_rtdev_targp)) {
++		xfs_warn(ip->i_mount,
++			"corrupt dinode %Lu, has realtime flag set.",
++			ip->i_ino);
++		XFS_CORRUPTION_ERROR("xfs_iformat(realtime)",
++				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	switch (ip->i_d.di_mode & S_IFMT) {
++	case S_IFIFO:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFSOCK:
++		if (unlikely(dip->di_format != XFS_DINODE_FMT_DEV)) {
++			XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
++					      ip->i_mount, dip);
++			return XFS_ERROR(EFSCORRUPTED);
++		}
++		ip->i_d.di_size = 0;
++		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
++		break;
++
++	case S_IFREG:
++	case S_IFLNK:
++	case S_IFDIR:
++		switch (dip->di_format) {
++		case XFS_DINODE_FMT_LOCAL:
++			/*
++			 * no local regular files yet
++			 */
++			if (unlikely(S_ISREG(be16_to_cpu(dip->di_mode)))) {
++				xfs_warn(ip->i_mount,
++			"corrupt inode %Lu (local format for regular file).",
++					(unsigned long long) ip->i_ino);
++				XFS_CORRUPTION_ERROR("xfs_iformat(4)",
++						     XFS_ERRLEVEL_LOW,
++						     ip->i_mount, dip);
++				return XFS_ERROR(EFSCORRUPTED);
++			}
++
++			di_size = be64_to_cpu(dip->di_size);
++			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
++				xfs_warn(ip->i_mount,
++			"corrupt inode %Lu (bad size %Ld for local inode).",
++					(unsigned long long) ip->i_ino,
++					(long long) di_size);
++				XFS_CORRUPTION_ERROR("xfs_iformat(5)",
++						     XFS_ERRLEVEL_LOW,
++						     ip->i_mount, dip);
++				return XFS_ERROR(EFSCORRUPTED);
++			}
++
++			size = (int)di_size;
++			error = xfs_iformat_local(ip, dip, XFS_DATA_FORK, size);
++			break;
++		case XFS_DINODE_FMT_EXTENTS:
++			error = xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
++			break;
++		case XFS_DINODE_FMT_BTREE:
++			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
++			break;
++		default:
++			XFS_ERROR_REPORT("xfs_iformat(6)", XFS_ERRLEVEL_LOW,
++					 ip->i_mount);
++			return XFS_ERROR(EFSCORRUPTED);
++		}
++		break;
++
++	default:
++		XFS_ERROR_REPORT("xfs_iformat(7)", XFS_ERRLEVEL_LOW, ip->i_mount);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++	if (error) {
++		return error;
++	}
++	if (!XFS_DFORK_Q(dip))
++		return 0;
++
++	ASSERT(ip->i_afp == NULL);
++	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP | KM_NOFS);
++
++	switch (dip->di_aformat) {
++	case XFS_DINODE_FMT_LOCAL:
++		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
++		size = be16_to_cpu(atp->hdr.totsize);
++
++		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
++			xfs_warn(ip->i_mount,
++				"corrupt inode %Lu (bad attr fork size %Ld).",
++				(unsigned long long) ip->i_ino,
++				(long long) size);
++			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
++					     XFS_ERRLEVEL_LOW,
++					     ip->i_mount, dip);
++			return XFS_ERROR(EFSCORRUPTED);
++		}
++
++		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
++		break;
++	case XFS_DINODE_FMT_EXTENTS:
++		error = xfs_iformat_extents(ip, dip, XFS_ATTR_FORK);
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		error = xfs_iformat_btree(ip, dip, XFS_ATTR_FORK);
++		break;
++	default:
++		error = XFS_ERROR(EFSCORRUPTED);
++		break;
++	}
++	if (error) {
++		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
++		ip->i_afp = NULL;
++		xfs_idestroy_fork(ip, XFS_DATA_FORK);
++	}
++	return error;
++}
++
++/*
++ * The file is in-lined in the on-disk inode.
++ * If it fits into if_inline_data, then copy
++ * it there, otherwise allocate a buffer for it
++ * and copy the data there.  Either way, set
++ * if_data to point at the data.
++ * If we allocate a buffer for the data, make
++ * sure that its size is a multiple of 4 and
++ * record the real size in i_real_bytes.
++ */
++STATIC int
++xfs_iformat_local(
++	xfs_inode_t	*ip,
++	xfs_dinode_t	*dip,
++	int		whichfork,
++	int		size)
++{
++	xfs_ifork_t	*ifp;
++	int		real_size;
++
++	/*
++	 * If the size is unreasonable, then something
++	 * is wrong and we just bail out rather than crash in
++	 * kmem_alloc() or memcpy() below.
++	 */
++	if (unlikely(size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
++		xfs_warn(ip->i_mount,
++	"corrupt inode %Lu (bad size %d for local fork, size = %d).",
++			(unsigned long long) ip->i_ino, size,
++			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
++		XFS_CORRUPTION_ERROR("xfs_iformat_local", XFS_ERRLEVEL_LOW,
++				     ip->i_mount, dip);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	real_size = 0;
++	if (size == 0)
++		ifp->if_u1.if_data = NULL;
++	else if (size <= sizeof(ifp->if_u2.if_inline_data))
++		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
++	else {
++		real_size = roundup(size, 4);
++		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP | KM_NOFS);
++	}
++	ifp->if_bytes = size;
++	ifp->if_real_bytes = real_size;
++	if (size)
++		memcpy(ifp->if_u1.if_data, XFS_DFORK_PTR(dip, whichfork), size);
++	ifp->if_flags &= ~XFS_IFEXTENTS;
++	ifp->if_flags |= XFS_IFINLINE;
++	return 0;
++}
++
++/*
++ * The file consists of a set of extents all
++ * of which fit into the on-disk inode.
++ * If there are few enough extents to fit into
++ * the if_inline_ext, then copy them there.
++ * Otherwise allocate a buffer for them and copy
++ * them into it.  Either way, set if_extents
++ * to point at the extents.
++ */
++STATIC int
++xfs_iformat_extents(
++	xfs_inode_t	*ip,
++	xfs_dinode_t	*dip,
++	int		whichfork)
++{
++	xfs_bmbt_rec_t	*dp;
++	xfs_ifork_t	*ifp;
++	int		nex;
++	int		size;
++	int		i;
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
++	size = nex * (uint)sizeof(xfs_bmbt_rec_t);
++
++	/*
++	 * If the number of extents is unreasonable, then something
++	 * is wrong and we just bail out rather than crash in
++	 * kmem_alloc() or memcpy() below.
++	 */
++	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, ip->i_mount, whichfork))) {
++		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
++			(unsigned long long) ip->i_ino, nex);
++		XFS_CORRUPTION_ERROR("xfs_iformat_extents(1)", XFS_ERRLEVEL_LOW,
++				     ip->i_mount, dip);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	ifp->if_real_bytes = 0;
++	if (nex == 0)
++		ifp->if_u1.if_extents = NULL;
++	else if (nex <= XFS_INLINE_EXTS)
++		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
++	else
++		xfs_iext_add(ifp, 0, nex);
++
++	ifp->if_bytes = size;
++	if (size) {
++		dp = (xfs_bmbt_rec_t *) XFS_DFORK_PTR(dip, whichfork);
++		xfs_validate_extents(ifp, nex, XFS_EXTFMT_INODE(ip));
++		for (i = 0; i < nex; i++, dp++) {
++			xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
++			ep->l0 = get_unaligned_be64(&dp->l0);
++			ep->l1 = get_unaligned_be64(&dp->l1);
++		}
++		XFS_BMAP_TRACE_EXLIST(ip, nex, whichfork);
++		if (whichfork != XFS_DATA_FORK ||
++			XFS_EXTFMT_INODE(ip) == XFS_EXTFMT_NOSTATE)
++				if (unlikely(xfs_check_nostate_extents(
++				    ifp, 0, nex))) {
++					XFS_ERROR_REPORT("xfs_iformat_extents(2)",
++							 XFS_ERRLEVEL_LOW,
++							 ip->i_mount);
++					return XFS_ERROR(EFSCORRUPTED);
++				}
++	}
++	ifp->if_flags |= XFS_IFEXTENTS;
++	return 0;
++}
++
++/*
++ * The file has too many extents to fit into
++ * the inode, so they are in B-tree format.
++ * Allocate a buffer for the root of the B-tree
++ * and copy the root into it.  The i_extents
++ * field will remain NULL until all of the
++ * extents are read in (when they are needed).
++ */
++STATIC int
++xfs_iformat_btree(
++	xfs_inode_t		*ip,
++	xfs_dinode_t		*dip,
++	int			whichfork)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_bmdr_block_t	*dfp;
++	xfs_ifork_t		*ifp;
++	/* REFERENCED */
++	int			nrecs;
++	int			size;
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
++	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
++	nrecs = be16_to_cpu(dfp->bb_numrecs);
++
++	/*
++	 * blow out if -- fork has less extents than can fit in
++	 * fork (fork shouldn't be a btree format), root btree
++	 * block has more records than can fit into the fork,
++	 * or the number of extents is greater than the number of
++	 * blocks.
++	 */
++	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <=
++					XFS_IFORK_MAXEXT(ip, whichfork) ||
++		     XFS_BMDR_SPACE_CALC(nrecs) >
++					XFS_DFORK_SIZE(dip, mp, whichfork) ||
++		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
++		xfs_warn(mp, "corrupt inode %Lu (btree).",
++					(unsigned long long) ip->i_ino);
++		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
++					 mp, dip);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	ifp->if_broot_bytes = size;
++	ifp->if_broot = kmem_alloc(size, KM_SLEEP | KM_NOFS);
++	ASSERT(ifp->if_broot != NULL);
++	/*
++	 * Copy and convert from the on-disk structure
++	 * to the in-memory structure.
++	 */
++	xfs_bmdr_to_bmbt(ip, dfp, XFS_DFORK_SIZE(dip, ip->i_mount, whichfork),
++			 ifp->if_broot, size);
++	ifp->if_flags &= ~XFS_IFEXTENTS;
++	ifp->if_flags |= XFS_IFBROOT;
++
++	return 0;
++}
++
++/*
++ * Read in extents from a btree-format inode.
++ * Allocate and fill in if_extents.  Real work is done in xfs_bmap.c.
++ */
++int
++xfs_iread_extents(
++	xfs_trans_t	*tp,
++	xfs_inode_t	*ip,
++	int		whichfork)
++{
++	int		error;
++	xfs_ifork_t	*ifp;
++	xfs_extnum_t	nextents;
++
++	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
++		XFS_ERROR_REPORT("xfs_iread_extents", XFS_ERRLEVEL_LOW,
++				 ip->i_mount);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++	nextents = XFS_IFORK_NEXTENTS(ip, whichfork);
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++
++	/*
++	 * We know that the size is valid (it's checked in iformat_btree)
++	 */
++	ifp->if_bytes = ifp->if_real_bytes = 0;
++	ifp->if_flags |= XFS_IFEXTENTS;
++	xfs_iext_add(ifp, 0, nextents);
++	error = xfs_bmap_read_extents(tp, ip, whichfork);
++	if (error) {
++		xfs_iext_destroy(ifp);
++		ifp->if_flags &= ~XFS_IFEXTENTS;
++		return error;
++	}
++	xfs_validate_extents(ifp, nextents, XFS_EXTFMT_INODE(ip));
++	return 0;
++}
++/*
++ * Reallocate the space for if_broot based on the number of records
++ * being added or deleted as indicated in rec_diff.  Move the records
++ * and pointers in if_broot to fit the new size.  When shrinking this
++ * will eliminate holes between the records and pointers created by
++ * the caller.  When growing this will create holes to be filled in
++ * by the caller.
++ *
++ * The caller must not request to add more records than would fit in
++ * the on-disk inode root.  If the if_broot is currently NULL, then
++ * if we adding records one will be allocated.  The caller must also
++ * not request that the number of records go below zero, although
++ * it can go to zero.
++ *
++ * ip -- the inode whose if_broot area is changing
++ * ext_diff -- the change in the number of records, positive or negative,
++ *	 requested for the if_broot array.
++ */
++void
++xfs_iroot_realloc(
++	xfs_inode_t		*ip,
++	int			rec_diff,
++	int			whichfork)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	int			cur_max;
++	xfs_ifork_t		*ifp;
++	struct xfs_btree_block	*new_broot;
++	int			new_max;
++	size_t			new_size;
++	char			*np;
++	char			*op;
++
++	/*
++	 * Handle the degenerate case quietly.
++	 */
++	if (rec_diff == 0) {
++		return;
++	}
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	if (rec_diff > 0) {
++		/*
++		 * If there wasn't any memory allocated before, just
++		 * allocate it now and get out.
++		 */
++		if (ifp->if_broot_bytes == 0) {
++			new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, rec_diff);
++			ifp->if_broot = kmem_alloc(new_size, KM_SLEEP | KM_NOFS);
++			ifp->if_broot_bytes = (int)new_size;
++			return;
++		}
++
++		/*
++		 * If there is already an existing if_broot, then we need
++		 * to realloc() it and shift the pointers to their new
++		 * location.  The records don't change location because
++		 * they are kept butted up against the btree block header.
++		 */
++		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
++		new_max = cur_max + rec_diff;
++		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
++		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
++				XFS_BMAP_BROOT_SPACE_CALC(mp, cur_max),
++				KM_SLEEP | KM_NOFS);
++		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++						     ifp->if_broot_bytes);
++		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++						     (int)new_size);
++		ifp->if_broot_bytes = (int)new_size;
++		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++			XFS_IFORK_SIZE(ip, whichfork));
++		memmove(np, op, cur_max * (uint)sizeof(xfs_dfsbno_t));
++		return;
++	}
++
++	/*
++	 * rec_diff is less than 0.  In this case, we are shrinking the
++	 * if_broot buffer.  It must already exist.  If we go to zero
++	 * records, just get rid of the root and clear the status bit.
++	 */
++	ASSERT((ifp->if_broot != NULL) && (ifp->if_broot_bytes > 0));
++	cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
++	new_max = cur_max + rec_diff;
++	ASSERT(new_max >= 0);
++	if (new_max > 0)
++		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
++	else
++		new_size = 0;
++	if (new_size > 0) {
++		new_broot = kmem_alloc(new_size, KM_SLEEP | KM_NOFS);
++		/*
++		 * First copy over the btree block header.
++		 */
++		memcpy(new_broot, ifp->if_broot,
++			XFS_BMBT_BLOCK_LEN(ip->i_mount));
++	} else {
++		new_broot = NULL;
++		ifp->if_flags &= ~XFS_IFBROOT;
++	}
++
++	/*
++	 * Only copy the records and pointers if there are any.
++	 */
++	if (new_max > 0) {
++		/*
++		 * First copy the records.
++		 */
++		op = (char *)XFS_BMBT_REC_ADDR(mp, ifp->if_broot, 1);
++		np = (char *)XFS_BMBT_REC_ADDR(mp, new_broot, 1);
++		memcpy(np, op, new_max * (uint)sizeof(xfs_bmbt_rec_t));
++
++		/*
++		 * Then copy the pointers.
++		 */
++		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
++						     ifp->if_broot_bytes);
++		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
++						     (int)new_size);
++		memcpy(np, op, new_max * (uint)sizeof(xfs_dfsbno_t));
++	}
++	kmem_free(ifp->if_broot);
++	ifp->if_broot = new_broot;
++	ifp->if_broot_bytes = (int)new_size;
++	if (ifp->if_broot)
++		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++			XFS_IFORK_SIZE(ip, whichfork));
++	return;
++}
++
++
++/*
++ * This is called when the amount of space needed for if_data
++ * is increased or decreased.  The change in size is indicated by
++ * the number of bytes that need to be added or deleted in the
++ * byte_diff parameter.
++ *
++ * If the amount of space needed has decreased below the size of the
++ * inline buffer, then switch to using the inline buffer.  Otherwise,
++ * use kmem_realloc() or kmem_alloc() to adjust the size of the buffer
++ * to what is needed.
++ *
++ * ip -- the inode whose if_data area is changing
++ * byte_diff -- the change in the number of bytes, positive or negative,
++ *	 requested for the if_data array.
++ */
++void
++xfs_idata_realloc(
++	xfs_inode_t	*ip,
++	int		byte_diff,
++	int		whichfork)
++{
++	xfs_ifork_t	*ifp;
++	int		new_size;
++	int		real_size;
++
++	if (byte_diff == 0) {
++		return;
++	}
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	new_size = (int)ifp->if_bytes + byte_diff;
++	ASSERT(new_size >= 0);
++
++	if (new_size == 0) {
++		if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
++			kmem_free(ifp->if_u1.if_data);
++		}
++		ifp->if_u1.if_data = NULL;
++		real_size = 0;
++	} else if (new_size <= sizeof(ifp->if_u2.if_inline_data)) {
++		/*
++		 * If the valid extents/data can fit in if_inline_ext/data,
++		 * copy them from the malloc'd vector and free it.
++		 */
++		if (ifp->if_u1.if_data == NULL) {
++			ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
++		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
++			ASSERT(ifp->if_real_bytes != 0);
++			memcpy(ifp->if_u2.if_inline_data, ifp->if_u1.if_data,
++			      new_size);
++			kmem_free(ifp->if_u1.if_data);
++			ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
++		}
++		real_size = 0;
++	} else {
++		/*
++		 * Stuck with malloc/realloc.
++		 * For inline data, the underlying buffer must be
++		 * a multiple of 4 bytes in size so that it can be
++		 * logged and stay on word boundaries.  We enforce
++		 * that here.
++		 */
++		real_size = roundup(new_size, 4);
++		if (ifp->if_u1.if_data == NULL) {
++			ASSERT(ifp->if_real_bytes == 0);
++			ifp->if_u1.if_data = kmem_alloc(real_size,
++							KM_SLEEP | KM_NOFS);
++		} else if (ifp->if_u1.if_data != ifp->if_u2.if_inline_data) {
++			/*
++			 * Only do the realloc if the underlying size
++			 * is really changing.
++			 */
++			if (ifp->if_real_bytes != real_size) {
++				ifp->if_u1.if_data =
++					kmem_realloc(ifp->if_u1.if_data,
++							real_size,
++							ifp->if_real_bytes,
++							KM_SLEEP | KM_NOFS);
++			}
++		} else {
++			ASSERT(ifp->if_real_bytes == 0);
++			ifp->if_u1.if_data = kmem_alloc(real_size,
++							KM_SLEEP | KM_NOFS);
++			memcpy(ifp->if_u1.if_data, ifp->if_u2.if_inline_data,
++				ifp->if_bytes);
++		}
++	}
++	ifp->if_real_bytes = real_size;
++	ifp->if_bytes = new_size;
++	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
++}
++
++void
++xfs_idestroy_fork(
++	xfs_inode_t	*ip,
++	int		whichfork)
++{
++	xfs_ifork_t	*ifp;
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	if (ifp->if_broot != NULL) {
++		kmem_free(ifp->if_broot);
++		ifp->if_broot = NULL;
++	}
++
++	/*
++	 * If the format is local, then we can't have an extents
++	 * array so just look for an inline data array.  If we're
++	 * not local then we may or may not have an extents list,
++	 * so check and free it up if we do.
++	 */
++	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
++		if ((ifp->if_u1.if_data != ifp->if_u2.if_inline_data) &&
++		    (ifp->if_u1.if_data != NULL)) {
++			ASSERT(ifp->if_real_bytes != 0);
++			kmem_free(ifp->if_u1.if_data);
++			ifp->if_u1.if_data = NULL;
++			ifp->if_real_bytes = 0;
++		}
++	} else if ((ifp->if_flags & XFS_IFEXTENTS) &&
++		   ((ifp->if_flags & XFS_IFEXTIREC) ||
++		    ((ifp->if_u1.if_extents != NULL) &&
++		     (ifp->if_u1.if_extents != ifp->if_u2.if_inline_ext)))) {
++		ASSERT(ifp->if_real_bytes != 0);
++		xfs_iext_destroy(ifp);
++	}
++	ASSERT(ifp->if_u1.if_extents == NULL ||
++	       ifp->if_u1.if_extents == ifp->if_u2.if_inline_ext);
++	ASSERT(ifp->if_real_bytes == 0);
++	if (whichfork == XFS_ATTR_FORK) {
++		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
++		ip->i_afp = NULL;
++	}
++}
++
++/*
++ * xfs_iextents_copy()
++ *
++ * This is called to copy the REAL extents (as opposed to the delayed
++ * allocation extents) from the inode into the given buffer.  It
++ * returns the number of bytes copied into the buffer.
++ *
++ * If there are no delayed allocation extents, then we can just
++ * memcpy() the extents into the buffer.  Otherwise, we need to
++ * examine each extent in turn and skip those which are delayed.
++ */
++int
++xfs_iextents_copy(
++	xfs_inode_t		*ip,
++	xfs_bmbt_rec_t		*dp,
++	int			whichfork)
++{
++	int			copied;
++	int			i;
++	xfs_ifork_t		*ifp;
++	int			nrecs;
++	xfs_fsblock_t		start_block;
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
++	ASSERT(ifp->if_bytes > 0);
++
++	nrecs = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	XFS_BMAP_TRACE_EXLIST(ip, nrecs, whichfork);
++	ASSERT(nrecs > 0);
++
++	/*
++	 * There are some delayed allocation extents in the
++	 * inode, so copy the extents one at a time and skip
++	 * the delayed ones.  There must be at least one
++	 * non-delayed extent.
++	 */
++	copied = 0;
++	for (i = 0; i < nrecs; i++) {
++		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, i);
++		start_block = xfs_bmbt_get_startblock(ep);
++		if (isnullstartblock(start_block)) {
++			/*
++			 * It's a delayed allocation extent, so skip it.
++			 */
++			continue;
++		}
++
++		/* Translate to on disk format */
++		put_unaligned_be64(ep->l0, &dp->l0);
++		put_unaligned_be64(ep->l1, &dp->l1);
++		dp++;
++		copied++;
++	}
++	ASSERT(copied != 0);
++	xfs_validate_extents(ifp, copied, XFS_EXTFMT_INODE(ip));
++
++	return (copied * (uint)sizeof(xfs_bmbt_rec_t));
++}
++
++/*
++ * Each of the following cases stores data into the same region
++ * of the on-disk inode, so only one of them can be valid at
++ * any given time. While it is possible to have conflicting formats
++ * and log flags, e.g. having XFS_ILOG_?DATA set when the fork is
++ * in EXTENTS format, this can only happen when the fork has
++ * changed formats after being modified but before being flushed.
++ * In these cases, the format always takes precedence, because the
++ * format indicates the current state of the fork.
++ */
++void
++xfs_iflush_fork(
++	xfs_inode_t		*ip,
++	xfs_dinode_t		*dip,
++	xfs_inode_log_item_t	*iip,
++	int			whichfork,
++	xfs_buf_t		*bp)
++{
++	char			*cp;
++	xfs_ifork_t		*ifp;
++	xfs_mount_t		*mp;
++	static const short	brootflag[2] =
++		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
++	static const short	dataflag[2] =
++		{ XFS_ILOG_DDATA, XFS_ILOG_ADATA };
++	static const short	extflag[2] =
++		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
++
++	if (!iip)
++		return;
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	/*
++	 * This can happen if we gave up in iformat in an error path,
++	 * for the attribute fork.
++	 */
++	if (!ifp) {
++		ASSERT(whichfork == XFS_ATTR_FORK);
++		return;
++	}
++	cp = XFS_DFORK_PTR(dip, whichfork);
++	mp = ip->i_mount;
++	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
++	case XFS_DINODE_FMT_LOCAL:
++		if ((iip->ili_fields & dataflag[whichfork]) &&
++		    (ifp->if_bytes > 0)) {
++			ASSERT(ifp->if_u1.if_data != NULL);
++			ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
++			memcpy(cp, ifp->if_u1.if_data, ifp->if_bytes);
++		}
++		break;
++
++	case XFS_DINODE_FMT_EXTENTS:
++		ASSERT((ifp->if_flags & XFS_IFEXTENTS) ||
++		       !(iip->ili_fields & extflag[whichfork]));
++		if ((iip->ili_fields & extflag[whichfork]) &&
++		    (ifp->if_bytes > 0)) {
++			ASSERT(xfs_iext_get_ext(ifp, 0));
++			ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) > 0);
++			(void)xfs_iextents_copy(ip, (xfs_bmbt_rec_t *)cp,
++				whichfork);
++		}
++		break;
++
++	case XFS_DINODE_FMT_BTREE:
++		if ((iip->ili_fields & brootflag[whichfork]) &&
++		    (ifp->if_broot_bytes > 0)) {
++			ASSERT(ifp->if_broot != NULL);
++			ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
++			        XFS_IFORK_SIZE(ip, whichfork));
++			xfs_bmbt_to_bmdr(mp, ifp->if_broot, ifp->if_broot_bytes,
++				(xfs_bmdr_block_t *)cp,
++				XFS_DFORK_SIZE(dip, mp, whichfork));
++		}
++		break;
++
++	case XFS_DINODE_FMT_DEV:
++		if (iip->ili_fields & XFS_ILOG_DEV) {
++			ASSERT(whichfork == XFS_DATA_FORK);
++			xfs_dinode_put_rdev(dip, ip->i_df.if_u2.if_rdev);
++		}
++		break;
++
++	case XFS_DINODE_FMT_UUID:
++		if (iip->ili_fields & XFS_ILOG_UUID) {
++			ASSERT(whichfork == XFS_DATA_FORK);
++			memcpy(XFS_DFORK_DPTR(dip),
++			       &ip->i_df.if_u2.if_uuid,
++			       sizeof(uuid_t));
++		}
++		break;
++
++	default:
++		ASSERT(0);
++		break;
++	}
++}
++
++/*
++ * Return a pointer to the extent record at file index idx.
++ */
++xfs_bmbt_rec_host_t *
++xfs_iext_get_ext(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	idx)		/* index of target extent */
++{
++	ASSERT(idx >= 0);
++	ASSERT(idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t));
++
++	if ((ifp->if_flags & XFS_IFEXTIREC) && (idx == 0)) {
++		return ifp->if_u1.if_ext_irec->er_extbuf;
++	} else if (ifp->if_flags & XFS_IFEXTIREC) {
++		xfs_ext_irec_t	*erp;		/* irec pointer */
++		int		erp_idx = 0;	/* irec index */
++		xfs_extnum_t	page_idx = idx;	/* ext index in target list */
++
++		erp = xfs_iext_idx_to_irec(ifp, &page_idx, &erp_idx, 0);
++		return &erp->er_extbuf[page_idx];
++	} else if (ifp->if_bytes) {
++		return &ifp->if_u1.if_extents[idx];
++	} else {
++		return NULL;
++	}
++}
++
++/*
++ * Insert new item(s) into the extent records for incore inode
++ * fork 'ifp'.  'count' new items are inserted at index 'idx'.
++ */
++void
++xfs_iext_insert(
++	xfs_inode_t	*ip,		/* incore inode pointer */
++	xfs_extnum_t	idx,		/* starting index of new items */
++	xfs_extnum_t	count,		/* number of inserted items */
++	xfs_bmbt_irec_t	*new,		/* items to insert */
++	int		state)		/* type of extent conversion */
++{
++	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
++	xfs_extnum_t	i;		/* extent record index */
++
++	trace_xfs_iext_insert(ip, idx, new, state, _RET_IP_);
++
++	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
++	xfs_iext_add(ifp, idx, count);
++	for (i = idx; i < idx + count; i++, new++)
++		xfs_bmbt_set_all(xfs_iext_get_ext(ifp, i), new);
++}
++
++/*
++ * This is called when the amount of space required for incore file
++ * extents needs to be increased. The ext_diff parameter stores the
++ * number of new extents being added and the idx parameter contains
++ * the extent index where the new extents will be added. If the new
++ * extents are being appended, then we just need to (re)allocate and
++ * initialize the space. Otherwise, if the new extents are being
++ * inserted into the middle of the existing entries, a bit more work
++ * is required to make room for the new extents to be inserted. The
++ * caller is responsible for filling in the new extent entries upon
++ * return.
++ */
++void
++xfs_iext_add(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	idx,		/* index to begin adding exts */
++	int		ext_diff)	/* number of extents to add */
++{
++	int		byte_diff;	/* new bytes being added */
++	int		new_size;	/* size of extents after adding */
++	xfs_extnum_t	nextents;	/* number of extents in file */
++
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	ASSERT((idx >= 0) && (idx <= nextents));
++	byte_diff = ext_diff * sizeof(xfs_bmbt_rec_t);
++	new_size = ifp->if_bytes + byte_diff;
++	/*
++	 * If the new number of extents (nextents + ext_diff)
++	 * fits inside the inode, then continue to use the inline
++	 * extent buffer.
++	 */
++	if (nextents + ext_diff <= XFS_INLINE_EXTS) {
++		if (idx < nextents) {
++			memmove(&ifp->if_u2.if_inline_ext[idx + ext_diff],
++				&ifp->if_u2.if_inline_ext[idx],
++				(nextents - idx) * sizeof(xfs_bmbt_rec_t));
++			memset(&ifp->if_u2.if_inline_ext[idx], 0, byte_diff);
++		}
++		ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
++		ifp->if_real_bytes = 0;
++	}
++	/*
++	 * Otherwise use a linear (direct) extent list.
++	 * If the extents are currently inside the inode,
++	 * xfs_iext_realloc_direct will switch us from
++	 * inline to direct extent allocation mode.
++	 */
++	else if (nextents + ext_diff <= XFS_LINEAR_EXTS) {
++		xfs_iext_realloc_direct(ifp, new_size);
++		if (idx < nextents) {
++			memmove(&ifp->if_u1.if_extents[idx + ext_diff],
++				&ifp->if_u1.if_extents[idx],
++				(nextents - idx) * sizeof(xfs_bmbt_rec_t));
++			memset(&ifp->if_u1.if_extents[idx], 0, byte_diff);
++		}
++	}
++	/* Indirection array */
++	else {
++		xfs_ext_irec_t	*erp;
++		int		erp_idx = 0;
++		int		page_idx = idx;
++
++		ASSERT(nextents + ext_diff > XFS_LINEAR_EXTS);
++		if (ifp->if_flags & XFS_IFEXTIREC) {
++			erp = xfs_iext_idx_to_irec(ifp, &page_idx, &erp_idx, 1);
++		} else {
++			xfs_iext_irec_init(ifp);
++			ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++			erp = ifp->if_u1.if_ext_irec;
++		}
++		/* Extents fit in target extent page */
++		if (erp && erp->er_extcount + ext_diff <= XFS_LINEAR_EXTS) {
++			if (page_idx < erp->er_extcount) {
++				memmove(&erp->er_extbuf[page_idx + ext_diff],
++					&erp->er_extbuf[page_idx],
++					(erp->er_extcount - page_idx) *
++					sizeof(xfs_bmbt_rec_t));
++				memset(&erp->er_extbuf[page_idx], 0, byte_diff);
++			}
++			erp->er_extcount += ext_diff;
++			xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, ext_diff);
++		}
++		/* Insert a new extent page */
++		else if (erp) {
++			xfs_iext_add_indirect_multi(ifp,
++				erp_idx, page_idx, ext_diff);
++		}
++		/*
++		 * If extent(s) are being appended to the last page in
++		 * the indirection array and the new extent(s) don't fit
++		 * in the page, then erp is NULL and erp_idx is set to
++		 * the next index needed in the indirection array.
++		 */
++		else {
++			int	count = ext_diff;
++
++			while (count) {
++				erp = xfs_iext_irec_new(ifp, erp_idx);
++				erp->er_extcount = count;
++				count -= MIN(count, (int)XFS_LINEAR_EXTS);
++				if (count) {
++					erp_idx++;
++				}
++			}
++		}
++	}
++	ifp->if_bytes = new_size;
++}
++
++/*
++ * This is called when incore extents are being added to the indirection
++ * array and the new extents do not fit in the target extent list. The
++ * erp_idx parameter contains the irec index for the target extent list
++ * in the indirection array, and the idx parameter contains the extent
++ * index within the list. The number of extents being added is stored
++ * in the count parameter.
++ *
++ *    |-------|   |-------|
++ *    |       |   |       |    idx - number of extents before idx
++ *    |  idx  |   | count |
++ *    |       |   |       |    count - number of extents being inserted at idx
++ *    |-------|   |-------|
++ *    | count |   | nex2  |    nex2 - number of extents after idx + count
++ *    |-------|   |-------|
++ */
++void
++xfs_iext_add_indirect_multi(
++	xfs_ifork_t	*ifp,			/* inode fork pointer */
++	int		erp_idx,		/* target extent irec index */
++	xfs_extnum_t	idx,			/* index within target list */
++	int		count)			/* new extents being added */
++{
++	int		byte_diff;		/* new bytes being added */
++	xfs_ext_irec_t	*erp;			/* pointer to irec entry */
++	xfs_extnum_t	ext_diff;		/* number of extents to add */
++	xfs_extnum_t	ext_cnt;		/* new extents still needed */
++	xfs_extnum_t	nex2;			/* extents after idx + count */
++	xfs_bmbt_rec_t	*nex2_ep = NULL;	/* temp list for nex2 extents */
++	int		nlists;			/* number of irec's (lists) */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	erp = &ifp->if_u1.if_ext_irec[erp_idx];
++	nex2 = erp->er_extcount - idx;
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++
++	/*
++	 * Save second part of target extent list
++	 * (all extents past */
++	if (nex2) {
++		byte_diff = nex2 * sizeof(xfs_bmbt_rec_t);
++		nex2_ep = (xfs_bmbt_rec_t *) kmem_alloc(byte_diff, KM_NOFS);
++		memmove(nex2_ep, &erp->er_extbuf[idx], byte_diff);
++		erp->er_extcount -= nex2;
++		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, -nex2);
++		memset(&erp->er_extbuf[idx], 0, byte_diff);
++	}
++
++	/*
++	 * Add the new extents to the end of the target
++	 * list, then allocate new irec record(s) and
++	 * extent buffer(s) as needed to store the rest
++	 * of the new extents.
++	 */
++	ext_cnt = count;
++	ext_diff = MIN(ext_cnt, (int)XFS_LINEAR_EXTS - erp->er_extcount);
++	if (ext_diff) {
++		erp->er_extcount += ext_diff;
++		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, ext_diff);
++		ext_cnt -= ext_diff;
++	}
++	while (ext_cnt) {
++		erp_idx++;
++		erp = xfs_iext_irec_new(ifp, erp_idx);
++		ext_diff = MIN(ext_cnt, (int)XFS_LINEAR_EXTS);
++		erp->er_extcount = ext_diff;
++		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, ext_diff);
++		ext_cnt -= ext_diff;
++	}
++
++	/* Add nex2 extents back to indirection array */
++	if (nex2) {
++		xfs_extnum_t	ext_avail;
++		int		i;
++
++		byte_diff = nex2 * sizeof(xfs_bmbt_rec_t);
++		ext_avail = XFS_LINEAR_EXTS - erp->er_extcount;
++		i = 0;
++		/*
++		 * If nex2 extents fit in the current page, append
++		 * nex2_ep after the new extents.
++		 */
++		if (nex2 <= ext_avail) {
++			i = erp->er_extcount;
++		}
++		/*
++		 * Otherwise, check if space is available in the
++		 * next page.
++		 */
++		else if ((erp_idx < nlists - 1) &&
++			 (nex2 <= (ext_avail = XFS_LINEAR_EXTS -
++			  ifp->if_u1.if_ext_irec[erp_idx+1].er_extcount))) {
++			erp_idx++;
++			erp++;
++			/* Create a hole for nex2 extents */
++			memmove(&erp->er_extbuf[nex2], erp->er_extbuf,
++				erp->er_extcount * sizeof(xfs_bmbt_rec_t));
++		}
++		/*
++		 * Final choice, create a new extent page for
++		 * nex2 extents.
++		 */
++		else {
++			erp_idx++;
++			erp = xfs_iext_irec_new(ifp, erp_idx);
++		}
++		memmove(&erp->er_extbuf[i], nex2_ep, byte_diff);
++		kmem_free(nex2_ep);
++		erp->er_extcount += nex2;
++		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, nex2);
++	}
++}
++
++/*
++ * This is called when the amount of space required for incore file
++ * extents needs to be decreased. The ext_diff parameter stores the
++ * number of extents to be removed and the idx parameter contains
++ * the extent index where the extents will be removed from.
++ *
++ * If the amount of space needed has decreased below the linear
++ * limit, XFS_IEXT_BUFSZ, then switch to using the contiguous
++ * extent array.  Otherwise, use kmem_realloc() to adjust the
++ * size to what is needed.
++ */
++void
++xfs_iext_remove(
++	xfs_inode_t	*ip,		/* incore inode pointer */
++	xfs_extnum_t	idx,		/* index to begin removing exts */
++	int		ext_diff,	/* number of extents to remove */
++	int		state)		/* type of extent conversion */
++{
++	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
++	xfs_extnum_t	nextents;	/* number of extents in file */
++	int		new_size;	/* size of extents after removal */
++
++	trace_xfs_iext_remove(ip, idx, state, _RET_IP_);
++
++	ASSERT(ext_diff > 0);
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	new_size = (nextents - ext_diff) * sizeof(xfs_bmbt_rec_t);
++
++	if (new_size == 0) {
++		xfs_iext_destroy(ifp);
++	} else if (ifp->if_flags & XFS_IFEXTIREC) {
++		xfs_iext_remove_indirect(ifp, idx, ext_diff);
++	} else if (ifp->if_real_bytes) {
++		xfs_iext_remove_direct(ifp, idx, ext_diff);
++	} else {
++		xfs_iext_remove_inline(ifp, idx, ext_diff);
++	}
++	ifp->if_bytes = new_size;
++}
++
++/*
++ * This removes ext_diff extents from the inline buffer, beginning
++ * at extent index idx.
++ */
++void
++xfs_iext_remove_inline(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	idx,		/* index to begin removing exts */
++	int		ext_diff)	/* number of extents to remove */
++{
++	int		nextents;	/* number of extents in file */
++
++	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
++	ASSERT(idx < XFS_INLINE_EXTS);
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	ASSERT(((nextents - ext_diff) > 0) &&
++		(nextents - ext_diff) < XFS_INLINE_EXTS);
++
++	if (idx + ext_diff < nextents) {
++		memmove(&ifp->if_u2.if_inline_ext[idx],
++			&ifp->if_u2.if_inline_ext[idx + ext_diff],
++			(nextents - (idx + ext_diff)) *
++			 sizeof(xfs_bmbt_rec_t));
++		memset(&ifp->if_u2.if_inline_ext[nextents - ext_diff],
++			0, ext_diff * sizeof(xfs_bmbt_rec_t));
++	} else {
++		memset(&ifp->if_u2.if_inline_ext[idx], 0,
++			ext_diff * sizeof(xfs_bmbt_rec_t));
++	}
++}
++
++/*
++ * This removes ext_diff extents from a linear (direct) extent list,
++ * beginning at extent index idx. If the extents are being removed
++ * from the end of the list (ie. truncate) then we just need to re-
++ * allocate the list to remove the extra space. Otherwise, if the
++ * extents are being removed from the middle of the existing extent
++ * entries, then we first need to move the extent records beginning
++ * at idx + ext_diff up in the list to overwrite the records being
++ * removed, then remove the extra space via kmem_realloc.
++ */
++void
++xfs_iext_remove_direct(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	idx,		/* index to begin removing exts */
++	int		ext_diff)	/* number of extents to remove */
++{
++	xfs_extnum_t	nextents;	/* number of extents in file */
++	int		new_size;	/* size of extents after removal */
++
++	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
++	new_size = ifp->if_bytes -
++		(ext_diff * sizeof(xfs_bmbt_rec_t));
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++
++	if (new_size == 0) {
++		xfs_iext_destroy(ifp);
++		return;
++	}
++	/* Move extents up in the list (if needed) */
++	if (idx + ext_diff < nextents) {
++		memmove(&ifp->if_u1.if_extents[idx],
++			&ifp->if_u1.if_extents[idx + ext_diff],
++			(nextents - (idx + ext_diff)) *
++			 sizeof(xfs_bmbt_rec_t));
++	}
++	memset(&ifp->if_u1.if_extents[nextents - ext_diff],
++		0, ext_diff * sizeof(xfs_bmbt_rec_t));
++	/*
++	 * Reallocate the direct extent list. If the extents
++	 * will fit inside the inode then xfs_iext_realloc_direct
++	 * will switch from direct to inline extent allocation
++	 * mode for us.
++	 */
++	xfs_iext_realloc_direct(ifp, new_size);
++	ifp->if_bytes = new_size;
++}
++
++/*
++ * This is called when incore extents are being removed from the
++ * indirection array and the extents being removed span multiple extent
++ * buffers. The idx parameter contains the file extent index where we
++ * want to begin removing extents, and the count parameter contains
++ * how many extents need to be removed.
++ *
++ *    |-------|   |-------|
++ *    | nex1  |   |       |    nex1 - number of extents before idx
++ *    |-------|   | count |
++ *    |       |   |       |    count - number of extents being removed at idx
++ *    | count |   |-------|
++ *    |       |   | nex2  |    nex2 - number of extents after idx + count
++ *    |-------|   |-------|
++ */
++void
++xfs_iext_remove_indirect(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	idx,		/* index to begin removing extents */
++	int		count)		/* number of extents to remove */
++{
++	xfs_ext_irec_t	*erp;		/* indirection array pointer */
++	int		erp_idx = 0;	/* indirection array index */
++	xfs_extnum_t	ext_cnt;	/* extents left to remove */
++	xfs_extnum_t	ext_diff;	/* extents to remove in current list */
++	xfs_extnum_t	nex1;		/* number of extents before idx */
++	xfs_extnum_t	nex2;		/* extents after idx + count */
++	int		page_idx = idx;	/* index in target extent list */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	erp = xfs_iext_idx_to_irec(ifp,  &page_idx, &erp_idx, 0);
++	ASSERT(erp != NULL);
++	nex1 = page_idx;
++	ext_cnt = count;
++	while (ext_cnt) {
++		nex2 = MAX((erp->er_extcount - (nex1 + ext_cnt)), 0);
++		ext_diff = MIN(ext_cnt, (erp->er_extcount - nex1));
++		/*
++		 * Check for deletion of entire list;
++		 * xfs_iext_irec_remove() updates extent offsets.
++		 */
++		if (ext_diff == erp->er_extcount) {
++			xfs_iext_irec_remove(ifp, erp_idx);
++			ext_cnt -= ext_diff;
++			nex1 = 0;
++			if (ext_cnt) {
++				ASSERT(erp_idx < ifp->if_real_bytes /
++					XFS_IEXT_BUFSZ);
++				erp = &ifp->if_u1.if_ext_irec[erp_idx];
++				nex1 = 0;
++				continue;
++			} else {
++				break;
++			}
++		}
++		/* Move extents up (if needed) */
++		if (nex2) {
++			memmove(&erp->er_extbuf[nex1],
++				&erp->er_extbuf[nex1 + ext_diff],
++				nex2 * sizeof(xfs_bmbt_rec_t));
++		}
++		/* Zero out rest of page */
++		memset(&erp->er_extbuf[nex1 + nex2], 0, (XFS_IEXT_BUFSZ -
++			((nex1 + nex2) * sizeof(xfs_bmbt_rec_t))));
++		/* Update remaining counters */
++		erp->er_extcount -= ext_diff;
++		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1, -ext_diff);
++		ext_cnt -= ext_diff;
++		nex1 = 0;
++		erp_idx++;
++		erp++;
++	}
++	ifp->if_bytes -= count * sizeof(xfs_bmbt_rec_t);
++	xfs_iext_irec_compact(ifp);
++}
++
++/*
++ * Create, destroy, or resize a linear (direct) block of extents.
++ */
++void
++xfs_iext_realloc_direct(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	int		new_size)	/* new size of extents */
++{
++	int		rnew_size;	/* real new size of extents */
++
++	rnew_size = new_size;
++
++	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC) ||
++		((new_size >= 0) && (new_size <= XFS_IEXT_BUFSZ) &&
++		 (new_size != ifp->if_real_bytes)));
++
++	/* Free extent records */
++	if (new_size == 0) {
++		xfs_iext_destroy(ifp);
++	}
++	/* Resize direct extent list and zero any new bytes */
++	else if (ifp->if_real_bytes) {
++		/* Check if extents will fit inside the inode */
++		if (new_size <= XFS_INLINE_EXTS * sizeof(xfs_bmbt_rec_t)) {
++			xfs_iext_direct_to_inline(ifp, new_size /
++				(uint)sizeof(xfs_bmbt_rec_t));
++			ifp->if_bytes = new_size;
++			return;
++		}
++		if (!is_power_of_2(new_size)){
++			rnew_size = roundup_pow_of_two(new_size);
++		}
++		if (rnew_size != ifp->if_real_bytes) {
++			ifp->if_u1.if_extents =
++				kmem_realloc(ifp->if_u1.if_extents,
++						rnew_size,
++						ifp->if_real_bytes, KM_NOFS);
++		}
++		if (rnew_size > ifp->if_real_bytes) {
++			memset(&ifp->if_u1.if_extents[ifp->if_bytes /
++				(uint)sizeof(xfs_bmbt_rec_t)], 0,
++				rnew_size - ifp->if_real_bytes);
++		}
++	}
++	/*
++	 * Switch from the inline extent buffer to a direct
++	 * extent list. Be sure to include the inline extent
++	 * bytes in new_size.
++	 */
++	else {
++		new_size += ifp->if_bytes;
++		if (!is_power_of_2(new_size)) {
++			rnew_size = roundup_pow_of_two(new_size);
++		}
++		xfs_iext_inline_to_direct(ifp, rnew_size);
++	}
++	ifp->if_real_bytes = rnew_size;
++	ifp->if_bytes = new_size;
++}
++
++/*
++ * Switch from linear (direct) extent records to inline buffer.
++ */
++void
++xfs_iext_direct_to_inline(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	nextents)	/* number of extents in file */
++{
++	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
++	ASSERT(nextents <= XFS_INLINE_EXTS);
++	/*
++	 * The inline buffer was zeroed when we switched
++	 * from inline to direct extent allocation mode,
++	 * so we don't need to clear it here.
++	 */
++	memcpy(ifp->if_u2.if_inline_ext, ifp->if_u1.if_extents,
++		nextents * sizeof(xfs_bmbt_rec_t));
++	kmem_free(ifp->if_u1.if_extents);
++	ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
++	ifp->if_real_bytes = 0;
++}
++
++/*
++ * Switch from inline buffer to linear (direct) extent records.
++ * new_size should already be rounded up to the next power of 2
++ * by the caller (when appropriate), so use new_size as it is.
++ * However, since new_size may be rounded up, we can't update
++ * if_bytes here. It is the caller's responsibility to update
++ * if_bytes upon return.
++ */
++void
++xfs_iext_inline_to_direct(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	int		new_size)	/* number of extents in file */
++{
++	ifp->if_u1.if_extents = kmem_alloc(new_size, KM_NOFS);
++	memset(ifp->if_u1.if_extents, 0, new_size);
++	if (ifp->if_bytes) {
++		memcpy(ifp->if_u1.if_extents, ifp->if_u2.if_inline_ext,
++			ifp->if_bytes);
++		memset(ifp->if_u2.if_inline_ext, 0, XFS_INLINE_EXTS *
++			sizeof(xfs_bmbt_rec_t));
++	}
++	ifp->if_real_bytes = new_size;
++}
++
++/*
++ * Resize an extent indirection array to new_size bytes.
++ */
++STATIC void
++xfs_iext_realloc_indirect(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	int		new_size)	/* new indirection array size */
++{
++	int		nlists;		/* number of irec's (ex lists) */
++	int		size;		/* current indirection array size */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	size = nlists * sizeof(xfs_ext_irec_t);
++	ASSERT(ifp->if_real_bytes);
++	ASSERT((new_size >= 0) && (new_size != size));
++	if (new_size == 0) {
++		xfs_iext_destroy(ifp);
++	} else {
++		ifp->if_u1.if_ext_irec = (xfs_ext_irec_t *)
++			kmem_realloc(ifp->if_u1.if_ext_irec,
++				new_size, size, KM_NOFS);
++	}
++}
++
++/*
++ * Switch from indirection array to linear (direct) extent allocations.
++ */
++STATIC void
++xfs_iext_indirect_to_direct(
++	 xfs_ifork_t	*ifp)		/* inode fork pointer */
++{
++	xfs_bmbt_rec_host_t *ep;	/* extent record pointer */
++	xfs_extnum_t	nextents;	/* number of extents in file */
++	int		size;		/* size of file extents */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	ASSERT(nextents <= XFS_LINEAR_EXTS);
++	size = nextents * sizeof(xfs_bmbt_rec_t);
++
++	xfs_iext_irec_compact_pages(ifp);
++	ASSERT(ifp->if_real_bytes == XFS_IEXT_BUFSZ);
++
++	ep = ifp->if_u1.if_ext_irec->er_extbuf;
++	kmem_free(ifp->if_u1.if_ext_irec);
++	ifp->if_flags &= ~XFS_IFEXTIREC;
++	ifp->if_u1.if_extents = ep;
++	ifp->if_bytes = size;
++	if (nextents < XFS_LINEAR_EXTS) {
++		xfs_iext_realloc_direct(ifp, size);
++	}
++}
++
++/*
++ * Free incore file extents.
++ */
++void
++xfs_iext_destroy(
++	xfs_ifork_t	*ifp)		/* inode fork pointer */
++{
++	if (ifp->if_flags & XFS_IFEXTIREC) {
++		int	erp_idx;
++		int	nlists;
++
++		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
++			xfs_iext_irec_remove(ifp, erp_idx);
++		}
++		ifp->if_flags &= ~XFS_IFEXTIREC;
++	} else if (ifp->if_real_bytes) {
++		kmem_free(ifp->if_u1.if_extents);
++	} else if (ifp->if_bytes) {
++		memset(ifp->if_u2.if_inline_ext, 0, XFS_INLINE_EXTS *
++			sizeof(xfs_bmbt_rec_t));
++	}
++	ifp->if_u1.if_extents = NULL;
++	ifp->if_real_bytes = 0;
++	ifp->if_bytes = 0;
++}
++
++/*
++ * Return a pointer to the extent record for file system block bno.
++ */
++xfs_bmbt_rec_host_t *			/* pointer to found extent record */
++xfs_iext_bno_to_ext(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_fileoff_t	bno,		/* block number to search for */
++	xfs_extnum_t	*idxp)		/* index of target extent */
++{
++	xfs_bmbt_rec_host_t *base;	/* pointer to first extent */
++	xfs_filblks_t	blockcount = 0;	/* number of blocks in extent */
++	xfs_bmbt_rec_host_t *ep = NULL;	/* pointer to target extent */
++	xfs_ext_irec_t	*erp = NULL;	/* indirection array pointer */
++	int		high;		/* upper boundary in search */
++	xfs_extnum_t	idx = 0;	/* index of target extent */
++	int		low;		/* lower boundary in search */
++	xfs_extnum_t	nextents;	/* number of file extents */
++	xfs_fileoff_t	startoff = 0;	/* start offset of extent */
++
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	if (nextents == 0) {
++		*idxp = 0;
++		return NULL;
++	}
++	low = 0;
++	if (ifp->if_flags & XFS_IFEXTIREC) {
++		/* Find target extent list */
++		int	erp_idx = 0;
++		erp = xfs_iext_bno_to_irec(ifp, bno, &erp_idx);
++		base = erp->er_extbuf;
++		high = erp->er_extcount - 1;
++	} else {
++		base = ifp->if_u1.if_extents;
++		high = nextents - 1;
++	}
++	/* Binary search extent records */
++	while (low <= high) {
++		idx = (low + high) >> 1;
++		ep = base + idx;
++		startoff = xfs_bmbt_get_startoff(ep);
++		blockcount = xfs_bmbt_get_blockcount(ep);
++		if (bno < startoff) {
++			high = idx - 1;
++		} else if (bno >= startoff + blockcount) {
++			low = idx + 1;
++		} else {
++			/* Convert back to file-based extent index */
++			if (ifp->if_flags & XFS_IFEXTIREC) {
++				idx += erp->er_extoff;
++			}
++			*idxp = idx;
++			return ep;
++		}
++	}
++	/* Convert back to file-based extent index */
++	if (ifp->if_flags & XFS_IFEXTIREC) {
++		idx += erp->er_extoff;
++	}
++	if (bno >= startoff + blockcount) {
++		if (++idx == nextents) {
++			ep = NULL;
++		} else {
++			ep = xfs_iext_get_ext(ifp, idx);
++		}
++	}
++	*idxp = idx;
++	return ep;
++}
++
++/*
++ * Return a pointer to the indirection array entry containing the
++ * extent record for filesystem block bno. Store the index of the
++ * target irec in *erp_idxp.
++ */
++xfs_ext_irec_t *			/* pointer to found extent record */
++xfs_iext_bno_to_irec(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_fileoff_t	bno,		/* block number to search for */
++	int		*erp_idxp)	/* irec index of target ext list */
++{
++	xfs_ext_irec_t	*erp = NULL;	/* indirection array pointer */
++	xfs_ext_irec_t	*erp_next;	/* next indirection array entry */
++	int		erp_idx;	/* indirection array index */
++	int		nlists;		/* number of extent irec's (lists) */
++	int		high;		/* binary search upper limit */
++	int		low;		/* binary search lower limit */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	erp_idx = 0;
++	low = 0;
++	high = nlists - 1;
++	while (low <= high) {
++		erp_idx = (low + high) >> 1;
++		erp = &ifp->if_u1.if_ext_irec[erp_idx];
++		erp_next = erp_idx < nlists - 1 ? erp + 1 : NULL;
++		if (bno < xfs_bmbt_get_startoff(erp->er_extbuf)) {
++			high = erp_idx - 1;
++		} else if (erp_next && bno >=
++			   xfs_bmbt_get_startoff(erp_next->er_extbuf)) {
++			low = erp_idx + 1;
++		} else {
++			break;
++		}
++	}
++	*erp_idxp = erp_idx;
++	return erp;
++}
++
++/*
++ * Return a pointer to the indirection array entry containing the
++ * extent record at file extent index *idxp. Store the index of the
++ * target irec in *erp_idxp and store the page index of the target
++ * extent record in *idxp.
++ */
++xfs_ext_irec_t *
++xfs_iext_idx_to_irec(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	xfs_extnum_t	*idxp,		/* extent index (file -> page) */
++	int		*erp_idxp,	/* pointer to target irec */
++	int		realloc)	/* new bytes were just added */
++{
++	xfs_ext_irec_t	*prev;		/* pointer to previous irec */
++	xfs_ext_irec_t	*erp = NULL;	/* pointer to current irec */
++	int		erp_idx;	/* indirection array index */
++	int		nlists;		/* number of irec's (ex lists) */
++	int		high;		/* binary search upper limit */
++	int		low;		/* binary search lower limit */
++	xfs_extnum_t	page_idx = *idxp; /* extent index in target list */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	ASSERT(page_idx >= 0);
++	ASSERT(page_idx <= ifp->if_bytes / sizeof(xfs_bmbt_rec_t));
++	ASSERT(page_idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t) || realloc);
++
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	erp_idx = 0;
++	low = 0;
++	high = nlists - 1;
++
++	/* Binary search extent irec's */
++	while (low <= high) {
++		erp_idx = (low + high) >> 1;
++		erp = &ifp->if_u1.if_ext_irec[erp_idx];
++		prev = erp_idx > 0 ? erp - 1 : NULL;
++		if (page_idx < erp->er_extoff || (page_idx == erp->er_extoff &&
++		     realloc && prev && prev->er_extcount < XFS_LINEAR_EXTS)) {
++			high = erp_idx - 1;
++		} else if (page_idx > erp->er_extoff + erp->er_extcount ||
++			   (page_idx == erp->er_extoff + erp->er_extcount &&
++			    !realloc)) {
++			low = erp_idx + 1;
++		} else if (page_idx == erp->er_extoff + erp->er_extcount &&
++			   erp->er_extcount == XFS_LINEAR_EXTS) {
++			ASSERT(realloc);
++			page_idx = 0;
++			erp_idx++;
++			erp = erp_idx < nlists ? erp + 1 : NULL;
++			break;
++		} else {
++			page_idx -= erp->er_extoff;
++			break;
++		}
++	}
++	*idxp = page_idx;
++	*erp_idxp = erp_idx;
++	return(erp);
++}
++
++/*
++ * Allocate and initialize an indirection array once the space needed
++ * for incore extents increases above XFS_IEXT_BUFSZ.
++ */
++void
++xfs_iext_irec_init(
++	xfs_ifork_t	*ifp)		/* inode fork pointer */
++{
++	xfs_ext_irec_t	*erp;		/* indirection array pointer */
++	xfs_extnum_t	nextents;	/* number of extents in file */
++
++	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	ASSERT(nextents <= XFS_LINEAR_EXTS);
++
++	erp = kmem_alloc(sizeof(xfs_ext_irec_t), KM_NOFS);
++
++	if (nextents == 0) {
++		ifp->if_u1.if_extents = kmem_alloc(XFS_IEXT_BUFSZ, KM_NOFS);
++	} else if (!ifp->if_real_bytes) {
++		xfs_iext_inline_to_direct(ifp, XFS_IEXT_BUFSZ);
++	} else if (ifp->if_real_bytes < XFS_IEXT_BUFSZ) {
++		xfs_iext_realloc_direct(ifp, XFS_IEXT_BUFSZ);
++	}
++	erp->er_extbuf = ifp->if_u1.if_extents;
++	erp->er_extcount = nextents;
++	erp->er_extoff = 0;
++
++	ifp->if_flags |= XFS_IFEXTIREC;
++	ifp->if_real_bytes = XFS_IEXT_BUFSZ;
++	ifp->if_bytes = nextents * sizeof(xfs_bmbt_rec_t);
++	ifp->if_u1.if_ext_irec = erp;
++
++	return;
++}
++
++/*
++ * Allocate and initialize a new entry in the indirection array.
++ */
++xfs_ext_irec_t *
++xfs_iext_irec_new(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	int		erp_idx)	/* index for new irec */
++{
++	xfs_ext_irec_t	*erp;		/* indirection array pointer */
++	int		i;		/* loop counter */
++	int		nlists;		/* number of irec's (ex lists) */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++
++	/* Resize indirection array */
++	xfs_iext_realloc_indirect(ifp, ++nlists *
++				  sizeof(xfs_ext_irec_t));
++	/*
++	 * Move records down in the array so the
++	 * new page can use erp_idx.
++	 */
++	erp = ifp->if_u1.if_ext_irec;
++	for (i = nlists - 1; i > erp_idx; i--) {
++		memmove(&erp[i], &erp[i-1], sizeof(xfs_ext_irec_t));
++	}
++	ASSERT(i == erp_idx);
++
++	/* Initialize new extent record */
++	erp = ifp->if_u1.if_ext_irec;
++	erp[erp_idx].er_extbuf = kmem_alloc(XFS_IEXT_BUFSZ, KM_NOFS);
++	ifp->if_real_bytes = nlists * XFS_IEXT_BUFSZ;
++	memset(erp[erp_idx].er_extbuf, 0, XFS_IEXT_BUFSZ);
++	erp[erp_idx].er_extcount = 0;
++	erp[erp_idx].er_extoff = erp_idx > 0 ?
++		erp[erp_idx-1].er_extoff + erp[erp_idx-1].er_extcount : 0;
++	return (&erp[erp_idx]);
++}
++
++/*
++ * Remove a record from the indirection array.
++ */
++void
++xfs_iext_irec_remove(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	int		erp_idx)	/* irec index to remove */
++{
++	xfs_ext_irec_t	*erp;		/* indirection array pointer */
++	int		i;		/* loop counter */
++	int		nlists;		/* number of irec's (ex lists) */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	erp = &ifp->if_u1.if_ext_irec[erp_idx];
++	if (erp->er_extbuf) {
++		xfs_iext_irec_update_extoffs(ifp, erp_idx + 1,
++			-erp->er_extcount);
++		kmem_free(erp->er_extbuf);
++	}
++	/* Compact extent records */
++	erp = ifp->if_u1.if_ext_irec;
++	for (i = erp_idx; i < nlists - 1; i++) {
++		memmove(&erp[i], &erp[i+1], sizeof(xfs_ext_irec_t));
++	}
++	/*
++	 * Manually free the last extent record from the indirection
++	 * array.  A call to xfs_iext_realloc_indirect() with a size
++	 * of zero would result in a call to xfs_iext_destroy() which
++	 * would in turn call this function again, creating a nasty
++	 * infinite loop.
++	 */
++	if (--nlists) {
++		xfs_iext_realloc_indirect(ifp,
++			nlists * sizeof(xfs_ext_irec_t));
++	} else {
++		kmem_free(ifp->if_u1.if_ext_irec);
++	}
++	ifp->if_real_bytes = nlists * XFS_IEXT_BUFSZ;
++}
++
++/*
++ * This is called to clean up large amounts of unused memory allocated
++ * by the indirection array.  Before compacting anything though, verify
++ * that the indirection array is still needed and switch back to the
++ * linear extent list (or even the inline buffer) if possible.  The
++ * compaction policy is as follows:
++ *
++ *    Full Compaction: Extents fit into a single page (or inline buffer)
++ * Partial Compaction: Extents occupy less than 50% of allocated space
++ *      No Compaction: Extents occupy at least 50% of allocated space
++ */
++void
++xfs_iext_irec_compact(
++	xfs_ifork_t	*ifp)		/* inode fork pointer */
++{
++	xfs_extnum_t	nextents;	/* number of extents in file */
++	int		nlists;		/* number of irec's (ex lists) */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++
++	if (nextents == 0) {
++		xfs_iext_destroy(ifp);
++	} else if (nextents <= XFS_INLINE_EXTS) {
++		xfs_iext_indirect_to_direct(ifp);
++		xfs_iext_direct_to_inline(ifp, nextents);
++	} else if (nextents <= XFS_LINEAR_EXTS) {
++		xfs_iext_indirect_to_direct(ifp);
++	} else if (nextents < (nlists * XFS_LINEAR_EXTS) >> 1) {
++		xfs_iext_irec_compact_pages(ifp);
++	}
++}
++
++/*
++ * Combine extents from neighboring extent pages.
++ */
++void
++xfs_iext_irec_compact_pages(
++	xfs_ifork_t	*ifp)		/* inode fork pointer */
++{
++	xfs_ext_irec_t	*erp, *erp_next;/* pointers to irec entries */
++	int		erp_idx = 0;	/* indirection array index */
++	int		nlists;		/* number of irec's (ex lists) */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	while (erp_idx < nlists - 1) {
++		erp = &ifp->if_u1.if_ext_irec[erp_idx];
++		erp_next = erp + 1;
++		if (erp_next->er_extcount <=
++		    (XFS_LINEAR_EXTS - erp->er_extcount)) {
++			memcpy(&erp->er_extbuf[erp->er_extcount],
++				erp_next->er_extbuf, erp_next->er_extcount *
++				sizeof(xfs_bmbt_rec_t));
++			erp->er_extcount += erp_next->er_extcount;
++			/*
++			 * Free page before removing extent record
++			 * so er_extoffs don't get modified in
++			 * xfs_iext_irec_remove.
++			 */
++			kmem_free(erp_next->er_extbuf);
++			erp_next->er_extbuf = NULL;
++			xfs_iext_irec_remove(ifp, erp_idx + 1);
++			nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++		} else {
++			erp_idx++;
++		}
++	}
++}
++
++/*
++ * This is called to update the er_extoff field in the indirection
++ * array when extents have been added or removed from one of the
++ * extent lists. erp_idx contains the irec index to begin updating
++ * at and ext_diff contains the number of extents that were added
++ * or removed.
++ */
++void
++xfs_iext_irec_update_extoffs(
++	xfs_ifork_t	*ifp,		/* inode fork pointer */
++	int		erp_idx,	/* irec index to update */
++	int		ext_diff)	/* number of new extents */
++{
++	int		i;		/* loop counter */
++	int		nlists;		/* number of irec's (ex lists */
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	for (i = erp_idx; i < nlists; i++) {
++		ifp->if_u1.if_ext_irec[i].er_extoff += ext_diff;
++	}
++}
 -- 
 1.8.3.2
 
