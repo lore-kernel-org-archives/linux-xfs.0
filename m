@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D26029E4D
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 743468F8033
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:49 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A382529E37
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7714C8F8033
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:50 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	F3CTo7BEaYapQmYg for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:47 -0700 (PDT)
+	N45UExapkhGcj3NJ for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:48 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007df-0z
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007db-Uw
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003tD-0A
-	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003sy-UH
+	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 26/55] libxfs: move transaction code to trans.c
-Date: Thu,  5 Sep 2013 08:05:30 +1000
-Message-Id: <1378332359-14737-27-git-send-email-david@fromorbit.com>
+Subject: [PATCH 23/55] xfs: introduce xfs_rtalloc_defs.h
+Date: Thu,  5 Sep 2013 08:05:27 +1000
+Message-Id: <1378332359-14737-24-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,218 +39,111 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is very little code left in xfs_trans.c. So little it is not
-worthtrying to share this file with kernel space any more. Move the
-code to libxfs/trans.c, and remove libxfs/xfs_trans.c.
+There are quite a few realtime device definitions shared with
+userspace. Move them from xfs_rtalloc.h to xfs_rt_alloc_defs.h
+so we don't need to share xfs_rtalloc.h with userspace anymore.
+
+This removes the final __KERNEL__ region from the XFS kernel
+codebase. Yay!
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/Makefile    |   1 -
- libxfs/trans.c     | 118 +++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs.h       |   6 +++
- libxfs/xfs_trans.c | 139 -----------------------------------------------------
- 4 files changed, 124 insertions(+), 140 deletions(-)
- delete mode 100644 libxfs/xfs_trans.c
+ include/Makefile      |   5 +-
+ include/libxfs.h      |   1 -
+ include/xfs_format.h  |  41 +++++++++++++
+ include/xfs_rtalloc.h | 166 --------------------------------------------------
+ include/xfs_types.h   |  10 +++
+ 5 files changed, 55 insertions(+), 168 deletions(-)
+ delete mode 100644 include/xfs_rtalloc.h
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index b19ff6c..64b5979 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -19,7 +19,6 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
- 	xfs_mount.c xfs_rtalloc.c xfs_attr.c xfs_attr_remote.c \
- 	crc32.c \
- 	xfs_symlink.c \
--	xfs_trans.c \
- 	xfs_trans_resv.c
+diff --git a/include/Makefile b/include/Makefile
+index ab71aad..3610726 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -35,7 +35,10 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_log_format.h \
+ 	xfs_log_recover.h \
+ 	xfs_metadump.h \
+-	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
++	xfs_mount.h \
++	xfs_quota.h \
++	xfs_sb.h \
++	xfs_symlink.h \
+ 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
  
- CFILES += $(PKG_PLATFORM).c
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 645952c..d0a91b1 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2000-2001,2005-2006 Silicon Graphics, Inc.
-+ * Copyright (C) 2010 Red Hat, Inc.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -22,6 +23,123 @@
-  * Simple transaction interface
+ HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
+diff --git a/include/libxfs.h b/include/libxfs.h
+index bc90082..8c09b77 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -614,7 +614,6 @@ extern int		libxfs_nproc(void);
+ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
+ 
+ #include <xfs/xfs_ialloc.h>
+-#include <xfs/xfs_rtalloc.h>
+ 
+ #include <xfs/xfs_attr_leaf.h>
+ #include <xfs/xfs_attr_remote.h>
+diff --git a/include/xfs_format.h b/include/xfs_format.h
+index 2b4f166..6205374 100644
+--- a/include/xfs_format.h
++++ b/include/xfs_format.h
+@@ -28,6 +28,47 @@
   */
  
-+kmem_zone_t	*xfs_log_item_desc_zone;
-+
-+/*
-+ * Initialize the precomputed transaction reservation values
-+ * in the mount structure.
-+ */
-+void
-+libxfs_trans_init(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_trans_resv_calc(mp, &mp->m_reservations);
-+}
-+
-+/*
-+ * Add the given log item to the transaction's list of log items.
-+ *
-+ * The log item will now point to its new descriptor with its li_desc field.
-+ */
-+void
-+libxfs_trans_add_item(
-+	struct xfs_trans	*tp,
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_log_item_desc *lidp;
-+
-+	ASSERT(lip->li_mountp == tp->t_mountp);
-+	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
-+
-+	lidp = calloc(sizeof(struct xfs_log_item_desc), 1);
-+	if (!lidp) {
-+		fprintf(stderr, _("%s: lidp calloc failed (%d bytes): %s\n"),
-+			progname, (int)sizeof(struct xfs_log_item_desc),
-+			strerror(errno));
-+		exit(1);
-+	}
-+
-+	lidp->lid_item = lip;
-+	lidp->lid_flags = 0;
-+	list_add_tail(&lidp->lid_trans, &tp->t_items);
-+
-+	lip->li_desc = lidp;
-+}
-+
-+/*
-+ * Unlink and free the given descriptor.
-+ */
-+void
-+libxfs_trans_del_item(
-+	struct xfs_log_item	*lip)
-+{
-+	list_del_init(&lip->li_desc->lid_trans);
-+	free(lip->li_desc);
-+	lip->li_desc = NULL;
-+}
-+
-+/*
-+ * Roll from one trans in the sequence of PERMANENT transactions to
-+ * the next: permanent transactions are only flushed out when
-+ * committed with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon
-+ * as possible to let chunks of it go to the log. So we commit the
-+ * chunk we've been working on and get a new transaction to continue.
-+ */
-+int
-+libxfs_trans_roll(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*dp)
-+{
-+	struct xfs_trans	*trans;
-+	unsigned int		logres, count;
-+	int			error;
-+
-+	/*
-+	 * Ensure that the inode is always logged.
-+	 */
-+	trans = *tpp;
-+	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
-+
-+	/*
-+	 * Copy the critical parameters from one trans to the next.
-+	 */
-+	logres = trans->t_log_res;
-+	count = trans->t_log_count;
-+	*tpp = xfs_trans_dup(trans);
-+
-+	/*
-+	 * Commit the current transaction.
-+	 * If this commit failed, then it'd just unlock those items that
-+	 * are not marked ihold. That also means that a filesystem shutdown
-+	 * is in progress. The caller takes the responsibility to cancel
-+	 * the duplicate transaction that gets returned.
-+	 */
-+	error = xfs_trans_commit(trans, 0);
-+	if (error)
-+		return (error);
-+
-+	trans = *tpp;
-+
-+	/*
-+	 * Reserve space in the log for th next transaction.
-+	 * This also pushes items in the "AIL", the list of logged items,
-+	 * out to disk if they are taking up space at the tail of the log
-+	 * that we want to use.  This requires that either nothing be locked
-+	 * across this call, or that anything that is locked be logged in
-+	 * the prior and the next transactions.
-+	 */
-+	error = xfs_trans_reserve(trans, 0, logres, 0,
-+				  XFS_TRANS_PERM_LOG_RES, count);
-+	/*
-+	 *  Ensure that the inode is in the new transaction and locked.
-+	 */
-+	if (error)
-+		return error;
-+
-+	xfs_trans_ijoin(trans, dp, 0);
-+	return 0;
-+}
-+
- xfs_trans_t *
- libxfs_trans_alloc(
- 	xfs_mount_t	*mp,
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 66fca85..7149c09 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -235,12 +235,14 @@ roundup_pow_of_two(uint v)
- #define xfs_mod_incore_sb		libxfs_mod_incore_sb
- 
- #define xfs_trans_alloc			libxfs_trans_alloc
-+#define xfs_trans_add_item		libxfs_trans_add_item
- #define xfs_trans_bhold			libxfs_trans_bhold
- #define xfs_trans_binval		libxfs_trans_binval
- #define xfs_trans_bjoin			libxfs_trans_bjoin
- #define xfs_trans_brelse		libxfs_trans_brelse
- #define xfs_trans_commit		libxfs_trans_commit
- #define xfs_trans_cancel		libxfs_trans_cancel
-+#define xfs_trans_del_item		libxfs_trans_del_item
- #define xfs_trans_dup			libxfs_trans_dup
- #define xfs_trans_get_buf		libxfs_trans_get_buf
- #define xfs_trans_getsb			libxfs_trans_getsb
-@@ -248,12 +250,14 @@ roundup_pow_of_two(uint v)
- #define xfs_trans_ihold			libxfs_trans_ihold
- #define xfs_trans_ijoin			libxfs_trans_ijoin
- #define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
-+#define xfs_trans_init			libxfs_trans_init
- #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
- #define xfs_trans_log_buf		libxfs_trans_log_buf
- #define xfs_trans_log_inode		libxfs_trans_log_inode
- #define xfs_trans_mod_sb		libxfs_trans_mod_sb
- #define xfs_trans_read_buf		libxfs_trans_read_buf
- #define xfs_trans_read_buf_map		libxfs_trans_read_buf_map
-+#define xfs_trans_roll			libxfs_trans_roll
- #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
- #define xfs_trans_reserve		libxfs_trans_reserve
- 
-@@ -373,6 +377,8 @@ void xfs_mount_common(xfs_mount_t *, xfs_sb_t *);
  /*
-  * logitem.c and trans.c prototypes
++ * RealTime Device format definitions
++ */
++
++/* Min and max rt extent sizes, specified in bytes */
++#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
++#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
++#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
++
++#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
++#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
++#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
++#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
++
++/*
++ * RT Summary and bit manipulation macros.
++ */
++#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
++#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
++	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
++#define	XFS_SUMPTR(mp,bp,so)	\
++	((xfs_suminfo_t *)((bp)->b_addr + \
++		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
++
++#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
++#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
++#define	XFS_BITTOWORD(mp,bi)	\
++	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
++
++#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
++#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
++
++#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
++#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
++
++#if XFS_BIG_BLKNOS
++#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
++#else
++#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
++#endif
++
++/*
+  * Dquot and dquot block format definitions
   */
-+void xfs_trans_init(struct xfs_mount *);
-+int xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
- 
- /* xfs_trans_item.c */
- void xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
-diff --git a/libxfs/xfs_trans.c b/libxfs/xfs_trans.c
+ #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
+diff --git a/include/xfs_rtalloc.h b/include/xfs_rtalloc.h
 deleted file mode 100644
-index 2daf545..0000000
---- a/libxfs/xfs_trans.c
+index f7f3a35..0000000
+--- a/include/xfs_rtalloc.h
 +++ /dev/null
-@@ -1,139 +0,0 @@
+@@ -1,166 +0,0 @@
 -/*
 - * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * Copyright (C) 2010 Red Hat, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -266,127 +159,174 @@ index 2daf545..0000000
 - * along with this program; if not, write the Free Software Foundation,
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
+-#ifndef __XFS_RTALLOC_H__
+-#define	__XFS_RTALLOC_H__
 -
--#include <xfs.h>
+-struct xfs_mount;
+-struct xfs_trans;
 -
--kmem_zone_t	*xfs_trans_zone;
--kmem_zone_t	*xfs_log_item_desc_zone;
+-/* Min and max rt extent sizes, specified in bytes */
+-#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
+-#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
+-#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
 -
 -/*
-- * Initialize the precomputed transaction reservation values
-- * in the mount structure.
+- * Constants for bit manipulations.
 - */
--void
--xfs_trans_init(
--	struct xfs_mount	*mp)
--{
--	xfs_trans_resv_calc(mp, &mp->m_reservations);
--}
+-#define	XFS_NBBYLOG	3		/* log2(NBBY) */
+-#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
+-#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
+-#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
+-#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
+-
+-#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
+-#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
+-#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
+-#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
 -
 -/*
-- * Add the given log item to the transaction's list of log items.
-- *
-- * The log item will now point to its new descriptor with its li_desc field.
+- * Summary and bit manipulation macros.
 - */
--void
--xfs_trans_add_item(
--	struct xfs_trans	*tp,
--	struct xfs_log_item	*lip)
--{
--	struct xfs_log_item_desc *lidp;
+-#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
+-#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
+-	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
+-#define	XFS_SUMPTR(mp,bp,so)	\
+-	((xfs_suminfo_t *)((bp)->b_addr + \
+-		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
 -
--	ASSERT(lip->li_mountp == tp->t_mountp);
--	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
+-#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
+-#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
+-#define	XFS_BITTOWORD(mp,bi)	\
+-	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
 -
--	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
+-#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+-#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
 -
--	lidp->lid_item = lip;
--	lidp->lid_flags = 0;
--	list_add_tail(&lidp->lid_trans, &tp->t_items);
+-#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
+-#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
 -
--	lip->li_desc = lidp;
--}
+-#if XFS_BIG_BLKNOS
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
+-#else
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
+-#endif
 -
--STATIC void
--xfs_trans_free_item_desc(
--	struct xfs_log_item_desc *lidp)
--{
--	list_del_init(&lidp->lid_trans);
--	kmem_zone_free(xfs_log_item_desc_zone, lidp);
--}
 -
+-#ifdef __KERNEL__
+-
+-#ifdef CONFIG_XFS_RT
 -/*
-- * Unlink and free the given descriptor.
+- * Function prototypes for exported functions.
 - */
--void
--xfs_trans_del_item(
--	struct xfs_log_item	*lip)
--{
--	xfs_trans_free_item_desc(lip->li_desc);
--	lip->li_desc = NULL;
--}
 -
 -/*
-- * Roll from one trans in the sequence of PERMANENT transactions to
-- * the next: permanent transactions are only flushed out when
-- * committed with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon
-- * as possible to let chunks of it go to the log. So we commit the
-- * chunk we've been working on and get a new transaction to continue.
+- * Allocate an extent in the realtime subvolume, with the usual allocation
+- * parameters.  The length units are all in realtime extents, as is the
+- * result block number.
+- */
+-int					/* error */
+-xfs_rtallocate_extent(
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_rtblock_t		bno,	/* starting block number to allocate */
+-	xfs_extlen_t		minlen,	/* minimum length to allocate */
+-	xfs_extlen_t		maxlen,	/* maximum length to allocate */
+-	xfs_extlen_t		*len,	/* out: actual length allocated */
+-	xfs_alloctype_t		type,	/* allocation type XFS_ALLOCTYPE... */
+-	int			wasdel,	/* was a delayed allocation extent */
+-	xfs_extlen_t		prod,	/* extent product factor */
+-	xfs_rtblock_t		*rtblock); /* out: start block allocated */
+-
+-/*
+- * Free an extent in the realtime subvolume.  Length is expressed in
+- * realtime extents, as is the block number.
+- */
+-int					/* error */
+-xfs_rtfree_extent(
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_rtblock_t		bno,	/* starting block number to free */
+-	xfs_extlen_t		len);	/* length of extent freed */
+-
+-/*
+- * Initialize realtime fields in the mount structure.
+- */
+-int					/* error */
+-xfs_rtmount_init(
+-	struct xfs_mount	*mp);	/* file system mount structure */
+-void
+-xfs_rtunmount_inodes(
+-	struct xfs_mount	*mp);
+-
+-/*
+- * Get the bitmap and summary inodes into the mount structure
+- * at mount time.
+- */
+-int					/* error */
+-xfs_rtmount_inodes(
+-	struct xfs_mount	*mp);	/* file system mount structure */
+-
+-/*
+- * Pick an extent for allocation at the start of a new realtime file.
+- * Use the sequence number stored in the atime field of the bitmap inode.
+- * Translate this to a fraction of the rtextents, and return the product
+- * of rtextents and the fraction.
+- * The fraction sequence is 0, 1/2, 1/4, 3/4, 1/8, ..., 7/8, 1/16, ...
+- */
+-int					/* error */
+-xfs_rtpick_extent(
+-	struct xfs_mount	*mp,	/* file system mount point */
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_extlen_t		len,	/* allocation length (rtextents) */
+-	xfs_rtblock_t		*pick);	/* result rt extent */
+-
+-/*
+- * Grow the realtime area of the filesystem.
 - */
 -int
--xfs_trans_roll(
--	struct xfs_trans	**tpp,
--	struct xfs_inode	*dp)
+-xfs_growfs_rt(
+-	struct xfs_mount	*mp,	/* file system mount structure */
+-	xfs_growfs_rt_t		*in);	/* user supplied growfs struct */
+-
+-#else
+-# define xfs_rtallocate_extent(t,b,min,max,l,a,f,p,rb)  (ENOSYS)
+-# define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+-# define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
+-# define xfs_growfs_rt(mp,in)                           (ENOSYS)
+-static inline int		/* error */
+-xfs_rtmount_init(
+-	xfs_mount_t	*mp)	/* file system mount structure */
 -{
--	struct xfs_trans	*trans;
--	unsigned int		logres, count;
--	int			error;
+-	if (mp->m_sb.sb_rblocks == 0)
+-		return 0;
 -
--	/*
--	 * Ensure that the inode is always logged.
--	 */
--	trans = *tpp;
--	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
--
--	/*
--	 * Copy the critical parameters from one trans to the next.
--	 */
--	logres = trans->t_log_res;
--	count = trans->t_log_count;
--	*tpp = xfs_trans_dup(trans);
--
--	/*
--	 * Commit the current transaction.
--	 * If this commit failed, then it'd just unlock those items that
--	 * are not marked ihold. That also means that a filesystem shutdown
--	 * is in progress. The caller takes the responsibility to cancel
--	 * the duplicate transaction that gets returned.
--	 */
--	error = xfs_trans_commit(trans, 0);
--	if (error)
--		return (error);
--
--	trans = *tpp;
--
--	/*
--	 * Reserve space in the log for th next transaction.
--	 * This also pushes items in the "AIL", the list of logged items,
--	 * out to disk if they are taking up space at the tail of the log
--	 * that we want to use.  This requires that either nothing be locked
--	 * across this call, or that anything that is locked be logged in
--	 * the prior and the next transactions.
--	 */
--	error = xfs_trans_reserve(trans, 0, logres, 0,
--				  XFS_TRANS_PERM_LOG_RES, count);
--	/*
--	 *  Ensure that the inode is in the new transaction and locked.
--	 */
--	if (error)
--		return error;
--
--	xfs_trans_ijoin(trans, dp, 0);
--	return 0;
+-	xfs_warn(mp, "Not built with CONFIG_XFS_RT");
+-	return ENOSYS;
 -}
+-# define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+-# define xfs_rtunmount_inodes(m)
+-#endif	/* CONFIG_XFS_RT */
+-
+-#endif	/* __KERNEL__ */
+-
+-#endif	/* __XFS_RTALLOC_H__ */
+diff --git a/include/xfs_types.h b/include/xfs_types.h
+index b144a8f..6ed6b26 100644
+--- a/include/xfs_types.h
++++ b/include/xfs_types.h
+@@ -184,4 +184,14 @@ struct xfs_name {
+  */
+ typedef __uint32_t	xfs_dqid_t;
+ 
++/*
++ * Constants for bit manipulations.
++ */
++#define	XFS_NBBYLOG	3		/* log2(NBBY) */
++#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
++#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
++#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
++#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
++
++
+ #endif	/* __XFS_TYPES_H__ */
 -- 
 1.8.3.2
 
