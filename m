@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D53C29E44
+	by oss.sgi.com (Postfix) with ESMTP id 000F829E48
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7CC268F8033
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E444E8F8033
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:36 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	6zKGM3VghlDDzvDH for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:33 -0700 (PDT)
+	OHb5hel55qPSsrET for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:34 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dH-Bq
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007df-H1
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003uU-AV
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003vL-Fp
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 41/55] xfs: Introduce a new structure to hold transaction
-	reservation items
-Date: Thu,  5 Sep 2013 08:05:45 +1000
-Message-Id: <1378332359-14737-42-git-send-email-david@fromorbit.com>
+Subject: [PATCH 48/55] xfs: Add write support for dirent filetype field
+Date: Thu,  5 Sep 2013 08:05:52 +1000
+Message-Id: <1378332359-14737-49-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,364 +37,290 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Introduce a new structure xfs_trans_res to hold transaction
-reservation item info per log ticket.
+Add support to propagate and add filetype values into the on-disk
+directs. This involves passing the filetype into the xfs_da_args
+structure along with the name and namelength for direct operations,
+and encoding it into the dirent at the same time we write the inode
+number into the dirent.
 
-We also need to improve xfs_trans_resv_calc() by initializing the
-log count as well as log flags for permanent log reservation.
-
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxfs.h         |   2 +-
- include/xfs_trans_resv.h | 125 ++++++++++++++++++++++++++---------------------
- libxfs/trans.c           |   2 +-
- libxfs/xfs_trans_resv.c  | 121 ++++++++++++++++++++++++++++++++++-----------
- mkfs/maxtrres.c          |  17 ++++---
- 5 files changed, 172 insertions(+), 95 deletions(-)
+ include/xfs_sb.h        |  3 ++-
+ libxfs/xfs_dir2_block.c |  7 +++++++
+ libxfs/xfs_dir2_data.c  |  2 ++
+ libxfs/xfs_dir2_leaf.c  |  3 +++
+ libxfs/xfs_dir2_node.c  |  3 +++
+ libxfs/xfs_dir2_sf.c    | 35 +++++++++++++++++++++++++++--------
+ 6 files changed, 44 insertions(+), 9 deletions(-)
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 086cb39..e48ab70 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -203,7 +203,7 @@ typedef struct xfs_mount {
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
- 	int			m_litino;	/* size of inode union area */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
--	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
-+	struct xfs_trans_resv	m_resv;		/* precomputed res values */
- 	__uint64_t		m_maxicount;	/* maximum inode count */
- 	int			m_dalign;	/* stripe unit */
- 	int			m_swidth;	/* stripe width */
-diff --git a/include/xfs_trans_resv.h b/include/xfs_trans_resv.h
-index cc8260e..0aac1fa 100644
---- a/include/xfs_trans_resv.h
-+++ b/include/xfs_trans_resv.h
-@@ -23,35 +23,45 @@ struct xfs_mount;
- /*
-  * structure for maintaining pre-calculated transaction reservations.
-  */
-+struct xfs_trans_res {
-+	uint	tr_logres;	/* log space unit in bytes per log ticket */
-+	int	tr_logcount;	/* number of log operations per log ticket */
-+	int	tr_logflags;	/* log flags, currently only used for indicating
-+				 * a reservation request is permanent or not */
-+};
-+
- struct xfs_trans_resv {
--	uint	tr_write;	/* extent alloc trans */
--	uint	tr_itruncate;	/* truncate trans */
--	uint	tr_rename;	/* rename trans */
--	uint	tr_link;	/* link trans */
--	uint	tr_remove;	/* unlink trans */
--	uint	tr_symlink;	/* symlink trans */
--	uint	tr_create;	/* create trans */
--	uint	tr_mkdir;	/* mkdir trans */
--	uint	tr_ifree;	/* inode free trans */
--	uint	tr_ichange;	/* inode update trans */
--	uint	tr_growdata;	/* fs data section grow trans */
--	uint	tr_swrite;	/* sync write inode trans */
--	uint	tr_addafork;	/* cvt inode to attributed trans */
--	uint	tr_writeid;	/* write setuid/setgid file */
--	uint	tr_attrinval;	/* attr fork buffer invalidation */
--	uint	tr_attrsetm;	/* set/create an attribute at mount time */
--	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
--	uint	tr_attrrm;	/* remove an attribute */
--	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
--	uint	tr_growrtalloc;	/* grow realtime allocations */
--	uint	tr_growrtzero;	/* grow realtime zeroing */
--	uint	tr_growrtfree;	/* grow realtime freeing */
--	uint	tr_qm_sbchange;	/* change quota flags */
--	uint	tr_qm_setqlim;	/* adjust quota limits */
--	uint	tr_qm_dqalloc;	/* allocate quota on disk */
--	uint	tr_qm_quotaoff;	/* turn quota off */
--	uint	tr_qm_equotaoff;/* end of turn quota off */
--	uint	tr_sb;		/* modify superblock */
-+	struct xfs_trans_res	tr_write;	/* extent alloc trans */
-+	struct xfs_trans_res	tr_itruncate;	/* truncate trans */
-+	struct xfs_trans_res	tr_rename;	/* rename trans */
-+	struct xfs_trans_res	tr_link;	/* link trans */
-+	struct xfs_trans_res	tr_remove;	/* unlink trans */
-+	struct xfs_trans_res	tr_symlink;	/* symlink trans */
-+	struct xfs_trans_res	tr_create;	/* create trans */
-+	struct xfs_trans_res	tr_mkdir;	/* mkdir trans */
-+	struct xfs_trans_res	tr_ifree;	/* inode free trans */
-+	struct xfs_trans_res	tr_ichange;	/* inode update trans */
-+	struct xfs_trans_res	tr_growdata;	/* fs data section grow trans */
-+	struct xfs_trans_res	tr_swrite;	/* sync write inode trans */
-+	struct xfs_trans_res	tr_addafork;	/* add inode attr fork trans */
-+	struct xfs_trans_res	tr_writeid;	/* write setuid/setgid file */
-+	struct xfs_trans_res	tr_attrinval;	/* attr fork buffer
-+						 * invalidation */
-+	struct xfs_trans_res	tr_attrsetm;	/* set/create an attribute at
-+						 * mount time */
-+	struct xfs_trans_res	tr_attrsetrt;	/* set/create an attribute at
-+						 * runtime */
-+	struct xfs_trans_res	tr_attrrm;	/* remove an attribute */
-+	struct xfs_trans_res	tr_clearagi;	/* clear agi unlinked bucket */
-+	struct xfs_trans_res	tr_growrtalloc;	/* grow realtime allocations */
-+	struct xfs_trans_res	tr_growrtzero;	/* grow realtime zeroing */
-+	struct xfs_trans_res	tr_growrtfree;	/* grow realtime freeing */
-+	struct xfs_trans_res	tr_qm_sbchange;	/* change quota flags */
-+	struct xfs_trans_res	tr_qm_setqlim;	/* adjust quota limits */
-+	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
-+	struct xfs_trans_res	tr_qm_quotaoff;	/* turn quota off */
-+	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
-+	struct xfs_trans_res	tr_sb;		/* modify superblock */
- };
- 
- /*
-@@ -79,39 +89,40 @@ struct xfs_trans_resv {
- 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
- 
- 
--#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
--#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
--#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
--#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
--#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
--#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
--#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
--#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
--#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
--#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
--#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
--#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
--#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
--#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
--#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
-+#define XFS_WRITE_LOG_RES(mp)	((mp)->m_resv.tr_write.tr_logres)
-+#define XFS_RENAME_LOG_RES(mp)	((mp)->m_resv.tr_rename.tr_logres)
-+#define XFS_LINK_LOG_RES(mp)	((mp)->m_resv.tr_link.tr_logres)
-+#define XFS_REMOVE_LOG_RES(mp)	((mp)->m_resv.tr_remove.tr_logres)
-+#define XFS_SYMLINK_LOG_RES(mp)	((mp)->m_resv.tr_symlink.tr_logres)
-+#define XFS_CREATE_LOG_RES(mp)	((mp)->m_resv.tr_create.tr_logres)
-+#define XFS_MKDIR_LOG_RES(mp)	((mp)->m_resv.tr_mkdir.tr_logres)
-+#define XFS_IFREE_LOG_RES(mp)	((mp)->m_resv.tr_ifree.tr_logres)
-+#define XFS_SWRITE_LOG_RES(mp)	((mp)->m_resv.tr_swrite.tr_logres)
-+#define XFS_ICHANGE_LOG_RES(mp)	((mp)->m_resv.tr_ichange.tr_logres)
-+#define XFS_GROWDATA_LOG_RES(mp)  ((mp)->m_resv.tr_growdata.tr_logres)
-+#define XFS_ITRUNCATE_LOG_RES(mp) ((mp)->m_resv.tr_itruncate.tr_logres)
-+#define XFS_GROWRTZERO_LOG_RES(mp) ((mp)->m_resv.tr_growrtzero.tr_logres)
-+#define XFS_GROWRTFREE_LOG_RES(mp) ((mp)->m_resv.tr_growrtfree.tr_logres)
-+#define XFS_GROWRTALLOC_LOG_RES(mp) ((mp)->m_resv.tr_growrtalloc.tr_logres)
-+
- /*
-  * Logging the inode timestamps on an fsync -- same as SWRITE
-  * as long as SWRITE logs the entire inode core
-  */
--#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
--#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
--#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
--#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
--#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
--#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
--#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
--#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
--#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
--#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
--#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
--#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
--#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
--#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
-+#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_swrite.tr_logres)
-+#define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_swrite.tr_logres)
-+#define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
-+#define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
-+#define XFS_ATTRINVAL_LOG_RES(mp) ((mp)->m_resv.tr_attrinval.tr_logres)
-+#define XFS_ATTRSETRT_LOG_RES(mp) ((mp)->m_resv.tr_attrsetrt.tr_logres)
-+#define XFS_ATTRRM_LOG_RES(mp)	  ((mp)->m_resv.tr_attrrm.tr_logres)
-+#define XFS_SB_LOG_RES(mp)	  ((mp)->m_resv.tr_sb.tr_logres)
-+#define XFS_QM_SETQLIM_LOG_RES(mp) ((mp)->m_resv.tr_qm_setqlim.tr_logres)
-+#define XFS_QM_DQALLOC_LOG_RES(mp) ((mp)->m_resv.tr_qm_dqalloc.tr_logres)
-+#define XFS_QM_SBCHANGE_LOG_RES(mp) ((mp)->m_resv.tr_qm_sbchange.tr_logres)
-+#define XFS_QM_QUOTAOFF_LOG_RES(mp) ((mp)->m_resv.tr_qm_quotaoff.tr_logres)
-+#define XFS_QM_QUOTAOFF_END_LOG_RES(mp) ((mp)->m_resv.tr_qm_equotaoff.tr_logres)
-+#define XFS_CLEAR_AGI_BUCKET_LOG_RES(mp) ((mp)->m_resv.tr_clearagi.tr_logres)
- 
- /*
-  * Various log count values.
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index d0a91b1..2fc0ecc 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -33,7 +33,7 @@ void
- libxfs_trans_init(
- 	struct xfs_mount	*mp)
- {
--	xfs_trans_resv_calc(mp, &mp->m_reservations);
-+	xfs_trans_resv_calc(mp, &mp->m_resv);
+diff --git a/include/xfs_sb.h b/include/xfs_sb.h
+index 8721904..1d0839a 100644
+--- a/include/xfs_sb.h
++++ b/include/xfs_sb.h
+@@ -594,7 +594,8 @@ xfs_sb_has_ro_compat_feature(
  }
  
- /*
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 7a391e3..e0b8ef6 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -646,32 +646,97 @@ xfs_trans_resv_calc(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans_resv	*resp)
- {
--	resp->tr_write = xfs_calc_write_reservation(mp);
--	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
--	resp->tr_rename = xfs_calc_rename_reservation(mp);
--	resp->tr_link = xfs_calc_link_reservation(mp);
--	resp->tr_remove = xfs_calc_remove_reservation(mp);
--	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
--	resp->tr_create = xfs_calc_create_reservation(mp);
--	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
--	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
--	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
--	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
--	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
--	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
--	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
--	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
--	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
--	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
--	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
--	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
--	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
--	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
--	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
--	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
--	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
--	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
--	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
--	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
--	resp->tr_sb = xfs_calc_sb_reservation(mp);
-+	/*
-+	 * The following transactions are logged in physical format and
-+	 * require a permanent reservation on space.
-+	 */
-+	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
-+	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-+	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-+	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
-+	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
-+	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
-+	resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
-+	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
-+	resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
-+	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
-+	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
-+	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_create.tr_logres = xfs_calc_create_reservation(mp);
-+	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
-+	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
-+	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
-+	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
-+	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
-+	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_addafork.tr_logres = xfs_calc_addafork_reservation(mp);
-+	resp->tr_addafork.tr_logcount = XFS_ADDAFORK_LOG_COUNT;
-+	resp->tr_addafork.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_attrinval.tr_logres = xfs_calc_attrinval_reservation(mp);
-+	resp->tr_attrinval.tr_logcount = XFS_ATTRINVAL_LOG_COUNT;
-+	resp->tr_attrinval.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_attrsetm.tr_logres = xfs_calc_attrsetm_reservation(mp);
-+	resp->tr_attrsetm.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-+	resp->tr_attrsetm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_attrrm.tr_logres = xfs_calc_attrrm_reservation(mp);
-+	resp->tr_attrrm.tr_logcount = XFS_ATTRRM_LOG_COUNT;
-+	resp->tr_attrrm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_growrtalloc.tr_logres = xfs_calc_growrtalloc_reservation(mp);
-+	resp->tr_growrtalloc.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-+	resp->tr_growrtalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_qm_dqalloc.tr_logres = xfs_calc_qm_dqalloc_reservation(mp);
-+	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	/*
-+	 * The following transactions are logged in logical format with
-+	 * a default log count.
-+	 */
-+	resp->tr_qm_sbchange.tr_logres = xfs_calc_qm_sbchange_reservation(mp);
-+	resp->tr_qm_sbchange.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-+
-+	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation(mp);
-+	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-+
-+	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
-+	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-+
-+	resp->tr_qm_equotaoff.tr_logres =
-+		xfs_calc_qm_quotaoff_end_reservation(mp);
-+	resp->tr_qm_equotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-+
-+	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
-+	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-+
-+	/* The following transaction are logged in logical format */
-+	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
-+	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-+	resp->tr_swrite.tr_logres = xfs_calc_swrite_reservation(mp);
-+	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
-+	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
-+	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
-+	resp->tr_growrtzero.tr_logres = xfs_calc_growrtzero_reservation(mp);
-+	resp->tr_growrtfree.tr_logres = xfs_calc_growrtfree_reservation(mp);
- }
-diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
-index 7da83aa..b2d2a5a 100644
---- a/mkfs/maxtrres.c
-+++ b/mkfs/maxtrres.c
-@@ -47,22 +47,23 @@ max_attrsetm_trans_res_adjust(
- 	nblks += XFS_B_TO_FSB(mp, size);
- 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
- 	res = XFS_ATTRSETM_LOG_RES(mp) + XFS_ATTRSETRT_LOG_RES(mp) * nblks;
--	mp->m_reservations.tr_attrsetm = res;
-+	mp->m_resv.tr_attrsetm.tr_logres = res;
- }
+ #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
+-#define XFS_SB_FEAT_INCOMPAT_ALL 0
++#define XFS_SB_FEAT_INCOMPAT_ALL \
++		(XFS_SB_FEAT_INCOMPAT_FTYPE)
  
- static int
- max_trans_res_by_mount(
- 	struct xfs_mount	*mp)
- {
--	uint			*p;
--	int			rval;
--	struct xfs_trans_resv	*tr = &mp->m_reservations;
-+	struct xfs_trans_resv	*tr = &mp->m_resv;
-+	struct xfs_trans_res	*p;
-+	struct xfs_trans_res	rval = {0};
- 
--	for (rval = 0, p = (uint *)tr; p < (uint *)(tr + 1); p++) {
--		if ((int)*p > rval)
--			rval = (int)*p;
-+	for (p = (struct xfs_trans_res *)tr;
-+	     p < (struct xfs_trans_res *)(tr + 1); p++) {
-+		if (p->tr_logres > rval.tr_logres)
-+			rval = *p;
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+ static inline bool
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index 615eea9..3e4bc53 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -530,6 +530,7 @@ xfs_dir2_block_addname(
+ 	dep->inumber = cpu_to_be64(args->inumber);
+ 	dep->namelen = args->namelen;
+ 	memcpy(dep->name, args->name, args->namelen);
++	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
+ 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	/*
+@@ -622,6 +623,7 @@ xfs_dir2_block_lookup(
+ 	 * Fill in inode number, CI name if appropriate, release the block.
+ 	 */
+ 	args->inumber = be64_to_cpu(dep->inumber);
++	args->filetype = xfs_dir3_dirent_get_ftype(mp, dep);
+ 	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
+ 	xfs_trans_brelse(args->trans, bp);
+ 	return XFS_ERROR(error);
+@@ -854,6 +856,7 @@ xfs_dir2_block_replace(
+ 	 * Change the inode number to the new value.
+ 	 */
+ 	dep->inumber = cpu_to_be64(args->inumber);
++	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
+ 	xfs_dir2_data_log_entry(args->trans, bp, dep);
+ 	xfs_dir3_data_check(dp, bp);
+ 	return 0;
+@@ -1140,6 +1143,7 @@ xfs_dir2_sf_to_block(
+ 	dep->inumber = cpu_to_be64(dp->i_ino);
+ 	dep->namelen = 1;
+ 	dep->name[0] = '.';
++	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
+ 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(tp, bp, dep);
+@@ -1153,6 +1157,7 @@ xfs_dir2_sf_to_block(
+ 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
+ 	dep->namelen = 2;
+ 	dep->name[0] = dep->name[1] = '.';
++	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
+ 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(tp, bp, dep);
+@@ -1200,6 +1205,8 @@ xfs_dir2_sf_to_block(
+ 		dep = (xfs_dir2_data_entry_t *)((char *)hdr + newoffset);
+ 		dep->inumber = cpu_to_be64(xfs_dir3_sfe_get_ino(mp, sfp, sfep));
+ 		dep->namelen = sfep->namelen;
++		xfs_dir3_dirent_put_ftype(mp, dep,
++					xfs_dir3_sfe_get_ftype(mp, sfp, sfep));
+ 		memcpy(dep->name, sfep->name, dep->namelen);
+ 		tagp = xfs_dir3_data_entry_tag_p(mp, dep);
+ 		*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index ea9ba91..189699f 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -133,6 +133,8 @@ __xfs_dir3_data_check(
+ 		XFS_WANT_CORRUPTED_RETURN(
+ 			be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) ==
+ 					       (char *)dep - (char *)hdr);
++		XFS_WANT_CORRUPTED_RETURN(
++			xfs_dir3_dirent_get_ftype(mp, dep) < XFS_DIR3_FT_MAX);
+ 		count++;
+ 		lastfree = 0;
+ 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 04ad083..7ec2f19 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -878,6 +878,7 @@ xfs_dir2_leaf_addname(
+ 	dep->inumber = cpu_to_be64(args->inumber);
+ 	dep->namelen = args->namelen;
+ 	memcpy(dep->name, args->name, dep->namelen);
++	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
+ 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	/*
+@@ -1207,6 +1208,7 @@ xfs_dir2_leaf_lookup(
+ 	 * Return the found inode number & CI name if appropriate
+ 	 */
+ 	args->inumber = be64_to_cpu(dep->inumber);
++	args->filetype = xfs_dir3_dirent_get_ftype(dp->i_mount, dep);
+ 	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
+ 	xfs_trans_brelse(tp, dbp);
+ 	xfs_trans_brelse(tp, lbp);
+@@ -1537,6 +1539,7 @@ xfs_dir2_leaf_replace(
+ 	 * Put the new inode number in, log it.
+ 	 */
+ 	dep->inumber = cpu_to_be64(args->inumber);
++	xfs_dir3_dirent_put_ftype(dp->i_mount, dep, args->filetype);
+ 	tp = args->trans;
+ 	xfs_dir2_data_log_entry(tp, dbp, dep);
+ 	xfs_dir3_leaf_check(dp->i_mount, lbp);
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 15b1eb6..6a245e5 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -798,6 +798,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 				xfs_trans_brelse(tp, state->extrablk.bp);
+ 			args->cmpresult = cmp;
+ 			args->inumber = be64_to_cpu(dep->inumber);
++			args->filetype = xfs_dir3_dirent_get_ftype(mp, dep);
+ 			*indexp = index;
+ 			state->extravalid = 1;
+ 			state->extrablk.bp = curbp;
+@@ -1989,6 +1990,7 @@ xfs_dir2_node_addname_int(
+ 	dep->inumber = cpu_to_be64(args->inumber);
+ 	dep->namelen = args->namelen;
+ 	memcpy(dep->name, args->name, dep->namelen);
++	xfs_dir3_dirent_put_ftype(mp, dep, args->filetype);
+ 	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(tp, dbp, dep);
+@@ -2209,6 +2211,7 @@ xfs_dir2_node_replace(
+ 		 * Fill in the new inode number and log the entry.
+ 		 */
+ 		dep->inumber = cpu_to_be64(inum);
++		xfs_dir3_dirent_put_ftype(state->mp, dep, args->filetype);
+ 		xfs_dir2_data_log_entry(args->trans, state->extrablk.bp, dep);
+ 		rval = 0;
  	}
--	return rval;
-+	return rval.tr_logres;
- }
+diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
+index 2791d99..740cab0 100644
+--- a/libxfs/xfs_dir2_sf.c
++++ b/libxfs/xfs_dir2_sf.c
+@@ -316,6 +316,8 @@ xfs_dir2_block_to_sf(
+ 			memcpy(sfep->name, dep->name, dep->namelen);
+ 			xfs_dir3_sfe_put_ino(mp, sfp, sfep,
+ 					     be64_to_cpu(dep->inumber));
++			xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
++					xfs_dir3_dirent_get_ftype(mp, dep));
  
- int
+ 			sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
+ 		}
+@@ -479,6 +481,8 @@ xfs_dir2_sf_addname_easy(
+ 	xfs_dir2_sf_put_offset(sfep, offset);
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+ 	xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep, args->inumber);
++	xfs_dir3_sfe_put_ftype(dp->i_mount, sfp, sfep, args->filetype);
++
+ 	/*
+ 	 * Update the header and inode.
+ 	 */
+@@ -572,6 +576,7 @@ xfs_dir2_sf_addname_hard(
+ 	xfs_dir2_sf_put_offset(sfep, offset);
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+ 	xfs_dir3_sfe_put_ino(mp, sfp, sfep, args->inumber);
++	xfs_dir3_sfe_put_ftype(mp, sfp, sfep, args->filetype);
+ 	sfp->count++;
+ #if XFS_BIG_INUMS
+ 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
+@@ -808,6 +813,7 @@ xfs_dir2_sf_lookup(
+ 	if (args->namelen == 1 && args->name[0] == '.') {
+ 		args->inumber = dp->i_ino;
+ 		args->cmpresult = XFS_CMP_EXACT;
++		args->filetype = XFS_DIR3_FT_DIR;
+ 		return XFS_ERROR(EEXIST);
+ 	}
+ 	/*
+@@ -817,6 +823,7 @@ xfs_dir2_sf_lookup(
+ 	    args->name[0] == '.' && args->name[1] == '.') {
+ 		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
+ 		args->cmpresult = XFS_CMP_EXACT;
++		args->filetype = XFS_DIR3_FT_DIR;
+ 		return XFS_ERROR(EEXIST);
+ 	}
+ 	/*
+@@ -836,6 +843,8 @@ xfs_dir2_sf_lookup(
+ 			args->cmpresult = cmp;
+ 			args->inumber = xfs_dir3_sfe_get_ino(dp->i_mount,
+ 							     sfp, sfep);
++			args->filetype = xfs_dir3_sfe_get_ftype(dp->i_mount,
++								sfp, sfep);
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return XFS_ERROR(EEXIST);
+ 			ci_sfep = sfep;
+@@ -1035,6 +1044,8 @@ xfs_dir2_sf_replace(
+ #endif
+ 				xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
+ 						     args->inumber);
++				xfs_dir3_sfe_put_ftype(dp->i_mount, sfp, sfep,
++						       args->filetype);
+ 				break;
+ 			}
+ 		}
+@@ -1101,10 +1112,12 @@ xfs_dir2_sf_toino4(
+ 	int			oldsize;	/* old inode size */
+ 	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
+ 	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
++	struct xfs_mount	*mp;
+ 
+ 	trace_xfs_dir2_sf_toino4(args);
+ 
+ 	dp = args->dp;
++	mp = dp->i_mount;
+ 
+ 	/*
+ 	 * Copy the old directory to the buffer.
+@@ -1142,13 +1155,15 @@ xfs_dir2_sf_toino4(
+ 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
+ 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
+ 	     i < sfp->count;
+-	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep),
+-		  oldsfep = xfs_dir3_sf_nextentry(dp->i_mount, oldsfp, oldsfep)) {
++	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep),
++		  oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep)) {
+ 		sfep->namelen = oldsfep->namelen;
+ 		sfep->offset = oldsfep->offset;
+ 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+-		xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
+-			xfs_dir3_sfe_get_ino(dp->i_mount, oldsfp, oldsfep));
++		xfs_dir3_sfe_put_ino(mp, sfp, sfep,
++			xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep));
++		xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
++			xfs_dir3_sfe_get_ftype(mp, oldsfp, oldsfep));
+ 	}
+ 	/*
+ 	 * Clean up the inode.
+@@ -1176,10 +1191,12 @@ xfs_dir2_sf_toino8(
+ 	int			oldsize;	/* old inode size */
+ 	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
+ 	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
++	struct xfs_mount	*mp;
+ 
+ 	trace_xfs_dir2_sf_toino8(args);
+ 
+ 	dp = args->dp;
++	mp = dp->i_mount;
+ 
+ 	/*
+ 	 * Copy the old directory to the buffer.
+@@ -1217,13 +1234,15 @@ xfs_dir2_sf_toino8(
+ 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
+ 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
+ 	     i < sfp->count;
+-	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep),
+-		  oldsfep = xfs_dir3_sf_nextentry(dp->i_mount, oldsfp, oldsfep)) {
++	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep),
++		  oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep)) {
+ 		sfep->namelen = oldsfep->namelen;
+ 		sfep->offset = oldsfep->offset;
+ 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+-		xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
+-			xfs_dir3_sfe_get_ino(dp->i_mount, oldsfp, oldsfep));
++		xfs_dir3_sfe_put_ino(mp, sfp, sfep,
++			xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep));
++		xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
++			xfs_dir3_sfe_get_ftype(mp, oldsfp, oldsfep));
+ 	}
+ 	/*
+ 	 * Clean up the inode.
 -- 
 1.8.3.2
 
