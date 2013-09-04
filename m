@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9390A29EA4
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 849A1304039
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:55 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 91F4F29EB9
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3EC8D8F8033
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:56 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Md5NG67rjEmM3iIB for <xfs@oss.sgi.com>;
+	SLcdWCiGAmxNkCsU for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:53 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007d6-Nw
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007d7-Oa
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003sA-NI
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003sF-Nw
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/55] libxfs: fix compile warnings
-Date: Thu,  5 Sep 2013 08:05:17 +1000
-Message-Id: <1378332359-14737-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/55] xfs: remove local fork format handling from
+	xfs_bmapi_write()
+Date: Thu,  5 Sep 2013 08:05:18 +1000
+Message-Id: <1378332359-14737-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,287 +40,372 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Some of the code shared with userspace causes compilation warnings
-from things turned off in the kernel code, such as differences in
-variable signedness. Fix those issues.
+The conversion from local format to extent format requires
+interpretation of the data in the fork being converted, so it cannot
+be done in a generic way. It is up to the caller to convert the fork
+format to extent format before calling into xfs_bmapi_write() so
+format conversion can be done correctly.
+
+The code in xfs_bmapi_write() to convert the format is used
+implicitly by the attribute and directory code, but they
+specifically zero the fork size so that the conversion does not do
+any allocation or manipulation. Move this conversion into the
+shortform to leaf functions for the dir/attr code so the conversions
+are explicitly controlled by all callers.
+
+Now we can remove the conversion code in xfs_bmapi_write.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- copy/xfs_copy.c          | 12 ++++++++++--
- db/bmroot.c              |  6 +++---
- libxfs/xfs.h             |  8 +++++++-
- libxfs/xfs_attr_remote.c |  8 ++++----
- libxfs/xfs_bmap.c        |  3 ---
- libxfs/xfs_da_btree.c    |  6 +++---
- libxfs/xfs_dir2_node.c   |  2 ++
- libxfs/xfs_ialloc.c      |  2 +-
- libxfs/xfs_rtalloc.c     |  4 ++--
- repair/attr_repair.c     |  2 ++
- repair/incore_ino.c      |  2 ++
- repair/scan.c            |  1 +
- 12 files changed, 37 insertions(+), 19 deletions(-)
+ include/xfs_bmap.h      |   1 +
+ libxfs/xfs_attr_leaf.c  |   2 +
+ libxfs/xfs_bmap.c       | 197 ++++++++++++++++++++----------------------------
+ libxfs/xfs_dir2_block.c |  19 +++--
+ 4 files changed, 97 insertions(+), 122 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 39517da..bb37279 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -434,6 +434,10 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
- 	off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
- 	buf->position = (xfs_off_t) off * (xfs_off_t) BBSIZE;
- 	length = buf->length = first_agbno * blocksize;
-+	if (length == 0) {
-+		do_log(_("ag header buffer invalid!\n"));
-+		exit(1);
-+	}
+diff --git a/include/xfs_bmap.h b/include/xfs_bmap.h
+index de451a2..ffa67b1 100644
+--- a/include/xfs_bmap.h
++++ b/include/xfs_bmap.h
+@@ -169,6 +169,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+ #endif
  
- 	/* handle alignment stuff */
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
++void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+ void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
+ 		struct xfs_bmap_free *flist, struct xfs_mount *mp);
+ void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 49a1764..c09b0f3 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -654,6 +654,8 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+ 	sf = (xfs_attr_shortform_t *)tmpbuffer;
  
-@@ -449,7 +453,6 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
- 	if (buf->length % buf->min_io_size != 0)
- 		buf->length = roundup(buf->length, buf->min_io_size);
- 
--	ASSERT(length != 0);
- 	read_wbuf(fd, buf, mp);
- 	ASSERT(buf->length >= length);
- 
-@@ -936,7 +939,12 @@ main(int argc, char **argv)
- 		for (;;) {
- 			/* none of this touches the w_buf buffer */
- 
--			ASSERT(current_level < btree_levels);
-+			if (current_level >= btree_levels) {
-+				do_log(
-+			_("Error: current level %d >= btree levels %d\n"),
-+					current_level, btree_levels);
-+				exit(1);
-+			}
- 
- 			current_level++;
- 
-diff --git a/db/bmroot.c b/db/bmroot.c
-index 3e18917..12b129e 100644
---- a/db/bmroot.c
-+++ b/db/bmroot.c
-@@ -91,13 +91,13 @@ bmroota_key_offset(
- 	int			idx)
- {
- 	xfs_bmdr_block_t	*block;
--	/* REFERENCED */
--	xfs_dinode_t		*dip;
-+#ifdef DEBUG
-+	xfs_dinode_t		*dip = obj;
-+#endif
- 	xfs_bmdr_key_t		*kp;
- 
- 	ASSERT(bitoffs(startoff) == 0);
- 	ASSERT(obj == iocur_top->data);
--	dip = obj;
- 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
- 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
- 	ASSERT(be16_to_cpu(block->bb_level) > 0);
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 3fd226c..c9d6a6d 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -189,7 +189,9 @@ roundup_pow_of_two(uint v)
- /* avoid gcc warning */
- #define xfs_incore(bt,blkno,len,lockit)	({		\
- 	typeof(blkno) __foo = (blkno);			\
-+	typeof(len) __bar = (len);			\
- 	(blkno) = __foo;				\
-+	(len) = __bar; /* no set-but-unused warning */	\
- 	NULL;						\
- })
- #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
-@@ -259,7 +261,11 @@ roundup_pow_of_two(uint v)
- #define	xfs_trans_agblocks_delta(tp, d)
- #define	xfs_trans_agflist_delta(tp, d)
- #define	xfs_trans_agbtree_delta(tp, d)
--#define xfs_trans_buf_set_type(tp, bp, t)
-+#define xfs_trans_buf_set_type(tp, bp, t)	({	\
-+	int __t = (t);					\
-+	__t = __t; /* no set-but-unused warning */	\
-+})
+ 	xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
++	xfs_bmap_local_to_extents_empty(dp, XFS_ATTR_FORK);
 +
- #define xfs_trans_buf_copy_type(dbp, sbp)
- 
- #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 0b2ca8c..59bb12d 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -214,7 +214,7 @@ xfs_attr_rmtval_copyout(
- 	xfs_ino_t	ino,
- 	int		*offset,
- 	int		*valuelen,
--	char		**dst)
-+	__uint8_t	**dst)
- {
- 	char		*src = bp->b_addr;
- 	xfs_daddr_t	bno = bp->b_bn;
-@@ -261,7 +261,7 @@ xfs_attr_rmtval_copyin(
- 	xfs_ino_t	ino,
- 	int		*offset,
- 	int		*valuelen,
--	char		**src)
-+	__uint8_t	**src)
- {
- 	char		*dst = bp->b_addr;
- 	xfs_daddr_t	bno = bp->b_bn;
-@@ -314,7 +314,7 @@ xfs_attr_rmtval_get(
- 	struct xfs_mount	*mp = args->dp->i_mount;
- 	struct xfs_buf		*bp;
- 	xfs_dablk_t		lblkno = args->rmtblkno;
--	char			*dst = args->value;
-+	__uint8_t		*dst = args->value;
- 	int			valuelen = args->valuelen;
- 	int			nmap;
- 	int			error;
-@@ -378,7 +378,7 @@ xfs_attr_rmtval_set(
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
- 	xfs_fileoff_t		lfileoff = 0;
--	char			*src = args->value;
-+	__uint8_t		*src = args->value;
- 	int			blkcnt;
- 	int			valuelen;
- 	int			nmap;
+ 	bp = NULL;
+ 	error = xfs_da_grow_inode(args, &blkno);
+ 	if (error) {
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 6664265..b7f798b 100644
+index b7f798b..5234674 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -4437,12 +4437,9 @@ xfs_bmapi_allocate(
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
- 	int			tmp_logflags = 0;
- 	int			error;
--	int			rt;
+@@ -1042,6 +1042,24 @@ xfs_bmap_extents_to_btree(
+  * since the file data needs to get logged so things will stay consistent.
+  * (The bmap-level manipulations are ok, though).
+  */
++void
++xfs_bmap_local_to_extents_empty(
++	struct xfs_inode	*ip,
++	int			whichfork)
++{
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++
++	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
++	ASSERT(ifp->if_bytes == 0);
++	ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
++
++	xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
++	ifp->if_flags &= ~XFS_IFINLINE;
++	ifp->if_flags |= XFS_IFEXTENTS;
++	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
++}
++
++
+ STATIC int				/* error */
+ xfs_bmap_local_to_extents(
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+@@ -1055,9 +1073,12 @@ xfs_bmap_local_to_extents(
+ 				   struct xfs_inode *ip,
+ 				   struct xfs_ifork *ifp))
+ {
+-	int		error;		/* error return value */
++	int		error = 0;
+ 	int		flags;		/* logging flags returned */
+ 	xfs_ifork_t	*ifp;		/* inode fork pointer */
++	xfs_alloc_arg_t	args;		/* allocation arguments */
++	xfs_buf_t	*bp;		/* buffer for extent block */
++	xfs_bmbt_rec_host_t *ep;	/* extent record pointer */
  
- 	ASSERT(bma->length > 0);
- 
--	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
+ 	/*
+ 	 * We don't want to deal with the case of keeping inode data inline yet.
+@@ -1066,68 +1087,65 @@ xfs_bmap_local_to_extents(
+ 	ASSERT(!(S_ISREG(ip->i_d.di_mode) && whichfork == XFS_DATA_FORK));
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
++
++	if (!ifp->if_bytes) {
++		xfs_bmap_local_to_extents_empty(ip, whichfork);
++		flags = XFS_ILOG_CORE;
++		goto done;
++	}
++
+ 	flags = 0;
+ 	error = 0;
+-	if (ifp->if_bytes) {
+-		xfs_alloc_arg_t	args;	/* allocation arguments */
+-		xfs_buf_t	*bp;	/* buffer for extent block */
+-		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
 -
- 	/*
- 	 * For the wasdelay case, we could also just allocate the stuff asked
- 	 * for in this bmap call but that wouldn't be as good.
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index d7798af..b7b6705 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -376,7 +376,7 @@ xfs_da3_split(
- 	struct xfs_da_intnode	*node;
- 	struct xfs_buf		*bp;
- 	int			max;
--	int			action;
-+	int			action = 0;
- 	int			error;
- 	int			i;
+-		ASSERT((ifp->if_flags &
+-			(XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) == XFS_IFINLINE);
+-		memset(&args, 0, sizeof(args));
+-		args.tp = tp;
+-		args.mp = ip->i_mount;
+-		args.firstblock = *firstblock;
+-		/*
+-		 * Allocate a block.  We know we need only one, since the
+-		 * file currently fits in an inode.
+-		 */
+-		if (*firstblock == NULLFSBLOCK) {
+-			args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
+-			args.type = XFS_ALLOCTYPE_START_BNO;
+-		} else {
+-			args.fsbno = *firstblock;
+-			args.type = XFS_ALLOCTYPE_NEAR_BNO;
+-		}
+-		args.total = total;
+-		args.minlen = args.maxlen = args.prod = 1;
+-		error = xfs_alloc_vextent(&args);
+-		if (error)
+-			goto done;
+-
+-		/* Can't fail, the space was reserved. */
+-		ASSERT(args.fsbno != NULLFSBLOCK);
+-		ASSERT(args.len == 1);
+-		*firstblock = args.fsbno;
+-		bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
+-
+-		/* initialise the block and copy the data */
+-		init_fn(tp, bp, ip, ifp);
+-
+-		/* account for the change in fork size and log everything */
+-		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
+-		xfs_bmap_forkoff_reset(args.mp, ip, whichfork);
+-		xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
+-		xfs_iext_add(ifp, 0, 1);
+-		ep = xfs_iext_get_ext(ifp, 0);
+-		xfs_bmbt_set_allf(ep, 0, args.fsbno, 1, XFS_EXT_NORM);
+-		trace_xfs_bmap_post_update(ip, 0,
+-				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
+-				_THIS_IP_);
+-		XFS_IFORK_NEXT_SET(ip, whichfork, 1);
+-		ip->i_d.di_nblocks = 1;
+-		xfs_trans_mod_dquot_byino(tp, ip,
+-			XFS_TRANS_DQ_BCOUNT, 1L);
+-		flags |= xfs_ilog_fext(whichfork);
++	ASSERT((ifp->if_flags & (XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) ==
++								XFS_IFINLINE);
++	memset(&args, 0, sizeof(args));
++	args.tp = tp;
++	args.mp = ip->i_mount;
++	args.firstblock = *firstblock;
++	/*
++	 * Allocate a block.  We know we need only one, since the
++	 * file currently fits in an inode.
++	 */
++	if (*firstblock == NULLFSBLOCK) {
++		args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
++		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+-		ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
+-		xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
++		args.fsbno = *firstblock;
++		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 	}
+-	ifp->if_flags &= ~XFS_IFINLINE;
+-	ifp->if_flags |= XFS_IFEXTENTS;
+-	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
++	args.total = total;
++	args.minlen = args.maxlen = args.prod = 1;
++	error = xfs_alloc_vextent(&args);
++	if (error)
++		goto done;
++
++	/* Can't fail, the space was reserved. */
++	ASSERT(args.fsbno != NULLFSBLOCK);
++	ASSERT(args.len == 1);
++	*firstblock = args.fsbno;
++	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
++
++	/* initialise the block and copy the data */
++	init_fn(tp, bp, ip, ifp);
++
++	/* account for the change in fork size and log everything */
++	xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
++	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
++	xfs_bmap_local_to_extents_empty(ip, whichfork);
+ 	flags |= XFS_ILOG_CORE;
++
++	xfs_iext_add(ifp, 0, 1);
++	ep = xfs_iext_get_ext(ifp, 0);
++	xfs_bmbt_set_allf(ep, 0, args.fsbno, 1, XFS_EXT_NORM);
++	trace_xfs_bmap_post_update(ip, 0,
++			whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
++			_THIS_IP_);
++	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
++	ip->i_d.di_nblocks = 1;
++	xfs_trans_mod_dquot_byino(tp, ip,
++		XFS_TRANS_DQ_BCOUNT, 1L);
++	flags |= xfs_ilog_fext(whichfork);
++
+ done:
+ 	*logflagsp = flags;
+ 	return error;
+@@ -1203,23 +1221,6 @@ xfs_bmap_add_attrfork_extents(
+ 	return error;
+ }
  
-@@ -2431,9 +2431,9 @@ static int
- xfs_buf_map_from_irec(
- 	struct xfs_mount	*mp,
- 	struct xfs_buf_map	**mapp,
--	unsigned int		*nmaps,
-+	int			*nmaps,
- 	struct xfs_bmbt_irec	*irecs,
--	unsigned int		nirecs)
-+	int			nirecs)
- {
- 	struct xfs_buf_map	*map;
- 	int			i;
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index fea0131..030f620 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -295,11 +295,13 @@ xfs_dir2_free_log_header(
+-/*
+- * Block initialisation functions for local to extent format conversion.
+- * As these get more complex, they will be moved to the relevant files,
+- * but for now they are too simple to worry about.
+- */
+-STATIC void
+-xfs_bmap_local_to_extents_init_fn(
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
+-{
+-	bp->b_ops = &xfs_bmbt_buf_ops;
+-	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+-	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
+-}
+-
+ STATIC void
+ xfs_symlink_local_to_remote(
  	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
- {
-+#ifdef DEBUG
- 	xfs_dir2_free_t		*free;		/* freespace structure */
+@@ -1272,9 +1273,9 @@ xfs_bmap_add_attrfork_local(
+ 						 flags, XFS_DATA_FORK,
+ 						 xfs_symlink_local_to_remote);
  
- 	free = bp->b_addr;
- 	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
- 	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
-+#endif
- 	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_free_hdr_size(tp->t_mountp) - 1);
- }
- 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 98513fd..4683287 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1319,7 +1319,7 @@ xfs_imap(
- 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
- 	int		error;	/* error code */
- 	int		offset;	/* index of inode in its buffer */
--	int		offset_agbno;	/* blks from chunk start to inode */
-+	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
- 
- 	ASSERT(ino != NULLFSINO);
- 
-diff --git a/libxfs/xfs_rtalloc.c b/libxfs/xfs_rtalloc.c
-index 1de85fd..9797db7 100644
---- a/libxfs/xfs_rtalloc.c
-+++ b/libxfs/xfs_rtalloc.c
-@@ -431,8 +431,8 @@ xfs_rtfree_range(
- {
- 	xfs_rtblock_t	end;		/* end of the freed extent */
- 	int		error;		/* error value */
--	xfs_rtblock_t	postblock;	/* first block freed > end */
--	xfs_rtblock_t	preblock;	/* first block freed < start */
-+	xfs_rtblock_t	postblock = 0;	/* first block freed > end */
-+	xfs_rtblock_t	preblock = 0;	/* first block freed < start */
- 
- 	end = start + len - 1;
- 	/*
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index d42b85f..ba85fd9 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -1631,9 +1631,11 @@ process_attributes(
- {
- 	int		err;
- 	__u8		aformat = dip->di_aformat;
-+#ifdef DEBUG
- 	xfs_attr_shortform_t *asf;
- 
- 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
-+#endif
- 
- 	if (aformat == XFS_DINODE_FMT_LOCAL) {
- 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=
-diff --git a/repair/incore_ino.c b/repair/incore_ino.c
-index efffe75..735737a 100644
---- a/repair/incore_ino.c
-+++ b/repair/incore_ino.c
-@@ -167,6 +167,7 @@ __uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
- 	default:
- 		ASSERT(0);
- 	}
-+	return 0;
- }
- 
- void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
-@@ -207,6 +208,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
- 	default:
- 		ASSERT(0);
- 	}
-+	return 0;
+-	return xfs_bmap_local_to_extents(tp, ip, firstblock, 1, flags,
+-					 XFS_DATA_FORK,
+-					 xfs_bmap_local_to_extents_init_fn);
++	/* should only be called for types that support local format data */
++	ASSERT(0);
++	return EFSCORRUPTED;
  }
  
  /*
-diff --git a/repair/scan.c b/repair/scan.c
-index 07880e4..4f8bbef 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -520,6 +520,7 @@ scan_allocbt(
- 		name = "cnt";
- 		break;
- 	default:
-+		name = "(unknown)";
- 		assert(0);
- 		break;
+@@ -4653,20 +4654,19 @@ xfs_bmapi_write(
+ 	orig_mval = mval;
+ 	orig_nmap = *nmap;
+ #endif
++	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
++		XFS_ATTR_FORK : XFS_DATA_FORK;
+ 
+ 	ASSERT(*nmap >= 1);
+ 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
+ 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
+ 	ASSERT(tp != NULL);
+ 	ASSERT(len > 0);
+-
+-	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+-		XFS_ATTR_FORK : XFS_DATA_FORK;
++	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+ 
+ 	if (unlikely(XFS_TEST_ERROR(
+ 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+-	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+-	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
++	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+ 	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+ 		XFS_ERROR_REPORT("xfs_bmapi_write", XFS_ERRLEVEL_LOW, mp);
+ 		return XFS_ERROR(EFSCORRUPTED);
+@@ -4679,37 +4679,6 @@ xfs_bmapi_write(
+ 
+ 	XFS_STATS_INC(xs_blk_mapw);
+ 
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+-		/*
+-		 * XXX (dgc): This assumes we are only called for inodes that
+-		 * contain content neutral data in local format. Anything that
+-		 * contains caller-specific data in local format that needs
+-		 * transformation to move to a block format needs to do the
+-		 * conversion to extent format itself.
+-		 *
+-		 * Directory data forks and attribute forks handle this
+-		 * themselves, but with the addition of metadata verifiers every
+-		 * data fork in local format now contains caller specific data
+-		 * and as such conversion through this function is likely to be
+-		 * broken.
+-		 *
+-		 * The only likely user of this branch is for remote symlinks,
+-		 * but we cannot overwrite the data fork contents of the symlink
+-		 * (EEXIST occurs higher up the stack) and so it will never go
+-		 * from local format to extent format here. Hence I don't think
+-		 * this branch is ever executed intentionally and we should
+-		 * consider removing it and asserting that xfs_bmapi_write()
+-		 * cannot be called directly on local format forks. i.e. callers
+-		 * are completely responsible for local to extent format
+-		 * conversion, not xfs_bmapi_write().
+-		 */
+-		error = xfs_bmap_local_to_extents(tp, ip, firstblock, total,
+-					&bma.logflags, whichfork,
+-					xfs_bmap_local_to_extents_init_fn);
+-		if (error)
+-			goto error0;
+-	}
+-
+ 	if (*firstblock == NULLFSBLOCK) {
+ 		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+ 			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index dc69394..d94b9b2 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -1051,13 +1051,15 @@ xfs_dir2_sf_to_block(
+ 	__be16			*tagp;		/* end of data entry */
+ 	xfs_trans_t		*tp;		/* transaction pointer */
+ 	struct xfs_name		name;
++	struct xfs_ifork	*ifp;
+ 
+ 	trace_xfs_dir2_sf_to_block(args);
+ 
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
++	ifp = XFS_IFORK_PTR(dp, XFS_DATA_FORK);
++	ASSERT(ifp->if_flags & XFS_IFINLINE);
+ 	/*
+ 	 * Bomb out if the shortform directory is way too short.
+ 	 */
+@@ -1066,22 +1068,23 @@ xfs_dir2_sf_to_block(
+ 		return XFS_ERROR(EIO);
  	}
+ 
+-	oldsfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
++	oldsfp = (xfs_dir2_sf_hdr_t *)ifp->if_u1.if_data;
+ 
+-	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
+-	ASSERT(dp->i_df.if_u1.if_data != NULL);
++	ASSERT(ifp->if_bytes == dp->i_d.di_size);
++	ASSERT(ifp->if_u1.if_data != NULL);
+ 	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(oldsfp->i8count));
++	ASSERT(dp->i_d.di_nextents == 0);
+ 
+ 	/*
+ 	 * Copy the directory into a temporary buffer.
+ 	 * Then pitch the incore inode data so we can make extents.
+ 	 */
+-	sfp = kmem_alloc(dp->i_df.if_bytes, KM_SLEEP);
+-	memcpy(sfp, oldsfp, dp->i_df.if_bytes);
++	sfp = kmem_alloc(ifp->if_bytes, KM_SLEEP);
++	memcpy(sfp, oldsfp, ifp->if_bytes);
+ 
+-	xfs_idata_realloc(dp, -dp->i_df.if_bytes, XFS_DATA_FORK);
++	xfs_idata_realloc(dp, -ifp->if_bytes, XFS_DATA_FORK);
++	xfs_bmap_local_to_extents_empty(dp, XFS_DATA_FORK);
+ 	dp->i_d.di_size = 0;
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+ 	/*
+ 	 * Add block 0 to the inode.
 -- 
 1.8.3.2
 
