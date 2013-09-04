@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 59ADB29E66
+	by oss.sgi.com (Postfix) with ESMTP id CB3AB29E37
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A98F304039
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BBAE1304039
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:45 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	AjhfsI6l2e0TcXVX for <xfs@oss.sgi.com>;
+	0s1FOfLqHta7wQvK for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:42 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007du-4n
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dp-3U
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003th-4N
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003tX-2p
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 32/55] xfs: create xfs_bmap_util.[ch]
-Date: Thu,  5 Sep 2013 08:05:36 +1000
-Message-Id: <1378332359-14737-33-git-send-email-david@fromorbit.com>
+Subject: [PATCH 30/55] xfs: split out the remote symlink handling
+Date: Thu,  5 Sep 2013 08:05:34 +1000
+Message-Id: <1378332359-14737-31-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,446 +39,547 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is a bunch of code in xfs_bmap.c that is kernel specific and
-not shared with userspace. to minimise the difference between the
-kernel and userspace code, shift this unshared code to
-xfs_bmap_util.c, and the declarations to xfs_bmap_util.h.
-
-The biggest issue here is xfs_bmap_finish() - userspce has it's own
-definition of this function, and so we need to move it out of
-xfs_bmap.[ch]. This means several other files need to include
-xfs_bmap_util.c as well.
-
-It also introduces and interesting dance for the stack switching
-code in xfs_bmapi_allocate(). The stack switching/workqueue code is
-actually moved to xfs_bmap_util.c, so that userspace can simply use
-a #define in a header file to connect the dots without needing to
-know about the stack switch code at all.
+The remote symlink format definition and manipulation needs to be
+shared with userspace, but the in-kernel interfaces do not. Split
+the remote symlink format handling out into xfs_symlink_remote.[ch]
+fo it can easily be shared with userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_bmap.h |  51 ------------
- libxfs/xfs.h       |  34 ++++++++
- libxfs/xfs_bmap.c  | 222 +++--------------------------------------------------
- 3 files changed, 43 insertions(+), 264 deletions(-)
+ include/Makefile            |   1 -
+ include/libxfs.h            |   1 -
+ include/xfs_format.h        |  42 ++++++++++
+ include/xfs_symlink.h       |  47 -----------
+ libxfs/Makefile             |   2 +-
+ libxfs/xfs_symlink.c        | 176 -----------------------------------------
+ libxfs/xfs_symlink_remote.c | 185 ++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 228 insertions(+), 226 deletions(-)
+ delete mode 100644 include/xfs_symlink.h
+ delete mode 100644 libxfs/xfs_symlink.c
+ create mode 100644 libxfs/xfs_symlink_remote.c
 
-diff --git a/include/xfs_bmap.h b/include/xfs_bmap.h
-index ffa67b1..8b2fe97 100644
---- a/include/xfs_bmap.h
-+++ b/include/xfs_bmap.h
-@@ -108,38 +108,6 @@ static inline void xfs_bmap_init(xfs_bmap_free_t *flp, xfs_fsblock_t *fbp)
- }
+diff --git a/include/Makefile b/include/Makefile
+index c86d2ce..6a4e521 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -39,7 +39,6 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_mount.h \
+ 	xfs_quota_defs.h \
+ 	xfs_sb.h \
+-	xfs_symlink.h \
+ 	xfs_trace.h \
+ 	xfs_trans_resv.h \
+ 	xfs_trans_space.h \
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 8ab832d..51a2442 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -61,7 +61,6 @@
+ #include <xfs/xfs_btree_trace.h>
+ #include <xfs/xfs_bmap.h>
+ #include <xfs/xfs_trace.h>
+-#include <xfs/xfs_symlink.h>
  
- /*
-- * Argument structure for xfs_bmap_alloc.
-- */
--typedef struct xfs_bmalloca {
--	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
--	struct xfs_bmap_free	*flist;	/* bmap freelist */
--	struct xfs_trans	*tp;	/* transaction pointer */
--	struct xfs_inode	*ip;	/* incore inode pointer */
--	struct xfs_bmbt_irec	prev;	/* extent before the new one */
--	struct xfs_bmbt_irec	got;	/* extent after, or delayed */
--
--	xfs_fileoff_t		offset;	/* offset in file filling in */
--	xfs_extlen_t		length;	/* i/o length asked/allocated */
--	xfs_fsblock_t		blkno;	/* starting block of new extent */
--
--	struct xfs_btree_cur	*cur;	/* btree cursor */
--	xfs_extnum_t		idx;	/* current extent index */
--	int			nallocs;/* number of extents alloc'd */
--	int			logflags;/* flags for transaction logging */
--
--	xfs_extlen_t		total;	/* total blocks needed for xaction */
--	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
--	xfs_extlen_t		minleft; /* amount must be left after alloc */
--	char			eof;	/* set if allocating past last extent */
--	char			wasdel;	/* replacing a delayed allocation */
--	char			userdata;/* set if is user data */
--	char			aeof;	/* allocated space at eof */
--	char			conv;	/* overwriting unwritten extents */
--	int			flags;
--	int			stack_switch;
--} xfs_bmalloca_t;
--
--/*
-  * Flags for xfs_bmap_add_extent*.
+ 
+ #ifndef ARRAY_SIZE
+diff --git a/include/xfs_format.h b/include/xfs_format.h
+index 6205374..35c08ff 100644
+--- a/include/xfs_format.h
++++ b/include/xfs_format.h
+@@ -27,6 +27,12 @@
+  * xfs_log_format.h. Everything else goes here.
   */
- #define BMAP_LEFT_CONTIG	(1 << 0)
-@@ -202,23 +170,4 @@ int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
- 		xfs_extnum_t num);
- uint	xfs_default_attroffset(struct xfs_inode *ip);
  
--#ifdef __KERNEL__
--/* bmap to userspace formatter - copy to user & advance pointer */
--typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
--
--int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
--		int *committed);
--int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
--		xfs_bmap_format_t formatter, void *arg);
--int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
--		int whichfork, int *eof);
--int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
--		int whichfork, int *count);
--int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
--		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
--
--xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
--
--#endif	/* __KERNEL__ */
--
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 0113b50..276fc25 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -51,6 +51,40 @@
- typedef __uint32_t		uint_t;
- typedef __uint32_t		inst_t;		/* an instruction */
++struct xfs_mount;
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_buf;
++struct xfs_ifork;
++
+ /*
+  * RealTime Device format definitions
+  */
+@@ -123,5 +129,41 @@ typedef struct xfs_dqblk {
+ 
+ #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
  
 +/*
-+ * Argument structure for xfs_bmap_alloc.
++ * Remote symlink format and access functions.
 + */
-+typedef struct xfs_bmalloca {
-+	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
-+	struct xfs_bmap_free    *flist;	/* bmap freelist */
-+	struct xfs_trans        *tp;	/* transaction pointer */
-+	struct xfs_inode        *ip;	/* incore inode pointer */
-+	struct xfs_bmbt_irec    prev;	/* extent before the new one */
-+	struct xfs_bmbt_irec    got;	/* extent after, or delayed */
++#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
 +
-+	xfs_fileoff_t		offset;	/* offset in file filling in */
-+	xfs_extlen_t		length;	/* i/o length asked/allocated */
-+	xfs_fsblock_t		blkno;	/* starting block of new extent */
++struct xfs_dsymlink_hdr {
++	__be32	sl_magic;
++	__be32	sl_offset;
++	__be32	sl_bytes;
++	__be32	sl_crc;
++	uuid_t	sl_uuid;
++	__be64	sl_owner;
++	__be64	sl_blkno;
++	__be64	sl_lsn;
++};
 +
-+	struct xfs_btree_cur    *cur;	/* btree cursor */
-+	xfs_extnum_t		idx;	/* current extent index */
-+	int			nallocs;/* number of extents alloc'd */
-+	int			logflags;/* flags for transaction logging */
++/*
++ * The maximum pathlen is 1024 bytes. Since the minimum file system
++ * blocksize is 512 bytes, we can get a max of 3 extents back from
++ * bmapi when crc headers are taken into account.
++ */
++#define XFS_SYMLINK_MAPS 3
 +
-+	xfs_extlen_t		total;	/* total blocks needed for xaction */
-+	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
-+	xfs_extlen_t		minleft; /* amount must be left after alloc */
-+	char			eof;	/* set if allocating past last extent */
-+	char			wasdel;	/* replacing a delayed allocation */
-+	char			userdata;/* set if is user data */
-+	char			aeof;	/* allocated space at eof */
-+	char			conv;	/* overwriting unwritten extents */
-+	char			stack_switch;
-+	int			flags;
-+} xfs_bmalloca_t;
++#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
++	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
++			sizeof(struct xfs_dsymlink_hdr) : 0))
 +
-+#define xfs_bmapi_allocate		__xfs_bmapi_allocate
++int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
++int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
++				 struct xfs_inode *ip, struct xfs_ifork *ifp);
 +
- #ifndef EWRONGFS
- #define EWRONGFS	EINVAL
- #endif
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index ce72b87..eeaea94 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -74,19 +74,6 @@ xfs_bmap_compute_maxlevels(
- 	mp->m_bm_maxlevels[whichfork] = level;
- }
++extern const struct xfs_buf_ops xfs_symlink_buf_ops;
  
+ #endif /* __XFS_FORMAT_H__ */
+diff --git a/include/xfs_symlink.h b/include/xfs_symlink.h
+deleted file mode 100644
+index e85dfd1..0000000
+--- a/include/xfs_symlink.h
++++ /dev/null
+@@ -1,47 +0,0 @@
 -/*
-- * Convert the given file system block to a disk block.  We have to treat it
-- * differently based on whether the file is a real time file or not, because the
-- * bmap code does.
+- * Copyright (c) 2012 Red Hat, Inc. All rights reserved.
 - */
--xfs_daddr_t
--xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+-#ifndef __XFS_SYMLINK_H
+-#define __XFS_SYMLINK_H 1
+-
+-#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
+-
+-struct xfs_dsymlink_hdr {
+-	__be32	sl_magic;
+-	__be32	sl_offset;
+-	__be32	sl_bytes;
+-	__be32	sl_crc;
+-	uuid_t	sl_uuid;
+-	__be64	sl_owner;
+-	__be64	sl_blkno;
+-	__be64	sl_lsn;
+-};
+-
+-/*
+- * The maximum pathlen is 1024 bytes. Since the minimum file system
+- * blocksize is 512 bytes, we can get a max of 3 extents back from
+- * bmapi when crc headers are taken into account.
+- */
+-#define XFS_SYMLINK_MAPS 3
+-
+-#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
+-	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
+-			sizeof(struct xfs_dsymlink_hdr) : 0))
+-
+-int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
+-bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
+-			uint32_t size, struct xfs_buf *bp);
+-void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+-				 struct xfs_inode *ip, struct xfs_ifork *ifp);
+-
+-extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+-
+-#ifdef __KERNEL__
+-
+-int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+-		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+-int xfs_readlink(struct xfs_inode *ip, char *link);
+-int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
+-
+-#endif /* __KERNEL__ */
+-#endif /* __XFS_SYMLINK_H */
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index b7df144..6ba38f9 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -23,7 +23,7 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
+ 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
+ 	xfs_mount.c xfs_rtalloc.c xfs_attr.c xfs_attr_remote.c \
+ 	crc32.c \
+-	xfs_symlink.c \
++	xfs_symlink_remote.c \
+ 	xfs_trans_resv.c
+ 
+ CFILES += $(PKG_PLATFORM).c
+diff --git a/libxfs/xfs_symlink.c b/libxfs/xfs_symlink.c
+deleted file mode 100644
+index f2e69f9..0000000
+--- a/libxfs/xfs_symlink.c
++++ /dev/null
+@@ -1,176 +0,0 @@
+-/*
+- * Copyright 2013 Red Hat, Inc.
+- * All rights reserved.
+- */
+-
+-#include "xfs.h"
+-
+-/*
+- * Each contiguous block has a header, so it is not just a simple pathlen
+- * to FSB conversion.
+- */
+-int
+-xfs_symlink_blocks(
+-	struct xfs_mount *mp,
+-	int		pathlen)
 -{
--	return (XFS_IS_REALTIME_INODE(ip) ? \
--		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
--		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
+-	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+-
+-	return (pathlen + buflen - 1) / buflen;
 -}
 -
- STATIC int				/* error */
- xfs_bmbt_lookup_eq(
- 	struct xfs_btree_cur	*cur,
-@@ -229,173 +216,6 @@ xfs_bmap_forkoff_reset(
- }
- 
- /*
-- * Extent tree block counting routines.
-- */
--
 -/*
-- * Count leaf blocks given a range of extent records.
+- * This is used by mkfs/proto.c to create symlinks.
 - */
--STATIC void
--xfs_bmap_count_leaves(
--	xfs_ifork_t		*ifp,
--	xfs_extnum_t		idx,
--	int			numrecs,
--	int			*count)
--{
--	int		b;
--
--	for (b = 0; b < numrecs; b++) {
--		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
--		*count += xfs_bmbt_get_blockcount(frp);
--	}
--}
--
--/*
-- * Count leaf blocks given a range of extent records originally
-- * in btree format.
-- */
--STATIC void
--xfs_bmap_disk_count_leaves(
+-int
+-xfs_symlink_hdr_set(
 -	struct xfs_mount	*mp,
--	struct xfs_btree_block	*block,
--	int			numrecs,
--	int			*count)
+-	xfs_ino_t		ino,
+-	uint32_t		offset,
+-	uint32_t		size,
+-	struct xfs_buf		*bp)
 -{
--	int		b;
--	xfs_bmbt_rec_t	*frp;
+-	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
 -
--	for (b = 1; b <= numrecs; b++) {
--		frp = XFS_BMBT_REC_ADDR(mp, block, b);
--		*count += xfs_bmbt_disk_get_blockcount(frp);
--	}
--}
--
--/*
-- * Recursively walks each level of a btree
-- * to count total fsblocks is use.
-- */
--STATIC int                                     /* error */
--xfs_bmap_count_tree(
--	xfs_mount_t     *mp,            /* file system mount point */
--	xfs_trans_t     *tp,            /* transaction pointer */
--	xfs_ifork_t	*ifp,		/* inode fork pointer */
--	xfs_fsblock_t   blockno,	/* file system block number */
--	int             levelin,	/* level in btree */
--	int		*count)		/* Count of blocks */
--{
--	int			error;
--	xfs_buf_t		*bp, *nbp;
--	int			level = levelin;
--	__be64			*pp;
--	xfs_fsblock_t           bno = blockno;
--	xfs_fsblock_t		nextbno;
--	struct xfs_btree_block	*block, *nextblock;
--	int			numrecs;
--
--	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--	if (error)
--		return error;
--	*count += 1;
--	block = XFS_BUF_TO_BLOCK(bp);
--
--	if (--level) {
--		/* Not at node above leaves, count this level of nodes */
--		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
--		while (nextbno != NULLFSBLOCK) {
--			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
--						XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--			if (error)
--				return error;
--			*count += 1;
--			nextblock = XFS_BUF_TO_BLOCK(nbp);
--			nextbno = be64_to_cpu(nextblock->bb_u.l.bb_rightsib);
--			xfs_trans_brelse(tp, nbp);
--		}
--
--		/* Dive to the next level */
--		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
--		bno = be64_to_cpu(*pp);
--		if (unlikely((error =
--		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
--			xfs_trans_brelse(tp, bp);
--			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
--					 XFS_ERRLEVEL_LOW, mp);
--			return XFS_ERROR(EFSCORRUPTED);
--		}
--		xfs_trans_brelse(tp, bp);
--	} else {
--		/* count all level 1 nodes and their leaves */
--		for (;;) {
--			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
--			numrecs = be16_to_cpu(block->bb_numrecs);
--			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
--			xfs_trans_brelse(tp, bp);
--			if (nextbno == NULLFSBLOCK)
--				break;
--			bno = nextbno;
--			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
--						XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--			if (error)
--				return error;
--			*count += 1;
--			block = XFS_BUF_TO_BLOCK(bp);
--		}
--	}
--	return 0;
--}
--
--/*
-- * Count fsblocks of the given fork.
-- */
--int						/* error */
--xfs_bmap_count_blocks(
--	xfs_trans_t		*tp,		/* transaction pointer */
--	xfs_inode_t		*ip,		/* incore inode */
--	int			whichfork,	/* data or attr fork */
--	int			*count)		/* out: count of blocks */
--{
--	struct xfs_btree_block	*block;	/* current btree block */
--	xfs_fsblock_t		bno;	/* block # of "block" */
--	xfs_ifork_t		*ifp;	/* fork structure */
--	int			level;	/* btree level, for checking */
--	xfs_mount_t		*mp;	/* file system mount structure */
--	__be64			*pp;	/* pointer to block address */
--
--	bno = NULLFSBLOCK;
--	mp = ip->i_mount;
--	ifp = XFS_IFORK_PTR(ip, whichfork);
--	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
--		xfs_bmap_count_leaves(ifp, 0,
--			ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t),
--			count);
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
 -		return 0;
+-
+-	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
+-	dsl->sl_offset = cpu_to_be32(offset);
+-	dsl->sl_bytes = cpu_to_be32(size);
+-	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
+-	dsl->sl_owner = cpu_to_be64(ino);
+-	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
+-	bp->b_ops = &xfs_symlink_buf_ops;
+-
+-	return sizeof(struct xfs_dsymlink_hdr);
+-}
+-
+-/*
+- * Checking of the symlink header is split into two parts. the verifier does
+- * CRC, location and bounds checking, the unpacking function checks the path
+- * parameters and owner.
+- */
+-bool
+-xfs_symlink_hdr_ok(
+-	struct xfs_mount	*mp,
+-	xfs_ino_t		ino,
+-	uint32_t		offset,
+-	uint32_t		size,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+-
+-	if (offset != be32_to_cpu(dsl->sl_offset))
+-		return false;
+-	if (size != be32_to_cpu(dsl->sl_bytes))
+-		return false;
+-	if (ino != be64_to_cpu(dsl->sl_owner))
+-		return false;
+-
+-	/* ok */
+-	return true;
+-
+-}
+-
+-static bool
+-xfs_symlink_verify(
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return false;
+-	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
+-		return false;
+-	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
+-		return false;
+-	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
+-		return false;
+-	if (be32_to_cpu(dsl->sl_offset) +
+-				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
+-		return false;
+-	if (dsl->sl_owner == 0)
+-		return false;
+-
+-	return true;
+-}
+-
+-static void
+-xfs_symlink_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-
+-	/* no verification of non-crc buffers */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
+-	    !xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
+-}
+-
+-static void
+-xfs_symlink_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+-
+-	/* no verification of non-crc buffers */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	if (!xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
+-
+-	if (bip) {
+-		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+-		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
+-}
+-
+-const struct xfs_buf_ops xfs_symlink_buf_ops = {
+-	.verify_read = xfs_symlink_read_verify,
+-	.verify_write = xfs_symlink_write_verify,
+-};
+-
+-void
+-xfs_symlink_local_to_remote(
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	char			*buf;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+-		bp->b_ops = NULL;
+-		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+-		return;
 -	}
 -
 -	/*
--	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+-	 * As this symlink fits in an inode literal area, it must also fit in
+-	 * the smallest buffer the filesystem supports.
 -	 */
--	block = ifp->if_broot;
--	level = be16_to_cpu(block->bb_level);
--	ASSERT(level > 0);
--	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
--	bno = be64_to_cpu(*pp);
--	ASSERT(bno != NULLDFSBNO);
--	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
--	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+-	ASSERT(BBTOB(bp->b_length) >=
+-			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
 -
--	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
--		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
--				 mp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
+-	bp->b_ops = &xfs_symlink_buf_ops;
 -
--	return 0;
+-	buf = bp->b_addr;
+-	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
+-	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
 -}
--
--/*
-  * Debug/sanity checking code
-  */
- 
-@@ -803,7 +623,6 @@ xfs_bmap_del_free(
- 	kmem_zone_free(xfs_bmap_free_item_zone, free);
- }
- 
--
- /*
-  * Free up any items left in the list.
-  */
-@@ -1028,8 +847,8 @@ xfs_bmap_extents_to_btree(
- 	 * Do all this logging at the end so that
- 	 * the root is at the right level.
- 	 */
--	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
- 	xfs_btree_log_block(cur, abp, XFS_BB_ALL_BITS);
-+	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
- 	ASSERT(*curp == NULL);
- 	*curp = cur;
- 	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
-@@ -1744,7 +1563,7 @@ xfs_bmap_last_before(
- 	return 0;
- }
- 
--STATIC int
+diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
+new file mode 100644
+index 0000000..539db0c
+--- /dev/null
++++ b/libxfs/xfs_symlink_remote.c
+@@ -0,0 +1,185 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2012-2013 Red Hat, Inc.
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include <xfs.h>
++
++/*
++ * Each contiguous block has a header, so it is not just a simple pathlen
++ * to FSB conversion.
++ */
 +int
- xfs_bmap_last_extent(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
-@@ -1808,29 +1627,6 @@ xfs_bmap_isaeof(
- }
- 
- /*
-- * Check if the endoff is outside the last extent. If so the caller will grow
-- * the allocation to a stripe unit boundary.  All offsets are considered outside
-- * the end of file for an empty fork, so 1 is returned in *eof in that case.
-- */
--int
--xfs_bmap_eof(
--	struct xfs_inode	*ip,
--	xfs_fileoff_t		endoff,
--	int			whichfork,
--	int			*eof)
--{
--	struct xfs_bmbt_irec	rec;
--	int			error;
--
--	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, eof);
--	if (error || *eof)
--		return error;
--
--	*eof = endoff >= rec.br_startoff + rec.br_blockcount;
--	return 0;
--}
--
--/*
-  * Returns the file-relative block number of the first block past eof in
-  * the file.  This is not based on i_size, it is based on the extent records.
-  * Returns 0 for local files, as they do not have extent records.
-@@ -3369,7 +3165,7 @@ done:
- /*
-  * Adjust the size of the new extent based on di_extsize and rt extsize.
-  */
--STATIC int
++xfs_symlink_blocks(
++	struct xfs_mount *mp,
++	int		pathlen)
++{
++	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++
++	return (pathlen + buflen - 1) / buflen;
++}
++
 +int
- xfs_bmap_extsize_align(
- 	xfs_mount_t	*mp,
- 	xfs_bmbt_irec_t	*gotp,		/* next extent pointer */
-@@ -3531,9 +3327,9 @@ xfs_bmap_extsize_align(
- 
- #define XFS_ALLOC_GAP_UNITS	4
- 
--STATIC void
++xfs_symlink_hdr_set(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return 0;
++
++	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
++	dsl->sl_offset = cpu_to_be32(offset);
++	dsl->sl_bytes = cpu_to_be32(size);
++	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
++	dsl->sl_owner = cpu_to_be64(ino);
++	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	return sizeof(struct xfs_dsymlink_hdr);
++}
++
++/*
++ * Checking of the symlink header is split into two parts. the verifier does
++ * CRC, location and bounds checking, the unpacking function checks the path
++ * parameters and owner.
++ */
++bool
++xfs_symlink_hdr_ok(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++
++	if (offset != be32_to_cpu(dsl->sl_offset))
++		return false;
++	if (size != be32_to_cpu(dsl->sl_bytes))
++		return false;
++	if (ino != be64_to_cpu(dsl->sl_owner))
++		return false;
++
++	/* ok */
++	return true;
++}
++
++static bool
++xfs_symlink_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
++		return false;
++	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
++		return false;
++	if (be32_to_cpu(dsl->sl_offset) +
++				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
++		return false;
++	if (dsl->sl_owner == 0)
++		return false;
++
++	return true;
++}
++
++static void
++xfs_symlink_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
++	    !xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++}
++
++static void
++xfs_symlink_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++
++	if (bip) {
++		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	}
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
++}
++
++const struct xfs_buf_ops xfs_symlink_buf_ops = {
++	.verify_read = xfs_symlink_read_verify,
++	.verify_write = xfs_symlink_write_verify,
++};
++
 +void
- xfs_bmap_adjacent(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
- 	xfs_fsblock_t	adjust;		/* adjustment to block numbers */
- 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
-@@ -3796,7 +3592,7 @@ xfs_bmap_btalloc_nullfb(
- 
- STATIC int
- xfs_bmap_btalloc(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
- 	xfs_mount_t	*mp;		/* mount point structure */
- 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
-@@ -4028,7 +3824,7 @@ xfs_bmap_btalloc(
-  */
- STATIC int
- xfs_bmap_alloc(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
- 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
- 		return xfs_bmap_rtalloc(ap);
-@@ -4416,8 +4212,8 @@ xfs_bmapi_delay(
- }
- 
- 
--STATIC int
--xfs_bmapi_allocate(
-+int
-+__xfs_bmapi_allocate(
- 	struct xfs_bmalloca	*bma)
- {
- 	struct xfs_mount	*mp = bma->ip->i_mount;
++xfs_symlink_local_to_remote(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	char			*buf;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		bp->b_ops = NULL;
++		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
++		return;
++	}
++
++	/*
++	 * As this symlink fits in an inode literal area, it must also fit in
++	 * the smallest buffer the filesystem supports.
++	 */
++	ASSERT(BBTOB(bp->b_length) >=
++			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
++
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	buf = bp->b_addr;
++	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
++	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
++}
 -- 
 1.8.3.2
 
