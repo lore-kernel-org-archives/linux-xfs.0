@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4FB7029E0E
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5549C29E22
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D5911AC003
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:34 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 45CCF304048
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:35 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	DIxAdvom6iXU0OJm for <xfs@oss.sgi.com>;
+	1qcrAXGqXLrwQloJ for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:33 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dS-T0
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007du-Pm
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:05 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003vp-IR
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003vy-JF
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 52/55] xfs: btree block LSN escaping to disk uninitialised
-Date: Thu,  5 Sep 2013 08:05:56 +1000
-Message-Id: <1378332359-14737-53-git-send-email-david@fromorbit.com>
+Subject: [PATCH 53/55] xfs: inode log reservations are too small
+Date: Thu,  5 Sep 2013 08:05:57 +1000
+Message-Id: <1378332359-14737-54-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,48 +39,272 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When testing LSN ordering code for v5 superblocks, it was discovered
-that the the LSN embedded in the generic btree blocks was
-occasionally uninitialised. These values didn't get written to disk
-by metadata writeback - they got written by previous transactions in
-log recovery.
+We've been seeing occasional problems with log space leaks and
+transaction underruns such as this for some time:
 
-The issue is here that the when the block is first allocated and
-initialised, the LSN field was not initialised - it gets overwritten
-before IO is issued on the buffer - but the value that is logged by
-transactions that modify the header before it is written to disk
-(and initialised) contain garbage. Hence the first recovery of the
-buffer will stamp garbage into the LSN field, and that can cause
-subsequent transactions to not replay correctly.
+ XFS (dm-0): xlog_write: reservation summary:
+   trans type  = FSYNC_TS (36)
+   unit res    = 2740 bytes
+   current res = -4 bytes
+   total reg   = 0 bytes (o/flow = 0 bytes)
+   ophdrs      = 0 (ophdr space = 0 bytes)
+   ophdr + reg = 0 bytes
+   num regions = 0
 
-The fix is simply to initialise the bb_lsn field to zero when we
-initialise the block for the first time.
+Turns out that xfstests generic/311 is reliably reproducing this
+problem with the test it runs at sequence 16 of it execution. It is
+a 100% reliable reproducer with the mkfs configuration of "-b
+size=1024 -m crc=1" on a 10GB scratch device.
+
+The problem? Inode forks in btree format are logged in memory
+format, not disk format (i.e. bmbt format, not bmdr format). That
+means there is a btree block header being logged, when such a
+structure is never written to the inode fork in bmdr format. The
+bmdr header in the inode is only 4 bytes, while the bmbt header is
+24 bytes for v4 filesystems and 72 bytes for v5 filesystems.
+
+We currently reserve the inode size plus the rounded up overhead of
+a logging a buffer, which is 128 bytes. That means the reservation
+for a 512 byte inode is 640 bytes. What we can actually log is:
+
+	inode core, data and attr fork = 512 bytes
+	inode log format + log op header = 56 + 12 = 68 bytes
+	data fork bmbt hdr = 24/72 bytes
+	attr fork bmbt hdr = 24/72 bytes
+
+So, for a v2 inodes we can log at least 628 bytes, but if we split that
+inode over the end of the log across log buffers, we need to also
+another log op header, which takes us to 640 bytes. If there's
+another reservation taken out of this that I haven't taken into
+account (perhaps multiple iclog splits?) or I haven't corectly
+calculated the bmbt format space used (entirely possible), then
+we will overun it.
+
+For v3 inodes the maximum is actually 724 bytes, and even a
+single maximally sized btree format fork can blow it (652 bytes).
+And that's exactly what is happening with the FSYNC_TS transaction
+in the above output - it's consumed 644 bytes of space after the CIL
+context took the space reserved for it (2100 bytes).
+
+This problem has always been present in the XFS code - the btree
+format inode forks have always been logged in this manner. Hence
+there has always been the possibility of an overrun with such a
+transaction. The CRC code has just exposed it frequently enough to
+be able to debug and understand the root cause....
+
+So, let's fix all the inode log space reservations.
+
+[ I'm so glad we spent the effort to clean up the transaction
+  reservation code. This is an easy fix now. ]
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_btree.c | 2 ++
- 1 file changed, 2 insertions(+)
+ libxfs/xfs_trans_resv.c | 72 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 53 insertions(+), 19 deletions(-)
 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 3ac3330..0099926 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -921,6 +921,7 @@ xfs_btree_init_block_int(
- 			buf->bb_u.l.bb_owner = cpu_to_be64(owner);
- 			uuid_copy(&buf->bb_u.l.bb_uuid, &mp->m_sb.sb_uuid);
- 			buf->bb_u.l.bb_pad = 0;
-+			buf->bb_u.l.bb_lsn = 0;
- 		}
- 	} else {
- 		/* owner is a 32 bit value on short blocks */
-@@ -932,6 +933,7 @@ xfs_btree_init_block_int(
- 			buf->bb_u.s.bb_blkno = cpu_to_be64(blkno);
- 			buf->bb_u.s.bb_owner = cpu_to_be32(__owner);
- 			uuid_copy(&buf->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid);
-+			buf->bb_u.s.bb_lsn = 0;
- 		}
- 	}
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index d134136..3e14b1c 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -48,6 +48,39 @@ xfs_calc_buf_res(
  }
+ 
+ /*
++ * Logging inodes is really tricksy. They are logged in memory format,
++ * which means that what we write into the log doesn't directory translate into
++ * the amount of space they use on disk.
++ *
++ * Case in point - btree format forks in memory format use more space than the
++ * on-disk format. In memory, the buffer contains a normal btree block header so
++ * the btree code can treat it as though it is just another generic buffer.
++ * However, when we write it to the inode fork, we don't write all of this
++ * header as it isn't needed. e.g. the root is only ever in the inode, so
++ * there's no need for sibling pointers which would waste 16 bytes of space.
++ *
++ * Hence when we have an inode with a maximally sized btree format fork, then
++ * amount of information we actually log is greater than the size of the inode
++ * on disk. Hence we need an inode reservation function that calculates all this
++ * correctly. So, we log:
++ *
++ * - log op headers for object
++ * - inode log format object
++ * - the entire inode contents (core + 2 forks)
++ * - two bmap btree block headers
++ */
++STATIC uint
++xfs_calc_inode_res(
++	struct xfs_mount	*mp,
++	uint			ninodes)
++{
++	return ninodes * (sizeof(struct xlog_op_header) +
++			  sizeof(struct xfs_inode_log_format) +
++			  mp->m_sb.sb_inodesize +
++			  2 * XFS_BMBT_BLOCK_LEN(mp));
++}
++
++/*
+  * Various log reservation values.
+  *
+  * These are based on the size of the file system block because that is what
+@@ -86,7 +119,7 @@ xfs_calc_write_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+@@ -115,7 +148,7 @@ xfs_calc_itruncate_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+@@ -145,7 +178,7 @@ xfs_calc_rename_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(4, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 4) +
+ 		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+@@ -170,7 +203,7 @@ xfs_calc_link_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 2) +
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+@@ -195,7 +228,7 @@ xfs_calc_remove_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 2) +
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+@@ -222,7 +255,7 @@ STATIC uint
+ xfs_calc_create_resv_modify(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++	return xfs_calc_inode_res(mp, 2) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+ 		(uint)XFS_FSB_TO_B(mp, 1) +
+ 		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+@@ -332,7 +365,7 @@ xfs_calc_ifree_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+ 		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+@@ -353,9 +386,8 @@ xfs_calc_ichange_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		mp->m_sb.sb_inodesize +
+-		mp->m_sb.sb_sectsize +
+-		512;
++		xfs_calc_inode_res(mp, 1) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+ 
+ }
+ 
+@@ -391,7 +423,7 @@ xfs_calc_growrtalloc_reservation(
+ 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+@@ -423,7 +455,7 @@ xfs_calc_growrtfree_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 2) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_blocksize) +
+ 		xfs_calc_buf_res(1, mp->m_rsumsize);
+ }
+@@ -436,7 +468,7 @@ STATIC uint
+ xfs_calc_swrite_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
++	return xfs_calc_inode_res(mp, 1);
+ }
+ 
+ /*
+@@ -444,9 +476,10 @@ xfs_calc_swrite_reservation(
+  *	inode
+  */
+ STATIC uint
+-xfs_calc_writeid_reservation(xfs_mount_t *mp)
++xfs_calc_writeid_reservation(
++	struct xfs_mount	*mp)
+ {
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
++	return xfs_calc_inode_res(mp, 1);
+ }
+ 
+ /*
+@@ -462,7 +495,7 @@ xfs_calc_addafork_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, mp->m_dirblksize) +
+ 		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
+@@ -486,7 +519,7 @@ STATIC uint
+ xfs_calc_attrinval_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	return MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++	return MAX((xfs_calc_inode_res(mp, 1) +
+ 		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+ 				     XFS_FSB_TO_B(mp, 1))),
+ 		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+@@ -510,7 +543,7 @@ xfs_calc_attrsetm_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
+ }
+@@ -550,7 +583,7 @@ xfs_calc_attrrm_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		MAX((xfs_calc_inode_res(mp, 1) +
+ 		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     (uint)XFS_FSB_TO_B(mp,
+@@ -602,6 +635,7 @@ STATIC uint
+ xfs_calc_qm_dqalloc_reservation(
+ 	struct xfs_mount	*mp)
+ {
++	ASSERT(M_RES(mp)->tr_write.tr_logres);
+ 	return M_RES(mp)->tr_write.tr_logres +
+ 		xfs_calc_buf_res(1,
+ 			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
 -- 
 1.8.3.2
 
