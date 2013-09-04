@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B62637F53
+	by oss.sgi.com (Postfix) with ESMTP id EB44E7F58
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:06:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B53A304039
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CD5ED304039
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:11 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	k61xnhKKLSoJEaCD for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:06:09 -0700 (PDT)
+	ARItd3R9vMD4LRqy for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:06:10 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cs-J6
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cl-GL
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rb-IT
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rC-FD
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/55] libxfs: fix byte swapping on constants
-Date: Thu,  5 Sep 2013 08:05:10 +1000
-Message-Id: <1378332359-14737-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/55] xfsprogs: introduce xfs_icreate.h
+Date: Thu,  5 Sep 2013 08:05:05 +1000
+Message-Id: <1378332359-14737-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,225 +39,135 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The kernel code uses cpu_to_beXX() on constants in switch()
-statements for magic numbers in the btree code. Th ebyte swapping
-infratructure isn't hooked up to the proper byte swap macros to make
-this work, so fix it and then swap all the generic btree code over
-to match the kernel code.
+Bring the new inode create item definitions across from kernel space
+for xfs_logprint to be able to parse.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/swab.h            |  6 +++---
- libxfs/xfs_alloc_btree.c  | 23 ++++++++++++++---------
- libxfs/xfs_bmap_btree.c   | 14 ++++++--------
- libxfs/xfs_ialloc_btree.c | 16 +++++++++++-----
- 4 files changed, 34 insertions(+), 25 deletions(-)
+ include/Makefile           |  2 +-
+ include/xfs_icreate_item.h | 52 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/xfs_log.h          |  3 ++-
+ include/xfs_trans.h        |  7 +++++--
+ 4 files changed, 60 insertions(+), 4 deletions(-)
+ create mode 100644 include/xfs_icreate_item.h
 
-diff --git a/include/swab.h b/include/swab.h
-index 3de44d8..b06346c 100644
---- a/include/swab.h
-+++ b/include/swab.h
-@@ -96,15 +96,15 @@
-  */
- #  define __swab16(x) \
- (__builtin_constant_p((__u16)(x)) ? \
-- ___swab16((x)) : \
-+ ___constant_swab16((x)) : \
-  __fswab16((x)))
- #  define __swab32(x) \
- (__builtin_constant_p((__u32)(x)) ? \
-- ___swab32((x)) : \
-+ ___constant_swab32((x)) : \
-  __fswab32((x)))
- #  define __swab64(x) \
- (__builtin_constant_p((__u64)(x)) ? \
-- ___swab64((x)) : \
-+ ___constant_swab64((x)) : \
-  __fswab64((x)))
+diff --git a/include/Makefile b/include/Makefile
+index 92161bd..ba2c80d 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -26,7 +26,7 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
+ 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
+ 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
+-	xfs_inode.h xfs_inode_item.h xfs_inum.h \
++	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
+ 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
+ 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
+ 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
+diff --git a/include/xfs_icreate_item.h b/include/xfs_icreate_item.h
+new file mode 100644
+index 0000000..88ba8aa
+--- /dev/null
++++ b/include/xfs_icreate_item.h
+@@ -0,0 +1,52 @@
++/*
++ * Copyright (c) 2008-2010, Dave Chinner
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef XFS_ICREATE_ITEM_H
++#define XFS_ICREATE_ITEM_H	1
++
++/*
++ * on disk log item structure
++ *
++ * Log recovery assumes the first two entries are the type and size and they fit
++ * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
++ * decoding can be done correctly.
++ */
++struct xfs_icreate_log {
++	__uint16_t	icl_type;	/* type of log format structure */
++	__uint16_t	icl_size;	/* size of log format structure */
++	__be32		icl_ag;		/* ag being allocated in */
++	__be32		icl_agbno;	/* start block of inode range */
++	__be32		icl_count;	/* number of inodes to initialise */
++	__be32		icl_isize;	/* size of inodes */
++	__be32		icl_length;	/* length of extent to initialise */
++	__be32		icl_gen;	/* inode generation number to use */
++};
++
++/* in memory log item structure */
++struct xfs_icreate_item {
++	struct xfs_log_item	ic_item;
++	struct xfs_icreate_log	ic_format;
++};
++
++extern kmem_zone_t *xfs_icreate_zone;	/* inode create item zone */
++
++void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
++			xfs_agblock_t agbno, unsigned int count,
++			unsigned int inode_size, xfs_agblock_t length,
++			unsigned int generation);
++
++#endif	/* XFS_ICREATE_ITEM_H */
+diff --git a/include/xfs_log.h b/include/xfs_log.h
+index 5caee96..70cc014 100644
+--- a/include/xfs_log.h
++++ b/include/xfs_log.h
+@@ -88,7 +88,8 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
+ #define XLOG_REG_TYPE_UNMOUNT		17
+ #define XLOG_REG_TYPE_COMMIT		18
+ #define XLOG_REG_TYPE_TRANSHDR		19
+-#define XLOG_REG_TYPE_MAX		19
++#define XLOG_REG_TYPE_ICREATE		20
++#define XLOG_REG_TYPE_MAX		20
  
+ typedef struct xfs_log_iovec {
+ 	void		*i_addr;	/* beginning address of region */
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index acf1381..36a0026 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -48,6 +48,7 @@ typedef struct xfs_trans_header {
+ #define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
+ #define	XFS_LI_DQUOT		0x123d
+ #define	XFS_LI_QUOTAOFF		0x123e
++#define	XFS_LI_ICREATE		0x123f
  
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index 1ee1f48..282a320 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -268,10 +268,15 @@ xfs_allocbt_verify(
- 	 * During growfs operations, we can't verify the exact level or owner as
- 	 * the perag is not fully initialised and hence not attached to the
- 	 * buffer.  In this case, check against the maximum tree depth.
-+	 *
-+	 * Similarly, during log recovery we will have a perag structure
-+	 * attached, but the agf information will not yet have been initialised
-+	 * from the on disk AGF. Again, we can only check against maximum limits
-+	 * in this case.
- 	 */
- 	level = be16_to_cpu(block->bb_level);
--	switch (cpu_to_be32(block->bb_magic)) {
--	case XFS_ABTB_CRC_MAGIC:
-+	switch (block->bb_magic) {
-+	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
- 		if (!xfs_sb_version_hascrc(&mp->m_sb))
- 			return false;
- 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
-@@ -282,14 +287,14 @@ xfs_allocbt_verify(
- 		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
- 			return false;
- 		/* fall through */
--	case XFS_ABTB_MAGIC:
--		if (pag) {
-+	case cpu_to_be32(XFS_ABTB_MAGIC):
-+		if (pag && pag->pagf_init) {
- 			if (level >= pag->pagf_levels[XFS_BTNUM_BNOi])
- 				return false;
- 		} else if (level >= mp->m_ag_maxlevels)
- 			return false;
- 		break;
--	case XFS_ABTC_CRC_MAGIC:
-+	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
- 		if (!xfs_sb_version_hascrc(&mp->m_sb))
- 			return false;
- 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
-@@ -300,8 +305,8 @@ xfs_allocbt_verify(
- 		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
- 			return false;
- 		/* fall through */
--	case XFS_ABTC_MAGIC:
--		if (pag) {
-+	case cpu_to_be32(XFS_ABTC_MAGIC):
-+		if (pag && pag->pagf_init) {
- 			if (level >= pag->pagf_levels[XFS_BTNUM_CNTi])
- 				return false;
- 		} else if (level >= mp->m_ag_maxlevels)
-@@ -361,7 +366,7 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
- };
+ #define XFS_LI_TYPE_DESC \
+ 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
+@@ -56,7 +57,8 @@ typedef struct xfs_trans_header {
+ 	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
+ 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
+ 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
+-	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
++	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
++	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
  
+ /*
+  * Transaction types.  Used to distinguish types of buffers.
+@@ -107,7 +109,8 @@ typedef struct xfs_trans_header {
+ #define	XFS_TRANS_SWAPEXT		40
+ #define	XFS_TRANS_SB_COUNT		41
+ #define	XFS_TRANS_CHECKPOINT		42
+-#define	XFS_TRANS_TYPE_MAX		42
++#define	XFS_TRANS_ICREATE		43
++#define	XFS_TRANS_TYPE_MAX		43
+ /* new transaction types need to be reflected in xfs_logprint(8) */
  
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_allocbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -483,7 +488,7 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.key_diff		= xfs_allocbt_key_diff,
- 	.buf_ops		= &xfs_allocbt_buf_ops,
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_allocbt_keys_inorder,
- 	.recs_inorder		= xfs_allocbt_recs_inorder,
- #endif
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 473db4a..bf214cf 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -708,13 +708,13 @@ xfs_bmbt_verify(
- 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
- 	unsigned int		level;
- 
--	switch (be32_to_cpu(block->bb_magic)) {
--	case XFS_BMAP_CRC_MAGIC:
-+	switch (block->bb_magic) {
-+	case cpu_to_be32(XFS_BMAP_CRC_MAGIC):
- 		if (!xfs_sb_version_hascrc(&mp->m_sb))
- 			return false;
- 		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_uuid))
- 			return false;
--		if (block->bb_u.l.bb_blkno != cpu_to_be64(bp->b_bn))
-+		if (be64_to_cpu(block->bb_u.l.bb_blkno) != bp->b_bn)
- 			return false;
- 		/*
- 		 * XXX: need a better way of verifying the owner here. Right now
-@@ -723,7 +723,7 @@ xfs_bmbt_verify(
- 		if (be64_to_cpu(block->bb_u.l.bb_owner) == 0)
- 			return false;
- 		/* fall through */
--	case XFS_BMAP_MAGIC:
-+	case cpu_to_be32(XFS_BMAP_MAGIC):
- 		break;
- 	default:
- 		return false;
-@@ -759,7 +759,6 @@ static void
- xfs_bmbt_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_bmbt_verify(bp);
- 	if (!(xfs_btree_lblock_verify_crc(bp) &&
- 	      xfs_bmbt_verify(bp))) {
- 		trace_xfs_btree_corrupt(bp, _RET_IP_);
-@@ -767,7 +766,6 @@ xfs_bmbt_read_verify(
- 				     bp->b_target->bt_mount, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
- 	}
--
- }
- 
- static void
-@@ -791,7 +789,7 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
- };
- 
- 
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_bmbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -920,7 +918,7 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
- 	.key_diff		= xfs_bmbt_key_diff,
- 	.buf_ops		= &xfs_bmbt_buf_ops,
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_bmbt_keys_inorder,
- 	.recs_inorder		= xfs_bmbt_recs_inorder,
- #endif
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index ee036bf..27a5dd9 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -175,9 +175,15 @@ xfs_inobt_verify(
- 	/*
- 	 * During growfs operations, we can't verify the exact owner as the
- 	 * perag is not fully initialised and hence not attached to the buffer.
-+	 *
-+	 * Similarly, during log recovery we will have a perag structure
-+	 * attached, but the agi information will not yet have been initialised
-+	 * from the on disk AGI. We don't currently use any of this information,
-+	 * but beware of the landmine (i.e. need to check pag->pagi_init) if we
-+	 * ever do.
- 	 */
--	switch (be32_to_cpu(block->bb_magic)) {
--	case XFS_IBT_CRC_MAGIC:
-+	switch (block->bb_magic) {
-+	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
- 		if (!xfs_sb_version_hascrc(&mp->m_sb))
- 			return false;
- 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
-@@ -188,7 +194,7 @@ xfs_inobt_verify(
- 		    be32_to_cpu(block->bb_u.s.bb_owner) != pag->pag_agno)
- 			return false;
- 		/* fall through */
--	case XFS_IBT_MAGIC:
-+	case cpu_to_be32(XFS_IBT_MAGIC):
- 		break;
- 	default:
- 		return 0;
-@@ -246,7 +252,7 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
- 	.verify_write = xfs_inobt_write_verify,
- };
- 
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_inobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -350,7 +356,7 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
- 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.buf_ops		= &xfs_inobt_buf_ops,
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
- #endif
+ #define XFS_TRANS_TYPES \
 -- 
 1.8.3.2
 
