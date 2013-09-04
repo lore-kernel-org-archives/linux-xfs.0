@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7D5987F53
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8DEC929DFB
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6815B304048
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 10CCBAC003
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:25 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZRUd9osXBVGBGoM3 for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:24 -0700 (PDT)
+	ARHel9DOxeACInxC for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:22 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dw-5h
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dS-Eh
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003tr-53
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003v0-DN
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 34/55] xfs: don't special case shared superblock mounts
-Date: Thu,  5 Sep 2013 08:05:38 +1000
-Message-Id: <1378332359-14737-35-git-send-email-david@fromorbit.com>
+Subject: [PATCH 45/55] xfs: Get rid of all XFS_XXX_LOG_RES() macro
+Date: Thu,  5 Sep 2013 08:05:49 +1000
+Message-Id: <1378332359-14737-46-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,38 +37,80 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
-Neither kernel or userspace support shared read-only mounts, so
-don't beother special casing the support check to be different
-between kernel and userspace. The same check canbe used as neither
-like it...
+Get rid of all XFS_XXX_LOG_RES() macros since they are obsoleted now.
 
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_sb.h | 7 -------
- 1 file changed, 7 deletions(-)
+ include/xfs_trans_resv.h | 36 ------------------------------------
+ mkfs/maxtrres.c          |  5 +++--
+ 2 files changed, 3 insertions(+), 38 deletions(-)
 
-diff --git a/include/xfs_sb.h b/include/xfs_sb.h
-index 04fe32a..9085662 100644
---- a/include/xfs_sb.h
-+++ b/include/xfs_sb.h
-@@ -355,15 +355,8 @@ static inline int xfs_sb_good_version(xfs_sb_t *sbp)
- 		     (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS)))
- 			return 0;
+diff --git a/include/xfs_trans_resv.h b/include/xfs_trans_resv.h
+index 140d3f3..de7de9a 100644
+--- a/include/xfs_trans_resv.h
++++ b/include/xfs_trans_resv.h
+@@ -92,42 +92,6 @@ struct xfs_trans_resv {
+ 	(XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK) + \
+ 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
  
--#ifdef __KERNEL__
- 		if (sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
- 			return 0;
--#else
--		if ((sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT) &&
--		    sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
--			return 0;
--#endif
 -
- 		return 1;
- 	}
- 	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
+-#define XFS_WRITE_LOG_RES(mp)	((mp)->m_resv.tr_write.tr_logres)
+-#define XFS_RENAME_LOG_RES(mp)	((mp)->m_resv.tr_rename.tr_logres)
+-#define XFS_LINK_LOG_RES(mp)	((mp)->m_resv.tr_link.tr_logres)
+-#define XFS_REMOVE_LOG_RES(mp)	((mp)->m_resv.tr_remove.tr_logres)
+-#define XFS_SYMLINK_LOG_RES(mp)	((mp)->m_resv.tr_symlink.tr_logres)
+-#define XFS_CREATE_LOG_RES(mp)	((mp)->m_resv.tr_create.tr_logres)
+-#define XFS_MKDIR_LOG_RES(mp)	((mp)->m_resv.tr_mkdir.tr_logres)
+-#define XFS_IFREE_LOG_RES(mp)	((mp)->m_resv.tr_ifree.tr_logres)
+-#define XFS_SWRITE_LOG_RES(mp)	((mp)->m_resv.tr_swrite.tr_logres)
+-#define XFS_ICHANGE_LOG_RES(mp)	((mp)->m_resv.tr_ichange.tr_logres)
+-#define XFS_GROWDATA_LOG_RES(mp)  ((mp)->m_resv.tr_growdata.tr_logres)
+-#define XFS_ITRUNCATE_LOG_RES(mp) ((mp)->m_resv.tr_itruncate.tr_logres)
+-#define XFS_GROWRTZERO_LOG_RES(mp) ((mp)->m_resv.tr_growrtzero.tr_logres)
+-#define XFS_GROWRTFREE_LOG_RES(mp) ((mp)->m_resv.tr_growrtfree.tr_logres)
+-#define XFS_GROWRTALLOC_LOG_RES(mp) ((mp)->m_resv.tr_growrtalloc.tr_logres)
+-
+-/*
+- * Logging the inode timestamps on an fsync -- same as SWRITE
+- * as long as SWRITE logs the entire inode core
+- */
+-#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_fsyncts.tr_logres)
+-#define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_writeid.tr_logres)
+-#define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
+-#define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
+-#define XFS_ATTRINVAL_LOG_RES(mp) ((mp)->m_resv.tr_attrinval.tr_logres)
+-#define XFS_ATTRSETRT_LOG_RES(mp) ((mp)->m_resv.tr_attrsetrt.tr_logres)
+-#define XFS_ATTRRM_LOG_RES(mp)	  ((mp)->m_resv.tr_attrrm.tr_logres)
+-#define XFS_SB_LOG_RES(mp)	  ((mp)->m_resv.tr_sb.tr_logres)
+-#define XFS_QM_SETQLIM_LOG_RES(mp) ((mp)->m_resv.tr_qm_setqlim.tr_logres)
+-#define XFS_QM_DQALLOC_LOG_RES(mp) ((mp)->m_resv.tr_qm_dqalloc.tr_logres)
+-#define XFS_QM_SBCHANGE_LOG_RES(mp) ((mp)->m_resv.tr_qm_sbchange.tr_logres)
+-#define XFS_QM_QUOTAOFF_LOG_RES(mp) ((mp)->m_resv.tr_qm_quotaoff.tr_logres)
+-#define XFS_QM_QUOTAOFF_END_LOG_RES(mp) ((mp)->m_resv.tr_qm_equotaoff.tr_logres)
+-#define XFS_CLEAR_AGI_BUCKET_LOG_RES(mp) ((mp)->m_resv.tr_clearagi.tr_logres)
+-
+ /*
+  * Various log count values.
+  */
+diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+index b2d2a5a..59cdcfd 100644
+--- a/mkfs/maxtrres.c
++++ b/mkfs/maxtrres.c
+@@ -46,8 +46,9 @@ max_attrsetm_trans_res_adjust(
+ 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+ 	nblks += XFS_B_TO_FSB(mp, size);
+ 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
+-	res = XFS_ATTRSETM_LOG_RES(mp) + XFS_ATTRSETRT_LOG_RES(mp) * nblks;
+-	mp->m_resv.tr_attrsetm.tr_logres = res;
++	res = M_RES(mp)->tr_attrsetm.tr_logres +
++	      M_RES(mp)->tr_attrsetrt.tr_logres * nblks;
++	M_RES(mp)->tr_attrsetm.tr_logres = res;
+ }
+ 
+ static int
 -- 
 1.8.3.2
 
