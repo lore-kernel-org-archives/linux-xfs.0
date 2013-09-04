@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1CC887F58
-	for <linux-xfs@oss.sgi.com>; Wed,  4 Sep 2013 10:19:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0BB4E304032
-	for <linux-xfs@oss.sgi.com>; Wed,  4 Sep 2013 08:19:52 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id DSmyHkoLBybNePzV for <linux-xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 08:19:51 -0700 (PDT)
-Received: from Liberator.local (c-98-240-215-156.hsd1.mn.comcast.net
-	[98.240.215.156])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 65EA9687F447
-	for <linux-xfs@oss.sgi.com>; Wed,  4 Sep 2013 10:19:51 -0500 (CDT)
-Message-ID: <52274F96.2010702@sandeen.net>
-Date: Wed, 04 Sep 2013 10:19:50 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5967D7F53
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 12:33:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2C4F68F8040
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 10:33:45 -0700 (PDT)
+Received: from mail-vc0-f170.google.com (mail-vc0-f170.google.com
+	[209.85.220.170]) by cuda.sgi.com with ESMTP id
+	v1a9Q8o6IiqBEpCx (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 10:33:43 -0700 (PDT)
+Received: by mail-vc0-f170.google.com with SMTP id kw10so399286vcb.29
+	for <xfs@oss.sgi.com>; Wed, 04 Sep 2013 10:33:43 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: test for bad level in dir2 node
+In-Reply-To: <20130904150854.GF3996@quack.suse.cz>
+References: <cover.1377193658.git.luto@amacapital.net>
+	<20130904150854.GF3996@quack.suse.cz>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Wed, 4 Sep 2013 10:33:22 -0700
+Message-ID: <CALCETrVayD1P2a8ShjZ2e4HYGwL_yE8FM7GnrWaL9MgXYMGvHg@mail.gmail.com>
+Subject: Re: [PATCH v3 0/5] Rework mtime and ctime updates on mmaped writes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,62 +32,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Tim Chen <tim.c.chen@linux.intel.com>
 
-In traverse_int_dir2block(), the variable 'i' is the level in
-the tree, with 0 being a leaf node.  In the "do" loop we
-start at the root, and work our way down to a leaf.
+On Wed, Sep 4, 2013 at 8:08 AM, Jan Kara <jack@suse.cz> wrote:
+> On Thu 22-08-13 17:03:16, Andy Lutomirski wrote:
+>> Writes via mmap currently update mtime and ctime in ->page_mkwrite.
+>> This hurts both throughput and latency.  In workloads that dirty a
+>> large number of mmapped pages, ->page_mkwrite can be hot and
+>> file_update_time is slow and scales poorly.  Updating timestamps can
+>> also sleep, which hurts latency for real-time workloads.
+>   It would help to make your case if you posted the latency comparison
+> before & after the patchset in this introductory email. We can then see
+> how significant is the reduction of latency...
 
-If the first node we read is an interior node with NODE_MAGIC,
-but it tells us that its level is 0 (a leaf), this is clearly
-an inconsistency.
+Will do, although the data from my workload will be a little strange.
 
-Worse, we'd return with success, bno set, and only level[0]
-in the cursor initialized.  Then down this path we'll
-segfault when accessing an uninitialized (and zeroed) member
-of the cursor's level array:
+I was hoping that Dave Hansen would re-run his benchmark with these
+patches applied.  I tried to run it, but it wasn't obvious what the
+numbers that spewed out meant.
 
-process_node_dir2
-  traverse_int_dir2block  // returns 0 w/ bno set, only level[0] init'd
-  process_leaf_level_dir2
-    verify_dir2_path(mp, da_cursor, 0) // p_level == 0
-       this_level = p_level + 1;
-       node = cursor->level[this_level].bp->b_addr; // level[1] uninit & 0'd
+--Andy
 
-Fix this by recognizing that an interior node w/ level 0 is invalid, and
-error out as for other inconsistencies.
+>
+>                                                                 Honza
+> --
+> Jan Kara <jack@suse.cz>
+> SUSE Labs, CR
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
 
-My only testcase for this is Jan Yves Brueckner's badly corrupted
-filesystem image.  With this change, we get i.e. :
 
-+bad level in interior inode for directory inode 39869938
-+corrupt block 6 in directory inode 39869957
-+       will junk block
-
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 05bd4b7..20c6e1a 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -220,6 +220,16 @@ _("bad record count in inode %" PRIu64 ", count = %d, max = %d\n"),
- 		 */
- 		if (i == -1) {
- 			i = da_cursor->active = nodehdr.level;
-+			if (i == 0 &&
-+			    (nodehdr.magic == XFS_DA_NODE_MAGIC ||
-+			     nodehdr.magic == XFS_DA3_NODE_MAGIC)) {
-+				do_warn(
-+_("bad level 0 in interior inode for directory inode %" PRIu64 "\n"),
-+					da_cursor->ino);
-+				libxfs_putbuf(bp);
-+				i = -1;
-+				goto error_out;
-+			}
- 			if (i >= XFS_DA_NODE_MAXDEPTH) {
- 				do_warn(
- _("bad header depth for directory inode %" PRIu64 "\n"),
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
 
 _______________________________________________
 xfs mailing list
