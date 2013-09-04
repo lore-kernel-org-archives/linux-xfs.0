@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1879829E22
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:40 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 59ADB29E66
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 08B0F304039
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:40 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A98F304039
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:45 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	MLOys14qKw09LNGQ for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:37 -0700 (PDT)
+	AjhfsI6l2e0TcXVX for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:42 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dl-Fg
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007du-4n
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003v5-Dw
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003th-4N
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 46/55] xfs: Add xfs_log_rlimit.c
-Date: Thu,  5 Sep 2013 08:05:50 +1000
-Message-Id: <1378332359-14737-47-git-send-email-david@fromorbit.com>
+Subject: [PATCH 32/55] xfs: create xfs_bmap_util.[ch]
+Date: Thu,  5 Sep 2013 08:05:36 +1000
+Message-Id: <1378332359-14737-33-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,682 +37,448 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Add source files for xfs_log_rlimit.c The new file is used for log
-size calculations and validation shared with userspace.
+There is a bunch of code in xfs_bmap.c that is kernel specific and
+not shared with userspace. to minimise the difference between the
+kernel and userspace code, shift this unshared code to
+xfs_bmap_util.c, and the declarations to xfs_bmap_util.h.
 
-[dchinner: xfs_log_calc_max_attrsetm_res() does not modify the
-tr_attrsetm reservation, just calculates the maximum. ]
+The biggest issue here is xfs_bmap_finish() - userspce has it's own
+definition of this function, and so we need to move it out of
+xfs_bmap.[ch]. This means several other files need to include
+xfs_bmap_util.c as well.
 
-[dchinner: rework loop in xfs_log_get_max_trans_res() ]
+It also introduces and interesting dance for the stack switching
+code in xfs_bmapi_allocate(). The stack switching/workqueue code is
+actually moved to xfs_bmap_util.c, so that userspace can simply use
+a #define in a header file to connect the dots without needing to
+know about the stack switch code at all.
 
-[dchinner: implement xfs_log_calc_unit_res() in util.c to give mkfs
-a worse case calculation of the log size needed. ]
-
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_fs.h         |   4 +-
- include/xfs_log_format.h |  11 +++-
- libxfs/Makefile          |  15 ++++--
- libxfs/util.c            | 107 +++++++++++++++++++++++++++++++++++++
- libxfs/xfs.h             |   8 +++
- libxfs/xfs_log_rlimit.c  | 136 +++++++++++++++++++++++++++++++++++++++++++++++
- mkfs/maxtrres.c          |  66 +++++++----------------
- mkfs/xfs_mkfs.c          | 105 ++++++++++++++++++++----------------
- mkfs/xfs_mkfs.h          |   6 +--
- 9 files changed, 356 insertions(+), 102 deletions(-)
- create mode 100644 libxfs/xfs_log_rlimit.c
+ include/xfs_bmap.h |  51 ------------
+ libxfs/xfs.h       |  34 ++++++++
+ libxfs/xfs_bmap.c  | 222 +++--------------------------------------------------
+ 3 files changed, 43 insertions(+), 264 deletions(-)
 
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 74b24b2..53e33c2 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -240,7 +240,9 @@ typedef struct xfs_fsop_resblks {
- 
+diff --git a/include/xfs_bmap.h b/include/xfs_bmap.h
+index ffa67b1..8b2fe97 100644
+--- a/include/xfs_bmap.h
++++ b/include/xfs_bmap.h
+@@ -108,38 +108,6 @@ static inline void xfs_bmap_init(xfs_bmap_free_t *flp, xfs_fsblock_t *fbp)
+ }
  
  /*
-- * Minimum and maximum sizes need for growth checks
-+ * Minimum and maximum sizes need for growth checks.
-+ *
-+ * Block counts are in units of filesystem blocks, not basic blocks.
-  */
- #define XFS_MIN_AG_BLOCKS	64
- #define XFS_MIN_LOG_BLOCKS	512ULL
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-index f57975d..31e3a06 100644
---- a/include/xfs_log_format.h
-+++ b/include/xfs_log_format.h
-@@ -18,6 +18,9 @@
- #ifndef	__XFS_LOG_FORMAT_H__
- #define __XFS_LOG_FORMAT_H__
- 
-+struct xfs_mount;
-+struct xfs_trans_res;
-+
- /*
-  * On-disk Log Format definitions.
-  *
-@@ -49,6 +52,9 @@ typedef __uint32_t xlog_tid_t;
- 
- #define XLOG_HEADER_SIZE	512
- 
-+/* Minimum number of transactions that must fit in the log (defined by mkfs) */
-+#define XFS_MIN_LOG_FACTOR	3
-+
- #define XLOG_REC_SHIFT(log) \
- 	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
- 	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
-@@ -133,7 +139,6 @@ typedef struct xlog_op_header {
- 	__u16	   oh_res2;	/* 32 bit align			:  2 b */
- } xlog_op_header_t;
- 
+- * Argument structure for xfs_bmap_alloc.
+- */
+-typedef struct xfs_bmalloca {
+-	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
+-	struct xfs_bmap_free	*flist;	/* bmap freelist */
+-	struct xfs_trans	*tp;	/* transaction pointer */
+-	struct xfs_inode	*ip;	/* incore inode pointer */
+-	struct xfs_bmbt_irec	prev;	/* extent before the new one */
+-	struct xfs_bmbt_irec	got;	/* extent after, or delayed */
 -
- /* valid values for h_fmt */
- #define XLOG_FMT_UNKNOWN  0
- #define XLOG_FMT_LINUX_LE 1
-@@ -840,4 +845,8 @@ struct xfs_icreate_log {
- 	__be32		icl_gen;	/* inode generation number to use */
- };
+-	xfs_fileoff_t		offset;	/* offset in file filling in */
+-	xfs_extlen_t		length;	/* i/o length asked/allocated */
+-	xfs_fsblock_t		blkno;	/* starting block of new extent */
+-
+-	struct xfs_btree_cur	*cur;	/* btree cursor */
+-	xfs_extnum_t		idx;	/* current extent index */
+-	int			nallocs;/* number of extents alloc'd */
+-	int			logflags;/* flags for transaction logging */
+-
+-	xfs_extlen_t		total;	/* total blocks needed for xaction */
+-	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+-	xfs_extlen_t		minleft; /* amount must be left after alloc */
+-	char			eof;	/* set if allocating past last extent */
+-	char			wasdel;	/* replacing a delayed allocation */
+-	char			userdata;/* set if is user data */
+-	char			aeof;	/* allocated space at eof */
+-	char			conv;	/* overwriting unwritten extents */
+-	int			flags;
+-	int			stack_switch;
+-} xfs_bmalloca_t;
+-
+-/*
+  * Flags for xfs_bmap_add_extent*.
+  */
+ #define BMAP_LEFT_CONTIG	(1 << 0)
+@@ -202,23 +170,4 @@ int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+ 		xfs_extnum_t num);
+ uint	xfs_default_attroffset(struct xfs_inode *ip);
  
-+int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
-+int	xfs_log_calc_minimum_size(struct xfs_mount *);
-+
-+
- #endif /* __XFS_LOG_FORMAT_H__ */
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 5608020..f0cbae3 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -17,14 +17,23 @@ CFILES = cache.c \
- 	xfs_alloc.c \
- 	xfs_alloc_btree.c \
- 	xfs_attr.c \
-+	xfs_attr_leaf.c \
- 	xfs_attr_remote.c \
-+	xfs_bmap.c \
-+	xfs_bmap_btree.c \
- 	xfs_btree.c \
-+	xfs_da_btree.c \
-+	xfs_dir2.c \
-+	xfs_dir2_block.c \
-+	xfs_dir2_data.c \
-+	xfs_dir2_leaf.c \
-+	xfs_dir2_node.c \
-+	xfs_dir2_sf.c \
- 	xfs_ialloc.c \
- 	xfs_inode_buf.c \
- 	xfs_inode_fork.c \
--	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
--	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
--	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
-+	xfs_ialloc_btree.c \
-+	xfs_log_rlimit.c \
- 	xfs_rtalloc.c \
- 	xfs_sb.c \
- 	xfs_symlink_remote.c \
-diff --git a/libxfs/util.c b/libxfs/util.c
-index d7459e0..8109ab3 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -22,6 +22,113 @@
- #include <stdarg.h>
- 
- /*
-+ * Calculate the worst case log unit reservation for a given superblock
-+ * configuration. Copied and munged from the kernel code, and assumes a
-+ * worse case header usage (maximum log buffer sizes)
-+ */
-+int
-+xfs_log_calc_unit_res(
-+	struct xfs_mount	*mp,
-+	int			unit_bytes)
-+{
-+	int			iclog_space;
-+	int			iclog_header_size;
-+	int			iclog_size;
-+	uint			num_headers;
-+
-+	if (xfs_sb_version_haslogv2(&mp->m_sb)) {
-+		iclog_size = XLOG_MAX_RECORD_BSIZE;
-+		iclog_header_size = BBTOB(iclog_size / XLOG_HEADER_CYCLE_SIZE);
-+	} else {
-+		iclog_size = XLOG_BIG_RECORD_BSIZE;
-+		iclog_header_size = BBSIZE;
-+	}
-+
-+	/*
-+	 * Permanent reservations have up to 'cnt'-1 active log operations
-+	 * in the log.  A unit in this case is the amount of space for one
-+	 * of these log operations.  Normal reservations have a cnt of 1
-+	 * and their unit amount is the total amount of space required.
-+	 *
-+	 * The following lines of code account for non-transaction data
-+	 * which occupy space in the on-disk log.
-+	 *
-+	 * Normal form of a transaction is:
-+	 * <oph><trans-hdr><start-oph><reg1-oph><reg1><reg2-oph>...<commit-oph>
-+	 * and then there are LR hdrs, split-recs and roundoff at end of syncs.
-+	 *
-+	 * We need to account for all the leadup data and trailer data
-+	 * around the transaction data.
-+	 * And then we need to account for the worst case in terms of using
-+	 * more space.
-+	 * The worst case will happen if:
-+	 * - the placement of the transaction happens to be such that the
-+	 *   roundoff is at its maximum
-+	 * - the transaction data is synced before the commit record is synced
-+	 *   i.e. <transaction-data><roundoff> | <commit-rec><roundoff>
-+	 *   Therefore the commit record is in its own Log Record.
-+	 *   This can happen as the commit record is called with its
-+	 *   own region to xlog_write().
-+	 *   This then means that in the worst case, roundoff can happen for
-+	 *   the commit-rec as well.
-+	 *   The commit-rec is smaller than padding in this scenario and so it is
-+	 *   not added separately.
-+	 */
-+
-+	/* for trans header */
-+	unit_bytes += sizeof(xlog_op_header_t);
-+	unit_bytes += sizeof(xfs_trans_header_t);
-+
-+	/* for start-rec */
-+	unit_bytes += sizeof(xlog_op_header_t);
-+
-+	/*
-+	 * for LR headers - the space for data in an iclog is the size minus
-+	 * the space used for the headers. If we use the iclog size, then we
-+	 * undercalculate the number of headers required.
-+	 *
-+	 * Furthermore - the addition of op headers for split-recs might
-+	 * increase the space required enough to require more log and op
-+	 * headers, so take that into account too.
-+	 *
-+	 * IMPORTANT: This reservation makes the assumption that if this
-+	 * transaction is the first in an iclog and hence has the LR headers
-+	 * accounted to it, then the remaining space in the iclog is
-+	 * exclusively for this transaction.  i.e. if the transaction is larger
-+	 * than the iclog, it will be the only thing in that iclog.
-+	 * Fundamentally, this means we must pass the entire log vector to
-+	 * xlog_write to guarantee this.
-+	 */
-+	iclog_space = iclog_size - iclog_header_size;
-+	num_headers = howmany(unit_bytes, iclog_space);
-+
-+	/* for split-recs - ophdrs added when data split over LRs */
-+	unit_bytes += sizeof(xlog_op_header_t) * num_headers;
-+
-+	/* add extra header reservations if we overrun */
-+	while (!num_headers ||
-+	       howmany(unit_bytes, iclog_space) > num_headers) {
-+		unit_bytes += sizeof(xlog_op_header_t);
-+		num_headers++;
-+	}
-+	unit_bytes += iclog_header_size * num_headers;
-+
-+	/* for commit-rec LR header - note: padding will subsume the ophdr */
-+	unit_bytes += iclog_header_size;
-+
-+	/* for roundoff padding for transaction data and one for commit record */
-+	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1) {
-+		/* log su roundoff */
-+		unit_bytes += 2 * mp->m_sb.sb_logsunit;
-+	} else {
-+		/* BB roundoff */
-+		unit_bytes += 2 * BBSIZE;
-+        }
-+
-+	return unit_bytes;
-+}
-+
-+/*
-  * Change the requested timestamp in the given inode.
-  *
-  * This was once shared with the kernel, but has diverged to the point
+-#ifdef __KERNEL__
+-/* bmap to userspace formatter - copy to user & advance pointer */
+-typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
+-
+-int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
+-		int *committed);
+-int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
+-		xfs_bmap_format_t formatter, void *arg);
+-int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+-		int whichfork, int *eof);
+-int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+-		int whichfork, int *count);
+-int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+-		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
+-
+-xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+-
+-#endif	/* __KERNEL__ */
+-
+ #endif	/* __XFS_BMAP_H__ */
 diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 0ab5f21..31acf1b 100644
+index 0113b50..276fc25 100644
 --- a/libxfs/xfs.h
 +++ b/libxfs/xfs.h
-@@ -208,6 +208,14 @@ roundup_pow_of_two(uint v)
+@@ -51,6 +51,40 @@
+ typedef __uint32_t		uint_t;
+ typedef __uint32_t		inst_t;		/* an instruction */
+ 
++/*
++ * Argument structure for xfs_bmap_alloc.
++ */
++typedef struct xfs_bmalloca {
++	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
++	struct xfs_bmap_free    *flist;	/* bmap freelist */
++	struct xfs_trans        *tp;	/* transaction pointer */
++	struct xfs_inode        *ip;	/* incore inode pointer */
++	struct xfs_bmbt_irec    prev;	/* extent before the new one */
++	struct xfs_bmbt_irec    got;	/* extent after, or delayed */
++
++	xfs_fileoff_t		offset;	/* offset in file filling in */
++	xfs_extlen_t		length;	/* i/o length asked/allocated */
++	xfs_fsblock_t		blkno;	/* starting block of new extent */
++
++	struct xfs_btree_cur    *cur;	/* btree cursor */
++	xfs_extnum_t		idx;	/* current extent index */
++	int			nallocs;/* number of extents alloc'd */
++	int			logflags;/* flags for transaction logging */
++
++	xfs_extlen_t		total;	/* total blocks needed for xaction */
++	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
++	xfs_extlen_t		minleft; /* amount must be left after alloc */
++	char			eof;	/* set if allocating past last extent */
++	char			wasdel;	/* replacing a delayed allocation */
++	char			userdata;/* set if is user data */
++	char			aeof;	/* allocated space at eof */
++	char			conv;	/* overwriting unwritten extents */
++	char			stack_switch;
++	int			flags;
++} xfs_bmalloca_t;
++
++#define xfs_bmapi_allocate		__xfs_bmapi_allocate
++
+ #ifndef EWRONGFS
+ #define EWRONGFS	EINVAL
+ #endif
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index ce72b87..eeaea94 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -74,19 +74,6 @@ xfs_bmap_compute_maxlevels(
+ 	mp->m_bm_maxlevels[whichfork] = level;
+ }
+ 
+-/*
+- * Convert the given file system block to a disk block.  We have to treat it
+- * differently based on whether the file is a real time file or not, because the
+- * bmap code does.
+- */
+-xfs_daddr_t
+-xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+-{
+-	return (XFS_IS_REALTIME_INODE(ip) ? \
+-		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
+-		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
+-}
+-
+ STATIC int				/* error */
+ xfs_bmbt_lookup_eq(
+ 	struct xfs_btree_cur	*cur,
+@@ -229,173 +216,6 @@ xfs_bmap_forkoff_reset(
+ }
+ 
+ /*
+- * Extent tree block counting routines.
+- */
+-
+-/*
+- * Count leaf blocks given a range of extent records.
+- */
+-STATIC void
+-xfs_bmap_count_leaves(
+-	xfs_ifork_t		*ifp,
+-	xfs_extnum_t		idx,
+-	int			numrecs,
+-	int			*count)
+-{
+-	int		b;
+-
+-	for (b = 0; b < numrecs; b++) {
+-		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
+-		*count += xfs_bmbt_get_blockcount(frp);
+-	}
+-}
+-
+-/*
+- * Count leaf blocks given a range of extent records originally
+- * in btree format.
+- */
+-STATIC void
+-xfs_bmap_disk_count_leaves(
+-	struct xfs_mount	*mp,
+-	struct xfs_btree_block	*block,
+-	int			numrecs,
+-	int			*count)
+-{
+-	int		b;
+-	xfs_bmbt_rec_t	*frp;
+-
+-	for (b = 1; b <= numrecs; b++) {
+-		frp = XFS_BMBT_REC_ADDR(mp, block, b);
+-		*count += xfs_bmbt_disk_get_blockcount(frp);
+-	}
+-}
+-
+-/*
+- * Recursively walks each level of a btree
+- * to count total fsblocks is use.
+- */
+-STATIC int                                     /* error */
+-xfs_bmap_count_tree(
+-	xfs_mount_t     *mp,            /* file system mount point */
+-	xfs_trans_t     *tp,            /* transaction pointer */
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_fsblock_t   blockno,	/* file system block number */
+-	int             levelin,	/* level in btree */
+-	int		*count)		/* Count of blocks */
+-{
+-	int			error;
+-	xfs_buf_t		*bp, *nbp;
+-	int			level = levelin;
+-	__be64			*pp;
+-	xfs_fsblock_t           bno = blockno;
+-	xfs_fsblock_t		nextbno;
+-	struct xfs_btree_block	*block, *nextblock;
+-	int			numrecs;
+-
+-	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
+-						&xfs_bmbt_buf_ops);
+-	if (error)
+-		return error;
+-	*count += 1;
+-	block = XFS_BUF_TO_BLOCK(bp);
+-
+-	if (--level) {
+-		/* Not at node above leaves, count this level of nodes */
+-		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+-		while (nextbno != NULLFSBLOCK) {
+-			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
+-						XFS_BMAP_BTREE_REF,
+-						&xfs_bmbt_buf_ops);
+-			if (error)
+-				return error;
+-			*count += 1;
+-			nextblock = XFS_BUF_TO_BLOCK(nbp);
+-			nextbno = be64_to_cpu(nextblock->bb_u.l.bb_rightsib);
+-			xfs_trans_brelse(tp, nbp);
+-		}
+-
+-		/* Dive to the next level */
+-		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+-		bno = be64_to_cpu(*pp);
+-		if (unlikely((error =
+-		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
+-			xfs_trans_brelse(tp, bp);
+-			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
+-					 XFS_ERRLEVEL_LOW, mp);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
+-		xfs_trans_brelse(tp, bp);
+-	} else {
+-		/* count all level 1 nodes and their leaves */
+-		for (;;) {
+-			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+-			numrecs = be16_to_cpu(block->bb_numrecs);
+-			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
+-			xfs_trans_brelse(tp, bp);
+-			if (nextbno == NULLFSBLOCK)
+-				break;
+-			bno = nextbno;
+-			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
+-						XFS_BMAP_BTREE_REF,
+-						&xfs_bmbt_buf_ops);
+-			if (error)
+-				return error;
+-			*count += 1;
+-			block = XFS_BUF_TO_BLOCK(bp);
+-		}
+-	}
+-	return 0;
+-}
+-
+-/*
+- * Count fsblocks of the given fork.
+- */
+-int						/* error */
+-xfs_bmap_count_blocks(
+-	xfs_trans_t		*tp,		/* transaction pointer */
+-	xfs_inode_t		*ip,		/* incore inode */
+-	int			whichfork,	/* data or attr fork */
+-	int			*count)		/* out: count of blocks */
+-{
+-	struct xfs_btree_block	*block;	/* current btree block */
+-	xfs_fsblock_t		bno;	/* block # of "block" */
+-	xfs_ifork_t		*ifp;	/* fork structure */
+-	int			level;	/* btree level, for checking */
+-	xfs_mount_t		*mp;	/* file system mount structure */
+-	__be64			*pp;	/* pointer to block address */
+-
+-	bno = NULLFSBLOCK;
+-	mp = ip->i_mount;
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
+-		xfs_bmap_count_leaves(ifp, 0,
+-			ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t),
+-			count);
+-		return 0;
+-	}
+-
+-	/*
+-	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+-	 */
+-	block = ifp->if_broot;
+-	level = be16_to_cpu(block->bb_level);
+-	ASSERT(level > 0);
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+-	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLDFSBNO);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+-
+-	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
+-		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
+-				 mp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+  * Debug/sanity checking code
+  */
+ 
+@@ -803,7 +623,6 @@ xfs_bmap_del_free(
+ 	kmem_zone_free(xfs_bmap_free_item_zone, free);
+ }
+ 
+-
+ /*
+  * Free up any items left in the list.
+  */
+@@ -1028,8 +847,8 @@ xfs_bmap_extents_to_btree(
+ 	 * Do all this logging at the end so that
+ 	 * the root is at the right level.
+ 	 */
+-	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
+ 	xfs_btree_log_block(cur, abp, XFS_BB_ALL_BITS);
++	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
+ 	ASSERT(*curp == NULL);
+ 	*curp = cur;
+ 	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
+@@ -1744,7 +1563,7 @@ xfs_bmap_last_before(
  	return 0;
  }
  
-+static inline __uint64_t
-+roundup_64(__uint64_t x, __uint32_t y)
-+{
-+	x += y - 1;
-+	do_div(x, y);
-+	return x * y;
-+}
-+
- /* buffer management */
- #define XFS_BUF_LOCK			0
- #define XFS_BUF_TRYLOCK			0
-diff --git a/libxfs/xfs_log_rlimit.c b/libxfs/xfs_log_rlimit.c
-new file mode 100644
-index 0000000..f52beed
---- /dev/null
-+++ b/libxfs/xfs_log_rlimit.c
-@@ -0,0 +1,136 @@
-+/*
-+ * Copyright (c) 2013 Jie Liu.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include <xfs.h>
-+
-+/*
-+ * Calculate the maximum length in bytes that would be required for a local
-+ * attribute value as large attributes out of line are not logged.
-+ */
-+STATIC int
-+xfs_log_calc_max_attrsetm_res(
-+	struct xfs_mount	*mp)
-+{
-+	int			size;
-+	int			nblks;
-+
-+	size = xfs_attr_leaf_entsize_local_max(mp->m_sb.sb_blocksize) -
-+	       MAXNAMELEN - 1;
-+	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
-+	nblks += XFS_B_TO_FSB(mp, size);
-+	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
-+
-+	return  M_RES(mp)->tr_attrsetm.tr_logres +
-+		M_RES(mp)->tr_attrsetrt.tr_logres * nblks;
-+}
-+
-+/*
-+ * Iterate over the log space reservation table to figure out and return
-+ * the maximum one in terms of the pre-calculated values which were done
-+ * at mount time.
-+ */
-+STATIC void
-+xfs_log_get_max_trans_res(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_res	*max_resp)
-+{
-+	struct xfs_trans_res	*resp;
-+	struct xfs_trans_res	*end_resp;
-+	int			log_space = 0;
-+	int			attr_space;
-+
-+	attr_space = xfs_log_calc_max_attrsetm_res(mp);
-+
-+	resp = (struct xfs_trans_res *)M_RES(mp);
-+	end_resp = (struct xfs_trans_res *)(M_RES(mp) + 1);
-+	for (; resp < end_resp; resp++) {
-+		int		tmp = resp->tr_logcount > 1 ?
-+				      resp->tr_logres * resp->tr_logcount :
-+				      resp->tr_logres;
-+		if (log_space < tmp) {
-+			log_space = tmp;
-+			*max_resp = *resp;		/* struct copy */
-+		}
-+	}
-+
-+	if (attr_space > log_space) {
-+		*max_resp = M_RES(mp)->tr_attrsetm;	/* struct copy */
-+		max_resp->tr_logres = attr_space;
-+	}
-+}
-+
-+/*
-+ * Calculate the minimum valid log size for the given superblock configuration.
-+ * Used to calculate the minimum log size at mkfs time, and to determine if
-+ * the log is large enough or not at mount time. Returns the minimum size in
-+ * filesystem block size units.
-+ */
+-STATIC int
 +int
-+xfs_log_calc_minimum_size(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_trans_res	tres = {0};
-+	int			max_logres;
-+	int			min_logblks = 0;
-+	int			lsunit = 0;
-+
-+	xfs_log_get_max_trans_res(mp, &tres);
-+
-+	max_logres = xfs_log_calc_unit_res(mp, tres.tr_logres);
-+	if (tres.tr_logcount > 1)
-+		max_logres *= tres.tr_logcount;
-+
-+	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1)
-+		lsunit = BTOBB(mp->m_sb.sb_logsunit);
-+
-+	/*
-+	 * Two factors should be taken into account for calculating the minimum
-+	 * log space.
-+	 * 1) The fundamental limitation is that no single transaction can be
-+	 *    larger than half size of the log.
-+	 *
-+	 *    From mkfs.xfs, this is considered by the XFS_MIN_LOG_FACTOR
-+	 *    define, which is set to 3. That means we can definitely fit
-+	 *    maximally sized 2 transactions in the log. We'll use this same
-+	 *    value here.
-+	 *
-+	 * 2) If the lsunit option is specified, a transaction requires 2 LSU
-+	 *    for the reservation because there are two log writes that can
-+	 *    require padding - the transaction data and the commit record which
-+	 *    are written separately and both can require padding to the LSU.
-+	 *    Consider that we can have an active CIL reservation holding 2*LSU,
-+	 *    but the CIL is not over a push threshold, in this case, if we
-+	 *    don't have enough log space for at one new transaction, which
-+	 *    includes another 2*LSU in the reservation, we will run into dead
-+	 *    loop situation in log space grant procedure. i.e.
-+	 *    xlog_grant_head_wait().
-+	 *
-+	 *    Hence the log size needs to be able to contain two maximally sized
-+	 *    and padded transactions, which is (2 * (2 * LSU + maxlres)).
-+	 *
-+	 * Also, the log size should be a multiple of the log stripe unit, round
-+	 * it up to lsunit boundary if lsunit is specified.
-+	 */
-+	if (lsunit) {
-+		min_logblks = roundup_64(BTOBB(max_logres), lsunit) +
-+			      2 * lsunit;
-+	} else
-+		min_logblks = BTOBB(max_logres) + 2 * BBSIZE;
-+	min_logblks *= XFS_MIN_LOG_FACTOR;
-+
-+	return XFS_BB_TO_FSB(mp, min_logblks);
-+}
-diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
-index 59cdcfd..feeab9c 100644
---- a/mkfs/maxtrres.c
-+++ b/mkfs/maxtrres.c
-@@ -27,46 +27,6 @@
- #include <xfs/libxfs.h>
- #include "xfs_mkfs.h"
+ xfs_bmap_last_extent(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+@@ -1808,29 +1627,6 @@ xfs_bmap_isaeof(
+ }
  
--static void
--max_attrsetm_trans_res_adjust(
--	xfs_mount_t			*mp)
+ /*
+- * Check if the endoff is outside the last extent. If so the caller will grow
+- * the allocation to a stripe unit boundary.  All offsets are considered outside
+- * the end of file for an empty fork, so 1 is returned in *eof in that case.
+- */
+-int
+-xfs_bmap_eof(
+-	struct xfs_inode	*ip,
+-	xfs_fileoff_t		endoff,
+-	int			whichfork,
+-	int			*eof)
 -{
--	int				local;
--	int				size;
--	int				nblks;
--	int				res;
+-	struct xfs_bmbt_irec	rec;
+-	int			error;
 -
--	/*
--	 * Determine space the maximal sized attribute will use,
--	 * to calculate the largest reservation size needed.
--	 */
--	size = libxfs_attr_leaf_newentsize(MAXNAMELEN, 64 * 1024,
--						mp->m_sb.sb_blocksize, &local);
--	ASSERT(!local);
--	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
--	nblks += XFS_B_TO_FSB(mp, size);
--	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
--	res = M_RES(mp)->tr_attrsetm.tr_logres +
--	      M_RES(mp)->tr_attrsetrt.tr_logres * nblks;
--	M_RES(mp)->tr_attrsetm.tr_logres = res;
+-	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, eof);
+-	if (error || *eof)
+-		return error;
+-
+-	*eof = endoff >= rec.br_startoff + rec.br_blockcount;
+-	return 0;
 -}
 -
--static int
--max_trans_res_by_mount(
--	struct xfs_mount	*mp)
--{
--	struct xfs_trans_resv	*tr = &mp->m_resv;
--	struct xfs_trans_res	*p;
--	struct xfs_trans_res	rval = {0};
--
--	for (p = (struct xfs_trans_res *)tr;
--	     p < (struct xfs_trans_res *)(tr + 1); p++) {
--		if (p->tr_logres > rval.tr_logres)
--			rval = *p;
--	}
--	return rval.tr_logres;
--}
--
- int
- max_trans_res(
- 	int		crcs_enabled,
-@@ -74,11 +34,13 @@ max_trans_res(
- 	int		sectorlog,
- 	int		blocklog,
- 	int		inodelog,
--	int		dirblocklog)
-+	int		dirblocklog,
-+	int		logversion,
-+	int		log_sunit)
+-/*
+  * Returns the file-relative block number of the first block past eof in
+  * the file.  This is not based on i_size, it is based on the extent records.
+  * Returns 0 for local files, as they do not have extent records.
+@@ -3369,7 +3165,7 @@ done:
+ /*
+  * Adjust the size of the new extent based on di_extsize and rt extsize.
+  */
+-STATIC int
++int
+ xfs_bmap_extsize_align(
+ 	xfs_mount_t	*mp,
+ 	xfs_bmbt_irec_t	*gotp,		/* next extent pointer */
+@@ -3531,9 +3327,9 @@ xfs_bmap_extsize_align(
+ 
+ #define XFS_ALLOC_GAP_UNITS	4
+ 
+-STATIC void
++void
+ xfs_bmap_adjacent(
+-	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
++	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
  {
- 	xfs_sb_t	*sbp;
- 	xfs_mount_t	mount;
--	int		maxres, maxfsb;
-+	int		maxfsb;
+ 	xfs_fsblock_t	adjust;		/* adjustment to block numbers */
+ 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+@@ -3796,7 +3592,7 @@ xfs_bmap_btalloc_nullfb(
  
- 	memset(&mount, 0, sizeof(mount));
- 	sbp = &mount.m_sb;
-@@ -93,19 +55,27 @@ max_trans_res(
- 	sbp->sb_inodesize = 1 << inodelog;
- 	sbp->sb_inopblock = 1 << (blocklog - inodelog);
- 	sbp->sb_dirblklog = dirblocklog - blocklog;
-+
-+	if (log_sunit > 0) {
-+		log_sunit <<= blocklog;
-+		logversion = 2;
-+	} else
-+		log_sunit = 1;
-+	sbp->sb_logsunit = log_sunit;
-+
- 	sbp->sb_versionnum =
- 			(crcs_enabled ? XFS_SB_VERSION_5 : XFS_SB_VERSION_4) |
--			(dirversion == 2 ? XFS_SB_VERSION_DIRV2BIT : 0);
-+			(dirversion == 2 ? XFS_SB_VERSION_DIRV2BIT : 0) |
-+			(logversion > 1 ? XFS_SB_VERSION_LOGV2BIT : 0);
+ STATIC int
+ xfs_bmap_btalloc(
+-	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
++	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
+ 	xfs_mount_t	*mp;		/* mount point structure */
+ 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+@@ -4028,7 +3824,7 @@ xfs_bmap_btalloc(
+  */
+ STATIC int
+ xfs_bmap_alloc(
+-	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
++	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
+ 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
+ 		return xfs_bmap_rtalloc(ap);
+@@ -4416,8 +4212,8 @@ xfs_bmapi_delay(
+ }
  
- 	libxfs_mount(&mount, sbp, 0,0,0,0);
--	max_attrsetm_trans_res_adjust(&mount);
--	maxres = max_trans_res_by_mount(&mount);
--	maxfsb = XFS_B_TO_FSB(&mount, maxres);
-+	maxfsb = xfs_log_calc_minimum_size(&mount);
- 	libxfs_umount(&mount);
  
- #if 0
--	printf("#define\tMAXTRRES_S%d_B%d_I%d_D%d_V%d\t%lld\n",
--		sectorlog, blocklog, inodelog, dirblocklog, dirversion, maxfsb);
-+	printf("#define\tMAXTRRES_S%d_B%d_I%d_D%d_V%d_LSU%d\t%d\n",
-+		sectorlog, blocklog, inodelog, dirblocklog, dirversion,
-+		log_sunit, maxfsb);
- #endif
- 
- 	return maxfsb;
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 6e243ab..896351b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -922,7 +922,6 @@ main(
- 	int			lssflag;
- 	int			lsu;
- 	int			lsunit;
--	int			max_tr_res;
- 	int			min_logblocks;
- 	xfs_mount_t		*mp;
- 	xfs_mount_t		mbuf;
-@@ -2111,50 +2110,6 @@ reported by the device (%u).\n"),
- 			sectorsize, xi.rtbsize);
- 	}
- 
--	max_tr_res = max_trans_res(crcs_enabled, dirversion,
--				   sectorlog, blocklog, inodelog, dirblocklog);
--	ASSERT(max_tr_res);
--	min_logblocks = max_tr_res * XFS_MIN_LOG_FACTOR;
--	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
--	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
--		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
--	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
--		fprintf(stderr,
--_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(xi.logBBsize));
--		usage();
--	} else if (!logsize && xi.logBBsize > 0) {
--		logblocks = DTOBT(xi.logBBsize);
--	} else if (logsize && !xi.logdev && !loginternal) {
--		fprintf(stderr,
--			_("size specified for non-existent log subvolume\n"));
--		usage();
--	} else if (loginternal && logsize && logblocks >= dblocks) {
--		fprintf(stderr, _("size %lld too large for internal log\n"),
--			(long long)logblocks);
--		usage();
--	} else if (!loginternal && !xi.logdev) {
--		logblocks = 0;
--	} else if (loginternal && !logsize) {
--		/*
--		 * With a 2GB max log size, default to maximum size
--		 * at 4TB. This keeps the same ratio from the older
--		 * max log size of 128M at 256GB fs size. IOWs,
--		 * the ratio of fs size to log size is 2048:1.
--		 */
--		logblocks = (dblocks << blocklog) / 2048;
--		logblocks = logblocks >> blocklog;
--		logblocks = MAX(min_logblocks, logblocks);
--		logblocks = MAX(logblocks,
--				MAX(XFS_DFL_LOG_SIZE,
--					max_tr_res * XFS_DFL_LOG_FACTOR));
--		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
--		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
--			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
--		}
--	}
--	validate_log_size(logblocks, blocklog, min_logblocks);
--
- 	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
- 		fprintf(stderr,
- 			_("size %s specified for rt subvolume is too large, "
-@@ -2363,6 +2318,60 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 		fprintf(stderr, _("log stripe unit adjusted to 32KiB\n"));
- 	}
- 
-+	min_logblocks = max_trans_res(crcs_enabled, dirversion,
-+				   sectorlog, blocklog, inodelog, dirblocklog,
-+				   logversion, lsunit);
-+	ASSERT(min_logblocks);
-+	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
-+	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-+		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
-+	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
-+		fprintf(stderr,
-+_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-+			logsize, (long long)DTOBT(xi.logBBsize));
-+		usage();
-+	} else if (!logsize && xi.logBBsize > 0) {
-+		logblocks = DTOBT(xi.logBBsize);
-+	} else if (logsize && !xi.logdev && !loginternal) {
-+		fprintf(stderr,
-+			_("size specified for non-existent log subvolume\n"));
-+		usage();
-+	} else if (loginternal && logsize && logblocks >= dblocks) {
-+		fprintf(stderr, _("size %lld too large for internal log\n"),
-+			(long long)logblocks);
-+		usage();
-+	} else if (!loginternal && !xi.logdev) {
-+		logblocks = 0;
-+	} else if (loginternal && !logsize) {
-+		/*
-+		 * With a 2GB max log size, default to maximum size
-+		 * at 4TB. This keeps the same ratio from the older
-+		 * max log size of 128M at 256GB fs size. IOWs,
-+		 * the ratio of fs size to log size is 2048:1.
-+		 */
-+		logblocks = (dblocks << blocklog) / 2048;
-+		logblocks = logblocks >> blocklog;
-+		logblocks = MAX(min_logblocks, logblocks);
-+
-+		/*
-+		 * If the default log size doesn't fit in the AG size, use the
-+		 * minimum log size instead. This ensures small filesystems
-+		 * don't use excessive amounts of space for the log.
-+		 */
-+		if (min_logblocks * XFS_DFL_LOG_FACTOR >= agsize) {
-+			logblocks = min_logblocks;
-+		} else {
-+			logblocks = MAX(logblocks,
-+				MAX(XFS_DFL_LOG_SIZE,
-+					min_logblocks * XFS_DFL_LOG_FACTOR));
-+		}
-+		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
-+		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
-+			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
-+		}
-+	}
-+	validate_log_size(logblocks, blocklog, min_logblocks);
-+
- 	protostring = setup_proto(protofile);
- 	bsize = 1 << (blocklog - BBSHIFT);
- 	mp = &mbuf;
-@@ -2371,6 +2380,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	sbp->sb_blocklog = (__uint8_t)blocklog;
- 	sbp->sb_sectlog = (__uint8_t)sectorlog;
- 	sbp->sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)agsize);
-+	sbp->sb_agblocks = (xfs_agblock_t)agsize;
- 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
- 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
- 
-@@ -2382,6 +2392,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 		if (!logsize) {
- 			logblocks = MIN(logblocks,
- 					XFS_ALLOC_AG_MAX_USABLE(mp));
-+
-+			/* revalidate the log size is valid if we changed it */
-+			validate_log_size(logblocks, blocklog, min_logblocks);
- 		}
- 		if (logblocks > agsize - XFS_PREALLOC_BLOCKS(mp)) {
- 			fprintf(stderr,
-@@ -2389,6 +2402,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 				(long long)logblocks);
- 			usage();
- 		}
-+
- 		if (laflag) {
- 			if (logagno >= agcount) {
- 				fprintf(stderr,
-@@ -2457,7 +2471,6 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	sbp->sb_logstart = logstart;
- 	sbp->sb_rootino = sbp->sb_rbmino = sbp->sb_rsumino = NULLFSINO;
- 	sbp->sb_rextsize = rtextblocks;
--	sbp->sb_agblocks = (xfs_agblock_t)agsize;
- 	sbp->sb_agcount = (xfs_agnumber_t)agcount;
- 	sbp->sb_rbmblocks = nbmblocks;
- 	sbp->sb_logblocks = (xfs_extlen_t)logblocks;
-diff --git a/mkfs/xfs_mkfs.h b/mkfs/xfs_mkfs.h
-index d10e444..1393feb 100644
---- a/mkfs/xfs_mkfs.h
-+++ b/mkfs/xfs_mkfs.h
-@@ -54,8 +54,7 @@
- #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
- #define	XFS_DFL_DIR_VERSION	2		/* default directory version */
- #define	XFS_DFL_LOG_SIZE	1000		/* default log size, blocks */
--#define	XFS_MIN_LOG_FACTOR	3		/* min log size factor */
--#define	XFS_DFL_LOG_FACTOR	16		/* default log size, factor */
-+#define	XFS_DFL_LOG_FACTOR	5		/* default log size, factor */
- 						/* with max trans reservation */
- #define XFS_MAX_INODE_SIG_BITS	32		/* most significant bits in an
- 						 * inode number that we'll
-@@ -82,6 +81,7 @@ extern void res_failed (int err);
- 
- /* maxtrres.c */
- extern int max_trans_res (int crcs_enabled, int dirversion,
--		int sectorlog, int blocklog, int inodelog, int dirblocklog);
-+		int sectorlog, int blocklog, int inodelog, int dirblocklog,
-+		int logversion, int log_sunit);
- 
- #endif	/* __XFS_MKFS_H__ */
+-STATIC int
+-xfs_bmapi_allocate(
++int
++__xfs_bmapi_allocate(
+ 	struct xfs_bmalloca	*bma)
+ {
+ 	struct xfs_mount	*mp = bma->ip->i_mount;
 -- 
 1.8.3.2
 
