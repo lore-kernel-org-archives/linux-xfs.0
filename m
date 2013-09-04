@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DDEB87F53
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:05:52 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 56C657F53
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:06:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BF879304067
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 13:05:49 -0700 (PDT)
-Received: from mail-vc0-f179.google.com (mail-vc0-f179.google.com
-	[209.85.220.179]) by cuda.sgi.com with ESMTP id
-	ruidMCnibPwSDcAw (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 13:05:48 -0700 (PDT)
-Received: by mail-vc0-f179.google.com with SMTP id ht10so500509vcb.38
-	for <xfs@oss.sgi.com>; Wed, 04 Sep 2013 13:05:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130904192048.GM3996@quack.suse.cz>
-References: <cover.1377193658.git.luto@amacapital.net>
-	<e1620c8e4909a65e270c8e9590e307c22fd96a44.1377193658.git.luto@amacapital.net>
-	<20130904145740.GE3996@quack.suse.cz>
-	<CALCETrUA653bw3C=XP=Es9UApqsKsDG-UAzuZ=qS1RA1LeoKYw@mail.gmail.com>
-	<20130904192048.GM3996@quack.suse.cz>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Wed, 4 Sep 2013 13:05:27 -0700
-Message-ID: <CALCETrXLtLbgQH-eXm7AvxyRYa2jxZ=3jR=CfvAY+drGC_O4nA@mail.gmail.com>
-Subject: Re: [PATCH v4 3/7] mm: Allow filesystems to defer cmtime updates
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CB7CCAC002
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:08 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	qfOnSzPF5u7tX1Ay for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:06:07 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cn-HP
+	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rM-Gn
+	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 03/55] xfsprogs: teach logprint about icreate transaction
+Date: Thu,  5 Sep 2013 08:05:07 +1000
+Message-Id: <1378332359-14737-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
+References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,107 +30,143 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Tim Chen <tim.c.chen@linux.intel.com>
+To: xfs@oss.sgi.com
 
-On Wed, Sep 4, 2013 at 12:20 PM, Jan Kara <jack@suse.cz> wrote:
-> On Wed 04-09-13 10:54:50, Andy Lutomirski wrote:
->> >> @@ -1970,6 +1988,39 @@ int write_one_page(struct page *page, int wait)
->> >>  }
->> >>  EXPORT_SYMBOL(write_one_page);
->> >>
->> >> +void mapping_flush_cmtime(struct address_space *mapping)
->> >> +{
->> >> +     if (mapping_test_clear_cmtime(mapping) &&
->> >> +         mapping->a_ops->update_cmtime_deferred)
->> >> +             mapping->a_ops->update_cmtime_deferred(mapping);
->> >> +}
->> >> +EXPORT_SYMBOL(mapping_flush_cmtime);
->> >   Hum, is there a reason for update_cmtime_deferred() operation? I can
->> > hardly imagine anyone will want to do anything else than what
->> > inode_update_time_writable() does so why bother? You mention tmpfs & co.
->> > don't fit into your scheme well with which I agree so let's just keep
->> > file_update_time() in their page_mkwrite() operation. But I don't see a
->> > real need for avoiding the deferred cmtime logic...
->>
->> I think there might be odd corner cases.  For example, mmap a tmpfs
->> file, write it, and unmap it.  Then, an hour later, maybe the system
->   If you unmap it then that will handle the update. But if you won't unmap,
-> you'd get spurious updates of timestamps which would be strange.
->
->> will be under memory pressure and page out the file.  This could
->> trigger a surprising time update.  (I'm not sure this can actually
->> happen on tmpfs, but maybe it would on some other filesystem.)
->>
->> Does this actually matter?  A flag to turn the feature on or off would
->> do the trick, but I don't think there's precedent for sticking a flag
->> in a_ops.
->   Flag in a_ops is ugly. But you can have a flag in 'struct
-> filesystem_type' which would be reasonable.
+From: Dave Chinner <dchinner@redhat.com>
 
-OK, will do.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/libxlog.h        |  1 +
+ logprint/log_misc.c      | 36 ++++++++++++++++++++++++++++++++++++
+ logprint/log_print_all.c | 21 +++++++++++++++++++++
+ 3 files changed, 58 insertions(+)
 
->
->> >> +void mapping_flush_cmtime_nowb(struct address_space *mapping)
->> >> +{
->> >> +     /*
->> >> +      * We get called from munmap and msync.  Both calls can race
->> >> +      * with fs freezing.  If the fs is frozen after
->> >> +      * mapping_test_clear_cmtime but before the time update, then
->> >> +      * sync_filesystem will miss the cmtime update (because we
->> >> +      * just cleared it) and we don't be able to write (because the
->> >> +      * fs is frozen).  On the other hand, we can't just return if
->> >> +      * we're in the SB_FREEZE_PAGEFAULT state because our caller
->> >> +      * expects the timestamp to be synchronously updated.  So we
->> >> +      * get write access without blocking, at the SB_FREEZE_FS
->> >> +      * level.  If the fs is already fully frozen, then we already
->> >> +      * know we have nothing to do.
->> >> +      */
->> >> +
->> >> +     if (!mapping_test_cmtime(mapping))
->> >> +             return;  /* Optimization: nothing to do. */
->> >> +
->> >> +     if (__sb_start_write(mapping->host->i_sb, SB_FREEZE_FS, false)) {
->> >> +             mapping_flush_cmtime(mapping);
->> >> +             __sb_end_write(mapping->host->i_sb, SB_FREEZE_FS);
->> >> +     }
->> >> +}
->> >   This is wrong because SB_FREEZE_FS level is targetted for filesystem
->> > internal use. Also it is racy. mapping_flush_cmtime() ends up calling
->> > mark_inode_dirty() and filesystems such as ext4 or xfs will start a
->> > transaction to store inode in the journal. This gets freeze protection at
->> > SB_FREEZE_FS level again. If freeze_super() sets s_writers.frozen to
->> > SB_FREEZE_FS before this second protection, things will deadlock.
->>
->> Whoops -- I assumed that it was safe to recursively take freeze
->> protection at the same level.
->>
->> I'm worried about the following race:
->>
->> Thread 1 (in munmap):
->> Check AS_CMTIME set
->> sb_start_pagefault
->>
->> Thread 2 (freezing the fs):
->> frozen = SB_FREEZE_PAGEFAULT;
->> sync_filesystem()
->>
->> Thread 1 is now stuck.  It doesn't need to be, because sync_filesystem
->> will flush out the cmtime write.  But there doesn't seem to be a clean
->> mechanism to wait for the freeze to finish.
->   OK, I see. Frankly, I'd rather live with msync() and munmap() blocking
-> while filesystem is frozen than trying to outsmart the freezing logic...
-> If someone comes up with a usecase where it causes trouble, we can always
-> improve the logic with some clever tricks.
-
-I'll at least check that it's a shared writable mapping before doing
-the flush to avoid blocking on other types of munmap.
-
---Andy
+diff --git a/include/libxlog.h b/include/libxlog.h
+index bd71bfe..ff711e9 100644
+--- a/include/libxlog.h
++++ b/include/libxlog.h
+@@ -51,6 +51,7 @@ struct xlog {
+ #include <xfs/xfs_buf_item.h>
+ #include <xfs/xfs_inode_item.h>
+ #include <xfs/xfs_extfree_item.h>
++#include <xfs/xfs_icreate_item.h>
+ 
+ typedef union {
+ 	xlog_rec_header_t       hic_header;
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index a369e72..623245e 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -70,6 +70,7 @@ char *trans_type[] = {
+ 	"SWAPEXT",
+ 	"SB_COUNT",
+ 	"CHECKPOINT",
++	"ICREATE",
+ };
+ 
+ typedef struct xlog_split_item {
+@@ -792,6 +793,35 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
+ }	/* xlog_print_trans_dquot */
+ 
+ 
++STATIC int
++xlog_print_trans_icreate(
++	xfs_caddr_t	*ptr,
++	int		len,
++	int		*i,
++	int		num_ops)
++{
++	struct xfs_icreate_log	icl_buf = {0};
++	struct xfs_icreate_log	*icl;
++
++	memmove(&icl_buf, *ptr, MIN(sizeof(struct xfs_icreate_log), len));
++	icl = &icl_buf;
++	(*i)++;
++	*ptr += len;
++
++	/* handle complete header only */
++	if (len != sizeof(struct xfs_icreate_log)) {
++		printf(_("ICR: split header, not printing\n"));
++		return 1; /* to skip leftover in next region */
++	}
++
++	printf(_("ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
++		 "      cnt: %d  isize: %d    gen: 0x%x\n"),
++		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
++		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
++		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
++	return 0;
++}
++
+ /******************************************************************************
+  *
+  *		Log print routines
+@@ -974,6 +1004,12 @@ xlog_print_record(int			  fd,
+ 					&i, num_ops);
+ 			break;
+ 		    }
++		    case XFS_LI_ICREATE: {
++			skip = xlog_print_trans_icreate(&ptr,
++					be32_to_cpu(op_head->oh_len),
++					&i, num_ops);
++			break;
++		    }
+ 		    case XFS_LI_INODE: {
+ 			skip = xlog_print_trans_inode(&ptr,
+ 					be32_to_cpu(op_head->oh_len),
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index 1194469..8b932d2 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -432,6 +432,21 @@ xlog_recover_print_efi(
+ 	free(f);
+ }
+ 
++STATIC void
++xlog_recover_print_icreate(
++	struct xlog_recover_item	*item)
++{
++	struct xfs_icreate_log	*icl;
++
++	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
++
++	printf(_("	ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
++		 "	      cnt: %d  isize: %d    gen: 0x%x\n"),
++		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
++		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
++		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
++}
++
+ void
+ xlog_recover_print_logitem(
+ 	xlog_recover_item_t	*item)
+@@ -440,6 +455,9 @@ xlog_recover_print_logitem(
+ 	case XFS_LI_BUF:
+ 		xlog_recover_print_buffer(item);
+ 		break;
++	case XFS_LI_ICREATE:
++		xlog_recover_print_icreate(item);
++		break;
+ 	case XFS_LI_INODE:
+ 		xlog_recover_print_inode(item);
+ 		break;
+@@ -471,6 +489,9 @@ xlog_recover_print_item(
+ 	case XFS_LI_BUF:
+ 		printf("BUF");
+ 		break;
++	case XFS_LI_ICREATE:
++		printf("ICR");
++		break;
+ 	case XFS_LI_INODE:
+ 		printf("INO");
+ 		break;
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
