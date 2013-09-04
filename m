@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 96B267F69
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 18:24:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ACBA07F69
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 18:35:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 863F28F8033
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 16:24:17 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	acWnlColdPTxWUTd for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 16:24:16 -0700 (PDT)
-Date: Thu, 5 Sep 2013 09:24:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: fix device lookup in btrfs/003
-Message-ID: <20130904232412.GM23571@dastard>
-References: <52266055.9050004@suse.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 98E09304066
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 16:35:29 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id SrdhHKI4lw0tye3z for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 16:35:28 -0700 (PDT)
+Message-ID: <5227C32E.1040805@sandeen.net>
+Date: Wed, 04 Sep 2013 18:33:02 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52266055.9050004@suse.com>
+Subject: Re: [PATCH 54/55] repair: fix segv on directory block read failure
+References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
+	<1378332359-14737-55-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-55-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,68 +28,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Mahoney <jeffm@suse.com>
-Cc: Linux FS Maling List <linux-fsdevel@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Add xfs@oss.sgi.com to the cc list.
+On 9/4/13 5:05 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> We try to read all blocks in the directory, but if we have a block
+> form directory we only have one block and so we need to fail if
+> there is a read error. Otherwise we try to derefence a null buffer
+> pointer.
+> 
+> While fixing the error handling for a read failure, fix the bug that
+> caused the read failure - trying to verify a block format buffer
+> with the data format buffer verifier.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-On Tue, Sep 03, 2013 at 06:19:01PM -0400, Jeff Mahoney wrote:
-> The DEVHTL lookup in btrfs/003 is broken. It can only handle full LUNs and
-> not partitions on a disk.
-> 
-> Rather than returning 2:0:0:0 for /dev/sdc7, it returns 'block' and we see:
-> ./common/rc: line 2081: /sys/class/scsi_device/block/device/delete:
-> No such file or directory
-> 
-> If we look up the device by dev instead of by name, we can handle working
-> with full disks and partitions more easily and get the ability to use
-> any device name rather than just the ones that match sysfs.
-> 
-> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+I independently hit this, and had a similar but crummier fix. ;)
+
+(and missed the root cause, because the fs I ran it on was so
+corrupt, there was no element of surprise)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  tests/btrfs/003 |   18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
+>  repair/phase6.c | 24 +++++++++++++++++++++---
+>  1 file changed, 21 insertions(+), 3 deletions(-)
 > 
-> --- a/tests/btrfs/003
-> +++ b/tests/btrfs/003
-> @@ -137,9 +137,21 @@ _test_replace()
->  	#pick the 2nd last disk 
->  	ds=${devs[@]:$(($n-1)):1}
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 2a523ca..a4ad7a3 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -2064,7 +2064,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+>  	int			isleaf;
+>  	xfs_fileoff_t		next_da_bno;
+>  	int			seeval;
+> -	int			fixit;
+> +	int			fixit = 0;
+>  	xfs_dir2_db_t		db;
 >  
-> -	# retrive the HTL for this scsi disk
-> -	d=`echo $ds|cut -d"/" -f3`
-> -	DEVHTL=`ls -l /sys/class/block/${d} | rev | cut -d "/" -f 3 | rev`
-> +	HEXMAJOR="$(stat -c "%t" "$ds")"
-> +	HEXMINOR="$(stat -c "%T" "$ds")"
-> +	if [ -z "$HEXMAJOR" -o -z "$HEXMINOR" ]; then
-> +		_fail "tr: HEXMAJOR and/or HEXMINOR is unset for $ds"
-> +	fi
+>  	*need_dot = 1;
+> @@ -2091,6 +2091,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+>  	for (da_bno = 0, next_da_bno = 0;
+>  	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirleafblk;
+>  	     da_bno = (xfs_dablk_t)next_da_bno) {
+> +		const struct xfs_buf_ops *ops;
 > +
-> +	DIR="/sys/dev/block/$(( 0x$HEXMAJOR )):$(( 0x$HEXMINOR ))"
+>  		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
+>  		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
+>  			break;
+> @@ -2104,13 +2106,28 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+>  		_("realloc failed in longform_dir2_entry_check (%zu bytes)\n"),
+>  					num_bps * sizeof(struct xfs_buf*));
+>  		}
 > +
-> +	if [ -L "$DIR/device" ]; then # whole disk
-> +		DEVHTL="$(basename $(readlink "$DIR/device"))"
-> +	elif [ -L "$DIR/../device" ]; then # partition
-> +		DEVHTL="$(basename $(readlink "$DIR/../device"))"
-> +	else
-> +		_fail "tr: Can't locate device backing $ds"
-> +	fi
->  
->  	#fail disk
->  	_devmgt_remove ${DEVHTL}
+> +		if (isblock)
+> +			ops = &xfs_dir3_block_buf_ops;
+> +		else
+> +			ops = &xfs_dir3_data_buf_ops;
+>  		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bplist[db],
+> -				XFS_DATA_FORK, &xfs_dir3_data_buf_ops)) {
+> +				       XFS_DATA_FORK, ops)) {
+>  			do_warn(
+>  	_("can't read data block %u for directory inode %" PRIu64 "\n"),
+>  				da_bno, ino);
+>  			*num_illegal += 1;
+> -			continue;	/* try and read all "data" blocks */
+> +
+> +			/*
+> +			 * we try to read all "data" blocks, but if we are in
+> +			 * block form and we fail, there isn't anything else to
+> +			 * read, and nothing we can do but trash it.
+> +			 */
+> +			if (isblock) {
+> +				fixit++;
+> +				goto out_fix;
+> +			}
+> +			continue;
+>  		}
+>  		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
+>  				irec, ino_offset, &bplist[db], hashtab,
+> @@ -2141,6 +2158,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+>  								freetab);
+>  		}
+>  	}
+> +out_fix:
+>  	if (!no_modify && (fixit || dotdot_update)) {
+>  		dir_hash_dup_names(hashtab);
+>  		for (i = 0; i < freetab->naents; i++)
 > 
-> --
-> Jeff Mahoney
-> SUSE Labs
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
