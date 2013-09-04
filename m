@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1CBF029E97
+	by oss.sgi.com (Postfix) with ESMTP id 6148629E8C
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0CAF3304039
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:53 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 353D2304039
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:54 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	yR2ClqvOkKYynOYj for <xfs@oss.sgi.com>;
+	GXLViMDIclldvsoJ for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:52 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cw-Kr
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007d0-MV
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rq-KI
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003s0-Lm
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/55] libxfs: sync attr code with kernel
-Date: Thu,  5 Sep 2013 08:05:13 +1000
-Message-Id: <1378332359-14737-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/55] libxfs: sync xfs_ialloc.c to the kernel code
+Date: Thu,  5 Sep 2013 08:05:15 +1000
+Message-Id: <1378332359-14737-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,96 +39,271 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
+include the missing xfs_difree() function. it's not used by
+userspace, but it makes no sense to have just this one arbitrary
+difference between the kernel and userspace files.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_attr.c      | 6 +++---
- libxfs/xfs_attr_leaf.c | 7 +++----
- 2 files changed, 6 insertions(+), 7 deletions(-)
+ libxfs/xfs.h        |   1 +
+ libxfs/xfs_ialloc.c | 186 +++++++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 177 insertions(+), 10 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 6ef7809..c96083e 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -65,7 +65,7 @@ xfs_attr_name_to_xname(
- 	return 0;
- }
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 15e82d7..3fd226c 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -208,6 +208,7 @@ roundup_pow_of_two(uint v)
+ #define XFS_MOUNT_SMALL_INUMS		0	/* ignored in userspace */
+ #define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
+ #define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
++#define XFS_MOUNT_IKEEP			0	/* ignored in userspace */
  
--STATIC int
-+int
- xfs_inode_hasattr(
- 	struct xfs_inode	*ip)
- {
-@@ -268,7 +268,6 @@ xfs_attr_set_int(
- 	if (rsvd)
- 		args.trans->t_flags |= XFS_TRANS_RESERVE;
+ #define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
+ 	xfs_mod_incore_sb(mp, field, delta, rsvd)
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 48916dd..98513fd 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -314,7 +314,7 @@ xfs_ialloc_ag_alloc(
+ 	 * First try to allocate inodes contiguous with the last-allocated
+ 	 * chunk of inodes.  If the filesystem is striped, this will fill
+ 	 * an entire stripe unit with inodes.
+- 	 */
++	 */
+ 	agi = XFS_BUF_TO_AGI(agbp);
+ 	newino = be32_to_cpu(agi->agi_newino);
+ 	agno = be32_to_cpu(agi->agi_seqno);
+@@ -324,8 +324,6 @@ xfs_ialloc_ag_alloc(
+ 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
+ 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
+ 		args.type = XFS_ALLOCTYPE_THIS_BNO;
+-		args.mod = args.total = args.wasdel = args.isfl =
+-			args.userdata = args.minalignslop = 0;
+ 		args.prod = 1;
  
--
- 	error = xfs_trans_reserve(args.trans, args.total,
- 				  XFS_ATTRSETM_LOG_RES(mp) +
- 				  XFS_ATTRSETRT_LOG_RES(mp) * args.total,
-@@ -587,6 +586,7 @@ xfs_attr_remove(
- 	return xfs_attr_remove_int(dp, &xname, flags);
- }
- 
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
-@@ -854,7 +854,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
- 	error = xfs_attr3_leaf_lookup_int(bp, args);
- 	if (error == ENOATTR) {
- 		xfs_trans_brelse(args->trans, bp);
--		return(error);
-+		return error;
- 	}
- 
- 	xfs_attr3_leaf_remove(bp, args);
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 4e2951b..49a1764 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -51,7 +51,6 @@ STATIC int xfs_attr3_leaf_figure_balance(xfs_da_state_t *state,
- 			int *number_entries_in_blk1,
- 			int *number_usedbytes_in_blk1);
- 
--
- /*
-  * Utility routines.
-  */
-@@ -1120,7 +1119,6 @@ xfs_attr3_leaf_add_work(
- 	struct xfs_attr_leaf_entry *entry;
- 	struct xfs_attr_leaf_name_local *name_loc;
- 	struct xfs_attr_leaf_name_remote *name_rmt;
--	struct xfs_attr_leaf_map *map;
- 	struct xfs_mount	*mp;
- 	int			tmp;
- 	int			i;
-@@ -1219,7 +1217,7 @@ xfs_attr3_leaf_add_work(
- 	tmp = (ichdr->count - 1) * sizeof(xfs_attr_leaf_entry_t)
- 					+ xfs_attr3_leaf_hdr_size(leaf);
- 
--	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; map++, i++) {
-+	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
- 		if (ichdr->freemap[i].base == tmp) {
- 			ichdr->freemap[i].base += sizeof(xfs_attr_leaf_entry_t);
- 			ichdr->freemap[i].size -= sizeof(xfs_attr_leaf_entry_t);
-@@ -2337,7 +2335,7 @@ xfs_attr3_leaf_moveents(
- 		 * Move the remaining entries down to fill the hole,
- 		 * then zero the entries at the top.
+ 		/*
+@@ -378,8 +376,6 @@ xfs_ialloc_ag_alloc(
+ 		 * Allocate a fixed-size extent of inodes.
  		 */
--		tmp  = (ichdr_s->count - count) - sizeof(xfs_attr_leaf_entry_t);
-+		tmp  = (ichdr_s->count - count) * sizeof(xfs_attr_leaf_entry_t);
- 		entry_s = &xfs_attr3_leaf_entryp(leaf_s)[start_s + count];
- 		entry_d = &xfs_attr3_leaf_entryp(leaf_s)[start_s];
- 		memmove(entry_d, entry_s, tmp);
-@@ -2431,6 +2429,7 @@ xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize, int *local)
- 	return size;
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+-		args.mod = args.total = args.wasdel = args.isfl =
+-			args.userdata = args.minalignslop = 0;
+ 		args.prod = 1;
+ 		/*
+ 		 * Allow space for the inode btree to split.
+@@ -630,8 +626,7 @@ xfs_ialloc_get_rec(
+ 	struct xfs_btree_cur	*cur,
+ 	xfs_agino_t		agino,
+ 	xfs_inobt_rec_incore_t	*rec,
+-	int			*done,
+-	int			left)
++	int			*done)
+ {
+ 	int                     error;
+ 	int			i;
+@@ -739,12 +734,12 @@ xfs_dialloc_ag(
+ 		    pag->pagl_leftrec != NULLAGINO &&
+ 		    pag->pagl_rightrec != NULLAGINO) {
+ 			error = xfs_ialloc_get_rec(tcur, pag->pagl_leftrec,
+-						   &trec, &doneleft, 1);
++						   &trec, &doneleft);
+ 			if (error)
+ 				goto error1;
+ 
+ 			error = xfs_ialloc_get_rec(cur, pag->pagl_rightrec,
+-						   &rec, &doneright, 0);
++						   &rec, &doneright);
+ 			if (error)
+ 				goto error1;
+ 		} else {
+@@ -1074,6 +1069,177 @@ out_error:
+ 	return XFS_ERROR(error);
  }
  
++/*
++ * Free disk inode.  Carefully avoids touching the incore inode, all
++ * manipulations incore are the caller's responsibility.
++ * The on-disk inode is not changed by this operation, only the
++ * btree (free inode mask) is changed.
++ */
++int
++xfs_difree(
++	xfs_trans_t	*tp,		/* transaction pointer */
++	xfs_ino_t	inode,		/* inode to be freed */
++	xfs_bmap_free_t	*flist,		/* extents to free */
++	int		*delete,	/* set if inode cluster was deleted */
++	xfs_ino_t	*first_ino)	/* first inode in deleted cluster */
++{
++	/* REFERENCED */
++	xfs_agblock_t	agbno;	/* block number containing inode */
++	xfs_buf_t	*agbp;	/* buffer containing allocation group header */
++	xfs_agino_t	agino;	/* inode number relative to allocation group */
++	xfs_agnumber_t	agno;	/* allocation group number */
++	xfs_agi_t	*agi;	/* allocation group header */
++	xfs_btree_cur_t	*cur;	/* inode btree cursor */
++	int		error;	/* error return value */
++	int		i;	/* result code */
++	int		ilen;	/* inodes in an inode cluster */
++	xfs_mount_t	*mp;	/* mount structure for filesystem */
++	int		off;	/* offset of inode in inode chunk */
++	xfs_inobt_rec_incore_t rec;	/* btree record */
++	struct xfs_perag *pag;
 +
- /*========================================================================
-  * Manage the INCOMPLETE flag in a leaf entry
-  *========================================================================*/
++	mp = tp->t_mountp;
++
++	/*
++	 * Break up inode number into its components.
++	 */
++	agno = XFS_INO_TO_AGNO(mp, inode);
++	if (agno >= mp->m_sb.sb_agcount)  {
++		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
++			__func__, agno, mp->m_sb.sb_agcount);
++		ASSERT(0);
++		return XFS_ERROR(EINVAL);
++	}
++	agino = XFS_INO_TO_AGINO(mp, inode);
++	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
++		xfs_warn(mp, "%s: inode != XFS_AGINO_TO_INO() (%llu != %llu).",
++			__func__, (unsigned long long)inode,
++			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
++		ASSERT(0);
++		return XFS_ERROR(EINVAL);
++	}
++	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
++	if (agbno >= mp->m_sb.sb_agblocks)  {
++		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
++			__func__, agbno, mp->m_sb.sb_agblocks);
++		ASSERT(0);
++		return XFS_ERROR(EINVAL);
++	}
++	/*
++	 * Get the allocation group header.
++	 */
++	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
++	if (error) {
++		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
++			__func__, error);
++		return error;
++	}
++	agi = XFS_BUF_TO_AGI(agbp);
++	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
++	ASSERT(agbno < be32_to_cpu(agi->agi_length));
++	/*
++	 * Initialize the cursor.
++	 */
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++
++	error = xfs_check_agi_freecount(cur, agi);
++	if (error)
++		goto error0;
++
++	/*
++	 * Look for the entry describing this inode.
++	 */
++	if ((error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i))) {
++		xfs_warn(mp, "%s: xfs_inobt_lookup() returned error %d.",
++			__func__, error);
++		goto error0;
++	}
++	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++	error = xfs_inobt_get_rec(cur, &rec, &i);
++	if (error) {
++		xfs_warn(mp, "%s: xfs_inobt_get_rec() returned error %d.",
++			__func__, error);
++		goto error0;
++	}
++	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++	/*
++	 * Get the offset in the inode chunk.
++	 */
++	off = agino - rec.ir_startino;
++	ASSERT(off >= 0 && off < XFS_INODES_PER_CHUNK);
++	ASSERT(!(rec.ir_free & XFS_INOBT_MASK(off)));
++	/*
++	 * Mark the inode free & increment the count.
++	 */
++	rec.ir_free |= XFS_INOBT_MASK(off);
++	rec.ir_freecount++;
++
++	/*
++	 * When an inode cluster is free, it becomes eligible for removal
++	 */
++	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
++	    (rec.ir_freecount == XFS_IALLOC_INODES(mp))) {
++
++		*delete = 1;
++		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
++
++		/*
++		 * Remove the inode cluster from the AGI B+Tree, adjust the
++		 * AGI and Superblock inode counts, and mark the disk space
++		 * to be freed when the transaction is committed.
++		 */
++		ilen = XFS_IALLOC_INODES(mp);
++		be32_add_cpu(&agi->agi_count, -ilen);
++		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
++		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
++		pag = xfs_perag_get(mp, agno);
++		pag->pagi_freecount -= ilen - 1;
++		xfs_perag_put(pag);
++		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
++		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
++
++		if ((error = xfs_btree_delete(cur, &i))) {
++			xfs_warn(mp, "%s: xfs_btree_delete returned error %d.",
++				__func__, error);
++			goto error0;
++		}
++
++		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp,
++				agno, XFS_INO_TO_AGBNO(mp,rec.ir_startino)),
++				XFS_IALLOC_BLOCKS(mp), flist, mp);
++	} else {
++		*delete = 0;
++
++		error = xfs_inobt_update(cur, &rec);
++		if (error) {
++			xfs_warn(mp, "%s: xfs_inobt_update returned error %d.",
++				__func__, error);
++			goto error0;
++		}
++
++		/* 
++		 * Change the inode free counts and log the ag/sb changes.
++		 */
++		be32_add_cpu(&agi->agi_freecount, 1);
++		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
++		pag = xfs_perag_get(mp, agno);
++		pag->pagi_freecount++;
++		xfs_perag_put(pag);
++		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, 1);
++	}
++
++	error = xfs_check_agi_freecount(cur, agi);
++	if (error)
++		goto error0;
++
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	return 0;
++
++error0:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	return error;
++}
++
+ STATIC int
+ xfs_imap_lookup(
+ 	struct xfs_mount	*mp,
+@@ -1153,7 +1319,7 @@ xfs_imap(
+ 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
+ 	int		error;	/* error code */
+ 	int		offset;	/* index of inode in its buffer */
+-	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
++	int		offset_agbno;	/* blks from chunk start to inode */
+ 
+ 	ASSERT(ino != NULLFSINO);
+ 
 -- 
 1.8.3.2
 
