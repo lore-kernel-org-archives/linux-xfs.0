@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 09ABF29E11
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:28 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 544DB29E0E
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E0338304048
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4373D304064
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:29 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	WGvUNYihrgC5tDUm for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:25 -0700 (PDT)
+	MGlWRxt8dapUjdcW for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:26 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007dZ-UN
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007dS-Sm
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003st-Tc
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003sj-S9
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 22/55] xfs: split out on-disk transaction definitions
-Date: Thu,  5 Sep 2013 08:05:26 +1000
-Message-Id: <1378332359-14737-23-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/55] xfs: separate dquot on disk format definitions out of
+	xfs_quota.h
+Date: Thu,  5 Sep 2013 08:05:24 +1000
+Message-Id: <1378332359-14737-21-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,462 +40,385 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There's a bunch of definitions in xfs_trans.h that define on-disk
-formats - transaction headers taht get written into the log, log
-item type definitions, etc. Split out everything into a separate
-file so that all which remains in xfs_trans.h are kernel only
-definitions.
+The on disk format definitions of the on-disk dquot, log formats and
+quota off log formats are all intertwined with other definitions for
+quotas. Separate them out into their own header file so they can
+easily be shared with userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_log_format.h | 207 +++++++++++++++++++++++++++++++++++++++++++++++
- include/xfs_trans.h      | 207 +----------------------------------------------
- 2 files changed, 208 insertions(+), 206 deletions(-)
+ include/Makefile         |   1 +
+ include/libxfs.h         |   1 +
+ include/xfs_format.h     |  86 ++++++++++++++++++++++++++++++
+ include/xfs_log_format.h |  64 ++++++++++++++++++++++
+ include/xfs_quota.h      | 134 -----------------------------------------------
+ include/xfs_types.h      |   6 +++
+ 6 files changed, 158 insertions(+), 134 deletions(-)
+ create mode 100644 include/xfs_format.h
 
+diff --git a/include/Makefile b/include/Makefile
+index ad2ac46..8f738a8 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -27,6 +27,7 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_cksum.h \
+ 	xfs_da_btree.h \
+ 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
++	xfs_format.h \
+ 	xfs_ialloc.h \
+ 	xfs_ialloc_btree.h \
+ 	xfs_icreate_item.h \
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 40e5e25..646ca79 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -37,6 +37,7 @@
+ #include <xfs/xfs_fs.h>
+ #include <xfs/xfs_arch.h>
+ 
++#include <xfs/xfs_format.h>
+ #include <xfs/xfs_log_format.h>
+ 
+ #include <xfs/xfs_bit.h>
+diff --git a/include/xfs_format.h b/include/xfs_format.h
+new file mode 100644
+index 0000000..2b4f166
+--- /dev/null
++++ b/include/xfs_format.h
+@@ -0,0 +1,86 @@
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef __XFS_FORMAT_H__
++#define __XFS_FORMAT_H__
++
++/*
++ * XFS On Disk Format Definitions
++ *
++ * This header file defines all the on-disk format definitions for 
++ * general XFS objects. Directory and attribute related objects are defined in
++ * xfs_da_format.h, which log and log item formats are defined in
++ * xfs_log_format.h. Everything else goes here.
++ */
++
++/*
++ * Dquot and dquot block format definitions
++ */
++#define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
++#define XFS_DQUOT_VERSION	(u_int8_t)0x01	/* latest version number */
++
++/*
++ * This is the main portion of the on-disk representation of quota
++ * information for a user. This is the q_core of the xfs_dquot_t that
++ * is kept in kernel memory. We pad this with some more expansion room
++ * to construct the on disk structure.
++ */
++typedef struct	xfs_disk_dquot {
++	__be16		d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
++	__u8		d_version;	/* dquot version */
++	__u8		d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
++	__be32		d_id;		/* user,project,group id */
++	__be64		d_blk_hardlimit;/* absolute limit on disk blks */
++	__be64		d_blk_softlimit;/* preferred limit on disk blks */
++	__be64		d_ino_hardlimit;/* maximum # allocated inodes */
++	__be64		d_ino_softlimit;/* preferred inode limit */
++	__be64		d_bcount;	/* disk blocks owned by the user */
++	__be64		d_icount;	/* inodes owned by the user */
++	__be32		d_itimer;	/* zero if within inode limits if not,
++					   this is when we refuse service */
++	__be32		d_btimer;	/* similar to above; for disk blocks */
++	__be16		d_iwarns;	/* warnings issued wrt num inodes */
++	__be16		d_bwarns;	/* warnings issued wrt disk blocks */
++	__be32		d_pad0;		/* 64 bit align */
++	__be64		d_rtb_hardlimit;/* absolute limit on realtime blks */
++	__be64		d_rtb_softlimit;/* preferred limit on RT disk blks */
++	__be64		d_rtbcount;	/* realtime blocks owned */
++	__be32		d_rtbtimer;	/* similar to above; for RT disk blocks */
++	__be16		d_rtbwarns;	/* warnings issued wrt RT disk blocks */
++	__be16		d_pad;
++} xfs_disk_dquot_t;
++
++/*
++ * This is what goes on disk. This is separated from the xfs_disk_dquot because
++ * carrying the unnecessary padding would be a waste of memory.
++ */
++typedef struct xfs_dqblk {
++	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
++	char		  dd_fill[4];	/* filling for posterity */
++
++	/*
++	 * These two are only present on filesystems with the CRC bits set.
++	 */
++	__be32		  dd_crc;	/* checksum */
++	__be64		  dd_lsn;	/* last modification in log */
++	uuid_t		  dd_uuid;	/* location information */
++} xfs_dqblk_t;
++
++#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
++
++
++#endif /* __XFS_FORMAT_H__ */
 diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-index 51d4932..13a0734 100644
+index d1e93d3..2c0f3f1 100644
 --- a/include/xfs_log_format.h
 +++ b/include/xfs_log_format.h
-@@ -187,6 +187,213 @@ typedef struct xfs_log_iovec {
+@@ -544,4 +544,68 @@ typedef struct xfs_efd_log_format_64 {
+ 	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
+ } xfs_efd_log_format_64_t;
  
++/*
++ * Dquot Log format definitions.
++ *
++ * The first two fields must be the type and size fitting into
++ * 32 bits : log_recovery code assumes that.
++ */
++typedef struct xfs_dq_logformat {
++	__uint16_t		qlf_type;      /* dquot log item type */
++	__uint16_t		qlf_size;      /* size of this item */
++	xfs_dqid_t		qlf_id;	       /* usr/grp/proj id : 32 bits */
++	__int64_t		qlf_blkno;     /* blkno of dquot buffer */
++	__int32_t		qlf_len;       /* len of dquot buffer */
++	__uint32_t		qlf_boffset;   /* off of dquot in buffer */
++} xfs_dq_logformat_t;
++
++/*
++ * log format struct for QUOTAOFF records.
++ * The first two fields must be the type and size fitting into
++ * 32 bits : log_recovery code assumes that.
++ * We write two LI_QUOTAOFF logitems per quotaoff, the last one keeps a pointer
++ * to the first and ensures that the first logitem is taken out of the AIL
++ * only when the last one is securely committed.
++ */
++typedef struct xfs_qoff_logformat {
++	unsigned short		qf_type;	/* quotaoff log item type */
++	unsigned short		qf_size;	/* size of this item */
++	unsigned int		qf_flags;	/* USR and/or GRP */
++	char			qf_pad[12];	/* padding for future */
++} xfs_qoff_logformat_t;
++
++
++/*
++ * Disk quotas status in m_qflags, and also sb_qflags. 16 bits.
++ */
++#define XFS_UQUOTA_ACCT	0x0001  /* user quota accounting ON */
++#define XFS_UQUOTA_ENFD	0x0002  /* user quota limits enforced */
++#define XFS_UQUOTA_CHKD	0x0004  /* quotacheck run on usr quotas */
++#define XFS_PQUOTA_ACCT	0x0008  /* project quota accounting ON */
++#define XFS_OQUOTA_ENFD	0x0010  /* other (grp/prj) quota limits enforced */
++#define XFS_OQUOTA_CHKD	0x0020  /* quotacheck run on other (grp/prj) quotas */
++#define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
++
++/*
++ * Conversion to and from the combined OQUOTA flag (if necessary)
++ * is done only in xfs_sb_qflags_to_disk() and xfs_sb_qflags_from_disk()
++ */
++#define XFS_GQUOTA_ENFD	0x0080  /* group quota limits enforced */
++#define XFS_GQUOTA_CHKD	0x0100  /* quotacheck run on group quotas */
++#define XFS_PQUOTA_ENFD	0x0200  /* project quota limits enforced */
++#define XFS_PQUOTA_CHKD	0x0400  /* quotacheck run on project quotas */
++
++#define XFS_ALL_QUOTA_ACCT	\
++		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
++#define XFS_ALL_QUOTA_ENFD	\
++		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
++#define XFS_ALL_QUOTA_CHKD	\
++		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
++
++#define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
++				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
++				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
++				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
++				 XFS_PQUOTA_CHKD)
++
+ #endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/include/xfs_quota.h b/include/xfs_quota.h
+index 3ac9da5..477093a 100644
+--- a/include/xfs_quota.h
++++ b/include/xfs_quota.h
+@@ -21,18 +21,6 @@
+ struct xfs_trans;
  
  /*
-+ * Transaction Header definitions.
-+ *
-+ * This is the structure written in the log at the head of every transaction. It
-+ * identifies the type and id of the transaction, and contains the number of
-+ * items logged by the transaction so we know how many to expect during
-+ * recovery.
-+ *
-+ * Do not change the below structure without redoing the code in
-+ * xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans().
-+ */
-+typedef struct xfs_trans_header {
-+	uint		th_magic;		/* magic number */
-+	uint		th_type;		/* transaction type */
-+	__int32_t	th_tid;			/* transaction id (unused) */
-+	uint		th_num_items;		/* num items logged by trans */
-+} xfs_trans_header_t;
-+
-+#define	XFS_TRANS_HEADER_MAGIC	0x5452414e	/* TRAN */
-+
-+/*
-+ * Log item types.
-+ */
-+#define	XFS_LI_EFI		0x1236
-+#define	XFS_LI_EFD		0x1237
-+#define	XFS_LI_IUNLINK		0x1238
-+#define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
-+#define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
-+#define	XFS_LI_DQUOT		0x123d
-+#define	XFS_LI_QUOTAOFF		0x123e
-+#define	XFS_LI_ICREATE		0x123f
-+
-+#define XFS_LI_TYPE_DESC \
-+	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-+	{ XFS_LI_EFD,		"XFS_LI_EFD" }, \
-+	{ XFS_LI_IUNLINK,	"XFS_LI_IUNLINK" }, \
-+	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
-+	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
-+	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
-+	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
-+	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
-+
-+/*
-+ * Transaction types.  Used to distinguish types of buffers.
-+ */
-+#define XFS_TRANS_SETATTR_NOT_SIZE	1
-+#define XFS_TRANS_SETATTR_SIZE		2
-+#define XFS_TRANS_INACTIVE		3
-+#define XFS_TRANS_CREATE		4
-+#define XFS_TRANS_CREATE_TRUNC		5
-+#define XFS_TRANS_TRUNCATE_FILE		6
-+#define XFS_TRANS_REMOVE		7
-+#define XFS_TRANS_LINK			8
-+#define XFS_TRANS_RENAME		9
-+#define XFS_TRANS_MKDIR			10
-+#define XFS_TRANS_RMDIR			11
-+#define XFS_TRANS_SYMLINK		12
-+#define XFS_TRANS_SET_DMATTRS		13
-+#define XFS_TRANS_GROWFS		14
-+#define XFS_TRANS_STRAT_WRITE		15
-+#define XFS_TRANS_DIOSTRAT		16
-+/* 17 was XFS_TRANS_WRITE_SYNC */
-+#define	XFS_TRANS_WRITEID		18
-+#define	XFS_TRANS_ADDAFORK		19
-+#define	XFS_TRANS_ATTRINVAL		20
-+#define	XFS_TRANS_ATRUNCATE		21
-+#define	XFS_TRANS_ATTR_SET		22
-+#define	XFS_TRANS_ATTR_RM		23
-+#define	XFS_TRANS_ATTR_FLAG		24
-+#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
-+#define XFS_TRANS_QM_SBCHANGE		26
-+/*
-+ * Dummy entries since we use the transaction type to index into the
-+ * trans_type[] in xlog_recover_print_trans_head()
-+ */
-+#define XFS_TRANS_DUMMY1		27
-+#define XFS_TRANS_DUMMY2		28
-+#define XFS_TRANS_QM_QUOTAOFF		29
-+#define XFS_TRANS_QM_DQALLOC		30
-+#define XFS_TRANS_QM_SETQLIM		31
-+#define XFS_TRANS_QM_DQCLUSTER		32
-+#define XFS_TRANS_QM_QINOCREATE		33
-+#define XFS_TRANS_QM_QUOTAOFF_END	34
-+#define XFS_TRANS_SB_UNIT		35
-+#define XFS_TRANS_FSYNC_TS		36
-+#define	XFS_TRANS_GROWFSRT_ALLOC	37
-+#define	XFS_TRANS_GROWFSRT_ZERO		38
-+#define	XFS_TRANS_GROWFSRT_FREE		39
-+#define	XFS_TRANS_SWAPEXT		40
-+#define	XFS_TRANS_SB_COUNT		41
-+#define	XFS_TRANS_CHECKPOINT		42
-+#define	XFS_TRANS_ICREATE		43
-+#define	XFS_TRANS_TYPE_MAX		43
-+/* new transaction types need to be reflected in xfs_logprint(8) */
-+
-+#define XFS_TRANS_TYPES \
-+	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
-+	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
-+	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
-+	{ XFS_TRANS_CREATE,		"CREATE" }, \
-+	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
-+	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
-+	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
-+	{ XFS_TRANS_LINK,		"LINK" }, \
-+	{ XFS_TRANS_RENAME,		"RENAME" }, \
-+	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
-+	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
-+	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
-+	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
-+	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
-+	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
-+	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
-+	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
-+	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
-+	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
-+	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
-+	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
-+	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
-+	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
-+	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
-+	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
-+	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
-+	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
-+	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
-+	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
-+	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
-+	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
-+	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
-+	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
-+	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
-+	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
-+	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
-+	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
-+	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
-+	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
-+	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
-+	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
-+	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
-+
-+/*
-+ * This structure is used to track log items associated with
-+ * a transaction.  It points to the log item and keeps some
-+ * flags to track the state of the log item.  It also tracks
-+ * the amount of space needed to log the item it describes
-+ * once we get to commit processing (see xfs_trans_commit()).
-+ */
-+struct xfs_log_item_desc {
-+	struct xfs_log_item	*lid_item;
-+	struct list_head	lid_trans;
-+	unsigned char		lid_flags;
-+};
-+
-+#define XFS_LID_DIRTY		0x1
-+
-+/*
-+ * Values for t_flags.
-+ */
-+#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
-+#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
-+#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
-+#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
-+#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
-+#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
-+#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
-+					   count in superblock */
-+
-+/*
-+ * Values for call flags parameter.
-+ */
-+#define	XFS_TRANS_RELEASE_LOG_RES	0x4
-+#define	XFS_TRANS_ABORT			0x8
-+
-+/*
-+ * Field values for xfs_trans_mod_sb.
-+ */
-+#define	XFS_TRANS_SB_ICOUNT		0x00000001
-+#define	XFS_TRANS_SB_IFREE		0x00000002
-+#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
-+#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
-+#define	XFS_TRANS_SB_FREXTENTS		0x00000010
-+#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
-+#define	XFS_TRANS_SB_DBLOCKS		0x00000040
-+#define	XFS_TRANS_SB_AGCOUNT		0x00000080
-+#define	XFS_TRANS_SB_IMAXPCT		0x00000100
-+#define	XFS_TRANS_SB_REXTSIZE		0x00000200
-+#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
-+#define	XFS_TRANS_SB_RBLOCKS		0x00000800
-+#define	XFS_TRANS_SB_REXTENTS		0x00001000
-+#define	XFS_TRANS_SB_REXTSLOG		0x00002000
-+
-+/*
-+ * Here we centralize the specification of XFS meta-data buffer
-+ * reference count values.  This determine how hard the buffer
-+ * cache tries to hold onto the buffer.
-+ */
-+#define	XFS_AGF_REF		4
-+#define	XFS_AGI_REF		4
-+#define	XFS_AGFL_REF		3
-+#define	XFS_INO_BTREE_REF	3
-+#define	XFS_ALLOC_BTREE_REF	2
-+#define	XFS_BMAP_BTREE_REF	2
-+#define	XFS_DIR_BTREE_REF	2
-+#define	XFS_INO_REF		2
-+#define	XFS_ATTR_BTREE_REF	1
-+#define	XFS_DQUOT_REF		1
-+
-+
-+/*
-  * Inode Log Item Format definitions.
-  *
-  * This is the structure used to lay out an inode log item in the
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index 36a0026..de5a8e7 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -18,197 +18,8 @@
- #ifndef	__XFS_TRANS_H__
- #define	__XFS_TRANS_H__
- 
--struct xfs_log_item;
+- * The ondisk form of a dquot structure.
+- */
+-#define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
+-#define XFS_DQUOT_VERSION	(u_int8_t)0x01	/* latest version number */
 -
 -/*
-- * This is the structure written in the log at the head of
-- * every transaction. It identifies the type and id of the
-- * transaction, and contains the number of items logged by
-- * the transaction so we know how many to expect during recovery.
+- * uid_t and gid_t are hard-coded to 32 bits in the inode.
+- * Hence, an 'id' in a dquot is 32 bits..
+- */
+-typedef __uint32_t	xfs_dqid_t;
+-
+-/*
+  * Even though users may not have quota limits occupying all 64-bits,
+  * they may need 64-bit accounting. Hence, 64-bit quota-counters,
+  * and quota-limits. This is a waste in the common case, but hey ...
+@@ -41,53 +29,6 @@ typedef __uint64_t	xfs_qcnt_t;
+ typedef __uint16_t	xfs_qwarncnt_t;
+ 
+ /*
+- * This is the main portion of the on-disk representation of quota
+- * information for a user. This is the q_core of the xfs_dquot_t that
+- * is kept in kernel memory. We pad this with some more expansion room
+- * to construct the on disk structure.
+- */
+-typedef struct	xfs_disk_dquot {
+-	__be16		d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
+-	__u8		d_version;	/* dquot version */
+-	__u8		d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
+-	__be32		d_id;		/* user,project,group id */
+-	__be64		d_blk_hardlimit;/* absolute limit on disk blks */
+-	__be64		d_blk_softlimit;/* preferred limit on disk blks */
+-	__be64		d_ino_hardlimit;/* maximum # allocated inodes */
+-	__be64		d_ino_softlimit;/* preferred inode limit */
+-	__be64		d_bcount;	/* disk blocks owned by the user */
+-	__be64		d_icount;	/* inodes owned by the user */
+-	__be32		d_itimer;	/* zero if within inode limits if not,
+-					   this is when we refuse service */
+-	__be32		d_btimer;	/* similar to above; for disk blocks */
+-	__be16		d_iwarns;	/* warnings issued wrt num inodes */
+-	__be16		d_bwarns;	/* warnings issued wrt disk blocks */
+-	__be32		d_pad0;		/* 64 bit align */
+-	__be64		d_rtb_hardlimit;/* absolute limit on realtime blks */
+-	__be64		d_rtb_softlimit;/* preferred limit on RT disk blks */
+-	__be64		d_rtbcount;	/* realtime blocks owned */
+-	__be32		d_rtbtimer;	/* similar to above; for RT disk blocks */
+-	__be16		d_rtbwarns;	/* warnings issued wrt RT disk blocks */
+-	__be16		d_pad;
+-} xfs_disk_dquot_t;
+-
+-/*
+- * This is what goes on disk. This is separated from the xfs_disk_dquot because
+- * carrying the unnecessary padding would be a waste of memory.
+- */
+-typedef struct xfs_dqblk {
+-	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
+-	char		  dd_fill[4];	/* filling for posterity */
+-
+-	/*
+-	 * These two are only present on filesystems with the CRC bits set.
+-	 */
+-	__be32		  dd_crc;	/* checksum */
+-	__be64		  dd_lsn;	/* last modification in log */
+-	uuid_t		  dd_uuid;	/* location information */
+-} xfs_dqblk_t;
+-
+-/*
+  * flags for q_flags field in the dquot.
+  */
+ #define XFS_DQ_USER		0x0001		/* a user quota */
+@@ -111,81 +52,6 @@ typedef struct xfs_dqblk {
+  */
+ #define XFS_DQUOT_LOGRES(mp)	(sizeof(xfs_disk_dquot_t) * 3)
+ 
+-
+-/*
+- * These are the structures used to lay out dquots and quotaoff
+- * records on the log. Quite similar to those of inodes.
+- */
+-
+-/*
+- * log format struct for dquots.
+- * The first two fields must be the type and size fitting into
+- * 32 bits : log_recovery code assumes that.
+- */
+-typedef struct xfs_dq_logformat {
+-	__uint16_t		qlf_type;      /* dquot log item type */
+-	__uint16_t		qlf_size;      /* size of this item */
+-	xfs_dqid_t		qlf_id;	       /* usr/grp/proj id : 32 bits */
+-	__int64_t		qlf_blkno;     /* blkno of dquot buffer */
+-	__int32_t		qlf_len;       /* len of dquot buffer */
+-	__uint32_t		qlf_boffset;   /* off of dquot in buffer */
+-} xfs_dq_logformat_t;
+-
+-/*
+- * log format struct for QUOTAOFF records.
+- * The first two fields must be the type and size fitting into
+- * 32 bits : log_recovery code assumes that.
+- * We write two LI_QUOTAOFF logitems per quotaoff, the last one keeps a pointer
+- * to the first and ensures that the first logitem is taken out of the AIL
+- * only when the last one is securely committed.
+- */
+-typedef struct xfs_qoff_logformat {
+-	unsigned short		qf_type;	/* quotaoff log item type */
+-	unsigned short		qf_size;	/* size of this item */
+-	unsigned int		qf_flags;	/* USR and/or GRP */
+-	char			qf_pad[12];	/* padding for future */
+-} xfs_qoff_logformat_t;
+-
+-
+-/*
+- * Disk quotas status in m_qflags, and also sb_qflags. 16 bits.
+- */
+-#define XFS_UQUOTA_ACCT	0x0001  /* user quota accounting ON */
+-#define XFS_UQUOTA_ENFD	0x0002  /* user quota limits enforced */
+-#define XFS_UQUOTA_CHKD	0x0004  /* quotacheck run on usr quotas */
+-#define XFS_PQUOTA_ACCT	0x0008  /* project quota accounting ON */
+-#define XFS_OQUOTA_ENFD	0x0010  /* other (grp/prj) quota limits enforced */
+-#define XFS_OQUOTA_CHKD	0x0020  /* quotacheck run on other (grp/prj) quotas */
+-#define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
+-
+-/*
+- * Start differentiating group quota and project quota in-core
+- * using distinct flags, instead of using the combined OQUOTA flags.
 - *
-- * Do not change the below structure without redoing the code in
-- * xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans().
+- * Conversion to and from the combined OQUOTA flag (if necessary)
+- * is done only in xfs_sb_{to,from}_disk()
 - */
--typedef struct xfs_trans_header {
--	uint		th_magic;		/* magic number */
--	uint		th_type;		/* transaction type */
--	__int32_t	th_tid;			/* transaction id (unused) */
--	uint		th_num_items;		/* num items logged by trans */
--} xfs_trans_header_t;
+-#define XFS_GQUOTA_ENFD 0x0080  /* group quota limits enforced */
+-#define XFS_GQUOTA_CHKD 0x0100  /* quotacheck run on group quotas */
+-#define XFS_PQUOTA_ENFD 0x0200  /* project quota limits enforced */
+-#define XFS_PQUOTA_CHKD 0x0400  /* quotacheck run on project quotas */
 -
--#define	XFS_TRANS_HEADER_MAGIC	0x5452414e	/* TRAN */
+-#define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
+-				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
+-				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
+-				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
+-				 XFS_PQUOTA_CHKD)
 -
 -/*
-- * Log item types.
+- * Quota Accounting/Enforcement flags
 - */
--#define	XFS_LI_EFI		0x1236
--#define	XFS_LI_EFD		0x1237
--#define	XFS_LI_IUNLINK		0x1238
--#define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
--#define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
--#define	XFS_LI_DQUOT		0x123d
--#define	XFS_LI_QUOTAOFF		0x123e
--#define	XFS_LI_ICREATE		0x123f
+-#define XFS_ALL_QUOTA_ACCT	\
+-		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
+-#define XFS_ALL_QUOTA_ENFD	\
+-		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
+-#define XFS_ALL_QUOTA_CHKD	\
+-		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
 -
--#define XFS_LI_TYPE_DESC \
--	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
--	{ XFS_LI_EFD,		"XFS_LI_EFD" }, \
--	{ XFS_LI_IUNLINK,	"XFS_LI_IUNLINK" }, \
--	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
--	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
--	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
--	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
--	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
--
--/*
-- * Transaction types.  Used to distinguish types of buffers.
-- */
--#define XFS_TRANS_SETATTR_NOT_SIZE	1
--#define XFS_TRANS_SETATTR_SIZE		2
--#define XFS_TRANS_INACTIVE		3
--#define XFS_TRANS_CREATE		4
--#define XFS_TRANS_CREATE_TRUNC		5
--#define XFS_TRANS_TRUNCATE_FILE		6
--#define XFS_TRANS_REMOVE		7
--#define XFS_TRANS_LINK			8
--#define XFS_TRANS_RENAME		9
--#define XFS_TRANS_MKDIR			10
--#define XFS_TRANS_RMDIR			11
--#define XFS_TRANS_SYMLINK		12
--#define XFS_TRANS_SET_DMATTRS		13
--#define XFS_TRANS_GROWFS		14
--#define XFS_TRANS_STRAT_WRITE		15
--#define XFS_TRANS_DIOSTRAT		16
--/* 17 was XFS_TRANS_WRITE_SYNC */
--#define	XFS_TRANS_WRITEID		18
--#define	XFS_TRANS_ADDAFORK		19
--#define	XFS_TRANS_ATTRINVAL		20
--#define	XFS_TRANS_ATRUNCATE		21
--#define	XFS_TRANS_ATTR_SET		22
--#define	XFS_TRANS_ATTR_RM		23
--#define	XFS_TRANS_ATTR_FLAG		24
--#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
--#define XFS_TRANS_QM_SBCHANGE		26
--/*
-- * Dummy entries since we use the transaction type to index into the
-- * trans_type[] in xlog_recover_print_trans_head()
-- */
--#define XFS_TRANS_DUMMY1		27
--#define XFS_TRANS_DUMMY2		28
--#define XFS_TRANS_QM_QUOTAOFF		29
--#define XFS_TRANS_QM_DQALLOC		30
--#define XFS_TRANS_QM_SETQLIM		31
--#define XFS_TRANS_QM_DQCLUSTER		32
--#define XFS_TRANS_QM_QINOCREATE		33
--#define XFS_TRANS_QM_QUOTAOFF_END	34
--#define XFS_TRANS_SB_UNIT		35
--#define XFS_TRANS_FSYNC_TS		36
--#define	XFS_TRANS_GROWFSRT_ALLOC	37
--#define	XFS_TRANS_GROWFSRT_ZERO		38
--#define	XFS_TRANS_GROWFSRT_FREE		39
--#define	XFS_TRANS_SWAPEXT		40
--#define	XFS_TRANS_SB_COUNT		41
--#define	XFS_TRANS_CHECKPOINT		42
--#define	XFS_TRANS_ICREATE		43
--#define	XFS_TRANS_TYPE_MAX		43
--/* new transaction types need to be reflected in xfs_logprint(8) */
--
--#define XFS_TRANS_TYPES \
--	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
--	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
--	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
--	{ XFS_TRANS_CREATE,		"CREATE" }, \
--	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
--	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
--	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
--	{ XFS_TRANS_LINK,		"LINK" }, \
--	{ XFS_TRANS_RENAME,		"RENAME" }, \
--	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
--	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
--	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
--	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
--	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
--	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
--	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
--	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
--	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
--	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
--	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
--	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
--	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
--	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
--	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
--	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
--	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
--	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
--	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
--	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
--	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
--	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
--	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
--	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
--	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
--	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
--	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
--	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
--	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
--	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
--	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
--	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
--	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
--
--/*
-- * This structure is used to track log items associated with
-- * a transaction.  It points to the log item and keeps some
-- * flags to track the state of the log item.  It also tracks
-- * the amount of space needed to log the item it describes
-- * once we get to commit processing (see xfs_trans_commit()).
-- */
--struct xfs_log_item_desc {
--	struct xfs_log_item	*lid_item;
--	struct list_head	lid_trans;
--	unsigned char		lid_flags;
--};
--
--#define XFS_LID_DIRTY		0x1
--
--#define	XFS_TRANS_MAGIC		0x5452414E	/* 'TRAN' */
--/*
-- * Values for t_flags.
-- */
--#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
--#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
--#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
--#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
--#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
--#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
--#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
--					   count in superblock */
--
--/*
-- * Values for call flags parameter.
-- */
--#define	XFS_TRANS_RELEASE_LOG_RES	0x4
--#define	XFS_TRANS_ABORT			0x8
--
--/*
-- * Field values for xfs_trans_mod_sb.
-- */
--#define	XFS_TRANS_SB_ICOUNT		0x00000001
--#define	XFS_TRANS_SB_IFREE		0x00000002
--#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
--#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
--#define	XFS_TRANS_SB_FREXTENTS		0x00000010
--#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
--#define	XFS_TRANS_SB_DBLOCKS		0x00000040
--#define	XFS_TRANS_SB_AGCOUNT		0x00000080
--#define	XFS_TRANS_SB_IMAXPCT		0x00000100
--#define	XFS_TRANS_SB_REXTSIZE		0x00000200
--#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
--#define	XFS_TRANS_SB_RBLOCKS		0x00000800
--#define	XFS_TRANS_SB_REXTENTS		0x00001000
--#define	XFS_TRANS_SB_REXTSLOG		0x00002000
+ #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+ #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
+ #define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
+diff --git a/include/xfs_types.h b/include/xfs_types.h
+index 543fdf0..b144a8f 100644
+--- a/include/xfs_types.h
++++ b/include/xfs_types.h
+@@ -178,4 +178,10 @@ struct xfs_name {
+ 	int			len;
+ };
  
-+struct xfs_log_item;
- 
- /*
-  * Per-extent log reservation for the allocation btree changes
-@@ -283,22 +94,6 @@ struct xfs_log_item_desc {
- #define	XFS_ATTRSET_LOG_COUNT		3
- #define	XFS_ATTRRM_LOG_COUNT		3
- 
--/*
-- * Here we centralize the specification of XFS meta-data buffer
-- * reference count values.  This determine how hard the buffer
-- * cache tries to hold onto the buffer.
-- */
--#define	XFS_AGF_REF		4
--#define	XFS_AGI_REF		4
--#define	XFS_AGFL_REF		3
--#define	XFS_INO_BTREE_REF	3
--#define	XFS_ALLOC_BTREE_REF	2
--#define	XFS_BMAP_BTREE_REF	2
--#define	XFS_DIR_BTREE_REF	2
--#define	XFS_INO_REF		2
--#define	XFS_ATTR_BTREE_REF	1
--#define	XFS_DQUOT_REF		1
--
- #ifdef __KERNEL__
- 
- struct xfs_buf;
++/*
++ * uid_t and gid_t are hard-coded to 32 bits in the inode.
++ * Hence, an 'id' in a dquot is 32 bits..
++ */
++typedef __uint32_t	xfs_dqid_t;
++
+ #endif	/* __XFS_TYPES_H__ */
 -- 
 1.8.3.2
 
