@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EF23D7F58
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:06:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D0164304039
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:09 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D64677F53
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:06:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C63058F8033
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:10 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	uRjjt7ZhGBGiph1K for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:06:08 -0700 (PDT)
+	rcruMhDa4VBdh4ea for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:06:09 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cq-Ia
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007co-Hw
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rW-Hu
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rR-HL
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/55] libxfs: ensure btree root split sets blkno correctly
-Date: Thu,  5 Sep 2013 08:05:09 +1000
-Message-Id: <1378332359-14737-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/55] libxfs: fix directory/attribute format issues
+Date: Thu,  5 Sep 2013 08:05:08 +1000
+Message-Id: <1378332359-14737-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,43 +39,57 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For CRC enabled filesystems, the BMBT is rooted in an inode, so it
-passes through a difference code path on root splits to the
-freespace and inode btrees. The inode based btree root has a
-corruption problem on split - it's the same problem we saw in the
-directory/attr code where headers are memcpy()d from one block to
-another without updating the self describing metadata.
-
-Simple fix - when copying the header out of the root block, make
-sure the block number is updated correctly.
+directory data headers and attr leaf headers need padding for 32 bit
+systems to correctly align the data sections on 64 bit boundaries.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_btree.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ include/xfs_attr_leaf.h   | 1 +
+ include/xfs_dir2_format.h | 5 +++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index b11131c..3ac3330 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -2487,7 +2487,17 @@ xfs_btree_new_iroot(
- 	if (error)
- 		goto error0;
+diff --git a/include/xfs_attr_leaf.h b/include/xfs_attr_leaf.h
+index b3e93bb..c102213 100644
+--- a/include/xfs_attr_leaf.h
++++ b/include/xfs_attr_leaf.h
+@@ -128,6 +128,7 @@ struct xfs_attr3_leaf_hdr {
+ 	__u8			holes;
+ 	__u8			pad1;
+ 	struct xfs_attr_leaf_map freemap[XFS_ATTR_LEAF_MAPSIZE];
++	__be32			pad2;		/* 64 bit alignment */
+ };
  
-+	/*
-+	 * we can't just memcpy() the root in for CRC enabled btree blocks.
-+	 * In that case have to also ensure the blkno remains correct
-+	 */
- 	memcpy(cblock, block, xfs_btree_block_len(cur));
-+	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS) {
-+		if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+			cblock->bb_u.l.bb_blkno = cpu_to_be64(cbp->b_bn);
-+		else
-+			cblock->bb_u.s.bb_blkno = cpu_to_be64(cbp->b_bn);
-+	}
+ #define XFS_ATTR3_LEAF_CRC_OFF	(offsetof(struct xfs_attr3_leaf_hdr, info.crc))
+diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
+index 8c16bb0..4126e86 100644
+--- a/include/xfs_dir2_format.h
++++ b/include/xfs_dir2_format.h
+@@ -260,6 +260,7 @@ struct xfs_dir3_blk_hdr {
+ struct xfs_dir3_data_hdr {
+ 	struct xfs_dir3_blk_hdr	hdr;
+ 	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
++	__be32			pad;	/* 64 bit alignment */
+ };
  
- 	be16_add_cpu(&block->bb_level, 1);
- 	xfs_btree_set_numrecs(block, 1);
+ #define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
+@@ -471,7 +472,7 @@ struct xfs_dir3_leaf_hdr {
+ 	struct xfs_da3_blkinfo	info;		/* header for da routines */
+ 	__be16			count;		/* count of entries */
+ 	__be16			stale;		/* count of stale entries */
+-	__be32			pad;
++	__be32			pad;		/* 64 bit alignment */
+ };
+ 
+ struct xfs_dir3_icleaf_hdr {
+@@ -712,7 +713,7 @@ struct xfs_dir3_free_hdr {
+ 	__be32			firstdb;	/* db of first entry */
+ 	__be32			nvalid;		/* count of valid entries */
+ 	__be32			nused;		/* count of used entries */
+-	__be32			pad;		/* 64 bit alignment. */
++	__be32			pad;		/* 64 bit alignment */
+ };
+ 
+ struct xfs_dir3_free {
 -- 
 1.8.3.2
 
