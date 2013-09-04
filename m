@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 17E8829E61
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 03E967F53
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9D694AC003
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E871C304039
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:37 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	RrxiAAOLOE52Z2EE for <xfs@oss.sgi.com>;
+	IQgMSxv6qGsbqs0a for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:36 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007dG-AN
+	(envelope-from <dave@fromorbit.com>) id 1VHLDA-0007e0-6f
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003uI-8n
+	(envelope-from <dave@disappointment.disaster>) id 1VHLDA-0003u1-66
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 39/55] xfs: move kernel specific type definitions to xfs.h
-Date: Thu,  5 Sep 2013 08:05:43 +1000
-Message-Id: <1378332359-14737-40-git-send-email-david@fromorbit.com>
+Subject: [PATCH 36/55] xfs: kill __KERNEL__ check for debug code in allocation
+	code
+Date: Thu,  5 Sep 2013 08:05:40 +1000
+Message-Id: <1378332359-14737-37-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,63 +40,41 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_types.h is shared with userspace, so having kernel specific
-types defined in it is problematic. Move all the kernel specific
-defines to xfs_linux.h so we can remove the __KERNEL__ guards from
-xfs_types.h
+Userspace running debug builds is relatively rare, so there's need
+to special case the allocation algorithm code coverage debug switch.
+As it is, userspace defines random numbers to 0, so  invert the
+logic of the switch so it is effectively a no-op in userspace.
+This kills another couple of __KERNEL__ users.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_types.h | 36 ------------------------------------
- 1 file changed, 36 deletions(-)
+ libxfs/xfs_alloc.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/xfs_types.h b/include/xfs_types.h
-index 6ed6b26..ce44b18 100644
---- a/include/xfs_types.h
-+++ b/include/xfs_types.h
-@@ -18,42 +18,6 @@
- #ifndef __XFS_TYPES_H__
- #define	__XFS_TYPES_H__
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 757b43d..e4fb1ad 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -856,7 +856,7 @@ xfs_alloc_ag_vextent_near(
+ 	xfs_agblock_t	ltnew;		/* useful start bno of left side */
+ 	xfs_extlen_t	rlen;		/* length of returned extent */
+ 	int		forced = 0;
+-#if defined(DEBUG) && defined(__KERNEL__)
++#ifdef DEBUG
+ 	/*
+ 	 * Randomly don't execute the first algorithm.
+ 	 */
+@@ -916,8 +916,8 @@ restart:
+ 		xfs_extlen_t	blen=0;
+ 		xfs_agblock_t	bnew=0;
  
--#ifdef __KERNEL__
--
--/*
-- * Additional type declarations for XFS
-- */
--typedef signed char		__int8_t;
--typedef unsigned char		__uint8_t;
--typedef signed short int	__int16_t;
--typedef unsigned short int	__uint16_t;
--typedef signed int		__int32_t;
--typedef unsigned int		__uint32_t;
--typedef signed long long int	__int64_t;
--typedef unsigned long long int	__uint64_t;
--
--typedef __uint32_t		inst_t;		/* an instruction */
--
--typedef __s64			xfs_off_t;	/* <file offset> type */
--typedef unsigned long long	xfs_ino_t;	/* <inode> type */
--typedef __s64			xfs_daddr_t;	/* <disk address> type */
--typedef char *			xfs_caddr_t;	/* <core address> type */
--typedef __u32			xfs_dev_t;
--typedef __u32			xfs_nlink_t;
--
--/* __psint_t is the same size as a pointer */
--#if (BITS_PER_LONG == 32)
--typedef __int32_t __psint_t;
--typedef __uint32_t __psunsigned_t;
--#elif (BITS_PER_LONG == 64)
--typedef __int64_t __psint_t;
--typedef __uint64_t __psunsigned_t;
--#else
--#error BITS_PER_LONG must be 32 or 64
--#endif
--
--#endif	/* __KERNEL__ */
--
- typedef __uint32_t	prid_t;		/* project ID */
- 
- typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+-#if defined(DEBUG) && defined(__KERNEL__)
+-		if (!dofirst)
++#ifdef DEBUG
++		if (dofirst)
+ 			break;
+ #endif
+ 		/*
 -- 
 1.8.3.2
 
