@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D19507F58
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 09:06:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B08D130405F
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 07:06:40 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 656E07F58
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 09:57:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 025A2AC002
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 07:57:46 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 0XgorvByXay9yuSa for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 07:06:39 -0700 (PDT)
-Date: Wed, 4 Sep 2013 16:06:35 +0200
+	with ESMTP id v7XIHs2Se6bGuVrd for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 07:57:44 -0700 (PDT)
+Date: Wed, 4 Sep 2013 16:57:40 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 0/5] Rework mtime and ctime updates on mmaped writes
-Message-ID: <20130904140635.GC3996@quack.suse.cz>
+Subject: Re: [PATCH v4 3/7] mm: Allow filesystems to defer cmtime updates
+Message-ID: <20130904145740.GE3996@quack.suse.cz>
 References: <cover.1377193658.git.luto@amacapital.net>
+	<e1620c8e4909a65e270c8e9590e307c22fd96a44.1377193658.git.luto@amacapital.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <cover.1377193658.git.luto@amacapital.net>
+In-Reply-To: <e1620c8e4909a65e270c8e9590e307c22fd96a44.1377193658.git.luto@amacapital.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,114 +32,112 @@ Sender: xfs-bounces@oss.sgi.com
 To: Andy Lutomirski <luto@amacapital.net>
 Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Tim Chen <tim.c.chen@linux.intel.com>
 
-On Thu 22-08-13 17:03:16, Andy Lutomirski wrote:
-> Writes via mmap currently update mtime and ctime in ->page_mkwrite.
-> This hurts both throughput and latency.  In workloads that dirty a
-> large number of mmapped pages, ->page_mkwrite can be hot and
-> file_update_time is slow and scales poorly.  Updating timestamps can
-> also sleep, which hurts latency for real-time workloads.
+On Thu 22-08-13 17:03:19, Andy Lutomirski wrote:
+> Filesystems that defer cmtime updates should update cmtime when any
+> of these events happen after a write via a mapping:
 > 
-> This is also a correctness issue.  SuS says:
+>  - The mapping is written back to disk.  This happens from all kinds
+>    of places, most of which eventually call ->writepages.  (The
+>    exceptions are vmscan and migration.)
 > 
->     The st_ctime and st_mtime fields of a file that is mapped with
->     MAP_SHARED and PROT_WRITE, will be marked for update at some point
->     in the interval between a write reference to the mapped region and
->     the next call to msync() with MS_ASYNC or MS_SYNC for that portion
->     of the file by any process. If there is no such call, these fields
->     may be marked for update at any time after a write reference if
->     the underlying file is modified as a result.
+>  - munmap is called or the mapping is removed when the process exits
 > 
-> Currently, if the same mmapped page is written twice, the timestamp
-> may not be update at all after the second write, whereas SuS (and
-> anything using timestamps to invalidate caches, backup data, etc.)
-> would expect the timestamp to eventually be updated.
+>  - msync(MS_ASYNC) is called.  Linux currently does nothing for
+>    msync(MS_ASYNC), but POSIX says that cmtime should be updated some
+>    time between an mmaped write and the subsequent msync call.
+>    MS_SYNC calls ->writepages, but MS_ASYNC needs special handling.
 > 
-> This patchset attempts to fix both issues at once.  It adds a new
-> address_space flag AS_CMTIME that is set atomically whenever the
-> system transfers a pte dirty bit to a struct page backed by the
-> address_space.  This can happen with various locks held and when low
-> on memory.
+> Filesystems are responsible for checking for pending deferred cmtime
+> updates in .writepages (a helper is provided for this purpose) and
+> for doing the actual update in .update_cmtime_deferred.
 > 
-> Later on, a_ops.update_cmtime_deferred is called to tell the FS to
-> update cmtime due to a previous mmapped write.
+> These changes have no effect by themselves; filesystems must opt in
+> by implementing .update_cmtime_deferred and removing any
+> file_update_time call in .page_mkwrite.
 > 
-> The core changes have no effect on unmodified filesystems.  To opt in,
-> a filesystem should implement .update_cmtime_deferred (most likely by
-> using generic_update_cmtime_deferred) and must call either
-> mapping_flush_cmtime or mapping_test_clear_cmtime in .writepages.
-> Filesystems should avoid updating timestamps in ->page_mkwrite.
+> This patch does not implement the MS_ASYNC case; that's in the next
+> patch.
 > 
-> The reason that this is not completely automatic is that filesystems
-> without backing stores do not really fit in to this model.
-> Eventually, someone can add support.
-> 
-> I've converted ext4, xfs, and btrfs.  Converting most other
-> filesystems should be straightforward.
-> 
-> I wrote an xfstest for this.  ext4, xfs, and btrfs pass.  It's here:
-> 
-> https://github.com/amluto/xfstests/commit/5fbb72ac799cc44a9c4c6d3919f00a479202c899
-> 
-> This series is pullable from:
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/log/?h=mmap_mtime/patch_v4
-  As a general note, I think you should CC linux-mm@kvack.org on this
-series so that mm guys are more likely to notice it. Since the patches
-touch mm you should probably get some opinions from them...
+> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+...
+> +/**
+> + * generic_update_cmtime_deferred - update cmtime after an mmapped write
+> + * @mapping: The mapping
+> + *
+> + * This library function implements .update_cmtime_deferred.  It is unlikely
+> + * that any filesystem will want to do anything here except update the time
+> + * (using this helper) or nothing at all (by leaving .update_cmtime_deferred
+> + * NULL).
+> + */
+> +void generic_update_cmtime_deferred(struct address_space *mapping)
+> +{
+> +	struct blk_plug plug;
+> +	blk_start_plug(&plug);
+> +	inode_update_time_writable(mapping->host);
+> +	blk_finish_plug(&plug);
+> +}
+> +EXPORT_SYMBOL(generic_update_cmtime_deferred);
+> +
+  You can remove the pluggin here. Inode update will likely result in a
+single write so there's no point.
+
+> @@ -1970,6 +1988,39 @@ int write_one_page(struct page *page, int wait)
+>  }
+>  EXPORT_SYMBOL(write_one_page);
+>  
+> +void mapping_flush_cmtime(struct address_space *mapping)
+> +{
+> +	if (mapping_test_clear_cmtime(mapping) &&
+> +	    mapping->a_ops->update_cmtime_deferred)
+> +		mapping->a_ops->update_cmtime_deferred(mapping);
+> +}
+> +EXPORT_SYMBOL(mapping_flush_cmtime);
+  Hum, is there a reason for update_cmtime_deferred() operation? I can
+hardly imagine anyone will want to do anything else than what
+inode_update_time_writable() does so why bother? You mention tmpfs & co.
+don't fit into your scheme well with which I agree so let's just keep
+file_update_time() in their page_mkwrite() operation. But I don't see a
+real need for avoiding the deferred cmtime logic...
+
+> +
+> +void mapping_flush_cmtime_nowb(struct address_space *mapping)
+> +{
+> +	/*
+> +	 * We get called from munmap and msync.  Both calls can race
+> +	 * with fs freezing.  If the fs is frozen after
+> +	 * mapping_test_clear_cmtime but before the time update, then
+> +	 * sync_filesystem will miss the cmtime update (because we
+> +	 * just cleared it) and we don't be able to write (because the
+> +	 * fs is frozen).  On the other hand, we can't just return if
+> +	 * we're in the SB_FREEZE_PAGEFAULT state because our caller
+> +	 * expects the timestamp to be synchronously updated.  So we
+> +	 * get write access without blocking, at the SB_FREEZE_FS
+> +	 * level.  If the fs is already fully frozen, then we already
+> +	 * know we have nothing to do.
+> +	 */
+> +
+> +	if (!mapping_test_cmtime(mapping))
+> +		return;  /* Optimization: nothing to do. */
+> +
+> +	if (__sb_start_write(mapping->host->i_sb, SB_FREEZE_FS, false)) {
+> +		mapping_flush_cmtime(mapping);
+> +		__sb_end_write(mapping->host->i_sb, SB_FREEZE_FS);
+> +	}
+> +}
+  This is wrong because SB_FREEZE_FS level is targetted for filesystem
+internal use. Also it is racy. mapping_flush_cmtime() ends up calling
+mark_inode_dirty() and filesystems such as ext4 or xfs will start a
+transaction to store inode in the journal. This gets freeze protection at
+SB_FREEZE_FS level again. If freeze_super() sets s_writers.frozen to
+SB_FREEZE_FS before this second protection, things will deadlock.
+
+Since the callers of this function hold mmap_sem, using SB_FREEZE_PAGEFAULT
+protection would be appropriate. Also since there are just two places that
+need the freeze protection I'd be inclined to open code the protection in
+the two places rather than hiding it in a special function.
 
 								Honza
-> 
-> Changes from v3:
->  - The new address space op is now called update_cmtime_deferred.
->    Callers take care of protection from fs freezing and checking
->    AS_CMTIME.  I fixed a deadlock in the freezer interaction.
->  - Block plugs should be handled better.
->  - Fixed an infinite loop in msync(MS_ASYNC).
->  - Converted xfs and btrfs.
->  - Misc minor cleanups.
->  - Fixed a corner case: reclaim or migration could have cleaned all
->    pages without updating cmtime.
-> 
-> Changes from v2:
->  - The core code now interacts with filesystems only through
->    address_space ops, so there should be fewer layering issues.
->  - MS_ASYNC is handled correctly.
-> 
-> Changes from v1:
->  - inode_update_time_writable now locks against the fs freezer.
->  - Minor cleanups.
->  - Major changelog improvements.
-> 
-> Andy Lutomirski (7):
->   mm: Track mappings that have been written via ptes
->   fs: Add inode_update_time_writable
->   mm: Allow filesystems to defer cmtime updates
->   mm: Scan for dirty ptes and update cmtime on MS_ASYNC
->   ext4: Defer mmap cmtime updates
->   btrfs: Defer mmap cmtime updates
->   xfs: Defer mmap cmtime updates
-> 
->  fs/btrfs/extent_io.c      |  1 +
->  fs/btrfs/inode.c          | 32 +++++++++---------
->  fs/buffer.c               |  7 ----
->  fs/ext4/inode.c           | 11 +++++--
->  fs/inode.c                | 64 +++++++++++++++++++++++++++---------
->  fs/xfs/xfs_aops.c         |  1 +
->  include/linux/fs.h        |  9 +++++
->  include/linux/pagemap.h   | 22 +++++++++++++
->  include/linux/writeback.h |  1 +
->  mm/memory.c               |  7 +++-
->  mm/migrate.c              |  2 ++
->  mm/mmap.c                 |  6 +++-
->  mm/msync.c                | 84 ++++++++++++++++++++++++++++++++++++++++-------
->  mm/page-writeback.c       | 53 +++++++++++++++++++++++++++++-
->  mm/rmap.c                 | 27 +++++++++++++--
->  mm/vmscan.c               |  1 +
->  16 files changed, 272 insertions(+), 56 deletions(-)
-> 
-> -- 
-> 1.8.3.1
-> 
+
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
