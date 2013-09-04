@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AC6E729DFC
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D5618F8033
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:26 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4979F29E02
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 39C708F8033
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:27 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	I2BUvg6n9CiXnBaG for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:24 -0700 (PDT)
+	XbpSjVsC4DWBLEs6 for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:25 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007dR-S8
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cz-Lt
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003se-RG
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rv-Ks
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/55] xfs: split out inode log item format definition
-Date: Thu,  5 Sep 2013 08:05:23 +1000
-Message-Id: <1378332359-14737-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/55] libxfs: sync dir2 kernel differences
+Date: Thu,  5 Sep 2013 08:05:14 +1000
+Message-Id: <1378332359-14737-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,304 +39,231 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The EFI/EFD item format definitions are shared with userspace. Split
-the out of header files that contain kernel only defintions to make
-it simple to shared them.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile           |   3 +-
- include/libxlog.h          |   1 -
- include/xfs_extfree_item.h | 161 ---------------------------------------------
- include/xfs_log_format.h   |  83 +++++++++++++++++++++++
- 4 files changed, 85 insertions(+), 163 deletions(-)
- delete mode 100644 include/xfs_extfree_item.h
+ libxfs/xfs_dir2.c      | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_dir2_data.c | 20 ++++++++++----------
+ libxfs/xfs_dir2_leaf.c |  4 ++--
+ libxfs/xfs_dir2_node.c | 26 ++++++++++++--------------
+ 4 files changed, 69 insertions(+), 26 deletions(-)
 
-diff --git a/include/Makefile b/include/Makefile
-index f5c50b7..ad2ac46 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -27,7 +27,8 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_cksum.h \
- 	xfs_da_btree.h \
- 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
--	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
-+	xfs_ialloc.h \
-+	xfs_ialloc_btree.h \
- 	xfs_icreate_item.h \
- 	xfs_inode.h \
- 	xfs_inum.h \
-diff --git a/include/libxlog.h b/include/libxlog.h
-index 08f5dbb..ee23212 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -48,7 +48,6 @@ struct xlog {
- };
- 
- #include <xfs/xfs_log_recover.h>
--#include <xfs/xfs_extfree_item.h>
- #include <xfs/xfs_icreate_item.h>
- 
- /*
-diff --git a/include/xfs_extfree_item.h b/include/xfs_extfree_item.h
-deleted file mode 100644
-index 375f68e..0000000
---- a/include/xfs_extfree_item.h
-+++ /dev/null
-@@ -1,161 +0,0 @@
--/*
-- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef	__XFS_EXTFREE_ITEM_H__
--#define	__XFS_EXTFREE_ITEM_H__
--
--struct xfs_mount;
--struct kmem_zone;
--
--typedef struct xfs_extent {
--	xfs_dfsbno_t	ext_start;
--	xfs_extlen_t	ext_len;
--} xfs_extent_t;
--
--/*
-- * Since an xfs_extent_t has types (start:64, len: 32)
-- * there are different alignments on 32 bit and 64 bit kernels.
-- * So we provide the different variants for use by a
-- * conversion routine.
-- */
--
--typedef struct xfs_extent_32 {
--	__uint64_t	ext_start;
--	__uint32_t	ext_len;
--} __attribute__((packed)) xfs_extent_32_t;
--
--typedef struct xfs_extent_64 {
--	__uint64_t	ext_start;
--	__uint32_t	ext_len;
--	__uint32_t	ext_pad;
--} xfs_extent_64_t;
--
--/*
-- * This is the structure used to lay out an efi log item in the
-- * log.  The efi_extents field is a variable size array whose
-- * size is given by efi_nextents.
-- */
--typedef struct xfs_efi_log_format {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_t;
--
--typedef struct xfs_efi_log_format_32 {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
--} __attribute__((packed)) xfs_efi_log_format_32_t;
--
--typedef struct xfs_efi_log_format_64 {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_64_t;
--
--/*
-- * This is the structure used to lay out an efd log item in the
-- * log.  The efd_extents array is a variable size array whose
-- * size is given by efd_nextents;
-- */
--typedef struct xfs_efd_log_format {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_t;
--
--typedef struct xfs_efd_log_format_32 {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
--} __attribute__((packed)) xfs_efd_log_format_32_t;
--
--typedef struct xfs_efd_log_format_64 {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_64_t;
--
--
--#ifdef __KERNEL__
--
--/*
-- * Max number of extents in fast allocation path.
-- */
--#define	XFS_EFI_MAX_FAST_EXTENTS	16
--
--/*
-- * Define EFI flag bits. Manipulated by set/clear/test_bit operators.
-- */
--#define	XFS_EFI_RECOVERED	1
--#define	XFS_EFI_COMMITTED	2
--
--/*
-- * This is the "extent free intention" log item.  It is used
-- * to log the fact that some extents need to be free.  It is
-- * used in conjunction with the "extent free done" log item
-- * described below.
-- */
--typedef struct xfs_efi_log_item {
--	xfs_log_item_t		efi_item;
--	atomic_t		efi_next_extent;
--	unsigned long		efi_flags;	/* misc flags */
--	xfs_efi_log_format_t	efi_format;
--} xfs_efi_log_item_t;
--
--/*
-- * This is the "extent free done" log item.  It is used to log
-- * the fact that some extents earlier mentioned in an efi item
-- * have been freed.
-- */
--typedef struct xfs_efd_log_item {
--	xfs_log_item_t		efd_item;
--	xfs_efi_log_item_t	*efd_efip;
--	uint			efd_next_extent;
--	xfs_efd_log_format_t	efd_format;
--} xfs_efd_log_item_t;
--
--/*
-- * Max number of extents in fast allocation path.
-- */
--#define	XFS_EFD_MAX_FAST_EXTENTS	16
--
--extern struct kmem_zone	*xfs_efi_zone;
--extern struct kmem_zone	*xfs_efd_zone;
--
--xfs_efi_log_item_t	*xfs_efi_init(struct xfs_mount *, uint);
--xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
--				      uint);
--int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
--					    xfs_efi_log_format_t *dst_efi_fmt);
--void			xfs_efi_item_free(xfs_efi_log_item_t *);
--
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_EXTFREE_ITEM_H__ */
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-index 77a6024..d1e93d3 100644
---- a/include/xfs_log_format.h
-+++ b/include/xfs_log_format.h
-@@ -461,4 +461,87 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
- 	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 6a4027f..830fe3e 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -392,6 +392,51 @@ xfs_dir_replace(
  }
  
-+/*
-+ * EFI/EFD log format definitions
+ /*
++ * See if this entry can be added to the directory without allocating space.
++ * First checks that the caller couldn't reserve enough space (resblks = 0).
 + */
-+typedef struct xfs_extent {
-+	xfs_dfsbno_t	ext_start;
-+	xfs_extlen_t	ext_len;
-+} xfs_extent_t;
++int
++xfs_dir_canenter(
++	xfs_trans_t	*tp,
++	xfs_inode_t	*dp,
++	struct xfs_name	*name,		/* name of entry to add */
++	uint		resblks)
++{
++	xfs_da_args_t	args;
++	int		rval;
++	int		v;		/* type-checking value */
 +
-+/*
-+ * Since an xfs_extent_t has types (start:64, len: 32)
-+ * there are different alignments on 32 bit and 64 bit kernels.
-+ * So we provide the different variants for use by a
-+ * conversion routine.
-+ */
-+typedef struct xfs_extent_32 {
-+	__uint64_t	ext_start;
-+	__uint32_t	ext_len;
-+} __attribute__((packed)) xfs_extent_32_t;
++	if (resblks)
++		return 0;
 +
-+typedef struct xfs_extent_64 {
-+	__uint64_t	ext_start;
-+	__uint32_t	ext_len;
-+	__uint32_t	ext_pad;
-+} xfs_extent_64_t;
++	ASSERT(S_ISDIR(dp->i_d.di_mode));
 +
-+/*
-+ * This is the structure used to lay out an efi log item in the
-+ * log.  The efi_extents field is a variable size array whose
-+ * size is given by efi_nextents.
-+ */
-+typedef struct xfs_efi_log_format {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_t		efi_extents[1];	/* array of extents to free */
-+} xfs_efi_log_format_t;
++	memset(&args, 0, sizeof(xfs_da_args_t));
++	args.name = name->name;
++	args.namelen = name->len;
++	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
++	args.dp = dp;
++	args.whichfork = XFS_DATA_FORK;
++	args.trans = tp;
++	args.op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
++							XFS_DA_OP_OKNOENT;
 +
-+typedef struct xfs_efi_log_format_32 {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
-+} __attribute__((packed)) xfs_efi_log_format_32_t;
-+
-+typedef struct xfs_efi_log_format_64 {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
-+} xfs_efi_log_format_64_t;
++	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
++		rval = xfs_dir2_sf_addname(&args);
++	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
++		return rval;
++	else if (v)
++		rval = xfs_dir2_block_addname(&args);
++	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
++		return rval;
++	else if (v)
++		rval = xfs_dir2_leaf_addname(&args);
++	else
++		rval = xfs_dir2_node_addname(&args);
++	return rval;
++}
 +
 +/*
-+ * This is the structure used to lay out an efd log item in the
-+ * log.  The efd_extents array is a variable size array whose
-+ * size is given by efd_nextents;
-+ */
-+typedef struct xfs_efd_log_format {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_t		efd_extents[1];	/* array of extents freed */
-+} xfs_efd_log_format_t;
-+
-+typedef struct xfs_efd_log_format_32 {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
-+} __attribute__((packed)) xfs_efd_log_format_32_t;
-+
-+typedef struct xfs_efd_log_format_64 {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
-+} xfs_efd_log_format_64_t;
-+
- #endif /* __XFS_LOG_FORMAT_H__ */
+  * Utility routines.
+  */
+ 
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index 155352c..064ddb2 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -53,15 +53,15 @@ __xfs_dir3_data_check(
+ 	bf = xfs_dir3_data_bestfree_p(hdr);
+ 	p = (char *)xfs_dir3_data_entry_p(hdr);
+ 
+-	switch (be32_to_cpu(hdr->magic)) {
+-	case XFS_DIR2_BLOCK_MAGIC:
+-	case XFS_DIR3_BLOCK_MAGIC:
++	switch (hdr->magic) {
++	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
++	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+ 		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endp = (char *)lep;
+ 		break;
+-	case XFS_DIR2_DATA_MAGIC:
+-	case XFS_DIR3_DATA_MAGIC:
++	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
++	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+ 		endp = (char *)hdr + mp->m_dirblksize;
+ 		break;
+ 	default:
+@@ -209,14 +209,14 @@ xfs_dir3_data_reada_verify(
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+ 
+-	switch (be32_to_cpu(hdr->magic)) {
+-	case XFS_DIR2_BLOCK_MAGIC:
+-	case XFS_DIR3_BLOCK_MAGIC:
++	switch (hdr->magic) {
++	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
++	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+ 		bp->b_ops = &xfs_dir3_block_buf_ops;
+ 		bp->b_ops->verify_read(bp);
+ 		return;
+-	case XFS_DIR2_DATA_MAGIC:
+-	case XFS_DIR3_DATA_MAGIC:
++	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
++	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+ 		xfs_dir3_data_verify(bp);
+ 		return;
+ 	default:
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index a287bb1..8c20b9e 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -247,14 +247,14 @@ xfs_dir3_leaf1_write_verify(
+ 	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+ }
+ 
+-void
++static void
+ xfs_dir3_leafn_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+ }
+ 
+-void
++static void
+ xfs_dir3_leafn_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index f819776..fea0131 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -257,7 +257,6 @@ xfs_dir3_free_get_buf(
+ 		hdr3->hdr.blkno = cpu_to_be64(bp->b_bn);
+ 		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
+ 		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_uuid);
+-
+ 	} else
+ 		hdr.magic = XFS_DIR2_FREE_MAGIC;
+ 	xfs_dir3_free_hdr_to_disk(bp->b_addr, &hdr);
+@@ -978,7 +977,7 @@ xfs_dir2_leafn_rebalance(
+ 	xfs_dir2_leaf_t		*leaf1;		/* first leaf structure */
+ 	xfs_dir2_leaf_t		*leaf2;		/* second leaf structure */
+ 	int			mid;		/* midpoint leaf index */
+-#ifdef DEBUG
++#if defined(DEBUG) || defined(XFS_WARN)
+ 	int			oldstale;	/* old count of stale leaves */
+ #endif
+ 	int			oldsum;		/* old total leaf count */
+@@ -1007,7 +1006,7 @@ xfs_dir2_leafn_rebalance(
+ 	ents2 = xfs_dir3_leaf_ents_p(leaf2);
+ 
+ 	oldsum = hdr1.count + hdr2.count;
+-#ifdef DEBUG
++#if defined(DEBUG) || defined(XFS_WARN)
+ 	oldstale = hdr1.stale + hdr2.stale;
+ #endif
+ 	mid = oldsum >> 1;
+@@ -1101,7 +1100,6 @@ xfs_dir3_data_block_free(
+ 	__be16			*bests;
+ 	struct xfs_dir3_icfree_hdr freehdr;
+ 
+-
+ 	xfs_dir3_free_hdr_from_disk(&freehdr, free);
+ 
+ 	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
+@@ -1115,12 +1113,14 @@ xfs_dir3_data_block_free(
+ 		return 0;
+ 	}
+ 
+-	/*
+-	 * One less used entry in the free table. Unused is not converted
+-	 * because we only need to know if it zero
+-	 */
++	/* One less used entry in the free table. */
+ 	freehdr.nused--;
+ 
++	/*
++	 * If this was the last entry in the table, we can trim the table size
++	 * back.  There might be other entries at the end referring to
++	 * non-existent data blocks, get those too.
++	 */
+ 	if (findex == freehdr.nvalid - 1) {
+ 		int	i;		/* free entry index */
+ 
+@@ -1159,7 +1159,6 @@ xfs_dir3_data_block_free(
+ 		 */
+ 	}
+ 
+-
+ 	/* Log the free entry that changed, unless we got rid of it.  */
+ 	if (logfree)
+ 		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
+@@ -1275,9 +1274,8 @@ xfs_dir2_leafn_remove(
+ 	{
+ 		struct xfs_dir3_icfree_hdr freehdr;
+ 		xfs_dir3_free_hdr_from_disk(&freehdr, free);
+-		ASSERT(freehdr.firstdb ==
+-				       xfs_dir3_free_max_bests(mp) *
+-				       (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
++		ASSERT(freehdr.firstdb == xfs_dir3_free_max_bests(mp) *
++					  (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
+ 	}
+ #endif
+ 		/*
+@@ -1425,7 +1423,7 @@ xfs_dir2_leafn_toosmall(
+ 	leaf = blk->bp->b_addr;
+ 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
+ 	ents = xfs_dir3_leaf_ents_p(leaf);
+-	xfs_dir3_leaf_check(mp, blk->bp);
++	xfs_dir3_leaf_check(state->args->dp->i_mount, blk->bp);
+ 
+ 	count = leafhdr.count - leafhdr.stale;
+ 	bytes = xfs_dir3_leaf_hdr_size(leaf) + count * sizeof(ents[0]);
+@@ -1863,7 +1861,7 @@ xfs_dir2_node_addname_int(
+ 		 * If there wasn't a freespace block, the read will
+ 		 * return a NULL fbp.  Allocate and initialize a new one.
+ 		 */
+-		if(!fbp) {
++		if (!fbp) {
+ 			error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
+ 						    &fbno);
+ 			if (error)
 -- 
 1.8.3.2
 
