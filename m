@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0571829EA4
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 658AB29EAB
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 99682AC002
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 561FF8F8033
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:53 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2C15gaEnoMbpBuuT for <xfs@oss.sgi.com>;
+	9jJTMkE7a9fb4WMd for <xfs@oss.sgi.com>;
 	Wed, 04 Sep 2013 15:21:51 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007dU-Td
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007d2-NX
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003so-Sl
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003s5-MT
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/55] xfs: separate icreate log format definitions from
-	xfs_icreate_item.h
-Date: Thu,  5 Sep 2013 08:05:25 +1000
-Message-Id: <1378332359-14737-22-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/55] xfsprogs: define min/max once and use them everywhere.
+Date: Thu,  5 Sep 2013 08:05:16 +1000
+Message-Id: <1378332359-14737-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,145 +39,64 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The on disk log format definitions for the icreate log item are
-intertwined with the kernel-only in-memory log item definitions.
-Separate the log format definitions out into their own header file
-so they can easily be shared with userspace.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile           |  1 -
- include/libxfs.h           |  1 -
- include/libxlog.h          |  1 -
- include/xfs_icreate_item.h | 55 ----------------------------------------------
- include/xfs_log_format.h   | 18 +++++++++++++++
- 5 files changed, 18 insertions(+), 58 deletions(-)
- delete mode 100644 include/xfs_icreate_item.h
+ include/libxfs.h           | 1 -
+ include/platform_defs.h.in | 5 +++++
+ io/init.h                  | 3 ---
+ libxfs/rdwr.c              | 1 -
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/Makefile b/include/Makefile
-index 8f738a8..ab71aad 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -30,7 +30,6 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_format.h \
- 	xfs_ialloc.h \
- 	xfs_ialloc_btree.h \
--	xfs_icreate_item.h \
- 	xfs_inode.h \
- 	xfs_inum.h \
- 	xfs_log_format.h \
 diff --git a/include/libxfs.h b/include/libxfs.h
-index 646ca79..bc90082 100644
+index bd74ca5..e776211 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -59,7 +59,6 @@
- #include <xfs/xfs_bmap.h>
- #include <xfs/xfs_trace.h>
- #include <xfs/xfs_symlink.h>
--#include <xfs/xfs_icreate_item.h>
- 
- 
- #ifndef ARRAY_SIZE
-diff --git a/include/libxlog.h b/include/libxlog.h
-index ee23212..e65b607 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -48,7 +48,6 @@ struct xlog {
- };
- 
- #include <xfs/xfs_log_recover.h>
--#include <xfs/xfs_icreate_item.h>
+@@ -72,7 +72,6 @@
+ #define __round_mask(x, y) ((__typeof__(x))((y)-1))
+ #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+ #define round_down(x, y) ((x) & ~__round_mask(x, y))
+-#define min(a,b)	((a) < (b) ? (a) : (b))
  
  /*
-  * macros mapping kernel code to user code
-diff --git a/include/xfs_icreate_item.h b/include/xfs_icreate_item.h
-deleted file mode 100644
-index 70dc03c..0000000
---- a/include/xfs_icreate_item.h
-+++ /dev/null
-@@ -1,55 +0,0 @@
--/*
-- * Copyright (c) 2008-2010, Dave Chinner
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef XFS_ICREATE_ITEM_H
--#define XFS_ICREATE_ITEM_H	1
--
--/*
-- * on disk log item structure
-- *
-- * Log recovery assumes the first two entries are the type and size and they fit
-- * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
-- * decoding can be done correctly.
-- */
--struct xfs_icreate_log {
--	__uint16_t	icl_type;	/* type of log format structure */
--	__uint16_t	icl_size;	/* size of log format structure */
--	__be32		icl_ag;		/* ag being allocated in */
--	__be32		icl_agbno;	/* start block of inode range */
--	__be32		icl_count;	/* number of inodes to initialise */
--	__be32		icl_isize;	/* size of inodes */
--	__be32		icl_length;	/* length of extent to initialise */
--	__be32		icl_gen;	/* inode generation number to use */
--};
--
--#ifdef __KERNEL__
--
--/* in memory log item structure */
--struct xfs_icreate_item {
--	struct xfs_log_item	ic_item;
--	struct xfs_icreate_log	ic_format;
--};
--
--extern kmem_zone_t *xfs_icreate_zone;	/* inode create item zone */
--
--void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
--			xfs_agblock_t agbno, unsigned int count,
--			unsigned int inode_size, xfs_agblock_t length,
--			unsigned int generation);
--#endif /* __KERNEL__ */
--
--#endif	/* XFS_ICREATE_ITEM_H */
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-index 2c0f3f1..51d4932 100644
---- a/include/xfs_log_format.h
-+++ b/include/xfs_log_format.h
-@@ -608,4 +608,22 @@ typedef struct xfs_qoff_logformat {
- 				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
- 				 XFS_PQUOTA_CHKD)
+  * Argument structure for libxfs_init().
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index 3c0106e..ac260bc 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -173,4 +173,9 @@ typedef unsigned short umode_t;
+ #define __arch_pack
+ #endif
  
-+/*
-+ * Inode create log item structure
-+ *
-+ * Log recovery assumes the first two entries are the type and size and they fit
-+ * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
-+ * decoding can be done correctly.
-+ */
-+struct xfs_icreate_log {
-+	__uint16_t	icl_type;	/* type of log format structure */
-+	__uint16_t	icl_size;	/* size of log format structure */
-+	__be32		icl_ag;		/* ag being allocated in */
-+	__be32		icl_agbno;	/* start block of inode range */
-+	__be32		icl_count;	/* number of inodes to initialise */
-+	__be32		icl_isize;	/* size of inodes */
-+	__be32		icl_length;	/* length of extent to initialise */
-+	__be32		icl_gen;	/* inode generation number to use */
-+};
++#ifndef min
++#define min(a,b)	(((a)<(b))?(a):(b))
++#define max(a,b)	(((a)>(b))?(a):(b))
++#endif
 +
- #endif /* __XFS_LOG_FORMAT_H__ */
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
+diff --git a/io/init.h b/io/init.h
+index 1dac211..d773b1b 100644
+--- a/io/init.h
++++ b/io/init.h
+@@ -26,7 +26,4 @@ extern int	expert;
+ extern size_t	pagesize;
+ extern struct timeval stopwatch;
+ 
+-#define min(a,b)	(((a)<(b))?(a):(b))
+-#define max(a,b)	(((a)>(b))?(a):(b))
+-
+ extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index c679f81..93beb23 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -22,7 +22,6 @@
+ #include "init.h"
+ 
+ #define BDSTRAT_SIZE	(256 * 1024)
+-#define min(x, y)	((x) < (y) ? (x) : (y))
+ 
+ #define IO_BCOMPARE_CHECK
+ 
 -- 
 1.8.3.2
 
