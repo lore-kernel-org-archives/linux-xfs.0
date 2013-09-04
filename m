@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 56C657F53
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EF23D7F58
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:06:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CB7CCAC002
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:08 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D0164304039
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:09 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	qfOnSzPF5u7tX1Ay for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:06:07 -0700 (PDT)
+	uRjjt7ZhGBGiph1K for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:06:08 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cn-HP
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007cq-Ia
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rM-Gn
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rW-Hu
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/55] xfsprogs: teach logprint about icreate transaction
-Date: Thu,  5 Sep 2013 08:05:07 +1000
-Message-Id: <1378332359-14737-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/55] libxfs: ensure btree root split sets blkno correctly
+Date: Thu,  5 Sep 2013 08:05:09 +1000
+Message-Id: <1378332359-14737-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,132 +39,43 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
+For CRC enabled filesystems, the BMBT is rooted in an inode, so it
+passes through a difference code path on root splits to the
+freespace and inode btrees. The inode based btree root has a
+corruption problem on split - it's the same problem we saw in the
+directory/attr code where headers are memcpy()d from one block to
+another without updating the self describing metadata.
+
+Simple fix - when copying the header out of the root block, make
+sure the block number is updated correctly.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxlog.h        |  1 +
- logprint/log_misc.c      | 36 ++++++++++++++++++++++++++++++++++++
- logprint/log_print_all.c | 21 +++++++++++++++++++++
- 3 files changed, 58 insertions(+)
+ libxfs/xfs_btree.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/include/libxlog.h b/include/libxlog.h
-index bd71bfe..ff711e9 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -51,6 +51,7 @@ struct xlog {
- #include <xfs/xfs_buf_item.h>
- #include <xfs/xfs_inode_item.h>
- #include <xfs/xfs_extfree_item.h>
-+#include <xfs/xfs_icreate_item.h>
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index b11131c..3ac3330 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -2487,7 +2487,17 @@ xfs_btree_new_iroot(
+ 	if (error)
+ 		goto error0;
  
- typedef union {
- 	xlog_rec_header_t       hic_header;
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index a369e72..623245e 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -70,6 +70,7 @@ char *trans_type[] = {
- 	"SWAPEXT",
- 	"SB_COUNT",
- 	"CHECKPOINT",
-+	"ICREATE",
- };
- 
- typedef struct xlog_split_item {
-@@ -792,6 +793,35 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
- }	/* xlog_print_trans_dquot */
- 
- 
-+STATIC int
-+xlog_print_trans_icreate(
-+	xfs_caddr_t	*ptr,
-+	int		len,
-+	int		*i,
-+	int		num_ops)
-+{
-+	struct xfs_icreate_log	icl_buf = {0};
-+	struct xfs_icreate_log	*icl;
-+
-+	memmove(&icl_buf, *ptr, MIN(sizeof(struct xfs_icreate_log), len));
-+	icl = &icl_buf;
-+	(*i)++;
-+	*ptr += len;
-+
-+	/* handle complete header only */
-+	if (len != sizeof(struct xfs_icreate_log)) {
-+		printf(_("ICR: split header, not printing\n"));
-+		return 1; /* to skip leftover in next region */
++	/*
++	 * we can't just memcpy() the root in for CRC enabled btree blocks.
++	 * In that case have to also ensure the blkno remains correct
++	 */
+ 	memcpy(cblock, block, xfs_btree_block_len(cur));
++	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS) {
++		if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
++			cblock->bb_u.l.bb_blkno = cpu_to_be64(cbp->b_bn);
++		else
++			cblock->bb_u.s.bb_blkno = cpu_to_be64(cbp->b_bn);
 +	}
-+
-+	printf(_("ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
-+		 "      cnt: %d  isize: %d    gen: 0x%x\n"),
-+		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
-+		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
-+		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
-+	return 0;
-+}
-+
- /******************************************************************************
-  *
-  *		Log print routines
-@@ -974,6 +1004,12 @@ xlog_print_record(int			  fd,
- 					&i, num_ops);
- 			break;
- 		    }
-+		    case XFS_LI_ICREATE: {
-+			skip = xlog_print_trans_icreate(&ptr,
-+					be32_to_cpu(op_head->oh_len),
-+					&i, num_ops);
-+			break;
-+		    }
- 		    case XFS_LI_INODE: {
- 			skip = xlog_print_trans_inode(&ptr,
- 					be32_to_cpu(op_head->oh_len),
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index 1194469..8b932d2 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -432,6 +432,21 @@ xlog_recover_print_efi(
- 	free(f);
- }
  
-+STATIC void
-+xlog_recover_print_icreate(
-+	struct xlog_recover_item	*item)
-+{
-+	struct xfs_icreate_log	*icl;
-+
-+	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
-+
-+	printf(_("	ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
-+		 "	      cnt: %d  isize: %d    gen: 0x%x\n"),
-+		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
-+		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
-+		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
-+}
-+
- void
- xlog_recover_print_logitem(
- 	xlog_recover_item_t	*item)
-@@ -440,6 +455,9 @@ xlog_recover_print_logitem(
- 	case XFS_LI_BUF:
- 		xlog_recover_print_buffer(item);
- 		break;
-+	case XFS_LI_ICREATE:
-+		xlog_recover_print_icreate(item);
-+		break;
- 	case XFS_LI_INODE:
- 		xlog_recover_print_inode(item);
- 		break;
-@@ -471,6 +489,9 @@ xlog_recover_print_item(
- 	case XFS_LI_BUF:
- 		printf("BUF");
- 		break;
-+	case XFS_LI_ICREATE:
-+		printf("ICR");
-+		break;
- 	case XFS_LI_INODE:
- 		printf("INO");
- 		break;
+ 	be16_add_cpu(&block->bb_level, 1);
+ 	xfs_btree_set_numrecs(block, 1);
 -- 
 1.8.3.2
 
