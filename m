@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D64677F53
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 000A729DFB
 	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:06:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C63058F8033
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:10 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 928F4AC003
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:06:07 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rcruMhDa4VBdh4ea for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:06:09 -0700 (PDT)
+	3pdXyxfcBqpIpNau for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:06:05 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007co-Hw
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007ck-FE
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003rR-HL
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003r9-EM
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/55] libxfs: fix directory/attribute format issues
-Date: Thu,  5 Sep 2013 08:05:08 +1000
-Message-Id: <1378332359-14737-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/55] xfsprogs: bring code up to date with kernel
+Date: Thu,  5 Sep 2013 08:05:04 +1000
+Message-Id: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,61 +35,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-directory data headers and attr leaf headers need padding for 32 bit
-systems to correctly align the data sections on 64 bit boundaries.
+This is an updated version of the patchset posted here:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- include/xfs_attr_leaf.h   | 1 +
- include/xfs_dir2_format.h | 5 +++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+http://oss.sgi.com/archives/xfs/2013-07/msg00454.html
 
-diff --git a/include/xfs_attr_leaf.h b/include/xfs_attr_leaf.h
-index b3e93bb..c102213 100644
---- a/include/xfs_attr_leaf.h
-+++ b/include/xfs_attr_leaf.h
-@@ -128,6 +128,7 @@ struct xfs_attr3_leaf_hdr {
- 	__u8			holes;
- 	__u8			pad1;
- 	struct xfs_attr_leaf_map freemap[XFS_ATTR_LEAF_MAPSIZE];
-+	__be32			pad2;		/* 64 bit alignment */
- };
- 
- #define XFS_ATTR3_LEAF_CRC_OFF	(offsetof(struct xfs_attr3_leaf_hdr, info.crc))
-diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
-index 8c16bb0..4126e86 100644
---- a/include/xfs_dir2_format.h
-+++ b/include/xfs_dir2_format.h
-@@ -260,6 +260,7 @@ struct xfs_dir3_blk_hdr {
- struct xfs_dir3_data_hdr {
- 	struct xfs_dir3_blk_hdr	hdr;
- 	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
-+	__be32			pad;	/* 64 bit alignment */
- };
- 
- #define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
-@@ -471,7 +472,7 @@ struct xfs_dir3_leaf_hdr {
- 	struct xfs_da3_blkinfo	info;		/* header for da routines */
- 	__be16			count;		/* count of entries */
- 	__be16			stale;		/* count of stale entries */
--	__be32			pad;
-+	__be32			pad;		/* 64 bit alignment */
- };
- 
- struct xfs_dir3_icleaf_hdr {
-@@ -712,7 +713,7 @@ struct xfs_dir3_free_hdr {
- 	__be32			firstdb;	/* db of first entry */
- 	__be32			nvalid;		/* count of valid entries */
- 	__be32			nused;		/* count of used entries */
--	__be32			pad;		/* 64 bit alignment. */
-+	__be32			pad;		/* 64 bit alignment */
- };
- 
- struct xfs_dir3_free {
--- 
-1.8.3.2
+Changes since the previous version:
+
+- rebased onto master branch of repository
+- updated to match current kernel code
+- added several new patches for changes added to the kernel code
+- fixed many bugs
+	- mkfs log sizing was wrong
+	- dtype output for block format directories didn't work
+	- repair was crashing on corrupt block format directories
+	- xfs_trans.h completely removed
+
+There is not support for validating dtype in xfs_repair yet - that
+is part of a series of improved validation changes I'm making at the
+moment on top of this patchset, along with stuff like making xfs_db
+use libxfs infrastructure....
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
