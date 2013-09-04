@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6148629E8C
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 353D2304039
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9390A29EA4
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 17:21:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 849A1304039
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 15:21:55 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	GXLViMDIclldvsoJ for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 15:21:52 -0700 (PDT)
+	Md5NG67rjEmM3iIB for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 15:21:53 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007d0-MV
+	(envelope-from <dave@fromorbit.com>) id 1VHLD9-0007d6-Nw
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003s0-Lm
+	(envelope-from <dave@disappointment.disaster>) id 1VHLD9-0003sA-NI
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 08:06:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/55] libxfs: sync xfs_ialloc.c to the kernel code
-Date: Thu,  5 Sep 2013 08:05:15 +1000
-Message-Id: <1378332359-14737-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/55] libxfs: fix compile warnings
+Date: Thu,  5 Sep 2013 08:05:17 +1000
+Message-Id: <1378332359-14737-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,271 +39,287 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-include the missing xfs_difree() function. it's not used by
-userspace, but it makes no sense to have just this one arbitrary
-difference between the kernel and userspace files.
+Some of the code shared with userspace causes compilation warnings
+from things turned off in the kernel code, such as differences in
+variable signedness. Fix those issues.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs.h        |   1 +
- libxfs/xfs_ialloc.c | 186 +++++++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 177 insertions(+), 10 deletions(-)
+ copy/xfs_copy.c          | 12 ++++++++++--
+ db/bmroot.c              |  6 +++---
+ libxfs/xfs.h             |  8 +++++++-
+ libxfs/xfs_attr_remote.c |  8 ++++----
+ libxfs/xfs_bmap.c        |  3 ---
+ libxfs/xfs_da_btree.c    |  6 +++---
+ libxfs/xfs_dir2_node.c   |  2 ++
+ libxfs/xfs_ialloc.c      |  2 +-
+ libxfs/xfs_rtalloc.c     |  4 ++--
+ repair/attr_repair.c     |  2 ++
+ repair/incore_ino.c      |  2 ++
+ repair/scan.c            |  1 +
+ 12 files changed, 37 insertions(+), 19 deletions(-)
 
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 39517da..bb37279 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -434,6 +434,10 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
+ 	off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
+ 	buf->position = (xfs_off_t) off * (xfs_off_t) BBSIZE;
+ 	length = buf->length = first_agbno * blocksize;
++	if (length == 0) {
++		do_log(_("ag header buffer invalid!\n"));
++		exit(1);
++	}
+ 
+ 	/* handle alignment stuff */
+ 
+@@ -449,7 +453,6 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
+ 	if (buf->length % buf->min_io_size != 0)
+ 		buf->length = roundup(buf->length, buf->min_io_size);
+ 
+-	ASSERT(length != 0);
+ 	read_wbuf(fd, buf, mp);
+ 	ASSERT(buf->length >= length);
+ 
+@@ -936,7 +939,12 @@ main(int argc, char **argv)
+ 		for (;;) {
+ 			/* none of this touches the w_buf buffer */
+ 
+-			ASSERT(current_level < btree_levels);
++			if (current_level >= btree_levels) {
++				do_log(
++			_("Error: current level %d >= btree levels %d\n"),
++					current_level, btree_levels);
++				exit(1);
++			}
+ 
+ 			current_level++;
+ 
+diff --git a/db/bmroot.c b/db/bmroot.c
+index 3e18917..12b129e 100644
+--- a/db/bmroot.c
++++ b/db/bmroot.c
+@@ -91,13 +91,13 @@ bmroota_key_offset(
+ 	int			idx)
+ {
+ 	xfs_bmdr_block_t	*block;
+-	/* REFERENCED */
+-	xfs_dinode_t		*dip;
++#ifdef DEBUG
++	xfs_dinode_t		*dip = obj;
++#endif
+ 	xfs_bmdr_key_t		*kp;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
 diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 15e82d7..3fd226c 100644
+index 3fd226c..c9d6a6d 100644
 --- a/libxfs/xfs.h
 +++ b/libxfs/xfs.h
-@@ -208,6 +208,7 @@ roundup_pow_of_two(uint v)
- #define XFS_MOUNT_SMALL_INUMS		0	/* ignored in userspace */
- #define XFS_MOUNT_WSYNC			0	/* ignored in userspace */
- #define XFS_MOUNT_NOALIGN		0	/* ignored in userspace */
-+#define XFS_MOUNT_IKEEP			0	/* ignored in userspace */
+@@ -189,7 +189,9 @@ roundup_pow_of_two(uint v)
+ /* avoid gcc warning */
+ #define xfs_incore(bt,blkno,len,lockit)	({		\
+ 	typeof(blkno) __foo = (blkno);			\
++	typeof(len) __bar = (len);			\
+ 	(blkno) = __foo;				\
++	(len) = __bar; /* no set-but-unused warning */	\
+ 	NULL;						\
+ })
+ #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+@@ -259,7 +261,11 @@ roundup_pow_of_two(uint v)
+ #define	xfs_trans_agblocks_delta(tp, d)
+ #define	xfs_trans_agflist_delta(tp, d)
+ #define	xfs_trans_agbtree_delta(tp, d)
+-#define xfs_trans_buf_set_type(tp, bp, t)
++#define xfs_trans_buf_set_type(tp, bp, t)	({	\
++	int __t = (t);					\
++	__t = __t; /* no set-but-unused warning */	\
++})
++
+ #define xfs_trans_buf_copy_type(dbp, sbp)
  
- #define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
- 	xfs_mod_incore_sb(mp, field, delta, rsvd)
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 48916dd..98513fd 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -314,7 +314,7 @@ xfs_ialloc_ag_alloc(
- 	 * First try to allocate inodes contiguous with the last-allocated
- 	 * chunk of inodes.  If the filesystem is striped, this will fill
- 	 * an entire stripe unit with inodes.
-- 	 */
-+	 */
- 	agi = XFS_BUF_TO_AGI(agbp);
- 	newino = be32_to_cpu(agi->agi_newino);
- 	agno = be32_to_cpu(agi->agi_seqno);
-@@ -324,8 +324,6 @@ xfs_ialloc_ag_alloc(
- 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
- 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
- 		args.type = XFS_ALLOCTYPE_THIS_BNO;
--		args.mod = args.total = args.wasdel = args.isfl =
--			args.userdata = args.minalignslop = 0;
- 		args.prod = 1;
- 
- 		/*
-@@ -378,8 +376,6 @@ xfs_ialloc_ag_alloc(
- 		 * Allocate a fixed-size extent of inodes.
- 		 */
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
--		args.mod = args.total = args.wasdel = args.isfl =
--			args.userdata = args.minalignslop = 0;
- 		args.prod = 1;
- 		/*
- 		 * Allow space for the inode btree to split.
-@@ -630,8 +626,7 @@ xfs_ialloc_get_rec(
- 	struct xfs_btree_cur	*cur,
- 	xfs_agino_t		agino,
- 	xfs_inobt_rec_incore_t	*rec,
--	int			*done,
--	int			left)
-+	int			*done)
+ #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 0b2ca8c..59bb12d 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -214,7 +214,7 @@ xfs_attr_rmtval_copyout(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	char		**dst)
++	__uint8_t	**dst)
  {
- 	int                     error;
- 	int			i;
-@@ -739,12 +734,12 @@ xfs_dialloc_ag(
- 		    pag->pagl_leftrec != NULLAGINO &&
- 		    pag->pagl_rightrec != NULLAGINO) {
- 			error = xfs_ialloc_get_rec(tcur, pag->pagl_leftrec,
--						   &trec, &doneleft, 1);
-+						   &trec, &doneleft);
- 			if (error)
- 				goto error1;
+ 	char		*src = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -261,7 +261,7 @@ xfs_attr_rmtval_copyin(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	char		**src)
++	__uint8_t	**src)
+ {
+ 	char		*dst = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -314,7 +314,7 @@ xfs_attr_rmtval_get(
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	struct xfs_buf		*bp;
+ 	xfs_dablk_t		lblkno = args->rmtblkno;
+-	char			*dst = args->value;
++	__uint8_t		*dst = args->value;
+ 	int			valuelen = args->valuelen;
+ 	int			nmap;
+ 	int			error;
+@@ -378,7 +378,7 @@ xfs_attr_rmtval_set(
+ 	struct xfs_bmbt_irec	map;
+ 	xfs_dablk_t		lblkno;
+ 	xfs_fileoff_t		lfileoff = 0;
+-	char			*src = args->value;
++	__uint8_t		*src = args->value;
+ 	int			blkcnt;
+ 	int			valuelen;
+ 	int			nmap;
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 6664265..b7f798b 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -4437,12 +4437,9 @@ xfs_bmapi_allocate(
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 	int			tmp_logflags = 0;
+ 	int			error;
+-	int			rt;
  
- 			error = xfs_ialloc_get_rec(cur, pag->pagl_rightrec,
--						   &rec, &doneright, 0);
-+						   &rec, &doneright);
- 			if (error)
- 				goto error1;
- 		} else {
-@@ -1074,6 +1069,177 @@ out_error:
- 	return XFS_ERROR(error);
+ 	ASSERT(bma->length > 0);
+ 
+-	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
+-
+ 	/*
+ 	 * For the wasdelay case, we could also just allocate the stuff asked
+ 	 * for in this bmap call but that wouldn't be as good.
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index d7798af..b7b6705 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -376,7 +376,7 @@ xfs_da3_split(
+ 	struct xfs_da_intnode	*node;
+ 	struct xfs_buf		*bp;
+ 	int			max;
+-	int			action;
++	int			action = 0;
+ 	int			error;
+ 	int			i;
+ 
+@@ -2431,9 +2431,9 @@ static int
+ xfs_buf_map_from_irec(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buf_map	**mapp,
+-	unsigned int		*nmaps,
++	int			*nmaps,
+ 	struct xfs_bmbt_irec	*irecs,
+-	unsigned int		nirecs)
++	int			nirecs)
+ {
+ 	struct xfs_buf_map	*map;
+ 	int			i;
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index fea0131..030f620 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -295,11 +295,13 @@ xfs_dir2_free_log_header(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp)
+ {
++#ifdef DEBUG
+ 	xfs_dir2_free_t		*free;		/* freespace structure */
+ 
+ 	free = bp->b_addr;
+ 	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
+ 	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
++#endif
+ 	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_free_hdr_size(tp->t_mountp) - 1);
  }
  
-+/*
-+ * Free disk inode.  Carefully avoids touching the incore inode, all
-+ * manipulations incore are the caller's responsibility.
-+ * The on-disk inode is not changed by this operation, only the
-+ * btree (free inode mask) is changed.
-+ */
-+int
-+xfs_difree(
-+	xfs_trans_t	*tp,		/* transaction pointer */
-+	xfs_ino_t	inode,		/* inode to be freed */
-+	xfs_bmap_free_t	*flist,		/* extents to free */
-+	int		*delete,	/* set if inode cluster was deleted */
-+	xfs_ino_t	*first_ino)	/* first inode in deleted cluster */
-+{
-+	/* REFERENCED */
-+	xfs_agblock_t	agbno;	/* block number containing inode */
-+	xfs_buf_t	*agbp;	/* buffer containing allocation group header */
-+	xfs_agino_t	agino;	/* inode number relative to allocation group */
-+	xfs_agnumber_t	agno;	/* allocation group number */
-+	xfs_agi_t	*agi;	/* allocation group header */
-+	xfs_btree_cur_t	*cur;	/* inode btree cursor */
-+	int		error;	/* error return value */
-+	int		i;	/* result code */
-+	int		ilen;	/* inodes in an inode cluster */
-+	xfs_mount_t	*mp;	/* mount structure for filesystem */
-+	int		off;	/* offset of inode in inode chunk */
-+	xfs_inobt_rec_incore_t rec;	/* btree record */
-+	struct xfs_perag *pag;
-+
-+	mp = tp->t_mountp;
-+
-+	/*
-+	 * Break up inode number into its components.
-+	 */
-+	agno = XFS_INO_TO_AGNO(mp, inode);
-+	if (agno >= mp->m_sb.sb_agcount)  {
-+		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
-+			__func__, agno, mp->m_sb.sb_agcount);
-+		ASSERT(0);
-+		return XFS_ERROR(EINVAL);
-+	}
-+	agino = XFS_INO_TO_AGINO(mp, inode);
-+	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
-+		xfs_warn(mp, "%s: inode != XFS_AGINO_TO_INO() (%llu != %llu).",
-+			__func__, (unsigned long long)inode,
-+			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
-+		ASSERT(0);
-+		return XFS_ERROR(EINVAL);
-+	}
-+	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-+	if (agbno >= mp->m_sb.sb_agblocks)  {
-+		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
-+			__func__, agbno, mp->m_sb.sb_agblocks);
-+		ASSERT(0);
-+		return XFS_ERROR(EINVAL);
-+	}
-+	/*
-+	 * Get the allocation group header.
-+	 */
-+	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-+	if (error) {
-+		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
-+			__func__, error);
-+		return error;
-+	}
-+	agi = XFS_BUF_TO_AGI(agbp);
-+	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
-+	ASSERT(agbno < be32_to_cpu(agi->agi_length));
-+	/*
-+	 * Initialize the cursor.
-+	 */
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
-+
-+	error = xfs_check_agi_freecount(cur, agi);
-+	if (error)
-+		goto error0;
-+
-+	/*
-+	 * Look for the entry describing this inode.
-+	 */
-+	if ((error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i))) {
-+		xfs_warn(mp, "%s: xfs_inobt_lookup() returned error %d.",
-+			__func__, error);
-+		goto error0;
-+	}
-+	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	error = xfs_inobt_get_rec(cur, &rec, &i);
-+	if (error) {
-+		xfs_warn(mp, "%s: xfs_inobt_get_rec() returned error %d.",
-+			__func__, error);
-+		goto error0;
-+	}
-+	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	/*
-+	 * Get the offset in the inode chunk.
-+	 */
-+	off = agino - rec.ir_startino;
-+	ASSERT(off >= 0 && off < XFS_INODES_PER_CHUNK);
-+	ASSERT(!(rec.ir_free & XFS_INOBT_MASK(off)));
-+	/*
-+	 * Mark the inode free & increment the count.
-+	 */
-+	rec.ir_free |= XFS_INOBT_MASK(off);
-+	rec.ir_freecount++;
-+
-+	/*
-+	 * When an inode cluster is free, it becomes eligible for removal
-+	 */
-+	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
-+	    (rec.ir_freecount == XFS_IALLOC_INODES(mp))) {
-+
-+		*delete = 1;
-+		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
-+
-+		/*
-+		 * Remove the inode cluster from the AGI B+Tree, adjust the
-+		 * AGI and Superblock inode counts, and mark the disk space
-+		 * to be freed when the transaction is committed.
-+		 */
-+		ilen = XFS_IALLOC_INODES(mp);
-+		be32_add_cpu(&agi->agi_count, -ilen);
-+		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
-+		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
-+		pag = xfs_perag_get(mp, agno);
-+		pag->pagi_freecount -= ilen - 1;
-+		xfs_perag_put(pag);
-+		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
-+		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
-+
-+		if ((error = xfs_btree_delete(cur, &i))) {
-+			xfs_warn(mp, "%s: xfs_btree_delete returned error %d.",
-+				__func__, error);
-+			goto error0;
-+		}
-+
-+		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp,
-+				agno, XFS_INO_TO_AGBNO(mp,rec.ir_startino)),
-+				XFS_IALLOC_BLOCKS(mp), flist, mp);
-+	} else {
-+		*delete = 0;
-+
-+		error = xfs_inobt_update(cur, &rec);
-+		if (error) {
-+			xfs_warn(mp, "%s: xfs_inobt_update returned error %d.",
-+				__func__, error);
-+			goto error0;
-+		}
-+
-+		/* 
-+		 * Change the inode free counts and log the ag/sb changes.
-+		 */
-+		be32_add_cpu(&agi->agi_freecount, 1);
-+		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
-+		pag = xfs_perag_get(mp, agno);
-+		pag->pagi_freecount++;
-+		xfs_perag_put(pag);
-+		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, 1);
-+	}
-+
-+	error = xfs_check_agi_freecount(cur, agi);
-+	if (error)
-+		goto error0;
-+
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	return 0;
-+
-+error0:
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	return error;
-+}
-+
- STATIC int
- xfs_imap_lookup(
- 	struct xfs_mount	*mp,
-@@ -1153,7 +1319,7 @@ xfs_imap(
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 98513fd..4683287 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1319,7 +1319,7 @@ xfs_imap(
  	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
  	int		error;	/* error code */
  	int		offset;	/* index of inode in its buffer */
--	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
-+	int		offset_agbno;	/* blks from chunk start to inode */
+-	int		offset_agbno;	/* blks from chunk start to inode */
++	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
  
  	ASSERT(ino != NULLFSINO);
  
+diff --git a/libxfs/xfs_rtalloc.c b/libxfs/xfs_rtalloc.c
+index 1de85fd..9797db7 100644
+--- a/libxfs/xfs_rtalloc.c
++++ b/libxfs/xfs_rtalloc.c
+@@ -431,8 +431,8 @@ xfs_rtfree_range(
+ {
+ 	xfs_rtblock_t	end;		/* end of the freed extent */
+ 	int		error;		/* error value */
+-	xfs_rtblock_t	postblock;	/* first block freed > end */
+-	xfs_rtblock_t	preblock;	/* first block freed < start */
++	xfs_rtblock_t	postblock = 0;	/* first block freed > end */
++	xfs_rtblock_t	preblock = 0;	/* first block freed < start */
+ 
+ 	end = start + len - 1;
+ 	/*
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index d42b85f..ba85fd9 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -1631,9 +1631,11 @@ process_attributes(
+ {
+ 	int		err;
+ 	__u8		aformat = dip->di_aformat;
++#ifdef DEBUG
+ 	xfs_attr_shortform_t *asf;
+ 
+ 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
++#endif
+ 
+ 	if (aformat == XFS_DINODE_FMT_LOCAL) {
+ 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=
+diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+index efffe75..735737a 100644
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -167,6 +167,7 @@ __uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
+ 	default:
+ 		ASSERT(0);
+ 	}
++	return 0;
+ }
+ 
+ void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
+@@ -207,6 +208,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
+ 	default:
+ 		ASSERT(0);
+ 	}
++	return 0;
+ }
+ 
+ /*
+diff --git a/repair/scan.c b/repair/scan.c
+index 07880e4..4f8bbef 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -520,6 +520,7 @@ scan_allocbt(
+ 		name = "cnt";
+ 		break;
+ 	default:
++		name = "(unknown)";
+ 		assert(0);
+ 		break;
+ 	}
 -- 
 1.8.3.2
 
