@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B6EC47F53
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 08:39:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9DA898F8039
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 06:39:50 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id H7sH2BFEWsGSFXOA for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 06:39:49 -0700 (PDT)
-Message-ID: <52273823.6050704@sandeen.net>
-Date: Wed, 04 Sep 2013 08:39:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D19507F58
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 09:06:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B08D130405F
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 07:06:40 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 0XgorvByXay9yuSa for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 07:06:39 -0700 (PDT)
+Date: Wed, 4 Sep 2013 16:06:35 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 0/5] Rework mtime and ctime updates on mmaped writes
+Message-ID: <20130904140635.GC3996@quack.suse.cz>
+References: <cover.1377193658.git.luto@amacapital.net>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaulting in phase 3
-References: <trinity-9e6d7620-812f-48a7-9a7e-3098368ff59a-1376307533158@3capp-gmx-bs36>
-In-Reply-To: <trinity-9e6d7620-812f-48a7-9a7e-3098368ff59a-1376307533158@3capp-gmx-bs36>
+Content-Disposition: inline
+In-Reply-To: <cover.1377193658.git.luto@amacapital.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,173 +28,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Yves Brueckner <jyb@gmx.com>
-Cc: xfs@oss.sgi.com
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Theodore Ts'o <tytso@mit.edu>, Dave Hansen <dave.hansen@linux.intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Tim Chen <tim.c.chen@linux.intel.com>
 
-On 8/12/13 6:38 AM, Jan Yves Brueckner wrote:
-> Hi there,
+On Thu 22-08-13 17:03:16, Andy Lutomirski wrote:
+> Writes via mmap currently update mtime and ctime in ->page_mkwrite.
+> This hurts both throughput and latency.  In workloads that dirty a
+> large number of mmapped pages, ->page_mkwrite can be hot and
+> file_update_time is slow and scales poorly.  Updating timestamps can
+> also sleep, which hurts latency for real-time workloads.
 > 
-> as in previous posts we've got a problem in repair/dir2.c after a
-> xfs_repair -L -m 60000 segfaulting reproducibly at the very same
-> point of recovery;
+> This is also a correctness issue.  SuS says:
 > 
-> I did the initial repair with debianish 2.9.8 (some patches applied);
-> then upgrading to latest stable 3.1.11 where the problem persists.
+>     The st_ctime and st_mtime fields of a file that is mapped with
+>     MAP_SHARED and PROT_WRITE, will be marked for update at some point
+>     in the interval between a write reference to the mapped region and
+>     the next call to msync() with MS_ASYNC or MS_SYNC for that portion
+>     of the file by any process. If there is no such call, these fields
+>     may be marked for update at any time after a write reference if
+>     the underlying file is modified as a result.
 > 
-> 3.1.11 when compiled w/o optimization and run with gdb however
-> segfaulted in libpthread so I repeated with an -O0 of 2.9.8 to get
-> the debugging information:
+> Currently, if the same mmapped page is written twice, the timestamp
+> may not be update at all after the second write, whereas SuS (and
+> anything using timestamps to invalidate caches, backup data, etc.)
+> would expect the timestamp to eventually be updated.
 > 
+> This patchset attempts to fix both issues at once.  It adds a new
+> address_space flag AS_CMTIME that is set atomically whenever the
+> system transfers a pte dirty bit to a struct page backed by the
+> address_space.  This can happen with various locks held and when low
+> on memory.
+> 
+> Later on, a_ops.update_cmtime_deferred is called to tell the FS to
+> update cmtime due to a previous mmapped write.
+> 
+> The core changes have no effect on unmodified filesystems.  To opt in,
+> a filesystem should implement .update_cmtime_deferred (most likely by
+> using generic_update_cmtime_deferred) and must call either
+> mapping_flush_cmtime or mapping_test_clear_cmtime in .writepages.
+> Filesystems should avoid updating timestamps in ->page_mkwrite.
+> 
+> The reason that this is not completely automatic is that filesystems
+> without backing stores do not really fit in to this model.
+> Eventually, someone can add support.
+> 
+> I've converted ext4, xfs, and btrfs.  Converting most other
+> filesystems should be straightforward.
+> 
+> I wrote an xfstest for this.  ext4, xfs, and btrfs pass.  It's here:
+> 
+> https://github.com/amluto/xfstests/commit/5fbb72ac799cc44a9c4c6d3919f00a479202c899
+> 
+> This series is pullable from:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/log/?h=mmap_mtime/patch_v4
+  As a general note, I think you should CC linux-mm@kvack.org on this
+series so that mm guys are more likely to notice it. Since the patches
+touch mm you should probably get some opinions from them...
 
-Jan - 3 bugfixes into this, and I can get repair to complete w/o
-a segv.  However, the fs is still not fully repaired.
-Nor is it fully repaired after the 2nd pass, etc etc.  :(
-
-So you may have contributed a bit to xfs_repair stability
-by uncovering this, but I'm not sure I will be able to contribute
-to recovery of your (apparently _severely_ damaged) filesystem.
-
-:(
-
--Eric
-
-> corrupt block 35 in directory inode 39869938
-> 
-> will junk block
-> 
-> corrupt block 51 in directory inode 39869938
-> 
-> will junk block
-> 
-> 
-> 
-> Program received signal SIGSEGV, Segmentation fault.
-> 
-> [Switching to Thread 0x7fcd982ae730 (LWP 19563)]
-> 
-> 0x0000000000419428 in verify_dir2_path (mp=0x7ffff8381580,
-> cursor=0x7ffff8380f10, p_level=0) at dir2.c:619
-> 
-> 619             node = cursor->level[this_level].bp->data;
-> 
-> (gdb) info locals
-> 
-> node = (xfs_da_intnode_t *) 0x7ffff8380e94
-> 
-> newnode = (xfs_da_intnode_t *) 0x52202867f8380de0
-> 
-> dabno = 0
-> 
-> bp = (xfs_dabuf_t *) 0x80000200000001
-> 
-> bad = -474527744
-> 
-> entry = 0
-> 
-> this_level = 1
-> 
-> bmp = (bmap_ext_t *) 0x1
-> 
-> nex = 134250496
-> 
-> lbmp = {startoff = 8459390528, startblock = 72058695280238674,
-> blockcount = 140737357811264, flag = 4309438}
-> 
-> __PRETTY_FUNCTION__ = "verify_dir2_path"
-> 
-> (gdb)
-> 
-> 
-> 
-> (gdb) bt
-> 
-> #0  0x0000000000419428 in verify_dir2_path (mp=0x7ffff8381580,
-> cursor=0x7ffff8380f10, p_level=0) at dir2.c:619
-> 
-> #1  0x000000000041c441 in process_leaf_level_dir2 (mp=0x7ffff8381580,
-> da_cursor=0x7ffff8380f10, repair=0x7ffff8381134)
-> 
-> at dir2.c:1899
-> 
-> #2  0x000000000041c61e in process_node_dir2 (mp=0x7ffff8381580,
-> ino=39869938, dip=0x7fc9e2b38000, blkmap=0x7fca249ffd40,
-> 
-> repair=0x7ffff8381134) at dir2.c:1979
-> 
-> #3  0x000000000041c8cf in process_leaf_node_dir2 (mp=0x7ffff8381580,
-> ino=39869938, dip=0x7fc9e2b38000, ino_discovery=1,
-> 
-> dirname=0x4911f6 "", parent=0x7ffff8381398, blkmap=0x7fca249ffd40,
-> dot=0x7ffff838113c, dotdot=0x7ffff8381138,
-> 
-> repair=0x7ffff8381134, isnode=1) at dir2.c:2059
-> 
-> #4  0x000000000041cb33 in process_dir2 (mp=0x7ffff8381580,
-> ino=39869938, dip=0x7fc9e2b38000, ino_discovery=1,
-> 
-> dino_dirty=0x7ffff8381390, dirname=0x4911f6 "",
-> parent=0x7ffff8381398, blkmap=0x7fca249ffd40) at dir2.c:2113
-> 
-> #5  0x00000000004127ac in process_dinode_int (mp=0x7ffff8381580,
-> dino=0x7fc9e2b38000, agno=0, ino=39869938, was_free=0,
-> 
-> dirty=0x7ffff8381390, cleared=0x7ffff838138c, used=0x7ffff8381394,
-> verify_mode=0, uncertain=0, ino_discovery=1,
-> 
-> check_dups=0, extra_attr_check=1, isa_dir=0x7ffff8381388,
-> parent=0x7ffff8381398) at dinode.c:2783
-> 
-> #6  0x0000000000412d94 in process_dinode (mp=0x7ffff8381580,
-> dino=0x7fc9e2b38000, agno=0, ino=39869938, was_free=0,
-> 
-> dirty=0x7ffff8381390, cleared=0x7ffff838138c, used=0x7ffff8381394,
-> ino_discovery=1, check_dups=0, extra_attr_check=1,
-> 
-> isa_dir=0x7ffff8381388, parent=0x7ffff8381398) at dinode.c:3017
-> 
-> #7  0x000000000040b607 in process_inode_chunk (mp=0x7ffff8381580,
-> agno=0, num_inos=64, first_irec=0x751c810, ino_discovery=1,
-> 
-> check_dups=0, extra_attr_check=1, bogus=0x7ffff8381430) at
-> dino_chunks.c:778
-> 
-> #8  0x000000000040bf46 in process_aginodes (mp=0x7ffff8381580,
-> pf_args=0x75e6810, agno=0, ino_discovery=1, check_dups=0,
-> 
-> extra_attr_check=1) at dino_chunks.c:1025
-> 
-> #9  0x0000000000421db3 in process_ag_func (wq=0x1fe3790, agno=0,
-> arg=0x75e6810) at phase3.c:162
-> 
-> #10 0x0000000000421f84 in process_ags (mp=0x7ffff8381580) at
-> phase3.c:201
-> 
-> #11 0x00000000004220aa in phase3 (mp=0x7ffff8381580) at phase3.c:240
-> 
-> #12 0x000000000043bec4 in main (argc=5, argv=0x7ffff83818c8) at
-> xfs_repair.c:697
-> 
-> 
-> 
-> 
-> 
-> I'll get the metadump on request.
-> 
-> 
-> 
-> 
-> 
-> Thanks for helping,
-> 
-> 
-> 
-> Jan
-> 
-> 
-> 
-> _______________________________________________ xfs mailing list 
-> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
-> 
+								Honza
+> 
+> Changes from v3:
+>  - The new address space op is now called update_cmtime_deferred.
+>    Callers take care of protection from fs freezing and checking
+>    AS_CMTIME.  I fixed a deadlock in the freezer interaction.
+>  - Block plugs should be handled better.
+>  - Fixed an infinite loop in msync(MS_ASYNC).
+>  - Converted xfs and btrfs.
+>  - Misc minor cleanups.
+>  - Fixed a corner case: reclaim or migration could have cleaned all
+>    pages without updating cmtime.
+> 
+> Changes from v2:
+>  - The core code now interacts with filesystems only through
+>    address_space ops, so there should be fewer layering issues.
+>  - MS_ASYNC is handled correctly.
+> 
+> Changes from v1:
+>  - inode_update_time_writable now locks against the fs freezer.
+>  - Minor cleanups.
+>  - Major changelog improvements.
+> 
+> Andy Lutomirski (7):
+>   mm: Track mappings that have been written via ptes
+>   fs: Add inode_update_time_writable
+>   mm: Allow filesystems to defer cmtime updates
+>   mm: Scan for dirty ptes and update cmtime on MS_ASYNC
+>   ext4: Defer mmap cmtime updates
+>   btrfs: Defer mmap cmtime updates
+>   xfs: Defer mmap cmtime updates
+> 
+>  fs/btrfs/extent_io.c      |  1 +
+>  fs/btrfs/inode.c          | 32 +++++++++---------
+>  fs/buffer.c               |  7 ----
+>  fs/ext4/inode.c           | 11 +++++--
+>  fs/inode.c                | 64 +++++++++++++++++++++++++++---------
+>  fs/xfs/xfs_aops.c         |  1 +
+>  include/linux/fs.h        |  9 +++++
+>  include/linux/pagemap.h   | 22 +++++++++++++
+>  include/linux/writeback.h |  1 +
+>  mm/memory.c               |  7 +++-
+>  mm/migrate.c              |  2 ++
+>  mm/mmap.c                 |  6 +++-
+>  mm/msync.c                | 84 ++++++++++++++++++++++++++++++++++++++++-------
+>  mm/page-writeback.c       | 53 +++++++++++++++++++++++++++++-
+>  mm/rmap.c                 | 27 +++++++++++++--
+>  mm/vmscan.c               |  1 +
+>  16 files changed, 272 insertions(+), 56 deletions(-)
+> 
+> -- 
+> 1.8.3.1
+> 
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
