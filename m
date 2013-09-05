@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A32CC7F59
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:46:58 -0500 (CDT)
-Message-ID: <5228A771.2090809@sgi.com>
-Date: Thu, 05 Sep 2013 10:46:57 -0500
+	by oss.sgi.com (Postfix) with ESMTP id AF4557F58
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:52:34 -0500 (CDT)
+Message-ID: <5228A8C1.2000102@sgi.com>
+Date: Thu, 05 Sep 2013 10:52:33 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH 07/55] libxfs: sync xfs_da_btree.c
@@ -34,14 +34,12 @@ On 09/04/13 17:05, Dave Chinner wrote:
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Patch has not changed since last posting. My review back then was [] is 
-added to make sense of the comments:
+Opps put patch 8 comment on patch 7.
 
-okay, only difference [between the kernel/user source files] is the 
-initializing of the pagb_tree in xfs_alloc_read_agf() [it is not in the 
-xfsprogs]. [Okay, because we] Don't use the busy extent tree in user space.
+This also did not change in this repost. And the patch really
 
-Still looks good.
+changed variable names in xfs_da3_node_unbalance().
+add directory allocation NOFS per kernel commit b17cb364
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
