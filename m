@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 569D87F4E
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:36:06 -0500 (CDT)
-Message-ID: <5228A4E5.4020409@sgi.com>
-Date: Thu, 05 Sep 2013 10:36:05 -0500
+	by oss.sgi.com (Postfix) with ESMTP id A0D4C7F51
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:37:13 -0500 (CDT)
+Message-ID: <5228A528.1060907@sgi.com>
+Date: Thu, 05 Sep 2013 10:37:12 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/55] libxfs: fix directory/attribute format issues
+Subject: Re: [PATCH 05/55] libxfs: ensure btree root split sets blkno correctly
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-5-git-send-email-david@fromorbit.com>
+	<1378332359-14737-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +28,23 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> directory data headers and attr leaf headers need padding for 32 bit
-> systems to correctly align the data sections on 64 bit boundaries.
+> For CRC enabled filesystems, the BMBT is rooted in an inode, so it
+> passes through a difference code path on root splits to the
+> freespace and inode btrees. The inode based btree root has a
+> corruption problem on split - it's the same problem we saw in the
+> directory/attr code where headers are memcpy()d from one block to
+> another without updating the self describing metadata.
+>
+> Simple fix - when copying the header out of the root block, make
+> sure the block number is updated correctly.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-This patch has not changed since the last posting. It brings xfsprogs to
-kernel commit 5170711d
+This patch has not changed since last posting. It brings xfsprogs to
+kernel commit ade1335a
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Review-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
