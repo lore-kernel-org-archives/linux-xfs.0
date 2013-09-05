@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CA97D7F6C
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 07:13:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 48DDAAC005
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vGyDWGxUUeTmKG1h for <xfs@oss.sgi.com>;
-	Thu, 05 Sep 2013 05:13:47 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GW-P7
-	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004Er-Nn
-	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 10/12] db: add a special directory buffer verifier
-Date: Thu,  5 Sep 2013 22:13:31 +1000
-Message-Id: <1378383213-16155-11-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378383213-16155-1-git-send-email-david@fromorbit.com>
-References: <1378383213-16155-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id B46147F52
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 09:30:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 32940AC006
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 07:30:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id xBgclayxjxHaWZZN for <xfs@oss.sgi.com>;
+	Thu, 05 Sep 2013 07:30:02 -0700 (PDT)
+Message-ID: <52289569.1070107@sandeen.net>
+Date: Thu, 05 Sep 2013 09:30:01 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: SGID inheritance in different file-systems
+References: <52208DC0.2030805@oracle.com>
+In-Reply-To: <52208DC0.2030805@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,134 +23,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Vasily Isaenko <vasily.isaenko@oracle.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On 8/30/13 7:19 AM, Vasily Isaenko wrote:
+> Dear XFS Members,
+> =
 
-Because we only have a single directory type that is used for all
-the different buffer types, we need to provide a special verifier
-for the read code. That verifier needs to know all the directory
-types and when it find one it knows about, switch to the correct
-verifier and call it.
+> In the XFS test suite there is a test case generic/314 "Test SGID inherit=
+ance on subdirectories".
+> It is not specific to a particular filesystem thus selected for both xfs =
+or ext4 test runs.
+> In other words, the same behaviour is expected and enforced for XFS and E=
+XT4.
 
-We already do this for certain readahead cases in the directory
-code, so there is precedence for this. If we don't find a magic
-number we recognise, the verifier fails...
+Yep, and it passes on both of them, as well as on ext3, ext2, btrfs, and gf=
+s2...
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- db/dir2.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/dir2.h |  2 ++
- db/type.c |  3 ++-
- 3 files changed, 65 insertions(+), 1 deletion(-)
+> However, I have been told that EXT4 and XFS may have different behaviour =
+as the
+> setgid-directory behavior is not guaranteed to work the same way on all f=
+ilesystems.
 
-diff --git a/db/dir2.c b/db/dir2.c
-index 2ec64e0..5a10955 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -24,6 +24,7 @@
- #include "field.h"
- #include "dir2.h"
- #include "init.h"
-+#include "output.h"
- 
- static int	dir2_block_hdr_count(void *obj, int startoff);
- static int	dir2_block_leaf_count(void *obj, int startoff);
-@@ -975,3 +976,63 @@ const field_t	da3_node_hdr_flds[] = {
- 	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
-+
-+/*
-+ * Special read verifier for directory buffers. detect the magic number
-+ * appropriately and set the correct verifier and call it.
-+ */
-+static void
-+xfs_dir3_db_read_verify(
-+	struct xfs_buf		*bp)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
-+
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+		bp->b_ops = &xfs_dir3_block_buf_ops;
-+		goto verify;
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+		bp->b_ops = &xfs_dir3_data_buf_ops;
-+		goto verify;
-+	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
-+		bp->b_ops = &xfs_dir3_free_buf_ops;
-+		goto verify;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-+		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
-+		break;
-+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-+		bp->b_ops = &xfs_dir3_leafn_buf_ops;
-+		break;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		break;
-+	default:
-+		dbprintf(_("Unknown directory buffer type!\n"));
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+verify:
-+	bp->b_ops->verify_read(bp);
-+}
-+
-+static void
-+xfs_dir3_db_write_verify(
-+	struct xfs_buf		*bp)
-+{
-+	dbprintf(_("Writing unknown directory buffer type!\n"));
-+	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+}
-+
-+const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
-+	.verify_read = xfs_dir3_db_read_verify,
-+	.verify_write = xfs_dir3_db_write_verify,
-+};
-diff --git a/db/dir2.h b/db/dir2.h
-index b3651d5..5054493 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -60,3 +60,5 @@ static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
- 
- extern int	dir2_data_union_size(void *obj, int startoff, int idx);
- extern int	dir2_size(void *obj, int startoff, int idx);
-+
-+extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
-diff --git a/db/type.c b/db/type.c
-index b3f3d87..2c3431e 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -87,7 +87,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
- 		&xfs_allocbt_buf_ops },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL },
--	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld, NULL },
-+	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
-+		&xfs_dir3_db_buf_ops },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
- 		&xfs_dquot_buf_ops },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
--- 
-1.8.3.2
+"I have been told" ... I'm guessing that you have tested a filesystem which=
+ doesn't
+behave this way?  Which one?
+
+> Shall XFS test case reflect that difference or enforcing the same behavio=
+ur is appropriate?
+
+If you have information that a filesystem exists which does not inherit SGI=
+D, and
+that this behavior is intentional and correct and standards-compliant, then=
+ feel
+free to submit a patch.
+
+However, I think you'll need to have a convincing argument against the man =
+pages.
+
+chmod(2) says:
+
+       S_ISGID  (02000)  set-group-ID   (set   process   effective   group =
+ ID  on
+                         execve(2); mandatory locking, as described  in  fc=
+ntl(2);
+                         take  a  new  file=92s  group  from  parent  direc=
+tory,  as
+                         described in chown(2) and mkdir(2))
+
+mkdir(2) says:
+
+       The newly created directory will be owned by the effective user ID  =
+of  the
+       process.   If  the  directory  containing the file has the set-group=
+-ID bit
+       set, or if the file system is mounted with BSD group  semantics  (mo=
+unt  -o
+       bsdgroups  or, synonymously mount -o grpid), the new directory will =
+inherit
+       the group ownership from its parent; otherwise it  will  be  owned  =
+by  the
+       effective group ID of the process.
+
+and chown(2) says:
+
+NOTES
+       When  a  new  file  is  created (by, for example, open(2) or mkdir(2=
+)), its
+       owner is made the same as the file system user ID of the creating  p=
+rocess.
+       The  group of the file depends on a range of factors, including the =
+type of
+       file system, the options used to mount the file system, and whether =
+or  not
+       the set-group-ID permission bit is enabled on the parent directory. =
+ If the
+       file system supports  the  -o grpid  (or,  synonymously  -o bsdgroup=
+s)  and
+       -o nogrpid  (or,  synonymously  -o sysvgroups)  mount(8)  options, t=
+hen the
+       rules are as follows:
+
+       * If the file system is mounted with -o grpid, then the group of a n=
+ew file
+         is made the same as that of the parent directory.
+
+       * If the file system is mounted with -o nogrpid and the set-group-ID=
+ bit is
+         disabled on the parent directory, then the group of a new  file  i=
+s  made
+         the same as the process=92s file system GID.
+
+       * If the file system is mounted with -o nogrpid and the set-group-ID=
+ bit is
+         enabled on the parent directory, then the group of a new file is m=
+ade the
+         same as that of the parent directory.
+
+Thanks,
+Eric
+
+> Best regards,
+> Vasily
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> =
+
 
 _______________________________________________
 xfs mailing list
