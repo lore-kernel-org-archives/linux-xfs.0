@@ -1,37 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7EB4129DFB
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 21:38:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5F40B8F8035
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 19:38:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id g6FXA3LZFADs1bIl for
-	<xfs@oss.sgi.com>; Wed, 04 Sep 2013 19:38:26 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r852cPaT015399
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 4 Sep 2013 22:38:26 -0400
-Received: from gelk.kernelslacker.org (ovpn-113-166.phx2.redhat.com
-	[10.3.113.166])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r852cJwh006496
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 4 Sep 2013 22:38:25 -0400
-Received: from gelk.kernelslacker.org (localhost [127.0.0.1])
-	by gelk.kernelslacker.org (8.14.7/8.14.7) with ESMTP id r852cJp0010975
-	for <xfs@oss.sgi.com>; Wed, 4 Sep 2013 22:38:19 -0400
-Received: (from davej@localhost)
-	by gelk.kernelslacker.org (8.14.7/8.14.7/Submit) id r852cIKO010974
-	for xfs@oss.sgi.com; Wed, 4 Sep 2013 22:38:18 -0400
-Date: Wed, 4 Sep 2013 22:38:18 -0400
-From: Dave Jones <davej@redhat.com>
-Subject: potential argument order bug in
-	fs/xfs/xfs_dir2_node.c:xfs_dir2_leafn_unbalance
-Message-ID: <20130905023818.GA10694@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 678D07F5D
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 21:54:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 28B65304051
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 19:54:28 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	SInDm9xOWrr2g2aG for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 19:54:26 -0700 (PDT)
+Date: Thu, 5 Sep 2013 12:54:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 10/11] xfs: update the finobt on inode free
+Message-ID: <20130905025421.GX23571@dastard>
+References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
+	<1378232708-57156-11-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1378232708-57156-11-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,31 +30,175 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-I'm picking through some of the bugs in coverity's database,
-and I came across this one, which I'm unsure of..
+On Tue, Sep 03, 2013 at 02:25:07PM -0400, Brian Foster wrote:
+> An inode free operation can have several effects on the finobt. If
+> all inodes have been freed and the chunk deallocated, we remove the
+> finobt record. If the inode chunk was previously full, we must
+> insert a new record based on the existing inobt record. Otherwise,
+> we modify the record in place.
+> 
+> Create the xfs_ifree_finobt() function to identify the potential
+> scenarios and update the finobt appropriately.
 
-In xfs_dir2_leafn_unbalance we have this code..
+The first thing I'd do is factor all the inobt manipulation
+code xfs_difree() into a xfs_difree_inobt() helper function. have it
+return the record and offset that is then passed to your new helper
+xfs_difree_finobt(). That way xfs_difree() really becomes the setup
+function for the two btree operations rather than containing one set
+of modifications and calling a function to do the other...
 
-1583         if (xfs_dir2_leafn_order(save_blk->bp, drop_blk->bp))
-1584                 xfs_dir3_leafn_moveents(args, drop_blk->bp, &drophdr, dents, 0,
-1585                                         save_blk->bp, &savehdr, sents, 0,
-1586                                         drophdr.count);
-1587         else
-1588                 xfs_dir3_leafn_moveents(args, drop_blk->bp, &drophdr, dents, 0,
-1589                                         save_blk->bp, &savehdr, sents,
-1590                                         savehdr.count, drophdr.count);
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_ialloc.c | 120 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 120 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> index 516f4af..96f71b5 100644
+> --- a/fs/xfs/xfs_ialloc.c
+> +++ b/fs/xfs/xfs_ialloc.c
+> @@ -198,6 +198,117 @@ xfs_inobt_insert(
+>  }
+>  
+>  /*
+> + * Free an inode in the free inode btree.
+> + */
+> +STATIC int
+> +xfs_ifree_finobt(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_trans		*tp,
+> +	struct xfs_buf			*agbp,
+> +	struct xfs_inobt_rec_incore	*ibtrec,/* inobt record */
+> +	int				offset)	/* offset of inode */
+> +{
+> +	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
+> +	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
+> +	struct xfs_btree_cur		*cur;
+> +	struct xfs_inobt_rec_incore	rec;
+> +	int				error;
+> +	int				i;
+> +
+> +	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
+> +		return 0;
 
-The issue that coverity picked up in both cases, is that 'sents' and 'dents' are in
-a different order to how the xfs_dir3_leafn_moveents function expects them.
+There's that vector thing again...
 
-Is this intentional ? If so I'll mark it as such in their db.
+> +
+> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_FINO);
+> +
+> +	error = xfs_inobt_lookup(cur, ibtrec->ir_startino, XFS_LOOKUP_EQ, &i);
+> +	if (error)
+> +		goto error;
+> +
+> +	if (i == 1) {
+> +		int j;
+> +		/*
+> +		 * Read and update the existing record.
+> +		 */
+> +		error = xfs_inobt_get_rec(cur, &rec, &j);
+> +		if (error)
+> +			goto error;
+> +		XFS_WANT_CORRUPTED_GOTO(j == 1, error);
+> +
+> +		rec.ir_free |= XFS_INOBT_MASK(offset);
+> +		rec.ir_freecount++;
+> +
+> +		XFS_WANT_CORRUPTED_GOTO((rec.ir_free == ibtrec->ir_free) &&
+> +					(rec.ir_freecount == ibtrec->ir_freecount),
+> +					error);
+> +	}
 
-thanks,
+I can't say I'm a great fan of the layout of the logic. Yes, there's
+lots of cases to handle. It looks like:
 
-	Dave
+	lookup()
+	if (found)
+		modify in place
+	if (found && full && deleting chunks)
+		delete record
+	else if (!found && no record)
+		insert record
+	else if (found)
+		update record
+	else
+		corruption!
 
+I think it woul dbe better to get then "!found" case out of the way
+at the start. ie
+
+	if (i == 0) {
+		if (ibtrec->ir_freecount == 1)
+			insert record
+		else
+			CORRUPTION
+		goto out;
+	}
+
+	/* found a record, no need to check i == 1 anymore */
+	ASSERT(i == 1);
+
+	/* read and update */
+
+	if (full && deleting chunks)
+		delete record
+	else
+		update record
+
+	
+> +
+> +	/*
+> +	 * The content of inobt records should always match between the inobt
+> +	 * and finobt. The lifecycle of records in the finobt is different from
+> +	 * the inobt in that the finobt only tracks records with at least one
+> +	 * free inode. This is to optimize lookup for inode allocation purposes.
+> +	 * The following checks fix up the finobt appropriately based on the
+> +	 * state of the record subsequent to the current operation.
+> +	 */
+> +
+> +	if ((i == 1) &&
+> +	    (rec.ir_freecount == XFS_IALLOC_INODES(mp) &&
+> +	     !(mp->m_flags & XFS_MOUNT_IKEEP))) {
+> +		/*
+> +		 * We have an existing finobt record. If all inodes are free
+> +		 * and we're in !ikeep mode, the entire inode chunk has been
+> +		 * deallocated. Remove the record from the finobt.
+> +		 */
+> +		error = xfs_btree_delete(cur, &i);
+> +		if (error)
+> +			goto error;
+> +		ASSERT(i == 1);
+> +	} else if ((i == 0) && (ibtrec->ir_freecount == 1)) {
+> +		/*
+> +		 * No existing finobt record and the inobt record has a single
+> +		 * free inode. This means we've freed an inode in a previously
+> +		 * fully allocated chunk. Insert a new record into the finobt
+> +		 * based on the current inobt record.
+> +		 */
+> +		cur->bc_rec.i.ir_startino = ibtrec->ir_startino;
+> +		cur->bc_rec.i.ir_free = ibtrec->ir_free;
+> +		cur->bc_rec.i.ir_freecount = ibtrec->ir_freecount;
+> +		error = xfs_btree_insert(cur, &i);
+> +		if (error)
+> +			goto error;
+> +		ASSERT(i == 1);
+
+That's rather similar to the code in xfs_inobt_insert(). Indeed,
+is you write a helper - xfs_inobt_insert_rec() - for this, then rather than modifying
+xfs_inobt_lookup() to take extra parameters like I wondered for the
+previous patch, leave it alonge and pass the parameters to
+xfs_inobt_insert_rec() instead.
+
+Then this code is functionally identical to xfs_inobt_insert() done
+during allocation....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
