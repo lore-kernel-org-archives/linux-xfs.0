@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 420447F51
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 16:55:02 -0500 (CDT)
-Message-ID: <5228FDB5.2010300@sgi.com>
-Date: Thu, 05 Sep 2013 16:55:01 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0829B7F4E
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 17:05:52 -0500 (CDT)
+Message-ID: <5229003C.7020806@sgi.com>
+Date: Thu, 05 Sep 2013 17:05:48 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 27/55] xfs: move inode fork definitions to a new header
-	file
+Subject: Re: [PATCH 28/55] xfs: move unrealted definitions out of xfs_inode.h
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-28-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-28-git-send-email-david@fromorbit.com>
+	<1378332359-14737-29-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-29-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +28,13 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The inode fork definitions are a combination of on-disk format
-> definition and in-memory tracking and manipulation. They are both
-> shared with userspace, so move them all into their own file so
-> sharing is easy to do and track.  This removes all inode fork
-> related information from xfs_inode.h.
->
-> Do the same for the all the C code that currently resides in
-> xfs_inode.c for the same reason.
->
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-No change from previous post.
+User equivalent of the for Linux 3.12 kernel patch 13/50.
 
-xfsprogs equivalent of the for 3.12 kernel patch 12/50.
-
-move remaining shared inode to new xfs_inode_fork.c/h. new function 
-prototypes.
+This moves the last shared inode items to xfs_trans.h and removes the
+kernel-only xfs_inode.h. Fixes my concerns I had in previous post.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
