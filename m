@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 804197F50
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 13:47:46 -0500 (CDT)
-Message-ID: <5228D1D1.9010507@sgi.com>
-Date: Thu, 05 Sep 2013 13:47:45 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0148E7F50
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 13:50:57 -0500 (CDT)
+Message-ID: <5228D28C.2060205@sgi.com>
+Date: Thu, 05 Sep 2013 13:50:52 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 12/55] xfsprogs: define min/max once and use them
-	everywhere.
+Subject: Re: [PATCH 13/55] libxfs: fix compile warnings
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-13-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-13-git-send-email-david@fromorbit.com>
+	<1378332359-14737-14-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-14-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,12 +28,16 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
+> Some of the code shared with userspace causes compilation warnings
+> from things turned off in the kernel code, such as differences in
+> variable signedness. Fix those issues.
+>
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
-no change in this reporting of the patch.
+no change in the reposting of the patch
 
-remove private min/max and define it in include/platform_defs.h where it 
-is included in xfs.h and libxfs.h.
+convert a couple ASSERT to warn/exits, variable sign correction, 
+non-DEBUG unused variable, default string value.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
