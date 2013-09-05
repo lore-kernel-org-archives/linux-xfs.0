@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D1AD37F4E
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:29:22 -0500 (CDT)
-Message-ID: <5228A34F.6060404@sgi.com>
-Date: Thu, 05 Sep 2013 10:29:19 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 569D87F4E
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:36:06 -0500 (CDT)
+Message-ID: <5228A4E5.4020409@sgi.com>
+Date: Thu, 05 Sep 2013 10:36:05 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/55] xfsprogs: teach logprint about icreate transaction
+Subject: Re: [PATCH 04/55] libxfs: fix directory/attribute format issues
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-4-git-send-email-david@fromorbit.com>
+	<1378332359-14737-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +28,14 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
+> directory data headers and attr leaf headers need padding for 32 bit
+> systems to correctly align the data sections on 64 bit boundaries.
+>
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-No change to patch from last posting.
-
-When reviewing the patch before I said, "xfs_logprint can print the 
-icreate log items. good layout of information."
-
-Still looks good to me.
+This patch has not changed since the last posting. It brings xfsprogs to
+kernel commit 5170711d
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
