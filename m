@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C1D817F4E
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:25:37 -0500 (CDT)
-Message-ID: <5228A26E.1040202@sgi.com>
-Date: Thu, 05 Sep 2013 10:25:34 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D1AD37F4E
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:29:22 -0500 (CDT)
+Message-ID: <5228A34F.6060404@sgi.com>
+Date: Thu, 05 Sep 2013 10:29:19 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 02/55] xfsprogs: port inode create transaction changes
+Subject: Re: [PATCH 03/55] xfsprogs: teach logprint about icreate transaction
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-3-git-send-email-david@fromorbit.com>
+	<1378332359-14737-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,21 +28,13 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Bring across the relevant parts of the new inode create transaction
-> sufficient to keep kernel/user code in sync and implement the
-> infrastructure needed to make it work in xfsprogs.
->
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Same as previous posting. I said in the last patch posting that this had 
-"parts of kernel commits 28c8e41a, ddf6ad01, b8402b47?, and b8402b47".
+No change to patch from last posting.
 
-I did not thoroughly review the previous posting of this patch, so I am 
-looking at it closer now.
-
-There arguement difference in xfs_ialloc_get_rec() from Linux 3.11, but 
-that is needed for patch 11.
+When reviewing the patch before I said, "xfs_logprint can print the 
+icreate log items. good layout of information."
 
 Still looks good to me.
 
