@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4AF787CBF
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 16:26:25 -0500 (CDT)
-Message-ID: <5228F700.6070901@sgi.com>
-Date: Thu, 05 Sep 2013 16:26:24 -0500
+	by oss.sgi.com (Postfix) with ESMTP id DCB3C7CBF
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 16:29:47 -0500 (CDT)
+Message-ID: <5228F7CB.20607@sgi.com>
+Date: Thu, 05 Sep 2013 16:29:47 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 23/55] xfs: introduce xfs_rtalloc_defs.h
+Subject: Re: [PATCH 24/55] xfs: introduce xfs_quota_defs.h
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-24-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-24-git-send-email-david@fromorbit.com>
+	<1378332359-14737-25-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-25-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +28,22 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> There are quite a few realtime device definitions shared with
-> userspace. Move them from xfs_rtalloc.h to xfs_rt_alloc_defs.h
-> so we don't need to share xfs_rtalloc.h with userspace anymore.
->
-> This removes the final __KERNEL__ region from the XFS kernel
-> codebase. Yay!
+> There are a lot of quota flag definitions that are shared by user
+> and kernel space. Move them all to xfs_quota_defs.h so we can
+> unshare xfs_quota.h and remove the __KERNEL__ regions from it.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
 
-No change in this patch from previous post. Synced files look good.
+This patch compares different from the previous series because of the 
+new quota header entry. I compares cleanly.
 
-xfsprogs equivalent of the for 3.12 kernel patch 08/50.
 
-move shared items from xfs_rtalloc.h to xfs_format.h.
-xfs_rtalloc.h is now kernel-only, remove from xfsprogs.
+xfsprogs equivalent of the for 3.12 kernel patch 09/50.
+
+move remaining quota shared entries from xfs_quota.h to xfs_quota_defs.h 
+- as mentioned in patch 20, xfs_quota.h is now kernel-only and removed.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
