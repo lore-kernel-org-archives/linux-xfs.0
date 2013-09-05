@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C896E7F67
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 86FCE7F5E
 	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 07:13:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6FF2304053
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:48 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1280DAC005
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:47 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ql7Q1CfFQxxGFrIO for <xfs@oss.sgi.com>;
-	Thu, 05 Sep 2013 05:13:47 -0700 (PDT)
+	GxEQdRH2b3ZDFec6 for <xfs@oss.sgi.com>;
+	Thu, 05 Sep 2013 05:13:46 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GS-Nk
+	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GX-Pl
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004Eh-Md
+	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004Ew-Od
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 08/12] db: verify and calculate inode CRCs
-Date: Thu,  5 Sep 2013 22:13:29 +1000
-Message-Id: <1378383213-16155-9-git-send-email-david@fromorbit.com>
+Subject: [RFC PATCH 11/12] db: add a special attribute buffer verifier
+Date: Thu,  5 Sep 2013 22:13:32 +1000
+Message-Id: <1378383213-16155-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378383213-16155-1-git-send-email-david@fromorbit.com>
 References: <1378383213-16155-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,126 +39,109 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we set the current Io cursor to point at an inode, verify that
-the inode CRC is intact. And prior to writing such an IO cursor,
-calculate the inode CRC.
+Because we only have a single attribute type that is used for all
+the attribute buffer types, we need to provide a special verifier
+for the read code. That verifier needs to know all the attribute
+types and when it find one it knows about, switch to the correct
+verifier and call it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/inode.c             | 2 ++
- db/io.c                | 4 ++++
- db/io.h                | 6 +++++-
- include/libxfs.h       | 4 ++++
- libxfs/xfs_inode_buf.c | 8 ++++----
- 5 files changed, 19 insertions(+), 5 deletions(-)
+ db/attr.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h |  2 ++
+ db/type.c |  3 ++-
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-diff --git a/db/inode.c b/db/inode.c
-index ec533ee..4090855 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -655,6 +655,8 @@ set_cur_inode(
- 		blkbb, DB_RING_IGN, NULL);
- 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
- 	dip = iocur_top->data;
-+	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
-+	iocur_top->ino_buf = 1;
- 	iocur_top->ino = ino;
- 	iocur_top->mode = be16_to_cpu(dip->di_mode);
- 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
-diff --git a/db/io.c b/db/io.c
-index d6e1d28..5f2e492 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -462,6 +462,9 @@ write_cur(void)
- 		return;
- 	}
+diff --git a/db/attr.c b/db/attr.c
+index cd95a0a..359af7b 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -25,6 +25,7 @@
+ #include "attr.h"
+ #include "io.h"
+ #include "init.h"
++#include "output.h"
  
-+	if (iocur_top->ino_buf)
-+		libxfs_dinode_calc_crc(mp, iocur_top->data);
+ static int	attr_leaf_entries_count(void *obj, int startoff);
+ static int	attr_leaf_hdr_count(void *obj, int startoff);
+@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++/*
++ * Special read verifier for attribute buffers. detect the magic number
++ * appropriately and set the correct verifier and call it.
++ */
++static void
++xfs_attr3_db_read_verify(
++	struct xfs_buf		*bp)
++{
++	__be32			magic32;
++	__be16			magic16;
 +
- 	if (iocur_top->bbmap)
- 		write_cur_bbs();
- 	else
-@@ -528,6 +531,7 @@ set_cur(
- 	iocur_top->ino = ino;
- 	iocur_top->dirino = dirino;
- 	iocur_top->mode = mode;
-+	iocur_top->ino_buf = 0;
- 
- 	/* store location in ring */
- 	if (ring_flag)
-diff --git a/db/io.h b/db/io.h
-index d647284..1f8270d 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -38,6 +38,8 @@ typedef struct iocur {
- 	const struct typ	*typ;	/* type of "data" */
- 	bbmap_t			*bbmap;	/* map daddr if fragmented */
- 	struct xfs_buf		*bp;	/* underlying buffer */
-+	int			ino_crc_ok:1;
-+	int			ino_buf:1;
- } iocur_t;
- 
- #define DB_RING_ADD 1                   /* add to ring on set_cur */
-@@ -62,5 +64,7 @@ extern void     ring_add(void);
- static inline bool
- iocur_crc_valid()
- {
--	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
-+	return (iocur_top->bp &&
-+		iocur_top->bp->b_error != EFSCORRUPTED &&
-+		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
- }
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 9429f61..90f9a75 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -754,6 +754,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
- #define libxfs_idata_realloc		xfs_idata_realloc
- #define libxfs_idestroy_fork		xfs_idestroy_fork
- 
-+#define libxfs_dinode_verify		xfs_dinode_verify
-+bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
-+		       struct xfs_dinode *dip);
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
 +
- /* xfs_sb.h */
- #define libxfs_mod_sb			xfs_mod_sb
- #define libxfs_sb_from_disk		xfs_sb_from_disk
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 6205318..54ad320 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -246,10 +246,10 @@ xfs_dinode_to_disk(
- 	}
- }
++	switch (magic16) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		bp->b_ops = &xfs_attr3_leaf_buf_ops;
++		goto verify;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		goto verify;
++	default:
++		break;
++	}
++
++	switch (magic32) {
++	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
++		bp->b_ops = &xfs_attr3_rmt_buf_ops;
++		break;
++	default:
++		dbprintf(_("Unknown attribute buffer type!\n"));
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++verify:
++	bp->b_ops->verify_read(bp);
++}
++
++static void
++xfs_attr3_db_write_verify(
++	struct xfs_buf		*bp)
++{
++	dbprintf(_("Writing unknown attribute buffer type!\n"));
++	xfs_buf_ioerror(bp, EFSCORRUPTED);
++}
++
++const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
++	.verify_read = xfs_attr3_db_read_verify,
++	.verify_write = xfs_attr3_db_write_verify,
++};
+diff --git a/db/attr.h b/db/attr.h
+index 3065372..bc3431f 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -33,3 +33,5 @@ extern const field_t	attr3_node_hdr_flds[];
  
--static bool
-+bool
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
--	struct xfs_inode	*ip,
-+	xfs_ino_t		ino,
- 	struct xfs_dinode	*dip)
- {
- 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
-@@ -264,7 +264,7 @@ xfs_dinode_verify(
- 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
- 			      offsetof(struct xfs_dinode, di_crc)))
- 		return false;
--	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
-+	if (be64_to_cpu(dip->di_ino) != ino)
- 		return false;
- 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
- 		return false;
-@@ -315,7 +315,7 @@ xfs_iread(
- 		return error;
- 
- 	/* even unallocated inodes are verified */
--	if (!xfs_dinode_verify(mp, ip, dip)) {
-+	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
- 		xfs_alert(mp, "%s: validation failed for inode %lld failed",
- 				__func__, ip->i_ino);
- 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
++
++extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
+diff --git a/db/type.c b/db/type.c
+index 2c3431e..04d0d56 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -77,7 +77,8 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+ 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
++		&xfs_attr3_db_buf_ops },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
 -- 
 1.8.3.2
 
