@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3D6B7F52
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 11:21:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A27F38F804C
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 09:21:02 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id BF5417F51
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 11:21:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AA2138F804C
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 09:21:42 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id agV6Npi1qrlHCQZJ for
-	<xfs@oss.sgi.com>; Thu, 05 Sep 2013 09:21:02 -0700 (PDT)
-Message-ID: <5228AE93.2050001@redhat.com>
-Date: Thu, 05 Sep 2013 12:17:23 -0400
+	cuda.sgi.com with ESMTP id XEnBZhEoSQm7EVhH for
+	<xfs@oss.sgi.com>; Thu, 05 Sep 2013 09:21:41 -0700 (PDT)
+Message-ID: <5228AEBB.9040402@redhat.com>
+Date: Thu, 05 Sep 2013 12:18:03 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 04/11] xfs: update inode allocation transaction
-	reservations for finobt
+Subject: Re: [RFC PATCH 06/11] xfs: use correct transaction reservations in
+	xfs_inactive()
 References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
-	<1378232708-57156-5-git-send-email-bfoster@redhat.com>
-	<20130905005946.GR23571@dastard>
-In-Reply-To: <20130905005946.GR23571@dastard>
+	<1378232708-57156-7-git-send-email-bfoster@redhat.com>
+	<20130905013519.GT23571@dastard>
+In-Reply-To: <20130905013519.GT23571@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,42 +33,105 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/04/2013 08:59 PM, Dave Chinner wrote:
-> On Tue, Sep 03, 2013 at 02:25:01PM -0400, Brian Foster wrote:
->> Update inode allocation transaction reservations for the finobt. A
->> create via record modification requires a log reservation for the
->> additional finobt record. Any such allocation could result in an
->> finobt removal if the inode chunk has become fully allocated, thus
->> we include a reservation for a finobt btree merge as well.
->> Allocation of a new inode chunk must account for splits in the
->> finobt as well as the existing ialloc tree.
+On 09/04/2013 09:35 PM, Dave Chinner wrote:
+> On Tue, Sep 03, 2013 at 02:25:03PM -0400, Brian Foster wrote:
+>> The transaction allocated in xfs_inactive() can be passed down into
+>> xfs_inactive_symlink() or xfs_itruncate_extents(), both of which
+>> can commit and reallocate a new transaction. This leads to
+>> reservation issues if the transaction is subsequently passed into
+>> xfs_ifree(), which requires a larger reservation to manage the
+>> finobt.
+>>
+>> Reorganize xfs_inactive() to commit any transaction handed back
+>> from symlink or truncate processing and unconditionally allocate
+>> a new transaction for xfs_ifree() with the appropriate reservation.
 > 
-> These transaction reservation changes are only necessary for
-> filesystems with free inode btrees, otherwise they just use more log
-> space than is necessary.
+> Ok, I've had a bit of a look at this now, and I like how the code
+> turns out. However, I don't think it goes far enough, or fix the
+> problem that causes all the transaction nastiness in xfs_inactive().
+> 
+> Firstly, we are not doing rolling transactions here - there is no
+> need for all the changes to be atomic because the inode is on the
+> unlinked list if it is going to be freed. Hence we don't need to
+> pass transaction pointers around.
 > 
 
-Yeah, good point.
+I was wondering about this when I was passing through the code. If I
+recall, I ended up just trying to work around the lower level calls as
+opposed to messing with them because xfs_truncate_extents() had other
+callers (but the discussion below addresses that).
 
-> Can you add helper functions for the free inode btree reservations,
-> and have them return 0 when the feature is not enabled? That way the
-> code stays pretty clean, is self documenting and doesn't take
-> unnecessary space when the feature is not enabled....
+> xfs_inactive_symlink() can do a transaction completely internally,
+> and, well, it doesn't even log the inode if the symlink is in-line
+> and so may not even need a transaction. Hence really only
+> xfs_inactive_symlink_rmt() needs to run a transaction, and it can do
+> that internally just fine.
 > 
 
-So not new functions that duplicate the entire calculations for the
-finobt enabled cases, but new functions that define the additional
-requirements for the finobt on top of the existing reservation
-calculations for particular operations (i.e., similar to the recent
-patch to fix the inode log size, if I recall). Sounds good.
+Ok.
+
+> For the xfs_itruncate_extents() data fork transaction, just add a
+> new wrapper called xfs_inactive_truncate() that holds the
+> transaction context internally - that moves the only other
+> transaction context that you need to commit out of xfs_inactive()
+> altogether, as the attr fork already uses a private transaction
+> context.
+> 
+
+Sounds good.
+
+> And, finally, you can then factor the xfs_ifree() and it's
+> transaction context into a helper function as well, so there aren't
+> any transaction contexts left in xfs_inactive() at all.
+> 
+> That would leave us with:
+> 
+> 	if (ISLNK) {
+> 		error = xfs_inactive_symlink(ip);
+> 	} else if (truncate)
+> 		error = xfs_inactive_truncate(ip);
+> 	}
+> 	if (error)
+> 		goto out;
+> 	if (ip->i_d.di_anextents > 0)
+> 		error = xfs_attr_inactive(ip);
+> 	if (error)
+> 		goto out;
+> 
+> 	error = xfs_inactive_ifree(ip);
+> 
+> 	xfs_qm_dqdetach(ip);
+> out:
+> 	return;
+> 
+> This gives us a natural separation of the different transaction
+> reservations and contexts needed to perform the operations, and does
+> result in any extraneous work being done because we don't know what
+> the transaction context passed to us contains at all...
+> 
+
+Yeah, I agree. That cleans things up nicely.
+
+> FWIW, there are other reasons for suggesting this structure - have a
+> read of "[RFD 14/17] xfs: separate inode freeing from inactivation"
+> and you'll see that what I've suggested above sets the code up for
+> implementing the optimisations documented in the RFD.
+> 
+> http://oss.sgi.com/archives/xfs/2013-08/msg00345.html
+> 
+> It might be best to put this as 3-4 patches at the start of the
+> series, rather than in the middle of it as it's really a separate
+> piece of cleanup work....
+> 
+
+Ok, I've skimmed through most of the writeups in that set. If it turns
+into a handful of patches, I might just test and post this as an
+independent, prerequisite set for personal ease of management reasons if
+nothing else. I'm more confident in the changes with the review feedback
+and that I obviously now know what the finobt requirements are. Thanks.
 
 Brian
 
->> Also update XFS_IALLOC_SPACE_RES() to reserve data blocks for
->> finobt split/merge scenarios.
-> 
-> Needs to handle the enabled/disabled case, too.
-> 
 > Cheers,
 > 
 > Dave.
