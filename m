@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D97597F51
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 16:51:29 -0500 (CDT)
-Message-ID: <5228FCE1.4020801@sgi.com>
-Date: Thu, 05 Sep 2013 16:51:29 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 420447F51
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 16:55:02 -0500 (CDT)
+Message-ID: <5228FDB5.2010300@sgi.com>
+Date: Thu, 05 Sep 2013 16:55:01 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 26/55] libxfs: move transaction code to trans.c
+Subject: Re: [PATCH 27/55] xfs: move inode fork definitions to a new header
+	file
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-27-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-27-git-send-email-david@fromorbit.com>
+	<1378332359-14737-28-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-28-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +29,24 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> There is very little code left in xfs_trans.c. So little it is not
-> worthtrying to share this file with kernel space any more. Move the
-> code to libxfs/trans.c, and remove libxfs/xfs_trans.c.
+> The inode fork definitions are a combination of on-disk format
+> definition and in-memory tracking and manipulation. They are both
+> shared with userspace, so move them all into their own file so
+> sharing is easy to do and track.  This removes all inode fork
+> related information from xfs_inode.h.
+>
+> Do the same for the all the C code that currently resides in
+> xfs_inode.c for the same reason.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-No change in this patch from previous post.
+No change from previous post.
 
-xfsprogs equivalent of the for 3.12 kernel patch 11/50.
+xfsprogs equivalent of the for 3.12 kernel patch 12/50.
 
-change zone allocator/zone free to calloc/free, change function names to 
-libxfs_trans_XX.
+move remaining shared inode to new xfs_inode_fork.c/h. new function 
+prototypes.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
