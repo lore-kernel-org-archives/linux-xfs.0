@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D2647F5E
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B1F517F52
 	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 07:13:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BB4C8F8040
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:46 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A0C83304053
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:43 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	t3Dk1k7eLQfIbsSC for <xfs@oss.sgi.com>;
-	Thu, 05 Sep 2013 05:13:43 -0700 (PDT)
+	IaWXr03XSeybPEqq for <xfs@oss.sgi.com>;
+	Thu, 05 Sep 2013 05:13:41 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GN-KY
+	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GQ-MT
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004EI-JY
+	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004EX-L9
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 03/12] db: rewrite IO engine to use libxfs
-Date: Thu,  5 Sep 2013 22:13:24 +1000
-Message-Id: <1378383213-16155-4-git-send-email-david@fromorbit.com>
+Subject: [RFC PATCH 06/12] db: introduce verifier support into set_cur
+Date: Thu,  5 Sep 2013 22:13:27 +1000
+Message-Id: <1378383213-16155-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378383213-16155-1-git-send-email-david@fromorbit.com>
 References: <1378383213-16155-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,511 +39,187 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that we have buffers and xfs_buf_maps, it is relatively easy to
-convert the IO engine to use libxfs routines. This gets rid of the
-most of the differences between mapped and straight buffer reads,
-and tracks xfs_bufs directly in the IO context that is being used.
+To be able to use read and write verifiers, we need to pass the
+verifier to the IO routines. We do this via the set_cur() function
+used to trigger reading the buffer.
 
-This is not yet a perfect solution, as xfs_db does different sized
-IOs for the same block range which will throw warnings like:
+For most metadata types, there is only one type of verifier needed.
+For these, we can simply add the verifier to the type table entry
+for the given type and use that directly. This type entry is already
+carried around by the IO context, so if we ever need to get it again
+we have direct access to it in the context we'll be doing IO.
 
-xfs_db> inode 64
-7ffff7fde740: Badness in key lookup (length)
-bp=(bno 0x40, len 8192 bytes) key=(bno 0x40, len 4096 bytes)
-xfs_db>
+Only attach the verifiers to the v5 filesystem type table; there is
+not need for them on v4 filesystems as we don't have to verify or
+calculate CRCs for them.
 
-This is when first displaying an inode in the root inode chunk.
-These will need to be dealt with on a case by case basis.
+There are some metadata types that have more than one buffer format,
+or aren't based in directly in buffers. For these, leave the type
+table verifier NULL for now - these will need to be addressed
+individually.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/bmap.c        |   1 +
- db/init.c        |  25 ++++++--
- db/io.c          | 170 +++++++++++++------------------------------------------
- db/io.h          |   5 +-
- include/libxfs.h |   3 +
- libxfs/init.c    |   5 ++
- libxfs/rdwr.c    |  61 +++++++++++++-------
- 7 files changed, 112 insertions(+), 158 deletions(-)
+ db/io.c   | 13 +++++++---
+ db/type.c | 88 ++++++++++++++++++++++++++++++++++-----------------------------
+ db/type.h |  1 +
+ 3 files changed, 59 insertions(+), 43 deletions(-)
 
-diff --git a/db/bmap.c b/db/bmap.c
-index eb5db66..4ac9632 100644
---- a/db/bmap.c
-+++ b/db/bmap.c
-@@ -299,6 +299,7 @@ make_bbmap(
- 		bbmap->b[i].bm_bn = XFS_FSB_TO_DADDR(mp, bmp[i].startblock);
- 		bbmap->b[i].bm_bn = XFS_FSB_TO_BB(mp, bmp[i].blockcount);
- 	}
-+	bbmap->nmaps = nex;
- }
- 
- static xfs_fsblock_t
-diff --git a/db/init.c b/db/init.c
-index 0e88b56..b1cddca 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -54,8 +54,8 @@ init(
- 	int		argc,
- 	char		**argv)
- {
--	xfs_sb_t	*sbp;
--	char		bufp[BBSIZE];
-+	struct xfs_sb	*sbp;
-+	struct xfs_buf	*bp;
- 	int		c;
- 
- 	setlocale(LC_ALL, "");
-@@ -115,14 +115,25 @@ init(
- 		exit(1);
- 	}
- 
--	if (read_buf(XFS_SB_DADDR, 1, bufp)) {
-+	/*
-+	 * Read the superblock, but don't validate it - we are a diagnostic
-+	 * tool and so need to be able to mount busted filesystems.
-+	 */
-+	memset(&xmount, 0, sizeof(struct xfs_mount));
-+	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
-+	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
-+			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-+
-+	if (!bp || bp->b_error) {
- 		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
- 			"bytes)\n"), progname, fsdevice);
- 		exit(1);
- 	}
- 
- 	/* copy SB from buffer to in-core, converting architecture as we go */
--	libxfs_sb_from_disk(&xmount.m_sb, (struct xfs_dsb *)bufp);
-+	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
-+	libxfs_putbuf(bp);
-+	libxfs_purgebuf(bp);
- 
- 	sbp = &xmount.m_sb;
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-@@ -201,6 +212,12 @@ main(
- 	}
- 
- close_devices:
-+	/*
-+	 * make sure that we pop the last buffer context we held so that the
-+	 * buffer is released before purge the caches during unmount.
-+	 */
-+	pop_cur();
-+	libxfs_umount(mp);
- 	if (x.ddev)
- 		libxfs_device_close(x.ddev);
- 	if (x.logdev && x.logdev != x.ddev)
 diff --git a/db/io.c b/db/io.c
-index 01a5970..abfbca4 100644
+index abfbca4..d6e1d28 100644
 --- a/db/io.c
 +++ b/db/io.c
-@@ -104,8 +104,12 @@ pop_cur(void)
- 		dbprintf(_("can't pop anything from I/O stack\n"));
- 		return;
- 	}
--	if (iocur_top->buf)
--		xfree(iocur_top->buf);
-+	if (iocur_top->bp)
-+		libxfs_putbuf(iocur_top->bp);
-+	if (iocur_top->bbmap) {
-+		free(iocur_top->bbmap);
-+		iocur_top->bbmap = NULL;
-+	}
- 	if (--iocur_sp >= 0) {
- 		iocur_top = iocur_base + iocur_sp;
- 		cur_typ = iocur_top->typ;
-@@ -147,10 +151,11 @@ print_iocur(
- 	dbprintf(_("\tbuffer block %lld (fsbno %lld), %d bb%s\n"), ioc->bb,
- 		(xfs_dfsbno_t)XFS_DADDR_TO_FSB(mp, ioc->bb), ioc->blen,
- 		ioc->blen == 1 ? "" : "s");
--	if (ioc->use_bbmap) {
-+	if (ioc->bbmap) {
- 		dbprintf(_("\tblock map"));
--		for (i = 0; i < ioc->blen; i++)
--			dbprintf(" %d:%lld", i, ioc->bbmap.b[i]);
-+		for (i = 0; i < ioc->bbmap->nmaps; i++)
-+			dbprintf(" %lld:%d", ioc->bbmap->b[i].bm_bn,
-+					     ioc->bbmap->b[i].bm_len);
- 		dbprintf("\n");
- 	}
- 	dbprintf(_("\tinode %lld, dir inode %lld, type %s\n"), ioc->ino,
-@@ -238,7 +243,7 @@ push_f(
- 	else
- 		set_cur(iocur_top[-1].typ, iocur_top[-1].bb,
- 			iocur_top[-1].blen, DB_RING_IGN,
--			iocur_top[-1].use_bbmap ? &iocur_top[-1].bbmap : NULL);
-+			iocur_top[-1].bbmap);
- 
- 	/* run requested command */
- 	if (argc>1)
-@@ -280,8 +285,7 @@ forward_f(
- 		iocur_ring[ring_current].bb,
- 		iocur_ring[ring_current].blen,
- 		DB_RING_IGN,
--		iocur_ring[ring_current].use_bbmap ?
--			&iocur_ring[ring_current].bbmap : NULL);
-+		iocur_ring[ring_current].bbmap);
- 
- 	return 0;
- }
-@@ -321,8 +325,7 @@ back_f(
- 		iocur_ring[ring_current].bb,
- 		iocur_ring[ring_current].blen,
- 		DB_RING_IGN,
--		iocur_ring[ring_current].use_bbmap ?
--			&iocur_ring[ring_current].bbmap : NULL);
-+		iocur_ring[ring_current].bbmap);
- 
- 	return 0;
- }
-@@ -362,7 +365,7 @@ ring_f(
- 		iocur_ring[index].bb,
- 		iocur_ring[index].blen,
- 		DB_RING_IGN,
--		iocur_ring[index].use_bbmap ? &iocur_ring[index].bbmap : NULL);
-+		iocur_ring[index].bbmap);
- 
- 	return 0;
- }
-@@ -417,132 +420,37 @@ ring_add(void)
- 	}
- }
- 
--int
--read_buf(
--	xfs_daddr_t	bbno,
--	int		count,
--	void		*bufp)
--{
--	int		err;
--
--	err = pread64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
--	if (err < 0)
--		err = errno;
--	else if (err < count)
--		err = -1;
--	return err;
--}
--
--static int
--write_buf(
--	xfs_daddr_t	bbno,
--	int		count,
--	void		*bufp)
--{
--	int		err;
--
--	err = pwrite64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
--	if (err < 0)
--		err = errno;
--	else if (err < count)
--		err = -1;
--	return err;
--}
--
- static void
- write_cur_buf(void)
- {
- 	int ret;
- 
--	ret = write_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
--
--	if (ret == -1)
--		dbprintf(_("incomplete write, block: %lld\n"),
--			 (iocur_base + iocur_sp)->bb);
--	else if (ret != 0)
-+	ret = libxfs_writebufr(iocur_top->bp);
-+	if (ret != 0)
- 		dbprintf(_("write error: %s\n"), strerror(ret));
- 
- 	/* re-read buffer from disk */
--	ret = read_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
--	if (ret == -1)
--		dbprintf(_("incomplete read, block: %lld\n"),
--			 (iocur_base + iocur_sp)->bb);
--	else if (ret != 0)
-+	ret = libxfs_readbufr(mp->m_ddev_targp, iocur_top->bb, iocur_top->bp,
-+			      iocur_top->blen, 0);
-+	if (ret != 0)
- 		dbprintf(_("read error: %s\n"), strerror(ret));
- }
- 
--static int
--write_bbs(
--	__int64_t       bbno,
--	int             count,
--	void            *bufp,
--	bbmap_t		*bbmap)
--{
--	int		j;
--	int		rval = EINVAL;	/* initialize for zero `count' case */
--
--	for (j = 0; j < count;) {
--		rval = write_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
--			     (char *)bufp + BBTOB(j));
--		if (rval)
--			break;
--
--		j += bbmap->b[j].bm_len;
--	}
--	return rval;
--}
--
--static int
--read_bbs(
--	__int64_t	bbno,
--	int		count,
--	void		**bufp,
--	bbmap_t		*bbmap)
--{
--	void		*buf;
--	int		j;
--	int		rval = EINVAL;
--
--	if (count <= 0)
--		count = 1;
--
--	if (*bufp == NULL)
--		buf = xmalloc(BBTOB(count));
--	else
--		buf = *bufp;
--	for (j = 0; j < count;) {
--		rval = read_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
--			     (char *)buf + BBTOB(j));
--		if (rval)
--			break;
--
--		j += bbmap->b[j].bm_len;
--	}
--	if (*bufp == NULL)
--		*bufp = buf;
--	return rval;
--}
--
- static void
- write_cur_bbs(void)
- {
- 	int ret;
- 
--	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
--			&iocur_top->bbmap);
--	if (ret == -1)
--		dbprintf(_("incomplete write, block: %lld\n"),
--			 (iocur_base + iocur_sp)->bb);
--	else if (ret != 0)
-+	ret = libxfs_writebufr(iocur_top->bp);
-+	if (ret != 0)
- 		dbprintf(_("write error: %s\n"), strerror(ret));
- 
-+
- 	/* re-read buffer from disk */
--	ret = read_bbs(iocur_top->bb, iocur_top->blen, &iocur_top->buf,
--		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
--	if (ret == -1)
--		dbprintf(_("incomplete read, block: %lld\n"),
--			 (iocur_base + iocur_sp)->bb);
--	else if (ret != 0)
-+	ret = libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp,
-+				  iocur_top->bbmap->b, iocur_top->bbmap->nmaps,
-+				  0);
-+	if (ret != 0)
- 		dbprintf(_("read error: %s\n"), strerror(ret));
- }
- 
-@@ -554,7 +462,7 @@ write_cur(void)
- 		return;
- 	}
- 
--	if (iocur_top->use_bbmap)
-+	if (iocur_top->bbmap)
- 		write_cur_bbs();
- 	else
- 		write_cur_buf();
-@@ -568,6 +476,7 @@ set_cur(
- 	int             ring_flag,
- 	bbmap_t		*bbmap)
- {
-+	struct xfs_buf	*bp;
+@@ -480,12 +480,14 @@ set_cur(
  	xfs_ino_t	dirino;
  	xfs_ino_t	ino;
  	__uint16_t	mode;
-@@ -587,21 +496,20 @@ set_cur(
- #ifdef DEBUG
- 		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
- #endif
--
--		if (read_bbs(d, c, &iocur_top->buf, bbmap))
-+		iocur_top->bbmap = malloc(sizeof(struct bbmap));
-+		if (!iocur_top->bbmap)
++	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
+ 
+ 	if (iocur_sp < 0) {
+ 		dbprintf(_("set_cur no stack element to set\n"));
+ 		return;
+ 	}
+ 
++
+ 	ino = iocur_top->ino;
+ 	dirino = iocur_top->dirino;
+ 	mode = iocur_top->mode;
+@@ -501,12 +503,17 @@ set_cur(
  			return;
--		iocur_top->bbmap = *bbmap;
--		iocur_top->use_bbmap = 1;
-+		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
-+		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
-+					bbmap->nmaps, 0, NULL);
+ 		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
+ 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
+-					bbmap->nmaps, 0, NULL);
++					bbmap->nmaps, 0, ops);
  	} else {
--		if (!iocur_top->buf) {
--			iocur_top->buf = malloc(BBTOB(c));
--			if (!iocur_top->buf)
--				return;
--		}
--		if (read_buf(d, c, iocur_top->buf))
--			return;
--		iocur_top->use_bbmap = 0;
-+		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
-+		iocur_top->bbmap = NULL;
+-		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
++		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
+ 		iocur_top->bbmap = NULL;
  	}
-+	if (!bp || bp->b_error)
-+		return;
-+	iocur_top->buf = bp->b_addr;
-+	iocur_top->bp = bp;
- 
- 	iocur_top->bb = d;
- 	iocur_top->blen = c;
-diff --git a/db/io.h b/db/io.h
-index 0f7c018..2c47ccc 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -20,6 +20,7 @@ struct typ;
- 
- #define	BBMAP_SIZE		(XFS_MAX_BLOCKSIZE / BBSIZE)
- typedef struct bbmap {
-+	int			nmaps;
- 	struct xfs_buf_map	b[BBMAP_SIZE];
- } bbmap_t;
- 
-@@ -35,8 +36,8 @@ typedef struct iocur {
- 	__uint16_t		mode;	/* current inode's mode */
- 	xfs_off_t		off;	/* fs offset of "data" in bytes */
- 	const struct typ	*typ;	/* type of "data" */
--	int			use_bbmap; /* set if bbmap is valid */
--	bbmap_t			bbmap;	/* map daddr if fragmented */
-+	bbmap_t			*bbmap;	/* map daddr if fragmented */
-+	struct xfs_buf		*bp;	/* underlying buffer */
- } iocur_t;
- 
- #define DB_RING_ADD 1                   /* add to ring on set_cur */
-diff --git a/include/libxfs.h b/include/libxfs.h
-index ffd83bf..bee0663 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -437,7 +437,10 @@ extern xfs_buf_t *libxfs_getbufr(struct xfs_buftarg *, xfs_daddr_t, int);
- extern void	libxfs_putbufr(xfs_buf_t *);
- 
- extern int	libxfs_writebuf_int(xfs_buf_t *, int);
-+extern int	libxfs_writebufr(struct xfs_buf *);
- extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
-+extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *,
-+				    struct xfs_buf_map *, int, int);
- 
- extern int libxfs_bhash_size;
- extern int libxfs_ihash_size;
-diff --git a/libxfs/init.c b/libxfs/init.c
-index db7eeea..229aa50 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -688,6 +688,9 @@ libxfs_mount(
- 	libxfs_buftarg_init(mp, dev, logdev, rtdev);
- 
- 	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
-+	if (flags & LIBXFS_MOUNT_ROOTINOS)
-+		mp->m_flags |= LIBXFS_MOUNT_ROOTINOS;
+-	if (!bp || bp->b_error)
 +
- 	mp->m_sb = *sb;
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
- 	sbp = &(mp->m_sb);
-@@ -866,6 +869,8 @@ libxfs_umount(xfs_mount_t *mp)
- 	int			agno;
++	/*
++	 * keep the buffer even if the verifier says it is corrupted.
++	 * We're a diagnostic tool, after all.
++	 */
++	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
+ 		return;
+ 	iocur_top->buf = bp->b_addr;
+ 	iocur_top->bp = bp;
+diff --git a/db/type.c b/db/type.c
+index 64e2ef4..b3f3d87 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -50,50 +50,58 @@ static const cmdinfo_t	type_cmd =
+ 	  N_("set/show current data type"), NULL };
  
- 	libxfs_rtmount_destroy(mp);
-+	if ((mp->m_flags & LIBXFS_MOUNT_ROOTINOS) && mp->m_rootip)
-+		libxfs_iput(mp->m_rootip, 0);
- 	libxfs_icache_purge();
- 	libxfs_bcache_purge();
+ static const typ_t	__typtab[] = {
+-	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+-	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld },
+-	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+-	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
+-	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld },
+-	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld },
+-	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld },
+-	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld },
+-	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
+-	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+-	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld },
+-	{ TYP_INODATA, "inodata", NULL, NULL },
+-	{ TYP_INODE, "inode", handle_struct, inode_hfld },
+-	{ TYP_LOG, "log", NULL, NULL },
+-	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+-	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+-	{ TYP_SB, "sb", handle_struct, sb_hfld },
+-	{ TYP_SYMLINK, "symlink", handle_string, NULL },
+-	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_AGF, "agf", handle_struct, agf_hfld, NULL },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld, NULL },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld, NULL },
++	{ TYP_ATTR, "attr", handle_struct, attr_hfld, NULL },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld, NULL },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld, NULL },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld, NULL },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld, NULL },
++	{ TYP_DATA, "data", handle_block, NULL, NULL },
++	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld, NULL },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld, NULL },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld, NULL },
++	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_hfld, NULL },
++	{ TYP_LOG, "log", NULL, NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL },
++	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL },
++	{ TYP_TEXT, "text", handle_text, NULL, NULL },
+ 	{ TYP_NONE, NULL }
+ };
  
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 13dbd23..8d8bcfc 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -719,30 +719,18 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
- 	return bp;
- }
+ static const typ_t	__typtab_crc[] = {
+-	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+-	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
+-	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld },
+-	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
+-	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
+-	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
+-	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
+-	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld },
+-	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+-	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
+-	{ TYP_INODATA, "inodata", NULL, NULL },
+-	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld },
+-	{ TYP_LOG, "log", NULL, NULL },
+-	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+-	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+-	{ TYP_SB, "sb", handle_struct, sb_hfld },
+-	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld },
+-	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
++		&xfs_bmbt_buf_ops },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
++		&xfs_bmbt_buf_ops },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld,
++		&xfs_allocbt_buf_ops },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
++		&xfs_allocbt_buf_ops },
++	{ TYP_DATA, "data", handle_block, NULL, NULL },
++	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld, NULL },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
++		&xfs_dquot_buf_ops },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
++		&xfs_inobt_buf_ops },
++	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
++		&xfs_inode_buf_ops },
++	{ TYP_LOG, "log", NULL, NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops },
++	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
++		&xfs_symlink_buf_ops },
++	{ TYP_TEXT, "text", handle_text, NULL, NULL },
+ 	{ TYP_NONE, NULL }
+ };
  
--struct xfs_buf *
--libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
--		int flags, const struct xfs_buf_ops *ops)
-+int
-+libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
-+		    struct xfs_buf_map *map, int nmaps, int flags)
- {
--	xfs_buf_t	*bp;
--	int		error = 0;
--	int		fd;
--	int		i;
--	char		*buf;
--
--	if (nmaps == 1)
--		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
--					flags, ops);
--
--	bp = libxfs_getbuf_map(btp, map, nmaps);
--	if (!bp)
--		return NULL;
-+	int	fd = libxfs_device_to_fd(btp->dev);
-+	int	error = 0;
-+	char	*buf;
-+	int	i;
+diff --git a/db/type.h b/db/type.h
+index c41aca4d..3bb26f1 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -42,6 +42,7 @@ typedef struct typ
+ 	char			*name;
+ 	pfunc_t			pfunc;
+ 	const struct field	*fields;
++	const struct xfs_buf_ops *bops;
+ } typ_t;
+ extern const typ_t	*typtab, *cur_typ;
  
--	bp->b_error = 0;
--	bp->b_ops = ops;
--	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
--		return bp;
-+	ASSERT(BBTOB(len) <= bp->b_bcount);
- 
--	ASSERT(bp->b_nmaps = nmaps);
-+	ASSERT(bp->b_nmaps == nmaps);
- 
- 	fd = libxfs_device_to_fd(btp->dev);
- 	buf = bp->b_addr;
-@@ -762,6 +750,37 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
- 		offset += len;
- 	}
- 
-+	if (!error);
-+		bp->b_flags |= LIBXFS_B_UPTODATE;
-+#ifdef IO_DEBUG
-+	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
-+		pthread_self(), __FUNCTION__, , error,
-+		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
-+#endif
-+	return error;
-+}
-+
-+struct xfs_buf *
-+libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
-+		int flags, const struct xfs_buf_ops *ops)
-+{
-+	struct xfs_buf	*bp;
-+	int		error = 0;
-+
-+	if (nmaps == 1)
-+		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
-+					flags, ops);
-+
-+	bp = libxfs_getbuf_map(btp, map, nmaps);
-+	if (!bp)
-+		return NULL;
-+
-+	bp->b_error = 0;
-+	bp->b_ops = ops;
-+	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
-+		return bp;
-+
-+	error = libxfs_readbufr_map(btp, bp, map, nmaps, flags);
- 	if (!error) {
- 		bp->b_flags |= LIBXFS_B_UPTODATE;
- 		if (bp->b_ops)
 -- 
 1.8.3.2
 
