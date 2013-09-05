@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EC28A7F5D
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 07:13:47 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C896E7F67
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 07:13:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7718CAC005
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:47 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B6FF2304053
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 05:13:48 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LWCbQUtPAFFUQani for <xfs@oss.sgi.com>;
-	Thu, 05 Sep 2013 05:13:46 -0700 (PDT)
+	ql7Q1CfFQxxGFrIO for <xfs@oss.sgi.com>;
+	Thu, 05 Sep 2013 05:13:47 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GV-ON
+	(envelope-from <dave@fromorbit.com>) id 1VHYRM-0001GS-Nk
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004Em-ND
+	(envelope-from <dave@disappointment.disaster>) id 1VHYRM-0004Eh-Md
 	for xfs@oss.sgi.com; Thu, 05 Sep 2013 22:13:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 09/12] db: verify and calculate dquot CRCs
-Date: Thu,  5 Sep 2013 22:13:30 +1000
-Message-Id: <1378383213-16155-10-git-send-email-david@fromorbit.com>
+Subject: [RFC PATCH 08/12] db: verify and calculate inode CRCs
+Date: Thu,  5 Sep 2013 22:13:29 +1000
+Message-Id: <1378383213-16155-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1378383213-16155-1-git-send-email-david@fromorbit.com>
 References: <1378383213-16155-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,51 +37,128 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When we set the current Io cursor to point at a dquot block, verify
-that the dquot CRC is intact. And prior to writing such an IO
-cursor, calculate the dquot CRC.
+From: Dave Chinner <dchinner@redhat.com>
+
+When we set the current Io cursor to point at an inode, verify that
+the inode CRC is intact. And prior to writing such an IO cursor,
+calculate the inode CRC.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/io.c | 5 ++++-
- db/io.h | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ db/inode.c             | 2 ++
+ db/io.c                | 4 ++++
+ db/io.h                | 6 +++++-
+ include/libxfs.h       | 4 ++++
+ libxfs/xfs_inode_buf.c | 8 ++++----
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
+diff --git a/db/inode.c b/db/inode.c
+index ec533ee..4090855 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -655,6 +655,8 @@ set_cur_inode(
+ 		blkbb, DB_RING_IGN, NULL);
+ 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
+ 	dip = iocur_top->data;
++	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
++	iocur_top->ino_buf = 1;
+ 	iocur_top->ino = ino;
+ 	iocur_top->mode = be16_to_cpu(dip->di_mode);
+ 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
 diff --git a/db/io.c b/db/io.c
-index 5f2e492..04f1879 100644
+index d6e1d28..5f2e492 100644
 --- a/db/io.c
 +++ b/db/io.c
-@@ -464,7 +464,9 @@ write_cur(void)
+@@ -462,6 +462,9 @@ write_cur(void)
+ 		return;
+ 	}
  
- 	if (iocur_top->ino_buf)
- 		libxfs_dinode_calc_crc(mp, iocur_top->data);
--
-+	if (iocur_top->dquot_buf)
-+		xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
-+				 XFS_DQUOT_CRC_OFF);
++	if (iocur_top->ino_buf)
++		libxfs_dinode_calc_crc(mp, iocur_top->data);
++
  	if (iocur_top->bbmap)
  		write_cur_bbs();
  	else
-@@ -532,6 +534,7 @@ set_cur(
+@@ -528,6 +531,7 @@ set_cur(
+ 	iocur_top->ino = ino;
  	iocur_top->dirino = dirino;
  	iocur_top->mode = mode;
- 	iocur_top->ino_buf = 0;
-+	iocur_top->dquot_buf = 0;
++	iocur_top->ino_buf = 0;
  
  	/* store location in ring */
  	if (ring_flag)
 diff --git a/db/io.h b/db/io.h
-index 1f8270d..4f24c83 100644
+index d647284..1f8270d 100644
 --- a/db/io.h
 +++ b/db/io.h
-@@ -40,6 +40,7 @@ typedef struct iocur {
+@@ -38,6 +38,8 @@ typedef struct iocur {
+ 	const struct typ	*typ;	/* type of "data" */
+ 	bbmap_t			*bbmap;	/* map daddr if fragmented */
  	struct xfs_buf		*bp;	/* underlying buffer */
- 	int			ino_crc_ok:1;
- 	int			ino_buf:1;
-+	int			dquot_buf:1;
++	int			ino_crc_ok:1;
++	int			ino_buf:1;
  } iocur_t;
  
  #define DB_RING_ADD 1                   /* add to ring on set_cur */
+@@ -62,5 +64,7 @@ extern void     ring_add(void);
+ static inline bool
+ iocur_crc_valid()
+ {
+-	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
++	return (iocur_top->bp &&
++		iocur_top->bp->b_error != EFSCORRUPTED &&
++		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
+ }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 9429f61..90f9a75 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -754,6 +754,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
+ #define libxfs_idata_realloc		xfs_idata_realloc
+ #define libxfs_idestroy_fork		xfs_idestroy_fork
+ 
++#define libxfs_dinode_verify		xfs_dinode_verify
++bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
++		       struct xfs_dinode *dip);
++
+ /* xfs_sb.h */
+ #define libxfs_mod_sb			xfs_mod_sb
+ #define libxfs_sb_from_disk		xfs_sb_from_disk
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 6205318..54ad320 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -246,10 +246,10 @@ xfs_dinode_to_disk(
+ 	}
+ }
+ 
+-static bool
++bool
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+-	struct xfs_inode	*ip,
++	xfs_ino_t		ino,
+ 	struct xfs_dinode	*dip)
+ {
+ 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+@@ -264,7 +264,7 @@ xfs_dinode_verify(
+ 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+ 			      offsetof(struct xfs_dinode, di_crc)))
+ 		return false;
+-	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
++	if (be64_to_cpu(dip->di_ino) != ino)
+ 		return false;
+ 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
+ 		return false;
+@@ -315,7 +315,7 @@ xfs_iread(
+ 		return error;
+ 
+ 	/* even unallocated inodes are verified */
+-	if (!xfs_dinode_verify(mp, ip, dip)) {
++	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
+ 		xfs_alert(mp, "%s: validation failed for inode %lld failed",
+ 				__func__, ip->i_ino);
+ 
 -- 
 1.8.3.2
 
