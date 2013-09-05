@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 59B937F51
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 13:56:36 -0500 (CDT)
-Message-ID: <5228D3E3.5040300@sgi.com>
-Date: Thu, 05 Sep 2013 13:56:35 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0AF697F51
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 14:01:33 -0500 (CDT)
+Message-ID: <5228D509.7040200@sgi.com>
+Date: Thu, 05 Sep 2013 14:01:29 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 15/55] libxfs: local to remote format support of remote
-	symlinks
+Subject: Re: [PATCH 16/55] xfs: separate out log format definitions
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-16-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-16-git-send-email-david@fromorbit.com>
+	<1378332359-14737-17-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-17-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,17 +28,20 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> This conversion was overlooked earlier on. Now that the differences
-> between userspace and kernel space are getting smaller this bug is
-> obvious. Fix it.
+> The on-disk format definitions for the log are spread randoms
+> through a couple of header files. Consolidate it all in a single
+> file that can be shared easily with userspace. This means that
+> xfs_log.h and xfs_log_priv.h no longer need to be shared with
+> userspace.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-This reposted patch has not changed.
+This reposted patch has not changed
 
-same content for xfs_symlink_local_to_remote() as kernel commit f948dd76 
-and moved from xfs_bmap.c to xfs_symlink.c
+sync the new user/kernel xfs_log_priv.h to patch 01/50 of the for Linux 
+3.12 kernel patch series which also means remove kernel-only headers 
+(xfs_log.h, xfs_log_priv.h) from xfsprogs.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
