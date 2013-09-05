@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3528B7F51
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:41:04 -0500 (CDT)
-Message-ID: <5228A60F.7010406@sgi.com>
-Date: Thu, 05 Sep 2013 10:41:03 -0500
+	by oss.sgi.com (Postfix) with ESMTP id A32CC7F59
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:46:58 -0500 (CDT)
+Message-ID: <5228A771.2090809@sgi.com>
+Date: Thu, 05 Sep 2013 10:46:57 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 06/55] libxfs: fix byte swapping on constants
+Subject: Re: [PATCH 07/55] libxfs: sync xfs_da_btree.c
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-7-git-send-email-david@fromorbit.com>
+	<1378332359-14737-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +28,20 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The kernel code uses cpu_to_beXX() on constants in switch()
-> statements for magic numbers in the btree code. Th ebyte swapping
-> infratructure isn't hooked up to the proper byte swap macros to make
-> this work, so fix it and then swap all the generic btree code over
-> to match the kernel code.
+> Some variables we renamed in the kernel code, and there are a few
+> other minor differences. Fix them up.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Patch has not changed since last posting.
+Patch has not changed since last posting. My review back then was [] is 
+added to make sense of the comments:
 
-sync to include/uapi/linux/swab.h and switch/case statements in 
-xfs_allocbt_verify() like kernel commit ee1a47ab.
+okay, only difference [between the kernel/user source files] is the 
+initializing of the pagb_tree in xfs_alloc_read_agf() [it is not in the 
+xfsprogs]. [Okay, because we] Don't use the busy extent tree in user space.
+
+Still looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
