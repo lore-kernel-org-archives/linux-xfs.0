@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 533CE29DFC
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 20:35:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 42EEB8F8040
-	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 18:35:40 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E11EF29DFC
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 20:40:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7FDDAAC003
+	for <xfs@oss.sgi.com>; Wed,  4 Sep 2013 18:40:43 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JRvelcPSGf8oJs0z for <xfs@oss.sgi.com>;
-	Wed, 04 Sep 2013 18:35:38 -0700 (PDT)
-Date: Thu, 5 Sep 2013 11:35:19 +1000
+	tCtYW18ub3S7ls3B for <xfs@oss.sgi.com>;
+	Wed, 04 Sep 2013 18:40:40 -0700 (PDT)
+Date: Thu, 5 Sep 2013 11:40:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 06/11] xfs: use correct transaction reservations in
+Subject: Re: [RFC PATCH 07/11] xfs: retry trans reservation on ENOSPC in
 	xfs_inactive()
-Message-ID: <20130905013519.GT23571@dastard>
+Message-ID: <20130905014016.GU23571@dastard>
 References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
-	<1378232708-57156-7-git-send-email-bfoster@redhat.com>
+	<1378232708-57156-8-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1378232708-57156-7-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1378232708-57156-8-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,79 +34,42 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 03, 2013 at 02:25:03PM -0400, Brian Foster wrote:
-> The transaction allocated in xfs_inactive() can be passed down into
-> xfs_inactive_symlink() or xfs_itruncate_extents(), both of which
-> can commit and reallocate a new transaction. This leads to
-> reservation issues if the transaction is subsequently passed into
-> xfs_ifree(), which requires a larger reservation to manage the
-> finobt.
+On Tue, Sep 03, 2013 at 02:25:04PM -0400, Brian Foster wrote:
+> An ifree data block reservation can fail with ENOSPC. Flush inodes
+> to try and free up space or attempt without a data block
+> reservation to avoid failing out of xfs_inactive().
+>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
-> Reorganize xfs_inactive() to commit any transaction handed back
-> from symlink or truncate processing and unconditionally allocate
-> a new transaction for xfs_ifree() with the appropriate reservation.
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 56cbf63..92de4b7 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1779,7 +1779,18 @@ xfs_inactive(
+>  	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+>  	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree,
+>  				  XFS_IFREE_SPACE_RES(mp), 0);
+> +	if (error == ENOSPC) {
+> +		/* flush outstanding delalloc blocks and retry */
+> +		xfs_flush_inodes(mp);
+> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree,
+> +					  XFS_IFREE_SPACE_RES(mp), 0);
+> +	}
 
-Ok, I've had a bit of a look at this now, and I like how the code
-turns out. However, I don't think it goes far enough, or fix the
-problem that causes all the transaction nastiness in xfs_inactive().
+We don't want to be blocking for inode flushes here. We might be in
+a shrinker context, for example, and blocking those for a filesystem
+sync is going to be unfriendly.
 
-Firstly, we are not doing rolling transactions here - there is no
-need for all the changes to be atomic because the inode is on the
-unlinked list if it is going to be freed. Hence we don't need to
-pass transaction pointers around.
-
-xfs_inactive_symlink() can do a transaction completely internally,
-and, well, it doesn't even log the inode if the symlink is in-line
-and so may not even need a transaction. Hence really only
-xfs_inactive_symlink_rmt() needs to run a transaction, and it can do
-that internally just fine.
-
-For the xfs_itruncate_extents() data fork transaction, just add a
-new wrapper called xfs_inactive_truncate() that holds the
-transaction context internally - that moves the only other
-transaction context that you need to commit out of xfs_inactive()
-altogether, as the attr fork already uses a private transaction
-context.
-
-And, finally, you can then factor the xfs_ifree() and it's
-transaction context into a helper function as well, so there aren't
-any transaction contexts left in xfs_inactive() at all.
-
-That would leave us with:
-
-	if (ISLNK) {
-		error = xfs_inactive_symlink(ip);
-	} else if (truncate)
-		error = xfs_inactive_truncate(ip);
-	}
-	if (error)
-		goto out;
-	if (ip->i_d.di_anextents > 0)
-		error = xfs_attr_inactive(ip);
-	if (error)
-		goto out;
-
-	error = xfs_inactive_ifree(ip);
-
-	xfs_qm_dqdetach(ip);
-out:
-	return;
-
-This gives us a natural separation of the different transaction
-reservations and contexts needed to perform the operations, and does
-result in any extraneous work being done because we don't know what
-the transaction context passed to us contains at all...
-
-FWIW, there are other reasons for suggesting this structure - have a
-read of "[RFD 14/17] xfs: separate inode freeing from inactivation"
-and you'll see that what I've suggested above sets the code up for
-implementing the optimisations documented in the RFD.
-
-http://oss.sgi.com/archives/xfs/2013-08/msg00345.html
-
-It might be best to put this as 3-4 patches at the start of the
-series, rather than in the middle of it as it's really a separate
-piece of cleanup work....
+If this really is a problem, then the right thing to do is to allow
+this transaction to dip into the reserve block pool so the
+transaction can complete and make progress - other write operations
+will trigger the flushing of the filesystem, and freeing of whole
+inode chunks should return more free space than we need for the
+finobt modifications in the removing lots of zero length inodes
+at ENOSPC case....
 
 Cheers,
 
