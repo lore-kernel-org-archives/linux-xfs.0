@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9AA047F5D
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 11:22:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 776F08F8040
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 09:22:26 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 76D7F7F51
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 11:22:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 61FE98F8039
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 09:22:51 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vTaxlH9SIQMYsvDp for
-	<xfs@oss.sgi.com>; Thu, 05 Sep 2013 09:22:25 -0700 (PDT)
-Message-ID: <5228AEE7.2070207@redhat.com>
-Date: Thu, 05 Sep 2013 12:18:47 -0400
+	cuda.sgi.com with ESMTP id xOtK5NJg8klvayVz for
+	<xfs@oss.sgi.com>; Thu, 05 Sep 2013 09:22:50 -0700 (PDT)
+Message-ID: <5228AF00.7080700@redhat.com>
+Date: Thu, 05 Sep 2013 12:19:12 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 09/11] xfs: use and update the finobt on inode
-	allocation
+Subject: Re: [RFC PATCH 10/11] xfs: update the finobt on inode free
 References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
-	<1378232708-57156-10-git-send-email-bfoster@redhat.com>
-	<20130905022719.GW23571@dastard>
-In-Reply-To: <20130905022719.GW23571@dastard>
+	<1378232708-57156-11-git-send-email-bfoster@redhat.com>
+	<20130905025421.GX23571@dastard>
+In-Reply-To: <20130905025421.GX23571@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,102 +32,126 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/04/2013 10:27 PM, Dave Chinner wrote:
-> On Tue, Sep 03, 2013 at 02:25:06PM -0400, Brian Foster wrote:
->> Replace xfs_dialloc_ag() with an implementation that looks for a
->> record in the finobt. The finobt only tracks records with at least
->> one free inode. This eliminates the need for the intra-ag scan in
->> the original algorithm. Once the inode is allocated, update the
->> finobt appropriately (possibly removing the record) as well as the
->> inobt.
+On 09/04/2013 10:54 PM, Dave Chinner wrote:
+> On Tue, Sep 03, 2013 at 02:25:07PM -0400, Brian Foster wrote:
+>> An inode free operation can have several effects on the finobt. If
+>> all inodes have been freed and the chunk deallocated, we remove the
+>> finobt record. If the inode chunk was previously full, we must
+>> insert a new record based on the existing inobt record. Otherwise,
+>> we modify the record in place.
 >>
->> Move the original xfs_dialloc_ag() algorithm to
->> xfs_dialloc_ag_slow() and fall back as such if finobt support is
->> not enabled.
->>
+>> Create the xfs_ifree_finobt() function to identify the potential
+>> scenarios and update the finobt appropriately.
+> 
+> The first thing I'd do is factor all the inobt manipulation
+> code xfs_difree() into a xfs_difree_inobt() helper function. have it
+> return the record and offset that is then passed to your new helper
+> xfs_difree_finobt(). That way xfs_difree() really becomes the setup
+> function for the two btree operations rather than containing one set
+> of modifications and calling a function to do the other...
+> 
+
+Sounds logical.
+
 >> Signed-off-by: Brian Foster <bfoster@redhat.com>
 >> ---
->>  fs/xfs/xfs_ialloc.c | 136 +++++++++++++++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 135 insertions(+), 1 deletion(-)
+>>  fs/xfs/xfs_ialloc.c | 120 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 120 insertions(+)
 >>
 >> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
->> index e64a728..516f4af 100644
+>> index 516f4af..96f71b5 100644
 >> --- a/fs/xfs/xfs_ialloc.c
 >> +++ b/fs/xfs/xfs_ialloc.c
->> @@ -708,7 +708,7 @@ xfs_ialloc_get_rec(
->>   * available.
->>   */
+>> @@ -198,6 +198,117 @@ xfs_inobt_insert(
+>>  }
+>>  
+>>  /*
+>> + * Free an inode in the free inode btree.
+>> + */
+>> +STATIC int
+>> +xfs_ifree_finobt(
 ...
 > 
-> Why do we need to initialise both cursors at once? We only do the
-> operations one at a time, and you should actually use 2 cursors
-> for the finobt lookup.....
+> I can't say I'm a great fan of the layout of the logic. Yes, there's
+> lots of cases to handle. It looks like:
 > 
 
-No good reason. I probably just did that to simplify error handling.
+Yeah, I've shuffled this code around quite a bit myself.
 
->> +
->> +	/*
->> +	 * Search the finobt.
->> +	 */
->> +	error = xfs_inobt_lookup(fcur, pagino, XFS_LOOKUP_LE, &i);
->> +	if (error)
->> +		goto error;
->> +	if (i == 0) {
->> +		error = xfs_inobt_lookup(fcur, pagino, XFS_LOOKUP_GE, &i);
+> 	lookup()
+> 	if (found)
+> 		modify in place
+> 	if (found && full && deleting chunks)
+> 		delete record
+> 	else if (!found && no record)
+> 		insert record
+> 	else if (found)
+> 		update record
+> 	else
+> 		corruption!
+> 
+> I think it woul dbe better to get then "!found" case out of the way
+> at the start. ie
+> 
+> 	if (i == 0) {
+> 		if (ibtrec->ir_freecount == 1)
+> 			insert record
+> 		else
+> 			CORRUPTION
+> 		goto out;
+> 	}
+> 
+> 	/* found a record, no need to check i == 1 anymore */
+> 	ASSERT(i == 1);
+> 
+> 	/* read and update */
+> 
+> 	if (full && deleting chunks)
+> 		delete record
+> 	else
+> 		update record
+> 
+
+Ok, I'll try to pull that logic up and see what falls out.
+
+...
+>> +	} else if ((i == 0) && (ibtrec->ir_freecount == 1)) {
+>> +		/*
+>> +		 * No existing finobt record and the inobt record has a single
+>> +		 * free inode. This means we've freed an inode in a previously
+>> +		 * fully allocated chunk. Insert a new record into the finobt
+>> +		 * based on the current inobt record.
+>> +		 */
+>> +		cur->bc_rec.i.ir_startino = ibtrec->ir_startino;
+>> +		cur->bc_rec.i.ir_free = ibtrec->ir_free;
+>> +		cur->bc_rec.i.ir_freecount = ibtrec->ir_freecount;
+>> +		error = xfs_btree_insert(cur, &i);
 >> +		if (error)
 >> +			goto error;
->> +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
->> +	}
+>> +		ASSERT(i == 1);
 > 
-> .... because this biases allocation to lower inode numbers than the
-> target. i.e we only ever search for higher numbers if here are none
-> lower. That's quite different to the current algorithm which first
-> searches for the *closest* free inode.
+> That's rather similar to the code in xfs_inobt_insert(). Indeed,
+> is you write a helper - xfs_inobt_insert_rec() - for this, then rather than modifying
+> xfs_inobt_lookup() to take extra parameters like I wondered for the
+> previous patch, leave it alonge and pass the parameters to
+> xfs_inobt_insert_rec() instead.
 > 
-> That is, we should be using two cursors for the free inode search,
-> one for LE, the other for GT. If they both return records then, like
-> the "slow" algorithm, calculate the diff between them and the target
-> inode, and select the closer one (smallest diff). Destroy the cursor
-> you don't need.
+> Then this code is functionally identical to xfs_inobt_insert() done
+> during allocation....
 > 
 
-Ah, Ok. I hadn't taken a close enough look at the existing algorithm
-yet, to be honest. I'll do so and incorporate the closest free inode
-heuristic.
+I think I'm parsing you after having another look at the code.
+xfs_inobt_lookup() remains as is and is potentially used from
+xfs_inobt_insert(). xfs_inobt_insert_rec() is introduced to set the
+cursor fields and do the insert and is used here and from
+xfs_inobt_insert().
 
-...
->> +	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
->> +	xfs_perag_put(pag);
->> +
->> +	error = xfs_check_agi_freecount(fcur, agi);
->> +	if (error)
->> +		goto error;
->> +	error = xfs_check_agi_freecount(icur, agi);
->> +	if (error)
->> +		goto error;
-> 
-> Failures here will result in 2 calls to xfs_perag_put(pag);
-> 
-
-Yeah, thanks.
+At that point, this looks close to xfs_inobt_insert(), but I think using
+that here would introduce a duplicate lookup. Regardless, we'll see what
+the whole thing looks like at that point. Thanks for the reviews. :)
 
 Brian
 
->> +
->> +	xfs_btree_del_cursor(icur, XFS_BTREE_NOERROR);
->> +	xfs_btree_del_cursor(fcur, XFS_BTREE_ERROR);
->> +	*inop = ino;
->> +	return 0;
->> +error:
->> +	xfs_perag_put(pag);
->> +	xfs_btree_del_cursor(icur, XFS_BTREE_ERROR);
->> +	xfs_btree_del_cursor(fcur, XFS_BTREE_ERROR);
->> +	return error;
->> +}
-> 
-> Otherwise it looks good.
-> 
 > Cheers,
 > 
 > Dave.
