@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A0D4C7F51
-	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:37:13 -0500 (CDT)
-Message-ID: <5228A528.1060907@sgi.com>
-Date: Thu, 05 Sep 2013 10:37:12 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3528B7F51
+	for <xfs@oss.sgi.com>; Thu,  5 Sep 2013 10:41:04 -0500 (CDT)
+Message-ID: <5228A60F.7010406@sgi.com>
+Date: Thu, 05 Sep 2013 10:41:03 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 05/55] libxfs: ensure btree root split sets blkno correctly
+Subject: Re: [PATCH 06/55] libxfs: fix byte swapping on constants
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-6-git-send-email-david@fromorbit.com>
+	<1378332359-14737-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +28,21 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> For CRC enabled filesystems, the BMBT is rooted in an inode, so it
-> passes through a difference code path on root splits to the
-> freespace and inode btrees. The inode based btree root has a
-> corruption problem on split - it's the same problem we saw in the
-> directory/attr code where headers are memcpy()d from one block to
-> another without updating the self describing metadata.
->
-> Simple fix - when copying the header out of the root block, make
-> sure the block number is updated correctly.
+> The kernel code uses cpu_to_beXX() on constants in switch()
+> statements for magic numbers in the btree code. Th ebyte swapping
+> infratructure isn't hooked up to the proper byte swap macros to make
+> this work, so fix it and then swap all the generic btree code over
+> to match the kernel code.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-This patch has not changed since last posting. It brings xfsprogs to
-kernel commit ade1335a
+Patch has not changed since last posting.
 
-Review-by: Mark Tinguely <tinguely@sgi.com>
+sync to include/uapi/linux/swab.h and switch/case statements in 
+xfs_allocbt_verify() like kernel commit ee1a47ab.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
