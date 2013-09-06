@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 05D9329E03
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 15:59:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D76888F8035
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 13:59:38 -0700 (PDT)
-Received: from mail-vb0-f46.google.com (mail-vb0-f46.google.com
-	[209.85.212.46]) by cuda.sgi.com with ESMTP id 6W5gtqWKZQgnQ3rT
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 06 Sep 2013 13:59:37 -0700 (PDT)
-Received: by mail-vb0-f46.google.com with SMTP id p13so2504647vbe.19
-	for <xfs@oss.sgi.com>; Fri, 06 Sep 2013 13:59:37 -0700 (PDT)
-Message-ID: <522A4238.8050906@gmail.com>
-Date: Fri, 06 Sep 2013 16:59:36 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 18AF529DFB
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 16:22:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BF29DAC008
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 14:22:25 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	7Gg2eI7HUoc14VEL for <xfs@oss.sgi.com>;
+	Fri, 06 Sep 2013 14:22:25 -0700 (PDT)
+Date: Sat, 7 Sep 2013 07:22:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 03/11] xfs: support the XFS_BTNUM_FINOBT free inode
+	btree type
+Message-ID: <20130906212220.GA12541@dastard>
+References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
+	<1378232708-57156-4-git-send-email-bfoster@redhat.com>
+	<20130905005428.GQ23571@dastard> <5228AE80.5050908@redhat.com>
+	<20130906000754.GO12779@dastard> <5229BBC6.5000808@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2] xfstests: Add JFS support to _scratch_mkfs_sized
+Content-Disposition: inline
+In-Reply-To: <5229BBC6.5000808@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,52 +33,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-This code works, with a little bit of tinkering.  I wanted to shovel 
-it off to another function but didn't know what to do with the 
-arguments.  In particular, the number_of_blocks value has to come 
-after the dev name.
+On Fri, Sep 06, 2013 at 07:25:58AM -0400, Brian Foster wrote:
+> On 09/05/2013 08:07 PM, Dave Chinner wrote:
+> > On Thu, Sep 05, 2013 at 12:17:04PM -0400, Brian Foster wrote:
+> >> On 09/04/2013 08:54 PM, Dave Chinner wrote:
+> >>> On Tue, Sep 03, 2013 at 02:25:00PM -0400, Brian Foster wrote:
+> ...
+> >>>
+> >>> What we really need here is for xfs_ialloc_log_agi to consider that
+> >>> there are two distinct regions for range logging - the first spaces
+> >>> from offset 0 to offset of agi_unlinked, and the second is from the
+> >>> the offset of agi_free_root to the end of the xfs_agi_t....
+> >>>
+> >>> It's abit messy, I know, but we couldn't easily add new padding to
+> >>> the AGI in the existing range logging area like was done for the AGF
+> >>> because of the unlinked list hash table already defining the end of
+> >>> the range logging region....
+> >>>
+> >>
+> >> ... but where would that ever happen? The existing invocations of
+> >> xfs_ialloc_log_agi() seem to log either the agi inode count values or
+> >> the btree root/level values (i.e., never the range across both). I think
+> >> I've introduced at least a couple new invocations throughout this set,
+> >> but I've not changed that model (i.e., an XFS_AGI_FREECOUNT instance in
+> >> the new lookup code and an XFS_AGI_FREE_ROOT|*_LEVEL instance in the new
+> >> btree code).
+> > 
+> > Right, we don't current log across the range because of the way the
+> > code is currently written, but there's no rule that says that
+> > logging fields must be done this way.
+> > 
+> > I can see that there may be reason for logging
+> > XFS_AGI_FREE_ROOT|*_LEVEL and XFS_AGI_NEW_INODE all in one go -
+> > pointing new inode allocation at recently freed inodes is not
+> > unreasonable, and if we split the finobt and update agi_newino in
+> > the one update, we will log across this gap.
+> > 
+> 
+> For the sake of argument, it seems a little strange to me to set an
+> inode level value in the agi in the context of a btree operation, such
+> as a split...
 
-Thanks!
+Like we do with the AGF to record changes to the longest
+extent in the btree? It's not a stretch to think we might update
+the "allocation from here" target in the AGI when we make a specific
+type of btree record change.... ;)
 
-Michael
+True, that is still an isolated logging event, but my point is that
+specific btree operations may drive other logging events in the
+header than just root/level...
 
->From cb46931b9313d001813be459f829f551d955d781 Mon Sep 17 00:00:00 2001
-From: "Michael L. Semon" <mlsemon35@gmail.com>
-Date: Fri, 6 Sep 2013 05:50:05 -0400
-Subject: [PATCH 2/2] xfstests: Add JFS support to _scratch_mkfs_sized
+Cheers,
 
-Add _scratch_mkfs_sized support for JFS.  Calculations are here
-due to a jfs_mkfs log calculation issue when the file system size
-is smaller than the partition size.  This issue is avoided by
-specifying the log size (in megabytes) on the command line.
----
- common/rc | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/common/rc b/common/rc
-index 191e9e5..58997d7 100644
---- a/common/rc
-+++ b/common/rc
-@@ -612,6 +612,15 @@ _scratch_mkfs_sized()
-     btrfs)
- 	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
- 	;;
-+    jfs)
-+	_scratch_options mkfs
-+        jfs_log_sized=`expr $fssize / 16777216`
-+	if `expr $jfs_log_sized \> 128`; then
-+	    jfs_log_sized=128
-+	fi
-+	$MKFS_JFS_PROG -s $jfs_log_sized $SCRATCH_OPTIONS $MKFS_OPTIONS \
-+	     $SCRATCH_DEV `expr $fssize / 4096` > /dev/null
-+        ;;
-     *)
- 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
- 	;;
+Dave.
 -- 
-1.8.3.2
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
