@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 94DCB7F50
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 13:15:39 -0500 (CDT)
-Message-ID: <522A1BCA.6010500@sgi.com>
-Date: Fri, 06 Sep 2013 13:15:38 -0500
+	by oss.sgi.com (Postfix) with ESMTP id AB8067F50
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 13:20:24 -0500 (CDT)
+Message-ID: <522A1CE7.6050905@sgi.com>
+Date: Fri, 06 Sep 2013 13:20:23 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 31/55] libxfs: switch over to xfs_sb.c and remove
-	xfs_mount.c
+Subject: Re: [PATCH 41/55] xfs: Introduce a new structure to hold transaction
+	reservation items
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-32-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-32-git-send-email-david@fromorbit.com>
+	<1378332359-14737-42-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-42-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,24 +27,21 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On 09/04/13 17:05, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
+> From: Jie Liu<jeff.liu@oracle.com>
 >
-> Now that the kernel code has split the superblock specific code out
-> of xfs_mount.c, we don't need xfs_mount.c anymore. Copy in xfs_sb.c
-> and remove xfs_mount.c
+> Introduce a new structure xfs_trans_res to hold transaction
+> reservation item info per log ticket.
 >
+> We also need to improve xfs_trans_resv_calc() by initializing the
+> log count as well as log flags for permanent log reservation.
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-user equivalent of the for Linux 3.12 kernel patch 20/49.
-This patch leaves xfs_sb.c/xfs_sb.h difference.
+Already reviewed in other posting.
 
-For example in xfs_sb.h the user header is missing the project inode
-test in xfs_is_quota_inode().
-
-Shouldn't xfs_sb.[ch] synced to the kernel files at this point?
-
---Mark.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
