@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9BD2B7F50
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 14:03:46 -0500 (CDT)
-Message-ID: <522A270E.8010705@sgi.com>
-Date: Fri, 06 Sep 2013 14:03:42 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 468507F54
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 14:39:28 -0500 (CDT)
+Message-ID: <522A2F6C.2030103@sgi.com>
+Date: Fri, 06 Sep 2013 14:39:24 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 55/55] xfsprogs: cleanup miscellaneous merge faults
-References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-56-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-56-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: aborted buf items can be in the AIL.
+References: <1378208858-20557-1-git-send-email-david@fromorbit.com>
+	<1378208858-20557-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378208858-20557-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +25,33 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/04/13 17:05, Dave Chinner wrote:
-> From: Ben Myers<bpm@sgi.com>
+On 09/03/13 06:47, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
 >
-> * clean up a few extra tabs
-> * xfs_buf_map->xfs_buf_ops in libxfs_readbuf and libxfs_readbuf_map args
-> * don't call the write verifier twice
-> * put the multithreaded scan_ags back
+> Saw this on generic/270 after a DQALLOC transaction overrun
+> shutdown:
 >
-> Signed-off-by: Ben Myers<bpm@sgi.com>
+> XFS: Assertion failed: !(bip->bli_item.li_flags&  XFS_LI_IN_AIL), file: fs/xfs/xfs_buf_item.c, line: 952
+> .....
+>   xfs_buf_item_relse+0x4f/0xd0
+>   xfs_buf_item_unlock+0x1b4/0x1e0
+>   xfs_trans_free_items+0x7d/0xb0
+>   xfs_trans_cancel+0x13c/0x1b0
+>   xfs_symlink+0x37e/0xa60
+> ....
+>
+> When a transaction abort occured.
+>
+> If we are aborting a transaction and trigger this code path, then
+> the item may be dirty. If the item is dirty, then it may be in the
+> AIL. Hence if we are aborting, we need to check if the item is in
+> the AIL and remove it before freeing it.
+>
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Looks good.
+This is fine for Linux 3.12. Christoph's reference counting reorg sounds 
+interesting.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
