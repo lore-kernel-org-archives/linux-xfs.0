@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 381107F50
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 12:29:39 -0500 (CDT)
-Message-ID: <522A1102.60006@sgi.com>
-Date: Fri, 06 Sep 2013 12:29:38 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 7A2307F50
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 12:31:30 -0500 (CDT)
+Message-ID: <522A1171.7060304@sgi.com>
+Date: Fri, 06 Sep 2013 12:31:29 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 38/55] xfs: remove __KERNEL__ check from xfs_dir2_leaf.c
+Subject: Re: [PATCH 39/55] xfs: move kernel specific type definitions to xfs.h
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-39-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-39-git-send-email-david@fromorbit.com>
+	<1378332359-14737-40-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-40-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,18 +28,16 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> It's actually an ifndef section, which means it is only included in
-> userspace. however, it's deep within the libxfs code, so it's
-> unlikely that the condition checked in userspace can actually occur
-> (search an empty leaf) through the libxfs interfaces. i.e. if it can
-> happen in usrspace, it can happen in the kernel, so remove it from
-> userspace too....
+> xfs_types.h is shared with userspace, so having kernel specific
+> types defined in it is problematic. Move all the kernel specific
+> defines to xfs_linux.h so we can remove the __KERNEL__ guards from
+> xfs_types.h
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-user equivalent of the for Linux 3.12 kernel patch 31/50.
-Looks good to me.
+user equivalent of the for Linux 3.12 kernel patch 33/50
+Same as previous post. Looks good to me.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
