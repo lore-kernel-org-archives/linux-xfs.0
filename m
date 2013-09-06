@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4B29B7F50
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 06:21:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D2F47AC009
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 04:21:02 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 844647F53
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 06:29:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C34F304075
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 04:29:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SQBJ17oWBXf29QIN for
-	<xfs@oss.sgi.com>; Fri, 06 Sep 2013 04:21:02 -0700 (PDT)
-Message-ID: <5229B9C1.5050505@redhat.com>
-Date: Fri, 06 Sep 2013 07:17:21 -0400
+	cuda.sgi.com with ESMTP id 5VaYazKEGBjuV8Jl for
+	<xfs@oss.sgi.com>; Fri, 06 Sep 2013 04:29:39 -0700 (PDT)
+Message-ID: <5229BBC6.5000808@redhat.com>
+Date: Fri, 06 Sep 2013 07:25:58 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 00/11] xfs: introduce the free inode btree
+Subject: Re: [RFC PATCH 03/11] xfs: support the XFS_BTNUM_FINOBT free inode
+	btree type
 References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
-	<5228F4D6.4050306@gmail.com>
-In-Reply-To: <5228F4D6.4050306@gmail.com>
+	<1378232708-57156-4-git-send-email-bfoster@redhat.com>
+	<20130905005428.GQ23571@dastard> <5228AE80.5050908@redhat.com>
+	<20130906000754.GO12779@dastard>
+In-Reply-To: <20130906000754.GO12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,212 +31,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/05/2013 05:17 PM, Michael L. Semon wrote:
-> On 09/03/2013 02:24 PM, Brian Foster wrote:
->> Hi all,
+On 09/05/2013 08:07 PM, Dave Chinner wrote:
+> On Thu, Sep 05, 2013 at 12:17:04PM -0400, Brian Foster wrote:
+>> On 09/04/2013 08:54 PM, Dave Chinner wrote:
+>>> On Tue, Sep 03, 2013 at 02:25:00PM -0400, Brian Foster wrote:
+...
+>>>
+>>> What we really need here is for xfs_ialloc_log_agi to consider that
+>>> there are two distinct regions for range logging - the first spaces
+>>> from offset 0 to offset of agi_unlinked, and the second is from the
+>>> the offset of agi_free_root to the end of the xfs_agi_t....
+>>>
+>>> It's abit messy, I know, but we couldn't easily add new padding to
+>>> the AGI in the existing range logging area like was done for the AGF
+>>> because of the unlinked list hash table already defining the end of
+>>> the range logging region....
+>>>
 >>
->> This is an RFC for the kernel work to support a free inode btree. The free inode
->> btree (finobt) is equivalent to the existing inode allocation btree with the
->> exception that the finobt only tracks inode chunks with at least one free inode.
->> The purpose is to improve lookups for free inode clusters for inode allocation.
->>
->> Newly allocated inode chunks by definition contain free inodes and are thus
->> inserted into the finobt immediately. The record for a previously full inode
->> chunk is inserted to the finobt when the first inode is freed. A record is
->> removed from the finobt when the last free inode has been allocated or the
->> entire chunk is completely deallocated.
->>
->> Patches 1-3 refactor some ialloc btree code to introduce the new finobt type and
->> feature bit. Patches 4-7 fix up the transaction handling for inode allocation
->> and deallocation to account for the new tree. Patches 8-10 add the finobt
->> management code to insert, remove and modify records as appropriate. Patch 11
->> fixes growfs to support the finobt.
->>
->> Thoughts, reviews, flames appreciated.
+>> ... but where would that ever happen? The existing invocations of
+>> xfs_ialloc_log_agi() seem to log either the agi inode count values or
+>> the btree root/level values (i.e., never the range across both). I think
+>> I've introduced at least a couple new invocations throughout this set,
+>> but I've not changed that model (i.e., an XFS_AGI_FREECOUNT instance in
+>> the new lookup code and an XFS_AGI_FREE_ROOT|*_LEVEL instance in the new
+>> btree code).
 > 
-> I'm looking for Dave's judgement call on whether I should run this code 
-> full-time.  The patchset applied well on top of Dave's latest work--only 
-> a "trailing whitespace" warning on Patch #9 (I think)--and the code 
-> compiled without error.  There was a lockdep while running xfstests, 
-> before generic/013 (I think), so I switched back to my normal git branch 
-> and have your patchset in a separate branch.
+> Right, we don't current log across the range because of the way the
+> code is currently written, but there's no rule that says that
+> logging fields must be done this way.
 > 
-
-Hi Michael,
-
-Thanks for giving this a burn. I actually haven't tested with lockdep
-yet, so I've made a note to do so and see if I can reproduce that or any
-other problems.
-
-With regard to running "full-time," I'd suggest to hold off at least
-until I post a non-RFC version (the next version will probably be a real
-v1). The review feedback has shown that a few areas need some
-non-trivial rework that change the behavior enough (i.e., the flush on
-inactive thing, transaction reservation management, etc.) that any
-issues at this point might be worth retesting for on the later version
-anyways.
-
-> My setup here is slow--x86, old IDE hardware, write cache off, debug 
-> kernel--but the patchset made things seem a little slower.  At the 
-> right time--not necessarily now--performance numbers might be nice.  
-> I didn't time it but did a copy of 3 kernel gits to v5 1k-block-size 
-> XFS and just felt something was off.  The copy did complete, though.  
-> Will try timing this on another day.
+> I can see that there may be reason for logging
+> XFS_AGI_FREE_ROOT|*_LEVEL and XFS_AGI_NEW_INODE all in one go -
+> pointing new inode allocation at recently freed inodes is not
+> unreasonable, and if we split the finobt and update agi_newino in
+> the one update, we will log across this gap.
 > 
 
-That's interesting. I had a chat with Dave with regard to the existing
-lookup allocation algorithm and the best way to test the improved
-lookup, and I am able to reproduce a nice inode allocation improvement
-under certain conditions. I could understand seeing some general effect
-in performance via the addition of the new tree (there's more work to do
-now to manage it, after all), but my expectation is that for finobt=0
-filesystems, there should be no effect whatsoever.
+For the sake of argument, it seems a little strange to me to set an
+inode level value in the agi in the context of a btree operation, such
+as a split...
 
-> Anyway, good work so far!  No additional stack traces were caused by 
-> your code in limited testing, and the filesystems were are still 
-> intact.
+>> My understanding of this code is that the range to log is defined at
+>> invocation time to xfs_iallog_log_agi(), so if the callers never specify
+>> a range that includes the unlinked bits in a single call, we won't set
+>> that range in the buffer log item code. In other words, even if we
+>> ultimately happen to log both ranges in the agi, the lower level code
+>> will never expand the logged region. Therefore, this shouldn't happen
+>> unless a single invocation that specifies one of the
+>> XFS_AGI_FREE_ROOT/LEVEL bits also specifies one of the existing agi bits.
+> 
+> Yes, we can avoid that by logging te regions separately, but that
+> then puts the onus on the future developers and reviewers to
+> remember this landmine and avoid it.
 > 
 
-Thanks again for testing. Most of my testing so far has been with finobt
-enabled, so that's a good bit of news! :)
+... but I agree with the general premise. It's certainly a landmine.
+
+>> I could see breaking this up as a matter of preparation for future
+>> fields or calls that would introduce logging that kind of range, but at
+>> the same time (and assuming my interpretation of above is correct),
+>> that's a bit of code that serves no purpose for the foreseeable future.
+>> Perhaps a comment in xfs_ialloc_log_agi() and the one caller that uses
+>> the AGI_FREE_* bits to document this restriction is sufficient?
+> 
+> Given it is only a few lines of extra code in xfs_ialloc_log_agi(),
+> I'd prefer that the code documents and deals with the different
+> regions internally. That way we can forget about it completely for the
+> future and never have to worry about it again.
+> 
+> Keep in mind that I'm looking at this from a code maintenance
+> timescale of at least 5-10 years into the future here - a few
+> minutes extra fixing this right now could save us a lot of hassle
+> years down the track. ;)
+> 
+
+Fair enough. If it's at least a reasonably likely scenario, then I'm on
+board with the better safe than sorry approach. ;)
 
 Brian
 
-> Thanks!
+>>>>  #ifdef DEBUG
+>>>> diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+>>>> index 0cdb88b..7923292 100644
+>>>> --- a/fs/xfs/xfs_ialloc_btree.c
+>>>> +++ b/fs/xfs/xfs_ialloc_btree.c
+>>>> @@ -62,10 +62,18 @@ xfs_inobt_set_root(
+>>>>  {
+>>>>  	struct xfs_buf		*agbp = cur->bc_private.a.agbp;
+>>>>  	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
+>>>> -
+>>>> -	agi->agi_root = nptr->s;
+>>>> -	be32_add_cpu(&agi->agi_level, inc);
+>>>> -	xfs_ialloc_log_agi(cur->bc_tp, agbp, XFS_AGI_ROOT | XFS_AGI_LEVEL);
+>>>> +	int			fields;
+>>>> +
+>>>> +	if (cur->bc_btnum == XFS_BTNUM_INO) {
+>>>> +		agi->agi_root = nptr->s;
+>>>> +		be32_add_cpu(&agi->agi_level, inc);
+>>>> +		fields = XFS_AGI_ROOT | XFS_AGI_LEVEL;
+>>>> +	} else {
+>>>> +		agi->agi_free_root = nptr->s;
+>>>> +		be32_add_cpu(&agi->agi_free_level, inc);
+>>>> +		fields = XFS_AGI_FREE_ROOT | XFS_AGI_FREE_LEVEL;
+>>>> +	}
+>>>> +	xfs_ialloc_log_agi(cur->bc_tp, agbp, fields);
+>>>>  }
+>>>
+>>> I suspect that it would be better to have separate functions for
+>>> these differences i.e. xfs_inobt_set_root() and
+>>> xfs_finobt_set_root(), and set up separate btree ops structure
+>>> forthe two different trees. Most of the code is still identical,
+>>> but the differences in root structures can easily be handled without
+>>> putting switches in the code everywhere.
+>>>
+>>
+>> Ok, I'm assuming the suggestion is to only create new functions for the
+>> implementations that differ.
 > 
-> Michael
+> Exactly.
 > 
-> [lockdep from xfstests generic/0-ten-something follows:]
+> Cheers,
 > 
-> [  763.993429] XFS (sdb4): Mounting Filesystem
-> [  764.258701] XFS (sdb4): Ending clean mount
-> [  768.798390] XFS (sdb5): Mounting Filesystem
-> [  769.061280] XFS (sdb5): Ending clean mount
-> [  770.030277] XFS (sdb4): Mounting Filesystem
-> [  770.313502] XFS (sdb4): Ending clean mount
-> [  788.932588] XFS (sdb4): Mounting Filesystem
-> [  789.256815] XFS (sdb4): Ending clean mount
-> [  792.639933] XFS (sdb4): Mounting Filesystem
-> [  792.965477] XFS (sdb4): Ending clean mount
-> [  795.166220] XFS (sdb4): Mounting Filesystem
-> [  795.507372] XFS (sdb4): Ending clean mount
-> [  802.870263] XFS (sdb4): Mounting Filesystem
-> [  803.516422] XFS (sdb4): Ending clean mount
-> [  814.376620] XFS (sdb4): Mounting Filesystem
-> [  815.050778] XFS (sdb4): Ending clean mount
-> [  823.169368] 
-> [  823.170932] ======================================================
-> [  823.172146] [ INFO: possible circular locking dependency detected ]
-> [  823.172146] 3.11.0+ #5 Not tainted
-> [  823.172146] -------------------------------------------------------
-> [  823.172146] dirstress/5276 is trying to acquire lock:
-> [  823.172146]  (sb_internal){.+.+.+}, at: [<c11c5e60>] xfs_trans_alloc+0x1f/0x35
-> [  823.172146] 
-> [  823.172146] but task is already holding lock:
-> [  823.172146]  (&(&ip->i_lock)->mr_lock){+++++.}, at: [<c1206cfb>] xfs_ilock+0x100/0x1f1
-> [  823.172146] 
-> [  823.172146] which lock already depends on the new lock.
-> [  823.172146] 
-> [  823.172146] 
-> [  823.172146] the existing dependency chain (in reverse order) is:
-> [  823.172146] 
-> [  823.172146] -> #1 (&(&ip->i_lock)->mr_lock){+++++.}:
-> [  823.172146]        [<c1070a11>] __lock_acquire+0x345/0xa11
-> [  823.172146]        [<c1071c45>] lock_acquire+0x88/0x17e
-> [  823.172146]        [<c14bff98>] _raw_spin_lock+0x47/0x74
-> [  823.172146]        [<c1116247>] __mark_inode_dirty+0x171/0x38c
-> [  823.172146]        [<c111acab>] __set_page_dirty+0x5f/0x95
-> [  823.172146]        [<c111b93e>] mark_buffer_dirty+0x58/0x12b
-> [  823.172146]        [<c111baff>] __block_commit_write.isra.17+0x64/0x82
-> [  823.172146]        [<c111c197>] block_write_end+0x2b/0x53
-> [  823.172146]        [<c111c201>] generic_write_end+0x42/0x9a
-> [  823.172146]        [<c11a42d5>] xfs_vm_write_end+0x60/0xbe
-> [  823.172146]        [<c10bd47a>] generic_file_buffered_write+0x140/0x20f
-> [  823.172146]        [<c11b2347>] xfs_file_buffered_aio_write+0x10b/0x205
-> [  823.172146]        [<c11b24ee>] xfs_file_aio_write+0xad/0xec
-> [  823.172146]        [<c10f0c5f>] do_sync_write+0x60/0x87
-> [  823.172146]        [<c10f0e0f>] vfs_write+0x9c/0x189
-> [  823.172146]        [<c10f0fc6>] SyS_write+0x49/0x81
-> [  823.172146]        [<c14c14bb>] sysenter_do_call+0x12/0x32
-> [  823.172146] 
-> [  823.172146] -> #0 (sb_internal){.+.+.+}:
-> [  823.172146]        [<c106e972>] validate_chain.isra.35+0xfc7/0xff4
-> [  823.172146]        [<c1070a11>] __lock_acquire+0x345/0xa11
-> [  823.172146]        [<c1071c45>] lock_acquire+0x88/0x17e
-> [  823.172146]        [<c10f36eb>] __sb_start_write+0xad/0x177
-> [  823.172146]        [<c11c5e60>] xfs_trans_alloc+0x1f/0x35
-> [  823.172146]        [<c120a823>] xfs_inactive+0x129/0x4a3
-> [  823.172146]        [<c11c280d>] xfs_fs_evict_inode+0x6c/0x114
-> [  823.172146]        [<c1106678>] evict+0x8e/0x15d
-> [  823.172146]        [<c1107126>] iput+0xc4/0x138
-> [  823.172146]        [<c1103504>] dput+0x1b2/0x257
-> [  823.172146]        [<c10f1a30>] __fput+0x140/0x1eb
-> [  823.172146]        [<c10f1b0f>] ____fput+0xd/0xf
-> [  823.172146]        [<c1048477>] task_work_run+0x67/0x90
-> [  823.172146]        [<c1001ea5>] do_notify_resume+0x61/0x63
-> [  823.172146]        [<c14c0cfa>] work_notifysig+0x1f/0x25
-> [  823.172146] 
-> [  823.172146] other info that might help us debug this:
-> [  823.172146] 
-> [  823.172146]  Possible unsafe locking scenario:
-> [  823.172146] 
-> [  823.172146]        CPU0                    CPU1
-> [  823.172146]        ----                    ----
-> [  823.172146]   lock(&(&ip->i_lock)->mr_lock);
-> [  823.172146]                                lock(sb_internal);
-> [  823.172146]                                lock(&(&ip->i_lock)->mr_lock);
-> [  823.172146]   lock(sb_internal);
-> [  823.172146] 
-> [  823.172146]  *** DEADLOCK ***
-> [  823.172146] 
-> [  823.172146] 1 lock held by dirstress/5276:
-> [  823.172146]  #0:  (&(&ip->i_lock)->mr_lock){+++++.}, at: [<c1206cfb>] xfs_ilock+0x100/0x1f1
-> [  823.172146] 
-> [  823.172146] stack backtrace:
-> [  823.172146] CPU: 0 PID: 5276 Comm: dirstress Not tainted 3.11.0+ #5
-> [  823.172146] Hardware name: Dell Computer Corporation Dimension 2350/07W080, BIOS A01 12/17/2002
-> [  823.172146]  c1c26060 c1c26060 da34fd58 c14ba216 da34fd78 c14b7317 c15f171b da34fdb4
-> [  823.172146]  dcaa1440 00000001 dcaa18b0 00000000 da34fde4 c106e972 dcaa1888 00000001
-> [  823.172146]  da34fdb4 c1057e0f 00000000 00003f61 c1c28660 00000000 dcaa1888 dcaa18b0
-> [  823.172146] Call Trace:
-> [  823.172146]  [<c14ba216>] dump_stack+0x16/0x18
-> [  823.172146]  [<c14b7317>] print_circular_bug+0x1b8/0x1c2
-> [  823.172146]  [<c106e972>] validate_chain.isra.35+0xfc7/0xff4
-> [  823.172146]  [<c1057e0f>] ? sched_clock_local.constprop.3+0x39/0x131
-> [  823.172146]  [<c1057fd4>] ? sched_clock_cpu+0x8f/0xe2
-> [  823.172146]  [<c1070a11>] __lock_acquire+0x345/0xa11
-> [  823.172146]  [<c1070a36>] ? __lock_acquire+0x36a/0xa11
-> [  823.172146]  [<c1071c45>] lock_acquire+0x88/0x17e
-> [  823.172146]  [<c11c5e60>] ? xfs_trans_alloc+0x1f/0x35
-> [  823.172146]  [<c10f36eb>] __sb_start_write+0xad/0x177
-> [  823.172146]  [<c11c5e60>] ? xfs_trans_alloc+0x1f/0x35
-> [  823.172146]  [<c11c5e60>] ? xfs_trans_alloc+0x1f/0x35
-> [  823.172146]  [<c1206cfb>] ? xfs_ilock+0x100/0x1f1
-> [  823.172146]  [<c11c5e60>] xfs_trans_alloc+0x1f/0x35
-> [  823.172146]  [<c120a823>] xfs_inactive+0x129/0x4a3
-> [  823.172146]  [<c106f21f>] ? trace_hardirqs_on+0xb/0xd
-> [  823.172146]  [<c14c01e5>] ? _raw_spin_unlock_irq+0x27/0x36
-> [  823.172146]  [<c11c280d>] xfs_fs_evict_inode+0x6c/0x114
-> [  823.172146]  [<c1106678>] evict+0x8e/0x15d
-> [  823.172146]  [<c1107126>] iput+0xc4/0x138
-> [  823.172146]  [<c1103504>] dput+0x1b2/0x257
-> [  823.172146]  [<c10f1a30>] __fput+0x140/0x1eb
-> [  823.172146]  [<c10f1b0f>] ____fput+0xd/0xf
-> [  823.172146]  [<c1048477>] task_work_run+0x67/0x90
-> [  823.172146]  [<c1001ea5>] do_notify_resume+0x61/0x63
-> [  823.172146]  [<c14c0cfa>] work_notifysig+0x1f/0x25
-> [  824.015366] Clocksource tsc unstable (delta = 486645129 ns)
-> [  825.324019] XFS (sdb4): Mounting Filesystem
-> [  825.743317] XFS (sdb4): Ending clean mount
-> [  827.223193] XFS (sdb4): Mounting Filesystem
-> [  827.668493] XFS (sdb4): Ending clean mount
-> [  837.524673] XFS (sdb4): Mounting Filesystem
-> [  837.986097] XFS (sdb4): Ending clean mount
-> 
-> 
+> Dave.
 > 
 
 _______________________________________________
