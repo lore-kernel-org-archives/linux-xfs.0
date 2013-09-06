@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3D55529DFB
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 13:24:08 -0500 (CDT)
-Message-ID: <522A1DC4.3010605@sgi.com>
-Date: Fri, 06 Sep 2013 13:24:04 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 72C1429DFB
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 13:25:52 -0500 (CDT)
+Message-ID: <522A1E2F.8090206@sgi.com>
+Date: Fri, 06 Sep 2013 13:25:51 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 48/55] xfs: Add write support for dirent filetype field
+Subject: Re: [PATCH 49/55] xfsprogs: add dtype support to mkfs and db
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-49-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-49-git-send-email-david@fromorbit.com>
+	<1378332359-14737-50-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-50-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,11 +28,12 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Add support to propagate and add filetype values into the on-disk
-> directs. This involves passing the filetype into the xfs_da_args
-> structure along with the name and namelength for direct operations,
-> and encoding it into the dirent at the same time we write the inode
-> number into the dirent.
+> Now that we have an extra field in the dirent, add support into
+> xfs_db to be able to view it when looking at directory structures.
+>
+> Add support to mkfs to create filesystems with filetype - we'll
+> always set it on CRC enabled filesystems so all new v5 filesystems
+> will have this functionality enabled.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
