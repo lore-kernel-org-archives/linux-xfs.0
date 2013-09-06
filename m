@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 528877F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 10:13:42 -0500 (CDT)
-Message-ID: <5229F122.3030206@sgi.com>
-Date: Fri, 06 Sep 2013 10:13:38 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 0153D7F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Sep 2013 10:30:06 -0500 (CDT)
+Message-ID: <5229F4FD.8060304@sgi.com>
+Date: Fri, 06 Sep 2013 10:30:05 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 30/55] xfs: split out the remote symlink handling
+Subject: Re: [PATCH 32/55] xfs: create xfs_bmap_util.[ch]
 References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-31-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-31-git-send-email-david@fromorbit.com>
+	<1378332359-14737-33-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378332359-14737-33-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,21 +28,30 @@ Cc: xfs@oss.sgi.com
 On 09/04/13 17:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The remote symlink format definition and manipulation needs to be
-> shared with userspace, but the in-kernel interfaces do not. Split
-> the remote symlink format handling out into xfs_symlink_remote.[ch]
-> fo it can easily be shared with userspace.
+> There is a bunch of code in xfs_bmap.c that is kernel specific and
+> not shared with userspace. to minimise the difference between the
+> kernel and userspace code, shift this unshared code to
+> xfs_bmap_util.c, and the declarations to xfs_bmap_util.h.
+>
+> The biggest issue here is xfs_bmap_finish() - userspce has it's own
+> definition of this function, and so we need to move it out of
+> xfs_bmap.[ch]. This means several other files need to include
+> xfs_bmap_util.c as well.
+>
+> It also introduces and interesting dance for the stack switching
+> code in xfs_bmapi_allocate(). The stack switching/workqueue code is
+> actually moved to xfs_bmap_util.c, so that userspace can simply use
+> a #define in a header file to connect the dots without needing to
+> know about the stack switch code at all.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-No change in repost.
-user equivalent of the for Linux 3.12 kernel patch 19/50.
+Skipped patch 31 because there are issues that I do not see resolved by 
+the end of the series. I will come back to it.
 
-moves the shared symlink information from xfs_symlink.c/h to
-xfs_format.h and xfs_symlink_remote.c/h.
-
-xfs_symlink.c/h is kernel-only and these files are removed from xfsprogs.
+This patch did not change from last posting. User equivalent of kernel 
+patch 21/50.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
