@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4AEB17F58
-	for <xfs@oss.sgi.com>; Sat,  7 Sep 2013 07:33:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 27D9C304062
-	for <xfs@oss.sgi.com>; Sat,  7 Sep 2013 05:33:49 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8C8AF7F59
+	for <xfs@oss.sgi.com>; Sat,  7 Sep 2013 07:35:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BB738F804B
+	for <xfs@oss.sgi.com>; Sat,  7 Sep 2013 05:35:19 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yLy85EK1oqgdKZcE for
-	<xfs@oss.sgi.com>; Sat, 07 Sep 2013 05:33:48 -0700 (PDT)
-Message-ID: <522B1C4F.7000404@redhat.com>
-Date: Sat, 07 Sep 2013 08:30:07 -0400
+	cuda.sgi.com with ESMTP id uhFdJZNjAbzRL2n1 for
+	<xfs@oss.sgi.com>; Sat, 07 Sep 2013 05:35:15 -0700 (PDT)
+Message-ID: <522B1CA6.1070804@redhat.com>
+Date: Sat, 07 Sep 2013 08:31:34 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 10/11] xfs: update the finobt on inode free
+Subject: Re: [RFC PATCH 00/11] xfs: introduce the free inode btree
 References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
-	<1378232708-57156-11-git-send-email-bfoster@redhat.com>
-	<20130905025421.GX23571@dastard> <5228AF00.7080700@redhat.com>
-	<20130906002847.GR12779@dastard> <5229BEE6.3060407@redhat.com>
-	<20130906212441.GB12541@dastard>
-In-Reply-To: <20130906212441.GB12541@dastard>
-Content-Type: multipart/mixed; boundary="------------090408020604090702060900"
+	<5228F4D6.4050306@gmail.com> <20130906213555.GC12541@dastard>
+In-Reply-To: <20130906213555.GC12541@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,244 +24,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------090408020604090702060900
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-On 09/06/2013 05:24 PM, Dave Chinner wrote:
-> On Fri, Sep 06, 2013 at 07:39:18AM -0400, Brian Foster wrote:
->> On 09/05/2013 08:28 PM, Dave Chinner wrote:
->>> On Thu, Sep 05, 2013 at 12:19:12PM -0400, Brian Foster wrote:
->>>> On 09/04/2013 10:54 PM, Dave Chinner wrote:
->>>>> On Tue, Sep 03, 2013 at 02:25:07PM -0400, Brian Foster wrote:
->> ...
->>>>
-...
->>> No worries. BTW, can you post your rudimentary userspace support so
->>> we can run tests that use this code, too?
->>>
->>
->> Sure. My xfsprogs branch currently is the application of a slightly
->> older version of this set (pre-cleanups I made to make this post-worthy)
->> with some hacks to make it apply/compile and a few other patches on top
->> of that for mkfs, xfs_db and xfs_repair to work through some basic
->> things I ran into when running xfstests.
->>
->> Would you prefer I drop the whole thing on the list?
+On 09/06/2013 05:35 PM, Dave Chinner wrote:
+> On Thu, Sep 05, 2013 at 05:17:10PM -0400, Michael L. Semon wrote:
+> ....
+>> [  814.376620] XFS (sdb4): Mounting Filesystem
+>> [  815.050778] XFS (sdb4): Ending clean mount
+>> [  823.169368] 
+>> [  823.170932] ======================================================
+>> [  823.172146] [ INFO: possible circular locking dependency detected ]
+>> [  823.172146] 3.11.0+ #5 Not tainted
+>> [  823.172146] -------------------------------------------------------
+>> [  823.172146] dirstress/5276 is trying to acquire lock:
+>> [  823.172146]  (sb_internal){.+.+.+}, at: [<c11c5e60>] xfs_trans_alloc+0x1f/0x35
+>> [  823.172146] 
+>> [  823.172146] but task is already holding lock:
+>> [  823.172146]  (&(&ip->i_lock)->mr_lock){+++++.}, at: [<c1206cfb>] xfs_ilock+0x100/0x1f1
+>> [  823.172146] 
+>> [  823.172146] which lock already depends on the new lock.
+>> [  823.172146] 
+>> [  823.172146] 
+>> [  823.172146] the existing dependency chain (in reverse order) is:
+>> [  823.172146] 
+>> [  823.172146] -> #1 (&(&ip->i_lock)->mr_lock){+++++.}:
+>> [  823.172146]        [<c1070a11>] __lock_acquire+0x345/0xa11
+>> [  823.172146]        [<c1071c45>] lock_acquire+0x88/0x17e
+>> [  823.172146]        [<c14bff98>] _raw_spin_lock+0x47/0x74
+>> [  823.172146]        [<c1116247>] __mark_inode_dirty+0x171/0x38c
+>> [  823.172146]        [<c111acab>] __set_page_dirty+0x5f/0x95
+>> [  823.172146]        [<c111b93e>] mark_buffer_dirty+0x58/0x12b
+>> [  823.172146]        [<c111baff>] __block_commit_write.isra.17+0x64/0x82
+>> [  823.172146]        [<c111c197>] block_write_end+0x2b/0x53
+>> [  823.172146]        [<c111c201>] generic_write_end+0x42/0x9a
+>> [  823.172146]        [<c11a42d5>] xfs_vm_write_end+0x60/0xbe
+>> [  823.172146]        [<c10bd47a>] generic_file_buffered_write+0x140/0x20f
+>> [  823.172146]        [<c11b2347>] xfs_file_buffered_aio_write+0x10b/0x205
+>> [  823.172146]        [<c11b24ee>] xfs_file_aio_write+0xad/0xec
+>> [  823.172146]        [<c10f0c5f>] do_sync_write+0x60/0x87
+>> [  823.172146]        [<c10f0e0f>] vfs_write+0x9c/0x189
+>> [  823.172146]        [<c10f0fc6>] SyS_write+0x49/0x81
+>> [  823.172146]        [<c14c14bb>] sysenter_do_call+0x12/0x32
+>> [  823.172146] 
+>> [  823.172146] -> #0 (sb_internal){.+.+.+}:
+>> [  823.172146]        [<c106e972>] validate_chain.isra.35+0xfc7/0xff4
+>> [  823.172146]        [<c1070a11>] __lock_acquire+0x345/0xa11
+>> [  823.172146]        [<c1071c45>] lock_acquire+0x88/0x17e
+>> [  823.172146]        [<c10f36eb>] __sb_start_write+0xad/0x177
+>> [  823.172146]        [<c11c5e60>] xfs_trans_alloc+0x1f/0x35
+>> [  823.172146]        [<c120a823>] xfs_inactive+0x129/0x4a3
+>> [  823.172146]        [<c11c280d>] xfs_fs_evict_inode+0x6c/0x114
+>> [  823.172146]        [<c1106678>] evict+0x8e/0x15d
+>> [  823.172146]        [<c1107126>] iput+0xc4/0x138
+>> [  823.172146]        [<c1103504>] dput+0x1b2/0x257
+>> [  823.172146]        [<c10f1a30>] __fput+0x140/0x1eb
+>> [  823.172146]        [<c10f1b0f>] ____fput+0xd/0xf
+>> [  823.172146]        [<c1048477>] task_work_run+0x67/0x90
+>> [  823.172146]        [<c1001ea5>] do_notify_resume+0x61/0x63
+>> [  823.172146]        [<c14c0cfa>] work_notifysig+0x1f/0x25
+>> [  823.172146] 
+>> [  823.172146] other info that might help us debug this:
+>> [  823.172146] 
+>> [  823.172146]  Possible unsafe locking scenario:
+>> [  823.172146] 
+>> [  823.172146]        CPU0                    CPU1
+>> [  823.172146]        ----                    ----
+>> [  823.172146]   lock(&(&ip->i_lock)->mr_lock);
+>> [  823.172146]                                lock(sb_internal);
+>> [  823.172146]                                lock(&(&ip->i_lock)->mr_lock);
+>> [  823.172146]   lock(sb_internal);
 > 
-> Drop it on the list, maybe just a as tarball rather than a patchset
-> if it's not ready for review yet.
+> Ah, now there's something I missed in all the xfs_inactive
+> transaction rework - you can't call
+> xfs_trans_alloc()/xfs-trans_reserve with the XFS_ILOCK_??? held.
+> It's not the freeze locks you really have to worry about deadlocking
+> if you do, it's deadlocking against log space that is much more
+> likely.
+> 
+> i.e. if you hold the ILOCK, the AIL can't get it to flush the inode
+> to disk. That means if the inode you hold locked is pinning the tail
+> of the log and there is no logspace for the transaction you are
+> about to run, xfs_trans_reserve() will block forever waiting for the
+> inode to be flushed and the tail of the log to move forward. This
+> will end up blocking all further reservations and hence deadlock the
+> filesystem...
+> 
+> Brian, if you rewrite xfs_inactive in the way that I suggested, this
+> problem goes away ;)
+> 
+> Thanks for reporting this, Michael.
 > 
 
-Ok, attached. This applies on top of the following commit in the
-xfsprogs tree:
-
-982e5c7e xfs_db: add header to freesp -d output
-
-Use the following command to format a finobt enabled fs:
-
-mkfs.xfs -m crc=1,finobt=1 <dev>
-
-... and otherwise there are a couple random fixes for xfs_db and xfs_repair.
+Oh, very interesting scenario. Thanks again for catching this, Michael,
+and for the analysis, Dave. I'll get this cleaned up in the next
+revision as well.
 
 Brian
-
 
 > Cheers,
 > 
 > Dave.
 > 
 
-
-
---------------090408020604090702060900
-Content-Type: application/x-bzip;
- name="xfsprogs_finobt_rfc.tar.bz2"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="xfsprogs_finobt_rfc.tar.bz2"
-
-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
---------------090408020604090702060900
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---------------090408020604090702060900--
