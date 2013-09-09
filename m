@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E78C29DFB
-	for <xfs@oss.sgi.com>; Mon,  9 Sep 2013 15:38:02 -0500 (CDT)
-Message-ID: <522E31A6.7050509@sgi.com>
-Date: Mon, 09 Sep 2013 15:37:58 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 904AB7F5F
+	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 16:08:47 -0500 (CDT)
+Message-ID: <522E38DB.4020408@sgi.com>
+Date: Mon, 09 Sep 2013 16:08:43 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfs: recovery of swap extents operations for CRC
-	filesystems
-References: <1377822225-17621-1-git-send-email-david@fromorbit.com>
-	<1377822225-17621-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1377822225-17621-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: be more forgiving of a v4 secondary sb w/ junk
+	in v5 fields
+References: <520D1BA3.1050500@redhat.com> <20130815210018.GR6023@dastard>
+	<520D44E7.1000905@sandeen.net> <520D592D.4040600@redhat.com>
+	<522E3099.1040503@sandeen.net>
+In-Reply-To: <522E3099.1040503@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,50 +24,70 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>
 
-On 08/29/13 19:23, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
+On 09/09/13 15:33, Eric Sandeen wrote:
+> Today, if xfs_sb_read_verify encounters a v4 superblock
+> with junk past v4 fields which includes data in sb_crc,
+> it will be treated as a failing checksum and a significant
+> corruption.
 >
-> This is the recovery side of the btree block owner change operation
-> performed by swapext on CRC enabled filesystems. We detect that an
-> owner change is needed by the flag that has been placed on the inode
-> log format flag field. Because the inode recovery is being replayed
-> after the buffers that make up the BMBT in the given checkpoint, we
-> can walk all the buffers and directly modify them when we see the
-> flag set on an inode.
+> There are known prior bugs which leave junk at the end
+> of the V4 superblock; we don't need to actually fail the
+> verification in this case if other checks pan out ok.
 >
-> Because the inode can be relogged and hence present in multiple
-> chekpoints with the "change owner" flag set, we could do multiple
-> passes across the inode to do this change. While this isn't optimal,
-> we can't directly ignore the flag as there may be multiple
-> independent swap extent operations being replayed on the same inode
-> in different checkpoints so we can't ignore them.
+> So if this is a secondary superblock, and the primary
+> superblock doesn't indicate that this is a V5 filesystem,
+> don't treat this as an actual checksum failure.
 >
-> Further, because the owner change operation uses ordered buffers, we
-> might have buffers that are newer on disk than the current
-> checkpoint and so already have the owner changed in them. Hence we
-> cannot just peek at a buffer in the tree and check that it has the
-> correct owner and assume that the change was completed.
+> We should probably check the garbage condition as
+> we do in xfs_repair, and possibly warn about it
+> or self-heal, but that's a different scope of work.
 >
-> So, for the moment just brute force the owner change every time we
-> see an inode with the flag set. Note that we have to be careful here
-> because the owner of the buffers may point to either the old owner
-> or the new owner. Currently the verifier can't verify the owner
-> directly, so there is no failure case here right now. If we verify
-> the owner exactly in future, then we'll have to take this into
-> account.
+> Stable folks: This can go back to v3.10, which is what
+> introduced the sb CRC checking that is tripped up by old,
+> stale, incorrect V4 superblocks w/ unzeroed bits.
 >
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
+>
+> V2: Comment changes: More!  (No code changes)
+>
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 2b0ba35..b2deab1 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -749,6 +749,11 @@ xfs_sb_verify(
+>    * single bit error could clear the feature bit and unused parts of the
+>    * superblock are supposed to be zero. Hence a non-null crc field indicates that
+>    * we've potentially lost a feature bit and we should check it anyway.
+> + *
+> + * However, past bugs (i.e. in growfs) left non-zeroed regions beyond the
+> + * last field in V4 secondary superblocks.  So for secondary superblocks,
+> + * we are more forgiving, and ignore CRC failures if the primary doesn't
+> + * indicate that the fs version is V5.
+>    */
+>   static void
+>   xfs_sb_read_verify(
+> @@ -769,8 +774,12 @@ xfs_sb_read_verify(
+>
+>   		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
+>   				      offsetof(struct xfs_sb, sb_crc))) {
+> -			error = EFSCORRUPTED;
+> -			goto out_error;
+> +			/* Only fail bad secondaries on a known V5 filesystem */
+> +			if (bp->b_bn != XFS_SB_DADDR&&
+> +			    xfs_sb_version_hascrc(&mp->m_sb)) {
+> +				error = EFSCORRUPTED;
+> +				goto out_error;
+> +			}
+>   		}
+>   	}
+>   	error = xfs_sb_verify(bp, true);
 
-...
-
-
-Recovery of swap extent makes sense. Variable name, XFS_ILOG_DOWNER, 
-gave me a chuckle but it is consistent with the other names.
-
-Really could use some recovery test for this. Did inode create recovery 
-get a test?
+This moved to fs/xfs/xfs_sb.c in TOT, but the patch looks good to me.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
