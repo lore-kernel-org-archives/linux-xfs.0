@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 48F1A7F55
-	for <xfs@oss.sgi.com>; Mon,  9 Sep 2013 15:32:55 -0500 (CDT)
-Message-ID: <522E3073.2080501@sgi.com>
-Date: Mon, 09 Sep 2013 15:32:51 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C33C37F5F
+	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 15:33:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 52F00AC007
+	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 13:33:33 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id YodQfvDOMZkmR2JS for <linux-xfs@oss.sgi.com>;
+	Mon, 09 Sep 2013 13:33:31 -0700 (PDT)
+Message-ID: <522E3099.1040503@sandeen.net>
+Date: Mon, 09 Sep 2013 15:33:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs: swap extents operations for CRC filesystems
-References: <1377822225-17621-1-git-send-email-david@fromorbit.com>
-	<1377822225-17621-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1377822225-17621-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH V2] xfs: be more forgiving of a v4 secondary sb w/ junk in
+	v5 fields
+References: <520D1BA3.1050500@redhat.com> <20130815210018.GR6023@dastard>
+	<520D44E7.1000905@sandeen.net> <520D592D.4040600@redhat.com>
+In-Reply-To: <520D592D.4040600@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,61 +25,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On 08/29/13 19:23, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> For CRC enabled filesystems, we can't just swap inode forks from one
-> inode to another when defragmenting a file - the blocks in the inode
-> fork bmap btree contain pointers back to the owner inode. Hence if
-> we are to swap the inode forks we have to atomically modify every
-> block in the btree during the transaction.
->
-> We are doing an entire fork swap here, so we could create a new
-> transaction item type that indicates we are changing the owner of a
-> certain structure from one value to another. If we combine this with
-> ordered buffer logging to modify all the buffers in the tree, then
-> we can change the buffers in the tree without needing log space for
-> the operation. However, this then requires log recovery to perform
-> the modification of the owner information of the objects/structures
-> in question.
->
-> This does introduce some interesting ordering details into recovery:
-> we have to make sure that the owner change replay occurs after the
-> change that moves the objects is made, not before. Hence we can't
-> use a separate log item for this as we have no guarantee of strict
-> ordering between multiple items in the log due to the relogging
-> action of asynchronous transaction commits. Hence there is no
-> "generic" method we can use for changing the ownership of arbitrary
-> metadata structures.
->
-> For inode forks, however, there is a simple method of communicating
-> that the fork contents need the owner rewritten - we can pass a
-> inode log format flag for the fork for the transaction that does a
-> fork swap. This flag will then follow the inode fork through
-> relogging actions so when the swap actually gets replayed the
-> ownership can be changed immediately by log recovery.  So that gives
-> us a simple method of "whole fork" exchange between two inodes.
->
-> This is relatively simple to implement, so it makes sense to do this
-> as an initial implementation to support xfs_fsr on CRC enabled
-> filesytems in the same manner as we do on existing filesystems. This
-> commit introduces the swapext driven functionality, the recovery
-> functionality will be in a separate patch.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+Today, if xfs_sb_read_verify encounters a v4 superblock
+with junk past v4 fields which includes data in sb_crc,
+it will be treated as a failing checksum and a significant
+corruption.
 
-Makes sense. Change owner in btree entry, Don't log the modified btree 
-buffers but recreate in recovery when necessary.
+There are known prior bugs which leave junk at the end
+of the V4 superblock; we don't need to actually fail the
+verification in this case if other checks pan out ok.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+So if this is a secondary superblock, and the primary
+superblock doesn't indicate that this is a V5 filesystem,
+don't treat this as an actual checksum failure.
+
+We should probably check the garbage condition as
+we do in xfs_repair, and possibly warn about it
+or self-heal, but that's a different scope of work.
+
+Stable folks: This can go back to v3.10, which is what
+introduced the sb CRC checking that is tripped up by old,
+stale, incorrect V4 superblocks w/ unzeroed bits.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+V2: Comment changes: More!  (No code changes)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2b0ba35..b2deab1 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -749,6 +749,11 @@ xfs_sb_verify(
+  * single bit error could clear the feature bit and unused parts of the
+  * superblock are supposed to be zero. Hence a non-null crc field indicates that
+  * we've potentially lost a feature bit and we should check it anyway.
++ *
++ * However, past bugs (i.e. in growfs) left non-zeroed regions beyond the
++ * last field in V4 secondary superblocks.  So for secondary superblocks,
++ * we are more forgiving, and ignore CRC failures if the primary doesn't
++ * indicate that the fs version is V5.
+  */
+ static void
+ xfs_sb_read_verify(
+@@ -769,8 +774,12 @@ xfs_sb_read_verify(
+ 
+ 		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
+ 				      offsetof(struct xfs_sb, sb_crc))) {
+-			error = EFSCORRUPTED;
+-			goto out_error;
++			/* Only fail bad secondaries on a known V5 filesystem */
++			if (bp->b_bn != XFS_SB_DADDR &&
++			    xfs_sb_version_hascrc(&mp->m_sb)) {
++				error = EFSCORRUPTED;
++				goto out_error;
++			}
+ 		}
+ 	}
+ 	error = xfs_sb_verify(bp, true);
+
 
 _______________________________________________
 xfs mailing list
