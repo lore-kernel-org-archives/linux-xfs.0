@@ -1,23 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 201847F5F
-	for <xfs@oss.sgi.com>; Mon,  9 Sep 2013 10:39:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD62E304059
-	for <xfs@oss.sgi.com>; Mon,  9 Sep 2013 08:39:45 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	AG3UC1ckw4G7fj6s for <xfs@oss.sgi.com>;
-	Mon, 09 Sep 2013 08:39:43 -0700 (PDT)
-Date: Tue, 10 Sep 2013 01:39:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: lookaside cache for xfs_buf_find
-Message-ID: <20130909153939.GU12779@dastard>
-References: <1378690396-15792-1-git-send-email-david@fromorbit.com>
-	<522DE684.4000903@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <522DE684.4000903@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 17B377F55
+	for <xfs@oss.sgi.com>; Mon,  9 Sep 2013 12:40:21 -0500 (CDT)
+Subject: [GIT PULL] XFS updates for 3.12-rc1
+Message-Id: <20130909174017.697A34266DC@whiskey.americas.sgi.com>
+Date: Mon,  9 Sep 2013 12:40:17 -0500 (CDT)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,351 +14,335 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Sep 09, 2013 at 10:17:24AM -0500, Mark Tinguely wrote:
-> On 09/08/13 20:33, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >CPU overhead of buffer lookups dominate most metadata intensive
-> >workloads. The thing is, most such workloads are hitting a
-> >relatively small number of buffers repeatedly, and so caching
-> >recently hit buffers is a good idea.
-> >
-> >Add a hashed lookaside buffer that records the recent buffer
-> >lookup successes and is searched first before doing a rb-tree
-> >lookup. If we get a hit, we avoid the expensive rbtree lookup and
-> >greatly reduce the overhead of the lookup. If we get a cache miss,
-> >then we've added an extra CPU cacheline miss into the lookup.
-> 
-> Interesting. The last allocated xfs_buf is placed into the hash.
-> 
-> Might be interesting to know the hit-miss ratio on a real workload.
+Hi Linus,
 
-Of course. Didn't you notice that data in the next patch I sent? ;)
+   Please pull these XFS updates for 3.12-rc1.  Most of this is related to the
+   libxfs kernel/userspace sync, there is also project quota work, performance
+   work in the log, recovery, and the CIL.  User namespace support has been
+   added, directory entries now have file type support, there is work to
+   cleanup log space reservations, a bunch of spelling cleanups, and bug fixes.
 
-Anyway, here's one I prepared earlier.
+Thanks,
+	Ben
 
-Cheers,
+The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
 
+are available in the git repository at:
 
-[RFC v2] xfs: lookaside cache for xfs_buf_find
+  git://oss.sgi.com/xfs/xfs tags/xfs-for-linus-v3.12-rc1
 
-From: Dave Chinner <dchinner@redhat.com>
+for you to fetch changes up to 1d03c6fa88af35e55047a1f2ab116f0fdf2f55aa:
 
-CPU overhead of buffer lookups dominate most metadata intensive
-workloads. The thing is, most such workloads are hitting a
-relatively small number of buffers repeatedly, and so caching
-recently hit buffers is a good idea.
+  xfs: XFS_MOUNT_QUOTA_ALL needed by userspace (2013-09-03 15:00:06 -0500)
 
-Add a hashed lookaside buffer that records the recent buffer
-lookup successes and is searched first before doing a rb-tree
-lookup. If we get a hit, we avoid the expensive rbtree lookup and
-greatly reduce the overhead of the lookup. If we get a cache miss,
-then we've added an extra CPU cacheline miss into the lookup.
+----------------------------------------------------------------
+xfs: update for v3.12-rc1
 
-In cold cache lookup cases, this extra cache line miss is irrelevant
-as we need to read or allocate the buffer anyway, and the etup time
-for that dwarfs the cost of the miss.
+For 3.12-rc1 there are a number of bugfixes in addition to work to ease usage
+of shared code between libxfs and the kernel, the rest of the work to enable
+project and group quotas to be used simultaneously, performance optimisations
+in the log and the CIL, directory entry file type support, fixes for log space
+reservations, some spelling/grammar cleanups, and the addition of user
+namespace support.
 
-In the case that we miss the lookaside cache and find the buffer in
-the rbtree, the cache line miss overhead will be noticable only if
-we don't see any lookaside cache misses at all in subsequent
-lookups. We don't tend to do random cache walks in perfomrance
-critical paths, so the net result is that the extra CPU cacheline
-miss will be lost in the reduction of misses due to cache hits. This
-hit/miss case is what we'll see with file removal operations.
+- introduce readahead to log recovery
+- add directory entry file type support
+- fix a number of spelling errors in comments
+- introduce new Q_XGETQSTATV quotactl for project quotas
+- add USER_NS support
+- log space reservation rework
+- CIL optimisations
+- kernel/userspace libxfs rework
 
-A simple prime number hash was chosen for the cache (i.e. modulo 37)
-because it is fast, simple, and works really well with block numbers
-that tend to be aligned to a multiple of 8. No attempt to optimise
-this has been made - it's just a number I picked out of thin air
-given that most repetitive workloads have a working set of buffers
-that is significantly smaller than 37 per AG and should hold most of
-the AG header buffers permanently in the lookaside cache.
+----------------------------------------------------------------
+Brian Foster (1):
+      xfs: check correct status variable for xfs_inobt_get_rec() call
 
-The result is that on a typical concurrent create fsmark benchmark I
-run, the profile of CPU usage went from having _xfs_buf_find() as
-teh number one CPU consumer:
+Chandra Seetharaman (5):
+      xfs: Fix a deadlock in xfs_log_commit_cil() code path
+      xfs: Initialize all quota inodes to be NULLFSINO
+      xfs: Start using pquotaino from the superblock.
+      quota: Add a new quotactl command Q_XGETQSTATV
+      xfs: Add support for the Q_XGETQSTATV
 
-   6.55%  [kernel]  [k] _xfs_buf_find
-   4.94%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
-   4.77%  [kernel]  [k] native_read_tsc
-   4.67%  [kernel]  [k] __ticket_spin_trylock
+Dan Carpenter (1):
+      xfs: check for underflow in xfs_iformat_fork()
 
-to this, at about #8 and #30 in the profile:
+Dave Chinner (53):
+      xfs: di_flushiter considered harmful
+      xfs: separate out log format definitions
+      xfs: split out inode log item format definition
+      xfs: split out buf log item format definitions
+      xfs: split out EFI/EFD log item format definition
+      xfs: separate dquot on disk format definitions out of xfs_quota.h
+      xfs: separate icreate log format definitions from xfs_icreate_item.h
+      xfs: split out on-disk transaction definitions
+      xfs: introduce xfs_rtalloc_defs.h
+      xfs: introduce xfs_quota_defs.h
+      xfs: sync minor header differences needed by userspace.
+      xfs: split out transaction reservation code
+      xfs: move inode fork definitions to a new header file
+      xfs: move unrelated definitions out of xfs_inode.h
+      xfs: introduce xfs_inode_buf.c for inode buffer operations
+      xfs: move getdents code into it's own file
+      xfs: reshuffle dir2 definitions around for userspace
+      xfs: split out attribute listing code into separate file
+      xfs: split out attribute fork truncation code into separate file
+      xfs: split out the remote symlink handling
+      xfs: introduce xfs_sb.c for sharing with libxfs
+      xfs: create xfs_bmap_util.[ch]
+      xfs: minor cleanups
+      xfs: fix issues that cause userspace warnings
+      xfs: kill xfs_vnodeops.[ch]
+      xfs: consolidate xfs_rename.c
+      xfs: consolidate xfs_utils.c
+      xfs: consolidate extent swap code
+      xfs: don't special case shared superblock mounts
+      xfs: kill __KERNEL__ check for debug code in allocation code
+      xfs: remove __KERNEL__ from debug code
+      xfs: remove __KERNEL__ check from xfs_dir2_leaf.c
+      xfs: xfs_filestreams.h doesn't need __KERNEL__
+      xfs: move kernel specific type definitions to xfs.h
+      xfs: make struct xfs_perag kernel only
+      xfs: return log item size in IOP_SIZE
+      xfs: Reduce allocations during CIL insertion
+      xfs: avoid CIL allocation during insert
+      xfs: Combine CIL insert and prepare passes
+      xfs: split the CIL lock
+      xfs: use reference counts to free clean buffer items
+      xfs: Add read-only support for dirent filetype field
+      xfs: Add write support for dirent filetype field
+      xfs: don't account buffer cancellation during log recovery readahead
+      xfs: fix bad dquot buffer size in log recovery readahead
+      XFS: Assertion failed: first <= last && last < BBTOB(bp->b_length), file: fs/xfs/xfs_trans_buf.c, line: 568
+      xfs: btree block LSN escaping to disk uninitialised
+      xfs: check LSN ordering for v5 superblocks during recovery
+      xfs: inode buffers may not be valid during recovery readahead
+      xfs: inode log reservations are too small
+      xfs: finish removing IOP_* macros.
+      xfs: dtype changed xfs_dir2_sfe_put_ino to xfs_dir3_sfe_put_ino
+      xfs: XFS_MOUNT_QUOTA_ALL needed by userspace
 
-   2.56%  [kernel]  [k] _xfs_buf_find
-....
-   0.55%  [kernel]  [k] _xfs_buf_find_lookaside
+Dwight Engen (8):
+      xfs: create wrappers for converting kuid_t to/from uid_t
+      xfs: convert kuid_t to/from uid_t in ACLs
+      xfs: ioctl check for capabilities in the current user namespace
+      xfs: convert kuid_t to/from uid_t for internal structures
+      xfs: create internal eofblocks structure with kuid_t types
+      xfs: add capability check to free eofblocks ioctl
+      enable building user namespace with xfs
+      powerpc/spufs: convert userns uid/gid mount options to kuid/kgid
 
-So the lookaside cache has halved the CPU overhead of looking up
-buffers for this workload.
+Eric Sandeen (4):
+      xfs: avoid double-free in xfs_attr_node_addname
+      xfs: free bp in xlog_find_zeroed() error path
+      xfs:free bp in xlog_find_tail() error path
+      Fix wrong flag ASSERT in xfs_attr_shortform_getvalue
 
-On a buffer hit/miss workload like the followup concurrent removes,
-_xfs_buf_find() went from #1 in the profile again at:
+Fengguang Wu (1):
+      xfs: xfs_dir3_sfe_put_ino can be static
 
-   9.13%  [kernel]  [k] _xfs_buf_find
+Jie Liu (11):
+      xfs: fix assertion failure in xfs_vm_write_failed()
+      xfs: Introduce a new structure to hold transaction reservation items
+      xfs: Introduce tr_fsyncts to m_reservation
+      xfs: Make writeid transaction use tr_writeid
+      xfs: refactor xfs_trans_reserve() interface
+      xfs: Get rid of all XFS_XXX_LOG_RES() macro
+      xfs: Refactor xfs_ticket_alloc() to extract a new helper
+      xfs: Add xfs_log_rlimit.c
+      xfs: Validate log space at mount time
+      xfs: call roundup_64() to calculate the min_logblks
+      xfs: Simplify xfs_ail_min() with list_first_entry_or_null()
 
-to #6 and #23 repesctively:
+Mark Tinguely (1):
+      xfs: add xfs sb v4 support for dirent filetype field
 
-   2.82%  [kernel]  [k] _xfs_buf_find
-....
-   0.78%  [kernel]  [k] _xfs_buf_find_lookaside
+Richard Weinberger (1):
+      xfs: Register hotcpu notifier after initialization
 
-IOWs, on most workloads - even read only workloads - there is still
-a significant benefit to this simple lookaside cache.
+Tejun Heo (1):
+      xfs: WQ_NON_REENTRANT is meaningless and going away
 
-More analysis, using -m crc=1,finobt=1:
+Zhi Yong Wu (25):
+      xfs: fix the comment of xfs_check_sizes()
+      xfs: fix the comment of xfs_buf_free()
+      xfs: fix the comment of xfs_btree_lookup()
+      xfs: fix the comment of xfs_mod_incore_sb_unlocked()
+      xfs: fix the comment of xlog_write_setup_copy()
+      xfs: remove one blank line in xfs_btree_make_block_unfull()
+      xfs: fix the comment of xfs_iroot_realloc()
+      xfs: fix the comment of xfs_btree_get_iroot()
+      xfs: remove two unused macro definitions in xfs_linux.h
+      xfs: fix the comment of xlog_recover_buffer_pass2()
+      xfs: fix the comment of xlog_find_head()
+      xfs: rename bio_add_buffer() to xfs_bio_add_buffer()
+      xfs: fix the comment of xfs_bmap_count_tree()
+      xfs: fix the comment of xfs_bmap_validate_ret()
+      xfs: fix the comment of xfs_bmap_last_before()
+      xfs: fix the comment of xfs_bmap_punch_delalloc_range()
+      xfs: fix the comment of xfs_setsize_buftarg_early()
+      xfs: fix the comment of xfs_extent_busy_update_extent()
+      xfs: fix the comment of xfs_ialloc_ag_select()
+      xfs: fix the comment of xfs_ifree_cluster()
+      xfs: fix the comment of xfs_log_unmount_write()
+      xfs: fix the comment of xlog_recover_do_dquot_buffer()
+      xfs: fix the comment of xfs_sb_quiet_read_verify()
+      xfs: fix the comment of xfs_mountfs()
+      xfs: introduce object readahead to log recovery
 
-Lookaside cache hit rates vs size:
-
-		    cache size
-cache size	7	37	73
-create		0.4	0.76	0.88
-bulkstat	0.64	0.88	0.93
-find+stat	0.45	0.68	0.73
-ls -R		0.06	0.10	0.14
-unlink		0.43	0.75	0.89
-
-As expected, the larger the cache, the higher the hit rate.
-
-Wall time vs cache size:
-
-			cache size
-		none	7	37	73
-create		256s	240s	235s	238s
-bulkstat	153s	154s	163s	161s
-find+stat	210s	204s	205s	206s
-ls -R		 31s	 31s	 31s	32s
-unlink		381s	362s	356s	360s
-
-Higher hit rates don't necessarily translate into higher
-performance, however.
-
-System time vs cache size:
-
-			cache size
-		none	7	37	73
-create		2851s	2681s	2637s	2607s
-bulkstat	2357s	2342s	2497s	2473s
-find+stat	1743s	1704s	1681s	1667s
-ls -R		 22s	  21s	  20s	  21s
-unlink		3409s	3313s	3216s	3168s
-
-All looks as expected here given the cache hit rate numbers, except
-for the bulkstat numbers. I'm not sure why the system time goes up
-given the cache hit rates being so high - perf shows the CPU in
-xfs_buf_find() going down....
-
-So, performance is best at a cache size of 37 entries, though cache
-hit rates and system time is better with 73 entries. Not immediately
-obvious why, but it tends to indicate the initial swag at a cache of
-37 entries gives a pretty good tradeoff between size, CPU usage
-reduction and overall performance improvement.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_buf.c   | 68 ++++++++++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_buf.h   |  6 +++++
- fs/xfs/xfs_mount.h |  4 +++-
- fs/xfs/xfs_stats.h |  8 ++++++-
- 4 files changed, 79 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ee85f29..bcceb81 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -470,6 +470,49 @@ _xfs_buf_map_pages(
-  */
- 
- /*
-+ * Lookaside cache check
-+ */
-+STATIC struct xfs_buf *
-+_xfs_buf_find_lookaside(
-+	struct xfs_perag	*pag,
-+	xfs_daddr_t		bn,
-+	int			numblks)
-+{
-+	struct xfs_buf	*bp;
-+
-+	ASSERT(spin_is_locked(&pag->pag_buf_lock));
-+	bp = pag->pag_buf_cache[XBF_HASH(bn)];
-+	if (!bp)
-+		return NULL;
-+	if (bp->b_bn != bn || bp->b_length != numblks)
-+		return NULL;
-+	return bp;
-+}
-+
-+static __inline__ void
-+_xfs_buf_find_lookaside_insert(
-+	struct xfs_perag	*pag,
-+	struct xfs_buf		*bp,
-+	xfs_daddr_t		bn)
-+{
-+	ASSERT(spin_is_locked(&pag->pag_buf_lock));
-+	XFS_STATS_INC(xb_lookaside_insert);
-+	pag->pag_buf_cache[XBF_HASH(bn)] = bp;
-+}
-+
-+static __inline__ void
-+_xfs_buf_find_lookaside_remove(
-+	struct xfs_perag	*pag,
-+	struct xfs_buf		*bp)
-+{
-+	ASSERT(spin_is_locked(&pag->pag_buf_lock));
-+	if (pag->pag_buf_cache[XBF_HASH(bp->b_bn)] == bp) {
-+		XFS_STATS_INC(xb_lookaside_remove);
-+		pag->pag_buf_cache[XBF_HASH(bp->b_bn)] = NULL;
-+	}
-+}
-+
-+/*
-  *	Look up, and creates if absent, a lockable buffer for
-  *	a given range of an inode.  The buffer is returned
-  *	locked.	No I/O is implied by this call.
-@@ -492,6 +535,13 @@ _xfs_buf_find(
- 	int			numblks = 0;
- 	int			i;
- 
-+	/* get tree root */
-+	pag = xfs_perag_get(btp->bt_mount,
-+				xfs_daddr_to_agno(btp->bt_mount, blkno));
-+	prefetch(&pag->pag_buf_lock);
-+	prefetch(&pag->pag_buf_cache[XBF_HASH(blkno)]);
-+	prefetch(&pag->pag_buf_tree);
-+
- 	for (i = 0; i < nmaps; i++)
- 		numblks += map[i].bm_len;
- 	numbytes = BBTOB(numblks);
-@@ -515,15 +565,20 @@ _xfs_buf_find(
- 			  "%s: Block out of range: block 0x%llx, EOFS 0x%llx ",
- 			  __func__, blkno, eofs);
- 		WARN_ON(1);
-+		xfs_perag_put(pag);
- 		return NULL;
- 	}
- 
--	/* get tree root */
--	pag = xfs_perag_get(btp->bt_mount,
--				xfs_daddr_to_agno(btp->bt_mount, blkno));
- 
--	/* walk tree */
-+	/* First check the lookaside cache for a hit, otherwise walk the tree */
- 	spin_lock(&pag->pag_buf_lock);
-+	bp = _xfs_buf_find_lookaside(pag, blkno, numblks);
-+	if (bp) {
-+		XFS_STATS_INC(xb_lookaside_hit);
-+		goto found;
-+	}
-+
-+	XFS_STATS_INC(xb_lookaside_miss);
- 	rbp = &pag->pag_buf_tree.rb_node;
- 	parent = NULL;
- 	bp = NULL;
-@@ -549,7 +604,7 @@ _xfs_buf_find(
- 				rbp = &(*rbp)->rb_right;
- 				continue;
- 			}
--			atomic_inc(&bp->b_hold);
-+			_xfs_buf_find_lookaside_insert(pag, bp, blkno);
- 			goto found;
- 		}
- 	}
-@@ -560,6 +615,7 @@ _xfs_buf_find(
- 		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
- 		/* the buffer keeps the perag reference until it is freed */
- 		new_bp->b_pag = pag;
-+		_xfs_buf_find_lookaside_insert(pag, bp, blkno);
- 		spin_unlock(&pag->pag_buf_lock);
- 	} else {
- 		XFS_STATS_INC(xb_miss_locked);
-@@ -569,6 +625,7 @@ _xfs_buf_find(
- 	return new_bp;
- 
- found:
-+	atomic_inc(&bp->b_hold);
- 	spin_unlock(&pag->pag_buf_lock);
- 	xfs_perag_put(pag);
- 
-@@ -924,6 +981,7 @@ xfs_buf_rele(
- 		} else {
- 			xfs_buf_lru_del(bp);
- 			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
-+			_xfs_buf_find_lookaside_remove(pag, bp);
- 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
- 			spin_unlock(&pag->pag_buf_lock);
- 			xfs_perag_put(pag);
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 433a12e..658f746 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -166,6 +166,12 @@ typedef struct xfs_buf {
- #endif
- } xfs_buf_t;
- 
-+/*
-+ * lookaside cache definitions
-+ */
-+#define XBF_HASH_SIZE		37
-+#define XBF_HASH(bn)		(bn % XBF_HASH_SIZE)
-+
- /* Finding and Reading Buffers */
- struct xfs_buf *_xfs_buf_find(struct xfs_buftarg *target,
- 			      struct xfs_buf_map *map, int nmaps,
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 1fa0584..2a997dc 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -364,7 +364,9 @@ typedef struct xfs_perag {
- 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
- 
- 	/* buffer cache index */
--	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
-+	spinlock_t	pag_buf_lock ____cacheline_aligned_in_smp;
-+					/* lock for pag_buf_tree */
-+	struct xfs_buf	*pag_buf_cache[XBF_HASH_SIZE];
- 	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
- 
- 	/* for rcu-safe freeing */
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index c8f238b..c1f98cb 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -108,7 +108,7 @@ struct xfsstats {
- 	__uint32_t		vn_reclaim;	/* # times vn_reclaim called */
- 	__uint32_t		vn_remove;	/* # times vn_remove called */
- 	__uint32_t		vn_free;	/* # times vn_free called */
--#define XFSSTAT_END_BUF			(XFSSTAT_END_VNODE_OPS+9)
-+#define XFSSTAT_END_BUF			(XFSSTAT_END_VNODE_OPS+13)
- 	__uint32_t		xb_get;
- 	__uint32_t		xb_create;
- 	__uint32_t		xb_get_locked;
-@@ -118,6 +118,12 @@ struct xfsstats {
- 	__uint32_t		xb_page_retries;
- 	__uint32_t		xb_page_found;
- 	__uint32_t		xb_get_read;
-+	/* XXX: can we extend like this? */
-+	__uint32_t		xb_lookaside_hit;
-+	__uint32_t		xb_lookaside_miss;
-+	__uint32_t		xb_lookaside_insert;
-+	__uint32_t		xb_lookaside_remove;
-+
- /* Version 2 btree counters */
- #define XFSSTAT_END_ABTB_V2		(XFSSTAT_END_BUF+15)
- 	__uint32_t		xs_abtb_2_lookup;
+ arch/powerpc/platforms/cell/spufs/inode.c |    8 +-
+ fs/quota/quota.c                          |   29 +
+ fs/xfs/Makefile                           |   20 +-
+ fs/xfs/xfs_acl.c                          |   24 +-
+ fs/xfs/xfs_ag.h                           |   53 -
+ fs/xfs/xfs_alloc.c                        |    6 +-
+ fs/xfs/xfs_aops.c                         |   23 +-
+ fs/xfs/xfs_attr.c                         |  427 +---
+ fs/xfs/xfs_attr.h                         |    9 +
+ fs/xfs/xfs_attr_inactive.c                |  453 ++++
+ fs/xfs/xfs_attr_leaf.c                    |  657 +----
+ fs/xfs/xfs_attr_leaf.h                    |    2 +
+ fs/xfs/xfs_attr_list.c                    |  655 +++++
+ fs/xfs/xfs_attr_remote.c                  |   18 +-
+ fs/xfs/xfs_bmap.c                         |  823 +------
+ fs/xfs/xfs_bmap.h                         |   56 +-
+ fs/xfs/xfs_bmap_btree.c                   |    6 +-
+ fs/xfs/xfs_bmap_util.c                    | 2026 +++++++++++++++
+ fs/xfs/xfs_bmap_util.h                    |  110 +
+ fs/xfs/xfs_btree.c                        |    7 +-
+ fs/xfs/xfs_btree.h                        |    2 -
+ fs/xfs/xfs_buf.c                          |    5 +-
+ fs/xfs/xfs_buf_item.c                     |   58 +-
+ fs/xfs/xfs_buf_item.h                     |  100 +-
+ fs/xfs/xfs_da_btree.c                     |    8 +-
+ fs/xfs/xfs_da_btree.h                     |   12 +-
+ fs/xfs/xfs_dfrag.c                        |  459 ----
+ fs/xfs/xfs_dfrag.h                        |   53 -
+ fs/xfs/xfs_dinode.h                       |    3 +
+ fs/xfs/xfs_dir2.c                         |   58 +-
+ fs/xfs/xfs_dir2.h                         |   46 +
+ fs/xfs/xfs_dir2_block.c                   |  122 +-
+ fs/xfs/xfs_dir2_data.c                    |   25 +-
+ fs/xfs/xfs_dir2_format.h                  |  186 +-
+ fs/xfs/xfs_dir2_leaf.c                    |  404 +--
+ fs/xfs/xfs_dir2_node.c                    |   14 +-
+ fs/xfs/xfs_dir2_priv.h                    |   49 +-
+ fs/xfs/xfs_dir2_readdir.c                 |  695 ++++++
+ fs/xfs/xfs_dir2_sf.c                      |  240 +-
+ fs/xfs/xfs_discard.c                      |    5 +-
+ fs/xfs/xfs_dquot.c                        |    8 +-
+ fs/xfs/xfs_dquot_item.c                   |   23 +-
+ fs/xfs/xfs_error.c                        |    1 -
+ fs/xfs/xfs_export.c                       |    5 +-
+ fs/xfs/xfs_extent_busy.c                  |    2 +-
+ fs/xfs/xfs_extfree_item.c                 |   50 +-
+ fs/xfs/xfs_extfree_item.h                 |   88 +-
+ fs/xfs/xfs_file.c                         |    3 +-
+ fs/xfs/xfs_filestream.c                   |    8 +-
+ fs/xfs/xfs_filestream.h                   |    4 -
+ fs/xfs/xfs_format.h                       |  169 ++
+ fs/xfs/xfs_fs.h                           |   38 +-
+ fs/xfs/xfs_fsops.c                        |    8 +-
+ fs/xfs/xfs_ialloc.c                       |    7 +-
+ fs/xfs/xfs_icache.c                       |   15 +-
+ fs/xfs/xfs_icache.h                       |   50 +
+ fs/xfs/xfs_icreate_item.c                 |   21 +-
+ fs/xfs/xfs_icreate_item.h                 |   18 -
+ fs/xfs/xfs_inode.c                        | 3840 ++++++++++++-----------------
+ fs/xfs/xfs_inode.h                        |  312 +--
+ fs/xfs/xfs_inode_buf.c                    |  483 ++++
+ fs/xfs/xfs_inode_buf.h                    |   53 +
+ fs/xfs/xfs_inode_fork.c                   | 1920 +++++++++++++++
+ fs/xfs/xfs_inode_fork.h                   |  171 ++
+ fs/xfs/xfs_inode_item.c                   |   53 +-
+ fs/xfs/xfs_inode_item.h                   |  115 +-
+ fs/xfs/xfs_ioctl.c                        |  148 +-
+ fs/xfs/xfs_ioctl.h                        |   10 +
+ fs/xfs/xfs_ioctl32.c                      |    4 +-
+ fs/xfs/xfs_iomap.c                        |   21 +-
+ fs/xfs/xfs_iops.c                         |   78 +-
+ fs/xfs/xfs_iops.h                         |   13 +
+ fs/xfs/xfs_linux.h                        |   60 +-
+ fs/xfs/xfs_log.c                          |  113 +-
+ fs/xfs/xfs_log.h                          |   90 +-
+ fs/xfs/xfs_log_cil.c                      |  371 +--
+ fs/xfs/xfs_log_format.h                   |  852 +++++++
+ fs/xfs/xfs_log_priv.h                     |  155 +-
+ fs/xfs/xfs_log_recover.c                  |  420 +++-
+ fs/xfs/xfs_log_rlimit.c                   |  147 ++
+ fs/xfs/xfs_mount.c                        |  755 +-----
+ fs/xfs/xfs_mount.h                        |  113 +-
+ fs/xfs/xfs_qm.c                           |   95 +-
+ fs/xfs/xfs_qm.h                           |    2 +
+ fs/xfs/xfs_qm_bhv.c                       |    1 +
+ fs/xfs/xfs_qm_syscalls.c                  |  126 +-
+ fs/xfs/xfs_quota.h                        |  278 +--
+ fs/xfs/xfs_quota_defs.h                   |  157 ++
+ fs/xfs/xfs_quotaops.c                     |   17 +-
+ fs/xfs/xfs_rename.c                       |  346 ---
+ fs/xfs/xfs_rtalloc.c                      |   28 +-
+ fs/xfs/xfs_rtalloc.h                      |   53 +-
+ fs/xfs/xfs_sb.c                           |  834 +++++++
+ fs/xfs/xfs_sb.h                           |   72 +-
+ fs/xfs/xfs_super.c                        |   31 +-
+ fs/xfs/xfs_symlink.c                      |  196 +-
+ fs/xfs/xfs_symlink.h                      |   41 +-
+ fs/xfs/xfs_symlink_remote.c               |  200 ++
+ fs/xfs/xfs_trace.c                        |    1 +
+ fs/xfs/xfs_trans.c                        |  732 +-----
+ fs/xfs/xfs_trans.h                        |  301 +--
+ fs/xfs/xfs_trans_ail.c                    |   18 +-
+ fs/xfs/xfs_trans_buf.c                    |    2 +-
+ fs/xfs/xfs_trans_dquot.c                  |    1 +
+ fs/xfs/xfs_trans_priv.h                   |   15 +
+ fs/xfs/xfs_trans_resv.c                   |  803 ++++++
+ fs/xfs/xfs_trans_resv.h                   |  116 +
+ fs/xfs/xfs_types.h                        |   60 +-
+ fs/xfs/xfs_utils.c                        |  314 ---
+ fs/xfs/xfs_utils.h                        |   27 -
+ fs/xfs/xfs_vnodeops.c                     | 1870 --------------
+ fs/xfs/xfs_vnodeops.h                     |   55 -
+ fs/xfs/xfs_xattr.c                        |    2 +-
+ include/linux/quota.h                     |    1 +
+ include/uapi/linux/dqblk_xfs.h            |   47 +
+ init/Kconfig                              |   13 -
+ kernel/capability.c                       |    1 +
+ 117 files changed, 13677 insertions(+), 11950 deletions(-)
+ create mode 100644 fs/xfs/xfs_attr_inactive.c
+ create mode 100644 fs/xfs/xfs_attr_list.c
+ create mode 100644 fs/xfs/xfs_bmap_util.c
+ create mode 100644 fs/xfs/xfs_bmap_util.h
+ delete mode 100644 fs/xfs/xfs_dfrag.c
+ delete mode 100644 fs/xfs/xfs_dfrag.h
+ create mode 100644 fs/xfs/xfs_dir2_readdir.c
+ create mode 100644 fs/xfs/xfs_format.h
+ create mode 100644 fs/xfs/xfs_inode_buf.c
+ create mode 100644 fs/xfs/xfs_inode_buf.h
+ create mode 100644 fs/xfs/xfs_inode_fork.c
+ create mode 100644 fs/xfs/xfs_inode_fork.h
+ create mode 100644 fs/xfs/xfs_log_format.h
+ create mode 100644 fs/xfs/xfs_log_rlimit.c
+ create mode 100644 fs/xfs/xfs_quota_defs.h
+ delete mode 100644 fs/xfs/xfs_rename.c
+ create mode 100644 fs/xfs/xfs_sb.c
+ create mode 100644 fs/xfs/xfs_symlink_remote.c
+ create mode 100644 fs/xfs/xfs_trans_resv.c
+ create mode 100644 fs/xfs/xfs_trans_resv.h
+ delete mode 100644 fs/xfs/xfs_utils.c
+ delete mode 100644 fs/xfs/xfs_utils.h
+ delete mode 100644 fs/xfs/xfs_vnodeops.c
+ delete mode 100644 fs/xfs/xfs_vnodeops.h
 
 _______________________________________________
 xfs mailing list
