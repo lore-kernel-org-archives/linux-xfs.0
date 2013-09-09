@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C33C37F5F
-	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 15:33:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52F00AC007
-	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 13:33:33 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2ACD67F5F
+	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 15:36:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C223EAC009
+	for <linux-xfs@oss.sgi.com>; Mon,  9 Sep 2013 13:36:21 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YodQfvDOMZkmR2JS for <linux-xfs@oss.sgi.com>;
-	Mon, 09 Sep 2013 13:33:31 -0700 (PDT)
-Message-ID: <522E3099.1040503@sandeen.net>
-Date: Mon, 09 Sep 2013 15:33:29 -0500
+	ESMTP id VsuJnu62LVD9ZBCP for <linux-xfs@oss.sgi.com>;
+	Mon, 09 Sep 2013 13:36:20 -0700 (PDT)
+Message-ID: <522E3142.7090501@sandeen.net>
+Date: Mon, 09 Sep 2013 15:36:18 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfs: be more forgiving of a v4 secondary sb w/ junk in
-	v5 fields
-References: <520D1BA3.1050500@redhat.com> <20130815210018.GR6023@dastard>
-	<520D44E7.1000905@sandeen.net> <520D592D.4040600@redhat.com>
-In-Reply-To: <520D592D.4040600@redhat.com>
+Subject: Re: [PATCH, RFC] xfs: don't break from growfs ag update loop on error
+References: <520D1AAC.8090701@redhat.com>
+In-Reply-To: <520D1AAC.8090701@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,65 +30,115 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-Today, if xfs_sb_read_verify encounters a v4 superblock
-with junk past v4 fields which includes data in sb_crc,
-it will be treated as a failing checksum and a significant
-corruption.
+On 8/15/13 1:15 PM, Eric Sandeen wrote:
+> When xfs_growfs_data_private() is updating backup superblocks,
+> it bails out on the first error encountered, whether reading or
+> writing:
 
-There are known prior bugs which leave junk at the end
-of the V4 superblock; we don't need to actually fail the
-verification in this case if other checks pan out ok.
+Any thoughts on this one?  W/ the verifiers, we have a higher
+chance of encountering an error, and leaving the rest of the
+supers un-updated.  Repair will then possibly revert the fs to
+it's pre-growfs state, and data loss will ensue...
 
-So if this is a secondary superblock, and the primary
-superblock doesn't indicate that this is a V5 filesystem,
-don't treat this as an actual checksum failure.
+Thanks,
+-Eric
 
-We should probably check the garbage condition as
-we do in xfs_repair, and possibly warn about it
-or self-heal, but that's a different scope of work.
-
-Stable folks: This can go back to v3.10, which is what
-introduced the sb CRC checking that is tripped up by old,
-stale, incorrect V4 superblocks w/ unzeroed bits.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Comment changes: More!  (No code changes)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2b0ba35..b2deab1 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -749,6 +749,11 @@ xfs_sb_verify(
-  * single bit error could clear the feature bit and unused parts of the
-  * superblock are supposed to be zero. Hence a non-null crc field indicates that
-  * we've potentially lost a feature bit and we should check it anyway.
-+ *
-+ * However, past bugs (i.e. in growfs) left non-zeroed regions beyond the
-+ * last field in V4 secondary superblocks.  So for secondary superblocks,
-+ * we are more forgiving, and ignore CRC failures if the primary doesn't
-+ * indicate that the fs version is V5.
-  */
- static void
- xfs_sb_read_verify(
-@@ -769,8 +774,12 @@ xfs_sb_read_verify(
- 
- 		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
- 				      offsetof(struct xfs_sb, sb_crc))) {
--			error = EFSCORRUPTED;
--			goto out_error;
-+			/* Only fail bad secondaries on a known V5 filesystem */
-+			if (bp->b_bn != XFS_SB_DADDR &&
-+			    xfs_sb_version_hascrc(&mp->m_sb)) {
-+				error = EFSCORRUPTED;
-+				goto out_error;
-+			}
- 		}
- 	}
- 	error = xfs_sb_verify(bp, true);
-
+> * If we get an error writing out the alternate superblocks,
+> * just issue a warning and continue.  The real work is
+> * already done and committed.
+> 
+> This can cause a problem later during repair, because repair
+> looks at all superblocks, and picks the most prevalent one
+> as correct.  If we bail out early in the backup superblock
+> loop, we can end up with more "bad" matching superblocks than
+> good, and a post-growfs repair may revert the filesystem to
+> the old geometry.
+> 
+> With the combination of superblock verifiers and old bugs,
+> we're more likely to encounter read errors due to verification.
+> 
+> And perhaps even worse, we don't even properly write any of the
+> newly-added superblocks in the new AGs.
+> 
+> Even with this change, growfs will still say:
+> 
+>   xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
+>   data blocks changed from 319815680 to 335216640
+> 
+> which might be confusing to the user, but it at least communicates
+> that something has gone wrong, and dmesg will probably highlight
+> the need for an xfs_repair.
+> 
+> And this is still best-effort; if verifiers fail on more than
+> half the backup supers, they may still "win" - but that's probably
+> best left to repair to more gracefully handle by doing its own
+> strict verification as part of the backup super "voting."
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 614eb0c..70714bb 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -153,7 +153,7 @@ xfs_growfs_data_private(
+>  	xfs_buf_t		*bp;
+>  	int			bucket;
+>  	int			dpct;
+> -	int			error;
+> +	int			error, saved_error = 0;
+>  	xfs_agnumber_t		nagcount;
+>  	xfs_agnumber_t		nagimax = 0;
+>  	xfs_rfsblock_t		nb, nb_mod;
+> @@ -495,29 +495,33 @@ xfs_growfs_data_private(
+>  				error = ENOMEM;
+>  		}
+>  
+> +		/*
+> +		 * If we get an error reading or writing alternate superblocks,
+> +		 * continue.  xfs_repair chooses the "best" superblock based
+> +		 * on most matches; if we break early, we'll leave more
+> +		 * superblocks un-updated than updated, and xfs_repair may
+> +		 * pick them over the properly-updated primary.
+> +		 */
+>  		if (error) {
+>  			xfs_warn(mp,
+>  		"error %d reading secondary superblock for ag %d",
+>  				error, agno);
+> -			break;
+> +			saved_error = error;
+> +			continue;
+>  		}
+>  		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
+>  
+> -		/*
+> -		 * If we get an error writing out the alternate superblocks,
+> -		 * just issue a warning and continue.  The real work is
+> -		 * already done and committed.
+> -		 */
+>  		error = xfs_bwrite(bp);
+>  		xfs_buf_relse(bp);
+>  		if (error) {
+>  			xfs_warn(mp,
+>  		"write error %d updating secondary superblock for ag %d",
+>  				error, agno);
+> -			break; /* no point in continuing */
+> +			saved_error = error;
+> +			continue;
+>  		}
+>  	}
+> -	return error;
+> +	return saved_error ? saved_error : error;
+>  
+>   error0:
+>  	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
