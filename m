@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B678B7F56
-	for <xfs@oss.sgi.com>; Sun,  8 Sep 2013 15:08:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 97D29304032
-	for <xfs@oss.sgi.com>; Sun,  8 Sep 2013 13:08:04 -0700 (PDT)
-Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com
-	[209.85.216.172]) by cuda.sgi.com with ESMTP id
-	0RECCh0j4d4Jr6fX (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 08 Sep 2013 13:08:03 -0700 (PDT)
-Received: by mail-qc0-f172.google.com with SMTP id l13so741552qcy.31
-	for <xfs@oss.sgi.com>; Sun, 08 Sep 2013 13:08:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <522B1C4F.7000404@redhat.com>
-References: <1378232708-57156-1-git-send-email-bfoster@redhat.com>
-	<1378232708-57156-11-git-send-email-bfoster@redhat.com>
-	<20130905025421.GX23571@dastard> <5228AF00.7080700@redhat.com>
-	<20130906002847.GR12779@dastard> <5229BEE6.3060407@redhat.com>
-	<20130906212441.GB12541@dastard> <522B1C4F.7000404@redhat.com>
-Date: Sun, 8 Sep 2013 16:08:03 -0400
-Message-ID: <CAJzLF9mM30C=vU9R4_ZJ7wXr3URyAnVGaydYT074eED3uDbADA@mail.gmail.com>
-Subject: Re: [RFC PATCH 10/11] xfs: update the finobt on inode free
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0BCDB7F55
+	for <xfs@oss.sgi.com>; Sun,  8 Sep 2013 20:33:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ACDAAAC003
+	for <xfs@oss.sgi.com>; Sun,  8 Sep 2013 18:33:25 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	l9pUglKwOzaqrijS for <xfs@oss.sgi.com>;
+	Sun, 08 Sep 2013 18:33:20 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VIqLs-0001ZD-38
+	for xfs@oss.sgi.com; Mon, 09 Sep 2013 11:33:16 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VIqLs-00047I-2B
+	for xfs@oss.sgi.com; Mon, 09 Sep 2013 11:33:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] [RFC] xfs: lookaside cache for xfs_buf_find
+Date: Mon,  9 Sep 2013 11:33:16 +1000
+Message-Id: <1378690396-15792-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,79 +28,225 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Sat, Sep 7, 2013 at 8:30 AM, Brian Foster <bfoster@redhat.com> wrote:
-> On 09/06/2013 05:24 PM, Dave Chinner wrote:
->> On Fri, Sep 06, 2013 at 07:39:18AM -0400, Brian Foster wrote:
->>> On 09/05/2013 08:28 PM, Dave Chinner wrote:
->>>> On Thu, Sep 05, 2013 at 12:19:12PM -0400, Brian Foster wrote:
->>>>> On 09/04/2013 10:54 PM, Dave Chinner wrote:
->>>>>> On Tue, Sep 03, 2013 at 02:25:07PM -0400, Brian Foster wrote:
->>> ...
->>>>>
-> ...
->>>> No worries. BTW, can you post your rudimentary userspace support so
->>>> we can run tests that use this code, too?
->>>>
->>>
->>> Sure. My xfsprogs branch currently is the application of a slightly
->>> older version of this set (pre-cleanups I made to make this post-worthy)
->>> with some hacks to make it apply/compile and a few other patches on top
->>> of that for mkfs, xfs_db and xfs_repair to work through some basic
->>> things I ran into when running xfstests.
->>>
->>> Would you prefer I drop the whole thing on the list?
->>
->> Drop it on the list, maybe just a as tarball rather than a patchset
->> if it's not ready for review yet.
->>
->
-> Ok, attached. This applies on top of the following commit in the
-> xfsprogs tree:
->
-> 982e5c7e xfs_db: add header to freesp -d output
->
-> Use the following command to format a finobt enabled fs:
->
-> mkfs.xfs -m crc=1,finobt=1 <dev>
->
-> ... and otherwise there are a couple random fixes for xfs_db and xfs_repair.
->
-> Brian
+From: Dave Chinner <dchinner@redhat.com>
 
-OK, I gave it a try and messed it up.  I have updated numbers that look a
-little better, and they'll be posted once I get to a Linux PC.
+CPU overhead of buffer lookups dominate most metadata intensive
+workloads. The thing is, most such workloads are hitting a
+relatively small number of buffers repeatedly, and so caching
+recently hit buffers is a good idea.
 
-My merge went badly because it went on top of Dave's latest work and Mark's
-v4 dirent work.  It's like some of the features2 stuff takes one extra argument
-in places.
+Add a hashed lookaside buffer that records the recent buffer
+lookup successes and is searched first before doing a rb-tree
+lookup. If we get a hit, we avoid the expensive rbtree lookup and
+greatly reduce the overhead of the lookup. If we get a cache miss,
+then we've added an extra CPU cacheline miss into the lookup.
 
-Also, when patching some code, it looks like some constants have been
-updated to use cpu_to_be32(), and I don't know why they've been updated.
+In cold cache lookup cases, this extra cache line miss is irrelevant
+as we need to read or allocate the buffer anyway, and the etup time
+for that dwarfs the cost of the miss.
 
-So it's not a surprise that I can make a v4-finobt filesystem with -finobt=1,
-mount it, get all the v5 warnings from the kernel, but there's not enough
-v5 code in use to choke on 256-byte v4 inodes.  Afterwards, `xfs_repair -n`
-suggests that it will correct some areas from each AG.
+In the case that we miss the lookaside cache and find the buffer in
+the rbtree, the cache line miss overhead will be noticable only if
+we don't see any lookaside cache misses at all in subsequent
+lookups. We don't tend to do random cache walks in perfomrance
+critical paths, so the net result is that the extra CPU cacheline
+miss will be lost in the reduction of misses due to cache hits. This
+hit/miss case is what we'll see with file removal operations.
 
-It's also not a surprise that I don't know what issues are your fault,
-which ones
-are my fault, and which ones require Mark to update his v4-dirent patches.
-Therefore, there's no conclusion to be placed on your userspace code yet.  It's
-an RFC, anyway...
+A simple prime number hash was chosen for the cache (i.e. modulo 37)
+because it is fast, simple, and works really well with block numbers
+that tend to be aligned to a multiple of 8. No attempt to optimise
+this has been made - it's just a number I picked out of thin air
+given that most repetitive workloads have a working set of buffers
+that is significantly smaller than 37 per AG and should hold most of
+the AG header buffers permanently in the lookaside cache.
 
-My "user commands" benchmark succeeded for the 4 XFS filesystem
-variants considered previously.
+The result is that on a typical concurrent create fsmark benchmark I
+run, the profile of CPU usage went from having _xfs_buf_find() as
+teh number one CPU consumer:
 
-More later...
+   6.55%  [kernel]  [k] _xfs_buf_find
+   4.94%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
+   4.77%  [kernel]  [k] native_read_tsc
+   4.67%  [kernel]  [k] __ticket_spin_trylock
 
-Michael
+to this, at about #8 and #30 in the profile:
+
+   2.56%  [kernel]  [k] _xfs_buf_find
+....
+   0.55%  [kernel]  [k] _xfs_buf_find_lookaside
+
+So the lookaside cache has halved the CPU overhead of looking up
+buffers for this workload.
+
+On a buffer hit/miss workload like the followup concurrent removes,
+_xfs_buf_find() went from #1 in the profile again at:
+
+   9.13%  [kernel]  [k] _xfs_buf_find
+
+to #6 and #23 repesctively:
+
+   2.82%  [kernel]  [k] _xfs_buf_find
+....
+   0.78%  [kernel]  [k] _xfs_buf_find_lookaside
+
+Which is also a significant reduction in CPU overhead for buffer
+lookups, and shows the benefit on mixed cold/hot cache lookup
+workloads.
+
+Performance differential, as measured with -m crc=1,finobt=1:
+
+		   create		remove
+		time    rate		time
+xfsdev		4m16s	221k/s		6m18s
+patched		3m59s	236k/s		5m56s
+
+So less CPU time spent on lookups translates directly to better
+metadata performance.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.c   | 51 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_buf.h   |  6 ++++++
+ fs/xfs/xfs_mount.h |  1 +
+ 3 files changed, 56 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index ee85f29..e382b80 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -470,6 +470,46 @@ _xfs_buf_map_pages(
+  */
+ 
+ /*
++ * Lookaside cache check
++ */
++STATIC struct xfs_buf *
++_xfs_buf_find_lookaside(
++	struct xfs_perag	*pag,
++	xfs_daddr_t		bn,
++	int			numblks)
++{
++	struct xfs_buf	*bp;
++
++	ASSERT(spin_is_locked(&pag->pag_buf_lock));
++	bp = pag->pag_buf_cache[XBF_HASH(bn)];
++	if (!bp)
++		return NULL;
++	if (bp->b_bn != bn || bp->b_length != numblks)
++		return NULL;
++	return bp;
++}
++
++static __inline__ void
++_xfs_buf_find_lookaside_insert(
++	struct xfs_perag	*pag,
++	struct xfs_buf		*bp,
++	xfs_daddr_t		bn)
++{
++	ASSERT(spin_is_locked(&pag->pag_buf_lock));
++	pag->pag_buf_cache[XBF_HASH(bn)] = bp;
++}
++
++static __inline__ void
++_xfs_buf_find_lookaside_remove(
++	struct xfs_perag	*pag,
++	struct xfs_buf		*bp)
++{
++	ASSERT(spin_is_locked(&pag->pag_buf_lock));
++	if (pag->pag_buf_cache[XBF_HASH(bp->b_bn)] == bp)
++		pag->pag_buf_cache[XBF_HASH(bp->b_bn)] = NULL;
++}
++
++/*
+  *	Look up, and creates if absent, a lockable buffer for
+  *	a given range of an inode.  The buffer is returned
+  *	locked.	No I/O is implied by this call.
+@@ -522,8 +562,12 @@ _xfs_buf_find(
+ 	pag = xfs_perag_get(btp->bt_mount,
+ 				xfs_daddr_to_agno(btp->bt_mount, blkno));
+ 
+-	/* walk tree */
++	/* First check the lookaside cache for a hit, otherwise walk the tree */
+ 	spin_lock(&pag->pag_buf_lock);
++	bp = _xfs_buf_find_lookaside(pag, blkno, numblks);
++	if (bp)
++		goto found;
++
+ 	rbp = &pag->pag_buf_tree.rb_node;
+ 	parent = NULL;
+ 	bp = NULL;
+@@ -549,7 +593,7 @@ _xfs_buf_find(
+ 				rbp = &(*rbp)->rb_right;
+ 				continue;
+ 			}
+-			atomic_inc(&bp->b_hold);
++			_xfs_buf_find_lookaside_insert(pag, bp, blkno);
+ 			goto found;
+ 		}
+ 	}
+@@ -560,6 +604,7 @@ _xfs_buf_find(
+ 		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
+ 		/* the buffer keeps the perag reference until it is freed */
+ 		new_bp->b_pag = pag;
++		_xfs_buf_find_lookaside_insert(pag, bp, blkno);
+ 		spin_unlock(&pag->pag_buf_lock);
+ 	} else {
+ 		XFS_STATS_INC(xb_miss_locked);
+@@ -569,6 +614,7 @@ _xfs_buf_find(
+ 	return new_bp;
+ 
+ found:
++	atomic_inc(&bp->b_hold);
+ 	spin_unlock(&pag->pag_buf_lock);
+ 	xfs_perag_put(pag);
+ 
+@@ -924,6 +970,7 @@ xfs_buf_rele(
+ 		} else {
+ 			xfs_buf_lru_del(bp);
+ 			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
++			_xfs_buf_find_lookaside_remove(pag, bp);
+ 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
+ 			spin_unlock(&pag->pag_buf_lock);
+ 			xfs_perag_put(pag);
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 433a12e..658f746 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -166,6 +166,12 @@ typedef struct xfs_buf {
+ #endif
+ } xfs_buf_t;
+ 
++/*
++ * lookaside cache definitions
++ */
++#define XBF_HASH_SIZE		37
++#define XBF_HASH(bn)		(bn % XBF_HASH_SIZE)
++
+ /* Finding and Reading Buffers */
+ struct xfs_buf *_xfs_buf_find(struct xfs_buftarg *target,
+ 			      struct xfs_buf_map *map, int nmaps,
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1fa0584..b8bfabc 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -366,6 +366,7 @@ typedef struct xfs_perag {
+ 	/* buffer cache index */
+ 	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
+ 	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
++	struct xfs_buf	*pag_buf_cache[XBF_HASH_SIZE];
+ 
+ 	/* for rcu-safe freeing */
+ 	struct rcu_head	rcu_head;
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
