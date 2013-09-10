@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E6C477F54
-	for <xfs@oss.sgi.com>; Tue, 10 Sep 2013 08:39:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 76075304043
-	for <xfs@oss.sgi.com>; Tue, 10 Sep 2013 06:39:47 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id ER39yzRoeHCb1KTa (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Sep 2013 06:39:46 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 6DB819A06AB
-	for <xfs@oss.sgi.com>; Tue, 10 Sep 2013 07:39:45 -0600 (MDT)
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH] xfstests: generic/274 increase scratch fs size to 2g
-Date: Tue, 10 Sep 2013 09:39:02 -0400
-Message-ID: <1378820342-6748-1-git-send-email-jbacik@fusionio.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 617757F54
+	for <xfs@oss.sgi.com>; Tue, 10 Sep 2013 09:11:46 -0500 (CDT)
+Message-ID: <522F289E.6070802@sgi.com>
+Date: Tue, 10 Sep 2013 09:11:42 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 31/55 V2] libxfs: switch over to xfs_sb.c and remove
+	xfs_mount.c
+References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
+	<1378332359-14737-32-git-send-email-david@fromorbit.com>
+	<522A1BCA.6010500@sgi.com> <20130906214021.GD12541@dastard>
+	<522A4C79.1030200@sgi.com> <20130910010241.GZ12779@dastard>
+In-Reply-To: <20130910010241.GZ12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +21,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-With 1 gig btrfs defaults to mixed block groups, so we ENOSPC in this test
-because we run out of metadata space, not data space.  Increasing to 2g allows
-us to use our normal setup and allows us to pass this test.  Thanks,
+On 09/09/13 20:02, Dave Chinner wrote:
+> diff --git a/include/xfs_sb.h b/include/xfs_sb.h
+> index 4a710d6..04fe32a 100644
+> --- a/include/xfs_sb.h
+> +++ b/include/xfs_sb.h
+> @@ -26,6 +26,7 @@
+>
+>   struct xfs_buf;
+>   struct xfs_mount;
+> +struct xfs_trans;
+>
+>   #define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
+>   #define	XFS_SB_VERSION_1	1		/* 5.3, 6.0.1, 6.1 */
+> @@ -630,6 +631,12 @@ static inline int xfs_sb_version_has_pquotino(xfs_sb_t *sbp)
+>   	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+>   }
+>
+> +static inline bool
+> +xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+> +{
+> +	return (ino == sbp->sb_uquotino || ino == sbp->sb_gquotino);
+> +}
+> +
+>   /*
 
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
----
- tests/generic/274 |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks Dave for doing all this work.
 
-diff --git a/tests/generic/274 b/tests/generic/274
-index da45fab..7c4887f 100755
---- a/tests/generic/274
-+++ b/tests/generic/274
-@@ -57,7 +57,7 @@ echo "------------------------------"
- rm -f $seqres.full
- 
- umount $SCRATCH_DEV 2>/dev/null
--_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
-+_scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
- _scratch_mount
- 
- # Create a 4k file and Allocate 4M past EOF on that file
--- 
-1.7.7.6
+The current kernel xfs_sb.h has an additional
+   " || ino == sbp->sb_pquotino"
+from kernel commit d892d586 that is not making it into  user xfs_sb.h.
+
+It is wrong to add it here but in a follow up patch (Chandra?).
+
+I am happy with the kernel / user sync series.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
