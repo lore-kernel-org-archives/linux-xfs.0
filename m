@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc1-11-g74ffa79
-Message-Id: <20130910224902.0B1C47F54@oss.sgi.com>
-Date: Tue, 10 Sep 2013 17:49:01 -0500 (CDT)
+Message-Id: <20130910224911.1BD177F5A@oss.sgi.com>
+Date: Tue, 10 Sep 2013 17:49:10 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   74ffa79 xfs: don't assert fail on bad inode numbers
   46f9d2e xfs: aborted buf items can be in the AIL.
   fdd3cce xfs: factor all the kmalloc-or-vmalloc fallback allocations
