@@ -1,26 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 95B267F55
-	for <linux-xfs@oss.sgi.com>; Tue, 10 Sep 2013 10:51:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 67D9C8F804B
-	for <linux-xfs@oss.sgi.com>; Tue, 10 Sep 2013 08:51:31 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 22UoBP4IV00ORQHr for <linux-xfs@oss.sgi.com>;
-	Tue, 10 Sep 2013 08:51:30 -0700 (PDT)
-Received: from Liberator.local (c-98-240-215-156.hsd1.mn.comcast.net
-	[98.240.215.156])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id CFAA365A812B
-	for <linux-xfs@oss.sgi.com>; Tue, 10 Sep 2013 10:51:29 -0500 (CDT)
-Message-ID: <522F4001.8010104@sandeen.net>
-Date: Tue, 10 Sep 2013 10:51:29 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B5B707F54
+	for <linux-xfs@oss.sgi.com>; Tue, 10 Sep 2013 11:43:22 -0500 (CDT)
+Message-ID: <522F4C26.2080106@sgi.com>
+Date: Tue, 10 Sep 2013 11:43:18 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfs_repair: test for bad level in dir2 node
-References: <52274F96.2010702@sandeen.net>
-In-Reply-To: <52274F96.2010702@sandeen.net>
+Subject: Re: [PATCH V2] xfs_repair: test for bad level in dir2 node
+References: <52274F96.2010702@sandeen.net> <522F4001.8010104@sandeen.net>
+In-Reply-To: <522F4001.8010104@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,73 +17,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-In traverse_int_dir2block(), the variable 'i' is the level in
-the tree, with 0 being a leaf node.  In the "do" loop we
-start at the root, and work our way down to a leaf.
+On 09/10/13 10:51, Eric Sandeen wrote:
+> In traverse_int_dir2block(), the variable 'i' is the level in
+> the tree, with 0 being a leaf node.  In the "do" loop we
+> start at the root, and work our way down to a leaf.
+>
+> If the first node we read is an interior node with NODE_MAGIC,
+> but it tells us that its level is 0 (a leaf), this is clearly
+> an inconsistency.
+>
+> Worse, we'd return with success, bno set, and only level[0]
+> in the cursor initialized.  Then down this path we'll
+> segfault when accessing an uninitialized (and zeroed) member
+> of the cursor's level array:
+>
+> process_node_dir2
+>    traverse_int_dir2block  // returns 0 w/ bno set, only level[0] init'd
+>    process_leaf_level_dir2
+>      verify_dir2_path(mp, da_cursor, 0) // p_level == 0
+>         this_level = p_level + 1;
+>         node = cursor->level[this_level].bp->b_addr; // level[1] uninit&  0'd
+>
+> Fix this by recognizing that an interior node w/ level 0 is invalid, and
+> error out as for other inconsistencies.
+>
+> By the time the level 0 test is done, we have already ensured that
+> this block has XFS_DA[3]_NODE_MAGIC.
+>
+> Reported-by: Jan Yves Brueckner<jyb@gmx.com>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
+>
+> V2: Drop re-test of hdr magic which is guaranteed to be NODE at this point.
+>      fix "interior inode" - s/b "interior node"
+>
+> My only testcase for this is Jan Yves Brueckner's badly corrupted
+> filesystem image.  With this change, we get i.e. :
+>
+> +bad level in interior inode for directory inode 39869938
+> +corrupt block 6 in directory inode 39869957
+> +       will junk block
+>
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index 05bd4b7..24db351 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -220,6 +220,15 @@ _("bad record count in inode %" PRIu64 ", count = %d, max = %d\n"),
+>   		 */
+>   		if (i == -1) {
+>   			i = da_cursor->active = nodehdr.level;
+> +			/* Tests above ensure that we have NODE_MAGIC here */
+> +			if (i == 0) {
+> +				do_warn(
+> +_("bad level 0 in interior node for directory inode %" PRIu64 "\n"),
+> +					da_cursor->ino);
+> +				libxfs_putbuf(bp);
+> +				i = -1;
+> +				goto error_out;
+> +			}
+>   			if (i>= XFS_DA_NODE_MAXDEPTH) {
+>   				do_warn(
+>   _("bad header depth for directory inode %" PRIu64 "\n"),
+>
 
-If the first node we read is an interior node with NODE_MAGIC,
-but it tells us that its level is 0 (a leaf), this is clearly
-an inconsistency.
+But moving the check out of the (i == -1) block, then the loop can check 
+all the intermediate nodes along the way and also the ending leaf.
 
-Worse, we'd return with success, bno set, and only level[0]
-in the cursor initialized.  Then down this path we'll
-segfault when accessing an uninitialized (and zeroed) member
-of the cursor's level array:
-
-process_node_dir2
-  traverse_int_dir2block  // returns 0 w/ bno set, only level[0] init'd
-  process_leaf_level_dir2
-    verify_dir2_path(mp, da_cursor, 0) // p_level == 0
-       this_level = p_level + 1;
-       node = cursor->level[this_level].bp->b_addr; // level[1] uninit & 0'd
-
-Fix this by recognizing that an interior node w/ level 0 is invalid, and
-error out as for other inconsistencies.
-
-By the time the level 0 test is done, we have already ensured that
-this block has XFS_DA[3]_NODE_MAGIC.
-
-Reported-by: Jan Yves Brueckner <jyb@gmx.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Drop re-test of hdr magic which is guaranteed to be NODE at this point.
-    fix "interior inode" - s/b "interior node"
-
-My only testcase for this is Jan Yves Brueckner's badly corrupted
-filesystem image.  With this change, we get i.e. :
-
-+bad level in interior inode for directory inode 39869938
-+corrupt block 6 in directory inode 39869957
-+       will junk block
-
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 05bd4b7..24db351 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -220,6 +220,15 @@ _("bad record count in inode %" PRIu64 ", count = %d, max = %d\n"),
- 		 */
- 		if (i == -1) {
- 			i = da_cursor->active = nodehdr.level;
-+			/* Tests above ensure that we have NODE_MAGIC here */
-+			if (i == 0) {
-+				do_warn(
-+_("bad level 0 in interior node for directory inode %" PRIu64 "\n"),
-+					da_cursor->ino);
-+				libxfs_putbuf(bp);
-+				i = -1;
-+				goto error_out;
-+			}
- 			if (i >= XFS_DA_NODE_MAXDEPTH) {
- 				do_warn(
- _("bad header depth for directory inode %" PRIu64 "\n"),
-
+--Mark.
 
 _______________________________________________
 xfs mailing list
