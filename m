@@ -1,13 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 07DFF7F53
-	for <xfs@oss.sgi.com>; Tue, 10 Sep 2013 17:34:53 -0500 (CDT)
-Message-Id: <20130910213624.726953044@sgi.com>
-Date: Tue, 10 Sep 2013 17:36:30 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: v2 change the immutable in xfs_open_by_handle
-Content-Disposition: inline;
-	filename=v2-xfs-change-immutable-in-xfs_open_by_handle.patch
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EB92B7F53
+	for <xfs@oss.sgi.com>; Tue, 10 Sep 2013 17:39:51 -0500 (CDT)
+Date: Tue, 10 Sep 2013 17:39:48 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/2] xfs: more shutdown-related fixes
+Message-ID: <20130910223947.GV1935@sgi.com>
+References: <1378208858-20557-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1378208858-20557-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,45 +18,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Greg Banks <gbanks@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This patch allows clients like DMF to modify an immutable file
-without changing the immutable capability on the file, which
-would expose the file to change.
+On Tue, Sep 03, 2013 at 09:47:36PM +1000, Dave Chinner wrote:
+> Hi folks,
+> 
+> More fixes as a result of forced shutdown testing. The first is
+> fixing yet another hole in the buf log item freein logic when a
+> transaction is aborted, and the other removes the asserts from the
+> inode buffer checking so that verifiers return errors rather than
+> crashing the system.
 
-This patch is restricted to holders of the CAP_LINUX_IMMUTABLE,
-so no addition security risk has been introduced.
-
-Signed-off-by: Greg Banks <gbanks@sgi.com>
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- v1->v2 fix the FMODE_WRITE test.
-
- fs/xfs/xfs_ioctl.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-Index: b/fs/xfs/xfs_ioctl.c
-===================================================================
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -237,7 +237,9 @@ xfs_open_by_handle(
- 		goto out_dput;
- 	}
- 
--	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-+	if ((fmode & FMODE_WRITE) &&
-+	    IS_IMMUTABLE(inode) &&
-+	    !capable(CAP_LINUX_IMMUTABLE)) {
- 		error = -XFS_ERROR(EACCES);
- 		goto out_dput;
- 	}
-
+Applied these 2.
 
 _______________________________________________
 xfs mailing list
