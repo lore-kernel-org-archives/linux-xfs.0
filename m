@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D31D47F51
-	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 11:22:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B26218F8033
-	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 09:22:03 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id BnDOvy5m5jZZicwx (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Sep 2013 09:21:59 -0700 (PDT)
-Date: Wed, 11 Sep 2013 09:21:59 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] [RFC] xfs: increase inode cluster size for v5 filesystems
-Message-ID: <20130911162159.GA29319@infradead.org>
-References: <1378715664-19969-1-git-send-email-david@fromorbit.com>
-	<20130909133254.GA14778@infradead.org>
-	<20130909153546.GT12779@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 764F27F37
+	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 14:47:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 656E68F8035
+	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 12:47:36 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id i7BmMhcBTOZbjdvA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Sep 2013 12:47:31 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id C55509A06CF
+	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 13:47:30 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: generic/311: add a few more test cases
+Date: Wed, 11 Sep 2013 15:47:27 -0400
+Message-ID: <1378928847-2349-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130909153546.GT12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +29,156 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-On Tue, Sep 10, 2013 at 01:35:47AM +1000, Dave Chinner wrote:
-> The test matrix of having to test everything on v4 and v5 is just
-> nasty, especially if we are talking about prototyping code. I'd much
-> prefer to bring things to v5 filesytsems where we have much lower
-> exposure and risk of corruption problems, and then when we know it's
-> solid because of the QA we've done on it, then we can expose the
-> majority of the XFS userbase to it by bringing it back to v4
-> filesystems.
+Btrfs had some issues with fsync()'ing directories and fsync()'ing after
+renames.  These three new tests cover the 3 different issues we were seeing.
+Thanks,
 
-I think the test matrix is a reason for not enabling this only on v5
-filesystems.  Large inodes are an old and supported use case, although
-probably not as heavily tested as it should.  By introducing two
-different large inode cases we don't really help increasing test
-coverage for a code path that is the same for v4 and v5.
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ tests/generic/311     |   89 +++++++++++++++++++++++++++++++++++++++++++++++-
+ tests/generic/311.out |    8 ++++
+ 2 files changed, 95 insertions(+), 2 deletions(-)
 
-That being said as long as you're still prototyping I'm not going to
-interfere.
+diff --git a/tests/generic/311 b/tests/generic/311
+index 675d927..002ad57 100644
+--- a/tests/generic/311
++++ b/tests/generic/311
+@@ -70,6 +70,8 @@ testfile=$SCRATCH_MNT/$seq.fsync
+ FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 180 0"
+ FLAKEY_TABLE_DROP="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
+ _TEST_OPTIONS=""
++allow_writes=0
++drop_writes=1
+ 
+ _mount_flakey()
+ {
+@@ -104,8 +106,6 @@ _load_flakey_table()
+ _run_test()
+ {
+ 	# _run_test <testnum> <0 - buffered | 1 - O_DIRECT>
+-	allow_writes=0
+-	drop_writes=1
+ 	test_num=$1
+ 
+ 	direct_opt=""
+@@ -131,6 +131,83 @@ _run_test()
+ 	_mount_flakey
+ }
+ 
++_clean_working_dir()
++{
++	_mount_flakey
++	rm -rf $SCRATCH_MNT/*
++	_unmount_flakey
++}
++
++# Btrfs wasn't making sure the directory survived fsync
++_directory_test()
++{
++	echo "fsync new directory"
++	_mount_flakey
++	mkdir $SCRATCH_MNT/bar
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
++	_load_flakey_table $drop_writes
++	_unmount_flakey
++
++	_load_flakey_table $allow_writes
++	_mount_flakey
++	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
++	_unmount_flakey
++	_check_scratch_fs $FLAKEY_DEV
++	[ $? -ne 0 ] && _fatal "fsck failed"
++}
++
++# Btrfs was losing a rename into a new directory
++_rename_test()
++{
++	echo "rename fsync test"
++	_mount_flakey
++	touch $SCRATCH_MNT/foo
++	mkdir $SCRATCH_MNT/bar
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foo
++	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar/foo
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar/foo
++	_load_flakey_table $drop_writes
++	_unmount_flakey
++
++	_load_flakey_table $allow_writes
++	_mount_flakey
++	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
++	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
++	_unmount_flakey
++	_check_scratch_fs $FLAKEY_DEV
++	[ $? -ne 0 ] && _fatal "fsck failed"
++}
++
++# Btrfs was failing to replay a log when we had a inode with a smaller inode
++# number that is renamed into a directory with a higher inode number
++_replay_rename_test()
++{
++	echo "replay rename fsync test"
++	_mount_flakey
++	touch $SCRATCH_MNT/foo
++	mkdir $SCRATCH_MNT/bar
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foo
++	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar/foo
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
++
++	# This is to force btrfs to relog the entire inode including the ref so
++	# we are sure to try and replay the ref along with the dir_index item
++	setfattr -n user.foo -v blah $SCRATCH_MNT/bar/foo >> $seqres.full 2>&1
++
++	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar/foo
++	_load_flakey_table $drop_writes
++	_unmount_flakey
++
++	_load_flakey_table $allow_writes
++	_mount_flakey
++	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
++	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
++	_unmount_flakey
++	_check_scratch_fs $FLAKEY_DEV
++	[ $? -ne 0 ] && _fatal "fsck failed"
++}
++
+ _scratch_mkfs >> $seqres.full 2>&1
+ 
+ # Create a basic flakey device that will never error out
+@@ -157,5 +234,13 @@ for i in $(seq 1 20); do
+ 	_run_test $i $direct
+ done
+ 
++rm -rf $SCRATCH_MNT/*
++_unmount_flakey
++_directory_test
++_clean_working_dir
++_rename_test
++_clean_working_dir
++_replay_rename_test
++
+ status=0
+ exit
+diff --git a/tests/generic/311.out b/tests/generic/311.out
+index 5bad6a7..8a0d5c8 100644
+--- a/tests/generic/311.out
++++ b/tests/generic/311.out
+@@ -319,3 +319,11 @@ Running test 20 direct, nolockfs
+ Random seed is 20
+ a16ac2b84456d41a15a1a4cc1202179f
+ a16ac2b84456d41a15a1a4cc1202179f
++fsync new directory
++drwxr-xr-x bar
++rename fsync test
++drwxr-xr-x bar
++-rw-r--r-- foo
++replay rename fsync test
++drwxr-xr-x bar
++-rw-r--r-- foo
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
