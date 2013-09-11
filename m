@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 764F27F37
-	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 14:47:39 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D30667F37
+	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 16:17:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 656E68F8035
-	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 12:47:36 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id i7BmMhcBTOZbjdvA (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C28A88F8040
+	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 14:17:44 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id TZZHpo0M3UmsgqbK (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Sep 2013 12:47:31 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id C55509A06CF
-	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 13:47:30 -0600 (MDT)
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH] xfstests: generic/311: add a few more test cases
-Date: Wed, 11 Sep 2013 15:47:27 -0400
-Message-ID: <1378928847-2349-1-git-send-email-jbacik@fusionio.com>
+	Wed, 11 Sep 2013 14:17:43 -0700 (PDT)
+Date: Thu, 12 Sep 2013 00:17:31 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] xfs: = vs == typo in ASSERT()
+Message-ID: <20130911211731.GA10527@elgon.mountain>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,156 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>
+Cc: Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, xfs@oss.sgi.com
 
-Btrfs had some issues with fsync()'ing directories and fsync()'ing after
-renames.  These three new tests cover the 3 different issues we were seeing.
-Thanks,
+There is a '=' vs '==' typo so the ASSERT()s are always true.
 
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- tests/generic/311     |   89 +++++++++++++++++++++++++++++++++++++++++++++++-
- tests/generic/311.out |    8 ++++
- 2 files changed, 95 insertions(+), 2 deletions(-)
+Introduced in 21b5c9784b ('xfs: swap extents operations for CRC
+filesystems')
 
-diff --git a/tests/generic/311 b/tests/generic/311
-index 675d927..002ad57 100644
---- a/tests/generic/311
-+++ b/tests/generic/311
-@@ -70,6 +70,8 @@ testfile=$SCRATCH_MNT/$seq.fsync
- FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 180 0"
- FLAKEY_TABLE_DROP="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
- _TEST_OPTIONS=""
-+allow_writes=0
-+drop_writes=1
+diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+index 531b020..bb8de8e 100644
+--- a/fs/xfs/xfs_bmap_btree.c
++++ b/fs/xfs/xfs_bmap_btree.c
+@@ -957,9 +957,9 @@ xfs_bmbt_change_owner(
+ 	ASSERT(tp || buffer_list);
+ 	ASSERT(!(tp && buffer_list));
+ 	if (whichfork == XFS_DATA_FORK)
+-		ASSERT(ip->i_d.di_format = XFS_DINODE_FMT_BTREE);
++		ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_BTREE);
+ 	else
+-		ASSERT(ip->i_d.di_aformat = XFS_DINODE_FMT_BTREE);
++		ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_BTREE);
  
- _mount_flakey()
- {
-@@ -104,8 +106,6 @@ _load_flakey_table()
- _run_test()
- {
- 	# _run_test <testnum> <0 - buffered | 1 - O_DIRECT>
--	allow_writes=0
--	drop_writes=1
- 	test_num=$1
- 
- 	direct_opt=""
-@@ -131,6 +131,83 @@ _run_test()
- 	_mount_flakey
- }
- 
-+_clean_working_dir()
-+{
-+	_mount_flakey
-+	rm -rf $SCRATCH_MNT/*
-+	_unmount_flakey
-+}
-+
-+# Btrfs wasn't making sure the directory survived fsync
-+_directory_test()
-+{
-+	echo "fsync new directory"
-+	_mount_flakey
-+	mkdir $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
-+	_load_flakey_table $drop_writes
-+	_unmount_flakey
-+
-+	_load_flakey_table $allow_writes
-+	_mount_flakey
-+	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
-+	_unmount_flakey
-+	_check_scratch_fs $FLAKEY_DEV
-+	[ $? -ne 0 ] && _fatal "fsck failed"
-+}
-+
-+# Btrfs was losing a rename into a new directory
-+_rename_test()
-+{
-+	echo "rename fsync test"
-+	_mount_flakey
-+	touch $SCRATCH_MNT/foo
-+	mkdir $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foo
-+	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar/foo
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar/foo
-+	_load_flakey_table $drop_writes
-+	_unmount_flakey
-+
-+	_load_flakey_table $allow_writes
-+	_mount_flakey
-+	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
-+	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
-+	_unmount_flakey
-+	_check_scratch_fs $FLAKEY_DEV
-+	[ $? -ne 0 ] && _fatal "fsck failed"
-+}
-+
-+# Btrfs was failing to replay a log when we had a inode with a smaller inode
-+# number that is renamed into a directory with a higher inode number
-+_replay_rename_test()
-+{
-+	echo "replay rename fsync test"
-+	_mount_flakey
-+	touch $SCRATCH_MNT/foo
-+	mkdir $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foo
-+	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar/foo
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
-+
-+	# This is to force btrfs to relog the entire inode including the ref so
-+	# we are sure to try and replay the ref along with the dir_index item
-+	setfattr -n user.foo -v blah $SCRATCH_MNT/bar/foo >> $seqres.full 2>&1
-+
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar/foo
-+	_load_flakey_table $drop_writes
-+	_unmount_flakey
-+
-+	_load_flakey_table $allow_writes
-+	_mount_flakey
-+	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
-+	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
-+	_unmount_flakey
-+	_check_scratch_fs $FLAKEY_DEV
-+	[ $? -ne 0 ] && _fatal "fsck failed"
-+}
-+
- _scratch_mkfs >> $seqres.full 2>&1
- 
- # Create a basic flakey device that will never error out
-@@ -157,5 +234,13 @@ for i in $(seq 1 20); do
- 	_run_test $i $direct
- done
- 
-+rm -rf $SCRATCH_MNT/*
-+_unmount_flakey
-+_directory_test
-+_clean_working_dir
-+_rename_test
-+_clean_working_dir
-+_replay_rename_test
-+
- status=0
- exit
-diff --git a/tests/generic/311.out b/tests/generic/311.out
-index 5bad6a7..8a0d5c8 100644
---- a/tests/generic/311.out
-+++ b/tests/generic/311.out
-@@ -319,3 +319,11 @@ Running test 20 direct, nolockfs
- Random seed is 20
- a16ac2b84456d41a15a1a4cc1202179f
- a16ac2b84456d41a15a1a4cc1202179f
-+fsync new directory
-+drwxr-xr-x bar
-+rename fsync test
-+drwxr-xr-x bar
-+-rw-r--r-- foo
-+replay rename fsync test
-+drwxr-xr-x bar
-+-rw-r--r-- foo
--- 
-1.7.7.6
+ 	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
+ 	if (!cur)
 
 _______________________________________________
 xfs mailing list
