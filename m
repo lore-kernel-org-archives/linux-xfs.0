@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5BE817F52
-	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 09:25:00 -0500 (CDT)
-Message-ID: <52307D39.6060903@sgi.com>
-Date: Wed, 11 Sep 2013 09:24:57 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F372D7F37
+	for <xfs@oss.sgi.com>; Wed, 11 Sep 2013 10:11:33 -0500 (CDT)
+Message-ID: <52308821.1080807@sgi.com>
+Date: Wed, 11 Sep 2013 10:11:29 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH 31/55 V3] libxfs: switch over to xfs_sb.c and remove
@@ -47,32 +47,19 @@ On 09/11/13 08:25, Mark Tinguely wrote:
 > Applies clean for me.
 >
 > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+>
 
-patch 31 V2/V3 break the compilation of xfsprogs.
+Oops, on testing V2/V3 of the patch, the libxfs/xfs_mount.c was left
+in these reposted patches and libxfs/xfs_sb.c was not and the reposeted
+patches won't compile.
 
-I get:
-...
+My mistake for concentrating on the header file when reviewing and not
+the whole re-post.
 
-configure: creating ./config.status
-config.status: creating include/builddefs
-config.status: creating include/platform_defs.h
-config.status: executing libtool commands
-Building include
-     [LN]     xfs
-     [LN]     disk
-Building libxfs
-     [CC]     gen_crc32table
-     [GENERATE] crc32table.h
-     [TEST]    CRC32
-CRC_LE_BITS = 32
-crc32: tests passed, 225944 bytes in 117 usec
-crc32c: tests passed, 225944 bytes in 121 usec
-gmake[3]: *** No rule to make target `.ltdep', needed by `ltdepend'.  Stop.
-gmake[2]: *** [libxfs] Error 2
-make[1]: *** [default] Error 2
-make: *** [default] Error 2
+Looks like everything is fine if using the libxfs/xfs_sb.c from the
+first post.
 
---Mark.
+--Mark
 
 _______________________________________________
 xfs mailing list
