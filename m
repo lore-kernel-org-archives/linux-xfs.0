@@ -1,14 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F309529DFC
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Sep 2013 16:17:46 -0500 (CDT)
-Message-ID: <52322F76.4080306@sgi.com>
-Date: Thu, 12 Sep 2013 16:17:42 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 41F0929E03
+	for <linux-xfs@oss.sgi.com>; Thu, 12 Sep 2013 16:17:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B5C58F8064
+	for <linux-xfs@oss.sgi.com>; Thu, 12 Sep 2013 14:17:48 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id dC1sEDElL1VzdX0S for <linux-xfs@oss.sgi.com>;
+	Thu, 12 Sep 2013 14:17:47 -0700 (PDT)
+Received: from Liberator.local (c-98-240-215-156.hsd1.mn.comcast.net
+	[98.240.215.156])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 565BD653B1A1
+	for <linux-xfs@oss.sgi.com>; Thu, 12 Sep 2013 16:17:47 -0500 (CDT)
+Message-ID: <52322F7A.8060405@sandeen.net>
+Date: Thu, 12 Sep 2013 16:17:46 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH V3] xfs_repair: test for bad level in dir2 node
-References: <52274F96.2010702@sandeen.net> <52322A84.1030007@sandeen.net>
-In-Reply-To: <52322A84.1030007@sandeen.net>
+Subject: Time for an xfsprogs "alpha1" release?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,55 +27,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On 09/12/13 15:56, Eric Sandeen wrote:
-> In traverse_int_dir2block(), the variable 'i' is the level in
-> the tree, with 0 being a leaf node.  In the "do" loop we
-> start at the root, and work our way down to a leaf.
->
-> If the first node we read is an interior node with NODE_MAGIC,
-> but it tells us that its level is 0 (a leaf), this is clearly
-> an inconsistency.
->
-> Worse, we'd return with success, bno set, and only level[0]
-> in the cursor initialized.  Then down this path we'll
-> segfault when accessing an uninitialized (and zeroed) member
-> of the cursor's level array:
->
-> process_node_dir2
->    traverse_int_dir2block  // returns 0 w/ bno set, only level[0] init'd
->    process_leaf_level_dir2
->      verify_dir2_path(mp, da_cursor, 0) // p_level == 0
->         this_level = p_level + 1;
->         node = cursor->level[this_level].bp->b_addr; // level[1] uninit&  0'd
->
-> Fix this by recognizing that an interior node w/ level 0 is invalid, and
-> error out as for other inconsistencies.
->
-> By the time the level 0 test is done, we have already ensured that
-> this block has XFS_DA[3]_NODE_MAGIC.
->
-> Reported-by: Jan Yves Brueckner<jyb@gmx.com>
-> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> ---
->
-> V3: Simplify the test.
->
-> Mark, Dave, I know you had some concerns about other conditions being
-> tested, but I think those are separate from this fix, which simply ensures
-> that the level we find for this _NODE block is within the valid range
-> for a node.  (It also matches the test currently present in xfs_check).
->
+With all of the changes for CRC filesystems in xfsprogs git now, I'm wondering if it'd be a good idea to do a "3.2.0-alpha1" sort of release.
 
-Nod.
+I know it's not yet feature complete, but I think there would be value in getting a version-stamped tarball out there for testing - it could filter to rawhide-ish distros, and get a bit more airtime while the remaining bits get worked out.
 
---Mark.
+We'd probably want a nice readme about what's new and what's not yet done, caveats, etc, but I think it'd be worth getting it out there into the hands of willing testers, w/o requiring them to do a build from git.
+
+Thoughts?
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
