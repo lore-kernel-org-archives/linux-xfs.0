@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C7B7429DFB
-	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 05:27:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 97908304039
-	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 03:27:40 -0700 (PDT)
-Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.138]) by
-	cuda.sgi.com with ESMTP id nuDOHz3PFYsbQPdk (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Sep 2013 03:27:27 -0700 (PDT)
-From: Stefan Behrens <sbehrens@giantdisaster.de>
-Subject: [PATCH] xfstests: btrfs/011 improvement for compressed filesystems
-Date: Fri, 13 Sep 2013 12:27:21 +0200
-Message-Id: <1379068041-4299-1-git-send-email-sbehrens@giantdisaster.de>
+	by oss.sgi.com (Postfix) with ESMTP id E3F9A29DFB
+	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 09:17:45 -0500 (CDT)
+Message-ID: <52331E85.2090601@sgi.com>
+Date: Fri, 13 Sep 2013 09:17:41 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 31/55 V3] libxfs: switch over to xfs_sb.c and remove
+	xfs_mount.c
+References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
+	<1378332359-14737-32-git-send-email-david@fromorbit.com>
+	<522A1BCA.6010500@sgi.com> <20130906214021.GD12541@dastard>
+	<522A4C79.1030200@sgi.com> <20130910010241.GZ12779@dastard>
+	<522F289E.6070802@sgi.com> <20130910213249.GC19103@dastard>
+	<52306F3E.8060409@sgi.com> <52307D39.6060903@sgi.com>
+In-Reply-To: <52307D39.6060903@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,129 +23,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jbacik@fusionio.com, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-Josef noticed that using /dev/zero to generate most of the test
-data doesn't work if someone overides the mount options to
-enable compression. The test that performs a cancelation failed
-because the replace operation was already finished when the
-cancel request was executed.
+On 09/11/13 09:24, Mark Tinguely wrote:
+> On 09/11/13 08:25, Mark Tinguely wrote:
+>> On 09/10/13 16:32, Dave Chinner wrote:
+>>
+>> > libxfs: switch over to xfs_sb.c and remove xfs_mount.c
+>> >
+>> > From: Dave Chinner <dchinner@redhat.com>
+>> >
+>> > Now that the kernel code has split the superblock specific code out
+>> > of xfs_mount.c, we don't need xfs_mount.c anymore. Copy in xfs_sb.c
+>> > and remove xfs_mount.c
+>> >
+>> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>> > ---
+>>
+>> Applies clean for me.
+>>
+>> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+>
+> patch 31 V2/V3 break the compilation of xfsprogs.
+>
+> I get:
+> ...
+>
+> configure: creating ./config.status
+> config.status: creating include/builddefs
+> config.status: creating include/platform_defs.h
+> config.status: executing libtool commands
+> Building include
+> [LN] xfs
+> [LN] disk
+> Building libxfs
+> [CC] gen_crc32table
+> [GENERATE] crc32table.h
+> [TEST] CRC32
+> CRC_LE_BITS = 32
+> crc32: tests passed, 225944 bytes in 117 usec
+> crc32c: tests passed, 225944 bytes in 121 usec
+> gmake[3]: *** No rule to make target `.ltdep', needed by `ltdepend'. Stop.
+> gmake[2]: *** [libxfs] Error 2
+> make[1]: *** [default] Error 2
+> make: *** [default] Error 2
+>
 
-Since /dev/urandom is too slow to generate multiple GB, the
-way how the filesystem data is generated is completely changed
-with this patch. Now /dev/urandom is used to generate one 1MB
-file and this file is copied up to 2048 times. /dev/zero is no
-longer used.
 
-The runtime of the test is about the same as before. Compression
-works now, online deduplication will again cause issues, but
-we don't have online deduplicatin today.
+Auugh, I think I had a bad version of quilt. on another machine it 
+applied and compiled correctly.
 
-Reported-by: Josef Bacik <jbacik@fusionio.com>
-Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
----
- tests/btrfs/011 | 46 ++++++++++++++++++++++++++++++----------------
- 1 file changed, 30 insertions(+), 16 deletions(-)
+I put reviewed-by in the files and sent to Rich to commit.
 
-diff --git a/tests/btrfs/011 b/tests/btrfs/011
-index c8b4aac..71ff3de 100755
---- a/tests/btrfs/011
-+++ b/tests/btrfs/011
-@@ -78,6 +78,7 @@ workout()
- 	local quick="$4"
- 	local source_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $1}'`"
- 	local target_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $NF}'`"
-+	local fssize
- 
- 	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt `expr $num_devs4raid + 1` ]; then
- 		echo "Skip workout $1 $2 $3 $4" >> $seqres.full
-@@ -107,33 +108,46 @@ workout()
- 		_notrun "Different device sizes detected"
- 	fi
- 
-+	if [ `$BTRFS_SHOW_SUPER_PROG $SCRATCH_DEV | grep dev_item.total_bytes | awk '{print $2}'` -lt 2500000000 ]; then
-+		_notrun "device size too small"
-+	fi
-+
- 	_scratch_mount
- 
--	# Generate 500 times 20K extents in the data chunk and fill up
--	# metadata with inline extents. Ignore ENOSPC.
-+	# Generate metadata and some minimal user data, generate 500 times
-+	# 20K extents in the data chunk and fill up metadata with inline
-+	# extents.
- 	for i in `seq 1 500`; do
- 		dd if=/dev/urandom of=$SCRATCH_MNT/l$i bs=16385 count=1
- 		dd if=/dev/urandom of=$SCRATCH_MNT/s$i bs=3800 count=1
- 	done > /dev/null 2>&1
- 
-+	# /dev/urandom is slow but has the benefit that the generated
-+	# contents does not shrink during compression.
-+	# Generate a template once and quickly copy it multiple times.
-+	# Obviously with online deduplication this will not work anymore.
-+	dd if=/dev/urandom of=$SCRATCH_MNT/t0 bs=1M count=1 > /dev/null 2>&1
-+
- 	if [ "${quick}Q" = "thoroughQ" ]; then
- 		# The intention of this "thorough" test is to increase
- 		# the probability of random errors, in particular in
- 		# conjunction with the background noise generator and
--		# a sync call while the replace operation in ongoing.
--		# Unfortunately it takes quite some time to generate
--		# the test filesystem, therefore most data consists out
--		# of zeros although this data is not very useful for
--		# detecting misplaced read/write requests.
--		# Ignore ENOSPC, it's not a problem..
--		dd if=/dev/urandom of=$SCRATCH_MNT/r bs=1M count=200 >> $seqres.full 2>&1 &
--		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=2000 >> $seqres.full 2>&1
--		wait
-+		# a sync call while the replace operation is ongoing.
-+		fssize=2048
- 	elif [ "${with_cancel}Q" = "cancelQ" ]; then
--		# produce some data to prevent that the replace operation
--		# finishes before the cancel request is started
--		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=1000 >> $seqres.full 2>&1
-+		# The goal is to produce enough data to prevent that the
-+		# replace operation finishes before the cancel request
-+		# is started.
-+		fssize=1024
-+	else
-+		fssize=64
- 	fi
-+
-+	# since the available size was tested before, do not tolerate
-+	# any failures
-+	for i in `seq $fssize`; do
-+		cp $SCRATCH_MNT/t0 $SCRATCH_MNT/t$i || _fail "cp failed"
-+	done > /dev/null 2>> $seqres.full
- 	sync; sync
- 
- 	btrfs_replace_test $source_dev $target_dev "" $with_cancel $quick
-@@ -214,7 +228,7 @@ btrfs_replace_test()
- 		# before the status is printed
- 		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
- 		cat $tmp.tmp >> $seqres.full
--		grep -q canceled $tmp.tmp || _fail "btrfs replace status failed"
-+		grep -q canceled $tmp.tmp || _fail "btrfs replace status (canceled) failed"
- 	else
- 		if [ "${quick}Q" = "thoroughQ" ]; then
- 			# On current hardware, the thorough test runs
-@@ -226,7 +240,7 @@ btrfs_replace_test()
- 
- 		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
- 		cat $tmp.tmp >> $seqres.full
--		grep -q finished $tmp.tmp || _fail "btrfs replace status failed"
-+		grep -q finished $tmp.tmp || _fail "btrfs replace status (finished) failed"
- 	fi
- 
- 	if ps -p $noise_pid | grep -q $noise_pid; then
--- 
-1.8.4
+--Mark.
+
+
 
 _______________________________________________
 xfs mailing list
