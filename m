@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D26D229E02
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Sep 2013 20:58:36 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9EABF29DFB
+	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 05:05:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A452304043
-	for <linux-xfs@oss.sgi.com>; Thu, 12 Sep 2013 18:58:36 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id LbaAURYzyVxGnDSP for <linux-xfs@oss.sgi.com>;
-	Thu, 12 Sep 2013 18:58:35 -0700 (PDT)
-Message-ID: <52327149.6060507@sandeen.net>
-Date: Thu, 12 Sep 2013 20:58:33 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 60D78304032
+	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 03:05:48 -0700 (PDT)
+Message-ID: <5232E39F.60206@oracle.com>
+Date: Fri, 13 Sep 2013 18:06:23 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: Time for an xfsprogs "alpha1" release?
-References: <52322F7A.8060405@sandeen.net> <5232380E.4040300@sgi.com>
-	<52323DB7.8000800@sandeen.net> <523250E5.2050607@sgi.com>
-In-Reply-To: <523250E5.2050607@sgi.com>
+Subject: Re: [PATCH] xfs: Make the incore inode di_size to xfs_ufsize_t
+References: <52269DF4.5040305@oracle.com> <20130912142446.GZ1935@sgi.com>
+In-Reply-To: <20130912142446.GZ1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +24,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 9/12/13 6:40 PM, Mark Tinguely wrote:
-> On 09/12/13 17:18, Eric Sandeen wrote:
->> On 9/12/13 4:54 PM, Mark Tinguely wrote:
->>> On 09/12/13 16:17, Eric Sandeen wrote:
->>>> With all of the changes for CRC filesystems in xfsprogs git now, I'm wondering if it'd be a good idea to do a "3.2.0-alpha1" sort of release.
->>>>
->>>> I know it's not yet feature complete, but I think there would be value in getting a version-stamped tarball out there for testing - it could filter to rawhide-ish distros, and get a bit more airtime while the remaining bits get worked out.
->>>>
->>>> We'd probably want a nice readme about what's new and what's not yet done, caveats, etc, but I think it'd be worth getting it out there into the hands of willing testers, w/o requiring them to do a build from git.
->>>>
->>>> Thoughts?
->>>>
->>>> Thanks,
->>>> -Eric
->>>>
->>>
->>> Good idea, but xfsprogs is in a state that it can't compile:
->>>
->>>     http://oss.sgi.com/archives/xfs/2013-09/msg00396.html
->>>
->>> Patch 31 v3 / 55 is broken. It is missing xfs_sb.c and has an extra
->>> xfs_mount.c.
->>>
->>> If you want it this week, we could do the corrections or wait for Dave
->>> to repost.
->>
->> hm? The git tree builds fine here, anyway (modulo some warnings).
->>
->> so quick, cut an alpha1 before it breaks.  ;)
->>
->> (but if you mean: we should get the latest stuff on the list in first,
->> and fix it so it builds - ok - but there will probably always be more
->> stuff to pull in, so at some point when we have a reasonable amount of it
->> in place, we could cut a test release?  There's always "alpha2"...)
->>
->> -Eric
+Hi Ben,
+
+On 09/12/2013 10:24 PM, Ben Myers wrote:
+
+> Hey Jeff,
 > 
-> Yep, simple to fix. I manually pulled in xfs_sb.c to make sure 47 v2 / 55 was still okay. I can have a tar tomorrow.
+> On Wed, Sep 04, 2013 at 10:41:56AM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> Make the incore inode di_size to unsigned, this would be helpful
+>> to catch the negative sizes of it in many cases, so that we don't
+>> need to perform additional check for it being less than ZERO or not.
+>>
+>> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> ---
+>>  fs/xfs/xfs_inode_fork.c |    3 +--
+>>  fs/xfs/xfs_log_format.h |    2 +-
+>>  2 files changed, 2 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+>> index 02f1083..2b60a5a 100644
+>> --- a/fs/xfs/xfs_inode_fork.c
+>> +++ b/fs/xfs/xfs_inode_fork.c
+>> @@ -167,8 +167,7 @@ xfs_iformat_fork(
+>>  			}
+>>  
+>>  			di_size = be64_to_cpu(dip->di_size);
+>> -			if (unlikely(di_size < 0 ||
+>> -				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+>> +			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+>>  				xfs_warn(ip->i_mount,
+>>  			"corrupt inode %Lu (bad size %Ld for local inode).",
+>>  					(unsigned long long) ip->i_ino,
+>> diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+>> index a49ab2c..2795fc5 100644
+>> --- a/fs/xfs/xfs_log_format.h
+>> +++ b/fs/xfs/xfs_log_format.h
+>> @@ -547,7 +547,7 @@ typedef struct xfs_icdinode {
+>>  	xfs_ictimestamp_t di_atime;	/* time last accessed */
+>>  	xfs_ictimestamp_t di_mtime;	/* time last modified */
+>>  	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+>> -	xfs_fsize_t	di_size;	/* number of bytes in file */
+>> +	xfs_ufsize_t	di_size;	/* number of bytes in file */
+> 
+> These two changes by themselves look fairly innocuous, but upon closer
+> inspection I'm not so sure...
 
-Well, any released tarball needs to come from a tagged git tree, of course.
+> 
+> e.g. xfs_fsize_t is still signed, and i_size is loff_t is still signed.
+> I'm wondering if this doesn't represent a subtle change in the on-disk
+> format for inodes up in that size range.  This was on my 3.12 queue.  I
+> think it bears more discussion, so I'll hold off on this one for now.
 
-So if the new series needs to go in first, and needs fixes before that, we can wait.  Or if it's ok as it is now, and just missing some functionality, we could cut it now as alpha1, and cut alpha2 next.... *shrug*.  Not a huge rush, just pick a time when the tree is useful to get some wider testing, and cut a pre-release from that point in git.
+As per my understanding for Dave's comments, maybe it's better to make
+di_size to be unsigned with few changes, that's why I chose to fix the
+incore di_size only.  Hence if a negative di_size is read from the disk
+to the incore in above case with Dan's fix, it will be evaluated to be
+an unexpected large value which would cause the corresponding check up fails.
 
--Eric
+Similarly, if a negative value is assigned to the incore di_size, it'll be
+evaluated to an unexpected bigger value as well. In consequence, after flushing
+the incore structure to disk, and read it back again, it will go through
+the previous check up again. 
 
-> --Mark.
+> 
+> FWIW I believe we're still ok with just Dan's fix because the maximum
+> size for local format is half a block or less.
 
+Ok, meanwhile, let's waiting for other's comments.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
