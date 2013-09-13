@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9EABF29DFB
-	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 05:05:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 60D78304032
-	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 03:05:48 -0700 (PDT)
-Message-ID: <5232E39F.60206@oracle.com>
-Date: Fri, 13 Sep 2013 18:06:23 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Make the incore inode di_size to xfs_ufsize_t
-References: <52269DF4.5040305@oracle.com> <20130912142446.GZ1935@sgi.com>
-In-Reply-To: <20130912142446.GZ1935@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id C7B7429DFB
+	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 05:27:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 97908304039
+	for <xfs@oss.sgi.com>; Fri, 13 Sep 2013 03:27:40 -0700 (PDT)
+Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.138]) by
+	cuda.sgi.com with ESMTP id nuDOHz3PFYsbQPdk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 13 Sep 2013 03:27:27 -0700 (PDT)
+From: Stefan Behrens <sbehrens@giantdisaster.de>
+Subject: [PATCH] xfstests: btrfs/011 improvement for compressed filesystems
+Date: Fri, 13 Sep 2013 12:27:21 +0200
+Message-Id: <1379068041-4299-1-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,86 +21,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: jbacik@fusionio.com, linux-btrfs@vger.kernel.org
 
-Hi Ben,
+Josef noticed that using /dev/zero to generate most of the test
+data doesn't work if someone overides the mount options to
+enable compression. The test that performs a cancelation failed
+because the replace operation was already finished when the
+cancel request was executed.
 
-On 09/12/2013 10:24 PM, Ben Myers wrote:
+Since /dev/urandom is too slow to generate multiple GB, the
+way how the filesystem data is generated is completely changed
+with this patch. Now /dev/urandom is used to generate one 1MB
+file and this file is copied up to 2048 times. /dev/zero is no
+longer used.
 
-> Hey Jeff,
-> 
-> On Wed, Sep 04, 2013 at 10:41:56AM +0800, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> Make the incore inode di_size to unsigned, this would be helpful
->> to catch the negative sizes of it in many cases, so that we don't
->> need to perform additional check for it being less than ZERO or not.
->>
->> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->> ---
->>  fs/xfs/xfs_inode_fork.c |    3 +--
->>  fs/xfs/xfs_log_format.h |    2 +-
->>  2 files changed, 2 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
->> index 02f1083..2b60a5a 100644
->> --- a/fs/xfs/xfs_inode_fork.c
->> +++ b/fs/xfs/xfs_inode_fork.c
->> @@ -167,8 +167,7 @@ xfs_iformat_fork(
->>  			}
->>  
->>  			di_size = be64_to_cpu(dip->di_size);
->> -			if (unlikely(di_size < 0 ||
->> -				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
->> +			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
->>  				xfs_warn(ip->i_mount,
->>  			"corrupt inode %Lu (bad size %Ld for local inode).",
->>  					(unsigned long long) ip->i_ino,
->> diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
->> index a49ab2c..2795fc5 100644
->> --- a/fs/xfs/xfs_log_format.h
->> +++ b/fs/xfs/xfs_log_format.h
->> @@ -547,7 +547,7 @@ typedef struct xfs_icdinode {
->>  	xfs_ictimestamp_t di_atime;	/* time last accessed */
->>  	xfs_ictimestamp_t di_mtime;	/* time last modified */
->>  	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
->> -	xfs_fsize_t	di_size;	/* number of bytes in file */
->> +	xfs_ufsize_t	di_size;	/* number of bytes in file */
-> 
-> These two changes by themselves look fairly innocuous, but upon closer
-> inspection I'm not so sure...
+The runtime of the test is about the same as before. Compression
+works now, online deduplication will again cause issues, but
+we don't have online deduplicatin today.
 
-> 
-> e.g. xfs_fsize_t is still signed, and i_size is loff_t is still signed.
-> I'm wondering if this doesn't represent a subtle change in the on-disk
-> format for inodes up in that size range.  This was on my 3.12 queue.  I
-> think it bears more discussion, so I'll hold off on this one for now.
+Reported-by: Josef Bacik <jbacik@fusionio.com>
+Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
+---
+ tests/btrfs/011 | 46 ++++++++++++++++++++++++++++++----------------
+ 1 file changed, 30 insertions(+), 16 deletions(-)
 
-As per my understanding for Dave's comments, maybe it's better to make
-di_size to be unsigned with few changes, that's why I chose to fix the
-incore di_size only.  Hence if a negative di_size is read from the disk
-to the incore in above case with Dan's fix, it will be evaluated to be
-an unexpected large value which would cause the corresponding check up fails.
-
-Similarly, if a negative value is assigned to the incore di_size, it'll be
-evaluated to an unexpected bigger value as well. In consequence, after flushing
-the incore structure to disk, and read it back again, it will go through
-the previous check up again. 
-
-> 
-> FWIW I believe we're still ok with just Dan's fix because the maximum
-> size for local format is half a block or less.
-
-Ok, meanwhile, let's waiting for other's comments.
-
-Thanks,
--Jeff
+diff --git a/tests/btrfs/011 b/tests/btrfs/011
+index c8b4aac..71ff3de 100755
+--- a/tests/btrfs/011
++++ b/tests/btrfs/011
+@@ -78,6 +78,7 @@ workout()
+ 	local quick="$4"
+ 	local source_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $1}'`"
+ 	local target_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $NF}'`"
++	local fssize
+ 
+ 	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt `expr $num_devs4raid + 1` ]; then
+ 		echo "Skip workout $1 $2 $3 $4" >> $seqres.full
+@@ -107,33 +108,46 @@ workout()
+ 		_notrun "Different device sizes detected"
+ 	fi
+ 
++	if [ `$BTRFS_SHOW_SUPER_PROG $SCRATCH_DEV | grep dev_item.total_bytes | awk '{print $2}'` -lt 2500000000 ]; then
++		_notrun "device size too small"
++	fi
++
+ 	_scratch_mount
+ 
+-	# Generate 500 times 20K extents in the data chunk and fill up
+-	# metadata with inline extents. Ignore ENOSPC.
++	# Generate metadata and some minimal user data, generate 500 times
++	# 20K extents in the data chunk and fill up metadata with inline
++	# extents.
+ 	for i in `seq 1 500`; do
+ 		dd if=/dev/urandom of=$SCRATCH_MNT/l$i bs=16385 count=1
+ 		dd if=/dev/urandom of=$SCRATCH_MNT/s$i bs=3800 count=1
+ 	done > /dev/null 2>&1
+ 
++	# /dev/urandom is slow but has the benefit that the generated
++	# contents does not shrink during compression.
++	# Generate a template once and quickly copy it multiple times.
++	# Obviously with online deduplication this will not work anymore.
++	dd if=/dev/urandom of=$SCRATCH_MNT/t0 bs=1M count=1 > /dev/null 2>&1
++
+ 	if [ "${quick}Q" = "thoroughQ" ]; then
+ 		# The intention of this "thorough" test is to increase
+ 		# the probability of random errors, in particular in
+ 		# conjunction with the background noise generator and
+-		# a sync call while the replace operation in ongoing.
+-		# Unfortunately it takes quite some time to generate
+-		# the test filesystem, therefore most data consists out
+-		# of zeros although this data is not very useful for
+-		# detecting misplaced read/write requests.
+-		# Ignore ENOSPC, it's not a problem..
+-		dd if=/dev/urandom of=$SCRATCH_MNT/r bs=1M count=200 >> $seqres.full 2>&1 &
+-		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=2000 >> $seqres.full 2>&1
+-		wait
++		# a sync call while the replace operation is ongoing.
++		fssize=2048
+ 	elif [ "${with_cancel}Q" = "cancelQ" ]; then
+-		# produce some data to prevent that the replace operation
+-		# finishes before the cancel request is started
+-		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=1000 >> $seqres.full 2>&1
++		# The goal is to produce enough data to prevent that the
++		# replace operation finishes before the cancel request
++		# is started.
++		fssize=1024
++	else
++		fssize=64
+ 	fi
++
++	# since the available size was tested before, do not tolerate
++	# any failures
++	for i in `seq $fssize`; do
++		cp $SCRATCH_MNT/t0 $SCRATCH_MNT/t$i || _fail "cp failed"
++	done > /dev/null 2>> $seqres.full
+ 	sync; sync
+ 
+ 	btrfs_replace_test $source_dev $target_dev "" $with_cancel $quick
+@@ -214,7 +228,7 @@ btrfs_replace_test()
+ 		# before the status is printed
+ 		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+ 		cat $tmp.tmp >> $seqres.full
+-		grep -q canceled $tmp.tmp || _fail "btrfs replace status failed"
++		grep -q canceled $tmp.tmp || _fail "btrfs replace status (canceled) failed"
+ 	else
+ 		if [ "${quick}Q" = "thoroughQ" ]; then
+ 			# On current hardware, the thorough test runs
+@@ -226,7 +240,7 @@ btrfs_replace_test()
+ 
+ 		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+ 		cat $tmp.tmp >> $seqres.full
+-		grep -q finished $tmp.tmp || _fail "btrfs replace status failed"
++		grep -q finished $tmp.tmp || _fail "btrfs replace status (finished) failed"
+ 	fi
+ 
+ 	if ps -p $noise_pid | grep -q $noise_pid; then
+-- 
+1.8.4
 
 _______________________________________________
 xfs mailing list
