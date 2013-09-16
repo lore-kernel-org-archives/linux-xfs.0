@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4D02F7F3F
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 17:00:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 356568F80DF
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 15:00:41 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id P4dBiut92xxFEBHp for
-	<xfs@oss.sgi.com>; Mon, 16 Sep 2013 15:00:40 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8GM0dgw020353
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 18:00:39 -0400
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r8GM0b3R018660
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 18:00:39 -0400
-Message-ID: <52377F85.70104@redhat.com>
-Date: Mon, 16 Sep 2013 17:00:37 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id D84627F3F
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 17:04:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 344908F80DE
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 15:04:01 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id GNZvHhg6vqxjKZur for <xfs@oss.sgi.com>;
+	Mon, 16 Sep 2013 15:03:57 -0700 (PDT)
+Message-ID: <5237804C.3090502@sandeen.net>
+Date: Mon, 16 Sep 2013 17:03:56 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fix fsstress usage() output
+Subject: Re: xfsprogs: update version for 3.2.0-alpha1
+References: <20130916205637.GD1935@sgi.com>
+In-Reply-To: <20130916205637.GD1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,28 +27,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: rjohnston@sgi.com, xfs@oss.sgi.com
 
-The show_ops() output should come as part of the -f option
-help.
+On 9/16/13 3:56 PM, Ben Myers wrote:
+> xfsprogs: update version for 3.2.0-alpha1
+> 
+> Update the VERSION and doc/CHANGES file for alpha release, 3.2.0-alpha1
+> 
+> Signed-off-by: Ben Myers <bpm@sgi.com>
+> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Seems fine to me - let's give Dave a chance to chime in too.
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 711ea9a..ef7ecfe 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -1499,8 +1499,8 @@ usage(void)
- 	printf("   -e errtg         specifies error injection stuff\n");
- 	printf("   -f op_name=freq  changes the frequency of option name to freq\n");
- 	printf("                    the valid operation names are:\n");
--	printf("   -i filenum       get verbose output for this nth file object\n");
- 	show_ops(-1, "                        ");
-+	printf("   -i filenum       get verbose output for this nth file object\n");
- 	printf("   -m modulo        uid/gid modulo for chown/chgrp (default 32)\n");
- 	printf("   -n nops          specifies the no. of operations per process (default 1)\n");
- 	printf("   -p nproc         specifies the no. of processes (default 1)\n");
+Thanks,
+-Eric
+
+> ---
+>  VERSION      |    4 ++--
+>  configure.ac |    2 +-
+>  doc/CHANGES  |    4 ++++
+>  3 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> Index: b/VERSION
+> ===================================================================
+> --- a/VERSION	2013-09-16 15:50:29.544368912 -0500
+> +++ b/VERSION	2013-09-16 15:50:37.993732514 -0500
+> @@ -2,6 +2,6 @@
+>  # This file is used by configure to get version information
+>  #
+>  PKG_MAJOR=3
+> -PKG_MINOR=1
+> -PKG_REVISION=11
+> +PKG_MINOR=2
+> +PKG_REVISION=0-alpha1
+>  PKG_BUILD=1
+> Index: b/configure.ac
+> ===================================================================
+> --- a/configure.ac	2013-09-16 15:54:14.394338104 -0500
+> +++ b/configure.ac	2013-09-16 15:54:37.154377546 -0500
+> @@ -1,4 +1,4 @@
+> -AC_INIT([xfsprogs], [3.1.11])
+> +AC_INIT([xfsprogs], [3.2.0-alpha1])
+>  AC_PREREQ(2.50)
+>  AC_CONFIG_AUX_DIR([.])
+>  AC_CONFIG_MACRO_DIR([m4])
+> Index: b/doc/CHANGES
+> ===================================================================
+> --- a/doc/CHANGES	2013-09-16 15:50:13.683773140 -0500
+> +++ b/doc/CHANGES	2013-09-16 15:55:58.379446313 -0500
+> @@ -1,3 +1,7 @@
+> +xfsprogs-3.2.0-alpha1 (16 Sep 2013)
+> +	- Alpha release for the purpose of testing the CRC feature during the
+> +	  v3.12 kernel -rc series.
+> +
+>  xfsprogs-3.1.11 (8 May 2013)
+>  	- Support for relative paths in xfs_quota thanks to Satoru Takeuchi.
+>  	- mkfs.xfs will always go into multidisk mode when filesystem
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
