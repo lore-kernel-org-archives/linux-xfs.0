@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E0317F3F
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 18:20:48 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 341D07F4E
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 19:54:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 37DA48F8065
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 16:20:48 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2275C30404E
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 17:54:41 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 0Wn0moQDVDTz8nKL for <xfs@oss.sgi.com>;
-	Mon, 16 Sep 2013 16:20:47 -0700 (PDT)
-Message-ID: <5237924B.4030304@sandeen.net>
-Date: Mon, 16 Sep 2013 18:20:43 -0500
+	ESMTP id u1fnYcJx0ABadGGv for <xfs@oss.sgi.com>;
+	Mon, 16 Sep 2013 17:54:40 -0700 (PDT)
+Message-ID: <5237A84E.2010404@sandeen.net>
+Date: Mon, 16 Sep 2013 19:54:38 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [PATCH, RFC] xfstests: add d_type checking to fsstress
@@ -43,22 +43,13 @@ On 9/16/13 5:55 PM, Dave Chinner wrote:
 > userspace interface. I can't think of why we'd want to consider it
 > invalid, especially as right now xfs_repair siply zeros the field
 > when recreating directory entries...
-
-well, I didn't know that last part.  (but why do that?)
-
-I was thinking along the lines of DT_UNKNOWN returns meaning
-"this fs doesn't support d_type."
-
-"If the file type could not be determined, the value DT_UNKNOWN is returned in d_type."
-
-What d_type-grokking fs can't determine its file types?
-
--Eric
-
+> 
 > Cheers,
 > 
 > Dave.
-> 
+
+ no fair signing off w/ more text below ;)
+
 >> +void test_d_type(int opno, pathname_t *f, struct dirent64 *de)
 >> +{
 >> +	struct stat64 sb;
@@ -72,7 +63,10 @@ What d_type-grokking fs can't determine its file types?
 > 
 > . and .. should have the values of DT_UNKNOWN or DT_DIR. They are
 > the only valid values for these entries.
-> 
+
+Hm let me look at something, I saw something that prompted this
+but now that I think about it maybe it's a bug.
+
 >> +
 >> +	if (lstat64(path, &sb)) {
 >> +		printf("%d/%d: getdents - can't stat %s\n",
@@ -116,9 +110,18 @@ What d_type-grokking fs can't determine its file types?
 >> +		}
 > 
 > And DT_WHT? That's defined on disk and in the user interface ;)
-> 
+
+but fsstress won't create it, will it?
+ 
 > i.e. this will not do the right thing with an unknown de->d_type.
-> 
+
+... but we know what fsstress can possibly create, right, so testing
+those created types should be safe, I'd think.
+
+I'll give this some thought & send V2.
+
+-Eric
+
 > Cheers,
 > 
 > Dave.
