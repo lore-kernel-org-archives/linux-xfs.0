@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8BAAE7F55
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 15:03:06 -0500 (CDT)
-Message-ID: <5238B576.7080608@sgi.com>
-Date: Tue, 17 Sep 2013 15:03:02 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3153B7F5A
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 15:41:11 -0500 (CDT)
+Message-ID: <5238BE63.8000405@sgi.com>
+Date: Tue, 17 Sep 2013 15:41:07 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: v2 xfs directory unbalance assert test
-References: <20130917192538.230164044@sgi.com> <5238AF75.2020905@sandeen.net>
-In-Reply-To: <5238AF75.2020905@sandeen.net>
+Subject: Re: [PATCH] xfstests: check for valid input to _scratch_mkfs_sized
+References: <5238ADE1.5050204@redhat.com>
+In-Reply-To: <5238ADE1.5050204@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,42 +21,19 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 09/17/13 14:37, Eric Sandeen wrote:
-> On 9/17/13 2:25 PM, Mark Tinguely wrote:
->> This tests triggers an assert in the XFS directory unbalance code.
->> This test originally written by Brian Foster and suggestions
->> from Micheal Semon.
->>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->> ---
->> v1->v2:
->>   remove clean up.
->>   remove $seqres.full before test.
->>   remove scratch mount.
->>   11g ->  calculate 11g bytes.
->>   check for failing mkfs and mount.
->>   add a safer removal of the scratch files.
->>
->>   put into auto group and "long" group so people can opt out:
->>    this test almost an hour on my test box.
+On 09/17/13 14:30, Eric Sandeen wrote:
+> _scratch_mkfs_sized requires an integer number of bytes
+> as input; if it's given something else, catch it and _notrun.
 >
-> Is there any way to do a more targeted test than 1hr of fsstress?  :(
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
 
-No, I pruned the test down from a 5 hr test to 1 hr test.
+Ah, the "don't do what Mark did" patch.
 
->
-> (TBH I didn't follow the bug, so not sure what it takes to repro)
->
-> Otherwise seems fine.
->
-> Reviewed-by: Eric Sandeen<sandeen@redhat.com>
-
-Thanks.
-
---Mark.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
