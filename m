@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9D917F50
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 09:46:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 47EE4AC003
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 07:46:19 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id LlHKCTDvkeQbTQk1 for <xfs@oss.sgi.com>;
-	Tue, 17 Sep 2013 07:46:17 -0700 (PDT)
-Message-ID: <52386B37.4060108@sandeen.net>
-Date: Tue, 17 Sep 2013 09:46:15 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] [RFC] xfs: increase inode cluster size for v5 filesystems
-References: <1378715664-19969-1-git-send-email-david@fromorbit.com>
-	<20130909133254.GA14778@infradead.org>
-	<20130909153546.GT12779@dastard>
-	<20130911162159.GA29319@infradead.org>
-	<20130917010449.GH19103@dastard>
-In-Reply-To: <20130917010449.GH19103@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2DEA07F52
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 09:48:36 -0500 (CDT)
+Received: from eagdhcp-232-140.americas.sgi.com
+	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0ED6D8F8065
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 07:48:35 -0700 (PDT)
+Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r8HEmZmM002782
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 09:48:35 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
+Message-Id: <20130917144733.819109222@sgi.com>
+Date: Tue, 17 Sep 2013 09:47:22 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfs: add the inode directory type support to XFS_IOC_FSGEOM
+References: <20130917144721.917667018@sgi.com>
+Content-Disposition: inline; filename=xfs-add-ftype-geo.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,86 +25,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 9/16/13 8:04 PM, Dave Chinner wrote:
-> On Wed, Sep 11, 2013 at 09:21:59AM -0700, Christoph Hellwig wrote:
->> On Tue, Sep 10, 2013 at 01:35:47AM +1000, Dave Chinner wrote:
->>> The test matrix of having to test everything on v4 and v5 is just
->>> nasty, especially if we are talking about prototyping code. I'd much
->>> prefer to bring things to v5 filesytsems where we have much lower
->>> exposure and risk of corruption problems, and then when we know it's
->>> solid because of the QA we've done on it, then we can expose the
->>> majority of the XFS userbase to it by bringing it back to v4
->>> filesystems.
->>
->> I think the test matrix is a reason for not enabling this only on v5
->> filesystems. 
-> 
-> You're assuming that someone is doing lots of QA on v4 filesystems.
-> Most of my attention is focussed on v5 filesystems and compared to
-> the amount of v5 QA I'm doing, there is very little v4 QA. All my
-> development and prototyping is being done on v5 filesystems, and the
-> code I post indicates that.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ fs/xfs/xfs_fs.h    |   32 ++++++++++++++++----------------
+ fs/xfs/xfs_fsops.c |    4 +++-
+ 2 files changed, 19 insertions(+), 17 deletions(-)
 
-Red Hat QE is doing quite a lot of testing of V4 at this point, although
-not on totally bleeding-edge kernels.
+Index: b/fs/xfs/xfs_fs.h
+===================================================================
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -222,22 +222,22 @@ typedef struct xfs_fsop_resblks {
+ 
+ #define XFS_FSOP_GEOM_VERSION	0
+ 
+-#define XFS_FSOP_GEOM_FLAGS_ATTR	0x0001	/* attributes in use	*/
+-#define XFS_FSOP_GEOM_FLAGS_NLINK	0x0002	/* 32-bit nlink values	*/
+-#define XFS_FSOP_GEOM_FLAGS_QUOTA	0x0004	/* quotas enabled	*/
+-#define XFS_FSOP_GEOM_FLAGS_IALIGN	0x0008	/* inode alignment	*/
+-#define XFS_FSOP_GEOM_FLAGS_DALIGN	0x0010	/* large data alignment */
+-#define XFS_FSOP_GEOM_FLAGS_SHARED	0x0020	/* read-only shared	*/
+-#define XFS_FSOP_GEOM_FLAGS_EXTFLG	0x0040	/* special extent flag	*/
+-#define XFS_FSOP_GEOM_FLAGS_DIRV2	0x0080	/* directory version 2	*/
+-#define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+-#define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+-#define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
+-#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
+-#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+-#define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+-#define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
+-
++#define XFS_FSOP_GEOM_FLAGS_ATTR	0x00001	/* attributes in use	*/
++#define XFS_FSOP_GEOM_FLAGS_NLINK	0x00002	/* 32-bit nlink values	*/
++#define XFS_FSOP_GEOM_FLAGS_QUOTA	0x00004	/* quotas enabled	*/
++#define XFS_FSOP_GEOM_FLAGS_IALIGN	0x00008	/* inode alignment	*/
++#define XFS_FSOP_GEOM_FLAGS_DALIGN	0x00010	/* large data alignment */
++#define XFS_FSOP_GEOM_FLAGS_SHARED	0x00020	/* read-only shared	*/
++#define XFS_FSOP_GEOM_FLAGS_EXTFLG	0x00040	/* special extent flag	*/
++#define XFS_FSOP_GEOM_FLAGS_DIRV2	0x00080	/* directory version 2	*/
++#define XFS_FSOP_GEOM_FLAGS_LOGV2	0x00100	/* log format version 2	*/
++#define XFS_FSOP_GEOM_FLAGS_SECTOR	0x00200	/* sector sizes >1BB	*/
++#define XFS_FSOP_GEOM_FLAGS_ATTR2	0x00400	/* inline attributes rework */
++#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x00800 /* 32-bit project IDs	*/
++#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x01000	/* ASCII only CI names	*/
++#define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x04000	/* lazy superblock counters */
++#define XFS_FSOP_GEOM_FLAGS_V5SB	0x08000	/* version 5 superblock */
++#define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
+ 
+ /*
+  * Minimum and maximum sizes need for growth checks.
+Index: b/fs/xfs/xfs_fsops.c
+===================================================================
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -101,7 +101,9 @@ xfs_fs_geometry(
+ 			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
+ 				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
+ 			(xfs_sb_version_hascrc(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_V5SB : 0);
++				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
++			(xfs_sb_version_hasftype(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_FTYPE : 0);
+ 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+ 				mp->m_sb.sb_logsectsize : BBSIZE;
+ 		geo->rtsectsize = mp->m_sb.sb_blocksize;
 
-> I'm not about to propose new features for v4 filesystems if I
-> haven't tested them robustly. And, in many cases, the new features
-> I'm proposing require a new filesystem to be made (like this one
-> does because of the inode alignment requirement) and userspace tool
-> support, and so it's going to be months (maybe a year) before
-> userspace support is in the hands of distro-based users.
-> 
-> People testing v5 filesystems right now are handrolling their
-> userspace code, and so they are following the bleeding edge of both
-> user and kernel space development. They are not using the bleeding
-> edge to test new v4 filesystem features. 
-> 
-> Given this, it makes sense to roll the v5 code first, then a
-> kernel release or 2 later roll in the v4 support once the v5 code
-> has been exposed and we've flushed out the problems. It minimises
-> our exposure to filesystem corruption issues, it gets the code into
-> the hands of early adopters and testers quickly, and it gets rolled
-> back into v4 filesystems in the same timeframe as distros will be
-> picking up the feature in v5 filesystems for the first time.
-> 
-> Nobody has yet given a technical reason why such a careful, staged
-> approach to new feature rollout for v4 filesystems is untenable. All
-> I'm hearing is people shouting at me for not bringing new features
-> to v4 filesystems.  Indeed, my reasons and plans to bring the
-> features to v4 in the near future are being completely ignored to
-> the point of recklessness...
-
-That sounds perfectly reasonable to me; from your original RFC
-it wasn't clear to me that that was the plan (stage it & roll it out
-for V4 later).
-
->> Large inodes are an old and supported use case, although
->> probably not as heavily tested as it should.  By introducing two
->> different large inode cases we don't really help increasing test
->> coverage for a code path that is the same for v4 and v5.
-> 
-> I think you've got it wrong - 512 byte inodes have not been
-> regularly or heavily tested until we introduced v5 filesystems.
-
-Gluster users have been advised to use 512-byte inodes for quite
-some time, actually.
-(http://www.gluster.org/community/documentation/index.php/QuickStart)
-
-So there is some real-world coverage, and presumably QE as well.
-
-I understand your valid concerns (snipped below as well) but let's not
-overstate the case either; V4 and 512-byte are both seeing some coverage
-even today.
-
--Eric
 
 _______________________________________________
 xfs mailing list
