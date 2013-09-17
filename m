@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4FD1D7F51
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 20:44:40 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8B2C17F59
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 20:44:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E1EB8F8050
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 18:44:40 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2966DAC004
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 18:44:39 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	aiTWAq2rQrRn4VtJ for <xfs@oss.sgi.com>;
-	Mon, 16 Sep 2013 18:44:38 -0700 (PDT)
+	8lO0dmwYIwResCMT for <xfs@oss.sgi.com>;
+	Mon, 16 Sep 2013 18:44:37 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VLkLB-00069l-OJ
+	(envelope-from <dave@fromorbit.com>) id 1VLkLB-00069k-Nf
 	for xfs@oss.sgi.com; Tue, 17 Sep 2013 11:44:33 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VLkLB-0007pG-Ne
+	(envelope-from <dave@disappointment.disaster>) id 1VLkLB-0007pB-N4
 	for xfs@oss.sgi.com; Tue, 17 Sep 2013 11:44:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: asserting lock not held during freeing not valid
-Date: Tue, 17 Sep 2013 11:44:31 +1000
-Message-Id: <1379382271-29907-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: lock the AIL before removing the buffer item
+Date: Tue, 17 Sep 2013 11:44:30 +1000
+Message-Id: <1379382271-29907-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1379382271-29907-1-git-send-email-david@fromorbit.com>
 References: <1379382271-29907-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,49 +39,27 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we free an inode, we do so via RCU. As an RCU lookup can occur
-at any time before we free an inode, and that lookup takes the inode
-flags lock, we cannot safely assert that the flags lock is not held
-just before marking it dead and running call_rcu() to free the
-inode.
-
-We check on allocation of a new inode structre that the lock is not
-held, so we still have protection against locks being leaked and
-hence not correctly initialised when allocated out of the slab.
-Hence just remove the assert...
+Regression introduced by commit 46f9d2e ("xfs: aborted buf items can
+be in the AIL") which fails to lock the AIL before removing the
+item. Spinlock debugging throws a warning about this.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_buf_item.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 193206b..474807a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -119,11 +119,6 @@ xfs_inode_free(
- 		ip->i_itemp = NULL;
- 	}
- 
--	/* asserts to verify all state is correct here */
--	ASSERT(atomic_read(&ip->i_pincount) == 0);
--	ASSERT(!spin_is_locked(&ip->i_flags_lock));
--	ASSERT(!xfs_isiflocked(ip));
--
- 	/*
- 	 * Because we use RCU freeing we need to ensure the inode always
- 	 * appears to be reclaimed with an invalid inode number when in the
-@@ -135,6 +130,10 @@ xfs_inode_free(
- 	ip->i_ino = 0;
- 	spin_unlock(&ip->i_flags_lock);
- 
-+	/* asserts to verify all state is correct here */
-+	ASSERT(atomic_read(&ip->i_pincount) == 0);
-+	ASSERT(!xfs_isiflocked(ip));
-+
- 	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
- }
- 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 88c5ea7..f1d85cf 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -628,6 +628,7 @@ xfs_buf_item_unlock(
+ 		else if (aborted) {
+ 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+ 			if (lip->li_flags & XFS_LI_IN_AIL) {
++				spin_lock(&lip->li_ailp->xa_lock);
+ 				xfs_trans_ail_delete(lip->li_ailp, lip,
+ 						     SHUTDOWN_LOG_IO_ERROR);
+ 			}
 -- 
 1.8.3.2
 
