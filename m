@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3D1E77F54
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 10:14:14 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1D0C37F52
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 10:29:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C158FAC004
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 08:14:13 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id BruiHSiRD0nTfCyh for <xfs@oss.sgi.com>;
-	Tue, 17 Sep 2013 08:14:12 -0700 (PDT)
-Message-ID: <523871C2.5010704@sandeen.net>
-Date: Tue, 17 Sep 2013 10:14:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E835E8F8033
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 08:29:00 -0700 (PDT)
+Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
+	[209.85.220.43]) by cuda.sgi.com with ESMTP id XOp8yikHp6z7bTod
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 17 Sep 2013 08:28:59 -0700 (PDT)
+Received: by mail-pa0-f43.google.com with SMTP id hz10so6959931pad.16
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 08:28:59 -0700 (PDT)
+Date: Tue, 17 Sep 2013 23:28:52 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] xfstests: xfs directory unbalance assert test
+Message-ID: <20130917152852.GA9550@dhcp-13-216.nay.redhat.com>
+References: <20130917145946.124195107@sgi.com>
+	<20130917145959.333796933@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 10/55] libxfs: sync dir2 kernel differences
-References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
-	<1378332359-14737-11-git-send-email-david@fromorbit.com>
-In-Reply-To: <1378332359-14737-11-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <20130917145959.333796933@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,80 +32,124 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 9/4/13 5:05 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Sep 17, 2013 at 09:59:47AM -0500, Mark Tinguely wrote:
+> This tests triggers an assert in the XFS directory unbalance code.
+> This test originally written by Brian Foster and suggestions
+> from Micheal Semon.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
 > ---
->  libxfs/xfs_dir2.c      | 45 +++++++++++++++++++++++++++++++++++++++++++++
->  libxfs/xfs_dir2_data.c | 20 ++++++++++----------
->  libxfs/xfs_dir2_leaf.c |  4 ++--
->  libxfs/xfs_dir2_node.c | 26 ++++++++++++--------------
->  4 files changed, 69 insertions(+), 26 deletions(-)
+>  tests/generic/319     |   62 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/319.out |    2 +
+>  tests/generic/group   |    1 
+>  3 files changed, 65 insertions(+)
 > 
-> diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-> index 6a4027f..830fe3e 100644
-> --- a/libxfs/xfs_dir2.c
-> +++ b/libxfs/xfs_dir2.c
-> @@ -392,6 +392,51 @@ xfs_dir_replace(
->  }
->  
->  /*
-> + * See if this entry can be added to the directory without allocating space.
-> + * First checks that the caller couldn't reserve enough space (resblks = 0).
-> + */
-> +int
-> +xfs_dir_canenter(
+> Index: b/tests/generic/319
+> ===================================================================
+> --- /dev/null
+> +++ b/tests/generic/319
+> @@ -0,0 +1,62 @@
+> +#! /bin/bash
+> +# FS QA Test No. 319
+> +#
+> +# Test directory code correctly handles fsstress filling the filesystem
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 SGI.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +_require_scratch
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs generic
+> +_supported_os IRIX Linux
+> +
+> +_scratch_unmount > /dev/null 2>&1
 
-Retroactive, post-merge question.  :)  This function isn't used in userspace,
-AFAICT.  What's the intended libxfs philosophy - keep files as identical to
-kernelspace as possible, used code or not, or remove things which aren't used
-in userspace?
+This is not necessary, _require_scratch has done the unmount work.
+
+> +_scratch_mkfs_sized 11g >> $seqres.full 2>&1
+
+_scratch_mkfs_sized expects fssize in bytes, 11g is not a valid value
+The comments in common/rc about _scratch_mkfs_sized say
+
+# _scratch_mkfs_sized <size in bytes> [optional blocksize]
+
+> +_scratch_mount > /dev/null 2>&1
+> +
+> +# Fill the filesystem.
+> +FSSTRESS_ARGS="-z -s 1378390208 -fsymlink=1 -n7500000 -p4 -d $SCRATCH_MNT"
+> +$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1
+> +
+> +cd $SCRATCH_MNT >> $seqres.full 2>&1
+> +sync
+> +# A debug XFS may assert in the remove due to a directory bug.
+> +rm -rf *
+> +echo "--- silence is golden ---"
+> +status=0
+> +exit
+> Index: b/tests/generic/319.out
+> ===================================================================
+> --- /dev/null
+> +++ b/tests/generic/319.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 319
+> +--- silence is golden ---
+> Index: b/tests/generic/group
+> ===================================================================
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -121,3 +121,4 @@
+>  316 auto quick
+>  317 auto metadata quick
+>  318 acl attr auto quick
+> +319 stress
+
+Should be in auto group too I guess.
 
 Thanks,
--Eric
-
-> +	xfs_trans_t	*tp,
-> +	xfs_inode_t	*dp,
-> +	struct xfs_name	*name,		/* name of entry to add */
-> +	uint		resblks)
-> +{
-> +	xfs_da_args_t	args;
-> +	int		rval;
-> +	int		v;		/* type-checking value */
-> +
-> +	if (resblks)
-> +		return 0;
-> +
-> +	ASSERT(S_ISDIR(dp->i_d.di_mode));
-> +
-> +	memset(&args, 0, sizeof(xfs_da_args_t));
-> +	args.name = name->name;
-> +	args.namelen = name->len;
-> +	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
-> +	args.dp = dp;
-> +	args.whichfork = XFS_DATA_FORK;
-> +	args.trans = tp;
-> +	args.op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
-> +							XFS_DA_OP_OKNOENT;
-> +
-> +	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-> +		rval = xfs_dir2_sf_addname(&args);
-> +	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-> +		return rval;
-> +	else if (v)
-> +		rval = xfs_dir2_block_addname(&args);
-> +	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-> +		return rval;
-> +	else if (v)
-> +		rval = xfs_dir2_leaf_addname(&args);
-> +	else
-> +		rval = xfs_dir2_node_addname(&args);
-> +	return rval;
-> +}
+Eryu Guan
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
