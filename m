@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 341D07F4E
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 19:54:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2275C30404E
-	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 17:54:41 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id u1fnYcJx0ABadGGv for <xfs@oss.sgi.com>;
-	Mon, 16 Sep 2013 17:54:40 -0700 (PDT)
-Message-ID: <5237A84E.2010404@sandeen.net>
-Date: Mon, 16 Sep 2013 19:54:38 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4C1357F4E
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 20:05:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1D9998F8064
+	for <xfs@oss.sgi.com>; Mon, 16 Sep 2013 18:04:58 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	aYIYvIIG1WGSh49x for <xfs@oss.sgi.com>;
+	Mon, 16 Sep 2013 18:04:56 -0700 (PDT)
+Date: Tue, 17 Sep 2013 11:04:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] xfs: increase inode cluster size for v5 filesystems
+Message-ID: <20130917010449.GH19103@dastard>
+References: <1378715664-19969-1-git-send-email-david@fromorbit.com>
+	<20130909133254.GA14778@infradead.org>
+	<20130909153546.GT12779@dastard>
+	<20130911162159.GA29319@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] xfstests: add d_type checking to fsstress
-References: <52377E50.3040907@redhat.com> <20130916225550.GG19103@dastard>
-In-Reply-To: <20130916225550.GG19103@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130911162159.GA29319@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,105 +32,128 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 9/16/13 5:55 PM, Dave Chinner wrote:
-> On Mon, Sep 16, 2013 at 04:55:28PM -0500, Eric Sandeen wrote:
->> This patch adds a "-D" switch to fsstress so that every time
->> we call readdir, we stat the dentry & compare it's st_mode
->> to the d_type.
->>
->> If -D is specified only once, it ignores DT_UNKNOWN.  If specified
->> twice, it considers DT_UNKNOWN to be an error.
+On Wed, Sep 11, 2013 at 09:21:59AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 10, 2013 at 01:35:47AM +1000, Dave Chinner wrote:
+> > The test matrix of having to test everything on v4 and v5 is just
+> > nasty, especially if we are talking about prototyping code. I'd much
+> > prefer to bring things to v5 filesytsems where we have much lower
+> > exposure and risk of corruption problems, and then when we know it's
+> > solid because of the QA we've done on it, then we can expose the
+> > majority of the XFS userbase to it by bringing it back to v4
+> > filesystems.
 > 
-> Hmmmm. DT_UNKNOWN is actually a valid type on disk right through to the
-> userspace interface. I can't think of why we'd want to consider it
-> invalid, especially as right now xfs_repair siply zeros the field
-> when recreating directory entries...
-> 
-> Cheers,
-> 
-> Dave.
+> I think the test matrix is a reason for not enabling this only on v5
+> filesystems. 
 
- no fair signing off w/ more text below ;)
+You're assuming that someone is doing lots of QA on v4 filesystems.
+Most of my attention is focussed on v5 filesystems and compared to
+the amount of v5 QA I'm doing, there is very little v4 QA. All my
+development and prototyping is being done on v5 filesystems, and the
+code I post indicates that.
 
->> +void test_d_type(int opno, pathname_t *f, struct dirent64 *de)
->> +{
->> +	struct stat64 sb;
->> +	char path[PATH_MAX];
->> +
->> +	snprintf(path, PATH_MAX, "%s/%s", f->path, de->d_name);
->> +
->> +	/* Don't check ./. or ./.. */
->> +	if (!strncmp(path, "./.", 3))
->> +		return;
-> 
-> . and .. should have the values of DT_UNKNOWN or DT_DIR. They are
-> the only valid values for these entries.
+I'm not about to propose new features for v4 filesystems if I
+haven't tested them robustly. And, in many cases, the new features
+I'm proposing require a new filesystem to be made (like this one
+does because of the inode alignment requirement) and userspace tool
+support, and so it's going to be months (maybe a year) before
+userspace support is in the hands of distro-based users.
 
-Hm let me look at something, I saw something that prompted this
-but now that I think about it maybe it's a bug.
+People testing v5 filesystems right now are handrolling their
+userspace code, and so they are following the bleeding edge of both
+user and kernel space development. They are not using the bleeding
+edge to test new v4 filesystem features. 
 
->> +
->> +	if (lstat64(path, &sb)) {
->> +		printf("%d/%d: getdents - can't stat %s\n",
->> +			procid, opno, path);
->> +	} else {
->> +		int bad_d_type = 0;
->> +
->> +		switch (de->d_type) {
->> +			case DT_BLK:
->> +				if (!S_ISBLK(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_CHR:
->> +				if (!S_ISCHR(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_DIR:
->> +				if (!S_ISDIR(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_FIFO:
->> +				if (!S_ISFIFO(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_LNK:
->> +				if (!S_ISLNK(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_REG:
->> +				if (!S_ISREG(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_SOCK:
->> +				if (!S_ISSOCK(sb.st_mode))
->> +					bad_d_type++;
->> +				break;
->> +			case DT_UNKNOWN:
->> +				if (verify_d_type > 1)
->> +					bad_d_type++;
->> +			break;
->> +		}
-> 
-> And DT_WHT? That's defined on disk and in the user interface ;)
+Given this, it makes sense to roll the v5 code first, then a
+kernel release or 2 later roll in the v4 support once the v5 code
+has been exposed and we've flushed out the problems. It minimises
+our exposure to filesystem corruption issues, it gets the code into
+the hands of early adopters and testers quickly, and it gets rolled
+back into v4 filesystems in the same timeframe as distros will be
+picking up the feature in v5 filesystems for the first time.
 
-but fsstress won't create it, will it?
- 
-> i.e. this will not do the right thing with an unknown de->d_type.
+Nobody has yet given a technical reason why such a careful, staged
+approach to new feature rollout for v4 filesystems is untenable. All
+I'm hearing is people shouting at me for not bringing new features
+to v4 filesystems.  Indeed, my reasons and plans to bring the
+features to v4 in the near future are being completely ignored to
+the point of recklessness...
 
-... but we know what fsstress can possibly create, right, so testing
-those created types should be safe, I'd think.
+> Large inodes are an old and supported use case, although
+> probably not as heavily tested as it should.  By introducing two
+> different large inode cases we don't really help increasing test
+> coverage for a code path that is the same for v4 and v5.
 
-I'll give this some thought & send V2.
+I think you've got it wrong - 512 byte inodes have not been
+regularly or heavily tested until we introduced v5 filesystems. Now
+they are getting tested all the time on v5 filesystems, but AFAICT
+there's only one person other than me regularly testing v5
+filesystems and reporting bugs (Michael Semon).  Hence, AFAICT there
+is very little ongoing test coverage of large inodes on v4
+filesystems, and so the expansion of the test matrix to cover large
+inodes on v4 filesystem is a very relevant concern.
 
--Eric
+We will be enabling both d_type and large inode clusters on v5
+filesystems at all times - they won't be optional features. Hence
+test matrix is simple - enable v5, all new features are enabled and
+are tested.
 
-> Cheers,
-> 
-> Dave.
-> 
+However, for v4 filesystems, we've now got default v4, v4 X dtype,
+v4 X dtype X 512 byte inodes, v4 X dtype X 512 byte inodes X inode
+alignment (i.e. forwards and backwards compatibility of large inode
+cluster configs on old 8k cluster kernels) and finally v4 X dtype X
+512 byte inodes X inode alignment X large clusters.
+
+IOWs, every change we make for v4 filesystems adds another
+*optional* dimension to the v4 filesystem test matrix. Such an
+explosion of feature configurations is not sustainable or
+maintainable - ext4 has proven that beyond a doubt.  We have to
+consider the cross multiplication of the optional v4 feature matrix,
+and consider that everything needs to work correctly for all the
+different combinations that can be made.
+
+So, code paths might be shared between v4 and v5 filesystems, but we
+don't have an optional feature matrix on v5 (yet), nor do we have
+concerns about backwards and forwards compatibility, and so adding
+new features to v5 filesystems has a far, far lower testing and QA
+burden than adding a new feature to a v4 filesystem.
+
+As I've repeatedly said, if someone wants to do all the v4
+validation work I've mentioned above faster than I can do it, then
+they can provide the patches for the v4 support in kernel and
+userspace and all the tests needed to validate it on v4 filesystems.
+
+[ And even then, the v4 dtype fiasco shows that some people have a
+major misunderstanding of what is necessary to enable a feature on a
+v4 filesystem. I'm still waiting for all the missing bits I
+mentioned in my review of the patch to add the feature bit that were
+ignored. e.g. the XFS_IOC_FSGEOM support for the feature bit, the
+changes to xfs_info to emit that it's enabled, mkfs to emit that
+it's enabled, xfs_db support for the field on v4 filesystems, etc.
+
+IOWs, there is still a significant amount missing from the v4 dtype
+support and so, again, I have little confidence that such things
+will get done properly until I get around to doing them. I'll be be
+pleasently surprised if the patches appear before I write them (the
+kernel XFS_IOC_FSGEOM support needs to be in before 3.12 releases),
+but I fear that I'm going to be forced to write them soon.... ]
+
+> That being said as long as you're still prototyping I'm not going to
+> interfere.
+
+Until I see other people pro-actively fixing regressions, I don't
+see that there is any scope for changing my approach. Right now the
+only person I can really rely on to proactively fix problems is
+myself, and I have limited time and resources...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
