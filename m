@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2DEA07F52
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 09:48:36 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 44A827F52
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 10:01:20 -0500 (CDT)
 Received: from eagdhcp-232-140.americas.sgi.com
 	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0ED6D8F8065
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 07:48:35 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CC81CAC003
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 08:01:16 -0700 (PDT)
 Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r8HEmZmM002782
-	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 09:48:35 -0500 (CDT)
+	r8HF1G3e003212
+	for <xfs@oss.sgi.com>; Tue, 17 Sep 2013 10:01:16 -0500 (CDT)
 	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
-Message-Id: <20130917144733.819109222@sgi.com>
-Date: Tue, 17 Sep 2013 09:47:22 -0500
+Message-Id: <20130917145959.333796933@sgi.com>
+Date: Tue, 17 Sep 2013 09:59:47 -0500
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: add the inode directory type support to XFS_IOC_FSGEOM
-References: <20130917144721.917667018@sgi.com>
-Content-Disposition: inline; filename=xfs-add-ftype-geo.patch
+Subject: [PATCH] xfstests: xfs directory unbalance assert test
+References: <20130917145946.124195107@sgi.com>
+Content-Disposition: inline; filename=xfstests-fill-directory.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,70 +32,100 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- fs/xfs/xfs_fs.h    |   32 ++++++++++++++++----------------
- fs/xfs/xfs_fsops.c |    4 +++-
- 2 files changed, 19 insertions(+), 17 deletions(-)
+This tests triggers an assert in the XFS directory unbalance code.
+This test originally written by Brian Foster and suggestions
+from Micheal Semon.
 
-Index: b/fs/xfs/xfs_fs.h
+Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
+---
+ tests/generic/319     |   62 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/319.out |    2 +
+ tests/generic/group   |    1 
+ 3 files changed, 65 insertions(+)
+
+Index: b/tests/generic/319
 ===================================================================
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -222,22 +222,22 @@ typedef struct xfs_fsop_resblks {
- 
- #define XFS_FSOP_GEOM_VERSION	0
- 
--#define XFS_FSOP_GEOM_FLAGS_ATTR	0x0001	/* attributes in use	*/
--#define XFS_FSOP_GEOM_FLAGS_NLINK	0x0002	/* 32-bit nlink values	*/
--#define XFS_FSOP_GEOM_FLAGS_QUOTA	0x0004	/* quotas enabled	*/
--#define XFS_FSOP_GEOM_FLAGS_IALIGN	0x0008	/* inode alignment	*/
--#define XFS_FSOP_GEOM_FLAGS_DALIGN	0x0010	/* large data alignment */
--#define XFS_FSOP_GEOM_FLAGS_SHARED	0x0020	/* read-only shared	*/
--#define XFS_FSOP_GEOM_FLAGS_EXTFLG	0x0040	/* special extent flag	*/
--#define XFS_FSOP_GEOM_FLAGS_DIRV2	0x0080	/* directory version 2	*/
--#define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
--#define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
--#define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
--#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
--#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
--#define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
--#define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
--
-+#define XFS_FSOP_GEOM_FLAGS_ATTR	0x00001	/* attributes in use	*/
-+#define XFS_FSOP_GEOM_FLAGS_NLINK	0x00002	/* 32-bit nlink values	*/
-+#define XFS_FSOP_GEOM_FLAGS_QUOTA	0x00004	/* quotas enabled	*/
-+#define XFS_FSOP_GEOM_FLAGS_IALIGN	0x00008	/* inode alignment	*/
-+#define XFS_FSOP_GEOM_FLAGS_DALIGN	0x00010	/* large data alignment */
-+#define XFS_FSOP_GEOM_FLAGS_SHARED	0x00020	/* read-only shared	*/
-+#define XFS_FSOP_GEOM_FLAGS_EXTFLG	0x00040	/* special extent flag	*/
-+#define XFS_FSOP_GEOM_FLAGS_DIRV2	0x00080	/* directory version 2	*/
-+#define XFS_FSOP_GEOM_FLAGS_LOGV2	0x00100	/* log format version 2	*/
-+#define XFS_FSOP_GEOM_FLAGS_SECTOR	0x00200	/* sector sizes >1BB	*/
-+#define XFS_FSOP_GEOM_FLAGS_ATTR2	0x00400	/* inline attributes rework */
-+#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x00800 /* 32-bit project IDs	*/
-+#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x01000	/* ASCII only CI names	*/
-+#define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x04000	/* lazy superblock counters */
-+#define XFS_FSOP_GEOM_FLAGS_V5SB	0x08000	/* version 5 superblock */
-+#define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-Index: b/fs/xfs/xfs_fsops.c
+--- /dev/null
++++ b/tests/generic/319
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 319
++#
++# Test directory code correctly handles fsstress filling the filesystem
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++_require_scratch
++
++# real QA test starts here
++
++_supported_fs generic
++_supported_os IRIX Linux
++
++_scratch_unmount > /dev/null 2>&1
++_scratch_mkfs_sized 11g >> $seqres.full 2>&1
++_scratch_mount > /dev/null 2>&1
++
++# Fill the filesystem.
++FSSTRESS_ARGS="-z -s 1378390208 -fsymlink=1 -n7500000 -p4 -d $SCRATCH_MNT"
++$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1
++
++cd $SCRATCH_MNT >> $seqres.full 2>&1
++sync
++# A debug XFS may assert in the remove due to a directory bug.
++rm -rf *
++echo "--- silence is golden ---"
++status=0
++exit
+Index: b/tests/generic/319.out
 ===================================================================
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -101,7 +101,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
- 			(xfs_sb_version_hascrc(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_V5SB : 0);
-+				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
-+			(xfs_sb_version_hasftype(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_FTYPE : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
+--- /dev/null
++++ b/tests/generic/319.out
+@@ -0,0 +1,2 @@
++QA output created by 319
++--- silence is golden ---
+Index: b/tests/generic/group
+===================================================================
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -121,3 +121,4 @@
+ 316 auto quick
+ 317 auto metadata quick
+ 318 acl attr auto quick
++319 stress
 
 
 _______________________________________________
