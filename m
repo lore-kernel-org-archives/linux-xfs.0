@@ -1,32 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E75497F37
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 13:19:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BD7488F8039
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 11:19:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TXH3mprM3GDcS5Ch for
-	<xfs@oss.sgi.com>; Wed, 18 Sep 2013 11:19:47 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8IIJkqp014547
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 14:19:46 -0400
-Received: from laptop.bfoster (vpn-51-254.rdu2.redhat.com [10.10.51.254])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r8IIA7LW016565
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 14:10:08 -0400
-Message-ID: <5239EBA2.4070207@redhat.com>
-Date: Wed, 18 Sep 2013 14:06:26 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 70A217F37
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Sep 2013 13:48:44 -0500 (CDT)
+Message-ID: <5239F588.5060907@sgi.com>
+Date: Wed, 18 Sep 2013 13:48:40 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: push down inactive transaction mgmt for remote
-	symlinks
-References: <1379520960-22972-1-git-send-email-bfoster@redhat.com>
-	<1379520960-22972-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1379520960-22972-2-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH V3] xfs_repair: test for bad level in dir2 node
+References: <52274F96.2010702@sandeen.net> <52322A84.1030007@sandeen.net>
+In-Reply-To: <52322A84.1030007@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,87 +17,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On 09/18/2013 12:15 PM, Brian Foster wrote:
-> Push down the transaction management for remote symlinks from
-> xfs_inactive() down to xfs_inactive_symlink_rmt(). The latter is
-> cleaned up to avoid transaction management intended for the
-> calling context (i.e., trans duplication, reservation, item
-> attachment).
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+On 09/12/13 15:56, Eric Sandeen wrote:
+> In traverse_int_dir2block(), the variable 'i' is the level in
+> the tree, with 0 being a leaf node.  In the "do" loop we
+> start at the root, and work our way down to a leaf.
+>
+> If the first node we read is an interior node with NODE_MAGIC,
+> but it tells us that its level is 0 (a leaf), this is clearly
+> an inconsistency.
+>
+> Worse, we'd return with success, bno set, and only level[0]
+> in the cursor initialized.  Then down this path we'll
+> segfault when accessing an uninitialized (and zeroed) member
+> of the cursor's level array:
+>
+> process_node_dir2
+>    traverse_int_dir2block  // returns 0 w/ bno set, only level[0] init'd
+>    process_leaf_level_dir2
+>      verify_dir2_path(mp, da_cursor, 0) // p_level == 0
+>         this_level = p_level + 1;
+>         node = cursor->level[this_level].bp->b_addr; // level[1] uninit&  0'd
+>
+> Fix this by recognizing that an interior node w/ level 0 is invalid, and
+> error out as for other inconsistencies.
+>
+> By the time the level 0 test is done, we have already ensured that
+> this block has XFS_DA[3]_NODE_MAGIC.
+>
+> Reported-by: Jan Yves Brueckner<jyb@gmx.com>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
->  fs/xfs/xfs_inode.c   | 15 ++++++------
->  fs/xfs/xfs_symlink.c | 64 ++++++++++++++++++----------------------------------
->  fs/xfs/xfs_symlink.h |  2 +-
->  3 files changed, 31 insertions(+), 50 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index f622a97..f85f6f2 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -424,8 +424,7 @@ xfs_symlink(
->   */
-...
->  
-> @@ -563,16 +546,13 @@ xfs_inactive_symlink_rmt(
->   */
->  int
->  xfs_inactive_symlink(
-> -	struct xfs_inode	*ip,
-> -	struct xfs_trans	**tp)
-> +	struct xfs_inode	*ip)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	int			pathlen;
->  
->  	trace_xfs_inactive_symlink(ip);
->  
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -
+>
+> V3: Simplify the test.
+>
+> Mark, Dave, I know you had some concerns about other conditions being
+> tested, but I think those are separate from this fix, which simply ensures
+> that the level we find for this _NODE block is within the valid range
+> for a node.  (It also matches the test currently present in xfs_check).
+>
+> If we've got other missing conditions, those can be other patches,
+> I think.
+>
+> V2: Drop re-test of hdr magic which is guaranteed to be NODE at this point.
+>      fix "interior inode" - s/b "interior node"
+>
+> My only testcase for this is Jan Yves Brueckner's badly corrupted
+> filesystem image.  With this change, we get i.e. :
+>
+>   bad level in interior inode for directory inode 39869938
+>   corrupt block 6 in directory inode 39869957
+>          will junk block
 
-I just want to call out one thing here in case it isn't noticed on
-review... the safety of this is something I was curious about.
-Specifically, note that I've removed the inode locking from
-xfs_inactive(), which previously covered xfs_inactive_symlink() (for
-xfs_idata_realloc()), down into xfs_inactive_symlink_rmt().
+I okay with this to fix the bug. I will make a note to think more on the 
+level == 1 case, but that is not related to the bug.
 
-My assumption was that this is currently ok since at this point we have
-an inode with di_nlink == 0. If that's not accurate or not expected to
-remain so after O_TMPFILE related work, I suppose I could pull the
-locking back up into xfs_inactive_symlink().
-
-Brian
-
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return XFS_ERROR(EIO);
->  
-> @@ -599,5 +579,5 @@ xfs_inactive_symlink(
->  	}
->  
->  	/* remove the remote symlink */
-> -	return xfs_inactive_symlink_rmt(ip, tp);
-> +	return xfs_inactive_symlink_rmt(ip);
->  }
-> diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-> index 99338ba..e75245d 100644
-> --- a/fs/xfs/xfs_symlink.h
-> +++ b/fs/xfs/xfs_symlink.h
-> @@ -22,6 +22,6 @@
->  int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
->  		const char *target_path, umode_t mode, struct xfs_inode **ipp);
->  int xfs_readlink(struct xfs_inode *ip, char *link);
-> -int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
-> +int xfs_inactive_symlink(struct xfs_inode *ip);
->  
->  #endif /* __XFS_SYMLINK_H */
-> 
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
