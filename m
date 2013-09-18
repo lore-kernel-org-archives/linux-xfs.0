@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F7287F54
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 15:48:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9252A304032
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 13:48:40 -0700 (PDT)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id ldR5WuL6HKlLRvZF (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Sep 2013 13:48:39 -0700 (PDT)
-Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id 76B387C068F
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 14:48:39 -0600 (MDT)
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH] xfstests: fix set-default test in btrfs/001
-Date: Wed, 18 Sep 2013 16:48:27 -0400
-Message-ID: <1379537307-21681-1-git-send-email-jbacik@fusionio.com>
+	by oss.sgi.com (Postfix) with ESMTP id 705C429E02
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Sep 2013 15:55:44 -0500 (CDT)
+Message-ID: <523A134B.6010609@sgi.com>
+Date: Wed, 18 Sep 2013 15:55:39 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_check: fix test for too-high level in v2 dir node
+References: <52322B67.80305@redhat.com> <523A0086.1080000@sgi.com>
+	<523A0AF0.3000507@sandeen.net>
+In-Reply-To: <523A0AF0.3000507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,39 +18,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>
 
-We were actually testing this improperly, there was a bug in the set default
-code so we weren't actually honoring the 0 subvolid properly.  To fix this we
-need to get the subvolid for the subvol we want to set as the default and use
-that in the command.  With this patch we now pass again with the fix for the 0
-subvolid.  Thanks,
+On 09/18/13 15:20, Eric Sandeen wrote:
+> On 9/18/13 2:35 PM, Mark Tinguely wrote:
+>> On 09/12/13 16:00, Eric Sandeen wrote:
+>>> The test as it stands allows level == XFS_DA_NODE_MAXDEPTH (5),
+>>> but a max depth of 5 equates to level values of 0 through 4.
+>>>
+>>> Level 5 would be a depth of 6.
+>>>
+>>> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+>>> ---
+...
+>> I think the current code is correct.
 
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
----
- tests/btrfs/001 | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> So confused.  :/  (Maybe the cursor array needs to be 1 bigger?)
+>
+> -Eric
 
-diff --git a/tests/btrfs/001 b/tests/btrfs/001
-index 9aa2431..c05d772 100755
---- a/tests/btrfs/001
-+++ b/tests/btrfs/001
-@@ -77,7 +77,8 @@ ls $SCRATCH_MNT/subvol
- echo "Creating file bar in subvol"
- dd if=/dev/zero of=$SCRATCH_MNT/subvol/bar bs=1M count=1 &> /dev/null
- echo "Setting subvol to the default"
--$BTRFS_UTIL_PROG subvolume set-default 0 $SCRATCH_MNT/subvol | _filter_scratch
-+subvolid=$(_btrfs_get_subvolid $SCRATCH_MNT subvol)
-+$BTRFS_UTIL_PROG subvolume set-default $subvolid $SCRATCH_MNT | _filter_scratch
- _scratch_remount
- echo "List root dir which is now subvol"
- ls $SCRATCH_MNT
--- 
-1.8.3.1
+
+Well, I am frequently noted as being permanently confused!
+
+I was referring to the kernel use of XFS_DA_NODE_MAXDEPTH. All the
+comparison indicate that having a value of 1 to XFS_DA_NODE_MAXDEPTH as
+being okay.
+
+When it accesses the xfs_da_state_blk_t blk[XFS_DA_NODE_MAXDEPTH],
+it decrements the index first there is no blk[] entry for a leaf that
+is why it does not need another entry.
+
+I need to study this more.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
