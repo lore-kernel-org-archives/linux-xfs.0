@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 70A217F37
-	for <linux-xfs@oss.sgi.com>; Wed, 18 Sep 2013 13:48:44 -0500 (CDT)
-Message-ID: <5239F588.5060907@sgi.com>
-Date: Wed, 18 Sep 2013 13:48:40 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 985457F37
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Sep 2013 14:35:38 -0500 (CDT)
+Message-ID: <523A0086.1080000@sgi.com>
+Date: Wed, 18 Sep 2013 14:35:34 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V3] xfs_repair: test for bad level in dir2 node
-References: <52274F96.2010702@sandeen.net> <52322A84.1030007@sandeen.net>
-In-Reply-To: <52322A84.1030007@sandeen.net>
+Subject: Re: [PATCH] xfs_check: fix test for too-high level in v2 dir node
+References: <52322B67.80305@redhat.com>
+In-Reply-To: <52322B67.80305@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,64 +21,42 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Eric Sandeen <sandeen@redhat.com>
 Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On 09/12/13 15:56, Eric Sandeen wrote:
-> In traverse_int_dir2block(), the variable 'i' is the level in
-> the tree, with 0 being a leaf node.  In the "do" loop we
-> start at the root, and work our way down to a leaf.
+On 09/12/13 16:00, Eric Sandeen wrote:
+> The test as it stands allows level == XFS_DA_NODE_MAXDEPTH (5),
+> but a max depth of 5 equates to level values of 0 through 4.
 >
-> If the first node we read is an interior node with NODE_MAGIC,
-> but it tells us that its level is 0 (a leaf), this is clearly
-> an inconsistency.
+> Level 5 would be a depth of 6.
 >
-> Worse, we'd return with success, bno set, and only level[0]
-> in the cursor initialized.  Then down this path we'll
-> segfault when accessing an uninitialized (and zeroed) member
-> of the cursor's level array:
->
-> process_node_dir2
->    traverse_int_dir2block  // returns 0 w/ bno set, only level[0] init'd
->    process_leaf_level_dir2
->      verify_dir2_path(mp, da_cursor, 0) // p_level == 0
->         this_level = p_level + 1;
->         node = cursor->level[this_level].bp->b_addr; // level[1] uninit&  0'd
->
-> Fix this by recognizing that an interior node w/ level 0 is invalid, and
-> error out as for other inconsistencies.
->
-> By the time the level 0 test is done, we have already ensured that
-> this block has XFS_DA[3]_NODE_MAGIC.
->
-> Reported-by: Jan Yves Brueckner<jyb@gmx.com>
 > Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
 >
-> V3: Simplify the test.
->
-> Mark, Dave, I know you had some concerns about other conditions being
-> tested, but I think those are separate from this fix, which simply ensures
-> that the level we find for this _NODE block is within the valid range
-> for a node.  (It also matches the test currently present in xfs_check).
->
-> If we've got other missing conditions, those can be other patches,
-> I think.
->
-> V2: Drop re-test of hdr magic which is guaranteed to be NODE at this point.
->      fix "interior inode" - s/b "interior node"
->
-> My only testcase for this is Jan Yves Brueckner's badly corrupted
-> filesystem image.  With this change, we get i.e. :
->
->   bad level in interior inode for directory inode 39869938
->   corrupt block 6 in directory inode 39869957
->          will junk block
 
-I okay with this to fix the bug. I will make a note to think more on the 
-level == 1 case, but that is not related to the bug.
+> diff --git a/db/check.c b/db/check.c
+> index cbe55ba..d9e3e3f 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -3138,7 +3138,7 @@ process_leaf_node_dir_v2_int(
+>   	case XFS_DA_NODE_MAGIC:
+>   		node = iocur_top->data;
+>   		xfs_da3_node_hdr_from_disk(&nodehdr, node);
+> -		if (nodehdr.level<  1 || nodehdr.level>  XFS_DA_NODE_MAXDEPTH) {
+> +		if (nodehdr.level<  1 || nodehdr.level>= XFS_DA_NODE_MAXDEPTH) {
+>   			if (!sflag || v)
+>   				dbprintf(_("bad node block level %d for dir ino "
+>   					 "%lld block %d\n"),
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+
+I think the current code is correct.
+
+0 is a leaf. levels 1-XFS_DA_NODE_MAXDEPTH are nodes.
+Subtract 1 when used as an index.
+
+--Mark.
+
+
 
 _______________________________________________
 xfs mailing list
