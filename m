@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 525A47F37
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 11:10:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CFC38AC004
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 09:10:32 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 790697F53
+	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 11:10:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5F088304048
+	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 09:10:35 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wMd82fjaFPRk7XNm for
+	cuda.sgi.com with ESMTP id FMAWyHfBTMDna319 for
 	<xfs@oss.sgi.com>; Wed, 18 Sep 2013 09:10:31 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8IGAUMb032190
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8IGAUJS032188
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 12:10:31 -0400
+	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 12:10:30 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r8IGAU5Q004658
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r8IGAUWW013586
 	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 12:10:30 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] xfs: push down inactive transaction mgmt for truncate
-Date: Wed, 18 Sep 2013 12:15:59 -0400
-Message-Id: <1379520960-22972-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 1/3] xfs: push down inactive transaction mgmt for remote
+	symlinks
+Date: Wed, 18 Sep 2013 12:15:58 -0400
+Message-Id: <1379520960-22972-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1379520960-22972-1-git-send-email-bfoster@redhat.com>
 References: <1379520960-22972-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,180 +39,226 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Create the new xfs_inactive_truncate() function to handle the
-truncate portion of xfs_inactive(). Push the locking and
-transaction management into the new function.
+Push down the transaction management for remote symlinks from
+xfs_inactive() down to xfs_inactive_symlink_rmt(). The latter is
+cleaned up to avoid transaction management intended for the
+calling context (i.e., trans duplication, reservation, item
+attachment).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 112 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 63 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_inode.c   | 15 ++++++------
+ fs/xfs/xfs_symlink.c | 64 ++++++++++++++++++----------------------------------
+ fs/xfs/xfs_symlink.h |  2 +-
+ 3 files changed, 31 insertions(+), 50 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 30db70e..9416462 100644
+index e3d7538..30db70e 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1663,6 +1663,53 @@ xfs_release(
- }
+@@ -1724,9 +1724,14 @@ xfs_inactive(
+ 	if (error)
+ 		return VN_INACTIVE_CACHE;
  
- /*
-+ * xfs_inactive_truncate
-+ *
-+ * Called to perform a truncate when an inode becomes unlinked.
-+ */
-+STATIC int
-+xfs_inactive_truncate(
-+	struct xfs_inode *ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-+
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		goto error0;
++	if (S_ISLNK(ip->i_d.di_mode)) {
++		error = xfs_inactive_symlink(ip);
++		if (error)
++			goto out;
 +	}
++
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+-	resp = (truncate || S_ISLNK(ip->i_d.di_mode)) ?
+-		&M_RES(mp)->tr_itruncate : &M_RES(mp)->tr_ifree;
++	resp = truncate ? &M_RES(mp)->tr_itruncate : &M_RES(mp)->tr_ifree;
+ 
+ 	error = xfs_trans_reserve(tp, resp, 0, 0);
+ 	if (error) {
+@@ -1738,11 +1743,7 @@ xfs_inactive(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	if (S_ISLNK(ip->i_d.di_mode)) {
+-		error = xfs_inactive_symlink(ip, &tp);
+-		if (error)
+-			goto out_cancel;
+-	} else if (truncate) {
++	if (truncate) {
+ 		ip->i_d.di_size = 0;
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index f622a97..f85f6f2 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -424,8 +424,7 @@ xfs_symlink(
+  */
+ STATIC int
+ xfs_inactive_symlink_rmt(
+-	xfs_inode_t	*ip,
+-	xfs_trans_t	**tpp)
++	xfs_inode_t	*ip)
+ {
+ 	xfs_buf_t	*bp;
+ 	int		committed;
+@@ -437,11 +436,9 @@ xfs_inactive_symlink_rmt(
+ 	xfs_mount_t	*mp;
+ 	xfs_bmbt_irec_t	mval[XFS_SYMLINK_MAPS];
+ 	int		nmaps;
+-	xfs_trans_t	*ntp;
+ 	int		size;
+ 	xfs_trans_t	*tp;
+ 
+-	tp = *tpp;
+ 	mp = ip->i_mount;
+ 	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+ 	/*
+@@ -453,6 +450,14 @@ xfs_inactive_symlink_rmt(
+ 	 */
+ 	ASSERT(ip->i_d.di_nextents > 0 && ip->i_d.di_nextents <= 2);
+ 
++	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
++	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
++	if (error)
++		goto error0;
 +
 +	xfs_ilock(ip, XFS_ILOCK_EXCL);
 +	xfs_trans_ijoin(tp, ip, 0);
 +
-+	ip->i_d.di_size = 0;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
-+	if (error)
+ 	/*
+ 	 * Lock the inode, fix the size, and join it to the transaction.
+ 	 * Hold it so in the normal path, we still have it locked for
+@@ -471,7 +476,7 @@ xfs_inactive_symlink_rmt(
+ 	error = xfs_bmapi_read(ip, 0, xfs_symlink_blocks(mp, size),
+ 				mval, &nmaps, 0);
+ 	if (error)
+-		goto error0;
 +		goto error1;
-+
-+	ASSERT(ip->i_d.di_nextents == 0);
-+
+ 	/*
+ 	 * Invalidate the block(s). No validation is done.
+ 	 */
+@@ -481,7 +486,7 @@ xfs_inactive_symlink_rmt(
+ 			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
+ 		if (!bp) {
+ 			error = ENOMEM;
+-			goto error1;
++			goto error2;
+ 		}
+ 		xfs_trans_binval(tp, bp);
+ 	}
+@@ -490,13 +495,13 @@ xfs_inactive_symlink_rmt(
+ 	 */
+ 	if ((error = xfs_bunmapi(tp, ip, 0, size, XFS_BMAPI_METADATA, nmaps,
+ 			&first_block, &free_list, &done)))
+-		goto error1;
++		goto error2;
+ 	ASSERT(done);
+ 	/*
+ 	 * Commit the first transaction.  This logs the EFI and the inode.
+ 	 */
+ 	if ((error = xfs_bmap_finish(&tp, &free_list, &committed)))
+-		goto error1;
++		goto error2;
+ 	/*
+ 	 * The transaction must have been committed, since there were
+ 	 * actually extents freed by xfs_bunmapi.  See xfs_bmap_finish.
+@@ -508,29 +513,16 @@ xfs_inactive_symlink_rmt(
+ 	 * Mark it dirty so it will be logged and moved forward in the log as
+ 	 * part of every commit.
+ 	 */
+-	xfs_trans_ijoin(tp, ip, 0);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	/*
+-	 * Get a new, empty transaction to return to our caller.
+-	 */
+-	ntp = xfs_trans_dup(tp);
+-	/*
+ 	 * Commit the transaction containing extent freeing and EFDs.
+-	 * If we get an error on the commit here or on the reserve below,
+-	 * we need to unlock the inode since the new transaction doesn't
+-	 * have the inode attached.
+ 	 */
+-	error = xfs_trans_commit(tp, 0);
+-	tp = ntp;
 +	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+	if (error)
-+		goto error1;
-+
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return 0;
-+
+ 	if (error) {
+ 		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+ 		goto error0;
+ 	}
+-	/*
+-	 * transaction commit worked ok so we can drop the extra ticket
+-	 * reference that we gained in xfs_trans_dup()
+-	 */
+-	xfs_log_ticket_put(tp->t_ticket);
+ 
+ 	/*
+ 	 * Remove the memory for extent descriptions (just bookkeeping).
+@@ -538,23 +530,14 @@ xfs_inactive_symlink_rmt(
+ 	if (ip->i_df.if_bytes)
+ 		xfs_idata_realloc(ip, -ip->i_df.if_bytes, XFS_DATA_FORK);
+ 	ASSERT(ip->i_df.if_bytes == 0);
+-	/*
+-	 * Put an itruncate log reservation in the new transaction
+-	 * for our caller.
+-	 */
+-	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
+-	if (error) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-		goto error0;
+-	}
+-
+-	xfs_trans_ijoin(tp, ip, 0);
+-	*tpp = tp;
+ 	return 0;
+ 
+- error1:
++error2:
+ 	xfs_bmap_cancel(&free_list);
+- error0:
 +error1:
 +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 +error0:
 +	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
-+	return error;
-+}
-+
-+/*
-  * xfs_inactive
-  *
-  * This is called when the vnode reference count for the vnode
-@@ -1679,7 +1726,6 @@ xfs_inactive(
- 	int			committed;
- 	struct xfs_trans	*tp;
- 	struct xfs_mount	*mp;
--	struct xfs_trans_res	*resp;
- 	int			error;
- 	int			truncate = 0;
- 
-@@ -1724,35 +1770,12 @@ xfs_inactive(
- 	if (error)
- 		return VN_INACTIVE_CACHE;
- 
--	if (S_ISLNK(ip->i_d.di_mode)) {
-+	if (S_ISLNK(ip->i_d.di_mode))
- 		error = xfs_inactive_symlink(ip);
--		if (error)
--			goto out;
--	}
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
--	resp = truncate ? &M_RES(mp)->tr_itruncate : &M_RES(mp)->tr_ifree;
--
--	error = xfs_trans_reserve(tp, resp, 0, 0);
--	if (error) {
--		ASSERT(XFS_FORCED_SHUTDOWN(mp));
--		xfs_trans_cancel(tp, 0);
--		return VN_INACTIVE_CACHE;
--	}
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, 0);
--
--	if (truncate) {
--		ip->i_d.di_size = 0;
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
--		if (error)
--			goto out_cancel;
--
--		ASSERT(ip->i_d.di_nextents == 0);
--	}
-+	else if (truncate)
-+		error = xfs_inactive_truncate(ip);
-+	if (error)
-+		goto out;
- 
- 	/*
- 	 * If there are attributes associated with the file then blow them away
-@@ -1763,25 +1786,9 @@ xfs_inactive(
- 	if (ip->i_d.di_anextents > 0) {
- 		ASSERT(ip->i_d.di_forkoff != 0);
- 
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
--		if (error)
--			goto out_unlock;
--
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
- 		error = xfs_attr_inactive(ip);
- 		if (error)
- 			goto out;
--
--		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
--		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			goto out;
--		}
--
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, 0);
- 	}
- 
- 	if (ip->i_afp)
-@@ -1789,6 +1796,17 @@ xfs_inactive(
- 
- 	ASSERT(ip->i_d.di_anextents == 0);
- 
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
-+		goto out;
-+	}
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
-+
- 	/*
- 	 * Free the inode.
- 	 */
-@@ -1831,13 +1849,9 @@ xfs_inactive(
- 	 * Release the dquots held by inode, if any.
- 	 */
- 	xfs_qm_dqdetach(ip);
--out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- out:
- 	return VN_INACTIVE_CACHE;
--out_cancel:
--	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
--	goto out_unlock;
+ 	return error;
  }
  
- /*
+@@ -563,16 +546,13 @@ xfs_inactive_symlink_rmt(
+  */
+ int
+ xfs_inactive_symlink(
+-	struct xfs_inode	*ip,
+-	struct xfs_trans	**tp)
++	struct xfs_inode	*ip)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			pathlen;
+ 
+ 	trace_xfs_inactive_symlink(ip);
+ 
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+@@ -599,5 +579,5 @@ xfs_inactive_symlink(
+ 	}
+ 
+ 	/* remove the remote symlink */
+-	return xfs_inactive_symlink_rmt(ip, tp);
++	return xfs_inactive_symlink_rmt(ip);
+ }
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index 99338ba..e75245d 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -22,6 +22,6 @@
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+-int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
++int xfs_inactive_symlink(struct xfs_inode *ip);
+ 
+ #endif /* __XFS_SYMLINK_H */
 -- 
 1.8.1.4
 
