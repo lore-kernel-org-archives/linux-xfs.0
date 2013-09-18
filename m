@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D1C729E10
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 16:17:58 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0943E29E11
+	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 16:35:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FFEFAC004
-	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 14:17:58 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	DrCOlGLOk34be8zd for <xfs@oss.sgi.com>;
-	Wed, 18 Sep 2013 14:17:56 -0700 (PDT)
-Date: Thu, 19 Sep 2013 07:17:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: initialize filetype for lost+found creation
-Message-ID: <20130918211753.GC4330@dastard>
-References: <52388C61.1000001@sandeen.net> <523A135D.7030509@sgi.com>
-	<523A156A.5040502@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8B1E304032
+	for <xfs@oss.sgi.com>; Wed, 18 Sep 2013 14:35:37 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id IoiUMWVfRQ55k8gt for <xfs@oss.sgi.com>;
+	Wed, 18 Sep 2013 14:35:36 -0700 (PDT)
+Message-ID: <523A1CA6.3020302@sandeen.net>
+Date: Wed, 18 Sep 2013 16:35:34 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <523A156A.5040502@sandeen.net>
+Subject: Re: xfsprogs: update version for 3.2.0-alpha1
+References: <20130916205637.GD1935@sgi.com> <20130916223855.GF19103@dastard>
+In-Reply-To: <20130916223855.GF19103@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,78 +27,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, rjohnston@sgi.com, xfs@oss.sgi.com
 
-On Wed, Sep 18, 2013 at 04:04:42PM -0500, Eric Sandeen wrote:
-> On 9/18/13 3:55 PM, Mark Tinguely wrote:
-> > On 09/17/13 12:07, Eric Sandeen wrote:
-> >> If we create lost+found make sure it's got the proper filetype.
-> >>
-> >> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> >> ---
-> >>
-> >> (sorry, untested, not sure how to force creation when I can't use
-> >> xfs_db to craft a filesystem that needs lost+found)
-> > 
-> > The {lib}xfs_dir_lookup() doesn't use the field - just like extended attributes use xfs_names but it won't use the field entry, but it does not hurt to have it initialized to something.
+On 9/16/13 5:38 PM, Dave Chinner wrote:
+> On Mon, Sep 16, 2013 at 03:56:37PM -0500, Ben Myers wrote:
+>> xfsprogs: update version for 3.2.0-alpha1
 > 
-> Thanks for the review - just FWIW, I was thinking that it needs
-> to be initialized so that when created, it is created with the proper
-> type, rather than random stack noise.
+> I'd say this is a major feature and infrastructure
+> update across the entire xfsprogs package, and in that case a
+> PKG_MAJOR bump is warranted, not PKG_MINOR.
 > 
-> It seems, though, that we're still missing bits in libxfs to actually
-> write the types to disk; I'll look into that.
+> i.e. We're shooting for a 4.0 release, not 3.2...
 
-Patch below.
+Yeah good point.  I'm fine with 4.0.  It smells like Progress!  ;)
 
-Cheers,
+Dave also pointed out offline that maybe a 3.99 might be easier
+on some package managers; for Fedora it's no problem, I can just
+do some sort of 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+4.0-0.1.alpha1
+4.0-0.2.alpha2
+4.0-0.3.alpha3
+4.0-0.4.rc1
+...
+4.0-1
 
+type progression.  But if people like 3.99 *shrug* let's not paint
+this bike shed too many times.
 
-libxfs: fix missing filetype updates to xfs_dir2.c
-
-From: Dave Chinner <dchinner@redhat.com>
-
-They were missed in the original patch that was committed.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- libxfs/xfs_dir2.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 010c701..96a3c1d 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -194,6 +194,7 @@ xfs_dir_createname(
- 	memset(&args, 0, sizeof(xfs_da_args_t));
- 	args.name = name->name;
- 	args.namelen = name->len;
-+	args.filetype = name->type;
- 	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.inumber = inum;
- 	args.dp = dp;
-@@ -268,6 +269,7 @@ xfs_dir_lookup(
- 	memset(&args, 0, sizeof(xfs_da_args_t));
- 	args.name = name->name;
- 	args.namelen = name->len;
-+	args.filetype = name->type;
- 	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.dp = dp;
- 	args.whichfork = XFS_DATA_FORK;
-@@ -323,6 +325,7 @@ xfs_dir_removename(
- 	memset(&args, 0, sizeof(xfs_da_args_t));
- 	args.name = name->name;
- 	args.namelen = name->len;
-+	args.filetype = name->type;
- 	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.inumber = ino;
- 	args.dp = dp;
+-Eric
 
 _______________________________________________
 xfs mailing list
