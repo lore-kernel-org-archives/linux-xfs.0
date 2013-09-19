@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 08A9129DFB
-	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 18:24:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 10C1B29DFB
+	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 18:29:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E0D358F8059
-	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 16:24:00 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F07F48F8059
+	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 16:29:21 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cbkpzAHq8dgdjUbv for <xfs@oss.sgi.com>;
-	Thu, 19 Sep 2013 16:23:59 -0700 (PDT)
-Date: Fri, 20 Sep 2013 09:23:56 +1000
+	vaxvwgVI7gsXGdPT for <xfs@oss.sgi.com>;
+	Thu, 19 Sep 2013 16:29:20 -0700 (PDT)
+Date: Fri, 20 Sep 2013 09:29:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: push down inactive transaction mgmt for remote
-	symlinks
-Message-ID: <20130919232356.GN9901@dastard>
+Subject: Re: [PATCH 3/3] xfs: push down inactive transaction mgmt for ifree
+Message-ID: <20130919232917.GO9901@dastard>
 References: <1379520960-22972-1-git-send-email-bfoster@redhat.com>
-	<1379520960-22972-2-git-send-email-bfoster@redhat.com>
-	<5239EBA2.4070207@redhat.com> <20130918225120.GC9901@dastard>
-	<523AF184.3030002@redhat.com>
+	<1379520960-22972-4-git-send-email-bfoster@redhat.com>
+	<20130918230620.GE9901@dastard> <523AF196.80205@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <523AF184.3030002@redhat.com>
+In-Reply-To: <523AF196.80205@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,114 +34,69 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 19, 2013 at 08:43:48AM -0400, Brian Foster wrote:
-> On 09/18/2013 06:51 PM, Dave Chinner wrote:
-> > On Wed, Sep 18, 2013 at 02:06:26PM -0400, Brian Foster wrote:
-> >> I just want to call out one thing here in case it isn't noticed on
-> >> review... the safety of this is something I was curious about.
-> >> Specifically, note that I've removed the inode locking from
-> >> xfs_inactive(), which previously covered xfs_inactive_symlink() (for
-> >> xfs_idata_realloc()), down into xfs_inactive_symlink_rmt().
+On Thu, Sep 19, 2013 at 08:44:06AM -0400, Brian Foster wrote:
+> On 09/18/2013 07:06 PM, Dave Chinner wrote:
+> > On Wed, Sep 18, 2013 at 12:16:00PM -0400, Brian Foster wrote:
+> >> Push the inode free work performed during xfs_inactive() down into
+> >> a new xfs_inactive_ifree() helper. This clears xfs_inactive() from
+> >> all inode locking and transaction management more directly
+> >> associated with freeing the inode xattrs, extents and the inode
+> >> itself.
+.....
+> >> +	/*
+> >> +	 * Credit the quota account(s). The inode is gone.
+> >> +	 */
+> >> +	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
+> >> +
+> >> +	/*
+> >> +	 * Just ignore errors at this point.  There is nothing we can
+> >> +	 * do except to try to keep going. Make sure it's not a silent
+> >> +	 * error.
+> >> +	 */
+> >> +	error = xfs_bmap_finish(&tp,  &free_list, &committed);
+> >> +	if (error)
+> >> +		xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
+> >> +			__func__, error);
+> >> +	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+> >> +	if (error)
+> >> +		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+> >> +			__func__, error);
+> >> +
+> >> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >> +	return 0;
+> >> +}
 > > 
-> > see my comments about idata_realloc() in the previous email. It
-> > might be safe, but it's better not to leave a landmine if we add
-> > some other caller to the function in the future.
-> > 
-> >> My assumption was that this is currently ok since at this point we have
-> >> an inode with di_nlink == 0.
-> > 
-> > It's not an entirely correct assumption. The end result is likely
-> > the same, but di_nlink has no influence here. i.e. the inode
-> > lifecycle is rather complex and there is an interesting condition
-> > that covers inodes going through xfs_inactive().
-> > 
-> > xfs_inactive() is called when the VFS reference count goes to zero
-> > and the VFS inode is being reclaimed, but the XFS_IRECLAIMABLE flag
-> > is not yet set on it. This doesn't happen until after xfs_inactive()
-> > completes and the VFS calls ->destroy_inode. Hence the inode is in a
-> > limbo state where calls to igrab() will fail but the inode can be
-> > found in the inode radix trees without being marked as "under
-> > reclaim conditions".
-> > 
-> > We handle this with xfs_iget_cache_hit() by the use of igrab(),
-> > which will fail on such an inode, and we use the same logic in
-> > xfs_inode_ag_walk_grab() to avoid this hole. That said,
-> > xfs_reclaim_inode_grab() does no such thing - it only checks for
-> > XFS_IRECLAIMABLE under an RCU traversal, and so may find inodes for
-> > which that the radix tree reclaimable tag is stale. hence that
-> > check is always done under a spinlock.
-> > 
-> > IOWs, the only thing that protects us from outside interference in
-> > xfs_inactive() is the logic in the XFS inode cache lookups
-> > specifically avoiding inodes in the transient state that
-> > xfs_inactive() is called under. It doesn't matter what the contents
-> > of the inode are - it's the safe transition from one lifecycle state
-> > to the next that is important at this point.
-> > 
-> > So, like I said in the previous email, we have to be careful with
-> > cache lookups to prevent races with the work xfs_inactive() is
-> > doing, but that doesn't mean we shouldn't still lock the inodes
-> > correctly when modifying them...
+> > I suspect we can clean up the error handling here now, and make it
+> > look like the symlink remove inactive handle where we cancel bmaps
+> > and abort transactions and trigger shutdowns appropriately. I'd
+> > leave that to a separate patchset, though ;)
 > > 
 > 
-> So broadly speaking, the inode states are more granular than my di_nlink
-> based assumption.
+> Hmm, well I follow what you mean as far as changing the code I think.
+> But what changed that makes this safe? Or are you suggesting to shutdown
+> on a bmap_finish/trans_commit failure instead of just "being noisy?"
 
-More that the inode lifecycle states are not related to the value of
-di_nlink at all ;)
+I was thinking aloud. The error handling there comes from a static
+checker that pointed out that we weren't handling the errors at all
+in this code (along with another 50 or so other error handling
+problems). So rather than change the code logic at the time (because
+I didn't understand why the code ignored the errors) I simply made
+failures noisy so we'd find out if there were real errors being
+ignored there.
 
-> We have to account for access via internal caches,
-> even if the inode is in the process of being torn down in the vfs. I'll
-> have to wade through the caching code much more to understand the
-> intricacies. ;) Thanks for the breakdown.
+Now we know that errors in this code path are extremely rare
+(nobody has ever reported a failure with these errors in them) so
+it's probably time to convert them to do the correct thing when
+xfs_bmap_finish() operations fail: abort transactions and
+potentially shut the filesystem down....
 
-First you need to understand the VFS inode lifecycle, as the XFS
-inode lifecycle mostly wraps around the outside of the VFS inode
-lifecycle. ;)
+> (Regardless, a separate patchset sounds good..)
 
-> With regard to the locking here, any preference as to whether
-> xfs_inactive_symlink() takes the lock and hands it to
-> xfs_inactive_symlink_rmt() or the former locks/unlocks and the latter
-> continues to work as implemented in this patch (save other comments to
-> be addressed)?
-> 
-> Actually now that I look at the code, xfs_inactive_symlink_rmt() does
-> the transaction allocation and reservation now, so for that reason I
-> think the lock/unlock pattern is required.
-
-Right, they are effectively two different cases with different
-locking constraints.
+*nod*
 
 Cheers,
 
 Dave.
-
-> 
-> Brian
-> 
-> >> If that's not accurate or not expected to
-> >> remain so after O_TMPFILE related work, I suppose I could pull the
-> >> locking back up into xfs_inactive_symlink().
-> > 
-> > O_TMPFILE itself won't change anything - they will look just like
-> > any other unlinked inode going through xfs_inactive() on their way
-> > to the XFS_IRECLAIMABLE state.
-> > 
-> > It's when we start separating the xfs_inactive() work into multiple
-> > distinct stages to allow for optimisation of inode freeing that we
-> > need to be careful as these introduce new states into the lifecycle
-> > state machine. These will most likely involve new state flags and
-> > radix tree tags and walks, but AFAICT, overall concept that
-> > xfs_inactive/xfs_inactive_symlink is run from the same special
-> > isolated "limbo" context should not change....
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > 
-> 
-> 
-
 -- 
 Dave Chinner
 david@fromorbit.com
