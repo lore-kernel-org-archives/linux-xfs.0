@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc1-2-11718-g272b98c
-Message-Id: <20130919164611.A92467F37@oss.sgi.com>
-Date: Thu, 19 Sep 2013 11:46:10 -0500 (CDT)
+Message-Id: <20130919164635.27FCC7F37@oss.sgi.com>
+Date: Thu, 19 Sep 2013 11:46:34 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -13,19 +13,19 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============4700916789100155227=="
+Content-Type: multipart/mixed; boundary="===============5368827967719854458=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============4700916789100155227==
+--===============5368827967719854458==
 Content-Type: text/plain
 
 This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   e0ea404 Merge tag 'xfs-for-linus-v3.12-rc1-2' of git://oss.sgi.com/xfs/xfs
   ac4de95 Merge branch 'akpm' (patches from Andrew Morton)
   7caef26 truncate: drop 'oldsize' truncate_pagecache() parameter
@@ -652,7 +652,7 @@ hooks/post-receive
 XFS development tree
 
 
---===============4700916789100155227==
+--===============5368827967719854458==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -663,4 +663,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4700916789100155227==--
+--===============5368827967719854458==--
