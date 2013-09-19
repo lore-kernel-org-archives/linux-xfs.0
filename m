@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C56E229E04
-	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 14:15:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8922230404E
-	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 12:15:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lwnFCVZCUYFhq6CP for
-	<xfs@oss.sgi.com>; Thu, 19 Sep 2013 12:15:23 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8JJFM1U009041
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 15:15:23 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r8JJFL6H022418
-	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 15:15:22 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 3/4] xfs: push down inactive transaction mgmt for ifree
-Date: Thu, 19 Sep 2013 15:15:20 -0400
-Message-Id: <1379618121-35105-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1379618121-35105-1-git-send-email-bfoster@redhat.com>
-References: <1379618121-35105-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2B70B7CBF
+	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 16:07:01 -0500 (CDT)
+Received: from eagdhcp-232-140.americas.sgi.com
+	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 043B78F8040
+	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 14:07:00 -0700 (PDT)
+Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r8JL7079003432
+	for <xfs@oss.sgi.com>; Thu, 19 Sep 2013 16:07:00 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
+Message-Id: <20130919211539.216012307@sgi.com>
+Date: Thu, 19 Sep 2013 16:05:26 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH 3/3] xfsprog: add mkfs.xfs sb v4 support for dirent filetype
+	field
+References: <20130919211523.407741285@sgi.com>
+Content-Disposition: inline;
+	filename=3-3-xfsprog-add-mkfs.xfs-sb-v4-support-for-dirent-filetype-field.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,173 +34,183 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Push the inode free work performed during xfs_inactive() down into
-a new xfs_inactive_ifree() helper. This clears xfs_inactive() from
-all inode locking and transaction management more directly
-associated with freeing the inode xattrs, extents and the inode
-itself.
+Add directory inode type feature to mkfs.xfs.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+In sb v4, "-n ftype=1" turns on the feature. The feature is still
+automatically turned on for sb v5.
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_inode.c | 121 +++++++++++++++++++++++++++++++----------------------
- 1 file changed, 71 insertions(+), 50 deletions(-)
+man/man8/mkfs.xfs.8 |    7 +++++++
+ man/man8/mkfs.xfs.8 |   10 ++++++++++
+ mkfs/xfs_mkfs.c     |   40 +++++++++++++++++++++++++++-------------
+ mkfs/xfs_mkfs.h     |    4 +++-
+ 3 files changed, 40 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 33bb9be..dde182e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1715,6 +1715,74 @@ error_trans_cancel:
- }
+Index: b/man/man8/mkfs.xfs.8
+===================================================================
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -517,6 +517,16 @@ option enables ASCII only case-insensiti
+ are stored in directories using the case they were created with.
+ .IP
+ Note: Version 1 directories are not supported.
++.TP
++.BI ftype= value
++Version 4 superblock supports the inode type stored in the directory feature.
++.I value
++can be either 0 or 1.
++With 0 meaning not supported (default) and 1 meaning supported.
++.IP
++Version 5 superblocks automatically support this feature and this
++setting will be ignored.
++.IP
+ .RE
+ .TP
+ .BI \-p " protofile"
+Index: b/mkfs/xfs_mkfs.c
+===================================================================
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -147,6 +147,8 @@ char	*nopts[] = {
+ 	"size",
+ #define	N_VERSION	2
+ 	"version",
++#define	N_FTYPE		3
++	"ftype",
+ 	NULL,
+ };
  
- /*
-+ * xfs_inactive_ifree()
-+ *
-+ * Perform the inode free when an inode is unlinked.
-+ */
-+STATIC int
-+xfs_inactive_ifree(
-+	struct xfs_inode *ip)
-+{
-+	xfs_bmap_free_t		free_list;
-+	xfs_fsblock_t		first_block;
-+	int			committed;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
-+		return error;
+@@ -885,6 +887,7 @@ main(
+ 	char			*dfile;
+ 	int			dirblocklog;
+ 	int			dirblocksize;
++	int			dirftype;
+ 	int			dirversion;
+ 	char			*dsize;
+ 	int			dsu;
+@@ -930,6 +933,7 @@ main(
+ 	int			nodsflag;
+ 	int			norsflag;
+ 	xfs_alloc_rec_t		*nrec;
++	int			niflag;
+ 	int			nsflag;
+ 	int			nvflag;
+ 	int			nci;
+@@ -976,8 +980,8 @@ main(
+ 	loginternal = 1;
+ 	logversion = 2;
+ 	logagno = logblocks = rtblocks = rtextblocks = 0;
+-	Nflag = nlflag = nsflag = nvflag = nci = 0;
+-	dirblocklog = dirblocksize = 0;
++	Nflag = niflag = nlflag = nsflag = nvflag = nci = 0;
++	dirftype = dirblocklog = dirblocksize = 0;
+ 	dirversion = XFS_DFL_DIR_VERSION;
+ 	qflag = 0;
+ 	imaxpct = inodelog = inopblock = isize = 0;
+@@ -1533,6 +1537,14 @@ main(
+ 					}
+ 					nvflag = 1;
+ 					break;
++				case N_FTYPE:
++					if (!value || *value == '\0')
++						reqval('n', nopts, N_FTYPE);
++					if (niflag)
++						respec('n', nopts, N_FTYPE);
++					dirftype = atoi(value);
++					niflag = 1;
++					break;
+ 				default:
+ 					unknown('n', value);
+ 				}
+@@ -2434,6 +2446,14 @@ _("size %s specified for log subvolume i
+ 	}
+ 	validate_log_size(logblocks, blocklog, min_logblocks);
+ 
++	/*
++	 * dirent filetype field always enabled on v5 superblocks
++	 */
++	if (crcs_enabled) {
++		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
++		dirftype = 1;
 +	}
 +
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
+ 	if (!qflag || Nflag) {
+ 		printf(_(
+ 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+@@ -2441,7 +2461,7 @@ _("size %s specified for log subvolume i
+ 		   "         =%-22s crc=%u\n"
+ 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
+-		   "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
++		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+ 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+ 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
+ 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+@@ -2450,7 +2470,7 @@ _("size %s specified for log subvolume i
+ 			"", crcs_enabled,
+ 			"", blocksize, (long long)dblocks, imaxpct,
+ 			"", dsunit, dswidth,
+-			dirversion, dirblocksize, nci,
++			dirversion, dirblocksize, nci, dirftype,
+ 			logfile, 1 << blocklog, (long long)logblocks,
+ 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
+ 			rtfile, rtextblocks << blocklog,
+@@ -2512,8 +2532,9 @@ _("size %s specified for log subvolume i
+ 		sbp->sb_logsectlog = 0;
+ 		sbp->sb_logsectsize = 0;
+ 	}
 +
-+	xfs_bmap_init(&free_list, &first_block);
-+	error = xfs_ifree(tp, ip, &free_list);
-+	if (error) {
-+		/*
-+		 * If we fail to free the inode, shut down.  The cancel
-+		 * might do that, we need to make sure.  Otherwise the
-+		 * inode might be lost for a long time or forever.
-+		 */
-+		if (!XFS_FORCED_SHUTDOWN(mp)) {
-+			xfs_notice(mp, "%s: xfs_ifree returned error %d",
-+				__func__, error);
-+			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+		}
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
-+		return error;
-+	}
-+
-+	/*
-+	 * Credit the quota account(s). The inode is gone.
-+	 */
-+	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
-+
-+	/*
-+	 * Just ignore errors at this point.  There is nothing we can
-+	 * do except to try to keep going. Make sure it's not a silent
-+	 * error.
-+	 */
-+	error = xfs_bmap_finish(&tp,  &free_list, &committed);
-+	if (error)
-+		xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
-+			__func__, error);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+	if (error)
-+		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
-+			__func__, error);
-+
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return 0;
-+}
-+
-+/*
-  * xfs_inactive
-  *
-  * This is called when the vnode reference count for the vnode
-@@ -1726,10 +1794,6 @@ int
- xfs_inactive(
- 	xfs_inode_t	*ip)
- {
--	xfs_bmap_free_t		free_list;
--	xfs_fsblock_t		first_block;
--	int			committed;
--	struct xfs_trans	*tp;
- 	struct xfs_mount	*mp;
- 	int			error;
- 	int			truncate = 0;
-@@ -1801,60 +1865,17 @@ xfs_inactive(
- 
- 	ASSERT(ip->i_d.di_anextents == 0);
- 
--	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
--	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
--	if (error) {
--		ASSERT(XFS_FORCED_SHUTDOWN(mp));
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
--		goto out;
+ 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
+-					attrversion == 2, !projid16bit, 0);
++				   attrversion == 2, !projid16bit, 0, dirftype);
+ 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
+ 					dsunit != 0,
+ 					logversion == 2, attrversion == 1,
+@@ -2521,13 +2542,6 @@ _("size %s specified for log subvolume i
+ 							lsectorsize != BBSIZE),
+ 					nci, sbp->sb_features2 != 0);
+ 	/*
+-	 * dirent filetype field always enabled on v5 superblocks
+-	 */
+-	if (crcs_enabled) {
+-		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
 -	}
 -
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, 0);
--
- 	/*
- 	 * Free the inode.
- 	 */
--	xfs_bmap_init(&free_list, &first_block);
--	error = xfs_ifree(tp, ip, &free_list);
--	if (error) {
--		/*
--		 * If we fail to free the inode, shut down.  The cancel
--		 * might do that, we need to make sure.  Otherwise the
--		 * inode might be lost for a long time or forever.
--		 */
--		if (!XFS_FORCED_SHUTDOWN(mp)) {
--			xfs_notice(mp, "%s: xfs_ifree returned error %d",
--				__func__, error);
--			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
--		}
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
--	} else {
--		/*
--		 * Credit the quota account(s). The inode is gone.
--		 */
--		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
--
--		/*
--		 * Just ignore errors at this point.  There is nothing we can
--		 * do except to try to keep going. Make sure it's not a silent
--		 * error.
--		 */
--		error = xfs_bmap_finish(&tp,  &free_list, &committed);
--		if (error)
--			xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
--				__func__, error);
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
--		if (error)
--			xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
--				__func__, error);
--	}
-+	error = xfs_inactive_ifree(ip);
-+	if (error)
-+		goto out;
+-	/*
+ 	 * Due to a structure alignment issue, sb_features2 ended up in one
+ 	 * of two locations, the second "incorrect" location represented by
+ 	 * the sb_bad_features2 field. To avoid older kernels mounting
+@@ -3065,7 +3079,7 @@ usage( void )
+ 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
+ 			    lazy-count=0|1]\n\
+ /* label */		[-L label (maximum 12 characters)]\n\
+-/* naming */		[-n log=n|size=num,version=2|ci]\n\
++/* naming */		[-n log=n|size=num,version=2|ci,ftype=0|1]\n\
+ /* no-op info only */	[-N]\n\
+ /* prototype file */	[-p fname]\n\
+ /* quiet */		[-q]\n\
+Index: b/mkfs/xfs_mkfs.h
+===================================================================
+--- a/mkfs/xfs_mkfs.h
++++ b/mkfs/xfs_mkfs.h
+@@ -36,12 +36,14 @@
+ 	        XFS_DFL_SB_VERSION_BITS |                               \
+ 	0 ) : XFS_SB_VERSION_1 )
  
- 	/*
- 	 * Release the dquots held by inode, if any.
- 	 */
- 	xfs_qm_dqdetach(ip);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- out:
- 	return VN_INACTIVE_CACHE;
- }
--- 
-1.8.1.4
+-#define XFS_SB_VERSION2_MKFS(crc, lazycount, attr2, projid32bit, parent) (\
++#define XFS_SB_VERSION2_MKFS(crc, lazycount, attr2, projid32bit, parent, \
++			     ftype) (\
+ 	((lazycount) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0) |		\
+ 	((attr2) ? XFS_SB_VERSION2_ATTR2BIT : 0) |			\
+ 	((projid32bit) ? XFS_SB_VERSION2_PROJID32BIT : 0) |		\
+ 	((parent) ? XFS_SB_VERSION2_PARENTBIT : 0) |			\
+ 	((crc) ? XFS_SB_VERSION2_CRCBIT : 0) |				\
++	((ftype) ? XFS_SB_VERSION2_FTYPE : 0) |				\
+ 	0 )
+ 
+ #define	XFS_DFL_BLOCKSIZE_LOG	12		/* 4096 byte blocks */
+
 
 _______________________________________________
 xfs mailing list
