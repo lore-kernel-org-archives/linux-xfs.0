@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3D25E7F55
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 10:06:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B11EEAC002
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 08:06:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1Mc12aPDSaHC9pZ3 for
-	<xfs@oss.sgi.com>; Fri, 20 Sep 2013 08:06:15 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8KF6Fi4023381
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 11:06:15 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r8KF6Erp024262
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 11:06:14 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 3/4] xfs: push down inactive transaction mgmt for ifree
-Date: Fri, 20 Sep 2013 11:06:11 -0400
-Message-Id: <1379689572-5543-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1379689572-5543-1-git-send-email-bfoster@redhat.com>
-References: <1379689572-5543-1-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7904F7F37
+	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 17:06:03 -0500 (CDT)
+Received: from eagdhcp-232-140.americas.sgi.com
+	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 09559AC003
+	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 15:05:59 -0700 (PDT)
+Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r8KM5wND004469
+	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 17:05:58 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
+Message-Id: <20130920220519.585903357@sgi.com>
+Date: Fri, 20 Sep 2013 17:05:08 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfs: fix node forward in xfs_node_toosmall 
+Content-Disposition: inline; filename=xfs-fix-xfs_da3_node_toosmall-test.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,173 +31,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Push the inode free work performed during xfs_inactive() down into
-a new xfs_inactive_ifree() helper. This clears xfs_inactive() from
-all inode locking and transaction management more directly
-associated with freeing the inode xattrs, extents and the inode
-itself.
+Commit f5ea1100 cleans up the disk to host conversions for
+node directory entries, but because a variable is reused in
+xfs_node_toosmall() the next node is not correctly found.
+If the original node is small enough (<= 3/8 of the node size),
+this change may incorrectly cause a node collapse when it should
+not. That will cause an assert in xfstest generic/319:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+   Assertion failed: first <= last && last < BBTOB(bp->b_length),
+   file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
+
+Keep the original node header to get the correct forward node.
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_inode.c | 121 +++++++++++++++++++++++++++++++----------------------
- 1 file changed, 71 insertions(+), 50 deletions(-)
+ fs/xfs/xfs_da_btree.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ff4e729..b7e9279 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1715,6 +1715,74 @@ error_unlock:
- }
- 
- /*
-+ * xfs_inactive_ifree()
-+ *
-+ * Perform the inode free when an inode is unlinked.
-+ */
-+STATIC int
-+xfs_inactive_ifree(
-+	struct xfs_inode *ip)
-+{
-+	xfs_bmap_free_t		free_list;
-+	xfs_fsblock_t		first_block;
-+	int			committed;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
-+		return error;
-+	}
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
-+
-+	xfs_bmap_init(&free_list, &first_block);
-+	error = xfs_ifree(tp, ip, &free_list);
-+	if (error) {
-+		/*
-+		 * If we fail to free the inode, shut down.  The cancel
-+		 * might do that, we need to make sure.  Otherwise the
-+		 * inode might be lost for a long time or forever.
-+		 */
-+		if (!XFS_FORCED_SHUTDOWN(mp)) {
-+			xfs_notice(mp, "%s: xfs_ifree returned error %d",
-+				__func__, error);
-+			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+		}
-+		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		return error;
-+	}
-+
-+	/*
-+	 * Credit the quota account(s). The inode is gone.
-+	 */
-+	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
-+
-+	/*
-+	 * Just ignore errors at this point.  There is nothing we can
-+	 * do except to try to keep going. Make sure it's not a silent
-+	 * error.
-+	 */
-+	error = xfs_bmap_finish(&tp,  &free_list, &committed);
-+	if (error)
-+		xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
-+			__func__, error);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+	if (error)
-+		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
-+			__func__, error);
-+
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return 0;
-+}
-+
-+/*
-  * xfs_inactive
-  *
-  * This is called when the vnode reference count for the vnode
-@@ -1726,10 +1794,6 @@ int
- xfs_inactive(
- 	xfs_inode_t	*ip)
- {
--	xfs_bmap_free_t		free_list;
--	xfs_fsblock_t		first_block;
--	int			committed;
--	struct xfs_trans	*tp;
- 	struct xfs_mount	*mp;
+Index: b/fs/xfs/xfs_da_btree.c
+===================================================================
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -1163,6 +1163,7 @@ xfs_da3_node_toosmall(
+ 	xfs_dablk_t		blkno;
+ 	struct xfs_buf		*bp;
+ 	struct xfs_da3_icnode_hdr nodehdr;
++	struct xfs_da3_icnode_hdr firstnhdr;
+ 	int			count;
+ 	int			forward;
  	int			error;
- 	int			truncate = 0;
-@@ -1801,60 +1865,17 @@ xfs_inactive(
+@@ -1221,13 +1222,14 @@ xfs_da3_node_toosmall(
+ 	count -= state->node_ents >> 2;
+ 	count -= nodehdr.count;
  
- 	ASSERT(ip->i_d.di_anextents == 0);
- 
--	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
--	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
--	if (error) {
--		ASSERT(XFS_FORCED_SHUTDOWN(mp));
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
--		goto out;
--	}
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, 0);
--
- 	/*
- 	 * Free the inode.
- 	 */
--	xfs_bmap_init(&free_list, &first_block);
--	error = xfs_ifree(tp, ip, &free_list);
--	if (error) {
--		/*
--		 * If we fail to free the inode, shut down.  The cancel
--		 * might do that, we need to make sure.  Otherwise the
--		 * inode might be lost for a long time or forever.
--		 */
--		if (!XFS_FORCED_SHUTDOWN(mp)) {
--			xfs_notice(mp, "%s: xfs_ifree returned error %d",
--				__func__, error);
--			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
--		}
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
--	} else {
--		/*
--		 * Credit the quota account(s). The inode is gone.
--		 */
--		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
--
--		/*
--		 * Just ignore errors at this point.  There is nothing we can
--		 * do except to try to keep going. Make sure it's not a silent
--		 * error.
--		 */
--		error = xfs_bmap_finish(&tp,  &free_list, &committed);
--		if (error)
--			xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
--				__func__, error);
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
--		if (error)
--			xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
--				__func__, error);
--	}
-+	error = xfs_inactive_ifree(ip);
-+	if (error)
-+		goto out;
- 
- 	/*
- 	 * Release the dquots held by inode, if any.
- 	 */
- 	xfs_qm_dqdetach(ip);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- out:
- 	return VN_INACTIVE_CACHE;
- }
--- 
-1.8.1.4
++	firstnhdr = nodehdr;
+ 	/* start with smaller blk num */
+ 	forward = nodehdr.forw < nodehdr.back;
+ 	for (i = 0; i < 2; forward = !forward, i++) {
+ 		if (forward)
+-			blkno = nodehdr.forw;
++			blkno = firstnhdr.forw;
+ 		else
+-			blkno = nodehdr.back;
++			blkno = firstnhdr.back;
+ 		if (blkno == 0)
+ 			continue;
+ 		error = xfs_da3_node_read(state->args->trans, state->args->dp,
+
 
 _______________________________________________
 xfs mailing list
