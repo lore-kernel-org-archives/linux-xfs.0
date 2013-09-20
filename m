@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A54677F56
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 10:06:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FC11AC001
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 08:06:16 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3D25E7F55
+	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 10:06:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B11EEAC002
+	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 08:06:19 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QdMISzJns4Yr956a for
+	cuda.sgi.com with ESMTP id 1Mc12aPDSaHC9pZ3 for
 	<xfs@oss.sgi.com>; Fri, 20 Sep 2013 08:06:15 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8KF6FlQ023380
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r8KF6Fi4023381
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 11:06:15 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r8KF6ED9025158
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r8KF6Erp024262
 	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 11:06:14 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 4/4] xfs: clean up xfs_inactive() error handling,
-	kill VN_INACTIVE_[NO]CACHE
-Date: Fri, 20 Sep 2013 11:06:12 -0400
-Message-Id: <1379689572-5543-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 3/4] xfs: push down inactive transaction mgmt for ifree
+Date: Fri, 20 Sep 2013 11:06:11 -0400
+Message-Id: <1379689572-5543-4-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1379689572-5543-1-git-send-email-bfoster@redhat.com>
 References: <1379689572-5543-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,142 +38,171 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The xfs_inactive() return value is meaningless. Turn xfs_inactive()
-into a void function and clean up the error handling appropriately.
-Kill the VN_INACTIVE_[NO]CACHE directives as they are not relevant
-to Linux.
+Push the inode free work performed during xfs_inactive() down into
+a new xfs_inactive_ifree() helper. This clears xfs_inactive() from
+all inode locking and transaction management more directly
+associated with freeing the inode xattrs, extents and the inode
+itself.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 28 +++++++++++-----------------
- fs/xfs/xfs_inode.h |  2 +-
- fs/xfs/xfs_vnode.h |  8 --------
- 3 files changed, 12 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_inode.c | 121 +++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 71 insertions(+), 50 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b7e9279..64f7733 100644
+index ff4e729..b7e9279 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1790,7 +1790,7 @@ xfs_inactive_ifree(
-  * now be truncated.  Also, we clear all of the read-ahead state
-  * kept for the inode here since the file is now closed.
-  */
--int
-+void
+@@ -1715,6 +1715,74 @@ error_unlock:
+ }
+ 
+ /*
++ * xfs_inactive_ifree()
++ *
++ * Perform the inode free when an inode is unlinked.
++ */
++STATIC int
++xfs_inactive_ifree(
++	struct xfs_inode *ip)
++{
++	xfs_bmap_free_t		free_list;
++	xfs_fsblock_t		first_block;
++	int			committed;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
++	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
++	if (error) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
++		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
++		return error;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++
++	xfs_bmap_init(&free_list, &first_block);
++	error = xfs_ifree(tp, ip, &free_list);
++	if (error) {
++		/*
++		 * If we fail to free the inode, shut down.  The cancel
++		 * might do that, we need to make sure.  Otherwise the
++		 * inode might be lost for a long time or forever.
++		 */
++		if (!XFS_FORCED_SHUTDOWN(mp)) {
++			xfs_notice(mp, "%s: xfs_ifree returned error %d",
++				__func__, error);
++			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++		}
++		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		return error;
++	}
++
++	/*
++	 * Credit the quota account(s). The inode is gone.
++	 */
++	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
++
++	/*
++	 * Just ignore errors at this point.  There is nothing we can
++	 * do except to try to keep going. Make sure it's not a silent
++	 * error.
++	 */
++	error = xfs_bmap_finish(&tp,  &free_list, &committed);
++	if (error)
++		xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
++			__func__, error);
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	if (error)
++		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
++			__func__, error);
++
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return 0;
++}
++
++/*
+  * xfs_inactive
+  *
+  * This is called when the vnode reference count for the vnode
+@@ -1726,10 +1794,6 @@ int
  xfs_inactive(
  	xfs_inode_t	*ip)
  {
-@@ -1805,16 +1805,14 @@ xfs_inactive(
- 	if (ip->i_d.di_mode == 0 || is_bad_inode(VFS_I(ip))) {
- 		ASSERT(ip->i_df.if_real_bytes == 0);
- 		ASSERT(ip->i_df.if_broot_bytes == 0);
--		return VN_INACTIVE_CACHE;
-+		return;
- 	}
+-	xfs_bmap_free_t		free_list;
+-	xfs_fsblock_t		first_block;
+-	int			committed;
+-	struct xfs_trans	*tp;
+ 	struct xfs_mount	*mp;
+ 	int			error;
+ 	int			truncate = 0;
+@@ -1801,60 +1865,17 @@ xfs_inactive(
  
- 	mp = ip->i_mount;
+ 	ASSERT(ip->i_d.di_anextents == 0);
  
--	error = 0;
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+-	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
+-	if (error) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		goto out;
+-	}
 -
- 	/* If this is a read-only mount, don't do this (would generate I/O) */
- 	if (mp->m_flags & XFS_MOUNT_RDONLY)
--		goto out;
-+		return;
- 
- 	if (ip->i_d.di_nlink != 0) {
- 		/*
-@@ -1822,12 +1820,10 @@ xfs_inactive(
- 		 * cache. Post-eof blocks must be freed, lest we end up with
- 		 * broken free space accounting.
- 		 */
--		if (xfs_can_free_eofblocks(ip, true)) {
--			error = xfs_free_eofblocks(mp, ip, false);
--			if (error)
--				return VN_INACTIVE_CACHE;
--		}
--		goto out;
-+		if (xfs_can_free_eofblocks(ip, true))
-+			xfs_free_eofblocks(mp, ip, false);
-+
-+		return;
- 	}
- 
- 	if (S_ISREG(ip->i_d.di_mode) &&
-@@ -1837,14 +1833,14 @@ xfs_inactive(
- 
- 	error = xfs_qm_dqattach(ip, 0);
- 	if (error)
--		return VN_INACTIVE_CACHE;
-+		return;
- 
- 	if (S_ISLNK(ip->i_d.di_mode))
- 		error = xfs_inactive_symlink(ip);
- 	else if (truncate)
- 		error = xfs_inactive_truncate(ip);
- 	if (error)
--		goto out;
-+		return;
- 
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, 0);
+-
  	/*
- 	 * If there are attributes associated with the file then blow them away
-@@ -1857,7 +1853,7 @@ xfs_inactive(
- 
- 		error = xfs_attr_inactive(ip);
- 		if (error)
--			goto out;
-+			return;
- 	}
- 
- 	if (ip->i_afp)
-@@ -1870,14 +1866,12 @@ xfs_inactive(
+ 	 * Free the inode.
  	 */
- 	error = xfs_inactive_ifree(ip);
- 	if (error)
--		goto out;
-+		return;
+-	xfs_bmap_init(&free_list, &first_block);
+-	error = xfs_ifree(tp, ip, &free_list);
+-	if (error) {
+-		/*
+-		 * If we fail to free the inode, shut down.  The cancel
+-		 * might do that, we need to make sure.  Otherwise the
+-		 * inode might be lost for a long time or forever.
+-		 */
+-		if (!XFS_FORCED_SHUTDOWN(mp)) {
+-			xfs_notice(mp, "%s: xfs_ifree returned error %d",
+-				__func__, error);
+-			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+-		}
+-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+-	} else {
+-		/*
+-		 * Credit the quota account(s). The inode is gone.
+-		 */
+-		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
+-
+-		/*
+-		 * Just ignore errors at this point.  There is nothing we can
+-		 * do except to try to keep going. Make sure it's not a silent
+-		 * error.
+-		 */
+-		error = xfs_bmap_finish(&tp,  &free_list, &committed);
+-		if (error)
+-			xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
+-				__func__, error);
+-		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		if (error)
+-			xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+-				__func__, error);
+-	}
++	error = xfs_inactive_ifree(ip);
++	if (error)
++		goto out;
  
  	/*
  	 * Release the dquots held by inode, if any.
  	 */
  	xfs_qm_dqdetach(ip);
--out:
--	return VN_INACTIVE_CACHE;
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out:
+ 	return VN_INACTIVE_CACHE;
  }
- 
- /*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 4a91358..cce62ce 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -316,7 +316,7 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
- 
- 
- int		xfs_release(struct xfs_inode *ip);
--int		xfs_inactive(struct xfs_inode *ip);
-+void		xfs_inactive(struct xfs_inode *ip);
- int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
- int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
-diff --git a/fs/xfs/xfs_vnode.h b/fs/xfs/xfs_vnode.h
-index db14d0c..3e8e797 100644
---- a/fs/xfs/xfs_vnode.h
-+++ b/fs/xfs/xfs_vnode.h
-@@ -25,14 +25,6 @@ struct xfs_inode;
- struct attrlist_cursor_kern;
- 
- /*
-- * Return values for xfs_inactive.  A return value of
-- * VN_INACTIVE_NOCACHE implies that the file system behavior
-- * has disassociated its state and bhv_desc_t from the vnode.
-- */
--#define	VN_INACTIVE_CACHE	0
--#define	VN_INACTIVE_NOCACHE	1
--
--/*
-  * Flags for read/write calls - same values as IRIX
-  */
- #define IO_ISDIRECT	0x00004		/* bypass page cache */
 -- 
 1.8.1.4
 
