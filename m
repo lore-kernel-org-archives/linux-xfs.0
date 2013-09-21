@@ -1,33 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 88DD229DFB
-	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 09:37:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 66F658F8052
-	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 07:37:50 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id kqPeGuj3CPkxFZRx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Sep 2013 07:37:49 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r8LEblsQ020365
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:37:48 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r8LEbkx1003064
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:37:47 GMT
-Received: from abhmt113.oracle.com (abhmt113.oracle.com [141.146.116.65])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r8LEbkpC014990 for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:37:46 GMT
-Message-ID: <523DAF67.9070206@oracle.com>
-Date: Sat, 21 Sep 2013 22:38:31 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 90E3A29DFB
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 16:17:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 530D48F804B
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:17:44 -0700 (PDT)
+Received: from mail-qc0-f181.google.com (mail-qc0-f181.google.com
+	[209.85.216.181]) by cuda.sgi.com with ESMTP id
+	5G9njxVYUgoO0Ct0 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 21 Sep 2013 14:17:39 -0700 (PDT)
+Received: by mail-qc0-f181.google.com with SMTP id q4so1123721qcx.26
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:17:39 -0700 (PDT)
+Date: Sat, 21 Sep 2013 17:17:35 -0400
+From: Eric Whitney <enwlinux@gmail.com>
+Subject: [PATCH] xfstests: set umask to avoid spurious generic/314 test
+	failures
+Message-ID: <20130921211735.GC7855@wallace>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: fix the extent count when allocating an new indirection
-	array entry
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,43 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org
 
-From: Jie Liu <jeff.liu@oracle.com>
+Generic/314 can fail when the group write file mode bit for "subdir" does not
+match that found in the golden output, as has been seen in ext4 regression
+testing.  It appears that the golden output for generic/314 was taken on a
+system where the $qa_user's umask cleared that mode bit - most likely, where
+the umask was 022.  Depending upon the distro, it's not uncommon for a user's
+default umask to have a different value, such as 002.  When that's the case,
+we get a false negative failure when the group write mode bit for "subdir" is
+not cleared.  This failure is unrelated to the value of the SGID mode bit
+that is the object of this test.
 
-At xfs_iext_add(), if extent(s) are being appended to the last
-page in the indirection array and the new extent(s) don't fit
-in the page, the number of extents(erp->er_extcount) in a new
-allocated entry should be the minimum value between count and
-XFS_LINEAR_EXTS, instead of count.
+We could either require that $qa_user's account be configured in advance with
+a umask of 022, or explicitly set a umask value compatible with the golden
+output when creating "subdir".  The latter option is more robust.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Signed-off-by: Eric Whitney <enwlinux@gmail.com>
 ---
- fs/xfs/xfs_inode_fork.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ tests/generic/314 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+ mode change 100644 => 100755 tests/generic/314
 
-diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-index 02f1083..dfb4226 100644
---- a/fs/xfs/xfs_inode_fork.c
-+++ b/fs/xfs/xfs_inode_fork.c
-@@ -1035,11 +1035,11 @@ xfs_iext_add(
+diff --git a/tests/generic/314 b/tests/generic/314
+old mode 100644
+new mode 100755
+index 0dd98a3..f430b82
+--- a/tests/generic/314
++++ b/tests/generic/314
+@@ -57,7 +57,7 @@ chown $qa_user:12345 $TEST_DIR/$seq-dir
+ chmod 2775 $TEST_DIR/$seq-dir
  
- 			while (count) {
- 				erp = xfs_iext_irec_new(ifp, erp_idx);
--				erp->er_extcount = count;
--				count -= MIN(count, (int)XFS_LINEAR_EXTS);
--				if (count) {
-+				erp->er_extcount = MIN(count,
-+						       (int)XFS_LINEAR_EXTS);
-+				count -= erp->er_extcount;
-+				if (count)
- 					erp_idx++;
--				}
- 			}
- 		}
- 	}
+ # Make subdirs before & after acl set
+-su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir"
++su $qa_user -c "umask 022; mkdir $TEST_DIR/$seq-dir/subdir"
+ su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
+ su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
+ 
 -- 
-1.7.9.5
+1.8.1.2
 
 _______________________________________________
 xfs mailing list
