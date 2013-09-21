@@ -1,21 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7904F7F37
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 17:06:03 -0500 (CDT)
-Received: from eagdhcp-232-140.americas.sgi.com
-	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 09559AC003
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 15:05:59 -0700 (PDT)
-Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r8KM5wND004469
-	for <xfs@oss.sgi.com>; Fri, 20 Sep 2013 17:05:58 -0500 (CDT)
-	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
-Message-Id: <20130920220519.585903357@sgi.com>
-Date: Fri, 20 Sep 2013 17:05:08 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: fix node forward in xfs_node_toosmall 
-Content-Disposition: inline; filename=xfs-fix-xfs_da3_node_toosmall-test.patch
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 88DD229DFB
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 09:37:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 66F658F8052
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 07:37:50 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id kqPeGuj3CPkxFZRx (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 21 Sep 2013 07:37:49 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r8LEblsQ020365
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:37:48 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r8LEbkx1003064
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:37:47 GMT
+Received: from abhmt113.oracle.com (abhmt113.oracle.com [141.146.116.65])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r8LEbkpC014990 for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 14:37:46 GMT
+Message-ID: <523DAF67.9070206@oracle.com>
+Date: Sat, 21 Sep 2013 22:38:31 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: fix the extent count when allocating an new indirection
+	array entry
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,60 +36,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Commit f5ea1100 cleans up the disk to host conversions for
-node directory entries, but because a variable is reused in
-xfs_node_toosmall() the next node is not correctly found.
-If the original node is small enough (<= 3/8 of the node size),
-this change may incorrectly cause a node collapse when it should
-not. That will cause an assert in xfstest generic/319:
+From: Jie Liu <jeff.liu@oracle.com>
 
-   Assertion failed: first <= last && last < BBTOB(bp->b_length),
-   file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
+At xfs_iext_add(), if extent(s) are being appended to the last
+page in the indirection array and the new extent(s) don't fit
+in the page, the number of extents(erp->er_extcount) in a new
+allocated entry should be the minimum value between count and
+XFS_LINEAR_EXTS, instead of count.
 
-Keep the original node header to get the correct forward node.
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_da_btree.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_inode_fork.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Index: b/fs/xfs/xfs_da_btree.c
-===================================================================
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -1163,6 +1163,7 @@ xfs_da3_node_toosmall(
- 	xfs_dablk_t		blkno;
- 	struct xfs_buf		*bp;
- 	struct xfs_da3_icnode_hdr nodehdr;
-+	struct xfs_da3_icnode_hdr firstnhdr;
- 	int			count;
- 	int			forward;
- 	int			error;
-@@ -1221,13 +1222,14 @@ xfs_da3_node_toosmall(
- 	count -= state->node_ents >> 2;
- 	count -= nodehdr.count;
+diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+index 02f1083..dfb4226 100644
+--- a/fs/xfs/xfs_inode_fork.c
++++ b/fs/xfs/xfs_inode_fork.c
+@@ -1035,11 +1035,11 @@ xfs_iext_add(
  
-+	firstnhdr = nodehdr;
- 	/* start with smaller blk num */
- 	forward = nodehdr.forw < nodehdr.back;
- 	for (i = 0; i < 2; forward = !forward, i++) {
- 		if (forward)
--			blkno = nodehdr.forw;
-+			blkno = firstnhdr.forw;
- 		else
--			blkno = nodehdr.back;
-+			blkno = firstnhdr.back;
- 		if (blkno == 0)
- 			continue;
- 		error = xfs_da3_node_read(state->args->trans, state->args->dp,
-
+ 			while (count) {
+ 				erp = xfs_iext_irec_new(ifp, erp_idx);
+-				erp->er_extcount = count;
+-				count -= MIN(count, (int)XFS_LINEAR_EXTS);
+-				if (count) {
++				erp->er_extcount = MIN(count,
++						       (int)XFS_LINEAR_EXTS);
++				count -= erp->er_extcount;
++				if (count)
+ 					erp_idx++;
+-				}
+ 			}
+ 		}
+ 	}
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
