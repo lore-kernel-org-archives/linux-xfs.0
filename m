@@ -1,33 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5B1997CBE
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 01:01:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D76C27F37
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 01:46:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4A2FC8F804B
-	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 23:01:31 -0700 (PDT)
-Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142]) by
-	cuda.sgi.com with ESMTP id LQ1PWXK1sd5jx1e4 (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B0E5F8F8050
+	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 23:46:02 -0700 (PDT)
+Received: from e28smtp03.in.ibm.com (e28smtp03.in.ibm.com [122.248.162.3]) by
+	cuda.sgi.com with ESMTP id u3pDyoEo1YX6E8bB (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Sep 2013 23:01:29 -0700 (PDT)
+	Sat, 21 Sep 2013 23:46:01 -0700 (PDT)
 Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
 	Only! Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Sun, 22 Sep 2013 16:01:26 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B70D42CE8051
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 16:01:23 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r8M61CE77471576
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 16:01:12 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r8M61NFm009113 for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 16:01:23 +1000
-Message-ID: <1379829679.4089.2.camel@ThinkPad-T5421>
-Subject: [PATCH] xfsprogs: fix potential memory leak in verify_set_primary_sb()
+	Sun, 22 Sep 2013 12:15:58 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 2875C3940058
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 12:15:41 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r8M6mBrZ38469832
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 12:18:11 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	r8M6jths021940 for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 12:15:55 +0530
+Message-ID: <1379832353.4089.10.camel@ThinkPad-T5421>
+Subject: [PATCH] xfsprogs: fix potential memory free issues in
+	quota_group_type()
 From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Sun, 22 Sep 2013 14:01:19 +0800
+Date: Sun, 22 Sep 2013 14:45:53 +0800
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -44,31 +45,32 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfsprogs <xfs@oss.sgi.com>
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
-as suggested by sekharan.
+This patch tries to fix CID 997009 reported by Coverity scan, as 
+suggested by sekharan
+
+If getgroups() fails, gids might be malloced, and overwritten with &gid.
+So the free() at the end of the function is trying to free a variable on
+the stack, while the pointer to the allocated memory is lost. 
 
 Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
 ---
- repair/sb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ quota/quota.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/repair/sb.c b/repair/sb.c
-index aa550e3..7abf47c 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 	/*
- 	 * see if we have enough superblocks to bother with
- 	 */
--	if (num_ok < num_sbs / 2)
--		return(XR_INSUFF_SEC_SB);
-+	if (num_ok < num_sbs / 2) {
-+		retval = XR_INSUFF_SEC_SB;
-+		goto out_free_list;
-+	}
- 
- 	current = get_best_geo(list);
- 
+diff --git a/quota/quota.c b/quota/quota.c
+index 7e52ad2..ae9b156 100644
+--- a/quota/quota.c
++++ b/quota/quota.c
+@@ -292,7 +292,8 @@ quota_group_type(
+ 	} else if ( ((ngroups = sysconf(_SC_NGROUPS_MAX)) < 0) ||
+ 		    ((gids = malloc(ngroups * sizeof(gid_t))) == NULL) ||
+ 		    ((ngroups = getgroups(ngroups, gids)) < 0)) {
+-		dofree = (gids != NULL);
++		if (gids)
++			free(gids);
+ 		gid = getgid();
+ 		gids = &gid;
+ 		ngroups = 1;
 -- 
 1.8.1.4
 
