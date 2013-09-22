@@ -1,35 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D76C27F37
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 01:46:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B0E5F8F8050
-	for <xfs@oss.sgi.com>; Sat, 21 Sep 2013 23:46:02 -0700 (PDT)
-Received: from e28smtp03.in.ibm.com (e28smtp03.in.ibm.com [122.248.162.3]) by
-	cuda.sgi.com with ESMTP id u3pDyoEo1YX6E8bB (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 51F947F4E
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 03:24:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E556304039
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 01:24:33 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id KL7sx7Uwyg5SrS1V (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Sep 2013 23:46:01 -0700 (PDT)
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Sun, 22 Sep 2013 12:15:58 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 2875C3940058
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 12:15:41 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r8M6mBrZ38469832
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 12:18:11 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r8M6jths021940 for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 12:15:55 +0530
-Message-ID: <1379832353.4089.10.camel@ThinkPad-T5421>
-Subject: [PATCH] xfsprogs: fix potential memory free issues in
-	quota_group_type()
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Sun, 22 Sep 2013 14:45:53 +0800
-Mime-Version: 1.0
+	Sun, 22 Sep 2013 01:24:31 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r8M8OU5J016214
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 08:24:31 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r8M8OTpZ017340
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 08:24:30 GMT
+Received: from abhmt113.oracle.com (abhmt113.oracle.com [141.146.116.65])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r8M8OTlP017332 for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 08:24:29 GMT
+Message-ID: <523EA96B.3040904@oracle.com>
+Date: Sun, 22 Sep 2013 16:25:15 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: fix the wrong new_size/rnew_size at
+	xfs_iext_realloc_direct()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,39 +40,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfsprogs <xfs@oss.sgi.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This patch tries to fix CID 997009 reported by Coverity scan, as 
-suggested by sekharan
+From: Jie Liu <jeff.liu@oracle.com>
 
-If getgroups() fails, gids might be malloced, and overwritten with &gid.
-So the free() at the end of the function is trying to free a variable on
-the stack, while the pointer to the allocated memory is lost. 
+At xfs_iext_realloc_direct(), the new_size is changed by adding
+if_bytes if originally the extent records are stored at the inline
+extent buffer, and we have to switch from it to a direct extent
+list for those new allocated extents, this is wrong. e.g,
 
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+Create a file with three extents which was showing as following,
+
+xfs_io -f -c "truncate 100m" /xfs/testme
+
+for i in $(seq 0 5 10); do
+	offset=$(($i * $((1 << 20))))
+	xfs_io -c "pwrite $offset 1m" /xfs/testme
+done
+
+Inline
+------
+irec:	if_bytes	bytes_diff	new_size
+1st	0		16		16
+2nd	16		16		32
+
+Switching
+---------						rnew_size
+3rd	32		16		48 + 32 = 80	roundup=128
+
+In this case, the desired value of new_size should be 48, and then
+it will be roundup to 64 and be assigned to rnew_size.
+
+However, this issue has been covered by resetting the if_bytes to
+the new_size which is calculated at the begnning of xfs_iext_add()
+before leaving out this function, and in turn make the rnew_size
+correctly again. Hence, this can not be detected via xfstestes.
+
+This patch fix above problem and revise the new_size comments at
+xfs_iext_realloc_direct() to make it more readable.  Also, fix the
+comments while switching from the inline extent buffer to a direct
+extent list to reflect this change.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- quota/quota.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_inode_fork.c |    9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/quota/quota.c b/quota/quota.c
-index 7e52ad2..ae9b156 100644
---- a/quota/quota.c
-+++ b/quota/quota.c
-@@ -292,7 +292,8 @@ quota_group_type(
- 	} else if ( ((ngroups = sysconf(_SC_NGROUPS_MAX)) < 0) ||
- 		    ((gids = malloc(ngroups * sizeof(gid_t))) == NULL) ||
- 		    ((ngroups = getgroups(ngroups, gids)) < 0)) {
--		dofree = (gids != NULL);
-+		if (gids)
-+			free(gids);
- 		gid = getgid();
- 		gids = &gid;
- 		ngroups = 1;
+diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+index dfb4226..7c6192a 100644
+--- a/fs/xfs/xfs_inode_fork.c
++++ b/fs/xfs/xfs_inode_fork.c
+@@ -1359,7 +1359,7 @@ xfs_iext_remove_indirect(
+ void
+ xfs_iext_realloc_direct(
+ 	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	int		new_size)	/* new size of extents */
++	int		new_size)	/* new size of extents after adding */
+ {
+ 	int		rnew_size;	/* real new size of extents */
+ 
+@@ -1397,13 +1397,8 @@ xfs_iext_realloc_direct(
+ 				rnew_size - ifp->if_real_bytes);
+ 		}
+ 	}
+-	/*
+-	 * Switch from the inline extent buffer to a direct
+-	 * extent list. Be sure to include the inline extent
+-	 * bytes in new_size.
+-	 */
++	/* Switch from the inline extent buffer to a direct extent list */
+ 	else {
+-		new_size += ifp->if_bytes;
+ 		if (!is_power_of_2(new_size)) {
+ 			rnew_size = roundup_pow_of_two(new_size);
+ 		}
 -- 
-1.8.1.4
-
-
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
