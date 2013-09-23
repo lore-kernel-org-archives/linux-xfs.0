@@ -1,21 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B63CC7F58
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 09:04:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 96FBE8F8049
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 07:04:31 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ASiVp576UTmu9day for <xfs@oss.sgi.com>;
-	Mon, 23 Sep 2013 07:04:30 -0700 (PDT)
-Message-ID: <52404A6E.4070306@sandeen.net>
-Date: Mon, 23 Sep 2013 09:04:30 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7EB0D7F5A
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 09:17:38 -0500 (CDT)
+Message-ID: <52404D7F.1080308@sgi.com>
+Date: Mon, 23 Sep 2013 09:17:35 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: xfsprogs: update version for 3.2.0-alpha1
-References: <20130916205637.GD1935@sgi.com> <20130916223855.GF19103@dastard>
-	<20130923122623.GA2199@infradead.org>
-In-Reply-To: <20130923122623.GA2199@infradead.org>
+Subject: Re: [PATCH] [RFC] xfs: lookaside cache for xfs_buf_find
+References: <1378690396-15792-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1378690396-15792-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,49 +17,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: rjohnston@sgi.com, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 9/23/13 7:26 AM, Christoph Hellwig wrote:
-> On Tue, Sep 17, 2013 at 08:38:55AM +1000, Dave Chinner wrote:
->> On Mon, Sep 16, 2013 at 03:56:37PM -0500, Ben Myers wrote:
->>> xfsprogs: update version for 3.2.0-alpha1
->>
->> I'd say this is a major feature and infrastructure
->> update across the entire xfsprogs package, and in that case a
->> PKG_MAJOR bump is warranted, not PKG_MINOR.
->>
->> i.e. We're shooting for a 4.0 release, not 3.2...
-> 
-> I tend to disagree with the 4.0 bump.
-> 
-> 2.0 was when the new xattr ABI was introduced, and 3.0 was when we
-> pulled fsr over from xfsdump to xfsprogs as well as drastically reducing
-> the amount of installed headers.
-> 
-> While the v5 support is a major internal change I think 3.2 would fit
-> better for this.
+On 09/08/13 20:33, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> CPU overhead of buffer lookups dominate most metadata intensive
+> workloads. The thing is, most such workloads are hitting a
+> relatively small number of buffers repeatedly, and so caching
+> recently hit buffers is a good idea.
+>
+...
 
-*shrug* TBH I Don't care a whole lot.  Externally for old users in theory
-it shouldn't be a big change.  But internally it's huge, and it enables
-a new disk format, so ... well, I don't want to bikeshed it too much.
+I think this needs more testing.
 
-I'd mostly like to see _something_ w/ a version number on it so distros
-can easily start to pick it up in testing repos.
+I get the following panic in a loop test after a few (3-8) iterations:
 
-> I'd also be tempted to just cut 3.2.0 instead of an alpha version - just
-> keep the v5 support experimental, maybe under a configure option.
+  while true
+   do
+    tar zxpf xfs.tar
+    cd xfs
+    make
+    make modules
+    cd ..
+    rm -r xfs
+  done
 
-But so many changes are already made throughout the codebase, I think firing
-off a point release with half-baked V5 support seems weird at this point.
 
-IOWs, aside from the V5 work I'm not sure anything merits a point release.
+BUG: unable to handle kernel paging request at ffff880831c1d218
+IP: [<ffffffffa01886c8>] _xfs_buf_find_lookaside+0x98/0xb0 [xfs]
+PGD 1c5d067 PUD 85ffe0067 PMD 85fe51067 PTE 8000000831c1d060
+Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+Modules linked in: xfs(O) e1000e exportfs libcrc32c ext3 jbd [last 
+unloaded: xfs
+]
+CPU: 0 PID: 23423 Comm: tar Tainted: G           O 3.11.0-rc1+ #3
+task: ffff880837f087a0 ti: ffff880831c46000 task.ti: ffff880831c46000
+RIP: 0010:[<ffffffffa01886c8>]  [<ffffffffa01886c8>] 
+_xfs_buf_find_lookaside+0x9
+8/0xb0 [xfs]
+RSP: 0018:ffff880831c47918  EFLAGS: 00010286
+RAX: ffff880831c1d200 RBX: ffff8808372e0000 RCX: 0000000000000003
+  RDX: 0000000000000011 RSI: 00000000000009c0 RDI: ffff8808372e0000
+  RBP: ffff880831c47938 R08: ffff8808372e0000 R09: ffff8808376e8d80
+  R10: 0000000000000010 R11: 00000000000009c0 R12: 00000000000009c0
+  R13: 0000000000000010 R14: 0000000000000001 R15: 00000000000009c0
+  FS:  00007fa4bc51f700(0000) GS:ffff88085bc00000(0000) 
+knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: ffff880831c1d218 CR3: 000000082ed00000 CR4: 00000000000007f0
+  Stack:
+   ffff880831c47938 ffff880831c47aa8 0000000000000010 ffff880834ab7900
+   ffff880831c479b8 ffffffffa018a679 ffff8808372e00c0 ffff88082eed01a0
+   0000000000000029 ffff8808372e01f0 0000000000000000 000200015bfe1c68
+  Call Trace:
+   [<ffffffffa018a679>] _xfs_buf_find+0x159/0x520 [xfs]
+   [<ffffffffa018aea0>] xfs_buf_get_map+0x30/0x130 [xfs]
+   [<ffffffffa018afc6>] xfs_buf_read_map+0x26/0xa0 [xfs]
+   [<ffffffffa01fbf5d>] xfs_trans_read_buf_map+0x16d/0x4c0 [xfs]
+   [<ffffffffa01e784c>] xfs_imap_to_bp+0x6c/0x120 [xfs]
+   [<ffffffffa01e7975>] xfs_iread+0x75/0x2f0 [xfs]
+   [<ffffffff8114eafb>] ? inode_init_always+0xfb/0x1c0
+   [<ffffffffa019311a>] xfs_iget_cache_miss+0x5a/0x1e0 [xfs]
+   [<ffffffffa01933db>] xfs_iget+0x13b/0x1c0 [xfs]
+   [<ffffffffa01dfaad>] xfs_ialloc+0xbd/0x860 [xfs]
+   [<ffffffffa01e02e7>] xfs_dir_ialloc+0x97/0x2e0 [xfs]
+   [<ffffffffa01a2308>] ? xfs_trans_reserve+0x308/0x310 [xfs]
 
--Eric
+I got the same panic running xfstest 319 with the patch at:
+    http://oss.sgi.com/archives/xfs/2013-09/msg00578.html
+once it hung on a xfs_buf lock before the panic.
+
+And these are the only tests that I threw at this patch.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
