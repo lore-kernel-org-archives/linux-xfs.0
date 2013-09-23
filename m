@@ -1,14 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E915C7F3F
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 13:19:58 -0500 (CDT)
-Message-Id: <20130923171911.273669684@sgi.com>
-Date: Mon, 23 Sep 2013 12:18:58 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall 
-References: <20130920220519.585903357@sgi.com>
-Content-Disposition: inline;
-	filename=v2-xfs-fix-xfs_da3_node_toosmall-test.patch
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ECA4A7F3F
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 15:34:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DAB16304043
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 13:34:09 -0700 (PDT)
+Received: from smtprelay.hostedemail.com (smtprelay0064.hostedemail.com
+	[216.40.44.64]) by cuda.sgi.com with ESMTP id LG0Mh6GbGFf98TX9
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 13:34:08 -0700 (PDT)
+Message-ID: <1379968445.3575.60.camel@joe-AO722>
+Subject: Re: [PATCH] stable_kernel_rules.txt: Exclude networking from stable
+	rules
+From: Joe Perches <joe@perches.com>
+Date: Mon, 23 Sep 2013 13:34:05 -0700
+In-Reply-To: <20130922185104.GA7515@infradead.org>
+References: <alpine.LRH.2.02.1309191229480.32035@file01.intranet.prod.int.rdu2.redhat.com>
+	<20130919.135628.1201613770803318193.davem@davemloft.net>
+	<alpine.LRH.2.02.1309191359300.12162@file01.intranet.prod.int.rdu2.redhat.com>
+	<1379615474.22168.13.camel@joe-AO722>
+	<20130922185104.GA7515@infradead.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,58 +28,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, stable@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-doc@vger.kernel.org, netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, stephen@networkplumber.org, Mikulas Patocka <mpatocka@redhat.com>, Rob Landley <rob@landley.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, David Miller <davem@davemloft.net>
 
-Commit f5ea1100 cleans up the disk to host conversions for
-node directory entries, but because a variable is reused in
-xfs_node_toosmall() the next node is not correctly found.
-If the original node is small enough (<= 3/8 of the node size),
-this change may incorrectly cause a node collapse when it should
-not. That will cause an assert in xfstest generic/319:
+On Sun, 2013-09-22 at 11:51 -0700, Christoph Hellwig wrote:
+> This is also the preferred way to do it for XFS.  Maybe word it in a way
+> that we can easily add subsystems.
+> 
+> To me it generally seems to be the best way to do it - having random Ccs
+> and lots of stable trees doesn't seem like a very good way of handling
+> it.
 
-   Assertion failed: first <= last && last < BBTOB(bp->b_length),
-   file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
+Maybe adding a mechanism to MAINTAINERS would be better.
+Maybe a default B: (backport?) of stable@vger.kernel.org
+with a per-subsystem override?
 
-Keep the original node header to get the correct forward node.
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- v2 -> Dave's local variable approach.
-    -> send to -stable this bug is in 3.10 and 3.11
-
- fs/xfs/xfs_da_btree.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-Index: b/fs/xfs/xfs_da_btree.c
-===================================================================
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -1224,6 +1224,7 @@ xfs_da3_node_toosmall(
- 	/* start with smaller blk num */
- 	forward = nodehdr.forw < nodehdr.back;
- 	for (i = 0; i < 2; forward = !forward, i++) {
-+		struct xfs_da3_icnode_hdr thdr; 
- 		if (forward)
- 			blkno = nodehdr.forw;
- 		else
-@@ -1236,10 +1237,10 @@ xfs_da3_node_toosmall(
- 			return(error);
- 
- 		node = bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+		xfs_da3_node_hdr_from_disk(&thdr, node);
- 		xfs_trans_brelse(state->args->trans, bp);
- 
--		if (count - nodehdr.count >= 0)
-+		if (count - thdr.count >= 0)
- 			break;	/* fits with at least 25% to spare */
- 	}
- 	if (i >= 2) {
+SUBSYSTEM TYPE
+M:	maintainer@email.address
+L:	list@email.address
+S:	Supported
+F:	file/pattern/
+B:	stable@email.address
 
 
 _______________________________________________
