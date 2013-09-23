@@ -1,14 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0375F7F55
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 08:38:17 -0500 (CDT)
-Message-ID: <52404448.7040800@sgi.com>
-Date: Mon, 23 Sep 2013 08:38:16 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id B63CC7F58
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 09:04:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 96FBE8F8049
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 07:04:31 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ASiVp576UTmu9day for <xfs@oss.sgi.com>;
+	Mon, 23 Sep 2013 07:04:30 -0700 (PDT)
+Message-ID: <52404A6E.4070306@sandeen.net>
+Date: Mon, 23 Sep 2013 09:04:30 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix node forward in xfs_node_toosmall
-References: <20130920220519.585903357@sgi.com> <20130923000824.GK12541@dastard>
-In-Reply-To: <20130923000824.GK12541@dastard>
+Subject: Re: xfsprogs: update version for 3.2.0-alpha1
+References: <20130916205637.GD1935@sgi.com> <20130916223855.GF19103@dastard>
+	<20130923122623.GA2199@infradead.org>
+In-Reply-To: <20130923122623.GA2199@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,70 +24,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: rjohnston@sgi.com, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On 09/22/13 19:08, Dave Chinner wrote:
-> On Fri, Sep 20, 2013 at 05:05:08PM -0500, Mark Tinguely wrote:
->> Commit f5ea1100 cleans up the disk to host conversions for
->> node directory entries, but because a variable is reused in
->> xfs_node_toosmall() the next node is not correctly found.
->> If the original node is small enough (<= 3/8 of the node size),
->> this change may incorrectly cause a node collapse when it should
->> not. That will cause an assert in xfstest generic/319:
+On 9/23/13 7:26 AM, Christoph Hellwig wrote:
+> On Tue, Sep 17, 2013 at 08:38:55AM +1000, Dave Chinner wrote:
+>> On Mon, Sep 16, 2013 at 03:56:37PM -0500, Ben Myers wrote:
+>>> xfsprogs: update version for 3.2.0-alpha1
 >>
->>     Assertion failed: first<= last&&  last<  BBTOB(bp->b_length),
->>     file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
+>> I'd say this is a major feature and infrastructure
+>> update across the entire xfsprogs package, and in that case a
+>> PKG_MAJOR bump is warranted, not PKG_MINOR.
 >>
->> Keep the original node header to get the correct forward node.
->>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->> ---
+>> i.e. We're shooting for a 4.0 release, not 3.2...
+> 
+> I tend to disagree with the 4.0 bump.
+> 
+> 2.0 was when the new xattr ABI was introduced, and 3.0 was when we
+> pulled fsr over from xfsdump to xfsprogs as well as drastically reducing
+> the amount of installed headers.
+> 
+> While the v5 support is a major internal change I think 3.2 would fit
+> better for this.
 
-...
+*shrug* TBH I Don't care a whole lot.  Externally for old users in theory
+it shouldn't be a big change.  But internally it's huge, and it enables
+a new disk format, so ... well, I don't want to bikeshed it too much.
 
-> Yes, that definitely a bug, but I think that the change doesn't
-> scope correctly. The original node header doesn't need to be saved
-> like this - the node header decoded in the loop needs a loop-scope
-> variable. i.e.:
->
-> 	/* start with smaller blk num */
-> 	forward = nodehdr.forw<  nodehdr.back;
-> 	for (i = 0; i<  2; forward = !forward, i++) {
-> +		struct xfs_da3_icnode_hdr thdr;
-> +
-> 		if (forward)
-> 			blkno = nodehdr.forw;
-> 		else
-> 			blkno = nodehdr.back;
-> 		if (blkno == 0)
-> 			continue;
-> 		error = xfs_da3_node_read(state->args->trans, state->args->dp,
-> 					blkno, -1,&bp, state->args->whichfork);
-> 		if (error)
-> 			return(error);
->
-> 		node = bp->b_addr;
-> -		xfs_da3_node_hdr_from_disk(&nodehdr, node);
-> +		xfs_da3_node_hdr_from_disk(&thdr, node);
-> 		xfs_trans_brelse(state->args->trans, bp);
->
-> -		if (count - nodehdr.count>= 0)
-> +		if (count - thdr.count>= 0)
-> 			break;  /* fits with at least 25% to spare */
-> 	}
->
-> Cheers,
->
-> Dave.
+I'd mostly like to see _something_ w/ a version number on it so distros
+can easily start to pick it up in testing repos.
 
-Okay thanks.
+> I'd also be tempted to just cut 3.2.0 instead of an alpha version - just
+> keep the v5 support experimental, maybe under a configure option.
 
---Mark.
+But so many changes are already made throughout the codebase, I think firing
+off a point release with half-baked V5 support seems weird at this point.
+
+IOWs, aside from the V5 work I'm not sure anything merits a point release.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
