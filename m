@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 61B7B7F37
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 07:26:31 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1E3A47F4E
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 08:17:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E601EAC003
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 05:26:27 -0700 (PDT)
-Date: Mon, 23 Sep 2013 05:26:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsprogs: update version for 3.2.0-alpha1
-Message-ID: <20130923122623.GA2199@infradead.org>
-References: <20130916205637.GD1935@sgi.com>
- <20130916223855.GF19103@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C3FB304059
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 06:17:50 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id I2C5HPUA1cb4ZpUN (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 23 Sep 2013 06:17:49 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 393199A03DC
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 07:17:49 -0600 (MDT)
+Date: Mon, 23 Sep 2013 09:17:46 -0400
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstest/btrfs/001: fix the misuse of subvolume set-default
+Message-ID: <20130923131746.GA18681@localhost.localdomain>
+References: <1379926049-22135-1-git-send-email-bo.li.liu@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130916223855.GF19103@dastard>
+In-Reply-To: <1379926049-22135-1-git-send-email-bo.li.liu@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,30 +32,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: sandeen@sandeen.net, Ben Myers <bpm@sgi.com>, rjohnston@sgi.com, xfs@oss.sgi.com
+To: Liu Bo <bo.li.liu@oracle.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 17, 2013 at 08:38:55AM +1000, Dave Chinner wrote:
-> On Mon, Sep 16, 2013 at 03:56:37PM -0500, Ben Myers wrote:
-> > xfsprogs: update version for 3.2.0-alpha1
+On Mon, Sep 23, 2013 at 04:47:29PM +0800, Liu Bo wrote:
+> The command is
+> btrfs subvolume set-default <subvolid> <path>.
 > 
-> I'd say this is a major feature and infrastructure
-> update across the entire xfsprogs package, and in that case a
-> PKG_MAJOR bump is warranted, not PKG_MINOR.
+> It uses @subvolid to control the default subvolume and
+> @subvolid=0 has always been parsed into FS_TREE no matter
+> what subvolume @path points to.
 > 
-> i.e. We're shooting for a 4.0 release, not 3.2...
+> So in order to set a subvolume to the default one, we need
+> to get the id of this subvolume first.
+> 
+> Also fix a typo:
+> s/sbuvolid/subvolid/g
+> 
+> Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
 
-I tend to disagree with the 4.0 bump.
+Sent a patch for this already.  Thanks,
 
-2.0 was when the new xattr ABI was introduced, and 3.0 was when we
-pulled fsr over from xfsdump to xfsprogs as well as drastically reducing
-the amount of installed headers.
-
-While the v5 support is a major internal change I think 3.2 would fit
-better for this.
-
-I'd also be tempted to just cut 3.2.0 instead of an alpha version - just
-keep the v5 support experimental, maybe under a configure option.
+Josef
 
 _______________________________________________
 xfs mailing list
