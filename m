@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0186629DFB
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 23:46:47 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9D5327CBF
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 23:56:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D35E9304032
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 21:46:43 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80707304043
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 21:56:14 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id TgPIAMrDAcpdGs9F (version=TLSv1
+	cuda.sgi.com with ESMTP id DR1yCNesSaQ1EQE2 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Sep 2013 21:46:41 -0700 (PDT)
-Message-ID: <523FC7DB.20204@oracle.com>
-Date: Mon, 23 Sep 2013 12:47:23 +0800
+	Sun, 22 Sep 2013 21:56:13 -0700 (PDT)
+Message-ID: <523FCA18.1000204@oracle.com>
+Date: Mon, 23 Sep 2013 12:56:56 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix the wrong new_size/rnew_size at
-	xfs_iext_realloc_direct()
-References: <523EA96B.3040904@oracle.com> <20130923005657.GN12541@dastard>
-In-Reply-To: <20130923005657.GN12541@dastard>
+Subject: Re: [PATCH] xfs: improve xfs_iext_destroy() by freeing extent
+	indirection array directly
+References: <523C5E92.8000406@oracle.com> <20130923003617.GM12541@dastard>
+In-Reply-To: <20130923003617.GM12541@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,64 +32,90 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Dave,
+On 09/23/2013 08:36 AM, Dave Chinner wrote:
 
-On 09/23/2013 08:56 AM, Dave Chinner wrote:
-
-> On Sun, Sep 22, 2013 at 04:25:15PM +0800, Jeff Liu wrote:
+> On Fri, Sep 20, 2013 at 10:41:22PM +0800, Jeff Liu wrote:
 >> From: Jie Liu <jeff.liu@oracle.com>
 >>
->> At xfs_iext_realloc_direct(), the new_size is changed by adding
->> if_bytes if originally the extent records are stored at the inline
->> extent buffer, and we have to switch from it to a direct extent
->> list for those new allocated extents, this is wrong. e.g,
+>> To free the incore file extents stores at the indirection array, we
+>> call the common routine xfs_iext_irec_remove() to remove a record
+>> from the array one at a time in reverse order, which will resize an
+>> extent indirection array repeatedly according to the array size.
 >>
->> Create a file with three extents which was showing as following,
->>
->> xfs_io -f -c "truncate 100m" /xfs/testme
->>
->> for i in $(seq 0 5 10); do
->> 	offset=$(($i * $((1 << 20))))
->> 	xfs_io -c "pwrite $offset 1m" /xfs/testme
->> done
->>
->> Inline
->> ------
->> irec:	if_bytes	bytes_diff	new_size
->> 1st	0		16		16
->> 2nd	16		16		32
->>
->> Switching
->> ---------						rnew_size
->> 3rd	32		16		48 + 32 = 80	roundup=128
->>
->> In this case, the desired value of new_size should be 48, and then
->> it will be roundup to 64 and be assigned to rnew_size.
+>> This is not often the case to make a file with thousands extent records
+>> stores at an indirection array, but above operation is inefficient and
+>> could result in memory fragments.
 > 
-> Ok, so it allocates 128 bytes instead of 64 bytes. It tracks that
-> allocation size correctly ifp->if_real_bytes, and all it means is
-> that there are 4 empty extra slots in the extent array. The code
-> already handles having empty slots in the direct extent array, so
-> what impact is there as a result of the oversized initial allocation
-> that is currently happening?
+> Yes, it may be inefficient, but I don't see that it's a contributor
+> to memory fragmentation as the reallocated buffer is freed shortly
+> after it has been allocated as the array shrinks. Do you have any
+> evidence to suggest that such behaviour is actually fragmenting
+> memory? If so, is the any test case that reproduces this problem?
+
+Ah, yes, it should not cause memory fragmentation.
+
+The benefits is that this change could save alloc/free buffers depending
+on the number of extents records are stored at indirection array.
+
 > 
-> i.e. if fixing the oversized results in more memory allocations due
-> to resizing more regularly, then is there a benefit to changing this
-> code given that the rewrite of the ifp->if_bytes value in the case
-> where we do inline->direct conversion prevents this over-allocation
-> from being a problem...
+> How did you test the change?
 
-I guess my current patch subject/description mislead you.  The result
-of the oversized can be ignored since this can be handled in the direct
-extent array as empty slots.
+I only test this change with a simple case for creating a sparse file
+with 8192 extents, which was shown as following,
 
-Actually, what I want to say is that we don't need to perform "new_size += ifp->if_bytes;"
-again at xfs_iext_realloc_direct() because the new_size at xfs_iext_add()
-already be the size of extents after adding, just as the variable comments
-is mentioned.
+xfs_io -f -c "truncate 10g" /xfs/testme
+
+for i in $(seq 0 1 8191); do
+	offset=$(($i * $((1 << 20))))
+	xfs_io -c "pwrite $offset 1k" /xfs/testme
+done
+
+> 
+>> This patch refine xfs_iext_destroy() by freeing the extent records from
+>> the indirection array directly in this case.
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> ---
+> 
+> FWIW, it is best to title a resend as [PATCH x/y, V2], and here tell
+> us what changed between posts such as:
+> 
+> V2:
+> - fixed typo in original posting
+
+Ok. :)
 
 Thanks,
 -Jeff
+
+> 
+>>  fs/xfs/xfs_inode_fork.c |    7 +++++--
+>>  1 file changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+>> index 02f1083..ba70f98 100644
+>> --- a/fs/xfs/xfs_inode_fork.c
+>> +++ b/fs/xfs/xfs_inode_fork.c
+>> @@ -1525,9 +1525,12 @@ xfs_iext_destroy(
+>>  		int	nlists;
+>>  
+>>  		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+>> -		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
+>> -			xfs_iext_irec_remove(ifp, erp_idx);
+>> +		for (erp_idx = 0; erp_idx < nlists; erp_idx++) {
+>> +			xfs_ext_irec_t	*erp = &ifp->if_u1.if_ext_irec[erp_idx];
+>> +			if (erp->er_extbuf)
+>> +				kmem_free(erp->er_extbuf);
+>>  		}
+>> +		kmem_free(ifp->if_u1.if_ext_irec);
+> 
+> 
+> The code looks correct...
+> 
+> Cheers,
+> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
