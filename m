@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E3A47F4E
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 08:17:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C3FB304059
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 06:17:50 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id I2C5HPUA1cb4ZpUN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Sep 2013 06:17:49 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 393199A03DC
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 07:17:49 -0600 (MDT)
-Date: Mon, 23 Sep 2013 09:17:46 -0400
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [PATCH] xfstest/btrfs/001: fix the misuse of subvolume set-default
-Message-ID: <20130923131746.GA18681@localhost.localdomain>
-References: <1379926049-22135-1-git-send-email-bo.li.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C1D557F52
+	for <linux-xfs@oss.sgi.com>; Mon, 23 Sep 2013 08:36:55 -0500 (CDT)
+Message-ID: <524043F4.6000202@sgi.com>
+Date: Mon, 23 Sep 2013 08:36:52 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1379926049-22135-1-git-send-email-bo.li.liu@oracle.com>
+Subject: Re: [PATCH] xfs_check: fix test for too-high level in v2 dir node
+References: <52322B67.80305@redhat.com> <523A0086.1080000@sgi.com>
+	<523A0AF0.3000507@sandeen.net>
+In-Reply-To: <523A0AF0.3000507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +18,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Liu Bo <bo.li.liu@oracle.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>
 
-On Mon, Sep 23, 2013 at 04:47:29PM +0800, Liu Bo wrote:
-> The command is
-> btrfs subvolume set-default <subvolid> <path>.
-> 
-> It uses @subvolid to control the default subvolume and
-> @subvolid=0 has always been parsed into FS_TREE no matter
-> what subvolume @path points to.
-> 
-> So in order to set a subvolume to the default one, we need
-> to get the id of this subvolume first.
-> 
-> Also fix a typo:
-> s/sbuvolid/subvolid/g
-> 
-> Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
+On 09/18/13 15:20, Eric Sandeen wrote:
+> On 9/18/13 2:35 PM, Mark Tinguely wrote:
+>> On 09/12/13 16:00, Eric Sandeen wrote:
+>>> The test as it stands allows level == XFS_DA_NODE_MAXDEPTH (5),
+>>> but a max depth of 5 equates to level values of 0 through 4.
+>>>
+>>> Level 5 would be a depth of 6.
+>>>
+>>> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+>>> ---
+>>>
+>>
+>>> diff --git a/db/check.c b/db/check.c
+>>> index cbe55ba..d9e3e3f 100644
+>>> --- a/db/check.c
+>>> +++ b/db/check.c
+>>> @@ -3138,7 +3138,7 @@ process_leaf_node_dir_v2_int(
+>>>        case XFS_DA_NODE_MAGIC:
+>>>            node = iocur_top->data;
+>>>            xfs_da3_node_hdr_from_disk(&nodehdr, node);
+>>> -        if (nodehdr.level <  1 || nodehdr.level >  XFS_DA_NODE_MAXDEPTH) {
+>>> +        if (nodehdr.level <  1 || nodehdr.level >= XFS_DA_NODE_MAXDEPTH) {
+>>>                if (!sflag || v)
+>>>                    dbprintf(_("bad node block level %d for dir ino "
+>>>                         "%lld block %d\n"),
+>>
+>>
+>> I think the current code is correct.
+>>
+>> 0 is a leaf. levels 1-XFS_DA_NODE_MAXDEPTH are nodes.
+>> Subtract 1 when used as an index.
+>
+>          case XFS_DA_NODE_MAGIC:
+>                  node = iocur_top->data;
+>                  xfs_da3_node_hdr_from_disk(&nodehdr, node);
+> 			to->level = be16_to_cpu(from->hdr.__level);
+>                  if (nodehdr.level < 1 || nodehdr.level > XFS_DA_NODE_MAXDEPTH) {
+>
+> so nodehdr.level comes directly off the disk.
+>
+> Hm, ok, let's look at the verifier, xfs_da3_node_verify:
+>
+> xfs_da3_node_hdr_from_disk /* sets to->level = be16_to_cpu(from->hdr.__level) */
+>
+> ...
+>
+>          if (ichdr.level == 0)
+>                  return false;
+>          if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
+>                  return false;
+>
+> ok, so 1 through XFS_DA_NODE_MAXDEPTH is valid for a generic node.  *shrug* ok
+> fine, I agree.  It's only xfs_check anyway.  ;)
+>
+> Feel free to drop this patch then.
+>
+> But now I'm trying to reconcile it w/ the code in repair,
+>
+>   			i = da_cursor->active = nodehdr.level;
+> 			if (i < 1 || i >= XFS_DA_NODE_MAXDEPTH) {
+>
+> which considers nodehdr.level == XFS_DA_NODE_MAXDEPTH to be problematic, because
+> i (== nodehdr.level) is used directly as an index into a level[XFS_DA_NODE_MAXDEPTH]-sized
+> array.
+>
+> So confused.  :/  (Maybe the cursor array needs to be 1 bigger?)
+>
+> -Eric
 
-Sent a patch for this already.  Thanks,
+Strange, the kernel attribute asserts use XFS_DA_NODE_MAXDEPTH-1 as the 
+maximum good value.
 
-Josef
+Looks like the repair code uses the cursor level[0], so we cannot index 
+with (i - 1). I agree that the array in the da_bt_cursor should be one 
+greater.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
