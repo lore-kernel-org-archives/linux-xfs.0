@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9D5327CBF
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 23:56:14 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 328FD7F37
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 03:47:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80707304043
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 21:56:14 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id DR1yCNesSaQ1EQE2 (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 11BBD8F8033
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 01:47:45 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id AoqqG8tqMNccpddz (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Sep 2013 21:56:13 -0700 (PDT)
-Message-ID: <523FCA18.1000204@oracle.com>
-Date: Mon, 23 Sep 2013 12:56:56 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: improve xfs_iext_destroy() by freeing extent
-	indirection array directly
-References: <523C5E92.8000406@oracle.com> <20130923003617.GM12541@dastard>
-In-Reply-To: <20130923003617.GM12541@dastard>
+	Mon, 23 Sep 2013 01:47:40 -0700 (PDT)
+From: Liu Bo <bo.li.liu@oracle.com>
+Subject: [PATCH] xfstest/btrfs/001: fix the misuse of subvolume set-default
+Date: Mon, 23 Sep 2013 16:47:29 +0800
+Message-Id: <1379926049-22135-1-git-send-email-bo.li.liu@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,97 +21,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-btrfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On 09/23/2013 08:36 AM, Dave Chinner wrote:
+The command is
+btrfs subvolume set-default <subvolid> <path>.
 
-> On Fri, Sep 20, 2013 at 10:41:22PM +0800, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> To free the incore file extents stores at the indirection array, we
->> call the common routine xfs_iext_irec_remove() to remove a record
->> from the array one at a time in reverse order, which will resize an
->> extent indirection array repeatedly according to the array size.
->>
->> This is not often the case to make a file with thousands extent records
->> stores at an indirection array, but above operation is inefficient and
->> could result in memory fragments.
-> 
-> Yes, it may be inefficient, but I don't see that it's a contributor
-> to memory fragmentation as the reallocated buffer is freed shortly
-> after it has been allocated as the array shrinks. Do you have any
-> evidence to suggest that such behaviour is actually fragmenting
-> memory? If so, is the any test case that reproduces this problem?
+It uses @subvolid to control the default subvolume and
+@subvolid=0 has always been parsed into FS_TREE no matter
+what subvolume @path points to.
 
-Ah, yes, it should not cause memory fragmentation.
+So in order to set a subvolume to the default one, we need
+to get the id of this subvolume first.
 
-The benefits is that this change could save alloc/free buffers depending
-on the number of extents records are stored at indirection array.
+Also fix a typo:
+s/sbuvolid/subvolid/g
 
-> 
-> How did you test the change?
+Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
+---
+ tests/btrfs/001     |    5 +++--
+ tests/btrfs/001.out |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-I only test this change with a simple case for creating a sparse file
-with 8192 extents, which was shown as following,
-
-xfs_io -f -c "truncate 10g" /xfs/testme
-
-for i in $(seq 0 1 8191); do
-	offset=$(($i * $((1 << 20))))
-	xfs_io -c "pwrite $offset 1k" /xfs/testme
-done
-
-> 
->> This patch refine xfs_iext_destroy() by freeing the extent records from
->> the indirection array directly in this case.
->>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->> ---
-> 
-> FWIW, it is best to title a resend as [PATCH x/y, V2], and here tell
-> us what changed between posts such as:
-> 
-> V2:
-> - fixed typo in original posting
-
-Ok. :)
-
-Thanks,
--Jeff
-
-> 
->>  fs/xfs/xfs_inode_fork.c |    7 +++++--
->>  1 file changed, 5 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
->> index 02f1083..ba70f98 100644
->> --- a/fs/xfs/xfs_inode_fork.c
->> +++ b/fs/xfs/xfs_inode_fork.c
->> @@ -1525,9 +1525,12 @@ xfs_iext_destroy(
->>  		int	nlists;
->>  
->>  		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
->> -		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
->> -			xfs_iext_irec_remove(ifp, erp_idx);
->> +		for (erp_idx = 0; erp_idx < nlists; erp_idx++) {
->> +			xfs_ext_irec_t	*erp = &ifp->if_u1.if_ext_irec[erp_idx];
->> +			if (erp->er_extbuf)
->> +				kmem_free(erp->er_extbuf);
->>  		}
->> +		kmem_free(ifp->if_u1.if_ext_irec);
-> 
-> 
-> The code looks correct...
-> 
-> Cheers,
-> 
-> Dave.
-
+diff --git a/tests/btrfs/001 b/tests/btrfs/001
+index 9aa2431..1864e01 100755
+--- a/tests/btrfs/001
++++ b/tests/btrfs/001
+@@ -77,12 +77,13 @@ ls $SCRATCH_MNT/subvol
+ echo "Creating file bar in subvol"
+ dd if=/dev/zero of=$SCRATCH_MNT/subvol/bar bs=1M count=1 &> /dev/null
+ echo "Setting subvol to the default"
+-$BTRFS_UTIL_PROG subvolume set-default 0 $SCRATCH_MNT/subvol | _filter_scratch
++subid=`$BTRFS_UTIL_PROG subvolume list $SCRATCH_MNT | grep subvol | awk '{print $2}'`
++$BTRFS_UTIL_PROG subvolume set-default $subid $SCRATCH_MNT | _filter_scratch
+ _scratch_remount
+ echo "List root dir which is now subvol"
+ ls $SCRATCH_MNT
+ _scratch_unmount
+-echo "Mounting sbuvolid=0 for the root dir"
++echo "Mounting subvolid=0 for the root dir"
+ _scratch_mount "-o subvolid=0"
+ echo "List root dir"
+ ls $SCRATCH_MNT
+diff --git a/tests/btrfs/001.out b/tests/btrfs/001.out
+index c782bde..7810c27 100644
+--- a/tests/btrfs/001.out
++++ b/tests/btrfs/001.out
+@@ -22,7 +22,7 @@ Creating file bar in subvol
+ Setting subvol to the default
+ List root dir which is now subvol
+ bar
+-Mounting sbuvolid=0 for the root dir
++Mounting subvolid=0 for the root dir
+ List root dir
+ snap
+ subvol
+-- 
+1.7.7
 
 _______________________________________________
 xfs mailing list
