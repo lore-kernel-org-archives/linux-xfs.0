@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DEECD29DFB
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 19:08:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CFC8F8F8037
-	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 17:08:31 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6ADCC29DFB
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 19:25:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 55F438F8039
+	for <xfs@oss.sgi.com>; Sun, 22 Sep 2013 17:25:45 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	FVxv8PNvMkfyR2np for <xfs@oss.sgi.com>;
-	Sun, 22 Sep 2013 17:08:29 -0700 (PDT)
-Date: Mon, 23 Sep 2013 10:08:24 +1000
+	GFsCNVMj3titi23z for <xfs@oss.sgi.com>;
+	Sun, 22 Sep 2013 17:25:43 -0700 (PDT)
+Date: Mon, 23 Sep 2013 10:24:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix node forward in xfs_node_toosmall
-Message-ID: <20130923000824.GK12541@dastard>
-References: <20130920220519.585903357@sgi.com>
+Subject: Re: [PATCH] xfs: fix the extent count when allocating an new
+	indirection array entry
+Message-ID: <20130923002448.GL12541@dastard>
+References: <523DAF67.9070206@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130920220519.585903357@sgi.com>
+In-Reply-To: <523DAF67.9070206@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,87 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Sep 20, 2013 at 05:05:08PM -0500, Mark Tinguely wrote:
-> Commit f5ea1100 cleans up the disk to host conversions for
-> node directory entries, but because a variable is reused in
-> xfs_node_toosmall() the next node is not correctly found.
-> If the original node is small enough (<= 3/8 of the node size),
-> this change may incorrectly cause a node collapse when it should
-> not. That will cause an assert in xfstest generic/319:
+On Sat, Sep 21, 2013 at 10:38:31PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
->    Assertion failed: first <= last && last < BBTOB(bp->b_length),
->    file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
-> 
-> Keep the original node header to get the correct forward node.
-> 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> At xfs_iext_add(), if extent(s) are being appended to the last
+> page in the indirection array and the new extent(s) don't fit
+> in the page, the number of extents(erp->er_extcount) in a new
+> allocated entry should be the minimum value between count and
+> XFS_LINEAR_EXTS, instead of count.
+
+Definitely looks like a bug, but what are the symptoms of it and how
+did you find the problem? Is there any test case that demonstrates a
+problem with the er_extcount being set incorrectly here?
+
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 > ---
->  fs/xfs/xfs_da_btree.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_inode_fork.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> Index: b/fs/xfs/xfs_da_btree.c
-> ===================================================================
-> --- a/fs/xfs/xfs_da_btree.c
-> +++ b/fs/xfs/xfs_da_btree.c
-> @@ -1163,6 +1163,7 @@ xfs_da3_node_toosmall(
->  	xfs_dablk_t		blkno;
->  	struct xfs_buf		*bp;
->  	struct xfs_da3_icnode_hdr nodehdr;
-> +	struct xfs_da3_icnode_hdr firstnhdr;
->  	int			count;
->  	int			forward;
->  	int			error;
-> @@ -1221,13 +1222,14 @@ xfs_da3_node_toosmall(
->  	count -= state->node_ents >> 2;
->  	count -= nodehdr.count;
+> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+> index 02f1083..dfb4226 100644
+> --- a/fs/xfs/xfs_inode_fork.c
+> +++ b/fs/xfs/xfs_inode_fork.c
+> @@ -1035,11 +1035,11 @@ xfs_iext_add(
 >  
-> +	firstnhdr = nodehdr;
->  	/* start with smaller blk num */
->  	forward = nodehdr.forw < nodehdr.back;
->  	for (i = 0; i < 2; forward = !forward, i++) {
->  		if (forward)
-> -			blkno = nodehdr.forw;
-> +			blkno = firstnhdr.forw;
->  		else
-> -			blkno = nodehdr.back;
-> +			blkno = firstnhdr.back;
->  		if (blkno == 0)
->  			continue;
->  		error = xfs_da3_node_read(state->args->trans, state->args->dp,
+>  			while (count) {
+>  				erp = xfs_iext_irec_new(ifp, erp_idx);
+> -				erp->er_extcount = count;
+> -				count -= MIN(count, (int)XFS_LINEAR_EXTS);
+> -				if (count) {
+> +				erp->er_extcount = MIN(count,
+> +						       (int)XFS_LINEAR_EXTS);
+> +				count -= erp->er_extcount;
 
-Yes, that definitely a bug, but I think that the change doesn't
-scope correctly. The original node header doesn't need to be saved
-like this - the node header decoded in the loop needs a loop-scope
-variable. i.e.:
-
-	/* start with smaller blk num */
-	forward = nodehdr.forw < nodehdr.back;
-	for (i = 0; i < 2; forward = !forward, i++) {
-+		struct xfs_da3_icnode_hdr thdr;
-+
-		if (forward)
-			blkno = nodehdr.forw;
-		else
-			blkno = nodehdr.back;
-		if (blkno == 0)
-			continue;
-		error = xfs_da3_node_read(state->args->trans, state->args->dp,
-					blkno, -1, &bp, state->args->whichfork);
-		if (error)
-			return(error);
-
-		node = bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+		xfs_da3_node_hdr_from_disk(&thdr, node);
-		xfs_trans_brelse(state->args->trans, bp);
-
--		if (count - nodehdr.count >= 0)
-+		if (count - thdr.count >= 0)
-			break;  /* fits with at least 25% to spare */
-	}
+count is declared as an int, whereas XFS_LINEAR_EXTS probably ends
+up with a type of uint because of a cast in the macro. because we
+are decrementing to zero, the count can be declared as a uint, too,
+and the cast in the MIN() can go away. Indeed, MIN() should be
+converted to min() seeing as we are touching the code here, and if
+you want to retain the current types, the min_t() is appropriate,
+not min(x, (some cast)y)....
 
 Cheers,
 
