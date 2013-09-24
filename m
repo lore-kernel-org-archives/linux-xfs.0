@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 054CA7F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 12:17:10 -0500 (CDT)
-Message-ID: <5241C915.4040106@sgi.com>
-Date: Tue, 24 Sep 2013 12:17:09 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 1C08129DFC
+	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 12:35:45 -0500 (CDT)
+Message-ID: <5241CD70.7050800@sgi.com>
+Date: Tue, 24 Sep 2013 12:35:44 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/5] xfs: asserting lock not held during freeing not valid
-References: <1380002476-18839-1-git-send-email-david@fromorbit.com>
-	<1380002476-18839-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1380002476-18839-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall
+References: <20130920220519.585903357@sgi.com>
+	<20130923171911.273669684@sgi.com> <20130923234819.GW9901@dastard>
+In-Reply-To: <20130923234819.GW9901@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,28 +23,46 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-On 09/24/13 01:01, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
+On 09/23/13 18:48, Dave Chinner wrote:
+> On Mon, Sep 23, 2013 at 12:18:58PM -0500, Mark Tinguely wrote:
+>> Commit f5ea1100 cleans up the disk to host conversions for
+>> node directory entries, but because a variable is reused in
+>> xfs_node_toosmall() the next node is not correctly found.
+>> If the original node is small enough (<= 3/8 of the node size),
+>> this change may incorrectly cause a node collapse when it should
+>> not.
 >
-> When we free an inode, we do so via RCU. As an RCU lookup can occur
-> at any time before we free an inode, and that lookup takes the inode
-> flags lock, we cannot safely assert that the flags lock is not held
-> just before marking it dead and running call_rcu() to free the
-> inode.
+> The comment about the size of the node triggering a collapse is
+> irrelevant - nodes always collapse at that given size. What this
+> doesn't tell us is why the crash occurs - "the next node is not
+> correctly found" is not particularly obvious, and would require
+> quite a bit of code reading to work out from first principles a
+> couple of years down the track.
 >
-> We check on allocation of a new inode structre that the lock is not
-> held, so we still have protection against locks being leaked and
-> hence not correctly initialised when allocated out of the slab.
-> Hence just remove the assert...
+> The commit message should be more precise and describe what the
+> underlying cause of the failure was. i.e. that the node is finding itself as the merge
+> candidate because we go forward, overwrite the pointers and the new
+> block's backward sibling is the original block which is where we end
+> up on teh second loop.  And vice versa if we go backwards first...
 >
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+> Also, the "next node" is correctly termed a "sibling", and it's
+> either the forwards or backwards sibling, not the "next" sibling as
+> the direction of movement is important. So perhaps this
+> is better written as:
+>
+> "When a node is considered for a merge with a sibling, it overwrites
+> the sibling pointers of the original node with the sibling's
+> pointers. This leads to loop considering the original node as a
+> merge candidate with itself in the second pass, and so it
+> incorrectly determines a merge should occur."
+>
 
-Looks good.
+Are you done ranting? Get the @#$% bug patched.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+--Mark.
+
 
 _______________________________________________
 xfs mailing list
