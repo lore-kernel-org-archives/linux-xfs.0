@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.12-rc1-4-g566055d
-Message-Id: <20130924200659.91D1229DFB@oss.sgi.com>
-Date: Tue, 24 Sep 2013 15:06:59 -0500 (CDT)
+Message-Id: <20130924200708.5C34829DFB@oss.sgi.com>
+Date: Tue, 24 Sep 2013 15:07:08 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   566055d xfs: log recovery lsn ordering needs uuid check
   b771af2 xfs: fix XFS_IOC_FREE_EOFBLOCKS definition
   b313a5f xfs: asserting lock not held during freeing not valid
