@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4C15F29DFB
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8EADE29DFC
 	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 01:01:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C870EAC008
-	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 23:01:54 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7C2CC30405F
+	for <xfs@oss.sgi.com>; Mon, 23 Sep 2013 23:01:52 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ZI4CUEBFUyXLKyPP for <xfs@oss.sgi.com>;
-	Mon, 23 Sep 2013 23:01:53 -0700 (PDT)
+	cYEl3hhdsTwvpA1S for <xfs@oss.sgi.com>;
+	Mon, 23 Sep 2013 23:01:51 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VOLgU-0007K7-Vu
-	for xfs@oss.sgi.com; Tue, 24 Sep 2013 16:01:19 +1000
+	(envelope-from <dave@fromorbit.com>) id 1VOLgU-0007K5-Um
+	for xfs@oss.sgi.com; Tue, 24 Sep 2013 16:01:18 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VOLgU-0004uo-VA
+	(envelope-from <dave@disappointment.disaster>) id 1VOLgU-0004ue-Ty
 	for xfs@oss.sgi.com; Tue, 24 Sep 2013 16:01:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] xfs: fix XFS_IOC_FREE_EOFBLOCKS definition
-Date: Tue, 24 Sep 2013 16:01:15 +1000
-Message-Id: <1380002476-18839-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/5] xfs: lock the AIL before removing the buffer item
+Date: Tue, 24 Sep 2013 16:01:13 +1000
+Message-Id: <1380002476-18839-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380002476-18839-1-git-send-email-david@fromorbit.com>
 References: <1380002476-18839-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,27 +39,27 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It uses a kernel internal structure in it's definition rather than
-the user visible structure that is passed to the ioctl.
+Regression introduced by commit 46f9d2e ("xfs: aborted buf items can
+be in the AIL") which fails to lock the AIL before removing the
+item. Spinlock debugging throws a warning about this.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_buf_item.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 1edb5cc..18272c7 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -515,7 +515,7 @@ typedef struct xfs_swapext
- /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
--#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
-+#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 88c5ea7..f1d85cf 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -628,6 +628,7 @@ xfs_buf_item_unlock(
+ 		else if (aborted) {
+ 			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+ 			if (lip->li_flags & XFS_LI_IN_AIL) {
++				spin_lock(&lip->li_ailp->xa_lock);
+ 				xfs_trans_ail_delete(lip->li_ailp, lip,
+ 						     SHUTDOWN_LOG_IO_ERROR);
+ 			}
 -- 
 1.8.3.2
 
