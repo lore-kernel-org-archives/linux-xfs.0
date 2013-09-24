@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9ABAE7F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 11:12:37 -0500 (CDT)
-Message-ID: <5241B9F5.2020500@sgi.com>
-Date: Tue, 24 Sep 2013 11:12:37 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 85AE77F4E
+	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 11:13:43 -0500 (CDT)
+Message-ID: <5241BA37.3020507@sgi.com>
+Date: Tue, 24 Sep 2013 11:13:43 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/5] xfs: lock the AIL before removing the buffer item
+Subject: Re: [PATCH 4/5] xfs: fix XFS_IOC_FREE_EOFBLOCKS definition
 References: <1380002476-18839-1-git-send-email-david@fromorbit.com>
-	<1380002476-18839-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1380002476-18839-3-git-send-email-david@fromorbit.com>
+	<1380002476-18839-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1380002476-18839-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,9 +28,8 @@ Cc: xfs@oss.sgi.com
 On 09/24/13 01:01, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Regression introduced by commit 46f9d2e ("xfs: aborted buf items can
-> be in the AIL") which fails to lock the AIL before removing the
-> item. Spinlock debugging throws a warning about this.
+> It uses a kernel internal structure in it's definition rather than
+> the user visible structure that is passed to the ioctl.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
