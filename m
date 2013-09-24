@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B692929DFC
-	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 12:41:57 -0500 (CDT)
-Message-ID: <5241CEE2.5040607@sgi.com>
-Date: Tue, 24 Sep 2013 12:41:54 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 97D0029DFC
+	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 12:46:37 -0500 (CDT)
+Date: Tue, 24 Sep 2013 12:46:33 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/5] xfs: fixes for 3.12-rc3
+Message-ID: <20130924174633.GH1935@sgi.com>
+References: <1380002476-18839-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] [RFC] xfs: lookaside cache for xfs_buf_find
-References: <1378690396-15792-1-git-send-email-david@fromorbit.com>
-	<52404D7F.1080308@sgi.com> <20130924004803.GZ9901@dastard>
-In-Reply-To: <20130924004803.GZ9901@dastard>
+Content-Disposition: inline
+In-Reply-To: <1380002476-18839-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,52 +18,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/23/13 19:48, Dave Chinner wrote:
-> On Mon, Sep 23, 2013 at 09:17:35AM -0500, Mark Tinguely wrote:
->> On 09/08/13 20:33, Dave Chinner wrote:
->>> From: Dave Chinner<dchinner@redhat.com>
->>>
->>> CPU overhead of buffer lookups dominate most metadata intensive
->>> workloads. The thing is, most such workloads are hitting a
->>> relatively small number of buffers repeatedly, and so caching
->>> recently hit buffers is a good idea.
->>>
->> ...
->>
->> I think this needs more testing.
->
-> Yes, that's what an "RFC" implies. It's an idea, it's not
-> fully baked and it's not ready for inclusion - it's a proof of
-> concept that needs further work, and I't being posted for discussion
-> to determine if it's worth pursuing further.
->
-> Indeed, I haven't proposed it for inclusion yet because I'm
-> still finding problems caused by the patch - it's still just a
-> prototype at this point.
->
->> I got the same panic running xfstest 319 with the patch at:
->>     http://oss.sgi.com/archives/xfs/2013-09/msg00578.html
->> once it hung on a xfs_buf lock before the panic.
->>
->> And these are the only tests that I threw at this patch.
->
-> Sure. The version I have in my stack at the moment has some more
-> ixes in it, like handling of length mismatches due to stale buffers
-> on lookaside lookups, and other such things.
->
-> i.e. early feedback on prototype code is exactly what [RFC] patches
-> are for...
+On Tue, Sep 24, 2013 at 04:01:11PM +1000, Dave Chinner wrote:
+> These are fixes needed for regressions introduced in the 3.12 merge.
+> I posted the first 3 patches a week ago, and sinve then I've found a
+> couple more issues in working through all the xfstests failures I've
+> been seeing since 3.12-rc1 was released.
+> 
+> The last patch in the series fixes a filesystem corruption bug, so
+> getting these into -rc3 should be considered a priority....
 
-And early feedback is that it has potential but needs more work.
-
---Mark.
+Applied 2-5.
 
 _______________________________________________
 xfs mailing list
