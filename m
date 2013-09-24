@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1C08129DFC
-	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 12:35:45 -0500 (CDT)
-Message-ID: <5241CD70.7050800@sgi.com>
-Date: Tue, 24 Sep 2013 12:35:44 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B692929DFC
+	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 12:41:57 -0500 (CDT)
+Message-ID: <5241CEE2.5040607@sgi.com>
+Date: Tue, 24 Sep 2013 12:41:54 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall
-References: <20130920220519.585903357@sgi.com>
-	<20130923171911.273669684@sgi.com> <20130923234819.GW9901@dastard>
-In-Reply-To: <20130923234819.GW9901@dastard>
+Subject: Re: [PATCH] [RFC] xfs: lookaside cache for xfs_buf_find
+References: <1378690396-15792-1-git-send-email-david@fromorbit.com>
+	<52404D7F.1080308@sgi.com> <20130924004803.GZ9901@dastard>
+In-Reply-To: <20130924004803.GZ9901@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +23,47 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On 09/23/13 18:48, Dave Chinner wrote:
-> On Mon, Sep 23, 2013 at 12:18:58PM -0500, Mark Tinguely wrote:
->> Commit f5ea1100 cleans up the disk to host conversions for
->> node directory entries, but because a variable is reused in
->> xfs_node_toosmall() the next node is not correctly found.
->> If the original node is small enough (<= 3/8 of the node size),
->> this change may incorrectly cause a node collapse when it should
->> not.
+On 09/23/13 19:48, Dave Chinner wrote:
+> On Mon, Sep 23, 2013 at 09:17:35AM -0500, Mark Tinguely wrote:
+>> On 09/08/13 20:33, Dave Chinner wrote:
+>>> From: Dave Chinner<dchinner@redhat.com>
+>>>
+>>> CPU overhead of buffer lookups dominate most metadata intensive
+>>> workloads. The thing is, most such workloads are hitting a
+>>> relatively small number of buffers repeatedly, and so caching
+>>> recently hit buffers is a good idea.
+>>>
+>> ...
+>>
+>> I think this needs more testing.
 >
-> The comment about the size of the node triggering a collapse is
-> irrelevant - nodes always collapse at that given size. What this
-> doesn't tell us is why the crash occurs - "the next node is not
-> correctly found" is not particularly obvious, and would require
-> quite a bit of code reading to work out from first principles a
-> couple of years down the track.
+> Yes, that's what an "RFC" implies. It's an idea, it's not
+> fully baked and it's not ready for inclusion - it's a proof of
+> concept that needs further work, and I't being posted for discussion
+> to determine if it's worth pursuing further.
 >
-> The commit message should be more precise and describe what the
-> underlying cause of the failure was. i.e. that the node is finding itself as the merge
-> candidate because we go forward, overwrite the pointers and the new
-> block's backward sibling is the original block which is where we end
-> up on teh second loop.  And vice versa if we go backwards first...
+> Indeed, I haven't proposed it for inclusion yet because I'm
+> still finding problems caused by the patch - it's still just a
+> prototype at this point.
 >
-> Also, the "next node" is correctly termed a "sibling", and it's
-> either the forwards or backwards sibling, not the "next" sibling as
-> the direction of movement is important. So perhaps this
-> is better written as:
+>> I got the same panic running xfstest 319 with the patch at:
+>>     http://oss.sgi.com/archives/xfs/2013-09/msg00578.html
+>> once it hung on a xfs_buf lock before the panic.
+>>
+>> And these are the only tests that I threw at this patch.
 >
-> "When a node is considered for a merge with a sibling, it overwrites
-> the sibling pointers of the original node with the sibling's
-> pointers. This leads to loop considering the original node as a
-> merge candidate with itself in the second pass, and so it
-> incorrectly determines a merge should occur."
+> Sure. The version I have in my stack at the moment has some more
+> ixes in it, like handling of length mismatches due to stale buffers
+> on lookaside lookups, and other such things.
 >
+> i.e. early feedback on prototype code is exactly what [RFC] patches
+> are for...
 
-Are you done ranting? Get the @#$% bug patched.
+And early feedback is that it has potential but needs more work.
 
 --Mark.
-
 
 _______________________________________________
 xfs mailing list
