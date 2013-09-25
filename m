@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1F2387F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 07:56:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F0095304032
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:56:15 -0700 (PDT)
-Received: from mail-oa0-f45.google.com (mail-oa0-f45.google.com
-	[209.85.219.45]) by cuda.sgi.com with ESMTP id cu02S3voC8rWx8Mv
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:56:13 -0700 (PDT)
-Received: by mail-oa0-f45.google.com with SMTP id o17so959349oag.32
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:56:13 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BC4B77F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 08:26:49 -0500 (CDT)
+Message-ID: <5242E494.7080900@sgi.com>
+Date: Wed, 25 Sep 2013 08:26:44 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Date: Wed, 25 Sep 2013 13:56:13 +0100
-Message-ID: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
-Subject: xfs hardware RAID alignment over linear lvm
-From: Stewart Webb <stew@messeduphare.co.uk>
+Subject: Re: [PATCH v2] xfsprogs: fix potential memory leak in
+	verify_set_primary_sb()
+References: <1379829679.4089.2.camel@ThinkPad-T5421> <5241E125.7010902@sgi.com>
+	<1380094327.2526.5.camel@ThinkPad-T5421>
+In-Reply-To: <1380094327.2526.5.camel@ThinkPad-T5421>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,60 +19,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8494542312913600004=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Li Zhong <zhong@linux.vnet.ibm.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
---===============8494542312913600004==
-Content-Type: multipart/alternative; boundary=047d7b33d5a0354b7d04e734c7e6
+On 09/25/13 02:32, Li Zhong wrote:
+> This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
+> as suggested by sekharan.
+>
+> v2: as Mark pointed out, out in the for loop before also needs list to
+> be freed. Also remove out lable as it is not referenced any more.
+>
+> Signed-off-by: Li Zhong<zhong@linux.vnet.ibm.com>
+> ---
 
---047d7b33d5a0354b7d04e734c7e6
-Content-Type: text/plain; charset=ISO-8859-1
+Thank-you, that looks great.
 
-Hi All,
-
-I am trying to do the following:
-3 x Hardware RAID Cards each with a raid 6 volume of 12 disks presented to
-the OS
-all raid units have a "stripe size" of 512 KB
-
-so given the info on the xfs.org wiki - I sould give each filesystem a
-sunit of 512 KB and a swidth of 10 (because RAID 6 has 2 parity disks)
-
-all well and good
-
-But - I would like to use Linear LVM to bring all 3 cards into 1 logical
-volume -
-here is where my question crops up:
-Does this effect how I need to align the filesystem?
-
-Regards
-
--- 
-Stewart Webb
-
---047d7b33d5a0354b7d04e734c7e6
-Content-Type: text/html; charset=ISO-8859-1
-
-<div dir="ltr">Hi All,<div><br></div><div>I am trying to do the following:</div><div>3 x Hardware RAID Cards each with a raid 6 volume of 12 disks presented to the OS</div><div>all raid units have a &quot;stripe size&quot; of 512 KB</div>
-<div><br></div><div>so given the info on the <a href="http://xfs.org">xfs.org</a> wiki - I sould give each filesystem a sunit of 512 KB and a swidth of 10 (because RAID 6 has 2 parity disks)</div><div><br></div><div>all well and good</div>
-<div><br></div><div>But - I would like to use Linear LVM to bring all 3 cards into 1 logical volume -</div><div>here is where my question crops up:</div><div>Does this effect how I need to align the filesystem?</div><div>
-<br></div><div>Regards</div><div><br></div><div>-- <br><div dir="ltr"><div></div>Stewart Webb<br></div>
-</div></div>
-
---047d7b33d5a0354b7d04e734c7e6--
-
-
---===============8494542312913600004==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8494542312913600004==--
