@@ -1,26 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 977C37F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 19:31:19 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 912647F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 02:32:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 33F28AC009
-	for <xfs@oss.sgi.com>; Tue, 24 Sep 2013 17:31:16 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	pw1M1sHTB2ltobdA for <xfs@oss.sgi.com>;
-	Tue, 24 Sep 2013 17:31:13 -0700 (PDT)
-Date: Wed, 25 Sep 2013 10:31:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: don't try to mark uncached buffers stale on
-	error.
-Message-ID: <20130925003108.GF26872@dastard>
-References: <1380002476-18839-1-git-send-email-david@fromorbit.com>
-	<1380002476-18839-2-git-send-email-david@fromorbit.com>
-	<20130924153324.GF1935@sgi.com> <20130924203232.GA26872@dastard>
-	<20130924205949.GK1935@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130924205949.GK1935@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8053B8F804C
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 00:32:50 -0700 (PDT)
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145]) by
+	cuda.sgi.com with ESMTP id y9cCkbb4WHB1nHu7 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Sep 2013 00:32:32 -0700 (PDT)
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	Only! Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
+	Wed, 25 Sep 2013 17:32:13 +1000
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7A2FC3578052
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 17:32:11 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r8P7FMNe53215366
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 17:15:22 +1000
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r8P7WA6J029119 for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 17:32:10 +1000
+Message-ID: <1380094327.2526.5.camel@ThinkPad-T5421>
+Subject: [PATCH v2] xfsprogs: fix potential memory leak in
+	verify_set_primary_sb()
+From: Li Zhong <zhong@linux.vnet.ibm.com>
+Date: Wed, 25 Sep 2013 15:32:07 +0800
+In-Reply-To: <5241E125.7010902@sgi.com>
+References: <1379829679.4089.2.camel@ThinkPad-T5421> <5241E125.7010902@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,35 +44,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
-On Tue, Sep 24, 2013 at 03:59:49PM -0500, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Wed, Sep 25, 2013 at 06:32:32AM +1000, Dave Chinner wrote:
-> > On Tue, Sep 24, 2013 at 10:33:24AM -0500, Ben Myers wrote:
-> > > ...but it looks like your fix is in xfs_bdstrat_cb, which wouldn't have been
-> > > involved in the stack you posted above.  What am I missing?
-> > 
-> > That the first hunk that changes xfs_bioerror_relse() fixes the bug
-> > that caused the assert failure through xfsbdstrat().
-> 
-> *blink*
-> 
-> All I see in that first hunk are changes to comments.  The second hunk seems to
-> contain the only functional change, highlighted above.
+This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
+as suggested by sekharan.
 
-You are right - it should not be reliably fixing the failure I'm
-seeing. I'm sure there was something else in this patch originally -
-I'll go back and check.
+v2: as Mark pointed out, out in the for loop before also needs list to
+be freed. Also remove out lable as it is not referenced any more.
 
-Cheers,
+Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+---
+ repair/sb.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Dave.
+diff --git a/repair/sb.c b/repair/sb.c
+index aa550e3..d34d7a2 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -733,7 +733,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+ 
+ 			if (get_sb(sb, off, size, agno) == XR_EOF)  {
+ 				retval = 1;
+-				goto out;
++				goto out_free_list;
+ 			}
+ 
+ 			if (verify_sb(sb, 0) == XR_OK)  {
+@@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+ 	/*
+ 	 * see if we have enough superblocks to bother with
+ 	 */
+-	if (num_ok < num_sbs / 2)
+-		return(XR_INSUFF_SEC_SB);
++	if (num_ok < num_sbs / 2) {
++		retval = XR_INSUFF_SEC_SB;
++		goto out_free_list;
++	}
+ 
+ 	current = get_best_geo(list);
+ 
+@@ -841,7 +843,6 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+ 
+ out_free_list:
+ 	free_geo(list);
+-out:
+ 	free(sb);
+ 	free(checked);
+ 	return(retval);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1.4
+
 
 _______________________________________________
 xfs mailing list
