@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F22AD7F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:07:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1F2387F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 07:56:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E0CFE304032
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 03:07:18 -0700 (PDT)
-Received: from mail-wi0-f172.google.com (mail-wi0-f172.google.com
-	[209.85.212.172]) by cuda.sgi.com with ESMTP id
-	QqARovaUEWTAk4nN (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 25 Sep 2013 03:07:17 -0700 (PDT)
-Received: by mail-wi0-f172.google.com with SMTP id hn9so5140837wib.17
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 03:07:16 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F0095304032
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:56:15 -0700 (PDT)
+Received: from mail-oa0-f45.google.com (mail-oa0-f45.google.com
+	[209.85.219.45]) by cuda.sgi.com with ESMTP id cu02S3voC8rWx8Mv
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:56:13 -0700 (PDT)
+Received: by mail-oa0-f45.google.com with SMTP id o17so959349oag.32
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 05:56:13 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 25 Sep 2013 18:07:16 +0800
-Message-ID: <CADZE9xxjLAXW6_G0qB9chJW=1Xxuj4G8GzAMDS+HT0u8PE=A1w@mail.gmail.com>
-Subject: Thanks for this great filesystem, I encounter a problem in using XFS
-	project quota.
-From: Jex Lin <jex_lin@miiicasa.com>
+Date: Wed, 25 Sep 2013 13:56:13 +0100
+Message-ID: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+Subject: xfs hardware RAID alignment over linear lvm
+From: Stewart Webb <stew@messeduphare.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,63 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7656342536643270330=="
+Content-Type: multipart/mixed; boundary="===============8494542312913600004=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7656342536643270330==
-Content-Type: multipart/alternative; boundary=001a11c38462fe3a5b04e7326a6d
+--===============8494542312913600004==
+Content-Type: multipart/alternative; boundary=047d7b33d5a0354b7d04e734c7e6
 
---001a11c38462fe3a5b04e7326a6d
+--047d7b33d5a0354b7d04e734c7e6
 Content-Type: text/plain; charset=ISO-8859-1
 
-OS : ubuntu 13.04
-xfsprogs version : 3.1.9
-xfsdump version : 3.1.1
+Hi All,
 
-------------------------------------------------------------
+I am trying to do the following:
+3 x Hardware RAID Cards each with a raid 6 volume of 12 disks presented to
+the OS
+all raid units have a "stripe size" of 512 KB
 
-In this case :
+so given the info on the xfs.org wiki - I sould give each filesystem a
+sunit of 512 KB and a swidth of 10 (because RAID 6 has 2 parity disks)
 
-There are three folders (A, B and C) in XFS filesystem.
-I set quota to A and B folder, C folder doesn't  be set quota.
+all well and good
 
-The report of A folder is correct when I moved file to B folder from A
-folder,
-but when I move file to C folder from A folder, the report of A folder has
-wrong display with used.
+But - I would like to use Linear LVM to bring all 3 cards into 1 logical
+volume -
+here is where my question crops up:
+Does this effect how I need to align the filesystem?
 
-Capacity of the file still be added in "used" of report of A folder.
+Regards
 
-Any help would be very appreciated.
+-- 
+Stewart Webb
 
-Best regards,
-
-Jex Lin
-
---001a11c38462fe3a5b04e7326a6d
+--047d7b33d5a0354b7d04e734c7e6
 Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr"><div>OS : ubuntu 13.04</div><div>xfsprogs version : 3.1.9<=
-/div><div>xfsdump version : 3.1.1</div><div><br></div><div>----------------=
---------------------------------------------</div><div><br></div><div>In th=
-is case :</div>
-<div><br></div><div>There are three folders (A, B and C) in XFS filesystem.=
-</div><div>I set quota to A and B folder, C folder doesn&#39;t =A0be set qu=
-ota.=A0</div><div><br></div><div>The report of A folder is correct when I m=
-oved file to B folder from A folder,=A0</div>
-<div>but when I move file to C folder from A folder, the report of A folder=
- has wrong display with used.</div><div><br></div><div>Capacity of the file=
- still be added in &quot;used&quot; of report of A folder.</div><div><br>
-</div><div>Any help would be very appreciated.</div><div><br></div><div>Bes=
-t regards,</div><div><br></div><div>Jex Lin</div></div>
+<div dir="ltr">Hi All,<div><br></div><div>I am trying to do the following:</div><div>3 x Hardware RAID Cards each with a raid 6 volume of 12 disks presented to the OS</div><div>all raid units have a &quot;stripe size&quot; of 512 KB</div>
+<div><br></div><div>so given the info on the <a href="http://xfs.org">xfs.org</a> wiki - I sould give each filesystem a sunit of 512 KB and a swidth of 10 (because RAID 6 has 2 parity disks)</div><div><br></div><div>all well and good</div>
+<div><br></div><div>But - I would like to use Linear LVM to bring all 3 cards into 1 logical volume -</div><div>here is where my question crops up:</div><div>Does this effect how I need to align the filesystem?</div><div>
+<br></div><div>Regards</div><div><br></div><div>-- <br><div dir="ltr"><div></div>Stewart Webb<br></div>
+</div></div>
 
---001a11c38462fe3a5b04e7326a6d--
+--047d7b33d5a0354b7d04e734c7e6--
 
 
---===============7656342536643270330==
+--===============8494542312913600004==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -93,4 +80,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7656342536643270330==--
+--===============8494542312913600004==--
