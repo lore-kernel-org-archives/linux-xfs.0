@@ -1,34 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 912647F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 02:32:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3E83C7F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 02:34:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8053B8F804C
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 00:32:50 -0700 (PDT)
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145]) by
-	cuda.sgi.com with ESMTP id y9cCkbb4WHB1nHu7 (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1EA748F804C
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 00:34:44 -0700 (PDT)
+Received: from e28smtp07.in.ibm.com (e28smtp07.in.ibm.com [122.248.162.7]) by
+	cuda.sgi.com with ESMTP id 0v8AYwtjFHJhFFUQ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 25 Sep 2013 00:32:32 -0700 (PDT)
+	Wed, 25 Sep 2013 00:34:42 -0700 (PDT)
 Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
 	Only! Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Wed, 25 Sep 2013 17:32:13 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7A2FC3578052
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 17:32:11 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r8P7FMNe53215366
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 17:15:22 +1000
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r8P7WA6J029119 for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 17:32:10 +1000
-Message-ID: <1380094327.2526.5.camel@ThinkPad-T5421>
-Subject: [PATCH v2] xfsprogs: fix potential memory leak in
+	Wed, 25 Sep 2013 13:04:38 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9AD901258056
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:04:48 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r8P7YY5j40173700
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:04:34 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	r8P7YZcO023344 for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:04:35 +0530
+Message-ID: <1380094473.2526.8.camel@ThinkPad-T5421>
+Subject: Re: [PATCH] xfsprogs: fix potential memory leak in
 	verify_set_primary_sb()
 From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Wed, 25 Sep 2013 15:32:07 +0800
+Date: Wed, 25 Sep 2013 15:34:33 +0800
 In-Reply-To: <5241E125.7010902@sgi.com>
 References: <1379829679.4089.2.camel@ThinkPad-T5421> <5241E125.7010902@sgi.com>
 Mime-Version: 1.0
@@ -47,53 +47,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
-This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
-as suggested by sekharan.
+On Tue, 2013-09-24 at 13:59 -0500, Mark Tinguely wrote:
+> On 09/22/13 01:01, Li Zhong wrote:
+> > This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
+> > as suggested by sekharan.
+> >
+> > Signed-off-by: Li Zhong<zhong@linux.vnet.ibm.com>
+> > ---
+> 
+> 
+> > @@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+> >   	/*
+> >   	 * see if we have enough superblocks to bother with
+> >   	 */
+> > -	if (num_ok < num_sbs / 2)
+> > -		return(XR_INSUFF_SEC_SB);
+> > +	if (num_ok < num_sbs / 2) {
+> > +		retval = XR_INSUFF_SEC_SB;
+> > +		goto out_free_list;
+> > +	}
+> 
+> >
+> 
+> Looks good. list, sb and check could have been allocated at this point.
+> 
+> Isn't the list been added to before the conditional in the for loop?:
 
-v2: as Mark pointed out, out in the for loop before also needs list to
-be freed. Also remove out lable as it is not referenced any more.
+See, I just sent a new version including below change.
 
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
----
- repair/sb.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Seems it is a Coverity scan bug not discovering this :)
 
-diff --git a/repair/sb.c b/repair/sb.c
-index aa550e3..d34d7a2 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -733,7 +733,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 
- 			if (get_sb(sb, off, size, agno) == XR_EOF)  {
- 				retval = 1;
--				goto out;
-+				goto out_free_list;
- 			}
- 
- 			if (verify_sb(sb, 0) == XR_OK)  {
-@@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 	/*
- 	 * see if we have enough superblocks to bother with
- 	 */
--	if (num_ok < num_sbs / 2)
--		return(XR_INSUFF_SEC_SB);
-+	if (num_ok < num_sbs / 2) {
-+		retval = XR_INSUFF_SEC_SB;
-+		goto out_free_list;
-+	}
- 
- 	current = get_best_geo(list);
- 
-@@ -841,7 +843,6 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 
- out_free_list:
- 	free_geo(list);
--out:
- 	free(sb);
- 	free(checked);
- 	return(retval);
--- 
-1.8.1.4
+Thanks, Zhong
+
+> 
+>          list = add_geo(list, &geo, sb_index);
+> 
+>          /*
+>           * grab N secondaries.  check them off as we get them
+>           * so we only process each one once
+>           */
+>          for (round = 0; round < skip; round++)  {
+> 
+> ...
+>                          if (get_sb(sb, off, size, agno) == XR_EOF)  {
+>                                  retval = 1;
+>                                  goto out;
+> 				^^^^^^^^^ out_free_list?
+>                          }
+> 
+> --Mark.
+> 
 
 
 _______________________________________________
