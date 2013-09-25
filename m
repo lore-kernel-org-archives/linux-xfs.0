@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 87EB17F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 09:28:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 21BB5AC005
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 07:28:46 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YX4LB5XAiPbhiper for <xfs@oss.sgi.com>;
-	Wed, 25 Sep 2013 07:28:45 -0700 (PDT)
-Message-ID: <5242F31B.4060902@sandeen.net>
-Date: Wed, 25 Sep 2013 09:28:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 998E07F37
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:38:20 -0500 (CDT)
+Date: Wed, 25 Sep 2013 13:38:17 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall
+Message-ID: <20130925183816.GL1935@sgi.com>
+References: <20130920220519.585903357@sgi.com>
+	<20130923171911.273669684@sgi.com> <20130923234819.GW9901@dastard>
+	<5241CD70.7050800@sgi.com> <20130924210653.GB26872@dastard>
+	<5242057D.8030404@sgi.com> <20130924233331.GC26872@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfsprogs: fix potential memory leak in
-	verify_set_primary_sb()
-References: <1379829679.4089.2.camel@ThinkPad-T5421> <5241E125.7010902@sgi.com>
-	<1380094327.2526.5.camel@ThinkPad-T5421>
-In-Reply-To: <1380094327.2526.5.camel@ThinkPad-T5421>
+Content-Disposition: inline
+In-Reply-To: <20130924233331.GC26872@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,128 +25,161 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: xfsprogs <xfs@oss.sgi.com>, Mark Tinguely <tinguely@sgi.com>, Chandra Seetharaman <sekharan@us.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On 9/25/13 2:32 AM, Li Zhong wrote:
-> This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
-> as suggested by sekharan.
+Hey Dave,
+
+On Wed, Sep 25, 2013 at 09:33:31AM +1000, Dave Chinner wrote:
+> On Tue, Sep 24, 2013 at 04:34:53PM -0500, Mark Tinguely wrote:
+> > On 09/24/13 16:06, Dave Chinner wrote:
+> > >On Tue, Sep 24, 2013 at 12:35:44PM -0500, Mark Tinguely wrote:
+> > >>On 09/23/13 18:48, Dave Chinner wrote:
+> > >>>On Mon, Sep 23, 2013 at 12:18:58PM -0500, Mark Tinguely wrote:
+> > >>>>Commit f5ea1100 cleans up the disk to host conversions for
+> > >>>>node directory entries, but because a variable is reused in
+> > >>>>xfs_node_toosmall() the next node is not correctly found.
+> > >>>>If the original node is small enough (<= 3/8 of the node size),
+> > >>>>this change may incorrectly cause a node collapse when it should
+> > >>>>not.
+> ....
+> > >>>Also, the "next node" is correctly termed a "sibling", and it's
+> > >>>either the forwards or backwards sibling, not the "next" sibling as
+> > >>>the direction of movement is important. So perhaps this
+> > >>>is better written as:
+> > >>>
+> > >>>"When a node is considered for a merge with a sibling, it overwrites
+> > >>>the sibling pointers of the original node with the sibling's
+> > >>>pointers. This leads to loop considering the original node as a
+> > >>>merge candidate with itself in the second pass, and so it
+> > >>>incorrectly determines a merge should occur."
+> > >>>
+> > >>
+> > >>Are you done ranting? Get the @#$% bug patched.
+> > >
+> > >I'm deeply sorry you feel that way about the review process - it's
+> > >not just code that matters. Experience has shown us time and time
+> > >again that accurate and complete commit messages are extremely
+> > >valuable as they document the symptoms of a problem being fixed and
+> > >why the fix was needed.
+> .....
+> > 
+> > You do not always practice what you preach - here is the commit
+> > message from the patch that caused this whole problem:
+> > 
+> > commit f5ea110044fa858925a880b4fa9f551bfa2dfc38
+> > Author: Dave Chinner <dchinner@redhat.com>
+> > Date:   Wed Apr 24 18:58:02 2013 +1000
+> > 
+> >     xfs: add CRCs to dir2/da node blocks
+> > 
+> >     Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> >     Reviewed-by: Ben Myers <bpm@sgi.com>
+> >     Signed-off-by: Ben Myers <bpm@sgi.com>
+> > 
+> > Did this patch just add CRCs to node blocks? no.
+> > 
+> > And how about your patches that do not need a commit message at all?!
 > 
-> v2: as Mark pointed out, out in the for loop before also needs list to
-> be freed. Also remove out lable as it is not referenced any more.
-
-Fix itself looks good, thanks!  Love to see the scan numbers change
-for the better.  ;)
-
-Nitpicks, though: Patch changelogs usually goes below the "---" so
-the history of trial and error isn't in the commit log.  Not that big
-a deal, it's just convention as mentioned in the kernel SubmittingPatches
-doc:
-
-> The "---" marker line serves the essential purpose of marking for patch
-> handling tools where the changelog message ends.
+> The above commit has a very different context surrounding it - it
+> was in the middle of a major feaure addition series where the
+> process of additions had been described in the previous commits, and
+> the one-line description is sufficient for future readers to
+> determine that the commit is not a bug fix.
 > 
-> One good use for the additional comments after the "---" marker is for
-> a diffstat, to show what files have changed, and the number of
-> inserted and deleted lines per file.  A diffstat is especially useful
-> on bigger patches.  Other comments relevant only to the moment or the
-> maintainer, not suitable for the permanent changelog, should also go
-> here.  A good example of such comments might be "patch changelogs"
-> which describe what has changed between the v1 and v2 version of the
-> patch.
+> If a reviewer doesn't speak up about something, then that implies
+> the reviewer considers it acceptible.
 
+I disagree with that statement.  A reviewer might not speak up about a
+flaw in a work for for other reasons.  There are more than two
+alternatives in this context.  For example...
 
-And since we're on the topic of commit messages lately, this one could
-be improved too I think.
+> In this case, the reviewer
+> (Ben) seemed to think the one-line description of the commit was
+> acceptible for the context in which it was being proposed and
+> committed.
 
-"CID 997012" won't mean anything to a reader in the future.  It'd be
-better to describe what you're fixing on its own terms.  Something like:
+I wasn't happy with the lack of the description in those commits, and
+probably should have spoken up about it.  In this case I weighed the
+frustration due to the argument that would almost certainly have ensued
+against the benefit of a decent commit message, and punted.
 
-===
-If verify_set_primary_sb() completes the secondary sb scanning loop with
-too few valid secondaries found (num_ok < num_sbs / 2), it will immediately
-return without freeing any of the previously allocated memory (variables 
-sb, checked, and any items on the geo list).  This was reported by
-the Coverity scanner as CID 997012, 997013 and 997014.
+That's similar to what happened when I pulled in the 1st half of the
+userspace crc-dev work after you refused to address my concerns in
+review.  I punted again, because the argument would have been more
+nuisance than it was worth.
 
-Fix this by using the out_free_list: goto target for this error case.
+Clearly I need to stop punting so often.  But since many a suggestion
+made by Mark or myself is taken as a bloody travesty and an argument
+ensues... I have to admit to some fatigue in this area.
 
-Earlier, if get_sb() fails in the secondary scan loop, it goes to
-the out: target which does not free any items on the geo list.   Fix
-this by using the out_free_list: target as well, and remove the now-unused
-out: target.
-===
-
-On the one hand, the fix isn't that complicated so it probably speaks for
-itself.  But it was complicated enough to warrant discussion & V2 on the list,
-so probably worth including that detail in the final changelog.
-
-
-Also, in looking at this, I wonder if there's another minor buglet.
-
-in phase1.c, we turn the return value from verify_set_primary_sb() into
-an error string via err_string(rval).  This handles the various
-error returns such as XR_INSUFF_SEC_SB, XR_EOF, etc.  But in the 2nd
-case above (get_sb failure), it simply returns "1" which will be interpreted
-as XR_BAD_MAGIC ("bad magic number").
-
-get_sb() actually returns several XR_* values, so we should probably capture
-it and use that return value?  That'd be a different patch though.
-
-I guess the comment for verify_set_primary_sb() would be changed
-then too, now it says:
-
- * returns 1 if bad, 0 if ok
-
-but today we actually return 0, 1, or XR_INSUFF_SEC_SB.
-
-Not that big a deal, but it seems like the error returns, their handling,
-and associated comments aren't quite consistent.
-
-Thanks,
--Eric
-
-
-> Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
-> ---
->  repair/sb.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
+> > Are these exceptions? No, I have done enough reviews of your
+> > patches, and some of your commit message are less than stunning.
 > 
-> diff --git a/repair/sb.c b/repair/sb.c
-> index aa550e3..d34d7a2 100644
-> --- a/repair/sb.c
-> +++ b/repair/sb.c
-> @@ -733,7 +733,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  
->  			if (get_sb(sb, off, size, agno) == XR_EOF)  {
->  				retval = 1;
-> -				goto out;
-> +				goto out_free_list;
->  			}
->  
->  			if (verify_sb(sb, 0) == XR_OK)  {
-> @@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  	/*
->  	 * see if we have enough superblocks to bother with
->  	 */
-> -	if (num_ok < num_sbs / 2)
-> -		return(XR_INSUFF_SEC_SB);
-> +	if (num_ok < num_sbs / 2) {
-> +		retval = XR_INSUFF_SEC_SB;
-> +		goto out_free_list;
-> +	}
->  
->  	current = get_best_geo(list);
->  
-> @@ -841,7 +843,6 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  
->  out_free_list:
->  	free_geo(list);
-> -out:
->  	free(sb);
->  	free(checked);
->  	return(retval);
+> Sure, some of my commit messages need work, especially as I'm
+> spelling and grammar challenged at the best of times. I make no
+> claim that they are perfect, but I do try to make the sufficient for
+> the context in which they are being proposed.
 > 
+> However - it is *your responsibility as a reviewer* to ask the
+> author to write a more complete change log or fix omissions or
+> clarify parts of the commit message that need improvement. 
+
+...
+
+> If the
+> reviewer does not ask for improvements or you chose not to review
+> the proposed patches, then you have no grounds to complain about the
+> contents of patches that were committed on your watch...
+
+I disagree.  The act of committing a patch does not necessarily imply an
+agreement regarding it's contents.  I am often in a position where I
+have to commit patches that I don't fully agree with.  This doesn't
+imply that I've waived my right to whine about bad commits later.  ;)
+
+> > when your preaching, and not so subtle digs at me or SGI gets to the
+> > point of rewriting commit messages even I can't hold my tongue any
+> > more.
+> 
+> You are reading way too much into a simple request, Mark.
+> Constructive criticism of your code is not a personal attack.
+
+I suspect the issue is not really with this particular request.  There
+is a cumulative effect to the toxicity that you seem to feel the need to
+bring to the list, and it sounds like Mark is full up.
+
+This is gonna sound soft coming from a grown man, but I'll call it for
+what I think it is:  Bullying.  And to the extent that I've taken part
+or watched others get planed and done nothing, I think I have to take
+this as a stain on my own character.
+
+The constructive criticism is fine.  The bullying needs to stop.
+Technical prowess is not license to act badly.  Knock it off.
+ 
+> Quite frankly, I don't care who submits the code or who they work for
+> - I apply the same *peer review criteria* to all code that is
+> proposed.  I'm here to make sure the code is robust, solid and
+> maintainable into the forseeable future. I'm here to tear your patches
+> apart and then help put it back together better than it was before. It
+> simply doesn't matter who submits the code...
+
+I'm pleased to hear that you don't care who submits code, but it sure
+seems like you're grinding an axe for Mark to me.
+
+> > PS. I told Ben that I do not appreciate commit messages being
+> > changed.
+> 
+> Ben did the right thing. Maintainers rewrite commit messages to
+> improve them all the time...
+
+I handled it badly.  It was probably ok to pull in your suggestion into
+the commit message as long as it was attributed properly, but it was
+more aggressive than was necessary, and I can understand why Mark didn't
+appreciate it.  Also, I really needn't have been snarky about it.
+Apologies to Mark.
+
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
