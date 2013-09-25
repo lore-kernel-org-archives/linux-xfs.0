@@ -1,37 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3E83C7F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 02:34:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1EA748F804C
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 00:34:44 -0700 (PDT)
-Received: from e28smtp07.in.ibm.com (e28smtp07.in.ibm.com [122.248.162.7]) by
-	cuda.sgi.com with ESMTP id 0v8AYwtjFHJhFFUQ (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id BF05E7F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 02:37:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E9118F804C
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 00:37:27 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id y1ACAYcVE08tDNGd (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 25 Sep 2013 00:34:42 -0700 (PDT)
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Wed, 25 Sep 2013 13:04:38 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9AD901258056
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:04:48 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay05.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r8P7YY5j40173700
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:04:34 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r8P7YZcO023344 for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:04:35 +0530
-Message-ID: <1380094473.2526.8.camel@ThinkPad-T5421>
-Subject: Re: [PATCH] xfsprogs: fix potential memory leak in
-	verify_set_primary_sb()
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Wed, 25 Sep 2013 15:34:33 +0800
-In-Reply-To: <5241E125.7010902@sgi.com>
-References: <1379829679.4089.2.camel@ThinkPad-T5421> <5241E125.7010902@sgi.com>
-Mime-Version: 1.0
+	Wed, 25 Sep 2013 00:37:26 -0700 (PDT)
+Message-ID: <524292E3.4010902@oracle.com>
+Date: Wed, 25 Sep 2013 15:38:11 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: fix the extent count when allocating an new
+	indirection array entry
+References: <523DAF67.9070206@oracle.com> <20130923002448.GL12541@dastard>
+In-Reply-To: <20130923002448.GL12541@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,60 +29,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, 2013-09-24 at 13:59 -0500, Mark Tinguely wrote:
-> On 09/22/13 01:01, Li Zhong wrote:
-> > This patch tries to fix CID 997012, 997013 and 997014 reported by Coverity scan,
-> > as suggested by sekharan.
-> >
-> > Signed-off-by: Li Zhong<zhong@linux.vnet.ibm.com>
-> > ---
-> 
-> 
-> > @@ -756,8 +756,10 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
-> >   	/*
-> >   	 * see if we have enough superblocks to bother with
-> >   	 */
-> > -	if (num_ok < num_sbs / 2)
-> > -		return(XR_INSUFF_SEC_SB);
-> > +	if (num_ok < num_sbs / 2) {
-> > +		retval = XR_INSUFF_SEC_SB;
-> > +		goto out_free_list;
-> > +	}
-> 
-> >
-> 
-> Looks good. list, sb and check could have been allocated at this point.
-> 
-> Isn't the list been added to before the conditional in the for loop?:
+On 09/23/2013 08:24 AM, Dave Chinner wrote:
 
-See, I just sent a new version including below change.
+> On Sat, Sep 21, 2013 at 10:38:31PM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> At xfs_iext_add(), if extent(s) are being appended to the last
+>> page in the indirection array and the new extent(s) don't fit
+>> in the page, the number of extents(erp->er_extcount) in a new
+>> allocated entry should be the minimum value between count and
+>> XFS_LINEAR_EXTS, instead of count.
+> 
+> Definitely looks like a bug, but what are the symptoms of it and how
+> did you find the problem? Is there any test case that demonstrates a
+> problem with the er_extcount being set incorrectly here?
 
-Seems it is a Coverity scan bug not discovering this :)
-
-Thanks, Zhong
+Sorry for the too late response, I found this problem while reading the code.
+However, I can not figure out a test case to break the kernel until now. :(
 
 > 
->          list = add_geo(list, &geo, sb_index);
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> ---
+>>  fs/xfs/xfs_inode_fork.c |    8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+>> index 02f1083..dfb4226 100644
+>> --- a/fs/xfs/xfs_inode_fork.c
+>> +++ b/fs/xfs/xfs_inode_fork.c
+>> @@ -1035,11 +1035,11 @@ xfs_iext_add(
+>>  
+>>  			while (count) {
+>>  				erp = xfs_iext_irec_new(ifp, erp_idx);
+>> -				erp->er_extcount = count;
+>> -				count -= MIN(count, (int)XFS_LINEAR_EXTS);
+>> -				if (count) {
+>> +				erp->er_extcount = MIN(count,
+>> +						       (int)XFS_LINEAR_EXTS);
+>> +				count -= erp->er_extcount;
 > 
->          /*
->           * grab N secondaries.  check them off as we get them
->           * so we only process each one once
->           */
->          for (round = 0; round < skip; round++)  {
-> 
-> ...
->                          if (get_sb(sb, off, size, agno) == XR_EOF)  {
->                                  retval = 1;
->                                  goto out;
-> 				^^^^^^^^^ out_free_list?
->                          }
-> 
-> --Mark.
-> 
+> count is declared as an int, whereas XFS_LINEAR_EXTS probably ends
+> up with a type of uint because of a cast in the macro. because we
+> are decrementing to zero, the count can be declared as a uint, too,
+> and the cast in the MIN() can go away. Indeed, MIN() should be
+> converted to min() seeing as we are touching the code here, and if
+> you want to retain the current types, the min_t() is appropriate,
+> not min(x, (some cast)y)....
 
+Ok, will fix it.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
