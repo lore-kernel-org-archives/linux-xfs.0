@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 998E07F37
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 13:38:20 -0500 (CDT)
-Date: Wed, 25 Sep 2013 13:38:17 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall
-Message-ID: <20130925183816.GL1935@sgi.com>
-References: <20130920220519.585903357@sgi.com>
-	<20130923171911.273669684@sgi.com> <20130923234819.GW9901@dastard>
-	<5241CD70.7050800@sgi.com> <20130924210653.GB26872@dastard>
-	<5242057D.8030404@sgi.com> <20130924233331.GC26872@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 4D9227F37
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 16:03:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 327B2304048
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:03:09 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id FweuiJhghdwoavPz for <xfs@oss.sgi.com>;
+	Wed, 25 Sep 2013 14:03:07 -0700 (PDT)
+Message-ID: <52434F8A.9040703@sandeen.net>
+Date: Wed, 25 Sep 2013 16:03:06 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130924233331.GC26872@dastard>
+Subject: Re: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall
+References: <20130920220519.585903357@sgi.com>
+	<20130923171911.273669684@sgi.com>
+	<20130923234819.GW9901@dastard> <5241CD70.7050800@sgi.com>
+	<20130924210653.GB26872@dastard> <5242057D.8030404@sgi.com>
+	<20130924233331.GC26872@dastard> <20130925183816.GL1935@sgi.com>
+In-Reply-To: <20130925183816.GL1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,161 +31,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-Hey Dave,
+[stable@vger.kernel.org stripped from this fascinating thread]
 
-On Wed, Sep 25, 2013 at 09:33:31AM +1000, Dave Chinner wrote:
-> On Tue, Sep 24, 2013 at 04:34:53PM -0500, Mark Tinguely wrote:
-> > On 09/24/13 16:06, Dave Chinner wrote:
-> > >On Tue, Sep 24, 2013 at 12:35:44PM -0500, Mark Tinguely wrote:
-> > >>On 09/23/13 18:48, Dave Chinner wrote:
-> > >>>On Mon, Sep 23, 2013 at 12:18:58PM -0500, Mark Tinguely wrote:
-> > >>>>Commit f5ea1100 cleans up the disk to host conversions for
-> > >>>>node directory entries, but because a variable is reused in
-> > >>>>xfs_node_toosmall() the next node is not correctly found.
-> > >>>>If the original node is small enough (<= 3/8 of the node size),
-> > >>>>this change may incorrectly cause a node collapse when it should
-> > >>>>not.
-> ....
-> > >>>Also, the "next node" is correctly termed a "sibling", and it's
-> > >>>either the forwards or backwards sibling, not the "next" sibling as
-> > >>>the direction of movement is important. So perhaps this
-> > >>>is better written as:
-> > >>>
-> > >>>"When a node is considered for a merge with a sibling, it overwrites
-> > >>>the sibling pointers of the original node with the sibling's
-> > >>>pointers. This leads to loop considering the original node as a
-> > >>>merge candidate with itself in the second pass, and so it
-> > >>>incorrectly determines a merge should occur."
-> > >>>
-> > >>
-> > >>Are you done ranting? Get the @#$% bug patched.
-> > >
-> > >I'm deeply sorry you feel that way about the review process - it's
-> > >not just code that matters. Experience has shown us time and time
-> > >again that accurate and complete commit messages are extremely
-> > >valuable as they document the symptoms of a problem being fixed and
-> > >why the fix was needed.
-> .....
-> > 
-> > You do not always practice what you preach - here is the commit
-> > message from the patch that caused this whole problem:
-> > 
-> > commit f5ea110044fa858925a880b4fa9f551bfa2dfc38
-> > Author: Dave Chinner <dchinner@redhat.com>
-> > Date:   Wed Apr 24 18:58:02 2013 +1000
-> > 
-> >     xfs: add CRCs to dir2/da node blocks
-> > 
-> >     Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> >     Reviewed-by: Ben Myers <bpm@sgi.com>
-> >     Signed-off-by: Ben Myers <bpm@sgi.com>
-> > 
-> > Did this patch just add CRCs to node blocks? no.
-> > 
-> > And how about your patches that do not need a commit message at all?!
+On 9/25/13 1:38 PM, Ben Myers wrote:
+> Hey Dave,
 > 
-> The above commit has a very different context surrounding it - it
-> was in the middle of a major feaure addition series where the
-> process of additions had been described in the previous commits, and
-> the one-line description is sufficient for future readers to
-> determine that the commit is not a bug fix.
+> On Wed, Sep 25, 2013 at 09:33:31AM +1000, Dave Chinner wrote:
+
+<snip>
+
+>> If a reviewer doesn't speak up about something, then that implies
+>> the reviewer considers it acceptible.
 > 
-> If a reviewer doesn't speak up about something, then that implies
-> the reviewer considers it acceptible.
+> I disagree with that statement.  A reviewer might not speak up about a
+> flaw in a work for for other reasons.  There are more than two
+> alternatives in this context.  For example...
 
-I disagree with that statement.  A reviewer might not speak up about a
-flaw in a work for for other reasons.  There are more than two
-alternatives in this context.  For example...
+<snip>
 
-> In this case, the reviewer
-> (Ben) seemed to think the one-line description of the commit was
-> acceptible for the context in which it was being proposed and
-> committed.
+<apologies if I snipped too much context, not my intention>
 
-I wasn't happy with the lack of the description in those commits, and
-probably should have spoken up about it.  In this case I weighed the
-frustration due to the argument that would almost certainly have ensued
-against the benefit of a decent commit message, and punted.
-
-That's similar to what happened when I pulled in the 1st half of the
-userspace crc-dev work after you refused to address my concerns in
-review.  I punted again, because the argument would have been more
-nuisance than it was worth.
-
-Clearly I need to stop punting so often.  But since many a suggestion
-made by Mark or myself is taken as a bloody travesty and an argument
-ensues... I have to admit to some fatigue in this area.
-
-> > Are these exceptions? No, I have done enough reviews of your
-> > patches, and some of your commit message are less than stunning.
+>> If the
+>> reviewer does not ask for improvements or you chose not to review
+>> the proposed patches, then you have no grounds to complain about the
+>> contents of patches that were committed on your watch...
 > 
-> Sure, some of my commit messages need work, especially as I'm
-> spelling and grammar challenged at the best of times. I make no
-> claim that they are perfect, but I do try to make the sufficient for
-> the context in which they are being proposed.
-> 
-> However - it is *your responsibility as a reviewer* to ask the
-> author to write a more complete change log or fix omissions or
-> clarify parts of the commit message that need improvement. 
+> I disagree.  The act of committing a patch does not necessarily imply an
+> agreement regarding it's contents.  I am often in a position where I
+> have to commit patches that I don't fully agree with.  This doesn't
+> imply that I've waived my right to whine about bad commits later.  ;)
 
-...
+If you don't like it, don't add reviewed-by.
 
-> If the
-> reviewer does not ask for improvements or you chose not to review
-> the proposed patches, then you have no grounds to complain about the
-> contents of patches that were committed on your watch...
+If you don't like the reviews, don't sign off, don't merge it.
+As maintainer you have that right, but to be a good maintainer,
+you need a strong reason.  And if you have a strong technical concern,
+then it's the patch author's duty to take it seriously, or risk not
+getting the patch merged.  And the author might argue back.  And other
+people might argue back.  And in the end, if we can all keep our cool,
+the code will be better for it.  If you apply clear and consistent merge
+criteria then people will know what to expect.
 
-I disagree.  The act of committing a patch does not necessarily imply an
-agreement regarding it's contents.  I am often in a position where I
-have to commit patches that I don't fully agree with.  This doesn't
-imply that I've waived my right to whine about bad commits later.  ;)
+When you send a Reviewed-by: that's a pretty strong indication of agreement.
+There shouldn't be a lot of misunderstanding about what it means;
+the kernel doc (Documentation/SubmittingPatches) is very clear:
 
-> > when your preaching, and not so subtle digs at me or SGI gets to the
-> > point of rewriting commit messages even I can't hold my tongue any
-> > more.
-> 
-> You are reading way too much into a simple request, Mark.
-> Constructive criticism of your code is not a personal attack.
+===
+        Reviewer's statement of oversight
 
-I suspect the issue is not really with this particular request.  There
-is a cumulative effect to the toxicity that you seem to feel the need to
-bring to the list, and it sounds like Mark is full up.
+        By offering my Reviewed-by: tag, I state that:
 
-This is gonna sound soft coming from a grown man, but I'll call it for
-what I think it is:  Bullying.  And to the extent that I've taken part
-or watched others get planed and done nothing, I think I have to take
-this as a stain on my own character.
+         (a) I have carried out a technical review of this patch to
+             evaluate its appropriateness and readiness for inclusion into
+             the mainline kernel.
 
-The constructive criticism is fine.  The bullying needs to stop.
-Technical prowess is not license to act badly.  Knock it off.
- 
-> Quite frankly, I don't care who submits the code or who they work for
-> - I apply the same *peer review criteria* to all code that is
-> proposed.  I'm here to make sure the code is robust, solid and
-> maintainable into the forseeable future. I'm here to tear your patches
-> apart and then help put it back together better than it was before. It
-> simply doesn't matter who submits the code...
+         (b) Any problems, concerns, or questions relating to the patch
+             have been communicated back to the submitter.  I am satisfied
+             with the submitter's response to my comments.
 
-I'm pleased to hear that you don't care who submits code, but it sure
-seems like you're grinding an axe for Mark to me.
+         (c) While there may be things that could be improved with this
+             submission, I believe that it is, at this time, (1) a
+             worthwhile modification to the kernel, and (2) free of known
+             issues which would argue against its inclusion.
 
-> > PS. I told Ben that I do not appreciate commit messages being
-> > changed.
-> 
-> Ben did the right thing. Maintainers rewrite commit messages to
-> improve them all the time...
+         (d) While I have reviewed the patch and believe it to be sound, I
+             do not (unless explicitly stated elsewhere) make any
+             warranties or guarantees that it will achieve its stated
+             purpose or function properly in any given situation.
+===
 
-I handled it badly.  It was probably ok to pull in your suggestion into
-the commit message as long as it was attributed properly, but it was
-more aggressive than was necessary, and I can understand why Mark didn't
-appreciate it.  Also, I really needn't have been snarky about it.
-Apologies to Mark.
+If you can't get behind that, don't add your Reviewed-by: and continue to
+work it out until you can.  Reviewers should be sure to pay attention to
+point (c) as well, something I sometimes forget myself.
 
-Regards,
-Ben
+Reviews don't have to be heeded, either.  They don't have to be gauntlets
+thrown down or lines in the sand.  "You've corrupted memory here" is
+different from "you could use an args struct instead of 8 arguments"
+or "your commit log isn't very descriptive."  Discretion abounds.
+
+As a reviewer once said on another list, "I'm free to share
+what occurs to me and you're free to tell me to go jump in a lake."
+Especially for cosmetic issues, that's a pretty good POV.  Sometimes
+it's trickier.
+
+As maintainer I guess you get to decide if a review concern has enough
+merit to hold up merging.  Ignoring a compelling technical concern
+could be risky.
+
+Maybe one reviewer is dissatisfied, and another is satisfied.  Then
+you get to play Solomon again.  Life goes on, I hope.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
