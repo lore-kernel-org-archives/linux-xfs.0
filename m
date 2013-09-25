@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1A5797F4E
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 16:18:31 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 788447F4E
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 16:32:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B1AFFAC001
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:18:27 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id ND2sMUA1q2g7jC2l
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:18:26 -0700 (PDT)
-Message-ID: <52435327.9080607@hardwarefreak.com>
-Date: Wed, 25 Sep 2013 16:18:31 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 66B3E8F8073
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:32:31 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	nkUqhHf8zPU6ftXZ for <xfs@oss.sgi.com>;
+	Wed, 25 Sep 2013 14:32:29 -0700 (PDT)
+Date: Thu, 26 Sep 2013 07:32:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 RESEND] xfs: fix dead loop at xfs_vm_writepage() on
+	32bit machine
+Message-ID: <20130925213224.GG26872@dastard>
+References: <52429A6C.3050908@oracle.com>
 MIME-Version: 1.0
-Subject: Re: xfs hardware RAID alignment over linear lvm
-References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
-In-Reply-To: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <52429A6C.3050908@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +30,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stewart Webb <stew@messeduphare.co.uk>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 9/25/2013 7:56 AM, Stewart Webb wrote:
-> Hi All,
-
-Hi Stewart,
-
-> I am trying to do the following:
-> 3 x Hardware RAID Cards each with a raid 6 volume of 12 disks presented to
-> the OS
-> all raid units have a "stripe size" of 512 KB
-
-Just for future reference so you're using correct terminology, a value
-of 512KB is surely your XFS su value, also called a "strip" in LSI
-terminology, or a "chunk" in Linux software md/RAID terminology.  This
-is the amount of data written to each data spindle (excluding parity) in
-the array.
-
-"Stripe size" is a synonym of XFS sw, which is su * #disks.  This is the
-amount of data written across the full RAID stripe (excluding parity).
-
-> so given the info on the xfs.org wiki - I sould give each filesystem a
-> sunit of 512 KB and a swidth of 10 (because RAID 6 has 2 parity disks)
-
-Partially correct.  If you format each /dev/[device] presented by the
-RAID controller with an XFS filesystem, 3 filesystems total, then your
-values above are correct.  EXCEPT you must use the su/sw parameters in
-mkfs.xfs if using BYTE values.  See mkfs.xfs(8)
-
-> all well and good
+On Wed, Sep 25, 2013 at 04:10:20PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> But - I would like to use Linear LVM to bring all 3 cards into 1 logical
-> volume -
-> here is where my question crops up:
-> Does this effect how I need to align the filesystem?
+> Write a file with an offset greater than 16TB on 32-bit system and
+> then trigger page write-back via sync(1) as below will cause the
+> task hang in a little while:
 
-In the case of a concatenation, which is what LVM linear is, you should
-use an XFS alignment identical to that for a single array as above.
+[snip]
 
+> This patch just fixed both issues.
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ---
+> v2: don't reset the s_max_bytes to MAX_LFS_FILESIZE, instead, revise the page offset
+>     check up strategy to avoid the potential overflow.
+> v1: http://oss.sgi.com/archives/xfs/2013-07/msg00154.html
+> 
+>  fs/xfs/xfs_aops.c |   11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 41a6950..6059d00 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -969,7 +969,9 @@ xfs_vm_writepage(
+>  	offset = i_size_read(inode);
+>  	end_index = offset >> PAGE_CACHE_SHIFT;
+>  	last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
+> -	if (page->index >= end_index) {
+> +	if (page->index < end_index)
+> +		end_offset = (xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT;
+> +	else {
+>  		unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
+
+The logic here is already difficult to understand, and the fact that
+the code that has 32 bit overflow issues is not obvious . Can you
+add a comment noting the overflow issue being handled here?
+
+>  
+>  		/*
+> @@ -978,7 +980,8 @@ xfs_vm_writepage(
+>  		 * page so that reclaim stops reclaiming it. Otherwise
+>  		 * xfs_vm_releasepage() is called on it and gets confused.
+>  		 */
+> -		if (page->index >= end_index + 1 || offset_into_page == 0)
+> +		if (page->index > end_index ||
+> +		    (page->index == end_index && offset_into_page == 0))
+>  			goto redirty;
+
+And again here? 
+
+That means in future we will be aware of the problem when reading
+the code...
+
+Cheers,
+
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
