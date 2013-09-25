@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4D9227F37
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 16:03:12 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1A5797F4E
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 16:18:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 327B2304048
-	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:03:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id FweuiJhghdwoavPz for <xfs@oss.sgi.com>;
-	Wed, 25 Sep 2013 14:03:07 -0700 (PDT)
-Message-ID: <52434F8A.9040703@sandeen.net>
-Date: Wed, 25 Sep 2013 16:03:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B1AFFAC001
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:18:27 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id ND2sMUA1q2g7jC2l
+	for <xfs@oss.sgi.com>; Wed, 25 Sep 2013 14:18:26 -0700 (PDT)
+Message-ID: <52435327.9080607@hardwarefreak.com>
+Date: Wed, 25 Sep 2013 16:18:31 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: v2 fix node forward in xfs_node_toosmall
-References: <20130920220519.585903357@sgi.com>
-	<20130923171911.273669684@sgi.com>
-	<20130923234819.GW9901@dastard> <5241CD70.7050800@sgi.com>
-	<20130924210653.GB26872@dastard> <5242057D.8030404@sgi.com>
-	<20130924233331.GC26872@dastard> <20130925183816.GL1935@sgi.com>
-In-Reply-To: <20130925183816.GL1935@sgi.com>
+Subject: Re: xfs hardware RAID alignment over linear lvm
+References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+In-Reply-To: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,100 +28,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Stewart Webb <stew@messeduphare.co.uk>
+Cc: xfs@oss.sgi.com
 
-[stable@vger.kernel.org stripped from this fascinating thread]
+On 9/25/2013 7:56 AM, Stewart Webb wrote:
+> Hi All,
 
-On 9/25/13 1:38 PM, Ben Myers wrote:
-> Hey Dave,
+Hi Stewart,
+
+> I am trying to do the following:
+> 3 x Hardware RAID Cards each with a raid 6 volume of 12 disks presented to
+> the OS
+> all raid units have a "stripe size" of 512 KB
+
+Just for future reference so you're using correct terminology, a value
+of 512KB is surely your XFS su value, also called a "strip" in LSI
+terminology, or a "chunk" in Linux software md/RAID terminology.  This
+is the amount of data written to each data spindle (excluding parity) in
+the array.
+
+"Stripe size" is a synonym of XFS sw, which is su * #disks.  This is the
+amount of data written across the full RAID stripe (excluding parity).
+
+> so given the info on the xfs.org wiki - I sould give each filesystem a
+> sunit of 512 KB and a swidth of 10 (because RAID 6 has 2 parity disks)
+
+Partially correct.  If you format each /dev/[device] presented by the
+RAID controller with an XFS filesystem, 3 filesystems total, then your
+values above are correct.  EXCEPT you must use the su/sw parameters in
+mkfs.xfs if using BYTE values.  See mkfs.xfs(8)
+
+> all well and good
 > 
-> On Wed, Sep 25, 2013 at 09:33:31AM +1000, Dave Chinner wrote:
+> But - I would like to use Linear LVM to bring all 3 cards into 1 logical
+> volume -
+> here is where my question crops up:
+> Does this effect how I need to align the filesystem?
 
-<snip>
+In the case of a concatenation, which is what LVM linear is, you should
+use an XFS alignment identical to that for a single array as above.
 
->> If a reviewer doesn't speak up about something, then that implies
->> the reviewer considers it acceptible.
-> 
-> I disagree with that statement.  A reviewer might not speak up about a
-> flaw in a work for for other reasons.  There are more than two
-> alternatives in this context.  For example...
-
-<snip>
-
-<apologies if I snipped too much context, not my intention>
-
->> If the
->> reviewer does not ask for improvements or you chose not to review
->> the proposed patches, then you have no grounds to complain about the
->> contents of patches that were committed on your watch...
-> 
-> I disagree.  The act of committing a patch does not necessarily imply an
-> agreement regarding it's contents.  I am often in a position where I
-> have to commit patches that I don't fully agree with.  This doesn't
-> imply that I've waived my right to whine about bad commits later.  ;)
-
-If you don't like it, don't add reviewed-by.
-
-If you don't like the reviews, don't sign off, don't merge it.
-As maintainer you have that right, but to be a good maintainer,
-you need a strong reason.  And if you have a strong technical concern,
-then it's the patch author's duty to take it seriously, or risk not
-getting the patch merged.  And the author might argue back.  And other
-people might argue back.  And in the end, if we can all keep our cool,
-the code will be better for it.  If you apply clear and consistent merge
-criteria then people will know what to expect.
-
-When you send a Reviewed-by: that's a pretty strong indication of agreement.
-There shouldn't be a lot of misunderstanding about what it means;
-the kernel doc (Documentation/SubmittingPatches) is very clear:
-
-===
-        Reviewer's statement of oversight
-
-        By offering my Reviewed-by: tag, I state that:
-
-         (a) I have carried out a technical review of this patch to
-             evaluate its appropriateness and readiness for inclusion into
-             the mainline kernel.
-
-         (b) Any problems, concerns, or questions relating to the patch
-             have been communicated back to the submitter.  I am satisfied
-             with the submitter's response to my comments.
-
-         (c) While there may be things that could be improved with this
-             submission, I believe that it is, at this time, (1) a
-             worthwhile modification to the kernel, and (2) free of known
-             issues which would argue against its inclusion.
-
-         (d) While I have reviewed the patch and believe it to be sound, I
-             do not (unless explicitly stated elsewhere) make any
-             warranties or guarantees that it will achieve its stated
-             purpose or function properly in any given situation.
-===
-
-If you can't get behind that, don't add your Reviewed-by: and continue to
-work it out until you can.  Reviewers should be sure to pay attention to
-point (c) as well, something I sometimes forget myself.
-
-Reviews don't have to be heeded, either.  They don't have to be gauntlets
-thrown down or lines in the sand.  "You've corrupted memory here" is
-different from "you could use an args struct instead of 8 arguments"
-or "your commit log isn't very descriptive."  Discretion abounds.
-
-As a reviewer once said on another list, "I'm free to share
-what occurs to me and you're free to tell me to go jump in a lake."
-Especially for cosmetic issues, that's a pretty good POV.  Sometimes
-it's trickier.
-
-As maintainer I guess you get to decide if a review concern has enough
-merit to hold up merging.  Ignoring a compelling technical concern
-could be risky.
-
-Maybe one reviewer is dissatisfied, and another is satisfied.  Then
-you get to play Solomon again.  Life goes on, I hope.
-
--Eric
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
