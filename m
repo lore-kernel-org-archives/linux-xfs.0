@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E35FB7F3F
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 08:12:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3EB1304062
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 06:12:26 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BC9B77F3F
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 08:30:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8EE008F8065
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 06:30:20 -0700 (PDT)
 Received: from mail.host2max.com (mail.host2max.com [72.29.91.110]) by
-	cuda.sgi.com with ESMTP id hopcxIrGDvAbNSsu (version=TLSv1
+	cuda.sgi.com with ESMTP id a5SuZtZ9NDVDZfJ9 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Sep 2013 06:12:25 -0700 (PDT)
+	Thu, 26 Sep 2013 06:30:19 -0700 (PDT)
 From: "Ronnie Tartar" <rtartar@host2max.com>
-References: <0e4201cebaae$24873680$6d95a380$@host2max.com>
-	<5244234D.1010603@hardwarefreak.com>
-In-Reply-To: <5244234D.1010603@hardwarefreak.com>
+References: <0e4201cebaae$24873680$6d95a380$@host2max.com>	<5244234D.1010603@hardwarefreak.com>
+	<100f01cebaba$0ae84280$20b8c780$@host2max.com>
+In-Reply-To: <100f01cebaba$0ae84280$20b8c780$@host2max.com>
 Subject: RE: Issues and new to the group
-Date: Thu, 26 Sep 2013 09:12:24 -0400
-Message-ID: <100f01cebaba$0ae84280$20b8c780$@host2max.com>
+Date: Thu, 26 Sep 2013 09:30:17 -0400
+Message-ID: <101601cebabc$8acb99a0$a062cce0$@host2max.com>
 MIME-Version: 1.0
 Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,14 +33,32 @@ Sender: xfs-bounces@oss.sgi.com
 To: stan@hardwarefreak.com
 Cc: xfs@oss.sgi.com
 
+Stan, looks like I have directory fragmentation problem.
+
+xfs_db> frag -d
+actual 65057, ideal 4680, fragmentation factor 92.81%
+
+What is the best way to fix this?
+
+Thanks
+
+
+-----Original Message-----
+From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of
+Ronnie Tartar
+Sent: Thursday, September 26, 2013 9:12 AM
+To: stan@hardwarefreak.com
+Cc: xfs@oss.sgi.com
+Subject: RE: Issues and new to the group
+
 Stan,
 
 Thanks for the reply.
 
 My fragmentation is:
 
-[root@AP-FS1 ~]# xfs_db -c frag -r /dev/xvdb1
-actual 10470159, ideal 10409782, fragmentation factor 0.58%
+[root@AP-FS1 ~]# xfs_db -c frag -r /dev/xvdb1 actual 10470159, ideal
+10409782, fragmentation factor 0.58%
 
 xfs_db> freesp
    from      to extents  blocks    pct
@@ -76,7 +94,7 @@ Thanks
 
 
 -----Original Message-----
-From: Stan Hoeppner [mailto:stan@hardwarefreak.com] 
+From: Stan Hoeppner [mailto:stan@hardwarefreak.com]
 Sent: Thursday, September 26, 2013 8:07 AM
 To: Ronnie Tartar
 Cc: xfs@oss.sgi.com
@@ -105,7 +123,7 @@ seeking.
 > the load is system%.  My fragmentation is less than 1 %.    Any help would
 > be greatly appreciated.  I was looking to see if there was a better 
 > way to mount this partition or allocate more memory, whatever it 
-> takes.  The folders are image folders that have anywhere between 5 to 
+> takes.  The folders are image folders that have anywhere between 5 to
 > 10 million images in each folder.
 
 > Fstab mount is: 
@@ -125,6 +143,11 @@ look like?
 --
 Stan
 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
