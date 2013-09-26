@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5B6F57F3F
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 14:19:29 -0500 (CDT)
-Received: from eagdhcp-232-140.americas.sgi.com
-	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E0ED8F8033
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 12:19:26 -0700 (PDT)
-Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r8QJJPrC003008
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 14:19:25 -0500 (CDT)
-	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
-Message-Id: <20130926191717.068593583@sgi.com>
-Date: Thu, 26 Sep 2013 14:17:03 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH v3] xfstests: xfs directory unbalance assert test
-Content-Disposition: inline; filename=v3-xfstests-fill-directory.patch
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 812E37F3F
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 16:58:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6E571304066
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 14:58:13 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	4UIiy165l5AHEDDp for <xfs@oss.sgi.com>;
+	Thu, 26 Sep 2013 14:58:11 -0700 (PDT)
+Date: Fri, 27 Sep 2013 07:58:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs hardware RAID alignment over linear lvm
+Message-ID: <20130926215806.GQ26872@dastard>
+References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+	<52435327.9080607@hardwarefreak.com>
+	<2F959FD9-EF28-4495-9D0B-59B93D89C820@colorremedies.com>
+	<20130925215713.GH26872@dastard>
+	<CAE3v2EYVnXiWq1n8AJ0+Y2eifZyhV08S4uLwf6B6mXXWAzBzRA@mail.gmail.com>
+	<5243FCD6.4000701@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5243FCD6.4000701@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,113 +30,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Stewart Webb <stew@messeduphare.co.uk>, Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This tests make sure that XFS correctly handles node sibling
-size checks. This test originally written by Brian Foster and
-has be been condensed with suggestions from Micheal Semon.
+On Thu, Sep 26, 2013 at 04:22:30AM -0500, Stan Hoeppner wrote:
+> On 9/26/2013 3:55 AM, Stewart Webb wrote:
+> > Thanks for all this info Stan and Dave,
+> > 
+> >> "Stripe size" is a synonym of XFS sw, which is su * #disks.  This is the
+> >> amount of data written across the full RAID stripe (excluding parity).
+> > 
+> > The reason I stated Stripe size is because in this instance, I have 3ware
+> > RAID controllers, which refer to
+> > this value as "Stripe" in their tw_cli software (god bless manufacturers
+> > renaming everything)
+> > 
+> > I do, however, have a follow-on question:
+> > On other systems, I have similar hardware:
+> > 3x Raid Controllers
+> > 1 of them has 10 disks as RAID 6 that I would like to add to a logical
+> > volume
+> > 2 of them have 12 disks as a RAID 6 that I would like to add to the same
+> > logical volume
+> > 
+> > All have the same "Stripe" or "Strip Size" of 512 KB
+> > 
+> > So if I where going to make 3 seperate xfs volumes, I would do the
+> > following:
+> > mkfs.xfs -d su=512k sw=8 /dev/sda
+> > mkfs.xfs -d su=512k sw=10 /dev/sdb
+> > mkfs.xfs -d su=512k sw=10 /dev/sdc
+> > 
+> > I assume, If I where going to bring them all into 1 logical volume, it
+> > would be best placed to have the sw value set
+> > to a value that is divisible by both 8 and 10 - in this case 2?
+> 
+> No.  In this case you do NOT stripe align XFS to the storage, because
+> it's impossible--the RAID stripes are dissimilar.  In this case you use
+> the default 4KB write out, as if this is a single disk drive.
+> 
+> As Dave stated, if you format a concatenated device with XFS and you
+> desire to align XFS, then all constituent arrays must have the same
+> geometry.
+> 
+> Two things to be aware of here:
+> 
+> 1.  With a decent hardware write caching RAID controller, having XFS
+> alined to the RAID geometry is a small optimization WRT overall write
+> performance, because the controller is going to be doing the optimizing
+> of final writeback to the drives.
+> 
+> 2. Alignment does not affect read performance.
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
----
- v3: puts back the _cleanup function
-     removes unnecessary groups.
+Ah, but it does...
 
- tests/generic/319     |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/319.out |    2 +
- tests/generic/group   |    1 
- 3 files changed, 67 insertions(+)
+> 3.  XFS only performs aligned writes during allocation.
 
-Index: b/tests/generic/319
-===================================================================
---- /dev/null
-+++ b/tests/generic/319
-@@ -0,0 +1,64 @@
-+#! /bin/bash
-+# FS QA Test No. 319
-+#
-+# Test directory code correctly handles fsstress filling the filesystem
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+   cd /
-+   killall -q $FSSTRESS_PROG
-+   umount $SCRATCH_MNT 2>/dev/null
-+   rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+_require_scratch
-+
-+# real QA test starts here
-+
-+_supported_fs generic
-+_supported_os IRIX Linux
-+
-+rm -f $seqres.full
-+_scratch_mkfs_sized $((11 * 1024 * 1024 * 1024)) >> $seqres.full 2>&1 \
-+	|| _fail "mkfs failed"
-+run_check _scratch_mount >> $seqres.full
-+
-+# Fill the filesystem.
-+FSSTRESS_ARGS="-z -s 1378390208 -fsymlink=1 -n7500000 -p4 -d $SCRATCH_MNT"
-+$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1
-+
-+# A debug XFS may assert in the remove due to a directory bug.
-+rm -rf $SCRATCH_MNT/p?
-+echo "--- silence is golden ---"
-+status=0
-+exit
-Index: b/tests/generic/319.out
-===================================================================
---- /dev/null
-+++ b/tests/generic/319.out
-@@ -0,0 +1,2 @@
-+QA output created by 319
-+--- silence is golden ---
-Index: b/tests/generic/group
-===================================================================
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -121,3 +121,4 @@
- 316 auto quick
- 317 auto metadata quick
- 318 acl attr auto quick
-+319 stress
+Right, and it does so not only to improve write performance, but to
+also maximise sequential read performance of the data that is
+written, especially when multiple files are being read
+simultaneously and IO latency is important to keep low (e.g.
+realtime video ingest and playout).
 
+> What really makes a difference as to whether alignment will be of
+> benefit to you, and how often, is your workload.  So at this point, you
+> need to describe the primary workload(s) of your systems we're discussing.
+
+Yup, my thoughts exactly...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
