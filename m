@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F5507F5F
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 04:28:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 86FAC304032
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 02:28:02 -0700 (PDT)
-Received: from mail-oa0-f47.google.com (mail-oa0-f47.google.com
-	[209.85.219.47]) by cuda.sgi.com with ESMTP id nwLMSxUrIWo1bCmo
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Sep 2013 02:28:01 -0700 (PDT)
-Received: by mail-oa0-f47.google.com with SMTP id i1so368979oag.6
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 02:28:01 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A4ED57F61
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 06:47:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 681E3304032
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 04:47:25 -0700 (PDT)
+Received: from mail.host2max.com (mail.host2max.com [72.29.91.110]) by
+	cuda.sgi.com with ESMTP id cgWw47HsW0A9mp9Z (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Sep 2013 04:47:17 -0700 (PDT)
+From: "Ronnie Tartar" <rtartar@host2max.com>
+Subject: Issues and new to the group
+Date: Thu, 26 Sep 2013 07:47:13 -0400
+Message-ID: <0e4201cebaae$24873680$6d95a380$@host2max.com>
 MIME-Version: 1.0
-In-Reply-To: <5243FCD6.4000701@hardwarefreak.com>
-References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
-	<52435327.9080607@hardwarefreak.com>
-	<2F959FD9-EF28-4495-9D0B-59B93D89C820@colorremedies.com>
-	<20130925215713.GH26872@dastard>
-	<CAE3v2EYVnXiWq1n8AJ0+Y2eifZyhV08S4uLwf6B6mXXWAzBzRA@mail.gmail.com>
-	<5243FCD6.4000701@hardwarefreak.com>
-Date: Thu, 26 Sep 2013 10:28:00 +0100
-Message-ID: <CAE3v2EZp-A2CokEGQWvGZG7rd=tJU=tEW=L_JePTjMygEqQkKg@mail.gmail.com>
-Subject: Re: xfs hardware RAID alignment over linear lvm
-From: Stewart Webb <stew@messeduphare.co.uk>
+Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,211 +23,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6749973853986984018=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============6749973853986984018==
-Content-Type: multipart/alternative; boundary=001a11c23696710c8a04e745fcf3
+Hi, 
 
---001a11c23696710c8a04e745fcf3
-Content-Type: text/plain; charset=ISO-8859-1
+I have a 600GB xfs file system mounted that suddenly started running slow on
+writes.  It takes about 2.5 to 3.5 seconds to write a single file.  Some
+folders (with less number of files) work well.  But it will copy fast, then
+slow for long periods of time.  This is a virtualized CentOS 5.9 64 bit box
+on Citrix Xenserver 5.6SP2.  Doesn't seem to be a load i/o issue as most of
+the load is system%.  My fragmentation is less than 1 %.    Any help would
+be greatly appreciated.  I was looking to see if there was a better way to
+mount this partition or allocate more memory, whatever it takes.  The
+folders are image folders that have anywhere between 5 to 10 million images
+in each folder.
 
-Understood,
+Thanks
 
-My workload is primarily reads (about 80%+ read operations) - so defaults
-will most likely
-be best suited on this occasion.
+Fstab mount is: 
+/dev/xvdb1              /images xfs
+defaults,nodiratime,nosuid,nodev,allocsize=64m 1 1
 
-I was simply trying to follow the guidelines on the XFS wiki to
-the best of my ability, and felt I didn't understand the impact of using
-this via LVM.
+Slabtop is:
+Active / Total Objects (% used)    : 2705947 / 2872142 (94.2%)
+ Active / Total Slabs (% used)      : 290008 / 290008 (100.0%)
+ Active / Total Caches (% used)     : 111 / 165 (67.3%)
+ Active / Total Size (% used)       : 1048796.52K / 1083850.55K (96.8%)
+ Minimum / Average / Maximum Object : 0.02K / 0.38K / 128.00K
 
-Now I feel I understand enough to continue in what I need to do.
+  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
 
-Thanks again
-
-
-On 26 September 2013 10:22, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-
-> On 9/26/2013 3:55 AM, Stewart Webb wrote:
-> > Thanks for all this info Stan and Dave,
-> >
-> >> "Stripe size" is a synonym of XFS sw, which is su * #disks.  This is the
-> >> amount of data written across the full RAID stripe (excluding parity).
-> >
-> > The reason I stated Stripe size is because in this instance, I have 3ware
-> > RAID controllers, which refer to
-> > this value as "Stripe" in their tw_cli software (god bless manufacturers
-> > renaming everything)
-> >
-> > I do, however, have a follow-on question:
-> > On other systems, I have similar hardware:
-> > 3x Raid Controllers
-> > 1 of them has 10 disks as RAID 6 that I would like to add to a logical
-> > volume
-> > 2 of them have 12 disks as a RAID 6 that I would like to add to the same
-> > logical volume
-> >
-> > All have the same "Stripe" or "Strip Size" of 512 KB
-> >
-> > So if I where going to make 3 seperate xfs volumes, I would do the
-> > following:
-> > mkfs.xfs -d su=512k sw=8 /dev/sda
-> > mkfs.xfs -d su=512k sw=10 /dev/sdb
-> > mkfs.xfs -d su=512k sw=10 /dev/sdc
-> >
-> > I assume, If I where going to bring them all into 1 logical volume, it
-> > would be best placed to have the sw value set
-> > to a value that is divisible by both 8 and 10 - in this case 2?
->
-> No.  In this case you do NOT stripe align XFS to the storage, because
-> it's impossible--the RAID stripes are dissimilar.  In this case you use
-> the default 4KB write out, as if this is a single disk drive.
->
-> As Dave stated, if you format a concatenated device with XFS and you
-> desire to align XFS, then all constituent arrays must have the same
-> geometry.
->
-> Two things to be aware of here:
->
-> 1.  With a decent hardware write caching RAID controller, having XFS
-> alined to the RAID geometry is a small optimization WRT overall write
-> performance, because the controller is going to be doing the optimizing
-> of final writeback to the drives.
->
-> 2. Alignment does not affect read performance.
->
-> 3.  XFS only performs aligned writes during allocation.  I.e. this only
-> occurs when creating a new file, new inode, etc.  For append and
-> modify-in-place operations, there is no write alignment.  So again,
-> stripe alignment to the hardware geometry is merely an optimization, and
-> only affect some types of writes.
->
-> What really makes a difference as to whether alignment will be of
-> benefit to you, and how often, is your workload.  So at this point, you
-> need to describe the primary workload(s) of your systems we're discussing.
->
-> --
-> Stan
->
->
-
-
--- 
-Stewart Webb
-
---001a11c23696710c8a04e745fcf3
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Understood,<div><br></div><div>My workload is primarily re=
-ads (about 80%+ read operations) - so defaults will most likely</div><div>b=
-e best suited on this occasion.</div><div><br></div><div>I was simply tryin=
-g to follow the guidelines on the XFS wiki to</div>
-<div>the best of my ability, and felt I didn&#39;t understand the impact of=
- using this via LVM.</div><div><br></div><div>Now I feel I understand enoug=
-h to continue in what I need to do.</div><div><br></div><div>Thanks again</=
-div>
-</div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote">On 26 S=
-eptember 2013 10:22, Stan Hoeppner <span dir=3D"ltr">&lt;<a href=3D"mailto:=
-stan@hardwarefreak.com" target=3D"_blank">stan@hardwarefreak.com</a>&gt;</s=
-pan> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On 9/26/2013 3:55 AM, Stew=
-art Webb wrote:<br>
-&gt; Thanks for all this info Stan and Dave,<br>
-&gt;<br>
-&gt;&gt; &quot;Stripe size&quot; is a synonym of XFS sw, which is su * #dis=
-ks. =A0This is the<br>
-&gt;&gt; amount of data written across the full RAID stripe (excluding pari=
-ty).<br>
-&gt;<br>
-&gt; The reason I stated Stripe size is because in this instance, I have 3w=
-are<br>
-&gt; RAID controllers, which refer to<br>
-&gt; this value as &quot;Stripe&quot; in their tw_cli software (god bless m=
-anufacturers<br>
-&gt; renaming everything)<br>
-&gt;<br>
-&gt; I do, however, have a follow-on question:<br>
-&gt; On other systems, I have similar hardware:<br>
-&gt; 3x Raid Controllers<br>
-&gt; 1 of them has 10 disks as RAID 6 that I would like to add to a logical=
-<br>
-&gt; volume<br>
-&gt; 2 of them have 12 disks as a RAID 6 that I would like to add to the sa=
-me<br>
-&gt; logical volume<br>
-&gt;<br>
-&gt; All have the same &quot;Stripe&quot; or &quot;Strip Size&quot; of 512 =
-KB<br>
-&gt;<br>
-&gt; So if I where going to make 3 seperate xfs volumes, I would do the<br>
-&gt; following:<br>
-&gt; mkfs.xfs -d su=3D512k sw=3D8 /dev/sda<br>
-&gt; mkfs.xfs -d su=3D512k sw=3D10 /dev/sdb<br>
-&gt; mkfs.xfs -d su=3D512k sw=3D10 /dev/sdc<br>
-&gt;<br>
-&gt; I assume, If I where going to bring them all into 1 logical volume, it=
-<br>
-&gt; would be best placed to have the sw value set<br>
-&gt; to a value that is divisible by both 8 and 10 - in this case 2?<br>
-<br>
-</div>No. =A0In this case you do NOT stripe align XFS to the storage, becau=
-se<br>
-it&#39;s impossible--the RAID stripes are dissimilar. =A0In this case you u=
-se<br>
-the default 4KB write out, as if this is a single disk drive.<br>
-<br>
-As Dave stated, if you format a concatenated device with XFS and you<br>
-desire to align XFS, then all constituent arrays must have the same<br>
-geometry.<br>
-<br>
-Two things to be aware of here:<br>
-<br>
-1. =A0With a decent hardware write caching RAID controller, having XFS<br>
-alined to the RAID geometry is a small optimization WRT overall write<br>
-performance, because the controller is going to be doing the optimizing<br>
-of final writeback to the drives.<br>
-<br>
-2. Alignment does not affect read performance.<br>
-<br>
-3. =A0XFS only performs aligned writes during allocation. =A0I.e. this only=
-<br>
-occurs when creating a new file, new inode, etc. =A0For append and<br>
-modify-in-place operations, there is no write alignment. =A0So again,<br>
-stripe alignment to the hardware geometry is merely an optimization, and<br=
->
-only affect some types of writes.<br>
-<br>
-What really makes a difference as to whether alignment will be of<br>
-benefit to you, and how often, is your workload. =A0So at this point, you<b=
-r>
-need to describe the primary workload(s) of your systems we&#39;re discussi=
-ng.<br>
-<span class=3D"HOEnZb"><font color=3D"#888888"><br>
---<br>
-Stan<br>
-<br>
-</font></span></blockquote></div><br><br clear=3D"all"><div><br></div>-- <b=
-r><div dir=3D"ltr"><div></div>Stewart Webb<br></div>
-</div>
-
---001a11c23696710c8a04e745fcf3--
-
-
---===============6749973853986984018==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+843080 836242  99%    0.44K 105385        8    421540K xfs_inode
+839608 836242  99%    0.56K 119944        7    479776K xfs_vnode
+461610 432085  93%    0.21K  25645       18    102580K dentry_cache
+306200 306200 100%    0.09K   7655       40     30620K buffer_head
+222570 121732  54%    0.12K   7419       30     29676K size-128
+117439  97108  82%    0.52K  16777        7     67108K radix_tree_node
+ 30820  30814  99%    0.19K   1541       20      6164K xfs_ili
+ 13270  13266  99%    0.74K   2654        5     10616K ext3_inode_cache
+  9390   9390 100%    0.25K    626       15      2504K size-256
+  7682   7562  98%    0.16K    334       23      1336K vm_area_struct
+  3068   1711  55%    0.06K     52       59       208K size-64
+  2816   2786  98%    0.09K     64       44       256K sysfs_dir_cache
+  2055   1275  62%    0.25K    137       15       548K filp
+  1440   1289  89%    0.02K     10      144        40K anon_vma
+  1120    999  89%    0.03K     10      112        40K size-32
+   768    534  69%    0.08K     16       48        64K
+selinux_inode_security
+   756    698  92%    0.55K    108        7       432K inode_cache
+   576    554  96%    0.58K     96        6       384K proc_inode_cache
+   476    455  95%    1.00K    119        4       476K size-1024
+   404    403  99%    2.00K    202        2       808K size-2048
+   404    404 100%    4.00K    404        1      1616K size-4096
+   360    350  97%    0.12K     12       30        48K bio     
+   320    284  88%    0.50K     40        8       160K size-512
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6749973853986984018==--
