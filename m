@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 079B37F3F
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 13:37:19 -0500 (CDT)
-Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E39518F8050
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 11:37:15 -0700 (PDT)
-Message-ID: <52447EEA.6090205@sgi.com>
-Date: Thu, 26 Sep 2013 13:37:30 -0500
-From: Rich Johnston <rjohnston@sgi.com>
-MIME-Version: 1.0
-Subject: [ANNOUNCE] xfsprogs v3.2.0-alpha1
+	by oss.sgi.com (Postfix) with ESMTP id 5B6F57F3F
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 14:19:29 -0500 (CDT)
+Received: from eagdhcp-232-140.americas.sgi.com
+	(eagdhcp-232-140.americas.sgi.com [128.162.232.140])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E0ED8F8033
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 12:19:26 -0700 (PDT)
+Received: from eagdhcp-232-140.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-140.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r8QJJPrC003008
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 14:19:25 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-140.americas.sgi.com)
+Message-Id: <20130926191717.068593583@sgi.com>
+Date: Thu, 26 Sep 2013 14:17:03 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v3] xfstests: xfs directory unbalance assert test
+Content-Disposition: inline; filename=v3-xfstests-fill-directory.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,32 +24,113 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Alpha version 3.2.0-alpha1 of xfsprogs has been released.
+This tests make sure that XFS correctly handles node sibling
+size checks. This test originally written by Brian Foster and
+has be been condensed with suggestions from Micheal Semon.
 
-The source code can be accessed via git using this URL:
+Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
+---
+ v3: puts back the _cleanup function
+     removes unnecessary groups.
 
-     git://oss.sgi.com/xfs/cmds/xfsprogs.git
+ tests/generic/319     |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/319.out |    2 +
+ tests/generic/group   |    1 
+ 3 files changed, 67 insertions(+)
 
-A gzipped-tar archive of the source code is available here:
+Index: b/tests/generic/319
+===================================================================
+--- /dev/null
++++ b/tests/generic/319
+@@ -0,0 +1,64 @@
++#! /bin/bash
++# FS QA Test No. 319
++#
++# Test directory code correctly handles fsstress filling the filesystem
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++   cd /
++   killall -q $FSSTRESS_PROG
++   umount $SCRATCH_MNT 2>/dev/null
++   rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++_require_scratch
++
++# real QA test starts here
++
++_supported_fs generic
++_supported_os IRIX Linux
++
++rm -f $seqres.full
++_scratch_mkfs_sized $((11 * 1024 * 1024 * 1024)) >> $seqres.full 2>&1 \
++	|| _fail "mkfs failed"
++run_check _scratch_mount >> $seqres.full
++
++# Fill the filesystem.
++FSSTRESS_ARGS="-z -s 1378390208 -fsymlink=1 -n7500000 -p4 -d $SCRATCH_MNT"
++$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1
++
++# A debug XFS may assert in the remove due to a directory bug.
++rm -rf $SCRATCH_MNT/p?
++echo "--- silence is golden ---"
++status=0
++exit
+Index: b/tests/generic/319.out
+===================================================================
+--- /dev/null
++++ b/tests/generic/319.out
+@@ -0,0 +1,2 @@
++QA output created by 319
++--- silence is golden ---
+Index: b/tests/generic/group
+===================================================================
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -121,3 +121,4 @@
+ 316 auto quick
+ 317 auto metadata quick
+ 318 acl attr auto quick
++319 stress
 
-     ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.0-alpha1.tar.gz
-
-The development tree previously hosted on kernel.org for this code has 
-been deprecated:
-
-     git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-Below is a summary (from the doc/CHANGES file) of the changes:
-
-xfsprogs-3.2.0-alpha1 (26 September 2013)
-   - Alpha release for the purpose of testing the CRC feature during the
-     v3.12 kernel -rc series.
 
 _______________________________________________
 xfs mailing list
