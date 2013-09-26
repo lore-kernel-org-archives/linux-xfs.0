@@ -1,35 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5A1B57F52
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 02:36:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 43DA18F8039
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 00:36:46 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id SlvxOjFu09EZk0dk (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Sep 2013 00:36:45 -0700 (PDT)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r8Q7ahJB029860
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 07:36:44 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r8Q7agIG016953
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 07:36:43 GMT
-Received: from abhmt119.oracle.com (abhmt119.oracle.com [141.146.116.71])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r8Q7ag4v021080 for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 07:36:42 GMT
-Message-ID: <5243E43A.6010101@oracle.com>
-Date: Thu, 26 Sep 2013 15:37:30 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EC4637F5A
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 03:44:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D7323304059
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 01:44:07 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id fSBR8qfgGhHDexaX
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 01:44:07 -0700 (PDT)
+Message-ID: <5243F3DE.3050900@hardwarefreak.com>
+Date: Thu, 26 Sep 2013 03:44:14 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfs: fix dead loop at xfs_vm_writepage() on 32bit
-	machine
-References: <5243D8DE.8090003@oracle.com>
-In-Reply-To: <5243D8DE.8090003@oracle.com>
+Subject: Re: xfs hardware RAID alignment over linear lvm
+References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+	<52435327.9080607@hardwarefreak.com>
+	<2F959FD9-EF28-4495-9D0B-59B93D89C820@colorremedies.com>
+	<20130925215713.GH26872@dastard>
+In-Reply-To: <20130925215713.GH26872@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,199 +31,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 09/26/2013 02:49 PM, Jeff Liu wrote:
-
-> From: Jie Liu <jeff.liu@oracle.com>
+On 9/25/2013 4:57 PM, Dave Chinner wrote:
+...
+> Linear concatentation looks like this:
 > 
-> Write a file with an offset greater than 16TB on 32-bit system and
-> then trigger page write-back via sync(1) as below will cause the
-> task hang in a little while:
-> 
-> INFO: task sync:2590 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> sync            D c1064a28     0  2590   2097 0x00000000
+> offset		volume				array
+> 0		+-D1-+-D2-+.....+-Dn-+		0	# first sw
 > .....
-> Call Trace:
-> [<c1064a28>] ? ttwu_do_wakeup+0x18/0x130
-> [<c1066d0e>] ? try_to_wake_up+0x1ce/0x220
-> [<c1066dbf>] ? wake_up_process+0x1f/0x40
-> [<c104fc2e>] ? wake_up_worker+0x1e/0x30
-> [<c15b6083>] schedule+0x23/0x60
-> [<c15b3c2d>] schedule_timeout+0x18d/0x1f0
-> [<c12a143e>] ? do_raw_spin_unlock+0x4e/0x90
-> [<c10515f1>] ? __queue_delayed_work+0x91/0x150
-> [<c12a12ef>] ? do_raw_spin_lock+0x3f/0x100
-> [<c12a143e>] ? do_raw_spin_unlock+0x4e/0x90
-> [<c15b5b5d>] wait_for_completion+0x7d/0xc0
-> [<c1066d60>] ? try_to_wake_up+0x220/0x220
-> [<c116a4d2>] sync_inodes_sb+0x92/0x180
-> [<c116fb05>] sync_inodes_one_sb+0x15/0x20
-> [<c114a8f8>] iterate_supers+0xb8/0xc0
-> [<c116faf0>] ? fdatawrite_one_bdev+0x20/0x20
-> [<c116fc21>] sys_sync+0x31/0x80
-> [<c15be18d>] sysenter_do_call+0x12/0x28
+> X-sw		+-D1-+-D2-+.....+-Dn-+		0
+> X		+-E1-+-E2-+.....+-En-+		1	# first sw
+> .....
+> 2X-sw		+-E1-+-E2-+.....+-En-+		1
+> 2X		+-F1-+-F2-+.....+-Fn-+		2	# first sw
+> .....
+> 3X-sw		+-F1-+-F2-+.....+-Fn-+		2
 > 
-> The reason is that the end_index is unsigned long with maximum value
-> '2^32-1=4294967295' on 32-bit platform, and the given offset cause it
-> wrapped to 0, so that the following codes will repeat again and again
-> until the task schedule time out:
+> Where:
+> 	D1...Dn are the disks in the first array
+> 	E1...En are the disks in the second array
+> 	F1...Fn are the disks in the third array
+> 	X is the size of the each array
+> 	sw = su * number of data disks in array
 > 
-> end_index = offset >> PAGE_CACHE_SHIFT;
-> last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
-> if (page->index >= end_index) {
-> 	unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
->         /*
->          * Just skip the page if it is fully outside i_size, e.g. due
->          * to a truncate operation that is in progress.
->          */
->         if (page->index >= end_index + 1 || offset_into_page == 0) {
-> 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 		unlock_page(page);
-> 		return 0;
-> 	}
+> As you can see, all the volumes are arranged in a single column -
+> identical to a larger single array of the same size.  Hence the
+> exposed alignment of a single array is what the filesystem should be
+> aligned to, as that is how the linear concat behaves.
 > 
-> To check a page is fully outsids i_size or not, we can change the
-> logic to:
-> 	if (page->index > end_index ||
-> 	    (page->index == end_index && offset_into_page == 0))
-> 
-> Secondly, there still has another similar issue when calculating the
-> end offset for mapping the filesystem blocks to the file blocks for
-> delalloc.  With the same tests to above, run unmount(8) will cause
-> kernel panic if CONFIG_XFS_DEBUG is enabled:
-> 
-> XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || \
-> 	ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 964
-> 
-> kernel BUG at fs/xfs/xfs_message.c:108!
-> invalid opcode: 0000 [#1] SMP
-> task: edddc100 ti: ec6ee000 task.ti: ec6ee000
-> EIP: 0060:[<f83d87cb>] EFLAGS: 00010296 CPU: 1
-> EIP is at assfail+0x2b/0x30 [xfs]
-> ..............
-> Call Trace:
-> [<f83d9cd4>] xfs_fs_destroy_inode+0x74/0x120 [xfs]
-> [<c115ddf1>] destroy_inode+0x31/0x50
-> [<c115deff>] evict+0xef/0x170
-> [<c115dfb2>] dispose_list+0x32/0x40
-> [<c115ea3a>] evict_inodes+0xca/0xe0
-> [<c1149706>] generic_shutdown_super+0x46/0xd0
-> [<c11497b9>] kill_block_super+0x29/0x70
-> [<c1149a14>] deactivate_locked_super+0x44/0x70
-> [<c114a427>] deactivate_super+0x47/0x60
-> [<c1161c3d>] mntput_no_expire+0xcd/0x120
-> [<c1162ae8>] SyS_umount+0xa8/0x370
-> [<c1162dce>] SyS_oldumount+0x1e/0x20
-> [<c15be18d>] sysenter_do_call+0x12/0x28
-> 
-> That because the end_offset is evaluated to 0 same to above, hence the
-> mapping and covertion for dealloc file blocks to file system blocks did
-> not happened.
-> 
-> This patch just fixed both issues.
-> 
-> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
-> v3: Add code comments to reflect this change.
-> v2: don't reset the s_max_bytes to MAX_LFS_FILESIZE, instead, revise the page offset
->     check up strategy to avoid the potential overflow.
-> v1: http://oss.sgi.com/archives/xfs/2013-07/msg00154.html
-> 
->  fs/xfs/xfs_aops.c |   49 +++++++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 43 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index e51e581..541c837 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -960,7 +960,32 @@ xfs_vm_writepage(
->  	offset = i_size_read(inode);
->  	end_index = offset >> PAGE_CACHE_SHIFT;
->  	last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
-> -	if (page->index >= end_index) {
-> +
-> +	/*
-> +	 * The page index is less than the end_index, adjust the end_offset
-> +	 * to the highest offset that this page should represent.
-> +	 * -----------------------------------------------------
-> +	 * |			file mapping	       | <EOF> |
-> +	 * -----------------------------------------------------
-> +	 * | Page ... | Page N-2 | Page N-1 |  Page N  |       |
-> +	 * ^--------------------------------^----------|--------
-> +	 * |     desired writeback range    |      see else    |
-> +	 * ---------------------------------^------------------|
-> +	 */
-> +	if (page->index < end_index)
-> +		end_offset = (xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT;
-> +	else {
-> +		/*
-> +		 * Check whether the page to write out is beyond or straddles
-> +		 * i_size or not.
-> +		 * -------------------------------------------------------
-> +		 * |		file mapping		        | <EOF>  |
-> +		 * -------------------------------------------------------
-> +		 * | Page ... | Page N-2 | Page N-1 |  Page N   | Beyond |
-> +		 * ^--------------------------------^-----------|---------
-> +		 * |				    |      Straddles     |
-> +		 * ---------------------------------^-----------|--------|
-> +		 */
->  		unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
->  
->  		/*
-> @@ -968,24 +993,36 @@ xfs_vm_writepage(
->  		 * truncate operation that is in progress. We must redirty the
->  		 * page so that reclaim stops reclaiming it. Otherwise
->  		 * xfs_vm_releasepage() is called on it and gets confused.
-> +		 *
-> +		 * Note that the end_index is unsigned long, it would cause it
-> +		 * overflow if the given offset is greater than 16TB on 32-bit
-> +		 * system if we do check the page is fully outside i_size or not
-> +		 * via "if (page->index >= end_index + 1)" as "end_idex + 1"
-> +		 * will be evaluated to 0.  Hence this page will be redirtied
-> +		 * and be written out again and again which would result in
-> +		 * dead loop, the user program that perform this operation will
+> You also might note here that if you want the second and subsequent
+> arrays to be correctly aligned to the initial array in the linear
+> concat (and you do want that), the arrays must be sized to be an
+> exact multiple of the stripe width.
 
-		^^^^^^^^^^^^^
-Should I say this is an infinite or endless loop rather than dead loop, although
-I was intended to comments the same behavior, but someone was kindly reminded me
-of that the infinite loop is more suitable in English world just now.
+On a similar note, if I do a concat like this I specify agsize/agcount
+during mkfs.xfs so no AGs straddle array boundaries.  I do this to keep
+per AG throughput consistent, among other concerns.  This may or may not
+be of benefit to the OP.  mkfs.xfs using defaults is not aware of the
+array boundaries within the concat, so it may well create AGs across
+array boundaries.
 
-Thanks,
--Jeff
-
-> +		 * hang.  Instead, we can verify this situation by checking if
-> +		 * the page to write if totally beyond the i_size or if it's
-> +		 * offset just equal to the EOF.
->  		 */
-> -		if (page->index >= end_index + 1 || offset_into_page == 0)
-> +		if (page->index > end_index ||
-> +		    (page->index == end_index && offset_into_page == 0))
->  			goto redirty;
->  
->  		/*
->  		 * The page straddles i_size.  It must be zeroed out on each
->  		 * and every writepage invocation because it may be mmapped.
->  		 * "A file is mapped in multiples of the page size.  For a file
-> -		 * that is not a multiple of the  page size, the remaining
-> +		 * that is not a multiple of the page size, the remaining
->  		 * memory is zeroed when mapped, and writes to that region are
->  		 * not written out to the file."
->  		 */
->  		zero_user_segment(page, offset_into_page, PAGE_CACHE_SIZE);
-> +
-> +		/* Adjust the end_offset to the end of file */
-> +		end_offset = offset;
->  	}
->  
-> -	end_offset = min_t(unsigned long long,
-> -			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
-> -			offset);
->  	len = 1 << inode->i_blkbits;
->  
->  	bh = head = page_buffers(page);
+-- 
+Stan
 
 
 _______________________________________________
