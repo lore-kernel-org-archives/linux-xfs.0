@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD00D7F3F
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 18:46:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C4DB58F8049
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 16:46:12 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id gPufQ2kbmDGNGHq9
-	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 16:46:11 -0700 (PDT)
-Message-ID: <5244C742.3080003@hardwarefreak.com>
-Date: Thu, 26 Sep 2013 18:46:10 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id 33F9A29DFB
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Sep 2013 20:09:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EDF598F8040
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Sep 2013 18:09:22 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	ogqe7vDHfPucgn0T for <linux-xfs@oss.sgi.com>;
+	Thu, 26 Sep 2013 18:09:20 -0700 (PDT)
+Date: Fri, 27 Sep 2013 11:08:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: free inodes remaining in 1tb
+Message-ID: <20130927010847.GW26872@dastard>
+References: <44qehaxod8.ln2@goaway.wombat.san-francisco.ca.us>
 MIME-Version: 1.0
-Subject: Re: Issues and new to the group
-References: <0e4201cebaae$24873680$6d95a380$@host2max.com>	<5244234D.1010603@hardwarefreak.com>
-	<100f01cebaba$0ae84280$20b8c780$@host2max.com>
-	<101601cebabc$8acb99a0$a062cce0$@host2max.com>
-	<52444355.50904@sandeen.net>
-In-Reply-To: <52444355.50904@sandeen.net>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <44qehaxod8.ln2@goaway.wombat.san-francisco.ca.us>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,61 +29,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com, Ronnie Tartar <rtartar@host2max.com>
+To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Cc: linux-xfs@oss.sgi.com
 
-On 9/26/2013 9:23 AM, Eric Sandeen wrote:
-> On 9/26/13 8:30 AM, Ronnie Tartar wrote:
->> Stan, looks like I have directory fragmentation problem.
->>
->> xfs_db> frag -d
->> actual 65057, ideal 4680, fragmentation factor 92.81%
->>
->> What is the best way to fix this?
+On Thu, Sep 26, 2013 at 03:47:00PM -0700, Keith Keller wrote:
+> Hi all,
 > 
-> http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_says_I.27m_over_50.25._Is_that_bad.3F
-> 
-> We should just get rid of that command, TBH.
-> 
-> So your dirs are in an average of 65057/4680 or about 14 fragments each.
-> Really not that bad, in the scope of things.
-> 
-> I'd imagine that this could be more of your problem:
-> 
->> The
->> folders are image folders that have anywhere between 5 to 10 million images
->> in each folder.
-> 
-> at 10 million entries in a dir, you're going to start slowing down on inserts
-> due to btree management.  But that probably doesn't account for multiple seconds for
-> a single file.
-> 
-> So really,it's not clear *what* is slow.
-> 
->> It takes about 2.5 to 3.5 seconds to write a single file.
-> 
-> strace with timing would be a very basic way to get a sense of what is slow;
-> is it the file open/create?  How big is the file, are you doing buffered or
-> direct IO?
-> 
-> On a more modern OS you could do some of the tracing suggested in
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> 
-> but some sort of profiling (oprofile, perhaps) might tell you where time is being spent in the kernel.
-> 
-> When you say suddenly started, was it after a kernel upgrade or other change?
+> I "recently" (a few months ago) came across the inode64 entries in the
+> XFS FAQ.  Unfortunately, I have a filesystem not mounted with inode64,
+> and I would like to know how many more inodes I can create in the
+> first 1TB before I run out,
 
-Eric is an expert on this, much more knowledgeable than me.  And somehow
-I missed the 5-10 million files per dir.  Maybe you have multiple issues
-here adding up to large delays.  In addition to the steps Eric
-recommends, it can't hurt to go ahead and take a look at the free space
-map.  Depending on how the filesystem has aged this could be a factor,
-such as being 90%+ full at one time, and then lots of files being deleted.
+Depends on how much other data is allocated in the first TB
+(occurs when you fill the space above 1TB completely), the
+size of the allocation groups (how much of the first TB canbe used
+for inodes), how many inodes and other metadata you've already
+allocated, etc.
 
-# xfs_db -r -c freesp /dev/[device]
+> so that I can plan for a migration to
+> inode64 (if it's very few, I would make it a high priority; if not, it
+> can be done in a few weeks instead, for example).  Is there an easy
+> way (or even a hard way) to query the filesystem for this information?
 
+Only a hard way - using xfs_db to look at on-disk structures and
+inferring the state from there...
+
+> I also wanted to ask about the FAQ that says you can switch back from
+> inode64 to inode32.  How does that work if an inode is created past the
+> 1TB mark?
+
+Depends on how old your kernel is. Access to 64 bit inodes when
+mounting with inode32 only came along in 2010:
+
+commit fb3b504adeee942e55393396fea8fdf406acf037
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Fri May 28 19:03:10 2010 +0000
+
+    xfs: fix access to upper inodes without inode64
+    
+    If a filesystem is mounted without the inode64 mount option we
+    should still be able to access inodes not fitting into 32 bits, just
+    not created new ones.  For this to work we need to make sure the
+    inode cache radix tree is initialized for all allocation groups, not
+    just those we plan to allocate inodes from.  This patch makes sure
+    we initialize the inode cache radix tree for all allocation groups,
+    and also cleans xfs_initialize_perag up a bit to separate the
+    inode32 logical from the general perag structure setup.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Alex Elder <aelder@sgi.com>
+
+So if you have an old kernel (older than 2.6.35), you won't be able
+to access 64 bit inodes at all if you mount with inode32. Anything
+more recent than that will work just fine.
+
+> How would the kernel know how to find an inode64 inode that
+> was created beyond the 1TB mark if the filesystem is subsequentely
+> mounted without inode64?
+
+The inode number is an encoding of the physical location of the inod
+inthe filesystem. Hence the kernel code can always find the inode
+location - it just may not be able to do anything with it because
+the caches on old kernels can't index them...
+
+Cheers,
+
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
