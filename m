@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.12-rc1-5-g997def2
-Message-Id: <20130927141837.2B9357F58@oss.sgi.com>
-Date: Fri, 27 Sep 2013 09:18:36 -0500 (CDT)
+Message-Id: <20130927141902.9E18F7F61@oss.sgi.com>
+Date: Fri, 27 Sep 2013 09:19:02 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   997def2 xfs: fix node forward in xfs_node_toosmall
       from  566055d33a91ddddb1cb31220b01ac4abd2d2bdd (commit)
 
