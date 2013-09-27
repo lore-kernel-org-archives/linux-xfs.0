@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 11EFC7F67
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:52:49 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CFAC47F52
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 11:34:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EEB548F8066
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 08:52:48 -0700 (PDT)
-Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.162]) by
-	cuda.sgi.com with ESMTP id 4XnZ3Ii8R2l3jRLa (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Sep 2013 08:52:47 -0700 (PDT)
-Message-ID: <5245A9D1.2000100@giantdisaster.de>
-Date: Fri, 27 Sep 2013 17:52:49 +0200
-From: Stefan Behrens <sbehrens@giantdisaster.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4837CAC005
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 09:34:27 -0700 (PDT)
+Received: from mail.in8.de (brockman.in8.de [85.214.220.56]) by cuda.sgi.com
+	with ESMTP id uqEMWYw3wlsudLgs for <xfs@oss.sgi.com>;
+	Fri, 27 Sep 2013 09:34:25 -0700 (PDT)
+Message-ID: <5245B38F.20800@jan-o-sch.net>
+Date: Fri, 27 Sep 2013 18:34:23 +0200
+From: Jan Schmidt <list.btrfs@jan-o-sch.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: btrfs/015 regression test for prealloc with
-	balance
-References: <1380292053-8123-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1380292053-8123-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstests: btrfs/011 improvement for compressed filesystems
+References: <1379068041-4299-1-git-send-email-sbehrens@giantdisaster.de>
+In-Reply-To: <1379068041-4299-1-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,143 +27,130 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Stefan Behrens <sbehrens@giantdisaster.de>
+Cc: jbacik@fusionio.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, 27 Sep 2013 10:27:33 -0400, Josef Bacik wrote:
-> We had a regression where we were not copying csums properly when balancing a
-> prealloc extent.  Unfortunately the way this showed up the most was with the
-> csum simply missing, which doesn't result in an error to userspace.  So I've
-> copied what generic/310 does and check dmesg for csum errors when the test
-> starts and then compare that count to the csum errors after the test finishes to
-> see if there was a problem.  This approach caught the error without my fix, and
-> then passed fine with my fix in place but with the previous errors still in
-> dmesg.  Thanks,
+On Fri, September 13, 2013 at 12:27 (+0200), Stefan Behrens wrote:
+> Josef noticed that using /dev/zero to generate most of the test
+> data doesn't work if someone overides the mount options to
+> enable compression. The test that performs a cancelation failed
+> because the replace operation was already finished when the
+> cancel request was executed.
 > 
-> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+> Since /dev/urandom is too slow to generate multiple GB, the
+> way how the filesystem data is generated is completely changed
+> with this patch. Now /dev/urandom is used to generate one 1MB
+> file and this file is copied up to 2048 times. /dev/zero is no
+> longer used.
+> 
+> The runtime of the test is about the same as before. Compression
+> works now, online deduplication will again cause issues, but
+> we don't have online deduplicatin today.
+> 
+> Reported-by: Josef Bacik <jbacik@fusionio.com>
+> Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
 > ---
->  tests/btrfs/015     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/015.out |  2 ++
->  tests/btrfs/group   |  1 +
->  3 files changed, 90 insertions(+)
->  create mode 100644 tests/btrfs/015
->  create mode 100644 tests/btrfs/015.out
+>  tests/btrfs/011 | 46 ++++++++++++++++++++++++++++++----------------
+>  1 file changed, 30 insertions(+), 16 deletions(-)
 > 
-> diff --git a/tests/btrfs/015 b/tests/btrfs/015
-> new file mode 100644
-> index 0000000..d463e48
-> --- /dev/null
-> +++ b/tests/btrfs/015
-> @@ -0,0 +1,87 @@
-> +#! /bin/bash
-> +# FS QA Test No. btrfs/015
-> +#
-> +# Regression test for balance with prealloc extents.  This checks to make sure
-> +# we are balacing prealloc'ed extents properly by making sure we don't have any
-> +# csum errors.  Unfortunately this manifests itself with no csum which means
-> +# userspace doesn't get an error when reading the file back so we have to grok
-> +# dmesg to see if there was a csum error.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Fusion IO.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +
-> +status=1	# failure is the default!
-> +
-> +_cleanup()
-> +{
-> +	rm -f $tmp.*
-> +}
-> +
-> +trap "_cleanup ; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs > /dev/null 2>&1
-> +_scratch_mount
-> +
-> +nr_csum_no_found=$(dmesg | grep -c "no csum found")
-> +nr_csum_failed=$(dmesg | grep -c "csum failed")
-> +
-> +_check_csum_error()
-> +{
-> +	new_csum_no_found=$(dmesg | grep -c "no csum found")
-> +	new_csum_failed=$(dmesg | grep -c "csum failed")
-> +
-> +	if [ $nr_csum_no_found -eq $new_csum_no_found -a \
-> +	     $nr_csum_failed -eq $new_csum_failed ]; then
-> +		return 0
+> diff --git a/tests/btrfs/011 b/tests/btrfs/011
+> index c8b4aac..71ff3de 100755
+> --- a/tests/btrfs/011
+> +++ b/tests/btrfs/011
+> @@ -78,6 +78,7 @@ workout()
+>  	local quick="$4"
+>  	local source_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $1}'`"
+>  	local target_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $NF}'`"
+> +	local fssize
+>  
+>  	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt `expr $num_devs4raid + 1` ]; then
+>  		echo "Skip workout $1 $2 $3 $4" >> $seqres.full
+> @@ -107,33 +108,46 @@ workout()
+>  		_notrun "Different device sizes detected"
+>  	fi
+>  
+> +	if [ `$BTRFS_SHOW_SUPER_PROG $SCRATCH_DEV | grep dev_item.total_bytes | awk '{print $2}'` -lt 2500000000 ]; then
+> +		_notrun "device size too small"
 > +	fi
-> +	return 1
-> +}
-> +$XFS_IO_PROG -f -c "falloc 0 1M" -c "pwrite 16k 8k" -c "fsync" \
-> +	$SCRATCH_MNT/foo > $seqres.full 2>&1
-> +$BTRFS_UTIL_PROG fi ba $SCRATCH_MNT >> $seqres.full 2>&1 || \
-> +	_fail "balance failed"
-> +_scratch_unmount
-> +_scratch_mount
-> +$XFS_IO_PROG -c "pread 0 1M" $SCRATCH_MNT/foo >> $seqres.full 2>&1 || \
-> +	_fail "pread failed"
 > +
-> +# This sucks but unfortunately it is the only way to be sure something didn't go
-> +# wrong.
-> +_check_csum_error || _fail "csum detected, please check dmesg"
+>  	_scratch_mount
+>  
+> -	# Generate 500 times 20K extents in the data chunk and fill up
+> -	# metadata with inline extents. Ignore ENOSPC.
+> +	# Generate metadata and some minimal user data, generate 500 times
+> +	# 20K extents in the data chunk and fill up metadata with inline
+> +	# extents.
+>  	for i in `seq 1 500`; do
+>  		dd if=/dev/urandom of=$SCRATCH_MNT/l$i bs=16385 count=1
+>  		dd if=/dev/urandom of=$SCRATCH_MNT/s$i bs=3800 count=1
+>  	done > /dev/null 2>&1
+>  
+> +	# /dev/urandom is slow but has the benefit that the generated
+> +	# contents does not shrink during compression.
+> +	# Generate a template once and quickly copy it multiple times.
+> +	# Obviously with online deduplication this will not work anymore.
+> +	dd if=/dev/urandom of=$SCRATCH_MNT/t0 bs=1M count=1 > /dev/null 2>&1
 > +
-> +echo "Silence is golden"
-> +status=0 ; exit
-> diff --git a/tests/btrfs/015.out b/tests/btrfs/015.out
-> new file mode 100644
-> index 0000000..fee0fcf
-> --- /dev/null
-> +++ b/tests/btrfs/015.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 015
-> +Silence is golden
-> diff --git a/tests/btrfs/group b/tests/btrfs/group
-> index 3a5747f..dc5bbea 100644
-> --- a/tests/btrfs/group
-> +++ b/tests/btrfs/group
-> @@ -17,3 +17,4 @@
->  012 auto quick
->  013 auto quick
->  014 auto quick
-> +015 auto quick
+>  	if [ "${quick}Q" = "thoroughQ" ]; then
+>  		# The intention of this "thorough" test is to increase
+>  		# the probability of random errors, in particular in
+>  		# conjunction with the background noise generator and
+> -		# a sync call while the replace operation in ongoing.
+> -		# Unfortunately it takes quite some time to generate
+> -		# the test filesystem, therefore most data consists out
+> -		# of zeros although this data is not very useful for
+> -		# detecting misplaced read/write requests.
+> -		# Ignore ENOSPC, it's not a problem..
+> -		dd if=/dev/urandom of=$SCRATCH_MNT/r bs=1M count=200 >> $seqres.full 2>&1 &
+> -		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=2000 >> $seqres.full 2>&1
+> -		wait
+> +		# a sync call while the replace operation is ongoing.
+> +		fssize=2048
+>  	elif [ "${with_cancel}Q" = "cancelQ" ]; then
+> -		# produce some data to prevent that the replace operation
+> -		# finishes before the cancel request is started
+> -		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=1000 >> $seqres.full 2>&1
+> +		# The goal is to produce enough data to prevent that the
+> +		# replace operation finishes before the cancel request
+> +		# is started.
+> +		fssize=1024
+> +	else
+> +		fssize=64
+>  	fi
+> +
+> +	# since the available size was tested before, do not tolerate
+> +	# any failures
+> +	for i in `seq $fssize`; do
+> +		cp $SCRATCH_MNT/t0 $SCRATCH_MNT/t$i || _fail "cp failed"
+> +	done > /dev/null 2>> $seqres.full
+>  	sync; sync
+>  
+>  	btrfs_replace_test $source_dev $target_dev "" $with_cancel $quick
+> @@ -214,7 +228,7 @@ btrfs_replace_test()
+>  		# before the status is printed
+>  		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+>  		cat $tmp.tmp >> $seqres.full
+> -		grep -q canceled $tmp.tmp || _fail "btrfs replace status failed"
+> +		grep -q canceled $tmp.tmp || _fail "btrfs replace status (canceled) failed"
+>  	else
+>  		if [ "${quick}Q" = "thoroughQ" ]; then
+>  			# On current hardware, the thorough test runs
+> @@ -226,7 +240,7 @@ btrfs_replace_test()
+>  
+>  		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+>  		cat $tmp.tmp >> $seqres.full
+> -		grep -q finished $tmp.tmp || _fail "btrfs replace status failed"
+> +		grep -q finished $tmp.tmp || _fail "btrfs replace status (finished) failed"
+>  	fi
+>  
+>  	if ps -p $noise_pid | grep -q $noise_pid; then
 > 
 
-Nothing to complain about.
+The "Q"-comparisons look a bit strange to me, but they've been there before.
 
-Reviewed-by: Stefan Behrens <sbehrens@giantdisaster.de>
+Reviewed-by: Jan Schmidt <list.xfs@jan-o-sch.net>
 
+-Jan
 
 _______________________________________________
 xfs mailing list
