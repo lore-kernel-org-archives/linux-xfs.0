@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 33F9A29DFB
-	for <linux-xfs@oss.sgi.com>; Thu, 26 Sep 2013 20:09:26 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A3BF29DFB
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 20:10:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EDF598F8040
-	for <linux-xfs@oss.sgi.com>; Thu, 26 Sep 2013 18:09:22 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ogqe7vDHfPucgn0T for <linux-xfs@oss.sgi.com>;
-	Thu, 26 Sep 2013 18:09:20 -0700 (PDT)
-Date: Fri, 27 Sep 2013 11:08:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: free inodes remaining in 1tb
-Message-ID: <20130927010847.GW26872@dastard>
-References: <44qehaxod8.ln2@goaway.wombat.san-francisco.ca.us>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4EA6AC004
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 18:10:53 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id nrBaHESFLCGhrgcv
+	for <xfs@oss.sgi.com>; Thu, 26 Sep 2013 18:10:52 -0700 (PDT)
+Message-ID: <5244DB1B.7000908@hardwarefreak.com>
+Date: Thu, 26 Sep 2013 20:10:51 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <44qehaxod8.ln2@goaway.wombat.san-francisco.ca.us>
+Subject: Re: xfs hardware RAID alignment over linear lvm
+References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+	<52435327.9080607@hardwarefreak.com>
+	<2F959FD9-EF28-4495-9D0B-59B93D89C820@colorremedies.com>
+	<20130925215713.GH26872@dastard>
+	<CAE3v2EYVnXiWq1n8AJ0+Y2eifZyhV08S4uLwf6B6mXXWAzBzRA@mail.gmail.com>
+	<5243FCD6.4000701@hardwarefreak.com>
+	<20130926215806.GQ26872@dastard>
+In-Reply-To: <20130926215806.GQ26872@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,75 +34,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Stewart Webb <stew@messeduphare.co.uk>, Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Sep 26, 2013 at 03:47:00PM -0700, Keith Keller wrote:
-> Hi all,
+On 9/26/2013 4:58 PM, Dave Chinner wrote:
+> On Thu, Sep 26, 2013 at 04:22:30AM -0500, Stan Hoeppner wrote:
+>> On 9/26/2013 3:55 AM, Stewart Webb wrote:
+>>> Thanks for all this info Stan and Dave,
+>>>
+>>>> "Stripe size" is a synonym of XFS sw, which is su * #disks.  This is the
+>>>> amount of data written across the full RAID stripe (excluding parity).
+>>>
+>>> The reason I stated Stripe size is because in this instance, I have 3ware
+>>> RAID controllers, which refer to
+>>> this value as "Stripe" in their tw_cli software (god bless manufacturers
+>>> renaming everything)
+>>>
+>>> I do, however, have a follow-on question:
+>>> On other systems, I have similar hardware:
+>>> 3x Raid Controllers
+>>> 1 of them has 10 disks as RAID 6 that I would like to add to a logical
+>>> volume
+>>> 2 of them have 12 disks as a RAID 6 that I would like to add to the same
+>>> logical volume
+>>>
+>>> All have the same "Stripe" or "Strip Size" of 512 KB
+>>>
+>>> So if I where going to make 3 seperate xfs volumes, I would do the
+>>> following:
+>>> mkfs.xfs -d su=512k sw=8 /dev/sda
+>>> mkfs.xfs -d su=512k sw=10 /dev/sdb
+>>> mkfs.xfs -d su=512k sw=10 /dev/sdc
+>>>
+>>> I assume, If I where going to bring them all into 1 logical volume, it
+>>> would be best placed to have the sw value set
+>>> to a value that is divisible by both 8 and 10 - in this case 2?
+>>
+>> No.  In this case you do NOT stripe align XFS to the storage, because
+>> it's impossible--the RAID stripes are dissimilar.  In this case you use
+>> the default 4KB write out, as if this is a single disk drive.
+>>
+>> As Dave stated, if you format a concatenated device with XFS and you
+>> desire to align XFS, then all constituent arrays must have the same
+>> geometry.
+>>
+>> Two things to be aware of here:
+>>
+>> 1.  With a decent hardware write caching RAID controller, having XFS
+>> alined to the RAID geometry is a small optimization WRT overall write
+>> performance, because the controller is going to be doing the optimizing
+>> of final writeback to the drives.
+>>
+>> 2. Alignment does not affect read performance.
 > 
-> I "recently" (a few months ago) came across the inode64 entries in the
-> XFS FAQ.  Unfortunately, I have a filesystem not mounted with inode64,
-> and I would like to know how many more inodes I can create in the
-> first 1TB before I run out,
+> Ah, but it does...
+> 
+>> 3.  XFS only performs aligned writes during allocation.
+> 
+> Right, and it does so not only to improve write performance, but to
+> also maximise sequential read performance of the data that is
+> written, especially when multiple files are being read
+> simultaneously and IO latency is important to keep low (e.g.
+> realtime video ingest and playout).
 
-Depends on how much other data is allocated in the first TB
-(occurs when you fill the space above 1TB completely), the
-size of the allocation groups (how much of the first TB canbe used
-for inodes), how many inodes and other metadata you've already
-allocated, etc.
+Absolutely correct, as Dave always is.  As my workloads are mostly
+random, as are those of others I consult in other fora, I sometimes
+forget the [multi]streaming case.  Which is not good, as many folks
+choose XFS specifically for [multi]streaming workloads.  My remarks to
+this audience should always reflect that.  Apologies for my oversight on
+this occasion.
 
-> so that I can plan for a migration to
-> inode64 (if it's very few, I would make it a high priority; if not, it
-> can be done in a few weeks instead, for example).  Is there an easy
-> way (or even a hard way) to query the filesystem for this information?
+>> What really makes a difference as to whether alignment will be of
+>> benefit to you, and how often, is your workload.  So at this point, you
+>> need to describe the primary workload(s) of your systems we're discussing.
+> 
+> Yup, my thoughts exactly...
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
-Only a hard way - using xfs_db to look at on-disk structures and
-inferring the state from there...
-
-> I also wanted to ask about the FAQ that says you can switch back from
-> inode64 to inode32.  How does that work if an inode is created past the
-> 1TB mark?
-
-Depends on how old your kernel is. Access to 64 bit inodes when
-mounting with inode32 only came along in 2010:
-
-commit fb3b504adeee942e55393396fea8fdf406acf037
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri May 28 19:03:10 2010 +0000
-
-    xfs: fix access to upper inodes without inode64
-    
-    If a filesystem is mounted without the inode64 mount option we
-    should still be able to access inodes not fitting into 32 bits, just
-    not created new ones.  For this to work we need to make sure the
-    inode cache radix tree is initialized for all allocation groups, not
-    just those we plan to allocate inodes from.  This patch makes sure
-    we initialize the inode cache radix tree for all allocation groups,
-    and also cleans xfs_initialize_perag up a bit to separate the
-    inode32 logical from the general perag structure setup.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Alex Elder <aelder@sgi.com>
-
-So if you have an old kernel (older than 2.6.35), you won't be able
-to access 64 bit inodes at all if you mount with inode32. Anything
-more recent than that will work just fine.
-
-> How would the kernel know how to find an inode64 inode that
-> was created beyond the 1TB mark if the filesystem is subsequentely
-> mounted without inode64?
-
-The inode number is an encoding of the physical location of the inod
-inthe filesystem. Hence the kernel code can always find the inode
-location - it just may not be able to do anything with it because
-the caches on old kernels can't index them...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
