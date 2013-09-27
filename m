@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DD9E07F52
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 12:56:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C548930407A
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:56:03 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IxtTPekFiQSxjZ32 for
-	<xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:56:03 -0700 (PDT)
-Date: Fri, 27 Sep 2013 10:55:59 -0700
-From: Zach Brown <zab@redhat.com>
-Subject: Re: [PATCH] xfstests: btrfs/015 regression test for prealloc with
-	balance
-Message-ID: <20130927175559.GV30372@lenny.home.zabbo.net>
-References: <1380292053-8123-1-git-send-email-jbacik@fusionio.com>
+	by oss.sgi.com (Postfix) with ESMTP id DDE7E7F56
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 12:56:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9F4730407A
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:56:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id gnzkz5PCO9mA2hd0 for <xfs@oss.sgi.com>;
+	Fri, 27 Sep 2013 10:56:00 -0700 (PDT)
+Message-ID: <5245C6AF.6080502@sandeen.net>
+Date: Fri, 27 Sep 2013 12:55:59 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1380292053-8123-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] xfs: fix memory leak in xfs_dir2_node_removename
+References: <20130927130140.640252809@sgi.com> <5245B5E5.7000206@sandeen.net>
+	<5245C4FA.7010208@sgi.com>
+In-Reply-To: <5245C4FA.7010208@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +28,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-> +nr_csum_no_found=$(dmesg | grep -c "no csum found")
-> +nr_csum_failed=$(dmesg | grep -c "csum failed")
-> +
-> +_check_csum_error()
-> +{
-> +	new_csum_no_found=$(dmesg | grep -c "no csum found")
-> +	new_csum_failed=$(dmesg | grep -c "csum failed")
-> +
-> +	if [ $nr_csum_no_found -eq $new_csum_no_found -a \
-> +	     $nr_csum_failed -eq $new_csum_failed ]; then
-> +		return 0
-> +	fi
-> +	return 1
-> +}
+On 9/27/13 12:48 PM, Mark Tinguely wrote:
+> On 09/27/13 11:44, Eric Sandeen wrote:
+>> On 9/27/13 8:01 AM, Mark Tinguely wrote:
+>>> Free the memory pointed to by state before returning on error from
+>>> xfs_dir2_node_removename.c
+>>>
+>>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>>> ---
+>>> Found by Coverity (134681) in userspace, same patch applies there
+>>> also.
+>>
+>> Heh, looks like that one has been around since the dawn of time, thanks.
+>>
+>> Reviewed-by: Eric Sandeen<sandeen@redhat.com>
+>>
+>> how do we handle the matching userspace fixes, separate patch to
+>> be explicit?  Wait for the next syncup?
+>>
+>> Thanks,
+>> -Eric
+> 
+> <patch delete>
+> 
+> Good question.
+> 
+> The user space should be kept up to date with the kernel.
+> 
+> Since the patches will be identical except the directory name, I was hoping to submit one copy. But I am not trying to invent a policy, just being lazy.
+> 
+> --Mark.
+> 
 
-> +# This sucks but unfortunately it is the only way to be sure something didn't go
-> +# wrong.
-> +_check_csum_error || _fail "csum detected, please check dmesg"
+Was just an offhanded question; it'd just be good to know what we all expect.
 
-In the future you could make them trace events and catch them for a
-given invocation of a command with perf.
+I suppose that it could depend on the severity of the flaw; a minor leak before exit()
+isn't a big deal and could wait for a global sync-up; a data corruption fix might
+need to be quickly merged to both trees.
 
-- z
+-Eric
 
 _______________________________________________
 xfs mailing list
