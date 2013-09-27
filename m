@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DB9947F52
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 11:44:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6BBAEAC004
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 09:44:24 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F17C27F52
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 11:55:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DA62330406B
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 09:55:18 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 1NUvDsOnPhngUKBm for <xfs@oss.sgi.com>;
-	Fri, 27 Sep 2013 09:44:23 -0700 (PDT)
-Message-ID: <5245B5E5.7000206@sandeen.net>
-Date: Fri, 27 Sep 2013 11:44:21 -0500
+	ESMTP id ywSen5nhKBBECGMt for <xfs@oss.sgi.com>;
+	Fri, 27 Sep 2013 09:55:15 -0700 (PDT)
+Message-ID: <5245B86F.3030309@sandeen.net>
+Date: Fri, 27 Sep 2013 11:55:11 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix memory leak in xfs_dir2_node_removename
-References: <20130927130140.640252809@sgi.com>
-In-Reply-To: <20130927130140.640252809@sgi.com>
+Subject: Re: [PATCH] xfs: fix memory leak in xlog_recover_add_to_trans
+References: <20130927140104.515578025@sgi.com>
+In-Reply-To: <20130927140104.515578025@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,66 +27,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: tinguely@sgi.com
 Cc: xfs@oss.sgi.com
 
-On 9/27/13 8:01 AM, Mark Tinguely wrote:
-> Free the memory pointed to by state before returning on error from 
-> xfs_dir2_node_removename.c
+On 9/27/13 9:00 AM, tinguely@sgi.com wrote:
+> Free the memory in error path of xlog_recover_add_to_trans().
+> Normally this memory is freed in recovery pass2, but is leaked
+> in the error path.
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
-> Found by Coverity (134681) in userspace, same patch applies there
-> also.
 
-Heh, looks like that one has been around since the dawn of time, thanks.
+For this local leak & the fix,
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-how do we handle the matching userspace fixes, separate patch to
-be explicit?  Wait for the next syncup?
+Since this gets called in a loop from xlog_recover_process_data(),
+I'm wondering what happens to previously-allocated items, if we
+return an error and never get to pass2?
+
+(I could be off base, haven't really followed it through, but
+it seems like they might leak).
 
 Thanks,
 -Eric
 
->  fs/xfs/xfs_dir2_node.c |   10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+> ---
+> Found by Coverity (134683) in userspace, same patch applies there
+> also.
+>  fs/xfs/xfs_log_recover.c |    1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Index: b/fs/xfs/xfs_dir2_node.c
+> Index: b/fs/xfs/xfs_log_recover.c
 > ===================================================================
-> --- a/fs/xfs/xfs_dir2_node.c
-> +++ b/fs/xfs/xfs_dir2_node.c
-> @@ -2131,10 +2131,9 @@ xfs_dir2_node_removename(
->  	/*
->  	 * Didn't find it, upper layer screwed up.
->  	 */
-> -	if (rval != EEXIST) {
-> -		xfs_da_state_free(state);
-> -		return rval;
-> -	}
-> +	if (rval != EEXIST)
-> +		goto done;
-> +
->  	blk = &state->path.blk[state->path.active - 1];
->  	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
->  	ASSERT(state->extravalid);
-> @@ -2145,7 +2144,7 @@ xfs_dir2_node_removename(
->  	error = xfs_dir2_leafn_remove(args, blk->bp, blk->index,
->  		&state->extrablk, &rval);
->  	if (error)
-> -		return error;
-> +		goto done;
->  	/*
->  	 * Fix the hash values up the btree.
->  	 */
-> @@ -2160,6 +2159,7 @@ xfs_dir2_node_removename(
->  	 */
->  	if (!error)
->  		error = xfs_dir2_node_to_leaf(state);
-> +done:
->  	xfs_da_state_free(state);
->  	return error;
->  }
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1585,6 +1585,7 @@ xlog_recover_add_to_trans(
+>  		"bad number of regions (%d) in inode log format",
+>  				  in_f->ilf_size);
+>  			ASSERT(0);
+> +			free(ptr);
+>  			return XFS_ERROR(EIO);
+>  		}
+>  
 > 
 > 
 > _______________________________________________
