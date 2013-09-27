@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2AB0E7F52
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 12:59:14 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 53DDF7F52
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 13:01:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F3B630407A
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:59:14 -0700 (PDT)
-Received: from mail-qe0-f44.google.com (mail-qe0-f44.google.com
-	[209.85.128.44]) by cuda.sgi.com with ESMTP id NjBVGzatMJ1pzqhJ
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CE905AC005
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 11:01:18 -0700 (PDT)
+Received: from mail-qe0-f46.google.com (mail-qe0-f46.google.com
+	[209.85.128.46]) by cuda.sgi.com with ESMTP id Hk312XUMC0LVZD94
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:59:12 -0700 (PDT)
-Received: by mail-qe0-f44.google.com with SMTP id 3so2090538qeb.3
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 10:59:12 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 27 Sep 2013 11:01:17 -0700 (PDT)
+Received: by mail-qe0-f46.google.com with SMTP id x7so2079659qeu.33
+	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 11:01:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAGG-pURO7QrMcU1btzh_RvQkLB=4QFqrLntW3n6BeMfU4iFdUQ@mail.gmail.com>
+In-Reply-To: <CAGG-pUQr39G3QiiS=yoDQk+RmVihr59N8Z6Wk5G05QFB=gJF4g@mail.gmail.com>
 References: <CAGG-pURO7QrMcU1btzh_RvQkLB=4QFqrLntW3n6BeMfU4iFdUQ@mail.gmail.com>
-Date: Fri, 27 Sep 2013 14:59:12 -0300
-Message-ID: <CAGG-pUQr39G3QiiS=yoDQk+RmVihr59N8Z6Wk5G05QFB=gJF4g@mail.gmail.com>
-Subject: [XFS MAINTAINERS] fs/xfs/xfs_dir2_node.c: xfs: xfs_dir2_leafn_add:
-	Variables Uninitialized
+	<CAGG-pUQr39G3QiiS=yoDQk+RmVihr59N8Z6Wk5G05QFB=gJF4g@mail.gmail.com>
+Date: Fri, 27 Sep 2013 15:01:16 -0300
+Message-ID: <CAGG-pUSiKyXSg7P+XnW965GoVQLib3FdZyCreXS8VDK8cLxnBA@mail.gmail.com>
+Subject: Re: [XFS MAINTAINERS] fs/xfs/xfs_dir2_node.c: xfs:
+	xfs_dir2_leafn_add: Variables Uninitialized
 From: =?UTF-8?Q?Geyslan_Greg=C3=B3rio_Bem?= <geyslan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,86 +28,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3371274103328678038=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
---===============3371274103328678038==
-Content-Type: multipart/alternative; boundary=001a1133beb672e94a04e7613ee4
-
---001a1133beb672e94a04e7613ee4
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Hi Maintainers,
-
-I suppose the variables "highstale" and "lowstale" are being used despite
-not having been initialized.
-
-File: fs/xfs/xfs_dir2_node.c
-Function: xfs_dir2_leafn_add
-
-L491:
-> /*
-> * Insert the new entry, log everything.
-> */
-> lep =3D xfs_dir3_leaf_find_entry(&leafhdr, ents, index, compact, lowstale=
-,
-> highstale, &lfloglow, &lfloghigh);
-
-The only place they are started up is within this condition:
-
-L480:
-> if (compact)
-> xfs_dir3_leaf_compact_x1(&leafhdr, ents, &index, &lowstale,
-> &highstale, &lfloglow, &lfloghigh);
-
-So, if it is not compact, both have garbage.
-
-Best Regards.
-
-Geyslan Greg=C3=B3rio Bem
-
---001a1133beb672e94a04e7613ee4
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<p dir=3D"ltr">Hi Maintainers,</p>
-<p dir=3D"ltr">I suppose the variables &quot;highstale&quot; and &quot;lows=
-tale&quot; are being used despite not having been initialized.</p>
-<p dir=3D"ltr">File: fs/xfs/xfs_dir2_node.c<br>
-Function: xfs_dir2_leafn_add</p>
-<p dir=3D"ltr">L491:<br>
-&gt; /*<br>
-&gt; * Insert the new entry, log everything.<br>
-&gt; */<br>
-&gt; lep =3D xfs_dir3_leaf_find_entry(&amp;leafhdr, ents, index, compact, l=
-owstale,<br>
-&gt; highstale, &amp;lfloglow, &amp;lfloghigh);<br></p>
-<p dir=3D"ltr">The only place they are started up is within this condition:=
-</p>
-<p dir=3D"ltr">L480:<br>
-&gt; if (compact)<br>
-&gt; xfs_dir3_leaf_compact_x1(&amp;leafhdr, ents, &amp;index, &amp;lowstale=
-,<br>
-&gt; &amp;highstale, &amp;lfloglow, &amp;lfloghigh);<br></p>
-<p dir=3D"ltr">So, if it is not compact, both have garbage.</p>
-<p dir=3D"ltr">Best Regards.</p>
-<p dir=3D"ltr">Geyslan Greg=C3=B3rio Bem</p>
-
---001a1133beb672e94a04e7613ee4--
-
-
---===============3371274103328678038==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3371274103328678038==--
+SGkgTWFpbnRhaW5lcnMsCgpJIHN1cHBvc2UgdGhlIHZhcmlhYmxlcyAiaGlnaHN0YWxlIiBhbmQg
+Imxvd3N0YWxlIiBhcmUgYmVpbmcgdXNlZApkZXNwaXRlIG5vdCBoYXZpbmcgYmVlbiBpbml0aWFs
+aXplZC4KCkZpbGU6IGZzL3hmcy94ZnNfZGlyMl9ub2RlLmMKRnVuY3Rpb246IHhmc19kaXIyX2xl
+YWZuX2FkZAoKTDQ5MToKPiAvKgo+ICogSW5zZXJ0IHRoZSBuZXcgZW50cnksIGxvZyBldmVyeXRo
+aW5nLgo+ICovCj4gbGVwID0geGZzX2RpcjNfbGVhZl9maW5kX2VudHJ5KCZsZWFmaGRyLCBlbnRz
+LCBpbmRleCwgY29tcGFjdCwgbG93c3RhbGUsCj4gaGlnaHN0YWxlLCAmbGZsb2dsb3csICZsZmxv
+Z2hpZ2gpOwoKVGhlIG9ubHkgcGxhY2UgdGhleSBhcmUgc3RhcnRlZCB1cCBpcyB3aXRoaW4gdGhp
+cyBjb25kaXRpb246CgpMNDgwOgo+IGlmIChjb21wYWN0KQo+IHhmc19kaXIzX2xlYWZfY29tcGFj
+dF94MSgmbGVhZmhkciwgZW50cywgJmluZGV4LCAmbG93c3RhbGUsCj4gJmhpZ2hzdGFsZSwgJmxm
+bG9nbG93LCAmbGZsb2doaWdoKTsKClNvLCBpZiBpdCBpcyBub3QgY29tcGFjdCwgYm90aCBoYXZl
+IGdhcmJhZ2UuCgpCZXN0IFJlZ2FyZHMuCgpHZXlzbGFuIEdyZWfDs3JpbyBCZW0KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
