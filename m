@@ -1,39 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E43AF7F50
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 04:09:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B835B304066
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 02:09:49 -0700 (PDT)
-Received: from e28smtp05.in.ibm.com (e28smtp05.in.ibm.com [122.248.162.5]) by
-	cuda.sgi.com with ESMTP id K3Ri1ARatVi3uugv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Sep 2013 02:09:43 -0700 (PDT)
-Received: from /spool/local
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Fri, 27 Sep 2013 14:39:39 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 86EA21258055
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 14:39:51 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r8R9Bxwi40042674
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 14:41:59 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r8R99aW8019380 for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 14:39:36 +0530
-Received: from [9.123.210.162] (thinkpad-t5421.cn.ibm.com [9.123.210.162])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVin) with ESMTP id
-	r8R99Yid019288
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 27 Sep 2013 14:39:35 +0530
-Message-ID: <1380272973.2836.5.camel@ThinkPad-T5421>
-Subject: [PATCH] xfsprogs: make log/size consistent for mkfs's -s option
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Fri, 27 Sep 2013 17:09:33 +0800
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 8E2E07F51
+	for <linux-xfs@oss.sgi.com>; Fri, 27 Sep 2013 04:26:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62E1E30405F
+	for <linux-xfs@oss.sgi.com>; Fri, 27 Sep 2013 02:26:41 -0700 (PDT)
+Received: from mail-we0-f178.google.com (mail-we0-f178.google.com
+	[74.125.82.178]) by cuda.sgi.com with ESMTP id Vjoiew9LvG2EXT6U
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Fri, 27 Sep 2013 02:26:39 -0700 (PDT)
+Received: by mail-we0-f178.google.com with SMTP id u57so2323429wes.23
+	for <linux-xfs@oss.sgi.com>; Fri, 27 Sep 2013 02:26:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130927081844.GA14996@wombat.san-francisco.ca.us>
+References: <44qehaxod8.ln2@goaway.wombat.san-francisco.ca.us>
+	<20130927010847.GW26872@dastard>
+	<20130927081844.GA14996@wombat.san-francisco.ca.us>
+Date: Fri, 27 Sep 2013 11:26:38 +0200
+Message-ID: <CAAxjCExze_9pPeWwEvpsyJ+sGKu2hZRN9g+5h2VmPa9DTXA+9g@mail.gmail.com>
+Subject: Re: free inodes remaining in 1tb
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,62 +32,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfsprogs <xfs@oss.sgi.com>
+To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Cc: linux-xfs@oss.sgi.com
 
-It seems using -s log is not able to set the sectsz correctly. Because slflag
-is set but ignored by later codes, so the advertised sector size of the device
-is used instead.
+> I am currently using a stock CentOS kernel, 2.6.32-358.14.1.el6.x86_64.
+> I'd have to check the changelogs to see if that kernel has the patch
+> in question, which I will do tomorrow.
 
-$ mkfs.xfs -f -s size=4096 /dev/sdd
-meta-data=/dev/sdd               isize=256    agcount=2, agsize=4096 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-	 ......
-
-$ mkfs.xfs -f -s log=12 /dev/sdd
-meta-data=/dev/sdd               isize=256    agcount=2, agsize=4096 blks
-         =                       sectsz=2048  attr=2, projid32bit=1
-	 ......
-
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
----
- mkfs/xfs_mkfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index eafbed3..9243044 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1693,7 +1693,7 @@ main(
- 		 * ft.sectoralign will never be set.
- 		 */
- 		sectorsize = blocksize;
--	} else if (!ssflag) {
-+	} else if (!ssflag && !slflag) {
- 		/*
- 		 * Unless specified manually on the command line use the
- 		 * advertised sector size of the device.  We use the physical
-@@ -1721,7 +1721,7 @@ _("switching to logical sector size %d\n"),
- 		}
- 	}
- 
--	if (ft.sectoralign || !ssflag) {
-+	if (ft.sectoralign || !ssflag || !slflag) {
- 		sectorlog = libxfs_highbit32(sectorsize);
- 		if (loginternal) {
- 			lsectorsize = sectorsize;
-@@ -1731,7 +1731,7 @@ _("switching to logical sector size %d\n"),
- 
- 	if (sectorsize < XFS_MIN_SECTORSIZE ||
- 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
--		if (ssflag)
-+		if (ssflag || slflag)
- 			fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
- 		else
- 			fprintf(stderr,
--- 
-1.8.1.4
-
-
+The cited patch seems to have appeared in 2.6.32-220.el6.
 
 _______________________________________________
 xfs mailing list
