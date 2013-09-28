@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 119527F4E
-	for <xfs@oss.sgi.com>; Sat, 28 Sep 2013 07:36:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F2D868F8035
-	for <xfs@oss.sgi.com>; Sat, 28 Sep 2013 05:36:00 -0700 (PDT)
-Received: from mail-wg0-f48.google.com (mail-wg0-f48.google.com
-	[74.125.82.48]) by cuda.sgi.com with ESMTP id pArhjjpLszyZ5zHq
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 28 Sep 2013 05:35:59 -0700 (PDT)
-Received: by mail-wg0-f48.google.com with SMTP id n12so3733023wgh.3
-	for <xfs@oss.sgi.com>; Sat, 28 Sep 2013 05:35:58 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 18F4F7F4E
+	for <xfs@oss.sgi.com>; Sat, 28 Sep 2013 09:54:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E337AC005
+	for <xfs@oss.sgi.com>; Sat, 28 Sep 2013 07:54:29 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id C5oGGSmZoxKX152C
+	for <xfs@oss.sgi.com>; Sat, 28 Sep 2013 07:54:28 -0700 (PDT)
+Message-ID: <5246EDA4.3040300@hardwarefreak.com>
+Date: Sat, 28 Sep 2013 09:54:28 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Date: Sat, 28 Sep 2013 18:05:58 +0530
-Message-ID: <CAMRGQbO4ojkim_fwEYUznMW0MGFPeALW-xPFg8u2Ky7ZR6xBLQ@mail.gmail.com>
-Subject: Xfs options for small files
-From: Ram Chander <ramquick@gmail.com>
-Reply-To: ram_chander250@yahoo.com
+Subject: Re: xfs hardware RAID alignment over linear lvm
+References: <CAE3v2EaODFud_S_BzuSjtwGwuNBXhvL0RiPB1P5QroF45Obwbw@mail.gmail.com>
+	<52435327.9080607@hardwarefreak.com>
+	<2F959FD9-EF28-4495-9D0B-59B93D89C820@colorremedies.com>
+	<20130925215713.GH26872@dastard>
+	<CAE3v2EYVnXiWq1n8AJ0+Y2eifZyhV08S4uLwf6B6mXXWAzBzRA@mail.gmail.com>
+	<5243FCD6.4000701@hardwarefreak.com>
+	<20130926215806.GQ26872@dastard>
+	<5244DB1B.7000908@hardwarefreak.com>
+	<CAE3v2Eb8hsCZxrV6_qwpC+9BpbYZ4bgigcUxm_zoK=B9SeDAZA@mail.gmail.com>
+	<524583A4.9050207@hardwarefreak.com>
+	<CAE3v2EZb3j0a8b2iEKdCVtUCqx42LFH8wAe=SR7qCuv0iFuTHg@mail.gmail.com>
+In-Reply-To: <CAE3v2EZb3j0a8b2iEKdCVtUCqx42LFH8wAe=SR7qCuv0iFuTHg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +34,199 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0380513134933489126=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stewart Webb <stew@messeduphare.co.uk>
+Cc: Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============0380513134933489126==
-Content-Type: multipart/alternative; boundary=047d7bb048224fad2004e770d866
+On 9/27/2013 8:29 AM, Stewart Webb wrote:
+> Hi Stan,
+> 
+> Apologies for not directly answering -
 
---047d7bb048224fad2004e770d866
-Content-Type: text/plain; charset=ISO-8859-1
+No problem, sorry for the late reply.
 
-Hi,
+> I was aiming at filling gaps in my knowledge that I could not find in the
+> xfs.org wiki.
 
-I have millions of small files of size ranging 2kb - 50kb  stored in
-hundreds of dir.
-Total size is around 2Tb.  Xfs runs on top of LVM.  Existing files wont
-grown and wont be overwritten.
-Lots of new small files will be created and there will be lot  of read
-operations.
+Hopefully this is occurring. :)
 
-Can someone shed light on optimal  format options and mount options.
-Many  thanks .
+> My workload for the storage is mainly reads of single large files (ranging
+> for 20GB to 100GB each)
+> These reads are mainly linear (video playback, although not always as the
+> end user may be jumping to different points in the video)
+> There are concurrent reads required, estimated at 2 to 8, any more would be
+> a bonus.
 
+This is the type of workload Dave described previously that should
+exhibit an increase in read performance if the files are written with
+alignment, especially with concurrent readers, which you describe as
+2-8, maybe more.  The number of "maybe more" is dictated by whether
+you're aligned.  I.e. with alignment your odds of successfully serving
+more readers is much greater.
 
-Regards,
-Ram
+Thus, if you need to stitch arrays together with LVM concatenation,
+you'd definitely benefit from making the geometry of all arrays
+identical, and aligning the filesystem to that geometry.  I.e. same
+number of disks, same RAID level, same RAID stripe unit (data per non
+parity disk), and stripe width (#non parity disks).
 
---047d7bb048224fad2004e770d866
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div><div><div><div><div>Hi,<br><br></div>I have millions =
-of small files of size ranging 2kb - 50kb=A0 stored in hundreds of dir.<br>=
-</div><div>Total size is around 2Tb.=A0 Xfs runs on top of LVM.=A0 Existing=
- files wont grown and wont be overwritten. <br>
-Lots of new small files will be created and there will be lot=A0 of read op=
-erations.<br></div><div><br></div>Can someone shed light on optimal=A0 form=
-at options and mount options. <br></div>Many=A0 thanks .<br><br><br></div>R=
-egards, <br>
-</div>Ram<br></div>
-
---047d7bb048224fad2004e770d866--
-
-
---===============0380513134933489126==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> The challenge of this would be that the reads need to be "real-time"
+> operations as they are interacted with by a person, and each
+> read operation would have to consistently have a low latency and obtain
+> speeds of over 50Mb/s
+> 
+> Disk write speeds are not *as* important for me - as they these files are
+> copied to location before they are required (in this case
+> using rsync or scp) and these operations do not require as much "real-time"
+> interaction.
+> 
+> 
+> On 27 September 2013 14:09, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> 
+>> On 9/27/2013 7:23 AM, Stewart Webb wrote:
+>>>> Right, and it does so not only to improve write performance, but to
+>>>> also maximise sequential read performance of the data that is
+>>>> written, especially when multiple files are being read
+>>>> simultaneously and IO latency is important to keep low (e.g.
+>>>> realtime video ingest and playout).
+>>>
+>>> So does this mean that I should avoid having devices in RAID with a
+>>> differing amount of spindles (or non-parity disks)
+>>> If I would like to use Linear concatenation LVM? Or is there a best
+>>> practice if this instance is not
+>>> avoidable?
+>>
+>> Above, Dave was correcting my oversight, not necessarily informing you,
+>> per se.  It seems clear from your follow up question that you didn't
+>> really grasp what he was saying.  Let's back up a little bit.
+>>
+>> What you need to concentrate on right now is the following which we
+>> stated previously in the thread, but which you did not reply to:
+>>
+>>>>>> What really makes a difference as to whether alignment will be of
+>>>>>> benefit to you, and how often, is your workload.  So at this point,
+>> you
+>>>>>> need to describe the primary workload(s) of your systems we're
+>>>> discussing.
+>>>>>
+>>>>> Yup, my thoughts exactly...
+>>
+>> This means you need to describe in detail how you are writing your
+>> files, and how you are reading them back.  I.e. what application are you
+>> using, what does it do, etc.  You stated IIRC that your workload is 80%
+>> read.  What types of files is it reading?  Small, large?  Is it reading
+>> multiple files in parallel?  How are these files originally written
+>> before being read?  Etc, etc.
+>>
+>> You may not understand why this is relevant, but it is the only thing
+>> that is relevant, at this point.  Spindles, RAID level, alignment, no
+>> alignment...none of this matters if it doesn't match up with how your
+>> application(s) do their IO.
+>>
+>> Rule #1 of storage architecture:  Always build your storage stack (i.e.
+>> disks, controller, driver, filesystem, etc) to fit the workload(s), not
+>> the other way around.
+>>
+>>>
+>>> On 27 September 2013 02:10, Stan Hoeppner <stan@hardwarefreak.com>
+>> wrote:
+>>>
+>>>> On 9/26/2013 4:58 PM, Dave Chinner wrote:
+>>>>> On Thu, Sep 26, 2013 at 04:22:30AM -0500, Stan Hoeppner wrote:
+>>>>>> On 9/26/2013 3:55 AM, Stewart Webb wrote:
+>>>>>>> Thanks for all this info Stan and Dave,
+>>>>>>>
+>>>>>>>> "Stripe size" is a synonym of XFS sw, which is su * #disks.  This is
+>>>> the
+>>>>>>>> amount of data written across the full RAID stripe (excluding
+>> parity).
+>>>>>>>
+>>>>>>> The reason I stated Stripe size is because in this instance, I have
+>>>> 3ware
+>>>>>>> RAID controllers, which refer to
+>>>>>>> this value as "Stripe" in their tw_cli software (god bless
+>>>> manufacturers
+>>>>>>> renaming everything)
+>>>>>>>
+>>>>>>> I do, however, have a follow-on question:
+>>>>>>> On other systems, I have similar hardware:
+>>>>>>> 3x Raid Controllers
+>>>>>>> 1 of them has 10 disks as RAID 6 that I would like to add to a
+>> logical
+>>>>>>> volume
+>>>>>>> 2 of them have 12 disks as a RAID 6 that I would like to add to the
+>>>> same
+>>>>>>> logical volume
+>>>>>>>
+>>>>>>> All have the same "Stripe" or "Strip Size" of 512 KB
+>>>>>>>
+>>>>>>> So if I where going to make 3 seperate xfs volumes, I would do the
+>>>>>>> following:
+>>>>>>> mkfs.xfs -d su=512k sw=8 /dev/sda
+>>>>>>> mkfs.xfs -d su=512k sw=10 /dev/sdb
+>>>>>>> mkfs.xfs -d su=512k sw=10 /dev/sdc
+>>>>>>>
+>>>>>>> I assume, If I where going to bring them all into 1 logical volume,
+>> it
+>>>>>>> would be best placed to have the sw value set
+>>>>>>> to a value that is divisible by both 8 and 10 - in this case 2?
+>>>>>>
+>>>>>> No.  In this case you do NOT stripe align XFS to the storage, because
+>>>>>> it's impossible--the RAID stripes are dissimilar.  In this case you
+>> use
+>>>>>> the default 4KB write out, as if this is a single disk drive.
+>>>>>>
+>>>>>> As Dave stated, if you format a concatenated device with XFS and you
+>>>>>> desire to align XFS, then all constituent arrays must have the same
+>>>>>> geometry.
+>>>>>>
+>>>>>> Two things to be aware of here:
+>>>>>>
+>>>>>> 1.  With a decent hardware write caching RAID controller, having XFS
+>>>>>> alined to the RAID geometry is a small optimization WRT overall write
+>>>>>> performance, because the controller is going to be doing the
+>> optimizing
+>>>>>> of final writeback to the drives.
+>>>>>>
+>>>>>> 2. Alignment does not affect read performance.
+>>>>>
+>>>>> Ah, but it does...
+>>>>>
+>>>>>> 3.  XFS only performs aligned writes during allocation.
+>>>>>
+>>>>> Right, and it does so not only to improve write performance, but to
+>>>>> also maximise sequential read performance of the data that is
+>>>>> written, especially when multiple files are being read
+>>>>> simultaneously and IO latency is important to keep low (e.g.
+>>>>> realtime video ingest and playout).
+>>>>
+>>>> Absolutely correct, as Dave always is.  As my workloads are mostly
+>>>> random, as are those of others I consult in other fora, I sometimes
+>>>> forget the [multi]streaming case.  Which is not good, as many folks
+>>>> choose XFS specifically for [multi]streaming workloads.  My remarks to
+>>>> this audience should always reflect that.  Apologies for my oversight on
+>>>> this occasion.
+>>>>
+>>>>>> What really makes a difference as to whether alignment will be of
+>>>>>> benefit to you, and how often, is your workload.  So at this point,
+>> you
+>>>>>> need to describe the primary workload(s) of your systems we're
+>>>> discussing.
+>>>>>
+>>>>> Yup, my thoughts exactly...
+>>>>>
+>>>>> Cheers,
+>>>>>
+>>>>> Dave.
+>>>>>
+>>>>
+>>>> --
+>>>> Stan
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0380513134933489126==--
