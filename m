@@ -1,37 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 850627F54
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 04:13:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 496078F8040
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 02:13:04 -0700 (PDT)
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141]) by
-	cuda.sgi.com with ESMTP id hs2BnXrZvnN3rMgd (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 395CB7F56
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 05:55:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27990304039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 03:55:18 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id LSAx5XDSeYI2zwhZ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 02:12:59 -0700 (PDT)
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Sun, 29 Sep 2013 19:12:57 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 423D52BB0040
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 19:12:54 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r8T8u0e16750536
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 18:56:00 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r8T9CrPJ001003 for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 19:12:53 +1000
-Message-ID: <1380445971.3811.14.camel@ThinkPad-T5421>
-Subject: [PATCH] xfsprogs: cleanup size/log setting flags of mkfs
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Sun, 29 Sep 2013 17:12:51 +0800
-In-Reply-To: <1380437441.3811.9.camel@ThinkPad-T5421>
-References: <1380272973.2836.5.camel@ThinkPad-T5421>
-	<5245C07A.3000700@sandeen.net> <1380437441.3811.9.camel@ThinkPad-T5421>
-Mime-Version: 1.0
+	Sun, 29 Sep 2013 03:55:17 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r8TAtFQB030965
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 10:55:16 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r8TAtEW1023220
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 10:55:15 GMT
+Received: from abhmt104.oracle.com (abhmt104.oracle.com [141.146.116.56])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r8TAtESt015281 for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 10:55:14 GMT
+Message-ID: <52480744.10606@oracle.com>
+Date: Sun, 29 Sep 2013 18:56:04 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: get rid of count from xfs_iomap_write_allocate()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,110 +39,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfsprogs <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-As Eric suggested, we could set both of the size/log flags after we have
-parsed the options - and from there on it simply means "manually set".
+From: Jie Liu <jeff.liu@oracle.com>
 
-After that, we could use just one flag, e.g. *sflag, to check whether 
-the corresponding value is manually set or not.
+Get rid of function variable count from xfs_iomap_write_allocate() as
+it is unused.
 
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+Additionally, checkpatch warn me of the following for this change:
+WARNING: extern prototypes should be avoided in .h files
++extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+
+So this patch also remove all extern function prototypes at xfs_iomap.h
+to suppress it to make this code style in consistent manner in this file.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- mkfs/xfs_mkfs.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c  |    2 +-
+ fs/xfs/xfs_iomap.c |    1 -
+ fs/xfs/xfs_iomap.h |    8 ++++----
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 34bf2ff..aa3f391 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1667,11 +1667,26 @@ main(
- 		dfile = xi.dname;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e51e581..f3f95f0 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -333,7 +333,7 @@ xfs_map_blocks(
  
- 	/*
-+	 * Later code wants to know if the user manually set a value.
-+	 * There are two ways to specify on the cmdline; as size or as a log.
-+	 * if either was used, set both flags - from here on it simply means
-+	 * "manually set"
-+	 */
-+	if (bsflag || blflag)
-+		bsflag = blflag = 1;
-+	if (ssflag || slflag)
-+		ssflag = slflag = 1;
-+	if (isflag || ilflag)
-+		isflag = ilflag = 1;
-+	if (nsflag || nlflag)
-+		nsflag = nlflag = 1;
-+
-+	/*
- 	 * Blocksize and sectorsize first, other things depend on them
- 	 * For RAID4/5/6 we want to align sector size and block size,
- 	 * so we need to start with the device geometry extraction too.
- 	 */
--	if (!blflag && !bsflag) {
-+	if (!bsflag) {
- 		blocklog = XFS_DFL_BLOCKSIZE_LOG;
- 		blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
- 	}
-@@ -1693,7 +1708,7 @@ main(
- 		 * ft.sectoralign will never be set.
- 		 */
- 		sectorsize = blocksize;
--	} else if (!ssflag && !slflag) {
-+	} else if (!ssflag) {
- 		/*
- 		 * Unless specified manually on the command line use the
- 		 * advertised sector size of the device.  We use the physical
-@@ -1721,7 +1736,7 @@ _("switching to logical sector size %d\n"),
- 		}
- 	}
+ 	if (type == XFS_IO_DELALLOC &&
+ 	    (!nimaps || isnullstartblock(imap->br_startblock))) {
+-		error = xfs_iomap_write_allocate(ip, offset, count, imap);
++		error = xfs_iomap_write_allocate(ip, offset, imap);
+ 		if (!error)
+ 			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+ 		return -XFS_ERROR(error);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 8d4d49b..521fdf2 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -655,7 +655,6 @@ int
+ xfs_iomap_write_allocate(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+-	size_t		count,
+ 	xfs_bmbt_irec_t *imap)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 8061576..411fbb8 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -21,12 +21,12 @@
+ struct xfs_inode;
+ struct xfs_bmbt_irec;
  
--	if (ft.sectoralign || (!ssflag && !slflag)) {
-+	if (ft.sectoralign || !ssflag) {
- 		sectorlog = libxfs_highbit32(sectorsize);
- 		if (loginternal) {
- 			lsectorsize = sectorsize;
-@@ -1731,7 +1746,7 @@ _("switching to logical sector size %d\n"),
+-extern int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
++int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *, int);
+-extern int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
++int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *);
+-extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t, size_t,
++int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+ 			struct xfs_bmbt_irec *);
+-extern int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, size_t);
++int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, size_t);
  
- 	if (sectorsize < XFS_MIN_SECTORSIZE ||
- 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
--		if (ssflag || slflag)
-+		if (ssflag)
- 			fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
- 		else
- 			fprintf(stderr,
-@@ -1760,7 +1775,7 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
- 	 */
- 	if (crcs_enabled) {
- 		/* minimum inode size is 512 bytes, ipflag checked later */
--		if ((isflag || ilflag) && inodelog < XFS_DINODE_DFL_CRC_LOG) {
-+		if (isflag && inodelog < XFS_DINODE_DFL_CRC_LOG) {
- 			fprintf(stderr,
- _("Minimum inode size for CRCs is %d bytes\n"),
- 				1 << XFS_DINODE_DFL_CRC_LOG);
-@@ -1804,7 +1819,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
- 		}
- 	}
- 
--	if (nsflag || nlflag) {
-+	if (nsflag) {
- 		if (dirblocksize < blocksize ||
- 					dirblocksize > XFS_MAX_BLOCKSIZE) {
- 			fprintf(stderr, _("illegal directory block size %d\n"),
-@@ -1850,7 +1865,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
- 	if (ipflag) {
- 		inodelog = blocklog - libxfs_highbit32(inopblock);
- 		isize = 1 << inodelog;
--	} else if (!ilflag && !isflag) {
-+	} else if (!isflag) {
- 		inodelog = crcs_enabled ? XFS_DINODE_DFL_CRC_LOG
- 					: XFS_DINODE_DFL_LOG;
- 		isize = 1 << inodelog;
+ #endif /* __XFS_IOMAP_H__*/
 -- 
-1.8.1.4
-
-
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
