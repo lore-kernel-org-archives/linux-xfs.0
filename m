@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 395CB7F56
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 05:55:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id DE2A37F37
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 17:35:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 27990304039
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 03:55:18 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id LSAx5XDSeYI2zwhZ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 03:55:17 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r8TAtFQB030965
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 10:55:16 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r8TAtEW1023220
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 10:55:15 GMT
-Received: from abhmt104.oracle.com (abhmt104.oracle.com [141.146.116.56])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r8TAtESt015281 for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 10:55:14 GMT
-Message-ID: <52480744.10606@oracle.com>
-Date: Sun, 29 Sep 2013 18:56:04 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB7FD304039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 15:35:23 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	t58tFYW2IWy0EFi3 for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 15:35:22 -0700 (PDT)
+Date: Mon, 30 Sep 2013 08:35:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: get rid of count from xfs_iomap_write_allocate()
+Message-ID: <20130929223511.GF26872@dastard>
+References: <52480744.10606@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: get rid of count from xfs_iomap_write_allocate()
+Content-Disposition: inline
+In-Reply-To: <52480744.10606@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,75 +29,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Jie Liu <jeff.liu@oracle.com>
+On Sun, Sep 29, 2013 at 06:56:04PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> Get rid of function variable count from xfs_iomap_write_allocate() as
+> it is unused.
+> 
+> Additionally, checkpatch warn me of the following for this change:
+> WARNING: extern prototypes should be avoided in .h files
+> +extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
 
-Get rid of function variable count from xfs_iomap_write_allocate() as
-it is unused.
+Bah, checkpatch should be considered harmful when run on code that
+has been around for years. It's a good guide for new code, but...
 
-Additionally, checkpatch warn me of the following for this change:
-WARNING: extern prototypes should be avoided in .h files
-+extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+$ git grep extern fs/xfs/xfs*h |wc -l
+345
+$ git grep extern include/linux/*h |wc -l
+6878
+$
 
-So this patch also remove all extern function prototypes at xfs_iomap.h
-to suppress it to make this code style in consistent manner in this file.
+.... and the rule of "consistent with existing coding style" when
+adding code to existing files generally trumps any "style errors"
+that checkpatch might warn about.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_aops.c  |    2 +-
- fs/xfs/xfs_iomap.c |    1 -
- fs/xfs/xfs_iomap.h |    8 ++++----
- 3 files changed, 5 insertions(+), 6 deletions(-)
+> So this patch also remove all extern function prototypes at xfs_iomap.h
+> to suppress it to make this code style in consistent manner in this file.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index e51e581..f3f95f0 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -333,7 +333,7 @@ xfs_map_blocks(
- 
- 	if (type == XFS_IO_DELALLOC &&
- 	    (!nimaps || isnullstartblock(imap->br_startblock))) {
--		error = xfs_iomap_write_allocate(ip, offset, count, imap);
-+		error = xfs_iomap_write_allocate(ip, offset, imap);
- 		if (!error)
- 			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
- 		return -XFS_ERROR(error);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 8d4d49b..521fdf2 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -655,7 +655,6 @@ int
- xfs_iomap_write_allocate(
- 	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
--	size_t		count,
- 	xfs_bmbt_irec_t *imap)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 8061576..411fbb8 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -21,12 +21,12 @@
- struct xfs_inode;
- struct xfs_bmbt_irec;
- 
--extern int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
-+int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
- 			struct xfs_bmbt_irec *, int);
--extern int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
-+int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
- 			struct xfs_bmbt_irec *);
--extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t, size_t,
-+int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
- 			struct xfs_bmbt_irec *);
--extern int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, size_t);
-+int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, size_t);
- 
- #endif /* __XFS_IOMAP_H__*/
+Anyway, it's a cleanup patch to begin with, and there's only a few
+of them, so it's not worth complaining about.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+Cheers,
+
+Dave.
 -- 
-1.7.9.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
