@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DE2A37F37
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 17:35:26 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 611767F37
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 18:06:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB7FD304039
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 15:35:23 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4EA6B8F8040
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 16:06:45 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	t58tFYW2IWy0EFi3 for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 15:35:22 -0700 (PDT)
-Date: Mon, 30 Sep 2013 08:35:11 +1000
+	mrALTRNi8NwX6sd1 for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 16:06:40 -0700 (PDT)
+Date: Mon, 30 Sep 2013 09:06:38 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: get rid of count from xfs_iomap_write_allocate()
-Message-ID: <20130929223511.GF26872@dastard>
-References: <52480744.10606@oracle.com>
+Subject: Re: [PATCH] xfsprogs: cleanup size/log setting flags of mkfs
+Message-ID: <20130929230638.GG26872@dastard>
+References: <1380272973.2836.5.camel@ThinkPad-T5421>
+	<5245C07A.3000700@sandeen.net>
+	<1380437441.3811.9.camel@ThinkPad-T5421>
+	<1380445971.3811.14.camel@ThinkPad-T5421>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52480744.10606@oracle.com>
+In-Reply-To: <1380445971.3811.14.camel@ThinkPad-T5421>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +32,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Li Zhong <zhong@linux.vnet.ibm.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfsprogs <xfs@oss.sgi.com>
 
-On Sun, Sep 29, 2013 at 06:56:04PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
+On Sun, Sep 29, 2013 at 05:12:51PM +0800, Li Zhong wrote:
+> As Eric suggested, we could set both of the size/log flags after we have
+> parsed the options - and from there on it simply means "manually set".
 > 
-> Get rid of function variable count from xfs_iomap_write_allocate() as
-> it is unused.
+> After that, we could use just one flag, e.g. *sflag, to check whether 
+> the corresponding value is manually set or not.
+
+It's a start, but I'm not sure that it is an improvement or not.
+i.e. you're adding yet another piece of logic to the already
+tortured argument parsing and flag setting.
+
+This could be done in the argument parsing itself, without needing
+separate post-processing code. e.g. changing the parsing code like
+so:
+
+	case N_LOG:
+		if (!value || *value == '\0')
+			reqval('n', nopts, N_LOG);
+-		if (nlflag)
++		if (nlflag > 1)
+			respec('n', nopts, N_LOG);
+		if (nsflag)
+			conflict('n', nopts, N_SIZE,
+				 N_LOG);
++		nlflag = 2;
+		dirblocklog = atoi(value);
+		if (dirblocklog <= 0)
+			illegal(value, "n log");
++		nsflag = 1;
+		dirblocksize = 1 << dirblocklog;
+-		nlflag = 1;
+		break;
+
+Would acheive exactly the same thing - i.e.
+a value of 1 means it was initialised, a value of 2 means it was a
+command line parameter...
+
+This means the code checks can be cleaned up as you have done, but
+we don't need a separate post-processing step for the arguments to
+set flags that weren't set...
+
+
+> Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+> ---
+>  mkfs/xfs_mkfs.c | 29 ++++++++++++++++++++++-------
+>  1 file changed, 22 insertions(+), 7 deletions(-)
 > 
-> Additionally, checkpatch warn me of the following for this change:
-> WARNING: extern prototypes should be avoided in .h files
-> +extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 34bf2ff..aa3f391 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1667,11 +1667,26 @@ main(
+>  		dfile = xi.dname;
+>  
+>  	/*
+> +	 * Later code wants to know if the user manually set a value.
+> +	 * There are two ways to specify on the cmdline; as size or as a log.
+> +	 * if either was used, set both flags - from here on it simply means
+> +	 * "manually set"
+> +	 */
+> +	if (bsflag || blflag)
+> +		bsflag = blflag = 1;
+> +	if (ssflag || slflag)
+> +		ssflag = slflag = 1;
+> +	if (isflag || ilflag)
+> +		isflag = ilflag = 1;
+> +	if (nsflag || nlflag)
+> +		nsflag = nlflag = 1;
 
-Bah, checkpatch should be considered harmful when run on code that
-has been around for years. It's a good guide for new code, but...
-
-$ git grep extern fs/xfs/xfs*h |wc -l
-345
-$ git grep extern include/linux/*h |wc -l
-6878
-$
-
-.... and the rule of "consistent with existing coding style" when
-adding code to existing files generally trumps any "style errors"
-that checkpatch might warn about.
-
-> So this patch also remove all extern function prototypes at xfs_iomap.h
-> to suppress it to make this code style in consistent manner in this file.
-
-Anyway, it's a cleanup patch to begin with, and there's only a few
-of them, so it's not worth complaining about.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+You missed the log sector size/log flags.
 
 Cheers,
 
