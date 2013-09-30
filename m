@@ -1,27 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1A6947F50
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:16:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BCAC8F8035
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:16:43 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	KT0aWbJPoBjD9zOW for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:16:40 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PJ-88
-	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002Gh-7C
-	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/32] db: indicate if the CRC on a buffer is correct or not
-Date: Mon, 30 Sep 2013 13:15:33 +1000
-Message-Id: <1380510944-8571-22-git-send-email-david@fromorbit.com>
-In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
-References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6DB117F5A
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 00:20:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E6130AC002
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:20:27 -0700 (PDT)
+Received: from e28smtp01.in.ibm.com (e28smtp01.in.ibm.com [122.248.162.1]) by
+	cuda.sgi.com with ESMTP id kaHWdB4bof57SpgQ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 22:20:22 -0700 (PDT)
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	Only! Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
+	Mon, 30 Sep 2013 10:50:18 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id F0490E0057
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 10:51:24 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r8U5MfsW27394294
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 10:52:42 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	r8U5KFKe027776 for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 10:50:15 +0530
+Message-ID: <1380518411.2985.14.camel@ThinkPad-T5421>
+Subject: [PATCH v2] xfsprogs: cleanup size/log setting flags of mkfs
+From: Li Zhong <zhong@linux.vnet.ibm.com>
+Date: Mon, 30 Sep 2013 13:20:11 +0800
+In-Reply-To: <20130929230638.GG26872@dastard>
+References: <1380272973.2836.5.camel@ThinkPad-T5421>
+	<5245C07A.3000700@sandeen.net> <1380437441.3811.9.camel@ThinkPad-T5421>
+	<1380445971.3811.14.camel@ThinkPad-T5421>
+	<20130929230638.GG26872@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,314 +42,343 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfsprogs <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+As Dave suggested, for the size/log flags, we could use:
+ a value of 1 to mean it was initialized (by the other suboption),
+ a value of 2 to mean it was a command lien parameter.
 
-When dumping metadata that has a CRC in it, output not only the CRC
-but text to tell us whether the value is correct or not. Hence we
-can see at a glance if there's something wrong or not.
+And after the options are parsed, if we want to check whether a value
+is set manually or not, we could just use one of the flags, e.g. *sflag:
+ non-zero means it was manually set ( 2 - by size, 1 - by log ),
+ zero means it was not manually set.
 
-Do this by peeking at the buffer attached to the current IO
-contexted. If there was a CRC error, then it will be marked with a
-EFSCORRUPTED error. Use this to determine what to output.
+There are also some small option checking order adjustments, so respec 
+checking is done before conflict checking -- just make them consistent 
+with others.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
 ---
- db/agf.c     |  2 +-
- db/agfl.c    |  2 +-
- db/agi.c     |  2 +-
- db/btblock.c | 10 +++++-----
- db/dir2.c    |  4 ++--
- db/dquot.c   |  2 +-
- db/field.c   |  5 +++++
- db/field.h   |  4 ++++
- db/fprint.c  | 39 +++++++++++++++++++++++++++++++++++++++
- db/fprint.h  |  2 ++
- db/inode.c   |  2 +-
- db/io.h      |  6 ++++++
- db/sb.c      |  2 +-
- db/symlink.c |  2 +-
- 14 files changed, 70 insertions(+), 14 deletions(-)
+ mkfs/xfs_mkfs.c | 88 ++++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 50 insertions(+), 38 deletions(-)
 
-diff --git a/db/agf.c b/db/agf.c
-index 389cb43..d9a07ca 100644
---- a/db/agf.c
-+++ b/db/agf.c
-@@ -71,7 +71,7 @@ const field_t	agf_flds[] = {
- 	{ "btreeblks", FLDT_UINT32D, OI(OFF(btreeblks)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
- 
-diff --git a/db/agfl.c b/db/agfl.c
-index e2340e6..b29538f 100644
---- a/db/agfl.c
-+++ b/db/agfl.c
-@@ -58,7 +58,7 @@ const field_t	agfl_crc_flds[] = {
- 	{ "seqno", FLDT_AGNUMBER, OI(OFF(seqno)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
- 	{ "bno", FLDT_AGBLOCKNZ, OI(OFF(bno)), agfl_bno_size,
- 	  FLD_ARRAY|FLD_COUNT, TYP_DATA },
- 	{ NULL }
-diff --git a/db/agi.c b/db/agi.c
-index 6b2e889..398bdbb 100644
---- a/db/agi.c
-+++ b/db/agi.c
-@@ -56,7 +56,7 @@ const field_t	agi_flds[] = {
- 	  CI(XFS_AGI_UNLINKED_BUCKETS), FLD_ARRAY, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
- 
-diff --git a/db/btblock.c b/db/btblock.c
-index 34188db..1ea0cff 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -295,7 +295,7 @@ const field_t	bmapbta_crc_flds[] = {
- 	{ "lsn", FLDT_UINT64X, OI(OFF(u.l.bb_lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
- 	{ "owner", FLDT_INO, OI(OFF(u.l.bb_owner)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
- 	{ "recs", FLDT_BMAPBTAREC, btblock_rec_offset, btblock_rec_count,
- 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ "keys", FLDT_BMAPBTAKEY, btblock_key_offset, btblock_key_count,
-@@ -314,7 +314,7 @@ const field_t	bmapbtd_crc_flds[] = {
- 	{ "lsn", FLDT_UINT64X, OI(OFF(u.l.bb_lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
- 	{ "owner", FLDT_INO, OI(OFF(u.l.bb_owner)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
- 	{ "recs", FLDT_BMAPBTDREC, btblock_rec_offset, btblock_rec_count,
- 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ "keys", FLDT_BMAPBTDKEY, btblock_key_offset, btblock_key_count,
-@@ -405,7 +405,7 @@ const field_t	inobt_crc_flds[] = {
- 	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
- 	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
- 	{ "recs", FLDT_INOBTREC, btblock_rec_offset, btblock_rec_count,
- 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ "keys", FLDT_INOBTKEY, btblock_key_offset, btblock_key_count,
-@@ -471,7 +471,7 @@ const field_t	bnobt_crc_flds[] = {
- 	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
- 	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
- 	{ "recs", FLDT_BNOBTREC, btblock_rec_offset, btblock_rec_count,
- 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ "keys", FLDT_BNOBTKEY, btblock_key_offset, btblock_key_count,
-@@ -533,7 +533,7 @@ const field_t	cntbt_crc_flds[] = {
- 	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
- 	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
- 	{ "recs", FLDT_CNTBTREC, btblock_rec_offset, btblock_rec_count,
- 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ "keys", FLDT_CNTBTKEY, btblock_key_offset, btblock_key_count,
-diff --git a/db/dir2.c b/db/dir2.c
-index 8b08d48..2ec64e0 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -922,7 +922,7 @@ const field_t	dir3_data_union_flds[] = {
- #define	DBH3OFF(f)	bitize(offsetof(struct xfs_dir3_blk_hdr, f))
- const field_t	dir3_blkhdr_flds[] = {
- 	{ "magic", FLDT_UINT32X, OI(DBH3OFF(magic)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(DBH3OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(DBH3OFF(crc)), C1, 0, TYP_NONE },
- 	{ "bno", FLDT_DFSBNO, OI(DBH3OFF(blkno)), C1, 0, TYP_BMAPBTD },
- 	{ "lsn", FLDT_UINT64X, OI(DBH3OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(DBH3OFF(uuid)), C1, 0, TYP_NONE },
-@@ -959,7 +959,7 @@ const field_t	dir3_free_hdr_flds[] = {
- #define	DB3OFF(f)	bitize(offsetof(struct xfs_da3_blkinfo, f))
- const field_t	da3_blkinfo_flds[] = {
- 	{ "hdr", FLDT_DA_BLKINFO, OI(DB3OFF(hdr)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(DB3OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(DB3OFF(crc)), C1, 0, TYP_NONE },
- 	{ "bno", FLDT_DFSBNO, OI(DB3OFF(blkno)), C1, 0, TYP_BMAPBTD },
- 	{ "lsn", FLDT_UINT64X, OI(DB3OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
-diff --git a/db/dquot.c b/db/dquot.c
-index 6927956..2f7d463 100644
---- a/db/dquot.c
-+++ b/db/dquot.c
-@@ -48,7 +48,7 @@ const field_t	dqblk_flds[] = {
- 	{ "diskdq", FLDT_DISK_DQUOT, OI(DDOFF(diskdq)), C1, 0, TYP_NONE },
- 	{ "fill", FLDT_CHARS, OI(DDOFF(fill)), CI(DDSZC(fill)), FLD_SKIPALL,
- 	  TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(DDOFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(DDOFF(crc)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(DDOFF(lsn)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(DDOFF(uuid)), C1, 0, TYP_NONE },
- 	{ NULL }
-diff --git a/db/field.c b/db/field.c
-index c6d7404..4582097 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -163,6 +163,11 @@ const ftattr_t	ftattrtab[] = {
- 	  0, fa_agblock, NULL },
- 	{ FLDT_CNTBTREC, "cntbtrec", fp_sarray, (char *)cntbt_rec_flds,
- 	  SI(bitsz(xfs_alloc_rec_t)), 0, NULL, cntbt_rec_flds },
-+
-+/* CRC field */
-+	{ FLDT_CRC, "crc", fp_crc, "%#x (%s)", SI(bitsz(__uint32_t)),
-+	  0, NULL, NULL },
-+
- 	{ FLDT_DEV, "dev", fp_num, "%#x", SI(bitsz(xfs_dev_t)), 0, NULL, NULL },
- 	{ FLDT_DFILOFFA, "dfiloffa", fp_num, "%llu", SI(bitsz(xfs_dfiloff_t)),
- 	  0, fa_dfiloffa, NULL },
-diff --git a/db/field.h b/db/field.h
-index aecdf9f..6343c9a 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -80,6 +80,10 @@ typedef enum fldt	{
- 	FLDT_CNTBTKEY,
- 	FLDT_CNTBTPTR,
- 	FLDT_CNTBTREC,
-+
-+	/* CRC field type */
-+	FLDT_CRC,
-+
- 	FLDT_DEV,
- 	FLDT_DFILOFFA,
- 	FLDT_DFILOFFD,
-diff --git a/db/fprint.c b/db/fprint.c
-index 1d2f29c..435d984 100644
---- a/db/fprint.c
-+++ b/db/fprint.c
-@@ -30,6 +30,7 @@
- #include "output.h"
- #include "sig.h"
- #include "malloc.h"
-+#include "io.h"
- 
- int
- fp_charns(
-@@ -184,3 +185,41 @@ fp_uuid(
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 34bf2ff..b7c1ca8 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1011,7 +1011,7 @@ main(
+ 				case B_LOG:
+ 					if (!value || *value == '\0')
+ 						reqval('b', bopts, B_LOG);
+-					if (blflag)
++					if (blflag > 1)
+ 						respec('b', bopts, B_LOG);
+ 					if (bsflag)
+ 						conflict('b', bopts, B_SIZE,
+@@ -1020,12 +1020,13 @@ main(
+ 					if (blocklog <= 0)
+ 						illegal(value, "b log");
+ 					blocksize = 1 << blocklog;
+-					blflag = 1;
++					blflag = 2; /* command line parameter */
++					bsflag = 1; /* value initialized */
+ 					break;
+ 				case B_SIZE:
+ 					if (!value || *value == '\0')
+ 						reqval('b', bopts, B_SIZE);
+-					if (bsflag)
++					if (bsflag > 1)
+ 						respec('b', bopts, B_SIZE);
+ 					if (blflag)
+ 						conflict('b', bopts, B_LOG,
+@@ -1036,7 +1037,8 @@ main(
+ 					    !ispow2(blocksize))
+ 						illegal(value, "b size");
+ 					blocklog = libxfs_highbit32(blocksize);
+-					bsflag = 1;
++					bsflag = 2;
++					blflag = 1;
+ 					break;
+ 				default:
+ 					unknown('b', value);
+@@ -1169,7 +1171,7 @@ main(
+ 				case D_SECTLOG:
+ 					if (!value || *value == '\0')
+ 						reqval('d', dopts, D_SECTLOG);
+-					if (slflag)
++					if (slflag > 1)
+ 						respec('d', dopts, D_SECTLOG);
+ 					if (ssflag)
+ 						conflict('d', dopts, D_SECTSIZE,
+@@ -1178,12 +1180,13 @@ main(
+ 					if (sectorlog <= 0)
+ 						illegal(value, "d sectlog");
+ 					sectorsize = 1 << sectorlog;
+-					slflag = 1;
++					slflag = 2;
++					ssflag = 1;
+ 					break;
+ 				case D_SECTSIZE:
+ 					if (!value || *value == '\0')
+ 						reqval('d', dopts, D_SECTSIZE);
+-					if (ssflag)
++					if (ssflag > 1)
+ 						respec('d', dopts, D_SECTSIZE);
+ 					if (slflag)
+ 						conflict('d', dopts, D_SECTLOG,
+@@ -1195,7 +1198,8 @@ main(
+ 						illegal(value, "d sectsize");
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+-					ssflag = 1;
++					ssflag = 2;
++					slflag = 1;
+ 					break;
+ 				case D_RTINHERIT:
+ 					fsx.fsx_xflags |= \
+@@ -1236,19 +1240,20 @@ main(
+ 				case I_LOG:
+ 					if (!value || *value == '\0')
+ 						reqval('i', iopts, I_LOG);
+-					if (ilflag)
++					if (ilflag > 1)
+ 						respec('i', iopts, I_LOG);
+-					if (ipflag)
+-						conflict('i', iopts, I_PERBLOCK,
+-							 I_LOG);
+ 					if (isflag)
+ 						conflict('i', iopts, I_SIZE,
+ 							 I_LOG);
++					if (ipflag)
++						conflict('i', iopts, I_PERBLOCK,
++							 I_LOG);
+ 					inodelog = atoi(value);
+ 					if (inodelog <= 0)
+ 						illegal(value, "i log");
+ 					isize = 1 << inodelog;
+-					ilflag = 1;
++					ilflag = 2;
++					isflag = 1;
+ 					break;
+ 				case I_MAXPCT:
+ 					if (!value || *value == '\0')
+@@ -1263,11 +1268,11 @@ main(
+ 				case I_PERBLOCK:
+ 					if (!value || *value == '\0')
+ 						reqval('i', iopts, I_PERBLOCK);
+-					if (ilflag)
+-						conflict('i', iopts, I_LOG,
+-							 I_PERBLOCK);
+ 					if (ipflag)
+ 						respec('i', iopts, I_PERBLOCK);
++					if (ilflag > 1)
++						conflict('i', iopts, I_LOG,
++							 I_PERBLOCK);
+ 					if (isflag)
+ 						conflict('i', iopts, I_SIZE,
+ 							 I_PERBLOCK);
+@@ -1281,19 +1286,20 @@ main(
+ 				case I_SIZE:
+ 					if (!value || *value == '\0')
+ 						reqval('i', iopts, I_SIZE);
++					if (isflag > 1)
++						respec('i', iopts, I_SIZE);
+ 					if (ilflag)
+ 						conflict('i', iopts, I_LOG,
+ 							 I_SIZE);
+ 					if (ipflag)
+ 						conflict('i', iopts, I_PERBLOCK,
+ 							 I_SIZE);
+-					if (isflag)
+-						respec('i', iopts, I_SIZE);
+ 					isize = cvtnum(0, 0, value);
+ 					if (isize <= 0 || !ispow2(isize))
+ 						illegal(value, "i size");
+ 					inodelog = libxfs_highbit32(isize);
+-					isflag = 1;
++					isflag = 2;
++					ilflag = 1;
+ 					break;
+ 				case I_ATTR:
+ 					if (!value || *value == '\0')
+@@ -1415,7 +1421,7 @@ main(
+ 				case L_SECTLOG:
+ 					if (!value || *value == '\0')
+ 						reqval('l', lopts, L_SECTLOG);
+-					if (lslflag)
++					if (lslflag > 1)
+ 						respec('l', lopts, L_SECTLOG);
+ 					if (lssflag)
+ 						conflict('l', lopts, L_SECTSIZE,
+@@ -1424,12 +1430,13 @@ main(
+ 					if (lsectorlog <= 0)
+ 						illegal(value, "l sectlog");
+ 					lsectorsize = 1 << lsectorlog;
+-					lslflag = 1;
++					lslflag = 2;
++					lssflag = 1;
+ 					break;
+ 				case L_SECTSIZE:
+ 					if (!value || *value == '\0')
+ 						reqval('l', lopts, L_SECTSIZE);
+-					if (lssflag)
++					if (lssflag > 1)
+ 						respec('l', lopts, L_SECTSIZE);
+ 					if (lslflag)
+ 						conflict('l', lopts, L_SECTLOG,
+@@ -1441,7 +1448,8 @@ main(
+ 						illegal(value, "l sectsize");
+ 					lsectorlog =
+ 						libxfs_highbit32(lsectorsize);
+-					lssflag = 1;
++					lssflag = 2;
++					lslflag = 1;
+ 					break;
+ 				case L_LAZYSBCNTR:
+ 					if (!value || *value == '\0')
+@@ -1490,7 +1498,7 @@ main(
+ 				case N_LOG:
+ 					if (!value || *value == '\0')
+ 						reqval('n', nopts, N_LOG);
+-					if (nlflag)
++					if (nlflag > 1)
+ 						respec('n', nopts, N_LOG);
+ 					if (nsflag)
+ 						conflict('n', nopts, N_SIZE,
+@@ -1499,12 +1507,13 @@ main(
+ 					if (dirblocklog <= 0)
+ 						illegal(value, "n log");
+ 					dirblocksize = 1 << dirblocklog;
+-					nlflag = 1;
++					nlflag = 2;
++					nsflag = 1;
+ 					break;
+ 				case N_SIZE:
+ 					if (!value || *value == '\0')
+ 						reqval('n', nopts, N_SIZE);
+-					if (nsflag)
++					if (nsflag > 1)
+ 						respec('n', nopts, N_SIZE);
+ 					if (nlflag)
+ 						conflict('n', nopts, N_LOG,
+@@ -1516,7 +1525,8 @@ main(
+ 						illegal(value, "n size");
+ 					dirblocklog =
+ 						libxfs_highbit32(dirblocksize);
+-					nsflag = 1;
++					nsflag = 2;
++					nlflag = 1;
+ 					break;
+ 				case N_VERSION:
+ 					if (!value || *value == '\0')
+@@ -1607,7 +1617,7 @@ main(
+ 				case S_SECTLOG:
+ 					if (!value || *value == '\0')
+ 						reqval('s', sopts, S_SECTLOG);
+-					if (slflag || lslflag)
++					if (slflag > 1 || lslflag > 1)
+ 						respec('s', sopts, S_SECTLOG);
+ 					if (ssflag || lssflag)
+ 						conflict('s', sopts, S_SECTSIZE,
+@@ -1618,13 +1628,14 @@ main(
+ 					lsectorlog = sectorlog;
+ 					sectorsize = 1 << sectorlog;
+ 					lsectorsize = sectorsize;
+-					lslflag = slflag = 1;
++					lslflag = slflag = 2;
++					lssflag = ssflag = 1;
+ 					break;
+ 				case S_SIZE:
+ 				case S_SECTSIZE:
+ 					if (!value || *value == '\0')
+ 						reqval('s', sopts, S_SECTSIZE);
+-					if (ssflag || lssflag)
++					if (ssflag > 1 || lssflag > 1)
+ 						respec('s', sopts, S_SECTSIZE);
+ 					if (slflag || lslflag)
+ 						conflict('s', sopts, S_SECTLOG,
+@@ -1638,7 +1649,8 @@ main(
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+ 					lsectorlog = sectorlog;
+-					lssflag = ssflag = 1;
++					lssflag = ssflag = 2;
++					lslflag = slflag = 1;
+ 					break;
+ 				default:
+ 					unknown('s', value);
+@@ -1671,7 +1683,7 @@ main(
+ 	 * For RAID4/5/6 we want to align sector size and block size,
+ 	 * so we need to start with the device geometry extraction too.
+ 	 */
+-	if (!blflag && !bsflag) {
++	if (!bsflag) {
+ 		blocklog = XFS_DFL_BLOCKSIZE_LOG;
+ 		blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
  	}
- 	return 1;
- }
-+
-+/*
-+ * CRC is correct is the current buffer it is being pulled out
-+ * of is not marked with a EFSCORRUPTED error.
-+ */
-+int
-+fp_crc(
-+	void	*obj,
-+	int	bit,
-+	int	count,
-+	char	*fmtstr,
-+	int	size,
-+	int	arg,
-+	int	base,
-+	int	array)
-+{
-+	int		bitpos;
-+	int		i;
-+	__int64_t	val;
-+	char		*ok;
-+
-+	ok = iocur_crc_valid() ? "correct" : "bad";
-+
-+	for (i = 0, bitpos = bit;
-+	     i < count && !seenint();
-+	     i++, bitpos += size) {
-+		if (array)
-+			dbprintf("%d:", i + base);
-+		val = getbitval(obj, bitpos, size, BVUNSIGNED);
-+		if (size > 32)
-+			dbprintf(fmtstr, val, ok);
-+		else
-+			dbprintf(fmtstr, (__int32_t)val, ok);
-+		if (i < count - 1)
-+			dbprintf(" ");
-+	}
-+	return 1;
-+}
-diff --git a/db/fprint.h b/db/fprint.h
-index b032dbd..6a6d77e 100644
---- a/db/fprint.h
-+++ b/db/fprint.h
-@@ -29,3 +29,5 @@ extern int	fp_time(void *obj, int bit, int count, char *fmtstr, int size,
- 			int arg, int base, int array);
- extern int	fp_uuid(void *obj, int bit, int count, char *fmtstr, int size,
- 			int arg, int base, int array);
-+extern int	fp_crc(void *obj, int bit, int count, char *fmtstr, int size,
-+		       int arg, int base, int array);
-diff --git a/db/inode.c b/db/inode.c
-index 634dc30..ec533ee 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -168,7 +168,7 @@ const field_t	inode_core_flds[] = {
- };
+@@ -1693,7 +1705,7 @@ main(
+ 		 * ft.sectoralign will never be set.
+ 		 */
+ 		sectorsize = blocksize;
+-	} else if (!ssflag && !slflag) {
++	} else if (!ssflag) {
+ 		/*
+ 		 * Unless specified manually on the command line use the
+ 		 * advertised sector size of the device.  We use the physical
+@@ -1721,7 +1733,7 @@ _("switching to logical sector size %d\n"),
+ 		}
+ 	}
  
- const field_t	inode_v3_flds[] = {
--	{ "crc", FLDT_UINT32X, OI(COFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(COFF(crc)), C1, 0, TYP_NONE },
- 	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
- 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
-diff --git a/db/io.h b/db/io.h
-index 2c47ccc..d647284 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -58,3 +58,9 @@ extern void     write_cur(void);
- extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
- extern void     ring_add(void);
-+
-+static inline bool
-+iocur_crc_valid()
-+{
-+	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
-+}
-diff --git a/db/sb.c b/db/sb.c
-index d178f58..b36abf8 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -118,7 +118,7 @@ const field_t	sb_flds[] = {
- 		C1, 0, TYP_NONE },
- 	{ "features_log_incompat", FLDT_UINT32X, OI(OFF(features_log_incompat)),
- 		C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
- 	{ "pquotino", FLDT_INO, OI(OFF(pquotino)), C1, 0, TYP_INODE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ NULL }
-diff --git a/db/symlink.c b/db/symlink.c
-index 9f3d0b9..a4f420f 100644
---- a/db/symlink.c
-+++ b/db/symlink.c
-@@ -69,7 +69,7 @@ const struct field	symlink_crc_flds[] = {
- 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
- 	{ "offset", FLDT_UINT32D, OI(OFF(offset)), C1, 0, TYP_NONE },
- 	{ "bytes", FLDT_UINT32D, OI(OFF(bytes)), C1, 0, TYP_NONE },
--	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
- 	{ "owner", FLDT_INO, OI(OFF(owner)), C1, 0, TYP_NONE },
- 	{ "bno", FLDT_DFSBNO, OI(OFF(blkno)), C1, 0, TYP_BMAPBTD },
+-	if (ft.sectoralign || (!ssflag && !slflag)) {
++	if (ft.sectoralign || !ssflag) {
+ 		sectorlog = libxfs_highbit32(sectorsize);
+ 		if (loginternal) {
+ 			lsectorsize = sectorsize;
+@@ -1731,7 +1743,7 @@ _("switching to logical sector size %d\n"),
+ 
+ 	if (sectorsize < XFS_MIN_SECTORSIZE ||
+ 	    sectorsize > XFS_MAX_SECTORSIZE || sectorsize > blocksize) {
+-		if (ssflag || slflag)
++		if (ssflag)
+ 			fprintf(stderr, _("illegal sector size %d\n"), sectorsize);
+ 		else
+ 			fprintf(stderr,
+@@ -1760,7 +1772,7 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
+ 	 */
+ 	if (crcs_enabled) {
+ 		/* minimum inode size is 512 bytes, ipflag checked later */
+-		if ((isflag || ilflag) && inodelog < XFS_DINODE_DFL_CRC_LOG) {
++		if (isflag && inodelog < XFS_DINODE_DFL_CRC_LOG) {
+ 			fprintf(stderr,
+ _("Minimum inode size for CRCs is %d bytes\n"),
+ 				1 << XFS_DINODE_DFL_CRC_LOG);
+@@ -1804,7 +1816,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 		}
+ 	}
+ 
+-	if (nsflag || nlflag) {
++	if (nsflag) {
+ 		if (dirblocksize < blocksize ||
+ 					dirblocksize > XFS_MAX_BLOCKSIZE) {
+ 			fprintf(stderr, _("illegal directory block size %d\n"),
+@@ -1850,7 +1862,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	if (ipflag) {
+ 		inodelog = blocklog - libxfs_highbit32(inopblock);
+ 		isize = 1 << inodelog;
+-	} else if (!ilflag && !isflag) {
++	} else if (!isflag) {
+ 		inodelog = crcs_enabled ? XFS_DINODE_DFL_CRC_LOG
+ 					: XFS_DINODE_DFL_LOG;
+ 		isize = 1 << inodelog;
 -- 
-1.8.3.2
+1.8.1.4
+
+
 
 _______________________________________________
 xfs mailing list
