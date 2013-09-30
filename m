@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D21EE7F5E
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:50 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 812E47F5E
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 60999AC001
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:50 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 649C78F8035
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:51 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	6xxS7yyF0EU04YmK for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:48 -0700 (PDT)
+	dPSDlV9W7B1KS2D1 for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:50 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006Om-UO
+	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006Oh-RL
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FU-Th
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002F5-Qu
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/32] xfs: don't assert fail on bad inode numbers
-Date: Mon, 30 Sep 2013 13:15:18 +1000
-Message-Id: <1380510944-8571-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/32] xfsprogs: fix automatic dependency generation
+Date: Mon, 30 Sep 2013 13:15:13 +1000
+Message-Id: <1380510944-8571-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,43 +39,54 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Let the inode verifier do it's work by returning an error when we
-fail to find correct magic numbers in an inode buffer.
+Adding are removing a header file does not result in dependency
+regeneration like it should. make clean will rebuild the
+dependencies, but a normal make won't. Fix it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_inode_buf.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ include/buildrules | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 6205318..b096f77 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -39,9 +39,8 @@ xfs_inobp_check(
- 					i * mp->m_sb.sb_inodesize);
- 		if (!dip->di_next_unlinked)  {
- 			xfs_alert(mp,
--	"Detected bogus zero next_unlinked field in incore inode buffer 0x%p.",
--				bp);
--			ASSERT(dip->di_next_unlinked);
-+	"Detected bogus zero next_unlinked field in inode %d buffer 0x%llx.",
-+				i, (long long)bp->b_bn);
- 		}
- 	}
- }
-@@ -74,11 +73,10 @@ xfs_inode_buf_verify(
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
- 					     mp, dip);
- #ifdef DEBUG
--			xfs_emerg(mp,
-+			xfs_alert(mp,
- 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
- 				(unsigned long long)bp->b_bn, i,
- 				be16_to_cpu(dip->di_magic));
--			ASSERT(0);
- #endif
- 		}
- 	}
+diff --git a/include/buildrules b/include/buildrules
+index 49cb2a4..edb1beb 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -79,18 +79,30 @@ endif # _BUILDRULES_INCLUDED_
+ $(_FORCE):
+ 
+ # dependency build is automatic, relies on gcc -MM to generate.
++#
++# This is a bit messy. It regenerates the depenencies on each build so
++# that we catch files being added and removed. There are other ways of doing
++# this (e.g. per-file dependency files) but that requires more in-depth changes
++# to the build system. Compile time is not an issue for us, so the
++# rebuild on every make invocation isn't a problem we need to care about. Just
++# do it silently so it doesn't make the build unnecessarily noisy.
++
+ .PHONY : depend ltdepend install-qa
+ 
+ MAKEDEP := $(MAKEDEPEND) $(CFLAGS)
+ 
+-ltdepend: .ltdep
++ltdepend: rmltdep .ltdep
++
++rmltdep:
++	@rm -f .ltdep
+ 
+ .ltdep: $(CFILES) $(HFILES)
+-	@echo "    [LTDEP]"
+ 	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
+ 
+-depend: .dep
++depend: rmdep .dep
++
++rmdep:
++	@rm -f .dep
+ 
+ .dep: $(CFILES) $(HFILES)
+-	@echo "    [DEP]"
+ 	$(Q)$(MAKEDEP) $(CFILES) > .dep
 -- 
 1.8.3.2
 
