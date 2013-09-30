@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 427EF7F85
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 16252304039
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4CFD27F85
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3ED13304032
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:55 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	EhGPiu0r7FZreGJ4 for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:52 -0700 (PDT)
+	joLvF1hHvbn4Jtib for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:53 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006On-Uv
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006Pi-EW
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FZ-UH
-	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002HV-Du
+	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/32] xfs: dirent dtype presence is dependent on directory
-	magic numbers
-Date: Mon, 30 Sep 2013 13:15:19 +1000
-Message-Id: <1380510944-8571-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 31/32] xfs: support larger inode clusters on v5 filesystems
+Date: Mon, 30 Sep 2013 13:15:43 +1000
+Message-Id: <1380510944-8571-32-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,225 +39,119 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The determination of whether a directory entry contains a dtype
-field originally was dependent on the filesystem having CRCs
-enabled. This meant that the format for dtype beign enabled could be
-determined by checking the directory block magic number rather than
-doing a feature bit check. This was useful in that it meant that we
-didn't need to pass a struct xfs_mount around to functions that
-were already supplied with a directory block header.
-
-Unfortunately, the introduction of dtype fields into the v4
-structure via a feature bit meant this "use the directory block
-magic number" method of discriminating the dirent entry sizes is
-broken. Hence we need to convert the places that use magic number
-checks to use feature bit checks so that they work correctly and not
-by chance.
-
-The current code works on v4 filesystems only because the dirent
-size roundup covers the extra byte needed by the dtype field in the
-places where this problem occurs.
+To allow the kernel to use larger inode clusters than the standard
+8192 bytes, we need to set the inode alignment fields appropriately
+so that the kernel is consistent in it's inode to buffer mappings.
+We set the alignment to allow a constant 32 inodes per cluster,
+instead of a fixed 8k cluster size.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/check.c                |  2 +-
- include/xfs_dir2_format.h | 51 +++++++++++++++++++----------------------------
- libxfs/xfs_dir2_block.c   |  6 +++---
- libxfs/xfs_dir2_sf.c      |  6 +++---
- repair/dir2.c             |  4 ++--
- 5 files changed, 29 insertions(+), 40 deletions(-)
+ include/libxfs.h |  2 +-
+ mkfs/xfs_mkfs.c  |  5 ++++-
+ repair/sb.c      | 41 ++++++++++++++++++++++++++++-------------
+ 3 files changed, 33 insertions(+), 15 deletions(-)
 
-diff --git a/db/check.c b/db/check.c
-index 2d4718d..4867698 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -3434,7 +3434,7 @@ process_sf_dir_v2(
- 		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
- 	(*dot)++;
- 	sfe = xfs_dir2_sf_firstentry(sf);
--	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
-+	offset = xfs_dir3_data_first_offset(mp);
- 	for (i = sf->count - 1, i8 = 0; i >= 0; i--) {
- 		if ((__psint_t)sfe + xfs_dir3_sf_entsize(mp, sf, sfe->namelen) -
- 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
-diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
-index a0961a6..9cf6738 100644
---- a/include/xfs_dir2_format.h
-+++ b/include/xfs_dir2_format.h
-@@ -497,69 +497,58 @@ xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 049b217..9d7c579 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -182,7 +182,7 @@ typedef struct xfs_mount {
+ 	__uint8_t		m_sectbb_log;	/* sectorlog - BBSHIFT */
+ 	__uint8_t		m_agno_log;	/* log #ag's */
+ 	__uint8_t		m_agino_log;	/* #bits for agino in inum */
+-	__uint16_t		m_inode_cluster_size;/* min inode buf size */
++	uint			m_inode_cluster_size;/* min inode buf size */
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 60e4d88..feb5bd0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2501,7 +2501,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	} else
+ 		sbp->sb_logsunit = 0;
+ 	if (iaflag) {
+-		sbp->sb_inoalignmt = XFS_INODE_BIG_CLUSTER_SIZE >> blocklog;
++		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
++		if (crcs_enabled)
++			cluster_size *= isize / XFS_DINODE_MIN_SIZE;
++		sbp->sb_inoalignmt = cluster_size >> blocklog;
+ 		iaflag = sbp->sb_inoalignmt != 0;
+ 	} else
+ 		sbp->sb_inoalignmt = 0;
+diff --git a/repair/sb.c b/repair/sb.c
+index e2f5933..86404ce 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -169,17 +169,37 @@ find_secondary_sb(xfs_sb_t *rsb)
+ }
+ 
  /*
-  * Offsets of . and .. in data space (always block 0)
-  *
-- * The macros are used for shortform directories as they have no headers to read
-- * the magic number out of. Shortform directories need to know the size of the
-- * data block header because the sfe embeds the block offset of the entry into
-- * it so that it doesn't change when format conversion occurs. Bad Things Happen
-- * if we don't follow this rule.
-- *
-  * XXX: there is scope for significant optimisation of the logic here. Right
-  * now we are checking for "dir3 format" over and over again. Ideally we should
-  * only do it once for each operation.
+- * calculate what inode alignment field ought to be
+- * based on internal superblock info
++ * Calculate what inode alignment field ought to be
++ * based on internal superblock info and determine if it is valid.
++ *
++ * For v5 superblocks, the inode alignment will either match that of the
++ * standard XFS_INODE_BIG_CLUSTER_SIZE, or it will be scaled based on the inode
++ * size. Either value is valid in this case.
++ *
++ * Return true if the alignment is valid, false otherwise.
   */
--#define	XFS_DIR3_DATA_DOT_OFFSET(mp)	\
--	xfs_dir3_data_hdr_size(xfs_sb_version_hascrc(&(mp)->m_sb))
--#define	XFS_DIR3_DATA_DOTDOT_OFFSET(mp)	\
--	(XFS_DIR3_DATA_DOT_OFFSET(mp) + xfs_dir3_data_entsize(mp, 1))
--#define	XFS_DIR3_DATA_FIRST_OFFSET(mp)		\
--	(XFS_DIR3_DATA_DOTDOT_OFFSET(mp) + xfs_dir3_data_entsize(mp, 2))
+-static int
+-calc_ino_align(xfs_sb_t *sb)
++static bool
++sb_validate_ino_align(struct xfs_sb *sb)
+ {
+-	xfs_extlen_t align;
++	xfs_extlen_t	align;
+ 
++	if (!xfs_sb_version_hasalign(sb))
++		return true;
++
++	/* standard cluster size alignment is always valid */
+ 	align = XFS_INODE_BIG_CLUSTER_SIZE >> sb->sb_blocklog;
++	if (align == sb->sb_inoalignmt)
++		return true;
++
++	/* alignment scaled by inode size is v5 only for now */
++	if (!xfs_sb_version_hascrc(sb))
++		return false;
+ 
+-	return(align);
++	align *= sb->sb_inodesize / XFS_DINODE_MIN_SIZE;
++	if (align == sb->sb_inoalignmt)
++		return true;
++
++	return false;
+ }
+ 
+ /*
+@@ -228,7 +248,6 @@ int
+ verify_sb(xfs_sb_t *sb, int is_primary_sb)
+ {
+ 	__uint32_t	bsize;
+-	xfs_extlen_t	align;
+ 	int		i;
+ 
+ 	/* check magic number and version number */
+@@ -364,12 +383,8 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
+ 	/*
+ 	 * verify correctness of inode alignment if it's there
+ 	 */
+-	if (xfs_sb_version_hasalign(sb))  {
+-		align = calc_ino_align(sb);
 -
- static inline xfs_dir2_data_aoff_t
--xfs_dir3_data_dot_offset(struct xfs_dir2_data_hdr *hdr)
-+xfs_dir3_data_dot_offset(struct xfs_mount *mp)
- {
--	return xfs_dir3_data_entry_offset(hdr);
-+	return xfs_dir3_data_hdr_size(xfs_sb_version_hascrc(&mp->m_sb));
- }
+-		if (align != sb->sb_inoalignmt)
+-			return(XR_BAD_INO_ALIGN);
+-	}
++	if (!sb_validate_ino_align(sb))
++		return(XR_BAD_INO_ALIGN);
  
- static inline xfs_dir2_data_aoff_t
--xfs_dir3_data_dotdot_offset(struct xfs_dir2_data_hdr *hdr)
-+xfs_dir3_data_dotdot_offset(struct xfs_mount *mp)
- {
--	bool dir3 = hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
--		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
--	return xfs_dir3_data_dot_offset(hdr) +
--		__xfs_dir3_data_entsize(dir3, 1);
-+	return xfs_dir3_data_dot_offset(mp) +
-+		xfs_dir3_data_entsize(mp, 1);
- }
- 
- static inline xfs_dir2_data_aoff_t
--xfs_dir3_data_first_offset(struct xfs_dir2_data_hdr *hdr)
-+xfs_dir3_data_first_offset(struct xfs_mount *mp)
- {
--	bool dir3 = hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
--		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
--	return xfs_dir3_data_dotdot_offset(hdr) +
--		__xfs_dir3_data_entsize(dir3, 2);
-+	return xfs_dir3_data_dotdot_offset(mp) +
-+		xfs_dir3_data_entsize(mp, 2);
- }
- 
- /*
-  * location of . and .. in data space (always block 0)
-  */
- static inline struct xfs_dir2_data_entry *
--xfs_dir3_data_dot_entry_p(struct xfs_dir2_data_hdr *hdr)
-+xfs_dir3_data_dot_entry_p(
-+	struct xfs_mount	*mp,
-+	struct xfs_dir2_data_hdr *hdr)
- {
- 	return (struct xfs_dir2_data_entry *)
--		((char *)hdr + xfs_dir3_data_dot_offset(hdr));
-+		((char *)hdr + xfs_dir3_data_dot_offset(mp));
- }
- 
- static inline struct xfs_dir2_data_entry *
--xfs_dir3_data_dotdot_entry_p(struct xfs_dir2_data_hdr *hdr)
-+xfs_dir3_data_dotdot_entry_p(
-+	struct xfs_mount	*mp,
-+	struct xfs_dir2_data_hdr *hdr)
- {
- 	return (struct xfs_dir2_data_entry *)
--		((char *)hdr + xfs_dir3_data_dotdot_offset(hdr));
-+		((char *)hdr + xfs_dir3_data_dotdot_offset(mp));
- }
- 
- static inline struct xfs_dir2_data_entry *
--xfs_dir3_data_first_entry_p(struct xfs_dir2_data_hdr *hdr)
-+xfs_dir3_data_first_entry_p(
-+	struct xfs_mount	*mp,
-+	struct xfs_dir2_data_hdr *hdr)
- {
- 	return (struct xfs_dir2_data_entry *)
--		((char *)hdr + xfs_dir3_data_first_offset(hdr));
-+		((char *)hdr + xfs_dir3_data_first_offset(mp));
- }
- 
- /*
-diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
-index 3e4bc53..1d8f598 100644
---- a/libxfs/xfs_dir2_block.c
-+++ b/libxfs/xfs_dir2_block.c
-@@ -1139,7 +1139,7 @@ xfs_dir2_sf_to_block(
  	/*
- 	 * Create entry for .
- 	 */
--	dep = xfs_dir3_data_dot_entry_p(hdr);
-+	dep = xfs_dir3_data_dot_entry_p(mp, hdr);
- 	dep->inumber = cpu_to_be64(dp->i_ino);
- 	dep->namelen = 1;
- 	dep->name[0] = '.';
-@@ -1153,7 +1153,7 @@ xfs_dir2_sf_to_block(
- 	/*
- 	 * Create entry for ..
- 	 */
--	dep = xfs_dir3_data_dotdot_entry_p(hdr);
-+	dep = xfs_dir3_data_dotdot_entry_p(mp, hdr);
- 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
- 	dep->namelen = 2;
- 	dep->name[0] = dep->name[1] = '.';
-@@ -1164,7 +1164,7 @@ xfs_dir2_sf_to_block(
- 	blp[1].hashval = cpu_to_be32(xfs_dir_hash_dotdot);
- 	blp[1].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
- 				(char *)dep - (char *)hdr));
--	offset = xfs_dir3_data_first_offset(hdr);
-+	offset = xfs_dir3_data_first_offset(mp);
- 	/*
- 	 * Loop over existing entries, stuff them in.
- 	 */
-diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
-index 740cab0..7580333 100644
---- a/libxfs/xfs_dir2_sf.c
-+++ b/libxfs/xfs_dir2_sf.c
-@@ -540,7 +540,7 @@ xfs_dir2_sf_addname_hard(
- 	 * to insert the new entry.
- 	 * If it's going to end up at the end then oldsfep will point there.
- 	 */
--	for (offset = XFS_DIR3_DATA_FIRST_OFFSET(mp),
-+	for (offset = xfs_dir3_data_first_offset(mp),
- 	      oldsfep = xfs_dir2_sf_firstentry(oldsfp),
- 	      add_datasize = xfs_dir3_data_entsize(mp, args->namelen),
- 	      eof = (char *)oldsfep == &buf[old_isize];
-@@ -623,7 +623,7 @@ xfs_dir2_sf_addname_pick(
- 
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	size = xfs_dir3_data_entsize(mp, args->namelen);
--	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
-+	offset = xfs_dir3_data_first_offset(mp);
- 	sfep = xfs_dir2_sf_firstentry(sfp);
- 	holefit = 0;
- 	/*
-@@ -696,7 +696,7 @@ xfs_dir2_sf_check(
- 	mp = dp->i_mount;
- 
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
--	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
-+	offset = xfs_dir3_data_first_offset(mp);
- 	ino = xfs_dir2_sf_get_parent_ino(sfp);
- 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
- 
-diff --git a/repair/dir2.c b/repair/dir2.c
-index a856631..d931d1d 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -705,7 +705,7 @@ process_sf_dir2_fixoff(
- 
- 	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
- 	sfep = xfs_dir2_sf_firstentry(sfp);
--	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
-+	offset = xfs_dir3_data_first_offset(mp);
- 
- 	for (i = 0; i < sfp->count; i++) {
- 		xfs_dir2_sf_put_offset(sfep, offset);
-@@ -759,7 +759,7 @@ process_sf_dir2(
- 	max_size = XFS_DFORK_DSIZE(dip, mp);
- 	num_entries = sfp->count;
- 	ino_dir_size = be64_to_cpu(dip->di_size);
--	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
-+	offset = xfs_dir3_data_first_offset(mp);
- 	bad_offset = *repair = 0;
- 
- 	ASSERT(ino_dir_size <= max_size);
+ 	 * verify max. % of inodes (sb_imax_pct)
 -- 
 1.8.3.2
 
