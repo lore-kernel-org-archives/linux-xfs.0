@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DB34F7FA7
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD1B1304053
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:59 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 762487FAE
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12826AC001
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:57 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	hPWlAL6T0ZoubNtN for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:57 -0700 (PDT)
+	JhH2K9YYuny9A6uo for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:55 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006P2-5I
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PV-As
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002GI-4G
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002H1-A9
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/32] libxfs: Minor cleanup and bug fix sync
-Date: Mon, 30 Sep 2013 13:15:28 +1000
-Message-Id: <1380510944-8571-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 25/32] db: add a special attribute buffer verifier
+Date: Mon, 30 Sep 2013 13:15:37 +1000
+Message-Id: <1380510944-8571-26-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,229 +39,109 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-These bring all the small single line comment, whitespace and minor
-code differences into sync with the kernel code. Anything left at
-this point is an intentional difference.
+Because we only have a single attribute type that is used for all
+the attribute buffer types, we need to provide a special verifier
+for the read code. That verifier needs to know all the attribute
+types and when it find one it knows about, switch to the correct
+verifier and call it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_fs.h         | 4 ++--
- include/xfs_quota_defs.h | 4 ++++
- libxfs/xfs_attr_leaf.c   | 4 +---
- libxfs/xfs_bmap.c        | 6 +++---
- libxfs/xfs_bmap_btree.c  | 2 +-
- libxfs/xfs_dir2_leaf.c   | 1 -
- libxfs/xfs_dir2_node.c   | 2 +-
- libxfs/xfs_ialloc.c      | 4 ++--
- libxfs/xfs_inode_buf.c   | 2 ++
- libxfs/xfs_inode_fork.c  | 5 +++--
- libxfs/xfs_trans_resv.c  | 2 +-
- 11 files changed, 20 insertions(+), 16 deletions(-)
+ db/attr.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h |  2 ++
+ db/type.c |  3 ++-
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 53e33c2..18272c7 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -357,7 +357,7 @@ typedef struct xfs_error_injection {
-  * Speculative preallocation trimming.
-  */
- #define XFS_EOFBLOCKS_VERSION		1
--struct xfs_eofblocks {
-+struct xfs_fs_eofblocks {
- 	__u32		eof_version;
- 	__u32		eof_flags;
- 	uid_t		eof_uid;
-@@ -515,7 +515,7 @@ typedef struct xfs_swapext
- /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
--#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
-+#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+diff --git a/db/attr.c b/db/attr.c
+index cd95a0a..359af7b 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -25,6 +25,7 @@
+ #include "attr.h"
+ #include "io.h"
+ #include "init.h"
++#include "output.h"
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/include/xfs_quota_defs.h b/include/xfs_quota_defs.h
-index e6b0d6e..b3b2b10 100644
---- a/include/xfs_quota_defs.h
-+++ b/include/xfs_quota_defs.h
-@@ -154,4 +154,8 @@ typedef __uint16_t	xfs_qwarncnt_t;
- 		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
- #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+ static int	attr_leaf_entries_count(void *obj, int startoff);
+ static int	attr_leaf_hdr_count(void *obj, int startoff);
+@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
+ 	{ NULL }
+ };
  
-+extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
-+		       xfs_dqid_t id, uint type, uint flags, char *str);
-+extern int xfs_calc_dquots_per_chunk(struct xfs_mount *mp, unsigned int nbblks);
++/*
++ * Special read verifier for attribute buffers. detect the magic number
++ * appropriately and set the correct verifier and call it.
++ */
++static void
++xfs_attr3_db_read_verify(
++	struct xfs_buf		*bp)
++{
++	__be32			magic32;
++	__be16			magic16;
 +
- #endif	/* __XFS_QUOTA_H__ */
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index c09b0f3..fd52397 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -599,7 +599,7 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
- 	xfs_attr_sf_entry_t *sfe;
- 	int i;
- 
--	ASSERT(args->dp->i_d.di_aformat == XFS_IFINLINE);
-+	ASSERT(args->dp->i_afp->if_flags == XFS_IFINLINE);
- 	sf = (xfs_attr_shortform_t *)args->dp->i_afp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	for (i = 0; i < sf->hdr.count;
-@@ -909,7 +909,6 @@ out:
- 	return error;
- }
- 
--
- /*========================================================================
-  * Routines used for growing the Btree.
-  *========================================================================*/
-@@ -1270,7 +1269,6 @@ xfs_attr3_leaf_compact(
- 	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
- 						ichdr_dst->freemap[0].base;
- 
--
- 	/* write the header back to initialise the underlying buffer */
- 	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);
- 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 7336abf..3e80c64 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -510,8 +510,8 @@ xfs_bmap_trace_exlist(
- 
- /*
-  * Validate that the bmbt_irecs being returned from bmapi are valid
-- * given the callers original parameters.  Specifically check the
-- * ranges of the returned irecs to ensure that they only extent beyond
-+ * given the caller's original parameters.  Specifically check the
-+ * ranges of the returned irecs to ensure that they only extend beyond
-  * the given parameters if the XFS_BMAPI_ENTIRE flag was set.
-  */
- STATIC void
-@@ -1515,7 +1515,7 @@ xfs_bmap_first_unused(
- }
- 
- /*
-- * Returns the file-relative block number of the last block + 1 before
-+ * Returns the file-relative block number of the last block - 1 before
-  * last_block (input value) in the file.
-  * This is not based on i_size, it is based on the extent records.
-  * Returns 0 for local files, as they do not have extent records.
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 2f6b48a..6211dc2 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -737,7 +737,7 @@ xfs_bmbt_verify(
- 	 * precise.
- 	 */
- 	level = be16_to_cpu(block->bb_level);
--	if (level > MAX(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
-+	if (level > max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
- 		return false;
- 	if (be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
- 		return false;
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index c035c4d..683536e 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -1072,7 +1072,6 @@ xfs_dir3_leaf_compact_x1(
- 	*highstalep = highstale;
- }
- 
--
- /*
-  * Log the bests entries indicated from a leaf1 block.
-  */
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 6a245e5..10d1d81 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -1796,7 +1796,7 @@ xfs_dir2_node_addname_int(
- 		/*
- 		 * Look at the current free entry.  Is it good enough?
- 		 *
--		 * The bests initialisation should be where the buffer is read in
-+		 * The bests initialisation should be where the bufer is read in
- 		 * the above branch. But gcc is too stupid to realise that bests
- 		 * and the freehdr are actually initialised if they are placed
- 		 * there, so we have to do it here to avoid warnings. Blech.
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 4683287..afe1a82 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -484,7 +484,7 @@ xfs_ialloc_next_ag(
- 
- /*
-  * Select an allocation group to look for a free inode in, based on the parent
-- * inode and then mode.  Return the allocation group buffer.
-+ * inode and the mode.  Return the allocation group buffer.
-  */
- STATIC xfs_agnumber_t
- xfs_ialloc_ag_select(
-@@ -706,7 +706,7 @@ xfs_dialloc_ag(
- 		error = xfs_inobt_get_rec(cur, &rec, &j);
- 		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(j == 1, error0);
- 
- 		if (rec.ir_freecount > 0) {
- 			/*
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 67d5eb4..b796556 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -101,6 +101,7 @@ xfs_inode_buf_verify(
- 	xfs_inobp_check(mp, bp);
- }
- 
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
 +
- static void
- xfs_inode_buf_read_verify(
- 	struct xfs_buf	*bp)
-@@ -299,6 +300,7 @@ xfs_dinode_verify(
- 		return false;
- 	return true;
- }
++	switch (magic16) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		bp->b_ops = &xfs_attr3_leaf_buf_ops;
++		goto verify;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		goto verify;
++	default:
++		break;
++	}
 +
- void
- xfs_dinode_calc_crc(
- 	struct xfs_mount	*mp,
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 1c006f9..190690c 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -138,7 +138,8 @@ xfs_iformat_fork(
- 			}
++	switch (magic32) {
++	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
++		bp->b_ops = &xfs_attr3_rmt_buf_ops;
++		break;
++	default:
++		dbprintf(_("Unknown attribute buffer type!\n"));
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++verify:
++	bp->b_ops->verify_read(bp);
++}
++
++static void
++xfs_attr3_db_write_verify(
++	struct xfs_buf		*bp)
++{
++	dbprintf(_("Writing unknown attribute buffer type!\n"));
++	xfs_buf_ioerror(bp, EFSCORRUPTED);
++}
++
++const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
++	.verify_read = xfs_attr3_db_read_verify,
++	.verify_write = xfs_attr3_db_write_verify,
++};
+diff --git a/db/attr.h b/db/attr.h
+index 3065372..bc3431f 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -33,3 +33,5 @@ extern const field_t	attr3_node_hdr_flds[];
  
- 			di_size = be64_to_cpu(dip->di_size);
--			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
-+			if (unlikely(di_size < 0 ||
-+				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
- 				xfs_warn(ip->i_mount,
- 			"corrupt inode %Lu (bad size %Ld for local inode).",
- 					(unsigned long long) ip->i_ino,
-@@ -444,7 +445,7 @@ xfs_iread_extents(
-  *
-  * The caller must not request to add more records than would fit in
-  * the on-disk inode root.  If the if_broot is currently NULL, then
-- * if we adding records one will be allocated.  The caller must also
-+ * if we are adding records, one will be allocated.  The caller must also
-  * not request that the number of records go below zero, although
-  * it can go to zero.
-  *
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 3e14b1c..1e59fad 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -49,7 +49,7 @@ xfs_calc_buf_res(
- 
- /*
-  * Logging inodes is really tricksy. They are logged in memory format,
-- * which means that what we write into the log doesn't directory translate into
-+ * which means that what we write into the log doesn't directly translate into
-  * the amount of space they use on disk.
-  *
-  * Case in point - btree format forks in memory format use more space than the
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
++
++extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
+diff --git a/db/type.c b/db/type.c
+index 2c3431e..04d0d56 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -77,7 +77,8 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+ 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
++		&xfs_attr3_db_buf_ops },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
 -- 
 1.8.3.2
 
