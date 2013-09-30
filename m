@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4BCAE7FB8
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A5C5529E04
 	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2CAAA304032
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 963BB8F8035
 	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:58 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	4cLdIBUc2OfUxjEK for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:56 -0700 (PDT)
+	3Smaxy1SPTY372Li for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:57 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006P4-5n
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006P8-6P
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002GN-4r
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002GS-5S
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/32] db: separate out straight buffer IO from map based IO.
-Date: Mon, 30 Sep 2013 13:15:29 +1000
-Message-Id: <1380510944-8571-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 18/32] db: rewrite bbmap to use xfs_buf_map
+Date: Mon, 30 Sep 2013 13:15:30 +1000
+Message-Id: <1380510944-8571-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,274 +39,153 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-First step in converting to libxfs based IO.
+Use the libxfs struct xfs_buf_map for recording the extent layout of
+discontiguous buffers and convert the read/write to decode them
+directory and use read_buf/write_buf to do the extent IO. This
+brings the physical xfs_db IO code to be very close to the model
+that libxfs uses.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/init.c |   7 ++--
- db/io.c   | 125 +++++++++++++++++++++++++++++++++++++++++++++++++-------------
- db/io.h   |   5 +--
- 3 files changed, 104 insertions(+), 33 deletions(-)
+ db/bmap.c | 15 ++++-----------
+ db/io.c   | 58 ++++++++++++----------------------------------------------
+ db/io.h   |  3 ++-
+ 3 files changed, 18 insertions(+), 58 deletions(-)
 
-diff --git a/db/init.c b/db/init.c
-index 2932e51..0e88b56 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -55,7 +55,7 @@ init(
- 	char		**argv)
+diff --git a/db/bmap.c b/db/bmap.c
+index 0ef7a62..3951b9f 100644
+--- a/db/bmap.c
++++ b/db/bmap.c
+@@ -293,20 +293,13 @@ make_bbmap(
+ 	int		nex,
+ 	bmap_ext_t	*bmp)
  {
- 	xfs_sb_t	*sbp;
--	void		*bufp = NULL;
-+	char		bufp[BBSIZE];
- 	int		c;
+-	int		d;
+-	xfs_dfsbno_t	dfsbno;
+ 	int		i;
+-	int		j;
+-	int		k;
  
- 	setlocale(LC_ALL, "");
-@@ -115,15 +115,14 @@ init(
- 		exit(1);
+-	for (i = 0, d = 0; i < nex; i++) {
+-		dfsbno = bmp[i].startblock;
+-		for (j = 0; j < bmp[i].blockcount; j++, dfsbno++) {
+-			for (k = 0; k < blkbb; k++)
+-				bbmap->b[d++] =
+-					XFS_FSB_TO_DADDR(mp, dfsbno) + k;
+-		}
++	for (i = 0; i < nex; i++) {
++		bbmap->b[i].bm_bn = XFS_FSB_TO_DADDR(mp, bmp[i].startblock);
++		bbmap->b[i].bm_len = XFS_FSB_TO_BB(mp, bmp[i].blockcount);
  	}
- 
--	if (read_bbs(XFS_SB_DADDR, 1, &bufp, NULL)) {
-+	if (read_buf(XFS_SB_DADDR, 1, bufp)) {
- 		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
- 			"bytes)\n"), progname, fsdevice);
- 		exit(1);
- 	}
- 
- 	/* copy SB from buffer to in-core, converting architecture as we go */
--	libxfs_sb_from_disk(&xmount.m_sb, bufp);
--	xfree(bufp);
-+	libxfs_sb_from_disk(&xmount.m_sb, (struct xfs_dsb *)bufp);
- 
- 	sbp = &xmount.m_sb;
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-diff --git a/db/io.c b/db/io.c
-index 39a1827..fa11646 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -417,8 +417,61 @@ ring_add(void)
- 	}
++	bbmap->nmaps = nex;
  }
  
--
- int
-+read_buf(
-+	xfs_daddr_t	bbno,
-+	int		count,
-+	void		*bufp)
-+{
-+	int		err;
-+
-+	err = pread64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
-+	if (err < 0)
-+		err = errno;
-+	else if (err < count)
-+		err = -1;
-+	return err;
-+}
-+
-+static int
-+write_buf(
-+	xfs_daddr_t	bbno,
-+	int		count,
-+	void		*bufp)
-+{
-+	int		err;
-+
-+	err = pwrite64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
-+	if (err < 0)
-+		err = errno;
-+	else if (err < count)
-+		err = -1;
-+	return err;
-+}
-+
-+static void
-+write_cur_buf(void)
-+{
-+	int ret;
-+
-+	ret = write_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-+
-+	if (ret == -1)
-+		dbprintf(_("incomplete write, block: %lld\n"),
-+			 (iocur_base + iocur_sp)->bb);
-+	else if (ret != 0)
-+		dbprintf(_("write error: %s\n"), strerror(ret));
-+
-+	/* re-read buffer from disk */
-+	ret = read_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-+	if (ret == -1)
-+		dbprintf(_("incomplete read, block: %lld\n"),
-+			 (iocur_base + iocur_sp)->bb);
-+	else if (ret != 0)
-+		dbprintf(_("read error: %s\n"), strerror(ret));
-+}
-+
-+static int
- write_bbs(
- 	__int64_t       bbno,
- 	int             count,
-@@ -430,15 +483,14 @@ write_bbs(
+ static xfs_fsblock_t
+diff --git a/db/io.c b/db/io.c
+index fa11646..01a5970 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -478,28 +478,16 @@ write_bbs(
+ 	void            *bufp,
+ 	bbmap_t		*bbmap)
+ {
+-	int		c;
+-	int		i;
  	int		j;
  	int		rval = EINVAL;	/* initialize for zero `count' case */
  
--	for (j = 0; j < count; j += bbmap ? 1 : count) {
--		if (bbmap)
--			bbno = bbmap->b[j];
-+	for (j = 0; j < count; j++) {
-+		bbno = bbmap->b[j];
- 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
- 			rval = errno;
- 			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
- 			return rval;
- 		}
--		c = BBTOB(bbmap ? 1 : count);
-+		c = BBTOB(1);
- 		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
- 		if (i < 0) {
- 			rval = errno;
-@@ -452,7 +504,7 @@ write_bbs(
+-	for (j = 0; j < count; j++) {
+-		bbno = bbmap->b[j];
+-		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
+-			rval = errno;
+-			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
+-			return rval;
+-		}
+-		c = BBTOB(1);
+-		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
+-		if (i < 0) {
+-			rval = errno;
+-		} else if (i < c) {
+-			rval = -1;
+-		} else
+-			rval = 0;
++	for (j = 0; j < count;) {
++		rval = write_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
++			     (char *)bufp + BBTOB(j));
+ 		if (rval)
+ 			break;
++
++		j += bbmap->b[j].bm_len;
+ 	}
  	return rval;
  }
+@@ -512,45 +500,23 @@ read_bbs(
+ 	bbmap_t		*bbmap)
+ {
+ 	void		*buf;
+-	int		c;
+-	int		i;
+ 	int		j;
+ 	int		rval = EINVAL;
  
--int
-+static int
- read_bbs(
- 	__int64_t	bbno,
- 	int		count,
-@@ -473,9 +525,8 @@ read_bbs(
- 		buf = xmalloc(c);
+ 	if (count <= 0)
+ 		count = 1;
+ 
+-	c = BBTOB(count);
+ 	if (*bufp == NULL)
+-		buf = xmalloc(c);
++		buf = xmalloc(BBTOB(count));
  	else
  		buf = *bufp;
--	for (j = 0; j < count; j += bbmap ? 1 : count) {
--		if (bbmap)
--			bbno = bbmap->b[j];
-+	for (j = 0; j < count; j++) {
-+		bbno = bbmap->b[j];
- 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
- 			rval = errno;
- 			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
-@@ -483,7 +534,7 @@ read_bbs(
- 				xfree(buf);
- 			buf = NULL;
- 		} else {
--			c = BBTOB(bbmap ? 1 : count);
-+			c = BBTOB(1);
- 			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
- 			if (i < 0) {
- 				rval = errno;
-@@ -506,22 +557,19 @@ read_bbs(
- 	return rval;
- }
- 
--void
--write_cur(void)
-+static void
-+write_cur_bbs(void)
- {
- 	int ret;
- 
--	if (iocur_sp < 0) {
--		dbprintf(_("nothing to write\n"));
--		return;
--	}
- 	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
--		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
-+			&iocur_top->bbmap);
- 	if (ret == -1)
- 		dbprintf(_("incomplete write, block: %lld\n"),
- 			 (iocur_base + iocur_sp)->bb);
- 	else if (ret != 0)
- 		dbprintf(_("write error: %s\n"), strerror(ret));
+-	for (j = 0; j < count; j++) {
+-		bbno = bbmap->b[j];
+-		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
+-			rval = errno;
+-			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
+-			if (*bufp == NULL)
+-				xfree(buf);
+-			buf = NULL;
+-		} else {
+-			c = BBTOB(1);
+-			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
+-			if (i < 0) {
+-				rval = errno;
+-				if (*bufp == NULL)
+-					xfree(buf);
+-				buf = NULL;
+-			} else if (i < c) {
+-				rval = -1;
+-				if (*bufp == NULL)
+-					xfree(buf);
+-				buf = NULL;
+-			} else
+-				rval = 0;
+-		}
+-		if (buf == NULL)
++	for (j = 0; j < count;) {
++		rval = read_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
++			     (char *)buf + BBTOB(j));
++		if (rval)
+ 			break;
 +
- 	/* re-read buffer from disk */
- 	ret = read_bbs(iocur_top->bb, iocur_top->blen, &iocur_top->buf,
- 		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
-@@ -533,6 +581,20 @@ write_cur(void)
- }
- 
- void
-+write_cur(void)
-+{
-+	if (iocur_sp < 0) {
-+		dbprintf(_("nothing to write\n"));
-+		return;
-+	}
-+
-+	if (iocur_top->use_bbmap)
-+		write_cur_bbs();
-+	else
-+		write_cur_buf();
-+}
-+
-+void
- set_cur(
- 	const typ_t	*t,
- 	__int64_t	d,
-@@ -549,17 +611,32 @@ set_cur(
- 		return;
++		j += bbmap->b[j].bm_len;
  	}
- 
--#ifdef DEBUG
--	if (bbmap)
--		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
--#endif
- 	ino = iocur_top->ino;
- 	dirino = iocur_top->dirino;
- 	mode = iocur_top->mode;
- 	pop_cur();
- 	push_cur();
--	if (read_bbs(d, c, &iocur_top->buf, bbmap))
--		return;
-+
-+	if (bbmap) {
-+#ifdef DEBUG
-+		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-+#endif
-+
-+		if (read_bbs(d, c, &iocur_top->buf, bbmap))
-+			return;
-+		iocur_top->bbmap = *bbmap;
-+		iocur_top->use_bbmap = 1;
-+	} else {
-+		if (!iocur_top->buf) {
-+			iocur_top->buf = malloc(BBTOB(c));
-+			if (!iocur_top->buf)
-+				return;
-+		}
-+		if (read_buf(d, c, iocur_top->buf))
-+			return;
-+		iocur_top->use_bbmap = 0;
-+	}
-+
- 	iocur_top->bb = d;
- 	iocur_top->blen = c;
- 	iocur_top->boff = 0;
-@@ -570,8 +647,6 @@ set_cur(
- 	iocur_top->ino = ino;
- 	iocur_top->dirino = dirino;
- 	iocur_top->mode = mode;
--	if ((iocur_top->use_bbmap = (bbmap != NULL)))
--		iocur_top->bbmap = *bbmap;
- 
- 	/* store location in ring */
- 	if (ring_flag)
+ 	if (*bufp == NULL)
+ 		*bufp = buf;
 diff --git a/db/io.h b/db/io.h
-index 549aad9..9ea6223 100644
+index 9ea6223..c7641d5 100644
 --- a/db/io.h
 +++ b/db/io.h
-@@ -52,10 +52,7 @@ extern void	off_cur(int off, int len);
- extern void	pop_cur(void);
- extern void	print_iocur(char *tag, iocur_t *ioc);
- extern void	push_cur(void);
--extern int	read_bbs(__int64_t daddr, int count, void **bufp,
--			 bbmap_t *bbmap);
--extern int	write_bbs(__int64_t daddr, int count, void *bufp,
--			  bbmap_t *bbmap);
-+extern int	read_buf(__int64_t daddr, int count, void *bufp);
- extern void     write_cur(void);
- extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
+@@ -20,7 +20,8 @@ struct typ;
+ 
+ #define	BBMAP_SIZE		(XFS_MAX_BLOCKSIZE / BBSIZE)
+ typedef struct bbmap {
+-	__int64_t		b[BBMAP_SIZE];
++	int			nmaps;
++	struct xfs_buf_map	b[BBMAP_SIZE];
+ } bbmap_t;
+ 
+ typedef struct iocur {
 -- 
 1.8.3.2
 
