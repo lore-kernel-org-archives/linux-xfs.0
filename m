@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C2E347F85
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8E0068F8039
+	by oss.sgi.com (Postfix) with ESMTP id 01B107F86
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E3C908F8039
 	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:53 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	vetK8lvTxNnYSivW for <xfs@oss.sgi.com>;
+	13MBpHZiy47j23Kv for <xfs@oss.sgi.com>;
 	Sun, 29 Sep 2013 20:15:52 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006Ok-TJ
-	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PL-8m
+	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FK-SI
-	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002Gm-7n
+	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/32] xfs: check magic numbers in dir3 leaf verifier first
-Date: Mon, 30 Sep 2013 13:15:16 +1000
-Message-Id: <1380510944-8571-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 22/32] db: verify and calculate inode CRCs
+Date: Mon, 30 Sep 2013 13:15:34 +1000
+Message-Id: <1380510944-8571-23-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,69 +39,125 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Calling xfs_dir3_leaf_hdr_from_disk() in a verifier before
-validating the magic numbers in the buffer results in ASSERT
-failures due to mismatching magic numbers when a corruption occurs.
-Seeing as the verifier is supposed to catch the corruption and pass
-it back to the caller, having the verifier assert fail on error
-defeats the purpose of detecting the errors in the first place.
-
-Check the magic numbers direct from the buffer before decoding the
-header.
+When we set the current Io cursor to point at an inode, verify that
+the inode CRC is intact. And prior to writing such an IO cursor,
+calculate the inode CRC.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_dir2_leaf.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ db/inode.c             | 2 ++
+ db/io.c                | 4 ++++
+ db/io.h                | 6 +++++-
+ include/libxfs.h       | 4 ++++
+ libxfs/xfs_inode_buf.c | 8 ++++----
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 7ec2f19..c035c4d 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -161,6 +161,11 @@ xfs_dir3_leaf_check_int(
- 	return true;
- }
- 
-+/*
-+ * We verify the magic numbers before decoding the leaf header so that on debug
-+ * kernels we don't get assertion failures in xfs_dir3_leaf_hdr_from_disk() due
-+ * to incorrect magic numbers.
-+ */
- static bool
- xfs_dir3_leaf_verify(
- 	struct xfs_buf		*bp,
-@@ -172,24 +177,25 @@ xfs_dir3_leaf_verify(
- 
- 	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
- 
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-+		__uint16_t		magic3;
- 
--		if ((magic == XFS_DIR2_LEAF1_MAGIC &&
--		     leafhdr.magic != XFS_DIR3_LEAF1_MAGIC) ||
--		    (magic == XFS_DIR2_LEAFN_MAGIC &&
--		     leafhdr.magic != XFS_DIR3_LEAFN_MAGIC))
--			return false;
-+		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
-+							 : XFS_DIR3_LEAFN_MAGIC;
- 
-+		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
-+			return false;
- 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_uuid))
- 			return false;
- 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
- 			return false;
- 	} else {
--		if (leafhdr.magic != magic)
-+		if (leaf->hdr.info.magic != cpu_to_be16(magic))
- 			return false;
+diff --git a/db/inode.c b/db/inode.c
+index ec533ee..4090855 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -655,6 +655,8 @@ set_cur_inode(
+ 		blkbb, DB_RING_IGN, NULL);
+ 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
+ 	dip = iocur_top->data;
++	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
++	iocur_top->ino_buf = 1;
+ 	iocur_top->ino = ino;
+ 	iocur_top->mode = be16_to_cpu(dip->di_mode);
+ 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
+diff --git a/db/io.c b/db/io.c
+index c9452f2..8ddb5e5 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -462,6 +462,9 @@ write_cur(void)
+ 		return;
  	}
+ 
++	if (iocur_top->ino_buf)
++		libxfs_dinode_calc_crc(mp, iocur_top->data);
 +
-+	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	return xfs_dir3_leaf_check_int(mp, &leafhdr, leaf);
+ 	if (iocur_top->bbmap)
+ 		write_cur_bbs();
+ 	else
+@@ -534,6 +537,7 @@ set_cur(
+ 	iocur_top->ino = ino;
+ 	iocur_top->dirino = dirino;
+ 	iocur_top->mode = mode;
++	iocur_top->ino_buf = 0;
+ 
+ 	/* store location in ring */
+ 	if (ring_flag)
+diff --git a/db/io.h b/db/io.h
+index d647284..1f8270d 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -38,6 +38,8 @@ typedef struct iocur {
+ 	const struct typ	*typ;	/* type of "data" */
+ 	bbmap_t			*bbmap;	/* map daddr if fragmented */
+ 	struct xfs_buf		*bp;	/* underlying buffer */
++	int			ino_crc_ok:1;
++	int			ino_buf:1;
+ } iocur_t;
+ 
+ #define DB_RING_ADD 1                   /* add to ring on set_cur */
+@@ -62,5 +64,7 @@ extern void     ring_add(void);
+ static inline bool
+ iocur_crc_valid()
+ {
+-	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
++	return (iocur_top->bp &&
++		iocur_top->bp->b_error != EFSCORRUPTED &&
++		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
  }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 08fd0b3..d28ac48 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -755,6 +755,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
+ #define libxfs_idata_realloc		xfs_idata_realloc
+ #define libxfs_idestroy_fork		xfs_idestroy_fork
+ 
++#define libxfs_dinode_verify		xfs_dinode_verify
++bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
++		       struct xfs_dinode *dip);
++
+ /* xfs_sb.h */
+ #define libxfs_mod_sb			xfs_mod_sb
+ #define libxfs_sb_from_disk		xfs_sb_from_disk
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index b796556..728ef71 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -276,10 +276,10 @@ xfs_dinode_to_disk(
+ 	}
+ }
+ 
+-static bool
++bool
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+-	struct xfs_inode	*ip,
++	xfs_ino_t		ino,
+ 	struct xfs_dinode	*dip)
+ {
+ 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+@@ -294,7 +294,7 @@ xfs_dinode_verify(
+ 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+ 			      offsetof(struct xfs_dinode, di_crc)))
+ 		return false;
+-	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
++	if (be64_to_cpu(dip->di_ino) != ino)
+ 		return false;
+ 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
+ 		return false;
+@@ -346,7 +346,7 @@ xfs_iread(
+ 		return error;
+ 
+ 	/* even unallocated inodes are verified */
+-	if (!xfs_dinode_verify(mp, ip, dip)) {
++	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
+ 		xfs_alert(mp, "%s: validation failed for inode %lld failed",
+ 				__func__, ip->i_ino);
  
 -- 
 1.8.3.2
