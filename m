@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 01B107F86
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 427EF7F85
 	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E3C908F8039
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:53 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 16252304039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:54 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	13MBpHZiy47j23Kv for <xfs@oss.sgi.com>;
+	EhGPiu0r7FZreGJ4 for <xfs@oss.sgi.com>;
 	Sun, 29 Sep 2013 20:15:52 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PL-8m
+	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006On-Uv
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002Gm-7n
-	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FZ-UH
+	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 22/32] db: verify and calculate inode CRCs
-Date: Mon, 30 Sep 2013 13:15:34 +1000
-Message-Id: <1380510944-8571-23-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/32] xfs: dirent dtype presence is dependent on directory
+	magic numbers
+Date: Mon, 30 Sep 2013 13:15:19 +1000
+Message-Id: <1380510944-8571-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,126 +40,225 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we set the current Io cursor to point at an inode, verify that
-the inode CRC is intact. And prior to writing such an IO cursor,
-calculate the inode CRC.
+The determination of whether a directory entry contains a dtype
+field originally was dependent on the filesystem having CRCs
+enabled. This meant that the format for dtype beign enabled could be
+determined by checking the directory block magic number rather than
+doing a feature bit check. This was useful in that it meant that we
+didn't need to pass a struct xfs_mount around to functions that
+were already supplied with a directory block header.
+
+Unfortunately, the introduction of dtype fields into the v4
+structure via a feature bit meant this "use the directory block
+magic number" method of discriminating the dirent entry sizes is
+broken. Hence we need to convert the places that use magic number
+checks to use feature bit checks so that they work correctly and not
+by chance.
+
+The current code works on v4 filesystems only because the dirent
+size roundup covers the extra byte needed by the dtype field in the
+places where this problem occurs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/inode.c             | 2 ++
- db/io.c                | 4 ++++
- db/io.h                | 6 +++++-
- include/libxfs.h       | 4 ++++
- libxfs/xfs_inode_buf.c | 8 ++++----
- 5 files changed, 19 insertions(+), 5 deletions(-)
+ db/check.c                |  2 +-
+ include/xfs_dir2_format.h | 51 +++++++++++++++++++----------------------------
+ libxfs/xfs_dir2_block.c   |  6 +++---
+ libxfs/xfs_dir2_sf.c      |  6 +++---
+ repair/dir2.c             |  4 ++--
+ 5 files changed, 29 insertions(+), 40 deletions(-)
 
-diff --git a/db/inode.c b/db/inode.c
-index ec533ee..4090855 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -655,6 +655,8 @@ set_cur_inode(
- 		blkbb, DB_RING_IGN, NULL);
- 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
- 	dip = iocur_top->data;
-+	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
-+	iocur_top->ino_buf = 1;
- 	iocur_top->ino = ino;
- 	iocur_top->mode = be16_to_cpu(dip->di_mode);
- 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
-diff --git a/db/io.c b/db/io.c
-index c9452f2..8ddb5e5 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -462,6 +462,9 @@ write_cur(void)
- 		return;
- 	}
- 
-+	if (iocur_top->ino_buf)
-+		libxfs_dinode_calc_crc(mp, iocur_top->data);
-+
- 	if (iocur_top->bbmap)
- 		write_cur_bbs();
- 	else
-@@ -534,6 +537,7 @@ set_cur(
- 	iocur_top->ino = ino;
- 	iocur_top->dirino = dirino;
- 	iocur_top->mode = mode;
-+	iocur_top->ino_buf = 0;
- 
- 	/* store location in ring */
- 	if (ring_flag)
-diff --git a/db/io.h b/db/io.h
-index d647284..1f8270d 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -38,6 +38,8 @@ typedef struct iocur {
- 	const struct typ	*typ;	/* type of "data" */
- 	bbmap_t			*bbmap;	/* map daddr if fragmented */
- 	struct xfs_buf		*bp;	/* underlying buffer */
-+	int			ino_crc_ok:1;
-+	int			ino_buf:1;
- } iocur_t;
- 
- #define DB_RING_ADD 1                   /* add to ring on set_cur */
-@@ -62,5 +64,7 @@ extern void     ring_add(void);
- static inline bool
- iocur_crc_valid()
+diff --git a/db/check.c b/db/check.c
+index 2d4718d..4867698 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3434,7 +3434,7 @@ process_sf_dir_v2(
+ 		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
+ 	(*dot)++;
+ 	sfe = xfs_dir2_sf_firstentry(sf);
+-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
++	offset = xfs_dir3_data_first_offset(mp);
+ 	for (i = sf->count - 1, i8 = 0; i >= 0; i--) {
+ 		if ((__psint_t)sfe + xfs_dir3_sf_entsize(mp, sf, sfe->namelen) -
+ 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
+diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
+index a0961a6..9cf6738 100644
+--- a/include/xfs_dir2_format.h
++++ b/include/xfs_dir2_format.h
+@@ -497,69 +497,58 @@ xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
+ /*
+  * Offsets of . and .. in data space (always block 0)
+  *
+- * The macros are used for shortform directories as they have no headers to read
+- * the magic number out of. Shortform directories need to know the size of the
+- * data block header because the sfe embeds the block offset of the entry into
+- * it so that it doesn't change when format conversion occurs. Bad Things Happen
+- * if we don't follow this rule.
+- *
+  * XXX: there is scope for significant optimisation of the logic here. Right
+  * now we are checking for "dir3 format" over and over again. Ideally we should
+  * only do it once for each operation.
+  */
+-#define	XFS_DIR3_DATA_DOT_OFFSET(mp)	\
+-	xfs_dir3_data_hdr_size(xfs_sb_version_hascrc(&(mp)->m_sb))
+-#define	XFS_DIR3_DATA_DOTDOT_OFFSET(mp)	\
+-	(XFS_DIR3_DATA_DOT_OFFSET(mp) + xfs_dir3_data_entsize(mp, 1))
+-#define	XFS_DIR3_DATA_FIRST_OFFSET(mp)		\
+-	(XFS_DIR3_DATA_DOTDOT_OFFSET(mp) + xfs_dir3_data_entsize(mp, 2))
+-
+ static inline xfs_dir2_data_aoff_t
+-xfs_dir3_data_dot_offset(struct xfs_dir2_data_hdr *hdr)
++xfs_dir3_data_dot_offset(struct xfs_mount *mp)
  {
--	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
-+	return (iocur_top->bp &&
-+		iocur_top->bp->b_error != EFSCORRUPTED &&
-+		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
- }
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 08fd0b3..d28ac48 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -755,6 +755,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
- #define libxfs_idata_realloc		xfs_idata_realloc
- #define libxfs_idestroy_fork		xfs_idestroy_fork
- 
-+#define libxfs_dinode_verify		xfs_dinode_verify
-+bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
-+		       struct xfs_dinode *dip);
-+
- /* xfs_sb.h */
- #define libxfs_mod_sb			xfs_mod_sb
- #define libxfs_sb_from_disk		xfs_sb_from_disk
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index b796556..728ef71 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -276,10 +276,10 @@ xfs_dinode_to_disk(
- 	}
+-	return xfs_dir3_data_entry_offset(hdr);
++	return xfs_dir3_data_hdr_size(xfs_sb_version_hascrc(&mp->m_sb));
  }
  
--static bool
-+bool
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
--	struct xfs_inode	*ip,
-+	xfs_ino_t		ino,
- 	struct xfs_dinode	*dip)
+ static inline xfs_dir2_data_aoff_t
+-xfs_dir3_data_dotdot_offset(struct xfs_dir2_data_hdr *hdr)
++xfs_dir3_data_dotdot_offset(struct xfs_mount *mp)
  {
- 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
-@@ -294,7 +294,7 @@ xfs_dinode_verify(
- 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
- 			      offsetof(struct xfs_dinode, di_crc)))
- 		return false;
--	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
-+	if (be64_to_cpu(dip->di_ino) != ino)
- 		return false;
- 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
- 		return false;
-@@ -346,7 +346,7 @@ xfs_iread(
- 		return error;
+-	bool dir3 = hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+-		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
+-	return xfs_dir3_data_dot_offset(hdr) +
+-		__xfs_dir3_data_entsize(dir3, 1);
++	return xfs_dir3_data_dot_offset(mp) +
++		xfs_dir3_data_entsize(mp, 1);
+ }
  
- 	/* even unallocated inodes are verified */
--	if (!xfs_dinode_verify(mp, ip, dip)) {
-+	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
- 		xfs_alert(mp, "%s: validation failed for inode %lld failed",
- 				__func__, ip->i_ino);
+ static inline xfs_dir2_data_aoff_t
+-xfs_dir3_data_first_offset(struct xfs_dir2_data_hdr *hdr)
++xfs_dir3_data_first_offset(struct xfs_mount *mp)
+ {
+-	bool dir3 = hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+-		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
+-	return xfs_dir3_data_dotdot_offset(hdr) +
+-		__xfs_dir3_data_entsize(dir3, 2);
++	return xfs_dir3_data_dotdot_offset(mp) +
++		xfs_dir3_data_entsize(mp, 2);
+ }
  
+ /*
+  * location of . and .. in data space (always block 0)
+  */
+ static inline struct xfs_dir2_data_entry *
+-xfs_dir3_data_dot_entry_p(struct xfs_dir2_data_hdr *hdr)
++xfs_dir3_data_dot_entry_p(
++	struct xfs_mount	*mp,
++	struct xfs_dir2_data_hdr *hdr)
+ {
+ 	return (struct xfs_dir2_data_entry *)
+-		((char *)hdr + xfs_dir3_data_dot_offset(hdr));
++		((char *)hdr + xfs_dir3_data_dot_offset(mp));
+ }
+ 
+ static inline struct xfs_dir2_data_entry *
+-xfs_dir3_data_dotdot_entry_p(struct xfs_dir2_data_hdr *hdr)
++xfs_dir3_data_dotdot_entry_p(
++	struct xfs_mount	*mp,
++	struct xfs_dir2_data_hdr *hdr)
+ {
+ 	return (struct xfs_dir2_data_entry *)
+-		((char *)hdr + xfs_dir3_data_dotdot_offset(hdr));
++		((char *)hdr + xfs_dir3_data_dotdot_offset(mp));
+ }
+ 
+ static inline struct xfs_dir2_data_entry *
+-xfs_dir3_data_first_entry_p(struct xfs_dir2_data_hdr *hdr)
++xfs_dir3_data_first_entry_p(
++	struct xfs_mount	*mp,
++	struct xfs_dir2_data_hdr *hdr)
+ {
+ 	return (struct xfs_dir2_data_entry *)
+-		((char *)hdr + xfs_dir3_data_first_offset(hdr));
++		((char *)hdr + xfs_dir3_data_first_offset(mp));
+ }
+ 
+ /*
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index 3e4bc53..1d8f598 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -1139,7 +1139,7 @@ xfs_dir2_sf_to_block(
+ 	/*
+ 	 * Create entry for .
+ 	 */
+-	dep = xfs_dir3_data_dot_entry_p(hdr);
++	dep = xfs_dir3_data_dot_entry_p(mp, hdr);
+ 	dep->inumber = cpu_to_be64(dp->i_ino);
+ 	dep->namelen = 1;
+ 	dep->name[0] = '.';
+@@ -1153,7 +1153,7 @@ xfs_dir2_sf_to_block(
+ 	/*
+ 	 * Create entry for ..
+ 	 */
+-	dep = xfs_dir3_data_dotdot_entry_p(hdr);
++	dep = xfs_dir3_data_dotdot_entry_p(mp, hdr);
+ 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
+ 	dep->namelen = 2;
+ 	dep->name[0] = dep->name[1] = '.';
+@@ -1164,7 +1164,7 @@ xfs_dir2_sf_to_block(
+ 	blp[1].hashval = cpu_to_be32(xfs_dir_hash_dotdot);
+ 	blp[1].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
+ 				(char *)dep - (char *)hdr));
+-	offset = xfs_dir3_data_first_offset(hdr);
++	offset = xfs_dir3_data_first_offset(mp);
+ 	/*
+ 	 * Loop over existing entries, stuff them in.
+ 	 */
+diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
+index 740cab0..7580333 100644
+--- a/libxfs/xfs_dir2_sf.c
++++ b/libxfs/xfs_dir2_sf.c
+@@ -540,7 +540,7 @@ xfs_dir2_sf_addname_hard(
+ 	 * to insert the new entry.
+ 	 * If it's going to end up at the end then oldsfep will point there.
+ 	 */
+-	for (offset = XFS_DIR3_DATA_FIRST_OFFSET(mp),
++	for (offset = xfs_dir3_data_first_offset(mp),
+ 	      oldsfep = xfs_dir2_sf_firstentry(oldsfp),
+ 	      add_datasize = xfs_dir3_data_entsize(mp, args->namelen),
+ 	      eof = (char *)oldsfep == &buf[old_isize];
+@@ -623,7 +623,7 @@ xfs_dir2_sf_addname_pick(
+ 
+ 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+ 	size = xfs_dir3_data_entsize(mp, args->namelen);
+-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
++	offset = xfs_dir3_data_first_offset(mp);
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
+ 	holefit = 0;
+ 	/*
+@@ -696,7 +696,7 @@ xfs_dir2_sf_check(
+ 	mp = dp->i_mount;
+ 
+ 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
++	offset = xfs_dir3_data_first_offset(mp);
+ 	ino = xfs_dir2_sf_get_parent_ino(sfp);
+ 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+ 
+diff --git a/repair/dir2.c b/repair/dir2.c
+index a856631..d931d1d 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -705,7 +705,7 @@ process_sf_dir2_fixoff(
+ 
+ 	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
+-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
++	offset = xfs_dir3_data_first_offset(mp);
+ 
+ 	for (i = 0; i < sfp->count; i++) {
+ 		xfs_dir2_sf_put_offset(sfep, offset);
+@@ -759,7 +759,7 @@ process_sf_dir2(
+ 	max_size = XFS_DFORK_DSIZE(dip, mp);
+ 	num_entries = sfp->count;
+ 	ino_dir_size = be64_to_cpu(dip->di_size);
+-	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
++	offset = xfs_dir3_data_first_offset(mp);
+ 	bad_offset = *repair = 0;
+ 
+ 	ASSERT(ino_dir_size <= max_size);
 -- 
 1.8.3.2
 
