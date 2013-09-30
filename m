@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E59F7F9C
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:16:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E929A8F8035
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:16:02 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6379A7FAF
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:16:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EA944AC003
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:16:01 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	OFicPMV7lMm0CY5i for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:16:00 -0700 (PDT)
+	trFKzK80jGAtmJKA for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:59 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006Ow-2h
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PB-7w
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002G3-21
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002Gc-6c
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/32] libxfs: bmap btree owner swap support
-Date: Mon, 30 Sep 2013 13:15:25 +1000
-Message-Id: <1380510944-8571-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/32] db: introduce verifier support into set_cur
+Date: Mon, 30 Sep 2013 13:15:32 +1000
+Message-Id: <1380510944-8571-21-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,390 +39,187 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For CRC enabled filesystems, we can't just swap inode forks from one
-inode to another when defragmenting a file - the blocks in the inode
-fork bmap btree contain pointers back to the owner inode. Hence if
-we are to swap the inode forks we have to atomically modify every
-block in the btree during the transaction.
+To be able to use read and write verifiers, we need to pass the
+verifier to the IO routines. We do this via the set_cur() function
+used to trigger reading the buffer.
 
-This patch brings across the kernel code for doing the owner
-swap of an entire fork - something that we are likely to end up
-needing in xfs_repair when reparenting stray inodes to lost+found -
-without all the associated swap extents transaction and recovery
-cruft as those parts are not needed in userspace.
+For most metadata types, there is only one type of verifier needed.
+For these, we can simply add the verifier to the type table entry
+for the given type and use that directly. This type entry is already
+carried around by the IO context, so if we ever need to get it again
+we have direct access to it in the context we'll be doing IO.
+
+Only attach the verifiers to the v5 filesystem type table; there is
+not need for them on v4 filesystems as we don't have to verify or
+calculate CRCs for them.
+
+There are some metadata types that have more than one buffer format,
+or aren't based in directly in buffers. For these, leave the type
+table verifier NULL for now - these will need to be addressed
+individually.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_bmap_btree.h |   4 ++
- include/xfs_btree.h      |  19 ++++--
- include/xfs_inode_buf.h  |  18 ++---
- include/xfs_log_format.h |   8 ++-
- libxfs/xfs_bmap_btree.c  |  44 ++++++++++++
- libxfs/xfs_btree.c       | 170 ++++++++++++++++++++++++++++++++++++++++++-----
- 6 files changed, 227 insertions(+), 36 deletions(-)
+ db/io.c   | 13 +++++++---
+ db/type.c | 88 ++++++++++++++++++++++++++++++++++-----------------------------
+ db/type.h |  1 +
+ 3 files changed, 59 insertions(+), 43 deletions(-)
 
-diff --git a/include/xfs_bmap_btree.h b/include/xfs_bmap_btree.h
-index 2379d33..6e42e1e 100644
---- a/include/xfs_bmap_btree.h
-+++ b/include/xfs_bmap_btree.h
-@@ -133,6 +133,10 @@ extern int xfs_bmbt_get_maxrecs(struct xfs_btree_cur *, int level);
- extern int xfs_bmdr_maxrecs(struct xfs_mount *, int blocklen, int leaf);
- extern int xfs_bmbt_maxrecs(struct xfs_mount *, int blocklen, int leaf);
+diff --git a/db/io.c b/db/io.c
+index 9129963..c9452f2 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -480,12 +480,14 @@ set_cur(
+ 	xfs_ino_t	dirino;
+ 	xfs_ino_t	ino;
+ 	__uint16_t	mode;
++	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
  
-+extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
-+				 int whichfork, xfs_ino_t new_owner,
-+				 struct list_head *buffer_list);
-+
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
- 
-diff --git a/include/xfs_btree.h b/include/xfs_btree.h
-index 227bfa5..6afe0b2 100644
---- a/include/xfs_btree.h
-+++ b/include/xfs_btree.h
-@@ -41,15 +41,18 @@ extern kmem_zone_t	*xfs_btree_cur_zone;
- /*
-  * For logging record fields.
-  */
--#define	XFS_BB_MAGIC		0x01
--#define	XFS_BB_LEVEL		0x02
--#define	XFS_BB_NUMRECS		0x04
--#define	XFS_BB_LEFTSIB		0x08
--#define	XFS_BB_RIGHTSIB		0x10
--#define	XFS_BB_BLKNO		0x20
-+#define	XFS_BB_MAGIC		(1 << 0)
-+#define	XFS_BB_LEVEL		(1 << 1)
-+#define	XFS_BB_NUMRECS		(1 << 2)
-+#define	XFS_BB_LEFTSIB		(1 << 3)
-+#define	XFS_BB_RIGHTSIB		(1 << 4)
-+#define	XFS_BB_BLKNO		(1 << 5)
-+#define	XFS_BB_LSN		(1 << 6)
-+#define	XFS_BB_UUID		(1 << 7)
-+#define	XFS_BB_OWNER		(1 << 8)
- #define	XFS_BB_NUM_BITS		5
- #define	XFS_BB_ALL_BITS		((1 << XFS_BB_NUM_BITS) - 1)
--#define	XFS_BB_NUM_BITS_CRC	8
-+#define	XFS_BB_NUM_BITS_CRC	9
- #define	XFS_BB_ALL_BITS_CRC	((1 << XFS_BB_NUM_BITS_CRC) - 1)
- 
- /*
-@@ -381,6 +384,8 @@ int xfs_btree_new_iroot(struct xfs_btree_cur *, int *, int *);
- int xfs_btree_insert(struct xfs_btree_cur *, int *);
- int xfs_btree_delete(struct xfs_btree_cur *, int *);
- int xfs_btree_get_rec(struct xfs_btree_cur *, union xfs_btree_rec **, int *);
-+int xfs_btree_change_owner(struct xfs_btree_cur *cur, __uint64_t new_owner,
-+			   struct list_head *buffer_list);
- 
- /*
-  * btree block CRC helpers
-diff --git a/include/xfs_inode_buf.h b/include/xfs_inode_buf.h
-index e8fd3bd..9308c47 100644
---- a/include/xfs_inode_buf.h
-+++ b/include/xfs_inode_buf.h
-@@ -32,17 +32,17 @@ struct xfs_imap {
- 	ushort		im_boffset;	/* inode offset in block in bytes */
- };
- 
--int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
--			       struct xfs_imap *, struct xfs_dinode **,
--			       struct xfs_buf **, uint, uint);
--int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
--			  struct xfs_inode *, uint);
--void		xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
--void		xfs_dinode_to_disk(struct xfs_dinode *,
--				   struct xfs_icdinode *);
-+int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
-+		       struct xfs_imap *, struct xfs_dinode **,
-+		       struct xfs_buf **, uint, uint);
-+int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
-+		  struct xfs_inode *, uint);
-+void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
-+void	xfs_dinode_to_disk(struct xfs_dinode *to, struct xfs_icdinode *from);
-+void	xfs_dinode_from_disk(struct xfs_icdinode *to, struct xfs_dinode *from);
- 
- #if defined(DEBUG)
--void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
-+void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
- #else
- #define	xfs_inobp_check(mp, bp)
- #endif /* DEBUG */
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-index aeaa715..f0969c7 100644
---- a/include/xfs_log_format.h
-+++ b/include/xfs_log_format.h
-@@ -302,6 +302,8 @@ typedef struct xfs_inode_log_format_64 {
- #define	XFS_ILOG_ADATA	0x040	/* log i_af.if_data */
- #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
- #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
-+#define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
-+#define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
- 
- 
- /*
-@@ -315,7 +317,8 @@ typedef struct xfs_inode_log_format_64 {
- #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
- 				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
--				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT)
-+				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
-+				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
- 
- #define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT)
-@@ -327,7 +330,8 @@ typedef struct xfs_inode_log_format_64 {
- 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
- 				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
- 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
--				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
-+				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP | \
-+				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER)
- 
- static inline int xfs_ilog_fbroot(int w)
- {
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index bf214cf..2f6b48a 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -999,3 +999,47 @@ xfs_bmdr_maxrecs(
- 		return blocklen / sizeof(xfs_bmdr_rec_t);
- 	return blocklen / (sizeof(xfs_bmdr_key_t) + sizeof(xfs_bmdr_ptr_t));
- }
-+
-+/*
-+ * Change the owner of a btree format fork fo the inode passed in. Change it to
-+ * the owner of that is passed in so that we can change owners before or after
-+ * we switch forks between inodes. The operation that the caller is doing will
-+ * determine whether is needs to change owner before or after the switch.
-+ *
-+ * For demand paged transactional modification, the fork switch should be done
-+ * after reading in all the blocks, modifying them and pinning them in the
-+ * transaction. For modification when the buffers are already pinned in memory,
-+ * the fork switch can be done before changing the owner as we won't need to
-+ * validate the owner until the btree buffers are unpinned and writes can occur
-+ * again.
-+ *
-+ * For recovery based ownership change, there is no transactional context and
-+ * so a buffer list must be supplied so that we can record the buffers that we
-+ * modified for the caller to issue IO on.
-+ */
-+int
-+xfs_bmbt_change_owner(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	xfs_ino_t		new_owner,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_btree_cur	*cur;
-+	int			error;
-+
-+	ASSERT(tp || buffer_list);
-+	ASSERT(!(tp && buffer_list));
-+	if (whichfork == XFS_DATA_FORK)
-+		ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_BTREE);
-+	else
-+		ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_BTREE);
-+
-+	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
-+	if (!cur)
-+		return ENOMEM;
-+
-+	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
-+	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+	return error;
-+}
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index ce149ad..2dd6fb7 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -837,6 +837,41 @@ xfs_btree_readahead(
- 	return xfs_btree_readahead_sblock(cur, lr, block);
- }
- 
-+STATIC xfs_daddr_t
-+xfs_btree_ptr_to_daddr(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr)
-+{
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		ASSERT(ptr->l != cpu_to_be64(NULLDFSBNO));
-+
-+		return XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
-+	} else {
-+		ASSERT(cur->bc_private.a.agno != NULLAGNUMBER);
-+		ASSERT(ptr->s != cpu_to_be32(NULLAGBLOCK));
-+
-+		return XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno,
-+					be32_to_cpu(ptr->s));
-+	}
-+}
-+
-+/*
-+ * Readahead @count btree blocks at the given @ptr location.
-+ *
-+ * We don't need to care about long or short form btrees here as we have a
-+ * method of converting the ptr directly to a daddr available to us.
-+ */
-+STATIC void
-+xfs_btree_readahead_ptr(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr,
-+	xfs_extlen_t		count)
-+{
-+	xfs_buf_readahead(cur->bc_mp->m_ddev_targp,
-+			  xfs_btree_ptr_to_daddr(cur, ptr),
-+			  cur->bc_mp->m_bsize * count, cur->bc_ops->buf_ops);
-+}
-+
- /*
-  * Set the buffer for level "lev" in the cursor to bp, releasing
-  * any previous buffer.
-@@ -1055,24 +1090,6 @@ xfs_btree_buf_to_ptr(
+ 	if (iocur_sp < 0) {
+ 		dbprintf(_("set_cur no stack element to set\n"));
+ 		return;
  	}
- }
  
--STATIC xfs_daddr_t
--xfs_btree_ptr_to_daddr(
--	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr)
--{
--	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
--		ASSERT(ptr->l != cpu_to_be64(NULLDFSBNO));
--
--		return XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
--	} else {
--		ASSERT(cur->bc_private.a.agno != NULLAGNUMBER);
--		ASSERT(ptr->s != cpu_to_be32(NULLAGBLOCK));
--
--		return XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno,
--					be32_to_cpu(ptr->s));
--	}
--}
--
- STATIC void
- xfs_btree_set_refs(
- 	struct xfs_btree_cur	*cur,
-@@ -3851,3 +3868,120 @@ xfs_btree_get_rec(
- 	*stat = 1;
- 	return 0;
- }
 +
-+/*
-+ * Change the owner of a btree.
-+ *
-+ * The mechanism we use here is ordered buffer logging. Because we don't know
-+ * how many buffers were are going to need to modify, we don't really want to
-+ * have to make transaction reservations for the worst case of every buffer in a
-+ * full size btree as that may be more space that we can fit in the log....
-+ *
-+ * We do the btree walk in the most optimal manner possible - we have sibling
-+ * pointers so we can just walk all the blocks on each level from left to right
-+ * in a single pass, and then move to the next level and do the same. We can
-+ * also do readahead on the sibling pointers to get IO moving more quickly,
-+ * though for slow disks this is unlikely to make much difference to performance
-+ * as the amount of CPU work we have to do before moving to the next block is
-+ * relatively small.
-+ *
-+ * For each btree block that we load, modify the owner appropriately, set the
-+ * buffer as an ordered buffer and log it appropriately. We need to ensure that
-+ * we mark the region we change dirty so that if the buffer is relogged in
-+ * a subsequent transaction the changes we make here as an ordered buffer are
-+ * correctly relogged in that transaction.  If we are in recovery context, then
-+ * just queue the modified buffer as delayed write buffer so the transaction
-+ * recovery completion writes the changes to disk.
-+ */
-+static int
-+xfs_btree_block_change_owner(
-+	struct xfs_btree_cur	*cur,
-+	int			level,
-+	__uint64_t		new_owner,
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_btree_block	*block;
-+	struct xfs_buf		*bp;
-+	union xfs_btree_ptr     rptr;
-+
-+	/* do right sibling readahead */
-+	xfs_btree_readahead(cur, level, XFS_BTCUR_RIGHTRA);
-+
-+	/* modify the owner */
-+	block = xfs_btree_get_block(cur, level, &bp);
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+		block->bb_u.l.bb_owner = cpu_to_be64(new_owner);
-+	else
-+		block->bb_u.s.bb_owner = cpu_to_be32(new_owner);
+ 	ino = iocur_top->ino;
+ 	dirino = iocur_top->dirino;
+ 	mode = iocur_top->mode;
+@@ -507,12 +509,17 @@ set_cur(
+ 			return;
+ 		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
+ 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
+-					bbmap->nmaps, 0, NULL);
++					bbmap->nmaps, 0, ops);
+ 	} else {
+-		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
++		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
+ 		iocur_top->bbmap = NULL;
+ 	}
+-	if (!bp || bp->b_error)
 +
 +	/*
-+	 * If the block is a root block hosted in an inode, we might not have a
-+	 * buffer pointer here and we shouldn't attempt to log the change as the
-+	 * information is already held in the inode and discarded when the root
-+	 * block is formatted into the on-disk inode fork. We still change it,
-+	 * though, so everything is consistent in memory.
++	 * keep the buffer even if the verifier says it is corrupted.
++	 * We're a diagnostic tool, after all.
 +	 */
-+	if (bp) {
-+		if (cur->bc_tp) {
-+			xfs_trans_ordered_buf(cur->bc_tp, bp);
-+			xfs_btree_log_block(cur, bp, XFS_BB_OWNER);
-+		} else {
-+			xfs_buf_delwri_queue(bp, buffer_list);
-+		}
-+	} else {
-+		ASSERT(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE);
-+		ASSERT(level == cur->bc_nlevels - 1);
-+	}
-+
-+	/* now read rh sibling block for next iteration */
-+	xfs_btree_get_sibling(cur, block, &rptr, XFS_BB_RIGHTSIB);
-+	if (xfs_btree_ptr_is_null(cur, &rptr))
-+		return ENOENT;
-+
-+	return xfs_btree_lookup_get_block(cur, level, &rptr, &block);
-+}
-+
-+int
-+xfs_btree_change_owner(
-+	struct xfs_btree_cur	*cur,
-+	__uint64_t		new_owner,
-+	struct list_head	*buffer_list)
-+{
-+	union xfs_btree_ptr     lptr;
-+	int			level;
-+	struct xfs_btree_block	*block = NULL;
-+	int			error = 0;
-+
-+	cur->bc_ops->init_ptr_from_cur(cur, &lptr);
-+
-+	/* for each level */
-+	for (level = cur->bc_nlevels - 1; level >= 0; level--) {
-+		/* grab the left hand block */
-+		error = xfs_btree_lookup_get_block(cur, level, &lptr, &block);
-+		if (error)
-+			return error;
-+
-+		/* readahead the left most block for the next level down */
-+		if (level > 0) {
-+			union xfs_btree_ptr     *ptr;
-+
-+			ptr = xfs_btree_ptr_addr(cur, 1, block);
-+			xfs_btree_readahead_ptr(cur, ptr, 1);
-+
-+			/* save for the next iteration of the loop */
-+			lptr = *ptr;
-+		}
-+
-+		/* for each buffer in the level */
-+		do {
-+			error = xfs_btree_block_change_owner(cur, level,
-+							     new_owner,
-+							     buffer_list);
-+		} while (!error);
-+
-+		if (error != ENOENT)
-+			return error;
-+	}
-+
-+	return 0;
-+}
++	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
+ 		return;
+ 	iocur_top->buf = bp->b_addr;
+ 	iocur_top->bp = bp;
+diff --git a/db/type.c b/db/type.c
+index 64e2ef4..b3f3d87 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -50,50 +50,58 @@ static const cmdinfo_t	type_cmd =
+ 	  N_("set/show current data type"), NULL };
+ 
+ static const typ_t	__typtab[] = {
+-	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+-	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld },
+-	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+-	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
+-	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld },
+-	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld },
+-	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld },
+-	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld },
+-	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
+-	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+-	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld },
+-	{ TYP_INODATA, "inodata", NULL, NULL },
+-	{ TYP_INODE, "inode", handle_struct, inode_hfld },
+-	{ TYP_LOG, "log", NULL, NULL },
+-	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+-	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+-	{ TYP_SB, "sb", handle_struct, sb_hfld },
+-	{ TYP_SYMLINK, "symlink", handle_string, NULL },
+-	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_AGF, "agf", handle_struct, agf_hfld, NULL },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld, NULL },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld, NULL },
++	{ TYP_ATTR, "attr", handle_struct, attr_hfld, NULL },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld, NULL },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld, NULL },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld, NULL },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld, NULL },
++	{ TYP_DATA, "data", handle_block, NULL, NULL },
++	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld, NULL },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld, NULL },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld, NULL },
++	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_hfld, NULL },
++	{ TYP_LOG, "log", NULL, NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL },
++	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL },
++	{ TYP_TEXT, "text", handle_text, NULL, NULL },
+ 	{ TYP_NONE, NULL }
+ };
+ 
+ static const typ_t	__typtab_crc[] = {
+-	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+-	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
+-	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld },
+-	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
+-	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
+-	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
+-	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
+-	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld },
+-	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+-	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
+-	{ TYP_INODATA, "inodata", NULL, NULL },
+-	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld },
+-	{ TYP_LOG, "log", NULL, NULL },
+-	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+-	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+-	{ TYP_SB, "sb", handle_struct, sb_hfld },
+-	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld },
+-	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
++		&xfs_bmbt_buf_ops },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
++		&xfs_bmbt_buf_ops },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld,
++		&xfs_allocbt_buf_ops },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
++		&xfs_allocbt_buf_ops },
++	{ TYP_DATA, "data", handle_block, NULL, NULL },
++	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld, NULL },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
++		&xfs_dquot_buf_ops },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
++		&xfs_inobt_buf_ops },
++	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
++		&xfs_inode_buf_ops },
++	{ TYP_LOG, "log", NULL, NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops },
++	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
++		&xfs_symlink_buf_ops },
++	{ TYP_TEXT, "text", handle_text, NULL, NULL },
+ 	{ TYP_NONE, NULL }
+ };
+ 
+diff --git a/db/type.h b/db/type.h
+index c41aca4d..3bb26f1 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -42,6 +42,7 @@ typedef struct typ
+ 	char			*name;
+ 	pfunc_t			pfunc;
+ 	const struct field	*fields;
++	const struct xfs_buf_ops *bops;
+ } typ_t;
+ extern const typ_t	*typtab, *cur_typ;
+ 
 -- 
 1.8.3.2
 
