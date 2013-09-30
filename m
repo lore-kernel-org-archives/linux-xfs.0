@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc3-2-g367993e
-Message-Id: <20130930225114.775D67F67@oss.sgi.com>
-Date: Mon, 30 Sep 2013 17:51:14 -0500 (CDT)
+Message-Id: <20130930225123.377697F6D@oss.sgi.com>
+Date: Mon, 30 Sep 2013 17:51:23 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   367993e xfs: dirent dtype presence is dependent on directory magic numbers
   f112a04 xfs: lockdep needs to know about 3 dquot-deep nesting
       from  997def25e4b9cee3b01609e18a52f926bca8bd2b (commit)
