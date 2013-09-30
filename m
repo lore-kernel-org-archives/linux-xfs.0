@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 145407F37
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:07:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B1E99304032
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:07:27 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 08C6C7F4E
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:07:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EE8408F8035
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:07:28 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	27EwWdkSUD1VM9eU for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:07:24 -0700 (PDT)
+	CSVFFaq5XDAJ3ByA for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:07:25 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTpO-0006Ld-OS
+	(envelope-from <dave@fromorbit.com>) id 1VQTpO-0006LT-KV
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:07:18 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTpO-0002C6-Nn
+	(envelope-from <dave@disappointment.disaster>) id 1VQTpO-0002Bh-Jl
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:07:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/16] xfs: vectorise remaining shortform dir2 ops
-Date: Mon, 30 Sep 2013 13:07:05 +1000
-Message-Id: <1380510433-8353-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/16] xfs: split dquot buffer operations out
+Date: Mon, 30 Sep 2013 13:07:00 +1000
+Message-Id: <1380510433-8353-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510433-8353-1-git-send-email-david@fromorbit.com>
 References: <1380510433-8353-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,634 +39,730 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Following from the initial patch to introduce the directory
-operations vector, convert the rest of the shortform directory
-operations to use vectored ops rather than superblock feature
-checks. This further reduces the size of the built binary:
-
-   text    data     bss     dec     hex filename
- 794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
- 792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
- 792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
+Parts of userspace want to be able to read and modify dquot buffers
+(e.g. xfs_db) so we need to split out the reading and writing of
+these buffers so it is easy to shared code with libxfs in userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_da_format.c    | 152 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_da_format.h    |  47 --------------
- fs/xfs/xfs_dir2.h         |  20 +++---
- fs/xfs/xfs_dir2_block.c   |   6 +-
- fs/xfs/xfs_dir2_readdir.c |   6 +-
- fs/xfs/xfs_dir2_sf.c      | 151 +++++++++------------------------------------
- 6 files changed, 199 insertions(+), 183 deletions(-)
+ fs/xfs/Makefile          |   1 +
+ fs/xfs/xfs_dquot.c       | 117 +------------------
+ fs/xfs/xfs_dquot_buf.c   | 288 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_log_recover.c | 133 +---------------------
+ fs/xfs/xfs_qm.c          |  22 +---
+ fs/xfs/xfs_qm.h          |   2 -
+ fs/xfs/xfs_quota.h       |   2 -
+ fs/xfs/xfs_quota_defs.h  |   4 +
+ 8 files changed, 303 insertions(+), 266 deletions(-)
+ create mode 100644 fs/xfs/xfs_dquot_buf.c
 
-diff --git a/fs/xfs/xfs_da_format.c b/fs/xfs/xfs_da_format.c
-index 982d105..62f55a0 100644
---- a/fs/xfs/xfs_da_format.c
-+++ b/fs/xfs/xfs_da_format.c
-@@ -69,17 +69,169 @@ xfs_dir3_sf_nextentry(
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 0719e4d..08f11bb 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -72,6 +72,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_dir2_leaf.o \
+ 				   xfs_dir2_node.o \
+ 				   xfs_dir2_sf.o \
++				   xfs_dquot_buf.o \
+ 				   xfs_ialloc.o \
+ 				   xfs_ialloc_btree.o \
+ 				   xfs_icreate_item.o \
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 8b1d2c0..f85a893 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -293,118 +293,6 @@ xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
+ 	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
  }
  
- 
-+/*
-+ * For filetype enabled shortform directories, the file type field is stored at
-+ * the end of the name.  Because it's only a single byte, endian conversion is
-+ * not necessary. For non-filetype enable directories, the type is always
-+ * unknown and we never store the value.
-+ */
-+static __uint8_t
-+xfs_dir2_sfe_get_ftype(
-+	struct xfs_dir2_sf_entry *sfep)
-+{
-+	return XFS_DIR3_FT_UNKNOWN;
-+}
-+
-+static void
-+xfs_dir2_sfe_put_ftype(
-+	struct xfs_dir2_sf_entry *sfep,
-+	__uint8_t		ftype)
-+{
-+	ASSERT(ftype < XFS_DIR3_FT_MAX);
-+}
-+
-+static __uint8_t
-+xfs_dir3_sfe_get_ftype(
-+	struct xfs_dir2_sf_entry *sfep)
-+{
-+	__uint8_t	ftype;
-+
-+	ftype = sfep->name[sfep->namelen];
-+	if (ftype >= XFS_DIR3_FT_MAX)
-+		return XFS_DIR3_FT_UNKNOWN;
-+	return ftype;
-+}
-+
-+static void
-+xfs_dir3_sfe_put_ftype(
-+	struct xfs_dir2_sf_entry *sfep,
-+	__uint8_t		ftype)
-+{
-+	ASSERT(ftype < XFS_DIR3_FT_MAX);
-+
-+	sfep->name[sfep->namelen] = ftype;
-+}
-+
-+/*
-+ * Inode numbers in short-form directories can come in two versions,
-+ * either 4 bytes or 8 bytes wide.  These helpers deal with the
-+ * two forms transparently by looking at the headers i8count field.
-+ *
-+ * For 64-bit inode number the most significant byte must be zero.
-+ */
-+static xfs_ino_t
-+xfs_dir2_sf_get_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	xfs_dir2_inou_t		*from)
-+{
-+	if (hdr->i8count)
-+		return get_unaligned_be64(&from->i8.i) & 0x00ffffffffffffffULL;
-+	else
-+		return get_unaligned_be32(&from->i4.i);
-+}
-+
-+static void
-+xfs_dir2_sf_put_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	xfs_dir2_inou_t		*to,
-+	xfs_ino_t		ino)
-+{
-+	ASSERT((ino & 0xff00000000000000ULL) == 0);
-+
-+	if (hdr->i8count)
-+		put_unaligned_be64(ino, &to->i8.i);
-+	else
-+		put_unaligned_be32(ino, &to->i4.i);
-+}
-+
-+static xfs_ino_t
-+xfs_dir2_sf_get_parent_ino(
-+	struct xfs_dir2_sf_hdr	*hdr)
-+{
-+	return xfs_dir2_sf_get_ino(hdr, &hdr->parent);
-+}
-+
-+static void
-+xfs_dir2_sf_put_parent_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	xfs_ino_t		ino)
-+{
-+	xfs_dir2_sf_put_ino(hdr, &hdr->parent, ino);
-+}
-+
-+/*
-+ * In short-form directory entries the inode numbers are stored at variable
-+ * offset behind the entry name. If the entry stores a filetype value, then it
-+ * sits between the name and the inode number. Hence the inode numbers may only
-+ * be accessed through the helpers below.
-+ */
-+static xfs_ino_t
-+xfs_dir2_sfe_get_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep)
-+{
-+	return xfs_dir2_sf_get_ino(hdr,
-+				(xfs_dir2_inou_t *)&sfep->name[sfep->namelen]);
-+}
-+
-+static void
-+xfs_dir2_sfe_put_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep,
-+	xfs_ino_t		ino)
-+{
-+	xfs_dir2_sf_put_ino(hdr,
-+			    (xfs_dir2_inou_t *)&sfep->name[sfep->namelen], ino);
-+}
-+
-+static xfs_ino_t
-+xfs_dir3_sfe_get_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep)
-+{
-+	return xfs_dir2_sf_get_ino(hdr,
-+			(xfs_dir2_inou_t *)&sfep->name[sfep->namelen + 1]);
-+}
-+
-+static void
-+xfs_dir3_sfe_put_ino(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep,
-+	xfs_ino_t		ino)
-+{
-+	xfs_dir2_sf_put_ino(hdr,
-+			(xfs_dir2_inou_t *)&sfep->name[sfep->namelen + 1], ino);
-+}
-+
- const struct xfs_dir_ops xfs_dir2_ops = {
- 	.sf_entsize = xfs_dir2_sf_entsize,
- 	.sf_nextentry = xfs_dir2_sf_nextentry,
-+	.sf_get_ftype = xfs_dir2_sfe_get_ftype,
-+	.sf_put_ftype = xfs_dir2_sfe_put_ftype,
-+	.sf_get_ino = xfs_dir2_sfe_get_ino,
-+	.sf_put_ino = xfs_dir2_sfe_put_ino,
-+	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
-+	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
- };
- 
- const struct xfs_dir_ops xfs_dir2_ftype_ops = {
- 	.sf_entsize = xfs_dir3_sf_entsize,
- 	.sf_nextentry = xfs_dir3_sf_nextentry,
-+	.sf_get_ftype = xfs_dir3_sfe_get_ftype,
-+	.sf_put_ftype = xfs_dir3_sfe_put_ftype,
-+	.sf_get_ino = xfs_dir3_sfe_get_ino,
-+	.sf_put_ino = xfs_dir3_sfe_put_ino,
-+	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
-+	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
- };
- 
- const struct xfs_dir_ops xfs_dir3_ops = {
- 	.sf_entsize = xfs_dir3_sf_entsize,
- 	.sf_nextentry = xfs_dir3_sf_nextentry,
-+	.sf_get_ftype = xfs_dir3_sfe_get_ftype,
-+	.sf_put_ftype = xfs_dir3_sfe_put_ftype,
-+	.sf_get_ino = xfs_dir3_sfe_get_ino,
-+	.sf_put_ino = xfs_dir3_sfe_put_ino,
-+	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
-+	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
- };
-diff --git a/fs/xfs/xfs_da_format.h b/fs/xfs/xfs_da_format.h
-index d54726d..68c2ad5 100644
---- a/fs/xfs/xfs_da_format.h
-+++ b/fs/xfs/xfs_da_format.h
-@@ -330,53 +330,6 @@ xfs_dir2_sf_firstentry(struct xfs_dir2_sf_hdr *hdr)
- }
- 
- /*
-- * in dir3 shortform directories, the file type field is stored at a variable
-- * offset after the inode number. Because it's only a single byte, endian
-- * conversion is not necessary.
-- */
--static inline __uint8_t *
--xfs_dir3_sfe_ftypep(
--	struct xfs_dir2_sf_hdr	*hdr,
--	struct xfs_dir2_sf_entry *sfep)
--{
--	return (__uint8_t *)&sfep->name[sfep->namelen];
--}
--
--static inline __uint8_t
--xfs_dir3_sfe_get_ftype(
+-STATIC bool
+-xfs_dquot_buf_verify_crc(
 -	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_hdr	*hdr,
--	struct xfs_dir2_sf_entry *sfep)
+-	struct xfs_buf		*bp)
 -{
--	__uint8_t	*ftp;
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+-	int			ndquots;
+-	int			i;
 -
--	if (!xfs_sb_version_hasftype(&mp->m_sb))
--		return XFS_DIR3_FT_UNKNOWN;
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return true;
 -
--	ftp = xfs_dir3_sfe_ftypep(hdr, sfep);
--	if (*ftp >= XFS_DIR3_FT_MAX)
--		return XFS_DIR3_FT_UNKNOWN;
--	return *ftp;
--}
--
--static inline void
--xfs_dir3_sfe_put_ftype(
--	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_hdr	*hdr,
--	struct xfs_dir2_sf_entry *sfep,
--	__uint8_t		ftype)
--{
--	__uint8_t	*ftp;
--
--	ASSERT(ftype < XFS_DIR3_FT_MAX);
--
--	if (!xfs_sb_version_hasftype(&mp->m_sb))
--		return;
--	ftp = xfs_dir3_sfe_ftypep(hdr, sfep);
--	*ftp = ftype;
--}
--
--/*
-  * Data block structures.
-  *
-  * A pure data block looks like the following drawing on disk:
-diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-index 1909d9f..0e94b3e 100644
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -39,6 +39,17 @@ struct xfs_dir_ops {
- 	struct xfs_dir2_sf_entry *
- 		(*sf_nextentry)(struct xfs_dir2_sf_hdr *hdr,
- 				struct xfs_dir2_sf_entry *sfep);
-+	__uint8_t (*sf_get_ftype)(struct xfs_dir2_sf_entry *sfep);
-+	void	(*sf_put_ftype)(struct xfs_dir2_sf_entry *sfep,
-+				__uint8_t ftype);
-+	xfs_ino_t (*sf_get_ino)(struct xfs_dir2_sf_hdr *hdr,
-+				struct xfs_dir2_sf_entry *sfep);
-+	void	(*sf_put_ino)(struct xfs_dir2_sf_hdr *hdr,
-+			      struct xfs_dir2_sf_entry *sfep,
-+			      xfs_ino_t ino);
-+	xfs_ino_t (*sf_get_parent_ino)(struct xfs_dir2_sf_hdr *hdr);
-+	void	(*sf_put_parent_ino)(struct xfs_dir2_sf_hdr *hdr,
-+				     xfs_ino_t ino);
- };
- 
- extern const struct xfs_dir_ops xfs_dir2_ops;
-@@ -79,15 +90,6 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
- /*
-  * Interface routines used by userspace utilities
-  */
--extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
--extern void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *sfp,
--		xfs_ino_t ino);
--extern xfs_ino_t xfs_dir3_sfe_get_ino(struct xfs_mount *mp,
--		struct xfs_dir2_sf_hdr *sfp, struct xfs_dir2_sf_entry *sfep);
--extern void xfs_dir3_sfe_put_ino(struct xfs_mount *mp,
--		struct xfs_dir2_sf_hdr *hdr, struct xfs_dir2_sf_entry *sfep,
--		xfs_ino_t ino);
--
- extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
- extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
- extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 9d86b6f..960f3ab 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -1173,7 +1173,7 @@ xfs_dir2_sf_to_block(
- 	 * Create entry for ..
- 	 */
- 	dep = xfs_dir3_data_dotdot_entry_p(mp, hdr);
--	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
-+	dep->inumber = cpu_to_be64(dp->d_ops->sf_get_parent_ino(sfp));
- 	dep->namelen = 2;
- 	dep->name[0] = dep->name[1] = '.';
- 	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
-@@ -1222,10 +1222,10 @@ xfs_dir2_sf_to_block(
- 		 * Copy a real entry.
- 		 */
- 		dep = (xfs_dir2_data_entry_t *)((char *)hdr + newoffset);
--		dep->inumber = cpu_to_be64(xfs_dir3_sfe_get_ino(mp, sfp, sfep));
-+		dep->inumber = cpu_to_be64(dp->d_ops->sf_get_ino(sfp, sfep));
- 		dep->namelen = sfep->namelen;
- 		xfs_dir3_dirent_put_ftype(mp, dep,
--					xfs_dir3_sfe_get_ftype(mp, sfp, sfep));
-+					  dp->d_ops->sf_get_ftype(sfep));
- 		memcpy(dep->name, sfep->name, dep->namelen);
- 		tagp = xfs_dir3_data_entry_tag_p(mp, dep);
- 		*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 8033305..2d2c8fb 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -136,7 +136,7 @@ xfs_dir2_sf_getdents(
- 	 * Put .. entry unless we're starting past it.
- 	 */
- 	if (ctx->pos <= dotdot_offset) {
--		ino = xfs_dir2_sf_get_parent_ino(sfp);
-+		ino = dp->d_ops->sf_get_parent_ino(sfp);
- 		ctx->pos = dotdot_offset & 0x7fffffff;
- 		if (!dir_emit(ctx, "..", 2, ino, DT_DIR))
- 			return 0;
-@@ -157,8 +157,8 @@ xfs_dir2_sf_getdents(
- 			continue;
- 		}
- 
--		ino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
--		filetype = xfs_dir3_sfe_get_ftype(mp, sfp, sfep);
-+		ino = dp->d_ops->sf_get_ino(sfp, sfep);
-+		filetype = dp->d_ops->sf_get_ftype(sfep);
- 		ctx->pos = off & 0x7fffffff;
- 		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen, ino,
- 			    xfs_dir3_get_dtype(mp, filetype)))
-diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index 73881c9..ec0d39b 100644
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -57,89 +57,6 @@ static void xfs_dir2_sf_toino8(xfs_da_args_t *args);
- #endif /* XFS_BIG_INUMS */
- 
- /*
-- * Inode numbers in short-form directories can come in two versions,
-- * either 4 bytes or 8 bytes wide.  These helpers deal with the
-- * two forms transparently by looking at the headers i8count field.
-- *
-- * For 64-bit inode number the most significant byte must be zero.
-- */
--static xfs_ino_t
--xfs_dir2_sf_get_ino(
--	struct xfs_dir2_sf_hdr	*hdr,
--	xfs_dir2_inou_t		*from)
--{
--	if (hdr->i8count)
--		return get_unaligned_be64(&from->i8.i) & 0x00ffffffffffffffULL;
+-	/*
+-	 * if we are in log recovery, the quota subsystem has not been
+-	 * initialised so we have no quotainfo structure. In that case, we need
+-	 * to manually calculate the number of dquots in the buffer.
+-	 */
+-	if (mp->m_quotainfo)
+-		ndquots = mp->m_quotainfo->qi_dqperchunk;
 -	else
--		return get_unaligned_be32(&from->i4.i);
+-		ndquots = xfs_qm_calc_dquots_per_chunk(mp,
+-					XFS_BB_TO_FSB(mp, bp->b_length));
+-
+-	for (i = 0; i < ndquots; i++, d++) {
+-		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF))
+-			return false;
+-		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
+-			return false;
+-	}
+-	return true;
+-}
+-
+-STATIC bool
+-xfs_dquot_buf_verify(
+-	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+-	xfs_dqid_t		id = 0;
+-	int			ndquots;
+-	int			i;
+-
+-	/*
+-	 * if we are in log recovery, the quota subsystem has not been
+-	 * initialised so we have no quotainfo structure. In that case, we need
+-	 * to manually calculate the number of dquots in the buffer.
+-	 */
+-	if (mp->m_quotainfo)
+-		ndquots = mp->m_quotainfo->qi_dqperchunk;
+-	else
+-		ndquots = xfs_qm_calc_dquots_per_chunk(mp, bp->b_length);
+-
+-	/*
+-	 * On the first read of the buffer, verify that each dquot is valid.
+-	 * We don't know what the id of the dquot is supposed to be, just that
+-	 * they should be increasing monotonically within the buffer. If the
+-	 * first id is corrupt, then it will fail on the second dquot in the
+-	 * buffer so corruptions could point to the wrong dquot in this case.
+-	 */
+-	for (i = 0; i < ndquots; i++) {
+-		struct xfs_disk_dquot	*ddq;
+-		int			error;
+-
+-		ddq = &d[i].dd_diskdq;
+-
+-		if (i == 0)
+-			id = be32_to_cpu(ddq->d_id);
+-
+-		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
+-				       "xfs_dquot_buf_verify");
+-		if (error)
+-			return false;
+-	}
+-	return true;
 -}
 -
 -static void
--xfs_dir2_sf_put_ino(
--	struct xfs_dir2_sf_hdr	*hdr,
--	xfs_dir2_inou_t		*to,
--	xfs_ino_t		ino)
+-xfs_dquot_buf_read_verify(
+-	struct xfs_buf	*bp)
 -{
--	ASSERT((ino & 0xff00000000000000ULL) == 0);
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
 -
--	if (hdr->i8count)
--		put_unaligned_be64(ino, &to->i8.i);
--	else
--		put_unaligned_be32(ino, &to->i4.i);
--}
--
--xfs_ino_t
--xfs_dir2_sf_get_parent_ino(
--	struct xfs_dir2_sf_hdr	*hdr)
--{
--	return xfs_dir2_sf_get_ino(hdr, &hdr->parent);
--}
--
--void
--xfs_dir2_sf_put_parent_ino(
--	struct xfs_dir2_sf_hdr	*hdr,
--	xfs_ino_t		ino)
--{
--	xfs_dir2_sf_put_ino(hdr, &hdr->parent, ino);
+-	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
 -}
 -
 -/*
-- * In short-form directory entries the inode numbers are stored at variable
-- * offset behind the entry name. If the entry stores a filetype value, then it
-- * sits between the name and the inode number. Hence the inode numbers may only
-- * be accessed through the helpers below.
+- * we don't calculate the CRC here as that is done when the dquot is flushed to
+- * the buffer after the update is done. This ensures that the dquot in the
+- * buffer always has an up-to-date CRC value.
 - */
--static xfs_dir2_inou_t *
--xfs_dir3_sfe_inop(
--	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_entry *sfep)
--{
--	__uint8_t	*ptr = &sfep->name[sfep->namelen];
--	if (xfs_sb_version_hasftype(&mp->m_sb))
--		ptr++;
--	return (xfs_dir2_inou_t *)ptr;
--}
--
--xfs_ino_t
--xfs_dir3_sfe_get_ino(
--	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_hdr	*hdr,
--	struct xfs_dir2_sf_entry *sfep)
--{
--	return xfs_dir2_sf_get_ino(hdr, xfs_dir3_sfe_inop(mp, sfep));
--}
--
 -void
--xfs_dir3_sfe_put_ino(
--	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_hdr	*hdr,
--	struct xfs_dir2_sf_entry *sfep,
--	xfs_ino_t		ino)
+-xfs_dquot_buf_write_verify(
+-	struct xfs_buf	*bp)
 -{
--	xfs_dir2_sf_put_ino(hdr, xfs_dir3_sfe_inop(mp, sfep), ino);
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-
+-	if (!xfs_dquot_buf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
 -}
 -
--/*
-  * Given a block directory (dp/block), calculate its size as a shortform (sf)
-  * directory and a header for the sf directory, if it will fit it the
-  * space currently present in the inode.  If it won't fit, the output
-@@ -226,7 +143,7 @@ xfs_dir2_block_sfsize(
+-const struct xfs_buf_ops xfs_dquot_buf_ops = {
+-	.verify_read = xfs_dquot_buf_read_verify,
+-	.verify_write = xfs_dquot_buf_write_verify,
+-};
+-
+ /*
+  * Allocate a block and fill it with dquots.
+  * This is called when the bmapi finds a hole.
+@@ -515,6 +403,7 @@ xfs_qm_dqalloc(
+ 
+ 	return (error);
+ }
++
+ STATIC int
+ xfs_qm_dqrepair(
+ 	struct xfs_mount	*mp,
+@@ -548,7 +437,7 @@ xfs_qm_dqrepair(
+ 	/* Do the actual repair of dquots in this buffer */
+ 	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
+ 		ddq = &d[i].dd_diskdq;
+-		error = xfs_qm_dqcheck(mp, ddq, firstid + i,
++		error = xfs_dqcheck(mp, ddq, firstid + i,
+ 				       dqp->dq_flags & XFS_DQ_ALLTYPES,
+ 				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
+ 		if (error) {
+@@ -1134,7 +1023,7 @@ xfs_qm_dqflush(
+ 	/*
+ 	 * A simple sanity check in case we got a corrupted dquot..
  	 */
- 	sfhp->count = count;
- 	sfhp->i8count = i8count;
--	xfs_dir2_sf_put_parent_ino(sfhp, parent);
-+	dp->d_ops->sf_put_parent_ino(sfhp, parent);
- 	return size;
+-	error = xfs_qm_dqcheck(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0,
++	error = xfs_dqcheck(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0,
+ 			   XFS_QMOPT_DOWARN, "dqflush (incore copy)");
+ 	if (error) {
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_dquot_buf.c b/fs/xfs/xfs_dquot_buf.c
+new file mode 100644
+index 0000000..ad2c18f
+--- /dev/null
++++ b/fs/xfs/xfs_dquot_buf.c
+@@ -0,0 +1,288 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2013 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_bit.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_ag.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_quota.h"
++#include "xfs_qm.h"
++#include "xfs_error.h"
++#include "xfs_cksum.h"
++#include "xfs_trace.h"
++
++int
++xfs_calc_dquots_per_chunk(
++	struct xfs_mount	*mp,
++	unsigned int		nbblks)	/* basic block units */
++{
++	unsigned int	ndquots;
++
++	ASSERT(nbblks > 0);
++	ndquots = BBTOB(nbblks);
++	do_div(ndquots, sizeof(xfs_dqblk_t));
++
++	return ndquots;
++}
++
++/*
++ * Do some primitive error checking on ondisk dquot data structures.
++ */
++int
++xfs_dqcheck(
++	struct xfs_mount *mp,
++	xfs_disk_dquot_t *ddq,
++	xfs_dqid_t	 id,
++	uint		 type,	  /* used only when IO_dorepair is true */
++	uint		 flags,
++	char		 *str)
++{
++	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
++	int		errs = 0;
++
++	/*
++	 * We can encounter an uninitialized dquot buffer for 2 reasons:
++	 * 1. If we crash while deleting the quotainode(s), and those blks got
++	 *    used for user data. This is because we take the path of regular
++	 *    file deletion; however, the size field of quotainodes is never
++	 *    updated, so all the tricks that we play in itruncate_finish
++	 *    don't quite matter.
++	 *
++	 * 2. We don't play the quota buffers when there's a quotaoff logitem.
++	 *    But the allocation will be replayed so we'll end up with an
++	 *    uninitialized quota block.
++	 *
++	 * This is all fine; things are still consistent, and we haven't lost
++	 * any quota information. Just don't complain about bad dquot blks.
++	 */
++	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC)) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, magic 0x%x != 0x%x",
++			str, id, be16_to_cpu(ddq->d_magic), XFS_DQUOT_MAGIC);
++		errs++;
++	}
++	if (ddq->d_version != XFS_DQUOT_VERSION) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, version 0x%x != 0x%x",
++			str, id, ddq->d_version, XFS_DQUOT_VERSION);
++		errs++;
++	}
++
++	if (ddq->d_flags != XFS_DQ_USER &&
++	    ddq->d_flags != XFS_DQ_PROJ &&
++	    ddq->d_flags != XFS_DQ_GROUP) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, unknown flags 0x%x",
++			str, id, ddq->d_flags);
++		errs++;
++	}
++
++	if (id != -1 && id != be32_to_cpu(ddq->d_id)) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : ondisk-dquot 0x%p, ID mismatch: "
++			"0x%x expected, found id 0x%x",
++			str, ddq, id, be32_to_cpu(ddq->d_id));
++		errs++;
++	}
++
++	if (!errs && ddq->d_id) {
++		if (ddq->d_blk_softlimit &&
++		    be64_to_cpu(ddq->d_bcount) >
++				be64_to_cpu(ddq->d_blk_softlimit)) {
++			if (!ddq->d_btimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) BLK TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++		if (ddq->d_ino_softlimit &&
++		    be64_to_cpu(ddq->d_icount) >
++				be64_to_cpu(ddq->d_ino_softlimit)) {
++			if (!ddq->d_itimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) INODE TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++		if (ddq->d_rtb_softlimit &&
++		    be64_to_cpu(ddq->d_rtbcount) >
++				be64_to_cpu(ddq->d_rtb_softlimit)) {
++			if (!ddq->d_rtbtimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) RTBLK TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++	}
++
++	if (!errs || !(flags & XFS_QMOPT_DQREPAIR))
++		return errs;
++
++	if (flags & XFS_QMOPT_DOWARN)
++		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
++
++	/*
++	 * Typically, a repair is only requested by quotacheck.
++	 */
++	ASSERT(id != -1);
++	ASSERT(flags & XFS_QMOPT_DQREPAIR);
++	memset(d, 0, sizeof(xfs_dqblk_t));
++
++	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
++	d->dd_diskdq.d_flags = type;
++	d->dd_diskdq.d_id = cpu_to_be32(id);
++
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
++		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++	}
++
++	return errs;
++}
++
++STATIC bool
++xfs_dquot_buf_verify_crc(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	int			ndquots;
++	int			i;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return true;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_calc_dquots_per_chunk(mp,
++					XFS_BB_TO_FSB(mp, bp->b_length));
++
++	for (i = 0; i < ndquots; i++, d++) {
++		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF))
++			return false;
++		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
++			return false;
++	}
++	return true;
++}
++
++STATIC bool
++xfs_dquot_buf_verify(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	xfs_dqid_t		id = 0;
++	int			ndquots;
++	int			i;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_calc_dquots_per_chunk(mp, bp->b_length);
++
++	/*
++	 * On the first read of the buffer, verify that each dquot is valid.
++	 * We don't know what the id of the dquot is supposed to be, just that
++	 * they should be increasing monotonically within the buffer. If the
++	 * first id is corrupt, then it will fail on the second dquot in the
++	 * buffer so corruptions could point to the wrong dquot in this case.
++	 */
++	for (i = 0; i < ndquots; i++) {
++		struct xfs_disk_dquot	*ddq;
++		int			error;
++
++		ddq = &d[i].dd_diskdq;
++
++		if (i == 0)
++			id = be32_to_cpu(ddq->d_id);
++
++		error = xfs_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
++				       "xfs_dquot_buf_verify");
++		if (error)
++			return false;
++	}
++	return true;
++}
++
++static void
++xfs_dquot_buf_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++}
++
++/*
++ * we don't calculate the CRC here as that is done when the dquot is flushed to
++ * the buffer after the update is done. This ensures that the dquot in the
++ * buffer always has an up-to-date CRC value.
++ */
++void
++xfs_dquot_buf_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++}
++
++const struct xfs_buf_ops xfs_dquot_buf_ops = {
++	.verify_read = xfs_dquot_buf_read_verify,
++	.verify_write = xfs_dquot_buf_write_verify,
++};
++
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 078f25e..e4260fa 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2362,7 +2362,7 @@ xlog_recover_do_reg_buffer(
+ 					item->ri_buf[i].i_len, __func__);
+ 				goto next;
+ 			}
+-			error = xfs_qm_dqcheck(mp, item->ri_buf[i].i_addr,
++			error = xfs_dqcheck(mp, item->ri_buf[i].i_addr,
+ 					       -1, 0, XFS_QMOPT_DOWARN,
+ 					       "dquot_buf_recover");
+ 			if (error)
+@@ -2394,133 +2394,6 @@ xlog_recover_do_reg_buffer(
  }
  
-@@ -321,7 +238,7 @@ xfs_dir2_block_to_sf(
- 		else if (dep->namelen == 2 &&
- 			 dep->name[0] == '.' && dep->name[1] == '.')
- 			ASSERT(be64_to_cpu(dep->inumber) ==
--			       xfs_dir2_sf_get_parent_ino(sfp));
-+			       dp->d_ops->sf_get_parent_ino(sfp));
+ /*
+- * Do some primitive error checking on ondisk dquot data structures.
+- */
+-int
+-xfs_qm_dqcheck(
+-	struct xfs_mount *mp,
+-	xfs_disk_dquot_t *ddq,
+-	xfs_dqid_t	 id,
+-	uint		 type,	  /* used only when IO_dorepair is true */
+-	uint		 flags,
+-	char		 *str)
+-{
+-	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
+-	int		errs = 0;
+-
+-	/*
+-	 * We can encounter an uninitialized dquot buffer for 2 reasons:
+-	 * 1. If we crash while deleting the quotainode(s), and those blks got
+-	 *    used for user data. This is because we take the path of regular
+-	 *    file deletion; however, the size field of quotainodes is never
+-	 *    updated, so all the tricks that we play in itruncate_finish
+-	 *    don't quite matter.
+-	 *
+-	 * 2. We don't play the quota buffers when there's a quotaoff logitem.
+-	 *    But the allocation will be replayed so we'll end up with an
+-	 *    uninitialized quota block.
+-	 *
+-	 * This is all fine; things are still consistent, and we haven't lost
+-	 * any quota information. Just don't complain about bad dquot blks.
+-	 */
+-	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC)) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : XFS dquot ID 0x%x, magic 0x%x != 0x%x",
+-			str, id, be16_to_cpu(ddq->d_magic), XFS_DQUOT_MAGIC);
+-		errs++;
+-	}
+-	if (ddq->d_version != XFS_DQUOT_VERSION) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : XFS dquot ID 0x%x, version 0x%x != 0x%x",
+-			str, id, ddq->d_version, XFS_DQUOT_VERSION);
+-		errs++;
+-	}
+-
+-	if (ddq->d_flags != XFS_DQ_USER &&
+-	    ddq->d_flags != XFS_DQ_PROJ &&
+-	    ddq->d_flags != XFS_DQ_GROUP) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : XFS dquot ID 0x%x, unknown flags 0x%x",
+-			str, id, ddq->d_flags);
+-		errs++;
+-	}
+-
+-	if (id != -1 && id != be32_to_cpu(ddq->d_id)) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : ondisk-dquot 0x%p, ID mismatch: "
+-			"0x%x expected, found id 0x%x",
+-			str, ddq, id, be32_to_cpu(ddq->d_id));
+-		errs++;
+-	}
+-
+-	if (!errs && ddq->d_id) {
+-		if (ddq->d_blk_softlimit &&
+-		    be64_to_cpu(ddq->d_bcount) >
+-				be64_to_cpu(ddq->d_blk_softlimit)) {
+-			if (!ddq->d_btimer) {
+-				if (flags & XFS_QMOPT_DOWARN)
+-					xfs_alert(mp,
+-			"%s : Dquot ID 0x%x (0x%p) BLK TIMER NOT STARTED",
+-					str, (int)be32_to_cpu(ddq->d_id), ddq);
+-				errs++;
+-			}
+-		}
+-		if (ddq->d_ino_softlimit &&
+-		    be64_to_cpu(ddq->d_icount) >
+-				be64_to_cpu(ddq->d_ino_softlimit)) {
+-			if (!ddq->d_itimer) {
+-				if (flags & XFS_QMOPT_DOWARN)
+-					xfs_alert(mp,
+-			"%s : Dquot ID 0x%x (0x%p) INODE TIMER NOT STARTED",
+-					str, (int)be32_to_cpu(ddq->d_id), ddq);
+-				errs++;
+-			}
+-		}
+-		if (ddq->d_rtb_softlimit &&
+-		    be64_to_cpu(ddq->d_rtbcount) >
+-				be64_to_cpu(ddq->d_rtb_softlimit)) {
+-			if (!ddq->d_rtbtimer) {
+-				if (flags & XFS_QMOPT_DOWARN)
+-					xfs_alert(mp,
+-			"%s : Dquot ID 0x%x (0x%p) RTBLK TIMER NOT STARTED",
+-					str, (int)be32_to_cpu(ddq->d_id), ddq);
+-				errs++;
+-			}
+-		}
+-	}
+-
+-	if (!errs || !(flags & XFS_QMOPT_DQREPAIR))
+-		return errs;
+-
+-	if (flags & XFS_QMOPT_DOWARN)
+-		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
+-
+-	/*
+-	 * Typically, a repair is only requested by quotacheck.
+-	 */
+-	ASSERT(id != -1);
+-	ASSERT(flags & XFS_QMOPT_DQREPAIR);
+-	memset(d, 0, sizeof(xfs_dqblk_t));
+-
+-	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+-	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+-	d->dd_diskdq.d_flags = type;
+-	d->dd_diskdq.d_id = cpu_to_be32(id);
+-
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
+-		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF);
+-	}
+-
+-	return errs;
+-}
+-
+-/*
+  * Perform a dquot buffer recovery.
+  * Simple algorithm: if we have found a QUOTAOFF log item of the same type
+  * (ie. USR or GRP), then just toss this buffer away; don't recover it.
+@@ -3125,7 +2998,7 @@ xlog_recover_dquot_pass2(
+ 	 */
+ 	dq_f = item->ri_buf[0].i_addr;
+ 	ASSERT(dq_f);
+-	error = xfs_qm_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
++	error = xfs_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
+ 			   "xlog_recover_dquot_pass2 (log copy)");
+ 	if (error)
+ 		return XFS_ERROR(EIO);
+@@ -3145,7 +3018,7 @@ xlog_recover_dquot_pass2(
+ 	 * was among a chunk of dquots created earlier, and we did some
+ 	 * minimal initialization then.
+ 	 */
+-	error = xfs_qm_dqcheck(mp, ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
++	error = xfs_dqcheck(mp, ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
+ 			   "xlog_recover_dquot_pass2");
+ 	if (error) {
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index dc2d4f7..6dfb4e3 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -665,20 +665,6 @@ xfs_qm_dqdetach(
+ 	}
+ }
+ 
+-int
+-xfs_qm_calc_dquots_per_chunk(
+-	struct xfs_mount	*mp,
+-	unsigned int		nbblks)	/* basic block units */
+-{
+-	unsigned int	ndquots;
+-
+-	ASSERT(nbblks > 0);
+-	ndquots = BBTOB(nbblks);
+-	do_div(ndquots, sizeof(xfs_dqblk_t));
+-
+-	return ndquots;
+-}
+-
+ struct xfs_qm_isolate {
+ 	struct list_head	buffers;
+ 	struct list_head	dispose;
+@@ -859,7 +845,7 @@ xfs_qm_init_quotainfo(
+ 
+ 	/* Precalc some constants */
+ 	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
+-	qinf->qi_dqperchunk = xfs_qm_calc_dquots_per_chunk(mp,
++	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(mp,
+ 							qinf->qi_dqchunklen);
+ 
+ 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+@@ -1093,10 +1079,10 @@ xfs_qm_reset_dqcounts(
  		/*
- 		 * Normal entry, copy it into shortform.
+ 		 * Do a sanity check, and if needed, repair the dqblk. Don't
+ 		 * output any warnings because it's perfectly possible to
+-		 * find uninitialised dquot blks. See comment in xfs_qm_dqcheck.
++		 * find uninitialised dquot blks. See comment in xfs_dqcheck.
  		 */
-@@ -331,9 +248,9 @@ xfs_dir2_block_to_sf(
- 				(xfs_dir2_data_aoff_t)
- 				((char *)dep - (char *)hdr));
- 			memcpy(sfep->name, dep->name, dep->namelen);
--			xfs_dir3_sfe_put_ino(mp, sfp, sfep,
--					     be64_to_cpu(dep->inumber));
--			xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
-+			dp->d_ops->sf_put_ino(sfp, sfep,
-+					      be64_to_cpu(dep->inumber));
-+			dp->d_ops->sf_put_ftype(sfep,
- 					xfs_dir3_dirent_get_ftype(mp, dep));
+-		(void) xfs_qm_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
+-				      "xfs_quotacheck");
++		xfs_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
++			    "xfs_quotacheck");
+ 		ddq->d_bcount = 0;
+ 		ddq->d_icount = 0;
+ 		ddq->d_rtbcount = 0;
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2b602df..a788b66 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -103,8 +103,6 @@ xfs_dq_to_quota_inode(struct xfs_dquot *dqp)
+ 	return NULL;
+ }
  
- 			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
-@@ -496,8 +413,8 @@ xfs_dir2_sf_addname_easy(
- 	sfep->namelen = args->namelen;
- 	xfs_dir2_sf_put_offset(sfep, offset);
- 	memcpy(sfep->name, args->name, sfep->namelen);
--	xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep, args->inumber);
--	xfs_dir3_sfe_put_ftype(dp->i_mount, sfp, sfep, args->filetype);
-+	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
-+	dp->d_ops->sf_put_ftype(sfep, args->filetype);
+-extern int	xfs_qm_calc_dquots_per_chunk(struct xfs_mount *mp,
+-					     unsigned int nbblks);
+ extern void	xfs_trans_mod_dquot(struct xfs_trans *,
+ 					struct xfs_dquot *, uint, long);
+ extern int	xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 84661d4..5376dd4 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -150,8 +150,6 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
+ 	xfs_trans_reserve_quota_bydquots(tp, mp, ud, gd, pd, nb, ni, \
+ 				f | XFS_QMOPT_RES_REGBLKS)
  
- 	/*
- 	 * Update the header and inode.
-@@ -591,8 +508,8 @@ xfs_dir2_sf_addname_hard(
- 	sfep->namelen = args->namelen;
- 	xfs_dir2_sf_put_offset(sfep, offset);
- 	memcpy(sfep->name, args->name, sfep->namelen);
--	xfs_dir3_sfe_put_ino(mp, sfp, sfep, args->inumber);
--	xfs_dir3_sfe_put_ftype(mp, sfp, sfep, args->filetype);
-+	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
-+	dp->d_ops->sf_put_ftype(sfep, args->filetype);
- 	sfp->count++;
- #if XFS_BIG_INUMS
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
-@@ -713,20 +630,19 @@ xfs_dir2_sf_check(
+-extern int xfs_qm_dqcheck(struct xfs_mount *, xfs_disk_dquot_t *,
+-				xfs_dqid_t, uint, uint, char *);
+ extern int xfs_mount_reset_sbqflags(struct xfs_mount *);
  
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	offset = xfs_dir3_data_first_offset(mp);
--	ino = xfs_dir2_sf_get_parent_ino(sfp);
-+	ino = dp->d_ops->sf_get_parent_ino(sfp);
- 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/fs/xfs/xfs_quota_defs.h b/fs/xfs/xfs_quota_defs.h
+index e6b0d6e..b3b2b10 100644
+--- a/fs/xfs/xfs_quota_defs.h
++++ b/fs/xfs/xfs_quota_defs.h
+@@ -154,4 +154,8 @@ typedef __uint16_t	xfs_qwarncnt_t;
+ 		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
  
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
- 	     i < sfp->count;
- 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 		ASSERT(xfs_dir2_sf_get_offset(sfep) >= offset);
--		ino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
-+		ino = dp->d_ops->sf_get_ino(sfp, sfep);
- 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
- 		offset =
- 			xfs_dir2_sf_get_offset(sfep) +
- 			xfs_dir3_data_entsize(mp, sfep->namelen);
--		ASSERT(xfs_dir3_sfe_get_ftype(mp, sfp, sfep) <
--							XFS_DIR3_FT_MAX);
-+		ASSERT(dp->d_ops->sf_get_ftype(sfep) < XFS_DIR3_FT_MAX);
- 	}
- 	ASSERT(i8count == sfp->i8count);
- 	ASSERT(XFS_BIG_INUMS || i8count == 0);
-@@ -782,7 +698,7 @@ xfs_dir2_sf_create(
- 	/*
- 	 * Now can put in the inode number, since i8count is set.
- 	 */
--	xfs_dir2_sf_put_parent_ino(sfp, pino);
-+	dp->d_ops->sf_put_parent_ino(sfp, pino);
- 	sfp->count = 0;
- 	dp->i_d.di_size = size;
- 	xfs_dir2_sf_check(args);
-@@ -837,7 +753,7 @@ xfs_dir2_sf_lookup(
- 	 */
- 	if (args->namelen == 2 &&
- 	    args->name[0] == '.' && args->name[1] == '.') {
--		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
-+		args->inumber = dp->d_ops->sf_get_parent_ino(sfp);
- 		args->cmpresult = XFS_CMP_EXACT;
- 		args->filetype = XFS_DIR3_FT_DIR;
- 		return XFS_ERROR(EEXIST);
-@@ -857,10 +773,8 @@ xfs_dir2_sf_lookup(
- 								sfep->namelen);
- 		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
- 			args->cmpresult = cmp;
--			args->inumber = xfs_dir3_sfe_get_ino(dp->i_mount,
--							     sfp, sfep);
--			args->filetype = xfs_dir3_sfe_get_ftype(dp->i_mount,
--								sfp, sfep);
-+			args->inumber = dp->d_ops->sf_get_ino(sfp, sfep);
-+			args->filetype = dp->d_ops->sf_get_ftype(sfep);
- 			if (cmp == XFS_CMP_EXACT)
- 				return XFS_ERROR(EEXIST);
- 			ci_sfep = sfep;
-@@ -919,7 +833,7 @@ xfs_dir2_sf_removename(
- 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 		if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
--			ASSERT(xfs_dir3_sfe_get_ino(dp->i_mount, sfp, sfep) ==
-+			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
- 			       args->inumber);
- 			break;
- 		}
-@@ -1040,10 +954,10 @@ xfs_dir2_sf_replace(
- 	if (args->namelen == 2 &&
- 	    args->name[0] == '.' && args->name[1] == '.') {
- #if XFS_BIG_INUMS || defined(DEBUG)
--		ino = xfs_dir2_sf_get_parent_ino(sfp);
-+		ino = dp->d_ops->sf_get_parent_ino(sfp);
- 		ASSERT(args->inumber != ino);
- #endif
--		xfs_dir2_sf_put_parent_ino(sfp, args->inumber);
-+		dp->d_ops->sf_put_parent_ino(sfp, args->inumber);
- 	}
- 	/*
- 	 * Normal entry, look for the name.
-@@ -1054,14 +968,11 @@ xfs_dir2_sf_replace(
- 			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
- #if XFS_BIG_INUMS || defined(DEBUG)
--				ino = xfs_dir3_sfe_get_ino(dp->i_mount,
--							   sfp, sfep);
-+				ino = dp->d_ops->sf_get_ino(sfp, sfep);
- 				ASSERT(args->inumber != ino);
- #endif
--				xfs_dir3_sfe_put_ino(dp->i_mount, sfp, sfep,
--						     args->inumber);
--				xfs_dir3_sfe_put_ftype(dp->i_mount, sfp, sfep,
--						       args->filetype);
-+				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
-+				dp->d_ops->sf_put_ftype(sfep, args->filetype);
- 				break;
- 			}
- 		}
-@@ -1164,7 +1075,7 @@ xfs_dir2_sf_toino4(
- 	 */
- 	sfp->count = oldsfp->count;
- 	sfp->i8count = 0;
--	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
-+	dp->d_ops->sf_put_parent_ino(sfp, dp->d_ops->sf_get_parent_ino(oldsfp));
- 	/*
- 	 * Copy the entries field by field.
- 	 */
-@@ -1176,10 +1087,9 @@ xfs_dir2_sf_toino4(
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
--		xfs_dir3_sfe_put_ino(mp, sfp, sfep,
--			xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep));
--		xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
--			xfs_dir3_sfe_get_ftype(mp, oldsfp, oldsfep));
-+		dp->d_ops->sf_put_ino(sfp, sfep,
-+				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
-+		dp->d_ops->sf_put_ftype(sfep, dp->d_ops->sf_get_ftype(oldsfep));
- 	}
- 	/*
- 	 * Clean up the inode.
-@@ -1243,7 +1153,7 @@ xfs_dir2_sf_toino8(
- 	 */
- 	sfp->count = oldsfp->count;
- 	sfp->i8count = 1;
--	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
-+	dp->d_ops->sf_put_parent_ino(sfp, dp->d_ops->sf_get_parent_ino(oldsfp));
- 	/*
- 	 * Copy the entries field by field.
- 	 */
-@@ -1255,10 +1165,9 @@ xfs_dir2_sf_toino8(
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
--		xfs_dir3_sfe_put_ino(mp, sfp, sfep,
--			xfs_dir3_sfe_get_ino(mp, oldsfp, oldsfep));
--		xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
--			xfs_dir3_sfe_get_ftype(mp, oldsfp, oldsfep));
-+		dp->d_ops->sf_put_ino(sfp, sfep,
-+				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
-+		dp->d_ops->sf_put_ftype(sfep, dp->d_ops->sf_get_ftype(oldsfep));
- 	}
- 	/*
- 	 * Clean up the inode.
++extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
++		       xfs_dqid_t id, uint type, uint flags, char *str);
++extern int xfs_calc_dquots_per_chunk(struct xfs_mount *mp, unsigned int nbblks);
++
+ #endif	/* __XFS_QUOTA_H__ */
 -- 
 1.8.3.2
 
