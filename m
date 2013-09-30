@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9D257F86
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:52 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C2E347F85
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C69EAC001
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:52 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8E0068F8039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:53 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	WmFMfMRwZgDXD3zQ for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:51 -0700 (PDT)
+	vetK8lvTxNnYSivW for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:52 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006Ol-Tq
+	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006Ok-TJ
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FP-T8
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FK-SI
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/32] xfs: ensure we copy buffer type in da btree root splits
-Date: Mon, 30 Sep 2013 13:15:17 +1000
-Message-Id: <1380510944-8571-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/32] xfs: check magic numbers in dir3 leaf verifier first
+Date: Mon, 30 Sep 2013 13:15:16 +1000
+Message-Id: <1380510944-8571-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,35 +39,69 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When splitting the root of the da btree, we shuffled data between
-buffers and the structures that track them. At one point, we copy
-data and state from one buffer to another, including the ops
-associated with the buffer. When we do this, we also need to copy
-the buffer type associated with the buf log item so that the buffer
-is logged correctly. If we don't do that, log recovery won't
-recognise it and hence it won't recalculate the CRC on the buffer
-after recovery. This leads to a directory block that can't be read
-after recovery has run.
+Calling xfs_dir3_leaf_hdr_from_disk() in a verifier before
+validating the magic numbers in the buffer results in ASSERT
+failures due to mismatching magic numbers when a corruption occurs.
+Seeing as the verifier is supposed to catch the corruption and pass
+it back to the caller, having the verifier assert fail on error
+defeats the purpose of detecting the errors in the first place.
 
-Found by inspection after finding the same problem with remote
-symlink buffers.
+Check the magic numbers direct from the buffer before decoding the
+header.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_da_btree.c | 1 +
- 1 file changed, 1 insertion(+)
+ libxfs/xfs_dir2_leaf.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index b7b6705..f106e06 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -612,6 +612,7 @@ xfs_da3_root_split(
- 	xfs_trans_log_buf(tp, bp, 0, size - 1);
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 7ec2f19..c035c4d 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -161,6 +161,11 @@ xfs_dir3_leaf_check_int(
+ 	return true;
+ }
  
- 	bp->b_ops = blk1->bp->b_ops;
-+	xfs_trans_buf_copy_type(bp, blk1->bp);
- 	blk1->bp = bp;
- 	blk1->blkno = blkno;
++/*
++ * We verify the magic numbers before decoding the leaf header so that on debug
++ * kernels we don't get assertion failures in xfs_dir3_leaf_hdr_from_disk() due
++ * to incorrect magic numbers.
++ */
+ static bool
+ xfs_dir3_leaf_verify(
+ 	struct xfs_buf		*bp,
+@@ -172,24 +177,25 @@ xfs_dir3_leaf_verify(
+ 
+ 	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
+ 
+-	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
++		__uint16_t		magic3;
+ 
+-		if ((magic == XFS_DIR2_LEAF1_MAGIC &&
+-		     leafhdr.magic != XFS_DIR3_LEAF1_MAGIC) ||
+-		    (magic == XFS_DIR2_LEAFN_MAGIC &&
+-		     leafhdr.magic != XFS_DIR3_LEAFN_MAGIC))
+-			return false;
++		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
++							 : XFS_DIR3_LEAFN_MAGIC;
+ 
++		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
++			return false;
+ 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_uuid))
+ 			return false;
+ 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+ 			return false;
+ 	} else {
+-		if (leafhdr.magic != magic)
++		if (leaf->hdr.info.magic != cpu_to_be16(magic))
+ 			return false;
+ 	}
++
++	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
+ 	return xfs_dir3_leaf_check_int(mp, &leafhdr, leaf);
+ }
  
 -- 
 1.8.3.2
