@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 700E67F96
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7C3CF7F9C
 	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 310D08F8039
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 65687304053
 	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:56 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	UzFCgVgdlowhzCnM for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:54 -0700 (PDT)
+	sD6ZLwyG7ziNoqgq for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:55 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PZ-C7
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006Pf-DL
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002HB-BH
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002HL-CW
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 27/32] libxfs: fix root inode handling inconsistencies
-Date: Mon, 30 Sep 2013 13:15:39 +1000
-Message-Id: <1380510944-8571-28-git-send-email-david@fromorbit.com>
+Subject: [PATCH 29/32] libxfs: work around do_div() not handling 32 bit
+	numerators
+Date: Mon, 30 Sep 2013 13:15:41 +1000
+Message-Id: <1380510944-8571-30-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,64 +40,54 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When "mounting" a filesystem via libxfs_mount(), callers can tell
-libxfs to read the root and realtime inodes into cache. However,
-when unmounting the filesystem, libxfs_unmount() used to
-unconditionally free root inodes if they were present.
-
-This leads to interesting issues like in mkfs, when it handles
-creation, reading and freeing of the root and rt inodes itself.
-It, however, passes in the flag to tell libxfs_mount() to read the
-root inode, and so when unmounting throws an error like:
-
-cache_node_put: node put on refcount 0 (node=0x684610)
-
-When a second libxfs_iput() call is made on the root inode.
-
-Clean this up and fix up all the callers that use magic numbers
-rather than symbolic values to tell libxfs tomount the root inodes.
+The libxfs dquot buffer code uses do_div() with a 32 bit numerator.
+This gives incorrect results as do_div() passes the numerator by
+reference as a pointer to a 64 bit value. Hence it does the division
+using 32 bits of garbage gives the wrong result. The kernel code
+handles 32 bit numerators just fine, so this patch is a temporary
+workaround in the dquot buffer code until we fix do_div() to handle
+32 bit numerators correctly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- copy/xfs_copy.c | 3 ++-
- mkfs/xfs_mkfs.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ libxfs/xfs_dquot_buf.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index bb37279..b6695d7 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -684,7 +684,8 @@ main(int argc, char **argv)
- 	sb = &mbuf.m_sb;
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
+diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
+index 620d9d3..ce6b09c 100644
+--- a/libxfs/xfs_dquot_buf.c
++++ b/libxfs/xfs_dquot_buf.c
+@@ -18,18 +18,28 @@
+  */
+ #include "xfs.h"
  
--	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
-+	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev,
-+			  LIBXFS_MOUNT_ROOTINOS);
- 	if (mp == NULL) {
- 		do_log(_("%s: %s filesystem failed to initialize\n"
- 			"%s: Aborting.\n"), progname, source_name, progname);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index eafbed3..60e4d88 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2556,6 +2556,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
- 	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-+	libxfs_purgebuf(buf);
++/*
++ * XXX: the userspace implementation of the do_div() macro does not handle 32
++ * bit numerators properly as it passes it by reference as a pointer to a 64 bit
++ * variable and dereferences it as such. Hence the result is way, way off
++ * because it uses 32 bits of garbage for the upper 32 bits of the numerator.
++ *
++ * This is being left here as a reminder that we need to fix do_div() in
++ * userspace as every time we do a libxfs kernel/userspace diff we'll see this
++ * comment.
++ */
+ int
+ xfs_calc_dquots_per_chunk(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		nbblks)	/* basic block units */
+ {
+-	unsigned int	ndquots;
++	uint64_t	ndquots;
  
- 	/*
- 	 * If the data area is a file, then grow it out to its final size
-@@ -2590,7 +2591,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
- 		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
+ 	ASSERT(nbblks > 0);
+ 	ndquots = BBTOB(nbblks);
+ 	do_div(ndquots, sizeof(xfs_dqblk_t));
  
--	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
-+	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
- 	if (mp == NULL) {
- 		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
- 			progname);
+-	return ndquots;
++	return (int)ndquots;
+ }
+ 
+ /*
 -- 
 1.8.3.2
 
