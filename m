@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9507D7F6C
-	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 17:52:03 -0500 (CDT)
-Date: Mon, 30 Sep 2013 17:52:03 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3550F7F6C
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 17:53:07 -0500 (CDT)
+Date: Mon, 30 Sep 2013 17:53:06 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/4] xfs: candidate fixes for 3.12-rc4
-Message-ID: <20130930225203.GR1935@sgi.com>
-References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix memory leak in xlog_recover_add_to_trans
+Message-ID: <20130930225306.GS1935@sgi.com>
+References: <20130927140104.515578025@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1380497826-13474-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130927140104.515578025@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,21 +22,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: tinguely@sgi.com
 Cc: xfs@oss.sgi.com
 
-On Mon, Sep 30, 2013 at 09:37:02AM +1000, Dave Chinner wrote:
-> Hi folks,
+On Fri, Sep 27, 2013 at 09:00:55AM -0500, tinguely@sgi.com wrote:
+> Free the memory in error path of xlog_recover_add_to_trans().
+> Normally this memory is freed in recovery pass2, but is leaked
+> in the error path.
 > 
-> The first two patches are regressions and hence -rc4 candidates -
-> the first patch fixes a lockdep false positive as a result of adding
-> the third quota inode, and the second fixes a on-disk format
-> interpretation problem in the v4 superblock dtype-in-dirent feature.
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 
-Applied 1 and 2.
-
-Thanks,
-	Ben
+Applied.
 
 _______________________________________________
 xfs mailing list
