@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4DCC97F86
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 700E67F96
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 223268F8039
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:55 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 310D08F8039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:56 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	IEh6rXYRw1D3pWbN for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:53 -0700 (PDT)
+	UzFCgVgdlowhzCnM for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:54 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PU-AK
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PZ-C7
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002Gw-9Y
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002HB-BH
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 24/32] db: add a special directory buffer verifier
-Date: Mon, 30 Sep 2013 13:15:36 +1000
-Message-Id: <1380510944-8571-25-git-send-email-david@fromorbit.com>
+Subject: [PATCH 27/32] libxfs: fix root inode handling inconsistencies
+Date: Mon, 30 Sep 2013 13:15:39 +1000
+Message-Id: <1380510944-8571-28-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,123 +39,64 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because we only have a single directory type that is used for all
-the different buffer types, we need to provide a special verifier
-for the read code. That verifier needs to know all the directory
-types and when it find one it knows about, switch to the correct
-verifier and call it.
+When "mounting" a filesystem via libxfs_mount(), callers can tell
+libxfs to read the root and realtime inodes into cache. However,
+when unmounting the filesystem, libxfs_unmount() used to
+unconditionally free root inodes if they were present.
 
-We already do this for certain readahead cases in the directory
-code, so there is precedence for this. If we don't find a magic
-number we recognise, the verifier fails...
+This leads to interesting issues like in mkfs, when it handles
+creation, reading and freeing of the root and rt inodes itself.
+It, however, passes in the flag to tell libxfs_mount() to read the
+root inode, and so when unmounting throws an error like:
+
+cache_node_put: node put on refcount 0 (node=0x684610)
+
+When a second libxfs_iput() call is made on the root inode.
+
+Clean this up and fix up all the callers that use magic numbers
+rather than symbolic values to tell libxfs tomount the root inodes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/dir2.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/dir2.h |  2 ++
- db/type.c |  3 ++-
- 3 files changed, 65 insertions(+), 1 deletion(-)
+ copy/xfs_copy.c | 3 ++-
+ mkfs/xfs_mkfs.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/db/dir2.c b/db/dir2.c
-index 2ec64e0..5a10955 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -24,6 +24,7 @@
- #include "field.h"
- #include "dir2.h"
- #include "init.h"
-+#include "output.h"
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index bb37279..b6695d7 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -684,7 +684,8 @@ main(int argc, char **argv)
+ 	sb = &mbuf.m_sb;
+ 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
  
- static int	dir2_block_hdr_count(void *obj, int startoff);
- static int	dir2_block_leaf_count(void *obj, int startoff);
-@@ -975,3 +976,63 @@ const field_t	da3_node_hdr_flds[] = {
- 	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
-+
-+/*
-+ * Special read verifier for directory buffers. detect the magic number
-+ * appropriately and set the correct verifier and call it.
-+ */
-+static void
-+xfs_dir3_db_read_verify(
-+	struct xfs_buf		*bp)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
-+
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+		bp->b_ops = &xfs_dir3_block_buf_ops;
-+		goto verify;
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+		bp->b_ops = &xfs_dir3_data_buf_ops;
-+		goto verify;
-+	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
-+		bp->b_ops = &xfs_dir3_free_buf_ops;
-+		goto verify;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-+		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
-+		break;
-+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-+		bp->b_ops = &xfs_dir3_leafn_buf_ops;
-+		break;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		break;
-+	default:
-+		dbprintf(_("Unknown directory buffer type!\n"));
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+verify:
-+	bp->b_ops->verify_read(bp);
-+}
-+
-+static void
-+xfs_dir3_db_write_verify(
-+	struct xfs_buf		*bp)
-+{
-+	dbprintf(_("Writing unknown directory buffer type!\n"));
-+	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+}
-+
-+const struct xfs_buf_ops xfs_dir3_db_buf_ops = {
-+	.verify_read = xfs_dir3_db_read_verify,
-+	.verify_write = xfs_dir3_db_write_verify,
-+};
-diff --git a/db/dir2.h b/db/dir2.h
-index b3651d5..5054493 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -60,3 +60,5 @@ static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
+-	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
++	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev,
++			  LIBXFS_MOUNT_ROOTINOS);
+ 	if (mp == NULL) {
+ 		do_log(_("%s: %s filesystem failed to initialize\n"
+ 			"%s: Aborting.\n"), progname, source_name, progname);
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index eafbed3..60e4d88 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2556,6 +2556,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
+ 	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
+ 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++	libxfs_purgebuf(buf);
  
- extern int	dir2_data_union_size(void *obj, int startoff, int idx);
- extern int	dir2_size(void *obj, int startoff, int idx);
-+
-+extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
-diff --git a/db/type.c b/db/type.c
-index b3f3d87..2c3431e 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -87,7 +87,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
- 		&xfs_allocbt_buf_ops },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL },
--	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld, NULL },
-+	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
-+		&xfs_dir3_db_buf_ops },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
- 		&xfs_dquot_buf_ops },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
+ 	/*
+ 	 * If the data area is a file, then grow it out to its final size
+@@ -2590,7 +2591,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
+ 		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
+ 
+-	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
++	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
+ 	if (mp == NULL) {
+ 		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
+ 			progname);
 -- 
 1.8.3.2
 
