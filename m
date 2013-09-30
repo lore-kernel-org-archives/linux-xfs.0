@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 22FB87F4E
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:07:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C798AAC003
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:07:33 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BBAE27F54
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:07:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ACE218F8039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:07:35 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Mpr4nPzWxqWIsyCi for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:07:31 -0700 (PDT)
+	3mOJxVVe2SeGjrEG for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:07:32 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTpO-0006La-O0
+	(envelope-from <dave@fromorbit.com>) id 1VQTpO-0006Lh-Pr
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:07:18 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTpO-0002C1-N8
+	(envelope-from <dave@disappointment.disaster>) id 1VQTpO-0002CG-P4
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:07:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/16] xfs: abstract the differences in dir2/dir3 via an ops
-	vector
-Date: Mon, 30 Sep 2013 13:07:04 +1000
-Message-Id: <1380510433-8353-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/16] xfs: vectorise directory data operations part 2
+Date: Mon, 30 Sep 2013 13:07:07 +1000
+Message-Id: <1380510433-8353-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510433-8353-1-git-send-email-david@fromorbit.com>
 References: <1380510433-8353-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,458 +39,1000 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Lots of the dir code now goes through switches to determine what is
-the correct on-disk format to parse. It generally involves a
-"xfs_sbversion_hasfoo" check, deferencing the superblock version and
-feature fields and hence touching several cache lines per operation
-in the process. Some operations do multiple checks because they nest
-conditional operations and they don't pass the information in a
-direct fashion between each other.
+Convert the rest of the directory data block encode/decode
+operations to vector format.
 
-Hence, add an ops vector to the xfs_inode structure that is
-configured when the inode is initialised to point to all the correct
-decode and encoding operations.  This will significantly reduce the
-branchiness and cacheline footprint of the directory object decoding
-and encoding.
+This further reduces the size of the built binary:
 
-This is the first patch in a series of conversion patches. It will
-introduce the ops structure, the setup of it and add the first
-operation to the vector. Subsequent patches will convert directory
-ops one at a time to keep the changes simple and obvious.
-
-Just this patch shows the benefit of such an approach on code size.
-Just converting the two shortform dir operations as this patch does
-decreases the built binary size by ~1500 bytes:
-
-$ size fs/xfs/xfs.o.orig fs/xfs/xfs.o.p1
    text    data     bss     dec     hex filename
  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
-$
-
-That's a significant decrease in the instruction cache footprint of
-the directory code for such a simple change, and indicates that this
-approach is definitely worth pursuing further.
+ 792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
+ 789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
+ 789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile           |  1 +
- fs/xfs/xfs_da_btree.h     |  1 +
- fs/xfs/xfs_da_format.c    | 85 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_da_format.h    | 26 ---------------
- fs/xfs/xfs_dir2.c         |  7 ++++
- fs/xfs/xfs_dir2.h         | 14 ++++++++
- fs/xfs/xfs_dir2_block.c   |  2 +-
- fs/xfs/xfs_dir2_readdir.c |  4 +--
- fs/xfs/xfs_dir2_sf.c      | 31 +++++++++--------
- fs/xfs/xfs_inode.h        |  3 ++
- fs/xfs/xfs_iops.c         |  1 +
- fs/xfs/xfs_mount.h        |  2 ++
- 12 files changed, 132 insertions(+), 45 deletions(-)
- create mode 100644 fs/xfs/xfs_da_format.c
+ fs/xfs/xfs_da_format.c    |  68 +++++++++++++++++++++++++++++++
+ fs/xfs/xfs_da_format.h    |  41 -------------------
+ fs/xfs/xfs_dir2.h         |  22 +++++++---
+ fs/xfs/xfs_dir2_block.c   |  33 ++++++++-------
+ fs/xfs/xfs_dir2_data.c    | 102 ++++++++++++++++++++++++----------------------
+ fs/xfs/xfs_dir2_leaf.c    |  26 ++++++------
+ fs/xfs/xfs_dir2_node.c    |  16 ++++----
+ fs/xfs/xfs_dir2_priv.h    |   3 +-
+ fs/xfs/xfs_dir2_readdir.c |   6 +--
+ fs/xfs/xfs_dir2_sf.c      |   2 +-
+ 10 files changed, 183 insertions(+), 136 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 33a69fa..c21f435 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -66,6 +66,7 @@ xfs-y				+= xfs_alloc.o \
- 				   xfs_bmap_btree.o \
- 				   xfs_btree.o \
- 				   xfs_da_btree.o \
-+				   xfs_da_format.o \
- 				   xfs_dir2.o \
- 				   xfs_dir2_block.o \
- 				   xfs_dir2_data.o \
-diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
-index e492dca..6e95ea7 100644
---- a/fs/xfs/xfs_da_btree.h
-+++ b/fs/xfs/xfs_da_btree.h
-@@ -23,6 +23,7 @@ struct xfs_bmap_free;
- struct xfs_inode;
- struct xfs_trans;
- struct zone;
-+struct xfs_dir_ops;
- 
- /*========================================================================
-  * Btree searching and modification structure definitions.
 diff --git a/fs/xfs/xfs_da_format.c b/fs/xfs/xfs_da_format.c
-new file mode 100644
-index 0000000..982d105
---- /dev/null
+index d0285fd..1e92a24 100644
+--- a/fs/xfs/xfs_da_format.c
 +++ b/fs/xfs/xfs_da_format.c
-@@ -0,0 +1,85 @@
-+/*
-+ * Copyright (c) 2000,2002,2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_mount.h"
-+#include "xfs_da_format.h"
-+#include "xfs_inode.h"
-+#include "xfs_dir2.h"
-+
-+
-+static int
-+xfs_dir2_sf_entsize(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	int			len)
+@@ -383,6 +383,58 @@ xfs_dir3_data_first_entry_p(
+ 		((char *)hdr + xfs_dir3_data_first_offset());
+ }
+ 
++static struct xfs_dir2_data_free *
++xfs_dir2_data_bestfree_p(struct xfs_dir2_data_hdr *hdr)
 +{
-+	int count = sizeof(struct xfs_dir2_sf_entry);	/* namelen + offset */
-+
-+	count += len;					/* name */
-+	count += hdr->i8count ? sizeof(xfs_dir2_ino8_t) :
-+				sizeof(xfs_dir2_ino4_t); /* ino # */
-+	return count;
++	return hdr->bestfree;
 +}
 +
-+static int
-+xfs_dir3_sf_entsize(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	int			len)
++static struct xfs_dir2_data_free *
++xfs_dir3_data_bestfree_p(struct xfs_dir2_data_hdr *hdr)
 +{
-+	return xfs_dir2_sf_entsize(hdr, len) + sizeof(__uint8_t);
++	return ((struct xfs_dir3_data_hdr *)hdr)->best_free;
 +}
 +
-+static struct xfs_dir2_sf_entry *
-+xfs_dir2_sf_nextentry(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep)
++static size_t
++xfs_dir2_data_entry_offset(void)
 +{
-+	return (struct xfs_dir2_sf_entry *)
-+		((char *)sfep + xfs_dir2_sf_entsize(hdr, sfep->namelen));
++	return sizeof(struct xfs_dir2_data_hdr);
 +}
 +
-+static struct xfs_dir2_sf_entry *
-+xfs_dir3_sf_nextentry(
-+	struct xfs_dir2_sf_hdr	*hdr,
-+	struct xfs_dir2_sf_entry *sfep)
++static struct xfs_dir2_data_entry *
++xfs_dir2_data_entry_p(struct xfs_dir2_data_hdr *hdr)
 +{
-+	return (struct xfs_dir2_sf_entry *)
-+		((char *)sfep + xfs_dir3_sf_entsize(hdr, sfep->namelen));
++	return (struct xfs_dir2_data_entry *)
++		((char *)hdr + xfs_dir2_data_entry_offset());
 +}
 +
++static struct xfs_dir2_data_unused *
++xfs_dir2_data_unused_p(struct xfs_dir2_data_hdr *hdr)
++{
++	return (struct xfs_dir2_data_unused *)
++		((char *)hdr + xfs_dir2_data_entry_offset());
++}
 +
-+const struct xfs_dir_ops xfs_dir2_ops = {
-+	.sf_entsize = xfs_dir2_sf_entsize,
-+	.sf_nextentry = xfs_dir2_sf_nextentry,
-+};
++static size_t
++xfs_dir3_data_entry_offset(void)
++{
++	return sizeof(struct xfs_dir3_data_hdr);
++}
 +
-+const struct xfs_dir_ops xfs_dir2_ftype_ops = {
-+	.sf_entsize = xfs_dir3_sf_entsize,
-+	.sf_nextentry = xfs_dir3_sf_nextentry,
-+};
++static struct xfs_dir2_data_entry *
++xfs_dir3_data_entry_p(struct xfs_dir2_data_hdr *hdr)
++{
++	return (struct xfs_dir2_data_entry *)
++		((char *)hdr + xfs_dir3_data_entry_offset());
++}
 +
-+const struct xfs_dir_ops xfs_dir3_ops = {
-+	.sf_entsize = xfs_dir3_sf_entsize,
-+	.sf_nextentry = xfs_dir3_sf_nextentry,
-+};
++static struct xfs_dir2_data_unused *
++xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
++{
++	return (struct xfs_dir2_data_unused *)
++		((char *)hdr + xfs_dir3_data_entry_offset());
++}
++
+ const struct xfs_dir_ops xfs_dir2_ops = {
+ 	.sf_entsize = xfs_dir2_sf_entsize,
+ 	.sf_nextentry = xfs_dir2_sf_nextentry,
+@@ -397,13 +449,19 @@ const struct xfs_dir_ops xfs_dir2_ops = {
+ 	.data_get_ftype = xfs_dir2_data_get_ftype,
+ 	.data_put_ftype = xfs_dir2_data_put_ftype,
+ 	.data_entry_tag_p = xfs_dir2_data_entry_tag_p,
++	.data_bestfree_p = xfs_dir2_data_bestfree_p,
+ 
+ 	.data_dot_offset = xfs_dir2_data_dot_offset,
+ 	.data_dotdot_offset = xfs_dir2_data_dotdot_offset,
+ 	.data_first_offset = xfs_dir2_data_first_offset,
++	.data_entry_offset = xfs_dir2_data_entry_offset,
++
+ 	.data_dot_entry_p = xfs_dir2_data_dot_entry_p,
+ 	.data_dotdot_entry_p = xfs_dir2_data_dotdot_entry_p,
+ 	.data_first_entry_p = xfs_dir2_data_first_entry_p,
++	.data_entry_p = xfs_dir2_data_entry_p,
++	.data_unused_p = xfs_dir2_data_unused_p,
++
+ };
+ 
+ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+@@ -420,13 +478,18 @@ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+ 	.data_get_ftype = xfs_dir3_data_get_ftype,
+ 	.data_put_ftype = xfs_dir3_data_put_ftype,
+ 	.data_entry_tag_p = xfs_dir3_data_entry_tag_p,
++	.data_bestfree_p = xfs_dir2_data_bestfree_p,
+ 
+ 	.data_dot_offset = xfs_dir2_data_dot_offset,
+ 	.data_dotdot_offset = xfs_dir2_data_dotdot_offset,
+ 	.data_first_offset = xfs_dir2_data_first_offset,
++	.data_entry_offset = xfs_dir2_data_entry_offset,
++
+ 	.data_dot_entry_p = xfs_dir2_data_dot_entry_p,
+ 	.data_dotdot_entry_p = xfs_dir2_data_dotdot_entry_p,
+ 	.data_first_entry_p = xfs_dir2_data_first_entry_p,
++	.data_entry_p = xfs_dir2_data_entry_p,
++	.data_unused_p = xfs_dir2_data_unused_p,
+ };
+ 
+ const struct xfs_dir_ops xfs_dir3_ops = {
+@@ -443,11 +506,16 @@ const struct xfs_dir_ops xfs_dir3_ops = {
+ 	.data_get_ftype = xfs_dir3_data_get_ftype,
+ 	.data_put_ftype = xfs_dir3_data_put_ftype,
+ 	.data_entry_tag_p = xfs_dir3_data_entry_tag_p,
++	.data_bestfree_p = xfs_dir3_data_bestfree_p,
+ 
+ 	.data_dot_offset = xfs_dir3_data_dot_offset,
+ 	.data_dotdot_offset = xfs_dir3_data_dotdot_offset,
+ 	.data_first_offset = xfs_dir3_data_first_offset,
++	.data_entry_offset = xfs_dir3_data_entry_offset,
++
+ 	.data_dot_entry_p = xfs_dir3_data_dot_entry_p,
+ 	.data_dotdot_entry_p = xfs_dir3_data_dotdot_entry_p,
+ 	.data_first_entry_p = xfs_dir3_data_first_entry_p,
++	.data_entry_p = xfs_dir3_data_entry_p,
++	.data_unused_p = xfs_dir3_data_unused_p,
+ };
 diff --git a/fs/xfs/xfs_da_format.h b/fs/xfs/xfs_da_format.h
-index 89a1a21..d54726d 100644
+index 5b72dd2..aeca003 100644
 --- a/fs/xfs/xfs_da_format.h
 +++ b/fs/xfs/xfs_da_format.h
-@@ -329,32 +329,6 @@ xfs_dir2_sf_firstentry(struct xfs_dir2_sf_hdr *hdr)
- 		((char *)hdr + xfs_dir2_sf_hdr_size(hdr->i8count));
- }
+@@ -412,17 +412,6 @@ struct xfs_dir3_data_hdr {
  
--static inline int
--xfs_dir3_sf_entsize(
--	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_hdr	*hdr,
--	int			len)
+ #define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
+ 
+-static inline struct xfs_dir2_data_free *
+-xfs_dir3_data_bestfree_p(struct xfs_dir2_data_hdr *hdr)
 -{
--	int count = sizeof(struct xfs_dir2_sf_entry); 	/* namelen + offset */
--
--	count += len;					/* name */
--	count += hdr->i8count ? sizeof(xfs_dir2_ino8_t) :
--				sizeof(xfs_dir2_ino4_t); /* ino # */
--	if (xfs_sb_version_hasftype(&mp->m_sb))
--		count += sizeof(__uint8_t);		/* file type */
--	return count;
--}
--
--static inline struct xfs_dir2_sf_entry *
--xfs_dir3_sf_nextentry(
--	struct xfs_mount	*mp,
--	struct xfs_dir2_sf_hdr	*hdr,
--	struct xfs_dir2_sf_entry *sfep)
--{
--	return (struct xfs_dir2_sf_entry *)
--		((char *)sfep + xfs_dir3_sf_entsize(mp, hdr, sfep->namelen));
+-	if (hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+-	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
+-		struct xfs_dir3_data_hdr *hdr3 = (struct xfs_dir3_data_hdr *)hdr;
+-		return hdr3->best_free;
+-	}
+-	return hdr->bestfree;
 -}
 -
  /*
-  * in dir3 shortform directories, the file type field is stored at a variable
-  * offset after the inode number. Because it's only a single byte, endian
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index 38bf932..7911136 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -112,6 +112,13 @@ xfs_dir_mount(
- 		mp->m_dirnameops = &xfs_ascii_ci_nameops;
- 	else
- 		mp->m_dirnameops = &xfs_default_nameops;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		mp->m_dir_inode_ops = &xfs_dir3_ops;
-+	else if (xfs_sb_version_hasftype(&mp->m_sb))
-+		mp->m_dir_inode_ops = &xfs_dir2_ftype_ops;
-+	else
-+		mp->m_dir_inode_ops = &xfs_dir2_ops;
+  * Active entry in a data block.
+  *
+@@ -465,36 +454,6 @@ xfs_dir2_data_unused_tag_p(struct xfs_dir2_data_unused *dup)
+ 			be16_to_cpu(dup->length) - sizeof(__be16));
  }
  
+-static inline size_t
+-xfs_dir3_data_hdr_size(bool dir3)
+-{
+-	if (dir3)
+-		return sizeof(struct xfs_dir3_data_hdr);
+-	return sizeof(struct xfs_dir2_data_hdr);
+-}
+-
+-static inline size_t
+-xfs_dir3_data_entry_offset(struct xfs_dir2_data_hdr *hdr)
+-{
+-	bool dir3 = hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+-		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
+-	return xfs_dir3_data_hdr_size(dir3);
+-}
+-
+-static inline struct xfs_dir2_data_entry *
+-xfs_dir3_data_entry_p(struct xfs_dir2_data_hdr *hdr)
+-{
+-	return (struct xfs_dir2_data_entry *)
+-		((char *)hdr + xfs_dir3_data_entry_offset(hdr));
+-}
+-
+-static inline struct xfs_dir2_data_unused *
+-xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
+-{
+-	return (struct xfs_dir2_data_unused *)
+-		((char *)hdr + xfs_dir3_data_entry_offset(hdr));
+-}
+-
  /*
+  * Leaf block structures.
+  *
 diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-index 9910401..1909d9f 100644
+index c0a4592..076010a 100644
 --- a/fs/xfs/xfs_dir2.h
 +++ b/fs/xfs/xfs_dir2.h
-@@ -32,6 +32,20 @@ struct xfs_dir2_data_unused;
- extern struct xfs_name	xfs_name_dotdot;
+@@ -56,16 +56,24 @@ struct xfs_dir_ops {
+ 	void	(*data_put_ftype)(struct xfs_dir2_data_entry *dep,
+ 				__uint8_t ftype);
+ 	__be16 * (*data_entry_tag_p)(struct xfs_dir2_data_entry *dep);
++	struct xfs_dir2_data_free *
++		(*data_bestfree_p)(struct xfs_dir2_data_hdr *hdr);
  
- /*
-+ * directory operations vector for encode/decode routines
-+ */
-+struct xfs_dir_ops {
-+	int	(*sf_entsize)(struct xfs_dir2_sf_hdr *hdr, int len);
-+	struct xfs_dir2_sf_entry *
-+		(*sf_nextentry)(struct xfs_dir2_sf_hdr *hdr,
-+				struct xfs_dir2_sf_entry *sfep);
-+};
+ 	xfs_dir2_data_aoff_t (*data_dot_offset)(void);
+ 	xfs_dir2_data_aoff_t (*data_dotdot_offset)(void);
+ 	xfs_dir2_data_aoff_t (*data_first_offset)(void);
++	size_t	(*data_entry_offset)(void);
 +
-+extern const struct xfs_dir_ops xfs_dir2_ops;
-+extern const struct xfs_dir_ops xfs_dir2_ftype_ops;
-+extern const struct xfs_dir_ops xfs_dir3_ops;
-+
-+/*
-  * Generic directory interface routines
-  */
- extern void xfs_dir_startup(void);
+ 	struct xfs_dir2_data_entry *
+ 		(*data_dot_entry_p)(struct xfs_dir2_data_hdr *hdr);
+ 	struct xfs_dir2_data_entry *
+ 		(*data_dotdot_entry_p)(struct xfs_dir2_data_hdr *hdr);
+ 	struct xfs_dir2_data_entry *
+ 		(*data_first_entry_p)(struct xfs_dir2_data_hdr *hdr);
++	struct xfs_dir2_data_entry *
++		(*data_entry_p)(struct xfs_dir2_data_hdr *hdr);
++	struct xfs_dir2_data_unused *
++		(*data_unused_p)(struct xfs_dir2_data_hdr *hdr);
+ };
+ 
+ extern const struct xfs_dir_ops xfs_dir2_ops;
+@@ -115,19 +123,21 @@ extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
+ 		struct xfs_dir2_data_hdr *hdr, int *loghead);
+ extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		struct xfs_buf *bp, struct xfs_dir2_data_entry *dep);
+-extern void xfs_dir2_data_log_header(struct xfs_trans *tp,
++extern void xfs_dir2_data_log_header(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		struct xfs_buf *bp);
+ extern void xfs_dir2_data_log_unused(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		struct xfs_dir2_data_unused *dup);
+-extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_buf *bp,
++extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_inode *dp,
++		struct xfs_buf *bp, xfs_dir2_data_aoff_t offset,
++		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
++extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_inode *dp,
++		struct xfs_buf *bp, struct xfs_dir2_data_unused *dup,
+ 		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
+ 		int *needlogp, int *needscanp);
+-extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+-		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
+-		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+ 
+ extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
+-		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
++		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_free *bf,
++		struct xfs_dir2_data_unused *dup);
+ 
+ extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
+ extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
 diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 9f3f83a..9d86b6f 100644
+index 7d7a8cc..e6f1784 100644
 --- a/fs/xfs/xfs_dir2_block.c
 +++ b/fs/xfs/xfs_dir2_block.c
-@@ -1240,7 +1240,7 @@ xfs_dir2_sf_to_block(
- 		if (++i == sfp->count)
- 			sfep = NULL;
- 		else
--			sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
-+			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
- 	}
- 	/* Done with the temporary buffer */
- 	kmem_free(sfp);
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 45c9ce8..8033305 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -153,7 +153,7 @@ xfs_dir2_sf_getdents(
- 				xfs_dir2_sf_get_offset(sfep));
+@@ -168,6 +168,7 @@ xfs_dir3_block_init(
  
- 		if (ctx->pos > off) {
--			sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
-+			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
+ static void
+ xfs_dir2_block_need_space(
++	struct xfs_inode		*dp,
+ 	struct xfs_dir2_data_hdr	*hdr,
+ 	struct xfs_dir2_block_tail	*btp,
+ 	struct xfs_dir2_leaf_entry	*blp,
+@@ -183,7 +184,7 @@ xfs_dir2_block_need_space(
+ 	struct xfs_dir2_data_unused	*enddup = NULL;
+ 
+ 	*compact = 0;
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
+ 
+ 	/*
+ 	 * If there are stale entries we'll use one for the leaf.
+@@ -313,7 +314,7 @@ xfs_dir2_block_compact(
+ 	*lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
+ 	*lfloghigh -= be32_to_cpu(btp->stale) - 1;
+ 	be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
+-	xfs_dir2_data_make_free(tp, bp,
++	xfs_dir2_data_make_free(tp, dp, bp,
+ 		(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
+ 		(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
+ 		needlog, &needscan);
+@@ -383,7 +384,7 @@ xfs_dir2_block_addname(
+ 	 * Find out if we can reuse stale entries or whether we need extra
+ 	 * space for entry and new leaf.
+ 	 */
+-	xfs_dir2_block_need_space(hdr, btp, blp, &tagp, &dup,
++	xfs_dir2_block_need_space(dp, hdr, btp, blp, &tagp, &dup,
+ 				  &enddup, &compact, len);
+ 
+ 	/*
+@@ -454,7 +455,7 @@ xfs_dir2_block_addname(
+ 		/*
+ 		 * Mark the space needed for the new leaf entry, now in use.
+ 		 */
+-		xfs_dir2_data_use_free(tp, bp, enddup,
++		xfs_dir2_data_use_free(tp, dp, bp, enddup,
+ 			(xfs_dir2_data_aoff_t)
+ 			((char *)enddup - (char *)hdr + be16_to_cpu(enddup->length) -
+ 			 sizeof(*blp)),
+@@ -541,7 +542,7 @@ xfs_dir2_block_addname(
+ 	/*
+ 	 * Mark space for the data entry used.
+ 	 */
+-	xfs_dir2_data_use_free(tp, bp, dup,
++	xfs_dir2_data_use_free(tp, dp, bp, dup,
+ 		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+ 		(xfs_dir2_data_aoff_t)len, &needlog, &needscan);
+ 	/*
+@@ -559,7 +560,7 @@ xfs_dir2_block_addname(
+ 	if (needscan)
+ 		xfs_dir2_data_freescan(dp, hdr, &needlog);
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, bp);
++		xfs_dir2_data_log_header(tp, dp, bp);
+ 	xfs_dir2_block_log_tail(tp, bp);
+ 	xfs_dir2_data_log_entry(tp, dp, bp, dep);
+ 	xfs_dir3_data_check(dp, bp);
+@@ -800,7 +801,7 @@ xfs_dir2_block_removename(
+ 	 * Mark the data entry's space free.
+ 	 */
+ 	needlog = needscan = 0;
+-	xfs_dir2_data_make_free(tp, bp,
++	xfs_dir2_data_make_free(tp, dp, bp,
+ 		(xfs_dir2_data_aoff_t)((char *)dep - (char *)hdr),
+ 		dp->d_ops->data_entsize(dep->namelen), &needlog, &needscan);
+ 	/*
+@@ -819,7 +820,7 @@ xfs_dir2_block_removename(
+ 	if (needscan)
+ 		xfs_dir2_data_freescan(dp, hdr, &needlog);
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, bp);
++		xfs_dir2_data_log_header(tp, dp, bp);
+ 	xfs_dir3_data_check(dp, bp);
+ 	/*
+ 	 * See if the size as a shortform is good enough.
+@@ -950,7 +951,7 @@ xfs_dir2_leaf_to_block(
+ 	while (dp->i_d.di_size > mp->m_dirblksize) {
+ 		int hdrsz;
+ 
+-		hdrsz = xfs_dir3_data_hdr_size(xfs_sb_version_hascrc(&mp->m_sb));
++		hdrsz = dp->d_ops->data_entry_offset();
+ 		bestsp = xfs_dir2_leaf_bests_p(ltp);
+ 		if (be16_to_cpu(bestsp[be32_to_cpu(ltp->bestcount) - 1]) ==
+ 					    mp->m_dirblksize - hdrsz) {
+@@ -1000,7 +1001,7 @@ xfs_dir2_leaf_to_block(
+ 	/*
+ 	 * Use up the space at the end of the block (blp/btp).
+ 	 */
+-	xfs_dir2_data_use_free(tp, dbp, dup, mp->m_dirblksize - size, size,
++	xfs_dir2_data_use_free(tp, dp, dbp, dup, mp->m_dirblksize - size, size,
+ 		&needlog, &needscan);
+ 	/*
+ 	 * Initialize the block tail.
+@@ -1026,7 +1027,7 @@ xfs_dir2_leaf_to_block(
+ 	if (needscan)
+ 		xfs_dir2_data_freescan(dp, hdr, &needlog);
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, dbp);
++		xfs_dir2_data_log_header(tp, dp, dbp);
+ 	/*
+ 	 * Pitch the old leaf block.
+ 	 */
+@@ -1137,9 +1138,9 @@ xfs_dir2_sf_to_block(
+ 	 * The whole thing is initialized to free by the init routine.
+ 	 * Say we're using the leaf and tail area.
+ 	 */
+-	dup = xfs_dir3_data_unused_p(hdr);
++	dup = dp->d_ops->data_unused_p(hdr);
+ 	needlog = needscan = 0;
+-	xfs_dir2_data_use_free(tp, bp, dup, mp->m_dirblksize - i, i, &needlog,
++	xfs_dir2_data_use_free(tp, dp, bp, dup, mp->m_dirblksize - i, i, &needlog,
+ 		&needscan);
+ 	ASSERT(needscan == 0);
+ 	/*
+@@ -1153,7 +1154,7 @@ xfs_dir2_sf_to_block(
+ 	/*
+ 	 * Remove the freespace, we'll manage it.
+ 	 */
+-	xfs_dir2_data_use_free(tp, bp, dup,
++	xfs_dir2_data_use_free(tp, dp, bp, dup,
+ 		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+ 		be16_to_cpu(dup->length), &needlog, &needscan);
+ 	/*
+@@ -1215,7 +1216,9 @@ xfs_dir2_sf_to_block(
+ 			*xfs_dir2_data_unused_tag_p(dup) = cpu_to_be16(
+ 				((char *)dup - (char *)hdr));
+ 			xfs_dir2_data_log_unused(tp, bp, dup);
+-			xfs_dir2_data_freeinsert(hdr, dup, &dummy);
++			xfs_dir2_data_freeinsert(hdr,
++						 dp->d_ops->data_bestfree_p(hdr),
++						 dup, &dummy);
+ 			offset += be16_to_cpu(dup->length);
  			continue;
  		}
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 571e173..0b58a07 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -66,8 +66,6 @@ __xfs_dir3_data_check(
  
-@@ -163,7 +163,7 @@ xfs_dir2_sf_getdents(
- 		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen, ino,
- 			    xfs_dir3_get_dtype(mp, filetype)))
- 			return 0;
--		sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
-+		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
+ 	mp = bp->b_target->bt_mount;
+ 	hdr = bp->b_addr;
+-	bf = xfs_dir3_data_bestfree_p(hdr);
+-	p = (char *)xfs_dir3_data_entry_p(hdr);
+ 
+ 	/*
+ 	 * we can be passed a null dp here froma verifier, so manually configure
+@@ -97,6 +95,8 @@ __xfs_dir3_data_check(
+ 		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
+ 		return EFSCORRUPTED;
  	}
++	bf = ops->data_bestfree_p(hdr);
++	p = (char *)ops->data_entry_p(hdr);
  
- 	ctx->pos = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
+ 	count = lastfree = freeseen = 0;
+ 	/*
+@@ -134,7 +134,7 @@ __xfs_dir3_data_check(
+ 			XFS_WANT_CORRUPTED_RETURN(
+ 				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+ 					       (char *)dup - (char *)hdr);
+-			dfp = xfs_dir2_data_freefind(hdr, dup);
++			dfp = xfs_dir2_data_freefind(hdr, bf, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+ 				XFS_WANT_CORRUPTED_RETURN(
+@@ -340,19 +340,18 @@ xfs_dir3_data_readahead(
+  */
+ xfs_dir2_data_free_t *
+ xfs_dir2_data_freefind(
+-	xfs_dir2_data_hdr_t	*hdr,		/* data block */
+-	xfs_dir2_data_unused_t	*dup)		/* data unused entry */
++	struct xfs_dir2_data_hdr *hdr,		/* data block header */
++	struct xfs_dir2_data_free *bf,		/* bestfree table pointer */
++	struct xfs_dir2_data_unused *dup)	/* unused space */
+ {
+ 	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
+ 	xfs_dir2_data_aoff_t	off;		/* offset value needed */
+-	struct xfs_dir2_data_free *bf;
+ #ifdef DEBUG
+ 	int			matched;	/* matched the value */
+ 	int			seenzero;	/* saw a 0 bestfree entry */
+ #endif
+ 
+ 	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
+-	bf = xfs_dir3_data_bestfree_p(hdr);
+ 
+ #ifdef DEBUG
+ 	/*
+@@ -412,11 +411,11 @@ xfs_dir2_data_freefind(
+  */
+ xfs_dir2_data_free_t *				/* entry inserted */
+ xfs_dir2_data_freeinsert(
+-	xfs_dir2_data_hdr_t	*hdr,		/* data block pointer */
+-	xfs_dir2_data_unused_t	*dup,		/* unused space */
++	struct xfs_dir2_data_hdr *hdr,		/* data block pointer */
++	struct xfs_dir2_data_free *dfp,		/* bestfree table pointer */
++	struct xfs_dir2_data_unused *dup,	/* unused space */
+ 	int			*loghead)	/* log the data header (out) */
+ {
+-	xfs_dir2_data_free_t	*dfp;		/* bestfree table pointer */
+ 	xfs_dir2_data_free_t	new;		/* new bestfree entry */
+ 
+ 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+@@ -424,7 +423,6 @@ xfs_dir2_data_freeinsert(
+ 	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+ 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
+ 
+-	dfp = xfs_dir3_data_bestfree_p(hdr);
+ 	new.length = dup->length;
+ 	new.offset = cpu_to_be16((char *)dup - (char *)hdr);
+ 
+@@ -457,11 +455,11 @@ xfs_dir2_data_freeinsert(
+  */
+ STATIC void
+ xfs_dir2_data_freeremove(
+-	xfs_dir2_data_hdr_t	*hdr,		/* data block header */
+-	xfs_dir2_data_free_t	*dfp,		/* bestfree entry pointer */
++	struct xfs_dir2_data_hdr *hdr,		/* data block header */
++	struct xfs_dir2_data_free *bf,		/* bestfree table pointer */
++	struct xfs_dir2_data_free *dfp,		/* bestfree entry pointer */
+ 	int			*loghead)	/* out: log data header */
+ {
+-	struct xfs_dir2_data_free *bf;
+ 
+ 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+@@ -471,7 +469,6 @@ xfs_dir2_data_freeremove(
+ 	/*
+ 	 * It's the first entry, slide the next 2 up.
+ 	 */
+-	bf = xfs_dir3_data_bestfree_p(hdr);
+ 	if (dfp == &bf[0]) {
+ 		bf[0] = bf[1];
+ 		bf[1] = bf[2];
+@@ -518,13 +515,13 @@ xfs_dir2_data_freescan(
+ 	/*
+ 	 * Start by clearing the table.
+ 	 */
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
+ 	memset(bf, 0, sizeof(*bf) * XFS_DIR2_DATA_FD_COUNT);
+ 	*loghead = 1;
+ 	/*
+ 	 * Set up pointers.
+ 	 */
+-	p = (char *)xfs_dir3_data_entry_p(hdr);
++	p = (char *)dp->d_ops->data_entry_p(hdr);
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+ 	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
+ 		btp = xfs_dir2_block_tail_p(dp->i_mount, hdr);
+@@ -542,7 +539,7 @@ xfs_dir2_data_freescan(
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+ 			ASSERT((char *)dup - (char *)hdr ==
+ 			       be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
+-			xfs_dir2_data_freeinsert(hdr, dup, loghead);
++			xfs_dir2_data_freeinsert(hdr, bf, dup, loghead);
+ 			p += be16_to_cpu(dup->length);
+ 		}
+ 		/*
+@@ -607,8 +604,8 @@ xfs_dir3_data_init(
+ 	} else
+ 		hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
+ 
+-	bf = xfs_dir3_data_bestfree_p(hdr);
+-	bf[0].offset = cpu_to_be16(xfs_dir3_data_entry_offset(hdr));
++	bf = dp->d_ops->data_bestfree_p(hdr);
++	bf[0].offset = cpu_to_be16(dp->d_ops->data_entry_offset());
+ 	for (i = 1; i < XFS_DIR2_DATA_FD_COUNT; i++) {
+ 		bf[i].length = 0;
+ 		bf[i].offset = 0;
+@@ -617,17 +614,17 @@ xfs_dir3_data_init(
+ 	/*
+ 	 * Set up an unused entry for the block's body.
+ 	 */
+-	dup = xfs_dir3_data_unused_p(hdr);
++	dup = dp->d_ops->data_unused_p(hdr);
+ 	dup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 
+-	t = mp->m_dirblksize - (uint)xfs_dir3_data_entry_offset(hdr);
++	t = mp->m_dirblksize - (uint)dp->d_ops->data_entry_offset();
+ 	bf[0].length = cpu_to_be16(t);
+ 	dup->length = cpu_to_be16(t);
+ 	*xfs_dir2_data_unused_tag_p(dup) = cpu_to_be16((char *)dup - (char *)hdr);
+ 	/*
+ 	 * Log it and return it.
+ 	 */
+-	xfs_dir2_data_log_header(tp, bp);
++	xfs_dir2_data_log_header(tp, dp, bp);
+ 	xfs_dir2_data_log_unused(tp, bp, dup);
+ 	*bpp = bp;
+ 	return 0;
+@@ -661,6 +658,7 @@ xfs_dir2_data_log_entry(
+ void
+ xfs_dir2_data_log_header(
+ 	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
+ 	struct xfs_buf		*bp)
+ {
+ 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
+@@ -670,7 +668,7 @@ xfs_dir2_data_log_header(
+ 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+ 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
+ 
+-	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_data_entry_offset(hdr) - 1);
++	xfs_trans_log_buf(tp, bp, 0, dp->d_ops->data_entry_offset() - 1);
+ }
+ 
+ /*
+@@ -711,6 +709,7 @@ xfs_dir2_data_log_unused(
+ void
+ xfs_dir2_data_make_free(
+ 	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
+ 	struct xfs_buf		*bp,
+ 	xfs_dir2_data_aoff_t	offset,		/* starting byte offset */
+ 	xfs_dir2_data_aoff_t	len,		/* length in bytes */
+@@ -748,7 +747,7 @@ xfs_dir2_data_make_free(
+ 	 * If this isn't the start of the block, then back up to
+ 	 * the previous entry and see if it's free.
+ 	 */
+-	if (offset > xfs_dir3_data_entry_offset(hdr)) {
++	if (offset > dp->d_ops->data_entry_offset()) {
+ 		__be16			*tagp;	/* tag just before us */
+ 
+ 		tagp = (__be16 *)((char *)hdr + offset) - 1;
+@@ -774,15 +773,15 @@ xfs_dir2_data_make_free(
+ 	 * Previous and following entries are both free,
+ 	 * merge everything into a single free entry.
+ 	 */
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
+ 	if (prevdup && postdup) {
+ 		xfs_dir2_data_free_t	*dfp2;	/* another bestfree pointer */
+ 
+ 		/*
+ 		 * See if prevdup and/or postdup are in bestfree table.
+ 		 */
+-		dfp = xfs_dir2_data_freefind(hdr, prevdup);
+-		dfp2 = xfs_dir2_data_freefind(hdr, postdup);
++		dfp = xfs_dir2_data_freefind(hdr, bf, prevdup);
++		dfp2 = xfs_dir2_data_freefind(hdr, bf, postdup);
+ 		/*
+ 		 * We need a rescan unless there are exactly 2 free entries
+ 		 * namely our two.  Then we know what's happening, otherwise
+@@ -810,12 +809,13 @@ xfs_dir2_data_make_free(
+ 				ASSERT(dfp2 == dfp);
+ 				dfp2 = &bf[1];
+ 			}
+-			xfs_dir2_data_freeremove(hdr, dfp2, needlogp);
+-			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++			xfs_dir2_data_freeremove(hdr, bf, dfp2, needlogp);
++			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
+ 			/*
+ 			 * Now insert the new entry.
+ 			 */
+-			dfp = xfs_dir2_data_freeinsert(hdr, prevdup, needlogp);
++			dfp = xfs_dir2_data_freeinsert(hdr, bf, prevdup,
++						       needlogp);
+ 			ASSERT(dfp == &bf[0]);
+ 			ASSERT(dfp->length == prevdup->length);
+ 			ASSERT(!dfp[1].length);
+@@ -826,7 +826,7 @@ xfs_dir2_data_make_free(
+ 	 * The entry before us is free, merge with it.
+ 	 */
+ 	else if (prevdup) {
+-		dfp = xfs_dir2_data_freefind(hdr, prevdup);
++		dfp = xfs_dir2_data_freefind(hdr, bf, prevdup);
+ 		be16_add_cpu(&prevdup->length, len);
+ 		*xfs_dir2_data_unused_tag_p(prevdup) =
+ 			cpu_to_be16((char *)prevdup - (char *)hdr);
+@@ -837,8 +837,8 @@ xfs_dir2_data_make_free(
+ 		 * the old one and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+-			xfs_dir2_data_freeinsert(hdr, prevdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
++			xfs_dir2_data_freeinsert(hdr, bf, prevdup, needlogp);
+ 		}
+ 		/*
+ 		 * Otherwise we need a scan if the new entry is big enough.
+@@ -852,7 +852,7 @@ xfs_dir2_data_make_free(
+ 	 * The following entry is free, merge with it.
+ 	 */
+ 	else if (postdup) {
+-		dfp = xfs_dir2_data_freefind(hdr, postdup);
++		dfp = xfs_dir2_data_freefind(hdr, bf, postdup);
+ 		newdup = (xfs_dir2_data_unused_t *)((char *)hdr + offset);
+ 		newdup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 		newdup->length = cpu_to_be16(len + be16_to_cpu(postdup->length));
+@@ -865,8 +865,8 @@ xfs_dir2_data_make_free(
+ 		 * the old one and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+-			xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
++			xfs_dir2_data_freeinsert(hdr, bf, newdup, needlogp);
+ 		}
+ 		/*
+ 		 * Otherwise we need a scan if the new entry is big enough.
+@@ -886,7 +886,7 @@ xfs_dir2_data_make_free(
+ 		*xfs_dir2_data_unused_tag_p(newdup) =
+ 			cpu_to_be16((char *)newdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup);
+-		xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
++		xfs_dir2_data_freeinsert(hdr, bf, newdup, needlogp);
+ 	}
+ 	*needscanp = needscan;
+ }
+@@ -897,6 +897,7 @@ xfs_dir2_data_make_free(
+ void
+ xfs_dir2_data_use_free(
+ 	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
+ 	struct xfs_buf		*bp,
+ 	xfs_dir2_data_unused_t	*dup,		/* unused entry */
+ 	xfs_dir2_data_aoff_t	offset,		/* starting offset to use */
+@@ -926,9 +927,9 @@ xfs_dir2_data_use_free(
+ 	/*
+ 	 * Look up the entry in the bestfree table.
+ 	 */
+-	dfp = xfs_dir2_data_freefind(hdr, dup);
+ 	oldlen = be16_to_cpu(dup->length);
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
++	dfp = xfs_dir2_data_freefind(hdr, bf, dup);
+ 	ASSERT(dfp || oldlen <= be16_to_cpu(bf[2].length));
+ 	/*
+ 	 * Check for alignment with front and back of the entry.
+@@ -945,7 +946,8 @@ xfs_dir2_data_use_free(
+ 		if (dfp) {
+ 			needscan = (bf[2].offset != 0);
+ 			if (!needscan)
+-				xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++				xfs_dir2_data_freeremove(hdr, bf, dfp,
++							 needlogp);
+ 		}
+ 	}
+ 	/*
+@@ -963,8 +965,9 @@ xfs_dir2_data_use_free(
+ 		 * If it was in the table, remove it and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+-			dfp = xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
++			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
++						       needlogp);
+ 			ASSERT(dfp != NULL);
+ 			ASSERT(dfp->length == newdup->length);
+ 			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
+@@ -990,8 +993,9 @@ xfs_dir2_data_use_free(
+ 		 * If it was in the table, remove it and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+-			dfp = xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
++			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
++						       needlogp);
+ 			ASSERT(dfp != NULL);
+ 			ASSERT(dfp->length == newdup->length);
+ 			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
+@@ -1030,9 +1034,11 @@ xfs_dir2_data_use_free(
+ 		if (dfp) {
+ 			needscan = (bf[2].length != 0);
+ 			if (!needscan) {
+-				xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+-				xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
+-				xfs_dir2_data_freeinsert(hdr, newdup2,
++				xfs_dir2_data_freeremove(hdr, bf, dfp,
++							 needlogp);
++				xfs_dir2_data_freeinsert(hdr, bf, newdup,
++							 needlogp);
++				xfs_dir2_data_freeinsert(hdr, bf, newdup2,
+ 							 needlogp);
+ 			}
+ 		}
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index dd19536..f35b394 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -460,7 +460,7 @@ xfs_dir2_block_to_leaf(
+ 	xfs_dir3_data_check(dp, dbp);
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
+ 	blp = xfs_dir2_block_leaf_p(btp);
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
+ 	ents = xfs_dir3_leaf_ents_p(leaf);
+ 
+ 	/*
+@@ -484,7 +484,7 @@ xfs_dir2_block_to_leaf(
+ 	 * Make the space formerly occupied by the leaf entries and block
+ 	 * tail be free.
+ 	 */
+-	xfs_dir2_data_make_free(tp, dbp,
++	xfs_dir2_data_make_free(tp, dp, dbp,
+ 		(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
+ 		(xfs_dir2_data_aoff_t)((char *)hdr + mp->m_dirblksize -
+ 				       (char *)blp),
+@@ -512,7 +512,7 @@ xfs_dir2_block_to_leaf(
+ 	 * Log the data header and leaf bests table.
+ 	 */
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, dbp);
++		xfs_dir2_data_log_header(tp, dp, dbp);
+ 	xfs_dir3_leaf_check(mp, lbp);
+ 	xfs_dir3_data_check(dp, dbp);
+ 	xfs_dir3_leaf_log_bests(tp, lbp, 0, 0);
+@@ -862,7 +862,7 @@ xfs_dir2_leaf_addname(
+ 		else
+ 			xfs_dir3_leaf_log_bests(tp, lbp, use_block, use_block);
+ 		hdr = dbp->b_addr;
+-		bf = xfs_dir3_data_bestfree_p(hdr);
++		bf = dp->d_ops->data_bestfree_p(hdr);
+ 		bestsp[use_block] = bf[0].length;
+ 		grown = 1;
+ 	} else {
+@@ -878,7 +878,7 @@ xfs_dir2_leaf_addname(
+ 			return error;
+ 		}
+ 		hdr = dbp->b_addr;
+-		bf = xfs_dir3_data_bestfree_p(hdr);
++		bf = dp->d_ops->data_bestfree_p(hdr);
+ 		grown = 0;
+ 	}
+ 	/*
+@@ -891,7 +891,7 @@ xfs_dir2_leaf_addname(
+ 	/*
+ 	 * Mark the initial part of our freespace in use for the new entry.
+ 	 */
+-	xfs_dir2_data_use_free(tp, dbp, dup,
++	xfs_dir2_data_use_free(tp, dp, dbp, dup,
+ 		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+ 		&needlog, &needscan);
+ 	/*
+@@ -913,7 +913,7 @@ xfs_dir2_leaf_addname(
+ 	 * Need to log the data block's header.
+ 	 */
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, dbp);
++		xfs_dir2_data_log_header(tp, dp, dbp);
+ 	xfs_dir2_data_log_entry(tp, dp, dbp, dep);
+ 	/*
+ 	 * If the bests table needs to be changed, do it.
+@@ -1413,7 +1413,7 @@ xfs_dir2_leaf_removename(
+ 	leaf = lbp->b_addr;
+ 	hdr = dbp->b_addr;
+ 	xfs_dir3_data_check(dp, dbp);
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
+ 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
+ 	ents = xfs_dir3_leaf_ents_p(leaf);
+ 	/*
+@@ -1431,7 +1431,7 @@ xfs_dir2_leaf_removename(
+ 	/*
+ 	 * Mark the former data entry unused.
+ 	 */
+-	xfs_dir2_data_make_free(tp, dbp,
++	xfs_dir2_data_make_free(tp, dp, dbp,
+ 		(xfs_dir2_data_aoff_t)((char *)dep - (char *)hdr),
+ 		dp->d_ops->data_entsize(dep->namelen), &needlog, &needscan);
+ 	/*
+@@ -1451,7 +1451,7 @@ xfs_dir2_leaf_removename(
+ 	if (needscan)
+ 		xfs_dir2_data_freescan(dp, hdr, &needlog);
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, dbp);
++		xfs_dir2_data_log_header(tp, dp, dbp);
+ 	/*
+ 	 * If the longest freespace in the data block has changed,
+ 	 * put the new value in the bests table and log that.
+@@ -1465,7 +1465,7 @@ xfs_dir2_leaf_removename(
+ 	 * If the data block is now empty then get rid of the data block.
+ 	 */
+ 	if (be16_to_cpu(bf[0].length) ==
+-			mp->m_dirblksize - xfs_dir3_data_entry_offset(hdr)) {
++			mp->m_dirblksize - dp->d_ops->data_entry_offset()) {
+ 		ASSERT(db != mp->m_dirdatablk);
+ 		if ((error = xfs_dir2_shrink_inode(args, db, dbp))) {
+ 			/*
+@@ -1659,12 +1659,12 @@ xfs_dir2_leaf_trim_data(
+ #ifdef DEBUG
+ {
+ 	struct xfs_dir2_data_hdr *hdr = dbp->b_addr;
+-	struct xfs_dir2_data_free *bf = xfs_dir3_data_bestfree_p(hdr);
++	struct xfs_dir2_data_free *bf = dp->d_ops->data_bestfree_p(hdr);
+ 
+ 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
+ 	ASSERT(be16_to_cpu(bf[0].length) ==
+-	       mp->m_dirblksize - xfs_dir3_data_entry_offset(hdr));
++	       mp->m_dirblksize - dp->d_ops->data_entry_offset());
+ 	ASSERT(db == be32_to_cpu(ltp->bestcount) - 1);
+ }
+ #endif
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index c45d452..6644ed6 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1255,10 +1255,10 @@ xfs_dir2_leafn_remove(
+ 	dbp = dblk->bp;
+ 	hdr = dbp->b_addr;
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr + off);
+-	bf = xfs_dir3_data_bestfree_p(hdr);
++	bf = dp->d_ops->data_bestfree_p(hdr);
+ 	longest = be16_to_cpu(bf[0].length);
+ 	needlog = needscan = 0;
+-	xfs_dir2_data_make_free(tp, dbp, off,
++	xfs_dir2_data_make_free(tp, dp, dbp, off,
+ 		dp->d_ops->data_entsize(dep->namelen), &needlog, &needscan);
+ 	/*
+ 	 * Rescan the data block freespaces for bestfree.
+@@ -1267,7 +1267,7 @@ xfs_dir2_leafn_remove(
+ 	if (needscan)
+ 		xfs_dir2_data_freescan(dp, hdr, &needlog);
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, dbp);
++		xfs_dir2_data_log_header(tp, dp, dbp);
+ 	xfs_dir3_data_check(dp, dbp);
+ 	/*
+ 	 * If the longest data block freespace changes, need to update
+@@ -1308,7 +1308,7 @@ xfs_dir2_leafn_remove(
+ 		 * (usually).
+ 		 */
+ 		if (longest == mp->m_dirblksize -
+-			       xfs_dir3_data_entry_offset(hdr)) {
++			       dp->d_ops->data_entry_offset()) {
+ 			/*
+ 			 * Try to punch out the data block.
+ 			 */
+@@ -1962,7 +1962,7 @@ xfs_dir2_node_addname_int(
+ 		 * change again.
+ 		 */
+ 		hdr = dbp->b_addr;
+-		bf = xfs_dir3_data_bestfree_p(hdr);
++		bf = dp->d_ops->data_bestfree_p(hdr);
+ 		bests[findex] = bf[0].length;
+ 		logfree = 1;
+ 	}
+@@ -1984,7 +1984,7 @@ xfs_dir2_node_addname_int(
+ 		if (error)
+ 			return error;
+ 		hdr = dbp->b_addr;
+-		bf = xfs_dir3_data_bestfree_p(hdr);
++		bf = dp->d_ops->data_bestfree_p(hdr);
+ 		logfree = 0;
+ 	}
+ 	ASSERT(be16_to_cpu(bf[0].length) >= length);
+@@ -1997,7 +1997,7 @@ xfs_dir2_node_addname_int(
+ 	/*
+ 	 * Mark the first part of the unused space, inuse for us.
+ 	 */
+-	xfs_dir2_data_use_free(tp, dbp, dup,
++	xfs_dir2_data_use_free(tp, dp, dbp, dup,
+ 		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+ 		&needlog, &needscan);
+ 	/*
+@@ -2020,7 +2020,7 @@ xfs_dir2_node_addname_int(
+ 	 * Log the data block header if needed.
+ 	 */
+ 	if (needlog)
+-		xfs_dir2_data_log_header(tp, dbp);
++		xfs_dir2_data_log_header(tp, dp, dbp);
+ 	/*
+ 	 * If the freespace entry is now wrong, update it.
+ 	 */
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 1bad84c..9a69f20 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -59,7 +59,8 @@ extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
+ 
+ extern struct xfs_dir2_data_free *
+ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
+-		struct xfs_dir2_data_unused *dup, int *loghead);
++		struct xfs_dir2_data_free *bf, struct xfs_dir2_data_unused *dup,
++		int *loghead);
+ extern int xfs_dir3_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
+ 		struct xfs_buf **bpp);
+ 
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index b99aa7d..f45ecac 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -213,7 +213,7 @@ xfs_dir2_block_getdents(
+ 	 * Set up values for the loop.
+ 	 */
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
+-	ptr = (char *)xfs_dir3_data_entry_p(hdr);
++	ptr = (char *)dp->d_ops->data_entry_p(hdr);
+ 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
+ 
+ 	/*
+@@ -578,13 +578,13 @@ xfs_dir2_leaf_getdents(
+ 			/*
+ 			 * Find our position in the block.
+ 			 */
+-			ptr = (char *)xfs_dir3_data_entry_p(hdr);
++			ptr = (char *)dp->d_ops->data_entry_p(hdr);
+ 			byteoff = xfs_dir2_byte_to_off(mp, curoff);
+ 			/*
+ 			 * Skip past the header.
+ 			 */
+ 			if (byteoff == 0)
+-				curoff += xfs_dir3_data_entry_offset(hdr);
++				curoff += dp->d_ops->data_entry_offset();
+ 			/*
+ 			 * Skip past entries until we reach our offset.
+ 			 */
 diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index 8811ee5..73881c9 100644
+index 953e194..42bbcff 100644
 --- a/fs/xfs/xfs_dir2_sf.c
 +++ b/fs/xfs/xfs_dir2_sf.c
-@@ -336,7 +336,7 @@ xfs_dir2_block_to_sf(
- 			xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
- 					xfs_dir3_dirent_get_ftype(mp, dep));
- 
--			sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
-+			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
- 		}
- 		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
- 	}
-@@ -389,7 +389,7 @@ xfs_dir2_sf_addname(
+@@ -210,7 +210,7 @@ xfs_dir2_block_to_sf(
+ 	 * Set up to loop over the block's entries.
+ 	 */
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
+-	ptr = (char *)xfs_dir3_data_entry_p(hdr);
++	ptr = (char *)dp->d_ops->data_entry_p(hdr);
+ 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
  	/*
- 	 * Compute entry (and change in) size.
- 	 */
--	add_entsize = xfs_dir3_sf_entsize(dp->i_mount, sfp, args->namelen);
-+	add_entsize = dp->d_ops->sf_entsize(sfp, args->namelen);
- 	incr_isize = add_entsize;
- 	objchange = 0;
- #if XFS_BIG_INUMS
-@@ -483,8 +483,7 @@ xfs_dir2_sf_addname_easy(
- 	/*
- 	 * Grow the in-inode space.
- 	 */
--	xfs_idata_realloc(dp,
--			  xfs_dir3_sf_entsize(dp->i_mount, sfp, args->namelen),
-+	xfs_idata_realloc(dp, dp->d_ops->sf_entsize(sfp, args->namelen),
- 			  XFS_DATA_FORK);
- 	/*
- 	 * Need to set up again due to realloc of the inode data.
-@@ -563,7 +562,7 @@ xfs_dir2_sf_addname_hard(
- 	      eof = (char *)oldsfep == &buf[old_isize];
- 	     !eof;
- 	     offset = new_offset + xfs_dir3_data_entsize(mp, oldsfep->namelen),
--	      oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep),
-+	      oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep),
- 	      eof = (char *)oldsfep == &buf[old_isize]) {
- 		new_offset = xfs_dir2_sf_get_offset(oldsfep);
- 		if (offset + add_datasize <= new_offset)
-@@ -603,7 +602,7 @@ xfs_dir2_sf_addname_hard(
- 	 * If there's more left to copy, do that.
- 	 */
- 	if (!eof) {
--		sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
-+		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
- 		memcpy(sfep, oldsfep, old_isize - nbytes);
- 	}
- 	kmem_free(buf);
-@@ -653,7 +652,7 @@ xfs_dir2_sf_addname_pick(
- 			holefit = offset + size <= xfs_dir2_sf_get_offset(sfep);
- 		offset = xfs_dir2_sf_get_offset(sfep) +
- 			 xfs_dir3_data_entsize(mp, sfep->namelen);
--		sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
-+		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
- 	}
- 	/*
- 	 * Calculate data bytes used excluding the new entry, if this
-@@ -719,7 +718,7 @@ xfs_dir2_sf_check(
- 
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
- 	     i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep)) {
-+	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 		ASSERT(xfs_dir2_sf_get_offset(sfep) >= offset);
- 		ino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
- 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
-@@ -848,7 +847,7 @@ xfs_dir2_sf_lookup(
- 	 */
- 	ci_sfep = NULL;
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep)) {
-+	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 		/*
- 		 * Compare name and if it's an exact match, return the inode
- 		 * number. If it's the first case-insensitive match, store the
-@@ -917,7 +916,7 @@ xfs_dir2_sf_removename(
- 	 * Find the one we're deleting.
- 	 */
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep)) {
-+	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 		if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
- 			ASSERT(xfs_dir3_sfe_get_ino(dp->i_mount, sfp, sfep) ==
-@@ -934,7 +933,7 @@ xfs_dir2_sf_removename(
- 	 * Calculate sizes.
- 	 */
- 	byteoff = (int)((char *)sfep - (char *)sfp);
--	entsize = xfs_dir3_sf_entsize(dp->i_mount, sfp, args->namelen);
-+	entsize = dp->d_ops->sf_entsize(sfp, args->namelen);
- 	newsize = oldsize - entsize;
- 	/*
- 	 * Copy the part if any after the removed entry, sliding it down.
-@@ -1051,7 +1050,7 @@ xfs_dir2_sf_replace(
- 	 */
- 	else {
- 		for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
--		     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep)) {
-+		     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
- #if XFS_BIG_INUMS || defined(DEBUG)
-@@ -1172,8 +1171,8 @@ xfs_dir2_sf_toino4(
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
- 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
- 	     i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep),
--		  oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep)) {
-+	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
-+		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
-@@ -1251,8 +1250,8 @@ xfs_dir2_sf_toino8(
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp),
- 		    oldsfep = xfs_dir2_sf_firstentry(oldsfp);
- 	     i < sfp->count;
--	     i++, sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep),
--		  oldsfep = xfs_dir3_sf_nextentry(mp, oldsfp, oldsfep)) {
-+	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
-+		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index bb2f283..3ce8c01 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -49,6 +49,9 @@ typedef struct xfs_inode {
- 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
- 	xfs_ifork_t		i_df;		/* data fork */
- 
-+	/* operations vectors */
-+	const struct xfs_dir_ops *d_ops;		/* directory ops vector */
-+
- 	/* Transaction and locking information. */
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	mrlock_t		i_lock;		/* inode lock */
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index eef7f1a..e8ae828 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1210,6 +1210,7 @@ xfs_setup_inode(
- 		else
- 			inode->i_op = &xfs_dir_inode_operations;
- 		inode->i_fop = &xfs_dir_file_operations;
-+		ip->d_ops = ip->i_mount->m_dir_inode_ops;
- 		break;
- 	case S_IFLNK:
- 		inode->i_op = &xfs_symlink_inode_operations;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 1fa0584..973397f 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -26,6 +26,7 @@ struct xfs_mru_cache;
- struct xfs_nameops;
- struct xfs_ail;
- struct xfs_quotainfo;
-+struct xfs_dir_ops;
- 
- #ifdef HAVE_PERCPU_SB
- 
-@@ -148,6 +149,7 @@ typedef struct xfs_mount {
- 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
- 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
- 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
-+	const struct xfs_dir_ops *m_dir_inode_ops; /* vector of dir inode ops */
- 	int			m_dirblksize;	/* directory block sz--bytes */
- 	int			m_dirblkfsbs;	/* directory block sz--fsbs */
- 	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
 -- 
 1.8.3.2
 
