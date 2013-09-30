@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0B9C97F50
-	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 12:01:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EBC4A304053
-	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 10:01:23 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id McEET6CFwlbPe2cr for
-	<xfs@oss.sgi.com>; Mon, 30 Sep 2013 10:01:23 -0700 (PDT)
-Message-ID: <5249AE5F.30305@redhat.com>
-Date: Mon, 30 Sep 2013 12:01:19 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CF8AB7F50
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 16:19:18 -0500 (CDT)
+Date: Mon, 30 Sep 2013 16:19:17 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/4] xfs: lockdep needs to know about 3 dquot-deep nesting
+Message-ID: <20130930211917.GN1935@sgi.com>
+References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
+	<1380497826-13474-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: handle symlinks etc in fs_table_initialise_mounts()
+Content-Disposition: inline
+In-Reply-To: <1380497826-13474-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,161 +23,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Commit:
+On Mon, Sep 30, 2013 at 09:37:03AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Michael Semon reported that xfs/299 generated this lockdep warning:
+> 
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 3.12.0-rc2+ #2 Not tainted
+> ---------------------------------------------
+> touch/21072 is trying to acquire lock:
+>  (&xfs_dquot_other_class){+.+...}, at: [<c12902fb>] xfs_trans_dqlockedjoin+0x57/0x64
+> 
+> but task is already holding lock:
+>  (&xfs_dquot_other_class){+.+...}, at: [<c12902fb>] xfs_trans_dqlockedjoin+0x57/0x64
+> 
+> other info that might help us debug this:
+>  Possible unsafe locking scenario:
+> 
+>        CPU0
+>        ----
+>   lock(&xfs_dquot_other_class);
+>   lock(&xfs_dquot_other_class);
+> 
+>  *** DEADLOCK ***
+> 
+>  May be due to missing lock nesting notation
+> 
+> 7 locks held by touch/21072:
+>  #0:  (sb_writers#10){++++.+}, at: [<c11185b6>] mnt_want_write+0x1e/0x3e
+>  #1:  (&type->i_mutex_dir_key#4){+.+.+.}, at: [<c11078ee>] do_last+0x245/0xe40
+>  #2:  (sb_internal#2){++++.+}, at: [<c122c9e0>] xfs_trans_alloc+0x1f/0x35
+>  #3:  (&(&ip->i_lock)->mr_lock/1){+.+...}, at: [<c126cd1b>] xfs_ilock+0x100/0x1f1
+>  #4:  (&(&ip->i_lock)->mr_lock){++++-.}, at: [<c126cf52>] xfs_ilock_nowait+0x105/0x22f
+>  #5:  (&dqp->q_qlock){+.+...}, at: [<c12902fb>] xfs_trans_dqlockedjoin+0x57/0x64
+>  #6:  (&xfs_dquot_other_class){+.+...}, at: [<c12902fb>] xfs_trans_dqlockedjoin+0x57/0x64
+> 
+> The lockdep annotation for dquot lock nesting only understands
+> locking for user and "other" dquots, not user, group and quota
+> dquots. Fix the annotations to match the locking heirarchy we now
+> have.
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-6a23747d xfs_quota: support relative path as `path' arguments
+Looks good. 
 
-used realpath() on the supplied pathname to handle things like
-relative pathnames and pathnames ending in "/" which otherwise
-caused the getmntent scanning to fail.
-
-However, this regressed cases where a path in mtab was a symlink;
-realpath() resolves this to the target, and so no match is found.
-
-This causes i.e.:
-
-# xfs_quota -x -c report /dev/mapper/testvg-testlv
-
-to fail with:
-
-xfs_quota: cannot setup path for mount /dev/mapper/testvg-testlv: No such device or address
-
-because the scanning looks for /dev/dm-3, but the long symlink
-name is what exists in mtab, and no match is found.
-
-Fix this, but keep the intended enhancements, by testing *both* the
-user-specified path (which might be relative, or contain a trailing
-slash on a mountpoint) and the realpath-resolved path (which turns
-a relative mountpoint into a full path, and removes trailing slashes),
-to determine whether the user-specified path is an xfs mountpoint or
-device.
-
-While we're at it, add a few comments, and go back to the testing
-of "path" not "rpath"; whether or not path is passed to the function
-is what determines control flow.  If path is specified, and realpath
-succeeds, we're guaranteed to have rpath as well, so there is no need
-to retest that.  rpath is initialized to NULL, so an unconditional
-free(rpath) is safe as well.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index bd84cde..7b0e434 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -266,6 +266,10 @@ out_nomem:
- 	return ENOMEM;
- }
- 
-+/*
-+ * If *path is NULL, initialize the fs table with all xfs mount points in mtab
-+ * If *path is specified, search for that path in mtab
-+ */
- static int
- fs_table_initialise_mounts(
- 	char		*path)
-@@ -288,6 +292,7 @@ fs_table_initialise_mounts(
- 	if ((mtp = setmntent(mtab_file, "r")) == NULL)
- 		return ENOENT;
- 
-+	/* Use realpath to resolve symlinks, relative paths, etc */
- 	if (path)
- 		if ((rpath = realpath(path, NULL)) == NULL)
- 			return ENOENT;
-@@ -295,31 +300,37 @@ fs_table_initialise_mounts(
- 	while ((mnt = getmntent(mtp)) != NULL) {
- 		if (strcmp(mnt->mnt_type, "xfs") != 0)
- 			continue;
--		if (rpath &&
--		    ((strcmp(rpath, mnt->mnt_dir) != 0) &&
-+		if (path &&
-+		    ((strcmp(path, mnt->mnt_dir) != 0) &&
-+		     (strcmp(path, mnt->mnt_fsname) != 0) &&
-+		     (strcmp(rpath, mnt->mnt_dir) != 0) &&
- 		     (strcmp(rpath, mnt->mnt_fsname) != 0)))
- 			continue;
- 		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
- 			continue;
- 		(void) fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
- 					mnt->mnt_fsname, fslog, fsrt);
--		if (rpath) {
-+		if (path) {
- 			found = 1;
- 			break;
- 		}
- 	}
- 	endmntent(mtp);
--	if (rpath) {
--		free(rpath);
--		if (!found)
--			error = ENXIO;
--	}
-+	free(rpath);
-+
-+	if (path && !found)
-+		error = ENXIO;
-+
- 	return error;
- }
- 
- #elif defined(HAVE_GETMNTINFO)
- #include <sys/mount.h>
- 
-+/*
-+ * If *path is NULL, initialize the fs table with all xfs mount points in mtab
-+ * If *path is specified, search for that path in mtab
-+ */
- static int
- fs_table_initialise_mounts(
- 	char		*path)
-@@ -335,6 +346,7 @@ fs_table_initialise_mounts(
- 		return 0;
- 	}
- 
-+	/* Use realpath to resolve symlinks, relative paths, etc */
- 	if (path)
- 		if ((rpath = realpath(path, NULL)) == NULL)
- 			return ENOENT;
-@@ -342,24 +354,24 @@ fs_table_initialise_mounts(
- 	for (i = 0; i < count; i++) {
- 		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
- 			continue;
--		if (rpath &&
--		    ((strcmp(rpath, stats[i].f_mntonname) != 0) &&
-+		if (path &&
-+		    ((strcmp(path, stats[i].f_mntonname) != 0) &&
-+		     (strcmp(path, stats[i].f_mntfromname) != 0) &&
-+		     (strcmp(rpath, stats[i].f_mntonname) != 0) &&
- 		     (strcmp(rpath, stats[i].f_mntfromname) != 0)))
- 			continue;
- 		/* TODO: external log and realtime device? */
- 		(void) fs_table_insert(stats[i].f_mntonname, 0,
- 					FS_MOUNT_POINT, stats[i].f_mntfromname,
- 					NULL, NULL);
--		if (rpath) {
-+		if (path) {
- 			found = 1;
- 			break;
- 		}
- 	}
--	if (rpath) {
--		free(rpath);
--		if (!found)
--			error = ENXIO;
--	}
-+	free(rpath);
-+	if (path && !found)
-+		error = ENXIO;
- 
- 	return error;
- }
-
-
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
