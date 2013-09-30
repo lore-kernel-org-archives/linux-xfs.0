@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 053B87F56
-	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 17:14:53 -0500 (CDT)
-Date: Mon, 30 Sep 2013 17:14:49 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 3/4] xfs: xfs_remove deadlocks due to inverted AGF vs
-	AGI lock ordering
-Message-ID: <20130930221449.GP1935@sgi.com>
-References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
-	<1380497826-13474-4-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 246017F5A
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 17:25:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 041C5304039
+	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 15:25:00 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id e8RUTnDqdhBSOe1K for <xfs@oss.sgi.com>;
+	Mon, 30 Sep 2013 15:24:56 -0700 (PDT)
+Message-ID: <5249FA36.1070609@sandeen.net>
+Date: Mon, 30 Sep 2013 17:24:54 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1380497826-13474-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 4/4] xfs: open code inc_inode_iversion when logging an
+	inode
+References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
+	<1380497826-13474-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1380497826-13474-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +32,67 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
-
-On Mon, Sep 30, 2013 at 09:37:05AM +1000, Dave Chinner wrote:
+On 9/29/13 6:37 PM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Removing an inode from the namespace involves removing the directory
-> entry and dropping the link count on the inode. Removing the
-> directory entry can result in locking an AGF (directory blocks were
-> freed) and removing a link count can result in placing the inode on
-> an unlinked list which results in locking an AGI.
+> Michael L Semon reported that generic/069 runtime increased on v5
+> superblocks by 100% compared to v4 superblocks. his perf-based
+> analysis pointed directly at the timestamp updates being done by the
+> write path in this workload. The append writers are doing 4-byte
+> writes, so there are lots of timestamp updates occurring.
 > 
-> The big problem here is that we have an ordering constraint on AGF
-> and AGI locking - inode allocation locks the AGI, then can allocate
-> a new extent for new inodes, locking the AGF after the AGI.
-> Similarly, freeing the inode removes the inode from the unlinked
-> list, requiring that we lock the AGI first, and then freeing the
-> inode can result in an inode chunk being freed and hence freeing
-> disk space requiring that we lock an AGF.
+> The thing is, they aren't being triggered by timestamp changes -
+> they are being triggered by the inode change counter needing to be
+> updated. That is, every write(2) system call needs to bump the inode
+> version count, and it does that through the timestamp update
+> mechanism. Hence for v5 filesystems, test generic/069 is running 3
+> orders of magnitude more timestmap update transactions on v5
+> filesystems due to the fact it does a huge number of *4 byte*
+> write(2) calls.
 > 
-> Hence the ordering that is imposed by other parts of the code is AGI
-> before AGF. This means we cannot remove the directory entry before
-> we drop the inode reference count and put it on the unlinked list as
-> this results in a lock order of AGF then AGI, and this can deadlock
-> against inode allocation and freeing. Therefore we must drop the
-> link counts before we remove the directory entry.
+> This isn't a real world scenario we really need to address - anyone
+> doing such sequential IO should be using fwrite(3), not write(2).
+> i.e. fwrite(3) buffers the writes in userspace to minimise the
+> number of write(2) syscalls, and the problem goes away.
 > 
-> This is still safe from a transactional point of view - it is not
-> until we get to xfs_bmap_finish() that we have the possibility of
-> multiple transactions in this operation. Hence as long as we remove
-> the directory entry and drop the link count in the first transaction
-> of the remove operation, there are no transactional constraints on
-> the ordering here.
+> However, there is a small change we can make to improve the
+> situation - removing the expensive lock operation on the change
+> counter update.  All inode version counter changes in XFS occur
+> under the ip->i_ilock during a transaction, and therefore we
+> don't actually need the spin lock that provides exclusive access to
+> it through inc_inode_iversion().
 > 
-> Change the ordering of the operations in the xfs_remove() function
-> to align the ordering of AGI and AGF locking to match that of the
-> rest of the code.
+> Hence avoid the lock and just open code the increment ourselves when
+> logging the inode.
 > 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_trans_inode.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> index 53dfe46..e6601c1 100644
+> --- a/fs/xfs/xfs_trans_inode.c
+> +++ b/fs/xfs/xfs_trans_inode.c
+> @@ -118,8 +118,7 @@ xfs_trans_log_inode(
+>  	 */
+>  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+>  	    IS_I_VERSION(VFS_I(ip))) {
+> -		inode_inc_iversion(VFS_I(ip));
+> -		ip->i_d.di_changecount = VFS_I(ip)->i_version;
 
-Hmmm..  I'm not quite comfortable with this one yet...  It'll probably be
-better after some more review.  Did you happen to have a test case to go with
-this?
+comment about the reason for the open-code might be good, too?
 
-Thanks,
-	Ben
+otherwise some semantic patcher might "fix" it for you again later...
+
+-Eric
+
+> +		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
+>  		flags |= XFS_ILOG_CORE;
+>  	}
+>  
+> 
 
 _______________________________________________
 xfs mailing list
