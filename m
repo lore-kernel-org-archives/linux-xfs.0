@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 762487FAE
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:57 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0C29F7FB9
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:16:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 12826AC001
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:57 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CB9808F8039
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:59 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	JhH2K9YYuny9A6uo for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:15:55 -0700 (PDT)
+	WyyHxdGmQBylOwBP for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:58 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006PV-As
+	(envelope-from <dave@fromorbit.com>) id 1VQTxa-0006Oz-4N
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002H1-A9
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxa-0002GD-3i
 	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 25/32] db: add a special attribute buffer verifier
-Date: Mon, 30 Sep 2013 13:15:37 +1000
-Message-Id: <1380510944-8571-26-git-send-email-david@fromorbit.com>
+Subject: [PATCH 15/32] libxfs: bring across inode buffer readahead verifier
+	changes
+Date: Mon, 30 Sep 2013 13:15:27 +1000
+Message-Id: <1380510944-8571-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,109 +40,110 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because we only have a single attribute type that is used for all
-the attribute buffer types, we need to provide a special verifier
-for the read code. That verifier needs to know all the attribute
-types and when it find one it knows about, switch to the correct
-verifier and call it.
+These were made for log recovery readahead in the kernel, so are not
+directly used in userspace. Hence bringing the change across is
+simply to keep files in sync.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/attr.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- db/attr.h |  2 ++
- db/type.c |  3 ++-
- 3 files changed, 55 insertions(+), 1 deletion(-)
+ libxfs/xfs_inode_buf.c | 41 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 36 insertions(+), 5 deletions(-)
 
-diff --git a/db/attr.c b/db/attr.c
-index cd95a0a..359af7b 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -25,6 +25,7 @@
- #include "attr.h"
- #include "io.h"
- #include "init.h"
-+#include "output.h"
- 
- static int	attr_leaf_entries_count(void *obj, int startoff);
- static int	attr_leaf_hdr_count(void *obj, int startoff);
-@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
- 	{ NULL }
- };
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index b096f77..67d5eb4 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -46,9 +46,22 @@ xfs_inobp_check(
+ }
+ #endif
  
 +/*
-+ * Special read verifier for attribute buffers. detect the magic number
-+ * appropriately and set the correct verifier and call it.
++ * If we are doing readahead on an inode buffer, we might be in log recovery
++ * reading an inode allocation buffer that hasn't yet been replayed, and hence
++ * has not had the inode cores stamped into it. Hence for readahead, the buffer
++ * may be potentially invalid.
++ *
++ * If the readahead buffer is invalid, we don't want to mark it with an error,
++ * but we do want to clear the DONE status of the buffer so that a followup read
++ * will re-read it from disk. This will ensure that we don't get an unnecessary
++ * warnings during log recovery and we don't get unnecssary panics on debug
++ * kernels.
 + */
-+static void
-+xfs_attr3_db_read_verify(
-+	struct xfs_buf		*bp)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
+ static void
+ xfs_inode_buf_verify(
+-	struct xfs_buf	*bp)
++	struct xfs_buf	*bp,
++	bool		readahead)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	int		i;
+@@ -69,6 +82,11 @@ xfs_inode_buf_verify(
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
++			if (readahead) {
++				bp->b_flags &= ~XBF_DONE;
++				return;
++			}
 +
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-+		bp->b_ops = &xfs_attr3_leaf_buf_ops;
-+		goto verify;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		goto verify;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
-+		bp->b_ops = &xfs_attr3_rmt_buf_ops;
-+		break;
-+	default:
-+		dbprintf(_("Unknown attribute buffer type!\n"));
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+verify:
-+	bp->b_ops->verify_read(bp);
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+ 					     mp, dip);
+@@ -87,14 +105,21 @@ static void
+ xfs_inode_buf_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
 +}
 +
 +static void
-+xfs_attr3_db_write_verify(
-+	struct xfs_buf		*bp)
++xfs_inode_buf_readahead_verify(
++	struct xfs_buf	*bp)
 +{
-+	dbprintf(_("Writing unknown attribute buffer type!\n"));
-+	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+}
-+
-+const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
-+	.verify_read = xfs_attr3_db_read_verify,
-+	.verify_write = xfs_attr3_db_write_verify,
-+};
-diff --git a/db/attr.h b/db/attr.h
-index 3065372..bc3431f 100644
---- a/db/attr.h
-+++ b/db/attr.h
-@@ -33,3 +33,5 @@ extern const field_t	attr3_node_hdr_flds[];
++	xfs_inode_buf_verify(bp, true);
+ }
  
- extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
- extern int	attr_size(void *obj, int startoff, int idx);
+ static void
+ xfs_inode_buf_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
+ }
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ops = {
+@@ -102,6 +127,12 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+ 
++const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
++	.verify_read = xfs_inode_buf_readahead_verify,
++	.verify_write = xfs_inode_buf_write_verify,
++};
 +
-+extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
-diff --git a/db/type.c b/db/type.c
-index 2c3431e..04d0d56 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -77,7 +77,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
- 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
- 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
--	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
-+	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
-+		&xfs_attr3_db_buf_ops },
- 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
- 		&xfs_bmbt_buf_ops },
- 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
++
+ /*
+  * This routine is called to map an inode to the buffer containing the on-disk
+  * version of the inode.  It returns a pointer to the buffer containing the
+@@ -191,7 +222,7 @@ xfs_dinode_from_disk(
+ 		to->di_ino = be64_to_cpu(from->di_ino);
+ 		to->di_lsn = be64_to_cpu(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
++		uuid_copy(&to->di_uuid, &from->di_uuid);
+ 	}
+ }
+ 
+@@ -237,7 +268,7 @@ xfs_dinode_to_disk(
+ 		to->di_ino = cpu_to_be64(from->di_ino);
+ 		to->di_lsn = cpu_to_be64(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
++		uuid_copy(&to->di_uuid, &from->di_uuid);
+ 		to->di_flushiter = 0;
+ 	} else {
+ 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
 -- 
 1.8.3.2
 
