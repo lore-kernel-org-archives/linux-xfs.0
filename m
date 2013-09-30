@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 75B877F5E
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:14:50 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D21EE7F5E
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 22:15:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EDEA304032
-	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:14:50 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Nv7zdHko7DZuPxAV for <xfs@oss.sgi.com>;
-	Sun, 29 Sep 2013 20:14:49 -0700 (PDT)
-Message-ID: <5248ECAA.1010506@sandeen.net>
-Date: Sun, 29 Sep 2013 22:14:50 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: cleanup size/log setting flags of mkfs
-References: <1380272973.2836.5.camel@ThinkPad-T5421>
-	<5245C07A.3000700@sandeen.net>
-	<1380437441.3811.9.camel@ThinkPad-T5421>
-	<1380445971.3811.14.camel@ThinkPad-T5421>
-	<20130929230638.GG26872@dastard>
-	<1380510260.2985.4.camel@ThinkPad-T5421>
-In-Reply-To: <1380510260.2985.4.camel@ThinkPad-T5421>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 60999AC001
+	for <xfs@oss.sgi.com>; Sun, 29 Sep 2013 20:15:50 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	6xxS7yyF0EU04YmK for <xfs@oss.sgi.com>;
+	Sun, 29 Sep 2013 20:15:48 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VQTxZ-0006Om-UO
+	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VQTxZ-0002FU-Th
+	for xfs@oss.sgi.com; Mon, 30 Sep 2013 13:15:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 06/32] xfs: don't assert fail on bad inode numbers
+Date: Mon, 30 Sep 2013 13:15:18 +1000
+Message-Id: <1380510944-8571-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1380510944-8571-1-git-send-email-david@fromorbit.com>
+References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,104 +30,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Li Zhong <zhong@linux.vnet.ibm.com>
-Cc: xfsprogs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 9/29/13 10:04 PM, Li Zhong wrote:
-> On Mon, 2013-09-30 at 09:06 +1000, Dave Chinner wrote:
->> On Sun, Sep 29, 2013 at 05:12:51PM +0800, Li Zhong wrote:
->>> As Eric suggested, we could set both of the size/log flags after we have
->>> parsed the options - and from there on it simply means "manually set".
->>>
->>> After that, we could use just one flag, e.g. *sflag, to check whether 
->>> the corresponding value is manually set or not.
->>
->> It's a start, but I'm not sure that it is an improvement or not.
->> i.e. you're adding yet another piece of logic to the already
->> tortured argument parsing and flag setting.
->>
->> This could be done in the argument parsing itself, without needing
->> separate post-processing code. e.g. changing the parsing code like
->> so:
->>
->> 	case N_LOG:
->> 		if (!value || *value == '\0')
->> 			reqval('n', nopts, N_LOG);
->> -		if (nlflag)
->> +		if (nlflag > 1)
->> 			respec('n', nopts, N_LOG);
->> 		if (nsflag)
->> 			conflict('n', nopts, N_SIZE,
->> 				 N_LOG);
->> +		nlflag = 2;
->> 		dirblocklog = atoi(value);
->> 		if (dirblocklog <= 0)
->> 			illegal(value, "n log");
->> +		nsflag = 1;
->> 		dirblocksize = 1 << dirblocklog;
->> -		nlflag = 1;
->> 		break;
->>
->> Would acheive exactly the same thing - i.e.
->> a value of 1 means it was initialised, a value of 2 means it was a
->> command line parameter...
->>
->> This means the code checks can be cleaned up as you have done, but
->> we don't need a separate post-processing step for the arguments to
->> set flags that weren't set...
-> 
-> Thank you for the suggestion, I will try this approach. 
-> I think It could also preserve the information which suboption is used
-> actually in the command line through the main() function, though it
-> seems not needed currently. 
+From: Dave Chinner <dchinner@redhat.com>
 
-sounds good to me too; just watch out for the conflict/respec stuff to
-be sure it all still works... I wasn't super happy with my suggestion
-after I made it, I guess. :)
+Let the inode verifier do it's work by returning an error when we
+fail to find correct magic numbers in an inode buffer.
 
--Eric
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ libxfs/xfs_inode_buf.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-> Thanks, Zhong
->>
->>
->>> Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
->>> ---
->>>  mkfs/xfs_mkfs.c | 29 ++++++++++++++++++++++-------
->>>  1 file changed, 22 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->>> index 34bf2ff..aa3f391 100644
->>> --- a/mkfs/xfs_mkfs.c
->>> +++ b/mkfs/xfs_mkfs.c
->>> @@ -1667,11 +1667,26 @@ main(
->>>  		dfile = xi.dname;
->>>  
->>>  	/*
->>> +	 * Later code wants to know if the user manually set a value.
->>> +	 * There are two ways to specify on the cmdline; as size or as a log.
->>> +	 * if either was used, set both flags - from here on it simply means
->>> +	 * "manually set"
->>> +	 */
->>> +	if (bsflag || blflag)
->>> +		bsflag = blflag = 1;
->>> +	if (ssflag || slflag)
->>> +		ssflag = slflag = 1;
->>> +	if (isflag || ilflag)
->>> +		isflag = ilflag = 1;
->>> +	if (nsflag || nlflag)
->>> +		nsflag = nlflag = 1;
->>
->> You missed the log sector size/log flags.
->>
->> Cheers,
->>
->> Dave.
-> 
-> 
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 6205318..b096f77 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -39,9 +39,8 @@ xfs_inobp_check(
+ 					i * mp->m_sb.sb_inodesize);
+ 		if (!dip->di_next_unlinked)  {
+ 			xfs_alert(mp,
+-	"Detected bogus zero next_unlinked field in incore inode buffer 0x%p.",
+-				bp);
+-			ASSERT(dip->di_next_unlinked);
++	"Detected bogus zero next_unlinked field in inode %d buffer 0x%llx.",
++				i, (long long)bp->b_bn);
+ 		}
+ 	}
+ }
+@@ -74,11 +73,10 @@ xfs_inode_buf_verify(
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+ 					     mp, dip);
+ #ifdef DEBUG
+-			xfs_emerg(mp,
++			xfs_alert(mp,
+ 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+ 				(unsigned long long)bp->b_bn, i,
+ 				be16_to_cpu(dip->di_magic));
+-			ASSERT(0);
+ #endif
+ 		}
+ 	}
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
