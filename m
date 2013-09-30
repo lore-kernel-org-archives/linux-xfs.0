@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc3-3-g519ccb8
-Message-Id: <20130930225338.676FB7F7C@oss.sgi.com>
-Date: Mon, 30 Sep 2013 17:53:38 -0500 (CDT)
+Message-Id: <20130930225349.3A15B7F84@oss.sgi.com>
+Date: Mon, 30 Sep 2013 17:53:49 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   519ccb8 xfs: fix memory leak in xlog_recover_add_to_trans
       from  367993e7c6428cb7617ab7653d61dca54e2fdede (commit)
 
