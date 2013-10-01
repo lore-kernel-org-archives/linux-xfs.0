@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 481707F7D
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 17:02:37 -0500 (CDT)
-Message-ID: <524B4677.40200@sgi.com>
-Date: Tue, 1 Oct 2013 17:02:31 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 1DB9F29DFB
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 17:19:10 -0500 (CDT)
+Message-ID: <524B4A58.3050607@sgi.com>
+Date: Tue, 1 Oct 2013 17:19:04 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsrestore: fix multi stream support
-References: <524AF8AE.5030300@sgi.com> <524B34D4.10807@sandeen.net>
-	<524B4119.8020005@sgi.com>
-In-Reply-To: <524B4119.8020005@sgi.com>
+Subject: Re: [PATCH] xfsdump: add locks around the inventory put
+References: <524AF8C3.8020904@sgi.com> <524B395C.6030705@sandeen.net>
+In-Reply-To: <524B395C.6030705@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,160 +24,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-OOPS hit send too soon.
 
-On 10/01/2013 04:39 PM, Rich Johnston wrote:
+
+On 10/01/2013 04:06 PM, Eric Sandeen wrote:
+> hi Rich -
 >
->
-> On 10/01/2013 03:47 PM, Eric Sandeen wrote:
->> Hi Rich -
+> On 10/1/13 11:30 AM, Rich Johnston wrote:
+>> From: Phil White <cerise-xfs@l.armory.com>
 >>
->> On 10/1/13 11:30 AM, Rich Johnston wrote:
->>> If no extents exist, there is no need to call partial_reg() becausee
->>> entire file
->>> there is no data to split up.
->> thought based on the code alone it was self explainitory
->> Does that break something, or is this an optimization?
->
-> The original code is broken, would not detect if th.
-                                                    the entire file was 
-a hole (no extents) regardless of the value of partialmax.
-
- > If partialmax != 0
-> (multi-stream) and no extents exist (entire file is a hole), is there
-> anything to restore? Nope so why call parial_reg().  If you do call it
-> you will not find anything to restore:
->
->
-> 8977         /* If not found, find a free one, fill it in and return */
-> 8978         if ( ! isptr ) {
-> 8979                 mlog(MLOG_NITTY | MLOG_NOLOCK,
-> 8980                         "partial_reg: no entry found for %llu\n",
-> ino);
-> 8981                 /* find a free one */
-> 8982                 for (i=0; i < partialmax; i++ ) {
-> 8983                         if (persp->a.parrest[i].is_ino == 0) {
-> 8984                                 int j;
-> 8985
-> 8986                                 isptr = &persp->a.parrest[i];
-> 8987                                 isptr->is_ino = ino;
-> 8988                                 persp->a.parrestcnt++;
-> 8989
-> 8990                                 /* Clear all endoffsets (this value is
-> 8991                                  * used to decide if an entry is
-> used or
-> 8992                                  * not
-> 8993                                  */
-> 8994                                 for (j=0, bsptr=isptr->is_bs;
-> 8995                                      j < drivecnt; j++, bsptr++) {
-> 8996                                      bsptr->endoffset = 0;
-> 8997                                 }
-> 8998
-> 8999                                 goto found;
-> 9000                         }
-> 9001                 }
-> 9002
-> 9003                 /* Should never get here. */
->
-> And we reach the dreaded comment above :)
->
->>> Also remove the uneeded check in partial_reg() to detect if this is a
->>> multistream restore.
+>> Add locks around the inventory put to prevent inventory
+>> corruption.
 >>
->> Why is it unneeded?
+>> Signed-off-by: Phil White <cerise-xfs@l.armory.com>
+>
+> Similar questions here; it says it's thread-safe, but apparently
+> not.  But why not?  what happens?  Is there a testcase?
 
-> The check is unneeded because with my fix,  partial_reg will never be
-> called if partialmax==0 which also means that . Do we really need the extra check?
-Scratch the above :)
-I meant to say the check was needed in the original code because of the 
-bug explained above.
+Phil worked on this for a long time. To my knowledge the corruption 
+occured with multistream dumps only.  I did not change his code but we 
+have had reports from the field on corruption when using multistream 
+dumps which does not occur with this fix.
 
-example:
-create a directory with several files with at least 1 extent
-create a file with no extents (i.e. touch empty_file)
+Not sure what else Phil did to reproduce this other than a multistream 
+dump/restore (20 streams), which fails.
 
-Current code will fail for multistream dump/restore and will also fail 
-for single stream if the partialmax == 0 check is removed from 
-partial_reg().
-
-In my opinion that check was just a workaround for single stream and no 
-one tested an empty file with no extents, just file with one extent and 
-the entire file is a hole.
-
---Rich
+Testcase?? Good point I need to submit a testcase for both patches.
 
 >
->>
->>  From a quick read, if partialmax == 0 that measn only 1 drive,
->> and no streams - so it does seem like partial_reg() would have
->> no work to do, so I'm a  little confused (but I'm also a total
->> n00b here).e
->>
->> This patch says it fixes multi stream support - what was broken?
->> Is there a testcase (or should there be) that shows the problem?
->>
->> I see changes but I don't know enough about xfsdump to know
->> what's broken & what's being fixed, can you explain a bit more?
+> (you guys probably have longer history in ptools, maybe you
+> can see what if anything changed since the original comment
+> was added - or maybe when it was added, etc?)
 >
-> Sorry I thought that it was self explanatory ;)
+I did not look into this further, I will see if there is a better 
+explaination in our bug writeup.
+
+> Thanks,
+> -Eric
+>
+>> diff --git a/dump/content.c b/dump/content.c
+>> index ac19021..b8977bb 100644
+>> --- a/dump/content.c
+>> +++ b/dump/content.c
+>> @@ -2550,8 +2550,11 @@ decision_more:
+>>                          scwhdrp->cih_startpt.sp_offset );
+>>               }
 >>
->> Thanks,
->> -Eric
+>> -            /* already thread-safe, don't need to lock
+>> +            /* Supposedly already thread-safe, according to the
+>> +             * previous revisions, but corruption of inventory
+>> +             * objects can occur.
+>>                */
+>>                */
+>> +            lock();
+>>               ok = inv_put_mediafile( inv_stmt,
+>>                           &mwhdrp->mh_mediaid,
+>>                           mwhdrp->mh_medialabel,
+>> @@ -2565,6 +2568,7 @@ decision_more:
+>>                           &&
+>>                           ! empty_mediafile,
+>>                           BOOL_FALSE );
+>> +            unlock();
+>>               if ( ! ok ) {
+>>                   mlog( MLOG_NORMAL, _(
+>>                         "inventory media file put failed\n") );
 >>
->>
->>> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
->>>
->>> diff --git a/restore/content.c b/restore/content.c
->>> index 54d933c..ecbcf13 100644
->>> --- a/restore/content.c
->>> +++ b/restore/content.c
->>> @@ -7494,6 +7494,7 @@ restore_extent_group( drive_t *drivep,
->>>       extenthdr_t ehdr;
->>>       off64_t bytesread;
->>>       rv_t rv;
->>> +    uint num_extents = 0; /* number of extents */
->>>
->>>       /* copy data extents from media to the file
->>>        */
->>> @@ -7518,6 +7519,7 @@ restore_extent_group( drive_t *drivep,
->>>           if ( ehdr.eh_type == EXTENTHDR_TYPE_LAST ) {
->>>               break;
->>>           }
->>> +        num_extents++;
->>>
->>>           /* if its an ALIGNment extent, discard the extent.
->>>            */
->>> @@ -7572,7 +7574,7 @@ restore_extent_group( drive_t *drivep,
->>>        * and certain extended inode flags. Register the portion
->>>        * of the file completed here in the persistent state.
->>>        */
->>> -    if (bstatp->bs_size > restoredsz) {
->>> +    if (num_extents && (bstatp->bs_size > restoredsz)) {
->>>           partial_reg(drivep->d_index,
->>>                   bstatp->bs_ino,
->>>                   bstatp->bs_size,
->>> @@ -8959,9 +8961,6 @@ partial_reg( ix_t d_index,
->>>
->>>       endoffset = offset + sz;
->>>
->>> -    if ( partialmax == 0 )
->>> -        return;
->>> -
->>>       pi_lock();
->>>
->>>       /* Search for a matching inode.  Gaps can exist so we must search
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
->>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 >>
 >
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
