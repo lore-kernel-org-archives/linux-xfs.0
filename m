@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1605C7F54
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 15:19:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D58217F6F
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 15:47:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02D2530406B
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 13:19:16 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	AYoSBmKCBQ42ItZ7 for <xfs@oss.sgi.com>;
-	Tue, 01 Oct 2013 13:19:13 -0700 (PDT)
-Date: Wed, 2 Oct 2013 06:19:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair segfault
-Message-ID: <20131001201909.GR12541@dastard>
-References: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 57B6AAC01D
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 13:47:26 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id c0ow2cVeoVff6KCx for <xfs@oss.sgi.com>;
+	Tue, 01 Oct 2013 13:47:17 -0700 (PDT)
+Message-ID: <524B34D4.10807@sandeen.net>
+Date: Tue, 01 Oct 2013 15:47:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
+Subject: Re: [PATCH] xfsrestore: fix multi stream support
+References: <524AF8AE.5030300@sgi.com>
+In-Reply-To: <524AF8AE.5030300@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +27,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Viet Nguyen <vietnguyen@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 01, 2013 at 12:57:42PM -0700, Viet Nguyen wrote:
-> Hi,
-> 
-> I have a corrupted xfs partition that segfaults when I run xfs_repair, at
-> the same place every time.
-> 
-> I'm using the latest version of xfs_repair that I am aware of: xfs_repair
-> version 3.2.0-alpha1
-> 
-> I simply run it as so: xfs_repair -P /dev/sda1
-> 
-> Here's a sample of the last few lines that are spit out:
-> correcting nextents for inode 8637985
-> correcting nblocks for inode 8637985, was 198 - counted 0
-> correcting nextents for inode 8637985, was 1 - counted 0
-> data fork in regular inode 8637987 claims used block 7847452695
-> correcting nextents for inode 8637987
-> correcting nblocks for inode 8637987, was 198 - counted 0
-> correcting nextents for inode 8637987, was 1 - counted 0
-> data fork in regular inode 8637999 claims used block 11068974204
-> correcting nextents for inode 8637999
-> correcting nblocks for inode 8637999, was 200 - counted 0
-> correcting nextents for inode 8637999, was 1 - counted 0
-> data fork in regular inode 8638002 claims used block 11873152787
-> correcting nextents for inode 8638002
-> correcting nblocks for inode 8638002, was 201 - counted 0
-> correcting nextents for inode 8638002, was 1 - counted 0
-> imap claims a free inode 8638005 is in use, correcting imap and clearing
-> inode
-> cleared inode 8638005
-> imap claims a free inode 8638011 is in use, correcting imap and clearing
-> inode
-> cleared inode 8638011
-> Segmentation fault (core dumped)
-> 
-> It crashes after attempting to clear that same inode every time.
-> 
-> Any advice you can give me on this?
+Hi Rich -
 
-Can you run it under gdb and send the stack trace that tells us
-where it crashed?
+On 10/1/13 11:30 AM, Rich Johnston wrote:
+> If no extents exist, there is no need to call partial_reg() because
+> there is no data to split up. 
 
-Cheers,
+Does that break something, or is this an optimization?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Also remove the uneeded check in partial_reg() to detect if this is a multistream restore.
+
+Why is it unneeded?
+
+>From a quick read, if partialmax == 0 that measn only 1 drive,
+and no streams - so it does seem like partial_reg() would have
+no work to do, so I'm a  little confused (but I'm also a total
+n00b here).
+
+This patch says it fixes multi stream support - what was broken?
+Is there a testcase (or should there be) that shows the problem?
+
+I see changes but I don't know enough about xfsdump to know
+what's broken & what's being fixed, can you explain a bit more?
+
+Thanks,
+-Eric
+
+ 
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> 
+> diff --git a/restore/content.c b/restore/content.c
+> index 54d933c..ecbcf13 100644
+> --- a/restore/content.c
+> +++ b/restore/content.c
+> @@ -7494,6 +7494,7 @@ restore_extent_group( drive_t *drivep,
+>      extenthdr_t ehdr;
+>      off64_t bytesread;
+>      rv_t rv;
+> +    uint num_extents = 0; /* number of extents */
+> 
+>      /* copy data extents from media to the file
+>       */
+> @@ -7518,6 +7519,7 @@ restore_extent_group( drive_t *drivep,
+>          if ( ehdr.eh_type == EXTENTHDR_TYPE_LAST ) {
+>              break;
+>          }
+> +        num_extents++;
+> 
+>          /* if its an ALIGNment extent, discard the extent.
+>           */
+> @@ -7572,7 +7574,7 @@ restore_extent_group( drive_t *drivep,
+>       * and certain extended inode flags. Register the portion
+>       * of the file completed here in the persistent state.
+>       */
+> -    if (bstatp->bs_size > restoredsz) {
+> +    if (num_extents && (bstatp->bs_size > restoredsz)) {
+>          partial_reg(drivep->d_index,
+>                  bstatp->bs_ino,
+>                  bstatp->bs_size,
+> @@ -8959,9 +8961,6 @@ partial_reg( ix_t d_index,
+> 
+>      endoffset = offset + sz;
+> 
+> -    if ( partialmax == 0 )
+> -        return;
+> -
+>      pi_lock();
+> 
+>      /* Search for a matching inode.  Gaps can exist so we must search
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
