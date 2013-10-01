@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F27067F6A
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 11:30:35 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 500EA7F72
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 11:30:57 -0500 (CDT)
 Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D10BB8F804C
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 09:30:32 -0700 (PDT)
-Message-ID: <524AF8AE.5030300@sgi.com>
-Date: Tue, 1 Oct 2013 11:30:38 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C625BAC013
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 09:30:53 -0700 (PDT)
+Message-ID: <524AF8C3.8020904@sgi.com>
+Date: Tue, 1 Oct 2013 11:30:59 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsrestore: fix multi stream support
+Subject: [PATCH] xfsdump: add locks around the inventory put
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,51 +24,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-If no extents exist, there is no need to call partial_reg() because
-there is no data to split up. Also remove the uneeded check in 
-partial_reg() to detect if this is a multistream restore.
+From: Phil White <cerise-xfs@l.armory.com>
 
-Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+Add locks around the inventory put to prevent inventory
+corruption.
 
-diff --git a/restore/content.c b/restore/content.c
-index 54d933c..ecbcf13 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -7494,6 +7494,7 @@ restore_extent_group( drive_t *drivep,
-  	extenthdr_t ehdr;
-  	off64_t bytesread;
-  	rv_t rv;
-+	uint num_extents = 0; /* number of extents */
+Signed-off-by: Phil White <cerise-xfs@l.armory.com>
 
-  	/* copy data extents from media to the file
-  	 */
-@@ -7518,6 +7519,7 @@ restore_extent_group( drive_t *drivep,
-  		if ( ehdr.eh_type == EXTENTHDR_TYPE_LAST ) {
-  			break;
-  		}
-+		num_extents++;
+diff --git a/dump/content.c b/dump/content.c
+index ac19021..b8977bb 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -2550,8 +2550,11 @@ decision_more:
+  				       scwhdrp->cih_startpt.sp_offset );
+  			}
 
-  		/* if its an ALIGNment extent, discard the extent.
-  		 */
-@@ -7572,7 +7574,7 @@ restore_extent_group( drive_t *drivep,
-  	 * and certain extended inode flags. Register the portion
-  	 * of the file completed here in the persistent state.
-  	 */
--	if (bstatp->bs_size > restoredsz) {
-+	if (num_extents && (bstatp->bs_size > restoredsz)) {
-  		partial_reg(drivep->d_index,
-  			    bstatp->bs_ino,
-  			    bstatp->bs_size,
-@@ -8959,9 +8961,6 @@ partial_reg( ix_t d_index,
-
-  	endoffset = offset + sz;
-
--	if ( partialmax == 0 )
--		return;
--
-  	pi_lock();
-
-  	/* Search for a matching inode.  Gaps can exist so we must search
+-			/* already thread-safe, don't need to lock
++			/* Supposedly already thread-safe, according to the
++			 * previous revisions, but corruption of inventory
++			 * objects can occur.
+  			 */
+  			 */
++			lock();
+  			ok = inv_put_mediafile( inv_stmt,
+  						&mwhdrp->mh_mediaid,
+  						mwhdrp->mh_medialabel,
+@@ -2565,6 +2568,7 @@ decision_more:
+  						&&
+  						! empty_mediafile,
+  						BOOL_FALSE );
++			unlock();
+  			if ( ! ok ) {
+  				mlog( MLOG_NORMAL, _(
+  				      "inventory media file put failed\n") );
 
 _______________________________________________
 xfs mailing list
