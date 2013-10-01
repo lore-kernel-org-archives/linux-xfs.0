@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 854DA7F50
-	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 22:24:07 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 264707F56
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 05:57:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 63C6A8F8035
-	for <xfs@oss.sgi.com>; Mon, 30 Sep 2013 20:24:04 -0700 (PDT)
-Received: from mail.desbrava.com.br (mail.desbrava.com.br [200.215.67.23]) by
-	cuda.sgi.com with ESMTP id oDIyTRdCQRc7PTl9 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Sep 2013 20:24:01 -0700 (PDT)
-Received: from Usuario-PC ([177.201.82.239]) (authenticated bits=0)
-	by mail.desbrava.com.br (8.13.8/8.13.8) with ESMTP id r912ufuJ021565
-	for <xfs@oss.sgi.com>; Tue, 1 Oct 2013 00:23:54 -0300
-From: "Alfa finaceira Ltda" <miguel@fiscomania.com.br>
-Subject: Boleto de =?ISO-8859-1?B?Q29icmFu52E=?= Referente 875623
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5917AC00D
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 03:57:52 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	sAEJF9ewJ4hJu5sa for <xfs@oss.sgi.com>;
+	Tue, 01 Oct 2013 03:57:50 -0700 (PDT)
+Date: Tue, 1 Oct 2013 20:57:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] xfs: xfs_remove deadlocks due to inverted AGF vs AGI
+	lock ordering
+Message-ID: <20131001105745.GP12541@dastard>
+References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
+	<1380497826-13474-4-git-send-email-david@fromorbit.com>
+	<20130930221449.GP1935@sgi.com>
 MIME-Version: 1.0
-Date: Tue, 1 Oct 2013 00:23:57 -0300
-Message-Id: <20131001002356918759A57C$0F5086328F@USUARIOPC>
+Content-Disposition: inline
+In-Reply-To: <20130930221449.GP1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,118 +28,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0528239977338766162=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format
+On Mon, Sep 30, 2013 at 05:14:49PM -0500, Ben Myers wrote:
+> Hi Dave,
+> 
+> On Mon, Sep 30, 2013 at 09:37:05AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Removing an inode from the namespace involves removing the directory
+> > entry and dropping the link count on the inode. Removing the
+> > directory entry can result in locking an AGF (directory blocks were
+> > freed) and removing a link count can result in placing the inode on
+> > an unlinked list which results in locking an AGI.
+> > 
+> > The big problem here is that we have an ordering constraint on AGF
+> > and AGI locking - inode allocation locks the AGI, then can allocate
+> > a new extent for new inodes, locking the AGF after the AGI.
+> > Similarly, freeing the inode removes the inode from the unlinked
+> > list, requiring that we lock the AGI first, and then freeing the
+> > inode can result in an inode chunk being freed and hence freeing
+> > disk space requiring that we lock an AGF.
+> > 
+> > Hence the ordering that is imposed by other parts of the code is AGI
+> > before AGF. This means we cannot remove the directory entry before
+> > we drop the inode reference count and put it on the unlinked list as
+> > this results in a lock order of AGF then AGI, and this can deadlock
+> > against inode allocation and freeing. Therefore we must drop the
+> > link counts before we remove the directory entry.
+> > 
+> > This is still safe from a transactional point of view - it is not
+> > until we get to xfs_bmap_finish() that we have the possibility of
+> > multiple transactions in this operation. Hence as long as we remove
+> > the directory entry and drop the link count in the first transaction
+> > of the remove operation, there are no transactional constraints on
+> > the ordering here.
+> > 
+> > Change the ordering of the operations in the xfs_remove() function
+> > to align the ordering of AGI and AGF locking to match that of the
+> > rest of the code.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Hmmm..  I'm not quite comfortable with this one yet...  It'll probably be
+> better after some more review.  Did you happen to have a test case to go with
+> this?
 
---===============0528239977338766162==
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_777_4617_8726E706.D6667650"
+Two test cases.
 
-This is a multi-part message in MIME format
+The first that I saw involved a 100TB filesystem and 16-way creates
+running concurrently with 16-way unlinks, as reported here:
 
-------=_NextPart_777_4617_8726E706.D6667650
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+http://oss.sgi.com/archives/xfs/2013-09/msg00359.html
 
-Boleto de Cobran=E7a Referente 875623 
+That's not reliable, though - in general it takes hours of running a
+couple of hundred threads doing sequential file create and unlinks
+on a 32p VM.  i.e. adding a half-hour long 16-way fsmark workload
+every couple of minutes to the load that is aready running on the
+filesystem. It runs at about 350,000 file creates/s and 150,000
+unlinks/s, so it takes a load that is not really feasible for the
+majority of QA environments. I haven't had this workload deadlock
+since I wrote this patch.
 
-Caro(a) cliente
+The other system I have that reliably trips over this is at the
+other end of the scale, and it's generic/269 w/ MKFS_OPTIONS="-b
+size=1024 -m crc=1" that deadlocks on a single CPU VM with 1GB RAM.
+This patch does make generic/269 complete on that machine - it just
+changes the deadlock that is being hit.
 
-Informo que a duplicata com vencimento em 28/05 no valor de R$282,55 n=E3=
-o foi pago.
-Estou enviando em anexo 2=AA via da duplicata atualizado para pagamento.=
+i.e.  it appears that we have introduced an ENOSPC AGF vs AGF lock
+ordering deadlock at some point, but I haven't got a handle on that
+yet to be able to even speculate on what the cause might be. I'm in
+the process of refining tracepoints to narrow down the exactly order
+of operations that is causing problems...
 
+Cheers,
 
-Conforme solicitado segue o anexo do BOLETO de cobran=E7a. 
-
-Download boleto atualizado http://vaaa.fr/2a 
-
-Aguardamos o pagamento do boleto. O n=E3o pagamento da anuidade nos praz=
-os estabelecidos
-acarretara multa e juros de mora de 0,3% (um por cento) ao m=EAs.
-Atenciosamente.
-Alessandra A. Cunha 
-Setor Financeiro.
-Alfa finaceira Ltda
-CNPJ 61.198.164/0001-60
-
-------=_NextPart_777_4617_8726E706.D6667650
-Content-Type: text/html; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"> <html><he=
-ad>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-88=
-59-1">
-  <META name=3DGenerator content=3D4.61> <title>Boleto de Cobran=E7a Ref=
-erente 875623</title>
- </head>
- <body> <DIV style=3D"TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,25=
-5,255); TEXT-INDENT: 0px; FONT: 12px 'Lucida Grande', Verdana, Arial, He=
-lvetica, sans-serif; WHITE-SPACE: normal; BORDER-TOP-WIDTH: 0px; LETTER-=
-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size=
--adjust: auto; -webkit-text-stroke-width: 0px"><FONT face=3DArial><SPAN =
-style=3D"FONT-SIZE: medium"><STRONG>Boleto de Cobran=E7a Referente 87562=
-3 </STRONG></SPAN></FONT></DIV><FONT face=3DArial> <P style=3D"TEXT-TRAN=
-SFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; FONT:=
- 12px 'Lucida Grande', Verdana, Arial, Helvetica, sans-serif; WHITE-SPAC=
-E: normal; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px;=
- -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><SPAN s=
-tyle=3D"FONT-SIZE: small"><STRONG><FONT face=3D"Courier New">Caro(a) cli=
-ente</FONT></STRONG></SPAN></P><PRE style=3D"PADDING-BOTTOM: 0px; TEXT-T=
-RANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; MA=
-RGIN: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; FONT: 12px monospace; =
-WHITE-SPACE: pre-wrap !important; LETTER-SPACING: normal; COLOR: rgb(0,0=
-,0); WORD-SPACING: 0px; PADDING-TOP: 0px; -webkit-text-size-adjust: auto=
-; -webkit-text-stroke-width: 0px"><SPAN style=3D"FONT-SIZE: small">Infor=
-mo que a duplicata com vencimento em 28/05 no valor de R$282,55 n=E3o fo=
-i pago.</SPAN><BR><SPAN style=3D"FONT-SIZE: small">Estou enviando em ane=
-xo 2=AA via da duplicata atualizado para pagamento.</SPAN></PRE> <P styl=
-e=3D"TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDE=
-NT: 0px; FONT: 12px 'Lucida Grande', Verdana, Arial, Helvetica, sans-ser=
-if; WHITE-SPACE: normal; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD=
--SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width=
-: 0px"><SPAN style=3D"FONT-SIZE: small"><STRONG>&nbsp;</STRONG>Conforme =
-solicitado segue o anexo do&nbsp;<STRONG>BOLETO</STRONG>&nbsp;de cobran=E7=
-a.&nbsp;</SPAN></p><p style=3D"TEXT-TRANSFORM: none; BACKGROUND-COLOR: r=
-gb(255,255,255); TEXT-INDENT: 0px; FONT: 12px 'Lucida Grande', Verdana, =
-Arial, Helvetica, sans-serif; WHITE-SPACE: normal; LETTER-SPACING: norma=
-l; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto;=
- -webkit-text-stroke-width: 0px"><SPAN style=3D"FONT-SIZE: small">&nbsp;=
-<A style=3D"OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: m=
-edium; COLOR: rgb(0,0,204)" href=3D"http://vaaa.fr/2d" target=3D_blank><=
-FONT face=3D"Courier New">Download boleto atualizado</FONT></A><FONT fac=
-e=3D"Courier New">&nbsp;&nbsp;</FONT></SPAN></p><p style=3D"TEXT-TRANSFO=
-RM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; FONT: 12=
-px 'Lucida Grande', Verdana, Arial, Helvetica, sans-serif; WHITE-SPACE: =
-normal; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -w=
-ebkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><FONT face=
-=3D"Courier New"><SPAN style=3D"FONT-SIZE: small">Aguardamos o pagamento=
- do boleto. O n=E3o pagamento da anuidade nos prazos estabelecidos</SPAN=
-><BR><SPAN style=3D"FONT-SIZE: small">acarretara multa e juros de mora d=
-e 0,3% (um por cento) ao m=EAs.</SPAN><BR><BR><BR>Atenciosamente.<BR><ST=
-RONG>Alessandra A. Cunha&nbsp;</STRONG><BR>Setor Financeiro.<BR><STRONG>=
-Alfa finaceira Ltda<BR></STRONG>CNPJ 61.198.164/0001-60</FONT></P></FONT=
-></body>
- </html>
- 
-
-------=_NextPart_777_4617_8726E706.D6667650--
-
-
---===============0528239977338766162==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0528239977338766162==--
