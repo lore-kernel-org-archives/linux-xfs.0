@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E263F7F59
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 09:40:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BF8E130406A
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 07:40:55 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 1WaLBRA2sayFPnMp for <xfs@oss.sgi.com>;
-	Tue, 01 Oct 2013 07:40:54 -0700 (PDT)
-Date: Tue, 1 Oct 2013 16:40:47 +0200
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH] xfstests/btrfs: do not test btrfs/010 with autodefrag
-Message-ID: <20131001144047.GI18291@twin.jikos.cz>
-References: <1379481475-10842-1-git-send-email-bo.li.liu@oracle.com>
-	<20130927134544.GI18681@localhost.localdomain>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130927134544.GI18681@localhost.localdomain>
-Reply-To: dsterba@suse.cz
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 55E967F5D
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 09:49:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D796AAC014
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 07:49:39 -0700 (PDT)
+Received: from mail-bk0-f41.google.com (mail-bk0-f41.google.com
+	[209.85.214.41]) by cuda.sgi.com with ESMTP id Swgyt0ElyEON7qvK
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Oct 2013 07:49:38 -0700 (PDT)
+Received: by mail-bk0-f41.google.com with SMTP id na10so2707397bkb.14
+	for <xfs@oss.sgi.com>; Tue, 01 Oct 2013 07:49:37 -0700 (PDT)
+From: Thierry Reding <thierry.reding@gmail.com>
+Subject: [PATCH] xfs: Use kmem_free() instead of free()
+Date: Tue,  1 Oct 2013 16:47:53 +0200
+Message-Id: <1380638873-5181-1-git-send-email-treding@nvidia.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +23,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: Liu Bo <bo.li.liu@oracle.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Sep 27, 2013 at 09:45:44AM -0400, Josef Bacik wrote:
-> On Wed, Sep 18, 2013 at 01:17:55PM +0800, Liu Bo wrote:
-> > btrfs/010 is going to create a fragmented file, however, with autodefrag
-> > this is impossible, so just skip the test when we're with autodefrag.
-> > 
-> > Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
-> 
-> I'd rather you just strip out the autodefrag option if it is there and add it
-> back once the test is done (or hell just remove it, mount, and add it back).
+This fixes a build failure caused by calling the free() function which
+does not exist in the Linux kernel.
 
-I think the test should be skipped if it does not make sense with a
-specific mount option rather than temporarily removing it, because then
-it looks like the test passes with the option altough it does not.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ fs/xfs/xfs_log_recover.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 4324058..3979749 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1585,7 +1585,7 @@ xlog_recover_add_to_trans(
+ 		"bad number of regions (%d) in inode log format",
+ 				  in_f->ilf_size);
+ 			ASSERT(0);
+-			free(ptr);
++			kmem_free(ptr);
+ 			return XFS_ERROR(EIO);
+ 		}
+ 
+-- 
+1.8.4
 
 _______________________________________________
 xfs mailing list
