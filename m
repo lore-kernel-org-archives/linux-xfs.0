@@ -1,9 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.12-rc3-7-gd948709
-Message-Id: <20131001225342.3F59729DFC@oss.sgi.com>
-Date: Tue,  1 Oct 2013 17:53:42 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 68D627F67
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 18:04:38 -0500 (CDT)
+Date: Tue, 1 Oct 2013 18:04:34 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 4/4] xfs: open code inc_inode_iversion when logging an
+	inode
+Message-ID: <20131001230434.GW1935@sgi.com>
+References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
+	<1380497826-13474-5-git-send-email-david@fromorbit.com>
+	<5249FA36.1070609@sandeen.net> <20130930223946.GQ1935@sgi.com>
+	<20131001111236.GQ12541@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131001111236.GQ12541@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,124 +22,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Jean Noel Cordenner <jean-noel.cordenner@bull.net>, xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+Hi Dave,
 
-The branch, for-next has been updated
-  d948709 xfs: remove usage of is_bad_inode
-  17ec81c xfs: fix the wrong new_size/rnew_size at xfs_iext_realloc_direct()
-  0799a3e xfs: get rid of count from xfs_iomap_write_allocate()
-      from  aaaae98022efa4f3c31042f1fdf9e7a0c5f04663 (commit)
+On Tue, Oct 01, 2013 at 09:12:36PM +1000, Dave Chinner wrote:
+> On Mon, Sep 30, 2013 at 05:39:46PM -0500, Ben Myers wrote:
+> > On Mon, Sep 30, 2013 at 05:24:54PM -0500, Eric Sandeen wrote:
+> > > On 9/29/13 6:37 PM, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > Michael L Semon reported that generic/069 runtime increased on v5
+> > > > superblocks by 100% compared to v4 superblocks. his perf-based
+> > > > analysis pointed directly at the timestamp updates being done by the
+> > > > write path in this workload. The append writers are doing 4-byte
+> > > > writes, so there are lots of timestamp updates occurring.
+> ...
+> > > > diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> > > > index 53dfe46..e6601c1 100644
+> > > > --- a/fs/xfs/xfs_trans_inode.c
+> > > > +++ b/fs/xfs/xfs_trans_inode.c
+> > > > @@ -118,8 +118,7 @@ xfs_trans_log_inode(
+> > > >  	 */
+> > > >  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+> > > >  	    IS_I_VERSION(VFS_I(ip))) {
+> > > > -		inode_inc_iversion(VFS_I(ip));
+> > > > -		ip->i_d.di_changecount = VFS_I(ip)->i_version;
+> > > 
+> > > comment about the reason for the open-code might be good, too?
+> 
+> Sure, I can add that.
+> 
+> > > otherwise some semantic patcher might "fix" it for you again later...
+> > > 
+> > > -Eric
+> > > 
+> > > > +		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
+> > > >  		flags |= XFS_ILOG_CORE;
+> > > >  	}
+> > > >  
+> > > > 
+> > 
+> > Adding a comment strikes me as a good idea too... But isn't that lock there for
+> > a reason?  I suspect that will break i_version like i_size on 32 bit systems.
+> > Jean added this function, hopefully he can shed some light.
+> 
+> I can't see how there's a 32 bit issue here - i_version is always
+> read unlocked, and so if you're worried about a 32 bit system doing
+> 2 32 bit reads to read the 64 bit value and seeing values on
+> different sides of the increment, then we've already got that
+> problem *everywhere*.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+I think if we had the 32 bit issues with i_size, the same is likely true here.
+You're not making it any worse, AFAICT.
 
-- Log -----------------------------------------------------------------
-commit d948709b8e468510d8c855d1e4c9f1cb7b524880
-Author: Ben Myers <bpm@sgi.com>
-Date:   Tue Sep 10 18:11:22 2013 -0500
+> i.e. the only place that i_version is
+> protected by i_lock is in inode_inc_iversion() - nowhere else is
+> that lock used at all when reading or writing i_version.
 
-    xfs: remove usage of is_bad_inode
-    
-    XFS never calls mark_inode_bad or iget_failed, so it will never see a
-    bad inode.  Remove all checks for is_bad_inode because they are
-    unnecessary.
-    
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Seems like if nobody is taking the i_lock when reading i_version, it's not
+really providing the protection that was intended.  Weird.
 
-commit 17ec81c15fd022842f9bc947841ba9fb9eb52591
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Sun Sep 22 16:25:15 2013 +0800
+> A quick grep points out that ext2/3/4 directory code all update and
+> read i_version without using the i_lock - they are all serialised by
+> the directory locks that are held. Ceph, exofs, ocfs2, ecryptfs,
+> affs, fat, etc all do similar things with inode->i_version. 
+> 
+> So if the intention is to make i_version safe on 32 bit systems,
+> then it's failed.
 
-    xfs: fix the wrong new_size/rnew_size at xfs_iext_realloc_direct()
-    
-    At xfs_iext_realloc_direct(), the new_size is changed by adding
-    if_bytes if originally the extent records are stored at the inline
-    extent buffer, and we have to switch from it to a direct extent
-    list for those new allocated extents, this is wrong. e.g,
-    
-    Create a file with three extents which was showing as following,
-    
-    xfs_io -f -c "truncate 100m" /xfs/testme
-    
-    for i in $(seq 0 5 10); do
-    	offset=$(($i * $((1 << 20))))
-    	xfs_io -c "pwrite $offset 1m" /xfs/testme
-    done
-    
-    Inline
-    ------
-    irec:	if_bytes	bytes_diff	new_size
-    1st	0		16		16
-    2nd	16		16		32
-    
-    Switching
-    ---------						rnew_size
-    3rd	32		16		48 + 32 = 80	roundup=128
-    
-    In this case, the desired value of new_size should be 48, and then
-    it will be roundup to 64 and be assigned to rnew_size.
-    
-    However, this issue has been covered by resetting the if_bytes to
-    the new_size which is calculated at the begnning of xfs_iext_add()
-    before leaving out this function, and in turn make the rnew_size
-    correctly again. Hence, this can not be detected via xfstestes.
-    
-    This patch fix above problem and revise the new_size comments at
-    xfs_iext_realloc_direct() to make it more readable.  Also, fix the
-    comments while switching from the inline extent buffer to a direct
-    extent list to reflect this change.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+Agreed.
 
-commit 0799a3e808e5543235bcdfe9d1fa1572e0e86ab5
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Sun Sep 29 18:56:04 2013 +0800
+> The only thing it does in inode_inc_iversion is
+> serialise other updates that aren't done under some exclusive inode
+> locks, and all the XFS updates are done either under the i_mutex
+> and/or the i_ilock, so I don't think there is any problem with
+> racing occurring here...
 
-    xfs: get rid of count from xfs_iomap_write_allocate()
-    
-    Get rid of function variable count from xfs_iomap_write_allocate() as
-    it is unused.
-    
-    Additionally, checkpatch warn me of the following for this change:
-    WARNING: extern prototypes should be avoided in .h files
-    +extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
-    
-    So this patch also remove all extern function prototypes at xfs_iomap.h
-    to suppress it to make this code style in consistent manner in this file.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+I'll take another look at it with that in mind.
 
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_aops.c       | 2 +-
- fs/xfs/xfs_icache.c     | 7 -------
- fs/xfs/xfs_inode.c      | 2 +-
- fs/xfs/xfs_inode_fork.c | 9 ++-------
- fs/xfs/xfs_iomap.c      | 1 -
- fs/xfs/xfs_iomap.h      | 8 ++++----
- fs/xfs/xfs_super.c      | 9 ---------
- 7 files changed, 8 insertions(+), 30 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
