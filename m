@@ -1,17 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DF88529DFC
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 17:40:29 -0500 (CDT)
-Date: Tue, 1 Oct 2013 17:40:25 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2] xfs: don't leak root inode reference
-Message-ID: <20131001224025.GV1935@sgi.com>
-References: <20130826204730.GZ7153@sgi.com> <20130826212423.GX6023@dastard>
-	<20130827212558.GY5262@sgi.com> <20130827220833.GY6023@dastard>
-	<20130910231122.GY1935@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130910231122.GY1935@sgi.com>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, master,
+	updated. xfs-for-linus-v3.12-rc3-7-gd948709
+Message-Id: <20131001225332.9188429DFC@oss.sgi.com>
+Date: Tue,  1 Oct 2013 17:53:32 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,99 +12,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 10, 2013 at 06:11:22PM -0500, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Wed, Aug 28, 2013 at 08:08:33AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 27, 2013 at 04:25:58PM -0500, Ben Myers wrote:
-> > > On Tue, Aug 27, 2013 at 07:24:23AM +1000, Dave Chinner wrote:
-> > > > On Mon, Aug 26, 2013 at 03:47:30PM -0500, Ben Myers wrote:
-> > > > > Looks like in 48fde701 we removed the iput of the root inode in
-> > > > > xfs_fs_fill_super for the error case.  Add it back.
-> > > > > 
-> > > > > Signed-off-by: Ben Myers <bpm@sgi.com>
-> > > > > 
-> > > > > ---
-> > > > >  fs/xfs/xfs_super.c |    6 ++++--
-> > > > >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > > > > 
-> > > > > Index: b/fs/xfs/xfs_super.c
-> > > > > ===================================================================
-> > > > > --- a/fs/xfs/xfs_super.c	2013-08-26 15:36:09.170848579 -0500
-> > > > > +++ b/fs/xfs/xfs_super.c	2013-08-26 15:40:19.450817933 -0500
-> > > > > @@ -1493,12 +1493,12 @@ xfs_fs_fill_super(
-> > > > >  	}
-> > > > >  	if (is_bad_inode(root)) {
-> > > > >  		error = EINVAL;
-> > > > > -		goto out_unmount;
-> > > > > +		goto out_iput;
-> > > > >  	}
-> > > > >  	sb->s_root = d_make_root(root);
-> > > > >  	if (!sb->s_root) {
-> > > > >  		error = ENOMEM;
-> > > > > -		goto out_unmount;
-> > > > > +		goto out_iput;
-> > > > >  	}
-> > > > 
-> > > > That's wrong. d_make_root() drops the reference to the inode on
-> > > > failure itself, and so the change in 48fde701 is correct and valid.
-> > > > 
-> > > > The leak on bad inodes (which, AFAICT, can never happen on XFS) has
-> > > > been around a lot longer than Al's change - this commit introduced
-> > > > it:
-> > > > 
-> > > > 	2bcf6e9 xfs: start periodic workers later
-> > > > 
-> > > > with this hunk:
-> > > > 
-> > > >         if (is_bad_inode(root)) {
-> > > >                 error = EINVAL;
-> > > > -               goto fail_vnrele;
-> > > > +               goto out_syncd_stop;
-> > > >         }
-> > > 
-> > > Thanks Gents.  Here's another try:
-> > > 
-> > > xfs: don't leak root inode reference
-> > > 
-> > > Looks like in 2bcf6e9 we removed the iput of the root inode in
-> > > xfs_fs_fill_super for the is_bad_inode error case.  Add it back.
-> > > 
-> > > Signed-off-by: Ben Myers <bpm@sgi.com>
-> > 
-> > I don't think this is right, either.
-> > 
-> > As I said in my previous reply, I don't think that XFS can ever see
-> > a bad inode. The fact is that we're grabbing mp->m_rootip, which is
-> > we already have a reference to and is in cache and validated thanks
-> > to an xfs_iget() call in xfs_mountfs().  If we fail validation when
-> > reading the root inode into cache then xfs_mountfs() will fail and
-> > we won't ever get to this check.
-> > 
-> > Further, XFS never marks inodes bad - even on a failed lookup or a
-> > shut down filesystem - and so AFAICT we cannot ever see the root
-> > inode (or any other XFS inode) as a bad inode.
-> > 
-> > Hence I think that the is_bad_inode(root) check should just go away.
-> 
-> Ok.  Lets try this.  ;)
-> 
-> xfs: remove usage of is_bad_inode
-> 
-> XFS never calls mark_inode_bad or iget_failed, so it will never see a
-> bad inode.  Remove all checks for is_bad_inode because they are
-> unnecessary.
-> 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Applied this one.
+The branch, master has been updated
+  d948709 xfs: remove usage of is_bad_inode
+  17ec81c xfs: fix the wrong new_size/rnew_size at xfs_iext_realloc_direct()
+  0799a3e xfs: get rid of count from xfs_iomap_write_allocate()
+      from  aaaae98022efa4f3c31042f1fdf9e7a0c5f04663 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
+
+- Log -----------------------------------------------------------------
+commit d948709b8e468510d8c855d1e4c9f1cb7b524880
+Author: Ben Myers <bpm@sgi.com>
+Date:   Tue Sep 10 18:11:22 2013 -0500
+
+    xfs: remove usage of is_bad_inode
+    
+    XFS never calls mark_inode_bad or iget_failed, so it will never see a
+    bad inode.  Remove all checks for is_bad_inode because they are
+    unnecessary.
+    
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+commit 17ec81c15fd022842f9bc947841ba9fb9eb52591
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Sun Sep 22 16:25:15 2013 +0800
+
+    xfs: fix the wrong new_size/rnew_size at xfs_iext_realloc_direct()
+    
+    At xfs_iext_realloc_direct(), the new_size is changed by adding
+    if_bytes if originally the extent records are stored at the inline
+    extent buffer, and we have to switch from it to a direct extent
+    list for those new allocated extents, this is wrong. e.g,
+    
+    Create a file with three extents which was showing as following,
+    
+    xfs_io -f -c "truncate 100m" /xfs/testme
+    
+    for i in $(seq 0 5 10); do
+    	offset=$(($i * $((1 << 20))))
+    	xfs_io -c "pwrite $offset 1m" /xfs/testme
+    done
+    
+    Inline
+    ------
+    irec:	if_bytes	bytes_diff	new_size
+    1st	0		16		16
+    2nd	16		16		32
+    
+    Switching
+    ---------						rnew_size
+    3rd	32		16		48 + 32 = 80	roundup=128
+    
+    In this case, the desired value of new_size should be 48, and then
+    it will be roundup to 64 and be assigned to rnew_size.
+    
+    However, this issue has been covered by resetting the if_bytes to
+    the new_size which is calculated at the begnning of xfs_iext_add()
+    before leaving out this function, and in turn make the rnew_size
+    correctly again. Hence, this can not be detected via xfstestes.
+    
+    This patch fix above problem and revise the new_size comments at
+    xfs_iext_realloc_direct() to make it more readable.  Also, fix the
+    comments while switching from the inline extent buffer to a direct
+    extent list to reflect this change.
+    
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+commit 0799a3e808e5543235bcdfe9d1fa1572e0e86ab5
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Sun Sep 29 18:56:04 2013 +0800
+
+    xfs: get rid of count from xfs_iomap_write_allocate()
+    
+    Get rid of function variable count from xfs_iomap_write_allocate() as
+    it is unused.
+    
+    Additionally, checkpatch warn me of the following for this change:
+    WARNING: extern prototypes should be avoided in .h files
+    +extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+    
+    So this patch also remove all extern function prototypes at xfs_iomap.h
+    to suppress it to make this code style in consistent manner in this file.
+    
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_aops.c       | 2 +-
+ fs/xfs/xfs_icache.c     | 7 -------
+ fs/xfs/xfs_inode.c      | 2 +-
+ fs/xfs/xfs_inode_fork.c | 9 ++-------
+ fs/xfs/xfs_iomap.c      | 1 -
+ fs/xfs/xfs_iomap.h      | 8 ++++----
+ fs/xfs/xfs_super.c      | 9 ---------
+ 7 files changed, 8 insertions(+), 30 deletions(-)
+
+
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
