@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 264707F56
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 05:57:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A5917AC00D
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 03:57:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F17957F56
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 06:12:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DC5328F8040
+	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 04:12:41 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	sAEJF9ewJ4hJu5sa for <xfs@oss.sgi.com>;
-	Tue, 01 Oct 2013 03:57:50 -0700 (PDT)
-Date: Tue, 1 Oct 2013 20:57:45 +1000
+	iu3HcpRdnOoZDfMS for <xfs@oss.sgi.com>;
+	Tue, 01 Oct 2013 04:12:40 -0700 (PDT)
+Date: Tue, 1 Oct 2013 21:12:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/4] xfs: xfs_remove deadlocks due to inverted AGF vs AGI
-	lock ordering
-Message-ID: <20131001105745.GP12541@dastard>
+Subject: Re: [PATCH 4/4] xfs: open code inc_inode_iversion when logging an
+	inode
+Message-ID: <20131001111236.GQ12541@dastard>
 References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
-	<1380497826-13474-4-git-send-email-david@fromorbit.com>
-	<20130930221449.GP1935@sgi.com>
+	<1380497826-13474-5-git-send-email-david@fromorbit.com>
+	<5249FA36.1070609@sandeen.net> <20130930223946.GQ1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130930221449.GP1935@sgi.com>
+In-Reply-To: <20130930223946.GQ1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,79 +33,67 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, Jean Noel Cordenner <jean-noel.cordenner@bull.net>, xfs@oss.sgi.com
 
-On Mon, Sep 30, 2013 at 05:14:49PM -0500, Ben Myers wrote:
-> Hi Dave,
+On Mon, Sep 30, 2013 at 05:39:46PM -0500, Ben Myers wrote:
+> On Mon, Sep 30, 2013 at 05:24:54PM -0500, Eric Sandeen wrote:
+> > On 9/29/13 6:37 PM, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Michael L Semon reported that generic/069 runtime increased on v5
+> > > superblocks by 100% compared to v4 superblocks. his perf-based
+> > > analysis pointed directly at the timestamp updates being done by the
+> > > write path in this workload. The append writers are doing 4-byte
+> > > writes, so there are lots of timestamp updates occurring.
+...
+> > > diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> > > index 53dfe46..e6601c1 100644
+> > > --- a/fs/xfs/xfs_trans_inode.c
+> > > +++ b/fs/xfs/xfs_trans_inode.c
+> > > @@ -118,8 +118,7 @@ xfs_trans_log_inode(
+> > >  	 */
+> > >  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+> > >  	    IS_I_VERSION(VFS_I(ip))) {
+> > > -		inode_inc_iversion(VFS_I(ip));
+> > > -		ip->i_d.di_changecount = VFS_I(ip)->i_version;
+> > 
+> > comment about the reason for the open-code might be good, too?
+
+Sure, I can add that.
+
+> > otherwise some semantic patcher might "fix" it for you again later...
+> > 
+> > -Eric
+> > 
+> > > +		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
+> > >  		flags |= XFS_ILOG_CORE;
+> > >  	}
+> > >  
+> > > 
 > 
-> On Mon, Sep 30, 2013 at 09:37:05AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Removing an inode from the namespace involves removing the directory
-> > entry and dropping the link count on the inode. Removing the
-> > directory entry can result in locking an AGF (directory blocks were
-> > freed) and removing a link count can result in placing the inode on
-> > an unlinked list which results in locking an AGI.
-> > 
-> > The big problem here is that we have an ordering constraint on AGF
-> > and AGI locking - inode allocation locks the AGI, then can allocate
-> > a new extent for new inodes, locking the AGF after the AGI.
-> > Similarly, freeing the inode removes the inode from the unlinked
-> > list, requiring that we lock the AGI first, and then freeing the
-> > inode can result in an inode chunk being freed and hence freeing
-> > disk space requiring that we lock an AGF.
-> > 
-> > Hence the ordering that is imposed by other parts of the code is AGI
-> > before AGF. This means we cannot remove the directory entry before
-> > we drop the inode reference count and put it on the unlinked list as
-> > this results in a lock order of AGF then AGI, and this can deadlock
-> > against inode allocation and freeing. Therefore we must drop the
-> > link counts before we remove the directory entry.
-> > 
-> > This is still safe from a transactional point of view - it is not
-> > until we get to xfs_bmap_finish() that we have the possibility of
-> > multiple transactions in this operation. Hence as long as we remove
-> > the directory entry and drop the link count in the first transaction
-> > of the remove operation, there are no transactional constraints on
-> > the ordering here.
-> > 
-> > Change the ordering of the operations in the xfs_remove() function
-> > to align the ordering of AGI and AGF locking to match that of the
-> > rest of the code.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Hmmm..  I'm not quite comfortable with this one yet...  It'll probably be
-> better after some more review.  Did you happen to have a test case to go with
-> this?
+> Adding a comment strikes me as a good idea too... But isn't that lock there for
+> a reason?  I suspect that will break i_version like i_size on 32 bit systems.
+> Jean added this function, hopefully he can shed some light.
 
-Two test cases.
+I can't see how there's a 32 bit issue here - i_version is always
+read unlocked, and so if you're worried about a 32 bit system doing
+2 32 bit reads to read the 64 bit value and seeing values on
+different sides of the increment, then we've already got that
+problem *everywhere*. i.e. the only place that i_version is
+protected by i_lock is in inode_inc_iversion() - nowhere else is
+that lock used at all when reading or writing i_version.
 
-The first that I saw involved a 100TB filesystem and 16-way creates
-running concurrently with 16-way unlinks, as reported here:
+A quick grep points out that ext2/3/4 directory code all update and
+read i_version without using the i_lock - they are all serialised by
+the directory locks that are held. Ceph, exofs, ocfs2, ecryptfs,
+affs, fat, etc all do similar things with inode->i_version. 
 
-http://oss.sgi.com/archives/xfs/2013-09/msg00359.html
-
-That's not reliable, though - in general it takes hours of running a
-couple of hundred threads doing sequential file create and unlinks
-on a 32p VM.  i.e. adding a half-hour long 16-way fsmark workload
-every couple of minutes to the load that is aready running on the
-filesystem. It runs at about 350,000 file creates/s and 150,000
-unlinks/s, so it takes a load that is not really feasible for the
-majority of QA environments. I haven't had this workload deadlock
-since I wrote this patch.
-
-The other system I have that reliably trips over this is at the
-other end of the scale, and it's generic/269 w/ MKFS_OPTIONS="-b
-size=1024 -m crc=1" that deadlocks on a single CPU VM with 1GB RAM.
-This patch does make generic/269 complete on that machine - it just
-changes the deadlock that is being hit.
-
-i.e.  it appears that we have introduced an ENOSPC AGF vs AGF lock
-ordering deadlock at some point, but I haven't got a handle on that
-yet to be able to even speculate on what the cause might be. I'm in
-the process of refining tracepoints to narrow down the exactly order
-of operations that is causing problems...
+So if the intention is to make i_version safe on 32 bit systems,
+then it's failed. The only thing it does in inode_inc_iversion is
+serialise other updates that aren't done under some exclusive inode
+locks, and all the XFS updates are done either under the i_mutex
+and/or the i_ilock, so I don't think there is any problem with
+racing occurring here...
 
 Cheers,
 
