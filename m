@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc3-4-gaaaae98
-Message-Id: <20131001152733.2FB507F67@oss.sgi.com>
-Date: Tue,  1 Oct 2013 10:27:33 -0500 (CDT)
+Message-Id: <20131001152743.3CF867F6C@oss.sgi.com>
+Date: Tue,  1 Oct 2013 10:27:43 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   aaaae98 xfs: Use kmem_free() instead of free()
       from  519ccb81ac1c8e3e4eed294acf93be00b43dcad6 (commit)
 
