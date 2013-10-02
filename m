@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DD6027F9C
-	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 15:13:04 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B984B7F9F
+	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 15:32:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7587CAC002
-	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 13:13:04 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id JzAeD5nXQFaGnbKK for <xfs@oss.sgi.com>;
-	Wed, 02 Oct 2013 13:13:03 -0700 (PDT)
-Message-ID: <524C7E4D.60208@sandeen.net>
-Date: Wed, 02 Oct 2013 15:13:01 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7C7318F804C
+	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 13:32:48 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	wmjlPU7DUnL7UHC3 for <xfs@oss.sgi.com>;
+	Wed, 02 Oct 2013 13:32:46 -0700 (PDT)
+Date: Thu, 3 Oct 2013 06:32:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: fix memory leak in xfs_dir2_node_removename
+Message-ID: <20131002203241.GV12541@dastard>
+References: <20131002125110.745269864@sgi.com>
+	<20131002125409.826742020@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsrestore: fix multi stream support
-References: <524AF8AE.5030300@sgi.com> <524C68C5.2030202@sandeen.net>
-	<524C7BF6.5050107@sgi.com>
-In-Reply-To: <524C7BF6.5050107@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20131002125409.826742020@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,79 +30,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 10/2/13 3:03 PM, Rich Johnston wrote:
+On Wed, Oct 02, 2013 at 07:51:11AM -0500, Mark Tinguely wrote:
+> Fix the leak of kernel memory in xfs_dir2_node_removename()
+> when xfs_dir2_leafn_remove() returns an error code.
 > 
+> Found by Coverity in userspace same patch applies there also.
 > 
-> On 10/02/2013 01:41 PM, Eric Sandeen wrote:
-
-...
-
->> What ,do you think?
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+>  v2 corrected bad return code as pointed out by Roger Willcocks.
 > 
-> Sure go for it. That was one of my test programs but obviously I
-> choose the wrong one. ;) Its really sixes to me.
+>  fs/xfs/xfs_dir2_node.c |   14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
 > 
-> I still think the the check in partial_reg is not needed. I never saw
-> a case where single stream restore hits that check except when there
-> are no extents. Do you have an case/example?
+> Index: b/fs/xfs/xfs_dir2_node.c
+> ===================================================================
+> --- a/fs/xfs/xfs_dir2_node.c
+> +++ b/fs/xfs/xfs_dir2_node.c
+> @@ -2105,12 +2105,12 @@ xfs_dir2_node_lookup(
+>   */
+>  int						/* error */
+>  xfs_dir2_node_removename(
+> -	xfs_da_args_t		*args)		/* operation arguments */
+> +	struct xfs_da_args	*args)		/* operation arguments */
+>  {
+> -	xfs_da_state_blk_t	*blk;		/* leaf block */
+> +	struct xfs_da_state_blk	*blk;		/* leaf block */
+>  	int			error;		/* error return value */
+>  	int			rval;		/* operation return value */
+> -	xfs_da_state_t		*state;		/* btree cursor */
+> +	struct xfs_da_state	*state;		/* btree cursor */
+>  
+>  	trace_xfs_dir2_node_removename(args);
+>  
+> @@ -2132,9 +2132,10 @@ xfs_dir2_node_removename(
+>  	 * Didn't find it, upper layer screwed up.
+>  	 */
+>  	if (rval != EEXIST) {
+> -		xfs_da_state_free(state);
+> -		return rval;
+> +		error = rval;
+> +		goto done;
 
-I don't.  It seems like reasonable defensive programming, though,
-so I'm not anxious to remove it, given that nobody really groks
-this code too well.  Could turn it into a warning, maybe, so
-it fires if we do ever get there.
+Can you make this something like "out_free"? We tend to name jump
+labels according to the action that needs to be taken, like
+"out_unlock", "error_trans_cancel", etc...
 
-Can you look back in ptools & see when/why it was added?
+Also, this code is now "funky" in how it handles rval. it will do
+this:
 
-> We saw this issue with DMF offline files because DMF removes the
-> extents and the file has an attribute which is not restored with the
-> current code using multistream.
+        /*
+         * Look up the entry we're deleting, set up the cursor.
+         */
+        error = xfs_da3_node_lookup_int(state, &rval);
+        if (error)
+                rval = error;
+        /*
+         * Didn't find it, upper layer screwed up.
+         */
+        if (rval != EEXIST) {
+		error = rval;
+                goto out_free;
+        }
 
-Ah, I think there's something about not restoring attributes until
-all of the file has been restored.  So again in this case, the file
-never looks "restored" and it never gets to the attribute restoration?
+That's kind funky with the reassignment of rval if there's an error.
+Better would be:
 
-Oh right, like the comment says:
+        /* Look up the entry we're deleting, set up the cursor. */
+        error = xfs_da3_node_lookup_int(state, &rval);
+        if (error)
+                goto out_free;
 
-/* partial_reg - Registers files that are only partially restored by
- * a dump stream into the persistent state.
- *
- * This is done because DMAPI extended attributes must not be set until
- * the entire file has been restored in order to co-ordinate with the 
- * Data Migration Facility (DMF) daemons.  Since extended attributes are
- * recorded with each extent group in the dump, this registry is used to
- * make sure only the final dump stream applies the extended attributes.
- *
- * Likewise, certain extended inode flags (e.g. XFS_XFLAG_IMMUTABLE)
- * should only be set after all data for a file has been restored.
- */
+        /* Didn't find it, upper layer screwed up. */
+	if (rval != EEXIST) {
+		error = rval;
+		goto out_free;
+	}
 
-> So I thinks a simple test case is:
-> 
-> Create a file with no extents. Give that file an attribute dump and
-> restore it (both single and multistream) verify the file still has
-> the attribute.
+Cheers,
 
-An extended attribute you mean?
-
-> Your thoughts?
-
-Yeah, go for it w/ a testcase. :)
-
-I could see where even if we didn't get the dreaded "Out of records"
-message, it might still skip the attribute restore if the file
-never looks "done?"
-
--Eric
-
- --Rich
-> 
->> 
->> -Eric
->> 
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
