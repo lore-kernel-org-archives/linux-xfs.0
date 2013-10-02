@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3271D7FA1
-	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 16:01:25 -0500 (CDT)
-Received: from eagdhcp-232-155.americas.sgi.com
-	(eagdhcp-232-155.americas.sgi.com [128.162.232.155])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B5380AC002
-	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 14:01:21 -0700 (PDT)
-Received: from eagdhcp-232-155.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-155.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r92L1KNZ004369
-	for <xfs@oss.sgi.com>; Wed, 2 Oct 2013 16:01:20 -0500 (CDT)
-	(envelope-from tinguely@eagdhcp-232-155.americas.sgi.com)
-Message-Id: <20131002210035.940755811@sgi.com>
-Date: Wed, 02 Oct 2013 16:00:06 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C74F27FA4
+	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 16:04:40 -0500 (CDT)
+Message-ID: <524C8A65.6030406@sgi.com>
+Date: Wed, 02 Oct 2013 16:04:37 -0500
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: add the inode directory type support to XFS_IOC_FSGEOM
-Content-Disposition: inline;
-	filename=v2-xfs-add-the-inode-directory-type-support-to-XFS_IOC_FSGEOM.patch
+MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] xfs: fix memory leak in xfs_dir2_node_removename
+References: <20131002125110.745269864@sgi.com>
+	<20131002125409.826742020@sgi.com> <20131002203241.GV12541@dastard>
+In-Reply-To: <20131002203241.GV12541@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +18,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Add the inode type directory type support to XFS_IOC_FSGEOM
-so that xfs_repair/xfs_info knows if the superblock v4 filesystem
-enabled the feature.
+On 10/02/13 15:32, Dave Chinner wrote:
+> On Wed, Oct 02, 2013 at 07:51:11AM -0500, Mark Tinguely wrote:
+>> Fix the leak of kernel memory in xfs_dir2_node_removename()
+>> when xfs_dir2_leafn_remove() returns an error code.
+>>
+>> Found by Coverity in userspace same patch applies there also.
+>>
+>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>> ---
+>>   v2 corrected bad return code as pointed out by Roger Willcocks.
+>>
+>>   fs/xfs/xfs_dir2_node.c |   14 ++++++++------
+>>   1 file changed, 8 insertions(+), 6 deletions(-)
+>>
+>> Index: b/fs/xfs/xfs_dir2_node.c
+>> ===================================================================
+>> --- a/fs/xfs/xfs_dir2_node.c
+>> +++ b/fs/xfs/xfs_dir2_node.c
+>> @@ -2105,12 +2105,12 @@ xfs_dir2_node_lookup(
+>>    */
+>>   int						/* error */
+>>   xfs_dir2_node_removename(
+>> -	xfs_da_args_t		*args)		/* operation arguments */
+>> +	struct xfs_da_args	*args)		/* operation arguments */
+>>   {
+>> -	xfs_da_state_blk_t	*blk;		/* leaf block */
+>> +	struct xfs_da_state_blk	*blk;		/* leaf block */
+>>   	int			error;		/* error return value */
+>>   	int			rval;		/* operation return value */
+>> -	xfs_da_state_t		*state;		/* btree cursor */
+>> +	struct xfs_da_state	*state;		/* btree cursor */
+>>
+>>   	trace_xfs_dir2_node_removename(args);
+>>
+>> @@ -2132,9 +2132,10 @@ xfs_dir2_node_removename(
+>>   	 * Didn't find it, upper layer screwed up.
+>>   	 */
+>>   	if (rval != EEXIST) {
+>> -		xfs_da_state_free(state);
+>> -		return rval;
+>> +		error = rval;
+>> +		goto done;
+>
+> Can you make this something like "out_free"? We tend to name jump
+> labels according to the action that needs to be taken, like
+> "out_unlock", "error_trans_cancel", etc...
+>
+> Also, this code is now "funky" in how it handles rval. it will do
+> this:
+>
+>          /*
+>           * Look up the entry we're deleting, set up the cursor.
+>           */
+>          error = xfs_da3_node_lookup_int(state,&rval);
+>          if (error)
+>                  rval = error;
+>          /*
+>           * Didn't find it, upper layer screwed up.
+>           */
+>          if (rval != EEXIST) {
+> 		error = rval;
+>                  goto out_free;
+>          }
+>
+> That's kind funky with the reassignment of rval if there's an error.
+> Better would be:
+>
+>          /* Look up the entry we're deleting, set up the cursor. */
+>          error = xfs_da3_node_lookup_int(state,&rval);
+>          if (error)
+>                  goto out_free;
+>
+>          /* Didn't find it, upper layer screwed up. */
+> 	if (rval != EEXIST) {
+> 		error = rval;
+> 		goto out_free;
+> 	}
+>
+> Cheers,
+>
+> Dave.
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- v2 remove the extra 0 in the XFS_FSOP_GEOM_FLAGS_xxx entries.
+nod.
 
-fs/xfs/xfs_fs.h    |   32 ++++++++++++++++----------------
- fs/xfs/xfs_fs.h    |    4 ++--
- fs/xfs/xfs_fsops.c |    4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+thank
 
-Index: b/fs/xfs/xfs_fs.h
-===================================================================
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -233,11 +233,11 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
- #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
- #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
--#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
-+#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800	/* 32-bit project IDs	*/
- #define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
- #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
- #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
--
-+#define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-Index: b/fs/xfs/xfs_fsops.c
-===================================================================
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -101,7 +101,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
- 			(xfs_sb_version_hascrc(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_V5SB : 0);
-+				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
-+			(xfs_sb_version_hasftype(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_FTYPE : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
-
+--Mark.
 
 _______________________________________________
 xfs mailing list
