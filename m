@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1C7DA7F92
-	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 08:24:43 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6519C7F9C
+	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 08:24:46 -0500 (CDT)
 Received: from eagdhcp-232-155.americas.sgi.com
 	(eagdhcp-232-155.americas.sgi.com [128.162.232.155])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E5A8C304032
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E60F1AC005
 	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 06:24:42 -0700 (PDT)
 Received: from eagdhcp-232-155.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-155.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r92DOgck002411
+	r92DOgZb002407
 	for <xfs@oss.sgi.com>; Wed, 2 Oct 2013 08:24:42 -0500 (CDT)
 	(envelope-from tinguely@eagdhcp-232-155.americas.sgi.com)
-Message-Id: <20131002125409.930462395@sgi.com>
-Date: Wed, 02 Oct 2013 07:51:12 -0500
+Message-Id: <20131002125409.826742020@sgi.com>
+Date: Wed, 02 Oct 2013 07:51:11 -0500
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH 2/2] xfs free the list of recovery items on error.
+Subject: [PATCH 1/2] xfs: fix memory leak in xfs_dir2_node_removename
 References: <20131002125110.745269864@sgi.com>
-Content-Disposition: inline; filename=xfs-fix-leaked-xlog_recover_items.patch
+Content-Disposition: inline;
+	filename=xfs-fix-leak-in-xfs_dir2_node_removename.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,72 +33,68 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Recovery builds a list of items on the transaction's
-r_itemq head. Normally these items are committed and freed.
-But in the event of a recovery error, these allocations
-are leaked.
+Fix the leak of kernel memory in xfs_dir2_node_removename()
+when xfs_dir2_leafn_remove() returns an error code.
 
-If the error occurs during item reordering, then reconstruct
-the r_itemq list before deleting the list to avoid leaking
-the entries that were on one of the temporary lists.
+Found by Coverity in userspace same patch applies there also.
 
 Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_log_recover.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ v2 corrected bad return code as pointed out by Roger Willcocks.
 
-Index: b/fs/xfs/xfs_log_recover.c
+ fs/xfs/xfs_dir2_node.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+Index: b/fs/xfs/xfs_dir2_node.c
 ===================================================================
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1659,6 +1659,7 @@ xlog_recover_reorder_trans(
- 	int			pass)
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -2105,12 +2105,12 @@ xfs_dir2_node_lookup(
+  */
+ int						/* error */
+ xfs_dir2_node_removename(
+-	xfs_da_args_t		*args)		/* operation arguments */
++	struct xfs_da_args	*args)		/* operation arguments */
  {
- 	xlog_recover_item_t	*item, *n;
-+	int			error = 0;
- 	LIST_HEAD(sort_list);
- 	LIST_HEAD(cancel_list);
- 	LIST_HEAD(buffer_list);
-@@ -1700,9 +1701,17 @@ xlog_recover_reorder_trans(
- 				"%s: unrecognized type of log operation",
- 				__func__);
- 			ASSERT(0);
--			return XFS_ERROR(EIO);
-+			/*
-+			 * return the remaining items back to the transaction
-+			 * item list so they can be freed in caller.
-+			 */
-+			if (!list_empty(&sort_list))
-+				list_splice_init(&sort_list, &trans->r_itemq);
-+			error = XFS_ERROR(EIO);
-+			goto out;
- 		}
- 	}
-+out:
- 	ASSERT(list_empty(&sort_list));
- 	if (!list_empty(&buffer_list))
- 		list_splice(&buffer_list, &trans->r_itemq);
-@@ -1712,7 +1721,7 @@ xlog_recover_reorder_trans(
- 		list_splice_tail(&inode_buffer_list, &trans->r_itemq);
- 	if (!list_empty(&cancel_list))
- 		list_splice_tail(&cancel_list, &trans->r_itemq);
--	return 0;
-+	return error;
- }
+-	xfs_da_state_blk_t	*blk;		/* leaf block */
++	struct xfs_da_state_blk	*blk;		/* leaf block */
+ 	int			error;		/* error return value */
+ 	int			rval;		/* operation return value */
+-	xfs_da_state_t		*state;		/* btree cursor */
++	struct xfs_da_state	*state;		/* btree cursor */
  
- /*
-@@ -3743,8 +3752,10 @@ xlog_recover_process_data(
- 				error = XFS_ERROR(EIO);
- 				break;
- 			}
--			if (error)
-+			if (error) {
-+				xlog_recover_free_trans(trans);
- 				return error;
-+			}
- 		}
- 		dp += be32_to_cpu(ohead->oh_len);
- 		num_logops--;
+ 	trace_xfs_dir2_node_removename(args);
+ 
+@@ -2132,9 +2132,10 @@ xfs_dir2_node_removename(
+ 	 * Didn't find it, upper layer screwed up.
+ 	 */
+ 	if (rval != EEXIST) {
+-		xfs_da_state_free(state);
+-		return rval;
++		error = rval;
++		goto done;
+ 	}
++
+ 	blk = &state->path.blk[state->path.active - 1];
+ 	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
+ 	ASSERT(state->extravalid);
+@@ -2145,7 +2146,7 @@ xfs_dir2_node_removename(
+ 	error = xfs_dir2_leafn_remove(args, blk->bp, blk->index,
+ 		&state->extrablk, &rval);
+ 	if (error)
+-		return error;
++		goto done;
+ 	/*
+ 	 * Fix the hash values up the btree.
+ 	 */
+@@ -2160,6 +2161,7 @@ xfs_dir2_node_removename(
+ 	 */
+ 	if (!error)
+ 		error = xfs_dir2_node_to_leaf(state);
++done:
+ 	xfs_da_state_free(state);
+ 	return error;
+ }
 
 
 _______________________________________________
