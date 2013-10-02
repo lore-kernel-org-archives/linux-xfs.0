@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 68D627F67
-	for <xfs@oss.sgi.com>; Tue,  1 Oct 2013 18:04:38 -0500 (CDT)
-Date: Tue, 1 Oct 2013 18:04:34 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 4/4] xfs: open code inc_inode_iversion when logging an
-	inode
-Message-ID: <20131001230434.GW1935@sgi.com>
-References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
-	<1380497826-13474-5-git-send-email-david@fromorbit.com>
-	<5249FA36.1070609@sandeen.net> <20130930223946.GQ1935@sgi.com>
-	<20131001111236.GQ12541@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 5834829DFB
+	for <linux-xfs@oss.sgi.com>; Tue,  1 Oct 2013 19:14:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 02D10AC01F
+	for <linux-xfs@oss.sgi.com>; Tue,  1 Oct 2013 17:14:39 -0700 (PDT)
+Received: from EXPERIOR-SERVER (189.73.broadband15.iol.cz [90.182.73.189]) by
+	cuda.sgi.com with ESMTP id M3QbSWcqm1Oba2jn for
+	<linux-xfs@oss.sgi.com>; Tue, 01 Oct 2013 17:14:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131001111236.GQ12541@dastard>
+Subject: Please confirm your apple account information
+From: "Apple" <onlines@apple.store.com>
+Date: Wed, 02 Oct 2013 02:14:26 +0200
+Message-ID: <EXPERIOR-SERVER70rM00000ca0@EXPERIOR-SERVER>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,94 +21,170 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3868672332639827484=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Jean Noel Cordenner <jean-noel.cordenner@bull.net>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hi Dave,
+You will not see this in a MIME-aware mail reader.
+--===============3868672332639827484==
+Content-Type: multipart/alternative; boundary="===============1076316360=="
 
-On Tue, Oct 01, 2013 at 09:12:36PM +1000, Dave Chinner wrote:
-> On Mon, Sep 30, 2013 at 05:39:46PM -0500, Ben Myers wrote:
-> > On Mon, Sep 30, 2013 at 05:24:54PM -0500, Eric Sandeen wrote:
-> > > On 9/29/13 6:37 PM, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Michael L Semon reported that generic/069 runtime increased on v5
-> > > > superblocks by 100% compared to v4 superblocks. his perf-based
-> > > > analysis pointed directly at the timestamp updates being done by the
-> > > > write path in this workload. The append writers are doing 4-byte
-> > > > writes, so there are lots of timestamp updates occurring.
-> ...
-> > > > diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-> > > > index 53dfe46..e6601c1 100644
-> > > > --- a/fs/xfs/xfs_trans_inode.c
-> > > > +++ b/fs/xfs/xfs_trans_inode.c
-> > > > @@ -118,8 +118,7 @@ xfs_trans_log_inode(
-> > > >  	 */
-> > > >  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
-> > > >  	    IS_I_VERSION(VFS_I(ip))) {
-> > > > -		inode_inc_iversion(VFS_I(ip));
-> > > > -		ip->i_d.di_changecount = VFS_I(ip)->i_version;
-> > > 
-> > > comment about the reason for the open-code might be good, too?
-> 
-> Sure, I can add that.
-> 
-> > > otherwise some semantic patcher might "fix" it for you again later...
-> > > 
-> > > -Eric
-> > > 
-> > > > +		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
-> > > >  		flags |= XFS_ILOG_CORE;
-> > > >  	}
-> > > >  
-> > > > 
-> > 
-> > Adding a comment strikes me as a good idea too... But isn't that lock there for
-> > a reason?  I suspect that will break i_version like i_size on 32 bit systems.
-> > Jean added this function, hopefully he can shed some light.
-> 
-> I can't see how there's a 32 bit issue here - i_version is always
-> read unlocked, and so if you're worried about a 32 bit system doing
-> 2 32 bit reads to read the 64 bit value and seeing values on
-> different sides of the increment, then we've already got that
-> problem *everywhere*.
+You will not see this in a MIME-aware mail reader.
+--===============1076316360==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
 
-I think if we had the 32 bit issues with i_size, the same is likely true here.
-You're not making it any worse, AFAICT.
+Dear Client,
+ =
 
-> i.e. the only place that i_version is
-> protected by i_lock is in inode_inc_iversion() - nowhere else is
-> that lock used at all when reading or writing i_version.
 
-Seems like if nobody is taking the i_lock when reading i_version, it's not
-really providing the protection that was intended.  Weird.
+This is an automatic message by the system to let you know that you have to=
+ confirm your account information within 48 hours.
+Your account has been frozen temporarily in order to protect it.
+ The account will continue to be frozen until it is approved And Validate Y=
+our Account Information.
+Once you have updated your account records, your information will be confir=
+med and your account will start to work as normal once again.
+  This will help protect you in the future. The process does not take more =
+than 3 minutes.
 
-> A quick grep points out that ext2/3/4 directory code all update and
-> read i_version without using the i_lock - they are all serialised by
-> the directory locks that are held. Ceph, exofs, ocfs2, ecryptfs,
-> affs, fat, etc all do similar things with inode->i_version. 
-> 
-> So if the intention is to make i_version safe on 32 bit systems,
-> then it's failed.
+To proceed to confirm your account information please click on the link bel=
+ow and follow the instructions that will be required.
 
-Agreed.
+  =
 
-> The only thing it does in inode_inc_iversion is
-> serialise other updates that aren't done under some exclusive inode
-> locks, and all the XFS updates are done either under the i_mutex
-> and/or the i_ilock, so I don't think there is any problem with
-> racing occurring here...
+ Click Here To Verfiy Your Account info
+  =
 
-I'll take another look at it with that in mind.
 
-Thanks,
-	Ben
+
+ =A9 2013 All rights reserved.
+
+--===============1076316360==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
+
+<HTML><head>
+
+
+
+
+
+
+  =
+
+  =
+
+  =
+
+  =
+
+  =
+
+  =
+
+  =
+
+  =
+
+  <title></title>
+  <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+
+
+
+
+
+  =
+
+  =
+
+  =
+
+  =
+
+  <style type=3D"text/css">
+.style1 {
+	font-family: Tahoma;
+	font-size: x-small;
+}
+.style2 {
+	color: #0E58A2;
+	font-family: Tahoma;
+	font-size: x-small;
+	text-decoration: underline;
+}
+.style3 {
+	color: #0E58A2;
+}
+.style4 {
+	font-family: Tahoma;
+	color: #0E58A2;
+	font-size: xx-small;
+}
+.style5 {
+	font-size: xx-small;
+	font-weight: bold;
+}
+.style6 {
+	font-size: xx-small;
+}
+.auto-style1 {
+	font-family: Tahoma;
+	font-size: small;
+}
+.auto-style2 {
+	font-size: small;
+}
+.auto-style3 {
+	color: #000000;
+}
+  </style>
+</head>
+
+
+<body><BIG><FONT style=3D"COLOR: rgb(51,0,153)" color=3D#000000 size=3D2 fa=
+ce=3DTahoma><BIG><EM>Dear Client,</EM></BIG></FONT></BIG><BR>
+<P><B><FONT color=3D#000000 size=3D2 face=3DTahoma></FONT></B><BR class=3Da=
+uto-style2><SPAN class=3Dauto-style1 style=3D"FONT-WEIGHT: bold"><BR><SPAN =
+class=3Dauto-style3>This is an automatic message by the system to let you k=
+now that you have to confirm your account information within 48 hours.</SPA=
+N><BR class=3Dauto-style3><SPAN class=3Dauto-style3>Your account has been f=
+rozen temporarily in order to protect it.</SPAN></SPAN></P>
+<P class=3Dauto-style1 style=3D"FONT-WEIGHT: bold"><SPAN class=3Dauto-style=
+3>The account will continue to be frozen until it is approved And Validate =
+Your Account Information.</SPAN><BR class=3Dauto-style3><SPAN class=3Dauto-=
+style3>Once you have updated your account records, your information will be=
+ confirmed and your account will start to work as normal once again.</SPAN>=
+</P>
+<P class=3Dauto-style1 style=3D"FONT-WEIGHT: bold"><SPAN class=3Dauto-style=
+3>&nbsp;This will help protect you in the future. The process does not take=
+ more than 3 minutes.</SPAN><BR class=3Dauto-style3><BR class=3Dauto-style3=
+><SPAN class=3Dauto-style3>To proceed to confirm your account information p=
+lease click on the link below and follow the instructions that will be requ=
+ired.</SPAN><BR class=3Dstyle3></P>
+<P style=3D"FONT-WEIGHT: bold">&nbsp;</P>
+<P><STRONG><A href=3D"http://www.cmxproperty.com/wp-content/themes/TP_Prope=
+rty/bb/apple/"><SPAN class=3Dauto-style3>Click Here To Verfiy Your Account =
+info</SPAN></A></STRONG></P>
+<P>&nbsp;<BR class=3Dauto-style3><BR class=3Dauto-style3></P>
+<P class=3Dstyle4>=C2=A9 2013 All rights reserved.</P></BODY></HTML>
+--===============1076316360==--
+
+
+--===============3868672332639827484==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3868672332639827484==--
