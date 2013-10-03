@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B5BD529DFC
-	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 06:58:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 41B1CAC003
-	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 04:58:16 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id j80ksjJUdXjKEC38 for
-	<xfs@oss.sgi.com>; Thu, 03 Oct 2013 04:58:15 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r93BwFKI019601
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 3 Oct 2013 07:58:15 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfstests generic/260: get correct trimmed bytes
-Date: Thu,  3 Oct 2013 19:57:17 +0800
-Message-Id: <1380801437-1191-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8639329DFC
+	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 08:40:23 -0500 (CDT)
+Message-ID: <524D73CC.8010202@sgi.com>
+Date: Thu, 3 Oct 2013 08:40:28 -0500
+From: Rich Johnston <rjohnston@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfsrestore: fix multi stream support
+References: <524AF8AE.5030300@sgi.com> <524C68C5.2030202@sandeen.net>
+	<524C7BF6.5050107@sgi.com> <524C7E4D.60208@sandeen.net>
+In-Reply-To: <524C7E4D.60208@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +18,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Newer fstrim(1) reports trimmed bytes differently, e.g.
+On 10/02/2013 03:13 PM, Eric Sandeen wrote:
+> On 10/2/13 3:03 PM, Rich Johnston wrote:
+>>
+>>
+>> On 10/02/2013 01:41 PM, Eric Sandeen wrote:
+>
+> ...
+>
+>>> What ,do you think?
+>>
+>> Sure go for it. That was one of my test programs but obviously I
+>> choose the wrong one. ;) Its really sixes to me.
+>>
+>> I still think the the check in partial_reg is not needed. I never saw
+>> a case where single stream restore hits that check except when there
+>> are no extents. Do you have an case/example?
+>
+> I don't.  It seems like reasonable defensive programming, though,
+> so I'm not anxious to remove it, given that nobody really groks
+> this code too well.  Could turn it into a warning, maybe, so
+> it fires if we do ever get there.
+>
+> Can you look back in ptools & see when/why it was added?
 
-new fstrim: /mnt/ext4: 9.7 GiB (10411118592 bytes) trimmed
-old fstrim: /mnt/ext4: 10411118592 bytes were trimmed
+Looks like it was added Jun 11 1998
 
-generic/260 reports syntax error
+xfsrestore can corrupt DMAPI files split across media.
 
-    +./tests/generic/260: line 111: [: 9.7: integer expression expected
-    +./tests/generic/260: line 121: [: 9.7: integer expression expected
-    +./tests/generic/260: line 183: [: 9.7: integer expression expected
+Description
+   When a file dumped by xfsdump spans media, the xfs extended
+   attributes are saved at the end of each section. xfsrestore
+   restores the xfs extended attributes each time that is sees
+   them.  This causes a DMAPI file (e.g., a file saved by the
+   DMF system) to appear completely restored when in fact there
+   are more pieces to restore.
 
-Fix it so 260 passes with both old and new fstrim.
+This looks like it can be removed safely becaus this was added for 
+multistream support (dumped by xfsdump spans media).
+Do you agree?
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- tests/generic/260 | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+>
+>> We saw this issue with DMF offline files because DMF removes the
+>> extents and the file has an attribute which is not restored with the
+>> current code using multistream.
+>
+> Ah, I think there's something about not restoring attributes until
+> all of the file has been restored.  So again in this case, the file
+> never looks "restored" and it never gets to the attribute restoration?
+>
+> Oh right, like the comment says:
+>
+> /* partial_reg - Registers files that are only partially restored by
+>   * a dump stream into the persistent state.
+>   *
+>   * This is done because DMAPI extended attributes must not be set until
+>   * the entire file has been restored in order to co-ordinate with the
+>   * Data Migration Facility (DMF) daemons.  Since extended attributes are
+>   * recorded with each extent group in the dump, this registry is used to
+>   * make sure only the final dump stream applies the extended attributes.
+>   *
+>   * Likewise, certain extended inode flags (e.g. XFS_XFLAG_IMMUTABLE)
+>   * should only be set after all data for a file has been restored.
+>   */
+>
+>> So I thinks a simple test case is:
+>>
+>> Create a file with no extents. Give that file an attribute dump and
+>> restore it (both single and multistream) verify the file still has
+>> the attribute.
+>
+> An extended attribute you mean?
+Yes
+>
+>> Your thoughts?
+>
+> Yeah, go for it w/ a testcase. :)
 
-diff --git a/tests/generic/260 b/tests/generic/260
-index dc8b822..bc9eb3b 100755
---- a/tests/generic/260
-+++ b/tests/generic/260
-@@ -104,9 +104,8 @@ _scratch_mount
- # This is a bit fuzzy, but since the file system is fresh
- # there should be at least (fssize/2) free space to trim.
- # This is supposed to catch wrong FITRIM argument handling
--out=$($FSTRIM_PROG -v -o10M $SCRATCH_MNT)
--nopref=${out##*: }
--bytes=${nopref%% *}
-+out=$($FSTRIM_PROG -v -o10M $SCRATCH_MNT | egrep -o "[0-9]+ bytes")
-+bytes=${out%% *}
- 
- if [ $bytes -gt $(_math "$fssize*1024") ]; then
- 	status=1
-@@ -177,9 +176,8 @@ _scratch_mount
- # It is because btrfs does not have not-yet-used parts of the device
- # mapped and since we got here right after the mkfs, there is not
- # enough free extents in the root tree.
--out=$($FSTRIM_PROG -v -l$len $SCRATCH_MNT)
--nopref=${out##*: }
--bytes=${nopref%% *}
-+out=$($FSTRIM_PROG -v -l$len $SCRATCH_MNT | egrep -o "[0-9]+ bytes")
-+bytes=${out%% *}
- if [ $bytes -le $(_math "$fssize*512") ] && [ $FSTYP != "btrfs" ]; then
- 	status=1
- 	echo "It seems that fs logic handling len argument overflows"
--- 
-1.8.3.1
+Looks like multistream is not tested at all.
+
+I would more or less modify 296 to test multistream and include more 
+types of files to test (files with extents, with attributes, with both etc).
+
+I will resubmit with your changes (giving credit where credit is do)
+
+>
+> I could see where even if we didn't get the dreaded "Out of records"
+> message, it might still skip the attribute restore if the file
+> never looks "done?"
+Yes but only when the data is split (multi stream).
+
+
+>
+> -Eric
+>
+>   --Rich
+>>
+>>>
+>>> -Eric
+>>>
+>>
+>
 
 _______________________________________________
 xfs mailing list
