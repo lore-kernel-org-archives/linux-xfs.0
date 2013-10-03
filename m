@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C74F27FA4
-	for <xfs@oss.sgi.com>; Wed,  2 Oct 2013 16:04:40 -0500 (CDT)
-Message-ID: <524C8A65.6030406@sgi.com>
-Date: Wed, 02 Oct 2013 16:04:37 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs: fix memory leak in xfs_dir2_node_removename
-References: <20131002125110.745269864@sgi.com>
-	<20131002125409.826742020@sgi.com> <20131002203241.GV12541@dastard>
-In-Reply-To: <20131002203241.GV12541@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B5BD529DFC
+	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 06:58:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 41B1CAC003
+	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 04:58:16 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id j80ksjJUdXjKEC38 for
+	<xfs@oss.sgi.com>; Thu, 03 Oct 2013 04:58:15 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r93BwFKI019601
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 3 Oct 2013 07:58:15 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests generic/260: get correct trimmed bytes
+Date: Thu,  3 Oct 2013 19:57:17 +0800
+Message-Id: <1380801437-1191-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,100 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-On 10/02/13 15:32, Dave Chinner wrote:
-> On Wed, Oct 02, 2013 at 07:51:11AM -0500, Mark Tinguely wrote:
->> Fix the leak of kernel memory in xfs_dir2_node_removename()
->> when xfs_dir2_leafn_remove() returns an error code.
->>
->> Found by Coverity in userspace same patch applies there also.
->>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->> ---
->>   v2 corrected bad return code as pointed out by Roger Willcocks.
->>
->>   fs/xfs/xfs_dir2_node.c |   14 ++++++++------
->>   1 file changed, 8 insertions(+), 6 deletions(-)
->>
->> Index: b/fs/xfs/xfs_dir2_node.c
->> ===================================================================
->> --- a/fs/xfs/xfs_dir2_node.c
->> +++ b/fs/xfs/xfs_dir2_node.c
->> @@ -2105,12 +2105,12 @@ xfs_dir2_node_lookup(
->>    */
->>   int						/* error */
->>   xfs_dir2_node_removename(
->> -	xfs_da_args_t		*args)		/* operation arguments */
->> +	struct xfs_da_args	*args)		/* operation arguments */
->>   {
->> -	xfs_da_state_blk_t	*blk;		/* leaf block */
->> +	struct xfs_da_state_blk	*blk;		/* leaf block */
->>   	int			error;		/* error return value */
->>   	int			rval;		/* operation return value */
->> -	xfs_da_state_t		*state;		/* btree cursor */
->> +	struct xfs_da_state	*state;		/* btree cursor */
->>
->>   	trace_xfs_dir2_node_removename(args);
->>
->> @@ -2132,9 +2132,10 @@ xfs_dir2_node_removename(
->>   	 * Didn't find it, upper layer screwed up.
->>   	 */
->>   	if (rval != EEXIST) {
->> -		xfs_da_state_free(state);
->> -		return rval;
->> +		error = rval;
->> +		goto done;
->
-> Can you make this something like "out_free"? We tend to name jump
-> labels according to the action that needs to be taken, like
-> "out_unlock", "error_trans_cancel", etc...
->
-> Also, this code is now "funky" in how it handles rval. it will do
-> this:
->
->          /*
->           * Look up the entry we're deleting, set up the cursor.
->           */
->          error = xfs_da3_node_lookup_int(state,&rval);
->          if (error)
->                  rval = error;
->          /*
->           * Didn't find it, upper layer screwed up.
->           */
->          if (rval != EEXIST) {
-> 		error = rval;
->                  goto out_free;
->          }
->
-> That's kind funky with the reassignment of rval if there's an error.
-> Better would be:
->
->          /* Look up the entry we're deleting, set up the cursor. */
->          error = xfs_da3_node_lookup_int(state,&rval);
->          if (error)
->                  goto out_free;
->
->          /* Didn't find it, upper layer screwed up. */
-> 	if (rval != EEXIST) {
-> 		error = rval;
-> 		goto out_free;
-> 	}
->
-> Cheers,
->
-> Dave.
+Newer fstrim(1) reports trimmed bytes differently, e.g.
 
-nod.
+new fstrim: /mnt/ext4: 9.7 GiB (10411118592 bytes) trimmed
+old fstrim: /mnt/ext4: 10411118592 bytes were trimmed
 
-thank
+generic/260 reports syntax error
 
---Mark.
+    +./tests/generic/260: line 111: [: 9.7: integer expression expected
+    +./tests/generic/260: line 121: [: 9.7: integer expression expected
+    +./tests/generic/260: line 183: [: 9.7: integer expression expected
+
+Fix it so 260 passes with both old and new fstrim.
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/generic/260 | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/tests/generic/260 b/tests/generic/260
+index dc8b822..bc9eb3b 100755
+--- a/tests/generic/260
++++ b/tests/generic/260
+@@ -104,9 +104,8 @@ _scratch_mount
+ # This is a bit fuzzy, but since the file system is fresh
+ # there should be at least (fssize/2) free space to trim.
+ # This is supposed to catch wrong FITRIM argument handling
+-out=$($FSTRIM_PROG -v -o10M $SCRATCH_MNT)
+-nopref=${out##*: }
+-bytes=${nopref%% *}
++out=$($FSTRIM_PROG -v -o10M $SCRATCH_MNT | egrep -o "[0-9]+ bytes")
++bytes=${out%% *}
+ 
+ if [ $bytes -gt $(_math "$fssize*1024") ]; then
+ 	status=1
+@@ -177,9 +176,8 @@ _scratch_mount
+ # It is because btrfs does not have not-yet-used parts of the device
+ # mapped and since we got here right after the mkfs, there is not
+ # enough free extents in the root tree.
+-out=$($FSTRIM_PROG -v -l$len $SCRATCH_MNT)
+-nopref=${out##*: }
+-bytes=${nopref%% *}
++out=$($FSTRIM_PROG -v -l$len $SCRATCH_MNT | egrep -o "[0-9]+ bytes")
++bytes=${out%% *}
+ if [ $bytes -le $(_math "$fssize*512") ] && [ $FSTYP != "btrfs" ]; then
+ 	status=1
+ 	echo "It seems that fs logic handling len argument overflows"
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
