@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C5CC29DFC
-	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 10:01:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 16708AC001
-	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 08:01:11 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 98D7329DFC
+	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 10:01:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 68EFF8F8054
+	for <xfs@oss.sgi.com>; Thu,  3 Oct 2013 08:01:33 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id r0ALggDeBuYrH2Jt (version=TLSv1 cipher=AES256-SHA
+	ESMTP id aeEODKmb8dUBnuVP (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 Oct 2013 08:01:10 -0700 (PDT)
-Date: Thu, 3 Oct 2013 08:01:09 -0700
+	Thu, 03 Oct 2013 08:01:32 -0700 (PDT)
+Date: Thu, 3 Oct 2013 08:01:32 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/16] xfs: vectorise directory data operations
-Message-ID: <20131003150109.GI10316@infradead.org>
+Subject: Re: [PATCH 10/16] xfs: vectorise directory data operations part 2
+Message-ID: <20131003150132.GJ10316@infradead.org>
 References: <1380510433-8353-1-git-send-email-david@fromorbit.com>
-	<1380510433-8353-10-git-send-email-david@fromorbit.com>
+	<1380510433-8353-11-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1380510433-8353-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1380510433-8353-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
