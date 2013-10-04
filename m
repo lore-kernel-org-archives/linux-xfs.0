@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 096DE7F4E
-	for <xfs@oss.sgi.com>; Fri,  4 Oct 2013 16:44:01 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 73E757F4E
+	for <xfs@oss.sgi.com>; Fri,  4 Oct 2013 17:16:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A5D0EAC005
-	for <xfs@oss.sgi.com>; Fri,  4 Oct 2013 14:43:57 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	RZ40pn4Z3AYCEiqA for <xfs@oss.sgi.com>;
-	Fri, 04 Oct 2013 14:43:56 -0700 (PDT)
-Date: Sat, 5 Oct 2013 07:43:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair segfault
-Message-ID: <20131004214353.GK4446@dastard>
-References: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
-	<20131001201909.GR12541@dastard>
-	<CAGa409_tDjbsdnf+wDiM7666FeQSjmMfOVdqG-SxOD_WUZMiZQ@mail.gmail.com>
-	<20131002104253.GT12541@dastard>
-	<CAGa409_wO74zGP1d85RGZ7WbfBPr7s_tKaW3u9k8=9Ps-D5FjQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGa409_wO74zGP1d85RGZ7WbfBPr7s_tKaW3u9k8=9Ps-D5FjQ@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 40B20304051
+	for <xfs@oss.sgi.com>; Fri,  4 Oct 2013 15:16:11 -0700 (PDT)
+Received: from mail-oa0-f47.google.com (mail-oa0-f47.google.com
+	[209.85.219.47]) by cuda.sgi.com with ESMTP id hSEr4NRmLWXYtAvg
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 04 Oct 2013 15:16:09 -0700 (PDT)
+Received: by mail-oa0-f47.google.com with SMTP id i1so4656989oag.34
+	for <xfs@oss.sgi.com>; Fri, 04 Oct 2013 15:16:09 -0700 (PDT)
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: RESEND: xattr issue with 3.11 kernel
+From: David Zafman <david.zafman@inktank.com>
+In-Reply-To: <20131004210411.GJ4446@dastard>
+Date: Fri, 4 Oct 2013 15:16:05 -0700
+Message-Id: <6ECC8063-935A-4DD6-A460-4B7D8AE24271@inktank.com>
+References: <ED5C1C84-614E-4EBB-A966-BBCD9CE89373@inktank.com>
+	<20131004210411.GJ4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,63 +31,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Viet Nguyen <vietnguyen@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: ceph-devel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Oct 04, 2013 at 10:51:50AM -0700, Viet Nguyen wrote:
-> Hi,
+
+Dave,
+
+The 3.12-rc3 kernel passed my test.  Thanks for the quick response.
+
+David Zafman
+Senior Developer
+http://www.inktank.com
+
+
+
+
+On Oct 4, 2013, at 2:04 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Fri, Oct 04, 2013 at 01:48:17PM -0700, David Zafman wrote:
+>> 
+>> <<Plain Text>>
+>> 
+>> This was also seen on a customized 3.10 kernel, but didn't reproduce on the Ubuntu 13.04 packaged 3.8 kernel.
+>> 
+>> $ cat /etc/issue
+>> Ubuntu 13.04 \n \l
+>> $ uname -a
+>> Linux ubuntu 3.11.0-031100-generic #201309021735 SMP Mon Sep 2 21:36:21 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+>> $ mount | grep /mnt
+>> /dev/sdb on /mnt type xfs (rw)
+>> $ ./xattr-test.sh /mnt/foo 10240
+>> 8
+>> 16
+>> 32
+>> 64
+>> 128
+>> 256
+>> 512
+>> 1024
+>> 2048
+>> setfattr: /mnt/foo: Structure needs cleaning
+>> failure to remove user.test1557
+>> 
+>> ffff88003a005000: 46 c4 4f 2f 00 00 06 b5 46 c4 4f a6 00 00 06 b4  F.O/....F.O.....
+>> ffff88003a005010: 46 c4 4f a7 00 00 06 b3 46 c4 4f a8 00 00 06 b2  F.O.....F.O.....
+>> ffff88003a005020: 46 c4 4f a9 00 00 06 b1 46 c4 4f aa 00 00 06 b0  F.O.....F.O.....
+>> ffff88003a005030: 46 c4 4f ab 00 00 06 af 46 c4 4f ac 00 00 06 ae  F.O.....F.O.....
+>> XFS (sdb): Internal error xfs_da_do_buf(2) at line 2694 of file /home/apw/COD/linux/fs/xfs/xfs_da_btree.c.  Caller 0xffffffffa0304423
+>> 
+>> CPU: 0 PID: 35058 Comm: setfattr Not tainted 3.11.0-031100-generic #201309021735
+>> Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 07/31/2013
+>> 0000000000000001 ffff8800354ab9f8 ffffffff81720fca 0000000000000007
+>> ffff88003a27b800 ffff8800354aba18 ffffffffa02cd27f ffffffffa0304423
+>> 0000000000000001 ffff8800354aba58 ffffffffa02cd2ee 0000000000000002
+>> Call Trace:
+>> [<ffffffff81720fca>] dump_stack+0x46/0x58
+>> [<ffffffffa02cd27f>] xfs_error_report+0x3f/0x50 [xfs]
+>> [<ffffffffa0304423>] ? xfs_da3_node_read+0x23/0xd0 [xfs]
+>> [<ffffffffa02cd2ee>] xfs_corruption_error+0x5e/0x90 [xfs]
+>> [<ffffffffa030438a>] xfs_da_read_buf+0x1ba/0x230 [xfs]
+>> [<ffffffffa0304423>] ? xfs_da3_node_read+0x23/0xd0 [xfs]
+>> [<ffffffffa0332127>] ? xfs_trans_log_buf+0x97/0x100 [xfs]
+>> [<ffffffffa0304423>] xfs_da3_node_read+0x23/0xd0 [xfs]
+>> [<ffffffffa030608c>] xfs_da3_blk_unlink.isra.13+0x16c/0x1e0 [xfs]
+>> [<ffffffffa030633f>] xfs_da3_join+0x9f/0x240 [xfs]
+>> [<ffffffffa02e6872>] xfs_attr_node_removename+0x192/0x300 [xfs]
 > 
-> I was wondering if you got a chance to look at this and if one's available,
-> where can I get a patch?
-
-Can you try the patch below?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-libxfs: validity check the directory block leaf entry count
-
-From: Dave Chinner <dchinner@redhat.com>
-
-The directory block format verifier fails to check that the leaf
-entry count is in a valid range, and so if it is corrupted then it
-can lead to derefencing a pointer outside the block buffer. While we
-can't exactly validate the count without first walking the directory
-block, we can ensure the count lands in the valid area within the
-directory block and hence avoid out-of-block references.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- libxfs/xfs_dir2_data.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 189699f..1b5196b 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -59,6 +59,18 @@ __xfs_dir3_data_check(
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endp = (char *)lep;
-+
-+		/*
-+		 * The number of leaf entries is limited by the size of the
-+		 * block and the amount of space used by the data entries.
-+		 * We don't know how much space is used by the data entries yet,
-+		 * so just ensure that the count falls somewhere inside the
-+		 * block right now.
-+		 */
-+		XFS_WANT_CORRUPTED_RETURN(be32_to_cpu(btp->count) >
-+				((char *)btp - (char *)p) /
-+					sizeof(struct xfs_dir2_leaf_entry));
-+
- 		break;
- 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+> You are probably hitting the problem fixed in commit 997def2 ("xfs:
+> fix node forward in xfs_node_toosmall") which went into 3.12-rc3.
+> Can you test that this fixes your problem, ad if so, we'll need to
+> push it back to -stable kernels..
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
