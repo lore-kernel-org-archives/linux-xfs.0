@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 119347F52
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:13:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B5AB4304048
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:13:18 -0700 (PDT)
-Received: from mail-pd0-f181.google.com (mail-pd0-f181.google.com
-	[209.85.192.181]) by cuda.sgi.com with ESMTP id
-	lqOJc0IqkY2HeNLz (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 06 Oct 2013 13:13:17 -0700 (PDT)
-Received: by mail-pd0-f181.google.com with SMTP id g10so6224249pdj.40
-	for <xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:13:17 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E7CC47F52
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:13:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D26168F8039
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:13:34 -0700 (PDT)
+Received: from mail-pa0-f53.google.com (mail-pa0-f53.google.com
+	[209.85.220.53]) by cuda.sgi.com with ESMTP id VZbzjoZy5FpdAPBM
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:13:33 -0700 (PDT)
+Received: by mail-pa0-f53.google.com with SMTP id kq14so6423759pab.12
+	for <xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:13:32 -0700 (PDT)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 2/7] xfs: add support FALLOC_FL_COLLAPSE_RANGE for
+Subject: [PATCH RESEND 3/7] ext4: add support FALLOC_FL_COLLAPSE_RANGE for
 	fallocate
-Date: Mon,  7 Oct 2013 05:13:08 +0900
-Message-Id: <1381090388-2761-1-git-send-email-linkinjeon@gmail.com>
+Date: Mon,  7 Oct 2013 05:13:24 +0900
+Message-Id: <1381090404-2795-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,406 +39,388 @@ Add support FALLOC_FL_COLLAPSE_RANGE for fallocate.
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- fs/xfs/xfs_bmap.c      |  174 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap.h      |    3 +
- fs/xfs/xfs_bmap_util.c |   96 ++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h |    2 +
- fs/xfs/xfs_file.c      |   20 ++++--
- fs/xfs/xfs_fs.h        |    6 ++
- 6 files changed, 296 insertions(+), 5 deletions(-)
+ fs/ext4/ext4.h              |    3 +
+ fs/ext4/extents.c           |  286 ++++++++++++++++++++++++++++++++++++++++++-
+ fs/ext4/move_extent.c       |    2 +-
+ include/trace/events/ext4.h |   25 ++++
+ 4 files changed, 314 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 92b8309..c12358e 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -5356,3 +5356,177 @@ error0:
- 	}
- 	return error;
- }
-+
-+/*
-+ * Update extents by shifting them downwards into a hole.
-+ * At max count number of extents will be shifted and *current_ext
-+ * is the extent number which is currently being shifted.
-+ * This function will return error if the hole is not present
-+ * while shifting extents. On success, 0 is returned.
-+ */
-+int
-+xfs_bmap_shift_extents(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	int			*done,
-+	xfs_fileoff_t		start_fsb,
-+	xfs_fileoff_t		shift,
-+	xfs_extnum_t		*current_ext,
-+	xfs_fsblock_t		*firstblock,
-+	struct xfs_bmap_free	*flist,
-+	int			count)
-+{
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_bmbt_rec_host	*gotp;
-+	struct xfs_bmbt_irec		left;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_ifork		*ifp;
-+	xfs_extnum_t			nexts = 0;
-+	xfs_fileoff_t			startoff;
-+	int				error = 0;
-+	int				i;
-+	int				whichfork = XFS_DATA_FORK;
-+	int				state;
-+	int				logflags;
-+	xfs_filblks_t			blockcount = 0;
-+
-+	if (unlikely(XFS_TEST_ERROR(
-+	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
-+	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-+		XFS_ERROR_REPORT("xfs_bmap_shift_extents",
-+				 XFS_ERRLEVEL_LOW, mp);
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return XFS_ERROR(EIO);
-+
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		/* Read in all the extents */
-+		error = xfs_iread_extents(tp, ip, whichfork);
-+		if (error)
-+			return error;
-+	}
-+
-+	if (!*current_ext) {
-+		gotp = xfs_iext_bno_to_ext(ifp, start_fsb, current_ext);
-+		/*
-+		 * gotp can be null in 2 cases: 1) if there are no extents
-+		 * or 2) start_fsb lies in a hole beyond which there are
-+		 * no extents. Either way, we are done.
-+		 */
-+		if (!gotp) {
-+			*done = 1;
-+			return 0;
-+		}
-+	}
-+
-+	/* We are going to change core inode */
-+	logflags = XFS_ILOG_CORE;
-+
-+	if (ifp->if_flags & XFS_IFBROOT) {
-+		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-+		cur->bc_private.b.firstblock = *firstblock;
-+		cur->bc_private.b.flist = flist;
-+		cur->bc_private.b.flags = 0;
-+		}
-+	else {
-+		cur = NULL;
-+		logflags |= XFS_ILOG_DEXT;
-+	}
-+
-+	while (nexts++ < count &&
-+	       *current_ext <  XFS_IFORK_NEXTENTS(ip, whichfork)) {
-+		state = 0;
-+
-+		gotp = xfs_iext_get_ext(ifp, *current_ext);
-+		startoff = xfs_bmbt_get_startoff(gotp);
-+		startoff -= shift;
-+
-+		/*
-+		 * Before shifting extent into hole, make sure that the hole
-+		 * is large enough to accomodate the shift.
-+		 */
-+		if (*current_ext) {
-+			state |= BMAP_LEFT_VALID;
-+			xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
-+						*current_ext - 1), &left);
-+
-+			if (isnullstartblock(left.br_startblock))
-+				state |= BMAP_LEFT_DELAY;
-+
-+			if (startoff < left.br_startoff + left.br_blockcount)
-+				error = XFS_ERROR(EFSCORRUPTED);
-+
-+		} else if (startoff > xfs_bmbt_get_startoff(gotp))
-+			/* Hole is at the start but not large enough */
-+			error = XFS_ERROR(EFSCORRUPTED);
-+
-+		if (error)
-+			goto del_cursor;
-+
-+		/* Check if we can merge 2 adjacent extents */
-+		if ((state & BMAP_LEFT_VALID) && !(state & BMAP_LEFT_DELAY) &&
-+		    left.br_startoff + left.br_blockcount == startoff &&
-+		    left.br_startblock + left.br_blockcount ==
-+		    xfs_bmbt_get_startblock(gotp) &&
-+		    xfs_bmbt_get_state(gotp) == left.br_state &&
-+		    left.br_blockcount + xfs_bmbt_get_blockcount(gotp) <=
-+		    MAXEXTLEN) {
-+			blockcount =
-+			left.br_blockcount + xfs_bmbt_get_blockcount(gotp);
-+			state |= BMAP_LEFT_CONTIG;
-+			xfs_iext_remove(ip, *current_ext, 1, 0);
-+			XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-+			gotp = xfs_iext_get_ext(ifp, --*current_ext);
-+		}
-+
-+		if (cur) {
-+			error = xfs_bmbt_lookup_eq(cur,
-+					xfs_bmbt_get_startoff(gotp),
-+					xfs_bmbt_get_startblock(gotp),
-+					xfs_bmbt_get_blockcount(gotp),
-+					&i);
-+			if (error)
-+				goto del_cursor;
-+			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
-+		}
-+
-+		if (state & BMAP_LEFT_CONTIG) {
-+			/* We have to update extent block count */
-+			xfs_bmbt_set_blockcount(gotp, blockcount);
-+		} else {
-+			/* We have to update the startoff */
-+			xfs_bmbt_set_startoff(gotp, startoff);
-+		}
-+
-+		if (cur) {
-+			error = xfs_bmbt_update(cur,
-+						xfs_bmbt_get_startoff(gotp),
-+						xfs_bmbt_get_startblock(gotp),
-+						xfs_bmbt_get_blockcount(gotp),
-+						xfs_bmbt_get_state(gotp));
-+			if (error)
-+				goto del_cursor;
-+		}
-+
-+		(*current_ext)++;
-+	}
-+
-+	/* Check if we are done */
-+	if (*current_ext ==  XFS_IFORK_NEXTENTS(ip, whichfork))
-+		*done = 1;
-+
-+del_cursor:
-+	if (cur)
-+		xfs_btree_del_cursor(cur,
-+			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+
-+	xfs_trans_log_inode(tp, ip, logflags);
-+
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 33b41f3..b16ebfa 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -169,5 +169,8 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
- 		xfs_extnum_t num);
- uint	xfs_default_attroffset(struct xfs_inode *ip);
-+int	xfs_bmap_shift_extents(struct xfs_trans *, struct xfs_inode *,
-+			int *, xfs_fileoff_t, xfs_fileoff_t, xfs_extnum_t *,
-+			xfs_fsblock_t *, struct xfs_bmap_free *, int);
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index f3c43fc..a13e0f4 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -2737,6 +2737,7 @@ extern int ext4_find_delalloc_cluster(struct inode *inode, ext4_lblk_t lblk);
+ extern int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 			__u64 start, __u64 len);
+ extern int ext4_ext_precache(struct inode *inode);
++extern int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len);
  
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 541d59f..57f045e 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1556,6 +1556,7 @@ xfs_change_file_space(
- 	case XFS_IOC_RESVSP64:
- 	case XFS_IOC_UNRESVSP:
- 	case XFS_IOC_UNRESVSP64:
-+	case XFS_COLLAPSE_RANGE:
- 		if (bf->l_len <= 0)
- 			return XFS_ERROR(EINVAL);
- 		break;
-@@ -1638,6 +1639,12 @@ xfs_change_file_space(
+ /* move_extent.c */
+ extern void ext4_double_down_write_data_sem(struct inode *first,
+@@ -2748,6 +2749,8 @@ void ext4_inode_double_unlock(struct inode *inode1, struct inode *inode2);
+ extern int ext4_move_extents(struct file *o_filp, struct file *d_filp,
+ 			     __u64 start_orig, __u64 start_donor,
+ 			     __u64 len, __u64 *moved_len);
++extern int mext_next_extent(struct inode *inode, struct ext4_ext_path *path,
++			    struct ext4_extent **extent);
  
- 		clrprealloc = 1;
- 		break;
-+	case XFS_COLLAPSE_RANGE:
-+		error = xfs_collapse_file_space(ip, startoffset, bf->l_len,
-+						attr_flags);
-+		if (error)
-+			return error;
-+		break;
+ /* page-io.c */
+ extern int __init ext4_init_pageio(void);
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 54d52af..baf1faf 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -4580,12 +4580,16 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	unsigned int credits, blkbits = inode->i_blkbits;
  
- 	default:
- 		ASSERT(0);
-@@ -1683,6 +1690,95 @@ xfs_change_file_space(
- 	return xfs_trans_commit(tp, 0);
- }
- 
-+
-+/*
-+ * xfs_collapse_file_space: Implements the FALLOC_FL_COLLAPSE_SPACE flag.
-+ */
-+int
-+xfs_collapse_file_space(
-+	struct xfs_inode	*ip,
-+	loff_t			offset,
-+	loff_t			len,
-+	int			attr_flags)
-+{
-+	int			done = 0;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	uint			resblks;
-+	struct xfs_trans	*tp;
-+	int			error;
-+	xfs_extnum_t		current_ext = 0;
-+	struct xfs_bmap_free	free_list;
-+	xfs_fsblock_t		first_block;
-+	int			committed;
-+	xfs_fileoff_t	start_fsb = XFS_B_TO_FSB(mp, offset + len);
-+	xfs_fileoff_t	shift_fsb = XFS_B_TO_FSB(mp, len);
-+
-+	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
-+
-+	/*
-+	 * The first thing we do is to free data blocks in the specified range
-+	 * by calling xfs_free_file_space(). It would also sync dirty data
-+	 * and invalidate page cache over the region on which collapse range
-+	 * is working.
-+	 */
-+
-+	error = xfs_free_file_space(ip, offset, len, attr_flags);
-+	if (error)
-+		return error;
-+
-+	while (!error && !done) {
-+		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
-+		tp->t_flags |= XFS_TRANS_RESERVE;
-+		/*
-+		 * We would need to reserve permanent block for transaction.
-+		 * This will come into picture when after shifting extent into
-+		 * hole we found that adjacent extents can be merged which
-+		 * may lead to freeing of a block during record update.
-+		 */
-+		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write, resblks, 0);
-+		if (error) {
-+			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
-+			xfs_trans_cancel(tp, 0);
-+			break;
-+		}
-+
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		error = xfs_trans_reserve_quota(tp, mp,
-+				ip->i_udquot, ip->i_gdquot, ip->i_pdquot,
-+				resblks, 0, XFS_QMOPT_RES_REGBLKS);
-+		if (error)
-+			goto out;
-+
-+		xfs_trans_ijoin(tp, ip, 0);
-+
-+		xfs_bmap_init(&free_list, &first_block);
-+
-+		/*
-+		 * We are using the write transaction in which max 2 bmbt
-+		 * updates are allowed
-+		 */
-+		error = xfs_bmap_shift_extents(tp, ip, &done, start_fsb,
-+				shift_fsb, &current_ext,
-+				&first_block, &free_list, 2);
-+		if (error)
-+			goto out;
-+
-+		error = xfs_bmap_finish(&tp, &free_list, &committed);
-+		if (error)
-+			goto out;
-+
-+		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	}
-+
-+	return error;
-+
-+out:
-+	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
-+	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	return error;
-+}
-+
- /*
-  * We need to check that the format of the data fork in the temporary inode is
-  * valid for the target inode before doing the swap. This is not a problem with
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 0612609..588d29d 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -97,6 +97,8 @@ int	xfs_change_file_space(struct xfs_inode *ip, int cmd,
- 			      xfs_flock64_t *bf, xfs_off_t offset,
- 			      int attr_flags);
- 
-+int xfs_collapse_file_space(struct xfs_inode *, loff_t, loff_t, int);
-+
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
- int	xfs_free_eofblocks(struct xfs_mount *mp, struct xfs_inode *ip,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 818c623..9c9c1ff 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -807,7 +807,8 @@ xfs_file_fallocate(
- 	int		cmd = XFS_IOC_RESVSP;
- 	int		attr_flags = XFS_ATTR_NOLOCK;
- 
+ 	/* Return error if mode is not supported */
 -	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
 +	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
 +		     FALLOC_FL_COLLAPSE_RANGE))
  		return -EOPNOTSUPP;
  
- 	bf.l_whence = 0;
-@@ -819,10 +820,19 @@ xfs_file_fallocate(
  	if (mode & FALLOC_FL_PUNCH_HOLE)
- 		cmd = XFS_IOC_UNRESVSP;
+ 		return ext4_punch_hole(inode, offset, len);
  
--	/* check the new inode size is valid before allocating */
--	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
--	    offset + len > i_size_read(inode)) {
-+	/* Shrink size in case of FALLOC_FL_COLLAPSE_RANGE */
-+	if (mode & FALLOC_FL_COLLAPSE_RANGE) {
-+		cmd = XFS_COLLAPSE_RANGE;
-+		if ((offset + len) > i_size_read(inode))
-+			new_size = offset;
-+		else
-+			new_size = i_size_read(inode) - len;
-+	} else if (!(mode & FALLOC_FL_KEEP_SIZE) &&
-+	    offset + len > i_size_read(inode))
- 		new_size = offset + len;
++	if (mode & FALLOC_FL_COLLAPSE_RANGE)
++		return ext4_collapse_range(inode, offset, len);
 +
-+	/* check the new inode size is valid before allocating */
-+	if (new_size || mode & FALLOC_FL_COLLAPSE_RANGE) {
- 		error = inode_newsize_ok(inode, new_size);
- 		if (error)
- 			goto out_unlock;
-@@ -836,7 +846,7 @@ xfs_file_fallocate(
- 		goto out_unlock;
- 
- 	/* Change file size if needed */
--	if (new_size) {
-+	if (new_size ||  mode & FALLOC_FL_COLLAPSE_RANGE) {
- 		struct iattr iattr;
- 
- 		iattr.ia_valid = ATTR_SIZE;
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 1edb5cc..99f5244 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -516,6 +516,12 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
+ 	ret = ext4_convert_inline_data(inode);
+ 	if (ret)
+ 		return ret;
+@@ -4884,3 +4888,283 @@ int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 	ext4_es_lru_add(inode);
+ 	return error;
+ }
++
 +/*
-+ * Although there is no ioctl implemented yet, we reserve an ioctl number for
-+ * representing collapse range operation to avoid any possible collision in
-+ * switch case of xfs_change_file_space.
++ * ext4_access_path:
++ * Function to access the path buffer for marking it dirty.
++ * It also checks if there are sufficient credits left in the journal handle
++ * to update path.
 + */
-+#define XFS_COLLAPSE_RANGE	_IOW('X', 59, struct xfs_flock64)
++static int
++ext4_access_path(handle_t *handle, struct inode *inode,
++		struct ext4_ext_path *path)
++{
++	int credits, err;
++
++	/*
++	 * Check if need to extend journal credits
++	 * 3 for leaf, sb, and inode plus 2 (bmap and group
++	 * descriptor) for each block group; assume two block
++	 * groups
++	 */
++	if (handle->h_buffer_credits < 7) {
++		credits = ext4_writepage_trans_blocks(inode);
++		err = ext4_ext_truncate_extend_restart(handle, inode, credits);
++		/* EAGAIN is success */
++		if (err && err != -EAGAIN)
++			return err;
++	}
++
++	err = ext4_ext_get_access(handle, inode, path);
++	return err;
++}
++
++/*
++ * ext4_ext_shift_path_extents:
++ * Shift the extents of a path structure lying between path[depth].p_ext
++ * and EXT_LAST_EXTENT(path[depth].p_hdr) downwards, by subtracting shift
++ * from starting block for each extent.
++ */
++static int
++ext4_ext_shift_path_extents(struct ext4_ext_path *path, ext4_lblk_t shift,
++			    struct inode *inode, handle_t *handle,
++			    ext4_lblk_t *start)
++{
++	int depth, err = 0;
++	struct ext4_extent *ex_start, *ex_last;
++	bool update = 0;
++	depth = path->p_depth;
++
++	while (depth >= 0) {
++		if (depth == path->p_depth) {
++			ex_start = path[depth].p_ext;
++			if (!ex_start)
++				return -EIO;
++
++			ex_last = EXT_LAST_EXTENT(path[depth].p_hdr);
++			if (!ex_last)
++				return -EIO;
++
++			err = ext4_access_path(handle, inode, path + depth);
++			if (err)
++				goto out;
++
++			if (ex_start == EXT_FIRST_EXTENT(path[depth].p_hdr))
++				update = 1;
++
++			*start = ex_last->ee_block +
++				ext4_ext_get_actual_len(ex_last);
++
++			while (ex_start <= ex_last) {
++				ex_start->ee_block -= shift;
++				ext4_ext_try_to_merge(handle, inode,
++						path, ex_start);
++				ex_start++;
++			}
++			err = ext4_ext_dirty(handle, inode, path + depth);
++			if (err)
++				goto out;
++
++			if (--depth < 0 || !update)
++				break;
++		}
++
++		/* Update index too */
++		err = ext4_access_path(handle, inode, path + depth);
++		if (err)
++			goto out;
++
++		path[depth].p_idx->ei_block -= shift;
++		err = ext4_ext_dirty(handle, inode, path + depth);
++		if (err)
++			goto out;
++
++		/* we are done if current index is not a starting index */
++		if (path[depth].p_idx != EXT_FIRST_INDEX(path[depth].p_hdr))
++			break;
++
++		depth--;
++	}
++
++out:
++	return err;
++}
++
++/*
++ * ext4_ext_shift_extents:
++ * All the extents which lies in the range from start to the last allocated
++ * block for the file are shifted downwards by shift blocks.
++ * On success, 0 is returned, error otherwise.
++ */
++static int
++ext4_ext_shift_extents(struct inode *inode, handle_t *handle,
++		       ext4_lblk_t start, ext4_lblk_t shift)
++{
++	struct ext4_ext_path *path;
++	int ret = 0, depth;
++	struct ext4_extent *extent;
++	ext4_lblk_t stop_block, current_block;
++	ext4_lblk_t ex_start, ex_end;
++
++	/* Let path point to the last extent */
++	path = ext4_ext_find_extent(inode, EXT_MAX_BLOCKS - 1, NULL, 0);
++	if (IS_ERR(path))
++		return PTR_ERR(path);
++
++	depth = path->p_depth;
++	extent = path[depth].p_ext;
++	if (!extent) {
++		ext4_ext_drop_refs(path);
++		kfree(path);
++		return ret;
++	}
++
++	stop_block = extent->ee_block + ext4_ext_get_actual_len(extent);
++	ext4_ext_drop_refs(path);
++	kfree(path);
++
++	/* Nothing to shift, if hole is at the end of file */
++	if (start >= stop_block)
++		return ret;
++
++	/*
++	 * Don't start shifting extents until we make sure the hole is big
++	 * enough to accomodate the shift.
++	 */
++	path = ext4_ext_find_extent(inode, start - 1, NULL, 0);
++	depth = path->p_depth;
++	extent =  path[depth].p_ext;
++	ex_start = extent->ee_block;
++	ex_end = extent->ee_block + ext4_ext_get_actual_len(extent);
++	ext4_ext_drop_refs(path);
++	kfree(path);
++
++	if ((ex_start > start - 1 && shift > ex_start) ||
++	    (ex_end > start - shift))
++		return -EIO;
++
++	/* Its safe to start updating extents */
++	while (start < stop_block) {
++		path = ext4_ext_find_extent(inode, start, NULL, 0);
++		if (IS_ERR(path))
++			return PTR_ERR(path);
++		depth = path->p_depth;
++		extent = path[depth].p_ext;
++		current_block = extent->ee_block;
++		if (start > current_block) {
++			/* Hole, move to the next extent */
++			ret = mext_next_extent(inode, path, &extent);
++			if (ret != 0) {
++				ext4_ext_drop_refs(path);
++				kfree(path);
++				if (ret == 1)
++					ret = 0;
++				break;
++			}
++		}
++		ret = ext4_ext_shift_path_extents(path, shift, inode,
++				handle, &start);
++		ext4_ext_drop_refs(path);
++		kfree(path);
++		if (ret)
++			break;
++	}
++
++	return ret;
++}
++
++/*
++ * ext4_collapse_range:
++ * This implements the fallocate's collapse range functionality for ext4
++ * Returns: 0 and non-zero on error.
++ */
++int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
++{
++	struct super_block *sb = inode->i_sb;
++	ext4_lblk_t punch_start, punch_stop;
++	handle_t *handle;
++	unsigned int credits;
++	unsigned int rounding;
++	loff_t ioffset, new_size;
++	int ret;
++
++	if (!S_ISREG(inode->i_mode))
++		return -EOPNOTSUPP;
++
++	if (EXT4_SB(sb)->s_cluster_ratio > 1)
++		return -EOPNOTSUPP;
++
++	/* Currently just for extent based files */
++	if (!ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS))
++		return -EOPNOTSUPP;
++
++	if (IS_SWAPFILE(inode))
++		return -ETXTBSY;
++
++	trace_ext4_collapse_range(inode, offset, len);
++
++	punch_start = offset >> EXT4_BLOCK_SIZE_BITS(sb);
++	punch_stop = (offset + len) >> EXT4_BLOCK_SIZE_BITS(sb);
++
++	rounding = max_t(uint, 1 << EXT4_BLOCK_SIZE_BITS(sb), PAGE_CACHE_SIZE);
++	ioffset = offset & ~(rounding - 1);
++
++	/* Write out all dirty pages */
++	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset, -1);
++	if (ret)
++		return ret;
++
++	/* Take mutex lock */
++	mutex_lock(&inode->i_mutex);
++
++	/* Wait for existing dio to complete */
++	ext4_inode_block_unlocked_dio(inode);
++	inode_dio_wait(inode);
++
++	truncate_pagecache_range(inode, ioffset, -1);
++
++	credits = ext4_writepage_trans_blocks(inode);
++	handle = ext4_journal_start(inode, EXT4_HT_TRUNCATE, credits);
++	if (IS_ERR(handle)) {
++		ret = PTR_ERR(handle);
++		goto out_dio;
++	}
++
++	down_write(&EXT4_I(inode)->i_data_sem);
++
++	ext4_discard_preallocations(inode);
++
++	ret = ext4_es_remove_extent(inode, punch_start,
++				    EXT_MAX_BLOCKS - punch_start - 1);
++	if (ret)
++		goto journal_stop;
++
++	ret = ext4_ext_remove_space(inode, punch_start, punch_stop - 1);
++	if (ret)
++		goto journal_stop;
++
++	ret = ext4_ext_shift_extents(inode, handle, punch_stop,
++				     punch_stop - punch_start);
++	if (ret)
++		goto journal_stop;
++
++	if ((offset + len) > i_size_read(inode))
++		new_size = offset;
++	else
++		new_size = i_size_read(inode) - len;
++
++	truncate_setsize(inode, new_size);
++	EXT4_I(inode)->i_disksize = new_size;
++
++	inode->i_mtime = inode->i_ctime = ext4_current_time(inode);
++	ext4_mark_inode_dirty(handle, inode);
++
++journal_stop:
++	ext4_journal_stop(handle);
++	up_write(&EXT4_I(inode)->i_data_sem);
++
++out_dio:
++	ext4_inode_resume_unlocked_dio(inode);
++	mutex_unlock(&inode->i_mutex);
++	return ret;
++}
+diff --git a/fs/ext4/move_extent.c b/fs/ext4/move_extent.c
+index 7fa4d85..4cbebb0 100644
+--- a/fs/ext4/move_extent.c
++++ b/fs/ext4/move_extent.c
+@@ -76,7 +76,7 @@ copy_extent_status(struct ext4_extent *src, struct ext4_extent *dest)
+  * ext4_ext_path structure refers to the last extent, or a negative error
+  * value on failure.
+  */
+-static int
++int
+ mext_next_extent(struct inode *inode, struct ext4_ext_path *path,
+ 		      struct ext4_extent **extent)
+ {
+diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
+index 197d312..90e2f71 100644
+--- a/include/trace/events/ext4.h
++++ b/include/trace/events/ext4.h
+@@ -2410,6 +2410,31 @@ TRACE_EVENT(ext4_es_shrink_exit,
+ 		  __entry->shrunk_nr, __entry->cache_cnt)
+ );
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
++TRACE_EVENT(ext4_collapse_range,
++	TP_PROTO(struct inode *inode, loff_t offset, loff_t len),
++
++	TP_ARGS(inode, offset, len),
++
++	TP_STRUCT__entry(
++		__field(dev_t,	dev)
++		__field(ino_t,	ino)
++		__field(loff_t,	offset)
++		__field(loff_t, len)
++	),
++
++	TP_fast_assign(
++		__entry->dev	= inode->i_sb->s_dev;
++		__entry->ino	= inode->i_ino;
++		__entry->offset	= offset;
++		__entry->len	= len;
++	),
++
++	TP_printk("dev %d,%d ino %lu offset %lld len %lld",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  (unsigned long) __entry->ino,
++		  __entry->offset, __entry->len)
++);
++
+ #endif /* _TRACE_EXT4_H */
+ 
+ /* This part must be outside protection */
 -- 
 1.7.9.5
 
