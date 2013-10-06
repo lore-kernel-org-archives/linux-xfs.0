@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 111937F4E
-	for <xfs@oss.sgi.com>; Fri,  4 Oct 2013 22:55:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ECA97304059
-	for <xfs@oss.sgi.com>; Fri,  4 Oct 2013 20:55:03 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	jS3HNFwKR5LIH2Oq for <xfs@oss.sgi.com>;
-	Fri, 04 Oct 2013 20:55:02 -0700 (PDT)
-Date: Sat, 5 Oct 2013 13:54:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: fix crc32 build on big endian
-Message-ID: <20131005035459.GN4446@dastard>
-References: <524F7753.8050801@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A184C7F50
+	for <xfs@oss.sgi.com>; Sat,  5 Oct 2013 21:25:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3C600AC003
+	for <xfs@oss.sgi.com>; Sat,  5 Oct 2013 19:25:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id i6ICgTeOIPZKwQca for
+	<xfs@oss.sgi.com>; Sat, 05 Oct 2013 19:25:26 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r962PPJ4028896
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sat, 5 Oct 2013 22:25:25 -0400
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r962POLK022947
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 5 Oct 2013 22:25:25 -0400
+Message-ID: <5250CA13.8040006@redhat.com>
+Date: Sat, 05 Oct 2013 21:25:23 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <524F7753.8050801@redhat.com>
+Subject: [PATCH] xfstests: restrict 259 device sizes to multiples of 512
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,64 +36,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Oct 04, 2013 at 09:20:03PM -0500, Eric Sandeen wrote:
-> While kernelspace can test #ifdef __LITTLE_ENDIAN, this
-> doesn't work in userspace.  __LITTLE_ENDIAN is defined -
-> as is __BIG_ENDIAN.
-> 
-> So we build on all boxes as __LITTLE_ENDIAN, and the
-> self-test (thankfully!) fails on big endian boxes.
+Test 259 tries to make a loop device size which is 1 byte less
+than 4T; losetup now warns that this makes little sense, and
+the warning breaks the test output:
 
-I'm glad I put that self test into the build now. :)
+    +losetup: /mnt/test/259.image: warning: file does not fit into a 512-byte sector the end of the file will be ignored.
 
-> Fix this by testing __BYTE_ORDER values.
-> 
-> And add an else which should never be hit, but just in case...
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/libxfs/crc32.c b/libxfs/crc32.c
-> index 1c0d958..0f847d2 100644
-> --- a/libxfs/crc32.c
-> +++ b/libxfs/crc32.c
-> @@ -63,18 +63,20 @@ typedef __u32	u64;
->  static inline u32
->  crc32_body(u32 crc, unsigned char const *buf, size_t len, const u32 (*tab)[256])
->  {
-> -# ifdef __LITTLE_ENDIAN
-> +#if __BYTE_ORDER == __LITTLE_ENDIAN
->  #  define DO_CRC(x) crc = t0[(crc ^ (x)) & 255] ^ (crc >> 8)
->  #  define DO_CRC4 (t3[(q) & 255] ^ t2[(q >> 8) & 255] ^ \
->  		   t1[(q >> 16) & 255] ^ t0[(q >> 24) & 255])
->  #  define DO_CRC8 (t7[(q) & 255] ^ t6[(q >> 8) & 255] ^ \
->  		   t5[(q >> 16) & 255] ^ t4[(q >> 24) & 255])
-> -# else
-> +# elif __BYTE_ORDER == __BIG_ENDIAN
->  #  define DO_CRC(x) crc = t0[((crc >> 24) ^ (x)) & 255] ^ (crc << 8)
->  #  define DO_CRC4 (t0[(q) & 255] ^ t1[(q >> 8) & 255] ^ \
->  		   t2[(q >> 16) & 255] ^ t3[(q >> 24) & 255])
->  #  define DO_CRC8 (t4[(q) & 255] ^ t5[(q >> 8) & 255] ^ \
->  		   t6[(q >> 16) & 255] ^ t7[(q >> 24) & 255])
-> +# else
-> +#  error What endian are you?
->  # endif
->  	const u32 *b;
->  	size_t    rem_len;
+The RH QE testcase did originally use loopback, so
+did not test anything other than 512 boundaries.
 
-Looks good - it matches the other endian checks in the code.
+Just drop the 1-byte-shy case, because it produces a device
+exactly the same size as the 512-bytes-shy case.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+(FWIW, this is a regression test for the bug that
+d943b11 mkfs: get size of device properly
+fixed.)
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/tests/xfs/259 b/tests/xfs/259
+index 59eeaca..9c12ccf 100755
+--- a/tests/xfs/259
++++ b/tests/xfs/259
+@@ -48,7 +48,7 @@ testfile=$TEST_DIR/259.image
+ 
+ # Test various sizes slightly less than 4 TB
+ four_TB=$(_math "2^42")
+-for del in 1 512 1024 1025 2048 4096; do
++for del in 512 1024 1025 2048 4096; do
+ 	ddseek=$(_math "$four_TB - $del")
+ 	echo "Trying to make (4 TB - $del) B long xfs fs image"
+ 	rm -f "$testfile"
+
 
 _______________________________________________
 xfs mailing list
