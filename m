@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DC55729DFC
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:14:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C1011304048
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:14:32 -0700 (PDT)
-Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
-	[209.85.220.47]) by cuda.sgi.com with ESMTP id u2pBiaABTAFmA5P3
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:14:32 -0700 (PDT)
-Received: by mail-pa0-f47.google.com with SMTP id kp14so6324585pab.20
-	for <xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:14:31 -0700 (PDT)
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 7/7] manpage: update FALLOC_FL_COLLAPSE_RANGE flag in
-	fallocate
-Date: Mon,  7 Oct 2013 05:14:21 +0900
-Message-Id: <1381090461-2931-1-git-send-email-linkinjeon@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 395347F52
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:42:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 03EFD304059
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:42:33 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id q23RoHjo3GjJnFPB for
+	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:42:33 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r96KgWIb031222
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 16:42:32 -0400
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r96KgVVV023722
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 16:42:31 -0400
+Message-ID: <5251CB37.2040406@redhat.com>
+Date: Sun, 06 Oct 2013 15:42:31 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests: mkfs scratch device in generic/294
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,68 +32,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: viro@zeniv.linux.org.uk, mtk.manpages@gmail.com, tytso@mit.edu, adilger.kernel@dilger.ca, bpm@sgi.com, elder@kernel.org, hch@infradead.org, david@fromorbit.com
-Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: xfs-oss <xfs@oss.sgi.com>
 
-From: Namjae Jeon <namjae.jeon@samsung.com>
+test 294 is using the scratch device w/o mkfs-ing it first,
+this runs the risk of following a test which completely
+fills the fs, causing 294 to fail.
 
-Update FALLOC_FL_COLLAPSE_RANGE flag in fallocate.
+add "rm -f $seqres.full" as well, it was growing on every run.
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- man2/fallocate.2 |   17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/man2/fallocate.2 b/man2/fallocate.2
-index f5c395d..b042c59 100644
---- a/man2/fallocate.2
-+++ b/man2/fallocate.2
-@@ -7,6 +7,7 @@
- .\"
- .\" 2011-09-19: Added FALLOC_FL_PUNCH_HOLE
- .\" 2011-09-19: Substantial restructuring of the page
-+.\" 2013-09-01: Added FALLOC_FL_COLLAPSE_RANGE
- .\"
- .TH FALLOCATE 2 2013-06-10 "Linux" "Linux Programmer's Manual"
- .SH NAME
-@@ -109,6 +110,19 @@ does not change.
- Not all filesystems support
- .BR FALLOC_FL_PUNCH_HOLE ;
- if a filesystem doesn't support the operation, an error is returned.
-+.SS Collapsing file space
-+Specifiying the
-+.BR FALLOC_FL_COLLAPSE_RANGE
-+flag in
-+.I mode
-+collapse space in the byte range starting at
-+.I offset
-+and continuing for
-+.I len
-+bytes, where the offset and len are aligned with block size of filesystem.
-+Within the specified range, it first de-allocates blocks and eliminates
-+the hole created in this process by shifting data blocks into the hole.
+diff --git a/tests/generic/294 b/tests/generic/294
+index fa7f339..3fa6ba2 100755
+--- a/tests/generic/294
++++ b/tests/generic/294
+@@ -48,6 +48,9 @@ _supported_fs generic
+ _supported_os Linux
+ _require_scratch
+ 
++rm -f $seqres.full
++_scratch_mkfs > $seqres.full 2>&1 || _fail "Could not mkfs scratch device"
 +
- .SH RETURN VALUE
- On success,
- .BR fallocate ()
-@@ -139,7 +153,8 @@ was less than 0, or
- .\" See "Re: [PATCH] fallocate.2: add FALLOC_FL_PUNCH_HOLE flag definition"
- .\" 21 Sep 2012
- .\" http://thread.gmane.org/gmane.linux.file-systems/48331/focus=1193526
--was less than or equal to 0.
-+was less than or equal to 0 or in case of FALLOC_FL_COLLAPSE_RANGE
-+offset and len are not aligned with file system's block size.
- .TP
- .B EIO
- An I/O error occurred while reading from or writing to a filesystem.
--- 
-1.7.9.5
+ THIS_TEST_DIR=$SCRATCH_MNT/$seq.test
+ 
+ _create_files()
 
 _______________________________________________
 xfs mailing list
