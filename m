@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD79B7F53
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:14:16 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DC55729DFC
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:14:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CB2B98F8049
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:14:16 -0700 (PDT)
-Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
-	[209.85.192.178]) by cuda.sgi.com with ESMTP id
-	5WM0Qp9BPJ1b9rfq (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 06 Oct 2013 13:14:15 -0700 (PDT)
-Received: by mail-pd0-f178.google.com with SMTP id w10so6273266pde.9
-	for <xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:14:15 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C1011304048
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:14:32 -0700 (PDT)
+Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
+	[209.85.220.47]) by cuda.sgi.com with ESMTP id u2pBiaABTAFmA5P3
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:14:32 -0700 (PDT)
+Received: by mail-pa0-f47.google.com with SMTP id kp14so6324585pab.20
+	for <xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:14:31 -0700 (PDT)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 6/7] xfstest: Add test case to test multiple collapse
-	range call
-Date: Mon,  7 Oct 2013 05:14:06 +0900
-Message-Id: <1381090446-2897-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 7/7] manpage: update FALLOC_FL_COLLAPSE_RANGE flag in
+	fallocate
+Date: Mon,  7 Oct 2013 05:14:21 +0900
+Message-Id: <1381090461-2931-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,224 +34,56 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, l
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-We execute collapse range multiple times on same file.
-Each collapse range call collapses a single alternate block.
-After the test execution, file will be left with 80 blocks and
-as much number of extents.
-We also check for file system consistency after the completion.
+Update FALLOC_FL_COLLAPSE_RANGE flag in fallocate.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/shared/317     |   96 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/317.out |   85 ++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/group   |    1 +
- 3 files changed, 182 insertions(+)
- create mode 100644 tests/shared/317
- create mode 100644 tests/shared/317.out
+ man2/fallocate.2 |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/tests/shared/317 b/tests/shared/317
-new file mode 100644
-index 0000000..1d7c384
---- /dev/null
-+++ b/tests/shared/317
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# FS QA Test No. 317
-+#
-+# Test multiple fallocate collapse range calls
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Samsung Electronics.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
+diff --git a/man2/fallocate.2 b/man2/fallocate.2
+index f5c395d..b042c59 100644
+--- a/man2/fallocate.2
++++ b/man2/fallocate.2
+@@ -7,6 +7,7 @@
+ .\"
+ .\" 2011-09-19: Added FALLOC_FL_PUNCH_HOLE
+ .\" 2011-09-19: Substantial restructuring of the page
++.\" 2013-09-01: Added FALLOC_FL_COLLAPSE_RANGE
+ .\"
+ .TH FALLOCATE 2 2013-06-10 "Linux" "Linux Programmer's Manual"
+ .SH NAME
+@@ -109,6 +110,19 @@ does not change.
+ Not all filesystems support
+ .BR FALLOC_FL_PUNCH_HOLE ;
+ if a filesystem doesn't support the operation, an error is returned.
++.SS Collapsing file space
++Specifiying the
++.BR FALLOC_FL_COLLAPSE_RANGE
++flag in
++.I mode
++collapse space in the byte range starting at
++.I offset
++and continuing for
++.I len
++bytes, where the offset and len are aligned with block size of filesystem.
++Within the specified range, it first de-allocates blocks and eliminates
++the hole created in this process by shifting data blocks into the hole.
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs xfs ext4
-+_supported_os Linux
-+
-+_require_scratch
-+_require_xfs_io_fiemap
-+_require_xfs_io_falloc_collapse
-+_do_die_on_error=y
-+test=$SCRATCH_MNT/test
-+testfile=$SCRATCH_MNT/317.$$
-+BSIZE=4096
-+BLOCKS=10240
-+
-+# Filters fiemap output
-+_filter_fiemap()
-+{
-+	awk --posix '
-+		$3 ~ /hole/ {
-+			print $1, $2, $3;
-+			next;
-+		}
-+		$5 ~ /0x[[:xdigit:]]+/ {
-+			print $1, $2, "extent";
-+		}'
-+}
-+
-+case $FSTYP in
-+	ext4)
-+		export MKFS_OPTIONS="-F -b $BSIZE"
-+		;;
-+	xfs)
-+		export MKFS_OPTIONS="-f -b size=$BSIZE"
-+		;;
-+esac
-+
-+# make filesystem on scratch with 4KB blocksize
-+_do 'make filesystem on $SCRATCH_DEV' '_scratch_mkfs'
-+_do 'mount filesytem' '_scratch_mount'
-+
-+# Write file
-+length=$(($BLOCKS*$BSIZE))
-+$XFS_IO_PROG -f -c "pwrite 0 $length" -c fsync $testfile > /dev/null
-+
-+# Collapse alternate blocks
-+for (( i = 1; i <= 7; i++ )); do
-+	for(( j=0 ; j < $(($BLOCKS/(2**$i))) ; j++ )); do
-+		offset=$(($j*$BSIZE))
-+		$XFS_IO_PROG -c "fcollapse $offset $BSIZE" $testfile > /dev/null
-+	done
-+done
-+
-+# Check if 80 extents are present
-+$XFS_IO_PROG -c "fiemap -v" $testfile | _filter_fiemap
-+
-+_do 'unmount $SCRATCH_DEV' 'umount $SCRATCH_DEV'
-+_do 'repair filesystem' '_check_scratch_fs'
-+
-+# success, all done
-+status=0; exit
-diff --git a/tests/shared/317.out b/tests/shared/317.out
-new file mode 100644
-index 0000000..836f0fe
---- /dev/null
-+++ b/tests/shared/317.out
-@@ -0,0 +1,85 @@
-+QA output created by 317
-+make filesystem on $SCRATCH_DEV... done
-+mount filesytem... done
-+0: [0..7]: extent
-+1: [8..15]: extent
-+2: [16..23]: extent
-+3: [24..31]: extent
-+4: [32..39]: extent
-+5: [40..47]: extent
-+6: [48..55]: extent
-+7: [56..63]: extent
-+8: [64..71]: extent
-+9: [72..79]: extent
-+10: [80..87]: extent
-+11: [88..95]: extent
-+12: [96..103]: extent
-+13: [104..111]: extent
-+14: [112..119]: extent
-+15: [120..127]: extent
-+16: [128..135]: extent
-+17: [136..143]: extent
-+18: [144..151]: extent
-+19: [152..159]: extent
-+20: [160..167]: extent
-+21: [168..175]: extent
-+22: [176..183]: extent
-+23: [184..191]: extent
-+24: [192..199]: extent
-+25: [200..207]: extent
-+26: [208..215]: extent
-+27: [216..223]: extent
-+28: [224..231]: extent
-+29: [232..239]: extent
-+30: [240..247]: extent
-+31: [248..255]: extent
-+32: [256..263]: extent
-+33: [264..271]: extent
-+34: [272..279]: extent
-+35: [280..287]: extent
-+36: [288..295]: extent
-+37: [296..303]: extent
-+38: [304..311]: extent
-+39: [312..319]: extent
-+40: [320..327]: extent
-+41: [328..335]: extent
-+42: [336..343]: extent
-+43: [344..351]: extent
-+44: [352..359]: extent
-+45: [360..367]: extent
-+46: [368..375]: extent
-+47: [376..383]: extent
-+48: [384..391]: extent
-+49: [392..399]: extent
-+50: [400..407]: extent
-+51: [408..415]: extent
-+52: [416..423]: extent
-+53: [424..431]: extent
-+54: [432..439]: extent
-+55: [440..447]: extent
-+56: [448..455]: extent
-+57: [456..463]: extent
-+58: [464..471]: extent
-+59: [472..479]: extent
-+60: [480..487]: extent
-+61: [488..495]: extent
-+62: [496..503]: extent
-+63: [504..511]: extent
-+64: [512..519]: extent
-+65: [520..527]: extent
-+66: [528..535]: extent
-+67: [536..543]: extent
-+68: [544..551]: extent
-+69: [552..559]: extent
-+70: [560..567]: extent
-+71: [568..575]: extent
-+72: [576..583]: extent
-+73: [584..591]: extent
-+74: [592..599]: extent
-+75: [600..607]: extent
-+76: [608..615]: extent
-+77: [616..623]: extent
-+78: [624..631]: extent
-+79: [632..639]: extent
-+unmount $SCRATCH_DEV... done
-+repair filesystem... done
-diff --git a/tests/shared/group b/tests/shared/group
-index 3a69294..80ff7ec 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -12,3 +12,4 @@
- 298 auto trim
- 305 aio dangerous enospc rw stress
- 316 auto quick collapse
-+317 auto collapse
+ .SH RETURN VALUE
+ On success,
+ .BR fallocate ()
+@@ -139,7 +153,8 @@ was less than 0, or
+ .\" See "Re: [PATCH] fallocate.2: add FALLOC_FL_PUNCH_HOLE flag definition"
+ .\" 21 Sep 2012
+ .\" http://thread.gmane.org/gmane.linux.file-systems/48331/focus=1193526
+-was less than or equal to 0.
++was less than or equal to 0 or in case of FALLOC_FL_COLLAPSE_RANGE
++offset and len are not aligned with file system's block size.
+ .TP
+ .B EIO
+ An I/O error occurred while reading from or writing to a filesystem.
 -- 
 1.7.9.5
 
