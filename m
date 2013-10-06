@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA16D7F52
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:07:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D7A278F8049
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:07:23 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id DAFE07F52
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:09:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A6AD08F8039
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 13:09:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vN8X2QdXZjJDK7gw for
-	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:07:23 -0700 (PDT)
+	cuda.sgi.com with ESMTP id xcWDbpeGJayaqpVI for
+	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 13:09:55 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r96K7M1E017259
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r96K9tNh017488
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 16:07:22 -0400
+	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 16:09:55 -0400
 Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
 	[10.5.9.1])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r96K7LrQ015574
+	id r96K9sgC015906
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 16:07:22 -0400
-Message-ID: <5251C2F8.80009@redhat.com>
-Date: Sun, 06 Oct 2013 15:07:20 -0500
+	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 16:09:55 -0400
+Message-ID: <5251C392.1020407@redhat.com>
+Date: Sun, 06 Oct 2013 15:09:54 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: fix inadvertent mkfs default change for projid32bit
+Subject: [PATCH] xfstests: filter projid32bit info out of growfs & info output
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,38 +38,35 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-This commit:
+commit 67e389c xfsprogs: support CRC enabled filesystem detection
 
-f3edb66a mkfs.xfs: validate options for CRCs up front.
-
-seems to have inadvertently switched to 32bit project IDs by default:
-
--       int                     projid32bit;
-+       int                     projid16bit;
-...
--       projid32bit = 0;
-+       projid16bit = 0;
-
-Switch back to 16 bit project ID by default, at least until we
-intentionally make that change.
+changed xfs_growfs (and by extension xfs_info) to report
+the projid32bit value.  This breaks at least xfstest xfs/206 due to
+the changed output, so filter it as we do for mkfs in that test.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index eafbed3..ebab09d 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -965,7 +965,7 @@ main(
- 	textdomain(PACKAGE);
+diff --git a/tests/xfs/206 b/tests/xfs/206
+index fcbdd9e..d2c2ade 100755
+--- a/tests/xfs/206
++++ b/tests/xfs/206
+@@ -86,6 +86,7 @@ echo "=== xfs_growfs ==="
+ xfs_growfs $tmpdir \
+ 	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
+ 		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
++		-e "s/, projid32bit=[0-9]//" \
+ 		-e "/.*crc=/d"
  
- 	attrversion = 2;
--	projid16bit = 0;
-+	projid16bit = 1;
- 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
- 	blocklog = blocksize = 0;
- 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
-
+ # and double-check the new geometry
+@@ -93,6 +94,7 @@ echo "=== xfs_info ==="
+ xfs_info $tmpdir \
+ 	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
+ 		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
++		-e "s/, projid32bit=[0-9]//" \
+ 		-e "/.*crc=/d"
+ 
+ # _cleanup cleans up for us
 
 _______________________________________________
 xfs mailing list
