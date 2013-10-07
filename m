@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 133AC7F52
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 12:35:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DEC65304051
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 10:35:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bpF7UWqPbHX6Z0Xm for
-	<xfs@oss.sgi.com>; Mon, 07 Oct 2013 10:35:19 -0700 (PDT)
-Message-ID: <5252F0D4.8090209@redhat.com>
-Date: Mon, 07 Oct 2013 12:35:16 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: remove incorrect l_sectBBsize assignment in
-	xfs_repair
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 877B17F52
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 14:40:37 -0500 (CDT)
+Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
+	[128.162.236.41])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 69F268F806F
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 12:40:34 -0700 (PDT)
+Message-Id: <20131007193912.256265551@sgi.com>
+Date: Mon, 07 Oct 2013 14:38:35 -0500
+From: rjohnston@sgi.com
+Subject: [PATCH] xfstests XFS: verify extended attributes after multi-stream
+	xfsdump/xfsrestore
+References: <524AF8AE.5030300@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,60 +20,188 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: xfs@oss.sgi.com
 
-Commit e0607266 xfsprogs: add crc format support to repair
+Verify extended attributes are not lost after multi-stream
+xfsdump/xfsrestore of wholly-sparse files.  xfsrestore did not
+recognize that if the LAST header was reached with no restoredsz set,
+(i.e the LAST header is the only header), the following warning is
+displayed:
 
-added a 2nd assignment to l_sectBBsize:
+  "partial_reg: Out of records. Extend attrs applied early."
 
-	log.l_sectBBsize = 1 << mp->m_sb.sb_logsectlog;
+and the extended attributes on the current and following restored
+files are lost.
 
-which is incorrect; sb_logsectlog is log2 of the sector size,
-in bytes; l_sectBBsize is the size of the log sector in
-512-byte units.
+Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
-So for a 4k sector size log, we were assigning 4096 rather
-than 8.  This broke xlog_find_tail, and caused xfs_repair
-to think that a log was dirty even when it was clean:
-
-"ERROR: The filesystem has valuable metadata changes in a log"
-
-(xfs_logprint didn't have this error, so xfs_logprint -t
-agreed that the filesystem really was clean).
-
-Just remove the incorrect assignment; it was already properly
-assigned about 12 lines prior:
-
-        log.l_sectBBsize  = BTOBB(x.lbsize);
-
-and things work again.
-
-(This worked accidentally for 512-sector devices, because
-we special-case those and set sb_logsectlog to "0" rather
-than 9, so l_sectBBsize came out to "1" (as in 1 sector),
-as it should have).
-
-Reporteed-by: Markus Trippelsdorf <markus@trippelsdorf.de>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
+ tests/xfs/350     |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/350.out |    2 
+ tests/xfs/group   |    1 
+ 3 files changed, 137 insertions(+)
 
-diff --git a/repair/phase2.c b/repair/phase2.c
-index a62854e..2817fed 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -64,7 +64,6 @@ zero_log(xfs_mount_t *mp)
- 		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
- 	}
- 	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
--	log.l_sectBBsize = 1 << mp->m_sb.sb_logsectlog;
- 
- 	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk))) {
- 		do_warn(_("zero_log: cannot find log head/tail "
+Index: b/tests/xfs/350
+===================================================================
+--- /dev/null
++++ b/tests/xfs/350
+@@ -0,0 +1,134 @@
++#! /bin/bash
++# FS QA Test No. 350
++#
++# Verify extended attributes are not lost after multi-stream
++# xfsdump/xfsrestore of wholly-sparse files.
++
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=0	# success is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/dump
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_multi_stream
++
++# dir where we'll restore
++RESTOREDIR=$SCRATCH_MNT/restore
++
++# subdir used for dump/restore
++DUMPDIR=dumpsrc
++
++# test extended attributes
++attr_name=testattr
++attr_value=1234
++
++# setup for test
++rm -rf $seqres.full
++mkdir -p $RESTOREDIR
++mkdir -p $SCRATCH_MNT/$DUMPDIR
++
++# cleanup for next dump/restore.
++_clean_dirs()
++{
++	rm -rf $SCRATCH_MNT/$DUMPDIR/*
++	rm -rf $RESTOREDIR/*
++	rm -f $tmp.stream?
++}
++
++# set the extended attributes on the test files.
++_set_attrs()
++{
++	for fname in $(ls -dD $SCRATCH_MNT/$DUMPDIR/*); do
++		attr -Rs $attr_name -V $attr_value $fname \
++		2>&1 >> $seqres.full || _fail "could not set ATTR for $fname"
++	done
++}
++
++# perform a dump and restore.
++_do_dump_restore()
++{
++	$XFSDUMP_PROG -L session -M label1 -M label2 -f $tmp.stream1 \
++		-f $tmp.stream2 $SCRATCH_MNT -s $DUMPDIR \
++		2>&1 >> $seqres.full || _fail "dump failed"
++	$XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $RESTOREDIR \
++		2>&1 >> $seqres.full || _fail "restore failed"
++}
++
++# verify the restored files extended attributes and
++# echo the error (if any) so the test will continue
++_verify_attrs()
++{
++	for fname in $(ls -dD $RESTOREDIR/$DUMPDIR/*); do
++		attr -Rg $attr_name $fname 2>&1 | tee -a $seqres.full | \
++			grep $attr_value 2>&1 >> $seqres.full || \
++			echo "ATTR for $fname  DOES NOT match"
++	done
++}
++
++# create files for test 1, a large file so the sparse file
++# is in the next stream.
++_create_test1_files()
++{
++
++	dd if=/dev/zero of=$SCRATCH_MNT/$DUMPDIR/10MB bs=1MB \
++		count=10 2>&1 >> $seqres.full | _filter_dd
++	truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse0 2>&1 \
++		>> $seqres.full
++}
++
++# create 4 sparse files for test 2
++_create_test2_files()
++{
++	for i in `seq 1 4`; do
++		truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse$i 2>&1 >> \
++		$seqres.full || _fail "failed to create sparse \"$i\""
++	done
++}
++echo "Silence is golden."
++echo "Starting Test 1" >> $seqres.full
++_clean_dirs
++_create_test1_files
++_set_attrs
++_do_dump_restore
++_verify_attrs
++
++echo "Starting Test 2" >> $seqres.full
++_clean_dirs
++_create_test2_files
++_set_attrs
++_do_dump_restore
++_verify_attrs
++
++# success, all done
++exit
+Index: b/tests/xfs/350.out
+===================================================================
+--- /dev/null
++++ b/tests/xfs/350.out
+@@ -0,0 +1,2 @@
++QA output created by 350
++Silence is golden.
+Index: b/tests/xfs/group
+===================================================================
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -179,3 +179,4 @@
+ 297 auto freeze
+ 298 auto attr symlink quick
+ 299 auto quota
++350 dump auto
+
 
 _______________________________________________
 xfs mailing list
