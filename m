@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E5B147F52
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 17:46:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 871D07F52
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 20:46:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C6487304048
-	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 15:46:22 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VjBQQ1SzeI3Dz3bJ for
-	<xfs@oss.sgi.com>; Sun, 06 Oct 2013 15:46:22 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r96MkLKL027981
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 18:46:21 -0400
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r96MkJcN005167
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sun, 6 Oct 2013 18:46:21 -0400
-Message-ID: <5251E83B.8060605@redhat.com>
-Date: Sun, 06 Oct 2013 17:46:19 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71B728F8039
+	for <xfs@oss.sgi.com>; Sun,  6 Oct 2013 18:46:05 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id quDPVnuEk4SBkbii for <xfs@oss.sgi.com>;
+	Sun, 06 Oct 2013 18:46:04 -0700 (PDT)
+Message-ID: <5252125B.2040300@sandeen.net>
+Date: Sun, 06 Oct 2013 20:46:03 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: handle xfs_quota output w/ long devicenames
+Subject: Re: [PATCH 46/55] xfs: Add xfs_log_rlimit.c
+References: <1378332359-14737-1-git-send-email-david@fromorbit.com>
+	<1378332359-14737-47-git-send-email-david@fromorbit.com>
+	<5251A450.4000407@sandeen.net>
+In-Reply-To: <5251A450.4000407@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,62 +29,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Long device names may be split onto their own line
-on quota output:
+On 10/6/13 12:56 PM, Eric Sandeen wrote:
+> On 9/4/13 5:05 PM, Dave Chinner wrote:
+>> > From: Jie Liu <jeff.liu@oracle.com>
+>> > 
+>> > Add source files for xfs_log_rlimit.c The new file is used for log
+>> > size calculations and validation shared with userspace.
+>> > 
+>> > [dchinner: xfs_log_calc_max_attrsetm_res() does not modify the
+>> > tr_attrsetm reservation, just calculates the maximum. ]
+>> > 
+>> > [dchinner: rework loop in xfs_log_get_max_trans_res() ]
+>> > 
+>> > [dchinner: implement xfs_log_calc_unit_res() in util.c to give mkfs
+>> > a worse case calculation of the log size needed. ]
+> 2 things:
+> 
+> Ben, seems like your workflow lost the:
+> 
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> at the top - in git, the author is listed as Dave in git.
+> 
+> (Although those [parentheticals] were pretty fundamental changes,
+> something I just gave Rich a hard time for)  ;)
+> 
+> Also, this now breaks xfstest xfs/216 as a result of the mkfs changes.
+> What are the plans for that?
 
-Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
-/dev/mapper/my-very-very-very-long-devicename
-                48M      0      0  00 [------] /mnt/scratch
+Sorry, to be clear, it breaks that test (and others, pretty sure)
+because the log sizes for small filesystems are significantly bigger:
 
-which breaks tests that capture quota output - currently,
-only xfs/108.
+-fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
++fssize=1g log      =internal log           bsize=4096   blocks=12800, version=2
 
-Add a _filter_quota() which fixes this.
+-fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
++fssize=2g log      =internal log           bsize=4096   blocks=12800, version=2
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+-fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
++fssize=4g log      =internal log           bsize=4096   blocks=12800, version=2
 
+-fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
++fssize=8g log      =internal log           bsize=4096   blocks=12800, version=2
 
+-fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
++fssize=16g log      =internal log           bsize=4096   blocks=12800, version=2
 
-diff --git a/common/filter b/common/filter
-index 066b353..a0d9d2a 100644
---- a/common/filter
-+++ b/common/filter
-@@ -240,6 +240,15 @@ _filter_spaces()
-        sed -e 's/ [ ]*/ /g'
- }
+-fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
++fssize=32g log      =internal log           bsize=4096   blocks=12800, version=2
+
+-fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
++fssize=64g log      =internal log           bsize=4096   blocks=12800, version=2
+
+ fssize=128g log      =internal log           bsize=4096   blocks=16384, version=2
+ fssize=256g log      =internal log           bsize=4096   blocks=32768, version=2
+
+-Eric
  
-+_filter_quota()
-+{
-+	# Long dev name might be split onto its own line; last
-+	# seds remove that newline if present
-+	_filter_scratch | _filter_test_dir | _filter_spaces | \
-+	sed -e 'N;s/SCRATCH_DEV\n/SCRATCH_DEV/g' | \
-+	sed -e 'N;s/TEST_DEV\n/TEST_DEV/g'
-+}
-+
- # Account for different "ln" failure messages
- _filter_ln()
- {
-diff --git a/tests/xfs/108 b/tests/xfs/108
-index 82694f1..5030f63 100755
---- a/tests/xfs/108
-+++ b/tests/xfs/108
-@@ -71,9 +71,9 @@ test_accounting()
- 	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
- 		$here/src/lstat64 $file | head -3 | _filter_scratch
- 	done
--	xfs_quota -c "quota -hnb -$type $id" $QARGS | _filter_scratch | _filter_spaces
--	xfs_quota -c "quota -hni -$type $id" $QARGS | _filter_scratch | _filter_spaces
--	xfs_quota -c "quota -hnr -$type $id" $QARGS | _filter_scratch | _filter_spaces
-+	xfs_quota -c "quota -hnb -$type $id" $QARGS | _filter_quota
-+	xfs_quota -c "quota -hni -$type $id" $QARGS | _filter_quota
-+	xfs_quota -c "quota -hnr -$type $id" $QARGS | _filter_quota
- }
- 
- export MOUNT_OPTIONS="-opquota"
+> Thanks,
+> -Eric
+> 
 
 _______________________________________________
 xfs mailing list
