@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 802637F37
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 15:09:15 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 20AF77F37
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 15:32:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6B71E304039
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 13:09:12 -0700 (PDT)
-Received: from mail-we0-f175.google.com (mail-we0-f175.google.com
-	[74.125.82.175]) by cuda.sgi.com with ESMTP id hkr11GMiYeSm69x7
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Oct 2013 13:09:10 -0700 (PDT)
-Received: by mail-we0-f175.google.com with SMTP id t61so7352924wes.20
-	for <xfs@oss.sgi.com>; Mon, 07 Oct 2013 13:09:09 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 06995304039
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 13:32:52 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Yyl8CozYrz8brB7j for <xfs@oss.sgi.com>;
+	Mon, 07 Oct 2013 13:32:51 -0700 (PDT)
+Message-ID: <52531A72.1060902@sandeen.net>
+Date: Mon, 07 Oct 2013 15:32:50 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20131004214353.GK4446@dastard>
-References: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
-	<20131001201909.GR12541@dastard>
-	<CAGa409_tDjbsdnf+wDiM7666FeQSjmMfOVdqG-SxOD_WUZMiZQ@mail.gmail.com>
-	<20131002104253.GT12541@dastard>
-	<CAGa409_wO74zGP1d85RGZ7WbfBPr7s_tKaW3u9k8=9Ps-D5FjQ@mail.gmail.com>
-	<20131004214353.GK4446@dastard>
-Date: Mon, 7 Oct 2013 13:09:09 -0700
-Message-ID: <CAGa4099NNUJV4_JbU0izLf0k3bcj3afHPTXt=HO2263_TESbNA@mail.gmail.com>
-Subject: Re: xfs_repair segfault
-From: Viet Nguyen <vietnguyen@gmail.com>
+Subject: Re: [PATCH] xfstests XFS: verify extended attributes after
+	multi-stream xfsdump/xfsrestore
+References: <524AF8AE.5030300@sgi.com> <20131007193912.256265551@sgi.com>
+In-Reply-To: <20131007193912.256265551@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,192 +24,233 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6778239272471770529=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: rjohnston@sgi.com
 Cc: xfs@oss.sgi.com
 
---===============6778239272471770529==
-Content-Type: multipart/alternative; boundary=f46d043c09329d140404e82c3978
+On 10/7/13 2:38 PM, rjohnston@sgi.com wrote:
+> Verify extended attributes are not lost after multi-stream
+> xfsdump/xfsrestore of wholly-sparse files.  xfsrestore did not
+> recognize that if the LAST header was reached with no restoredsz set,
+> (i.e the LAST header is the only header), the following warning is
+> displayed:
+> 
+>   "partial_reg: Out of records. Extend attrs applied early."
+> 
+> and the extended attributes on the current and following restored
+> files are lost.
 
---f46d043c09329d140404e82c3978
-Content-Type: text/plain; charset=ISO-8859-1
+and restore segfaults too, IIRC.  ;)
 
-Thanks. That seemed to fix that bug.
+So I'm trying to understand - are attrs not applied because xfs_restore
+terminates, or is everything fine other than the attrs missing when
+it completes successfully?
 
-Now I'm getting a lot of this:
-xfs_da_do_buf(2): XFS_CORRUPTION_ERROR
+iows, I get this when it fails:
 
-fatal error -- can't read block 8388608 for directory inode 8628218
+ QA output created by 350
+ Silence is golden.
++ATTR for /mnt/scratch/restore/dumpsrc/sparse0  DOES NOT match
++./tests/xfs/350: line 80: 18231 Segmentation fault      (core dumped) $XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $RESTOREDIR 2>&1 >> $seqres.full
++restore failed
++(see /mnt/test2/git/xfstests/results//xfs/350.full for details)
 
-Then xfs_repair exits.
+and never get to the point of seeing if attrs are missing.
 
-What I've been doing is what I saw in the FAQ where I would use xfs_db and
-write core.mode 0 for these inodes. But there are just so many of them. And
-is that even the right thing to do?
+Anyway, a few other things below for the record...
 
-Thanks
-
-
-On Fri, Oct 4, 2013 at 2:43 PM, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Fri, Oct 04, 2013 at 10:51:50AM -0700, Viet Nguyen wrote:
-> > Hi,
-> >
-> > I was wondering if you got a chance to look at this and if one's
-> available,
-> > where can I get a patch?
->
-> Can you try the patch below?
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-> libxfs: validity check the directory block leaf entry count
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> The directory block format verifier fails to check that the leaf
-> entry count is in a valid range, and so if it is corrupted then it
-> can lead to derefencing a pointer outside the block buffer. While we
-> can't exactly validate the count without first walking the directory
-> block, we can ensure the count lands in the valid area within the
-> directory block and hence avoid out-of-block references.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> 
 > ---
->  libxfs/xfs_dir2_data.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
->
-> diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-> index 189699f..1b5196b 100644
-> --- a/libxfs/xfs_dir2_data.c
-> +++ b/libxfs/xfs_dir2_data.c
-> @@ -59,6 +59,18 @@ __xfs_dir3_data_check(
->                 btp = xfs_dir2_block_tail_p(mp, hdr);
->                 lep = xfs_dir2_block_leaf_p(btp);
->                 endp = (char *)lep;
+>  tests/xfs/350     |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/350.out |    2 
+>  tests/xfs/group   |    1 
+>  3 files changed, 137 insertions(+)
+> 
+> Index: b/tests/xfs/350
+> ===================================================================
+> --- /dev/null
+> +++ b/tests/xfs/350
+> @@ -0,0 +1,134 @@
+> +#! /bin/bash
+> +# FS QA Test No. 350
+
+Big jump!
+
+> +#
+> +# Verify extended attributes are not lost after multi-stream
+> +# xfsdump/xfsrestore of wholly-sparse files.
 > +
-> +               /*
-> +                * The number of leaf entries is limited by the size of the
-> +                * block and the amount of space used by the data entries.
-> +                * We don't know how much space is used by the data
-> entries yet,
-> +                * so just ensure that the count falls somewhere inside the
-> +                * block right now.
-> +                */
-> +               XFS_WANT_CORRUPTED_RETURN(be32_to_cpu(btp->count) >
-> +                               ((char *)btp - (char *)p) /
-> +                                       sizeof(struct
-> xfs_dir2_leaf_entry));
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 SGI.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
 > +
->                 break;
->         case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
->         case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
->
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=0	# success is the default!
+> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/dump
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +_require_multi_stream
 
---f46d043c09329d140404e82c3978
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+_require_scratch
+_scratch_mkfs
+_scratch_mount
 
-<div dir=3D"ltr">Thanks. That seemed to fix that bug.<div><br></div><div>No=
-w I&#39;m getting a lot of this:</div><div><div>xfs_da_do_buf(2): XFS_CORRU=
-PTION_ERROR</div><div><br></div><div>fatal error -- can&#39;t read block 83=
-88608 for directory inode 8628218</div>
-</div><div><br></div><div>Then xfs_repair exits.</div><div><br></div><div>W=
-hat I&#39;ve been doing is what I saw in the FAQ where I would use xfs_db a=
-nd write core.mode 0 for these inodes. But there are just so many of them. =
-And is that even the right thing to do?</div>
-<div><br></div><div>Thanks</div></div><div class=3D"gmail_extra"><br><br><d=
-iv class=3D"gmail_quote">On Fri, Oct 4, 2013 at 2:43 PM, Dave Chinner <span=
- dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">d=
-avid@fromorbit.com</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On Fri, Oct 04, 2013 at 10=
-:51:50AM -0700, Viet Nguyen wrote:<br>
-&gt; Hi,<br>
-&gt;<br>
-&gt; I was wondering if you got a chance to look at this and if one&#39;s a=
-vailable,<br>
-&gt; where can I get a patch?<br>
-<br>
-</div>Can you try the patch below?<br>
-<div class=3D"im"><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-<br>
-</div>libxfs: validity check the directory block leaf entry count<br>
-<br>
-From: Dave Chinner &lt;<a href=3D"mailto:dchinner@redhat.com">dchinner@redh=
-at.com</a>&gt;<br>
-<br>
-The directory block format verifier fails to check that the leaf<br>
-entry count is in a valid range, and so if it is corrupted then it<br>
-can lead to derefencing a pointer outside the block buffer. While we<br>
-can&#39;t exactly validate the count without first walking the directory<br=
->
-block, we can ensure the count lands in the valid area within the<br>
-directory block and hence avoid out-of-block references.<br>
-<br>
-Signed-off-by: Dave Chinner &lt;<a href=3D"mailto:dchinner@redhat.com">dchi=
-nner@redhat.com</a>&gt;<br>
----<br>
-=A0libxfs/xfs_dir2_data.c | 13 +++++++++++++<br>
-=A01 file changed, 13 insertions(+)<br>
-<br>
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c<br>
-index 189699f..1b5196b 100644<br>
---- a/libxfs/xfs_dir2_data.c<br>
-+++ b/libxfs/xfs_dir2_data.c<br>
-@@ -59,6 +59,18 @@ __xfs_dir3_data_check(<br>
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 btp =3D xfs_dir2_block_tail_p(mp, hdr);<br>
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 lep =3D xfs_dir2_block_leaf_p(btp);<br>
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 endp =3D (char *)lep;<br>
-+<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* The number of leaf entries is limited by=
- the size of the<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* block and the amount of space used by th=
-e data entries.<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* We don&#39;t know how much space is used=
- by the data entries yet,<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* so just ensure that the count falls some=
-where inside the<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* block right now.<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 XFS_WANT_CORRUPTED_RETURN(be32_to_cpu(btp-&gt=
-;count) &gt;<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ((char *)btp =
-- (char *)p) /<br>
-+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 sizeof(struct xfs_dir2_leaf_entry));<br>
-+<br>
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;<br>
-=A0 =A0 =A0 =A0 case cpu_to_be32(XFS_DIR3_DATA_MAGIC):<br>
-=A0 =A0 =A0 =A0 case cpu_to_be32(XFS_DIR2_DATA_MAGIC):<br>
-</blockquote></div><br></div>
+> +
+> +# dir where we'll restore
+> +RESTOREDIR=$SCRATCH_MNT/restore
 
---f46d043c09329d140404e82c3978--
+so you need _require_scratch & _scratch_mkfs before this...
 
+> +
+> +# subdir used for dump/restore
+> +DUMPDIR=dumpsrc
+> +
+> +# test extended attributes
+> +attr_name=testattr
+> +attr_value=1234
+> +
+> +# setup for test
+> +rm -rf $seqres.full
 
---===============6778239272471770529==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+no need to recursively remove a file, but *shrug* :)
+
+> +mkdir -p $RESTOREDIR
+> +mkdir -p $SCRATCH_MNT/$DUMPDIR
+> +
+> +# cleanup for next dump/restore.
+> +_clean_dirs()
+> +{
+> +	rm -rf $SCRATCH_MNT/$DUMPDIR/*
+> +	rm -rf $RESTOREDIR/*
+> +	rm -f $tmp.stream?
+> +}
+> +
+> +# set the extended attributes on the test files.
+> +_set_attrs()
+> +{
+> +	for fname in $(ls -dD $SCRATCH_MNT/$DUMPDIR/*); do
+> +		attr -Rs $attr_name -V $attr_value $fname \
+> +		2>&1 >> $seqres.full || _fail "could not set ATTR for $fname"
+> +	done
+
+Just out of curiosity, is the root (-R) namespace relevant to the problem?
+
+> +}
+> +
+> +# perform a dump and restore.
+> +_do_dump_restore()
+> +{
+> +	$XFSDUMP_PROG -L session -M label1 -M label2 -f $tmp.stream1 \
+> +		-f $tmp.stream2 $SCRATCH_MNT -s $DUMPDIR \
+> +		2>&1 >> $seqres.full || _fail "dump failed"
+> +	$XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $RESTOREDIR \
+> +		2>&1 >> $seqres.full || _fail "restore failed"
+> +}
+> +
+> +# verify the restored files extended attributes and
+> +# echo the error (if any) so the test will continue
+> +_verify_attrs()
+> +{
+> +	for fname in $(ls -dD $RESTOREDIR/$DUMPDIR/*); do
+> +		attr -Rg $attr_name $fname 2>&1 | tee -a $seqres.full | \
+> +			grep $attr_value 2>&1 >> $seqres.full || \
+> +			echo "ATTR for $fname  DOES NOT match"
+> +	done
+> +}
+> +
+> +# create files for test 1, a large file so the sparse file
+> +# is in the next stream.
+> +_create_test1_files()
+> +{
+> +
+> +	dd if=/dev/zero of=$SCRATCH_MNT/$DUMPDIR/10MB bs=1MB \
+> +		count=10 2>&1 >> $seqres.full | _filter_dd
+> +	truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse0 2>&1 \
+> +		>> $seqres.full
+> +}
+> +
+> +# create 4 sparse files for test 2
+> +_create_test2_files()
+> +{
+> +	for i in `seq 1 4`; do
+> +		truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse$i 2>&1 >> \
+> +		$seqres.full || _fail "failed to create sparse \"$i\""
+> +	done
+> +}
+> +echo "Silence is golden."
+> +echo "Starting Test 1" >> $seqres.full
+> +_clean_dirs
+> +_create_test1_files
+> +_set_attrs
+> +_do_dump_restore
+> +_verify_attrs
+> +
+> +echo "Starting Test 2" >> $seqres.full
+> +_clean_dirs
+> +_create_test2_files
+> +_set_attrs
+> +_do_dump_restore
+> +_verify_attrs
+> +
+> +# success, all done
+> +exit
+> Index: b/tests/xfs/350.out
+> ===================================================================
+> --- /dev/null
+> +++ b/tests/xfs/350.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 350
+> +Silence is golden.
+> Index: b/tests/xfs/group
+> ===================================================================
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -179,3 +179,4 @@
+>  297 auto freeze
+>  298 auto attr symlink quick
+>  299 auto quota
+> +350 dump auto
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6778239272471770529==--
