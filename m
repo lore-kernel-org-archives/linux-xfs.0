@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 20AF77F37
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 15:32:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 06995304039
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 13:32:52 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Yyl8CozYrz8brB7j for <xfs@oss.sgi.com>;
-	Mon, 07 Oct 2013 13:32:51 -0700 (PDT)
-Message-ID: <52531A72.1060902@sandeen.net>
-Date: Mon, 07 Oct 2013 15:32:50 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1C8117F37
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 15:38:39 -0500 (CDT)
+Date: Mon, 7 Oct 2013 15:38:35 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: RESEND: xattr issue with 3.11 kernel
+Message-ID: <20131007203835.GY1935@sgi.com>
+References: <ED5C1C84-614E-4EBB-A966-BBCD9CE89373@inktank.com>
+	<20131004210411.GJ4446@dastard>
+	<6ECC8063-935A-4DD6-A460-4B7D8AE24271@inktank.com>
+	<20131005032112.GM4446@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests XFS: verify extended attributes after
-	multi-stream xfsdump/xfsrestore
-References: <524AF8AE.5030300@sgi.com> <20131007193912.256265551@sgi.com>
-In-Reply-To: <20131007193912.256265551@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20131005032112.GM4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,227 +25,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: David Zafman <david.zafman@inktank.com>, ceph-devel@vger.kernel.org, xfs@oss.sgi.com
 
-On 10/7/13 2:38 PM, rjohnston@sgi.com wrote:
-> Verify extended attributes are not lost after multi-stream
-> xfsdump/xfsrestore of wholly-sparse files.  xfsrestore did not
-> recognize that if the LAST header was reached with no restoredsz set,
-> (i.e the LAST header is the only header), the following warning is
-> displayed:
+Hi Dave & Dave,
+
+On Sat, Oct 05, 2013 at 01:21:12PM +1000, Dave Chinner wrote:
+> On Fri, Oct 04, 2013 at 03:16:05PM -0700, David Zafman wrote:
+> > 
+> > Dave,
+> > 
+> > The 3.12-rc3 kernel passed my test.  Thanks for the quick response.
 > 
->   "partial_reg: Out of records. Extend attrs applied early."
+> Good to hear.
 > 
-> and the extended attributes on the current and following restored
-> files are lost.
-
-and restore segfaults too, IIRC.  ;)
-
-So I'm trying to understand - are attrs not applied because xfs_restore
-terminates, or is everything fine other than the attrs missing when
-it completes successfully?
-
-iows, I get this when it fails:
-
- QA output created by 350
- Silence is golden.
-+ATTR for /mnt/scratch/restore/dumpsrc/sparse0  DOES NOT match
-+./tests/xfs/350: line 80: 18231 Segmentation fault      (core dumped) $XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $RESTOREDIR 2>&1 >> $seqres.full
-+restore failed
-+(see /mnt/test2/git/xfstests/results//xfs/350.full for details)
-
-and never get to the point of seeing if attrs are missing.
-
-Anyway, a few other things below for the record...
-
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> ....
 > 
-> ---
->  tests/xfs/350     |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/350.out |    2 
->  tests/xfs/group   |    1 
->  3 files changed, 137 insertions(+)
+> > > You are probably hitting the problem fixed in commit 997def2 ("xfs:
+> > > fix node forward in xfs_node_toosmall") which went into 3.12-rc3.
+> > > Can you test that this fixes your problem, ad if so, we'll need to
+> > > push it back to -stable kernels..
 > 
-> Index: b/tests/xfs/350
-> ===================================================================
-> --- /dev/null
-> +++ b/tests/xfs/350
-> @@ -0,0 +1,134 @@
-> +#! /bin/bash
-> +# FS QA Test No. 350
+> Ben, can you push this fix back to the -stable kernels
+> that require it?
 
-Big jump!
+Sure.  IIRC it needs to go back to 3.10, but I'll double check...
 
-> +#
-> +# Verify extended attributes are not lost after multi-stream
-> +# xfsdump/xfsrestore of wholly-sparse files.
-> +
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 SGI.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=0	# success is the default!
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/dump
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +
-> +_require_multi_stream
-
-_require_scratch
-_scratch_mkfs
-_scratch_mount
-
-> +
-> +# dir where we'll restore
-> +RESTOREDIR=$SCRATCH_MNT/restore
-
-so you need _require_scratch & _scratch_mkfs before this...
-
-> +
-> +# subdir used for dump/restore
-> +DUMPDIR=dumpsrc
-> +
-> +# test extended attributes
-> +attr_name=testattr
-> +attr_value=1234
-> +
-> +# setup for test
-> +rm -rf $seqres.full
-
-no need to recursively remove a file, but *shrug* :)
-
-> +mkdir -p $RESTOREDIR
-> +mkdir -p $SCRATCH_MNT/$DUMPDIR
-> +
-> +# cleanup for next dump/restore.
-> +_clean_dirs()
-> +{
-> +	rm -rf $SCRATCH_MNT/$DUMPDIR/*
-> +	rm -rf $RESTOREDIR/*
-> +	rm -f $tmp.stream?
-> +}
-> +
-> +# set the extended attributes on the test files.
-> +_set_attrs()
-> +{
-> +	for fname in $(ls -dD $SCRATCH_MNT/$DUMPDIR/*); do
-> +		attr -Rs $attr_name -V $attr_value $fname \
-> +		2>&1 >> $seqres.full || _fail "could not set ATTR for $fname"
-> +	done
-
-Just out of curiosity, is the root (-R) namespace relevant to the problem?
-
-> +}
-> +
-> +# perform a dump and restore.
-> +_do_dump_restore()
-> +{
-> +	$XFSDUMP_PROG -L session -M label1 -M label2 -f $tmp.stream1 \
-> +		-f $tmp.stream2 $SCRATCH_MNT -s $DUMPDIR \
-> +		2>&1 >> $seqres.full || _fail "dump failed"
-> +	$XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $RESTOREDIR \
-> +		2>&1 >> $seqres.full || _fail "restore failed"
-> +}
-> +
-> +# verify the restored files extended attributes and
-> +# echo the error (if any) so the test will continue
-> +_verify_attrs()
-> +{
-> +	for fname in $(ls -dD $RESTOREDIR/$DUMPDIR/*); do
-> +		attr -Rg $attr_name $fname 2>&1 | tee -a $seqres.full | \
-> +			grep $attr_value 2>&1 >> $seqres.full || \
-> +			echo "ATTR for $fname  DOES NOT match"
-> +	done
-> +}
-> +
-> +# create files for test 1, a large file so the sparse file
-> +# is in the next stream.
-> +_create_test1_files()
-> +{
-> +
-> +	dd if=/dev/zero of=$SCRATCH_MNT/$DUMPDIR/10MB bs=1MB \
-> +		count=10 2>&1 >> $seqres.full | _filter_dd
-> +	truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse0 2>&1 \
-> +		>> $seqres.full
-> +}
-> +
-> +# create 4 sparse files for test 2
-> +_create_test2_files()
-> +{
-> +	for i in `seq 1 4`; do
-> +		truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse$i 2>&1 >> \
-> +		$seqres.full || _fail "failed to create sparse \"$i\""
-> +	done
-> +}
-> +echo "Silence is golden."
-> +echo "Starting Test 1" >> $seqres.full
-> +_clean_dirs
-> +_create_test1_files
-> +_set_attrs
-> +_do_dump_restore
-> +_verify_attrs
-> +
-> +echo "Starting Test 2" >> $seqres.full
-> +_clean_dirs
-> +_create_test2_files
-> +_set_attrs
-> +_do_dump_restore
-> +_verify_attrs
-> +
-> +# success, all done
-> +exit
-> Index: b/tests/xfs/350.out
-> ===================================================================
-> --- /dev/null
-> +++ b/tests/xfs/350.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 350
-> +Silence is golden.
-> Index: b/tests/xfs/group
-> ===================================================================
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -179,3 +179,4 @@
->  297 auto freeze
->  298 auto attr symlink quick
->  299 auto quota
-> +350 dump auto
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
