@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB2F07F54
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 19:53:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E53DAC002
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 17:53:25 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	gnR6Nl60GvsO1rRA for <xfs@oss.sgi.com>;
-	Mon, 07 Oct 2013 17:53:24 -0700 (PDT)
-Date: Tue, 8 Oct 2013 11:53:17 +1100
-From: Dave Chinner <david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 55F7E7F58
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 19:57:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5678AC002
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 17:57:12 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id sQWYcSNXfuODKgdy for <xfs@oss.sgi.com>;
+	Mon, 07 Oct 2013 17:57:09 -0700 (PDT)
+Message-ID: <52535864.8020503@sandeen.net>
+Date: Mon, 07 Oct 2013 19:57:08 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests XFS: verify extended attributes after
 	multi-stream xfsdump/xfsrestore
-Message-ID: <20131008005317.GU4446@dastard>
-References: <524AF8AE.5030300@sgi.com>
- <20131007193912.256265551@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131007193912.256265551@sgi.com>
+References: <524AF8AE.5030300@sgi.com> <20131007193912.256265551@sgi.com>
+	<20131008005317.GU4446@dastard>
+In-Reply-To: <20131008005317.GU4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,70 +29,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: rjohnston@sgi.com, xfs@oss.sgi.com
 
-On Mon, Oct 07, 2013 at 02:38:35PM -0500, rjohnston@sgi.com wrote:
-> Verify extended attributes are not lost after multi-stream
-> xfsdump/xfsrestore of wholly-sparse files.  xfsrestore did not
-> recognize that if the LAST header was reached with no restoredsz set,
-> (i.e the LAST header is the only header), the following warning is
-> displayed:
-> 
->   "partial_reg: Out of records. Extend attrs applied early."
-> 
-> and the extended attributes on the current and following restored
-> files are lost.
-> 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> 
-> ---
->  tests/xfs/350     |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/350.out |    2 
->  tests/xfs/group   |    1 
->  3 files changed, 137 insertions(+)
-> 
-> Index: b/tests/xfs/350
-> ===================================================================
-> --- /dev/null
-> +++ b/tests/xfs/350
-....
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=0	# success is the default!
+On 10/7/13 7:53 PM, Dave Chinner wrote:
+> Two tests, please. move all the common parts into common/dump, and
+> write them as two separate tests. That way we can easily track what
+> test is failing just by looking at what harness test is failing...
 
-status=1
+I'm not quite convinced that it's 2 separate tests, TBH.
 
-Test failure should always be the default.
+It's the same root cause; I guess there is a slightly different
+outcome because if you hit the same root cause enough times,
+you'll segfault.  That's the only difference in test #2.
+(and the segfault isn't fixed AFAIK).
 
-
-> +}
-> +echo "Silence is golden."
-> +echo "Starting Test 1" >> $seqres.full
-> +_clean_dirs
-> +_create_test1_files
-> +_set_attrs
-> +_do_dump_restore
-> +_verify_attrs
-> +
-> +echo "Starting Test 2" >> $seqres.full
-> +_clean_dirs
-> +_create_test2_files
-> +_set_attrs
-> +_do_dump_restore
-> +_verify_attrs
-
-Two tests, please. move all the common parts into common/dump, and
-write them as two separate tests. That way we can easily track what
-test is failing just by looking at what harness test is failing...
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
