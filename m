@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BAC277F69
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 09:21:12 -0500 (CDT)
-Message-ID: <525414D9.10308@sgi.com>
-Date: Tue, 8 Oct 2013 09:21:13 -0500
+	by oss.sgi.com (Postfix) with ESMTP id EBEEF7F69
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 09:22:37 -0500 (CDT)
+Message-ID: <5254153F.7060308@sgi.com>
+Date: Tue, 8 Oct 2013 09:22:55 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests XFS: verify extended attributes after
 	multi-stream xfsdump/xfsrestore
 References: <524AF8AE.5030300@sgi.com> <20131007193912.256265551@sgi.com>
-	<20131008005317.GU4446@dastard> <52535864.8020503@sandeen.net>
-In-Reply-To: <52535864.8020503@sandeen.net>
+	<20131008010822.GW4446@dastard>
+In-Reply-To: <20131008010822.GW4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +23,32 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 10/07/2013 07:57 PM, Eric Sandeen wrote:
-> On 10/7/13 7:53 PM, Dave Chinner wrote:
->> Two tests, please. move all the common parts into common/dump, and
->> write them as two separate tests. That way we can easily track what
->> test is failing just by looking at what harness test is failing...
+On 10/07/2013 08:08 PM, Dave Chinner wrote:
+> On Mon, Oct 07, 2013 at 02:38:35PM -0500, rjohnston@sgi.com wrote:
+>> +# create files for test 1, a large file so the sparse file
+>> +# is in the next stream.
+>> +_create_test1_files()
+>> +{
+>> +
+>> +	dd if=/dev/zero of=$SCRATCH_MNT/$DUMPDIR/10MB bs=1MB \
+>> +		count=10 2>&1 >> $seqres.full | _filter_dd
+>> +	truncate --size=1t $SCRATCH_MNT/$DUMPDIR/sparse0 2>&1 \
+>> +		>> $seqres.full
 >
-> I'm not quite convinced that it's 2 separate tests, TBH.
+> I just noticed that 'truncate' is used here - we don't use that
+> anywhere else in xfstests, so either you need test for it in
+> common/config and use $TRUNCATE_PROG, or do like every other test
+> does and use:
 >
-> It's the same root cause; I guess there is a slightly different
-> outcome because if you hit the same root cause enough times,
-> you'll segfault.
-
-
-Multiple DMF offline files are successfully restored but the attrs are 
-lost. I wanted to show/test that case.
-
-I agree with Eric that it is the same  root cause but because can occur 
-with successful dumps and does not segfault,  Thats why the 2 tests.
-
-> That's the only difference in test #2.
-> (and the segfault isn't fixed AFAIK).
-
-Agreed and I will note that in the test description.
-
+> 	$XFS_IO_PROG -c "truncate 1t" $SCRATCH_MNT/$DUMPDIR/sparse0
+Good point I will make the changes.
 >
-> -Eric
+> Cheers,
+>
+> Dave.
 >
 
 _______________________________________________
