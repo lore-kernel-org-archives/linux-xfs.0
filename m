@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 42E637F89
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 17:01:15 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D71467F89
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 17:05:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 30AD6304032
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 15:01:12 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cEmfPDmGVJ7AtJmu for
-	<xfs@oss.sgi.com>; Tue, 08 Oct 2013 15:01:11 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r98M1Bx6004352
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 8 Oct 2013 18:01:11 -0400
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r98M1AOE006057
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 8 Oct 2013 18:01:10 -0400
-Message-ID: <525480A6.3000202@redhat.com>
-Date: Tue, 08 Oct 2013 17:01:10 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C54C98F808F
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 15:05:56 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id EtvvmFJdgRVzdvPX for <xfs@oss.sgi.com>;
+	Tue, 08 Oct 2013 15:05:55 -0700 (PDT)
+Received: from Liberator.local (c-98-240-215-156.hsd1.mn.comcast.net
+	[98.240.215.156])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 7396D60A995B
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 17:05:55 -0500 (CDT)
+Message-ID: <525481C2.6040100@sandeen.net>
+Date: Tue, 08 Oct 2013 17:05:54 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 0/2] xfsdump: 2 more fixes
+Subject: [PATCH 1/2] xfsdump: avoid segfault in partial_reg() in error case
+References: <525480A6.3000202@redhat.com>
+In-Reply-To: <525480A6.3000202@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,12 +35,44 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Related to the previous one.
+If we go down the "/* Should never get here. */" path
+in partial_reg(), we issue a warning but then continue
+with the function.  This calls pi_unlock() twice,
+but worse, uses a null isptr:
 
-patch one avoids the segfault if for some reason (i.e. bug) the partials
-array fills.
+        if ( ! isptr ) {
+... isptr is never set if we get to ...
+                /* Should never get here. */
+                pi_unlock();
+...
+        }
+...
+        /* Update this drive's entry */
+        bsptr = &isptr->is_bs[d_index];
+        if (bsptr->endoffset == 0) {
 
-patch two fixes the #ifdef DEBUGPARTIALS build.
+>From all appearances, because we unlock on that "never get
+here" path, it should just be returning after printing the
+warning.  So add that, and we avoid the segfault.
+
+The previous fix to partial_reg() should prevent us from
+hitting this in the first place.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/restore/content.c b/restore/content.c
+index 54d933c..cc49336 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -9007,6 +9007,7 @@ partial_reg( ix_t d_index,
+ #ifdef DEBUGPARTIALS
+ 		dump_partials();
+ #endif
++		return;
+ 	}
+ 
+ found:
 
 _______________________________________________
 xfs mailing list
