@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 066E47F4E
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 19:38:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E79ED304048
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 17:38:39 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 782317F4E
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 19:43:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 651448F8078
+	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 17:43:51 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jKjbbnRn3GIcOBZL for <xfs@oss.sgi.com>;
-	Mon, 07 Oct 2013 17:38:35 -0700 (PDT)
-Date: Tue, 8 Oct 2013 11:37:13 +1100
+	eq7AlyFxxyq4NF2E for <xfs@oss.sgi.com>;
+	Mon, 07 Oct 2013 17:43:50 -0700 (PDT)
+Date: Tue, 8 Oct 2013 11:43:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: fix inadvertent mkfs default change for
-	projid32bit
-Message-ID: <20131008003713.GQ4446@dastard>
-References: <5251C2F8.80009@redhat.com>
+Subject: Re: [PATCH] xfstests: filter projid32bit info out of growfs & info
+	output
+Message-ID: <20131008004317.GR4446@dastard>
+References: <5251C392.1020407@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5251C2F8.80009@redhat.com>
+In-Reply-To: <5251C392.1020407@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,57 +33,48 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Oct 06, 2013 at 03:07:20PM -0500, Eric Sandeen wrote:
-> This commit:
+On Sun, Oct 06, 2013 at 03:09:54PM -0500, Eric Sandeen wrote:
+> commit 67e389c xfsprogs: support CRC enabled filesystem detection
 > 
-> f3edb66a mkfs.xfs: validate options for CRCs up front.
-> 
-> seems to have inadvertently switched to 32bit project IDs by default:
-> 
-> -       int                     projid32bit;
-> +       int                     projid16bit;
-> ...
-> -       projid32bit = 0;
-> +       projid16bit = 0;
-> 
-> Switch back to 16 bit project ID by default, at least until we
-> intentionally make that change.
+> changed xfs_growfs (and by extension xfs_info) to report
+> the projid32bit value.  This breaks at least xfstest xfs/206 due to
+> the changed output, so filter it as we do for mkfs in that test.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index eafbed3..ebab09d 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -965,7 +965,7 @@ main(
->  	textdomain(PACKAGE);
+> diff --git a/tests/xfs/206 b/tests/xfs/206
+> index fcbdd9e..d2c2ade 100755
+> --- a/tests/xfs/206
+> +++ b/tests/xfs/206
+> @@ -86,6 +86,7 @@ echo "=== xfs_growfs ==="
+>  xfs_growfs $tmpdir \
+>  	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
+>  		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
+> +		-e "s/, projid32bit=[0-9]//" \
+>  		-e "/.*crc=/d"
 >  
->  	attrversion = 2;
-> -	projid16bit = 0;
-> +	projid16bit = 1;
->  	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
->  	blocklog = blocksize = 0;
->  	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
+>  # and double-check the new geometry
+> @@ -93,6 +94,7 @@ echo "=== xfs_info ==="
+>  xfs_info $tmpdir \
+>  	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
+>  		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
+> +		-e "s/, projid32bit=[0-9]//" \
+>  		-e "/.*crc=/d"
+>  
+>  # _cleanup cleans up for us
 
-And so:
+Yup, that's needed. There's a bunch of other things we need to do to
+correctly test 16/32bit project ids without failures. Have a look
+here:
 
-                /* 32 bit project quota always on */
-                /* attr2 always on */
-                if (projid16bit == 1) {
-                        fprintf(stderr,
-_("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
-                        usage();
-                }
+http://oss.sgi.com/archives/xfs/2013-06/msg00219.html
 
-That will prevent mkfs from making a CRC enabled filesystem.
+For the mods I posted back in June to avoid failures with the CRC
+enabled filesystems in tests that assume certain options can be
+turned on/off on XFS filesystems.
 
-And, realistically, what's the problem with enabling 32 bit project
-IDs by default for all new filesystems in 3.2.0? I'm of the opinion
-we should just leave the code as it is because all kernels since
-2.6.37 support 32 bit projid and any kernel picking up
-xfsprogs-3.2.0 when it is released will have a kernel that supports
-it....
+I'm still running xfstests with that patch....
 
 Cheers,
 
