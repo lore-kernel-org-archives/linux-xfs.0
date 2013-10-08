@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 29B077FAD
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 18:07:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B8CA9AC002
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 16:06:58 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2A8FF7FAD
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 18:09:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 16EC98F807A
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 16:09:47 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YeCteAXwNYUGBUCc for <xfs@oss.sgi.com>;
-	Tue, 08 Oct 2013 16:06:57 -0700 (PDT)
-Message-ID: <5254900F.5020506@sandeen.net>
-Date: Tue, 08 Oct 2013 18:06:55 -0500
+	ESMTP id wMZiapFFmU9Rfu2S for <xfs@oss.sgi.com>;
+	Tue, 08 Oct 2013 16:09:46 -0700 (PDT)
+Message-ID: <525490B5.7080907@sandeen.net>
+Date: Tue, 08 Oct 2013 18:09:41 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 05/32] xfs: ensure we copy buffer type in da btree root
-	splits
+Subject: Re: [PATCH 06/32] xfs: don't assert fail on bad inode numbers
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
-	<1380510944-8571-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1380510944-8571-6-git-send-email-david@fromorbit.com>
+	<1380510944-8571-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1380510944-8571-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,40 +34,47 @@ Cc: xfs@oss.sgi.com
 On 9/29/13 10:15 PM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When splitting the root of the da btree, we shuffled data between
-> buffers and the structures that track them. At one point, we copy
-> data and state from one buffer to another, including the ops
-> associated with the buffer. When we do this, we also need to copy
-> the buffer type associated with the buf log item so that the buffer
-> is logged correctly. If we don't do that, log recovery won't
-> recognise it and hence it won't recalculate the CRC on the buffer
-> after recovery. This leads to a directory block that can't be read
-> after recovery has run.
-> 
-> Found by inspection after finding the same problem with remote
-> symlink buffers.
+> Let the inode verifier do it's work by returning an error when we
+> fail to find correct magic numbers in an inode buffer.
 
-Makes sense, matches kernel commit 0a4edc8f0b54cd5f613e7fda7dc8106cb9869bc9
+Makes sense & matches kernel 74ffa796e127906883cacedcf3871494192c9e42
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  libxfs/xfs_da_btree.c | 1 +
->  1 file changed, 1 insertion(+)
+>  libxfs/xfs_inode_buf.c | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
 > 
-> diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-> index b7b6705..f106e06 100644
-> --- a/libxfs/xfs_da_btree.c
-> +++ b/libxfs/xfs_da_btree.c
-> @@ -612,6 +612,7 @@ xfs_da3_root_split(
->  	xfs_trans_log_buf(tp, bp, 0, size - 1);
->  
->  	bp->b_ops = blk1->bp->b_ops;
-> +	xfs_trans_buf_copy_type(bp, blk1->bp);
->  	blk1->bp = bp;
->  	blk1->blkno = blkno;
->  
+> diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+> index 6205318..b096f77 100644
+> --- a/libxfs/xfs_inode_buf.c
+> +++ b/libxfs/xfs_inode_buf.c
+> @@ -39,9 +39,8 @@ xfs_inobp_check(
+>  					i * mp->m_sb.sb_inodesize);
+>  		if (!dip->di_next_unlinked)  {
+>  			xfs_alert(mp,
+> -	"Detected bogus zero next_unlinked field in incore inode buffer 0x%p.",
+> -				bp);
+> -			ASSERT(dip->di_next_unlinked);
+> +	"Detected bogus zero next_unlinked field in inode %d buffer 0x%llx.",
+> +				i, (long long)bp->b_bn);
+>  		}
+>  	}
+>  }
+> @@ -74,11 +73,10 @@ xfs_inode_buf_verify(
+>  			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+>  					     mp, dip);
+>  #ifdef DEBUG
+> -			xfs_emerg(mp,
+> +			xfs_alert(mp,
+>  				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+>  				(unsigned long long)bp->b_bn, i,
+>  				be16_to_cpu(dip->di_magic));
+> -			ASSERT(0);
+>  #endif
+>  		}
+>  	}
 > 
 
 _______________________________________________
