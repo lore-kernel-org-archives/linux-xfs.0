@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E16F429DFB
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 20:23:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CEAE4304059
-	for <xfs@oss.sgi.com>; Mon,  7 Oct 2013 18:23:04 -0700 (PDT)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id qae0MsNTrSWqe6Rs for
-	<xfs@oss.sgi.com>; Mon, 07 Oct 2013 18:23:03 -0700 (PDT)
-From: Gui Hecheng <guihc.fnst@cn.fujitsu.com>
-Subject: [PATCH] xfstest: an regression test for btrfs balance
-Date: Tue, 8 Oct 2013 09:21:15 +0800
-Message-Id: <1381195275-9471-1-git-send-email-guihc.fnst@cn.fujitsu.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BAC277F69
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 09:21:12 -0500 (CDT)
+Message-ID: <525414D9.10308@sgi.com>
+Date: Tue, 8 Oct 2013 09:21:13 -0500
+From: Rich Johnston <rjohnston@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstests XFS: verify extended attributes after
+	multi-stream xfsdump/xfsrestore
+References: <524AF8AE.5030300@sgi.com> <20131007193912.256265551@sgi.com>
+	<20131008005317.GU4446@dastard> <52535864.8020503@sandeen.net>
+In-Reply-To: <52535864.8020503@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,133 +19,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jbacik@fusionio.com, Gui Hecheng <guihc.fnst@cn.fujitsu.com>, miaox@cn.fujitsu.com, linux-btrfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Originally, when executing "btrfs balance" right after
-"btrfs subvolume snaphot" & "btrfs subvolume delete",
-a kernel BUG arises.
+On 10/07/2013 07:57 PM, Eric Sandeen wrote:
+> On 10/7/13 7:53 PM, Dave Chinner wrote:
+>> Two tests, please. move all the common parts into common/dump, and
+>> write them as two separate tests. That way we can easily track what
+>> test is failing just by looking at what harness test is failing...
+>
+> I'm not quite convinced that it's 2 separate tests, TBH.
+>
+> It's the same root cause; I guess there is a slightly different
+> outcome because if you hit the same root cause enough times,
+> you'll segfault.
 
-This problem is caused by the patch:
-[PATCH 1/2] Btrfs: fix for patch "cleanup: don't check
-the same thing twice"
-The commit id: 48475471728f060bfd2e686f592ef208d3ba8b7d
-(in kernel/git/torvalds/linux.git)
 
-handled by the patch:
-[PATCH 2/3] Btrfs: fix oops caused by the space balance
-and dead roots
+Multiple DMF offline files are successfully restored but the attrs are 
+lost. I wanted to show/test that case.
 
-Signed-off-by: Gui Hecheng <guihc.fnst@cn.fujitsu.com>
----
- tests/btrfs/319     | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/319.out |  2 ++
- tests/btrfs/group   |  1 +
- 3 files changed, 74 insertions(+)
- create mode 100755 tests/btrfs/319
- create mode 100644 tests/btrfs/319.out
+I agree with Eric that it is the same  root cause but because can occur 
+with successful dumps and does not segfault,  Thats why the 2 tests.
 
-diff --git a/tests/btrfs/319 b/tests/btrfs/319
-new file mode 100755
-index 0000000..b49e760
---- /dev/null
-+++ b/tests/btrfs/319
-@@ -0,0 +1,71 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/319
-+#
-+# Btrfs balance tests
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Fujitsu.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here="`pwd`"
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_create_snapshot()
-+{
-+	for i in $(seq 20)
-+	do
-+		btrfs sub snapshot $SCRATCH_MNT $SCRATCH_MNT/snapshot0 >/dev/null
-+		btrfs sub delete $SCRATCH_MNT/snapshot0 >/dev/null
-+	done
-+}
-+
-+_balance()
-+{
-+	for i in $(seq 20)
-+	do
-+		btrfs balance start $SCRATCH_MNT >/dev/null
-+	done
-+}
-+
-+#get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_setup_testdir
-+_require_scratch
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+echo "Tip: Run dmesg to see the error on failure"
-+
-+_create_snapshot &
-+
-+_balance &
-+
-+wait
-+
-+status=0
-+exit
-diff --git a/tests/btrfs/319.out b/tests/btrfs/319.out
-new file mode 100644
-index 0000000..1d21523
---- /dev/null
-+++ b/tests/btrfs/319.out
-@@ -0,0 +1,2 @@
-+QA output created by 319
-+Tip: Run dmesg to see the error on failure
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index d2fe030..201a475 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -14,3 +14,4 @@
- 009 auto quick
- 010 auto quick
- 011 auto
-+319 auto
--- 
-1.8.0.1
+> That's the only difference in test #2.
+> (and the segfault isn't fixed AFAIK).
+
+Agreed and I will note that in the test description.
+
+>
+> -Eric
+>
 
 _______________________________________________
 xfs mailing list
