@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 188D07F6C
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 10:17:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E9069304032
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 08:17:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bWswoR9mS4EhNgbU for
-	<xfs@oss.sgi.com>; Tue, 08 Oct 2013 08:17:52 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r98FHpVX026580
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 8 Oct 2013 11:17:51 -0400
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r98FHopH010749
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 8 Oct 2013 11:17:50 -0400
-Message-ID: <5254221E.1000503@redhat.com>
-Date: Tue, 08 Oct 2013 10:17:50 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 957C47F6F
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 12:22:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 72B5C304032
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 10:22:01 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id GAjfPlGXoxi7CJAR (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 08 Oct 2013 10:22:00 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 29F369A03ED
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 11:22:00 -0600 (MDT)
+Date: Tue, 8 Oct 2013 13:21:57 -0400
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstest: an regression test for btrfs balance
+Message-ID: <20131008172157.GD16461@localhost.localdomain>
+References: <1381195275-9471-1-git-send-email-guihc.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: restrict platform_test_xfs_fd to regular files
+Content-Disposition: inline
+In-Reply-To: <1381195275-9471-1-git-send-email-guihc.fnst@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,75 +32,143 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Gui Hecheng <guihc.fnst@cn.fujitsu.com>
+Cc: jbacik@fusionio.com, miaox@cn.fujitsu.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-If a special file (block, char, pipe etc) resides on an
-xfs filesystem, platform_test_xfs_[fd|path] will return
-true, but a subsequent xfsctl will fail, because the file
-operations to support the xfs ioctls are not set up on such
-files (see i_fop assignments in xfs_setup_inode()).
+On Tue, Oct 08, 2013 at 09:21:15AM +0800, Gui Hecheng wrote:
+> Originally, when executing "btrfs balance" right after
+> "btrfs subvolume snaphot" & "btrfs subvolume delete",
+> a kernel BUG arises.
+> 
+> This problem is caused by the patch:
+> [PATCH 1/2] Btrfs: fix for patch "cleanup: don't check
+> the same thing twice"
+> The commit id: 48475471728f060bfd2e686f592ef208d3ba8b7d
+> (in kernel/git/torvalds/linux.git)
+> 
+> handled by the patch:
+> [PATCH 2/3] Btrfs: fix oops caused by the space balance
+> and dead roots
+> 
+> Signed-off-by: Gui Hecheng <guihc.fnst@cn.fujitsu.com>
+> ---
+>  tests/btrfs/319     | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/btrfs/319.out |  2 ++
+>  tests/btrfs/group   |  1 +
+>  3 files changed, 74 insertions(+)
+>  create mode 100755 tests/btrfs/319
+>  create mode 100644 tests/btrfs/319.out
+> 
+> diff --git a/tests/btrfs/319 b/tests/btrfs/319
+> new file mode 100755
+> index 0000000..b49e760
+> --- /dev/null
+> +++ b/tests/btrfs/319
+> @@ -0,0 +1,71 @@
+> +#! /bin/bash
+> +# FS QA Test No. btrfs/319
+> +#
 
->From the xfsctl manpage it's pretty clear that these functions
-are supposed to return true iff a subsequent xfsctl can be
-handled, so it makes sense to exclude special files.
+Just pick the next available number, so 012, no reason to jack up the numbers
+like this.
 
-This was showing up in xfstest generic/306, which creates
-the dev/null block device on an xfstest an tries to pwrite
-to it with xfs_io - which emitted a warning when the xfsctl
-trying to get geometry failed.
+> +# Btrfs balance tests
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Fujitsu.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here="`pwd`"
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +
+> +_create_snapshot()
+> +{
+> +	for i in $(seq 20)
+> +	do
+> +		btrfs sub snapshot $SCRATCH_MNT $SCRATCH_MNT/snapshot0 >/dev/null
+> +		btrfs sub delete $SCRATCH_MNT/snapshot0 >/dev/null
+> +	done
+> +}
+> +
+> +_balance()
+> +{
+> +	for i in $(seq 20)
+> +	do
+> +		btrfs balance start $SCRATCH_MNT >/dev/null
+> +	done
+> +}
+> +
+> +#get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +
+> +_setup_testdir
+> +_require_scratch
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +echo "Tip: Run dmesg to see the error on failure"
+> +
+> +_create_snapshot &
+> +
+> +_balance &
+> +
+> +wait
+> +
+> +status=0
+> +exit
+> diff --git a/tests/btrfs/319.out b/tests/btrfs/319.out
+> new file mode 100644
+> index 0000000..1d21523
+> --- /dev/null
+> +++ b/tests/btrfs/319.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 319
+> +Tip: Run dmesg to see the error on failure
+> diff --git a/tests/btrfs/group b/tests/btrfs/group
+> index d2fe030..201a475 100644
+> --- a/tests/btrfs/group
+> +++ b/tests/btrfs/group
+> @@ -14,3 +14,4 @@
+>  009 auto quick
+>  010 auto quick
+>  011 auto
+> +319 auto
+> -- 
+> 1.8.0.1
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Otherwise this looks nice and straightforward, did you verify that it made the
+box panic without Miao's fixes?  If you did just fixup the test number and you
+can add
 
-diff --git a/include/linux.h b/include/linux.h
-index 5bb91cd..502fd1f 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -34,20 +34,38 @@ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
- 	return ioctl(fd, cmd, p);
- }
- 
-+/*
-+ * platform_test_xfs_*() implies that xfsctl will succeed on the file;
-+ * on Linux, at least, special files don't get xfs file ops,
-+ * so return 0 for those
-+ */
-+
- static __inline__ int platform_test_xfs_fd(int fd)
- {
--	struct statfs buf;
--	if (fstatfs(fd, &buf) < 0)
-+	struct statfs statfsbuf;
-+	struct stat statbuf;
-+
-+	if (fstatfs(fd, &statfsbuf) < 0)
-+		return 0;
-+	if (fstat(fd, &statbuf) < 0)
- 		return 0;
--	return (buf.f_type == 0x58465342);	/* XFSB */
-+	if (!S_ISREG(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
-+		return 0;
-+	return (statfsbuf.f_type == 0x58465342);	/* XFSB */
- }
- 
- static __inline__ int platform_test_xfs_path(const char *path)
- {
--	struct statfs buf;
--	if (statfs(path, &buf) < 0)
-+	struct statfs statfsbuf;
-+	struct stat statbuf;
-+
-+	if (statfs(path, &statfsbuf) < 0)
-+		return 0;
-+	if (stat(path, &statbuf) < 0)
-+		return 0;
-+	if (!S_ISREG(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
- 		return 0;
--	return (buf.f_type == 0x58465342);	/* XFSB */
-+	return (statfsbuf.f_type == 0x58465342);	/* XFSB */
- }
- 
- static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
+Reviewed-by: Josef Bacik <jbacik@fusionio.com>
+
+Thanks,
+
+Josef
 
 _______________________________________________
 xfs mailing list
