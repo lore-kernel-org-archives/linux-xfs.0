@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 144787F7B
+	by oss.sgi.com (Postfix) with ESMTP id 32D907F7C
 	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:07:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 04022304039
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1260A304032
 	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 11:07:35 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZaQHCc0Z5DFJ0fwu for
+	cuda.sgi.com with ESMTP id wLuTRTJRcRBSkVC2 for
 	<xfs@oss.sgi.com>; Wed, 09 Oct 2013 11:07:34 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99I7XUD021898
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99I7WGZ021894
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:33 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r99I7XUA000440
-	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:33 -0400
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r99I7WbL015784
+	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:32 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 09/10] xfs: add finobt support to growfs
-Date: Wed,  9 Oct 2013 14:06:57 -0400
-Message-Id: <1381342018-35829-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 02/10] xfs: reserve v5 superblock read-only compat. feature
+	bit for finobt
+Date: Wed,  9 Oct 2013 14:06:50 -0400
+Message-Id: <1381342018-35829-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1381342018-35829-1-git-send-email-bfoster@redhat.com>
 References: <1381342018-35829-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,65 +39,49 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add finobt support to growfs. Initialize the agi root/level fields
-and the root finobt block.
+Reserve a v5 read-only compatibility feature bit for the finobt and
+create the xfs_sb_version_hasfinobt() helper to determine whether
+an fs has the feature enabled.
+
+The finobt does not change existing on-disk structures, but must
+remain consistent with the ialloc btree. Modifications from older
+kernels would violate that constrant. Therefore, we restrict older
+kernels to read-only mounts of finobt-enabled filesystems.
+
+Note that this does not yet enable the ability to rw mount a finobt
+fs (by setting the feature bit in the XFS_SB_FEAT_RO_COMPAT_ALL
+mask).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_fsops.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ fs/xfs/xfs_sb.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index fdae4ec5..af04352 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -311,6 +311,10 @@ xfs_growfs_data_private(
- 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
- 			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
-+			agi->agi_free_level = cpu_to_be32(1);
-+		}
- 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
- 			agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index 6835b44..0013bac 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -585,6 +585,7 @@ xfs_sb_has_compat_feature(
+ 	return (sbp->sb_features_compat & feature) != 0;
+ }
  
-@@ -402,6 +406,34 @@ xfs_growfs_data_private(
- 		xfs_buf_relse(bp);
- 		if (error)
- 			goto error0;
++#define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL 0
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+@@ -639,6 +640,12 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+ }
+ 
++static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
++{
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
++}
 +
-+		/*
-+		 * FINO btree root block
-+		 */
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+			bp = xfs_growfs_get_hdr_buf(mp,
-+				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
-+				BTOBB(mp->m_sb.sb_blocksize), 0,
-+				&xfs_inobt_buf_ops);
-+			if (!bp) {
-+				error = ENOMEM;
-+				goto error0;
-+			}
-+
-+			if (xfs_sb_version_hascrc(&mp->m_sb))
-+				xfs_btree_init_block(mp, bp, XFS_FIBT_CRC_MAGIC,
-+						     0, 0, agno,
-+						     XFS_BTREE_CRC_BLOCKS);
-+			else
-+				xfs_btree_init_block(mp, bp, XFS_FIBT_MAGIC, 0,
-+						     0, agno, 0);
-+
-+			error = xfs_bwrite(bp);
-+			xfs_buf_relse(bp);
-+			if (error)
-+				goto error0;
-+		}
-+
- 	}
- 	xfs_trans_agblocks_delta(tp, nfree);
- 	/*
+ /*
+  * end of superblock version macros
+  */
 -- 
 1.8.1.4
 
