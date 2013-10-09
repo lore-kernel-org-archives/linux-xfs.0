@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E64947FB8
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:59:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 60583AC002
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 11:59:21 -0700 (PDT)
-Received: from mail-vc0-f177.google.com (mail-vc0-f177.google.com
-	[209.85.220.177]) by cuda.sgi.com with ESMTP id
-	77NxfxtgTQHLHK4C (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 11:59:19 -0700 (PDT)
-Received: by mail-vc0-f177.google.com with SMTP id hv10so851698vcb.36
-	for <xfs@oss.sgi.com>; Wed, 09 Oct 2013 11:59:19 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 493037FBE
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 14:04:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1CF62304062
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 12:04:45 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id RBocphzH8NEN3YmY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 12:04:40 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 4C2C79A06C2
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:04:40 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: btrfs/016: a regression test for subvolume rename
+Date: Wed, 9 Oct 2013 15:04:37 -0400
+Message-ID: <1381345477-7902-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-In-Reply-To: <20131008202342.GA4446@dastard>
-References: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
-	<20131001201909.GR12541@dastard>
-	<CAGa409_tDjbsdnf+wDiM7666FeQSjmMfOVdqG-SxOD_WUZMiZQ@mail.gmail.com>
-	<20131002104253.GT12541@dastard>
-	<CAGa409_wO74zGP1d85RGZ7WbfBPr7s_tKaW3u9k8=9Ps-D5FjQ@mail.gmail.com>
-	<20131004214353.GK4446@dastard>
-	<CAGa4099NNUJV4_JbU0izLf0k3bcj3afHPTXt=HO2263_TESbNA@mail.gmail.com>
-	<20131008202342.GA4446@dastard>
-Date: Wed, 9 Oct 2013 11:59:19 -0700
-Message-ID: <CAGa409_Wk9L5mD_p0MzCbMKxHFRrFWKaf+ejFD+tUnhmeHBO3g@mail.gmail.com>
-Subject: Re: xfs_repair segfault
-From: Viet Nguyen <vietnguyen@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,132 +25,113 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1664665025215170852=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
---===============1664665025215170852==
-Content-Type: multipart/alternative; boundary=001a1133225288794f04e8537bd2
+A user reported a regression where we could no longer rename a subvolume into
+another subvolume.  This is a test case to do just that to make sure we don't
+regress on this again.  Thanks,
 
---001a1133225288794f04e8537bd2
-Content-Type: text/plain; charset=ISO-8859-1
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ tests/btrfs/016     | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/016.out |  2 ++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 64 insertions(+)
+ create mode 100644 tests/btrfs/016
+ create mode 100644 tests/btrfs/016.out
 
-On Tue, Oct 8, 2013 at 1:23 PM, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Mon, Oct 07, 2013 at 01:09:09PM -0700, Viet Nguyen wrote:
-> > Thanks. That seemed to fix that bug.
-> >
-> > Now I'm getting a lot of this:
-> > xfs_da_do_buf(2): XFS_CORRUPTION_ERROR
->
-> Right, that's blocks that are being detected as corrupt when they
-> are read. You can ignore that for now.
->
-> > fatal error -- can't read block 8388608 for directory inode 8628218
->
-> That's a corrupted block list of some kind - it should junk the
-> inode.
->
-> > Then xfs_repair exits.
->
-> I'm not sure why that happens. Is it exiting cleanly or crashing?
-> Can you take a metadump of the filesystem and provide it for someone
-> to debug the problems it causes repair?
->
-
-It seems to be exiting cleanly with return code 1. I created a metadump,
-but it's 9.6GB. I suppose I can put up on a secure FTP or something like
-that, but it does seem a big large to shuffle around.
-
-
->
-> > What I've been doing is what I saw in the FAQ where I would use xfs_db
-> and
-> > write core.mode 0 for these inodes. But there are just so many of them.
-> And
-> > is that even the right thing to do?
->
-> That marks the inode as "free" which effectively junks it and then
-> xfs_repair will free all it's extents next time it is run. Basically
-> you are removing the files from the filesystem and making them
-> unrecoverable.
->
-
-In the case of directories, it blows away just directory but xfs_repair
-later on scans for orphan files, no? Or am I mistaken on how that works.
-
-Thanks,
-Viet
-
---001a1133225288794f04e8537bd2
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><br><div class=3D"gmail=
-_quote">On Tue, Oct 8, 2013 at 1:23 PM, Dave Chinner <span dir=3D"ltr">&lt;=
-<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.co=
-m</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On Mon, Oct 07, 2013 at 01=
-:09:09PM -0700, Viet Nguyen wrote:<br>
-&gt; Thanks. That seemed to fix that bug.<br>
-&gt;<br>
-&gt; Now I&#39;m getting a lot of this:<br>
-&gt; xfs_da_do_buf(2): XFS_CORRUPTION_ERROR<br>
-<br>
-</div>Right, that&#39;s blocks that are being detected as corrupt when they=
-<br>
-are read. You can ignore that for now.<br>
-<div class=3D"im"><br>
-&gt; fatal error -- can&#39;t read block 8388608 for directory inode 862821=
-8<br>
-<br>
-</div>That&#39;s a corrupted block list of some kind - it should junk the<b=
-r>
-inode.<br>
-<br>
-&gt; Then xfs_repair exits.<br>
-<br>
-I&#39;m not sure why that happens. Is it exiting cleanly or crashing?<br>
-Can you take a metadump of the filesystem and provide it for someone<br>
-to debug the problems it causes repair?<br></blockquote><div><br></div><div=
->It seems to be exiting cleanly with return code 1. I created a metadump, b=
-ut it&#39;s 9.6GB. I suppose I can put up on a secure FTP or something like=
- that, but it does seem a big large to shuffle around.</div>
-<div>=A0</div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;=
-border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"im"><br>
-&gt; What I&#39;ve been doing is what I saw in the FAQ where I would use xf=
-s_db and<br>
-&gt; write core.mode 0 for these inodes. But there are just so many of them=
-. And<br>
-&gt; is that even the right thing to do?<br>
-<br>
-</div>That marks the inode as &quot;free&quot; which effectively junks it a=
-nd then<br>
-xfs_repair will free all it&#39;s extents next time it is run. Basically<br=
->
-you are removing the files from the filesystem and making them<br>
-unrecoverable.<br></blockquote><div><br></div><div>In the case of directori=
-es, it blows away just directory but xfs_repair later on scans for orphan f=
-iles, no? Or am I mistaken on how that works.</div><div>=A0</div><div>Thank=
-s,</div>
-<div>Viet</div></div></div></div>
-
---001a1133225288794f04e8537bd2--
-
-
---===============1664665025215170852==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/tests/btrfs/016 b/tests/btrfs/016
+new file mode 100644
+index 0000000..09a8b8b
+--- /dev/null
++++ b/tests/btrfs/016
+@@ -0,0 +1,61 @@
++#! /bin/bash
++# FS QA Test No. btrfs/016
++#
++# Regression test to make sure we can move a subvol into another subvol
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Fusion IO.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++
++status=1	# failure is the default!
++
++_cleanup()
++{
++	rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++rm -f $seqres.full
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/test1 >> $seqres.full 2>&1 \
++	|| _fail "couldn't create test1"
++$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/test2 >> $seqres.full 2>&1 \
++	|| _fail "couldn't create test1"
++mv $SCRATCH_MNT/test1 $SCRATCH_MNT/test2 || _fail "Problem doing move"
++
++echo "Silence is golden"
++status=0 ; exit
+diff --git a/tests/btrfs/016.out b/tests/btrfs/016.out
+new file mode 100644
+index 0000000..aa2526b
+--- /dev/null
++++ b/tests/btrfs/016.out
+@@ -0,0 +1,2 @@
++QA output created by 016
++Silence is golden
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index dc5bbea..65d93b9 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -18,3 +18,4 @@
+ 013 auto quick
+ 014 auto quick
+ 015 auto quick
++016 auto quick
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1664665025215170852==--
