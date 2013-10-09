@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F2B177F89
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:07:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 99F31AC003
+	by oss.sgi.com (Postfix) with ESMTP id 735AB7F78
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:07:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D63F2AC004
 	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 11:07:34 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1mxZXH8R76pBNznR for
+	cuda.sgi.com with ESMTP id 052X5UYDhe90DsbK for
 	<xfs@oss.sgi.com>; Wed, 09 Oct 2013 11:07:33 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99I7Xag021750
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99I7XMd006107
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:33 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r99I7XX7024035
-	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:33 -0400
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r99I7W78019032
+	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:32 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 06/10] xfs: use and update the finobt on inode allocation
-Date: Wed,  9 Oct 2013 14:06:54 -0400
-Message-Id: <1381342018-35829-7-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 03/10] xfs: support the XFS_BTNUM_FINOBT free inode btree type
+Date: Wed,  9 Oct 2013 14:06:51 -0400
+Message-Id: <1381342018-35829-4-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1381342018-35829-1-git-send-email-bfoster@redhat.com>
 References: <1381342018-35829-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,251 +38,394 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Replace xfs_dialloc_ag() with an implementation that looks for a
-record in the finobt. The finobt only tracks records with at least
-one free inode. This eliminates the need for the intra-ag scan in
-the original algorithm. Once the inode is allocated, update the
-finobt appropriately (possibly removing the record) as well as the
-inobt.
+Define the AGI fields for the finobt root/level and add magic
+numbers. Update the btree code to add support for the new
+XFS_BTNUM_FINOBT inode btree.
 
-Move the original xfs_dialloc_ag() algorithm to
-xfs_dialloc_ag_slow() and fall back as such if finobt support is
-not enabled.
+The finobt root block is reserved immediately following the inobt
+root block in the AG. Update XFS_PREALLOC_BLOCKS() to determine the
+starting AG data block based on whether finobt support is enabled.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_ialloc.c | 211 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 210 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_ag.h           | 32 +++++++++++++++----------
+ fs/xfs/xfs_btree.c        |  6 +++--
+ fs/xfs/xfs_btree.h        |  3 +++
+ fs/xfs/xfs_ialloc.c       | 37 +++++++++++++++++++++++++----
+ fs/xfs/xfs_ialloc_btree.c | 60 +++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_ialloc_btree.h | 14 ++++++++++-
+ fs/xfs/xfs_log_recover.c  |  2 ++
+ fs/xfs/xfs_stats.c        |  1 +
+ fs/xfs/xfs_stats.h        | 18 +++++++++++++-
+ fs/xfs/xfs_types.h        |  2 +-
+ 10 files changed, 150 insertions(+), 25 deletions(-)
 
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index 1cb740a..eb0840c 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -166,22 +166,28 @@ typedef struct xfs_agi {
+ 	__be32		agi_pad32;
+ 	__be64		agi_lsn;	/* last write sequence */
+ 
++	__be32		agi_free_root; /* root of the free inode btree */
++	__be32		agi_free_level;/* levels in free inode btree */
++
+ 	/* structure must be padded to 64 bit alignment */
+ } xfs_agi_t;
+ 
+-#define	XFS_AGI_MAGICNUM	0x00000001
+-#define	XFS_AGI_VERSIONNUM	0x00000002
+-#define	XFS_AGI_SEQNO		0x00000004
+-#define	XFS_AGI_LENGTH		0x00000008
+-#define	XFS_AGI_COUNT		0x00000010
+-#define	XFS_AGI_ROOT		0x00000020
+-#define	XFS_AGI_LEVEL		0x00000040
+-#define	XFS_AGI_FREECOUNT	0x00000080
+-#define	XFS_AGI_NEWINO		0x00000100
+-#define	XFS_AGI_DIRINO		0x00000200
+-#define	XFS_AGI_UNLINKED	0x00000400
+-#define	XFS_AGI_NUM_BITS	11
+-#define	XFS_AGI_ALL_BITS	((1 << XFS_AGI_NUM_BITS) - 1)
++#define	XFS_AGI_MAGICNUM	(1 << 0)
++#define	XFS_AGI_VERSIONNUM	(1 << 1)
++#define	XFS_AGI_SEQNO		(1 << 2)
++#define	XFS_AGI_LENGTH		(1 << 3)
++#define	XFS_AGI_COUNT		(1 << 4)
++#define	XFS_AGI_ROOT		(1 << 5)
++#define	XFS_AGI_LEVEL		(1 << 6)
++#define	XFS_AGI_FREECOUNT	(1 << 7)
++#define	XFS_AGI_NEWINO		(1 << 8)
++#define	XFS_AGI_DIRINO		(1 << 9)
++#define	XFS_AGI_UNLINKED	(1 << 10)
++#define	XFS_AGI_NUM_BITS_R1	11	/* end of the 1st agi logging region */
++#define	XFS_AGI_ALL_BITS_R1	((1 << XFS_AGI_NUM_BITS_R1) - 1)
++#define	XFS_AGI_FREE_ROOT	(1 << 11)
++#define	XFS_AGI_FREE_LEVEL	(1 << 12)
++#define	XFS_AGI_NUM_BITS_R2	13
+ 
+ /* disk block (xfs_daddr_t) in the AG */
+ #define XFS_AGI_DADDR(mp)	((xfs_daddr_t)(2 << (mp)->m_sectbb_log))
+diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
+index 5690e10..bef20bd 100644
+--- a/fs/xfs/xfs_btree.c
++++ b/fs/xfs/xfs_btree.c
+@@ -45,9 +45,10 @@ kmem_zone_t	*xfs_btree_cur_zone;
+  * Btree magic numbers.
+  */
+ static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
+-	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC },
++	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
++	  XFS_FIBT_MAGIC },
+ 	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC,
+-	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC }
++	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
+ };
+ #define xfs_btree_magic(cur) \
+ 	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
+@@ -1119,6 +1120,7 @@ xfs_btree_set_refs(
+ 		xfs_buf_set_ref(bp, XFS_ALLOC_BTREE_REF);
+ 		break;
+ 	case XFS_BTNUM_INO:
++	case XFS_BTNUM_FINO:
+ 		xfs_buf_set_ref(bp, XFS_INO_BTREE_REF);
+ 		break;
+ 	case XFS_BTNUM_BMAP:
+diff --git a/fs/xfs/xfs_btree.h b/fs/xfs/xfs_btree.h
+index 06729b6..001f030 100644
+--- a/fs/xfs/xfs_btree.h
++++ b/fs/xfs/xfs_btree.h
+@@ -37,6 +37,7 @@ extern kmem_zone_t	*xfs_btree_cur_zone;
+ #define	XFS_BTNUM_CNT	((xfs_btnum_t)XFS_BTNUM_CNTi)
+ #define	XFS_BTNUM_BMAP	((xfs_btnum_t)XFS_BTNUM_BMAPi)
+ #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
++#define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
+ 
+ /*
+  * Generic btree header.
+@@ -147,6 +148,7 @@ do {    \
+ 	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_INC(abtc, stat); break;	\
+ 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
++	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
+ 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
+ 	}       \
+ } while (0)
+@@ -160,6 +162,7 @@ do {    \
+ 	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_ADD(abtc, stat, val); break; \
+ 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
++	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
+ 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
+ 	}       \
+ } while (0)
 diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 4ca7b8b..fd9ba6c 100644
+index 524aa88..19ae14a 100644
 --- a/fs/xfs/xfs_ialloc.c
 +++ b/fs/xfs/xfs_ialloc.c
-@@ -722,7 +722,7 @@ xfs_ialloc_get_rec(
-  * available.
-  */
- STATIC int
--xfs_dialloc_ag(
-+xfs_dialloc_ag_slow(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*agbp,
- 	xfs_ino_t		parent,
-@@ -980,6 +980,215 @@ error0:
- 	return error;
- }
- 
-+STATIC int
-+xfs_dialloc_ag(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*agbp,
-+	xfs_ino_t		parent,
-+	xfs_ino_t		*inop)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
-+	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
-+	xfs_agnumber_t			pagno = XFS_INO_TO_AGNO(mp, parent);
-+	xfs_agino_t			pagino = XFS_INO_TO_AGINO(mp, parent);
-+	struct xfs_perag		*pag;
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_btree_cur		*tcur;
-+	struct xfs_inobt_rec_incore	rec;
-+	struct xfs_inobt_rec_incore	trec;
-+	xfs_ino_t			ino;
-+	int				error;
-+	int				offset;
-+	int				i, j;
+@@ -1505,6 +1505,8 @@ xfs_ialloc_log_agi(
+ 		offsetof(xfs_agi_t, agi_newino),
+ 		offsetof(xfs_agi_t, agi_dirino),
+ 		offsetof(xfs_agi_t, agi_unlinked),
++		offsetof(xfs_agi_t, agi_free_root),
++		offsetof(xfs_agi_t, agi_free_level),
+ 		sizeof(xfs_agi_t)
+ 	};
+ #ifdef DEBUG
+@@ -1514,14 +1516,39 @@ xfs_ialloc_log_agi(
+ 	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
+ #endif
+ 	/*
+-	 * Compute byte offsets for the first and last fields.
++	 * The growth of the agi buffer over time now requires that we interpret
++	 * the buffer as two logical regions delineated at the end of the unlinked
++	 * list. This is due to the size of the hash table and its location in the
++	 * middle of the agi.
++	 *
++	 * For example, a request to log a field before agi_unlinked and a field
++	 * after agi_unlinked could cause us to log the entire hash table and use
++	 * an excessive amount of log space. To avoid this behavior, log the
++	 * region up through agi_unlinked in one call and the region after
++	 * agi_unlinked through the end of the structure in another.
+ 	 */
+-	xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS, &first, &last);
++	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
 +
-+	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return xfs_dialloc_ag_slow(tp, agbp, parent, inop);
-+
-+	pag = xfs_perag_get(mp, agno);
-+
-+	/*
-+	 * If pagino is 0 (this is the root inode allocation) use newino.
-+	 * This must work because we've just allocated some.
-+	 */
-+	if (!pagino)
-+		pagino = be32_to_cpu(agi->agi_newino);
-+
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_FINO);
-+
-+	error = xfs_check_agi_freecount(cur, agi);
-+	if (error)
-+		goto error_cur;
-+
-+	if (agno == pagno) {
-+		/*
-+		 * We're in the same AG as the parent inode so allocate the
-+		 * closest inode to the parent.
-+		 */
-+		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
-+		if (error)
-+			goto error_cur;
-+		if (i == 1) {
-+			error = xfs_inobt_get_rec(cur, &rec, &i);
-+			if (error)
-+				goto error_cur;
-+			XFS_WANT_CORRUPTED_GOTO(i == 1, error_cur);
-+
-+			/*
-+			 * See if we've landed in the parent inode record. The
-+			 * finobt only tracks chunks with at least one free
-+			 * inode, so record existence is enough.
-+			 */
-+			if (pagino >= rec.ir_startino &&
-+			    pagino < (rec.ir_startino + XFS_INODES_PER_CHUNK))
-+				goto alloc_inode;
-+		}
-+
-+		error = xfs_btree_dup_cursor(cur, &tcur);
-+		if (error) 
-+			goto error_cur;
-+
-+		error = xfs_inobt_lookup(tcur, pagino, XFS_LOOKUP_GE, &j);
-+		if (error)
-+			goto error_tcur;
-+		if (j == 1) {
-+			error = xfs_inobt_get_rec(tcur, &trec, &j);
-+			if (error)
-+				goto error_tcur;
-+			XFS_WANT_CORRUPTED_GOTO(j == 1, error_tcur);
-+		}
-+
-+		if (i == 1 && j == 1) {
-+			if ((pagino - rec.ir_startino + XFS_INODES_PER_CHUNK - 1) >
-+			    (trec.ir_startino - pagino)) {
-+				rec = trec;
-+				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+				cur = tcur;
-+			} else {
-+				xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+			}
-+		} else if (j == 1) {
-+			rec = trec;
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+			cur = tcur;
-+		} else {
-+			xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+		}
-+	} else {
-+		/*
-+		 * Different AG from the parent inode. Check the record for the
-+		 * most recently allocated inode.
-+		 */
-+		if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
-+			error = xfs_inobt_lookup(cur, agi->agi_newino,
-+						 XFS_LOOKUP_EQ, &i);
-+			if (error)
-+				goto error_cur;
-+			if (i == 1) {
-+				error = xfs_inobt_get_rec(cur, &rec, &i);
-+				if (error)
-+					goto error_cur;
-+				XFS_WANT_CORRUPTED_GOTO(i == 1, error_cur);
-+				goto alloc_inode;
-+			}
-+		}
-+
-+		/*
-+		 * Allocate the first inode available in the AG.
-+		 */
-+		error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &i);
-+		if (error)
-+			goto error_cur;
-+		XFS_WANT_CORRUPTED_GOTO(i == 1, error_cur);
-+
-+		error = xfs_inobt_get_rec(cur, &rec, &i);
-+		if (error)
-+			goto error_cur;
-+		XFS_WANT_CORRUPTED_GOTO(i == 1, error_cur);
+ 	/*
+-	 * Log the allocation group inode header buffer.
++	 * Compute byte offsets for the first and last fields in the first
++	 * region and log agi buffer. This only logs up through agi_unlinked.
+ 	 */
+-	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
+-	xfs_trans_log_buf(tp, bp, first, last);
++	if (fields & XFS_AGI_ALL_BITS_R1) {
++		xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS_R1,
++				  &first, &last);
++		xfs_trans_log_buf(tp, bp, first, last);
 +	}
 +
-+alloc_inode:
-+	offset = xfs_lowbit64(rec.ir_free);
-+	ASSERT(offset >= 0);
-+	ASSERT(offset < XFS_INODES_PER_CHUNK);
-+	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
-+				   XFS_INODES_PER_CHUNK) == 0);
-+	ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino + offset);
-+
 +	/*
-+	 * Modify or remove the finobt record.
++	 * Mask off the bits in the first region and calculate the first and last
++	 * field offsets for any bits in the second region.
 +	 */
-+	rec.ir_free &= ~XFS_INOBT_MASK(offset);
-+	rec.ir_freecount--;
-+	if (rec.ir_freecount) 
-+		error = xfs_inobt_update(cur, &rec);
-+	else
-+		error = xfs_btree_delete(cur, &i);
-+	if (error)
-+		goto error_cur;
++	fields &= ~XFS_AGI_ALL_BITS_R1;
++	if (fields) {
++		xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS_R2,
++				  &first, &last);
++		xfs_trans_log_buf(tp, bp, first, last);
++	}
+ }
+ 
+ #ifdef DEBUG
+diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+index 0cdb88b..48130e8 100644
+--- a/fs/xfs/xfs_ialloc_btree.c
++++ b/fs/xfs/xfs_ialloc_btree.c
+@@ -68,6 +68,21 @@ xfs_inobt_set_root(
+ 	xfs_ialloc_log_agi(cur->bc_tp, agbp, XFS_AGI_ROOT | XFS_AGI_LEVEL);
+ }
+ 
++STATIC void
++xfs_finobt_set_root(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*nptr,
++	int			inc)	/* level change */
++{
++	struct xfs_buf		*agbp = cur->bc_private.a.agbp;
++	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
 +
-+	/*
-+	 * Lookup and modify the equivalent record in the inobt.
-+	 */
-+	tcur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
-+
-+	error = xfs_check_agi_freecount(tcur, agi);
-+	if (error)
-+		goto error_tcur;
-+
-+	error = xfs_inobt_lookup(tcur, rec.ir_startino, XFS_LOOKUP_EQ, &i);
-+	if (error)
-+		goto error_tcur;
-+	XFS_WANT_CORRUPTED_GOTO(i == 1, error_tcur);
-+
-+	error = xfs_inobt_get_rec(tcur, &trec, &i);
-+	if (error)
-+		goto error_tcur;
-+	XFS_WANT_CORRUPTED_GOTO(i == 1, error_tcur);
-+	ASSERT((XFS_AGINO_TO_OFFSET(mp, trec.ir_startino) %
-+				   XFS_INODES_PER_CHUNK) == 0);
-+
-+	trec.ir_free &= ~XFS_INOBT_MASK(offset);
-+	trec.ir_freecount--;
-+
-+	XFS_WANT_CORRUPTED_GOTO((rec.ir_free == trec.ir_free) &&
-+				(rec.ir_freecount == trec.ir_freecount),
-+				error_tcur);
-+
-+	error = xfs_inobt_update(tcur, &trec);
-+	if (error)
-+		goto error_tcur;
-+
-+	/*
-+	 * Update the perag and superblock.
-+	 */
-+	be32_add_cpu(&agi->agi_freecount, -1);
-+	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
-+	pag->pagi_freecount--;
-+
-+	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
-+
-+	error = xfs_check_agi_freecount(tcur, agi);
-+	if (error)
-+		goto error_tcur;
-+	error = xfs_check_agi_freecount(cur, agi);
-+	if (error)
-+		goto error_tcur;
-+
-+	xfs_btree_del_cursor(tcur, XFS_BTREE_NOERROR);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	xfs_perag_put(pag);
-+	*inop = ino;
-+	return 0;
-+
-+error_tcur:
-+	xfs_btree_del_cursor(tcur, XFS_BTREE_ERROR);
-+error_cur:
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	xfs_perag_put(pag);
-+	return error;
++	agi->agi_free_root = nptr->s;
++	be32_add_cpu(&agi->agi_free_level, inc);
++	xfs_ialloc_log_agi(cur->bc_tp, agbp,
++			   XFS_AGI_FREE_ROOT | XFS_AGI_FREE_LEVEL);
 +}
 +
+ STATIC int
+ xfs_inobt_alloc_block(
+ 	struct xfs_btree_cur	*cur,
+@@ -175,6 +190,17 @@ xfs_inobt_init_ptr_from_cur(
+ 	ptr->s = agi->agi_root;
+ }
+ 
++STATIC void
++xfs_finobt_init_ptr_from_cur(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*ptr)
++{
++	struct xfs_agi		*agi = XFS_BUF_TO_AGI(cur->bc_private.a.agbp);
++
++	ASSERT(cur->bc_private.a.agno == be32_to_cpu(agi->agi_seqno));
++	ptr->s = agi->agi_free_root;
++}
++
+ STATIC __int64_t
+ xfs_inobt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+@@ -205,6 +231,7 @@ xfs_inobt_verify(
+ 	 */
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
++	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
+ 		if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 			return false;
+ 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
+@@ -216,6 +243,7 @@ xfs_inobt_verify(
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_IBT_MAGIC):
++	case cpu_to_be32(XFS_FIBT_MAGIC):
+ 		break;
+ 	default:
+ 		return 0;
+@@ -317,6 +345,28 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
+ #endif
+ };
+ 
++static const struct xfs_btree_ops xfs_finobt_ops = {
++	.rec_len		= sizeof(xfs_inobt_rec_t),
++	.key_len		= sizeof(xfs_inobt_key_t),
++
++	.dup_cursor		= xfs_inobt_dup_cursor,
++	.set_root		= xfs_finobt_set_root,
++	.alloc_block		= xfs_inobt_alloc_block,
++	.free_block		= xfs_inobt_free_block,
++	.get_minrecs		= xfs_inobt_get_minrecs,
++	.get_maxrecs		= xfs_inobt_get_maxrecs,
++	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
++	.init_rec_from_key	= xfs_inobt_init_rec_from_key,
++	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
++	.key_diff		= xfs_inobt_key_diff,
++	.buf_ops		= &xfs_inobt_buf_ops,
++#if defined(DEBUG) || defined(XFS_WARN)
++	.keys_inorder		= xfs_inobt_keys_inorder,
++	.recs_inorder		= xfs_inobt_recs_inorder,
++#endif
++};
++
  /*
-  * Allocate an inode on disk.
-  *
+  * Allocate a new inode btree cursor.
+  */
+@@ -335,11 +385,17 @@ xfs_inobt_init_cursor(
+ 
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+-	cur->bc_nlevels = be32_to_cpu(agi->agi_level);
+ 	cur->bc_btnum = btnum;
++	if (btnum == XFS_BTNUM_INO) {
++		cur->bc_nlevels = be32_to_cpu(agi->agi_level);
++		cur->bc_ops = &xfs_inobt_ops;
++	} else {
++		cur->bc_nlevels = be32_to_cpu(agi->agi_free_level);
++		cur->bc_ops = &xfs_finobt_ops;
++	}
++
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 
+-	cur->bc_ops = &xfs_inobt_ops;
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+diff --git a/fs/xfs/xfs_ialloc_btree.h b/fs/xfs/xfs_ialloc_btree.h
+index ce7a62b..33d6dd4 100644
+--- a/fs/xfs/xfs_ialloc_btree.h
++++ b/fs/xfs/xfs_ialloc_btree.h
+@@ -31,6 +31,8 @@ struct xfs_mount;
+  */
+ #define	XFS_IBT_MAGIC		0x49414254	/* 'IABT' */
+ #define	XFS_IBT_CRC_MAGIC	0x49414233	/* 'IAB3' */
++#define	XFS_FIBT_MAGIC		0x46494254	/* 'FIBT' */
++#define	XFS_FIBT_CRC_MAGIC	0x46494233	/* 'FIB3' */
+ 
+ typedef	__uint64_t	xfs_inofree_t;
+ #define	XFS_INODES_PER_CHUNK		(NBBY * sizeof(xfs_inofree_t))
+@@ -73,7 +75,17 @@ typedef __be32 xfs_inobt_ptr_t;
+  * block numbers in the AG.
+  */
+ #define	XFS_IBT_BLOCK(mp)		((xfs_agblock_t)(XFS_CNT_BLOCK(mp) + 1))
+-#define	XFS_PREALLOC_BLOCKS(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
++#define	XFS_FIBT_BLOCK(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
++
++/*
++ * The first data block of an AG depends on whether the filesystem was formatted
++ * with the finobt feature. If so, account for the finobt reserved root btree
++ * block.
++ */
++#define XFS_PREALLOC_BLOCKS(mp) \
++	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
++	 XFS_FIBT_BLOCK(mp) + 1 : \
++	 XFS_IBT_BLOCK(mp) + 1)
+ 
+ /*
+  * Btree block header size depends on a superblock flag.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 3979749..19cde4a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2134,7 +2134,9 @@ xlog_recover_validate_buf_type(
+ 			bp->b_ops = &xfs_allocbt_buf_ops;
+ 			break;
+ 		case XFS_IBT_CRC_MAGIC:
++		case XFS_FIBT_CRC_MAGIC:
+ 		case XFS_IBT_MAGIC:
++		case XFS_FIBT_MAGIC:
+ 			bp->b_ops = &xfs_inobt_buf_ops;
+ 			break;
+ 		case XFS_BMAP_CRC_MAGIC:
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index ce372b7..f224038 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -59,6 +59,7 @@ static int xfs_stat_proc_show(struct seq_file *m, void *v)
+ 		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
+ 		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
+ 		{ "ibt2",		XFSSTAT_END_IBT_V2		},
++		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
+ 		/* we print both series of quota information together */
+ 		{ "qm",			XFSSTAT_END_QM			},
+ 	};
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index c03ad38..c8f238b 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -183,7 +183,23 @@ struct xfsstats {
+ 	__uint32_t		xs_ibt_2_alloc;
+ 	__uint32_t		xs_ibt_2_free;
+ 	__uint32_t		xs_ibt_2_moves;
+-#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_IBT_V2+6)
++#define XFSSTAT_END_FIBT_V2		(XFSSTAT_END_IBT_V2+15)
++	__uint32_t		xs_fibt_2_lookup;
++	__uint32_t		xs_fibt_2_compare;
++	__uint32_t		xs_fibt_2_insrec;
++	__uint32_t		xs_fibt_2_delrec;
++	__uint32_t		xs_fibt_2_newroot;
++	__uint32_t		xs_fibt_2_killroot;
++	__uint32_t		xs_fibt_2_increment;
++	__uint32_t		xs_fibt_2_decrement;
++	__uint32_t		xs_fibt_2_lshift;
++	__uint32_t		xs_fibt_2_rshift;
++	__uint32_t		xs_fibt_2_split;
++	__uint32_t		xs_fibt_2_join;
++	__uint32_t		xs_fibt_2_alloc;
++	__uint32_t		xs_fibt_2_free;
++	__uint32_t		xs_fibt_2_moves;
++#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_FIBT_V2+6)
+ 	__uint32_t		xs_qm_dqreclaims;
+ 	__uint32_t		xs_qm_dqreclaim_misses;
+ 	__uint32_t		xs_qm_dquot_dups;
+diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
+index 82bbc34..65c6e66 100644
+--- a/fs/xfs/xfs_types.h
++++ b/fs/xfs/xfs_types.h
+@@ -134,7 +134,7 @@ typedef enum {
+ 
+ typedef enum {
+ 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_BMAPi, XFS_BTNUM_INOi,
+-	XFS_BTNUM_MAX
++	XFS_BTNUM_FINOi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
+ 
+ struct xfs_name {
 -- 
 1.8.1.4
 
