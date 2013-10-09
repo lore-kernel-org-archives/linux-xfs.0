@@ -1,22 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 276FD7FBD
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 18:37:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0440D304032
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 16:37:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id WjfKZszBUVvwSUoW for <xfs@oss.sgi.com>;
-	Tue, 08 Oct 2013 16:37:22 -0700 (PDT)
-Message-ID: <52549731.7060601@sandeen.net>
-Date: Tue, 08 Oct 2013 18:37:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 644087FB3
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 19:09:30 -0500 (CDT)
+Date: Tue, 8 Oct 2013 19:09:26 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH] xfs: fix node forward in xfs_node_toosmall
+Message-ID: <20131009000926.GI10553@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 08/32] xfs: create a shared header file for format-related
-	information
-References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
-	<1380510944-8571-9-git-send-email-david@fromorbit.com>
-In-Reply-To: <1380510944-8571-9-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,686 +20,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-On 9/29/13 10:15 PM, Dave Chinner wrote:
-> All of the buffer operations structures are needed to be exported
-> for xfs_db, so move them all to a common location rather than
-> spreading them all over the place. They are verifying the on-disk
-> format, so while xfs_format.h might be a good place, it is not part
-> of the on disk format.
-> 
-> Hence we need to create a new header file that we centralise these
-> related definitions. Start by moving the bffer operations
-> structures, and then also move all the other definitions that have
-> crept into xfs_log_format.h and xfs_format.h as there was no other
-> shared header file to put them in.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+From: Mark Tinguely <tinguely@sgi.com>
 
-All lines present & accounted for in new file.  ;)
+Commit f5ea1100 cleans up the disk to host conversions for
+node directory entries, but because a variable is reused in
+xfs_node_toosmall() the next node is not correctly found.
+If the original node is small enough (<= 3/8 of the node size),
+this change may incorrectly cause a node collapse when it should
+not. That will cause an assert in xfstest generic/319:
 
-Would be nice to fix:
+   Assertion failed: first <= last && last < BBTOB(bp->b_length),
+   file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
 
-"* This determine how hard the buffer cache tries to hold onto"
+Keep the original node header to get the correct forward node.
 
-while you're at it, but *shrug*
+(When a node is considered for a merge with a sibling, it overwrites the
+ sibling pointers of the original incore nodehdr with the sibling's
+ pointers.  This leads to loop considering the original node as a merge
+ candidate with itself in the second pass, and so it incorrectly
+ determines a merge should occur.)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+upstream commit 997def25e4b9cee3b01609e18a52f926bca8bd2b
 
-> ---
->  include/Makefile           |   1 +
->  include/libxfs.h           |   1 +
->  include/xfs_ag.h           |   4 -
->  include/xfs_alloc.h        |   3 -
->  include/xfs_alloc_btree.h  |   2 -
->  include/xfs_attr_leaf.h    |   2 -
->  include/xfs_attr_remote.h  |   2 -
->  include/xfs_bmap_btree.h   |   2 -
->  include/xfs_da_btree.h     |   2 -
->  include/xfs_format.h       |  10 --
->  include/xfs_ialloc.h       |   2 -
->  include/xfs_ialloc_btree.h |   2 -
->  include/xfs_inode_buf.h    |   2 -
->  include/xfs_log_format.h   | 177 --------------------------------
->  include/xfs_sb.h           |   3 -
->  include/xfs_shared.h       | 244 +++++++++++++++++++++++++++++++++++++++++++++
->  16 files changed, 246 insertions(+), 213 deletions(-)
->  create mode 100644 include/xfs_shared.h
-> 
-> diff --git a/include/Makefile b/include/Makefile
-> index 628a087..fd2d61b 100644
-> --- a/include/Makefile
-> +++ b/include/Makefile
-> @@ -38,6 +38,7 @@ QAHFILES = libxfs.h libxlog.h \
->  	xfs_metadump.h \
->  	xfs_quota_defs.h \
->  	xfs_sb.h \
-> +	xfs_shared.h \
->  	xfs_trace.h \
->  	xfs_trans_resv.h \
->  	xfs_trans_space.h
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index ffd83bf..a5d6388 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -37,6 +37,7 @@
->  #include <xfs/xfs_fs.h>
->  #include <xfs/xfs_arch.h>
->  
-> +#include <xfs/xfs_shared.h>
->  #include <xfs/xfs_format.h>
->  #include <xfs/xfs_log_format.h>
->  #include <xfs/xfs_quota_defs.h>
-> diff --git a/include/xfs_ag.h b/include/xfs_ag.h
-> index 1cb740a..3fc1098 100644
-> --- a/include/xfs_ag.h
-> +++ b/include/xfs_ag.h
-> @@ -128,8 +128,6 @@ typedef struct xfs_agf {
->  extern int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
->  			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
->  
-> -extern const struct xfs_buf_ops xfs_agf_buf_ops;
-> -
->  /*
->   * Size of the unlinked inode hash table in the agi.
->   */
-> @@ -191,8 +189,6 @@ typedef struct xfs_agi {
->  extern int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
->  				xfs_agnumber_t agno, struct xfs_buf **bpp);
->  
-> -extern const struct xfs_buf_ops xfs_agi_buf_ops;
-> -
->  /*
->   * The third a.g. block contains the a.g. freelist, an array
->   * of block pointers to blocks owned by the allocation btree code.
-> diff --git a/include/xfs_alloc.h b/include/xfs_alloc.h
-> index 99d0a61..feacb06 100644
-> --- a/include/xfs_alloc.h
-> +++ b/include/xfs_alloc.h
-> @@ -231,7 +231,4 @@ xfs_alloc_get_rec(
->  	xfs_extlen_t		*len,	/* output: length of extent */
->  	int			*stat);	/* output: success/failure */
->  
-> -extern const struct xfs_buf_ops xfs_agf_buf_ops;
-> -extern const struct xfs_buf_ops xfs_agfl_buf_ops;
-> -
->  #endif	/* __XFS_ALLOC_H__ */
-> diff --git a/include/xfs_alloc_btree.h b/include/xfs_alloc_btree.h
-> index e3a3f74..72676c3 100644
-> --- a/include/xfs_alloc_btree.h
-> +++ b/include/xfs_alloc_btree.h
-> @@ -95,6 +95,4 @@ extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
->  		xfs_agnumber_t, xfs_btnum_t);
->  extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
->  
-> -extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
-> -
->  #endif	/* __XFS_ALLOC_BTREE_H__ */
-> diff --git a/include/xfs_attr_leaf.h b/include/xfs_attr_leaf.h
-> index c102213..da34e64 100644
-> --- a/include/xfs_attr_leaf.h
-> +++ b/include/xfs_attr_leaf.h
-> @@ -336,6 +336,4 @@ void	xfs_attr3_leaf_hdr_from_disk(struct xfs_attr3_icleaf_hdr *to,
->  void	xfs_attr3_leaf_hdr_to_disk(struct xfs_attr_leafblock *to,
->  				   struct xfs_attr3_icleaf_hdr *from);
->  
-> -extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
-> -
->  #endif	/* __XFS_ATTR_LEAF_H__ */
-> diff --git a/include/xfs_attr_remote.h b/include/xfs_attr_remote.h
-> index 92a8fd7..b3e1e1b 100644
-> --- a/include/xfs_attr_remote.h
-> +++ b/include/xfs_attr_remote.h
-> @@ -45,8 +45,6 @@ struct xfs_attr3_rmt_hdr {
->  	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
->  			sizeof(struct xfs_attr3_rmt_hdr) : 0))
->  
-> -extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
-> -
->  int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
->  
->  int xfs_attr_rmtval_get(struct xfs_da_args *args);
-> diff --git a/include/xfs_bmap_btree.h b/include/xfs_bmap_btree.h
-> index 1b726d6..e307978 100644
-> --- a/include/xfs_bmap_btree.h
-> +++ b/include/xfs_bmap_btree.h
-> @@ -239,6 +239,4 @@ extern int xfs_bmbt_maxrecs(struct xfs_mount *, int blocklen, int leaf);
->  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
->  		struct xfs_trans *, struct xfs_inode *, int);
->  
-> -extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
-> -
->  #endif	/* __XFS_BMAP_BTREE_H__ */
-> diff --git a/include/xfs_da_btree.h b/include/xfs_da_btree.h
-> index b1f2679..a762cfa 100644
-> --- a/include/xfs_da_btree.h
-> +++ b/include/xfs_da_btree.h
-> @@ -309,8 +309,6 @@ int	xfs_da3_node_read(struct xfs_trans *tp, struct xfs_inode *dp,
->  			 xfs_dablk_t bno, xfs_daddr_t mappedbno,
->  			 struct xfs_buf **bpp, int which_fork);
->  
-> -extern const struct xfs_buf_ops xfs_da3_node_buf_ops;
-> -
->  /*
->   * Utility routines.
->   */
-> diff --git a/include/xfs_format.h b/include/xfs_format.h
-> index 35c08ff..a790428 100644
-> --- a/include/xfs_format.h
-> +++ b/include/xfs_format.h
-> @@ -156,14 +156,4 @@ struct xfs_dsymlink_hdr {
->  	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
->  			sizeof(struct xfs_dsymlink_hdr) : 0))
->  
-> -int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
-> -int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
-> -			uint32_t size, struct xfs_buf *bp);
-> -bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
-> -			uint32_t size, struct xfs_buf *bp);
-> -void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
-> -				 struct xfs_inode *ip, struct xfs_ifork *ifp);
-> -
-> -extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> -
->  #endif /* __XFS_FORMAT_H__ */
-> diff --git a/include/xfs_ialloc.h b/include/xfs_ialloc.h
-> index 68c0732..1557798 100644
-> --- a/include/xfs_ialloc.h
-> +++ b/include/xfs_ialloc.h
-> @@ -158,6 +158,4 @@ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
->  			  xfs_agnumber_t agno, xfs_agblock_t agbno,
->  			  xfs_agblock_t length, unsigned int gen);
->  
-> -extern const struct xfs_buf_ops xfs_agi_buf_ops;
-> -
->  #endif	/* __XFS_IALLOC_H__ */
-> diff --git a/include/xfs_ialloc_btree.h b/include/xfs_ialloc_btree.h
-> index 3ac36b7..cfbfe46 100644
-> --- a/include/xfs_ialloc_btree.h
-> +++ b/include/xfs_ialloc_btree.h
-> @@ -110,6 +110,4 @@ extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
->  		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
->  extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
->  
-> -extern const struct xfs_buf_ops xfs_inobt_buf_ops;
-> -
->  #endif	/* __XFS_IALLOC_BTREE_H__ */
-> diff --git a/include/xfs_inode_buf.h b/include/xfs_inode_buf.h
-> index aae9fc4..e8fd3bd 100644
-> --- a/include/xfs_inode_buf.h
-> +++ b/include/xfs_inode_buf.h
-> @@ -47,6 +47,4 @@ void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
->  #define	xfs_inobp_check(mp, bp)
->  #endif /* DEBUG */
->  
-> -extern const struct xfs_buf_ops xfs_inode_buf_ops;
-> -
->  #endif	/* __XFS_INODE_BUF_H__ */
-> diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-> index 31e3a06..aeaa715 100644
-> --- a/include/xfs_log_format.h
-> +++ b/include/xfs_log_format.h
-> @@ -234,178 +234,6 @@ typedef struct xfs_trans_header {
->  	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
->  
->  /*
-> - * Transaction types.  Used to distinguish types of buffers.
-> - */
-> -#define XFS_TRANS_SETATTR_NOT_SIZE	1
-> -#define XFS_TRANS_SETATTR_SIZE		2
-> -#define XFS_TRANS_INACTIVE		3
-> -#define XFS_TRANS_CREATE		4
-> -#define XFS_TRANS_CREATE_TRUNC		5
-> -#define XFS_TRANS_TRUNCATE_FILE		6
-> -#define XFS_TRANS_REMOVE		7
-> -#define XFS_TRANS_LINK			8
-> -#define XFS_TRANS_RENAME		9
-> -#define XFS_TRANS_MKDIR			10
-> -#define XFS_TRANS_RMDIR			11
-> -#define XFS_TRANS_SYMLINK		12
-> -#define XFS_TRANS_SET_DMATTRS		13
-> -#define XFS_TRANS_GROWFS		14
-> -#define XFS_TRANS_STRAT_WRITE		15
-> -#define XFS_TRANS_DIOSTRAT		16
-> -/* 17 was XFS_TRANS_WRITE_SYNC */
-> -#define	XFS_TRANS_WRITEID		18
-> -#define	XFS_TRANS_ADDAFORK		19
-> -#define	XFS_TRANS_ATTRINVAL		20
-> -#define	XFS_TRANS_ATRUNCATE		21
-> -#define	XFS_TRANS_ATTR_SET		22
-> -#define	XFS_TRANS_ATTR_RM		23
-> -#define	XFS_TRANS_ATTR_FLAG		24
-> -#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
-> -#define XFS_TRANS_QM_SBCHANGE		26
-> -/*
-> - * Dummy entries since we use the transaction type to index into the
-> - * trans_type[] in xlog_recover_print_trans_head()
-> - */
-> -#define XFS_TRANS_DUMMY1		27
-> -#define XFS_TRANS_DUMMY2		28
-> -#define XFS_TRANS_QM_QUOTAOFF		29
-> -#define XFS_TRANS_QM_DQALLOC		30
-> -#define XFS_TRANS_QM_SETQLIM		31
-> -#define XFS_TRANS_QM_DQCLUSTER		32
-> -#define XFS_TRANS_QM_QINOCREATE		33
-> -#define XFS_TRANS_QM_QUOTAOFF_END	34
-> -#define XFS_TRANS_SB_UNIT		35
-> -#define XFS_TRANS_FSYNC_TS		36
-> -#define	XFS_TRANS_GROWFSRT_ALLOC	37
-> -#define	XFS_TRANS_GROWFSRT_ZERO		38
-> -#define	XFS_TRANS_GROWFSRT_FREE		39
-> -#define	XFS_TRANS_SWAPEXT		40
-> -#define	XFS_TRANS_SB_COUNT		41
-> -#define	XFS_TRANS_CHECKPOINT		42
-> -#define	XFS_TRANS_ICREATE		43
-> -#define	XFS_TRANS_TYPE_MAX		43
-> -/* new transaction types need to be reflected in xfs_logprint(8) */
-> -
-> -#define XFS_TRANS_TYPES \
-> -	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
-> -	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
-> -	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
-> -	{ XFS_TRANS_CREATE,		"CREATE" }, \
-> -	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
-> -	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
-> -	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
-> -	{ XFS_TRANS_LINK,		"LINK" }, \
-> -	{ XFS_TRANS_RENAME,		"RENAME" }, \
-> -	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
-> -	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
-> -	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
-> -	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
-> -	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
-> -	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
-> -	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
-> -	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
-> -	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
-> -	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
-> -	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
-> -	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
-> -	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
-> -	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
-> -	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
-> -	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
-> -	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
-> -	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
-> -	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
-> -	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
-> -	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
-> -	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
-> -	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
-> -	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
-> -	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
-> -	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
-> -	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
-> -	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
-> -	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
-> -	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
-> -	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
-> -	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
-> -	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
-> -
-> -/*
-> - * This structure is used to track log items associated with
-> - * a transaction.  It points to the log item and keeps some
-> - * flags to track the state of the log item.  It also tracks
-> - * the amount of space needed to log the item it describes
-> - * once we get to commit processing (see xfs_trans_commit()).
-> - */
-> -struct xfs_log_item_desc {
-> -	struct xfs_log_item	*lid_item;
-> -	struct list_head	lid_trans;
-> -	unsigned char		lid_flags;
-> -};
-> -
-> -#define XFS_LID_DIRTY		0x1
-> -
-> -/*
-> - * Values for t_flags.
-> - */
-> -#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
-> -#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
-> -#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
-> -#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
-> -#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
-> -#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
-> -#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
-> -					   count in superblock */
-> -
-> -/*
-> - * Values for call flags parameter.
-> - */
-> -#define	XFS_TRANS_RELEASE_LOG_RES	0x4
-> -#define	XFS_TRANS_ABORT			0x8
-> -
-> -/*
-> - * Field values for xfs_trans_mod_sb.
-> - */
-> -#define	XFS_TRANS_SB_ICOUNT		0x00000001
-> -#define	XFS_TRANS_SB_IFREE		0x00000002
-> -#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
-> -#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
-> -#define	XFS_TRANS_SB_FREXTENTS		0x00000010
-> -#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
-> -#define	XFS_TRANS_SB_DBLOCKS		0x00000040
-> -#define	XFS_TRANS_SB_AGCOUNT		0x00000080
-> -#define	XFS_TRANS_SB_IMAXPCT		0x00000100
-> -#define	XFS_TRANS_SB_REXTSIZE		0x00000200
-> -#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
-> -#define	XFS_TRANS_SB_RBLOCKS		0x00000800
-> -#define	XFS_TRANS_SB_REXTENTS		0x00001000
-> -#define	XFS_TRANS_SB_REXTSLOG		0x00002000
-> -
-> -/*
-> - * Here we centralize the specification of XFS meta-data buffer
-> - * reference count values.  This determine how hard the buffer
-> - * cache tries to hold onto the buffer.
-> - */
-> -#define	XFS_AGF_REF		4
-> -#define	XFS_AGI_REF		4
-> -#define	XFS_AGFL_REF		3
-> -#define	XFS_INO_BTREE_REF	3
-> -#define	XFS_ALLOC_BTREE_REF	2
-> -#define	XFS_BMAP_BTREE_REF	2
-> -#define	XFS_DIR_BTREE_REF	2
-> -#define	XFS_INO_REF		2
-> -#define	XFS_ATTR_BTREE_REF	1
-> -#define	XFS_DQUOT_REF		1
-> -
-> -/*
-> - * Flags for xfs_trans_ichgtime().
-> - */
-> -#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
-> -#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
-> -#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
-> -
-> -
-> -/*
->   * Inode Log Item Format definitions.
->   *
->   * This is the structure used to lay out an inode log item in the
-> @@ -793,7 +621,6 @@ typedef struct xfs_qoff_logformat {
->  	char			qf_pad[12];	/* padding for future */
->  } xfs_qoff_logformat_t;
->  
-> -
->  /*
->   * Disk quotas status in m_qflags, and also sb_qflags. 16 bits.
->   */
-> @@ -845,8 +672,4 @@ struct xfs_icreate_log {
->  	__be32		icl_gen;	/* inode generation number to use */
->  };
->  
-> -int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
-> -int	xfs_log_calc_minimum_size(struct xfs_mount *);
-> -
-> -
->  #endif /* __XFS_LOG_FORMAT_H__ */
-> diff --git a/include/xfs_sb.h b/include/xfs_sb.h
-> index c8d8898..741b7a3 100644
-> --- a/include/xfs_sb.h
-> +++ b/include/xfs_sb.h
-> @@ -695,7 +695,4 @@ extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
->  extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
->  
-> -extern const struct xfs_buf_ops xfs_sb_buf_ops;
-> -extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
-> -
->  #endif	/* __XFS_SB_H__ */
-> diff --git a/include/xfs_shared.h b/include/xfs_shared.h
-> new file mode 100644
-> index 0000000..63c94b1
-> --- /dev/null
-> +++ b/include/xfs_shared.h
-> @@ -0,0 +1,244 @@
-> +/*
-> + * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-> + * Copyright (c) 2013 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +#ifndef __XFS_SHARED_H__
-> +#define __XFS_SHARED_H__
-> +
-> +/*
-> + * Definitions shared between kernel and userspace that don't fit into any other
-> + * header file that is shared with userspace.
-> + */
-> +struct xfs_ifork;
-> +struct xfs_buf;
-> +struct xfs_buf_ops;
-> +struct xfs_mount;
-> +struct xfs_trans;
-> +struct xfs_inode;
-> +
-> +/*
-> + * Buffer verifier operations are widely used, including userspace tools
-> + */
-> +extern const struct xfs_buf_ops xfs_agf_buf_ops;
-> +extern const struct xfs_buf_ops xfs_agi_buf_ops;
-> +extern const struct xfs_buf_ops xfs_agf_buf_ops;
-> +extern const struct xfs_buf_ops xfs_agfl_buf_ops;
-> +extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
-> +extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_da3_node_buf_ops;
-> +extern const struct xfs_buf_ops xfs_dquot_buf_ops;
-> +extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> +extern const struct xfs_buf_ops xfs_agi_buf_ops;
-> +extern const struct xfs_buf_ops xfs_inobt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_inode_buf_ops;
-> +extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
-> +extern const struct xfs_buf_ops xfs_dquot_buf_ops;
-> +extern const struct xfs_buf_ops xfs_sb_buf_ops;
-> +extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
-> +extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> +
-> +/*
-> + * Transaction types.  Used to distinguish types of buffers. These never reach
-> + * the log.
-> + */
-> +#define XFS_TRANS_SETATTR_NOT_SIZE	1
-> +#define XFS_TRANS_SETATTR_SIZE		2
-> +#define XFS_TRANS_INACTIVE		3
-> +#define XFS_TRANS_CREATE		4
-> +#define XFS_TRANS_CREATE_TRUNC		5
-> +#define XFS_TRANS_TRUNCATE_FILE		6
-> +#define XFS_TRANS_REMOVE		7
-> +#define XFS_TRANS_LINK			8
-> +#define XFS_TRANS_RENAME		9
-> +#define XFS_TRANS_MKDIR			10
-> +#define XFS_TRANS_RMDIR			11
-> +#define XFS_TRANS_SYMLINK		12
-> +#define XFS_TRANS_SET_DMATTRS		13
-> +#define XFS_TRANS_GROWFS		14
-> +#define XFS_TRANS_STRAT_WRITE		15
-> +#define XFS_TRANS_DIOSTRAT		16
-> +/* 17 was XFS_TRANS_WRITE_SYNC */
-> +#define	XFS_TRANS_WRITEID		18
-> +#define	XFS_TRANS_ADDAFORK		19
-> +#define	XFS_TRANS_ATTRINVAL		20
-> +#define	XFS_TRANS_ATRUNCATE		21
-> +#define	XFS_TRANS_ATTR_SET		22
-> +#define	XFS_TRANS_ATTR_RM		23
-> +#define	XFS_TRANS_ATTR_FLAG		24
-> +#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
-> +#define XFS_TRANS_QM_SBCHANGE		26
-> +/*
-> + * Dummy entries since we use the transaction type to index into the
-> + * trans_type[] in xlog_recover_print_trans_head()
-> + */
-> +#define XFS_TRANS_DUMMY1		27
-> +#define XFS_TRANS_DUMMY2		28
-> +#define XFS_TRANS_QM_QUOTAOFF		29
-> +#define XFS_TRANS_QM_DQALLOC		30
-> +#define XFS_TRANS_QM_SETQLIM		31
-> +#define XFS_TRANS_QM_DQCLUSTER		32
-> +#define XFS_TRANS_QM_QINOCREATE		33
-> +#define XFS_TRANS_QM_QUOTAOFF_END	34
-> +#define XFS_TRANS_SB_UNIT		35
-> +#define XFS_TRANS_FSYNC_TS		36
-> +#define	XFS_TRANS_GROWFSRT_ALLOC	37
-> +#define	XFS_TRANS_GROWFSRT_ZERO		38
-> +#define	XFS_TRANS_GROWFSRT_FREE		39
-> +#define	XFS_TRANS_SWAPEXT		40
-> +#define	XFS_TRANS_SB_COUNT		41
-> +#define	XFS_TRANS_CHECKPOINT		42
-> +#define	XFS_TRANS_ICREATE		43
-> +#define	XFS_TRANS_TYPE_MAX		43
-> +/* new transaction types need to be reflected in xfs_logprint(8) */
-> +
-> +#define XFS_TRANS_TYPES \
-> +	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
-> +	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
-> +	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
-> +	{ XFS_TRANS_CREATE,		"CREATE" }, \
-> +	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
-> +	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
-> +	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
-> +	{ XFS_TRANS_LINK,		"LINK" }, \
-> +	{ XFS_TRANS_RENAME,		"RENAME" }, \
-> +	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
-> +	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
-> +	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
-> +	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
-> +	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
-> +	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
-> +	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
-> +	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
-> +	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
-> +	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
-> +	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
-> +	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
-> +	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
-> +	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
-> +	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
-> +	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
-> +	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
-> +	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
-> +	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
-> +	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
-> +	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
-> +	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
-> +	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
-> +	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
-> +	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
-> +	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
-> +	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
-> +	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
-> +	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
-> +	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
-> +	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
-> +	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
-> +	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
-> +
-> +/*
-> + * This structure is used to track log items associated with
-> + * a transaction.  It points to the log item and keeps some
-> + * flags to track the state of the log item.  It also tracks
-> + * the amount of space needed to log the item it describes
-> + * once we get to commit processing (see xfs_trans_commit()).
-> + */
-> +struct xfs_log_item_desc {
-> +	struct xfs_log_item	*lid_item;
-> +	struct list_head	lid_trans;
-> +	unsigned char		lid_flags;
-> +};
-> +
-> +#define XFS_LID_DIRTY		0x1
-> +
-> +/* log size calculation functions */
-> +int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
-> +int	xfs_log_calc_minimum_size(struct xfs_mount *);
-> +
-> +
-> +/*
-> + * Values for t_flags.
-> + */
-> +#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
-> +#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
-> +#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
-> +#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
-> +#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
-> +#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
-> +#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
-> +					   count in superblock */
-> +/*
-> + * Values for call flags parameter.
-> + */
-> +#define	XFS_TRANS_RELEASE_LOG_RES	0x4
-> +#define	XFS_TRANS_ABORT			0x8
-> +
-> +/*
-> + * Field values for xfs_trans_mod_sb.
-> + */
-> +#define	XFS_TRANS_SB_ICOUNT		0x00000001
-> +#define	XFS_TRANS_SB_IFREE		0x00000002
-> +#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
-> +#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
-> +#define	XFS_TRANS_SB_FREXTENTS		0x00000010
-> +#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
-> +#define	XFS_TRANS_SB_DBLOCKS		0x00000040
-> +#define	XFS_TRANS_SB_AGCOUNT		0x00000080
-> +#define	XFS_TRANS_SB_IMAXPCT		0x00000100
-> +#define	XFS_TRANS_SB_REXTSIZE		0x00000200
-> +#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
-> +#define	XFS_TRANS_SB_RBLOCKS		0x00000800
-> +#define	XFS_TRANS_SB_REXTENTS		0x00001000
-> +#define	XFS_TRANS_SB_REXTSLOG		0x00002000
-> +
-> +/*
-> + * Here we centralize the specification of XFS meta-data buffer reference count
-> + * values.  This determine how hard the buffer cache tries to hold onto the
-> + * buffer.
-> + */
-> +#define	XFS_AGF_REF		4
-> +#define	XFS_AGI_REF		4
-> +#define	XFS_AGFL_REF		3
-> +#define	XFS_INO_BTREE_REF	3
-> +#define	XFS_ALLOC_BTREE_REF	2
-> +#define	XFS_BMAP_BTREE_REF	2
-> +#define	XFS_DIR_BTREE_REF	2
-> +#define	XFS_INO_REF		2
-> +#define	XFS_ATTR_BTREE_REF	1
-> +#define	XFS_DQUOT_REF		1
-> +
-> +/*
-> + * Flags for xfs_trans_ichgtime().
-> + */
-> +#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
-> +#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
-> +#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
-> +
-> +
-> +/*
-> + * Symlink decoding/encoding functions
-> + */
-> +int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
-> +int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
-> +			uint32_t size, struct xfs_buf *bp);
-> +bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
-> +			uint32_t size, struct xfs_buf *bp);
-> +void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
-> +				 struct xfs_inode *ip, struct xfs_ifork *ifp);
-> +
-> +#endif /* __XFS_SHARED_H__ */
-> 
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+
+[v3: added Dave Chinner's (slightly modified) suggestion to the commit header,
+	cleaned up whitespace.  -bpm]
+---
+
+Hi Stable Folk,
+
+   Please take this commit for stable branches back to 3.10.  This fixes a bug
+   in XFS directory code.
+
+Thanks,
+	Ben
+
+ fs/xfs/xfs_da_btree.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 069537c..20bf8e8 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -1224,6 +1224,7 @@ xfs_da3_node_toosmall(
+ 	/* start with smaller blk num */
+ 	forward = nodehdr.forw < nodehdr.back;
+ 	for (i = 0; i < 2; forward = !forward, i++) {
++		struct xfs_da3_icnode_hdr thdr;
+ 		if (forward)
+ 			blkno = nodehdr.forw;
+ 		else
+@@ -1236,10 +1237,10 @@ xfs_da3_node_toosmall(
+ 			return(error);
+ 
+ 		node = bp->b_addr;
+-		xfs_da3_node_hdr_from_disk(&nodehdr, node);
++		xfs_da3_node_hdr_from_disk(&thdr, node);
+ 		xfs_trans_brelse(state->args->trans, bp);
+ 
+-		if (count - nodehdr.count >= 0)
++		if (count - thdr.count >= 0)
+ 			break;	/* fits with at least 25% to spare */
+ 	}
+ 	if (i >= 2) {
+-- 
+1.7.12.4
 
 _______________________________________________
 xfs mailing list
