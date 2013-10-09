@@ -1,9 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.12-rc3-12-g74564fb
-Message-Id: <20131009002601.938247FE1@oss.sgi.com>
-Date: Tue,  8 Oct 2013 19:26:01 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C93487FD6
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 19:32:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 707CEAC002
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 17:32:12 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	PuCENBMg9AiiHWEJ for <xfs@oss.sgi.com>;
+	Tue, 08 Oct 2013 17:32:10 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VThgl-0005mP-Iw
+	for xfs@oss.sgi.com; Wed, 09 Oct 2013 11:31:43 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VThgl-00066e-Ho
+	for xfs@oss.sgi.com; Wed, 09 Oct 2013 11:31:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: prevent deadlock trying to cover an active log
+Date: Wed,  9 Oct 2013 11:31:43 +1100
+Message-Id: <1381278703-23439-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,114 +35,203 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+From: Dave Chinner <dchinner@redhat.com>
 
-The branch, for-next has been updated
-  74564fb xfs: clean up xfs_inactive() error handling, kill VN_INACTIVE_[NO]CACHE
-  88877d2 xfs: push down inactive transaction mgmt for ifree
-  f7be2d7 xfs: push down inactive transaction mgmt for truncate
-  36b21dd xfs: push down inactive transaction mgmt for remote symlinks
-  2900a57 xfs: add the inode directory type support to XFS_IOC_FSGEOM
-      from  d948709b8e468510d8c855d1e4c9f1cb7b524880 (commit)
+Recent analysis of a deadlocked XFS filesystem from a kernel
+crash dump indicated that the filesystem was stuck waiting for log
+space. The short story of the hang on the RHEL6 kernel is this:
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+	- the tail of the log is pinned by an inode
+	- the inode has been pushed by the xfsaild
+	- the inode has been flushed to it's backing buffer and is
+	  currently flush locked and hence waiting for backing
+	  buffer IO to complete and remove it from the AIL
+	- the backing buffer is marked for write - it is on the
+	  delayed write queue
+	- the inode buffer has been modified directly and logged
+	  recently due to unlinked inode list modification
+	- the backing buffer is pinned in memory as it is in the
+	  active CIL context.
+	- the xfsbufd won't start buffer writeback because it is
+	  pinned
+	- xfssyncd won't force the log because it sees the log as
+	  needing to be covered and hence wants to issue a dummy
+	  transaction to move the log covering state machine along.
 
-- Log -----------------------------------------------------------------
-commit 74564fb48cbfcb5b433c1baec1f3158ea638b203
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Fri Sep 20 11:06:12 2013 -0400
+Hence there is no trigger to force the CIL to the log and hence
+unpin the inode buffer and therefore complete the inode IO, remove
+it from the AIL and hence move the tail of the log along, allowing
+transactions to start again.
 
-    xfs: clean up xfs_inactive() error handling, kill VN_INACTIVE_[NO]CACHE
-    
-    The xfs_inactive() return value is meaningless. Turn xfs_inactive()
-    into a void function and clean up the error handling appropriately.
-    Kill the VN_INACTIVE_[NO]CACHE directives as they are not relevant
-    to Linux.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+Mainline kernels also have the same deadlock, though the signature
+is slightly different - the inode buffer never reaches the delayed
+write lists because xfs_buf_item_push() sees that it is pinned and
+hence never adds it to the delayed write list that the xfsaild
+flushes.
 
-commit 88877d2b9727a14431bfe48216ff86331ab47ea5
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Fri Sep 20 11:06:11 2013 -0400
+There are two possible solutions here. The first is to simply force
+the log before trying to cover the log and so ensure that the CIL is
+emptied before we try to reserve space for the dummy transaction in
+the xfs_log_worker(). While this might work most of the time, it is
+still racy and is no guarantee that we don't get stuck in
+xfs_trans_reserve waiting for log space to come free. Hence it's not
+the best way to solve the problem.
 
-    xfs: push down inactive transaction mgmt for ifree
-    
-    Push the inode free work performed during xfs_inactive() down into
-    a new xfs_inactive_ifree() helper. This clears xfs_inactive() from
-    all inode locking and transaction management more directly
-    associated with freeing the inode xattrs, extents and the inode
-    itself.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+The second solution is to modify xfs_log_need_covered() to be aware
+of the CIL. We only should be attempting to cover the log if there
+is no current activity in the log - covering the log is the process
+of ensuring that the head and tail in the log on disk are identical
+(i.e. the log is clean and at idle). Hence, by definition, if there
+are items in the CIL then the log is not at idle and so we don't
+need to attempt to cover it.
 
-commit f7be2d7f594cbc7a00902b5427332a1ad519a528
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Fri Sep 20 11:06:10 2013 -0400
+When we don't need to cover the log because it is active or idle, we
+issue a log force from xfs_log_worker() - if the log is idle, then
+this does nothing.  However, if the log is active due to there being
+items in the CIL, it will force the items in the CIL to the log and
+unpin them.
 
-    xfs: push down inactive transaction mgmt for truncate
-    
-    Create the new xfs_inactive_truncate() function to handle the
-    truncate portion of xfs_inactive(). Push the locking and
-    transaction management into the new function.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+In the case of the above deadlock scenario, instead of
+xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
+cover the log, it will instead force the log, thereby unpinning the
+inode buffer, allowing IO to be issued and complete and hence
+removing the inode that was pinning the tail of the log from the
+AIL. At that point, everything will start moving along again. i.e.
+the xfs_log_worker turns back into a watchdog that can alleviate
+deadlocks based around pinned items that prevent the tail of the log
+from being moved...
 
-commit 36b21dde6e899d2f25077b7c239d2d6bcff17d73
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Fri Sep 20 11:06:09 2013 -0400
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c      | 48 +++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_log_cil.c  | 14 ++++++++++++++
+ fs/xfs/xfs_log_priv.h | 10 ++++------
+ 3 files changed, 47 insertions(+), 25 deletions(-)
 
-    xfs: push down inactive transaction mgmt for remote symlinks
-    
-    Push down the transaction management for remote symlinks from
-    xfs_inactive() down to xfs_inactive_symlink_rmt(). The latter is
-    cleaned up to avoid transaction management intended for the
-    calling context (i.e., trans duplication, reservation, item
-    attachment).
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 2900a579abcea13e4e77c40f89eb16eeecb5508e
-Author: Mark Tinguely <tinguely@sgi.com>
-Date:   Wed Oct 2 16:00:06 2013 -0500
-
-    xfs: add the inode directory type support to XFS_IOC_FSGEOM
-    
-    Add the inode type directory type support to XFS_IOC_FSGEOM
-    so that xfs_repair/xfs_info knows if the superblock v4 filesystem
-    enabled the feature.
-    
-    Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-    Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_fs.h      |   4 +-
- fs/xfs/xfs_fsops.c   |   4 +-
- fs/xfs/xfs_inode.c   | 241 +++++++++++++++++++++++++++++----------------------
- fs/xfs/xfs_inode.h   |   2 +-
- fs/xfs/xfs_symlink.c |  86 +++++++++---------
- fs/xfs/xfs_symlink.h |   2 +-
- fs/xfs/xfs_vnode.h   |   8 --
- 7 files changed, 185 insertions(+), 162 deletions(-)
-
-
-hooks/post-receive
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a2dea108..613ed94 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1000,27 +1000,34 @@ xfs_log_space_wake(
+ }
+ 
+ /*
+- * Determine if we have a transaction that has gone to disk
+- * that needs to be covered. To begin the transition to the idle state
+- * firstly the log needs to be idle (no AIL and nothing in the iclogs).
+- * If we are then in a state where covering is needed, the caller is informed
+- * that dummy transactions are required to move the log into the idle state.
++ * Determine if we have a transaction that has gone to disk that needs to be
++ * covered. To begin the transition to the idle state firstly the log needs to
++ * be idle. That means the CIL, the AIL and the iclogs needs to be empty before
++ * we start attempting to cover the log.
+  *
+- * Because this is called as part of the sync process, we should also indicate
+- * that dummy transactions should be issued in anything but the covered or
+- * idle states. This ensures that the log tail is accurately reflected in
+- * the log at the end of the sync, hence if a crash occurrs avoids replay
+- * of transactions where the metadata is already on disk.
++ * Only if we are then in a state where covering is needed, the caller is
++ * informed that dummy transactions are required to move the log into the idle
++ * state.
++ *
++ * If there are any items in the AIl or CIL, then we do not want to attempt to
++ * cover the log as we may be in a situation where there isn't log space
++ * available to run a dummy transaction and this can lead to deadlocks when the
++ * tail of the log is pinned by an item that is modified in the CIL.  Hence
++ * there's no point in running a dummy transaction at this point because we
++ * can't start trying to idle the log until both the CIL and AIL are empty.
+  */
+ int
+ xfs_log_need_covered(xfs_mount_t *mp)
+ {
+-	int		needed = 0;
+ 	struct xlog	*log = mp->m_log;
++	int		needed = 0;
+ 
+ 	if (!xfs_fs_writable(mp))
+ 		return 0;
+ 
++	if (!xlog_cil_empty(log))
++		return 0;
++
+ 	spin_lock(&log->l_icloglock);
+ 	switch (log->l_covered_state) {
+ 	case XLOG_STATE_COVER_DONE:
+@@ -1029,14 +1036,17 @@ xfs_log_need_covered(xfs_mount_t *mp)
+ 		break;
+ 	case XLOG_STATE_COVER_NEED:
+ 	case XLOG_STATE_COVER_NEED2:
+-		if (!xfs_ail_min_lsn(log->l_ailp) &&
+-		    xlog_iclogs_empty(log)) {
+-			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
+-				log->l_covered_state = XLOG_STATE_COVER_DONE;
+-			else
+-				log->l_covered_state = XLOG_STATE_COVER_DONE2;
+-		}
+-		/* FALLTHRU */
++		if (xfs_ail_min_lsn(log->l_ailp))
++			break;
++		if (!xlog_iclogs_empty(log))
++			break;
++
++		needed = 1;
++		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
++			log->l_covered_state = XLOG_STATE_COVER_DONE;
++		else
++			log->l_covered_state = XLOG_STATE_COVER_DONE2;
++		break;
+ 	default:
+ 		needed = 1;
+ 		break;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index cfe9797..da8524e77 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -711,6 +711,20 @@ xlog_cil_push_foreground(
+ 	xlog_cil_push(log);
+ }
+ 
++bool
++xlog_cil_empty(
++	struct xlog	*log)
++{
++	struct xfs_cil	*cil = log->l_cilp;
++	bool		empty = false;
++
++	spin_lock(&cil->xc_push_lock);
++	if (list_empty(&cil->xc_cil))
++		empty = true;
++	spin_unlock(&cil->xc_push_lock);
++	return empty;
++}
++
+ /*
+  * Commit a transaction with the given vector to the Committed Item List.
+  *
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 136654b..de24ffb 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -514,12 +514,10 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
+ /*
+  * Committed Item List interfaces
+  */
+-int
+-xlog_cil_init(struct xlog *log);
+-void
+-xlog_cil_init_post_recovery(struct xlog *log);
+-void
+-xlog_cil_destroy(struct xlog *log);
++int	xlog_cil_init(struct xlog *log);
++void	xlog_cil_init_post_recovery(struct xlog *log);
++void	xlog_cil_destroy(struct xlog *log);
++bool	xlog_cil_empty(struct xlog *log)
+ 
+ /*
+  * CIL force routines
 -- 
-XFS development tree
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
