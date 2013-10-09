@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 493037FBE
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 14:04:45 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 75A537F55
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 14:48:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1CF62304062
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 12:04:45 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id RBocphzH8NEN3YmY (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 12:04:40 -0700 (PDT)
-Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 4C2C79A06C2
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:04:40 -0600 (MDT)
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH] xfstests: btrfs/016: a regression test for subvolume rename
-Date: Wed, 9 Oct 2013 15:04:37 -0400
-Message-ID: <1381345477-7902-1-git-send-email-jbacik@fusionio.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 56D8D8F8073
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 12:48:47 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id PqfzccRBp7fYLmOp for
+	<xfs@oss.sgi.com>; Wed, 09 Oct 2013 12:48:46 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99JmktX002309
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 15:48:46 -0400
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r99JmjUZ013180
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 15:48:45 -0400
+Message-ID: <5255B31D.3050306@redhat.com>
+Date: Wed, 09 Oct 2013 14:48:45 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
+Subject: [PATCH] xfstests: fix xfs/205 for new log size defaults
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,107 +36,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-A user reported a regression where we could no longer rename a subvolume into
-another subvolume.  This is a test case to do just that to make sure we don't
-regress on this again.  Thanks,
+test xfs/205 expects a certain log size, but defaults have
+changed, the logs are bigger, and this test now fails w/ early
+ENOSPC:
 
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+     QA output created by 205
+    +   !!! disk full (expected)
+    +   !!! disk full (expected)
+    +   !!! disk full (expected)
+     *** one file
+    +   !!! disk full (expected)
+     *** one file, a few bytes at a time
+     ...
+
+Fix this by specifying the log size at mkfs time, so freespace is
+as the test expects it to be.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- tests/btrfs/016     | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/016.out |  2 ++
- tests/btrfs/group   |  1 +
- 3 files changed, 64 insertions(+)
- create mode 100644 tests/btrfs/016
- create mode 100644 tests/btrfs/016.out
 
-diff --git a/tests/btrfs/016 b/tests/btrfs/016
-new file mode 100644
-index 0000000..09a8b8b
---- /dev/null
-+++ b/tests/btrfs/016
-@@ -0,0 +1,61 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/016
-+#
-+# Regression test to make sure we can move a subvol into another subvol
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Fusion IO.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
-+$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/test1 >> $seqres.full 2>&1 \
-+	|| _fail "couldn't create test1"
-+$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/test2 >> $seqres.full 2>&1 \
-+	|| _fail "couldn't create test1"
-+mv $SCRATCH_MNT/test1 $SCRATCH_MNT/test2 || _fail "Problem doing move"
-+
-+echo "Silence is golden"
-+status=0 ; exit
-diff --git a/tests/btrfs/016.out b/tests/btrfs/016.out
-new file mode 100644
-index 0000000..aa2526b
---- /dev/null
-+++ b/tests/btrfs/016.out
-@@ -0,0 +1,2 @@
-+QA output created by 016
-+Silence is golden
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index dc5bbea..65d93b9 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -18,3 +18,4 @@
- 013 auto quick
- 014 auto quick
- 015 auto quick
-+016 auto quick
--- 
-1.8.3.1
+diff --git a/tests/xfs/205 b/tests/xfs/205
+index c9b73a1..0c071ca 100755
+--- a/tests/xfs/205
++++ b/tests/xfs/205
+@@ -41,7 +41,7 @@ _require_scratch
+ 
+ rm -f $seqres.full
+ 
+-_scratch_mkfs_xfs -d size=16m -b size=512 >> $seqres.full 2>&1
++_scratch_mkfs_xfs -d size=16m -b size=512 -l size=4944b >> $seqres.full 2>&1
+ _scratch_mount
+ 
+ # fix the reserve block pool to a known size so that the enospc calculations
 
 _______________________________________________
 xfs mailing list
