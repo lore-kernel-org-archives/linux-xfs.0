@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 75A537F55
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 14:48:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 56D8D8F8073
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 12:48:47 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PqfzccRBp7fYLmOp for
-	<xfs@oss.sgi.com>; Wed, 09 Oct 2013 12:48:46 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99JmktX002309
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 15:48:46 -0400
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r99JmjUZ013180
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 15:48:45 -0400
-Message-ID: <5255B31D.3050306@redhat.com>
-Date: Wed, 09 Oct 2013 14:48:45 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 39EA57F54
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 15:06:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 291E98F8074
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:06:26 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	0bd3yBsNEUku0jwh for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 13:06:21 -0700 (PDT)
+Date: Thu, 10 Oct 2013 07:06:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair deletes files after power cut
+Message-ID: <20131009200615.GE4446@dastard>
+References: <345BE8CDF5F1514CB9B5CB3FFFA9B65920197D@xmb-aln-x14.cisco.com>
+	<20130815000225.GH6023@dastard>
+	<345BE8CDF5F1514CB9B5CB3FFFA9B6590145CD39@xmb-aln-x14.cisco.com>
+	<345BE8CDF5F1514CB9B5CB3FFFA9B6590A8FEA5D@xmb-aln-x14.cisco.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fix xfs/205 for new log size defaults
+Content-Disposition: inline
+In-Reply-To: <345BE8CDF5F1514CB9B5CB3FFFA9B6590A8FEA5D@xmb-aln-x14.cisco.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,40 +32,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: "Semion Zak (sezak)" <sezak@cisco.com>
+Cc: "xtv-fs-group-nds-dg(mailer list)" <xtv-fs-group-nds-dg@cisco.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-test xfs/205 expects a certain log size, but defaults have
-changed, the logs are bigger, and this test now fails w/ early
-ENOSPC:
+On Wed, Oct 09, 2013 at 09:55:39AM +0000, Semion Zak (sezak) wrote:
+> Hello Dave,
+> 
+> Is the patch going to be implemented in the formal Linux code?
 
-     QA output created by 205
-    +   !!! disk full (expected)
-    +   !!! disk full (expected)
-    +   !!! disk full (expected)
-     *** one file
-    +   !!! disk full (expected)
-     *** one file, a few bytes at a time
-     ...
+It needs to be. I've been busy with other stuff, so haven't done it
+myself. I'll try to get to it soon, but if someone else wants to
+pick it up sooner, then by all means....
 
-Fix this by specifying the log size at mkfs time, so freespace is
-as the test expects it to be.
+Cheers,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/tests/xfs/205 b/tests/xfs/205
-index c9b73a1..0c071ca 100755
---- a/tests/xfs/205
-+++ b/tests/xfs/205
-@@ -41,7 +41,7 @@ _require_scratch
- 
- rm -f $seqres.full
- 
--_scratch_mkfs_xfs -d size=16m -b size=512 >> $seqres.full 2>&1
-+_scratch_mkfs_xfs -d size=16m -b size=512 -l size=4944b >> $seqres.full 2>&1
- _scratch_mount
- 
- # fix the reserve block pool to a known size so that the enospc calculations
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
