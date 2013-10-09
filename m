@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C872C7F54
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 05:02:06 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 275577F5D
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 08:02:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 644EBAC003
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 03:02:03 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id fiUPjV7p0gzoJJm9 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 03:02:02 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r99A213m013715
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 10:02:01 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r99A20kV002478
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 10:02:01 GMT
-Received: from abhmt110.oracle.com (abhmt110.oracle.com [141.146.116.62])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r99A20Ci007840 for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 10:02:00 GMT
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Subject: [PATCH] Incorrect check for gdbm/ndbm.h
-Date: Wed,  9 Oct 2013 14:01:45 +0400
-Message-Id: <1381312905-22322-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D1AB88F8078
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 06:02:43 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 3ULwqT9O7KtLdp6B (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 06:02:42 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
+	Hat Linux)) id 1VTtPV-0002I2-Si
+	for xfs@oss.sgi.com; Wed, 09 Oct 2013 13:02:41 +0000
+Date: Wed, 9 Oct 2013 06:02:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] libxfs: stop caching inode structures
+Message-ID: <20131009130241.GA8754@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,59 +26,346 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: vasily.isaenko@oracle.com
 
-Current version of AC_PACKAGE_WANT_NDBM has following bugs:
-* a typo (',') next to 'gdbm/ndbm.h', so C compiler fails
-  with a syntax error when trying to compile
-  "#include <gdbm/ndbm.h,>"
+Currently libxfs has a cache for xfs_inode structures.  Unlike in kernelspace
+where the inode cache, and the associated page cache for file data is used
+for all filesystem operations the libxfs inode cache is only used in few
+places:
 
-* autoconf never defines HAVE_GDBM_NDBM_H_ because it
-  converts both header names (gdbm/ndbm.h, gdbm-ndbm.h)
-  to GDBM_NDBM_H
+ - the libxfs init code reads the root and realtime inodes when called from
+   xfs_db using a special flag, but these inode structure are never referenced
+   again
+ - mkfs uses namespace and bmap routines that take the xfs_inode structure
+   to create the root and realtime inodes, as well as any additional files
+   specified in the proto file
+ - the xfs_db attr code uses xfs_inode-based attr routines in the attrset
+   and attrget commands
+ - phase6 of xfs_repair uses xfs_inode-based routines for rebuilding
+   directories and moving files to the lost+found directory.
+ - phase7 of xfs_repair uses struct xfs_inode to modify the nlink count
+   of inodes.
 
-Because of these bugs 'dbtest' can't be compiled on systems where
-'gdbm-ndbm.h' header is absent but 'gdbm/ndbm.h' is present.
+So except in repair we never ever reuse a cached inode, and even in repair
+the logical inode caching doesn't help:
 
-Fixed this.
+ - in phase 6a we iterate over each inode in the incore inode tree,
+   and if it's a directory check/rebuild it
+ - phase6b then updates the "." and ".." entries for directories
+   that need, which means we require the backing buffers.
+ - phase6c moves disconnected inodes to lost_found, which again needs
+   the backing buffer to actually do anything.
+ - phase7 then only touches inodes for which we need to reset i_nlink,
+   which always involves reading, modifying and writing the physical
+   inode.
+   which always involves modifying the . and .. entries.
 
-Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Given these facts stop caching the inodes to reduce memory usage
+especially in xfs_repair, where this makes a different for large inode
+count inodes.  On the upper end this allows repair to complete for
+filesystem / amount of memory combinations that previously wouldn't.
+
+With this we probably could increase the memory available to the buffer
+cache in xfs_repair, but trying to do so I got a bit lost - the current
+formula seems to magic to me to make any sense, and simply doubling the
+buffer cache size causes us to run out of memory given that the data cached
+in the buffer cache (typically lots of 8k inode buffers and few 4k other
+metadata buffers) are much bigger than the inodes cached in the inode
+cache.  We probably need a sizing scheme that takes the actual amount
+of memory allocated to the buffer cache into account to solve this better.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
 ---
- m4/package_gdbmdev.m4 |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+ include/libxfs.h      |    5 --
+ libxfs/init.c         |    9 -----
+ libxfs/rdwr.c         |   87 +++++++++++---------------------------------------
+ man/man8/xfs_repair.8 |    6 ---
+ mkfs/xfs_mkfs.c       |    1 
+ repair/xfs_repair.c   |   14 +-------
+ 6 files changed, 23 insertions(+), 99 deletions(-)
 
-diff --git a/m4/package_gdbmdev.m4 b/m4/package_gdbmdev.m4
-index c07f75d..a57e3a2 100644
---- a/m4/package_gdbmdev.m4
-+++ b/m4/package_gdbmdev.m4
-@@ -19,7 +19,18 @@ AC_DEFUN([AC_PACKAGE_WANT_NDBM],
-   ])
+Index: xfsprogs/include/libxfs.h
+===================================================================
+--- xfsprogs.orig/include/libxfs.h	2013-10-09 12:36:31.000000000 +0000
++++ xfsprogs/include/libxfs.h	2013-10-09 12:40:20.000000000 +0000
+@@ -257,7 +257,6 @@
+ #define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
+ #define LIBXFS_MOUNT_ATTR2		0x0020
  
- AC_DEFUN([AC_PACKAGE_WANT_GDBM],
--  [ AC_CHECK_HEADERS([gdbm/ndbm.h, gdbm-ndbm.h], [ have_db=true ], [ have_db=false ])
-+  [ AC_CHECK_HEADER(gdbm-ndbm.h, [ gdbm_ndbm=true; have_db=true ], [ gdbm_ndbm=false; have_db=false ])
-+
-+    if test $gdbm_ndbm = true; then
-+        AC_DEFINE(HAVE_GDBM_NDBM_H, [1], [Define to 1 if you have the <gdbm-ndbm.h> header file.])
-+    else
-+	AS_UNSET([ac_cv_header_gdbm_ndbm_h])
-+        AC_CHECK_HEADER(gdbm/ndbm.h, [ gdbm_ndbm_=true; have_db=true ], [ gdbm_ndbm_=false; have_db=false ])
-+        if test $gdbm_ndbm_ = true; then
-+            AC_DEFINE(HAVE_GDBM_NDBM_H_, [1], [Define to 1 if you have the <gdbm/ndbm.h> header file.])
-+        fi
-+    fi
-+
-     found=false
-     libgdbm=""
+-#define LIBXFS_IHASHSIZE(sbp)		(1<<10)
+ #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
  
--- 
-1.7.1
+ extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
+@@ -440,7 +439,6 @@
+ extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
+ 
+ extern int libxfs_bhash_size;
+-extern int libxfs_ihash_size;
+ 
+ #define LIBXFS_BREAD	0x1
+ #define LIBXFS_BWRITE	0x2
+@@ -640,9 +638,6 @@
+ extern int	libxfs_iflush_int (xfs_inode_t *, xfs_buf_t *);
+ 
+ /* Inode Cache Interfaces */
+-extern struct cache	*libxfs_icache;
+-extern struct cache_operations	libxfs_icache_operations;
+-extern void	libxfs_icache_purge (void);
+ extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
+ 				uint, xfs_inode_t **, xfs_daddr_t);
+ extern void	libxfs_iput (xfs_inode_t *, uint);
+Index: xfsprogs/libxfs/init.c
+===================================================================
+--- xfsprogs.orig/libxfs/init.c	2013-10-09 12:36:31.000000000 +0000
++++ xfsprogs/libxfs/init.c	2013-10-09 12:40:20.000000000 +0000
+@@ -22,9 +22,6 @@
+ 
+ char *progname = "libxfs";	/* default, changed by each tool */
+ 
+-struct cache *libxfs_icache;	/* global inode cache */
+-int libxfs_ihash_size;		/* #buckets in icache */
+-
+ struct cache *libxfs_bcache;	/* global buffer cache */
+ int libxfs_bhash_size;		/* #buckets in bcache */
+ 
+@@ -335,9 +332,6 @@
+ 	}
+ 	if (needcd)
+ 		chdir(curdir);
+-	if (!libxfs_ihash_size)
+-		libxfs_ihash_size = LIBXFS_IHASHSIZE(sbp);
+-	libxfs_icache = cache_init(libxfs_ihash_size, &libxfs_icache_operations);
+ 	if (!libxfs_bhash_size)
+ 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
+ 	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
+@@ -866,7 +860,6 @@
+ 	int			agno;
+ 
+ 	libxfs_rtmount_destroy(mp);
+-	libxfs_icache_purge();
+ 	libxfs_bcache_purge();
+ 
+ 	for (agno = 0; agno < mp->m_maxagi; agno++) {
+@@ -882,7 +875,6 @@
+ libxfs_destroy(void)
+ {
+ 	manage_zones(1);
+-	cache_destroy(libxfs_icache);
+ 	cache_destroy(libxfs_bcache);
+ }
+ 
+@@ -898,7 +890,6 @@
+ 	time_t t;
+ 	char *c;
+ 
+-	cache_report(fp, "libxfs_icache", libxfs_icache);
+ 	cache_report(fp, "libxfs_bcache", libxfs_bcache);
+ 
+ 	t = time(NULL);
+Index: xfsprogs/libxfs/rdwr.c
+===================================================================
+--- xfsprogs.orig/libxfs/rdwr.c	2013-10-09 12:36:31.000000000 +0000
++++ xfsprogs/libxfs/rdwr.c	2013-10-09 12:46:09.000000000 +0000
+@@ -993,26 +993,12 @@
+ 
+ 
+ /*
+- * Inode cache interfaces
++ * Inode cache stubs.
+  */
+ 
+ extern kmem_zone_t	*xfs_ili_zone;
+ extern kmem_zone_t	*xfs_inode_zone;
+ 
+-static unsigned int
+-libxfs_ihash(cache_key_t key, unsigned int hashsize)
+-{
+-	return ((unsigned int)*(xfs_ino_t *)key) % hashsize;
+-}
+-
+-static int
+-libxfs_icompare(struct cache_node *node, cache_key_t key)
+-{
+-	xfs_inode_t	*ip = (xfs_inode_t *)node;
+-
+-	return (ip->i_ino == *(xfs_ino_t *)key);
+-}
+-
+ int
+ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+ 		xfs_inode_t **ipp, xfs_daddr_t bno)
+@@ -1020,34 +1006,21 @@
+ 	xfs_inode_t	*ip;
+ 	int		error = 0;
+ 
+-	if (cache_node_get(libxfs_icache, &ino, (struct cache_node **)&ip)) {
+-#ifdef INO_DEBUG
+-		fprintf(stderr, "%s: allocated inode, ino=%llu(%llu), %p\n",
+-			__FUNCTION__, (unsigned long long)ino, bno, ip);
+-#endif
+-		ip->i_ino = ino;
+-		ip->i_mount = mp;
+-		error = xfs_iread(mp, tp, ip, bno);
+-		if (error) {
+-			cache_node_purge(libxfs_icache, &ino,
+-					(struct cache_node *)ip);
+-			ip = NULL;
+-		}
++	ip = kmem_zone_zalloc(xfs_inode_zone, 0);
++	if (!ip)
++		return ENOMEM;
++
++	ip->i_ino = ino;
++	ip->i_mount = mp;
++	error = xfs_iread(mp, tp, ip, bno);
++	if (error) {
++		kmem_zone_free(xfs_inode_zone, ip);
++		*ipp = NULL;
++		return error;
+ 	}
+-	*ipp = ip;
+-	return error;
+-}
+-
+-void
+-libxfs_iput(xfs_inode_t *ip, uint lock_flags)
+-{
+-	cache_node_put(libxfs_icache, (struct cache_node *)ip);
+-}
+ 
+-static struct cache_node *
+-libxfs_ialloc(cache_key_t key)
+-{
+-	return kmem_zone_zalloc(xfs_inode_zone, 0);
++	*ipp = ip;
++	return 0;
+ }
+ 
+ static void
+@@ -1064,32 +1037,12 @@
+ 		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
+ }
+ 
+-static void
+-libxfs_irelse(struct cache_node *node)
+-{
+-	xfs_inode_t	*ip = (xfs_inode_t *)node;
+-
+-	if (ip != NULL) {
+-		if (ip->i_itemp)
+-			kmem_zone_free(xfs_ili_zone, ip->i_itemp);
+-		ip->i_itemp = NULL;
+-		libxfs_idestroy(ip);
+-		kmem_zone_free(xfs_inode_zone, ip);
+-		ip = NULL;
+-	}
+-}
+-
+ void
+-libxfs_icache_purge(void)
++libxfs_iput(xfs_inode_t *ip, uint lock_flags)
+ {
+-	cache_purge(libxfs_icache);
++	if (ip->i_itemp)
++		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
++	ip->i_itemp = NULL;
++	libxfs_idestroy(ip);
++	kmem_zone_free(xfs_inode_zone, ip);
+ }
+-
+-struct cache_operations libxfs_icache_operations = {
+-	/* .hash */	libxfs_ihash,
+-	/* .alloc */	libxfs_ialloc,
+-	/* .flush */	NULL,
+-	/* .relse */	libxfs_irelse,
+-	/* .compare */	libxfs_icompare,
+-	/* .bulkrelse */ NULL
+-};
+Index: xfsprogs/mkfs/xfs_mkfs.c
+===================================================================
+--- xfsprogs.orig/mkfs/xfs_mkfs.c	2013-10-09 12:36:31.000000000 +0000
++++ xfsprogs/mkfs/xfs_mkfs.c	2013-10-09 12:40:20.000000000 +0000
+@@ -2909,7 +2909,6 @@
+ 	 * Need to drop references to inodes we still hold, first.
+ 	 */
+ 	libxfs_rtmount_destroy(mp);
+-	libxfs_icache_purge();
+ 	libxfs_bcache_purge();
+ 
+ 	/*
+Index: xfsprogs/repair/xfs_repair.c
+===================================================================
+--- xfsprogs.orig/repair/xfs_repair.c	2013-09-09 14:34:49.000000000 +0000
++++ xfsprogs/repair/xfs_repair.c	2013-10-09 12:40:20.000000000 +0000
+@@ -69,7 +69,6 @@
+ };
+ 
+ 
+-static int	ihash_option_used;
+ static int	bhash_option_used;
+ static long	max_mem_specified;	/* in megabytes */
+ static int	phase2_threads = 32;
+@@ -239,13 +238,13 @@
+ 					pre_65_beta = 1;
+ 					break;
+ 				case IHASH_SIZE:
+-					libxfs_ihash_size = (int)strtol(val, NULL, 0);
+-					ihash_option_used = 1;
++					do_warn(
++		_("-o ihash option has been removed and will be ignored\n"));
+ 					break;
+ 				case BHASH_SIZE:
+ 					if (max_mem_specified)
+ 						do_abort(
+-			_("-o bhash option cannot be used with -m option\n"));
++		_("-o bhash option cannot be used with -m option\n"));
+ 					libxfs_bhash_size = (int)strtol(val, NULL, 0);
+ 					bhash_option_used = 1;
+ 					break;
+@@ -648,9 +647,7 @@
+ 		unsigned long	max_mem;
+ 		struct rlimit	rlim;
+ 
+-		libxfs_icache_purge();
+ 		libxfs_bcache_purge();
+-		cache_destroy(libxfs_icache);
+ 		cache_destroy(libxfs_bcache);
+ 
+ 		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
+@@ -709,11 +706,6 @@
+ 			do_log(_("        - block cache size set to %d entries\n"),
+ 				libxfs_bhash_size * HASH_CACHE_RATIO);
+ 
+-		if (!ihash_option_used)
+-			libxfs_ihash_size = libxfs_bhash_size;
+-
+-		libxfs_icache = cache_init(libxfs_ihash_size,
+-						&libxfs_icache_operations);
+ 		libxfs_bcache = cache_init(libxfs_bhash_size,
+ 						&libxfs_bcache_operations);
+ 	}
+Index: xfsprogs/man/man8/xfs_repair.8
+===================================================================
+--- xfsprogs.orig/man/man8/xfs_repair.8	2013-09-09 14:34:49.000000000 +0000
++++ xfsprogs/man/man8/xfs_repair.8	2013-10-09 12:40:20.000000000 +0000
+@@ -130,12 +130,6 @@
+ supported are:
+ .RS 1.0i
+ .TP
+-.BI ihash= ihashsize
+-overrides the default inode cache hash size. The total number of
+-inode cache entries are limited to 8 times this amount. The default
+-.I ihashsize
+-is 1024 (for a total of 8192 entries).
+-.TP
+ .BI bhash= bhashsize
+ overrides the default buffer cache hash size. The total number of
+ buffer cache entries are limited to 8 times this amount. The default
 
 _______________________________________________
 xfs mailing list
