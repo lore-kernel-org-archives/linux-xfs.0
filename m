@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 224727F6A
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 15:43:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D1608F8074
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:43:29 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8F1407F6A
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 15:45:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C727AC004
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:45:38 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	PuxGED1rsvEKlHCN for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 13:43:27 -0700 (PDT)
-Date: Thu, 10 Oct 2013 07:43:25 +1100
+	tv1pHKaMRbxxgviB for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 13:45:37 -0700 (PDT)
+Date: Thu, 10 Oct 2013 07:45:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/32] xfs: fix some minor sparse warnings
-Message-ID: <20131009204325.GI4446@dastard>
+Subject: Re: [PATCH 04/32] xfs: check magic numbers in dir3 leaf verifier first
+Message-ID: <20131009204527.GJ4446@dastard>
 References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
-	<1380510944-8571-4-git-send-email-david@fromorbit.com>
-	<52548D80.8070807@sandeen.net>
+	<1380510944-8571-5-git-send-email-david@fromorbit.com>
+	<52548F4F.5000800@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52548D80.8070807@sandeen.net>
+In-Reply-To: <52548F4F.5000800@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,21 +34,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 08, 2013 at 05:56:00PM -0500, Eric Sandeen wrote:
+On Tue, Oct 08, 2013 at 06:03:43PM -0500, Eric Sandeen wrote:
 > On 9/29/13 10:15 PM, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > A couple of simple locking annotations and 0 vs NULL warnings.
-> > Nothing that changes any code behaviour, just removes build noise.
+> > Calling xfs_dir3_leaf_hdr_from_disk() in a verifier before
+> > validating the magic numbers in the buffer results in ASSERT
+> > failures due to mismatching magic numbers when a corruption occurs.
+> > Seeing as the verifier is supposed to catch the corruption and pass
+> > it back to the caller, having the verifier assert fail on error
+> > defeats the purpose of detecting the errors in the first place.
+> > 
+> > Check the magic numbers direct from the buffer before decoding the
+> > header.
 > 
-> The patch is fine as it is, but it doesn't reflect the commit log.
+> Looks good; have you sent this for the kernel yet?
 > 
-> Is part of it missing?
+> (I thought we wanted changes to hit kernelspace first) :)
 
-It's trimmed down from the kernel commit to just the bits that are
-in libxfs. I haven't altered it in any other way, so it's entirely
-possible the commit message has bits in it that the patch now
-doesn't.
+Yes, commit 0f295a214bb7658ca37bd61a8a1f0cd4a9d86c1f.
 
 Cheers,
 
