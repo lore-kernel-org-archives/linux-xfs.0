@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4D2577F7E
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CA23B7F7B
 	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 13:07:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D11C304032
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 54AB9AC002
 	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 11:07:35 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iPaFZTdmvalLGA6S for
+	cuda.sgi.com with ESMTP id zEgGFxCqWHy4uG9y for
 	<xfs@oss.sgi.com>; Wed, 09 Oct 2013 11:07:34 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99I7XIk025011
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r99I7Xjj021899
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:33 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r99I7XQI004866
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r99I7Xiv000443
 	for <xfs@oss.sgi.com>; Wed, 9 Oct 2013 14:07:33 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 07/10] xfs: refactor xfs_difree() inobt bits into
-	xfs_difree_inobt() helper
-Date: Wed,  9 Oct 2013 14:06:55 -0400
-Message-Id: <1381342018-35829-8-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 10/10] xfs: enable the finobt feature on v5 superblocks
+Date: Wed,  9 Oct 2013 14:06:58 -0400
+Message-Id: <1381342018-35829-11-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1381342018-35829-1-git-send-email-bfoster@redhat.com>
 References: <1381342018-35829-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,205 +38,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Refactor xfs_difree() in preparation for the finobt. xfs_difree()
-performs the validity checks against the ag and reads the agi
-header. The work of physically updating the inode allocation btree
-is pushed down into the new xfs_difree_inobt() helper.
+Add the finobt feature bit to the list of known features. As of
+this point, the kernel code knows how to mount and manage both
+finobt and non-finobt formatted filesystems.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_ialloc.c | 160 +++++++++++++++++++++++++++++++---------------------
- 1 file changed, 96 insertions(+), 64 deletions(-)
+ fs/xfs/xfs_sb.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index fd9ba6c..7cffc24 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1348,74 +1348,31 @@ out_error:
- 	return XFS_ERROR(error);
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index 0013bac..c48d95d 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -586,7 +586,8 @@ xfs_sb_has_compat_feature(
  }
  
--/*
-- * Free disk inode.  Carefully avoids touching the incore inode, all
-- * manipulations incore are the caller's responsibility.
-- * The on-disk inode is not changed by this operation, only the
-- * btree (free inode mask) is changed.
-- */
--int
--xfs_difree(
--	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_ino_t	inode,		/* inode to be freed */
--	xfs_bmap_free_t	*flist,		/* extents to free */
--	int		*delete,	/* set if inode cluster was deleted */
--	xfs_ino_t	*first_ino)	/* first inode in deleted cluster */
-+STATIC int
-+xfs_difree_inobt(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	struct xfs_buf			*agbp,
-+	xfs_agino_t			agino,
-+	struct xfs_bmap_free		*flist,
-+	int				*delete,
-+	xfs_ino_t			*first_ino,
-+	struct xfs_inobt_rec_incore	*orec)
- {
--	/* REFERENCED */
--	xfs_agblock_t	agbno;	/* block number containing inode */
--	xfs_buf_t	*agbp;	/* buffer containing allocation group header */
--	xfs_agino_t	agino;	/* inode number relative to allocation group */
--	xfs_agnumber_t	agno;	/* allocation group number */
--	xfs_agi_t	*agi;	/* allocation group header */
--	xfs_btree_cur_t	*cur;	/* inode btree cursor */
--	int		error;	/* error return value */
--	int		i;	/* result code */
--	int		ilen;	/* inodes in an inode cluster */
--	xfs_mount_t	*mp;	/* mount structure for filesystem */
--	int		off;	/* offset of inode in inode chunk */
--	xfs_inobt_rec_incore_t rec;	/* btree record */
--	struct xfs_perag *pag;
--
--	mp = tp->t_mountp;
-+	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
-+	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
-+	xfs_agblock_t			agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-+	struct xfs_perag		*pag;
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_inobt_rec_incore	rec;
-+	int				ilen;
-+	int				error;
-+	int				i;
-+	int				off;
- 
--	/*
--	 * Break up inode number into its components.
--	 */
--	agno = XFS_INO_TO_AGNO(mp, inode);
--	if (agno >= mp->m_sb.sb_agcount)  {
--		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
--			__func__, agno, mp->m_sb.sb_agcount);
--		ASSERT(0);
--		return XFS_ERROR(EINVAL);
--	}
--	agino = XFS_INO_TO_AGINO(mp, inode);
--	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
--		xfs_warn(mp, "%s: inode != XFS_AGINO_TO_INO() (%llu != %llu).",
--			__func__, (unsigned long long)inode,
--			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
--		ASSERT(0);
--		return XFS_ERROR(EINVAL);
--	}
--	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
--	if (agbno >= mp->m_sb.sb_agblocks)  {
--		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
--			__func__, agbno, mp->m_sb.sb_agblocks);
--		ASSERT(0);
--		return XFS_ERROR(EINVAL);
--	}
--	/*
--	 * Get the allocation group header.
--	 */
--	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
--	if (error) {
--		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
--			__func__, error);
--		return error;
--	}
--	agi = XFS_BUF_TO_AGI(agbp);
- 	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
- 	ASSERT(agbno < be32_to_cpu(agi->agi_length));
-+
- 	/*
- 	 * Initialize the cursor.
- 	 */
-@@ -1511,6 +1468,7 @@ xfs_difree(
- 	if (error)
- 		goto error0;
- 
-+	*orec = rec;
- 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	return 0;
- 
-@@ -1519,6 +1477,80 @@ error0:
- 	return error;
- }
- 
-+/*
-+ * Free disk inode.  Carefully avoids touching the incore inode, all
-+ * manipulations incore are the caller's responsibility.
-+ * The on-disk inode is not changed by this operation, only the
-+ * btree (free inode mask) is changed.
-+ */
-+int
-+xfs_difree(
-+	xfs_trans_t	*tp,		/* transaction pointer */
-+	xfs_ino_t	inode,		/* inode to be freed */
-+	xfs_bmap_free_t	*flist,		/* extents to free */
-+	int		*delete,	/* set if inode cluster was deleted */
-+	xfs_ino_t	*first_ino)	/* first inode in deleted cluster */
-+{
-+	/* REFERENCED */
-+	xfs_agblock_t	agbno;	/* block number containing inode */
-+	xfs_buf_t	*agbp;	/* buffer containing allocation group header */
-+	xfs_agino_t	agino;	/* inode number relative to allocation group */
-+	xfs_agnumber_t	agno;	/* allocation group number */
-+	int		error;	/* error return value */
-+	xfs_mount_t	*mp;	/* mount structure for filesystem */
-+	xfs_inobt_rec_incore_t rec;	/* btree record */
-+
-+	mp = tp->t_mountp;
-+
-+	/*
-+	 * Break up inode number into its components.
-+	 */
-+	agno = XFS_INO_TO_AGNO(mp, inode);
-+	if (agno >= mp->m_sb.sb_agcount)  {
-+		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
-+			__func__, agno, mp->m_sb.sb_agcount);
-+		ASSERT(0);
-+		return XFS_ERROR(EINVAL);
-+	}
-+	agino = XFS_INO_TO_AGINO(mp, inode);
-+	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
-+		xfs_warn(mp, "%s: inode != XFS_AGINO_TO_INO() (%llu != %llu).",
-+			__func__, (unsigned long long)inode,
-+			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
-+		ASSERT(0);
-+		return XFS_ERROR(EINVAL);
-+	}
-+	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-+	if (agbno >= mp->m_sb.sb_agblocks)  {
-+		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
-+			__func__, agbno, mp->m_sb.sb_agblocks);
-+		ASSERT(0);
-+		return XFS_ERROR(EINVAL);
-+	}
-+	/*
-+	 * Get the allocation group header.
-+	 */
-+	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-+	if (error) {
-+		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
-+			__func__, error);
-+		return error;
-+	}
-+
-+	/*
-+	 * Fix up the inode allocation btree.
-+	 */
-+	error = xfs_difree_inobt(mp, tp, agbp, agino, flist, delete, first_ino,
-+				 &rec);
-+	if (error)
-+		goto error0;
-+
-+	return 0;
-+
-+error0:
-+	return error;
-+}
-+
- STATIC int
- xfs_imap_lookup(
- 	struct xfs_mount	*mp,
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+-#define XFS_SB_FEAT_RO_COMPAT_ALL 0
++#define XFS_SB_FEAT_RO_COMPAT_ALL \
++		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
 -- 
 1.8.1.4
 
