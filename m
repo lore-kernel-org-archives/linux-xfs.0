@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C93487FD6
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 19:32:12 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 976257FED
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 21:15:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 707CEAC002
-	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 17:32:12 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	PuCENBMg9AiiHWEJ for <xfs@oss.sgi.com>;
-	Tue, 08 Oct 2013 17:32:10 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VThgl-0005mP-Iw
-	for xfs@oss.sgi.com; Wed, 09 Oct 2013 11:31:43 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VThgl-00066e-Ho
-	for xfs@oss.sgi.com; Wed, 09 Oct 2013 11:31:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: prevent deadlock trying to cover an active log
-Date: Wed,  9 Oct 2013 11:31:43 +1100
-Message-Id: <1381278703-23439-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5ABFC8F8054
+	for <xfs@oss.sgi.com>; Tue,  8 Oct 2013 19:15:46 -0700 (PDT)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id 5oMH2PRj4ptUOeFe for
+	<xfs@oss.sgi.com>; Tue, 08 Oct 2013 19:15:44 -0700 (PDT)
+Message-ID: <1381284836.3969.8.camel@localhost.localdomain>
+Subject: Re: [PATCH] xfstest: an regression test for btrfs balance
+From: Gui Hecheng <guihc.fnst@cn.fujitsu.com>
+Date: Wed, 09 Oct 2013 10:13:56 +0800
+In-Reply-To: <20131008172157.GD16461@localhost.localdomain>
+References: <1381195275-9471-1-git-send-email-guihc.fnst@cn.fujitsu.com>
+	<20131008172157.GD16461@localhost.localdomain>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,210 +24,161 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: miaox@cn.fujitsu.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, 2013-10-08 at 13:21 -0400, Josef Bacik wrote:
+> On Tue, Oct 08, 2013 at 09:21:15AM +0800, Gui Hecheng wrote:
+> > Originally, when executing "btrfs balance" right after
+> > "btrfs subvolume snaphot" & "btrfs subvolume delete",
+> > a kernel BUG arises.
+> > 
+> > This problem is caused by the patch:
+> > [PATCH 1/2] Btrfs: fix for patch "cleanup: don't check
+> > the same thing twice"
+> > The commit id: 48475471728f060bfd2e686f592ef208d3ba8b7d
+> > (in kernel/git/torvalds/linux.git)
+> > 
+> > handled by the patch:
+> > [PATCH 2/3] Btrfs: fix oops caused by the space balance
+> > and dead roots
+> > 
+> > Signed-off-by: Gui Hecheng <guihc.fnst@cn.fujitsu.com>
+> > ---
+> >  tests/btrfs/319     | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/btrfs/319.out |  2 ++
+> >  tests/btrfs/group   |  1 +
+> >  3 files changed, 74 insertions(+)
+> >  create mode 100755 tests/btrfs/319
+> >  create mode 100644 tests/btrfs/319.out
+> > 
+> > diff --git a/tests/btrfs/319 b/tests/btrfs/319
+> > new file mode 100755
+> > index 0000000..b49e760
+> > --- /dev/null
+> > +++ b/tests/btrfs/319
+> > @@ -0,0 +1,71 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. btrfs/319
+> > +#
+> 
+> Just pick the next available number, so 012, no reason to jack up the numbers
+> like this.
 
-Recent analysis of a deadlocked XFS filesystem from a kernel
-crash dump indicated that the filesystem was stuck waiting for log
-space. The short story of the hang on the RHEL6 kernel is this:
+Test number has been changed 319 -> 012 in V2.
 
-	- the tail of the log is pinned by an inode
-	- the inode has been pushed by the xfsaild
-	- the inode has been flushed to it's backing buffer and is
-	  currently flush locked and hence waiting for backing
-	  buffer IO to complete and remove it from the AIL
-	- the backing buffer is marked for write - it is on the
-	  delayed write queue
-	- the inode buffer has been modified directly and logged
-	  recently due to unlinked inode list modification
-	- the backing buffer is pinned in memory as it is in the
-	  active CIL context.
-	- the xfsbufd won't start buffer writeback because it is
-	  pinned
-	- xfssyncd won't force the log because it sees the log as
-	  needing to be covered and hence wants to issue a dummy
-	  transaction to move the log covering state machine along.
+> > +# Btrfs balance tests
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2013 Fujitsu.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here="`pwd`"
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +
+> > +_create_snapshot()
+> > +{
+> > +	for i in $(seq 20)
+> > +	do
+> > +		btrfs sub snapshot $SCRATCH_MNT $SCRATCH_MNT/snapshot0 >/dev/null
+> > +		btrfs sub delete $SCRATCH_MNT/snapshot0 >/dev/null
+> > +	done
+> > +}
+> > +
+> > +_balance()
+> > +{
+> > +	for i in $(seq 20)
+> > +	do
+> > +		btrfs balance start $SCRATCH_MNT >/dev/null
+> > +	done
+> > +}
+> > +
+> > +#get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +_supported_fs btrfs
+> > +_supported_os Linux
+> > +
+> > +_setup_testdir
+> > +_require_scratch
+> > +_scratch_mkfs >/dev/null 2>&1
+> > +_scratch_mount
+> > +
+> > +echo "Tip: Run dmesg to see the error on failure"
+> > +
+> > +_create_snapshot &
+> > +
+> > +_balance &
+> > +
+> > +wait
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/btrfs/319.out b/tests/btrfs/319.out
+> > new file mode 100644
+> > index 0000000..1d21523
+> > --- /dev/null
+> > +++ b/tests/btrfs/319.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 319
+> > +Tip: Run dmesg to see the error on failure
+> > diff --git a/tests/btrfs/group b/tests/btrfs/group
+> > index d2fe030..201a475 100644
+> > --- a/tests/btrfs/group
+> > +++ b/tests/btrfs/group
+> > @@ -14,3 +14,4 @@
+> >  009 auto quick
+> >  010 auto quick
+> >  011 auto
+> > +319 auto
+> > -- 
+> > 1.8.0.1
+> 
+> Otherwise this looks nice and straightforward, did you verify that it made the
+> box panic without Miao's fixes?  If you did just fixup the test number and you
+> can add
+> 
+> Reviewed-by: Josef Bacik <jbacik@fusionio.com>
+> 
+> Thanks,
+> 
+> Josef
+> --
 
-Hence there is no trigger to force the CIL to the log and hence
-unpin the inode buffer and therefore complete the inode IO, remove
-it from the AIL and hence move the tail of the log along, allowing
-transactions to start again.
+I have verify that it did make the box panic without Miao's fixes.
+Thank you for your comments.
 
-Mainline kernels also have the same deadlock, though the signature
-is slightly different - the inode buffer never reaches the delayed
-write lists because xfs_buf_item_push() sees that it is pinned and
-hence never adds it to the delayed write list that the xfsaild
-flushes.
+Gui
 
-There are two possible solutions here. The first is to simply force
-the log before trying to cover the log and so ensure that the CIL is
-emptied before we try to reserve space for the dummy transaction in
-the xfs_log_worker(). While this might work most of the time, it is
-still racy and is no guarantee that we don't get stuck in
-xfs_trans_reserve waiting for log space to come free. Hence it's not
-the best way to solve the problem.
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The second solution is to modify xfs_log_need_covered() to be aware
-of the CIL. We only should be attempting to cover the log if there
-is no current activity in the log - covering the log is the process
-of ensuring that the head and tail in the log on disk are identical
-(i.e. the log is clean and at idle). Hence, by definition, if there
-are items in the CIL then the log is not at idle and so we don't
-need to attempt to cover it.
-
-When we don't need to cover the log because it is active or idle, we
-issue a log force from xfs_log_worker() - if the log is idle, then
-this does nothing.  However, if the log is active due to there being
-items in the CIL, it will force the items in the CIL to the log and
-unpin them.
-
-In the case of the above deadlock scenario, instead of
-xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
-cover the log, it will instead force the log, thereby unpinning the
-inode buffer, allowing IO to be issued and complete and hence
-removing the inode that was pinning the tail of the log from the
-AIL. At that point, everything will start moving along again. i.e.
-the xfs_log_worker turns back into a watchdog that can alleviate
-deadlocks based around pinned items that prevent the tail of the log
-from being moved...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c      | 48 +++++++++++++++++++++++++++++-------------------
- fs/xfs/xfs_log_cil.c  | 14 ++++++++++++++
- fs/xfs/xfs_log_priv.h | 10 ++++------
- 3 files changed, 47 insertions(+), 25 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a2dea108..613ed94 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1000,27 +1000,34 @@ xfs_log_space_wake(
- }
- 
- /*
-- * Determine if we have a transaction that has gone to disk
-- * that needs to be covered. To begin the transition to the idle state
-- * firstly the log needs to be idle (no AIL and nothing in the iclogs).
-- * If we are then in a state where covering is needed, the caller is informed
-- * that dummy transactions are required to move the log into the idle state.
-+ * Determine if we have a transaction that has gone to disk that needs to be
-+ * covered. To begin the transition to the idle state firstly the log needs to
-+ * be idle. That means the CIL, the AIL and the iclogs needs to be empty before
-+ * we start attempting to cover the log.
-  *
-- * Because this is called as part of the sync process, we should also indicate
-- * that dummy transactions should be issued in anything but the covered or
-- * idle states. This ensures that the log tail is accurately reflected in
-- * the log at the end of the sync, hence if a crash occurrs avoids replay
-- * of transactions where the metadata is already on disk.
-+ * Only if we are then in a state where covering is needed, the caller is
-+ * informed that dummy transactions are required to move the log into the idle
-+ * state.
-+ *
-+ * If there are any items in the AIl or CIL, then we do not want to attempt to
-+ * cover the log as we may be in a situation where there isn't log space
-+ * available to run a dummy transaction and this can lead to deadlocks when the
-+ * tail of the log is pinned by an item that is modified in the CIL.  Hence
-+ * there's no point in running a dummy transaction at this point because we
-+ * can't start trying to idle the log until both the CIL and AIL are empty.
-  */
- int
- xfs_log_need_covered(xfs_mount_t *mp)
- {
--	int		needed = 0;
- 	struct xlog	*log = mp->m_log;
-+	int		needed = 0;
- 
- 	if (!xfs_fs_writable(mp))
- 		return 0;
- 
-+	if (!xlog_cil_empty(log))
-+		return 0;
-+
- 	spin_lock(&log->l_icloglock);
- 	switch (log->l_covered_state) {
- 	case XLOG_STATE_COVER_DONE:
-@@ -1029,14 +1036,17 @@ xfs_log_need_covered(xfs_mount_t *mp)
- 		break;
- 	case XLOG_STATE_COVER_NEED:
- 	case XLOG_STATE_COVER_NEED2:
--		if (!xfs_ail_min_lsn(log->l_ailp) &&
--		    xlog_iclogs_empty(log)) {
--			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
--				log->l_covered_state = XLOG_STATE_COVER_DONE;
--			else
--				log->l_covered_state = XLOG_STATE_COVER_DONE2;
--		}
--		/* FALLTHRU */
-+		if (xfs_ail_min_lsn(log->l_ailp))
-+			break;
-+		if (!xlog_iclogs_empty(log))
-+			break;
-+
-+		needed = 1;
-+		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
-+			log->l_covered_state = XLOG_STATE_COVER_DONE;
-+		else
-+			log->l_covered_state = XLOG_STATE_COVER_DONE2;
-+		break;
- 	default:
- 		needed = 1;
- 		break;
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index cfe9797..da8524e77 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -711,6 +711,20 @@ xlog_cil_push_foreground(
- 	xlog_cil_push(log);
- }
- 
-+bool
-+xlog_cil_empty(
-+	struct xlog	*log)
-+{
-+	struct xfs_cil	*cil = log->l_cilp;
-+	bool		empty = false;
-+
-+	spin_lock(&cil->xc_push_lock);
-+	if (list_empty(&cil->xc_cil))
-+		empty = true;
-+	spin_unlock(&cil->xc_push_lock);
-+	return empty;
-+}
-+
- /*
-  * Commit a transaction with the given vector to the Committed Item List.
-  *
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 136654b..de24ffb 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -514,12 +514,10 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
- /*
-  * Committed Item List interfaces
-  */
--int
--xlog_cil_init(struct xlog *log);
--void
--xlog_cil_init_post_recovery(struct xlog *log);
--void
--xlog_cil_destroy(struct xlog *log);
-+int	xlog_cil_init(struct xlog *log);
-+void	xlog_cil_init_post_recovery(struct xlog *log);
-+void	xlog_cil_destroy(struct xlog *log);
-+bool	xlog_cil_empty(struct xlog *log)
- 
- /*
-  * CIL force routines
--- 
-1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
