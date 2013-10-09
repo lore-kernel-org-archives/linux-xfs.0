@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc3-12-g74564fb
-Message-Id: <20131009002551.E17917FD8@oss.sgi.com>
-Date: Tue,  8 Oct 2013 19:25:51 -0500 (CDT)
+Message-Id: <20131009002601.938247FE1@oss.sgi.com>
+Date: Tue,  8 Oct 2013 19:26:01 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   74564fb xfs: clean up xfs_inactive() error handling, kill VN_INACTIVE_[NO]CACHE
   88877d2 xfs: push down inactive transaction mgmt for ifree
   f7be2d7 xfs: push down inactive transaction mgmt for truncate
