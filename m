@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 213D67F7C
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 16:42:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF3A2304032
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 14:42:44 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F2B1F7F3F
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 17:12:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C9421304032
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 15:12:20 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	3kUiE7Tms7Hc84fD for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 14:42:43 -0700 (PDT)
-Date: Thu, 10 Oct 2013 08:42:41 +1100
+	oC2BSHFrmpTSeSCA for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 15:12:19 -0700 (PDT)
+Date: Thu, 10 Oct 2013 09:12:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: add filter to 200 accommodate changed mount
-	output
-Message-ID: <20131009214241.GM4446@dastard>
-References: <5251D5E1.3020202@redhat.com>
+Subject: Re: [PATCH] xfstests: handle xfs_quota output w/ long devicenames
+Message-ID: <20131009221216.GN4446@dastard>
+References: <5251E83B.8060605@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5251D5E1.3020202@redhat.com>
+In-Reply-To: <5251E83B.8060605@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,18 +32,57 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Oct 06, 2013 at 04:28:01PM -0500, Eric Sandeen wrote:
-> The mount binary changed its output w.r.t. red-only devices, and
-> stopped referring to a "block device."
+On Sun, Oct 06, 2013 at 05:46:19PM -0500, Eric Sandeen wrote:
+> Long device names may be split onto their own line
+> on quota output:
 > 
-> This broke at least test xfs/200; add a common filter to remove
-> the "block device" from older mount binary output, and change
-> the 200.out file to match.
+> Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
+> /dev/mapper/my-very-very-very-long-devicename
+>                 48M      0      0  00 [------] /mnt/scratch
+> 
+> which breaks tests that capture quota output - currently,
+> only xfs/107.
 
-Looks good. xfs/200 is the only test I can see that dumps this
-output to it's golden image.
+xfs/108?
+
+> Add a _filter_quota() which fixes this.
+
+Is this necessary for any other tests? I notice some have their own
+filters (e.g. xfs/106), but AFAICT none of them handle wraped
+lines...
+
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> 
+> 
+> diff --git a/common/filter b/common/filter
+> index 066b353..a0d9d2a 100644
+> --- a/common/filter
+> +++ b/common/filter
+> @@ -240,6 +240,15 @@ _filter_spaces()
+>         sed -e 's/ [ ]*/ /g'
+>  }
+>  
+> +_filter_quota()
+> +{
+> +	# Long dev name might be split onto its own line; last
+> +	# seds remove that newline if present
+> +	_filter_scratch | _filter_test_dir | _filter_spaces | \
+> +	sed -e 'N;s/SCRATCH_DEV\n/SCRATCH_DEV/g' | \
+> +	sed -e 'N;s/TEST_DEV\n/TEST_DEV/g'
+
+A bit messy, but given that we need to filter SCRATCH_MNT and
+TEST_DIR as well I can't see a much more obvious way to do it.
+I can think of plenty of line noise equivalents that are much
+shorter and more concise, but the comments explaining it would be
+longer than the above method. ;) So:
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
