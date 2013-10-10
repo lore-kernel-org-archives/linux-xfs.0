@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C17EE7F8B
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 09:17:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B7D5AC003
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 07:17:16 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 980C97F8B
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 09:21:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7657E8F804B
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 07:21:26 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZabUkDVC298XNtQw for
-	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 07:17:15 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9AEHEds019638
+	cuda.sgi.com with ESMTP id MyPNK2bwypqkrYcn for
+	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 07:21:25 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9AELOcM029475
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 10:17:15 -0400
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 10:21:25 -0400
 Received: from orion.maiolino.org (ovpn-113-149.phx2.redhat.com [10.3.113.149])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r9AEHBTB032386
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r9AELKOA027168
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 10:17:14 -0400
-Date: Thu, 10 Oct 2013 11:17:11 -0300
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 10:21:23 -0400
+Date: Thu, 10 Oct 2013 11:21:20 -0300
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/2] xfsdump: avoid segfault in partial_reg() in error case
-Message-ID: <20131010141710.GB2052@orion.maiolino.org>
+Subject: Re: [PATCH 2/2] xfsdump: fix DEBUGPARTIALS build
+Message-ID: <20131010142119.GA3434@orion.maiolino.org>
 References: <525480A6.3000202@redhat.com>
- <525481C2.6040100@sandeen.net>
+ <525487CD.7080900@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <525481C2.6040100@sandeen.net>
+In-Reply-To: <525487CD.7080900@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,49 +41,84 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Looks good to me
+Looks good to me indeed
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-On Tue, Oct 08, 2013 at 05:05:54PM -0500, Eric Sandeen wrote:
-> If we go down the "/* Should never get here. */" path
-> in partial_reg(), we issue a warning but then continue
-> with the function.  This calls pi_unlock() twice,
-> but worse, uses a null isptr:
+On Tue, Oct 08, 2013 at 05:31:41PM -0500, Eric Sandeen wrote:
+> the DEBUGPARTIALS debug code might have been helpful
+> in this saga, so get it building again.
 > 
->         if ( ! isptr ) {
-> ... isptr is never set if we get to ...
->                 /* Should never get here. */
->                 pi_unlock();
-> ...
->         }
-> ...
->         /* Update this drive's entry */
->         bsptr = &isptr->is_bs[d_index];
->         if (bsptr->endoffset == 0) {
+> The primary build failure is that STREAM_MAX isn't
+> defined for the num_partials[STREAM_MAX] array;
+> the loop which uses that array iterates "drivecnt"
+> times, so just allocate an array of that size.
 > 
-> From all appearances, because we unlock on that "never get
-> here" path, it should just be returning after printing the
-> warning.  So add that, and we avoid the segfault.
-> 
-> The previous fix to partial_reg() should prevent us from
-> hitting this in the first place.
+> Fix a few printf format warnings while we're at it.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
 > diff --git a/restore/content.c b/restore/content.c
-> index 54d933c..cc49336 100644
+> index cc49336..8ad0f00 100644
 > --- a/restore/content.c
 > +++ b/restore/content.c
-> @@ -9007,6 +9007,7 @@ partial_reg( ix_t d_index,
->  #ifdef DEBUGPARTIALS
->  		dump_partials();
->  #endif
-> +		return;
->  	}
+> @@ -8857,22 +8857,23 @@ dump_partials(void)
+>  	int i;
 >  
->  found:
+>  	pi_lock();
+> -	printf("\npartial_reg: count=%d\n", persp->a.parrestcnt);
+> +	printf("\npartial_reg: count=%d\n", (int)persp->a.parrestcnt);
+>  	if (persp->a.parrestcnt > 0) {
+>  		for (i=0; i < partialmax; i++ ) {
+>  			if (persp->a.parrest[i].is_ino > 0) {
+>  				int j;
+>  
+>  				isptr = &persp->a.parrest[i];
+> -				printf( "\tino=%lld ", isptr->is_ino);
+> +				printf("\tino=%llu ",
+> +				       (unsigned long long)isptr->is_ino);
+>  				for (j=0, bsptr=isptr->is_bs;
+>  				     j < drivecnt; 
+>  				     j++, bsptr++)
+>  				{
+>  					if (bsptr->endoffset > 0) {
+>  						printf("%d:%lld-%lld ",
+> -						     j, bsptr->offset, 
+> -						     bsptr->endoffset);
+> +						   j, (long long)bsptr->offset,
+> +						   (long long)bsptr->endoffset);
+>  					} 
+>  				}
+>  				printf( "\n");
+> @@ -8892,13 +8893,17 @@ dump_partials(void)
+>  void
+>  check_valid_partials(void)
+>  {
+> -        int num_partials[STREAM_MAX]; /* sum of partials for a given drive */
+> +	int *num_partials; /* array for sum of partials for a given drive */
+>  	partial_rest_t *isptr = NULL;
+>  	bytespan_t *bsptr = NULL;
+>  	int i;
+>  
+>  	/* zero the sums for each stream */
+> -        memset(num_partials, 0, sizeof(num_partials));
+> +	num_partials = calloc(drivecnt, sizeof(int));
+> +	if (!num_partials) {
+> +		perror("num_partials array allocation");
+> +		return;
+> +	}
+>  
+>  	pi_lock();
+>  	if (persp->a.parrestcnt > 0) {
+> @@ -8926,6 +8931,7 @@ check_valid_partials(void)
+>  		}
+>  	}
+>  	pi_unlock();
+> +	free(num_partials);
+>  }
+>  #endif
+>  
+> 
 > 
 > _______________________________________________
 > xfs mailing list
