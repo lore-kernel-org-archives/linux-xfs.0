@@ -1,28 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D6D17F66
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 23:28:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E1FFB8F8070
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 21:28:30 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	RdGzBP03jHMbyhtj for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 21:28:26 -0700 (PDT)
-Date: Thu, 10 Oct 2013 15:28:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS on bad superblock] BUG: unable to handle kernel NULL
-	pointer dereference at 00000003
-Message-ID: <20131010042820.GA5663@dastard>
-References: <20131009073910.GA387@localhost>
-	<20131010005900.GE2025@devil.localdomain>
-	<20131010011640.GA5726@localhost> <20131010014117.GA6017@localhost>
-	<20131010031515.GT4446@dastard> <20131010032637.GA12725@localhost>
-	<20131010033300.GA12952@localhost>
-	<20131010033834.GA13141@localhost>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131010033834.GA13141@localhost>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F36347F6B
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 23:52:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D3EF3304032
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 21:52:33 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cnz0ErZr5wkSS5tC for
+	<xfs@oss.sgi.com>; Wed, 09 Oct 2013 21:52:33 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests btrfs/012: test balance while creating and deleting
+	subvolumes
+Date: Thu, 10 Oct 2013 12:52:13 +0800
+Message-Id: <1381380733-27117-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,65 +21,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>, linux-btrfs@vger.kernel.org
 
-On Thu, Oct 10, 2013 at 11:38:34AM +0800, Fengguang Wu wrote:
-> On Thu, Oct 10, 2013 at 11:33:00AM +0800, Fengguang Wu wrote:
-> > On Thu, Oct 10, 2013 at 11:26:37AM +0800, Fengguang Wu wrote:
-> > > Dave,
-> > > 
-> > > > I note that you have CONFIG_SLUB=y, which means that the cache slabs
-> > > > are shared with objects of other types. That means that the memory
-> > > > corruption problem is likely to be caused by one of the other
-> > > > filesystems that is probing the block device(s), not XFS.
-> > > 
-> > > Good to know that, it would easy to test then: just turn off every
-> > > other filesystems. I'll try it right away.
-> > 
-> > Seems that we don't even need to do that. A dig through the oops
-> > database and I find stack dumps from other FS.
-> > 
-> > This happens in the kernel with same kconfig and commit 3.12-rc1.
-> 
-> Here is a summary of all FS with oops:
-> 
->     411 ocfs2_fill_super
->     189 xfs_fs_fill_super
->      86 jfs_fill_super
->      50 isofs_fill_super
->      33 fat_fill_super
->      18 vfat_fill_super
->      15 msdos_fill_super
->      11 ext2_fill_super
->      10 ext3_fill_super
->       3 reiserfs_fill_super
+Do subvolume create/delete in loop at back ground and do filesystem
+balance at the same time could trigger
 
-The order of probing on the original dmesg output you reported is:
+kernel BUG at fs/btrfs/relocation.c:2255!
 
-	ext3
-	ext2
-	fatfs
-	reiserfs
-	gfs2
-	isofs
-	ocfs2
+on 3.12-rc4 kernel.
 
-which means that no XFS filesystem was mounted in the original bug
-report, and hence that further indicates that XFS is not responsible
-for the problem and that perhaps the original bisect was not
-reliable...
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/btrfs/012     | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/012.out | 11 ++++++++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 86 insertions(+)
+ create mode 100755 tests/btrfs/012
+ create mode 100644 tests/btrfs/012.out
 
-Cheers,
-
-Dave.
+diff --git a/tests/btrfs/012 b/tests/btrfs/012
+new file mode 100755
+index 0000000..3f72a9b
+--- /dev/null
++++ b/tests/btrfs/012
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test No. btrfs/012
++#
++# Test btrfs balance while creating and deleting subvolumes
++#
++# On buggy kernel this could trigger:
++# kernel BUG at fs/btrfs/relocation.c:2255!
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_require_scratch_dev_pool
++
++subvolume=subvol_$seq
++rm -f $seqres.full
++
++subvolume_create_delete()
++{
++	while true; do
++		$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/$subvolume >/dev/null
++		$BTRFS_UTIL_PROG subvolume delete $SCRATCH_MNT/$subvolume >/dev/null
++	done
++}
++
++_scratch_pool_mkfs >> $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++subvolume_create_delete &
++
++for i in `seq 1 10`;do
++	$BTRFS_UTIL_PROG filesystem balance start $SCRATCH_MNT >>$seqres.full 2>&1
++	echo "Done balance loop $i"
++done
++kill $!
++wait
++
++# No crash, test passed
++status=0
++exit
+diff --git a/tests/btrfs/012.out b/tests/btrfs/012.out
+new file mode 100644
+index 0000000..9604f1b
+--- /dev/null
++++ b/tests/btrfs/012.out
+@@ -0,0 +1,11 @@
++QA output created by 012
++Done balance loop 1
++Done balance loop 2
++Done balance loop 3
++Done balance loop 4
++Done balance loop 5
++Done balance loop 6
++Done balance loop 7
++Done balance loop 8
++Done balance loop 9
++Done balance loop 10
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index d2fe030..c12b9e9 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -14,3 +14,4 @@
+ 009 auto quick
+ 010 auto quick
+ 011 auto
++012 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
