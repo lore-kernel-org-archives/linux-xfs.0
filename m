@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D31897FA3
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 12:05:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C1DCE8F8064
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 10:05:49 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id COt8a2DFa1Z7MBNt for <xfs@oss.sgi.com>;
-	Thu, 10 Oct 2013 10:05:48 -0700 (PDT)
-Message-ID: <5256DE6A.1070502@sandeen.net>
-Date: Thu, 10 Oct 2013 12:05:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 1236E7F3F
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:13:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E53EE8F8059
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:13:45 -0700 (PDT)
+Received: from mail-wg0-f44.google.com (mail-wg0-f44.google.com
+	[74.125.82.44]) by cuda.sgi.com with ESMTP id COVFgsiCjtHt7Y95
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:13:44 -0700 (PDT)
+Received: by mail-wg0-f44.google.com with SMTP id n12so2679397wgh.23
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:13:43 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: prevent deadlock trying to cover an active log
-References: <1381278703-23439-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1381278703-23439-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20131008202342.GA4446@dastard>
+References: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
+	<20131001201909.GR12541@dastard>
+	<CAGa409_tDjbsdnf+wDiM7666FeQSjmMfOVdqG-SxOD_WUZMiZQ@mail.gmail.com>
+	<20131002104253.GT12541@dastard>
+	<CAGa409_wO74zGP1d85RGZ7WbfBPr7s_tKaW3u9k8=9Ps-D5FjQ@mail.gmail.com>
+	<20131004214353.GK4446@dastard>
+	<CAGa4099NNUJV4_JbU0izLf0k3bcj3afHPTXt=HO2263_TESbNA@mail.gmail.com>
+	<20131008202342.GA4446@dastard>
+Date: Thu, 10 Oct 2013 14:13:43 -0700
+Message-ID: <CAGa4098d7NL86HPX0+zyTSGafrxS3VMepbJ_3JKoaTCZud59qg@mail.gmail.com>
+Subject: Re: xfs_repair segfault
+From: Viet Nguyen <vietnguyen@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,239 +33,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4551038399539579914=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 10/8/13 7:31 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Recent analysis of a deadlocked XFS filesystem from a kernel
-> crash dump indicated that the filesystem was stuck waiting for log
-> space. The short story of the hang on the RHEL6 kernel is this:
-> 
-> 	- the tail of the log is pinned by an inode
-> 	- the inode has been pushed by the xfsaild
-> 	- the inode has been flushed to it's backing buffer and is
-> 	  currently flush locked and hence waiting for backing
-> 	  buffer IO to complete and remove it from the AIL
-> 	- the backing buffer is marked for write - it is on the
-> 	  delayed write queue
-> 	- the inode buffer has been modified directly and logged
-> 	  recently due to unlinked inode list modification
-> 	- the backing buffer is pinned in memory as it is in the
-> 	  active CIL context.
-> 	- the xfsbufd won't start buffer writeback because it is
-> 	  pinned
-> 	- xfssyncd won't force the log because it sees the log as
-> 	  needing to be covered and hence wants to issue a dummy
-> 	  transaction to move the log covering state machine along.
-> 
-> Hence there is no trigger to force the CIL to the log and hence
-> unpin the inode buffer and therefore complete the inode IO, remove
-> it from the AIL and hence move the tail of the log along, allowing
-> transactions to start again.
-> 
-> Mainline kernels also have the same deadlock, though the signature
-> is slightly different - the inode buffer never reaches the delayed
-> write lists because xfs_buf_item_push() sees that it is pinned and
-> hence never adds it to the delayed write list that the xfsaild
-> flushes.
-> 
-> There are two possible solutions here. The first is to simply force
-> the log before trying to cover the log and so ensure that the CIL is
-> emptied before we try to reserve space for the dummy transaction in
-> the xfs_log_worker(). While this might work most of the time, it is
-> still racy and is no guarantee that we don't get stuck in
-> xfs_trans_reserve waiting for log space to come free. Hence it's not
-> the best way to solve the problem.
-> 
-> The second solution is to modify xfs_log_need_covered() to be aware
-> of the CIL. We only should be attempting to cover the log if there
-> is no current activity in the log - covering the log is the process
-> of ensuring that the head and tail in the log on disk are identical
-> (i.e. the log is clean and at idle). Hence, by definition, if there
-> are items in the CIL then the log is not at idle and so we don't
-> need to attempt to cover it.
-> 
-> When we don't need to cover the log because it is active or idle, we
-> issue a log force from xfs_log_worker() - if the log is idle, then
-> this does nothing.  However, if the log is active due to there being
-> items in the CIL, it will force the items in the CIL to the log and
-> unpin them.
-> 
-> In the case of the above deadlock scenario, instead of
-> xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
-> cover the log, it will instead force the log, thereby unpinning the
-> inode buffer, allowing IO to be issued and complete and hence
-> removing the inode that was pinning the tail of the log from the
-> AIL. At that point, everything will start moving along again. i.e.
-> the xfs_log_worker turns back into a watchdog that can alleviate
-> deadlocks based around pinned items that prevent the tail of the log
-> from being moved...
+--===============4551038399539579914==
+Content-Type: multipart/alternative; boundary=f46d0437499304c83e04e8697ab6
 
-Seems reasonable to me.  Minor cosmetic things below, take them or leave
-them...
+--f46d0437499304c83e04e8697ab6
+Content-Type: text/plain; charset=ISO-8859-1
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_log.c      | 48 +++++++++++++++++++++++++++++-------------------
->  fs/xfs/xfs_log_cil.c  | 14 ++++++++++++++
->  fs/xfs/xfs_log_priv.h | 10 ++++------
->  3 files changed, 47 insertions(+), 25 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a2dea108..613ed94 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1000,27 +1000,34 @@ xfs_log_space_wake(
->  }
->  
->  /*
-> - * Determine if we have a transaction that has gone to disk
-> - * that needs to be covered. To begin the transition to the idle state
-> - * firstly the log needs to be idle (no AIL and nothing in the iclogs).
-> - * If we are then in a state where covering is needed, the caller is informed
-> - * that dummy transactions are required to move the log into the idle state.
-> + * Determine if we have a transaction that has gone to disk that needs to be
-> + * covered. To begin the transition to the idle state firstly the log needs to
-> + * be idle. That means the CIL, the AIL and the iclogs needs to be empty before
-> + * we start attempting to cover the log.
->   *
-> - * Because this is called as part of the sync process, we should also indicate
-> - * that dummy transactions should be issued in anything but the covered or
-> - * idle states. This ensures that the log tail is accurately reflected in
-> - * the log at the end of the sync, hence if a crash occurrs avoids replay
-> - * of transactions where the metadata is already on disk.
-> + * Only if we are then in a state where covering is needed, the caller is
-> + * informed that dummy transactions are required to move the log into the idle
-> + * state.
-> + *
-> + * If there are any items in the AIl or CIL, then we do not want to attempt to
-> + * cover the log as we may be in a situation where there isn't log space
-> + * available to run a dummy transaction and this can lead to deadlocks when the
-> + * tail of the log is pinned by an item that is modified in the CIL.  Hence
-> + * there's no point in running a dummy transaction at this point because we
-> + * can't start trying to idle the log until both the CIL and AIL are empty.
->   */
->  int
->  xfs_log_need_covered(xfs_mount_t *mp)
->  {
-> -	int		needed = 0;
->  	struct xlog	*log = mp->m_log;
-> +	int		needed = 0;
->  
->  	if (!xfs_fs_writable(mp))
->  		return 0;
->  
-> +	if (!xlog_cil_empty(log))
-> +		return 0;
-> +
->  	spin_lock(&log->l_icloglock);
->  	switch (log->l_covered_state) {
->  	case XLOG_STATE_COVER_DONE:
-> @@ -1029,14 +1036,17 @@ xfs_log_need_covered(xfs_mount_t *mp)
+Luckily the files that I want to recover have metadata in them that will
+help me rebuild their names. So I'm okay with blowing away the directory
+inodes. I guess I wish there was a flag that I can pass to say that
+xfs_repair can junk those for me instead of having to do it manually each
+time.
 
-This hunk is all cosmetic, right?  (nice cosmetic, but cosmetic).
 
-Kinda wish this were in a patch 2/2 just for clarity.
+So, the compressed metadump file is 2.4G. Any suggestions on where I should
+put it, and who I send it to?
 
->  		break;
->  	case XLOG_STATE_COVER_NEED:
->  	case XLOG_STATE_COVER_NEED2:
-> -		if (!xfs_ail_min_lsn(log->l_ailp) &&
-> -		    xlog_iclogs_empty(log)) {
-> -			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
-> -				log->l_covered_state = XLOG_STATE_COVER_DONE;
-> -			else
-> -				log->l_covered_state = XLOG_STATE_COVER_DONE2;
-> -		}
-> -		/* FALLTHRU */
-> +		if (xfs_ail_min_lsn(log->l_ailp))
-> +			break;
-> +		if (!xlog_iclogs_empty(log))
-> +			break;
-> +
-> +		needed = 1;
-> +		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
-> +			log->l_covered_state = XLOG_STATE_COVER_DONE;
-> +		else
-> +			log->l_covered_state = XLOG_STATE_COVER_DONE2;
-> +		break;
->  	default:
->  		needed = 1;
->  		break;
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index cfe9797..da8524e77 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -711,6 +711,20 @@ xlog_cil_push_foreground(
->  	xlog_cil_push(log);
->  }
->  
-> +bool
-> +xlog_cil_empty(
-> +	struct xlog	*log)
-> +{
-> +	struct xfs_cil	*cil = log->l_cilp;
-> +	bool		empty = false;
-> +
-> +	spin_lock(&cil->xc_push_lock);
-> +	if (list_empty(&cil->xc_cil))
-> +		empty = true;
-> +	spin_unlock(&cil->xc_push_lock);
-> +	return empty;
-> +}
+On Tue, Oct 8, 2013 at 1:23 PM, Dave Chinner <david@fromorbit.com> wrote:
 
-maybe just:
+> On Mon, Oct 07, 2013 at 01:09:09PM -0700, Viet Nguyen wrote:
+> > Thanks. That seemed to fix that bug.
+> >
+> > Now I'm getting a lot of this:
+> > xfs_da_do_buf(2): XFS_CORRUPTION_ERROR
+>
+> Right, that's blocks that are being detected as corrupt when they
+> are read. You can ignore that for now.
+>
+> > fatal error -- can't read block 8388608 for directory inode 8628218
+>
+> That's a corrupted block list of some kind - it should junk the
+> inode.
+>
+> > Then xfs_repair exits.
+>
+> I'm not sure why that happens. Is it exiting cleanly or crashing?
+> Can you take a metadump of the filesystem and provide it for someone
+> to debug the problems it causes repair?
+>
+> > What I've been doing is what I saw in the FAQ where I would use xfs_db
+> and
+> > write core.mode 0 for these inodes. But there are just so many of them.
+> And
+> > is that even the right thing to do?
+>
+> That marks the inode as "free" which effectively junks it and then
+> xfs_repair will free all it's extents next time it is run. Basically
+> you are removing the files from the filesystem and making them
+> unrecoverable.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
-xlog_cil_empty(
-	struct xlog	*log)
-{
-	struct xfs_cil	*cil = log->l_cilp;
-	bool		empty;
+--f46d0437499304c83e04e8697ab6
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-	spin_lock(&cil->xc_push_lock);
-	empty = list_empty(&cil->xc_cil);
-	spin_unlock(&cil->xc_push_lock);
-	return empty;
-}
+<div dir=3D"ltr">Luckily the files that I want to recover have metadata in =
+them that will help me rebuild their names. So I&#39;m okay with blowing aw=
+ay the directory inodes. I guess I wish there was a flag that I can pass to=
+ say that xfs_repair can junk those for me instead of having to do it manua=
+lly each time.<div>
+<br></div><div><br><div class=3D"gmail_extra">So, the compressed metadump f=
+ile is 2.4G. Any suggestions on where I should put it, and who I send it to=
+?<br><br><div class=3D"gmail_quote">On Tue, Oct 8, 2013 at 1:23 PM, Dave Ch=
+inner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=
+=3D"_blank">david@fromorbit.com</a>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"im">On Mon, Oct 07, 2013 at 01=
+:09:09PM -0700, Viet Nguyen wrote:<br>
+&gt; Thanks. That seemed to fix that bug.<br>
+&gt;<br>
+&gt; Now I&#39;m getting a lot of this:<br>
+&gt; xfs_da_do_buf(2): XFS_CORRUPTION_ERROR<br>
+<br>
+</div>Right, that&#39;s blocks that are being detected as corrupt when they=
+<br>
+are read. You can ignore that for now.<br>
+<div class=3D"im"><br>
+&gt; fatal error -- can&#39;t read block 8388608 for directory inode 862821=
+8<br>
+<br>
+</div>That&#39;s a corrupted block list of some kind - it should junk the<b=
+r>
+inode.<br>
+<br>
+&gt; Then xfs_repair exits.<br>
+<br>
+I&#39;m not sure why that happens. Is it exiting cleanly or crashing?<br>
+Can you take a metadump of the filesystem and provide it for someone<br>
+to debug the problems it causes repair?<br>
+<div class=3D"im"><br>
+&gt; What I&#39;ve been doing is what I saw in the FAQ where I would use xf=
+s_db and<br>
+&gt; write core.mode 0 for these inodes. But there are just so many of them=
+. And<br>
+&gt; is that even the right thing to do?<br>
+<br>
+</div>That marks the inode as &quot;free&quot; which effectively junks it a=
+nd then<br>
+xfs_repair will free all it&#39;s extents next time it is run. Basically<br=
+>
+you are removing the files from the filesystem and making them<br>
+unrecoverable.<br>
+<div class=3D"im"><br>
+Cheers,<br>
+<br>
+Dave.<br>
+--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+<br>
+</div>_______________________________________________<br>
+xfs mailing list<br>
+<a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
+<a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" target=3D"_blank">http:=
+//oss.sgi.com/mailman/listinfo/xfs</a><br>
+</blockquote></div><br></div></div></div>
 
-but *shrug*  (That was Zach's idea) ;)
+--f46d0437499304c83e04e8697ab6--
 
--Eric
 
-> +
->  /*
->   * Commit a transaction with the given vector to the Committed Item List.
->   *
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 136654b..de24ffb 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -514,12 +514,10 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
->  /*
->   * Committed Item List interfaces
->   */
-> -int
-> -xlog_cil_init(struct xlog *log);
-> -void
-> -xlog_cil_init_post_recovery(struct xlog *log);
-> -void
-> -xlog_cil_destroy(struct xlog *log);
-> +int	xlog_cil_init(struct xlog *log);
-> +void	xlog_cil_init_post_recovery(struct xlog *log);
-> +void	xlog_cil_destroy(struct xlog *log);
-> +bool	xlog_cil_empty(struct xlog *log)
->  
->  /*
->   * CIL force routines
-> 
+--===============4551038399539579914==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4551038399539579914==--
