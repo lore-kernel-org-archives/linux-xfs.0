@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 430977F54
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 22:19:24 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A61E17F54
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 22:20:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2FDB78F8039
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 20:19:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id J6IA6gTy9Ei4PHXV for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 20:19:22 -0700 (PDT)
-Message-ID: <52561CB5.7090209@sandeen.net>
-Date: Wed, 09 Oct 2013 22:19:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 871F8304032
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 20:20:27 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ziOBD9mNa3MdX9jA for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 20:20:25 -0700 (PDT)
+Date: Thu, 10 Oct 2013 14:20:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V2] xfstests: get fsstress DIO working on non-xfs
+	filesystems
+Message-ID: <20131010032023.GU4446@dastard>
+References: <4B54C8AB.6080607@sandeen.net>
+ <5256175C.6020000@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests ext4/306: regression test for ext4 resize with
-	non-extent files
-References: <1377860767-13304-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1377860767-13304-1-git-send-email-eguan@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <5256175C.6020000@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,154 +31,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 8/30/13 6:06 AM, Eryu Guan wrote:
-> From: Eric Sandeen <esandeen@redhat.com>
+On Wed, Oct 09, 2013 at 09:56:28PM -0500, Eric Sandeen wrote:
+> Pretty sure all DIO IO fails in fsstress today since XFS_IOC_DIOINFO
+> fails.  If so, rather than just bailing out on the op, assign
+> some sane default DIO parameters, getting min IO size from
+> sector size if possible.
 > 
-> Regression test for:
-> 
-> c5c72d8 ext4: fix online resizing for ext3-compat file systems
-> 
-> Signed-off-by: Eric Sandeen <esandeen@redhat.com>
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
-
-Ping, needs 3rd party review still I guess (from the ext4 list, please)
-
--Eric
-
-> This test is originally written by Eric and doesn't get merged. I did
-> minor update and resent.
 > 
-> V2: s/dangerous/auto/
-> V3: remove "Silence is golden" output since it's not silent
+> V2: factor out get_alignment, use BLKSSZGET for min DIO size
+> rather than guessing at 512.
 > 
->  tests/ext4/306     | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/ext4/306.out | 13 +++++++++
->  tests/ext4/group   |  1 +
->  3 files changed, 96 insertions(+)
->  create mode 100755 tests/ext4/306
->  create mode 100644 tests/ext4/306.out
 > 
-> diff --git a/tests/ext4/306 b/tests/ext4/306
-> new file mode 100755
-> index 0000000..398c4c0
-> --- /dev/null
-> +++ b/tests/ext4/306
-> @@ -0,0 +1,82 @@
-> +#! /bin/bash
-> +# FS QA Test No. ext4/306
-> +#
-> +# Test that blocks are available to non-extent files after a resize2fs
-> +# Regression test for commit:
-> +# c5c72d8 ext4: fix online resizing for ext3-compat file systems
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +PIDS=""
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index 5d5611f..af06059 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -550,6 +550,27 @@ int main(int argc, char **argv)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Get alignment via XFS_IOC_DIOINFO, else fall back to
+> + * best guess from BLKSSZGET, else return -1.
+> + */
+> +static int
+> +get_alignment(pathname_t *f, int fd, struct dioattr *dio)
 > +{
-> +    _scratch_unmount
-> +}
+> +	if (xfsctl(f->path, fd, XFS_IOC_DIOINFO, dio) < 0) {
+> +		int sectorsize;
 > +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
+> +		if (ioctl(fd, BLKSSZGET, &sectorsize) < 0)
+> +			return -1;
 > +
-> +# real QA test starts here
-> +_supported_fs ext4
-> +_supported_os Linux
-> +
-> +_require_scratch
-> +
-> +# This needs to mount ext3; might require ext3 driver, or ext4
-> +# might handle it itself.  Find out if we have it one way or another.
-> +modprobe ext3 > /dev/null 2>&1
-> +grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
-> +
-> +rm -f $seqres.full
-> +
-> +# Make a small ext3 fs, (extents disabled) & mount it
-> +yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> +_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
-> +# Create a small non-extent-based file
-> +echo "Create 1m testfile1"
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
-> +echo "Create testfile2 to fill the fs"
-> +# A large non-extent-based file filling the fs; this will run out & fail
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
-> +
-> +# Remount as ext4
-> +_scratch_unmount
-> +_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
-> +df -h $SCRATCH_MNT >> $seqres.full
-> +
-> +# Grow it by 512m
-> +echo "Resize to 1g"
-> +resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
-> +df -h $SCRATCH_MNT >> $seqres.full
-> +
-> +# See if we can add more blocks to the files
-> +echo "append 2m to testfile1"
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
-> +echo "append 2m to testfile2"
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
-> +
-> +status=0
-> +exit
-> diff --git a/tests/ext4/306.out b/tests/ext4/306.out
-> new file mode 100644
-> index 0000000..ee6c90c
-> --- /dev/null
-> +++ b/tests/ext4/306.out
-> @@ -0,0 +1,13 @@
-> +QA output created by 306
-> +Create 1m testfile1
-> +wrote 1048576/1048576 bytes at offset 0
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +Create testfile2 to fill the fs
-> +pwrite64: No space left on device
-> +Resize to 1g
-> +append 2m to testfile1
-> +wrote 2097152/2097152 bytes at offset 1048576
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +append 2m to testfile2
-> +wrote 2097152/2097152 bytes at offset 536870912
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> diff --git a/tests/ext4/group b/tests/ext4/group
-> index 53af708..7e1a68b 100644
-> --- a/tests/ext4/group
-> +++ b/tests/ext4/group
-> @@ -9,3 +9,4 @@
->  303 aio dangerous ioctl rw stress
->  304 aio dangerous ioctl rw stress
->  305 auto
-> +306 auto rw resize quick
-> 
+> +		dio->d_maxiosz = -1U;
+> +		dio->d_miniosz = sectorsize;
+> +		dio->d_mem = sectorsize;
+
+To be safe, shouldn't we align d_mem to page size given it is the
+alignment of the data within the user page, not the alignment of the
+offset of the IO?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
