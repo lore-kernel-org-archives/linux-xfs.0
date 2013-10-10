@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1236E7F3F
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:13:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E53EE8F8059
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:13:45 -0700 (PDT)
-Received: from mail-wg0-f44.google.com (mail-wg0-f44.google.com
-	[74.125.82.44]) by cuda.sgi.com with ESMTP id COVFgsiCjtHt7Y95
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:13:44 -0700 (PDT)
-Received: by mail-wg0-f44.google.com with SMTP id n12so2679397wgh.23
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:13:43 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D36A87F3F
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:23:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 60C53AC004
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 14:23:34 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	lSn3qZohfTwlEHhJ for <xfs@oss.sgi.com>;
+	Thu, 10 Oct 2013 14:23:32 -0700 (PDT)
+Date: Fri, 11 Oct 2013 08:23:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RESEND 2/7] xfs: add support FALLOC_FL_COLLAPSE_RANGE for
+	fallocate
+Message-ID: <20131010212326.GZ4446@dastard>
+References: <1381090388-2761-1-git-send-email-linkinjeon@gmail.com>
+	<20131010005154.GS4446@dastard>
+	<CAKYAXd8=ZKESV5Fmw7hqwL=G8L=BG6h0LQpc2cVjN9uTkj7nYw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20131008202342.GA4446@dastard>
-References: <CAGa4098ZKd2KQfWMgNXYgLr9LJF8r-MpFgQAn3G-W+ovDGHTAw@mail.gmail.com>
-	<20131001201909.GR12541@dastard>
-	<CAGa409_tDjbsdnf+wDiM7666FeQSjmMfOVdqG-SxOD_WUZMiZQ@mail.gmail.com>
-	<20131002104253.GT12541@dastard>
-	<CAGa409_wO74zGP1d85RGZ7WbfBPr7s_tKaW3u9k8=9Ps-D5FjQ@mail.gmail.com>
-	<20131004214353.GK4446@dastard>
-	<CAGa4099NNUJV4_JbU0izLf0k3bcj3afHPTXt=HO2263_TESbNA@mail.gmail.com>
-	<20131008202342.GA4446@dastard>
-Date: Thu, 10 Oct 2013 14:13:43 -0700
-Message-ID: <CAGa4098d7NL86HPX0+zyTSGafrxS3VMepbJ_3JKoaTCZud59qg@mail.gmail.com>
-Subject: Re: xfs_repair segfault
-From: Viet Nguyen <vietnguyen@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAKYAXd8=ZKESV5Fmw7hqwL=G8L=BG6h0LQpc2cVjN9uTkj7nYw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,152 +28,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4551038399539579914=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
 
---===============4551038399539579914==
-Content-Type: multipart/alternative; boundary=f46d0437499304c83e04e8697ab6
-
---f46d0437499304c83e04e8697ab6
-Content-Type: text/plain; charset=ISO-8859-1
-
-Luckily the files that I want to recover have metadata in them that will
-help me rebuild their names. So I'm okay with blowing away the directory
-inodes. I guess I wish there was a flag that I can pass to say that
-xfs_repair can junk those for me instead of having to do it manually each
-time.
-
-
-So, the compressed metadump file is 2.4G. Any suggestions on where I should
-put it, and who I send it to?
-
-On Tue, Oct 8, 2013 at 1:23 PM, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Mon, Oct 07, 2013 at 01:09:09PM -0700, Viet Nguyen wrote:
-> > Thanks. That seemed to fix that bug.
+On Thu, Oct 10, 2013 at 04:00:13PM +0900, Namjae Jeon wrote:
 > >
-> > Now I'm getting a lot of this:
-> > xfs_da_do_buf(2): XFS_CORRUPTION_ERROR
->
-> Right, that's blocks that are being detected as corrupt when they
-> are read. You can ignore that for now.
->
-> > fatal error -- can't read block 8388608 for directory inode 8628218
->
-> That's a corrupted block list of some kind - it should junk the
-> inode.
->
-> > Then xfs_repair exits.
->
-> I'm not sure why that happens. Is it exiting cleanly or crashing?
-> Can you take a metadump of the filesystem and provide it for someone
-> to debug the problems it causes repair?
->
-> > What I've been doing is what I saw in the FAQ where I would use xfs_db
-> and
-> > write core.mode 0 for these inodes. But there are just so many of them.
-> And
-> > is that even the right thing to do?
->
-> That marks the inode as "free" which effectively junks it and then
-> xfs_repair will free all it's extents next time it is run. Basically
-> you are removing the files from the filesystem and making them
-> unrecoverable.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+> > /*
+> >  * Shift extent records to the left to cover a hole.
+> >  *
+> >  * The maximum number of extents to be shifted in a single operation
+> >  * is @count, and @current_ext keeps track of the current extent
+> >  * index we have shifted. If there is no hole to shift the extents
+> >  * into, then we abort immediately.
+> >  */
+> Thanks for your help. I will change this comment instead of original one.
+> 
+> >> +int
+> >> +xfs_bmap_shift_extents(
+> >> +     struct xfs_trans        *tp,
+> >> +     struct xfs_inode        *ip,
+> >> +     int                     *done,
+> >> +     xfs_fileoff_t           start_fsb,
+> >> +     xfs_fileoff_t           shift,
+> >
+> > Shift means ...? Number of extents to shift, a length, a number of
+> > block, or something else?
+> Ah, yes, shift_len would be a more proper name
 
---f46d0437499304c83e04e8697ab6
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+I'm not sure that's a lot better. What are we shifting? We are
+shifting the offset of the blocks, right? And the unit is in fsb?
+So perhaps offset_shift_fsb, and add that to the description of the
+function above?
 
-<div dir=3D"ltr">Luckily the files that I want to recover have metadata in =
-them that will help me rebuild their names. So I&#39;m okay with blowing aw=
-ay the directory inodes. I guess I wish there was a flag that I can pass to=
- say that xfs_repair can junk those for me instead of having to do it manua=
-lly each time.<div>
-<br></div><div><br><div class=3D"gmail_extra">So, the compressed metadump f=
-ile is 2.4G. Any suggestions on where I should put it, and who I send it to=
-?<br><br><div class=3D"gmail_quote">On Tue, Oct 8, 2013 at 1:23 PM, Dave Ch=
-inner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=
-=3D"_blank">david@fromorbit.com</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On Mon, Oct 07, 2013 at 01=
-:09:09PM -0700, Viet Nguyen wrote:<br>
-&gt; Thanks. That seemed to fix that bug.<br>
-&gt;<br>
-&gt; Now I&#39;m getting a lot of this:<br>
-&gt; xfs_da_do_buf(2): XFS_CORRUPTION_ERROR<br>
-<br>
-</div>Right, that&#39;s blocks that are being detected as corrupt when they=
-<br>
-are read. You can ignore that for now.<br>
-<div class=3D"im"><br>
-&gt; fatal error -- can&#39;t read block 8388608 for directory inode 862821=
-8<br>
-<br>
-</div>That&#39;s a corrupted block list of some kind - it should junk the<b=
-r>
-inode.<br>
-<br>
-&gt; Then xfs_repair exits.<br>
-<br>
-I&#39;m not sure why that happens. Is it exiting cleanly or crashing?<br>
-Can you take a metadump of the filesystem and provide it for someone<br>
-to debug the problems it causes repair?<br>
-<div class=3D"im"><br>
-&gt; What I&#39;ve been doing is what I saw in the FAQ where I would use xf=
-s_db and<br>
-&gt; write core.mode 0 for these inodes. But there are just so many of them=
-. And<br>
-&gt; is that even the right thing to do?<br>
-<br>
-</div>That marks the inode as &quot;free&quot; which effectively junks it a=
-nd then<br>
-xfs_repair will free all it&#39;s extents next time it is run. Basically<br=
->
-you are removing the files from the filesystem and making them<br>
-unrecoverable.<br>
-<div class=3D"im"><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-<br>
-</div>_______________________________________________<br>
-xfs mailing list<br>
-<a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
-<a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" target=3D"_blank">http:=
-//oss.sgi.com/mailman/listinfo/xfs</a><br>
-</blockquote></div><br></div></div></div>
+> >> +             /*
+> >> +              * Before shifting extent into hole, make sure that the hole
+> >> +              * is large enough to accomodate the shift.
+> >> +              */
+> >> +             if (*current_ext) {
+> >> +                     state |= BMAP_LEFT_VALID;
+> >> +                     xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
+> >> +                                             *current_ext - 1), &left);
+> >> +
+> >> +                     if (isnullstartblock(left.br_startblock))
+> >> +                             state |= BMAP_LEFT_DELAY;
+> >> +
+> >> +                     if (startoff < left.br_startoff + left.br_blockcount)
+> >> +                             error = XFS_ERROR(EFSCORRUPTED);
+> >
+> > Why is the filesystem corrupted if the shift we asked for is too
+> > large for the hole in the file? I haven't seen any checks before
+> > this that guarantee that the hole is big enough for the shift...
+> 
+> we call xfs_free_file_space to free enough blocks for shifting.
+> If still the space is not big enough will it be considered as fs corrupted?
+> What error could we return in this case?
 
---f46d0437499304c83e04e8697ab6--
+Hole punching rounds inwards, and the amount of rounding is not
+necessarily the nearest filesystem block. Again it's the block size
+smaller than page size case that will trip you over here, as the
+rounding  when punching holes will be done to page size, not
+filesystem block size. Hence it's entirely possible that your
+calculated shift start and lengths don't match the size of the hole
+that was punched.
 
+That doesn't mean there was a corruption - just that the hole wasn't
+the size and shape that was expected....
 
---===============4551038399539579914==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4551038399539579914==--
