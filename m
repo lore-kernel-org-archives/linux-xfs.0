@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 04B417F54
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 22:16:49 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 430977F54
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 22:19:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E8DED8F8039
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 20:16:48 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2FDB78F8039
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 20:19:24 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 1LTNiATdcpm1qGhx for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 20:16:47 -0700 (PDT)
-Message-ID: <52561C1E.6040601@sandeen.net>
-Date: Wed, 09 Oct 2013 22:16:46 -0500
+	ESMTP id J6IA6gTy9Ei4PHXV for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 20:19:22 -0700 (PDT)
+Message-ID: <52561CB5.7090209@sandeen.net>
+Date: Wed, 09 Oct 2013 22:19:17 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH, V2] xfstests: fail test if it causes a kernel taint
-References: <51916146.80308@redhat.com> <519E3A20.7060102@sandeen.net>
-In-Reply-To: <519E3A20.7060102@sandeen.net>
+Subject: Re: [PATCH] xfstests ext4/306: regression test for ext4 resize with
+	non-extent files
+References: <1377860767-13304-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1377860767-13304-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,90 +28,153 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-On 5/23/13 10:47 AM, Eric Sandeen wrote:
-> This modification will fail a test if it introduces one of
-> a handful of "serious" kernel taints.  I mask on a few taint
-> values because using an out of tree module or a non-GPL module
-> should never fail a test, for example.
+On 8/30/13 6:06 AM, Eryu Guan wrote:
+> From: Eric Sandeen <esandeen@redhat.com>
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Regression test for:
+> 
+> c5c72d8 ext4: fix online resizing for ext3-compat file systems
+> 
+> Signed-off-by: Eric Sandeen <esandeen@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 > ---
-> 
-> Tested by modifying tests/generic/001 to modprobe a "staging"
-> driver, and adding the staging taint bit (1024) to the mask.
-> 
-> V2: fail test by modifying the test output so the golden
-> output check will fail, per dchinner's suggestion.
 
-Ping, needs re-review for V2 I guess.
+Ping, needs 3rd party review still I guess (from the ext4 list, please)
 
-Thanks,
 -Eric
 
-> diff --git a/check b/check
-> index a79747e..7ba6696 100755
-> --- a/check
-> +++ b/check
-> @@ -446,6 +446,11 @@ do
->  	fi
->  	rm -f core $seqres.notrun
->  
-> +	if [ "$HOSTOS" == "Linux" ]; then
-> +		tainted=`sysctl -n kernel.tainted`
-> +		let "tainted &= $TAINT_FAIL"
-> +	fi
-> +
->  	start=`_wallclock`
->  	$timestamp && echo -n "	["`date "+%T"`"]"
->  	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
-> @@ -458,6 +463,19 @@ do
->  	_fix_malloc <$tmp.rawout >$tmp.out
->  	rm -f $tmp.rawout
->  
-> +	# See if this run tainted the kernel due to oops, etc
-> +	# If so, break the test via the golden output file
-> +	if [ "$HOSTOS" == "Linux" ]
-> +	then
-> +		tainted2=`sysctl -n kernel.tainted`
-> +		let "tainted2 &= $TAINT_FAIL"
-> +		if [ "$tainted" != "$tainted2" ]
-> +		then
-> +			echo " Kernel taint changed from $tainted to $tainted2." >> $tmp.out
-> +			echo " See dmesg for details." >> $tmp.out
-> +		fi
-> +	fi
-> +
->  	if [ -f core ]
->  	then
->  	    echo -n " [dumped core]"
-> diff --git a/common/config b/common/config
-> index 67c1498..6483ded 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -82,6 +82,15 @@ export PWD=`pwd`
->  export MALLOCLIB=${MALLOCLIB:=/usr/lib/libefence.a}
->  export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
->  
-> +# kernel taint values on Linux (from kernel.taint sysctl)
-> +TAINT_MACHINE_CHECK=16
-> +TAINT_BAD_PAGE=32
-> +TAINT_DIED=128
-> +TAINT_WARNING=512
-> +# If a test introduces one of these taints we consider it to have failed
-> +let "TAINT_FAIL=( $TAINT_MACHINE_CHECK | $TAINT_BAD_PAGE | $TAINT_DIED | $TAINT_WARNING )"
-> +export TAINT_FAIL
-> +
->  # $1 = prog to look for, $2* = default pathnames if not found in $PATH
->  set_prog_path()
->  {
+> This test is originally written by Eric and doesn't get merged. I did
+> minor update and resent.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> V2: s/dangerous/auto/
+> V3: remove "Silence is golden" output since it's not silent
+> 
+>  tests/ext4/306     | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/ext4/306.out | 13 +++++++++
+>  tests/ext4/group   |  1 +
+>  3 files changed, 96 insertions(+)
+>  create mode 100755 tests/ext4/306
+>  create mode 100644 tests/ext4/306.out
+> 
+> diff --git a/tests/ext4/306 b/tests/ext4/306
+> new file mode 100755
+> index 0000000..398c4c0
+> --- /dev/null
+> +++ b/tests/ext4/306
+> @@ -0,0 +1,82 @@
+> +#! /bin/bash
+> +# FS QA Test No. ext4/306
+> +#
+> +# Test that blocks are available to non-extent files after a resize2fs
+> +# Regression test for commit:
+> +# c5c72d8 ext4: fix online resizing for ext3-compat file systems
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +PIDS=""
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    _scratch_unmount
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs ext4
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +
+> +# This needs to mount ext3; might require ext3 driver, or ext4
+> +# might handle it itself.  Find out if we have it one way or another.
+> +modprobe ext3 > /dev/null 2>&1
+> +grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
+> +
+> +rm -f $seqres.full
+> +
+> +# Make a small ext3 fs, (extents disabled) & mount it
+> +yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
+> +_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
+> +# Create a small non-extent-based file
+> +echo "Create 1m testfile1"
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
+> +echo "Create testfile2 to fill the fs"
+> +# A large non-extent-based file filling the fs; this will run out & fail
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
+> +
+> +# Remount as ext4
+> +_scratch_unmount
+> +_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
+> +df -h $SCRATCH_MNT >> $seqres.full
+> +
+> +# Grow it by 512m
+> +echo "Resize to 1g"
+> +resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
+> +df -h $SCRATCH_MNT >> $seqres.full
+> +
+> +# See if we can add more blocks to the files
+> +echo "append 2m to testfile1"
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
+> +echo "append 2m to testfile2"
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
+> +
+> +status=0
+> +exit
+> diff --git a/tests/ext4/306.out b/tests/ext4/306.out
+> new file mode 100644
+> index 0000000..ee6c90c
+> --- /dev/null
+> +++ b/tests/ext4/306.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 306
+> +Create 1m testfile1
+> +wrote 1048576/1048576 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +Create testfile2 to fill the fs
+> +pwrite64: No space left on device
+> +Resize to 1g
+> +append 2m to testfile1
+> +wrote 2097152/2097152 bytes at offset 1048576
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +append 2m to testfile2
+> +wrote 2097152/2097152 bytes at offset 536870912
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> diff --git a/tests/ext4/group b/tests/ext4/group
+> index 53af708..7e1a68b 100644
+> --- a/tests/ext4/group
+> +++ b/tests/ext4/group
+> @@ -9,3 +9,4 @@
+>  303 aio dangerous ioctl rw stress
+>  304 aio dangerous ioctl rw stress
+>  305 auto
+> +306 auto rw resize quick
 > 
 
 _______________________________________________
