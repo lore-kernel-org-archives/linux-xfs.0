@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8F0237F3F
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 18:02:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7DCCB8F8065
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:02:04 -0700 (PDT)
-Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
-	[140.211.169.12]) by cuda.sgi.com with ESMTP id
-	5ytRAzhmPx7GUi0e for <xfs@oss.sgi.com>;
-	Thu, 10 Oct 2013 16:02:03 -0700 (PDT)
-Date: Thu, 10 Oct 2013 16:02:02 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] xfs: fix node forward in xfs_node_toosmall
-Message-ID: <20131010230202.GC4301@kroah.com>
-References: <20131009000926.GI10553@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 57B367F4E
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 18:24:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E6A9FAC001
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:24:33 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id P07WjphHl41zUeQ6 for
+	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:24:32 -0700 (PDT)
+Received: from zmail20.collab.prod.int.phx2.redhat.com
+	(zmail20.collab.prod.int.phx2.redhat.com [10.5.83.23])
+	by mx3-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r9ANOVrn022293
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 19:24:31 -0400
+Date: Thu, 10 Oct 2013 19:24:31 -0400 (EDT)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <408976477.5626180.1381447471755.JavaMail.root@redhat.com>
+In-Reply-To: <20131010133811.GK32337@riva.ucam.org>
+References: <20131010133811.GK32337@riva.ucam.org>
+Subject: Fwd: Bug#725971: xfsprogs: config.guess/config.sub out of date for
+	arm64
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131009000926.GI10553@sgi.com>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +33,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: XFS <xfs@oss.sgi.com>
 
-On Tue, Oct 08, 2013 at 07:09:26PM -0500, Ben Myers wrote:
-> From: Mark Tinguely <tinguely@sgi.com>
-> 
-> Commit f5ea1100 cleans up the disk to host conversions for
-> node directory entries, but because a variable is reused in
-> xfs_node_toosmall() the next node is not correctly found.
-> If the original node is small enough (<= 3/8 of the node size),
-> this change may incorrectly cause a node collapse when it should
-> not. That will cause an assert in xfstest generic/319:
-> 
->    Assertion failed: first <= last && last < BBTOB(bp->b_length),
->    file: /root/newest/xfs/fs/xfs/xfs_trans_buf.c, line: 569
-> 
-> Keep the original node header to get the correct forward node.
-> 
-> (When a node is considered for a merge with a sibling, it overwrites the
->  sibling pointers of the original incore nodehdr with the sibling's
->  pointers.  This leads to loop considering the original node as a merge
->  candidate with itself in the second pass, and so it incorrectly
->  determines a merge should occur.)
-> 
-> upstream commit 997def25e4b9cee3b01609e18a52f926bca8bd2b
+Hi all,
 
-Applied to the 3.10 and 3.11 stable queues, thanks.
+Have tested this out here & works just fine - please merge.
 
-greg k-h
+Signed-off-by: Nathan Scott <nathans@debian.org>
+
+and tested-by, reviewed-by, etc ... whatever floats your boat.
+
+thanks!
+
+----- Forwarded Message -----
+From: "Colin Watson" <cjwatson@ubuntu.com>
+To: submit@bugs.debian.org
+Sent: Friday, October 11, 2013 12:38:11 AM
+Subject: Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
+
+Package: xfsprogs
+Version: 3.1.9
+Severity: important
+Tags: patch
+User: debian-arm@lists.debian.org
+Usertags: arm64
+
+xfsprogs' config.guess/config.sub are out of date for the forthcoming
+arm64 port.  The attached patch sets things up so that you don't have to
+be bothered by this type of bug for future ports.
+
+  * Use the autotools-dev dh addon to update config.guess/config.sub for
+    arm64.
+
+diff -Nru xfsprogs-3.1.9/debian/control xfsprogs-3.1.9ubuntu1/debian/control
+--- xfsprogs-3.1.9/debian/control	2012-12-12 23:21:22.000000000 +0000
++++ xfsprogs-3.1.9ubuntu1/debian/control	2013-10-10 14:25:31.000000000 +0100
+@@ -3,7 +3,7 @@
+ Priority: optional
+ Maintainer: XFS Development Team <xfs@oss.sgi.com>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
++Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, autotools-dev
+ Standards-Version: 3.9.1
+ Homepage: http://oss.sgi.com/projects/xfs/
+ 
+diff -Nru xfsprogs-3.1.9/debian/rules xfsprogs-3.1.9ubuntu1/debian/rules
+--- xfsprogs-3.1.9/debian/rules	2010-08-18 04:53:43.000000000 +0100
++++ xfsprogs-3.1.9ubuntu1/debian/rules	2013-10-10 14:26:47.000000000 +0100
+@@ -35,6 +35,7 @@
+ .census:
+ 	@echo "== dpkg-buildpackage: configure" 1>&2
+ 	$(checkdir)
++	dh_autotools-dev_updateconfig
+ 	$(options) $(MAKE) include/platform_defs.h
+ 	touch .census
+ 
+@@ -57,6 +58,8 @@
+ 	$(MAKE) distclean
+ 	-rm -rf $(dirme) $(dirdev) $(dirdi)
+ 	-rm -f debian/*substvars debian/files* debian/*.debhelper
++	dh_autotools-dev_restoreconfig
++	dh_clean
+ 
+ binary-indep:
+ 
+
+Thanks,
+
+-- 
+Colin Watson                                       [cjwatson@ubuntu.com]
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
