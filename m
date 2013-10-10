@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5C6907F7E
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 08:39:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 415E9304039
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 06:39:16 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id pn3MDvFzCwR0jfgs (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 10 Oct 2013 06:39:15 -0700 (PDT)
-Subject: Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.725971.B.138141229820688@bugs.debian.org>
-Date: Thu, 10 Oct 2013 14:38:11 +0100
-From: Colin Watson <cjwatson@ubuntu.com>
-Message-ID: <20131010133811.GK32337@riva.ucam.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CBF427F7C
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 08:57:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 566A1AC003
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 06:56:57 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4cFpyfl9QRbefs0I for
+	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 06:56:56 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9ADut41008080
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 09:56:55 -0400
+Received: from orion.maiolino.org (ovpn-113-149.phx2.redhat.com [10.3.113.149])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r9ADuqJu002824
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 09:56:54 -0400
+Date: Thu, 10 Oct 2013 10:56:51 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfsprogs: remove incorrect l_sectBBsize assignment in
+	xfs_repair
+Message-ID: <20131010135650.GA2052@orion.maiolino.org>
+References: <5252F0D4.8090209@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-Reply-To: Colin Watson <cjwatson@ubuntu.com>, 725971@bugs.debian.org
+In-Reply-To: <5252F0D4.8090209@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,59 +39,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: submit@bugs.debian.org
+To: xfs@oss.sgi.com
 
-Package: xfsprogs
-Version: 3.1.9
-Severity: important
-Tags: patch
-User: debian-arm@lists.debian.org
-Usertags: arm64
+This looks good to me,
 
-xfsprogs' config.guess/config.sub are out of date for the forthcoming
-arm64 port.  The attached patch sets things up so that you don't have to
-be bothered by this type of bug for future ports.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-  * Use the autotools-dev dh addon to update config.guess/config.sub for
-    arm64.
-
-diff -Nru xfsprogs-3.1.9/debian/control xfsprogs-3.1.9ubuntu1/debian/control
---- xfsprogs-3.1.9/debian/control	2012-12-12 23:21:22.000000000 +0000
-+++ xfsprogs-3.1.9ubuntu1/debian/control	2013-10-10 14:25:31.000000000 +0100
-@@ -3,7 +3,7 @@
- Priority: optional
- Maintainer: XFS Development Team <xfs@oss.sgi.com>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
-+Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, autotools-dev
- Standards-Version: 3.9.1
- Homepage: http://oss.sgi.com/projects/xfs/
- 
-diff -Nru xfsprogs-3.1.9/debian/rules xfsprogs-3.1.9ubuntu1/debian/rules
---- xfsprogs-3.1.9/debian/rules	2010-08-18 04:53:43.000000000 +0100
-+++ xfsprogs-3.1.9ubuntu1/debian/rules	2013-10-10 14:26:47.000000000 +0100
-@@ -35,6 +35,7 @@
- .census:
- 	@echo "== dpkg-buildpackage: configure" 1>&2
- 	$(checkdir)
-+	dh_autotools-dev_updateconfig
- 	$(options) $(MAKE) include/platform_defs.h
- 	touch .census
- 
-@@ -57,6 +58,8 @@
- 	$(MAKE) distclean
- 	-rm -rf $(dirme) $(dirdev) $(dirdi)
- 	-rm -f debian/*substvars debian/files* debian/*.debhelper
-+	dh_autotools-dev_restoreconfig
-+	dh_clean
- 
- binary-indep:
- 
-
-Thanks,
+On Mon, Oct 07, 2013 at 12:35:16PM -0500, Eric Sandeen wrote:
+> Commit e0607266 xfsprogs: add crc format support to repair
+> 
+> added a 2nd assignment to l_sectBBsize:
+> 
+> 	log.l_sectBBsize = 1 << mp->m_sb.sb_logsectlog;
+> 
+> which is incorrect; sb_logsectlog is log2 of the sector size,
+> in bytes; l_sectBBsize is the size of the log sector in
+> 512-byte units.
+> 
+> So for a 4k sector size log, we were assigning 4096 rather
+> than 8.  This broke xlog_find_tail, and caused xfs_repair
+> to think that a log was dirty even when it was clean:
+> 
+> "ERROR: The filesystem has valuable metadata changes in a log"
+> 
+> (xfs_logprint didn't have this error, so xfs_logprint -t
+> agreed that the filesystem really was clean).
+> 
+> Just remove the incorrect assignment; it was already properly
+> assigned about 12 lines prior:
+> 
+>         log.l_sectBBsize  = BTOBB(x.lbsize);
+> 
+> and things work again.
+> 
+> (This worked accidentally for 512-sector devices, because
+> we special-case those and set sb_logsectlog to "0" rather
+> than 9, so l_sectBBsize came out to "1" (as in 1 sector),
+> as it should have).
+> 
+> Reporteed-by: Markus Trippelsdorf <markus@trippelsdorf.de>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/repair/phase2.c b/repair/phase2.c
+> index a62854e..2817fed 100644
+> --- a/repair/phase2.c
+> +++ b/repair/phase2.c
+> @@ -64,7 +64,6 @@ zero_log(xfs_mount_t *mp)
+>  		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
+>  	}
+>  	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
+> -	log.l_sectBBsize = 1 << mp->m_sb.sb_logsectlog;
+>  
+>  	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk))) {
+>  		do_warn(_("zero_log: cannot find log head/tail "
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 -- 
-Colin Watson                                       [cjwatson@ubuntu.com]
+Carlos
 
 _______________________________________________
 xfs mailing list
