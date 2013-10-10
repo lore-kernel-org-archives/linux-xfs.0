@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9C28D7F5F
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D550D7F8C
 	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 10:51:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8ABD78F8074
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AEE10304048
 	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 08:51:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OzZw2Rp24kKpYNjq for
+	cuda.sgi.com with ESMTP id LsUvkKKq8eJgKo7Q for
 	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 08:51:49 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9AFpnob001147
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9AFpnBv023488
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 11:51:49 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r9AFpmbd016439
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 11:51:48 -0400
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r9AFpnrK001991
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 11:51:49 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 03/12] xfsprogs: support the XFS_BTNUM_FINOBT free inode btree
-	type
-Date: Thu, 10 Oct 2013 11:51:03 -0400
-Message-Id: <1381420272-13249-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 10/12] xfsprogs/mkfs: finobt mkfs support
+Date: Thu, 10 Oct 2013 11:51:10 -0400
+Message-Id: <1381420272-13249-11-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1381420272-13249-1-git-send-email-bfoster@redhat.com>
 References: <1381420272-13249-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,336 +38,201 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Define the AGI fields for the finobt root/level and add magic
-numbers. Update the btree code to add support for the new
-XFS_BTNUM_FINOBT inode btree.
+Add the 'finobt' metadata option to mkfs to format an fs with free
+inode btree support. If enabled, initialize the associated AGI
+header fields and btree root block.
 
-The finobt root block is reserved immediately following the inobt
-root block in the AG. Update XFS_PREALLOC_BLOCKS() to determine the
-starting AG data block based on whether finobt support is enabled.
+Also, do the initialization of the superblock version and feature
+bits (including the new finobt flag) a bit earlier. These fields
+must now be initialized prior to the use of XFS_PREALLOC_BLOCKS(),
+as the latter returns a value that depends on whether a finobt root
+btree block is reserved.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- include/xfs_ag.h           | 32 +++++++++++++++----------
- include/xfs_btree.h        |  3 +++
- include/xfs_ialloc_btree.h | 14 ++++++++++-
- include/xfs_types.h        |  2 +-
- libxfs/xfs_btree.c         |  6 +++--
- libxfs/xfs_ialloc.c        | 37 ++++++++++++++++++++++++----
- libxfs/xfs_ialloc_btree.c  | 60 ++++++++++++++++++++++++++++++++++++++++++++--
- 7 files changed, 130 insertions(+), 24 deletions(-)
+ mkfs/xfs_mkfs.c | 97 +++++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 71 insertions(+), 26 deletions(-)
 
-diff --git a/include/xfs_ag.h b/include/xfs_ag.h
-index 1cb740a..eb0840c 100644
---- a/include/xfs_ag.h
-+++ b/include/xfs_ag.h
-@@ -166,22 +166,28 @@ typedef struct xfs_agi {
- 	__be32		agi_pad32;
- 	__be64		agi_lsn;	/* last write sequence */
- 
-+	__be32		agi_free_root; /* root of the free inode btree */
-+	__be32		agi_free_level;/* levels in free inode btree */
-+
- 	/* structure must be padded to 64 bit alignment */
- } xfs_agi_t;
- 
--#define	XFS_AGI_MAGICNUM	0x00000001
--#define	XFS_AGI_VERSIONNUM	0x00000002
--#define	XFS_AGI_SEQNO		0x00000004
--#define	XFS_AGI_LENGTH		0x00000008
--#define	XFS_AGI_COUNT		0x00000010
--#define	XFS_AGI_ROOT		0x00000020
--#define	XFS_AGI_LEVEL		0x00000040
--#define	XFS_AGI_FREECOUNT	0x00000080
--#define	XFS_AGI_NEWINO		0x00000100
--#define	XFS_AGI_DIRINO		0x00000200
--#define	XFS_AGI_UNLINKED	0x00000400
--#define	XFS_AGI_NUM_BITS	11
--#define	XFS_AGI_ALL_BITS	((1 << XFS_AGI_NUM_BITS) - 1)
-+#define	XFS_AGI_MAGICNUM	(1 << 0)
-+#define	XFS_AGI_VERSIONNUM	(1 << 1)
-+#define	XFS_AGI_SEQNO		(1 << 2)
-+#define	XFS_AGI_LENGTH		(1 << 3)
-+#define	XFS_AGI_COUNT		(1 << 4)
-+#define	XFS_AGI_ROOT		(1 << 5)
-+#define	XFS_AGI_LEVEL		(1 << 6)
-+#define	XFS_AGI_FREECOUNT	(1 << 7)
-+#define	XFS_AGI_NEWINO		(1 << 8)
-+#define	XFS_AGI_DIRINO		(1 << 9)
-+#define	XFS_AGI_UNLINKED	(1 << 10)
-+#define	XFS_AGI_NUM_BITS_R1	11	/* end of the 1st agi logging region */
-+#define	XFS_AGI_ALL_BITS_R1	((1 << XFS_AGI_NUM_BITS_R1) - 1)
-+#define	XFS_AGI_FREE_ROOT	(1 << 11)
-+#define	XFS_AGI_FREE_LEVEL	(1 << 12)
-+#define	XFS_AGI_NUM_BITS_R2	13
- 
- /* disk block (xfs_daddr_t) in the AG */
- #define XFS_AGI_DADDR(mp)	((xfs_daddr_t)(2 << (mp)->m_sectbb_log))
-diff --git a/include/xfs_btree.h b/include/xfs_btree.h
-index b55af99..c519fe4 100644
---- a/include/xfs_btree.h
-+++ b/include/xfs_btree.h
-@@ -37,6 +37,7 @@ extern kmem_zone_t	*xfs_btree_cur_zone;
- #define	XFS_BTNUM_CNT	((xfs_btnum_t)XFS_BTNUM_CNTi)
- #define	XFS_BTNUM_BMAP	((xfs_btnum_t)XFS_BTNUM_BMAPi)
- #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
-+#define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
- 
- /*
-  * Generic btree header.
-@@ -144,6 +145,7 @@ do {    \
- 	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_INC(abtc, stat); break;	\
- 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
- 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
-+	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
- 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
- 	}       \
- } while (0)
-@@ -157,6 +159,7 @@ do {    \
- 	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_ADD(abtc, stat, val); break; \
- 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
- 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
-+	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
- 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
- 	}       \
- } while (0)
-diff --git a/include/xfs_ialloc_btree.h b/include/xfs_ialloc_btree.h
-index ce7a62b..33d6dd4 100644
---- a/include/xfs_ialloc_btree.h
-+++ b/include/xfs_ialloc_btree.h
-@@ -31,6 +31,8 @@ struct xfs_mount;
-  */
- #define	XFS_IBT_MAGIC		0x49414254	/* 'IABT' */
- #define	XFS_IBT_CRC_MAGIC	0x49414233	/* 'IAB3' */
-+#define	XFS_FIBT_MAGIC		0x46494254	/* 'FIBT' */
-+#define	XFS_FIBT_CRC_MAGIC	0x46494233	/* 'FIB3' */
- 
- typedef	__uint64_t	xfs_inofree_t;
- #define	XFS_INODES_PER_CHUNK		(NBBY * sizeof(xfs_inofree_t))
-@@ -73,7 +75,17 @@ typedef __be32 xfs_inobt_ptr_t;
-  * block numbers in the AG.
-  */
- #define	XFS_IBT_BLOCK(mp)		((xfs_agblock_t)(XFS_CNT_BLOCK(mp) + 1))
--#define	XFS_PREALLOC_BLOCKS(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
-+#define	XFS_FIBT_BLOCK(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
-+
-+/*
-+ * The first data block of an AG depends on whether the filesystem was formatted
-+ * with the finobt feature. If so, account for the finobt reserved root btree
-+ * block.
-+ */
-+#define XFS_PREALLOC_BLOCKS(mp) \
-+	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
-+	 XFS_FIBT_BLOCK(mp) + 1 : \
-+	 XFS_IBT_BLOCK(mp) + 1)
- 
- /*
-  * Btree block header size depends on a superblock flag.
-diff --git a/include/xfs_types.h b/include/xfs_types.h
-index 82bbc34..65c6e66 100644
---- a/include/xfs_types.h
-+++ b/include/xfs_types.h
-@@ -134,7 +134,7 @@ typedef enum {
- 
- typedef enum {
- 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_BMAPi, XFS_BTNUM_INOi,
--	XFS_BTNUM_MAX
-+	XFS_BTNUM_FINOi, XFS_BTNUM_MAX
- } xfs_btnum_t;
- 
- struct xfs_name {
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 0099926..ca0ab6d 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -27,9 +27,10 @@ kmem_zone_t	*xfs_btree_cur_zone;
-  * Btree magic numbers.
-  */
- static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
--	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC },
-+	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
-+	  XFS_FIBT_MAGIC },
- 	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC,
--	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC }
-+	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index eafbed3..3ca7398 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -181,6 +181,8 @@ char	*sopts[] = {
+ char	*mopts[] = {
+ #define	M_CRC		0
+ 	"crc",
++#define M_FINOBT	1
++	"finobt",
+ 	NULL
  };
- #define xfs_btree_magic(cur) \
- 	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
-@@ -1045,6 +1046,7 @@ xfs_btree_set_refs(
- 		xfs_buf_set_ref(bp, XFS_ALLOC_BTREE_REF);
- 		break;
- 	case XFS_BTNUM_INO:
-+	case XFS_BTNUM_FINO:
- 		xfs_buf_set_ref(bp, XFS_INO_BTREE_REF);
- 		break;
- 	case XFS_BTNUM_BMAP:
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 45a5692..d86a436 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1482,6 +1482,8 @@ xfs_ialloc_log_agi(
- 		offsetof(xfs_agi_t, agi_newino),
- 		offsetof(xfs_agi_t, agi_dirino),
- 		offsetof(xfs_agi_t, agi_unlinked),
-+		offsetof(xfs_agi_t, agi_free_root),
-+		offsetof(xfs_agi_t, agi_free_level),
- 		sizeof(xfs_agi_t)
- 	};
- #ifdef DEBUG
-@@ -1491,14 +1493,39 @@ xfs_ialloc_log_agi(
- 	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
- #endif
- 	/*
--	 * Compute byte offsets for the first and last fields.
-+	 * The growth of the agi buffer over time now requires that we interpret
-+	 * the buffer as two logical regions delineated at the end of the unlinked
-+	 * list. This is due to the size of the hash table and its location in the
-+	 * middle of the agi.
-+	 *
-+	 * For example, a request to log a field before agi_unlinked and a field
-+	 * after agi_unlinked could cause us to log the entire hash table and use
-+	 * an excessive amount of log space. To avoid this behavior, log the
-+	 * region up through agi_unlinked in one call and the region after
-+	 * agi_unlinked through the end of the structure in another.
- 	 */
--	xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS, &first, &last);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
+ 
+@@ -958,6 +960,7 @@ main(
+ 	struct fs_topology	ft;
+ 	int			lazy_sb_counters;
+ 	int			crcs_enabled;
++	int			finobt;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -990,6 +993,7 @@ main(
+ 	worst_freelist = 0;
+ 	lazy_sb_counters = 1;
+ 	crcs_enabled = 0;
++	finobt = 0;
+ 	memset(&fsx, 0, sizeof(fsx));
+ 
+ 	memset(&xi, 0, sizeof(xi));
+@@ -1476,6 +1480,14 @@ main(
+ 						illegal(value, "m crc");
+ 					crcs_enabled = c;
+ 					break;
++				case M_FINOBT:
++					if (!value || *value == '\0')
++						reqval('m', mopts, M_CRC);
++					c = atoi(value);
++					if (c < 0 || c > 1)
++						illegal(value, "m finobt");
++					finobt = c;
++					break;
+ 				default:
+ 					unknown('m', value);
+ 				}
+@@ -2384,6 +2396,37 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+ 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+ 
++	/*
++	 * sb_versionnum and finobt flags must be set before we use
++	 * XFS_PREALLOC_BLOCKS().
++	 */
++	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
++					attrversion == 2, !projid16bit, 0);
 +
- 	/*
--	 * Log the allocation group inode header buffer.
-+	 * Compute byte offsets for the first and last fields in the first
-+	 * region and log agi buffer. This only logs up through agi_unlinked.
- 	 */
--	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
--	xfs_trans_log_buf(tp, bp, first, last);
-+	if (fields & XFS_AGI_ALL_BITS_R1) {
-+		xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS_R1,
-+				  &first, &last);
-+		xfs_trans_log_buf(tp, bp, first, last);
++	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
++					dsunit != 0,
++					logversion == 2, attrversion == 1,
++					(sectorsize != BBSIZE ||
++							lsectorsize != BBSIZE),
++					nci, sbp->sb_features2 != 0);
++	/*
++	 * dirent filetype field always enabled on v5 superblocks
++	 */
++	if (crcs_enabled) {
++		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
 +	}
 +
 +	/*
-+	 * Mask off the bits in the first region and calculate the first and last
-+	 * field offsets for any bits in the second region.
++	 * Due to a structure alignment issue, sb_features2 ended up in one
++	 * of two locations, the second "incorrect" location represented by
++	 * the sb_bad_features2 field. To avoid older kernels mounting
++	 * filesystems they shouldn't, set both field to the same value.
 +	 */
-+	fields &= ~XFS_AGI_ALL_BITS_R1;
-+	if (fields) {
-+		xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS_R2,
-+				  &first, &last);
-+		xfs_trans_log_buf(tp, bp, first, last);
-+	}
- }
- 
- #ifdef DEBUG
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 0b9b91a..3e9425c 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -48,6 +48,21 @@ xfs_inobt_set_root(
- 	xfs_ialloc_log_agi(cur->bc_tp, agbp, XFS_AGI_ROOT | XFS_AGI_LEVEL);
- }
- 
-+STATIC void
-+xfs_finobt_set_root(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*nptr,
-+	int			inc)	/* level change */
-+{
-+	struct xfs_buf		*agbp = cur->bc_private.a.agbp;
-+	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
++	sbp->sb_bad_features2 = sbp->sb_features2;
 +
-+	agi->agi_free_root = nptr->s;
-+	be32_add_cpu(&agi->agi_free_level, inc);
-+	xfs_ialloc_log_agi(cur->bc_tp, agbp,
-+			   XFS_AGI_FREE_ROOT | XFS_AGI_FREE_LEVEL);
-+}
++	if (finobt)
++		sbp->sb_features_ro_compat = XFS_SB_FEAT_RO_COMPAT_FINOBT;
 +
- STATIC int
- xfs_inobt_alloc_block(
- 	struct xfs_btree_cur	*cur,
-@@ -155,6 +170,17 @@ xfs_inobt_init_ptr_from_cur(
- 	ptr->s = agi->agi_root;
- }
+ 	if (loginternal) {
+ 		/*
+ 		 * Readjust the log size to fit within an AG if it was sized
+@@ -2438,7 +2481,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		printf(_(
+ 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+ 		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-		   "         =%-22s crc=%u\n"
++		   "         =%-22s crc=%-8u finobt=%u\n"
+ 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
+@@ -2447,7 +2490,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+ 			dfile, isize, (long long)agcount, (long long)agsize,
+ 			"", sectorsize, attrversion, !projid16bit,
+-			"", crcs_enabled,
++			"", crcs_enabled, finobt,
+ 			"", blocksize, (long long)dblocks, imaxpct,
+ 			"", dsunit, dswidth,
+ 			dirversion, dirblocksize, nci,
+@@ -2512,28 +2555,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		sbp->sb_logsectlog = 0;
+ 		sbp->sb_logsectsize = 0;
+ 	}
+-	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
+-					attrversion == 2, !projid16bit, 0);
+-	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
+-					dsunit != 0,
+-					logversion == 2, attrversion == 1,
+-					(sectorsize != BBSIZE ||
+-							lsectorsize != BBSIZE),
+-					nci, sbp->sb_features2 != 0);
+-	/*
+-	 * dirent filetype field always enabled on v5 superblocks
+-	 */
+-	if (crcs_enabled) {
+-		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
+-	}
+-
+-	/*
+-	 * Due to a structure alignment issue, sb_features2 ended up in one
+-	 * of two locations, the second "incorrect" location represented by
+-	 * the sb_bad_features2 field. To avoid older kernels mounting
+-	 * filesystems they shouldn't, set both field to the same value.
+-	 */
+-	sbp->sb_bad_features2 = sbp->sb_features2;
  
-+STATIC void
-+xfs_finobt_init_ptr_from_cur(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr)
-+{
-+	struct xfs_agi		*agi = XFS_BUF_TO_AGI(cur->bc_private.a.agbp);
+ 	if (force_overwrite)
+ 		zero_old_xfs_structures(&xi, sbp);
+@@ -2690,6 +2711,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		agi->agi_count = 0;
+ 		agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+ 		agi->agi_level = cpu_to_be32(1);
++		if (finobt) {
++			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
++			agi->agi_free_level = cpu_to_be32(1);
++		}
+ 		agi->agi_freecount = 0;
+ 		agi->agi_newino = cpu_to_be32(NULLAGINO);
+ 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
+@@ -2815,6 +2840,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			xfs_btree_init_block(mp, buf, XFS_IBT_MAGIC, 0, 0,
+ 						agno, 0);
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 +
-+	ASSERT(cur->bc_private.a.agno == be32_to_cpu(agi->agi_seqno));
-+	ptr->s = agi->agi_free_root;
-+}
++		/*
++		 * Free INO btree root block
++		 */
++		if (!finobt)
++			continue;
 +
- STATIC __int64_t
- xfs_inobt_key_diff(
- 	struct xfs_btree_cur	*cur,
-@@ -185,6 +211,7 @@ xfs_inobt_verify(
- 	 */
- 	switch (block->bb_magic) {
- 	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
-+	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
- 		if (!xfs_sb_version_hascrc(&mp->m_sb))
- 			return false;
- 		if (!uuid_equal(&block->bb_u.s.bb_uuid, &mp->m_sb.sb_uuid))
-@@ -196,6 +223,7 @@ xfs_inobt_verify(
- 			return false;
- 		/* fall through */
- 	case cpu_to_be32(XFS_IBT_MAGIC):
-+	case cpu_to_be32(XFS_FIBT_MAGIC):
- 		break;
- 	default:
- 		return 0;
-@@ -370,6 +398,28 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
- #endif
- };
++		buf = libxfs_getbuf(mp->m_ddev_targp,
++				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
++				bsize);
++		buf->b_ops = &xfs_inobt_buf_ops;
++		block = XFS_BUF_TO_BLOCK(buf);
++		memset(block, 0, blocksize);
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			xfs_btree_init_block(mp, buf, XFS_FIBT_CRC_MAGIC, 0, 0,
++						agno, XFS_BTREE_CRC_BLOCKS);
++		else
++			xfs_btree_init_block(mp, buf, XFS_FIBT_MAGIC, 0, 0,
++						agno, 0);
++		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 	}
  
-+static const struct xfs_btree_ops xfs_finobt_ops = {
-+	.rec_len		= sizeof(xfs_inobt_rec_t),
-+	.key_len		= sizeof(xfs_inobt_key_t),
-+
-+	.dup_cursor		= xfs_inobt_dup_cursor,
-+	.set_root		= xfs_finobt_set_root,
-+	.alloc_block		= xfs_inobt_alloc_block,
-+	.free_block		= xfs_inobt_free_block,
-+	.get_minrecs		= xfs_inobt_get_minrecs,
-+	.get_maxrecs		= xfs_inobt_get_maxrecs,
-+	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
-+	.init_rec_from_key	= xfs_inobt_init_rec_from_key,
-+	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
-+	.key_diff		= xfs_inobt_key_diff,
-+	.buf_ops		= &xfs_inobt_buf_ops,
-+#if defined(DEBUG) || defined(XFS_WARN)
-+	.keys_inorder		= xfs_inobt_keys_inorder,
-+	.recs_inorder		= xfs_inobt_recs_inorder,
-+#endif
-+};
-+
- /*
-  * Allocate a new inode btree cursor.
-  */
-@@ -388,11 +438,17 @@ xfs_inobt_init_cursor(
- 
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
--	cur->bc_nlevels = be32_to_cpu(agi->agi_level);
- 	cur->bc_btnum = btnum;
-+	if (btnum == XFS_BTNUM_INO) {
-+		cur->bc_nlevels = be32_to_cpu(agi->agi_level);
-+		cur->bc_ops = &xfs_inobt_ops;
-+	} else {
-+		cur->bc_nlevels = be32_to_cpu(agi->agi_free_level);
-+		cur->bc_ops = &xfs_finobt_ops;
-+	}
-+
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
- 
--	cur->bc_ops = &xfs_inobt_ops;
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
- 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
- 
+ 	/*
+@@ -3053,10 +3098,10 @@ usage( void )
+ {
+ 	fprintf(stderr, _("Usage: %s\n\
+ /* blocksize */		[-b log=n|size=num]\n\
+-/* metadata */		[-m crc=[0|1]\n\
++/* metadata */		[-m crc=0|1,finobt=0|1]\n\
+ /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+ 			    (sunit=value,swidth=value|su=num,sw=num),\n\
+-			    sectlog=n|sectsize=num\n\
++			    sectlog=n|sectsize=num]\n\
+ /* force overwrite */	[-f]\n\
+ /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+ 			    projid32bit=0|1]\n\
 -- 
 1.8.1.4
 
