@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A61E17F54
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 22:20:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 871F8304032
-	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 20:20:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AFC7E7F51
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 22:22:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D9E6AC002
+	for <xfs@oss.sgi.com>; Wed,  9 Oct 2013 20:22:19 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ziOBD9mNa3MdX9jA for <xfs@oss.sgi.com>;
-	Wed, 09 Oct 2013 20:20:25 -0700 (PDT)
-Date: Thu, 10 Oct 2013 14:20:23 +1100
+	hsKDEItc4AechGJw for <xfs@oss.sgi.com>;
+	Wed, 09 Oct 2013 20:22:18 -0700 (PDT)
+Date: Thu, 10 Oct 2013 14:21:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfstests: get fsstress DIO working on non-xfs
-	filesystems
-Message-ID: <20131010032023.GU4446@dastard>
-References: <4B54C8AB.6080607@sandeen.net>
- <5256175C.6020000@sandeen.net>
+Subject: Re: [PATCH 2/2] xfs_fsr: create extent-based attr to grow forkoff
+Message-ID: <20131010032144.GV4446@dastard>
+References: <4F75C939.6030009@redhat.com> <4F75CAD9.60808@redhat.com>
+	<52561AE1.8010902@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5256175C.6020000@sandeen.net>
+In-Reply-To: <52561AE1.8010902@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,49 +31,39 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 09, 2013 at 09:56:28PM -0500, Eric Sandeen wrote:
-> Pretty sure all DIO IO fails in fsstress today since XFS_IOC_DIOINFO
-> fails.  If so, rather than just bailing out on the op, assign
-> some sane default DIO parameters, getting min IO size from
-> sector size if possible.
+On Wed, Oct 09, 2013 at 10:11:29PM -0500, Eric Sandeen wrote:
+> On 3/30/12 10:01 AM, Eric Sandeen wrote:
+> > In some cases the target file may have a non-local attribute,
+> > but the temp file gets assigned a local attribute on creation,
+> > due to selinux, for example.
+> > 
+> > In this case, the large-ish selinux attr will create a forkoff
+> > in the temp file smaller than the forkoff in the target file,
+> > because the FMT_EXTENTS attr takes up less space.  There is
+> > no mechanism to grow the forkoff to match, so we can end up
+> > failing to swap these 2 inodes if the result is not enough
+> > data space in the temp inode as a result.
+> > 
+> > After testing the target file for a non-local extent, and
+> > checking to see if the forkoff needs to be grown on the first
+> > pass, we can add a large attr to knock all attributes of the
+> > temp file out of local format, and grow the fork offset.
+> > 
+> > This passes xfstest 227, and also resolves issues seen on
+> > a metadata image provided by Gabriel.
+> > 
+> > Reported-by: Gabriel VLASIU <gabriel@vlasiu.net>
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > ---
 > 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
+> Ping #2?  This was a real bug once, IIRC.  Probably still is...
 > 
-> V2: factor out get_alignment, use BLKSSZGET for min DIO size
-> rather than guessing at 512.
-> 
-> 
-> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> index 5d5611f..af06059 100644
-> --- a/ltp/fsstress.c
-> +++ b/ltp/fsstress.c
-> @@ -550,6 +550,27 @@ int main(int argc, char **argv)
->  	return 0;
->  }
->  
-> +/*
-> + * Get alignment via XFS_IOC_DIOINFO, else fall back to
-> + * best guess from BLKSSZGET, else return -1.
-> + */
-> +static int
-> +get_alignment(pathname_t *f, int fd, struct dioattr *dio)
-> +{
-> +	if (xfsctl(f->path, fd, XFS_IOC_DIOINFO, dio) < 0) {
-> +		int sectorsize;
-> +
-> +		if (ioctl(fd, BLKSSZGET, &sectorsize) < 0)
-> +			return -1;
-> +
-> +		dio->d_maxiosz = -1U;
-> +		dio->d_miniosz = sectorsize;
-> +		dio->d_mem = sectorsize;
+> Patch 1/2 helped identify the problem, so ping on that too I guess.
 
-To be safe, shouldn't we align d_mem to page size given it is the
-alignment of the data within the user page, not the alignment of the
-offset of the IO?
+Can you repost all these old patches as a new series to make it easy
+to apply and test them?
 
 Cheers,
 
