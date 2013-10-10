@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AB6267F84
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 04:58:34 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5CEB17F84
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 05:01:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 45F7EAC002
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 02:58:31 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8r1LxAbWK3SX9LXX for <xfs@oss.sgi.com>;
-	Thu, 10 Oct 2013 02:58:29 -0700 (PDT)
-Date: Thu, 10 Oct 2013 20:58:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS on bad superblock] BUG: unable to handle kernel NULL
-	pointer dereference at 00000003
-Message-ID: <20131010095824.GX4446@dastard>
-References: <20131010011640.GA5726@localhost> <20131010014117.GA6017@localhost>
-	<20131010031515.GT4446@dastard> <20131010032637.GA12725@localhost>
-	<20131010033300.GA12952@localhost>
-	<20131010033834.GA13141@localhost> <20131010042820.GA5663@dastard>
-	<20131010060334.GA17576@localhost> <20131010080652.GW4446@dastard>
-	<20131010082350.GA31385@localhost>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E7458F8039
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 03:01:03 -0700 (PDT)
+Received: from mail-pd0-f169.google.com (mail-pd0-f169.google.com
+	[209.85.192.169]) by cuda.sgi.com with ESMTP id
+	ljdL5zFlEinfSUaB (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 10 Oct 2013 03:01:01 -0700 (PDT)
+Received: by mail-pd0-f169.google.com with SMTP id r10so2356180pdi.0
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 03:01:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131010082350.GA31385@localhost>
+In-Reply-To: <20131009233421.GQ4446@dastard>
+References: <1381090432-2863-1-git-send-email-linkinjeon@gmail.com>
+	<20131009233421.GQ4446@dastard>
+Date: Thu, 10 Oct 2013 19:01:01 +0900
+Message-ID: <CAKYAXd84D8XpYTDZuaY=rUzZdyxSD0NKaV8nCkYvj_XRs_gV_Q@mail.gmail.com>
+Subject: Re: [PATCH RESEND 5/7] xfstest: Add test case to check various corner
+	cases for collapsing range
+From: Namjae Jeon <linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,112 +33,153 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
 
-On Thu, Oct 10, 2013 at 04:23:50PM +0800, Fengguang Wu wrote:
-> Dave,
-> 
-> >> This is an easily reproducible bug. And I further confirmed it in
-> >> two ways:
-> >>
-> >> 1) turn off XFS, build 39 commits and boot them 2000+ times
-> >>
-> >> => no single mount error
-> >
-> >That doesn't tell you it is an XFS error. Absence of symptoms !=
-> >absence of bug.
-> 
-> True.
-> 
-> >> 2) turn off all other filesystems, build 2 kernels on v3.12-rc3
-> >>    v3.12-rc4 and boot them
-> >> 
-> >> => half boots have oops
-> >
-> >Again, it doesn't tell you that it is an XFS bug. XFS is well known
-> >for exposing bugs in less used block devices, and you are definitely
-> >using devices that are unusual and not commonly tested by filesystem
-> >developers (e.g. zram, nbd, etc).
-> >
-> 
-> Yeah, it's possible that your commit exposed a bug in the less used
-> nbd/zram devices.
+>> +#
+>> +_test_generic_collapse()
+>> +{
+>
+> This function is just a copy and paste of _test_generic_punch() with
+> all the ranges increased by a factor of 4. Why can't you simply use
+> _test_generic_punch() and pass in a different $zero_cmd?
+Yes, you're right. We can use test_generic_punch as you said.
+I will update.
+>
+>
+>>
+>> +# check that xfs_io, kernel and filesystem all support fallocate with collapse
+>> +# range
+>> +_require_xfs_io_falloc_collapse()
+>> +{
+>> +     testfile=$TEST_DIR/$$.falloc
+>> +     testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+>> +             -c "fcollapse 4k 8k" $testfile 2>&1`
+>
+> No need for the -F parameter anymore.
+Okay.
 
-So please reproduce it on a brd/scsi/sata/virtio block device before
-going any further. Preferably with a bash script I can point at a
-single block device, not a binary initrd blob that I have to
-deconstruct to try to work out what your test is doing.
+>
+>> +     rm -f $testfile 2>&1 > /dev/null
+>> +     echo $testio | grep -q "not found" && \
+>> +             _notrun "xfs_io fallocate collapse range support is missing"
+>> +     echo $testio | grep -q "Operation not supported" && \
+>> +             _notrun "xfs_io fallocate collapse range failed (no fs support?)"
+>> +}
+>> +
+>>  # check that xfs_io, kernel and filesystem support fiemap
+>>  _require_xfs_io_fiemap()
+>>  {
+>> diff --git a/tests/shared/316 b/tests/shared/316
+>> new file mode 100644
+>> index 0000000..66a8489
+>> --- /dev/null
+>> +++ b/tests/shared/316
+>
+> You don't need to number this 316. shared/001 is not taken, so start
+> there....
+okay.
 
-because this:
+>
+>> @@ -0,0 +1,70 @@
+>> +#! /bin/bash
+>> +# FS QA Test No. 316
+>> +#
+>> +# Test fallocate collapse range
+>
+> A more verbose test description is preferred. A paragraph describing
+> that the test exercises boundary conditions across different extent
+> types for the FALLOC_FL_COLLAPSE_RANGE operation would be ideal.
+Okay.
 
-> [    7.707009] end_request: I/O error, dev fd0, sector 0
-> [   10.475988] block nbd4: Attempted send on closed socket
-> [   10.478272] end_request: I/O error, dev nbd4, sector 0
-> [   10.492950] block nbd15: Attempted send on closed socket
-> [   10.498283] end_request: I/O error, dev nbd15, sector 0
+>
+>> +trap "_cleanup ; exit \$status" 0 1 2 3 15
+>> +
+>> +# get standard environment, filters and checks
+>> +# we need to include common/punch to get defination fo filter functions
+>> +. ./common/rc
+>> +. ./common/filter
+>> +. ./common/punch
+>> +. ./common/collapse
+>> +
+>> +# real QA test starts here
+>> +_supported_fs xfs ext4
+>> +_supported_os Linux
+>> +
+>> +_require_xfs_io_falloc_punch
+>> +_require_xfs_io_falloc
+>> +_require_xfs_io_fiemap
+>> +_require_xfs_io_falloc_collapse
+>> +
+>> +testfile=$TEST_DIR/316.$$
+>
+> If you are going to use the test number to identify the file, you
+> should use $seq rather than hard coding the number....
+Okay.
 
-says that nbd is going through I/O error land, and that's the most
-likely cause of problems being seen by higher level IO completion
-operations....
+>
+>> +# Standard collapse range tests
+>> +_test_generic_collapse falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
+>> +
+>> +# Delayed allocation collapse range tests
+>> +_test_generic_collapse -d falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
+>> +
+>> +# Multi collapse tests
+>> +_test_generic_collapse -k falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
+>> +
+>> +# Delayed allocation multi collapse range tests
+>> +_test_generic_collapse -d -k falloc fcollapse fpunch fiemap _filter_hole_fiemap $testfile
+>
+> What I'd prefer is each of these is a separate unit test. i.e:
+>
+> shared/001: Standard collapse range tests
+> shared/002: Delayed allocation collapse range tests
+> shared/003: Multi collapse tests
+> shared/004: Delayed allocation multi collapse range tests
+>
+> The reason for doing this is that it means that:
+>
+>         a) we can track failures of the different types of tests
+>            independently; and
+>         b) the filesystem the tests are being run on is checked for
+>            consistency between each test
+>
+> I know, the punch tests you copied this from lump them all into the
+> one test, but I'd really like to get away from the complex tests
+> that aggregate lots of different things into a single pass/fail test
+> as it makes it hard to isolate failures and track them over the long
+> term...
+>
+Okay, I will do it as your suggestion.
 
-> [   10.504236] BUG: unable to handle kernel NULL pointer dereference at 00000004
-> [   10.507558] IP: [<c1034419>] pool_mayday_timeout+0x5f/0x9c
+>> +
+>> +status=0 ; exit
+>
+> separate lines
+>
+>> diff --git a/tests/shared/group b/tests/shared/group
+>> index 0ad640b..3a69294 100644
+>> --- a/tests/shared/group
+>> +++ b/tests/shared/group
+>> @@ -11,4 +11,4 @@
+>>  289 auto quick
+>>  298 auto trim
+>>  305 aio dangerous enospc rw stress
+>> -
+>> +316 auto quick collapse
+>
+> I'd put this in the prealloc group rather than create a new one
+> called "collapse".
+Okay.
 
-And that's deep inside the workqueue infrastructure, indicating that
-rescues are being used (allocation deadlock?) which is also less
-tested error handling code path....
-
-> [   10.507558] *pdpt = 000000000ce6a001 *pde = 0000000000000000
-> [   10.507558] Oops: 0000 [#1]
-> [   10.507558] CPU: 0 PID: 516 Comm: mount Not tainted 3.12.0-rc4 #2
-> [   10.507558] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-> [   10.507558] task: ccda7440 ti: cf40a000 task.ti: cce2e000
-> [   10.507558] EIP: 0060:[<c1034419>] EFLAGS: 00010046 CPU: 0
-> [   10.507558] EIP is at pool_mayday_timeout+0x5f/0x9c
-> [   10.507558] EAX: 00000000 EBX: c1931d50 ECX: 00000000 EDX: 00000000
-> [   10.507558] ESI: c10343ba EDI: cd5a3258 EBP: cf40bf94 ESP: cf40bf80
-> [   10.507558]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-> [   10.507558] CR0: 8005003b CR2: 00000004 CR3: 0cdbd000 CR4: 000006b0
-> [   10.507558] Stack:
-> [   10.507558]  c1931d60 cf40bf90 00000100 c10343ba cf40bfc0 cf40bfa4 c102cd96 c1a52700
-> [   10.507558]  cf40bfc0 cf40bfd4 c102cf7e c1931d50 c1a53110 c1a52f10 cf40bfc0 c10343ba
-> [   10.507558]  cf40bfc0 cf40bfc0 00000001 c1a52588 00000100 cf40bff8 c1028f61 00000001
-> [   10.507558] Call Trace:
-> [   10.507558]  [<c10343ba>] ? need_to_create_worker+0x32/0x32
-> [   10.507558]  [<c102cd96>] call_timer_fn.isra.39+0x16/0x60
-> [   10.507558]  [<c102cf7e>] run_timer_softirq+0x144/0x15e
-> [   10.507558]  [<c10343ba>] ? need_to_create_worker+0x32/0x32
-> [   10.507558]  [<c1028f61>] __do_softirq+0x87/0x12b
-> [   10.507558]  [<c1028eda>] ? local_bh_enable_ip+0xa/0xa
-> [   10.507558]  <IRQ>
-> [   10.507558]  [<c10290c4>] ? irq_exit+0x3a/0x48
-> [   10.507558]  [<c1018818>] ? smp_apic_timer_interrupt+0x23/0x2c
-> [   10.507558]  [<c164f38d>] ? apic_timer_interrupt+0x2d/0x34
-> [   10.507558]  [<c126f5e2>] ? arch_local_irq_restore+0x5/0xb
-> [   10.507558]  [<c126f694>] ? spin_unlock_irqrestore.isra.4+0x8/0x14
-> [   10.507558]  [<c126f705>] ? nbd_end_request+0x65/0x6d
-> [   10.507558]  [<c126f784>] ? do_nbd_request+0x77/0xc1
-> [   10.507558]  [<c11abe4f>] ? __blk_run_queue_uncond+0x1e/0x27
-> [   10.507558]  [<c11abe6b>] ? __blk_run_queue+0x13/0x15
-> [   10.507558]  [<c11abfe8>] ? queue_unplugged.isra.56+0x13/0x1f
-> [   10.507558]  [<c11ad70b>] ? blk_flush_plug_list+0x140/0x14f
-> [   10.507558]  [<c11ad95f>] ? blk_finish_plug+0xd/0x27
-> [   10.507558]  [<c11051b6>] ? _xfs_buf_ioapply+0x236/0x24e
-
-and it has happened deep inside the nbd IO path in the context of
-the xfs_buf allocation that has seen corruptions in previous dumps.
-
-So before I look any further at this, you need to rule out nbd as
-the cause of the problems because the XFS code paths on scsi, sata,
-brd and virtio block device don't cause any problems....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks for review.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
