@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BD57F7F55
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 23:28:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1114E7F56
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 23:28:52 -0500 (CDT)
 Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
 	[128.162.236.41])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A2F768F8050
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 21:28:48 -0700 (PDT)
-Message-Id: <20131011042007.923283516@sgi.com>
-Date: Thu, 10 Oct 2013 23:19:12 -0500
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E09EA8F8050
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 21:28:51 -0700 (PDT)
+Message-Id: <20131011042008.042241192@sgi.com>
+Date: Thu, 10 Oct 2013 23:19:13 -0500
 From: rjohnston@sgi.com
-Subject: [PATCH 1/2] xfstests XFS: verify extended attributes after
-	multi-stream xfsdump/xfsrestore
+Subject: [PATCH 2/2] xfstests: xfsdump/restore test for partial_reg: Out of
+	records. Extend attrs applied early
 References: <20131011041911.238407600@sgi.com>
 Content-Disposition: inline;
-	filename=xfstests-verify-extended-attributes-after-multi-stream-xfsdump-xfsrestore.patch
+	filename=xfstests-multi-stream-xfsdump-xfsrestore-of-wholly-sparse-files.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +29,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Verify extended attributes are not lost after multi-stream
-xfsdump/xfsrestore of wholly-sparse files.  The restore succeeds,
-however the extended attributes for that file are lost.
+Multi-stream xfsdump/xfsrestore of more than partialmax wholly-sparse
+files segfaults with the following warning:
+
+  "partial_reg: Out of records. Extend attrs applied early."
+
+Add a test that dumps and restores partialmax + 1 wholly-sparse files.
 
 Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
-diff --git a/tests/xfs/350 b/tests/xfs/350
+diff --git a/tests/xfs/351 b/tests/xfs/351
 new file mode 100755
-index 0000000..88943e4
+index 0000000..43b14c2
 --- /dev/null
-+++ b/tests/xfs/350
-@@ -0,0 +1,72 @@
++++ b/tests/xfs/351
+@@ -0,0 +1,71 @@
 +#! /bin/bash
-+# FS QA Test No. 350
++# FS QA Test No. 351
 +#
-+# Verify multi-stream xfsdump/restore preserves extended attributes
++# Dump and restore partialmax + 1 wholly-sparse files
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++# Copyright (c) 2013 SGI.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -83,7 +86,6 @@ index 0000000..88943e4
 +. ./common/rc
 +. ./common/filter
 +. ./common/dump
-+. ./common/attr
 +
 +# real QA test starts here
 +
@@ -91,77 +93,45 @@ index 0000000..88943e4
 +_supported_fs xfs
 +_supported_os Linux
 +_require_scratch
-+
-+# Extended attributes
-+attr_name=attrname
-+attr_value=1234
++#dump_dir=/mnt/test/$dump_sdir
 +
 +rm -f $seqres.full
++rm -rf $restore_dir/*
++rm -f $tmp.stream? 
 +
-+_create_dumpdir_fill_ea 2>&1 >> $seqres.full
-+
-+# Create and add wholly-sparse file to the dump directory
-+$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile 2>&1 >> $seqres.full ||
-+_fail "could not create \"$dump_dir\"/sparsefile"
-+
-+# Set the xattr on sparsefile
-+$ATTR_PROG -s $attr_name -V $attr_value $dump_dir/sparsefile 2>&1 >> $seqres.full || _fail "could not set ATTR for \"$dump_dir\"/sparsefile"
-+
-+_do_dump_multi_file --multi 4  2>&1 >> $seqres.full
-+_do_restore_multi_file --multi 4 2>&1 >> $seqres.full
-+_diff_compare_eas 
-+
++echo "Silence is golden."
++_wipe_fs
++mkdir $dump_dir 2>&1 >> $seqres.full || _fail "mkdir \"$dump_dir\" failed"
++for i in `seq 1 4`; do
++	$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile$i \
++		2>&1 >> $seqres.full || _fail "failed to create sparsefile\"$i\""
++done
++# Dump and restore the files
++_prepare_restore_dir
++$XFSDUMP_PROG -L session -M label1 -M label2 -f $tmp.stream1 \
++	-f $tmp.stream2 $SCRATCH_MNT -s $dump_sdir \
++	2>&1 >> $seqres.full || _fail "dump failed"
++$XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $restore_dir \
++	2>&1 >> $seqres.full || _fail "restore failed"
 +status=0
 +exit 
-diff --git a/tests/xfs/350.out b/tests/xfs/350.out
+diff --git a/tests/xfs/351.out b/tests/xfs/351.out
 new file mode 100644
-index 0000000..6798ded
+index 0000000..42cf52e
 --- /dev/null
-+++ b/tests/xfs/350.out
-@@ -0,0 +1,34 @@
-+QA output created by 350
-+Comparing dump directory with restore directory
-+Looking at the extended attributes (EAs)
-+EAs on dump
-+User names
-+Attribute "attr5" had a 8 byte value for DUMP_DIR/dir:
-+dir_text
-+Attribute "attr1" had a 9 byte value for DUMP_DIR/smalll:
-+some_text
-+Attribute "attrname" had a 4 byte value for DUMP_DIR/sparsefile:
-+1234
-+Attribute "attr3" had a 10 byte value for DUMP_DIR/sub/smalll:
-+some_text3
-+Root names
-+Attribute "attr2" had a 10 byte value for DUMP_DIR/biggg:
-+some_text2
-+Attribute "attr4" had a 10 byte value for DUMP_DIR/sub/biggg:
-+some_text4
-+EAs on restore
-+User names
-+Attribute "attr5" had a 8 byte value for DUMP_DIR/dir:
-+dir_text
-+Attribute "attr1" had a 9 byte value for DUMP_DIR/smalll:
-+some_text
-+Attribute "attrname" had a 4 byte value for DUMP_DIR/sparsefile:
-+1234
-+Attribute "attr3" had a 10 byte value for DUMP_DIR/sub/smalll:
-+some_text3
-+Root names
-+Attribute "attr2" had a 10 byte value for DUMP_DIR/biggg:
-+some_text2
-+Attribute "attr4" had a 10 byte value for DUMP_DIR/sub/biggg:
-+some_text4
-+Files 350.ea1 and 350.ea2 are identical
++++ b/tests/xfs/351.out
+@@ -0,0 +1,2 @@
++QA output created by 351
++Silence is golden.
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 352a4c5..2cd3cf0 100644
+index 352a4c5..3e73f1d 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
 @@ -179,3 +179,4 @@
  297 auto freeze
  298 auto attr symlink quick
  299 auto quota
-+350 dump auto
++351 auto dump
 
 
 _______________________________________________
