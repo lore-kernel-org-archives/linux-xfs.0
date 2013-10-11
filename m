@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 266AB7F4E
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 18:56:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AD221AC001
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:56:20 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id 4QSibWe6NNmyIQ1J for
-	<xfs@oss.sgi.com>; Thu, 10 Oct 2013 16:56:19 -0700 (PDT)
-Received: from zmail20.collab.prod.int.phx2.redhat.com
-	(zmail20.collab.prod.int.phx2.redhat.com [10.5.83.23])
-	by mx3-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id r9ANuJ0T027558
-	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 19:56:19 -0400
-Date: Thu, 10 Oct 2013 19:56:19 -0400 (EDT)
-From: Nathan Scott <nathans@debian.org>
-Message-ID: <1803090820.5630526.1381449379093.JavaMail.root@redhat.com>
-In-Reply-To: <408976477.5626180.1381447471755.JavaMail.root@redhat.com>
-References: <20131010133811.GK32337@riva.ucam.org>
-	<408976477.5626180.1381447471755.JavaMail.root@redhat.com>
-Subject: Re: Bug#725971: xfsprogs: config.guess/config.sub out of date for
-	arm64
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 816E67F3F
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 22:23:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 638B3304032
+	for <xfs@oss.sgi.com>; Thu, 10 Oct 2013 20:23:49 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id PjvGVYrVNnhUK1vV for <xfs@oss.sgi.com>;
+	Thu, 10 Oct 2013 20:23:48 -0700 (PDT)
+Message-ID: <52576F42.7070501@sandeen.net>
+Date: Thu, 10 Oct 2013 22:23:46 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_5630524_334529076.1381449379089"
-Reply-To: Nathan Scott <nathans@debian.org>
+Subject: Re: [PATCH] xfs: prevent deadlock trying to cover an active log
+References: <1381278703-23439-1-git-send-email-david@fromorbit.com>
+	<5256DE6A.1070502@sandeen.net> <20131010214227.GA4446@dastard>
+In-Reply-To: <20131010214227.GA4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +24,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-------=_Part_5630524_334529076.1381449379089
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-
------ Original Message -----
-> ...
-> Have tested this out here & works just fine - please merge.
+On 10/10/13 4:42 PM, Dave Chinner wrote:
+> On Thu, Oct 10, 2013 at 12:05:46PM -0500, Eric Sandeen wrote:
+>> On 10/8/13 7:31 PM, Dave Chinner wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+>>> Recent analysis of a deadlocked XFS filesystem from a kernel
+>>> crash dump indicated that the filesystem was stuck waiting for log
+>>> space. The short story of the hang on the RHEL6 kernel is this:
+>>>
+>>> 	- the tail of the log is pinned by an inode
+>>> 	- the inode has been pushed by the xfsaild
+>>> 	- the inode has been flushed to it's backing buffer and is
+>>> 	  currently flush locked and hence waiting for backing
+>>> 	  buffer IO to complete and remove it from the AIL
+>>> 	- the backing buffer is marked for write - it is on the
+>>> 	  delayed write queue
+>>> 	- the inode buffer has been modified directly and logged
+>>> 	  recently due to unlinked inode list modification
+>>> 	- the backing buffer is pinned in memory as it is in the
+>>> 	  active CIL context.
+>>> 	- the xfsbufd won't start buffer writeback because it is
+>>> 	  pinned
+>>> 	- xfssyncd won't force the log because it sees the log as
+>>> 	  needing to be covered and hence wants to issue a dummy
+>>> 	  transaction to move the log covering state machine along.
+>>>
+>>> Hence there is no trigger to force the CIL to the log and hence
+>>> unpin the inode buffer and therefore complete the inode IO, remove
+>>> it from the AIL and hence move the tail of the log along, allowing
+>>> transactions to start again.
+> ....
+>>>  int
+>>>  xfs_log_need_covered(xfs_mount_t *mp)
+>>>  {
+>>> -	int		needed = 0;
+>>>  	struct xlog	*log = mp->m_log;
+>>> +	int		needed = 0;
+>>>  
+>>>  	if (!xfs_fs_writable(mp))
+>>>  		return 0;
+>>>  
+>>> +	if (!xlog_cil_empty(log))
+>>> +		return 0;
+>>> +
+>>>  	spin_lock(&log->l_icloglock);
+>>>  	switch (log->l_covered_state) {
+>>>  	case XLOG_STATE_COVER_DONE:
+>>> @@ -1029,14 +1036,17 @@ xfs_log_need_covered(xfs_mount_t *mp)
+>>
+>> This hunk is all cosmetic, right?  (nice cosmetic, but cosmetic).
 > 
+> No, it's a logic change.
+> 
+>> Kinda wish this were in a patch 2/2 just for clarity.
+>>
+>>>  		break;
+>>>  	case XLOG_STATE_COVER_NEED:
+>>>  	case XLOG_STATE_COVER_NEED2:
+>>> -		if (!xfs_ail_min_lsn(log->l_ailp) &&
+>>> -		    xlog_iclogs_empty(log)) {
+>>> -			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
+>>> -				log->l_covered_state = XLOG_STATE_COVER_DONE;
+>>> -			else
+>>> -				log->l_covered_state = XLOG_STATE_COVER_DONE2;
+>>> -		}
+>>> -		/* FALLTHRU */
+>>> +		if (xfs_ail_min_lsn(log->l_ailp))
+>>> +			break;
+>>> +		if (!xlog_iclogs_empty(log))
+>>> +			break;
+>>> +
+>>> +		needed = 1;
+>>> +		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
+>>> +			log->l_covered_state = XLOG_STATE_COVER_DONE;
+>>> +		else
+>>> +			log->l_covered_state = XLOG_STATE_COVER_DONE2;
+>>> +		break;
+>>>  	default:
+>>>  		needed = 1;
+>>>  		break;
+> 
+> There is different logic - the old code *always* fell through to set
+> needed = 1, regardless of whether the AIL or iclogs had anything in
+> them or not. Hence we'd try to cover the log when we clearly could
+> not make any progress covering it and so we make a transaction
+> reservation when in a state that could potentially deadlock.
+> 
+> The new code only sets needed = 1 if the AIL and iclogs are empty
+> and so we know that covering can make progress, and hence we don't
+> take a transaction reservation in the situation where the AIL is
+> full and we have to block waiting for the AIL to make progress.
+> Instead, the caller (xfs_log_worker) will issue a log force that
+> will resolve the deadlock described above.
 
-Also, the attached fixes a warning in the deb build for me,
-plus some trivial cleanup in the release script.
+woof, you're right.  Ok, I misread the patch, sorry.
 
-cheers.
-
---
-Nathan
-
-------=_Part_5630524_334529076.1381449379089
-Content-Type: text/x-patch; name=xfsprogs-patchlet
-Content-Disposition: attachment; filename=xfsprogs-patchlet
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtLWdpdCBhL2RlYmlhbi9jaGFuZ2Vsb2cgYi9kZWJpYW4vY2hhbmdlbG9nCmluZGV4IDEy
-NTQ3MWQuLjA5MzVlMDcgMTAwNjQ0Ci0tLSBhL2RlYmlhbi9jaGFuZ2Vsb2cKKysrIGIvZGViaWFu
-L2NoYW5nZWxvZwpAQCAtMiw3ICsyLDcgQEAgeGZzcHJvZ3MgKDMuMS4xMSkgdW5zdGFibGU7IHVy
-Z2VuY3k9bG93CiAKICAgKiBOZXcgdXBzdHJlYW0gcmVsZWFzZQogCi0gLS0gTmF0aGFuIFNjb3R0
-IDxuYXRoYW5zQGRlYmlhbi5vcmc+IFdlZCwgMDggTWF5IDIwMTMgMTI6NTk6NTYgLTA1MDAKKyAt
-LSBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9yZz4gIFdlZCwgMDggTWF5IDIwMTMgMTI6
-NTk6NTYgLTA1MDAKIAogeGZzcHJvZ3MgKDMuMS45KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKIApk
-aWZmIC0tZ2l0IGEvcmVsZWFzZS5zaCBiL3JlbGVhc2Uuc2gKaW5kZXggZGI1Y2M3NC4uZTIwOTU3
-NCAxMDA3NTUKLS0tIGEvcmVsZWFzZS5zaAorKysgYi9yZWxlYXNlLnNoCkBAIC0xLDYgKzEsNiBA
-QAotIyEvYmluL2Jhc2gKKyMhL2Jpbi9zaAogIwotIyBBdXRvbWF0ZSBnZW5lcmF0aW9uIGEgbmV3
-IHJlbGVhc2UKKyMgQXV0b21hdGUgZ2VuZXJhdGlvbiBvZiBhIG5ldyByZWxlYXNlCiAjCiAKIC4g
-Li9WRVJTSU9OCg==
-------=_Part_5630524_334529076.1381449379089
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
-------=_Part_5630524_334529076.1381449379089--
