@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F27AD7F4E
-	for <xfs@oss.sgi.com>; Sat, 12 Oct 2013 01:43:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D5476304043
-	for <xfs@oss.sgi.com>; Fri, 11 Oct 2013 23:43:06 -0700 (PDT)
-Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147]) by
-	cuda.sgi.com with ESMTP id jWi0VroANVgqhrp6 (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C3F447F51
+	for <xfs@oss.sgi.com>; Sat, 12 Oct 2013 02:56:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 927DB8F8078
+	for <xfs@oss.sgi.com>; Sat, 12 Oct 2013 00:56:42 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id HiwrElmtRfR6dADY (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 11 Oct 2013 23:43:04 -0700 (PDT)
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Sat, 12 Oct 2013 16:42:59 +1000
-Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [9.190.235.152])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id AD64A2BB0040
-	for <xfs@oss.sgi.com>; Sat, 12 Oct 2013 17:42:57 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r9C6Pm4t8388892
-	for <xfs@oss.sgi.com>; Sat, 12 Oct 2013 17:25:48 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r9C6gvCw019038 for <xfs@oss.sgi.com>; Sat, 12 Oct 2013 17:42:57 +1100
-Message-ID: <1381560174.3064.4.camel@ThinkPad-T5421>
-Subject: [PATCH] xfsprogs: fix resouce leak in longform_dir2_rebuild()
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Sat, 12 Oct 2013 14:42:54 +0800
-Mime-Version: 1.0
+	Sat, 12 Oct 2013 00:56:41 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
+	Hat Linux)) id 1VUu40-0000lJ-7d
+	for xfs@oss.sgi.com; Sat, 12 Oct 2013 07:56:40 +0000
+Message-Id: <20131012075640.115410017@bombadil.infradead.org>
+Date: Sat, 12 Oct 2013 00:55:05 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 2/5] xfs: remove the unused XFS_ATTR_NONBLOCK flag
+References: <20131012075503.370510641@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-kill-XFS_ATTR_NONBLOCK
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,66 +26,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfsprogs <xfs@oss.sgi.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+To: xfs@oss.sgi.com
 
-coverity scan 997010 reported following leak in repair/phase6.c
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-1309                if (error) {
-1310                        do_warn(
-1311        _("space reservation failed (%d), filesystem may be out of space\n"),
-1312                                error);
-    	25. Breaking from loop
-1313                        break;
-1314                }
-
-......
-
-1342                libxfs_trans_commit(tp,
-1343                                XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
-1344        }
-
-CID 997010 (#1 of 1): Resource leak (RESOURCE_LEAK)
-26. leaked_storage: Variable "tp" going out of scope leaks the storage it points to.
-1345}
-
-Though not reported by coverity, it seems that there might be some entries in
-flist which needs to be freed in the failure case below libxfs_dir_createname(),
-so I also added a bmap cancel there.
-
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
 ---
- repair/phase6.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/xfs_ioctl.c |    3 ---
+ fs/xfs/xfs_iops.h  |    1 -
+ 2 files changed, 4 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index a4ad7a3..0d88ad2 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1310,6 +1310,8 @@ longform_dir2_rebuild(
- 			do_warn(
- 	_("space reservation failed (%d), filesystem may be out of space\n"),
- 				error);
-+			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
-+						XFS_TRANS_ABORT);
- 			break;
- 		}
+Index: xfs/fs/xfs/xfs_ioctl.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_ioctl.c	2013-09-12 18:43:35.480015650 +0200
++++ xfs/fs/xfs/xfs_ioctl.c	2013-10-01 20:16:53.240138969 +0200
+@@ -661,9 +661,6 @@ xfs_ioc_space(
+ 	if (!S_ISREG(inode->i_mode))
+ 		return -XFS_ERROR(EINVAL);
  
-@@ -1323,6 +1325,7 @@ longform_dir2_rebuild(
- 			do_warn(
- _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"),
- 				ino, error);
-+			libxfs_bmap_cancel(&flist);
- 			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
- 						XFS_TRANS_ABORT);
- 			break;
--- 
-1.8.1.4
-
+-	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
+-		attr_flags |= XFS_ATTR_NONBLOCK;
+-
+ 	if (filp->f_flags & O_DSYNC)
+ 		attr_flags |= XFS_ATTR_SYNC;
+ 
+Index: xfs/fs/xfs/xfs_iops.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iops.h	2013-08-13 15:21:06.716303663 +0200
++++ xfs/fs/xfs/xfs_iops.h	2013-10-01 20:17:18.440139568 +0200
+@@ -31,7 +31,6 @@ extern void xfs_setup_inode(struct xfs_i
+  * Internal setattr interfaces.
+  */
+ #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
+-#define	XFS_ATTR_NONBLOCK	0x02	/* return EAGAIN if op would block */
+ #define XFS_ATTR_NOLOCK		0x04	/* Don't grab any conflicting locks */
+ #define XFS_ATTR_NOACL		0x08	/* Don't call xfs_acl_chmod */
+ #define XFS_ATTR_SYNC		0x10	/* synchronous operation required */
 
 _______________________________________________
 xfs mailing list
