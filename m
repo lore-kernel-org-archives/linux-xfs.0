@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4775529DFB
-	for <xfs@oss.sgi.com>; Sun, 13 Oct 2013 16:52:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 54E33304032
-	for <xfs@oss.sgi.com>; Sun, 13 Oct 2013 14:52:13 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 95C6E29DFB
+	for <xfs@oss.sgi.com>; Sun, 13 Oct 2013 16:57:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9F7248F8035
+	for <xfs@oss.sgi.com>; Sun, 13 Oct 2013 14:57:12 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	A0FrL1VDxeyvSzbC for <xfs@oss.sgi.com>;
-	Sun, 13 Oct 2013 14:52:11 -0700 (PDT)
-Date: Mon, 14 Oct 2013 08:52:08 +1100
+	QEnOZxXvN0xjcJLO for <xfs@oss.sgi.com>;
+	Sun, 13 Oct 2013 14:57:11 -0700 (PDT)
+Date: Mon, 14 Oct 2013 08:57:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: reject completely bogus remount options
-Message-ID: <20131013215208.GE5663@dastard>
-References: <52584C8A.1060808@redhat.com>
- <52584D56.7090902@sandeen.net>
+Subject: Re: [PATCH RESEND] xfstests: Incorrect check for gdbm/ndbm.h
+Message-ID: <20131013215708.GF5663@dastard>
+References: <1381312905-22322-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+	<1381473751-31534-1-git-send-email-stanislav.kholmanskikh@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52584D56.7090902@sandeen.net>
+In-Reply-To: <1381473751-31534-1-git-send-email-stanislav.kholmanskikh@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Cc: vasily.isaenko@oracle.com, xfs@oss.sgi.com
 
-On Fri, Oct 11, 2013 at 02:11:18PM -0500, Eric Sandeen wrote:
-> There's a long comment about handling non-remountable
-> options in xfs_fs_remount, but nothing addresses the case
-> of completely bogus mount options at remount time, which
-> can lead to some severe strangeness:
+On Fri, Oct 11, 2013 at 10:42:31AM +0400, Stanislav Kholmanskikh wrote:
+> Current version of AC_PACKAGE_WANT_NDBM has following bugs:
+> * a typo (',') next to 'gdbm/ndbm.h', so C compiler fails
+>   with a syntax error when trying to compile
+>   "#include <gdbm/ndbm.h,>"
 > 
-> # for I in `seq 1 10`; do mount -o remount,noacl /mnt/test2; done
-> # for I in `seq 1 10`; do mount -o remount,badoption /mnt/test2; done
-> # grep sdb4 /etc/mtab
-> /dev/sdb4 /mnt/test2 xfs rw,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,badoption,badoption,badoption,badoption,badoption,badoption,badoption,badoption,badoption,badoption 0 0
+> * autoconf never defines HAVE_GDBM_NDBM_H_ because it
+>   converts both header names (gdbm/ndbm.h, gdbm-ndbm.h)
+>   to GDBM_NDBM_H
 > 
-> This is a bit of a hack, but we can re-use xfs_parseargs()
-> with a dummy mount struct to just vet all of the remount
-> options which were passed in.  With this, we get a saner
-> result:
+> Because of these bugs 'dbtest' can't be compiled on systems where
+> 'gdbm-ndbm.h' header is absent but 'gdbm/ndbm.h' is present.
 > 
-> [44898.102990] EXT4-fs (sdb4): Unrecognized mount option "badoption" or missing value
-
-ext4? Really? :)
-
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1202,11 +1202,25 @@ xfs_fs_remount(
->  	int			*flags,
->  	char			*options)
->  {
-> -	struct xfs_mount	*mp = XFS_M(sb);
-> +	struct xfs_mount	*mp = XFS_M(sb), *dummy_mp;
->  	substring_t		args[MAX_OPT_ARGS];
->  	char			*p;
->  	int			error;
+> Fixed this.
+> 
+> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+> ---
+>  m4/package_gdbmdev.m4 |   13 ++++++++++++-
+>  1 files changed, 12 insertions(+), 1 deletions(-)
+> 
+> diff --git a/m4/package_gdbmdev.m4 b/m4/package_gdbmdev.m4
+> index c07f75d..a57e3a2 100644
+> --- a/m4/package_gdbmdev.m4
+> +++ b/m4/package_gdbmdev.m4
+> @@ -19,7 +19,18 @@ AC_DEFUN([AC_PACKAGE_WANT_NDBM],
+>    ])
 >  
-> +	/*
-> +	 * Check all the mount options presented to be sure
-> +	 * there's nothing too crazy in there.  Non-remountable
-> +	 * but valid options are a different issue.
-> +	 */
-> +	dummy_mp = kmem_zalloc(sizeof(*dummy_mp), KM_MAYFAIL);
-> +	if (dummy_mp) {
-> +		dummy_mp->m_super = sb;
-> +		error = xfs_parseargs(dummy_mp, options);
-> +		kfree(dummy_mp);
-> +		if (error)
-> +			return -error;
+>  AC_DEFUN([AC_PACKAGE_WANT_GDBM],
+> -  [ AC_CHECK_HEADERS([gdbm/ndbm.h, gdbm-ndbm.h], [ have_db=true ], [ have_db=false ])
+> +  [ AC_CHECK_HEADER(gdbm-ndbm.h, [ gdbm_ndbm=true; have_db=true ], [ gdbm_ndbm=false; have_db=false ])
+> +
+> +    if test $gdbm_ndbm = true; then
+> +        AC_DEFINE(HAVE_GDBM_NDBM_H, [1], [Define to 1 if you have the <gdbm-ndbm.h> header file.])
+> +    else
+> +	AS_UNSET([ac_cv_header_gdbm_ndbm_h])
 
-This, at minimum, leaks dummy_mp->m_fsname, and it will leak other
-strings that are also kstrdup()d by xfs_parseargs().
+Whitespace problem here.
+
+Otherwise it looks fine.
+
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
 Cheers,
 
