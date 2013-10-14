@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 71AC67F5E
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 00:08:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BA3B304032
-	for <xfs@oss.sgi.com>; Sun, 13 Oct 2013 22:08:13 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	vBNAFTshM308uC6r for <xfs@oss.sgi.com>;
-	Sun, 13 Oct 2013 22:08:11 -0700 (PDT)
-Date: Mon, 14 Oct 2013 16:08:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: fold xfs_change_file_space into xfs_ioc_space
-Message-ID: <20131014050807.GJ4446@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 92D147F62
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 02:29:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2E6E6AC001
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 00:29:47 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id HHMjDuFEiIFmNimB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 14 Oct 2013 00:29:45 -0700 (PDT)
+Date: Mon, 14 Oct 2013 00:29:43 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: always take the iolock around xfs_setattr_size
+Message-ID: <20131014072943.GA21013@infradead.org>
 References: <20131012075503.370510641@bombadil.infradead.org>
-	<20131012075640.637625757@bombadil.infradead.org>
+	<20131012075639.940898263@bombadil.infradead.org>
+	<20131014045007.GF4446@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131012075640.637625757@bombadil.infradead.org>
+In-Reply-To: <20131014045007.GF4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,36 +31,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sat, Oct 12, 2013 at 12:55:08AM -0700, Christoph Hellwig wrote:
-> Now that only one caller of xfs_change_file_space is left it can be merged
-> into said caller.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Oct 14, 2013 at 03:50:07PM +1100, Dave Chinner wrote:
+> I think there should be a bit more cleanup of this lock_flags
+> variable. There's quite a few error paths that now "goto out_unlock"
+> without actually holding a lock. i.e. they could just become a
+> straight "return error", and lock_flags can probably go away
+> completely...
 
-Looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-One question, though:
-
-> +	case XFS_IOC_ALLOCSP:
-> +	case XFS_IOC_ALLOCSP64:
-> +	case XFS_IOC_FREESP:
-> +	case XFS_IOC_FREESP64:
-
-Should we, at this point, mark these ioctls as deprecated and
-schedule then for removal given that we've recommended against using
-them for the past 10 years and we have fallocate() now?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I'll look into that.
 
 _______________________________________________
 xfs mailing list
