@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B85487F37
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 15:09:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 53DD8AC003
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 13:09:40 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 950797F37
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 15:17:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8340F304039
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 13:17:02 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Tq3bjdqeHEWCGU5i for <xfs@oss.sgi.com>;
-	Mon, 14 Oct 2013 13:09:38 -0700 (PDT)
-Date: Tue, 15 Oct 2013 07:09:35 +1100
+	vDi5yGREq3pm8Wsi for <xfs@oss.sgi.com>;
+	Mon, 14 Oct 2013 13:17:01 -0700 (PDT)
+Date: Tue, 15 Oct 2013 07:16:59 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RESEND V2] xfstests: Incorrect check for gdbm/ndbm.h
-Message-ID: <20131014200935.GM4446@dastard>
-References: <20131013215708.GF5663@dastard>
-	<1381762899-6799-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+Subject: Re: [PATCH] libxfs: stop caching inode structures
+Message-ID: <20131014201659.GN4446@dastard>
+References: <20131009130241.GA8754@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1381762899-6799-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+In-Reply-To: <20131009130241.GA8754@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +29,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Cc: vasily.isaenko@oracle.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Oct 14, 2013 at 07:01:39PM +0400, Stanislav Kholmanskikh wrote:
-> Current version of AC_PACKAGE_WANT_NDBM has following bugs:
-> * a typo (',') next to 'gdbm/ndbm.h', so C compiler fails
->   with a syntax error when trying to compile
->   "#include <gdbm/ndbm.h,>"
+On Wed, Oct 09, 2013 at 06:02:41AM -0700, Christoph Hellwig wrote:
+> Currently libxfs has a cache for xfs_inode structures.  Unlike in kernelspace
+> where the inode cache, and the associated page cache for file data is used
+> for all filesystem operations the libxfs inode cache is only used in few
+> places:
 > 
-> * autoconf never defines HAVE_GDBM_NDBM_H_ because it
->   converts both header names (gdbm/ndbm.h, gdbm-ndbm.h)
->   to GDBM_NDBM_H
+>  - the libxfs init code reads the root and realtime inodes when called from
+>    xfs_db using a special flag, but these inode structure are never referenced
+>    again
+>  - mkfs uses namespace and bmap routines that take the xfs_inode structure
+>    to create the root and realtime inodes, as well as any additional files
+>    specified in the proto file
+>  - the xfs_db attr code uses xfs_inode-based attr routines in the attrset
+>    and attrget commands
+>  - phase6 of xfs_repair uses xfs_inode-based routines for rebuilding
+>    directories and moving files to the lost+found directory.
+>  - phase7 of xfs_repair uses struct xfs_inode to modify the nlink count
+>    of inodes.
 > 
-> Because of these bugs 'dbtest' can't be compiled on systems where
-> 'gdbm-ndbm.h' header is absent but 'gdbm/ndbm.h' is present.
+> So except in repair we never ever reuse a cached inode, and even in repair
+> the logical inode caching doesn't help:
 > 
-> Fixed this.
+>  - in phase 6a we iterate over each inode in the incore inode tree,
+>    and if it's a directory check/rebuild it
+>  - phase6b then updates the "." and ".." entries for directories
+>    that need, which means we require the backing buffers.
+>  - phase6c moves disconnected inodes to lost_found, which again needs
+>    the backing buffer to actually do anything.
+>  - phase7 then only touches inodes for which we need to reset i_nlink,
+>    which always involves reading, modifying and writing the physical
+>    inode.
+>    which always involves modifying the . and .. entries.
 > 
-> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+> Given these facts stop caching the inodes to reduce memory usage
+> especially in xfs_repair, where this makes a different for large inode
+> count inodes.  On the upper end this allows repair to complete for
+> filesystem / amount of memory combinations that previously wouldn't.
 
-Looks good now.
+This all sounds good and the code looks fine, but there's one
+lingering question I have - what's the impact on performance for
+repair? Does it slow down phase 6/7 at all?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> With this we probably could increase the memory available to the buffer
+> cache in xfs_repair, but trying to do so I got a bit lost - the current
+> formula seems to magic to me to make any sense, and simply doubling the
+> buffer cache size causes us to run out of memory given that the data cached
+> in the buffer cache (typically lots of 8k inode buffers and few 4k other
+> metadata buffers) are much bigger than the inodes cached in the inode
+> cache.  We probably need a sizing scheme that takes the actual amount
+> of memory allocated to the buffer cache into account to solve this better.
+
+IIRC, the size of the buffer cache is currently set at 75% of RAM
+so doubling it would cause OOM issues regardless of the presence of
+the inode cache....
+
+Cheers,
+
+Dave.
 
 -- 
 Dave Chinner
