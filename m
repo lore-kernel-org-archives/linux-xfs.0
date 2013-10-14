@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 194D77F37
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 16:24:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EDE6D304032
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 14:24:26 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id WLREVGCSCJUiaDSl for <xfs@oss.sgi.com>;
-	Mon, 14 Oct 2013 14:24:25 -0700 (PDT)
-Message-ID: <525C6108.6010108@sandeen.net>
-Date: Mon, 14 Oct 2013 16:24:24 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 096C77F37
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 16:46:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E872B8F804B
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 14:46:37 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	XHRxmM3N56MHDvkQ for <xfs@oss.sgi.com>;
+	Mon, 14 Oct 2013 14:46:36 -0700 (PDT)
+Date: Tue, 15 Oct 2013 08:46:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: fix resouce leak in longform_dir2_rebuild()
+Message-ID: <20131014214601.GJ5663@dastard>
+References: <1381560174.3064.4.camel@ThinkPad-T5421>
 MIME-Version: 1.0
-Subject: Re: projid32bit=1 default in xfsprogs-3.2.0
-References: <525C1C15.7020204@sandeen.net> <20131014211659.GI5663@dastard>
-	<20131014212347.GB1935@sgi.com>
-In-Reply-To: <20131014212347.GB1935@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1381560174.3064.4.camel@ThinkPad-T5421>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +29,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Li Zhong <zhong@linux.vnet.ibm.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
-On 10/14/13 4:23 PM, Ben Myers wrote:
-> On Tue, Oct 15, 2013 at 08:16:59AM +1100, Dave Chinner wrote:
->> On Mon, Oct 14, 2013 at 11:30:13AM -0500, Eric Sandeen wrote:
->>> The commit:
->>>
->>> f3edb66a mkfs.xfs: validate options for CRCs up front.
->>>
->>> unintentionally (?) defaulted to projid32bit=1 for all filesystems
->>> at mkfs time.
->>
->> It wasn't unintentional, I just forgot to document it.
->>
->>> Support for 32 bit project IDs has been present since kernel v2.6.37.
->>
->> Right, so taking the usual approach to these things, all the
->> distro's now ship kernels that support 32 bit project IDs, so there
->> is no reason for mkfs.xfs in a new xfsprogs release not to set it
->> by default.
+On Sat, Oct 12, 2013 at 02:42:54PM +0800, Li Zhong wrote:
+> coverity scan 997010 reported following leak in repair/phase6.c
 > 
-> I'm not seeing much downside to turning on 32 bit project IDs by default in
-> 3.2.0.  Sounds good to me.
+> 1309                if (error) {
+> 1310                        do_warn(
+> 1311        _("space reservation failed (%d), filesystem may be out of space\n"),
+> 1312                                error);
+>     	25. Breaking from loop
+> 1313                        break;
+> 1314                }
 > 
-> -Ben
+> ......
 > 
+> 1342                libxfs_trans_commit(tp,
+> 1343                                XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
+> 1344        }
+> 
+> CID 997010 (#1 of 1): Resource leak (RESOURCE_LEAK)
+> 26. leaked_storage: Variable "tp" going out of scope leaks the storage it points to.
+> 1345}
+> 
+> Though not reported by coverity, it seems that there might be some entries in
+> flist which needs to be freed in the failure case below libxfs_dir_createname(),
+> so I also added a bmap cancel there.
+> 
+> Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
+> ---
+>  repair/phase6.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index a4ad7a3..0d88ad2 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1310,6 +1310,8 @@ longform_dir2_rebuild(
+>  			do_warn(
+>  	_("space reservation failed (%d), filesystem may be out of space\n"),
+>  				error);
+> +			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
+> +						XFS_TRANS_ABORT);
 
-Ok.  Default it is!   Thanks guys, just wanted to make sure we were
-all in agreement there.
+As per the rest of the code in phase 6, the error handling here
+should call "res_failed()" as we can't sanely recover from an ENOSPC
+error during phase6.
 
--Eric
+>  			break;
+>  		}
+>  
+> @@ -1323,6 +1325,7 @@ longform_dir2_rebuild(
+>  			do_warn(
+>  _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"),
+>  				ino, error);
+> +			libxfs_bmap_cancel(&flist);
+>  			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
+>  						XFS_TRANS_ABORT);
+>  			break;
+
+There's another case exactly the same in that function you missed.
+What you should probably do is stack the error handling cases at the
+end of the function like:
+
+....
+	return;
+
+out_bmap_cancel:
+	libxfs_bmap_cancel(&flist);
+out_trans_cancel:
+	libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+	return;
+}
+
+And convert all the error handling cases to jump to the appropriate
+error handler.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
