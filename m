@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 92D147F62
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 02:29:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 09D997F6A
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 02:30:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2E6E6AC001
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 00:29:47 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EDD6E304039
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 00:30:48 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id HHMjDuFEiIFmNimB (version=TLSv1
+	by cuda.sgi.com with ESMTP id dkADGzkvoI7TBJ88 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 14 Oct 2013 00:29:45 -0700 (PDT)
-Date: Mon, 14 Oct 2013 00:29:43 -0700
+	Mon, 14 Oct 2013 00:30:48 -0700 (PDT)
+Date: Mon, 14 Oct 2013 00:30:47 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] xfs: always take the iolock around xfs_setattr_size
-Message-ID: <20131014072943.GA21013@infradead.org>
+Subject: Re: [PATCH 4/5] xfs: simplify the fallocate path
+Message-ID: <20131014073047.GB21013@infradead.org>
 References: <20131012075503.370510641@bombadil.infradead.org>
-	<20131012075639.940898263@bombadil.infradead.org>
-	<20131014045007.GF4446@dastard>
+	<20131012075640.467511096@bombadil.infradead.org>
+	<20131014050424.GI4446@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131014045007.GF4446@dastard>
+In-Reply-To: <20131014050424.GI4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,14 +34,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Oct 14, 2013 at 03:50:07PM +1100, Dave Chinner wrote:
-> I think there should be a bit more cleanup of this lock_flags
-> variable. There's quite a few error paths that now "goto out_unlock"
-> without actually holding a lock. i.e. they could just become a
-> straight "return error", and lock_flags can probably go away
-> completely...
+On Mon, Oct 14, 2013 at 04:04:24PM +1100, Dave Chinner wrote:
+> Seems a bit clunky to do all this work when we've got to repeat most
+> of it when when we call xfs_setattr_size() if the size has changed.
+> Any thoughts on how we might reduce to a single transaction?
 
-I'll look into that.
+I tried that, but the helper becomes a complete mess of flag values for the
+possible inode modifications.  You also pointed this out the last time
+around.  If anyone can come up with a saner helper than I tired feel
+free to send a patch on top.
 
 _______________________________________________
 xfs mailing list
