@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B62067F59
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 17:18:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 620BDAC003
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 15:18:30 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 670B07FA8
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 17:18:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 56C1E8F8054
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 15:18:36 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	sPTH2CS9dq1hH7gV for <xfs@oss.sgi.com>;
-	Mon, 14 Oct 2013 15:18:26 -0700 (PDT)
+	vQdy0Ea1q0uGf7Cp for <xfs@oss.sgi.com>;
+	Mon, 14 Oct 2013 15:18:16 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VVqSm-0004xJ-Fq
+	(envelope-from <dave@fromorbit.com>) id 1VVqSm-0004wm-7N
 	for xfs@oss.sgi.com; Tue, 15 Oct 2013 09:18:08 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VVqSm-0005jp-Ey
+	(envelope-from <dave@disappointment.disaster>) id 1VVqSm-0005iu-6P
 	for xfs@oss.sgi.com; Tue, 15 Oct 2013 09:18:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/19] xfs: vectorise encoding/decoding directory headers
-Date: Tue, 15 Oct 2013 09:18:03 +1100
-Message-Id: <1381789085-21923-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/19] xfs: split dquot buffer operations out
+Date: Tue, 15 Oct 2013 09:17:52 +1100
+Message-Id: <1381789085-21923-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1381789085-21923-1-git-send-email-david@fromorbit.com>
 References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,1480 +39,731 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Conversion from on-disk structures to in-core header structures
-currently relies on magic number checks. If the magic number is
-wrong, but one of the supported values, we do the wrong thing with
-the encode/decode operation. Split these functions so that there are
-discrete operations for the specific directory format we are
-handling.
-
-In doing this, move all the header encode/decode functions to
-xfs_da_format.c as they are directly manipulating the on-disk
-format. It should be noted that all the growth in binary size is
-from xfs_da_format.c - the rest of the code actaully shrinks.
-
-   text    data     bss     dec     hex filename
- 794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
- 792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
- 792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
- 789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
- 789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
- 789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
- 789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
- 791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
-
+Parts of userspace want to be able to read and modify dquot buffers
+(e.g. xfs_db) so we need to split out the reading and writing of
+these buffers so it is easy to shared code with libxfs in userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_attr_inactive.c |   2 +-
- fs/xfs/xfs_attr_leaf.c     |   4 +-
- fs/xfs/xfs_attr_list.c     |   2 +-
- fs/xfs/xfs_da_btree.c      | 141 +++++++++++--------------------
- fs/xfs/xfs_da_format.c     | 206 ++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_da_format.h     |  16 ----
- fs/xfs/xfs_dir2.h          |  13 +++
- fs/xfs/xfs_dir2_block.c    |   2 +-
- fs/xfs/xfs_dir2_leaf.c     | 100 ++++++----------------
- fs/xfs/xfs_dir2_node.c     | 126 +++++++++------------------
- fs/xfs/xfs_dir2_priv.h     |   4 -
- 11 files changed, 335 insertions(+), 281 deletions(-)
+ fs/xfs/Makefile          |   1 +
+ fs/xfs/xfs_dquot.c       | 117 +------------------
+ fs/xfs/xfs_dquot_buf.c   | 288 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_log_recover.c | 133 +---------------------
+ fs/xfs/xfs_qm.c          |  22 +---
+ fs/xfs/xfs_qm.h          |   2 -
+ fs/xfs/xfs_quota.h       |   2 -
+ fs/xfs/xfs_quota_defs.h  |   4 +
+ 8 files changed, 303 insertions(+), 266 deletions(-)
+ create mode 100644 fs/xfs/xfs_dquot_buf.c
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 4855085..09480c5 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -231,7 +231,7 @@ xfs_attr3_node_inactive(
- 	}
- 
- 	node = bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&ichdr, node);
-+	dp->d_ops->node_hdr_from_disk(&ichdr, node);
- 	parent_blkno = bp->b_bn;
- 	if (!ichdr.count) {
- 		xfs_trans_brelse(*trans, bp);
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 82f1354..fdf9992 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -916,7 +916,7 @@ xfs_attr3_leaf_to_node(
- 	if (error)
- 		goto out;
- 	node = bp1->b_addr;
--	xfs_da3_node_hdr_from_disk(&icnodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&icnodehdr, node);
- 	btree = dp->d_ops->node_tree_p(node);
- 
- 	leaf = bp2->b_addr;
-@@ -927,7 +927,7 @@ xfs_attr3_leaf_to_node(
- 	btree[0].hashval = entries[icleafhdr.count - 1].hashval;
- 	btree[0].before = cpu_to_be32(blkno);
- 	icnodehdr.count = 1;
--	xfs_da3_node_hdr_to_disk(node, &icnodehdr);
-+	dp->d_ops->node_hdr_to_disk(node, &icnodehdr);
- 	xfs_trans_log_buf(args->trans, bp1, 0, XFS_LBSIZE(mp) - 1);
- 	error = 0;
- out:
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index ea1c4c4..2d174b1 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -311,7 +311,7 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 				return XFS_ERROR(EFSCORRUPTED);
- 			}
- 
--			xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+			dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 			btree = dp->d_ops->node_tree_p(node);
- 			for (i = 0; i < nodehdr.count; btree++, i++) {
- 				if (cursor->hashval
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 26dfc42..a51762d 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -129,56 +129,6 @@ xfs_da_state_free(xfs_da_state_t *state)
- 	kmem_zone_free(xfs_da_state_zone, state);
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 0719e4d..08f11bb 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -72,6 +72,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_dir2_leaf.o \
+ 				   xfs_dir2_node.o \
+ 				   xfs_dir2_sf.o \
++				   xfs_dquot_buf.o \
+ 				   xfs_ialloc.o \
+ 				   xfs_ialloc_btree.o \
+ 				   xfs_icreate_item.o \
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 8b1d2c0..f85a893 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -293,118 +293,6 @@ xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
+ 	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
  }
  
--void
--xfs_da3_node_hdr_from_disk(
--	struct xfs_da3_icnode_hdr	*to,
--	struct xfs_da_intnode		*from)
+-STATIC bool
+-xfs_dquot_buf_verify_crc(
+-	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
 -{
--	ASSERT(from->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
--	       from->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+-	int			ndquots;
+-	int			i;
 -
--	if (from->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC)) {
--		struct xfs_da3_node_hdr *hdr3 = (struct xfs_da3_node_hdr *)from;
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return true;
 -
--		to->forw = be32_to_cpu(hdr3->info.hdr.forw);
--		to->back = be32_to_cpu(hdr3->info.hdr.back);
--		to->magic = be16_to_cpu(hdr3->info.hdr.magic);
--		to->count = be16_to_cpu(hdr3->__count);
--		to->level = be16_to_cpu(hdr3->__level);
--		return;
+-	/*
+-	 * if we are in log recovery, the quota subsystem has not been
+-	 * initialised so we have no quotainfo structure. In that case, we need
+-	 * to manually calculate the number of dquots in the buffer.
+-	 */
+-	if (mp->m_quotainfo)
+-		ndquots = mp->m_quotainfo->qi_dqperchunk;
+-	else
+-		ndquots = xfs_qm_calc_dquots_per_chunk(mp,
+-					XFS_BB_TO_FSB(mp, bp->b_length));
+-
+-	for (i = 0; i < ndquots; i++, d++) {
+-		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF))
+-			return false;
+-		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
+-			return false;
 -	}
--	to->forw = be32_to_cpu(from->hdr.info.forw);
--	to->back = be32_to_cpu(from->hdr.info.back);
--	to->magic = be16_to_cpu(from->hdr.info.magic);
--	to->count = be16_to_cpu(from->hdr.__count);
--	to->level = be16_to_cpu(from->hdr.__level);
+-	return true;
 -}
 -
--void
--xfs_da3_node_hdr_to_disk(
--	struct xfs_da_intnode		*to,
--	struct xfs_da3_icnode_hdr	*from)
+-STATIC bool
+-xfs_dquot_buf_verify(
+-	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
 -{
--	ASSERT(from->magic == XFS_DA_NODE_MAGIC ||
--	       from->magic == XFS_DA3_NODE_MAGIC);
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+-	xfs_dqid_t		id = 0;
+-	int			ndquots;
+-	int			i;
 -
--	if (from->magic == XFS_DA3_NODE_MAGIC) {
--		struct xfs_da3_node_hdr *hdr3 = (struct xfs_da3_node_hdr *)to;
+-	/*
+-	 * if we are in log recovery, the quota subsystem has not been
+-	 * initialised so we have no quotainfo structure. In that case, we need
+-	 * to manually calculate the number of dquots in the buffer.
+-	 */
+-	if (mp->m_quotainfo)
+-		ndquots = mp->m_quotainfo->qi_dqperchunk;
+-	else
+-		ndquots = xfs_qm_calc_dquots_per_chunk(mp, bp->b_length);
 -
--		hdr3->info.hdr.forw = cpu_to_be32(from->forw);
--		hdr3->info.hdr.back = cpu_to_be32(from->back);
--		hdr3->info.hdr.magic = cpu_to_be16(from->magic);
--		hdr3->__count = cpu_to_be16(from->count);
--		hdr3->__level = cpu_to_be16(from->level);
--		return;
+-	/*
+-	 * On the first read of the buffer, verify that each dquot is valid.
+-	 * We don't know what the id of the dquot is supposed to be, just that
+-	 * they should be increasing monotonically within the buffer. If the
+-	 * first id is corrupt, then it will fail on the second dquot in the
+-	 * buffer so corruptions could point to the wrong dquot in this case.
+-	 */
+-	for (i = 0; i < ndquots; i++) {
+-		struct xfs_disk_dquot	*ddq;
+-		int			error;
+-
+-		ddq = &d[i].dd_diskdq;
+-
+-		if (i == 0)
+-			id = be32_to_cpu(ddq->d_id);
+-
+-		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
+-				       "xfs_dquot_buf_verify");
+-		if (error)
+-			return false;
 -	}
--	to->hdr.info.forw = cpu_to_be32(from->forw);
--	to->hdr.info.back = cpu_to_be32(from->back);
--	to->hdr.info.magic = cpu_to_be16(from->magic);
--	to->hdr.__count = cpu_to_be16(from->count);
--	to->hdr.__level = cpu_to_be16(from->level);
--}
--
- static bool
- xfs_da3_node_verify(
- 	struct xfs_buf		*bp)
-@@ -186,8 +136,11 @@ xfs_da3_node_verify(
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_da_intnode	*hdr = bp->b_addr;
- 	struct xfs_da3_icnode_hdr ichdr;
-+	const struct xfs_dir_ops *ops;
-+
-+	ops = xfs_dir_get_ops(mp, NULL);
- 
--	xfs_da3_node_hdr_from_disk(&ichdr, hdr);
-+	ops->node_hdr_from_disk(&ichdr, hdr);
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-@@ -354,11 +307,12 @@ xfs_da3_node_create(
- 	struct xfs_da3_icnode_hdr ichdr = {0};
- 	struct xfs_buf		*bp;
- 	int			error;
-+	struct xfs_inode	*dp = args->dp;
- 
- 	trace_xfs_da_node_create(args);
- 	ASSERT(level <= XFS_DA_NODE_MAXDEPTH);
- 
--	error = xfs_da_get_buf(tp, args->dp, blkno, -1, &bp, whichfork);
-+	error = xfs_da_get_buf(tp, dp, blkno, -1, &bp, whichfork);
- 	if (error)
- 		return(error);
- 	bp->b_ops = &xfs_da3_node_buf_ops;
-@@ -377,10 +331,10 @@ xfs_da3_node_create(
- 	}
- 	ichdr.level = level;
- 
--	xfs_da3_node_hdr_to_disk(node, &ichdr);
-+	dp->d_ops->node_hdr_to_disk(node, &ichdr);
- 	xfs_trans_log_buf(tp, bp,
- 		XFS_DA_LOGRANGE(node, &node->hdr,
--				args->dp->d_ops->node_hdr_size()));
-+				dp->d_ops->node_hdr_size()));
- 
- 	*bpp = bp;
- 	return(0);
-@@ -590,7 +544,7 @@ xfs_da3_root_split(
- 	    oldroot->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC)) {
- 		struct xfs_da3_icnode_hdr nodehdr;
- 
--		xfs_da3_node_hdr_from_disk(&nodehdr, oldroot);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr, oldroot);
- 		btree = dp->d_ops->node_tree_p(oldroot);
- 		size = (int)((char *)&btree[nodehdr.count] - (char *)oldroot);
- 		level = nodehdr.level;
-@@ -605,7 +559,7 @@ xfs_da3_root_split(
- 		struct xfs_dir2_leaf_entry *ents;
- 
- 		leaf = (xfs_dir2_leaf_t *)oldroot;
--		xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+		dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 		ents = dp->d_ops->leaf_ents_p(leaf);
- 
- 		ASSERT(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
-@@ -650,14 +604,14 @@ xfs_da3_root_split(
- 		return error;
- 
- 	node = bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 	btree = dp->d_ops->node_tree_p(node);
- 	btree[0].hashval = cpu_to_be32(blk1->hashval);
- 	btree[0].before = cpu_to_be32(blk1->blkno);
- 	btree[1].hashval = cpu_to_be32(blk2->hashval);
- 	btree[1].before = cpu_to_be32(blk2->blkno);
- 	nodehdr.count = 2;
--	xfs_da3_node_hdr_to_disk(node, &nodehdr);
-+	dp->d_ops->node_hdr_to_disk(node, &nodehdr);
- 
- #ifdef DEBUG
- 	if (oldroot->hdr.info.magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC) ||
-@@ -694,11 +648,12 @@ xfs_da3_node_split(
- 	int			newcount;
- 	int			error;
- 	int			useextra;
-+	struct xfs_inode	*dp = state->args->dp;
- 
- 	trace_xfs_da_node_split(state->args);
- 
- 	node = oldblk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 
- 	/*
- 	 * With V2 dirs the extra block is data or freespace.
-@@ -745,7 +700,7 @@ xfs_da3_node_split(
- 	 * If we had double-split op below us, then add the extra block too.
- 	 */
- 	node = oldblk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 	if (oldblk->index <= nodehdr.count) {
- 		oldblk->index++;
- 		xfs_da3_node_add(state, oldblk, addblk);
-@@ -800,8 +755,8 @@ xfs_da3_node_rebalance(
- 
- 	node1 = blk1->bp->b_addr;
- 	node2 = blk2->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr1, node1);
--	xfs_da3_node_hdr_from_disk(&nodehdr2, node2);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr1, node1);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr2, node2);
- 	btree1 = dp->d_ops->node_tree_p(node1);
- 	btree2 = dp->d_ops->node_tree_p(node2);
- 
-@@ -816,8 +771,8 @@ xfs_da3_node_rebalance(
- 		tmpnode = node1;
- 		node1 = node2;
- 		node2 = tmpnode;
--		xfs_da3_node_hdr_from_disk(&nodehdr1, node1);
--		xfs_da3_node_hdr_from_disk(&nodehdr2, node2);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr1, node1);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr2, node2);
- 		btree1 = dp->d_ops->node_tree_p(node1);
- 		btree2 = dp->d_ops->node_tree_p(node2);
- 		swap = 1;
-@@ -881,12 +836,12 @@ xfs_da3_node_rebalance(
- 	/*
- 	 * Log header of node 1 and all current bits of node 2.
- 	 */
--	xfs_da3_node_hdr_to_disk(node1, &nodehdr1);
-+	dp->d_ops->node_hdr_to_disk(node1, &nodehdr1);
- 	xfs_trans_log_buf(tp, blk1->bp,
- 		XFS_DA_LOGRANGE(node1, &node1->hdr,
- 				dp->d_ops->node_hdr_size()));
- 
--	xfs_da3_node_hdr_to_disk(node2, &nodehdr2);
-+	dp->d_ops->node_hdr_to_disk(node2, &nodehdr2);
- 	xfs_trans_log_buf(tp, blk2->bp,
- 		XFS_DA_LOGRANGE(node2, &node2->hdr,
- 				dp->d_ops->node_hdr_size() +
-@@ -899,8 +854,8 @@ xfs_da3_node_rebalance(
- 	if (swap) {
- 		node1 = blk1->bp->b_addr;
- 		node2 = blk2->bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&nodehdr1, node1);
--		xfs_da3_node_hdr_from_disk(&nodehdr2, node2);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr1, node1);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr2, node2);
- 		btree1 = dp->d_ops->node_tree_p(node1);
- 		btree2 = dp->d_ops->node_tree_p(node2);
- 	}
-@@ -934,7 +889,7 @@ xfs_da3_node_add(
- 	trace_xfs_da_node_add(state->args);
- 
- 	node = oldblk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 	btree = dp->d_ops->node_tree_p(node);
- 
- 	ASSERT(oldblk->index >= 0 && oldblk->index <= nodehdr.count);
-@@ -958,7 +913,7 @@ xfs_da3_node_add(
- 				tmp + sizeof(*btree)));
- 
- 	nodehdr.count += 1;
--	xfs_da3_node_hdr_to_disk(node, &nodehdr);
-+	dp->d_ops->node_hdr_to_disk(node, &nodehdr);
- 	xfs_trans_log_buf(state->args->trans, oldblk->bp,
- 		XFS_DA_LOGRANGE(node, &node->hdr, dp->d_ops->node_hdr_size()));
- 
-@@ -1097,6 +1052,7 @@ xfs_da3_root_join(
- 	struct xfs_da3_icnode_hdr oldroothdr;
- 	struct xfs_da_node_entry *btree;
- 	int			error;
-+	struct xfs_inode	*dp = state->args->dp;
- 
- 	trace_xfs_da_root_join(state->args);
- 
-@@ -1104,7 +1060,7 @@ xfs_da3_root_join(
- 
- 	args = state->args;
- 	oldroot = root_blk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&oldroothdr, oldroot);
-+	dp->d_ops->node_hdr_from_disk(&oldroothdr, oldroot);
- 	ASSERT(oldroothdr.forw == 0);
- 	ASSERT(oldroothdr.back == 0);
- 
-@@ -1118,10 +1074,10 @@ xfs_da3_root_join(
- 	 * Read in the (only) child block, then copy those bytes into
- 	 * the root block's buffer and free the original child block.
- 	 */
--	btree = args->dp->d_ops->node_tree_p(oldroot);
-+	btree = dp->d_ops->node_tree_p(oldroot);
- 	child = be32_to_cpu(btree[0].before);
- 	ASSERT(child != 0);
--	error = xfs_da3_node_read(args->trans, args->dp, child, -1, &bp,
-+	error = xfs_da3_node_read(args->trans, dp, child, -1, &bp,
- 					     args->whichfork);
- 	if (error)
- 		return error;
-@@ -1171,6 +1127,7 @@ xfs_da3_node_toosmall(
- 	int			error;
- 	int			retval;
- 	int			i;
-+	struct xfs_inode	*dp = state->args->dp;
- 
- 	trace_xfs_da_node_toosmall(state->args);
- 
-@@ -1182,7 +1139,7 @@ xfs_da3_node_toosmall(
- 	blk = &state->path.blk[ state->path.active-1 ];
- 	info = blk->bp->b_addr;
- 	node = (xfs_da_intnode_t *)info;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 	if (nodehdr.count > (state->node_ents >> 1)) {
- 		*action = 0;	/* blk over 50%, don't try to join */
- 		return(0);	/* blk over 50%, don't try to join */
-@@ -1234,13 +1191,13 @@ xfs_da3_node_toosmall(
- 			blkno = nodehdr.back;
- 		if (blkno == 0)
- 			continue;
--		error = xfs_da3_node_read(state->args->trans, state->args->dp,
-+		error = xfs_da3_node_read(state->args->trans, dp,
- 					blkno, -1, &bp, state->args->whichfork);
- 		if (error)
- 			return(error);
- 
- 		node = bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&thdr, node);
-+		dp->d_ops->node_hdr_from_disk(&thdr, node);
- 		xfs_trans_brelse(state->args->trans, bp);
- 
- 		if (count - thdr.count >= 0)
-@@ -1287,7 +1244,7 @@ xfs_da3_node_lasthash(
- 	struct xfs_da3_icnode_hdr nodehdr;
- 
- 	node = bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 	if (count)
- 		*count = nodehdr.count;
- 	if (!nodehdr.count)
-@@ -1338,7 +1295,7 @@ xfs_da3_fixhashpath(
- 		struct xfs_da3_icnode_hdr nodehdr;
- 
- 		node = blk->bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 		btree = dp->d_ops->node_tree_p(node);
- 		if (be32_to_cpu(btree->hashval) == lasthash)
- 			break;
-@@ -1370,7 +1327,7 @@ xfs_da3_node_remove(
- 	trace_xfs_da_node_remove(state->args);
- 
- 	node = drop_blk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+	dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 	ASSERT(drop_blk->index < nodehdr.count);
- 	ASSERT(drop_blk->index >= 0);
- 
-@@ -1391,7 +1348,7 @@ xfs_da3_node_remove(
- 	xfs_trans_log_buf(state->args->trans, drop_blk->bp,
- 	    XFS_DA_LOGRANGE(node, &btree[index], sizeof(btree[index])));
- 	nodehdr.count -= 1;
--	xfs_da3_node_hdr_to_disk(node, &nodehdr);
-+	dp->d_ops->node_hdr_to_disk(node, &nodehdr);
- 	xfs_trans_log_buf(state->args->trans, drop_blk->bp,
- 	    XFS_DA_LOGRANGE(node, &node->hdr, dp->d_ops->node_hdr_size()));
- 
-@@ -1426,8 +1383,8 @@ xfs_da3_node_unbalance(
- 
- 	drop_node = drop_blk->bp->b_addr;
- 	save_node = save_blk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&drop_hdr, drop_node);
--	xfs_da3_node_hdr_from_disk(&save_hdr, save_node);
-+	dp->d_ops->node_hdr_from_disk(&drop_hdr, drop_node);
-+	dp->d_ops->node_hdr_from_disk(&save_hdr, save_node);
- 	drop_btree = dp->d_ops->node_tree_p(drop_node);
- 	save_btree = dp->d_ops->node_tree_p(save_node);
- 	tp = state->args->trans;
-@@ -1463,7 +1420,7 @@ xfs_da3_node_unbalance(
- 	memcpy(&save_btree[sindex], &drop_btree[0], tmp);
- 	save_hdr.count += drop_hdr.count;
- 
--	xfs_da3_node_hdr_to_disk(save_node, &save_hdr);
-+	dp->d_ops->node_hdr_to_disk(save_node, &save_hdr);
- 	xfs_trans_log_buf(tp, save_blk->bp,
- 		XFS_DA_LOGRANGE(save_node, &save_node->hdr,
- 				dp->d_ops->node_hdr_size()));
-@@ -1556,7 +1513,7 @@ xfs_da3_node_lookup_int(
- 		 * Search an intermediate node for a match.
- 		 */
- 		node = blk->bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 		btree = dp->d_ops->node_tree_p(node);
- 
- 		max = nodehdr.count;
-@@ -1665,8 +1622,8 @@ xfs_da3_node_order(
- 
- 	node1 = node1_bp->b_addr;
- 	node2 = node2_bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&node1hdr, node1);
--	xfs_da3_node_hdr_from_disk(&node2hdr, node2);
-+	dp->d_ops->node_hdr_from_disk(&node1hdr, node1);
-+	dp->d_ops->node_hdr_from_disk(&node2hdr, node2);
- 	btree1 = dp->d_ops->node_tree_p(node1);
- 	btree2 = dp->d_ops->node_tree_p(node2);
- 
-@@ -1888,7 +1845,7 @@ xfs_da3_path_shift(
- 	level = (path->active-1) - 1;	/* skip bottom layer in path */
- 	for (blk = &path->blk[level]; level >= 0; blk--, level--) {
- 		node = blk->bp->b_addr;
--		xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+		dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 		btree = dp->d_ops->node_tree_p(node);
- 
- 		if (forward && (blk->index < nodehdr.count - 1)) {
-@@ -1945,7 +1902,7 @@ xfs_da3_path_shift(
- 		case XFS_DA3_NODE_MAGIC:
- 			blk->magic = XFS_DA_NODE_MAGIC;
- 			node = (xfs_da_intnode_t *)info;
--			xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+			dp->d_ops->node_hdr_from_disk(&nodehdr, node);
- 			btree = dp->d_ops->node_tree_p(node);
- 			blk->hashval = be32_to_cpu(btree[nodehdr.count - 1].hashval);
- 			if (forward)
-@@ -2233,7 +2190,7 @@ xfs_da3_swap_lastblock(
- 		struct xfs_dir2_leaf_entry *ents;
- 
- 		dead_leaf2 = (xfs_dir2_leaf_t *)dead_info;
--		xfs_dir3_leaf_hdr_from_disk(&leafhdr, dead_leaf2);
-+		dp->d_ops->leaf_hdr_from_disk(&leafhdr, dead_leaf2);
- 		ents = dp->d_ops->leaf_ents_p(dead_leaf2);
- 		dead_level = 0;
- 		dead_hash = be32_to_cpu(ents[leafhdr.count - 1].hashval);
-@@ -2241,7 +2198,7 @@ xfs_da3_swap_lastblock(
- 		struct xfs_da3_icnode_hdr deadhdr;
- 
- 		dead_node = (xfs_da_intnode_t *)dead_info;
--		xfs_da3_node_hdr_from_disk(&deadhdr, dead_node);
-+		dp->d_ops->node_hdr_from_disk(&deadhdr, dead_node);
- 		btree = dp->d_ops->node_tree_p(dead_node);
- 		dead_level = deadhdr.level;
- 		dead_hash = be32_to_cpu(btree[deadhdr.count - 1].hashval);
-@@ -2301,7 +2258,7 @@ xfs_da3_swap_lastblock(
- 		if (error)
- 			goto done;
- 		par_node = par_buf->b_addr;
--		xfs_da3_node_hdr_from_disk(&par_hdr, par_node);
-+		dp->d_ops->node_hdr_from_disk(&par_hdr, par_node);
- 		if (level >= 0 && level != par_hdr.level + 1) {
- 			XFS_ERROR_REPORT("xfs_da_swap_lastblock(4)",
- 					 XFS_ERRLEVEL_LOW, mp);
-@@ -2352,7 +2309,7 @@ xfs_da3_swap_lastblock(
- 		if (error)
- 			goto done;
- 		par_node = par_buf->b_addr;
--		xfs_da3_node_hdr_from_disk(&par_hdr, par_node);
-+		dp->d_ops->node_hdr_from_disk(&par_hdr, par_node);
- 		if (par_hdr.level != level) {
- 			XFS_ERROR_REPORT("xfs_da_swap_lastblock(7)",
- 					 XFS_ERRLEVEL_LOW, mp);
-diff --git a/fs/xfs/xfs_da_format.c b/fs/xfs/xfs_da_format.c
-index 72b48b5..d81cff7 100644
---- a/fs/xfs/xfs_da_format.c
-+++ b/fs/xfs/xfs_da_format.c
-@@ -464,19 +464,84 @@ xfs_dir3_leaf_hdr_size(void)
- 	return sizeof(struct xfs_dir3_leaf_hdr);
- }
- 
--static inline int
-+static int
- xfs_dir3_max_leaf_ents(struct xfs_mount *mp)
- {
- 	return (mp->m_dirblksize - xfs_dir3_leaf_hdr_size()) /
- 		(uint)sizeof(struct xfs_dir2_leaf_entry);
- }
- 
--static inline struct xfs_dir2_leaf_entry *
-+static struct xfs_dir2_leaf_entry *
- xfs_dir3_leaf_ents_p(struct xfs_dir2_leaf *lp)
- {
- 	return ((struct xfs_dir3_leaf *)lp)->__ents;
- }
- 
-+static void
-+xfs_dir2_leaf_hdr_from_disk(
-+	struct xfs_dir3_icleaf_hdr	*to,
-+	struct xfs_dir2_leaf		*from)
-+{
-+	to->forw = be32_to_cpu(from->hdr.info.forw);
-+	to->back = be32_to_cpu(from->hdr.info.back);
-+	to->magic = be16_to_cpu(from->hdr.info.magic);
-+	to->count = be16_to_cpu(from->hdr.count);
-+	to->stale = be16_to_cpu(from->hdr.stale);
-+
-+	ASSERT(to->magic == XFS_DIR2_LEAF1_MAGIC ||
-+	       to->magic == XFS_DIR2_LEAFN_MAGIC);
-+}
-+
-+static void
-+xfs_dir2_leaf_hdr_to_disk(
-+	struct xfs_dir2_leaf		*to,
-+	struct xfs_dir3_icleaf_hdr	*from)
-+{
-+	ASSERT(from->magic == XFS_DIR2_LEAF1_MAGIC ||
-+	       from->magic == XFS_DIR2_LEAFN_MAGIC);
-+
-+	to->hdr.info.forw = cpu_to_be32(from->forw);
-+	to->hdr.info.back = cpu_to_be32(from->back);
-+	to->hdr.info.magic = cpu_to_be16(from->magic);
-+	to->hdr.count = cpu_to_be16(from->count);
-+	to->hdr.stale = cpu_to_be16(from->stale);
-+}
-+
-+static void
-+xfs_dir3_leaf_hdr_from_disk(
-+	struct xfs_dir3_icleaf_hdr	*to,
-+	struct xfs_dir2_leaf		*from)
-+{
-+	struct xfs_dir3_leaf_hdr *hdr3 = (struct xfs_dir3_leaf_hdr *)from;
-+
-+	to->forw = be32_to_cpu(hdr3->info.hdr.forw);
-+	to->back = be32_to_cpu(hdr3->info.hdr.back);
-+	to->magic = be16_to_cpu(hdr3->info.hdr.magic);
-+	to->count = be16_to_cpu(hdr3->count);
-+	to->stale = be16_to_cpu(hdr3->stale);
-+
-+	ASSERT(to->magic == XFS_DIR3_LEAF1_MAGIC ||
-+	       to->magic == XFS_DIR3_LEAFN_MAGIC);
-+}
-+
-+static void
-+xfs_dir3_leaf_hdr_to_disk(
-+	struct xfs_dir2_leaf		*to,
-+	struct xfs_dir3_icleaf_hdr	*from)
-+{
-+	struct xfs_dir3_leaf_hdr *hdr3 = (struct xfs_dir3_leaf_hdr *)to;
-+
-+	ASSERT(from->magic == XFS_DIR3_LEAF1_MAGIC ||
-+	       from->magic == XFS_DIR3_LEAFN_MAGIC);
-+
-+	hdr3->info.hdr.forw = cpu_to_be32(from->forw);
-+	hdr3->info.hdr.back = cpu_to_be32(from->back);
-+	hdr3->info.hdr.magic = cpu_to_be16(from->magic);
-+	hdr3->count = cpu_to_be16(from->count);
-+	hdr3->stale = cpu_to_be16(from->stale);
-+}
-+
-+
- /*
-  * Directory/Attribute Node block operations
-  */
-@@ -504,6 +569,121 @@ xfs_da3_node_tree_p(struct xfs_da_intnode *dap)
- 	return ((struct xfs_da3_intnode *)dap)->__btree;
- }
- 
-+static void
-+xfs_da2_node_hdr_from_disk(
-+	struct xfs_da3_icnode_hdr	*to,
-+	struct xfs_da_intnode		*from)
-+{
-+	ASSERT(from->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
-+	to->forw = be32_to_cpu(from->hdr.info.forw);
-+	to->back = be32_to_cpu(from->hdr.info.back);
-+	to->magic = be16_to_cpu(from->hdr.info.magic);
-+	to->count = be16_to_cpu(from->hdr.__count);
-+	to->level = be16_to_cpu(from->hdr.__level);
-+}
-+
-+static void
-+xfs_da2_node_hdr_to_disk(
-+	struct xfs_da_intnode		*to,
-+	struct xfs_da3_icnode_hdr	*from)
-+{
-+	ASSERT(from->magic == XFS_DA_NODE_MAGIC);
-+	to->hdr.info.forw = cpu_to_be32(from->forw);
-+	to->hdr.info.back = cpu_to_be32(from->back);
-+	to->hdr.info.magic = cpu_to_be16(from->magic);
-+	to->hdr.__count = cpu_to_be16(from->count);
-+	to->hdr.__level = cpu_to_be16(from->level);
-+}
-+
-+static void
-+xfs_da3_node_hdr_from_disk(
-+	struct xfs_da3_icnode_hdr	*to,
-+	struct xfs_da_intnode		*from)
-+{
-+	struct xfs_da3_node_hdr *hdr3 = (struct xfs_da3_node_hdr *)from;
-+
-+	ASSERT(from->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
-+	to->forw = be32_to_cpu(hdr3->info.hdr.forw);
-+	to->back = be32_to_cpu(hdr3->info.hdr.back);
-+	to->magic = be16_to_cpu(hdr3->info.hdr.magic);
-+	to->count = be16_to_cpu(hdr3->__count);
-+	to->level = be16_to_cpu(hdr3->__level);
-+}
-+
-+static void
-+xfs_da3_node_hdr_to_disk(
-+	struct xfs_da_intnode		*to,
-+	struct xfs_da3_icnode_hdr	*from)
-+{
-+	struct xfs_da3_node_hdr *hdr3 = (struct xfs_da3_node_hdr *)to;
-+
-+	ASSERT(from->magic == XFS_DA3_NODE_MAGIC);
-+	hdr3->info.hdr.forw = cpu_to_be32(from->forw);
-+	hdr3->info.hdr.back = cpu_to_be32(from->back);
-+	hdr3->info.hdr.magic = cpu_to_be16(from->magic);
-+	hdr3->__count = cpu_to_be16(from->count);
-+	hdr3->__level = cpu_to_be16(from->level);
-+}
-+
-+
-+/*
-+ * Directory free space block operations
-+ */
-+static void
-+xfs_dir2_free_hdr_from_disk(
-+	struct xfs_dir3_icfree_hdr	*to,
-+	struct xfs_dir2_free		*from)
-+{
-+	to->magic = be32_to_cpu(from->hdr.magic);
-+	to->firstdb = be32_to_cpu(from->hdr.firstdb);
-+	to->nvalid = be32_to_cpu(from->hdr.nvalid);
-+	to->nused = be32_to_cpu(from->hdr.nused);
-+	ASSERT(to->magic == XFS_DIR2_FREE_MAGIC);
-+}
-+
-+static void
-+xfs_dir2_free_hdr_to_disk(
-+	struct xfs_dir2_free		*to,
-+	struct xfs_dir3_icfree_hdr	*from)
-+{
-+	ASSERT(from->magic == XFS_DIR2_FREE_MAGIC);
-+
-+	to->hdr.magic = cpu_to_be32(from->magic);
-+	to->hdr.firstdb = cpu_to_be32(from->firstdb);
-+	to->hdr.nvalid = cpu_to_be32(from->nvalid);
-+	to->hdr.nused = cpu_to_be32(from->nused);
-+}
-+
-+static void
-+xfs_dir3_free_hdr_from_disk(
-+	struct xfs_dir3_icfree_hdr	*to,
-+	struct xfs_dir2_free		*from)
-+{
-+	struct xfs_dir3_free_hdr *hdr3 = (struct xfs_dir3_free_hdr *)from;
-+
-+	to->magic = be32_to_cpu(hdr3->hdr.magic);
-+	to->firstdb = be32_to_cpu(hdr3->firstdb);
-+	to->nvalid = be32_to_cpu(hdr3->nvalid);
-+	to->nused = be32_to_cpu(hdr3->nused);
-+
-+	ASSERT(to->magic == XFS_DIR3_FREE_MAGIC);
-+}
-+
-+static void
-+xfs_dir3_free_hdr_to_disk(
-+	struct xfs_dir2_free		*to,
-+	struct xfs_dir3_icfree_hdr	*from)
-+{
-+	struct xfs_dir3_free_hdr *hdr3 = (struct xfs_dir3_free_hdr *)to;
-+
-+	ASSERT(from->magic == XFS_DIR3_FREE_MAGIC);
-+
-+	hdr3->hdr.magic = cpu_to_be32(from->magic);
-+	hdr3->firstdb = cpu_to_be32(from->firstdb);
-+	hdr3->nvalid = cpu_to_be32(from->nvalid);
-+	hdr3->nused = cpu_to_be32(from->nused);
-+}
-+
- const struct xfs_dir_ops xfs_dir2_ops = {
- 	.sf_entsize = xfs_dir2_sf_entsize,
- 	.sf_nextentry = xfs_dir2_sf_nextentry,
-@@ -532,10 +712,14 @@ const struct xfs_dir_ops xfs_dir2_ops = {
- 	.data_unused_p = xfs_dir2_data_unused_p,
- 
- 	.leaf_hdr_size = xfs_dir2_leaf_hdr_size,
-+	.leaf_hdr_to_disk = xfs_dir2_leaf_hdr_to_disk,
-+	.leaf_hdr_from_disk = xfs_dir2_leaf_hdr_from_disk,
- 	.leaf_max_ents = xfs_dir2_max_leaf_ents,
- 	.leaf_ents_p = xfs_dir2_leaf_ents_p,
- 
- 	.node_hdr_size = xfs_da2_node_hdr_size,
-+	.node_hdr_to_disk = xfs_da2_node_hdr_to_disk,
-+	.node_hdr_from_disk = xfs_da2_node_hdr_from_disk,
- 	.node_tree_p = xfs_da2_node_tree_p,
- };
- 
-@@ -567,11 +751,18 @@ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
- 	.data_unused_p = xfs_dir2_data_unused_p,
- 
- 	.leaf_hdr_size = xfs_dir2_leaf_hdr_size,
-+	.leaf_hdr_to_disk = xfs_dir2_leaf_hdr_to_disk,
-+	.leaf_hdr_from_disk = xfs_dir2_leaf_hdr_from_disk,
- 	.leaf_max_ents = xfs_dir2_max_leaf_ents,
- 	.leaf_ents_p = xfs_dir2_leaf_ents_p,
- 
- 	.node_hdr_size = xfs_da2_node_hdr_size,
-+	.node_hdr_to_disk = xfs_da2_node_hdr_to_disk,
-+	.node_hdr_from_disk = xfs_da2_node_hdr_from_disk,
- 	.node_tree_p = xfs_da2_node_tree_p,
-+
-+	.free_hdr_to_disk = xfs_dir2_free_hdr_to_disk,
-+	.free_hdr_from_disk = xfs_dir2_free_hdr_from_disk,
- };
- 
- const struct xfs_dir_ops xfs_dir3_ops = {
-@@ -602,20 +793,31 @@ const struct xfs_dir_ops xfs_dir3_ops = {
- 	.data_unused_p = xfs_dir3_data_unused_p,
- 
- 	.leaf_hdr_size = xfs_dir3_leaf_hdr_size,
-+	.leaf_hdr_to_disk = xfs_dir3_leaf_hdr_to_disk,
-+	.leaf_hdr_from_disk = xfs_dir3_leaf_hdr_from_disk,
- 	.leaf_max_ents = xfs_dir3_max_leaf_ents,
- 	.leaf_ents_p = xfs_dir3_leaf_ents_p,
- 
- 	.node_hdr_size = xfs_da3_node_hdr_size,
-+	.node_hdr_to_disk = xfs_da3_node_hdr_to_disk,
-+	.node_hdr_from_disk = xfs_da3_node_hdr_from_disk,
- 	.node_tree_p = xfs_da3_node_tree_p,
-+
-+	.free_hdr_to_disk = xfs_dir3_free_hdr_to_disk,
-+	.free_hdr_from_disk = xfs_dir3_free_hdr_from_disk,
- };
- 
- const struct xfs_dir_ops xfs_dir2_nondir_ops = {
- 	.node_hdr_size = xfs_da2_node_hdr_size,
-+	.node_hdr_to_disk = xfs_da2_node_hdr_to_disk,
-+	.node_hdr_from_disk = xfs_da2_node_hdr_from_disk,
- 	.node_tree_p = xfs_da2_node_tree_p,
- };
- 
- const struct xfs_dir_ops xfs_dir3_nondir_ops = {
- 	.node_hdr_size = xfs_da3_node_hdr_size,
-+	.node_hdr_to_disk = xfs_da3_node_hdr_to_disk,
-+	.node_hdr_from_disk = xfs_da3_node_hdr_from_disk,
- 	.node_tree_p = xfs_da3_node_tree_p,
- };
- 
-diff --git a/fs/xfs/xfs_da_format.h b/fs/xfs/xfs_da_format.h
-index 69b4c6e..1ff7b9f 100644
---- a/fs/xfs/xfs_da_format.h
-+++ b/fs/xfs/xfs_da_format.h
-@@ -122,16 +122,6 @@ struct xfs_da3_icnode_hdr {
- 	__uint16_t	level;
- };
- 
--extern void xfs_da3_node_hdr_from_disk(struct xfs_da3_icnode_hdr *to,
--				       struct xfs_da_intnode *from);
--extern void xfs_da3_node_hdr_to_disk(struct xfs_da_intnode *to,
--				     struct xfs_da3_icnode_hdr *from);
--
--extern void xfs_da3_intnode_from_disk(struct xfs_da3_icnode_hdr *to,
--				      struct xfs_da_intnode *from);
--extern void xfs_da3_intnode_to_disk(struct xfs_da_intnode *to,
--				    struct xfs_da3_icnode_hdr *from);
--
- #define	XFS_LBSIZE(mp)	(mp)->m_sb.sb_blocksize
- 
- /*
-@@ -523,9 +513,6 @@ struct xfs_dir3_leaf {
- 
- #define XFS_DIR3_LEAF_CRC_OFF  offsetof(struct xfs_dir3_leaf_hdr, info.crc)
- 
--extern void xfs_dir3_leaf_hdr_from_disk(struct xfs_dir3_icleaf_hdr *to,
--					struct xfs_dir2_leaf *from);
--
- /*
-  * Get address of the bestcount field in the single-leaf block.
-  */
-@@ -717,9 +704,6 @@ struct xfs_dir3_icfree_hdr {
- 
- };
- 
--void xfs_dir3_free_hdr_from_disk(struct xfs_dir3_icfree_hdr *to,
--				 struct xfs_dir2_free *from);
--
- static inline int
- xfs_dir3_free_hdr_size(struct xfs_mount *mp)
- {
-diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-index c5cad9d..6119534 100644
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -76,13 +76,26 @@ struct xfs_dir_ops {
- 		(*data_unused_p)(struct xfs_dir2_data_hdr *hdr);
- 
- 	int	(*leaf_hdr_size)(void);
-+	void	(*leaf_hdr_to_disk)(struct xfs_dir2_leaf *to,
-+				    struct xfs_dir3_icleaf_hdr *from);
-+	void	(*leaf_hdr_from_disk)(struct xfs_dir3_icleaf_hdr *to,
-+				      struct xfs_dir2_leaf *from);
- 	int	(*leaf_max_ents)(struct xfs_mount *mp);
- 	struct xfs_dir2_leaf_entry *
- 		(*leaf_ents_p)(struct xfs_dir2_leaf *lp);
- 
- 	int	(*node_hdr_size)(void);
-+	void	(*node_hdr_to_disk)(struct xfs_da_intnode *to,
-+				    struct xfs_da3_icnode_hdr *from);
-+	void	(*node_hdr_from_disk)(struct xfs_da3_icnode_hdr *to,
-+				      struct xfs_da_intnode *from);
- 	struct xfs_da_node_entry *
- 		(*node_tree_p)(struct xfs_da_intnode *dap);
-+
-+	void	(*free_hdr_to_disk)(struct xfs_dir2_free *to,
-+				    struct xfs_dir3_icfree_hdr *from);
-+	void	(*free_hdr_from_disk)(struct xfs_dir3_icfree_hdr *to,
-+				      struct xfs_dir2_free *from);
- };
- 
- extern const struct xfs_dir_ops *
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 03015f5..364fe3a 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -936,7 +936,7 @@ xfs_dir2_leaf_to_block(
- 	tp = args->trans;
- 	mp = dp->i_mount;
- 	leaf = lbp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 16fdc0e..2fb8db9 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -64,7 +64,7 @@ xfs_dir3_leaf1_check(
- 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
- 	struct xfs_dir3_icleaf_hdr leafhdr;
- 
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 
- 	if (leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
- 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-@@ -79,62 +79,6 @@ xfs_dir3_leaf1_check(
- #define	xfs_dir3_leaf_check(dp, bp)
- #endif
- 
--void
--xfs_dir3_leaf_hdr_from_disk(
--	struct xfs_dir3_icleaf_hdr	*to,
--	struct xfs_dir2_leaf		*from)
--{
--	if (from->hdr.info.magic == cpu_to_be16(XFS_DIR2_LEAF1_MAGIC) ||
--	    from->hdr.info.magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC)) {
--		to->forw = be32_to_cpu(from->hdr.info.forw);
--		to->back = be32_to_cpu(from->hdr.info.back);
--		to->magic = be16_to_cpu(from->hdr.info.magic);
--		to->count = be16_to_cpu(from->hdr.count);
--		to->stale = be16_to_cpu(from->hdr.stale);
--	} else {
--		struct xfs_dir3_leaf_hdr *hdr3 = (struct xfs_dir3_leaf_hdr *)from;
--
--		to->forw = be32_to_cpu(hdr3->info.hdr.forw);
--		to->back = be32_to_cpu(hdr3->info.hdr.back);
--		to->magic = be16_to_cpu(hdr3->info.hdr.magic);
--		to->count = be16_to_cpu(hdr3->count);
--		to->stale = be16_to_cpu(hdr3->stale);
--	}
--
--	ASSERT(to->magic == XFS_DIR2_LEAF1_MAGIC ||
--	       to->magic == XFS_DIR3_LEAF1_MAGIC ||
--	       to->magic == XFS_DIR2_LEAFN_MAGIC ||
--	       to->magic == XFS_DIR3_LEAFN_MAGIC);
--}
--
--void
--xfs_dir3_leaf_hdr_to_disk(
--	struct xfs_dir2_leaf		*to,
--	struct xfs_dir3_icleaf_hdr	*from)
--{
--	ASSERT(from->magic == XFS_DIR2_LEAF1_MAGIC ||
--	       from->magic == XFS_DIR3_LEAF1_MAGIC ||
--	       from->magic == XFS_DIR2_LEAFN_MAGIC ||
--	       from->magic == XFS_DIR3_LEAFN_MAGIC);
--
--	if (from->magic == XFS_DIR2_LEAF1_MAGIC ||
--	    from->magic == XFS_DIR2_LEAFN_MAGIC) {
--		to->hdr.info.forw = cpu_to_be32(from->forw);
--		to->hdr.info.back = cpu_to_be32(from->back);
--		to->hdr.info.magic = cpu_to_be16(from->magic);
--		to->hdr.count = cpu_to_be16(from->count);
--		to->hdr.stale = cpu_to_be16(from->stale);
--	} else {
--		struct xfs_dir3_leaf_hdr *hdr3 = (struct xfs_dir3_leaf_hdr *)to;
--
--		hdr3->info.hdr.forw = cpu_to_be32(from->forw);
--		hdr3->info.hdr.back = cpu_to_be32(from->back);
--		hdr3->info.hdr.magic = cpu_to_be16(from->magic);
--		hdr3->count = cpu_to_be16(from->count);
--		hdr3->stale = cpu_to_be16(from->stale);
--	}
--}
--
- bool
- xfs_dir3_leaf_check_int(
- 	struct xfs_mount	*mp,
-@@ -147,6 +91,7 @@ xfs_dir3_leaf_check_int(
- 	int			stale;
- 	int			i;
- 	const struct xfs_dir_ops *ops;
-+	struct xfs_dir3_icleaf_hdr leafhdr;
- 
- 	/*
- 	 * we can be passed a null dp here from a verifier, so we need to go the
-@@ -154,6 +99,11 @@ xfs_dir3_leaf_check_int(
- 	 */
- 	ops = xfs_dir_get_ops(mp, dp);
- 
-+	if (!hdr) {
-+		ops->leaf_hdr_from_disk(&leafhdr, leaf);
-+		hdr = &leafhdr;
-+	}
-+
- 	ents = ops->leaf_ents_p(leaf);
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 
-@@ -198,7 +148,6 @@ xfs_dir3_leaf_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
--	struct xfs_dir3_icleaf_hdr leafhdr;
- 
- 	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
- 
-@@ -220,8 +169,7 @@ xfs_dir3_leaf_verify(
- 			return false;
- 	}
- 
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
--	return xfs_dir3_leaf_check_int(mp, NULL, &leafhdr, leaf);
-+	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
- }
- 
- static void
-@@ -474,10 +422,10 @@ xfs_dir2_block_to_leaf(
- 	/*
- 	 * Set the counts in the leaf header.
- 	 */
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	leafhdr.count = be32_to_cpu(btp->count);
- 	leafhdr.stale = be32_to_cpu(btp->stale);
--	xfs_dir3_leaf_hdr_to_disk(leaf, &leafhdr);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, &leafhdr);
- 	xfs_dir3_leaf_log_header(tp, dp, lbp);
- 
- 	/*
-@@ -706,7 +654,7 @@ xfs_dir2_leaf_addname(
- 	leaf = lbp->b_addr;
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	bestsp = xfs_dir2_leaf_bests_p(ltp);
- 	length = dp->d_ops->data_entsize(args->namelen);
- 
-@@ -945,7 +893,7 @@ xfs_dir2_leaf_addname(
- 	/*
- 	 * Log the leaf fields and give up the buffers.
- 	 */
--	xfs_dir3_leaf_hdr_to_disk(leaf, &leafhdr);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, &leafhdr);
- 	xfs_dir3_leaf_log_header(tp, dp, lbp);
- 	xfs_dir3_leaf_log_ents(tp, dp, lbp, lfloglow, lfloghigh);
- 	xfs_dir3_leaf_check(dp, lbp);
-@@ -968,6 +916,7 @@ xfs_dir3_leaf_compact(
- 	int		loglow;		/* first leaf entry to log */
- 	int		to;		/* target leaf index */
- 	struct xfs_dir2_leaf_entry *ents;
-+	struct xfs_inode *dp = args->dp;
- 
- 	leaf = bp->b_addr;
- 	if (!leafhdr->stale)
-@@ -976,7 +925,7 @@ xfs_dir3_leaf_compact(
- 	/*
- 	 * Compress out the stale entries in place.
- 	 */
--	ents = args->dp->d_ops->leaf_ents_p(leaf);
-+	ents = dp->d_ops->leaf_ents_p(leaf);
- 	for (from = to = 0, loglow = -1; from < leafhdr->count; from++) {
- 		if (ents[from].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
- 			continue;
-@@ -997,11 +946,10 @@ xfs_dir3_leaf_compact(
- 	leafhdr->count -= leafhdr->stale;
- 	leafhdr->stale = 0;
- 
--	xfs_dir3_leaf_hdr_to_disk(leaf, leafhdr);
--	xfs_dir3_leaf_log_header(args->trans, args->dp, bp);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, leafhdr);
-+	xfs_dir3_leaf_log_header(args->trans, dp, bp);
- 	if (loglow != -1)
--		xfs_dir3_leaf_log_ents(args->trans, args->dp, bp,
--				       loglow, to - 1);
-+		xfs_dir3_leaf_log_ents(args->trans, dp, bp, loglow, to - 1);
- }
- 
- /*
-@@ -1290,7 +1238,7 @@ xfs_dir2_leaf_lookup_int(
- 	leaf = lbp->b_addr;
- 	xfs_dir3_leaf_check(dp, lbp);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 
- 	/*
- 	 * Look for the first leaf entry with our hash value.
-@@ -1425,7 +1373,7 @@ xfs_dir2_leaf_removename(
- 	hdr = dbp->b_addr;
- 	xfs_dir3_data_check(dp, dbp);
- 	bf = dp->d_ops->data_bestfree_p(hdr);
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 	/*
- 	 * Point to the leaf entry, use that to point to the data entry.
-@@ -1449,7 +1397,7 @@ xfs_dir2_leaf_removename(
- 	 * We just mark the leaf entry stale by putting a null in it.
- 	 */
- 	leafhdr.stale++;
--	xfs_dir3_leaf_hdr_to_disk(leaf, &leafhdr);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, &leafhdr);
- 	xfs_dir3_leaf_log_header(tp, dp, lbp);
- 
- 	lep->address = cpu_to_be32(XFS_DIR2_NULL_DATAPTR);
-@@ -1602,7 +1550,7 @@ xfs_dir2_leaf_search_hash(
- 
- 	leaf = lbp->b_addr;
- 	ents = args->dp->d_ops->leaf_ents_p(leaf);
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	args->dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 
- 	/*
- 	 * Note, the table cannot be empty, so we have to go through the loop.
-@@ -1791,7 +1739,7 @@ xfs_dir2_node_to_leaf(
- 		return 0;
- 	lbp = state->path.blk[0].bp;
- 	leaf = lbp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 
- 	ASSERT(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
- 	       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC);
-@@ -1803,7 +1751,7 @@ xfs_dir2_node_to_leaf(
- 	if (error)
- 		return error;
- 	free = fbp->b_addr;
--	xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+	dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 
- 	ASSERT(!freehdr.firstdb);
- 
-@@ -1840,7 +1788,7 @@ xfs_dir2_node_to_leaf(
- 	memcpy(xfs_dir2_leaf_bests_p(ltp), xfs_dir3_free_bests_p(mp, free),
- 		freehdr.nvalid * sizeof(xfs_dir2_data_off_t));
- 
--	xfs_dir3_leaf_hdr_to_disk(leaf, &leafhdr);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, &leafhdr);
- 	xfs_dir3_leaf_log_header(tp, dp, lbp);
- 	xfs_dir3_leaf_log_bests(tp, lbp, 0, be32_to_cpu(ltp->bestcount) - 1);
- 	xfs_dir3_leaf_log_tail(tp, lbp);
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 17e65c7..8de6dc4 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -68,7 +68,7 @@ xfs_dir3_leafn_check(
- 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
- 	struct xfs_dir3_icleaf_hdr leafhdr;
- 
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 
- 	if (leafhdr.magic == XFS_DIR3_LEAFN_MAGIC) {
- 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-@@ -192,53 +192,6 @@ xfs_dir2_free_try_read(
- 	return __xfs_dir3_free_read(tp, dp, fbno, -2, bpp);
- }
- 
--
--void
--xfs_dir3_free_hdr_from_disk(
--	struct xfs_dir3_icfree_hdr	*to,
--	struct xfs_dir2_free		*from)
--{
--	if (from->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC)) {
--		to->magic = be32_to_cpu(from->hdr.magic);
--		to->firstdb = be32_to_cpu(from->hdr.firstdb);
--		to->nvalid = be32_to_cpu(from->hdr.nvalid);
--		to->nused = be32_to_cpu(from->hdr.nused);
--	} else {
--		struct xfs_dir3_free_hdr *hdr3 = (struct xfs_dir3_free_hdr *)from;
--
--		to->magic = be32_to_cpu(hdr3->hdr.magic);
--		to->firstdb = be32_to_cpu(hdr3->firstdb);
--		to->nvalid = be32_to_cpu(hdr3->nvalid);
--		to->nused = be32_to_cpu(hdr3->nused);
--	}
--
--	ASSERT(to->magic == XFS_DIR2_FREE_MAGIC ||
--	       to->magic == XFS_DIR3_FREE_MAGIC);
+-	return true;
 -}
 -
 -static void
--xfs_dir3_free_hdr_to_disk(
--	struct xfs_dir2_free		*to,
--	struct xfs_dir3_icfree_hdr	*from)
+-xfs_dquot_buf_read_verify(
+-	struct xfs_buf	*bp)
 -{
--	ASSERT(from->magic == XFS_DIR2_FREE_MAGIC ||
--	       from->magic == XFS_DIR3_FREE_MAGIC);
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
 -
--	if (from->magic == XFS_DIR2_FREE_MAGIC) {
--		to->hdr.magic = cpu_to_be32(from->magic);
--		to->hdr.firstdb = cpu_to_be32(from->firstdb);
--		to->hdr.nvalid = cpu_to_be32(from->nvalid);
--		to->hdr.nused = cpu_to_be32(from->nused);
--	} else {
--		struct xfs_dir3_free_hdr *hdr3 = (struct xfs_dir3_free_hdr *)to;
--
--		hdr3->hdr.magic = cpu_to_be32(from->magic);
--		hdr3->firstdb = cpu_to_be32(from->firstdb);
--		hdr3->nvalid = cpu_to_be32(from->nvalid);
--		hdr3->nused = cpu_to_be32(from->nused);
+-	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
 -	}
 -}
 -
- static int
- xfs_dir3_free_get_buf(
- 	struct xfs_trans	*tp,
-@@ -276,7 +229,7 @@ xfs_dir3_free_get_buf(
- 		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_uuid);
- 	} else
- 		hdr.magic = XFS_DIR2_FREE_MAGIC;
--	xfs_dir3_free_hdr_to_disk(bp->b_addr, &hdr);
-+	dp->d_ops->free_hdr_to_disk(bp->b_addr, &hdr);
- 	*bpp = bp;
- 	return 0;
+-/*
+- * we don't calculate the CRC here as that is done when the dquot is flushed to
+- * the buffer after the update is done. This ensures that the dquot in the
+- * buffer always has an up-to-date CRC value.
+- */
+-void
+-xfs_dquot_buf_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-
+-	if (!xfs_dquot_buf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
+-}
+-
+-const struct xfs_buf_ops xfs_dquot_buf_ops = {
+-	.verify_read = xfs_dquot_buf_read_verify,
+-	.verify_write = xfs_dquot_buf_write_verify,
+-};
+-
+ /*
+  * Allocate a block and fill it with dquots.
+  * This is called when the bmapi finds a hole.
+@@ -515,6 +403,7 @@ xfs_qm_dqalloc(
+ 
+ 	return (error);
  }
-@@ -368,7 +321,7 @@ xfs_dir2_leaf_to_node(
- 		return error;
- 
- 	free = fbp->b_addr;
--	xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+	dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 	leaf = lbp->b_addr;
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 	ASSERT(be32_to_cpu(ltp->bestcount) <=
-@@ -392,7 +345,7 @@ xfs_dir2_leaf_to_node(
- 	freehdr.nused = n;
- 	freehdr.nvalid = be32_to_cpu(ltp->bestcount);
- 
--	xfs_dir3_free_hdr_to_disk(fbp->b_addr, &freehdr);
-+	dp->d_ops->free_hdr_to_disk(fbp->b_addr, &freehdr);
- 	xfs_dir2_free_log_bests(tp, fbp, 0, freehdr.nvalid - 1);
- 	xfs_dir2_free_log_header(tp, fbp);
- 
-@@ -442,7 +395,7 @@ xfs_dir2_leafn_add(
- 	mp = dp->i_mount;
- 	tp = args->trans;
- 	leaf = bp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 
++
+ STATIC int
+ xfs_qm_dqrepair(
+ 	struct xfs_mount	*mp,
+@@ -548,7 +437,7 @@ xfs_qm_dqrepair(
+ 	/* Do the actual repair of dquots in this buffer */
+ 	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
+ 		ddq = &d[i].dd_diskdq;
+-		error = xfs_qm_dqcheck(mp, ddq, firstid + i,
++		error = xfs_dqcheck(mp, ddq, firstid + i,
+ 				       dqp->dq_flags & XFS_DQ_ALLTYPES,
+ 				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
+ 		if (error) {
+@@ -1134,7 +1023,7 @@ xfs_qm_dqflush(
  	/*
-@@ -497,7 +450,7 @@ xfs_dir2_leafn_add(
- 	lep->address = cpu_to_be32(xfs_dir2_db_off_to_dataptr(mp,
- 				args->blkno, args->index));
- 
--	xfs_dir3_leaf_hdr_to_disk(leaf, &leafhdr);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, &leafhdr);
- 	xfs_dir3_leaf_log_header(tp, dp, bp);
- 	xfs_dir3_leaf_log_ents(tp, dp, bp, lfloglow, lfloghigh);
- 	xfs_dir3_leaf_check(dp, bp);
-@@ -507,20 +460,20 @@ xfs_dir2_leafn_add(
- #ifdef DEBUG
- static void
- xfs_dir2_free_hdr_check(
--	struct xfs_mount *mp,
-+	struct xfs_inode *dp,
- 	struct xfs_buf	*bp,
- 	xfs_dir2_db_t	db)
- {
- 	struct xfs_dir3_icfree_hdr hdr;
- 
--	xfs_dir3_free_hdr_from_disk(&hdr, bp->b_addr);
-+	dp->d_ops->free_hdr_from_disk(&hdr, bp->b_addr);
- 
--	ASSERT((hdr.firstdb % xfs_dir3_free_max_bests(mp)) == 0);
-+	ASSERT((hdr.firstdb % xfs_dir3_free_max_bests(dp->i_mount)) == 0);
- 	ASSERT(hdr.firstdb <= db);
- 	ASSERT(db < hdr.firstdb + hdr.nvalid);
+ 	 * A simple sanity check in case we got a corrupted dquot..
+ 	 */
+-	error = xfs_qm_dqcheck(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0,
++	error = xfs_dqcheck(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0,
+ 			   XFS_QMOPT_DOWARN, "dqflush (incore copy)");
+ 	if (error) {
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_dquot_buf.c b/fs/xfs/xfs_dquot_buf.c
+new file mode 100644
+index 0000000..ad2c18f
+--- /dev/null
++++ b/fs/xfs/xfs_dquot_buf.c
+@@ -0,0 +1,288 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2013 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_bit.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_ag.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_quota.h"
++#include "xfs_qm.h"
++#include "xfs_error.h"
++#include "xfs_cksum.h"
++#include "xfs_trace.h"
++
++int
++xfs_calc_dquots_per_chunk(
++	struct xfs_mount	*mp,
++	unsigned int		nbblks)	/* basic block units */
++{
++	unsigned int	ndquots;
++
++	ASSERT(nbblks > 0);
++	ndquots = BBTOB(nbblks);
++	do_div(ndquots, sizeof(xfs_dqblk_t));
++
++	return ndquots;
++}
++
++/*
++ * Do some primitive error checking on ondisk dquot data structures.
++ */
++int
++xfs_dqcheck(
++	struct xfs_mount *mp,
++	xfs_disk_dquot_t *ddq,
++	xfs_dqid_t	 id,
++	uint		 type,	  /* used only when IO_dorepair is true */
++	uint		 flags,
++	char		 *str)
++{
++	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
++	int		errs = 0;
++
++	/*
++	 * We can encounter an uninitialized dquot buffer for 2 reasons:
++	 * 1. If we crash while deleting the quotainode(s), and those blks got
++	 *    used for user data. This is because we take the path of regular
++	 *    file deletion; however, the size field of quotainodes is never
++	 *    updated, so all the tricks that we play in itruncate_finish
++	 *    don't quite matter.
++	 *
++	 * 2. We don't play the quota buffers when there's a quotaoff logitem.
++	 *    But the allocation will be replayed so we'll end up with an
++	 *    uninitialized quota block.
++	 *
++	 * This is all fine; things are still consistent, and we haven't lost
++	 * any quota information. Just don't complain about bad dquot blks.
++	 */
++	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC)) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, magic 0x%x != 0x%x",
++			str, id, be16_to_cpu(ddq->d_magic), XFS_DQUOT_MAGIC);
++		errs++;
++	}
++	if (ddq->d_version != XFS_DQUOT_VERSION) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, version 0x%x != 0x%x",
++			str, id, ddq->d_version, XFS_DQUOT_VERSION);
++		errs++;
++	}
++
++	if (ddq->d_flags != XFS_DQ_USER &&
++	    ddq->d_flags != XFS_DQ_PROJ &&
++	    ddq->d_flags != XFS_DQ_GROUP) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, unknown flags 0x%x",
++			str, id, ddq->d_flags);
++		errs++;
++	}
++
++	if (id != -1 && id != be32_to_cpu(ddq->d_id)) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : ondisk-dquot 0x%p, ID mismatch: "
++			"0x%x expected, found id 0x%x",
++			str, ddq, id, be32_to_cpu(ddq->d_id));
++		errs++;
++	}
++
++	if (!errs && ddq->d_id) {
++		if (ddq->d_blk_softlimit &&
++		    be64_to_cpu(ddq->d_bcount) >
++				be64_to_cpu(ddq->d_blk_softlimit)) {
++			if (!ddq->d_btimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) BLK TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++		if (ddq->d_ino_softlimit &&
++		    be64_to_cpu(ddq->d_icount) >
++				be64_to_cpu(ddq->d_ino_softlimit)) {
++			if (!ddq->d_itimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) INODE TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++		if (ddq->d_rtb_softlimit &&
++		    be64_to_cpu(ddq->d_rtbcount) >
++				be64_to_cpu(ddq->d_rtb_softlimit)) {
++			if (!ddq->d_rtbtimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) RTBLK TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++	}
++
++	if (!errs || !(flags & XFS_QMOPT_DQREPAIR))
++		return errs;
++
++	if (flags & XFS_QMOPT_DOWARN)
++		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
++
++	/*
++	 * Typically, a repair is only requested by quotacheck.
++	 */
++	ASSERT(id != -1);
++	ASSERT(flags & XFS_QMOPT_DQREPAIR);
++	memset(d, 0, sizeof(xfs_dqblk_t));
++
++	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
++	d->dd_diskdq.d_flags = type;
++	d->dd_diskdq.d_id = cpu_to_be32(id);
++
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
++		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++	}
++
++	return errs;
++}
++
++STATIC bool
++xfs_dquot_buf_verify_crc(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	int			ndquots;
++	int			i;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return true;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_calc_dquots_per_chunk(mp,
++					XFS_BB_TO_FSB(mp, bp->b_length));
++
++	for (i = 0; i < ndquots; i++, d++) {
++		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF))
++			return false;
++		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
++			return false;
++	}
++	return true;
++}
++
++STATIC bool
++xfs_dquot_buf_verify(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	xfs_dqid_t		id = 0;
++	int			ndquots;
++	int			i;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_calc_dquots_per_chunk(mp, bp->b_length);
++
++	/*
++	 * On the first read of the buffer, verify that each dquot is valid.
++	 * We don't know what the id of the dquot is supposed to be, just that
++	 * they should be increasing monotonically within the buffer. If the
++	 * first id is corrupt, then it will fail on the second dquot in the
++	 * buffer so corruptions could point to the wrong dquot in this case.
++	 */
++	for (i = 0; i < ndquots; i++) {
++		struct xfs_disk_dquot	*ddq;
++		int			error;
++
++		ddq = &d[i].dd_diskdq;
++
++		if (i == 0)
++			id = be32_to_cpu(ddq->d_id);
++
++		error = xfs_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
++				       "xfs_dquot_buf_verify");
++		if (error)
++			return false;
++	}
++	return true;
++}
++
++static void
++xfs_dquot_buf_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++}
++
++/*
++ * we don't calculate the CRC here as that is done when the dquot is flushed to
++ * the buffer after the update is done. This ensures that the dquot in the
++ * buffer always has an up-to-date CRC value.
++ */
++void
++xfs_dquot_buf_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++}
++
++const struct xfs_buf_ops xfs_dquot_buf_ops = {
++	.verify_read = xfs_dquot_buf_read_verify,
++	.verify_write = xfs_dquot_buf_write_verify,
++};
++
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 8bd89a9..1a4321f 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2363,7 +2363,7 @@ xlog_recover_do_reg_buffer(
+ 					item->ri_buf[i].i_len, __func__);
+ 				goto next;
+ 			}
+-			error = xfs_qm_dqcheck(mp, item->ri_buf[i].i_addr,
++			error = xfs_dqcheck(mp, item->ri_buf[i].i_addr,
+ 					       -1, 0, XFS_QMOPT_DOWARN,
+ 					       "dquot_buf_recover");
+ 			if (error)
+@@ -2395,133 +2395,6 @@ xlog_recover_do_reg_buffer(
  }
- #else
--#define xfs_dir2_free_hdr_check(mp, dp, db)
-+#define xfs_dir2_free_hdr_check(dp, bp, db)
- #endif	/* DEBUG */
  
  /*
-@@ -537,7 +490,7 @@ xfs_dir2_leafn_lasthash(
- 	struct xfs_dir2_leaf_entry *ents;
- 	struct xfs_dir3_icleaf_hdr leafhdr;
- 
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 
- 	ASSERT(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
- 	       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC);
-@@ -584,7 +537,7 @@ xfs_dir2_leafn_lookup_for_addname(
- 	tp = args->trans;
- 	mp = dp->i_mount;
- 	leaf = bp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 
- 	xfs_dir3_leaf_check(dp, bp);
-@@ -655,7 +608,7 @@ xfs_dir2_leafn_lookup_for_addname(
- 					return error;
- 				free = curbp->b_addr;
- 
--				xfs_dir2_free_hdr_check(mp, curbp, curdb);
-+				xfs_dir2_free_hdr_check(dp, curbp, curdb);
- 			}
- 			/*
- 			 * Get the index for our entry.
-@@ -734,7 +687,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 	tp = args->trans;
- 	mp = dp->i_mount;
- 	leaf = bp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 
- 	xfs_dir3_leaf_check(dp, bp);
-@@ -969,8 +922,8 @@ xfs_dir2_leafn_order(
- 	struct xfs_dir3_icleaf_hdr hdr1;
- 	struct xfs_dir3_icleaf_hdr hdr2;
- 
--	xfs_dir3_leaf_hdr_from_disk(&hdr1, leaf1);
--	xfs_dir3_leaf_hdr_from_disk(&hdr2, leaf2);
-+	dp->d_ops->leaf_hdr_from_disk(&hdr1, leaf1);
-+	dp->d_ops->leaf_hdr_from_disk(&hdr2, leaf2);
- 	ents1 = dp->d_ops->leaf_ents_p(leaf1);
- 	ents2 = dp->d_ops->leaf_ents_p(leaf2);
- 
-@@ -1025,8 +978,8 @@ xfs_dir2_leafn_rebalance(
- 	}
- 	leaf1 = blk1->bp->b_addr;
- 	leaf2 = blk2->bp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&hdr1, leaf1);
--	xfs_dir3_leaf_hdr_from_disk(&hdr2, leaf2);
-+	dp->d_ops->leaf_hdr_from_disk(&hdr1, leaf1);
-+	dp->d_ops->leaf_hdr_from_disk(&hdr2, leaf2);
- 	ents1 = dp->d_ops->leaf_ents_p(leaf1);
- 	ents2 = dp->d_ops->leaf_ents_p(leaf2);
- 
-@@ -1074,8 +1027,8 @@ xfs_dir2_leafn_rebalance(
- 	ASSERT(hdr1.stale + hdr2.stale == oldstale);
- 
- 	/* log the changes made when moving the entries */
--	xfs_dir3_leaf_hdr_to_disk(leaf1, &hdr1);
--	xfs_dir3_leaf_hdr_to_disk(leaf2, &hdr2);
-+	dp->d_ops->leaf_hdr_to_disk(leaf1, &hdr1);
-+	dp->d_ops->leaf_hdr_to_disk(leaf2, &hdr2);
- 	xfs_dir3_leaf_log_header(args->trans, dp, blk1->bp);
- 	xfs_dir3_leaf_log_header(args->trans, dp, blk2->bp);
- 
-@@ -1124,8 +1077,9 @@ xfs_dir3_data_block_free(
- 	int			logfree = 0;
- 	__be16			*bests;
- 	struct xfs_dir3_icfree_hdr freehdr;
-+	struct xfs_inode	*dp = args->dp;
- 
--	xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+	dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 
- 	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
- 	if (hdr) {
-@@ -1161,7 +1115,7 @@ xfs_dir3_data_block_free(
- 		logfree = 1;
- 	}
- 
--	xfs_dir3_free_hdr_to_disk(free, &freehdr);
-+	dp->d_ops->free_hdr_to_disk(free, &freehdr);
- 	xfs_dir2_free_log_header(tp, fbp);
- 
- 	/*
-@@ -1226,7 +1180,7 @@ xfs_dir2_leafn_remove(
- 	tp = args->trans;
- 	mp = dp->i_mount;
- 	leaf = bp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 
- 	/*
-@@ -1247,7 +1201,7 @@ xfs_dir2_leafn_remove(
- 	 * Log the leaf block changes.
+- * Do some primitive error checking on ondisk dquot data structures.
+- */
+-int
+-xfs_qm_dqcheck(
+-	struct xfs_mount *mp,
+-	xfs_disk_dquot_t *ddq,
+-	xfs_dqid_t	 id,
+-	uint		 type,	  /* used only when IO_dorepair is true */
+-	uint		 flags,
+-	char		 *str)
+-{
+-	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
+-	int		errs = 0;
+-
+-	/*
+-	 * We can encounter an uninitialized dquot buffer for 2 reasons:
+-	 * 1. If we crash while deleting the quotainode(s), and those blks got
+-	 *    used for user data. This is because we take the path of regular
+-	 *    file deletion; however, the size field of quotainodes is never
+-	 *    updated, so all the tricks that we play in itruncate_finish
+-	 *    don't quite matter.
+-	 *
+-	 * 2. We don't play the quota buffers when there's a quotaoff logitem.
+-	 *    But the allocation will be replayed so we'll end up with an
+-	 *    uninitialized quota block.
+-	 *
+-	 * This is all fine; things are still consistent, and we haven't lost
+-	 * any quota information. Just don't complain about bad dquot blks.
+-	 */
+-	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC)) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : XFS dquot ID 0x%x, magic 0x%x != 0x%x",
+-			str, id, be16_to_cpu(ddq->d_magic), XFS_DQUOT_MAGIC);
+-		errs++;
+-	}
+-	if (ddq->d_version != XFS_DQUOT_VERSION) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : XFS dquot ID 0x%x, version 0x%x != 0x%x",
+-			str, id, ddq->d_version, XFS_DQUOT_VERSION);
+-		errs++;
+-	}
+-
+-	if (ddq->d_flags != XFS_DQ_USER &&
+-	    ddq->d_flags != XFS_DQ_PROJ &&
+-	    ddq->d_flags != XFS_DQ_GROUP) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : XFS dquot ID 0x%x, unknown flags 0x%x",
+-			str, id, ddq->d_flags);
+-		errs++;
+-	}
+-
+-	if (id != -1 && id != be32_to_cpu(ddq->d_id)) {
+-		if (flags & XFS_QMOPT_DOWARN)
+-			xfs_alert(mp,
+-			"%s : ondisk-dquot 0x%p, ID mismatch: "
+-			"0x%x expected, found id 0x%x",
+-			str, ddq, id, be32_to_cpu(ddq->d_id));
+-		errs++;
+-	}
+-
+-	if (!errs && ddq->d_id) {
+-		if (ddq->d_blk_softlimit &&
+-		    be64_to_cpu(ddq->d_bcount) >
+-				be64_to_cpu(ddq->d_blk_softlimit)) {
+-			if (!ddq->d_btimer) {
+-				if (flags & XFS_QMOPT_DOWARN)
+-					xfs_alert(mp,
+-			"%s : Dquot ID 0x%x (0x%p) BLK TIMER NOT STARTED",
+-					str, (int)be32_to_cpu(ddq->d_id), ddq);
+-				errs++;
+-			}
+-		}
+-		if (ddq->d_ino_softlimit &&
+-		    be64_to_cpu(ddq->d_icount) >
+-				be64_to_cpu(ddq->d_ino_softlimit)) {
+-			if (!ddq->d_itimer) {
+-				if (flags & XFS_QMOPT_DOWARN)
+-					xfs_alert(mp,
+-			"%s : Dquot ID 0x%x (0x%p) INODE TIMER NOT STARTED",
+-					str, (int)be32_to_cpu(ddq->d_id), ddq);
+-				errs++;
+-			}
+-		}
+-		if (ddq->d_rtb_softlimit &&
+-		    be64_to_cpu(ddq->d_rtbcount) >
+-				be64_to_cpu(ddq->d_rtb_softlimit)) {
+-			if (!ddq->d_rtbtimer) {
+-				if (flags & XFS_QMOPT_DOWARN)
+-					xfs_alert(mp,
+-			"%s : Dquot ID 0x%x (0x%p) RTBLK TIMER NOT STARTED",
+-					str, (int)be32_to_cpu(ddq->d_id), ddq);
+-				errs++;
+-			}
+-		}
+-	}
+-
+-	if (!errs || !(flags & XFS_QMOPT_DQREPAIR))
+-		return errs;
+-
+-	if (flags & XFS_QMOPT_DOWARN)
+-		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
+-
+-	/*
+-	 * Typically, a repair is only requested by quotacheck.
+-	 */
+-	ASSERT(id != -1);
+-	ASSERT(flags & XFS_QMOPT_DQREPAIR);
+-	memset(d, 0, sizeof(xfs_dqblk_t));
+-
+-	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+-	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+-	d->dd_diskdq.d_flags = type;
+-	d->dd_diskdq.d_id = cpu_to_be32(id);
+-
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
+-		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF);
+-	}
+-
+-	return errs;
+-}
+-
+-/*
+  * Perform a dquot buffer recovery.
+  * Simple algorithm: if we have found a QUOTAOFF log item of the same type
+  * (ie. USR or GRP), then just toss this buffer away; don't recover it.
+@@ -3126,7 +2999,7 @@ xlog_recover_dquot_pass2(
  	 */
- 	leafhdr.stale++;
--	xfs_dir3_leaf_hdr_to_disk(leaf, &leafhdr);
-+	dp->d_ops->leaf_hdr_to_disk(leaf, &leafhdr);
- 	xfs_dir3_leaf_log_header(tp, dp, bp);
- 
- 	lep->address = cpu_to_be32(XFS_DIR2_NULL_DATAPTR);
-@@ -1298,7 +1252,7 @@ xfs_dir2_leafn_remove(
- #ifdef DEBUG
- 	{
- 		struct xfs_dir3_icfree_hdr freehdr;
--		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 		ASSERT(freehdr.firstdb == xfs_dir3_free_max_bests(mp) *
- 					  (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
- 	}
-@@ -1449,7 +1403,7 @@ xfs_dir2_leafn_toosmall(
+ 	dq_f = item->ri_buf[0].i_addr;
+ 	ASSERT(dq_f);
+-	error = xfs_qm_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
++	error = xfs_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
+ 			   "xlog_recover_dquot_pass2 (log copy)");
+ 	if (error)
+ 		return XFS_ERROR(EIO);
+@@ -3146,7 +3019,7 @@ xlog_recover_dquot_pass2(
+ 	 * was among a chunk of dquots created earlier, and we did some
+ 	 * minimal initialization then.
  	 */
- 	blk = &state->path.blk[state->path.active - 1];
- 	leaf = blk->bp->b_addr;
--	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 	xfs_dir3_leaf_check(dp, blk->bp);
+-	error = xfs_qm_dqcheck(mp, ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
++	error = xfs_dqcheck(mp, ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
+ 			   "xlog_recover_dquot_pass2");
+ 	if (error) {
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index dc2d4f7..6dfb4e3 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -665,20 +665,6 @@ xfs_qm_dqdetach(
+ 	}
+ }
  
-@@ -1511,7 +1465,7 @@ xfs_dir2_leafn_toosmall(
- 		bytes = state->blocksize - (state->blocksize >> 2);
+-int
+-xfs_qm_calc_dquots_per_chunk(
+-	struct xfs_mount	*mp,
+-	unsigned int		nbblks)	/* basic block units */
+-{
+-	unsigned int	ndquots;
+-
+-	ASSERT(nbblks > 0);
+-	ndquots = BBTOB(nbblks);
+-	do_div(ndquots, sizeof(xfs_dqblk_t));
+-
+-	return ndquots;
+-}
+-
+ struct xfs_qm_isolate {
+ 	struct list_head	buffers;
+ 	struct list_head	dispose;
+@@ -859,7 +845,7 @@ xfs_qm_init_quotainfo(
  
- 		leaf = bp->b_addr;
--		xfs_dir3_leaf_hdr_from_disk(&hdr2, leaf);
-+		dp->d_ops->leaf_hdr_from_disk(&hdr2, leaf);
- 		ents = dp->d_ops->leaf_ents_p(leaf);
- 		count += hdr2.count - hdr2.stale;
- 		bytes -= count * sizeof(ents[0]);
-@@ -1574,10 +1528,10 @@ xfs_dir2_leafn_unbalance(
- 	drop_leaf = drop_blk->bp->b_addr;
- 	save_leaf = save_blk->bp->b_addr;
+ 	/* Precalc some constants */
+ 	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
+-	qinf->qi_dqperchunk = xfs_qm_calc_dquots_per_chunk(mp,
++	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(mp,
+ 							qinf->qi_dqchunklen);
  
--	xfs_dir3_leaf_hdr_from_disk(&savehdr, save_leaf);
--	xfs_dir3_leaf_hdr_from_disk(&drophdr, drop_leaf);
--	sents = args->dp->d_ops->leaf_ents_p(save_leaf);
--	dents = args->dp->d_ops->leaf_ents_p(drop_leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&savehdr, save_leaf);
-+	dp->d_ops->leaf_hdr_from_disk(&drophdr, drop_leaf);
-+	sents = dp->d_ops->leaf_ents_p(save_leaf);
-+	dents = dp->d_ops->leaf_ents_p(drop_leaf);
- 
- 	/*
- 	 * If there are any stale leaf entries, take this opportunity
-@@ -1603,8 +1557,8 @@ xfs_dir2_leafn_unbalance(
- 	save_blk->hashval = be32_to_cpu(sents[savehdr.count - 1].hashval);
- 
- 	/* log the changes made when moving the entries */
--	xfs_dir3_leaf_hdr_to_disk(save_leaf, &savehdr);
--	xfs_dir3_leaf_hdr_to_disk(drop_leaf, &drophdr);
-+	dp->d_ops->leaf_hdr_to_disk(save_leaf, &savehdr);
-+	dp->d_ops->leaf_hdr_to_disk(drop_leaf, &drophdr);
- 	xfs_dir3_leaf_log_header(args->trans, dp, save_blk->bp);
- 	xfs_dir3_leaf_log_header(args->trans, dp, drop_blk->bp);
- 
-@@ -1735,7 +1689,7 @@ xfs_dir2_node_addname_int(
- 		free = fbp->b_addr;
- 		findex = fblk->index;
- 		bests = xfs_dir3_free_bests_p(mp, free);
--		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 
+ 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+@@ -1093,10 +1079,10 @@ xfs_qm_reset_dqcounts(
  		/*
- 		 * This means the free entry showed that the data block had
-@@ -1828,7 +1782,7 @@ xfs_dir2_node_addname_int(
- 		 * there, so we have to do it here to avoid warnings. Blech.
+ 		 * Do a sanity check, and if needed, repair the dqblk. Don't
+ 		 * output any warnings because it's perfectly possible to
+-		 * find uninitialised dquot blks. See comment in xfs_qm_dqcheck.
++		 * find uninitialised dquot blks. See comment in xfs_dqcheck.
  		 */
- 		bests = xfs_dir3_free_bests_p(mp, free);
--		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 		if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
- 		    be16_to_cpu(bests[findex]) >= length)
- 			dbno = freehdr.firstdb + findex;
-@@ -1927,7 +1881,7 @@ xfs_dir2_node_addname_int(
- 				return error;
- 			free = fbp->b_addr;
- 			bests = xfs_dir3_free_bests_p(mp, free);
--			xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+			dp->d_ops->free_hdr_from_disk(&freehdr, free);
+-		(void) xfs_qm_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
+-				      "xfs_quotacheck");
++		xfs_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
++			    "xfs_quotacheck");
+ 		ddq->d_bcount = 0;
+ 		ddq->d_icount = 0;
+ 		ddq->d_rtbcount = 0;
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2b602df..a788b66 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -103,8 +103,6 @@ xfs_dq_to_quota_inode(struct xfs_dquot *dqp)
+ 	return NULL;
+ }
  
- 			/*
- 			 * Remember the first slot as our empty slot.
-@@ -1937,7 +1891,7 @@ xfs_dir2_node_addname_int(
- 		} else {
- 			free = fbp->b_addr;
- 			bests = xfs_dir3_free_bests_p(mp, free);
--			xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+			dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 		}
+-extern int	xfs_qm_calc_dquots_per_chunk(struct xfs_mount *mp,
+-					     unsigned int nbblks);
+ extern void	xfs_trans_mod_dquot(struct xfs_trans *,
+ 					struct xfs_dquot *, uint, long);
+ extern int	xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 84661d4..5376dd4 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -150,8 +150,6 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
+ 	xfs_trans_reserve_quota_bydquots(tp, mp, ud, gd, pd, nb, ni, \
+ 				f | XFS_QMOPT_RES_REGBLKS)
  
- 		/*
-@@ -1962,7 +1916,7 @@ xfs_dir2_node_addname_int(
- 		 */
- 		if (bests[findex] == cpu_to_be16(NULLDATAOFF)) {
- 			freehdr.nused++;
--			xfs_dir3_free_hdr_to_disk(fbp->b_addr, &freehdr);
-+			dp->d_ops->free_hdr_to_disk(fbp->b_addr, &freehdr);
- 			xfs_dir2_free_log_header(tp, fbp);
- 		}
- 		/*
-@@ -2294,7 +2248,7 @@ xfs_dir2_node_trim_free(
- 	if (!bp)
- 		return 0;
- 	free = bp->b_addr;
--	xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+	dp->d_ops->free_hdr_from_disk(&freehdr, free);
+-extern int xfs_qm_dqcheck(struct xfs_mount *, xfs_disk_dquot_t *,
+-				xfs_dqid_t, uint, uint, char *);
+ extern int xfs_mount_reset_sbqflags(struct xfs_mount *);
  
- 	/*
- 	 * If there are used entries, there's nothing to do.
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 3e4b5ba..8b9d228 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -94,10 +94,6 @@ xfs_dir3_leaf_find_entry(struct xfs_dir3_icleaf_hdr *leafhdr,
- 		int lowstale, int highstale, int *lfloglow, int *lfloghigh);
- extern int xfs_dir2_node_to_leaf(struct xfs_da_state *state);
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/fs/xfs/xfs_quota_defs.h b/fs/xfs/xfs_quota_defs.h
+index e6b0d6e..b3b2b10 100644
+--- a/fs/xfs/xfs_quota_defs.h
++++ b/fs/xfs/xfs_quota_defs.h
+@@ -154,4 +154,8 @@ typedef __uint16_t	xfs_qwarncnt_t;
+ 		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
  
--extern void xfs_dir3_leaf_hdr_from_disk(struct xfs_dir3_icleaf_hdr *to,
--		struct xfs_dir2_leaf *from);
--extern void xfs_dir3_leaf_hdr_to_disk(struct xfs_dir2_leaf *to,
--		struct xfs_dir3_icleaf_hdr *from);
- extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
- 		struct xfs_dir3_icleaf_hdr *hdr, struct xfs_dir2_leaf *leaf);
- 
++extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
++		       xfs_dqid_t id, uint type, uint flags, char *str);
++extern int xfs_calc_dquots_per_chunk(struct xfs_mount *mp, unsigned int nbblks);
++
+ #endif	/* __XFS_QUOTA_H__ */
 -- 
 1.8.4.rc3
 
