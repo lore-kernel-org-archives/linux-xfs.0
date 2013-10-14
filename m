@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 950797F37
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 15:17:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8340F304039
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 13:17:02 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id AED487F37
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 15:22:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C553304062
+	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 13:22:40 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vDi5yGREq3pm8Wsi for <xfs@oss.sgi.com>;
-	Mon, 14 Oct 2013 13:17:01 -0700 (PDT)
-Date: Tue, 15 Oct 2013 07:16:59 +1100
+	IW5oG2ECMHwf7DaQ for <xfs@oss.sgi.com>;
+	Mon, 14 Oct 2013 13:22:38 -0700 (PDT)
+Date: Tue, 15 Oct 2013 07:22:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libxfs: stop caching inode structures
-Message-ID: <20131014201659.GN4446@dastard>
-References: <20131009130241.GA8754@infradead.org>
+Subject: Re: [PATCH] xfs: prevent deadlock trying to cover an active log
+Message-ID: <20131014202234.GO4446@dastard>
+References: <1381278703-23439-1-git-send-email-david@fromorbit.com>
+	<52577337.2090901@sandeen.net> <20131014200422.GA1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131009130241.GA8754@infradead.org>
+In-Reply-To: <20131014200422.GA1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +30,246 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Oct 09, 2013 at 06:02:41AM -0700, Christoph Hellwig wrote:
-> Currently libxfs has a cache for xfs_inode structures.  Unlike in kernelspace
-> where the inode cache, and the associated page cache for file data is used
-> for all filesystem operations the libxfs inode cache is only used in few
-> places:
+On Mon, Oct 14, 2013 at 03:04:22PM -0500, Ben Myers wrote:
+> Hey Fellas,
+> > > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> > > index 136654b..de24ffb 100644
+> > > --- a/fs/xfs/xfs_log_priv.h
+> > > +++ b/fs/xfs/xfs_log_priv.h
+> > > @@ -514,12 +514,10 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
+> > >  /*
+> > >   * Committed Item List interfaces
+> > >   */
+> > > -int
+> > > -xlog_cil_init(struct xlog *log);
+> > > -void
+> > > -xlog_cil_init_post_recovery(struct xlog *log);
+> > > -void
+> > > -xlog_cil_destroy(struct xlog *log);
+> > > +int	xlog_cil_init(struct xlog *log);
+> > > +void	xlog_cil_init_post_recovery(struct xlog *log);
+> > > +void	xlog_cil_destroy(struct xlog *log);
+> > > +bool	xlog_cil_empty(struct xlog *log)
 > 
->  - the libxfs init code reads the root and realtime inodes when called from
->    xfs_db using a special flag, but these inode structure are never referenced
->    again
->  - mkfs uses namespace and bmap routines that take the xfs_inode structure
->    to create the root and realtime inodes, as well as any additional files
->    specified in the proto file
->  - the xfs_db attr code uses xfs_inode-based attr routines in the attrset
->    and attrget commands
->  - phase6 of xfs_repair uses xfs_inode-based routines for rebuilding
->    directories and moving files to the lost+found directory.
->  - phase7 of xfs_repair uses struct xfs_inode to modify the nlink count
->    of inodes.
-> 
-> So except in repair we never ever reuse a cached inode, and even in repair
-> the logical inode caching doesn't help:
-> 
->  - in phase 6a we iterate over each inode in the incore inode tree,
->    and if it's a directory check/rebuild it
->  - phase6b then updates the "." and ".." entries for directories
->    that need, which means we require the backing buffers.
->  - phase6c moves disconnected inodes to lost_found, which again needs
->    the backing buffer to actually do anything.
->  - phase7 then only touches inodes for which we need to reset i_nlink,
->    which always involves reading, modifying and writing the physical
->    inode.
->    which always involves modifying the . and .. entries.
-> 
-> Given these facts stop caching the inodes to reduce memory usage
-> especially in xfs_repair, where this makes a different for large inode
-> count inodes.  On the upper end this allows repair to complete for
-> filesystem / amount of memory combinations that previously wouldn't.
+> Huh.  Looks like we're short a semicolon here.  I can add one, unless you
+> prefer to repost?
 
-This all sounds good and the code looks fine, but there's one
-lingering question I have - what's the impact on performance for
-repair? Does it slow down phase 6/7 at all?
+\o/
 
-> With this we probably could increase the memory available to the buffer
-> cache in xfs_repair, but trying to do so I got a bit lost - the current
-> formula seems to magic to me to make any sense, and simply doubling the
-> buffer cache size causes us to run out of memory given that the data cached
-> in the buffer cache (typically lots of 8k inode buffers and few 4k other
-> metadata buffers) are much bigger than the inodes cached in the inode
-> cache.  We probably need a sizing scheme that takes the actual amount
-> of memory allocated to the buffer cache into account to solve this better.
+Someone finally noticed I sent a broken patch.
 
-IIRC, the size of the buffer cache is currently set at 75% of RAM
-so doubling it would cause OOM issues regardless of the presence of
-the inode cache....
+I forgot to refresh the commit before I sent it, so this was fixed
+before I even posted it. :/
+
+Current version of the patch is below.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
+
+xfs: prevent deadlock trying to cover an active log
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Recent analysis of a deadlocked XFS filesystem from a kernel
+crash dump indicated that the filesystem was stuck waiting for log
+space. The short story of the hang on the RHEL6 kernel is this:
+
+	- the tail of the log is pinned by an inode
+	- the inode has been pushed by the xfsaild
+	- the inode has been flushed to it's backing buffer and is
+	  currently flush locked and hence waiting for backing
+	  buffer IO to complete and remove it from the AIL
+	- the backing buffer is marked for write - it is on the
+	  delayed write queue
+	- the inode buffer has been modified directly and logged
+	  recently due to unlinked inode list modification
+	- the backing buffer is pinned in memory as it is in the
+	  active CIL context.
+	- the xfsbufd won't start buffer writeback because it is
+	  pinned
+	- xfssyncd won't force the log because it sees the log as
+	  needing to be covered and hence wants to issue a dummy
+	  transaction to move the log covering state machine along.
+
+Hence there is no trigger to force the CIL to the log and hence
+unpin the inode buffer and therefore complete the inode IO, remove
+it from the AIL and hence move the tail of the log along, allowing
+transactions to start again.
+
+Mainline kernels also have the same deadlock, though the signature
+is slightly different - the inode buffer never reaches the delayed
+write lists because xfs_buf_item_push() sees that it is pinned and
+hence never adds it to the delayed write list that the xfsaild
+flushes.
+
+There are two possible solutions here. The first is to simply force
+the log before trying to cover the log and so ensure that the CIL is
+emptied before we try to reserve space for the dummy transaction in
+the xfs_log_worker(). While this might work most of the time, it is
+still racy and is no guarantee that we don't get stuck in
+xfs_trans_reserve waiting for log space to come free. Hence it's not
+the best way to solve the problem.
+
+The second solution is to modify xfs_log_need_covered() to be aware
+of the CIL. We only should be attempting to cover the log if there
+is no current activity in the log - covering the log is the process
+of ensuring that the head and tail in the log on disk are identical
+(i.e. the log is clean and at idle). Hence, by definition, if there
+are items in the CIL then the log is not at idle and so we don't
+need to attempt to cover it.
+
+When we don't need to cover the log because it is active or idle, we
+issue a log force from xfs_log_worker() - if the log is idle, then
+this does nothing.  However, if the log is active due to there being
+items in the CIL, it will force the items in the CIL to the log and
+unpin them.
+
+In the case of the above deadlock scenario, instead of
+xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
+cover the log, it will instead force the log, thereby unpinning the
+inode buffer, allowing IO to be issued and complete and hence
+removing the inode that was pinning the tail of the log from the
+AIL. At that point, everything will start moving along again. i.e.
+the xfs_log_worker turns back into a watchdog that can alleviate
+deadlocks based around pinned items that prevent the tail of the log
+from being moved...
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c      | 48 +++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_log_cil.c  | 14 ++++++++++++++
+ fs/xfs/xfs_log_priv.h | 10 ++++------
+ 3 files changed, 47 insertions(+), 25 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a2dea108..613ed94 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1000,27 +1000,34 @@ xfs_log_space_wake(
+ }
+ 
+ /*
+- * Determine if we have a transaction that has gone to disk
+- * that needs to be covered. To begin the transition to the idle state
+- * firstly the log needs to be idle (no AIL and nothing in the iclogs).
+- * If we are then in a state where covering is needed, the caller is informed
+- * that dummy transactions are required to move the log into the idle state.
++ * Determine if we have a transaction that has gone to disk that needs to be
++ * covered. To begin the transition to the idle state firstly the log needs to
++ * be idle. That means the CIL, the AIL and the iclogs needs to be empty before
++ * we start attempting to cover the log.
+  *
+- * Because this is called as part of the sync process, we should also indicate
+- * that dummy transactions should be issued in anything but the covered or
+- * idle states. This ensures that the log tail is accurately reflected in
+- * the log at the end of the sync, hence if a crash occurrs avoids replay
+- * of transactions where the metadata is already on disk.
++ * Only if we are then in a state where covering is needed, the caller is
++ * informed that dummy transactions are required to move the log into the idle
++ * state.
++ *
++ * If there are any items in the AIl or CIL, then we do not want to attempt to
++ * cover the log as we may be in a situation where there isn't log space
++ * available to run a dummy transaction and this can lead to deadlocks when the
++ * tail of the log is pinned by an item that is modified in the CIL.  Hence
++ * there's no point in running a dummy transaction at this point because we
++ * can't start trying to idle the log until both the CIL and AIL are empty.
+  */
+ int
+ xfs_log_need_covered(xfs_mount_t *mp)
+ {
+-	int		needed = 0;
+ 	struct xlog	*log = mp->m_log;
++	int		needed = 0;
+ 
+ 	if (!xfs_fs_writable(mp))
+ 		return 0;
+ 
++	if (!xlog_cil_empty(log))
++		return 0;
++
+ 	spin_lock(&log->l_icloglock);
+ 	switch (log->l_covered_state) {
+ 	case XLOG_STATE_COVER_DONE:
+@@ -1029,14 +1036,17 @@ xfs_log_need_covered(xfs_mount_t *mp)
+ 		break;
+ 	case XLOG_STATE_COVER_NEED:
+ 	case XLOG_STATE_COVER_NEED2:
+-		if (!xfs_ail_min_lsn(log->l_ailp) &&
+-		    xlog_iclogs_empty(log)) {
+-			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
+-				log->l_covered_state = XLOG_STATE_COVER_DONE;
+-			else
+-				log->l_covered_state = XLOG_STATE_COVER_DONE2;
+-		}
+-		/* FALLTHRU */
++		if (xfs_ail_min_lsn(log->l_ailp))
++			break;
++		if (!xlog_iclogs_empty(log))
++			break;
++
++		needed = 1;
++		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
++			log->l_covered_state = XLOG_STATE_COVER_DONE;
++		else
++			log->l_covered_state = XLOG_STATE_COVER_DONE2;
++		break;
+ 	default:
+ 		needed = 1;
+ 		break;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index cfe9797..da8524e77 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -711,6 +711,20 @@ xlog_cil_push_foreground(
+ 	xlog_cil_push(log);
+ }
+ 
++bool
++xlog_cil_empty(
++	struct xlog	*log)
++{
++	struct xfs_cil	*cil = log->l_cilp;
++	bool		empty = false;
++
++	spin_lock(&cil->xc_push_lock);
++	if (list_empty(&cil->xc_cil))
++		empty = true;
++	spin_unlock(&cil->xc_push_lock);
++	return empty;
++}
++
+ /*
+  * Commit a transaction with the given vector to the Committed Item List.
+  *
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 136654b..f80cff2 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -514,12 +514,10 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
+ /*
+  * Committed Item List interfaces
+  */
+-int
+-xlog_cil_init(struct xlog *log);
+-void
+-xlog_cil_init_post_recovery(struct xlog *log);
+-void
+-xlog_cil_destroy(struct xlog *log);
++int	xlog_cil_init(struct xlog *log);
++void	xlog_cil_init_post_recovery(struct xlog *log);
++void	xlog_cil_destroy(struct xlog *log);
++bool	xlog_cil_empty(struct xlog *log);
+ 
+ /*
+  * CIL force routines
 
 _______________________________________________
 xfs mailing list
