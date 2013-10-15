@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 44C9A7F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:27:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 13ADF8F8054
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:27:06 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id 6oWAZiakfxLm5w5J (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 14:27:05 -0700 (PDT)
-Subject: Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.725971.B725971.138187229415718@bugs.debian.org>
-Date: Tue, 15 Oct 2013 22:24:48 +0100
-From: Colin Watson <cjwatson@ubuntu.com>
-Message-ID: <20131015212448.GM32337@riva.ucam.org>
-References: <20131010133811.GK32337@riva.ucam.org>
-	<20131015194211.GA32095@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5CC8C7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:31:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C5F3304032
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:31:12 -0700 (PDT)
+Date: Tue, 15 Oct 2013 14:31:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: projid32bit=1 default in xfsprogs-3.2.0
+Message-ID: <20131015213110.GA5895@infradead.org>
+References: <525C1C15.7020204@sandeen.net> <20131014211659.GI5663@dastard>
+	<20131014212347.GB1935@sgi.com> <525C6108.6010108@sandeen.net>
+	<20131015194609.GC32095@infradead.org>
+	<20131015204342.GA24997@infradead.org>
+	<20131015212214.GC1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131015194211.GA32095@infradead.org>
-Reply-To: Colin Watson <cjwatson@ubuntu.com>, 725971@bugs.debian.org
+In-Reply-To: <20131015212214.GC1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,31 +29,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: 725971@bugs.debian.org
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 15, 2013 at 12:42:11PM -0700, Christoph Hellwig wrote:
-> While updating it in the debhelp is nice for the Debian package I'd also
-> really like to see a patch updating the files in the repository.  Colin,
-> would you mind sending that patch, too?
+On Tue, Oct 15, 2013 at 04:22:14PM -0500, Ben Myers wrote:
+> The tags are out there:
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=tags
 
-I looked, but there's nothing to send; the xfsprogs repository doesn't
-contain those files.  They're updated by the configure target in
-Makefile, which is run as part of ./release.sh via "make dist".  (Good;
-this should be as automatic as possible.)
+I managed to somehow miss them.  Sorry!
 
-IOW, any new upstream release will contain updated files as long as the
-developer who built the release has current libtool etc. installed.  But
-of course this should be fixed to auto-update at build time in the
-Debian packaging anyway, since we want to be able to port to new
-architectures without having to upload lots of new source packages or
-take lots of new upstream releases at the same time; it makes life so
-much easier.
+> That's an interesting idea.  We hadn't discussed a 3.1.12 release.  No
+> particular objection to doing that, it's just that we didn't branch for the
+> v3.0.5->v3.1.0 set of releases.  Maybe it is better if we all focus on 3.2.0.
 
-Cheers,
+With git you can easily branch from a past commit, e.g.:
 
--- 
-Colin Watson                                       [cjwatson@ubuntu.com]
+hch@brick:~/work/xfsprogs$ git checkout -b release-3.1 v3.1.11
+Switched to a new branch 'release-3.1'
 
 _______________________________________________
 xfs mailing list
