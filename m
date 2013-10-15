@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 14D437F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:47:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BF8DE304039
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:47:38 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	t7E1io9ntLpf0grp for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 14:47:37 -0700 (PDT)
-Date: Wed, 16 Oct 2013 08:47:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: fold xfs_change_file_space into xfs_ioc_space
-Message-ID: <20131015214733.GW4446@dastard>
-References: <20131012075503.370510641@bombadil.infradead.org>
-	<20131012075640.637625757@bombadil.infradead.org>
-	<20131014050807.GJ4446@dastard>
-	<20131015153143.GA1612@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7F59B7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:49:22 -0500 (CDT)
+Date: Tue, 15 Oct 2013 16:49:10 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: projid32bit=1 default in xfsprogs-3.2.0
+Message-ID: <20131015214910.GX10553@sgi.com>
+References: <525C1C15.7020204@sandeen.net> <20131014211659.GI5663@dastard>
+	<20131014212347.GB1935@sgi.com> <525C6108.6010108@sandeen.net>
+	<20131015194609.GC32095@infradead.org>
+	<20131015204342.GA24997@infradead.org>
+	<20131015212214.GC1935@sgi.com>
+	<20131015213110.GA5895@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131015153143.GA1612@infradead.org>
+In-Reply-To: <20131015213110.GA5895@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,46 +28,34 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 15, 2013 at 08:31:43AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 14, 2013 at 04:08:07PM +1100, Dave Chinner wrote:
-> > One question, though:
-> > 
-> > > +	case XFS_IOC_ALLOCSP:
-> > > +	case XFS_IOC_ALLOCSP64:
-> > > +	case XFS_IOC_FREESP:
-> > > +	case XFS_IOC_FREESP64:
-> > 
-> > Should we, at this point, mark these ioctls as deprecated and
-> > schedule then for removal given that we've recommended against using
-> > them for the past 10 years and we have fallocate() now?
+Hey,
+
+On Tue, Oct 15, 2013 at 02:31:10PM -0700, Christoph Hellwig wrote:
+> On Tue, Oct 15, 2013 at 04:22:14PM -0500, Ben Myers wrote:
+> > The tags are out there:
+> > http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=tags
 > 
-> I don't see any reason to remove them given that it's only about 15
-> extra lines of code.  But if you care enough to get rid of them we
-> probably need multiple years of actuall warnings emmited when used
-> before actually removing them.  I would be very surprised if there
-> aren't same users that wouldn't argue very vocally against their
-> removal.
+> I managed to somehow miss them.  Sorry!
 
-I'll put a significant quantity of beer on the table if anyone other
-than xfstests is actually using these ioctls. In all my years of
-working with XFS, I've never seen a single user of them, even on
-Irix.
+np
+ 
+> > That's an interesting idea.  We hadn't discussed a 3.1.12 release.  No
+> > particular objection to doing that, it's just that we didn't branch for the
+> > v3.0.5->v3.1.0 set of releases.  Maybe it is better if we all focus on 3.2.0.
+> 
+> With git you can easily branch from a past commit, e.g.:
+> 
+> hch@brick:~/work/xfsprogs$ git checkout -b release-3.1 v3.1.11
+> Switched to a new branch 'release-3.1'
 
-The one person I know who was considering using XFS_IOC_ALLOCSP
-convinced me (quite easily) to implement XFS_IOC_ZERO_RANGE for them
-because writing all those zeros to re-initialise pre-allocated VM
-images was going to be prohibitively expensive...
+Yep.  If folks want a 3.1.12 we should certainly kick the idea around a bit.
+I'm just guessing that most would prefer to focus on a 3.2.0 in the near term.
+Maybe I'm mistaken about that though.  ;)
 
-Anyway, it was just a thought.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
