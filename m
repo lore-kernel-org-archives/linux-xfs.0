@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D1D77F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:22:15 -0500 (CDT)
-Date: Tue, 15 Oct 2013 16:22:14 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: projid32bit=1 default in xfsprogs-3.2.0
-Message-ID: <20131015212214.GC1935@sgi.com>
-References: <525C1C15.7020204@sandeen.net> <20131014211659.GI5663@dastard>
-	<20131014212347.GB1935@sgi.com> <525C6108.6010108@sandeen.net>
-	<20131015194609.GC32095@infradead.org>
-	<20131015204342.GA24997@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 44C9A7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:27:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 13ADF8F8054
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:27:06 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id 6oWAZiakfxLm5w5J (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Oct 2013 14:27:05 -0700 (PDT)
+Subject: Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.725971.B725971.138187229415718@bugs.debian.org>
+Date: Tue, 15 Oct 2013 22:24:48 +0100
+From: Colin Watson <cjwatson@ubuntu.com>
+Message-ID: <20131015212448.GM32337@riva.ucam.org>
+References: <20131010133811.GK32337@riva.ucam.org>
+	<20131015194211.GA32095@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131015204342.GA24997@infradead.org>
+In-Reply-To: <20131015194211.GA32095@infradead.org>
+Reply-To: Colin Watson <cjwatson@ubuntu.com>, 725971@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,70 +34,30 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+Cc: 725971@bugs.debian.org
 
-Hey Christoph,
+On Tue, Oct 15, 2013 at 12:42:11PM -0700, Christoph Hellwig wrote:
+> While updating it in the debhelp is nice for the Debian package I'd also
+> really like to see a patch updating the files in the repository.  Colin,
+> would you mind sending that patch, too?
 
-On Tue, Oct 15, 2013 at 01:43:42PM -0700, Christoph Hellwig wrote:
-> On Tue, Oct 15, 2013 at 12:46:09PM -0700, Christoph Hellwig wrote:
-> > On Mon, Oct 14, 2013 at 04:24:24PM -0500, Eric Sandeen wrote:
-> > > Ok.  Default it is!   Thanks guys, just wanted to make sure we were
-> > > all in agreement there.
-> > 
-> > Can we make sure this gets documented in doc/CHANGES?
-> > 
-> > I'm also pretty sure the entry for 3.2.0-alpha1 is severly lacking,
-> > can we make sure the one for the real release is as detailed as the ones
-> > for the previous releases?
-> 
-> Btw, I also noticed releases after 3.1.9 aren't tagged in git, any
-> chance we could fix that?  The release.sh script was supposed to take
-> care of this automatically.
+I looked, but there's nothing to send; the xfsprogs repository doesn't
+contain those files.  They're updated by the configure target in
+Makefile, which is run as part of ./release.sh via "make dist".  (Good;
+this should be as automatic as possible.)
 
-The tags are out there:
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=tags
+IOW, any new upstream release will contain updated files as long as the
+developer who built the release has current libtool etc. installed.  But
+of course this should be fixed to auto-update at build time in the
+Debian packaging anyway, since we want to be able to port to new
+architectures without having to upload lots of new source packages or
+take lots of new upstream releases at the same time; it makes life so
+much easier.
 
-The release script doesn't push tags, just reminds you to do so.  ;)
+Cheers,
 
-IMO it's probably a good idea not automate pushing tags, so you have
-opportunity to hit the breaks and double check your work before posting a tag
-publicly.
-
-> Also we have tons of fixes in the xfsprogs repo that really should go
-> out into a new 3.1.12 release:
-> 
->     xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
->     xfs_db: add header to freesp -d output
->     xfs_repair: zero out unused parts of superblocks
->     xfs_repair: add prototype for alloc_ex_data()
->     xfsprogs: fix Out-of-bounds access in repair/dinode.c
->     xfsprogs: fix inode crash in xfs_repair
->     xfsprogs: fix unint var in repair phase6
->     xfsprogs: fix agcnts leak in xfs_repair's scan_ags
->     xfsprogs:free bp in xlog_find_tail() error path
->     xfsprogs: free bp in xlog_find_zeroed() error path
->     xfsprogs: fix buffer leak in xlog_print_find_oldest
->     xfsprogs: avoid double-free in xfs_attr_node_addname
->     xfsprogs/io: add readdir command
->     mkfs.xfs: fix protofile name create block reservation
->     logprint: fix wrapped log dump issue
->     xfs_metadump: manpage fix regarding frozen fs
->     mkfs: add missing noalign suboption information
->     xfsprogs: fix make deb
->     xfsprogs: define umode_t for build if not defined already
->     xfs_logprint: fix continuation transactions
->     xfs_fsr: file reads should be O_DIRECT
->     xfs_logprint: print all AGI unlinked buckets
-> 
-> + a few more pending on the list.  I'd volunteer to prepare and test
-> thos backports once we get the remaining patches from the list in.
-
-That's an interesting idea.  We hadn't discussed a 3.1.12 release.  No
-particular objection to doing that, it's just that we didn't branch for the
-v3.0.5->v3.1.0 set of releases.  Maybe it is better if we all focus on 3.2.0.
-
-Regards,
-	Ben
+-- 
+Colin Watson                                       [cjwatson@ubuntu.com]
 
 _______________________________________________
 xfs mailing list
