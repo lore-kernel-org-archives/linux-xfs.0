@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1D2D77F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:33:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9A0917F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:36:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C8E288F8074
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:33:08 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id p4yMG3bAqtgrjPPq (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 14:33:06 -0700 (PDT)
-Subject: Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.725971.B725971.138187257918219@bugs.debian.org>
-Date: Tue, 15 Oct 2013 14:29:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Message-ID: <20131015212930.GA5874@infradead.org>
-References: <20131010133811.GK32337@riva.ucam.org>
-	<20131015194211.GA32095@infradead.org>
-	<20131015212448.GM32337@riva.ucam.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 437AD304043
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:36:26 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	n0GqCS2FUHhiff8t for <xfs@oss.sgi.com>;
+	Tue, 15 Oct 2013 14:36:23 -0700 (PDT)
+Date: Wed, 16 Oct 2013 08:36:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: fs/attr.c:notify_change locking warning.
+Message-ID: <20131015213618.GU4446@dastard>
+References: <20131005005210.GA25773@redhat.com> <20131005031918.GL4446@dastard>
+	<20131015201905.GA7509@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131015212448.GM32337@riva.ucam.org>
-Reply-To: Christoph Hellwig <hch@infradead.org>, 725971@bugs.debian.org
+In-Reply-To: <20131015201905.GA7509@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +30,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Colin Watson <cjwatson@ubuntu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, 725971@bugs.debian.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Tue, Oct 15, 2013 at 10:24:48PM +0100, Colin Watson wrote:
-> I looked, but there's nothing to send; the xfsprogs repository doesn't
-> contain those files.  They're updated by the configure target in
-> Makefile, which is run as part of ./release.sh via "make dist".  (Good;
-> this should be as automatic as possible.)
+On Tue, Oct 15, 2013 at 01:19:05PM -0700, Christoph Hellwig wrote:
+> On Sat, Oct 05, 2013 at 01:19:18PM +1000, Dave Chinner wrote:
+> > Yup, we don't hold the i_mutex *at all* through the fast path for
+> > direct IO writes. Having to grab the i_mutex on every IO just for
+> > the extremely unlikely case we need to remove a suid bit on the file
+> > would add a significant serialisation point into the direct Io model
+> > that XFS uses, and is the difference between 50,000 and 2+ million
+> > direct IO IOPS to a single file.
+> > 
+> > I'm unwilling to sacrifice the concurrency of direct IO writes just
+> > to shut up ths warning, especially as the actual modifications that
+> > are made to remove SUID bits are correctly serialised within XFS
+> > once notify_change() calls ->setattr(). If it really matters, I'll
+> > just open code file_remove_suid() into XFS like ocfs2 does just so
+> > we don't get that warning being emitted by trinity.
+> 
+> But the i_lock doesn't synchronize against the VFS modifying various
+> struct inode fields.
 
-Oh, forgot about that.
+Sure, but file_remove_suid() doesn't actually modify any VFS inode
+structures until we process the flags and the modifications within
+->setattr, which in XFS are all done under the XFS_ILOCK_EXCL via
+xfs_setattr_mode(). i.e. both the VFS and XFS inodes S*ID bits are
+removed only under XFS_ILOCK_EXCL....
 
-> IOW, any new upstream release will contain updated files as long as the
-> developer who built the release has current libtool etc. installed.  But
-> of course this should be fixed to auto-update at build time in the
-> Debian packaging anyway, since we want to be able to port to new
-> architectures without having to upload lots of new source packages or
-> take lots of new upstream releases at the same time; it makes life so
-> much easier.
+Hence I see no point in adding extra serialisation via the i_mutex
+to this path when we can just do something like:
 
-As said, I don't disagree with your patch at all, I was just asking for
-an additional patch which turned out not to be nessecary.
+	killsuid = should_remove_suid(file->f_path.dentry);
+	if (killsuid) {
+		struct iattr	newattr;
 
-Thanks a lot!
+		newattr.ia_valid = ATTR_FORCE | killsuid;
+		error = xfs_setattr_nonsize(ip, &newattr, 0);
+		if (error)
+			return error;
+	}
+
+and not require the i_mutex at all...
+
+Indeed, this is exactly what do_truncate() does - the check outside
+the i_mutex, then calls notify_change() with the i_mutex held. IOWs,
+the i_mutex does nothing to serialise concurrent attempts to check
+and remove S*ID bits....
+
+> The right fix is to take i_mutex just in case
+> we actually need to remove the suid bit.  The patch below should fix it,
+> although I need to write a testcase that actually exercises it first.
+> 
+> Dave (J.): if you have time to try the patch below please go ahead,
+> if not I'll make sure to write an isolated test ASAP to verify it and
+> will then submit the change.
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 4c749ab..e879f96 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -590,8 +590,22 @@ restart:
+>  	 * If we're writing the file then make sure to clear the setuid and
+>  	 * setgid bits if the process is not being run by root.  This keeps
+>  	 * people from modifying setuid and setgid binaries.
+> +	 *
+> +	 * Note that file_remove_suid must be called with the i_mutex held,
+> +	 * so we have to go through some hoops here to make sure we hold it.
+>  	 */
+> -	return file_remove_suid(file);
+> +	if (!IS_NOSEC(inode) && should_remove_suid(file->f_path.dentry)) {
+> +		if (*iolock == XFS_IOLOCK_SHARED) {
+> +			mutex_lock(&inode->i_mutex);
+> +			error = file_remove_suid(file);
+> +			mutex_unlock(&inode->i_mutex);
+
+Lock inversion - i_mutex is always outside i_iolock. i.e. this will
+deadlock if someone else calls xfs_rw_ilock(XFS_ILOCK_EXCL) at the
+same time because we already hold the i_iolock in shared mode. It's
+the same case that this function already handles for the EOF zeroing
+relocking.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
