@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 959AF7F6F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 15:19:13 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 95C237F77
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 15:26:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B459304039
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 13:19:13 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 7thNA00184gDGN3o (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 13:19:12 -0700 (PDT)
-Date: Tue, 15 Oct 2013 13:19:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: fs/attr.c:notify_change locking warning.
-Message-ID: <20131015201905.GA7509@infradead.org>
-References: <20131005005210.GA25773@redhat.com> <20131005031918.GL4446@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F769304032
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 13:26:47 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	7GuZt6fDr1kpeHK9 for <xfs@oss.sgi.com>;
+	Tue, 15 Oct 2013 13:26:45 -0700 (PDT)
+Date: Wed, 16 Oct 2013 07:26:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs corrupted
+Message-ID: <20131015202640.GR4446@dastard>
+References: <1381826507281-35009.post@n7.nabble.com>
+	<20131015203434.2f336fd8@galadriel.home>
+	<525D8D67.2090301@keptprivate.com>
+	<20131015213447.40d05ea0@galadriel.home>
+	<525D9E3B.5040507@keptprivate.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131005031918.GL4446@dastard>
+In-Reply-To: <525D9E3B.5040507@keptprivate.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,61 +33,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+To: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, Oct 05, 2013 at 01:19:18PM +1000, Dave Chinner wrote:
-> Yup, we don't hold the i_mutex *at all* through the fast path for
-> direct IO writes. Having to grab the i_mutex on every IO just for
-> the extremely unlikely case we need to remove a suid bit on the file
-> would add a significant serialisation point into the direct Io model
-> that XFS uses, and is the difference between 50,000 and 2+ million
-> direct IO IOPS to a single file.
+On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
+> Since i am using centos 5.9, the version of the xfsprogs seems to be
+> old, so i cloned the new one from sgi.
 > 
-> I'm unwilling to sacrifice the concurrency of direct IO writes just
-> to shut up ths warning, especially as the actual modifications that
-> are made to remove SUID bits are correctly serialised within XFS
-> once notify_change() calls ->setattr(). If it really matters, I'll
-> just open code file_remove_suid() into XFS like ocfs2 does just so
-> we don't get that warning being emitted by trinity.
+> I have a machine with 4 gb ram, and 4 gb swap, and it's all been
+> eaten up by xfs_repair, and slowed down to a crawl.
+> 
+> the sdc partition is the one being checked. i am all out of memory
+> now. 4 gb phys and 4 gb swap all gone.
+> 
+> http://pastebin.ca/2467064
+> 
+> posted to pastebin for better formatting.
+> 
+> i was using:
+> 
+> [root@kp4 ~]# xfs_repair -o bhash=16384 -o ihash=16384 -o ag_stride=16 \
+> > /dev/sdc >& /tmp/repair.log
 
-But the i_lock doesn't synchronize against the VFS modifying various
-struct inode fields.  The right fix is to take i_mutex just in case
-we actually need to remove the suid bit.  The patch below should fix it,
-although I need to write a testcase that actually exercises it first.
+You don't have enough RAM to run threaded prefetching and parallel
+AG processing. You'd do better to turn prefetching off entirely with
+"-P" if you are having OOM problems.
 
-Dave (J.): if you have time to try the patch below please go ahead,
-if not I'll make sure to write an isolated test ASAP to verify it and
-will then submit the change.
+> but now i am trying the -m option to see if the memory can be
+> limited, so the server doesn't freeze.
+> 
+> [root@kp4 ~]# xfs_repair -m 3072 -o ag_stride=16 /dev/sdc >& /tmp/repair.log
+> 
+> nothing in dmesg either.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4c749ab..e879f96 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -590,8 +590,22 @@ restart:
- 	 * If we're writing the file then make sure to clear the setuid and
- 	 * setgid bits if the process is not being run by root.  This keeps
- 	 * people from modifying setuid and setgid binaries.
-+	 *
-+	 * Note that file_remove_suid must be called with the i_mutex held,
-+	 * so we have to go through some hoops here to make sure we hold it.
- 	 */
--	return file_remove_suid(file);
-+	if (!IS_NOSEC(inode) && should_remove_suid(file->f_path.dentry)) {
-+		if (*iolock == XFS_IOLOCK_SHARED) {
-+			mutex_lock(&inode->i_mutex);
-+			error = file_remove_suid(file);
-+			mutex_unlock(&inode->i_mutex);
-+		} else {
-+			error = file_remove_suid(file);
-+		}
-+
-+	}
-+
-+	return error;
- }
- 
- /*
+Give it another 10-20GB of swap, and it should be fine. xfs_repair
+usually only thrashes swap when you don't have enough of it and it
+keeps trying to free memory, paging in pages that are in swap to
+free cached objects from them. Most of the memory references that
+repair makes are quite local, so when pages are swapped out they
+generally aren't needed again for a while except when cache reclaim
+kicks in. Hence if you give it enough swap that it can grow without
+bounds, then it should still be quite efficient.
+
+Keep in mind that badly corrupted filesystems require lots more
+memory than clean filesystems to check and repair as there is lots
+more intermediate state that repair needs to hold in memory about
+partially or incompletely referenced objects. Don't be surprised if
+the amount of memory needed to repair a badly broken filesystem is
+10-100x the amount of RAM needed to run xfs_repair on the same clean
+filesystem....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
