@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BEAA17F6F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 15:17:31 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id ED5307F6F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 15:18:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A48D6304039
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 13:17:31 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C5826304032
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 13:18:33 -0700 (PDT)
 Received: from keptprivate.com (keptprivate.com [38.117.1.51]) by cuda.sgi.com
-	with ESMTP id HDLHpFRNgnYRqDWg (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 2yiQlo7PcUUsRo2e (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 13:17:28 -0700 (PDT)
-Message-ID: <525DA2D8.2070208@keptprivate.com>
-Date: Tue, 15 Oct 2013 22:17:28 +0200
+	Tue, 15 Oct 2013 13:18:31 -0700 (PDT)
+Message-ID: <525DA317.8050606@keptprivate.com>
+Date: Tue, 15 Oct 2013 22:18:31 +0200
 From: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
 MIME-Version: 1.0
 Subject: Re: xfs corrupted
@@ -32,21 +32,21 @@ Sender: xfs-bounces@oss.sgi.com
 To: Emmanuel Florac <eflorac@intellique.com>
 Cc: xfs@oss.sgi.com
 
-SG1tIHRoYXQgbmV2ZXIgb2NjdXJlZCB0byBtZS4gSSBqdXN0IHR1cm5lZCB0aGUgc3dhcCBvZmYg
-YW5kIGkgYW0gdHJ5aW5nIAphZ2Fpbi4KCk9uIDE1LzEwLzIwMTMgMjI6MDUsIEVtbWFudWVsIEZs
-b3JhYyB3cm90ZToKPiBMZSBUdWUsIDE1IE9jdCAyMDEzIDIxOjU3OjQ3ICswMjAwIHZvdXMgw6lj
-cml2aWV6Ogo+Cj4+IEkgaGF2ZSBhIG1hY2hpbmUgd2l0aCA0IGdiIHJhbSwgYW5kIDQgZ2Igc3dh
-cCwgYW5kIGl0J3MgYWxsIGJlZW4KPj4gZWF0ZW4gdXAgYnkgeGZzX3JlcGFpciwgYW5kIHNsb3dl
-ZCBkb3duIHRvIGEgY3Jhd2wuCj4+Cj4+IHRoZSBzZGMgcGFydGl0aW9uIGlzIHRoZSBvbmUgYmVp
-bmcgY2hlY2tlZC4gaSBhbSBhbGwgb3V0IG9mIG1lbW9yeQo+PiBub3cuIDQgZ2IgcGh5cyBhbmQg
-NCBnYiBzd2FwIGFsbCBnb25lLgo+Pgo+PiBodHRwOi8vcGFzdGViaW4uY2EvMjQ2NzA2NAo+Pgo+
-PiBwb3N0ZWQgdG8gcGFzdGViaW4gZm9yIGJldHRlciBmb3JtYXR0aW5nLgo+Pgo+PiBpIHdhcyB1
-c2luZzoKPj4KPj4gW3Jvb3RAa3A0IH5dIyB4ZnNfcmVwYWlyIC1vIGJoYXNoPTE2Mzg0IC1vIGlo
-YXNoPTE2Mzg0IC1vCj4+IGFnX3N0cmlkZT0xNiBcCj4+ICAgPiAvZGV2L3NkYyA+JiAvdG1wL3Jl
-cGFpci5sb2cKPj4KPj4gYnV0IG5vdyBpIGFtIHRyeWluZyB0aGUgLW0gb3B0aW9uIHRvIHNlZSBp
-ZiB0aGUgbWVtb3J5IGNhbiBiZQo+PiBsaW1pdGVkLCBzbyB0aGUgc2VydmVyIGRvZXNuJ3QgZnJl
-ZXplLgo+Cj4gT3IgbWF5YmUgeW91IGNvdWxkIHR1cm4gdGhlIHN3YXAgb2ZmIGVudGlyZWx5IGZv
-ciB0aGUgY2hlY2suIEFwcGFyZW50bHkKPiBhbGwgb2YgdGhlIElPcyBhcmUgZ29pbmcgdG8gc2Rh
-LCB3aGljaCBJIHN1cHBvc2UgaG9zdHMgdGhlIHN3YXAuCj4KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+d2VsbCB0aGF0IGRpZCBub3Qgd29yay4gdGhlIG1hY2hpbmUganVzdCBmcmVlemVzLgoKT24gMTUv
+MTAvMjAxMyAyMjowNSwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+IExlIFR1ZSwgMTUgT2N0IDIw
+MTMgMjE6NTc6NDcgKzAyMDAgdm91cyDDqWNyaXZpZXo6Cj4KPj4gSSBoYXZlIGEgbWFjaGluZSB3
+aXRoIDQgZ2IgcmFtLCBhbmQgNCBnYiBzd2FwLCBhbmQgaXQncyBhbGwgYmVlbgo+PiBlYXRlbiB1
+cCBieSB4ZnNfcmVwYWlyLCBhbmQgc2xvd2VkIGRvd24gdG8gYSBjcmF3bC4KPj4KPj4gdGhlIHNk
+YyBwYXJ0aXRpb24gaXMgdGhlIG9uZSBiZWluZyBjaGVja2VkLiBpIGFtIGFsbCBvdXQgb2YgbWVt
+b3J5Cj4+IG5vdy4gNCBnYiBwaHlzIGFuZCA0IGdiIHN3YXAgYWxsIGdvbmUuCj4+Cj4+IGh0dHA6
+Ly9wYXN0ZWJpbi5jYS8yNDY3MDY0Cj4+Cj4+IHBvc3RlZCB0byBwYXN0ZWJpbiBmb3IgYmV0dGVy
+IGZvcm1hdHRpbmcuCj4+Cj4+IGkgd2FzIHVzaW5nOgo+Pgo+PiBbcm9vdEBrcDQgfl0jIHhmc19y
+ZXBhaXIgLW8gYmhhc2g9MTYzODQgLW8gaWhhc2g9MTYzODQgLW8KPj4gYWdfc3RyaWRlPTE2IFwK
+Pj4gICA+IC9kZXYvc2RjID4mIC90bXAvcmVwYWlyLmxvZwo+Pgo+PiBidXQgbm93IGkgYW0gdHJ5
+aW5nIHRoZSAtbSBvcHRpb24gdG8gc2VlIGlmIHRoZSBtZW1vcnkgY2FuIGJlCj4+IGxpbWl0ZWQs
+IHNvIHRoZSBzZXJ2ZXIgZG9lc24ndCBmcmVlemUuCj4KPiBPciBtYXliZSB5b3UgY291bGQgdHVy
+biB0aGUgc3dhcCBvZmYgZW50aXJlbHkgZm9yIHRoZSBjaGVjay4gQXBwYXJlbnRseQo+IGFsbCBv
+ZiB0aGUgSU9zIGFyZSBnb2luZyB0byBzZGEsIHdoaWNoIEkgc3VwcG9zZSBob3N0cyB0aGUgc3dh
+cC4KPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
