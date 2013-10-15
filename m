@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9A0917F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:36:37 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C43B87F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 16:39:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 437AD304043
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:36:26 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 318F1AC008
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:39:40 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	n0GqCS2FUHhiff8t for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 14:36:23 -0700 (PDT)
-Date: Wed, 16 Oct 2013 08:36:18 +1100
+	QEzmH4JlvrnCFpzW for <xfs@oss.sgi.com>;
+	Tue, 15 Oct 2013 14:39:38 -0700 (PDT)
+Date: Wed, 16 Oct 2013 08:39:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fs/attr.c:notify_change locking warning.
-Message-ID: <20131015213618.GU4446@dastard>
-References: <20131005005210.GA25773@redhat.com> <20131005031918.GL4446@dastard>
-	<20131015201905.GA7509@infradead.org>
+Subject: Re: [PATCH v2] xfsprogs: fix resource leak in longform_dir2_rebuild()
+Message-ID: <20131015213936.GV4446@dastard>
+References: <1381560174.3064.4.camel@ThinkPad-T5421>
+	<20131014214601.GJ5663@dastard>
+	<1381805731.3106.5.camel@ThinkPad-T5421>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131015201905.GA7509@infradead.org>
+In-Reply-To: <1381805731.3106.5.camel@ThinkPad-T5421>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,90 +31,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+To: Li Zhong <zhong@linux.vnet.ibm.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
 
-On Tue, Oct 15, 2013 at 01:19:05PM -0700, Christoph Hellwig wrote:
-> On Sat, Oct 05, 2013 at 01:19:18PM +1000, Dave Chinner wrote:
-> > Yup, we don't hold the i_mutex *at all* through the fast path for
-> > direct IO writes. Having to grab the i_mutex on every IO just for
-> > the extremely unlikely case we need to remove a suid bit on the file
-> > would add a significant serialisation point into the direct Io model
-> > that XFS uses, and is the difference between 50,000 and 2+ million
-> > direct IO IOPS to a single file.
-> > 
-> > I'm unwilling to sacrifice the concurrency of direct IO writes just
-> > to shut up ths warning, especially as the actual modifications that
-> > are made to remove SUID bits are correctly serialised within XFS
-> > once notify_change() calls ->setattr(). If it really matters, I'll
-> > just open code file_remove_suid() into XFS like ocfs2 does just so
-> > we don't get that warning being emitted by trinity.
+On Tue, Oct 15, 2013 at 10:55:31AM +0800, Li Zhong wrote:
+> coverity scan 997010 reported following leak:
 > 
-> But the i_lock doesn't synchronize against the VFS modifying various
-> struct inode fields.
-
-Sure, but file_remove_suid() doesn't actually modify any VFS inode
-structures until we process the flags and the modifications within
-->setattr, which in XFS are all done under the XFS_ILOCK_EXCL via
-xfs_setattr_mode(). i.e. both the VFS and XFS inodes S*ID bits are
-removed only under XFS_ILOCK_EXCL....
-
-Hence I see no point in adding extra serialisation via the i_mutex
-to this path when we can just do something like:
-
-	killsuid = should_remove_suid(file->f_path.dentry);
-	if (killsuid) {
-		struct iattr	newattr;
-
-		newattr.ia_valid = ATTR_FORCE | killsuid;
-		error = xfs_setattr_nonsize(ip, &newattr, 0);
-		if (error)
-			return error;
-	}
-
-and not require the i_mutex at all...
-
-Indeed, this is exactly what do_truncate() does - the check outside
-the i_mutex, then calls notify_change() with the i_mutex held. IOWs,
-the i_mutex does nothing to serialise concurrent attempts to check
-and remove S*ID bits....
-
-> The right fix is to take i_mutex just in case
-> we actually need to remove the suid bit.  The patch below should fix it,
-> although I need to write a testcase that actually exercises it first.
+> 1309                if (error) {
+> 1310                        do_warn(
+> 1311        _("space reservation failed (%d), filesystem may be out of space\n"),
+> 1312                                error);
+>     	25. Breaking from loop
+> 1313                        break;
+> 1314                }
 > 
-> Dave (J.): if you have time to try the patch below please go ahead,
-> if not I'll make sure to write an isolated test ASAP to verify it and
-> will then submit the change.
+> ......
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 4c749ab..e879f96 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -590,8 +590,22 @@ restart:
->  	 * If we're writing the file then make sure to clear the setuid and
->  	 * setgid bits if the process is not being run by root.  This keeps
->  	 * people from modifying setuid and setgid binaries.
-> +	 *
-> +	 * Note that file_remove_suid must be called with the i_mutex held,
-> +	 * so we have to go through some hoops here to make sure we hold it.
->  	 */
-> -	return file_remove_suid(file);
-> +	if (!IS_NOSEC(inode) && should_remove_suid(file->f_path.dentry)) {
-> +		if (*iolock == XFS_IOLOCK_SHARED) {
-> +			mutex_lock(&inode->i_mutex);
-> +			error = file_remove_suid(file);
-> +			mutex_unlock(&inode->i_mutex);
+> 1342                libxfs_trans_commit(tp,
+> 1343                                XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
+> 1344        }
+> 
+> CID 997010 (#1 of 1): Resource leak (RESOURCE_LEAK)
+> 26. leaked_storage: Variable "tp" going out of scope leaks the storage it points to.
+> 1345}
+> 
+> Though not reported by coverity, it seems that there might be some entries in
+> flist which needs to be freed in the failure case below libxfs_dir_createname(),
+> and libxfs_bunmapi().
+> 
+> The fix cleans up the code by stacking the error handling at the end of the
+> function, and jumping to the error handler label for the above cases. (fail
+> directly by calling res_failed() for reservation failure.)
+> 
+> Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
 
-Lock inversion - i_mutex is always outside i_iolock. i.e. this will
-deadlock if someone else calls xfs_rw_ilock(XFS_ILOCK_EXCL) at the
-same time because we already hold the i_iolock in shared mode. It's
-the same case that this function already handles for the EOF zeroing
-relocking.
+Looks much better. Thanks! :)
 
-Cheers,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
