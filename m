@@ -1,37 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 894D07F37
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 21:55:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5B226304039
-	for <xfs@oss.sgi.com>; Mon, 14 Oct 2013 19:55:46 -0700 (PDT)
-Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [122.248.162.2]) by
-	cuda.sgi.com with ESMTP id ZQch5XmoQYLyCYEY (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E59797F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 03:50:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D25F98F804B
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 01:50:11 -0700 (PDT)
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id Jl1udgDJ0MLDxGK0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 14 Oct 2013 19:55:41 -0700 (PDT)
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
-	Only! Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zhong@linux.vnet.ibm.com>;
-	Tue, 15 Oct 2013 08:25:37 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id EEB80E004A
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 08:26:57 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r9F2wJWj40763496
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 08:28:20 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
-	r9F2tXxI023917 for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 08:25:33 +0530
-Message-ID: <1381805731.3106.5.camel@ThinkPad-T5421>
-Subject: [PATCH v2] xfsprogs: fix resource leak in longform_dir2_rebuild()
-From: Li Zhong <zhong@linux.vnet.ibm.com>
-Date: Tue, 15 Oct 2013 10:55:31 +0800
-In-Reply-To: <20131014214601.GJ5663@dastard>
-References: <1381560174.3064.4.camel@ThinkPad-T5421>
-	<20131014214601.GJ5663@dastard>
-Mime-Version: 1.0
+	Tue, 15 Oct 2013 01:50:10 -0700 (PDT)
+Received: from tom.nabble.com ([192.168.236.105])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <katmai@keptprivate.com>) id 1VW0CJ-0007OW-Cf
+	for xfs@oss.sgi.com; Tue, 15 Oct 2013 01:41:47 -0700
+Date: Tue, 15 Oct 2013 01:41:47 -0700 (PDT)
+From: katmai <katmai@keptprivate.com>
+Message-ID: <1381826507281-35009.post@n7.nabble.com>
+Subject: xfs corrupted
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,116 +30,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfsprogs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-coverity scan 997010 reported following leak:
+i guys,
 
-1309                if (error) {
-1310                        do_warn(
-1311        _("space reservation failed (%d), filesystem may be out of space\n"),
-1312                                error);
-    	25. Breaking from loop
-1313                        break;
-1314                }
+i have a problem. yesterday there was a power outage at one of my
+datacenters, where i have a relatively large fileserver. 2 arrays, 1 x 14 tb
+and 1 x 18 tb both in raid6, with an adaptec card.
 
-......
+after the outage, the server came back online, the xfs partitions were
+mounted, and everything looked okay. i could access the data and everything
+seemed just fine.
 
-1342                libxfs_trans_commit(tp,
-1343                                XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
-1344        }
+today i woke up to lots of i/o errors, and when i rebooted the server, the
+partitions would not mount:
 
-CID 997010 (#1 of 1): Resource leak (RESOURCE_LEAK)
-26. leaked_storage: Variable "tp" going out of scope leaks the storage it points to.
-1345}
+Oct 14 04:09:17 kp4 kernel:
+Oct 14 04:09:17 kp4 kernel: XFS internal error XFS_WANT_CORRUPTED_RETURN
+a<ffffffff80056933>] pdflush+0x0/0x1fb
+Oct 14 04:09:17 kp4 kernel: [<ffffffff80056a84>] pdflush+0x151/0x1fb
+Oct 14 04:09:17 kp4 kernel: [<ffffffff800cd931>] wb_kupdate+0x0/0x16a
+Oct 14 04:09:17 kp4 kernel: [<ffffffff80032c2b>] kthread+0xfe/0x132
+Oct 14 04:09:17 kp4 kernel: [<ffffffff8005dfc1>] child_rip+0xa/0x11
+Oct 14 04:09:17 kp4 kernel: [<ffffffff800a3ab7>]
+keventd_create_kthread+0x0/0xc4
+Oct 14 04:09:17 kp4 kernel: [<ffffffff80032b2d>] kthread+0x0/0x132
+Oct 14 04:09:17 kp4 kernel: [<ffffffff8005dfb7>] child_rip+0x0/0x11
+Oct 14 04:09:17 kp4 kernel:
+Oct 14 04:09:17 kp4 kernel: XFS internal error XFS_WANT_CORRUPTED_RETURN at
+line 279 of file fs/xfs/xfs_alloc.c. Caller 0xffffffff88342331
+Oct 14 04:09:17 kp4 kernel:
 
-Though not reported by coverity, it seems that there might be some entries in
-flist which needs to be freed in the failure case below libxfs_dir_createname(),
-and libxfs_bunmapi().
+got a bunch of these in dmesg.
 
-The fix cleans up the code by stacking the error handling at the end of the
-function, and jumping to the error handler label for the above cases. (fail
-directly by calling res_failed() for reservation failure.)
+i googled for solutions and i think i jumped the horse by doing xfs_repair
+-L /dev/sdc. it would not clean it with xfs_repair /dev/sdc, and everybody
+pretty much says the same thing.
 
-Signed-off-by: Li Zhong <zhong@linux.vnet.ibm.com>
----
-v2: as Dave suggested,
-        use res_failed() for libxfs_trans_reserve()
-        adding bmap cancel for one missed case
-        using error handling lables to clean up the code
+this is what i was getting when trying to mount the array.
 
- repair/phase6.c | 28 ++++++++++++----------------
- 1 file changed, 12 insertions(+), 16 deletions(-)
+Filesystem Corruption of in-memory data detected. Shutting down filesystem
+xfs_check
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index a4ad7a3..6b3fb09 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1280,9 +1280,7 @@ longform_dir2_rebuild(
- 				&firstblock, &flist, &done);
- 	if (error) {
- 		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
--		libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
--					XFS_TRANS_ABORT);
--		return;
-+		goto out_bmap_cancel;
- 	}
- 
- 	ASSERT(done);
-@@ -1306,12 +1304,8 @@ longform_dir2_rebuild(
- 		nres = XFS_CREATE_SPACE_RES(mp, p->name.len);
- 		error = libxfs_trans_reserve(tp, &M_RES(mp)->tr_create,
- 					     nres, 0);
--		if (error) {
--			do_warn(
--	_("space reservation failed (%d), filesystem may be out of space\n"),
--				error);
--			break;
--		}
-+		if (error)
-+			res_failed(error);
- 
- 		libxfs_trans_ijoin(tp, ip, 0);
- 		libxfs_trans_ihold(tp, ip);
-@@ -1323,9 +1317,7 @@ longform_dir2_rebuild(
- 			do_warn(
- _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"),
- 				ino, error);
--			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
--						XFS_TRANS_ABORT);
--			break;
-+			goto out_bmap_cancel;
- 		}
- 
- 		error = libxfs_bmap_finish(&tp, &flist, &committed);
-@@ -1333,15 +1325,19 @@ _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"
- 			do_warn(
- 	_("bmap finish failed (%d), filesystem may be out of space\n"),
- 				error);
--			libxfs_bmap_cancel(&flist);
--			libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
--						XFS_TRANS_ABORT);
--			break;
-+			goto out_bmap_cancel;
- 		}
- 
- 		libxfs_trans_commit(tp,
- 				XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
- 	}
-+
-+	return;
-+
-+out_bmap_cancel:
-+	libxfs_bmap_cancel(&flist);
-+	libxfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
-+	return;
- }
- 
- 
--- 
-1.8.1.4
+Did i jump the gun by using the -L switch :/ ?
 
 
+
+--
+View this message in context: http://xfs.9218.n7.nabble.com/xfs-corrupted-tp35009.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
