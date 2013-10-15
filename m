@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8514A7F5A
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:07:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 609658F804B
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 12:07:32 -0700 (PDT)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id mV60xyp27rPKEpPI
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 15 Oct 2013 12:07:22 -0700 (PDT)
-Received: from c-67-165-243-162.hsd1.co.comcast.net ([67.165.243.162]:62343
-	helo=[192.168.1.126])
-	by slmp-550-94.slc.westdc.net with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.80.1) (envelope-from <lists@colorremedies.com>)
-	id 1VW9xg-004HPo-2S
-	for xfs@oss.sgi.com; Tue, 15 Oct 2013 13:07:20 -0600
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: xfs corrupted
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <525D8D67.2090301@keptprivate.com>
-Date: Tue, 15 Oct 2013 13:07:22 -0600
-Message-Id: <F0730252-EF33-4452-957A-FA33DAD43913@colorremedies.com>
-References: <1381826507281-35009.post@n7.nabble.com>
-	<20131015203434.2f336fd8@galadriel.home>
-	<525D8D67.2090301@keptprivate.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 849847F5A
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 14:16:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F092304039
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 12:16:46 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id Jtn1N9bBFPaAyCgp (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Oct 2013 12:16:44 -0700 (PDT)
+Date: Tue, 15 Oct 2013 12:16:42 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: filter projid32bit info out of growfs & info
+	output
+Message-ID: <20131015191642.GB3008@infradead.org>
+References: <5251C392.1020407@redhat.com>
+ <20131008004317.GR4446@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131008004317.GR4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,18 +31,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-
-On Oct 15, 2013, at 12:45 PM, Stefanita Rares Dumitrescu <katmai@keptprivate.com> wrote:
+On Tue, Oct 08, 2013 at 11:43:17AM +1100, Dave Chinner wrote:
+> Yup, that's needed. There's a bunch of other things we need to do to
+> correctly test 16/32bit project ids without failures. Have a look
+> here:
 > 
-> What worries me is that i see 100 % cpu usage, some 74 % memory usage (i have 4 gb ram) but there is no disk activity at all. I was thinking that it would be at least some reads if the xfs_repair is doing something.
+> http://oss.sgi.com/archives/xfs/2013-06/msg00219.html
+> 
+> For the mods I posted back in June to avoid failures with the CRC
+> enabled filesystems in tests that assume certain options can be
+> turned on/off on XFS filesystems.
+> 
+> I'm still running xfstests with that patch....
 
-That is very low RAM for a system with two big arrays attached. So if repair finds it needs to repair something it's going to take a long time. 
-http://xfs.org/index.php/XFS_FAQ#Q:_Which_factors_influence_the_memory_usage_of_xfs_repair.3F
+Would be good to get it in ASAP!
 
-
-Chris Murphy
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
