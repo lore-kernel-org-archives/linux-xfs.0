@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 95C237F77
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 15:26:47 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A7A3D7F76
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 15:33:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F769304032
-	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 13:26:47 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	7GuZt6fDr1kpeHK9 for <xfs@oss.sgi.com>;
-	Tue, 15 Oct 2013 13:26:45 -0700 (PDT)
-Date: Wed, 16 Oct 2013 07:26:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs corrupted
-Message-ID: <20131015202640.GR4446@dastard>
-References: <1381826507281-35009.post@n7.nabble.com>
-	<20131015203434.2f336fd8@galadriel.home>
-	<525D8D67.2090301@keptprivate.com>
-	<20131015213447.40d05ea0@galadriel.home>
-	<525D9E3B.5040507@keptprivate.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 415C8AC003
+	for <xfs@oss.sgi.com>; Tue, 15 Oct 2013 13:33:06 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id xpKXnoSXBoZRMpG2 (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Oct 2013 13:33:06 -0700 (PDT)
+Subject: Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.725971.B.138186907824459@bugs.debian.org>
+Date: Tue, 15 Oct 2013 12:42:11 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Message-ID: <20131015194211.GA32095@infradead.org>
+References: <20131010133811.GK32337@riva.ucam.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <525D9E3B.5040507@keptprivate.com>
+In-Reply-To: <20131010133811.GK32337@riva.ucam.org>
+Reply-To: Christoph Hellwig <hch@infradead.org>, 725971@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +32,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
-Cc: xfs@oss.sgi.com
+To: Colin Watson <cjwatson@ubuntu.com>, 725971@bugs.debian.org
+Cc: submit@bugs.debian.org
 
-On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
-> Since i am using centos 5.9, the version of the xfsprogs seems to be
-> old, so i cloned the new one from sgi.
-> 
-> I have a machine with 4 gb ram, and 4 gb swap, and it's all been
-> eaten up by xfs_repair, and slowed down to a crawl.
-> 
-> the sdc partition is the one being checked. i am all out of memory
-> now. 4 gb phys and 4 gb swap all gone.
-> 
-> http://pastebin.ca/2467064
-> 
-> posted to pastebin for better formatting.
-> 
-> i was using:
-> 
-> [root@kp4 ~]# xfs_repair -o bhash=16384 -o ihash=16384 -o ag_stride=16 \
-> > /dev/sdc >& /tmp/repair.log
-
-You don't have enough RAM to run threaded prefetching and parallel
-AG processing. You'd do better to turn prefetching off entirely with
-"-P" if you are having OOM problems.
-
-> but now i am trying the -m option to see if the memory can be
-> limited, so the server doesn't freeze.
-> 
-> [root@kp4 ~]# xfs_repair -m 3072 -o ag_stride=16 /dev/sdc >& /tmp/repair.log
-> 
-> nothing in dmesg either.
-
-Give it another 10-20GB of swap, and it should be fine. xfs_repair
-usually only thrashes swap when you don't have enough of it and it
-keeps trying to free memory, paging in pages that are in swap to
-free cached objects from them. Most of the memory references that
-repair makes are quite local, so when pages are swapped out they
-generally aren't needed again for a while except when cache reclaim
-kicks in. Hence if you give it enough swap that it can grow without
-bounds, then it should still be quite efficient.
-
-Keep in mind that badly corrupted filesystems require lots more
-memory than clean filesystems to check and repair as there is lots
-more intermediate state that repair needs to hold in memory about
-partially or incompletely referenced objects. Don't be surprised if
-the amount of memory needed to repair a badly broken filesystem is
-10-100x the amount of RAM needed to run xfs_repair on the same clean
-filesystem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+While updating it in the debhelp is nice for the Debian package I'd also
+really like to see a patch updating the files in the repository.  Colin,
+would you mind sending that patch, too?
 
 _______________________________________________
 xfs mailing list
