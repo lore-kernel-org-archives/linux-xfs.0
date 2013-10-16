@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2645B7F50
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 17:46:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 15F8E8F8039
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:46:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rQUvE7J8QA46tTHI for
-	<xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:46:04 -0700 (PDT)
-Date: Wed, 16 Oct 2013 15:46:01 -0700
-From: Zach Brown <zab@redhat.com>
-Subject: Re: xfstests names/numbers
-Message-ID: <20131016224601.GP11338@lenny.home.zabbo.net>
-References: <525EBDD1.7070107@sandeen.net>
- <20131016214938.GJ4446@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131016214938.GJ4446@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ACC037F50
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 17:47:47 -0500 (CDT)
+Received: from eagdhcp-232-150.americas.sgi.com
+	(eagdhcp-232-150.americas.sgi.com [128.162.232.150])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 867DB304032
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:47:47 -0700 (PDT)
+Received: from eagdhcp-232-150.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-150.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r9GMllL4004632
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 17:47:47 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-150.americas.sgi.com)
+Message-Id: <20131016223654.505433792@sgi.com>
+Date: Wed, 16 Oct 2013 17:36:54 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH 0/3] xfsprogs: v4 inode type in directory
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,28 +23,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-> > And if Zach ain't happy, ain't nobody happy.  ;)
-> 
-> On the count of 3. 1... 2... 3...
-> 
-> Awwwwww, poor Zach.
-> 
-> :)
+Here are the patches that enable the inode in the directory
+feature in v4 superblocks.
 
-*group hugs*
+ patch 1: add the entries to xfs_sb.h (sync with kernel)
+ patch 2: add the XFS_FSOP_GEOM_FLAGS_FTYPE to xfs_fs.h (sync with kernel)
+	  add the entry to repair so that xfs_info reports the feature
+ patch 3: add the feature to mkfs.xfs and manual page.
+          note: this new feature is ignored for superblock v5
+		automatically turns on this feature.
 
-> You're more than welcome to hack on it if you want....
-
-Yeah, I'll take a swing at it.  What's the worst that could happen?  :)
-
-- z
+--Mark.
 
 _______________________________________________
 xfs mailing list
