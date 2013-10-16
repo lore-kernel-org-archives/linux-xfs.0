@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1796B7F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:23:44 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C8B5A7F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 08:32:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D84A8304043
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 05:23:43 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C511AC003
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 06:32:00 -0700 (PDT)
 Received: from keptprivate.com (keptprivate.com [38.117.1.51]) by cuda.sgi.com
-	with ESMTP id VJYUDiUt70viC15B (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id Nrjsl24WCklslRYA (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Oct 2013 05:23:42 -0700 (PDT)
-Message-ID: <525E854F.3090105@keptprivate.com>
-Date: Wed, 16 Oct 2013 14:23:43 +0200
+	Wed, 16 Oct 2013 06:31:59 -0700 (PDT)
+Message-ID: <525E9550.80008@keptprivate.com>
+Date: Wed, 16 Oct 2013 15:32:00 +0200
 From: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
 MIME-Version: 1.0
 Subject: Re: xfs corrupted
@@ -35,25 +35,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-I have a small 40 gb ssd and i tried to do some smart stuff by resizing 
-the os partition to try to increase the swap, and i botched it, so i 
-reloaded quickly centos6 today.
+Quick update:
 
-I have all the important stuff backed up, so it did not really matter if 
-i reloaded or not, however:
+The xfsprogs from the centos6 yum are newer and they don't use that much 
+memory, however i got 2 segfaults and the process stopped.
 
-I did 1a 14 gb swap partition, but on centos6 the xfs_repair doesn't 
-even go above 2.7 gb, and none of the swap used.
+I cloned the xfsprogs git and i am running it now with the new 15 gb 
+swap that i created, and this is a monster in memory usage.
 
-I am using xfsprogs-3.1.1-10.el6_4.1.x86_64
-
-So far so good, i see a lot of reads on the botched array, but just to 
-be safe i  mounted it first, and tested if i could read the data, and it 
-was all fine.
-
-I will keep you updated. Hopefully i can get over with this.
-
-
+Pretty bit of discrepancy.
 
 On 15/10/2013 22:26, Dave Chinner wrote:
 > On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
