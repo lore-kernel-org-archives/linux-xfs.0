@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C2D37F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 09:32:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4765FAC007
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:32:03 -0700 (PDT)
-Received: from keptprivate.com (keptprivate.com [38.117.1.51]) by cuda.sgi.com
-	with ESMTP id UAcSKHut80LTIJiG (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Oct 2013 07:31:58 -0700 (PDT)
-Message-ID: <525EA360.5040100@keptprivate.com>
-Date: Wed, 16 Oct 2013 16:32:00 +0200
-From: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 65A227F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 10:05:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 58B908F804B
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 08:05:01 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id U2o27lYjNZcVv2bW for <xfs@oss.sgi.com>;
+	Wed, 16 Oct 2013 08:05:00 -0700 (PDT)
+Message-ID: <525EAB1C.6020504@sandeen.net>
+Date: Wed, 16 Oct 2013 10:05:00 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs corrupted
-References: <1381826507281-35009.post@n7.nabble.com>
-	<20131015203434.2f336fd8@galadriel.home>
-	<525D8D67.2090301@keptprivate.com>
-	<20131015213447.40d05ea0@galadriel.home>
-	<525D9E3B.5040507@keptprivate.com> <20131015202640.GR4446@dastard>
-In-Reply-To: <20131015202640.GR4446@dastard>
+Subject: Re: XFS - configuration for multi-thread high-speed streams
+References: <C08036CF9E2BAC498EFDA29CB9BDF25B34B9D1E06D@dc-ex1.power.com>
+In-Reply-To: <C08036CF9E2BAC498EFDA29CB9BDF25B34B9D1E06D@dc-ex1.power.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,85 +23,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mike Jensen <Mike.Jensen@dothill.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-I have been running the xfs_repair from the sgi repo for quite a while 
-now, and it keeps chugging memory, however there seems to be no progress :/
+On 10/15/13 3:45 PM, Mike Jensen wrote:
+> Hi Group - 1^st time post, looks like just use the email address I have s=
+een from other posts
+> =
 
-doubling cache size to 1048576
-         - 09:27:05: process known inodes and inode discovery - 0 of 
-76088384 inodes done
-         - 09:42:05: process known inodes and inode discovery - 0 of 
-76088384 inodes done
-doubling cache size to 2097152
-         - 09:57:05: process known inodes and inode discovery - 0 of 
-76088384 inodes done
-         - 10:12:05: process known inodes and inode discovery - 0 of 
-76088384 inodes done
-         - 10:27:05: process known inodes and inode discovery - 0 of 
-76088384 inodes done
+> If the setup/info/questions below are not suitable for this list, is ther=
+e another xfs list available for these??
+> =
 
-Using the xfsprogs from yum got over this, but it segfaulted.
 
-I am going to give it a little bit more time ... 4 more gb of swap left.
+User questions are appropriate here, but since this is a Red Hat distro ker=
+nel, not upstream, it's probably better to engage Red Hat for information o=
+n optimal tuning of something like this.
 
-On 15/10/2013 22:26, Dave Chinner wrote:
-> On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
->> Since i am using centos 5.9, the version of the xfsprogs seems to be
->> old, so i cloned the new one from sgi.
->>
->> I have a machine with 4 gb ram, and 4 gb swap, and it's all been
->> eaten up by xfs_repair, and slowed down to a crawl.
->>
->> the sdc partition is the one being checked. i am all out of memory
->> now. 4 gb phys and 4 gb swap all gone.
->>
->> http://pastebin.ca/2467064
->>
->> posted to pastebin for better formatting.
->>
->> i was using:
->>
->> [root@kp4 ~]# xfs_repair -o bhash=16384 -o ihash=16384 -o ag_stride=16 \
->>> /dev/sdc >& /tmp/repair.log
->
-> You don't have enough RAM to run threaded prefetching and parallel
-> AG processing. You'd do better to turn prefetching off entirely with
-> "-P" if you are having OOM problems.
->
->> but now i am trying the -m option to see if the memory can be
->> limited, so the server doesn't freeze.
->>
->> [root@kp4 ~]# xfs_repair -m 3072 -o ag_stride=16 /dev/sdc >& /tmp/repair.log
->>
->> nothing in dmesg either.
->
-> Give it another 10-20GB of swap, and it should be fine. xfs_repair
-> usually only thrashes swap when you don't have enough of it and it
-> keeps trying to free memory, paging in pages that are in swap to
-> free cached objects from them. Most of the memory references that
-> repair makes are quite local, so when pages are swapped out they
-> generally aren't needed again for a while except when cache reclaim
-> kicks in. Hence if you give it enough swap that it can grow without
-> bounds, then it should still be quite efficient.
->
-> Keep in mind that badly corrupted filesystems require lots more
-> memory than clean filesystems to check and repair as there is lots
-> more intermediate state that repair needs to hold in memory about
-> partially or incompletely referenced objects. Don't be surprised if
-> the amount of memory needed to repair a badly broken filesystem is
-> 10-100x the amount of RAM needed to run xfs_repair on the same clean
-> filesystem....
->
-> Cheers,
->
-> Dave.
->
+-Eric
+
+> =
+
+> Thanks
+> =
+
+> mike
+> =
+
+>  =
+
+> =
+
+> Configuration =96
+> =
+
+>  =
+
+> =
+
+> -          RH 6.4 on HP G8 server w/16GB mem (could add a lot more)
+> =
+
+> -          12Gb SAS connections (2) to storage
+> =
+
+> -          Storage
+> =
+
+> -          96 LFF HDD=92s (4TB 7K NLSAS) presently organized as 8 x 10+2 =
+R6 raidsets
+> =
+
+> -          8 volumes mapped to host ports (MPIO engaged)
+> =
+
+> -          Mdadm used to stripe (/dev/dm*) LUNs into a single md device (=
+approx. 300+TB file system space)
+> =
+
+> -          Mkfs.xfs used to lay down file system
+> =
+
+> -           =
+
+> =
+
+> -          Workload
+> =
+
+> -          Application creates file of specified length in dir of mount p=
+oint, IO=92s then issued to file(s), each file receives 1 stream of IO
+> =
+
+> -          1 x high speed stream 1000MB/s Seq W (IO=92s arrive as 512KB -=
+=3D> 4MB frame would be 8 x 512KB IO=92s)
+> =
+
+> -          2 x med-speed streams 200MB/s Seq W =93
+> =
+
+> -          30-50 low speed streams 10MB/s Seq W =93
+> =
+
+>  =
+
+> =
+
+> Objectives/Questions =96
+> =
+
+>  =
+
+> =
+
+> -          Would like to optimize xfs/mount parameters to make maximal us=
+e of storage assets
+> =
+
+> -          Thinking of using 15K HDD R1 set for log files =96 would this =
+get all/most of metadata or just a subset?  Right now seeing metadata write=
+s arriving with data writes and want to peel them off the 7K HDD=92s
+> =
+
+> -          Would using sub-directories for each file ensure that each sub=
+dir/file would be in it=92s own alloc group? And that would keep the stream=
+ing data in a separate AG =96 could help the storage more efficiently desta=
+ge the writes from cache to disk
+> =
+
+>  =
+
+> =
+
+> =
+
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> =
+
 
 _______________________________________________
 xfs mailing list
