@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0D5857F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 09:06:06 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9C2D37F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 09:32:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A7462AC008
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:06:02 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 8MH0uE6Eu4nKIQ1n (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Oct 2013 07:06:01 -0700 (PDT)
-From: Dave Kleikamp <dave.kleikamp@oracle.com>
-Subject: [PATCH V9 27/33] xfs: add support for read_iter and write_iter
-Date: Wed, 16 Oct 2013 09:04:40 -0500
-Message-Id: <1381932286-14978-28-git-send-email-dave.kleikamp@oracle.com>
-In-Reply-To: <1381932286-14978-1-git-send-email-dave.kleikamp@oracle.com>
-References: <1381932286-14978-1-git-send-email-dave.kleikamp@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4765FAC007
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:32:03 -0700 (PDT)
+Received: from keptprivate.com (keptprivate.com [38.117.1.51]) by cuda.sgi.com
+	with ESMTP id UAcSKHut80LTIJiG (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Oct 2013 07:31:58 -0700 (PDT)
+Message-ID: <525EA360.5040100@keptprivate.com>
+Date: Wed, 16 Oct 2013 16:32:00 +0200
+From: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
+MIME-Version: 1.0
+Subject: Re: xfs corrupted
+References: <1381826507281-35009.post@n7.nabble.com>
+	<20131015203434.2f336fd8@galadriel.home>
+	<525D8D67.2090301@keptprivate.com>
+	<20131015213447.40d05ea0@galadriel.home>
+	<525D9E3B.5040507@keptprivate.com> <20131015202640.GR4446@dastard>
+In-Reply-To: <20131015202640.GR4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,182 +28,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Dave Kleikamp <dave.kleikamp@oracle.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Zach Brown <zab@zabbo.net>, "Maxim V. Patlasov" <mpatlasov@parallels.com>
-
-Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
-Acked-by: Dave Chinner <dchinner@redhat.com>
-Cc: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
----
- fs/xfs/xfs_file.c | 51 ++++++++++++++++++++-------------------------------
- 1 file changed, 20 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4c749ab..818c623 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -227,10 +227,9 @@ xfs_file_fsync(
- }
- 
- STATIC ssize_t
--xfs_file_aio_read(
-+xfs_file_read_iter(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos)
- {
- 	struct file		*file = iocb->ki_filp;
-@@ -251,9 +250,7 @@ xfs_file_aio_read(
- 	if (file->f_mode & FMODE_NOCMTIME)
- 		ioflags |= IO_INVIS;
- 
--	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
--	if (ret < 0)
--		return ret;
-+	size = iov_iter_count(iter);
- 
- 	if (unlikely(ioflags & IO_ISDIRECT)) {
- 		xfs_buftarg_t	*target =
-@@ -306,7 +303,7 @@ xfs_file_aio_read(
- 
- 	trace_xfs_file_read(ip, size, pos, ioflags);
- 
--	ret = generic_file_aio_read(iocb, iovp, nr_segs, pos);
-+	ret = generic_file_read_iter(iocb, iter, pos);
- 	if (ret > 0)
- 		XFS_STATS_ADD(xs_read_bytes, ret);
- 
-@@ -622,10 +619,9 @@ restart:
- STATIC ssize_t
- xfs_file_dio_aio_write(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos,
--	size_t			ocount)
-+	size_t			count)
- {
- 	struct file		*file = iocb->ki_filp;
- 	struct address_space	*mapping = file->f_mapping;
-@@ -633,7 +629,6 @@ xfs_file_dio_aio_write(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
--	size_t			count = ocount;
- 	int			unaligned_io = 0;
- 	int			iolock;
- 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
-@@ -693,8 +688,8 @@ xfs_file_dio_aio_write(
- 	}
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
--	ret = generic_file_direct_write(iocb, iovp,
--			&nr_segs, pos, &iocb->ki_pos, count, ocount);
-+	ret = generic_file_direct_write_iter(iocb, iter,
-+			pos, &iocb->ki_pos, count);
- 
- out:
- 	xfs_rw_iunlock(ip, iolock);
-@@ -707,10 +702,9 @@ out:
- STATIC ssize_t
- xfs_file_buffered_aio_write(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos,
--	size_t			ocount)
-+	size_t			count)
- {
- 	struct file		*file = iocb->ki_filp;
- 	struct address_space	*mapping = file->f_mapping;
-@@ -719,7 +713,6 @@ xfs_file_buffered_aio_write(
- 	ssize_t			ret;
- 	int			enospc = 0;
- 	int			iolock = XFS_IOLOCK_EXCL;
--	size_t			count = ocount;
- 
- 	xfs_rw_ilock(ip, iolock);
- 
-@@ -732,7 +725,7 @@ xfs_file_buffered_aio_write(
- 
- write_retry:
- 	trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, 0);
--	ret = generic_file_buffered_write(iocb, iovp, nr_segs,
-+	ret = generic_file_buffered_write_iter(iocb, iter,
- 			pos, &iocb->ki_pos, count, 0);
- 
- 	/*
-@@ -753,10 +746,9 @@ out:
- }
- 
- STATIC ssize_t
--xfs_file_aio_write(
-+xfs_file_write_iter(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos)
- {
- 	struct file		*file = iocb->ki_filp;
-@@ -764,17 +756,15 @@ xfs_file_aio_write(
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret;
--	size_t			ocount = 0;
-+	size_t			count = 0;
- 
- 	XFS_STATS_INC(xs_write_calls);
- 
- 	BUG_ON(iocb->ki_pos != pos);
- 
--	ret = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
--	if (ret)
--		return ret;
-+	count = iov_iter_count(iter);
- 
--	if (ocount == 0)
-+	if (count == 0)
- 		return 0;
- 
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-@@ -783,10 +773,9 @@ xfs_file_aio_write(
- 	}
- 
- 	if (unlikely(file->f_flags & O_DIRECT))
--		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
-+		ret = xfs_file_dio_aio_write(iocb, iter, pos, count);
- 	else
--		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
--						  ocount);
-+		ret = xfs_file_buffered_aio_write(iocb, iter, pos, count);
- 
- 	if (ret > 0) {
- 		ssize_t err;
-@@ -1411,8 +1400,8 @@ const struct file_operations xfs_file_operations = {
- 	.llseek		= xfs_file_llseek,
- 	.read		= do_sync_read,
- 	.write		= do_sync_write,
--	.aio_read	= xfs_file_aio_read,
--	.aio_write	= xfs_file_aio_write,
-+	.read_iter	= xfs_file_read_iter,
-+	.write_iter	= xfs_file_write_iter,
- 	.splice_read	= xfs_file_splice_read,
- 	.splice_write	= xfs_file_splice_write,
- 	.unlocked_ioctl	= xfs_file_ioctl,
--- 
-1.8.4
+I have been running the xfs_repair from the sgi repo for quite a while 
+now, and it keeps chugging memory, however there seems to be no progress :/
+
+doubling cache size to 1048576
+         - 09:27:05: process known inodes and inode discovery - 0 of 
+76088384 inodes done
+         - 09:42:05: process known inodes and inode discovery - 0 of 
+76088384 inodes done
+doubling cache size to 2097152
+         - 09:57:05: process known inodes and inode discovery - 0 of 
+76088384 inodes done
+         - 10:12:05: process known inodes and inode discovery - 0 of 
+76088384 inodes done
+         - 10:27:05: process known inodes and inode discovery - 0 of 
+76088384 inodes done
+
+Using the xfsprogs from yum got over this, but it segfaulted.
+
+I am going to give it a little bit more time ... 4 more gb of swap left.
+
+On 15/10/2013 22:26, Dave Chinner wrote:
+> On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
+>> Since i am using centos 5.9, the version of the xfsprogs seems to be
+>> old, so i cloned the new one from sgi.
+>>
+>> I have a machine with 4 gb ram, and 4 gb swap, and it's all been
+>> eaten up by xfs_repair, and slowed down to a crawl.
+>>
+>> the sdc partition is the one being checked. i am all out of memory
+>> now. 4 gb phys and 4 gb swap all gone.
+>>
+>> http://pastebin.ca/2467064
+>>
+>> posted to pastebin for better formatting.
+>>
+>> i was using:
+>>
+>> [root@kp4 ~]# xfs_repair -o bhash=16384 -o ihash=16384 -o ag_stride=16 \
+>>> /dev/sdc >& /tmp/repair.log
+>
+> You don't have enough RAM to run threaded prefetching and parallel
+> AG processing. You'd do better to turn prefetching off entirely with
+> "-P" if you are having OOM problems.
+>
+>> but now i am trying the -m option to see if the memory can be
+>> limited, so the server doesn't freeze.
+>>
+>> [root@kp4 ~]# xfs_repair -m 3072 -o ag_stride=16 /dev/sdc >& /tmp/repair.log
+>>
+>> nothing in dmesg either.
+>
+> Give it another 10-20GB of swap, and it should be fine. xfs_repair
+> usually only thrashes swap when you don't have enough of it and it
+> keeps trying to free memory, paging in pages that are in swap to
+> free cached objects from them. Most of the memory references that
+> repair makes are quite local, so when pages are swapped out they
+> generally aren't needed again for a while except when cache reclaim
+> kicks in. Hence if you give it enough swap that it can grow without
+> bounds, then it should still be quite efficient.
+>
+> Keep in mind that badly corrupted filesystems require lots more
+> memory than clean filesystems to check and repair as there is lots
+> more intermediate state that repair needs to hold in memory about
+> partially or incompletely referenced objects. Don't be surprised if
+> the amount of memory needed to repair a badly broken filesystem is
+> 10-100x the amount of RAM needed to run xfs_repair on the same clean
+> filesystem....
+>
+> Cheers,
+>
+> Dave.
+>
 
 _______________________________________________
 xfs mailing list
