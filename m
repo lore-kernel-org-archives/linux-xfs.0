@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 512557F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 09:05:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 332438F806F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:05:14 -0700 (PDT)
-Received: from mail-we0-f175.google.com (mail-we0-f175.google.com
-	[74.125.82.175]) by cuda.sgi.com with ESMTP id rphcmYgkM6hymoIU
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:05:12 -0700 (PDT)
-Received: by mail-we0-f175.google.com with SMTP id t61so747722wes.20
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:05:11 -0700 (PDT)
-From: Filipe David Borba Manana <fdmanana@gmail.com>
-Subject: [PATCH] xfstests: add specific test for default ACL inheritance
-Date: Wed, 16 Oct 2013 15:04:56 +0100
-Message-Id: <1381932296-14674-1-git-send-email-fdmanana@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D5857F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 09:06:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A7462AC008
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 07:06:02 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 8MH0uE6Eu4nKIQ1n (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Oct 2013 07:06:01 -0700 (PDT)
+From: Dave Kleikamp <dave.kleikamp@oracle.com>
+Subject: [PATCH V9 27/33] xfs: add support for read_iter and write_iter
+Date: Wed, 16 Oct 2013 09:04:40 -0500
+Message-Id: <1381932286-14978-28-git-send-email-dave.kleikamp@oracle.com>
+In-Reply-To: <1381932286-14978-1-git-send-email-dave.kleikamp@oracle.com>
+References: <1381932286-14978-1-git-send-email-dave.kleikamp@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,130 +28,177 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
-Cc: dsterba@suse.cz, jbacik@fusionio.com, Filipe David Borba Manana <fdmanana@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Dave Kleikamp <dave.kleikamp@oracle.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Zach Brown <zab@zabbo.net>, "Maxim V. Patlasov" <mpatlasov@parallels.com>
 
-This test is motivated by an issue found by a btrfs user, addressed
-and described by the following GNU/Linux kernel patch:
-
-https://patchwork.kernel.org/patch/3046931/
-
-The steps to reproduce the issue on btrfs are the following:
-
-$ mkfs.btrfs -f /dev/loop0
-$ mount /dev/loop0 /mnt
-$ mkdir /mnt/acl
-$ setfacl -d --set u::rwx,g::rwx,o::- /mnt/acl
-$ getfacl /mnt/acl
-user::rwx
-group::rwx
-other::r-x
-default:user::rwx
-default:group::rwx
-default:other::---
-
-$ mkdir /mnt/acl/dir1
-$ getfacl /mnt/acl/dir1
-user::rwx
-group::rwx
-other::---
-
-After unmounting and mounting again the filesystem, getfacl returned the
-expected default ACL for the subdirectory:
-
-$ umount /mnt/acl
-$ mount /dev/loop0 /mnt
-$ getfacl /mnt/acl/dir1
-user::rwx
-group::rwx
-other::---
-default:user::rwx
-default:group::rwx
-default:other::---
-
-This means that the underlying ACL xattr was persisted correctly but
-the in memory representation of the inode had (incorrectly) a NULL ACL.
-
-Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
+Acked-by: Dave Chinner <dchinner@redhat.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
+Cc: xfs@oss.sgi.com
 ---
- tests/shared/051     |   18 ++++++++++++++++--
- tests/shared/051.out |   21 +++++++++++++++++++++
- 2 files changed, 37 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_file.c | 51 ++++++++++++++++++++-------------------------------
+ 1 file changed, 20 insertions(+), 31 deletions(-)
 
-diff --git a/tests/shared/051 b/tests/shared/051
-index 07399cc..56a4c10 100755
---- a/tests/shared/051
-+++ b/tests/shared/051
-@@ -69,7 +69,7 @@ _cleanup()
- #
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 4c749ab..818c623 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -227,10 +227,9 @@ xfs_file_fsync(
+ }
  
- # real QA test starts here
--_supported_fs xfs udf
-+_supported_fs xfs udf btrfs
- _supported_os Linux
+ STATIC ssize_t
+-xfs_file_aio_read(
++xfs_file_read_iter(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -251,9 +250,7 @@ xfs_file_aio_read(
+ 	if (file->f_mode & FMODE_NOCMTIME)
+ 		ioflags |= IO_INVIS;
  
- [ -x $runas ] || _notrun "$runas executable not found"
-@@ -345,7 +345,12 @@ chacl $acl2 largeaclfile
- getfacl --numeric largeaclfile | _filter_aces
+-	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
+-	if (ret < 0)
+-		return ret;
++	size = iov_iter_count(iter);
  
- echo "1 above xfs acl max"
--chacl $acl3 largeaclfile
-+if [ "$FSTYP" != "btrfs" ]; then
-+	chacl $acl3 largeaclfile
-+else
-+	echo 'chacl: cannot set access acl on "largeaclfile": Invalid argument'
-+fi
-+
- getfacl --numeric largeaclfile | _filter_aces
+ 	if (unlikely(ioflags & IO_ISDIRECT)) {
+ 		xfs_buftarg_t	*target =
+@@ -306,7 +303,7 @@ xfs_file_aio_read(
  
- echo "use 16 aces"
-@@ -356,6 +361,15 @@ echo "use 17 aces"
- chacl $acl5 largeaclfile
- getfacl --numeric largeaclfile | _filter_aces
+ 	trace_xfs_file_read(ip, size, pos, ioflags);
  
-+echo "=== Test child directory inheritance of its parent's default ACL ==="
-+
-+mkdir $SCRATCH_MNT/testdir
-+setfacl -d --set u::rwx,g::rwx,o::- $SCRATCH_MNT/testdir
-+getfacl --absolute-names $SCRATCH_MNT/testdir | _filter_scratch
-+
-+mkdir $SCRATCH_MNT/testdir/testsubdir
-+getfacl --absolute-names $SCRATCH_MNT/testdir/testsubdir | _filter_scratch
-+
- #-------------------------------------------------------
+-	ret = generic_file_aio_read(iocb, iovp, nr_segs, pos);
++	ret = generic_file_read_iter(iocb, iter, pos);
+ 	if (ret > 0)
+ 		XFS_STATS_ADD(xs_read_bytes, ret);
  
- # success, all done
-diff --git a/tests/shared/051.out b/tests/shared/051.out
-index a871082..5f0b620 100644
---- a/tests/shared/051.out
-+++ b/tests/shared/051.out
-@@ -353,3 +353,24 @@ group::rwx
- mask::rwx
- other::rwx
+@@ -622,10 +619,9 @@ restart:
+ STATIC ssize_t
+ xfs_file_dio_aio_write(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos,
+-	size_t			ocount)
++	size_t			count)
+ {
+ 	struct file		*file = iocb->ki_filp;
+ 	struct address_space	*mapping = file->f_mapping;
+@@ -633,7 +629,6 @@ xfs_file_dio_aio_write(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			ret = 0;
+-	size_t			count = ocount;
+ 	int			unaligned_io = 0;
+ 	int			iolock;
+ 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
+@@ -693,8 +688,8 @@ xfs_file_dio_aio_write(
+ 	}
  
-+=== Test child directory inheritance of its parent's default ACL ===
-+# file: SCRATCH_MNT/testdir
-+# owner: root
-+# group: root
-+user::rwx
-+group::r-x
-+other::r-x
-+default:user::rwx
-+default:group::rwx
-+default:other::---
-+
-+# file: SCRATCH_MNT/testdir/testsubdir
-+# owner: root
-+# group: root
-+user::rwx
-+group::rwx
-+other::---
-+default:user::rwx
-+default:group::rwx
-+default:other::---
-+
+ 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_direct_write(iocb, iovp,
+-			&nr_segs, pos, &iocb->ki_pos, count, ocount);
++	ret = generic_file_direct_write_iter(iocb, iter,
++			pos, &iocb->ki_pos, count);
+ 
+ out:
+ 	xfs_rw_iunlock(ip, iolock);
+@@ -707,10 +702,9 @@ out:
+ STATIC ssize_t
+ xfs_file_buffered_aio_write(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos,
+-	size_t			ocount)
++	size_t			count)
+ {
+ 	struct file		*file = iocb->ki_filp;
+ 	struct address_space	*mapping = file->f_mapping;
+@@ -719,7 +713,6 @@ xfs_file_buffered_aio_write(
+ 	ssize_t			ret;
+ 	int			enospc = 0;
+ 	int			iolock = XFS_IOLOCK_EXCL;
+-	size_t			count = ocount;
+ 
+ 	xfs_rw_ilock(ip, iolock);
+ 
+@@ -732,7 +725,7 @@ xfs_file_buffered_aio_write(
+ 
+ write_retry:
+ 	trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_buffered_write(iocb, iovp, nr_segs,
++	ret = generic_file_buffered_write_iter(iocb, iter,
+ 			pos, &iocb->ki_pos, count, 0);
+ 
+ 	/*
+@@ -753,10 +746,9 @@ out:
+ }
+ 
+ STATIC ssize_t
+-xfs_file_aio_write(
++xfs_file_write_iter(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -764,17 +756,15 @@ xfs_file_aio_write(
+ 	struct inode		*inode = mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	ssize_t			ret;
+-	size_t			ocount = 0;
++	size_t			count = 0;
+ 
+ 	XFS_STATS_INC(xs_write_calls);
+ 
+ 	BUG_ON(iocb->ki_pos != pos);
+ 
+-	ret = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
+-	if (ret)
+-		return ret;
++	count = iov_iter_count(iter);
+ 
+-	if (ocount == 0)
++	if (count == 0)
+ 		return 0;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+@@ -783,10 +773,9 @@ xfs_file_aio_write(
+ 	}
+ 
+ 	if (unlikely(file->f_flags & O_DIRECT))
+-		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
++		ret = xfs_file_dio_aio_write(iocb, iter, pos, count);
+ 	else
+-		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
+-						  ocount);
++		ret = xfs_file_buffered_aio_write(iocb, iter, pos, count);
+ 
+ 	if (ret > 0) {
+ 		ssize_t err;
+@@ -1411,8 +1400,8 @@ const struct file_operations xfs_file_operations = {
+ 	.llseek		= xfs_file_llseek,
+ 	.read		= do_sync_read,
+ 	.write		= do_sync_write,
+-	.aio_read	= xfs_file_aio_read,
+-	.aio_write	= xfs_file_aio_write,
++	.read_iter	= xfs_file_read_iter,
++	.write_iter	= xfs_file_write_iter,
+ 	.splice_read	= xfs_file_splice_read,
+ 	.splice_write	= xfs_file_splice_write,
+ 	.unlocked_ioctl	= xfs_file_ioctl,
 -- 
-1.7.9.5
+1.8.4
 
 _______________________________________________
 xfs mailing list
