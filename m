@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2AB4A7F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:30:51 -0500 (CDT)
-Message-ID: <525EF79A.9090009@sgi.com>
-Date: Wed, 16 Oct 2013 15:31:22 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 639D97F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:33:13 -0500 (CDT)
+Message-ID: <525EF828.80908@sgi.com>
+Date: Wed, 16 Oct 2013 15:33:44 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add filter to 200 accommodate changed mount
-	output
-References: <5251D5E1.3020202@redhat.com>
-In-Reply-To: <5251D5E1.3020202@redhat.com>
+Subject: Re: [PATCH] xfstests: handle xfs_quota output w/ long devicenames
+References: <5251E83B.8060605@redhat.com>
+In-Reply-To: <5251E83B.8060605@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,11 +28,11 @@ This has been committed.
 Thanks
 --Rich
 
-commit fc671750a54c82e9b8db1b03e3102be994613252
+commit cd7eb340dd2eded93f41bc096954017e2f9fa58d
 Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sun Oct 6 21:28:01 2013 +0000
+Date:   Sun Oct 6 22:46:19 2013 +0000
 
-     xfstests: add filter to 200 accommodate changed mount output
+     xfstests: handle xfs_quota output w/ long devicenames
 
 _______________________________________________
 xfs mailing list
