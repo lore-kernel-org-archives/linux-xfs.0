@@ -1,35 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1006C7F3F
-	for <linux-xfs@oss.sgi.com>; Wed, 16 Oct 2013 12:35:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 040CC304043
-	for <linux-xfs@oss.sgi.com>; Wed, 16 Oct 2013 10:35:39 -0700 (PDT)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id tXsugdmpjSQHDcsM (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Wed, 16 Oct 2013 10:35:38 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1VWV0S-00059e-AI
-	for linux-xfs@oss.sgi.com; Wed, 16 Oct 2013 19:35:36 +0200
-Received: from wombat.san-francisco.ca.us ([75.101.60.140])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 16 Oct 2013 19:35:36 +0200
-Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 16 Oct 2013 19:35:36 +0200
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: xfs corrupted
-Date: Wed, 16 Oct 2013 10:33:06 -0700
-Message-ID: <i7v2jax9rs.ln2@goaway.wombat.san-francisco.ca.us>
-References: <1381826507281-35009.post@n7.nabble.com>
-	<20131015203434.2f336fd8@galadriel.home>
-	<525D8D67.2090301@keptprivate.com>
-	<20131015213447.40d05ea0@galadriel.home>
-	<525D9E3B.5040507@keptprivate.com>
-	<20131015202640.GR4446@dastard> <525E9550.80008@keptprivate.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E6FB67F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 13:12:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D99478F8081
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 11:12:42 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 0MBpvzhe4aYBvl9d (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Oct 2013 11:12:38 -0700 (PDT)
+Date: Wed, 16 Oct 2013 11:12:34 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: fs/attr.c:notify_change locking warning.
+Message-ID: <20131016181234.GA26646@infradead.org>
+References: <20131005005210.GA25773@redhat.com> <20131005031918.GL4446@dastard>
+	<20131015201905.GA7509@infradead.org>
+	<20131015213618.GU4446@dastard>
+	<20131016070528.GB18721@infradead.org>
+	<20131016102651.GF4446@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131016102651.GF4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,31 +33,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-On 2013-10-16, Stefanita Rares Dumitrescu <katmai@keptprivate.com> wrote:
->
-> The xfsprogs from the centos6 yum are newer
+On Wed, Oct 16, 2013 at 09:26:51PM +1100, Dave Chinner wrote:
+> The killpriv calls? I couldn't find anything that implemented those
+> security hooks nor any documentation about it, so I'm pretty much
+> clueless about it. FWIW, ocfs2 doesn't implement them, either....
 
-They are certainly newer than from CentOS 5, but are still reasonably
-old compared to git.  You should probably prefer the latest stable
-version or the git version over what's available from yum by default.
+The killpriv code ends up doing xattr calls for per-file capabilities
+(grep security/commoncap.c for killpriv).  Seems like ocfs2 is buggy in
+that regard.
 
-> I cloned the xfsprogs git and i am running it now with the new 15 gb 
-> swap that i created, and this is a monster in memory usage.
->
-> Pretty bit of discrepancy.
-
-As others have suggested, lots of memory use is to be expected with the
-size of the filesystem and the amount of memory you have.  Did you use
-the -P switch as Dave suggested?  I have found it very helpful in
-low-memory situations.
-
---keith
-
--- 
-kkeller@wombat.san-francisco.ca.us
-
+I suspect the easiest way to solve it properly in XFS is to simply
+retake the iolock exclusive and get the i_mutex as part of it.  This
+means direct I/O writes to files with the suid bit won't scale, but I
+think we can live with that given that it avoids introducing special
+cases that impact more code.
 
 _______________________________________________
 xfs mailing list
