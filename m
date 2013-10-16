@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 823227F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:50:50 -0500 (CDT)
-Message-ID: <525EFC49.7090300@sgi.com>
-Date: Wed, 16 Oct 2013 15:51:21 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ED4CC7F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 15:52:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E213AC001
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 13:52:35 -0700 (PDT)
+Received: from keptprivate.com (keptprivate.com [38.117.1.51]) by cuda.sgi.com
+	with ESMTP id p7newceZTV76Z6dq (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Oct 2013 13:52:33 -0700 (PDT)
+Message-ID: <525EFC93.8050203@keptprivate.com>
+Date: Wed, 16 Oct 2013 22:52:35 +0200
+From: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 10/10 v2] xfstests: Remount file system if MOUNT_OPTIONS
-	changed
-References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
-	<1373539085-8577-11-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1373539085-8577-11-git-send-email-lczerner@redhat.com>
+Subject: Re: xfs corrupted
+References: <1381826507281-35009.post@n7.nabble.com>
+	<20131015203434.2f336fd8@galadriel.home>
+	<525D8D67.2090301@keptprivate.com>
+	<20131015213447.40d05ea0@galadriel.home>
+	<525D9E3B.5040507@keptprivate.com> <20131015202640.GR4446@dastard>
+In-Reply-To: <20131015202640.GR4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,72 +32,74 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Lukas,
+another quick update:
 
-On 07/11/2013 05:38 AM, Lukas Czerner wrote:
-> When MOUNT_OPTIONS change we should remount TEST_DEV to put the changes
-> in effect. This will allow us to have different MOUNT_OPTIONS in sections
-> in configuration file.
->
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->   README.config-sections | 8 ++++++++
->   check                  | 8 ++++++++
->   2 files changed, 16 insertions(+)
->
-> diff --git a/README.config-sections b/README.config-sections
-> index 4d60272..2849fd5 100644
-> --- a/README.config-sections
-> +++ b/README.config-sections
-> @@ -36,6 +36,14 @@ For every section xfstests will run with specified options and will produce
->   separate results in the '$RESULT_BASE/$section_name' directory.
->
->
-> +Different mount options
-> +-----------------------
-> +
-> +Specifying different mount options in difference config sections is allowed.
-> +When MOUNT_OPTIONS differs in the following section TEST_DEV will be remounted
-> +with new MOUNT_OPTIONS automatically before running the test.
-> +
-> +
->   Multiple file systems
->   ---------------------
->
-> diff --git a/check b/check
-> index 5775276..ef91260 100755
-> --- a/check
-> +++ b/check
-> @@ -394,6 +394,7 @@ fi
->
->   for section in $HOST_OPTIONS_SECTIONS; do
->   	OLD_FSTYP=$FSTYP
-> +	OLD_MOUNT_OPTIONS=$MOUNT_OPTIONS
->   	get_next_config $section
->
->   	mkdir -p $RESULT_BASE
-> @@ -422,6 +423,13 @@ for section in $HOST_OPTIONS_SECTIONS; do
->   			exit 1
->   		fi
->   		_prepare_test_list
-> +	elif [ "$OLD_MOUNT_OPTIONS" != "$MOUNT_OPTIONS" ]; then
-> +		_umount_or_remount_ro $TEST_DEV 2>&1> /dev/null
-> +		out=`_mount_or_remount_rw "$MOUNT_OPTIONS" $TEST_DEV $TEST_DIR`
-> +		if [ $? -ne 1 ]; then
-> +			echo $out
-> +			exit 1
-> +		fi
->   	fi
->
->   	init_rc
->
+after reloading centos 6, i noticed that both arrays were in verifying 
+status, so i stopped xfs_repair to see if the raid array has some 
+inconsistencies, which it did, and repaired. so my note here is that 
+even if the arrays show okay, you should force verify after a power outage.
 
-Sorry this took so long to get to but this no longer applies cleanly.
+now the array verify has completed, and some errors were fixed, so i am 
+running xfs_repair once more on the broken array.
 
-Thanks
---Rich
+to keep note, i can now write on the array without issues, lag or whatever.
+
+
+On 15/10/2013 22:26, Dave Chinner wrote:
+> On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
+>> Since i am using centos 5.9, the version of the xfsprogs seems to be
+>> old, so i cloned the new one from sgi.
+>>
+>> I have a machine with 4 gb ram, and 4 gb swap, and it's all been
+>> eaten up by xfs_repair, and slowed down to a crawl.
+>>
+>> the sdc partition is the one being checked. i am all out of memory
+>> now. 4 gb phys and 4 gb swap all gone.
+>>
+>> http://pastebin.ca/2467064
+>>
+>> posted to pastebin for better formatting.
+>>
+>> i was using:
+>>
+>> [root@kp4 ~]# xfs_repair -o bhash=16384 -o ihash=16384 -o ag_stride=16 \
+>>> /dev/sdc >& /tmp/repair.log
+>
+> You don't have enough RAM to run threaded prefetching and parallel
+> AG processing. You'd do better to turn prefetching off entirely with
+> "-P" if you are having OOM problems.
+>
+>> but now i am trying the -m option to see if the memory can be
+>> limited, so the server doesn't freeze.
+>>
+>> [root@kp4 ~]# xfs_repair -m 3072 -o ag_stride=16 /dev/sdc >& /tmp/repair.log
+>>
+>> nothing in dmesg either.
+>
+> Give it another 10-20GB of swap, and it should be fine. xfs_repair
+> usually only thrashes swap when you don't have enough of it and it
+> keeps trying to free memory, paging in pages that are in swap to
+> free cached objects from them. Most of the memory references that
+> repair makes are quite local, so when pages are swapped out they
+> generally aren't needed again for a while except when cache reclaim
+> kicks in. Hence if you give it enough swap that it can grow without
+> bounds, then it should still be quite efficient.
+>
+> Keep in mind that badly corrupted filesystems require lots more
+> memory than clean filesystems to check and repair as there is lots
+> more intermediate state that repair needs to hold in memory about
+> partially or incompletely referenced objects. Don't be surprised if
+> the amount of memory needed to repair a badly broken filesystem is
+> 10-100x the amount of RAM needed to run xfs_repair on the same clean
+> filesystem....
+>
+> Cheers,
+>
+> Dave.
+>
 
 _______________________________________________
 xfs mailing list
