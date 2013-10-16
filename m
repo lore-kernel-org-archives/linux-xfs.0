@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E0FB67F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 10:19:06 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 632157F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 10:52:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D4873304039
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 08:19:03 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id bj8q8bBufHiCEvRa for <xfs@oss.sgi.com>;
-	Wed, 16 Oct 2013 08:19:03 -0700 (PDT)
-Message-ID: <525EAE67.5020509@sandeen.net>
-Date: Wed, 16 Oct 2013 10:19:03 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add specific test for default ACL inheritance
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D1E3FAC001
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 08:52:53 -0700 (PDT)
+Received: from mail-wg0-f53.google.com (mail-wg0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id XdlZobNc8JemVz3k
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Oct 2013 08:52:51 -0700 (PDT)
+Received: by mail-wg0-f53.google.com with SMTP id y10so926143wgg.8
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 08:52:50 -0700 (PDT)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH v2] xfstests: add specific test for default ACL inheritance
+Date: Wed, 16 Oct 2013 16:52:41 +0100
+Message-Id: <1381938761-31625-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1381932296-14674-1-git-send-email-fdmanana@gmail.com>
 References: <1381932296-14674-1-git-send-email-fdmanana@gmail.com>
-	<525EAC5F.3040201@sandeen.net>
-	<CAL3q7H6N3K7wda5Rm8OYS5a0QYYQr4MbXpxCpahuXVj+dnzozA@mail.gmail.com>
-In-Reply-To: <CAL3q7H6N3K7wda5Rm8OYS5a0QYYQr4MbXpxCpahuXVj+dnzozA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,92 +25,185 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fdmanana@gmail.com
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "dsterba@suse.cz" <dsterba@suse.cz>, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: sandeen@sandeen.net, dsterba@suse.cz, jbacik@fusionio.com, Filipe David Borba Manana <fdmanana@gmail.com>
 
-On 10/16/13 10:14 AM, Filipe David Manana wrote:
-> On Wed, Oct 16, 2013 at 4:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 10/16/13 9:04 AM, Filipe David Borba Manana wrote:
->>> This test is motivated by an issue found by a btrfs user, addressed
->>> and described by the following GNU/Linux kernel patch:
->>>
->>> https://patchwork.kernel.org/patch/3046931/
->>
->> Hi Filipe, thanks for the patch.
->>
->> Usually we don't want to add new, possibly-failing cases to old tests;
->> that makes it harder to identify when the code regressed vs. when
->> the test changed to test new things.
->>
->> It would be better to just copy the framework of tests/shared/051
->> to a new test in shared/ and test only this new inheritance
->> problem.
-> 
-> Ok, I wasn't aware of that logic, which makes sense.
-> 
->>
->> Also, I'm confused about this hunk:
->>
->>> @@ -345,7 +345,12 @@ chacl $acl2 largeaclfile
->>>  getfacl --numeric largeaclfile | _filter_aces
->>>
->>>  echo "1 above xfs acl max"
->>> -chacl $acl3 largeaclfile
->>> +if [ "$FSTYP" != "btrfs" ]; then
->>> +     chacl $acl3 largeaclfile
->>> +else
->>> +     echo 'chacl: cannot set access acl on "largeaclfile": Invalid argument'
->>> +fi
->>> +
->>>  getfacl --numeric largeaclfile | _filter_aces
->>>
->>>  echo "use 16 aces"
->>
->> What's that about?
-> 
-> That chacl command succeeds on btrfs, which makes the test fail. Seems
-> to rely on some xfs specific limit.
-> By moving this test into a new file, that hack is no longer needed.
+This test is motivated by an issue found by a btrfs user, addressed
+and described by the following GNU/Linux kernel patch:
 
-Oh, if I'd read the context... ;)
+https://patchwork.kernel.org/patch/3046931/
 
->>>  echo "1 above xfs acl max"
+The steps to reproduce the issue on btrfs are the following:
 
-and:
+$ mkfs.btrfs -f /dev/loop0
+$ mount /dev/loop0 /mnt
+$ mkdir /mnt/acl
+$ setfacl -d --set u::rwx,g::rwx,o::- /mnt/acl
+$ getfacl /mnt/acl
+user::rwx
+group::rwx
+other::r-x
+default:user::rwx
+default:group::rwx
+default:other::---
 
-XFS_ACL_MAX_ENTRIES=25
-num_aces_pre=`expr $XFS_ACL_MAX_ENTRIES - 1`
-num_aces_post=`expr $XFS_ACL_MAX_ENTRIES + 1`
+$ mkdir /mnt/acl/dir1
+$ getfacl /mnt/acl/dir1
+user::rwx
+group::rwx
+other::---
 
-acl1=`_create_n_aces $num_aces_pre`
-acl2=`_create_n_aces $XFS_ACL_MAX_ENTRIES`
-acl3=`_create_n_aces $num_aces_post`
+After unmounting and mounting again the filesystem, getfacl returned the
+expected default ACL for the subdirectory:
 
-Sorry for not reading more.
+$ umount /mnt/acl
+$ mount /dev/loop0 /mnt
+$ getfacl /mnt/acl/dir1
+user::rwx
+group::rwx
+other::---
+default:user::rwx
+default:group::rwx
+default:other::---
 
-interesting that it's a udf test too...
+This means that the underlying ACL xattr was persisted correctly but
+the in memory representation of the inode had (incorrectly) a NULL ACL.
 
-Ok, but right - it's testing an xfs specific limit.
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
 
-Your new test can probably be generic, with a _require_acls
-to skip the test on any fs w/o acl support.
+V2: Moved the regression test into a dedicated and new file, as suggested
+    by Eric Sandeen.
 
-Thanks,
+ tests/shared/052     |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/052.out |   21 +++++++++++++++
+ tests/shared/group   |    1 +
+ 3 files changed, 92 insertions(+)
+ create mode 100755 tests/shared/052
+ create mode 100644 tests/shared/052.out
 
--Eric
-> Thanks Eric.
-> 
->>
->> Thanks,
->> -Eric
->>
-> 
-> 
-> 
+diff --git a/tests/shared/052 b/tests/shared/052
+new file mode 100755
+index 0000000..ee08eda
+--- /dev/null
++++ b/tests/shared/052
+@@ -0,0 +1,70 @@
++#! /bin/bash
++# FS QA Test No. shared/052
++#
++# Regression test to make sure a directory inherits the default ACL from
++# its parent directory. This test was motivated by an issue reported by
++# a btrfs user. That issue is fixed and described by the following btrfs
++# kernel patch:
++#
++#     https://patchwork.kernel.org/patch/3046931/
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# FAILure is the default!
++
++_cleanup()
++{
++       rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++
++# real QA test starts here
++_supported_os Linux
++_require_acls
++_require_scratch
++_need_to_be_root
++
++rm -f $seqres.full
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++mkdir $SCRATCH_MNT/testdir
++setfacl -d --set u::rwx,g::rwx,o::- $SCRATCH_MNT/testdir
++getfacl --absolute-names $SCRATCH_MNT/testdir | _filter_scratch
++
++mkdir $SCRATCH_MNT/testdir/testsubdir
++getfacl --absolute-names $SCRATCH_MNT/testdir/testsubdir | _filter_scratch
++
++# success, all done
++status=0
++exit
+diff --git a/tests/shared/052.out b/tests/shared/052.out
+new file mode 100644
+index 0000000..d453175
+--- /dev/null
++++ b/tests/shared/052.out
+@@ -0,0 +1,21 @@
++QA output created by 052
++# file: SCRATCH_MNT/testdir
++# owner: root
++# group: root
++user::rwx
++group::r-x
++other::r-x
++default:user::rwx
++default:group::rwx
++default:other::---
++
++# file: SCRATCH_MNT/testdir/testsubdir
++# owner: root
++# group: root
++user::rwx
++group::rwx
++other::---
++default:user::rwx
++default:group::rwx
++default:other::---
++
+diff --git a/tests/shared/group b/tests/shared/group
+index 0ad640b..91cb049 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -5,6 +5,7 @@
+ #
+ 032 mkfs auto quick
+ 051 acl udf auto quick
++052 acl auto quick
+ 218 auto fsr quick
+ 243 auto quick prealloc
+ 272 auto enospc rw
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
