@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0D3B77F3F
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 16:24:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D79FB304062
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 14:24:16 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A945A7F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 16:29:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6D1198F8050
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 14:29:20 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id S5o3Mp3MQAi3GDTT for <xfs@oss.sgi.com>;
-	Thu, 17 Oct 2013 14:24:15 -0700 (PDT)
-Message-ID: <5260557D.8050404@sandeen.net>
-Date: Thu, 17 Oct 2013 16:24:13 -0500
+	ESMTP id w1lfKkMre07R8Aur for <xfs@oss.sgi.com>;
+	Thu, 17 Oct 2013 14:29:18 -0700 (PDT)
+Message-ID: <526056AC.4000307@sandeen.net>
+Date: Thu, 17 Oct 2013 16:29:16 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] xfstests: New _require_* tests for CRC enabled
-	filesystems
+Subject: Re: [PATCH 6/6] xfstests: add a multithreaded mode to bstat
 References: <1370610398-14630-1-git-send-email-david@fromorbit.com>
-	<1370610398-14630-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1370610398-14630-6-git-send-email-david@fromorbit.com>
+	<1370610398-14630-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370610398-14630-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,288 +34,497 @@ Cc: xfs@oss.sgi.com
 On 6/7/13 8:06 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> CRCs always enabled 32 bit project inodes and attr2 formats, hence
-> they cannot be turned off. Add new require rules for the tests that
-> require attr and 16 bit project IDs so these tests are avoided on
-> CRC enabled filesystems.
-> 
-> Also, add a xfs_db write check so that we can avoid tests that are
-> dependent on xfs_db modifying filesystem structures as they will
-> fail on CRC enabled filessystems right now. This is just temporary
-> until full write xfs_db support is available.
+> For benchmarking of bulkstat, add a multithreaded mode that spawns a
+> thread per AG and runs bulkstat on every AG in parallel. There is a
+> small amount of overlap between each AG because of the way the
+> interface works only on inode numbers, so some inodes are reported
+> twice. A real implementation of this sort of parallelism would be
+> greatly helped by adding an AG parameter to the bulkstat interface.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-small optimization question below
+At least w/ older xfsprogs[[qa]-devel] packages, I get:
+
+bstat.c:41: error: redefinition of 'fls'
+/usr/include/xfs/bitops.h:8: note: previous definition of 'fls' was here
+bstat.c:70: error: redefinition of 'xfs_highbit32'
+/usr/include/xfs/xfs_bit.h:50: note: previous definition of 'xfs_highbit32' was here
+
+w/ the new functions you've added here...
+
+-Eric
 
 > ---
->  common/attr      |    6 ++++++
->  common/rc        |   26 +++++++++++++++++++++++---
->  tests/shared/298 |    2 +-
->  tests/xfs/044    |    1 +
->  tests/xfs/045    |    1 +
->  tests/xfs/186    |    2 ++
->  tests/xfs/187    |   13 +++++++------
->  tests/xfs/199    |    1 +
->  tests/xfs/244    |    1 +
->  tests/xfs/278    |    2 ++
->  tests/xfs/287    |    4 +++-
->  tests/xfs/291    |    2 +-
->  12 files changed, 49 insertions(+), 12 deletions(-)
+>  src/Makefile |    2 +-
+>  src/bstat.c  |  388 +++++++++++++++++++++++++++++++++++++++++++++-------------
+>  2 files changed, 302 insertions(+), 88 deletions(-)
 > 
-> diff --git a/common/attr b/common/attr
-> index e5070bf..1ab5014 100644
-> --- a/common/attr
-> +++ b/common/attr
-> @@ -176,6 +176,12 @@ _require_attrs()
->      rm -f $TEST_DIR/syscalltest.out
->  }
+> diff --git a/src/Makefile b/src/Makefile
+> index c18ffc9..243a432 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -22,7 +22,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
 >  
-> +_require_attr_v1()
+>  SUBDIRS =
+>  
+> -LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
+> +LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL) -lpthread
+>  
+>  ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
+>  LINUX_TARGETS += loggen
+> diff --git a/src/bstat.c b/src/bstat.c
+> index 4e22ecd..0fc7d9d 100644
+> --- a/src/bstat.c
+> +++ b/src/bstat.c
+> @@ -18,6 +18,60 @@
+>  
+>  #include "global.h"
+>  #include <xfs/jdm.h>
+> +#include <pthread.h>
+> +
+> +
+> +int	debug;
+> +int	quiet;
+> +int	statit;
+> +int	verbose;
+> +int	threaded;
+> +
+> +unsigned int
+> +libxfs_log2_roundup(unsigned int i)
 > +{
-> +	scratch_mkfs_xfs -f -i attr=1 > /dev/null 2>&1 \
-
-How about adding an "-N" to speed it up if the fs is large?
-
-> +		|| _notrun "attr v1 not supported"
+> +	unsigned int    rval;
+> +
+> +	for (rval = 0; rval < NBBY * sizeof(i); rval++) {
+> +		if ((1 << rval) >= i)
+> +			break;
+> +	}
+> +	return rval;
+> +}
+> +static inline int fls(int x)
+> +{
+> +	int r = 32;
+> +
+> +	if (!x)
+> +		return 0;
+> +	if (!(x & 0xffff0000u)) {
+> +		x <<= 16;
+> +		r -= 16;
+> +	}
+> +	if (!(x & 0xff000000u)) {
+> +		x <<= 8;
+> +		r -= 8;
+> +	}
+> +	if (!(x & 0xf0000000u)) {
+> +		x <<= 4;
+> +		r -= 4;
+> +	}
+> +	if (!(x & 0xc0000000u)) {
+> +		x <<= 2;
+> +		r -= 2;
+> +	}
+> +	if (!(x & 0x80000000u)) {
+> +		x <<= 1;
+> +		r -= 1;
+> +	}
+> +	return r;
 > +}
 > +
->  # getfattr -R returns info in readdir order which varies from fs to fs.
->  # This sorts the output by filename
->  _sort_getfattr_output()
-> diff --git a/common/rc b/common/rc
-> index 88d38ef..b2ad2a0 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1074,14 +1074,34 @@ _require_dm_flakey()
->  }
->  
->  # this test requires the projid32bit feature to be available in
-> -# mkfs.xfs
-> -#
-> +# mkfs.xfs. We need to open code the mkfs test because _scratch_mkfs_xfs
-> +# will drop command line mkfs options to ensure that it succeeds, hence
-> +# not actually testing the configuration we desire to be tested for support.
->  _require_projid32bit()
->  {
-> -        _scratch_mkfs_xfs -f -i projid32bit=0 >/dev/null 2>&1 \
-> +    _scratch_options mkfs
-> +
-> +    $MKFS_XFS_PROG $SCRATCH_OPTIONS $MKFS_OPTIONS \
-> +		-f -i projid32bit=1 $SCRATCH_DEV >/dev/null 2>&1 \
->  	   || _notrun "mkfs.xfs doesn't have projid32bit feature"
->  }
-
-Same here?
-
-> +_require_projid16bit()
+> +static inline int xfs_highbit32(__uint32_t v)
 > +{
-> +    _scratch_options mkfs
-> +
-> +    $MKFS_XFS_PROG $SCRATCH_OPTIONS $MKFS_OPTIONS \
-> +		-f -i projid32bit=0 $SCRATCH_DEV >/dev/null 2>&1 \
-> +	   || _notrun "16 bit project IDs not supported on $SCRATCH_DEV"
-> +}
-
-and here?  Do we want the mkfs as a side effect?  (that would seem odd...)
-
-> +
-> +# This test requires xfs_db write support
-> +_require_xfs_db_write()
-> +{
-> +	$XFS_DB_PROG $TEST_DEV > /dev/null 2>&1 \
-> +		|| _notrun "xfs_db write support required."
+> +	return fls(v) - 1;
 > +}
 > +
->  # this test requires that external log/realtime devices are not in use
->  #
->  _require_nonexternal()
-> diff --git a/tests/shared/298 b/tests/shared/298
-> index 4541798..6b5402c 100755
-> --- a/tests/shared/298
-> +++ b/tests/shared/298
-> @@ -70,7 +70,7 @@ get_free_sectors()
->  	agsize=`xfs_info $loop_mnt | $SED_PROG -n 's/.*agsize=\(.*\) blks.*/\1/p'`
->  	# Convert free space (agno, block, length) to (start sector, end sector)
->  	$UMOUNT_PROG $loop_mnt
-> -	$XFS_DB_PROG -c "freesp -d" $img_file | $SED_PROG '/^.*from/,$d'| \
-> +	$XFS_DB_PROG -r -c "freesp -d" $img_file | $SED_PROG '/^.*from/,$d'| \
->  		 $AWK_PROG -v spb=$sectors_per_block -v agsize=$agsize \
->  		'{ print spb * ($1 * agsize + $2), spb * ($1 * agsize + $2 + $3) - 1 }'
->  	;;
-> diff --git a/tests/xfs/044 b/tests/xfs/044
-> index a84af22..cf575f8 100755
-> --- a/tests/xfs/044
-> +++ b/tests/xfs/044
-> @@ -44,6 +44,7 @@ _supported_fs xfs
->  _supported_os Linux
 >  
->  _require_logdev
-> +_require_xfs_db_write
+>  void
+>  dotime(void *ti, char *s)
+> @@ -62,87 +116,21 @@ printstat(struct stat64 *sp)
+>  	dotime(&sp->st_ctime, "ctime");
+>  }
 >  
->  _filter_logprint()
+> -int
+> -main(int argc, char **argv)
+> +static int
+> +do_bstat(
+> +	int		fsfd,
+> +	jdm_fshandle_t	*fshandlep,
+> +	char		*name,
+> +	int		nent,
+> +	__u64		first,
+> +	__u64		last)
 >  {
-> diff --git a/tests/xfs/045 b/tests/xfs/045
-> index 84ca802..17d2391 100755
-> --- a/tests/xfs/045
-> +++ b/tests/xfs/045
-> @@ -45,6 +45,7 @@ _supported_fs xfs
->  _supported_os Linux
+>  	__s32		count;
+>  	int		total = 0;
+> -	int		fsfd;
+> -	int		i;
+> -	__u64		last = 0;
+> -	char		*name;
+> -	int		nent;
+> -	int		debug = 0;
+> -	int		quiet = 0;
+> -	int		statit = 0;
+> -	int		verbose = 0;
+>  	xfs_bstat_t	*t;
+>  	int		ret;
+> -	jdm_fshandle_t	*fshandlep = NULL;
+> -	int		fd;
+> -	struct stat64	sb;
+> -	int nread;
+> -	char *cc_readlinkbufp;
+> -	int cc_readlinkbufsz;
+> -	int 		c;
+>  	xfs_fsop_bulkreq_t bulkreq;
+> -
+> -	while ((c = getopt(argc, argv, "cdl:qv")) != -1) {
+> -		switch (c) {
+> -		case 'q':
+> -			quiet = 1;
+> -			break;
+> -		case 'v':
+> -			verbose = 1;
+> -			break;
+> -		case 'c':
+> -			statit = 1;
+> -			break;
+> -		case 'd':
+> -			debug = 1;
+> -			break;
+> -		case 'l':
+> -			last = atoi(optarg);
+> -			break;
+> -		case '?':
+> -		printf("usage: xfs_bstat [-c] [-q] [-v] [ dir [ batch_size ]]\n");
+> -		printf("   -c   Check the results against stat(3) output\n");
+> -		printf("   -q   Quiet\n");
+> -		printf("   -l _num_  Inode to start with\n");
+> -		printf("   -v   Verbose output\n");
+> -			exit(1);
+> -		}
+> -	}
+> -	argc -= optind;
+> -	argv += optind;
+> -
+> -	if (argc < 1)
+> -		name = ".";
+> -	else
+> -		name = *argv;
+> -
+> -	fsfd = open(name, O_RDONLY);
+> -	if (fsfd < 0) {
+> -		perror(name);
+> -		exit(1);
+> -	}
+> -	if (argc < 2)
+> -		nent = 4096;
+> -	else
+> -		nent = atoi(*++argv);
+> -
+> -	if (verbose)
+> -		printf("Bulkstat test on %s, batch size=%d statcheck=%d\n", 
+> -			name, nent, statit);
+> -
+> -	if (statit) {
+> -		fshandlep = jdm_getfshandle( name );
+> -		if (! fshandlep) {
+> -			printf("unable to construct sys handle for %s: %s\n",
+> -			  name, strerror(errno));
+> -			return -1;
+> -		}
+> -	}
+> +	__u64		ino;
 >  
->  _require_scratch
-> +_require_xfs_db_write
+>  	t = malloc(nent * sizeof(*t));
 >  
->  echo "*** get uuid"
->  uuid=`_get_existing_uuid`
-> diff --git a/tests/xfs/186 b/tests/xfs/186
-> index 960aed1..71f2a31 100755
-> --- a/tests/xfs/186
-> +++ b/tests/xfs/186
-> @@ -147,6 +147,8 @@ _supported_os Linux
+> @@ -150,23 +138,27 @@ main(int argc, char **argv)
+>  		printf(
+>  		  "XFS_IOC_FSBULKSTAT test: last=%lld nent=%d\n", (long long)last, nent);
 >  
->  _require_scratch
->  _require_attrs
-> +_require_attr_v1
-> +_require_xfs_db_write
->  
->  rm -f $seqres.full
->  
-> diff --git a/tests/xfs/187 b/tests/xfs/187
-> index 9cf1305..415ab11 100755
-> --- a/tests/xfs/187
-> +++ b/tests/xfs/187
-> @@ -58,6 +58,7 @@ _supported_os Linux
->  
->  _require_scratch
->  _require_attrs
-> +_require_attr_v1
->  
->  rm -f $seqres.full
->  
-> @@ -87,13 +88,13 @@ echo ""
->  echo "attr2 fs"
->  echo ""
->  _scratch_mkfs -i attr=2 -l lazy-count=0 >/dev/null 2>&1
-> -$XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 | _filter_version
-> +$XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
->  echo ""
->  echo "noattr2 fs"
->  echo ""
->  _scratch_mount -o noattr2
->  $UMOUNT_PROG $SCRATCH_MNT
-> -$XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 | _filter_version
-> +$XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
->  
->  # adding an EA will ensure the ATTR1 flag is turned on
->  echo ""
-> @@ -102,7 +103,7 @@ echo ""
->  echo "attr2 fs"
->  echo ""
->  _scratch_mkfs -i attr=2 -l lazy-count=0 >/dev/null 2>&1
-> -$XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 | _filter_version
-> +$XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
->  echo ""
->  echo "noattr2 fs"
->  echo ""
-> @@ -113,7 +114,7 @@ $SETFATTR_PROG -n user.test -v 0xbabe testfile
->  $GETFATTR_PROG testfile
->  cd $here
->  $UMOUNT_PROG $SCRATCH_MNT
-> -$XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 | _filter_version
-> +$XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
->  
->  echo ""
->  echo "*** 3. test noattr2 mount and lazy sb ***"
-> @@ -122,7 +123,7 @@ echo ""
->  echo "attr2 fs"
->  echo ""
->  _scratch_mkfs -i attr=2 -l lazy-count=1 >/dev/null 2>&1
-> -$XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 | _filter_version
-> +$XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
->  echo ""
->  echo "noattr2 fs"
->  echo ""
-> @@ -131,7 +132,7 @@ cd $SCRATCH_MNT
->  touch testfile
->  cd $here
->  $UMOUNT_PROG $SCRATCH_MNT
-> -$XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 | _filter_version
-> +$XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
->  
->  # success, all done
->  status=0
-> diff --git a/tests/xfs/199 b/tests/xfs/199
-> index 1d64e02..0ab0dba 100755
-> --- a/tests/xfs/199
-> +++ b/tests/xfs/199
-> @@ -48,6 +48,7 @@ _supported_fs xfs
->  _supported_os Linux
->  
->  _require_scratch
-> +_require_xfs_db_write
->  
->  _scratch_mkfs_xfs -l lazy-count=1 >/dev/null 2>&1
->  
-> diff --git a/tests/xfs/244 b/tests/xfs/244
-> index 7d2a2d3..90291fb 100755
-> --- a/tests/xfs/244
-> +++ b/tests/xfs/244
-> @@ -48,6 +48,7 @@ _supported_fs xfs
->  _require_xfs_quota
->  _require_scratch
->  _require_projid32bit
-> +_require_projid16bit
->  
->  export MOUNT_OPTIONS="-opquota"
->  
-> diff --git a/tests/xfs/278 b/tests/xfs/278
-> index 938717d..e6f9289 100755
-> --- a/tests/xfs/278
-> +++ b/tests/xfs/278
-> @@ -46,6 +46,8 @@ _cleanup()
->  _supported_fs xfs
->  _supported_os Linux
->  _require_scratch
-> +_require_xfs_db_write
+> -	bulkreq.lastip  = &last;
+> +	ino = first;
 > +
->  _scratch_mkfs >/dev/null 2>&1
->  _scratch_mount
+> +	bulkreq.lastip  = &ino;
+>  	bulkreq.icount  = nent;
+>  	bulkreq.ubuffer = t;
+>  	bulkreq.ocount  = &count;
 >  
-> diff --git a/tests/xfs/287 b/tests/xfs/287
-> index 9de0b3d..febc3af 100755
-> --- a/tests/xfs/287
-> +++ b/tests/xfs/287
-> @@ -45,7 +45,7 @@ _cleanup()
+>  	while ((ret = xfsctl(name, fsfd, XFS_IOC_FSBULKSTAT, &bulkreq)) == 0) {
+> +		int		i;
+> +
+>  		total += count;
 >  
->  _print_projid()
->  {
-> -	$XFS_DB_PROG -c "inode $1" \
-> +	$XFS_DB_PROG -r -c "inode $1" \
->  		-c "print core.projid_lo" \
->  		-c "print core.projid_hi" \
->  		$SCRATCH_DEV
-> @@ -56,6 +56,8 @@ _supported_fs xfs
->  _require_xfs_quota
->  _require_scratch
->  _require_projid32bit
-> +_require_projid16bit
-> +_require_xfs_db_write	# for xfs_admin
+>  		if (verbose)
+>  			printf(
+> -	    "XFS_IOC_FSBULKSTAT test: last=%lld ret=%d count=%d total=%d\n", 
+> -						(long long)last, ret, count, total);
+> +    "XFS_IOC_FSBULKSTAT test: first/last/ino=%lld/%lld/%lld ret=%d count=%d total=%d\n", 
+> +			(long long)first, (long long)last, (long long)ino, ret, count, total);
+>  		if (count == 0)
+> -			exit(0);
+> +			break;
 >  
->  # create xfs fs without projid32bit ability, will be gained by xfs_admin
->  _scratch_mkfs_xfs -i projid32bit=0 -d size=200m 2> /dev/null >> $seqres.full \
-> diff --git a/tests/xfs/291 b/tests/xfs/291
-> index 7723b9e..03c4de9 100755
-> --- a/tests/xfs/291
-> +++ b/tests/xfs/291
-> @@ -70,7 +70,7 @@ xfs_io -f -c "pwrite 0 16m" -c "fsync" $SCRATCH_MNT/space_file.large >> $seqres.
+>  		if ( quiet && ! statit )
+> -			continue;
+> +			goto next;
 >  
->  # Take a look at freespace for any post-mortem on the test
->  _scratch_unmount
-> -xfs_db -c freesp $SCRATCH_DEV >> $seqres.full 2>&1
-> +xfs_db -r -c freesp $SCRATCH_DEV >> $seqres.full 2>&1
->  _scratch_mount
+>  		for (i = 0; i < count; i++) {
+>  			if (! quiet) {
+> @@ -174,6 +166,12 @@ main(int argc, char **argv)
+>  			}
+>  	
+>  			if (statit) {
+> +				char *cc_readlinkbufp;
+> +				int cc_readlinkbufsz;
+> +				struct stat64	sb;
+> +				int nread;
+> +				int		fd;
+> +
+>  				switch(t[i].bs_mode & S_IFMT) {
+>  				case S_IFLNK:
+>  					cc_readlinkbufsz = MAXPATHLEN;
+> @@ -244,10 +242,231 @@ main(int argc, char **argv)
+>  				}
+>  			}
+>  		}
+> -
+> +next:
+>  		if (debug)
+>  			break;
+> +
+> +		if (ino >= last)
+> +			break;
+>  	}
+> +	if (verbose)
+> +		printf(
+> +	    "XFS_IOC_FSBULKSTAT test: last=%lld nent=%d ret=%d count=%d\n", 
+> +					       (long long)last, nent, ret, count);
+> +
+> +	return total;
+> +}
+> +
+> +struct thread_args {
+> +	pthread_t	tid;
+> +	int		fsfd;
+> +	jdm_fshandle_t	*fshandlep;
+> +	char		*name;
+> +	int		nent;
+> +	__u64		first;
+> +	__u64		last;
+> +	int		ret;
+> +};
+> +
+> +static void *
+> +do_bstat_thread(
+> +	void	*args)
+> +{
+> +	struct thread_args *targs = args;
+> +
+> +	targs->ret = do_bstat(targs->fsfd, targs->fshandlep, targs->name,
+> +			      targs->nent, targs->first, targs->last);
+> +	return NULL;
+> +}
+> +
+> +/*
+> + *   XFS_AGINO_TO_INO(mp,a,i)        \
+> + *           (((xfs_ino_t)(a) << XFS_INO_AGINO_BITS(mp)) | (i))
+> + *
+> + * 	i always zero, so:
+> + * 			a << XFS_INO_AGINO_BITS(mp)
+> + *
+> + *   XFS_INO_AGINO_BITS(mp)          (mp)->m_agino_log
+> + *
+> + *   mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog
+> + *
+> + *   sb_inopblog = fsgeom.blocksize / fsgeom.inodesize
+> + *   sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)fsgeom.agblocks);
+> + *
+> + *	a << (libxfs_highbit32(fsgeom.blocksize /fsgeom.inodesize) +
+> + *				libxfs_log2_roundup(fsgeom.agblocks));
+> + */
+> +#define FSGEOM_INOPBLOG(fsg) \
+> +		(xfs_highbit32((fsg).blocksize / (fsg).inodesize))
+> +#define FSGEOM_AGINO_TO_INO(fsg, a, i) \
+> +	(((__u64)(a) << (FSGEOM_INOPBLOG(fsg) + \
+> +			libxfs_log2_roundup((fsg).agblocks))) | (i))
+> +
+> +/*
+> + *    XFS_OFFBNO_TO_AGINO(mp,b,o)     \                                        
+> + *            ((xfs_agino_t)(((b) << XFS_INO_OFFSET_BITS(mp)) | (o)))
+> + *
+> + *       i always zero, so:
+> + *			b << XFS_INO_OFFSET_BITS(mp)
+> + *
+> + *    XFS_INO_OFFSET_BITS(mp)         (mp)->m_sb.sb_inopblog
+> + */
+> +#define FSGEOM_OFFBNO_TO_AGINO(fsg, b, o) \
+> +		((__u32)(((b) << FSGEOM_INOPBLOG(fsg)) | (o)))
+> +static int
+> +do_threads(
+> +	int		fsfd,
+> +	jdm_fshandle_t	*fshandlep,
+> +	char		*name,
+> +	int		nent,
+> +	__u64		first)
+> +{
+> +	struct xfs_fsop_geom geom;
+> +	struct thread_args *targs;
+> +	int		ret;
+> +	int		i;
+> +	int		numthreads;
+> +	int		total = 0;
+> +
+> +
+> +	/* get number of AGs */
+> +	ret = ioctl(fsfd, XFS_IOC_FSGEOMETRY, &geom);
+> +	if (ret) {
+> +		perror("XFS_IOC_FSGEOMETRY");
+> +		exit(1);
+> +	}
+> +
+> +	/* allocate thread array */
+> +	targs = malloc(geom.agcount * sizeof(*targs));
+> +	if (ret) {
+> +		perror("malloc(targs)");
+> +		exit(1);
+> +	}
+> +
+> +	for (i = 0; i < geom.agcount; i++) {
+> +		__u64 last;
+> +
+> +		last = FSGEOM_AGINO_TO_INO(geom, i,
+> +					   FSGEOM_OFFBNO_TO_AGINO(geom,
+> +						       geom.agblocks - 1, 0));
+> +
+> +		if (first > last) {
+> +			i--;
+> +			continue;
+> +		}
+> +		first = MAX(first, FSGEOM_AGINO_TO_INO(geom, i, 0));
+> +
+> +		targs[i].fsfd = fsfd;
+> +		targs[i].fshandlep = fshandlep;
+> +		targs[i].name = name;
+> +		targs[i].nent = nent;
+> +		targs[i].first = first;
+> +		targs[i].last = last;
+> +		targs[i].ret = 0;
+> +	}
+> +	numthreads = i;
+> +
+> +	/* start threads */
+> +	for (i = 0; i< numthreads; i++) {
+> +		ret = pthread_create(&targs[i].tid, NULL, do_bstat_thread, &targs[i]);
+> +		if (ret) {
+> +			perror("pthread-create");
+> +			exit(1);
+> +		}
+> +	}
+> +
+> +
+> +	/* join threads */
+> +	for (i = 0; i < numthreads; i++) {
+> +		if (targs[i].tid) {
+> +			pthread_join(targs[i].tid, NULL);
+> +			total += targs[i].ret;
+> +		}
+> +	}
+> +
+> +	/* die */
+> +	return total;
+> +}
+> +
+> +
+> +int
+> +main(int argc, char **argv)
+> +{
+> +	int		fsfd;
+> +	__u64		first = 0;
+> +	char		*name;
+> +	int		nent;
+> +	int		ret;
+> +	jdm_fshandle_t	*fshandlep = NULL;
+> +	int 		c;
+> +
+> +	while ((c = getopt(argc, argv, "cdl:qtv")) != -1) {
+> +		switch (c) {
+> +		case 'q':
+> +			quiet = 1;
+> +			break;
+> +		case 'v':
+> +			verbose = 1;
+> +			break;
+> +		case 'c':
+> +			statit = 1;
+> +			break;
+> +		case 'd':
+> +			debug = 1;
+> +			break;
+> +		case 'l':
+> +			first = atoi(optarg);
+> +			break;
+> +		case 't':
+> +			threaded = 1;
+> +			break;
+> +		case '?':
+> +		printf("usage: xfs_bstat [-c] [-q] [-v] [ dir [ batch_size ]]\n");
+> +		printf("   -c   Check the results against stat(3) output\n");
+> +		printf("   -q   Quiet\n");
+> +		printf("   -l _num_  Inode to start with\n");
+> +		printf("   -v   Verbose output\n");
+> +			exit(1);
+> +		}
+> +	}
+> +	argc -= optind;
+> +	argv += optind;
+> +
+> +	if (argc < 1)
+> +		name = ".";
+> +	else
+> +		name = *argv;
+> +
+> +	fsfd = open(name, O_RDONLY);
+> +	if (fsfd < 0) {
+> +		perror(name);
+> +		exit(1);
+> +	}
+> +	if (argc < 2)
+> +		nent = 4096;
+> +	else
+> +		nent = atoi(*++argv);
+> +
+> +	if (verbose)
+> +		printf("Bulkstat test on %s, batch size=%d statcheck=%d\n", 
+> +			name, nent, statit);
+> +
+> +	if (statit) {
+> +		fshandlep = jdm_getfshandle( name );
+> +		if (! fshandlep) {
+> +			printf("unable to construct sys handle for %s: %s\n",
+> +			  name, strerror(errno));
+> +			return -1;
+> +		}
+> +	}
+> +
+> +	if (threaded)
+> +		ret = do_threads(fsfd, fshandlep, name, nent, first);
+> +	else
+> +		ret = do_bstat(fsfd, fshandlep, name, nent, first, -1LL);
+> +
+> +	if (verbose)
+> +		printf("Bulkstat found %d inodes\n", ret);
 >  
->  # Step 2: Make a bunch of (hopefully fragmented) multiblock
+>  	if (fsfd)
+>  		close(fsfd);
+> @@ -255,10 +474,5 @@ main(int argc, char **argv)
+>  	if (ret < 0 )
+>  		perror("xfsctl(XFS_IOC_FSBULKSTAT)");
+>  
+> -	if (verbose)
+> -		printf(
+> -	    "XFS_IOC_FSBULKSTAT test: last=%lld nent=%d ret=%d count=%d\n", 
+> -					       (long long)last, nent, ret, count);
+> -
+> -	return 1;
+> +	return 0;
+>  }
 > 
 
 _______________________________________________
