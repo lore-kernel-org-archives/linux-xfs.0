@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B4FEE7F3F
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:04:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A40008F8040
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 11:04:37 -0700 (PDT)
-Received: from keptprivate.com (keptprivate.com [38.117.1.51]) by cuda.sgi.com
-	with ESMTP id tA9mI3BmoXURFYas (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Oct 2013 11:04:33 -0700 (PDT)
-Message-ID: <526026AE.8000306@keptprivate.com>
-Date: Thu, 17 Oct 2013 20:04:30 +0200
-From: Stefanita Rares Dumitrescu <katmai@keptprivate.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A3E417F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:51:16 -0500 (CDT)
+Date: Thu, 17 Oct 2013 13:51:16 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 03/19] xfs: prevent deadlock trying to cover an active log
+Message-ID: <20131017185116.GG1935@sgi.com>
+References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
+	<1381789085-21923-4-git-send-email-david@fromorbit.com>
+	<52600835.9010802@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs corrupted
-References: <1381826507281-35009.post@n7.nabble.com>
-	<20131015203434.2f336fd8@galadriel.home>
-	<525D8D67.2090301@keptprivate.com>
-	<20131015213447.40d05ea0@galadriel.home>
-	<525D9E3B.5040507@keptprivate.com> <20131015202640.GR4446@dastard>
-In-Reply-To: <20131015202640.GR4446@dastard>
+Content-Disposition: inline
+In-Reply-To: <52600835.9010802@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,75 +20,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Hi guys,
+On Thu, Oct 17, 2013 at 10:54:29AM -0500, Eric Sandeen wrote:
+> On 10/14/13 5:17 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Recent analysis of a deadlocked XFS filesystem from a kernel
+> > crash dump indicated that the filesystem was stuck waiting for log
+> > space. The short story of the hang on the RHEL6 kernel is this:
+> > 
+> > 	- the tail of the log is pinned by an inode
+> > 	- the inode has been pushed by the xfsaild
+> > 	- the inode has been flushed to it's backing buffer and is
+> > 	  currently flush locked and hence waiting for backing
+> > 	  buffer IO to complete and remove it from the AIL
+> > 	- the backing buffer is marked for write - it is on the
+> > 	  delayed write queue
+> > 	- the inode buffer has been modified directly and logged
+> > 	  recently due to unlinked inode list modification
+> > 	- the backing buffer is pinned in memory as it is in the
+> > 	  active CIL context.
+> > 	- the xfsbufd won't start buffer writeback because it is
+> > 	  pinned
+> > 	- xfssyncd won't force the log because it sees the log as
+> > 	  needing to be covered and hence wants to issue a dummy
+> > 	  transaction to move the log covering state machine along.
+> > 
+> > Hence there is no trigger to force the CIL to the log and hence
+> > unpin the inode buffer and therefore complete the inode IO, remove
+> > it from the AIL and hence move the tail of the log along, allowing
+> > transactions to start again.
+> > 
+> > Mainline kernels also have the same deadlock, though the signature
+> > is slightly different - the inode buffer never reaches the delayed
+> > write lists because xfs_buf_item_push() sees that it is pinned and
+> > hence never adds it to the delayed write list that the xfsaild
+> > flushes.
+> > 
+> > There are two possible solutions here. The first is to simply force
+> > the log before trying to cover the log and so ensure that the CIL is
+> > emptied before we try to reserve space for the dummy transaction in
+> > the xfs_log_worker(). While this might work most of the time, it is
+> > still racy and is no guarantee that we don't get stuck in
+> > xfs_trans_reserve waiting for log space to come free. Hence it's not
+> > the best way to solve the problem.
+> > 
+> > The second solution is to modify xfs_log_need_covered() to be aware
+> > of the CIL. We only should be attempting to cover the log if there
+> > is no current activity in the log - covering the log is the process
+> > of ensuring that the head and tail in the log on disk are identical
+> > (i.e. the log is clean and at idle). Hence, by definition, if there
+> > are items in the CIL then the log is not at idle and so we don't
+> > need to attempt to cover it.
+> > 
+> > When we don't need to cover the log because it is active or idle, we
+> > issue a log force from xfs_log_worker() - if the log is idle, then
+> > this does nothing.  However, if the log is active due to there being
+> > items in the CIL, it will force the items in the CIL to the log and
+> > unpin them.
+> > 
+> > In the case of the above deadlock scenario, instead of
+> > xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
+> > cover the log, it will instead force the log, thereby unpinning the
+> > inode buffer, allowing IO to be issued and complete and hence
+> > removing the inode that was pinning the tail of the log from the
+> > AIL. At that point, everything will start moving along again. i.e.
+> > the xfs_log_worker turns back into a watchdog that can alleviate
+> > deadlocks based around pinned items that prevent the tail of the log
+> > from being moved...
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-I am finished yay! After the array got rechecked and fixed some errors, 
-i ran the xfs_repair and left it overnight, and i came back to a clean 
-system.
-
-Thanks for all your support. Now i learned that no matter what the raid 
-card status says, i still need to force another integrity check after a 
-power failure, even if it says all is good.
-
-On 15/10/2013 22:26, Dave Chinner wrote:
-> On Tue, Oct 15, 2013 at 09:57:47PM +0200, Stefanita Rares Dumitrescu wrote:
->> Since i am using centos 5.9, the version of the xfsprogs seems to be
->> old, so i cloned the new one from sgi.
->>
->> I have a machine with 4 gb ram, and 4 gb swap, and it's all been
->> eaten up by xfs_repair, and slowed down to a crawl.
->>
->> the sdc partition is the one being checked. i am all out of memory
->> now. 4 gb phys and 4 gb swap all gone.
->>
->> http://pastebin.ca/2467064
->>
->> posted to pastebin for better formatting.
->>
->> i was using:
->>
->> [root@kp4 ~]# xfs_repair -o bhash=16384 -o ihash=16384 -o ag_stride=16 \
->>> /dev/sdc >& /tmp/repair.log
->
-> You don't have enough RAM to run threaded prefetching and parallel
-> AG processing. You'd do better to turn prefetching off entirely with
-> "-P" if you are having OOM problems.
->
->> but now i am trying the -m option to see if the memory can be
->> limited, so the server doesn't freeze.
->>
->> [root@kp4 ~]# xfs_repair -m 3072 -o ag_stride=16 /dev/sdc >& /tmp/repair.log
->>
->> nothing in dmesg either.
->
-> Give it another 10-20GB of swap, and it should be fine. xfs_repair
-> usually only thrashes swap when you don't have enough of it and it
-> keeps trying to free memory, paging in pages that are in swap to
-> free cached objects from them. Most of the memory references that
-> repair makes are quite local, so when pages are swapped out they
-> generally aren't needed again for a while except when cache reclaim
-> kicks in. Hence if you give it enough swap that it can grow without
-> bounds, then it should still be quite efficient.
->
-> Keep in mind that badly corrupted filesystems require lots more
-> memory than clean filesystems to check and repair as there is lots
-> more intermediate state that repair needs to hold in memory about
-> partially or incompletely referenced objects. Don't be surprised if
-> the amount of memory needed to repair a badly broken filesystem is
-> 10-100x the amount of RAM needed to run xfs_repair on the same clean
-> filesystem....
->
-> Cheers,
->
-> Dave.
->
+Applied.
 
 _______________________________________________
 xfs mailing list
