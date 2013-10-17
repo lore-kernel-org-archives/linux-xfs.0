@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 91D1F7F3F
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 15:05:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 20A09AC004
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:05:11 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id TBYf0LGEgjHg7Tg3 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Oct 2013 13:05:06 -0700 (PDT)
-Date: Thu, 17 Oct 2013 13:05:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_repair: avoid segfault if reporting progress early
-	in repair
-Message-ID: <20131017200505.GA26671@infradead.org>
-References: <52602358.1050300@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id BC2A27F3F
+	for <linux-xfs@oss.sgi.com>; Thu, 17 Oct 2013 15:17:12 -0500 (CDT)
+Date: Thu, 17 Oct 2013 15:17:11 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH, RFC] xfs: be more forgiving of a v4 secondary sb w/
+	junk in v5 fields
+Message-ID: <20131017201711.GJ1935@sgi.com>
+References: <520D1BA3.1050500@redhat.com> <20130815210018.GR6023@dastard>
+	<520D44E7.1000905@sandeen.net> <520D592D.4040600@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52602358.1050300@redhat.com>
+In-Reply-To: <520D592D.4040600@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,11 +25,29 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@sandeen.net>
 
-Looks good,
+On Thu, Aug 15, 2013 at 05:41:49PM -0500, Eric Sandeen wrote:
+> Today, if xfs_sb_read_verify encounters a v4 superblock
+> with junk past v4 fields which includes data in sb_crc,
+> it will be treated as a failing checksum and significant
+> corruption.
+> 
+> There are known prior bugs which leave junk at the end
+> of the superblock; we don't need to actually fail the
+> verification in this case if other checks pan out ok.
+> 
+> So if this is a secondary superblock, and the primary
+> superblock is not V5, don't treat this as a serious
+> checksum failure.
+> 
+> We should probably check the garbage condition as
+> we do in xfs_repair, and possibly warn about it
+> or self-heal, but that's a different scope of work.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Eric... is the one you're talking about?
 
 _______________________________________________
 xfs mailing list
