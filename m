@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1945E7F3F
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 10:54:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA6BE8F8066
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 08:54:33 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id iBxW4YYpTTyBC2lj for <xfs@oss.sgi.com>;
-	Thu, 17 Oct 2013 08:54:31 -0700 (PDT)
-Message-ID: <52600835.9010802@sandeen.net>
-Date: Thu, 17 Oct 2013 10:54:29 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id EF2897F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 12:01:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DD6E58F8064
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 10:01:54 -0700 (PDT)
+Received: from mail-vb0-f44.google.com (mail-vb0-f44.google.com
+	[209.85.212.44]) by cuda.sgi.com with ESMTP id J3HC1JOKDaNiE35G
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 17 Oct 2013 10:01:53 -0700 (PDT)
+Received: by mail-vb0-f44.google.com with SMTP id p14so1312341vbm.31
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 10:01:53 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/19] xfs: prevent deadlock trying to cover an active log
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1381789085-21923-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20131017040654.GQ4446@dastard>
+References: <CAGa4099etDS8eBGCQ_Se2oQxObO8ZSqHpGeXzeUCpCz3S7XnBw@mail.gmail.com>
+	<20131017040654.GQ4446@dastard>
+Date: Thu, 17 Oct 2013 10:01:53 -0700
+Message-ID: <CAGa409_dbHBK=MVuQf8Z2YSmgTTqBGkG07XvD4bPhn=pHF9Seg@mail.gmail.com>
+Subject: Re: xfs_repair fatal error -- name create failed in lost+found,
+	filesystem may be out of space
+From: Viet Nguyen <vietnguyen@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,215 +28,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8491776702681574144=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 10/14/13 5:17 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Recent analysis of a deadlocked XFS filesystem from a kernel
-> crash dump indicated that the filesystem was stuck waiting for log
-> space. The short story of the hang on the RHEL6 kernel is this:
-> 
-> 	- the tail of the log is pinned by an inode
-> 	- the inode has been pushed by the xfsaild
-> 	- the inode has been flushed to it's backing buffer and is
-> 	  currently flush locked and hence waiting for backing
-> 	  buffer IO to complete and remove it from the AIL
-> 	- the backing buffer is marked for write - it is on the
-> 	  delayed write queue
-> 	- the inode buffer has been modified directly and logged
-> 	  recently due to unlinked inode list modification
-> 	- the backing buffer is pinned in memory as it is in the
-> 	  active CIL context.
-> 	- the xfsbufd won't start buffer writeback because it is
-> 	  pinned
-> 	- xfssyncd won't force the log because it sees the log as
-> 	  needing to be covered and hence wants to issue a dummy
-> 	  transaction to move the log covering state machine along.
-> 
-> Hence there is no trigger to force the CIL to the log and hence
-> unpin the inode buffer and therefore complete the inode IO, remove
-> it from the AIL and hence move the tail of the log along, allowing
-> transactions to start again.
-> 
-> Mainline kernels also have the same deadlock, though the signature
-> is slightly different - the inode buffer never reaches the delayed
-> write lists because xfs_buf_item_push() sees that it is pinned and
-> hence never adds it to the delayed write list that the xfsaild
-> flushes.
-> 
-> There are two possible solutions here. The first is to simply force
-> the log before trying to cover the log and so ensure that the CIL is
-> emptied before we try to reserve space for the dummy transaction in
-> the xfs_log_worker(). While this might work most of the time, it is
-> still racy and is no guarantee that we don't get stuck in
-> xfs_trans_reserve waiting for log space to come free. Hence it's not
-> the best way to solve the problem.
-> 
-> The second solution is to modify xfs_log_need_covered() to be aware
-> of the CIL. We only should be attempting to cover the log if there
-> is no current activity in the log - covering the log is the process
-> of ensuring that the head and tail in the log on disk are identical
-> (i.e. the log is clean and at idle). Hence, by definition, if there
-> are items in the CIL then the log is not at idle and so we don't
-> need to attempt to cover it.
-> 
-> When we don't need to cover the log because it is active or idle, we
-> issue a log force from xfs_log_worker() - if the log is idle, then
-> this does nothing.  However, if the log is active due to there being
-> items in the CIL, it will force the items in the CIL to the log and
-> unpin them.
-> 
-> In the case of the above deadlock scenario, instead of
-> xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
-> cover the log, it will instead force the log, thereby unpinning the
-> inode buffer, allowing IO to be issued and complete and hence
-> removing the inode that was pinning the tail of the log from the
-> AIL. At that point, everything will start moving along again. i.e.
-> the xfs_log_worker turns back into a watchdog that can alleviate
-> deadlocks based around pinned items that prevent the tail of the log
-> from being moved...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+--===============8491776702681574144==
+Content-Type: multipart/alternative; boundary=001a11c2c1ea49fb9b04e8f2c667
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+--001a11c2c1ea49fb9b04e8f2c667
+Content-Type: text/plain; charset=ISO-8859-1
 
-> ---
->  fs/xfs/xfs_log.c      | 48 +++++++++++++++++++++++++++++-------------------
->  fs/xfs/xfs_log_cil.c  | 14 ++++++++++++++
->  fs/xfs/xfs_log_priv.h | 10 ++++------
->  3 files changed, 47 insertions(+), 25 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a2dea108..613ed94 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1000,27 +1000,34 @@ xfs_log_space_wake(
->  }
->  
->  /*
-> - * Determine if we have a transaction that has gone to disk
-> - * that needs to be covered. To begin the transition to the idle state
-> - * firstly the log needs to be idle (no AIL and nothing in the iclogs).
-> - * If we are then in a state where covering is needed, the caller is informed
-> - * that dummy transactions are required to move the log into the idle state.
-> + * Determine if we have a transaction that has gone to disk that needs to be
-> + * covered. To begin the transition to the idle state firstly the log needs to
-> + * be idle. That means the CIL, the AIL and the iclogs needs to be empty before
-> + * we start attempting to cover the log.
->   *
-> - * Because this is called as part of the sync process, we should also indicate
-> - * that dummy transactions should be issued in anything but the covered or
-> - * idle states. This ensures that the log tail is accurately reflected in
-> - * the log at the end of the sync, hence if a crash occurrs avoids replay
-> - * of transactions where the metadata is already on disk.
-> + * Only if we are then in a state where covering is needed, the caller is
-> + * informed that dummy transactions are required to move the log into the idle
-> + * state.
-> + *
-> + * If there are any items in the AIl or CIL, then we do not want to attempt to
-> + * cover the log as we may be in a situation where there isn't log space
-> + * available to run a dummy transaction and this can lead to deadlocks when the
-> + * tail of the log is pinned by an item that is modified in the CIL.  Hence
-> + * there's no point in running a dummy transaction at this point because we
-> + * can't start trying to idle the log until both the CIL and AIL are empty.
->   */
->  int
->  xfs_log_need_covered(xfs_mount_t *mp)
->  {
-> -	int		needed = 0;
->  	struct xlog	*log = mp->m_log;
-> +	int		needed = 0;
->  
->  	if (!xfs_fs_writable(mp))
->  		return 0;
->  
-> +	if (!xlog_cil_empty(log))
-> +		return 0;
-> +
->  	spin_lock(&log->l_icloglock);
->  	switch (log->l_covered_state) {
->  	case XLOG_STATE_COVER_DONE:
-> @@ -1029,14 +1036,17 @@ xfs_log_need_covered(xfs_mount_t *mp)
->  		break;
->  	case XLOG_STATE_COVER_NEED:
->  	case XLOG_STATE_COVER_NEED2:
-> -		if (!xfs_ail_min_lsn(log->l_ailp) &&
-> -		    xlog_iclogs_empty(log)) {
-> -			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
-> -				log->l_covered_state = XLOG_STATE_COVER_DONE;
-> -			else
-> -				log->l_covered_state = XLOG_STATE_COVER_DONE2;
-> -		}
-> -		/* FALLTHRU */
-> +		if (xfs_ail_min_lsn(log->l_ailp))
-> +			break;
-> +		if (!xlog_iclogs_empty(log))
-> +			break;
-> +
-> +		needed = 1;
-> +		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
-> +			log->l_covered_state = XLOG_STATE_COVER_DONE;
-> +		else
-> +			log->l_covered_state = XLOG_STATE_COVER_DONE2;
-> +		break;
->  	default:
->  		needed = 1;
->  		break;
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index cfe9797..da8524e77 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -711,6 +711,20 @@ xlog_cil_push_foreground(
->  	xlog_cil_push(log);
->  }
->  
-> +bool
-> +xlog_cil_empty(
-> +	struct xlog	*log)
-> +{
-> +	struct xfs_cil	*cil = log->l_cilp;
-> +	bool		empty = false;
-> +
-> +	spin_lock(&cil->xc_push_lock);
-> +	if (list_empty(&cil->xc_cil))
-> +		empty = true;
-> +	spin_unlock(&cil->xc_push_lock);
-> +	return empty;
-> +}
-> +
->  /*
->   * Commit a transaction with the given vector to the Committed Item List.
->   *
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 136654b..f80cff2 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -514,12 +514,10 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
->  /*
->   * Committed Item List interfaces
->   */
-> -int
-> -xlog_cil_init(struct xlog *log);
-> -void
-> -xlog_cil_init_post_recovery(struct xlog *log);
-> -void
-> -xlog_cil_destroy(struct xlog *log);
-> +int	xlog_cil_init(struct xlog *log);
-> +void	xlog_cil_init_post_recovery(struct xlog *log);
-> +void	xlog_cil_destroy(struct xlog *log);
-> +bool	xlog_cil_empty(struct xlog *log);
->  
->  /*
->   * CIL force routines
-> 
+The corruption was detected after a power outage. The underlying system is
+an LSI RAID 6, according to the controller, the RAID integrity checks out,
+though I don't know if I could trust that. This is the second time this
+server has suffered xfs corruption after a power outage. The strange thing
+is that there hasn't been any writes made to the filesystem for weeks. The
+server passed a memtest, and xfs_repair fails consistently at the same
+point. So I'm not sure what's going on there.
+
+Is there any other particular details I could provide?
+
+
+On Wed, Oct 16, 2013 at 9:06 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Wed, Oct 16, 2013 at 08:57:20PM -0700, Viet Nguyen wrote:
+> > Hi,
+> > Me again. I've got get another corrupted drive and I'm getting a
+> different
+> > error for xfs_repair:
+> >
+> > fatal error -- name create failed in lost+found (117), filesystem may be
+> > out of space
+>
+> Error 117 is telling you that the filesystem is corrupted. i.e.
+> attempting to make a new name for a lost inode has resulted in
+> detection of a new corruption or previously undetected or
+> uncorrected corruption in the filesystem.
+>
+> Given the amount of damage your filesystem sustained, that's not
+> totally unexpected, especially if you are running 3.2.0-alpha.
+> Can you provide more details about the failure?
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+--001a11c2c1ea49fb9b04e8f2c667
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">The corruption was detected after a power outage. The unde=
+rlying system is an LSI RAID 6, according to the controller, the RAID integ=
+rity checks out, though I don&#39;t know if I could trust that. This is the=
+ second time this server has suffered xfs corruption after a power outage. =
+The strange thing is that there hasn&#39;t been any writes made to the file=
+system for weeks. The server passed a memtest, and xfs_repair fails consist=
+ently at the same point. So I&#39;m not sure what&#39;s going on there.<div=
+>
+<br></div><div>Is there any other particular details I could provide?</div>=
+</div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote">On Wed,=
+ Oct 16, 2013 at 9:06 PM, Dave Chinner <span dir=3D"ltr">&lt;<a href=3D"mai=
+lto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&gt;</spa=
+n> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"im">On Wed, Oct 16, 2013 at 08=
+:57:20PM -0700, Viet Nguyen wrote:<br>
+&gt; Hi,<br>
+&gt; Me again. I&#39;ve got get another corrupted drive and I&#39;m getting=
+ a different<br>
+&gt; error for xfs_repair:<br>
+&gt;<br>
+&gt; fatal error -- name create failed in lost+found (117), filesystem may =
+be<br>
+&gt; out of space<br>
+<br>
+</div>Error 117 is telling you that the filesystem is corrupted. i.e.<br>
+attempting to make a new name for a lost inode has resulted in<br>
+detection of a new corruption or previously undetected or<br>
+uncorrected corruption in the filesystem.<br>
+<br>
+Given the amount of damage your filesystem sustained, that&#39;s not<br>
+totally unexpected, especially if you are running 3.2.0-alpha.<br>
+Can you provide more details about the failure?<br>
+<br>
+Cheers,<br>
+<br>
+Dave.<br>
+<span class=3D"HOEnZb"><font color=3D"#888888">--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</font></span></blockquote></div><br></div>
+
+--001a11c2c1ea49fb9b04e8f2c667--
+
+
+--===============8491776702681574144==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8491776702681574144==--
