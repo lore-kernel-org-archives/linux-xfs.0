@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C60A67F4E
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 18:54:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6A984AC001
-	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 16:54:31 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C22147F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 19:18:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B3CD2304032
+	for <xfs@oss.sgi.com>; Wed, 16 Oct 2013 17:18:50 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	V5rKza7UEKXi2gfD for <xfs@oss.sgi.com>;
-	Wed, 16 Oct 2013 16:54:30 -0700 (PDT)
-Date: Thu, 17 Oct 2013 10:54:27 +1100
+	d4OFnDvRxfBMRfXk for <xfs@oss.sgi.com>;
+	Wed, 16 Oct 2013 17:18:23 -0700 (PDT)
+Date: Thu, 17 Oct 2013 11:17:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/3] xfsprogs: v4 inode type in directory
-Message-ID: <20131016235427.GO4446@dastard>
-References: <20131016223654.505433792@sgi.com>
+Subject: Re: [PATCH 19/19] xfs: convert directory vector functions to constants
+Message-ID: <20131017001758.GP4446@dastard>
+References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
+	<1381789085-21923-20-git-send-email-david@fromorbit.com>
+	<20131016211615.GD1935@sgi.com> <20131016222317.GM4446@dastard>
+	<20131016225204.GE1935@sgi.com> <20131016230618.GF1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131016223654.505433792@sgi.com>
+In-Reply-To: <20131016230618.GF1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +32,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 16, 2013 at 05:36:54PM -0500, Mark Tinguely wrote:
-> Here are the patches that enable the inode in the directory
-> feature in v4 superblocks.
+On Wed, Oct 16, 2013 at 06:06:18PM -0500, Ben Myers wrote:
+> On Wed, Oct 16, 2013 at 05:52:04PM -0500, Ben Myers wrote:
+> > On Thu, Oct 17, 2013 at 09:23:17AM +1100, Dave Chinner wrote:
+> > > On Wed, Oct 16, 2013 at 04:16:15PM -0500, Ben Myers wrote:
+> > > > On Tue, Oct 15, 2013 at 09:18:05AM +1100, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > 
+> > > > > Many of the vectorised function calls now take no parameters and
+> > > > > return a constant value. There is no reason for these to be vectored
+> > > > > functions, so convert them to constants
+> > > > > 
+> > > > > Binary sizes:
+> > > > > 
+> > > > >    text    data     bss     dec     hex filename
+> > > > >  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
+> > > > >  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
+> > > > >  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
+> > > > >  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
+> > > > >  789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
+> > > > >  789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
+> > > > >  789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
+> > > > >  791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
+> > > > >  791701   96802    1096  889599   d92ff fs/xfs/xfs.o.p8
+> > > > >  791205   96802    1096  889103   d91cf fs/xfs/xfs.o.p9
+> > > > > 
+> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > Hmmm.  This one doesn't seem to apply.  Maybe it's just me.
+> > > 
+> > > Applies without mismatch here on an 3.12-rc5 + oss-xfs/master tree
+> > > here. What's the reject that you get?
+> > 
+> > Like so:
+> > 
+> > $ q pu
+> > Applying patch xfs-convert-directory-vector-functions-to-constants.patch
+> > patching file fs/xfs/xfs_da_btree.c
+> > patching file fs/xfs/xfs_da_format.c
+> > Hunk #13 FAILED at 571.
+> > Hunk #14 FAILED at 608.
+> > Hunk #15 succeeded at 641 (offset -74 lines).
+> > Hunk #16 FAILED at 729.
+> > Hunk #17 succeeded at 683 (offset -82 lines).
+> > Hunk #18 FAILED at 779.
+> > Hunk #19 succeeded at 728 (offset -87 lines).
+> > Hunk #20 FAILED at 829.
+> > 5 out of 20 hunks FAILED -- rejects in file fs/xfs/xfs_da_format.c
+> > patching file fs/xfs/xfs_dir2.c
+> > patching file fs/xfs/xfs_dir2.h
+> > Hunk #4 FAILED at 92.
+> > 1 out of 4 hunks FAILED -- rejects in file fs/xfs/xfs_dir2.h
+> > patching file fs/xfs/xfs_dir2_block.c
+> > patching file fs/xfs/xfs_dir2_data.c
+> > patching file fs/xfs/xfs_dir2_leaf.c
+> > patching file fs/xfs/xfs_dir2_node.c
+> > Hunk #1 FAILED at 274.
+> > Hunk #2 succeeded at 1267 (offset -1 lines).
+> > Hunk #3 succeeded at 1299 (offset -1 lines).
+> > Hunk #4 succeeded at 1408 (offset -1 lines).
+> > 1 out of 4 hunks FAILED -- rejects in file fs/xfs/xfs_dir2_node.c
+> > patching file fs/xfs/xfs_dir2_readdir.c
+> > patching file fs/xfs/xfs_dir2_sf.c
+> > Patch xfs-convert-directory-vector-functions-to-constants.patch does not apply (enforce with -f)
+> > 
+> > That's on 74564fb48.
 > 
->  patch 1: add the entries to xfs_sb.h (sync with kernel)
->  patch 2: add the XFS_FSOP_GEOM_FLAGS_FTYPE to xfs_fs.h (sync with kernel)
-> 	  add the entry to repair so that xfs_info reports the feature
->  patch 3: add the feature to mkfs.xfs and manual page.
->           note: this new feature is ignored for superblock v5
-> 		automatically turns on this feature.
+> To be more specific, these are the rejects.  Maybe I missed a patch.
 
-xfs_db needs to have the version string output updated, it also
-needs support for dirent dtype dumping for block, leaf and node form
-directories.
+Looks like you might be missing patch 18 as all the rejects are
+against hunks introduced by that patch.
 
 Cheers,
 
