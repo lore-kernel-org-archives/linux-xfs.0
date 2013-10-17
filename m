@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EE5A57F3F
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 15:03:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA22E304059
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:03:19 -0700 (PDT)
-Date: Thu, 17 Oct 2013 13:03:15 -0700
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 91D1F7F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 15:05:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 20A09AC004
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:05:11 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id TBYf0LGEgjHg7Tg3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 17 Oct 2013 13:05:06 -0700 (PDT)
+Date: Thu, 17 Oct 2013 13:05:05 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] xfs: remove the unused XFS_ATTR_NONBLOCK flag
-Message-ID: <20131017200315.GA26616@infradead.org>
-References: <20131012075503.370510641@bombadil.infradead.org>
-	<20131012075640.115410017@bombadil.infradead.org>
-	<20131014045152.GG4446@dastard> <20131017200109.GI1935@sgi.com>
+Subject: Re: [PATCH] xfs_repair: avoid segfault if reporting progress early
+	in repair
+Message-ID: <20131017200505.GA26671@infradead.org>
+References: <52602358.1050300@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131017200109.GI1935@sgi.com>
+In-Reply-To: <52602358.1050300@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,17 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Oct 17, 2013 at 03:01:09PM -0500, Ben Myers wrote:
-> An xfs ioctl user who requests nonblocking behavior will no longer get it.
-> This seems to constitute API breakage.  How can we verify that this is unused
-> since anyone can open with O_NONBLOCK?
+Looks good,
 
-The flag isn't checked anywhere, which means it doesn't have any effect,
-and doesn't as far as I can look back.  I also don't know how the
-prealloc ioctls could behave non-blocking in any sane way.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
