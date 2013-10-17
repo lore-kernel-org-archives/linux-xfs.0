@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A3E417F3F
-	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:51:16 -0500 (CDT)
-Date: Thu, 17 Oct 2013 13:51:16 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6C3B67F3F
+	for <xfs@oss.sgi.com>; Thu, 17 Oct 2013 13:51:47 -0500 (CDT)
+Date: Thu, 17 Oct 2013 13:51:43 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 03/19] xfs: prevent deadlock trying to cover an active log
-Message-ID: <20131017185116.GG1935@sgi.com>
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-4-git-send-email-david@fromorbit.com>
-	<52600835.9010802@sandeen.net>
+Subject: Re: [PATCH 0/4] xfs: old lost patches
+Message-ID: <20131017185143.GH1935@sgi.com>
+References: <52584C8A.1060808@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52600835.9010802@sandeen.net>
+In-Reply-To: <52584C8A.1060808@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,82 +22,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Oct 17, 2013 at 10:54:29AM -0500, Eric Sandeen wrote:
-> On 10/14/13 5:17 PM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Recent analysis of a deadlocked XFS filesystem from a kernel
-> > crash dump indicated that the filesystem was stuck waiting for log
-> > space. The short story of the hang on the RHEL6 kernel is this:
-> > 
-> > 	- the tail of the log is pinned by an inode
-> > 	- the inode has been pushed by the xfsaild
-> > 	- the inode has been flushed to it's backing buffer and is
-> > 	  currently flush locked and hence waiting for backing
-> > 	  buffer IO to complete and remove it from the AIL
-> > 	- the backing buffer is marked for write - it is on the
-> > 	  delayed write queue
-> > 	- the inode buffer has been modified directly and logged
-> > 	  recently due to unlinked inode list modification
-> > 	- the backing buffer is pinned in memory as it is in the
-> > 	  active CIL context.
-> > 	- the xfsbufd won't start buffer writeback because it is
-> > 	  pinned
-> > 	- xfssyncd won't force the log because it sees the log as
-> > 	  needing to be covered and hence wants to issue a dummy
-> > 	  transaction to move the log covering state machine along.
-> > 
-> > Hence there is no trigger to force the CIL to the log and hence
-> > unpin the inode buffer and therefore complete the inode IO, remove
-> > it from the AIL and hence move the tail of the log along, allowing
-> > transactions to start again.
-> > 
-> > Mainline kernels also have the same deadlock, though the signature
-> > is slightly different - the inode buffer never reaches the delayed
-> > write lists because xfs_buf_item_push() sees that it is pinned and
-> > hence never adds it to the delayed write list that the xfsaild
-> > flushes.
-> > 
-> > There are two possible solutions here. The first is to simply force
-> > the log before trying to cover the log and so ensure that the CIL is
-> > emptied before we try to reserve space for the dummy transaction in
-> > the xfs_log_worker(). While this might work most of the time, it is
-> > still racy and is no guarantee that we don't get stuck in
-> > xfs_trans_reserve waiting for log space to come free. Hence it's not
-> > the best way to solve the problem.
-> > 
-> > The second solution is to modify xfs_log_need_covered() to be aware
-> > of the CIL. We only should be attempting to cover the log if there
-> > is no current activity in the log - covering the log is the process
-> > of ensuring that the head and tail in the log on disk are identical
-> > (i.e. the log is clean and at idle). Hence, by definition, if there
-> > are items in the CIL then the log is not at idle and so we don't
-> > need to attempt to cover it.
-> > 
-> > When we don't need to cover the log because it is active or idle, we
-> > issue a log force from xfs_log_worker() - if the log is idle, then
-> > this does nothing.  However, if the log is active due to there being
-> > items in the CIL, it will force the items in the CIL to the log and
-> > unpin them.
-> > 
-> > In the case of the above deadlock scenario, instead of
-> > xfs_log_worker() getting stuck in xfs_trans_reserve() attempting to
-> > cover the log, it will instead force the log, thereby unpinning the
-> > inode buffer, allowing IO to be issued and complete and hence
-> > removing the inode that was pinning the tail of the log from the
-> > AIL. At that point, everything will start moving along again. i.e.
-> > the xfs_log_worker turns back into a watchdog that can alleviate
-> > deadlocks based around pinned items that prevent the tail of the log
-> > from being moved...
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Fri, Oct 11, 2013 at 02:07:54PM -0500, Eric Sandeen wrote:
+> 4 patches I found in patchworks in various state of review, but no merges.
 > 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> Resending.
 
-Applied.
+Applied patch 1v2, 3, and 4.
 
 _______________________________________________
 xfs mailing list
