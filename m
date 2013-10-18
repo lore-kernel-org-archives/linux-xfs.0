@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D56787F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:20:54 -0500 (CDT)
-Message-ID: <52617C02.3070007@sgi.com>
-Date: Fri, 18 Oct 2013 13:20:50 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7FB167F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:23:47 -0500 (CDT)
+Message-ID: <52617CB0.3080805@sgi.com>
+Date: Fri, 18 Oct 2013 13:23:44 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: add d_type when moving files to lost+found
-References: <52617708.9000206@redhat.com>
-In-Reply-To: <52617708.9000206@redhat.com>
+Subject: Re: [PATCH] xfsprogs: Note projid32bit default change in mkfs.xfs
+	manpage
+References: <52617691.8090101@redhat.com>
+In-Reply-To: <52617691.8090101@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,16 +24,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-This has been committed.
+This has been committed. (sent this to the wrong patch)
 
 Thanks
 --Rich
+
 
 commit dd536e1212d9008a182627b6333d69b2f8c1c393
 Author: Eric Sandeen <sandeen@redhat.com>
 Date:   Fri Oct 18 17:57:37 2013 +0000
 
      xfsprogs: Note projid32bit default change in mkfs.xfs manpage
+
+_
 
 _______________________________________________
 xfs mailing list
