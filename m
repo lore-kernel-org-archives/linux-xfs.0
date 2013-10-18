@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 035047F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 12:42:07 -0500 (CDT)
-Message-ID: <526172EC.2030209@sgi.com>
-Date: Fri, 18 Oct 2013 12:42:04 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 9E78A7F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 12:45:04 -0500 (CDT)
+Message-ID: <5261739D.30705@sgi.com>
+Date: Fri, 18 Oct 2013 12:45:01 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: avoid segfault if reporting progress early
-	in repair
-References: <52602358.1050300@redhat.com>
-In-Reply-To: <52602358.1050300@redhat.com>
+Subject: Re: [PATCH] xfsprogs: initialize filetype for lost+found creation
+References: <52388C61.1000001@sandeen.net>
+In-Reply-To: <52388C61.1000001@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,18 +21,18 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
 This has been committed.
 
 Thanks
 --Rich
 
-commit 7f2d6b811755b6b91f18aa5bd9d5980848a81267
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Thu Oct 17 17:50:16 2013 +0000
+commit 68774b900e0c8368342cb12f649572a86ef2f6e4
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue Sep 17 17:07:45 2013 +0000
 
-     xfs_repair: avoid segfault if reporting progress early in repair
+     xfsprogs: initialize filetype for lost+found creation
 
 _______________________________________________
 xfs mailing list
