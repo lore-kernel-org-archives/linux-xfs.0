@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EE3767F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 08:22:27 -0500 (CDT)
-Message-ID: <52613610.5090409@sgi.com>
-Date: Fri, 18 Oct 2013 08:22:24 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id F2C687F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 11:23:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E051D8F804C
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 09:23:16 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id kC4bp5R36MX48E9e for <xfs@oss.sgi.com>;
+	Fri, 18 Oct 2013 09:23:15 -0700 (PDT)
+Message-ID: <52616072.6040808@sandeen.net>
+Date: Fri, 18 Oct 2013 11:23:14 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 0/4] xfsprogs: v4 inode type in directory
-References: <20131017152804.204045257@sgi.com> <52605FF8.2000301@sgi.com>
-	<20131018031950.GT4446@dastard>
-In-Reply-To: <20131018031950.GT4446@dastard>
+Subject: [PATCH V2] xfstests: Test xfs_fsr / swapext management of di_forkoff
+	w/ selinux
+References: <5260B62D.2010507@redhat.com>
+In-Reply-To: <5260B62D.2010507@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,133 +24,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 10/17/13 22:19, Dave Chinner wrote:
-> On Thu, Oct 17, 2013 at 05:08:56PM -0500, Mark Tinguely wrote:
->> On 10/17/13 10:28, Mark Tinguely wrote:
->>> Here are the patches that enable the inode in the directory
->>> feature in v4 superblocks.
->>>
->>> Unchanged
->>>   patch 1: add the entries to xfs_sb.h (sync with kernel)
->>>   patch 2: add the XFS_FSOP_GEOM_FLAGS_FTYPE to xfs_fs.h (sync with kernel)
->>> 	  add the entry to repair so that xfs_info reports the feature
->>> New
->>>   patch 3: add feature to the xfs_db version command.
->>>
->>> Fixed
->>>   patch 4: add the feature to mkfs.xfs and manual page.
->>>            note: this new feature is ignored for superblock v5
->>> 		automatically turns on this feature.
->>
->> FYI.
->>
->> I saw the request for adding the filetype entry to block/leaf after posting.
->>
->> I have it displaying unconditionally, but am trying to figure out
->> how to make it display only for filesytems that support the ftype
->> feature. I am missing something in the field.count().
->
-> The count function only tells the code whether a structure is
-> present or not, but it does not tell you what the format of the
-> structure is.
->
-> if you look at db/dir2.c, you'll see that the difference between the
-> dir2_flds[] and the dir3_flds[] is mainly in the type, count and offset
-> fields. For example:
->
-> const field_t   dir2_flds[] = {
->          { "bhdr", FLDT_DIR2_DATA_HDR, OI(BOFF(magic)), dir2_block_hdr_count,
->            FLD_COUNT, TYP_NONE }
-> ...
->
-> const field_t   dir3_flds[] = {
->          { "bhdr", FLDT_DIR3_DATA_HDR, OI(B3OFF(hdr)), dir3_block_hdr_count,
->            FLD_COUNT, TYP_NONE },
-> ...
->
-> if you look at dir[23]_block_hdr_count(), you'll see that they
-> return a boolean value based on a magic number check. Hence when the
-> code is trying to determine the type of the block that has been read
-> (i.e. what the field definition is), if the magic number matches we
-> know exactly what type of contents they contain.
->
-> For decoding the dtype, you need too look at how to select the
-> correct structure for the FLDT_DIR2_DATA_UNION. If you don't have
-> the feature set, you need to select the FLDT_DIR2_DATA_UNION
-> structure type, and if it is set you need to select the
-> FLDT_DIR3_DATA_UNION type. Hence you need both these types defined
-> in the dir2_flds[] array, and some manner to ensure the correct
-> values are returned from the count functions.
->
-> And just to make it hard, both the dir2 and dir3 data union count
-> functions use the same function (dir2_data_u_count) so you're going
-> to have to be careful that you don't break the v5 superblock
-> directory decoding....
->
-> Cheers,
->
-> Dave.
+In some cases selinux's creation of an xattr on the temporary
+fd creates a local xattr, but the file we are trying to 
+defragment has attrs in extent format, and the forkoff mismatch
+will cause xfs_fsr to fail.  This test demonstrates it;  I
+have old patches sent to the list long ago that should fix
+it.  I'll resend them soon.
 
-
-Thanks Dave. I did some RTFS and found I was having problems with the 
-field_t.flag.
-
-Can't we add a filetype to the dir2 dir2_data_union_flds entry and use 
-the count to turn it on/off? The problem I was having with this was the 
-flag. Something like:
-
-Add the directory field type information to xfs_db directory
-displays.
-
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
-  db/dir2.c |   12 ++++++++++++
-  1 file changed, 12 insertions(+)
 
-Index: b/db/dir2.c
-===================================================================
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -52,6 +52,8 @@ static int	dir2_leaf_tail_count(void *ob
-  static int	dir2_leaf_tail_offset(void *obj, int startoff, int idx);
-  static int	dir2_node_btree_count(void *obj, int startoff);
-  static int	dir2_node_hdr_count(void *obj, int startoff);
-+static int	dir3_data_union_ftype_offset(void *obj, int startoff, int idx);
-+static int	dir2_data_union_ftype_count(void *obj, int startoff);
+V2: Address Eryu's review
 
-  const field_t	dir2_hfld[] = {
-  	{ "", FLDT_DIR2, OI(0), C1, 0, TYP_NONE },
-@@ -130,6 +132,8 @@ const field_t	dir2_data_union_flds[] = {
-  	  dir2_data_union_namelen_count, FLD_COUNT, TYP_NONE },
-  	{ "name", FLDT_CHARNS, OI(DEOFF(name)), dir2_data_union_name_count,
-  	  FLD_COUNT, TYP_NONE },
-+	{ "filetype", FLDT_UINT8D, dir3_data_union_ftype_offset,
-+	  dir2_data_union_ftype_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
-  	{ "tag", FLDT_DIR2_DATA_OFF, dir2_data_union_tag_offset,
-  	  dir2_data_union_tag_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
-  	{ NULL }
-@@ -454,6 +458,14 @@ dir2_data_union_name_count(
-  }
-
-  static int
-+dir2_data_union_ftype_count(
-+	void			*obj,
-+	int			startoff)
+diff --git a/tests/xfs/351 b/tests/xfs/351
+new file mode 100755
+index 0000000..13c7629
+--- /dev/null
++++ b/tests/xfs/351
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# FS QA Test No. 351
++#
++# Test xfs_fsr / swapext management of di_forkoff w/ selinux
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	return xfs_sb_version_hasftype(&mp->m_sb);
++    cd /
++    rm -f $tmp.*
 +}
 +
-+static int
-  dir2_data_union_namelen_count(
-  	void			*obj,
-  	int			startoff)
-
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++_require_scratch
++
++# real QA test starts here
++
++_supported_fs xfs
++_supported_os Linux
++
++getenforce | grep -q "Enforcing\|Permissive" || _notrun "SELinux not enabled"
++[ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
++
++rm -f $seqres.full
++
++_scratch_mkfs_xfs -i size=256 >> $seq.full 2>&1 || _fail "mkfs failed"
++
++# Manually mount to avoid fs-wide context set by default in xfstests
++mount $SCRATCH_DEV $SCRATCH_MNT
++
++touch $SCRATCH_MNT/$seq.test
++
++# Create an extents-format attribute on a file
++$XFS_IO_PROG -f -c "pwrite -S 0x63 0 4096" $SCRATCH_MNT/attrvals >> $seqres.full 2>&1
++cat $SCRATCH_MNT/attrvals | attr -s name $SCRATCH_MNT/$seq.test >> $seqres.full 2>&1
++
++# Fragment the file by writing backwards
++for I in `seq 6 -1 0`; do
++	dd if=/dev/zero of=$SCRATCH_MNT/$seq.test seek=$I bs=4k \
++	   oflag=direct count=1 conv=notrunc >> $seqres.full 2>&1
++done
++
++# See if xfs_fsr works.
++
++# The target file now has a non-local attribute, but the
++# fsr temp file gets assigned a local attribute on creation,
++# due to selinux.
++    
++# In this case, the large-ish selinux attr will create a forkoff
++# in the temp file smaller than the forkoff in the target file,
++# because the FMT_EXTENTS attr takes up less space.  If there is
++# no mechanism to grow the temp forkoff to match, we can end up
++# failing to swap these 2 inodes if the result is not enough
++# data space in the temp inode as a result.
++
++$XFS_FSR_PROG -v $SCRATCH_MNT/$seq.test | _filter_scratch
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/351.out b/tests/xfs/351.out
+new file mode 100644
+index 0000000..86cbe5d
+--- /dev/null
++++ b/tests/xfs/351.out
+@@ -0,0 +1,3 @@
++QA output created by 351
++SCRATCH_MNT/351.test
++extents before:6 after:1 DONE SCRATCH_MNT/351.test
+diff --git a/tests/xfs/group b/tests/xfs/group
+index acb92ac..da76770 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -180,4 +180,4 @@
+ 298 auto attr symlink quick
+ 299 auto quota
+ 350 auto dump quota
+-
++351 auto fsr
 
 _______________________________________________
 xfs mailing list
