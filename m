@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 293627F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 11:56:04 -0500 (CDT)
-Message-ID: <52616820.8000603@sgi.com>
-Date: Fri, 18 Oct 2013 11:56:00 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 67C5F7F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 11:59:26 -0500 (CDT)
+Message-ID: <526168EB.1080403@sgi.com>
+Date: Fri, 18 Oct 2013 11:59:23 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] xfs: dirent dtype presence is dependent on directory
-	magic numbers
-References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
-	<1380497826-13474-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1380497826-13474-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 08/32] xfs: create a shared header file for format-related
+	information
+References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
+	<1380510944-8571-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1380510944-8571-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +30,11 @@ This has been committed.
 Thanks
 --Rich
 
-commit 41315687d9db9b50876401e7b0ee20dd77cfc712
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Sep 30 03:15:19 2013 +0000
+commit dd297fd6d366f62ca2f579e510e6287699d0bd5d
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Mon Sep 30 03:15:20 2013 +0000
 
-     xfs: dirent dtype presence is dependent on directory magic numbers
+     xfs: create a shared header file for format-related information
 
 _______________________________________________
 xfs mailing list
