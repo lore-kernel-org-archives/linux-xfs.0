@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ABA4429E02
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:27:50 -0500 (CDT)
-Message-ID: <52617DA2.7070104@sgi.com>
-Date: Fri, 18 Oct 2013 13:27:46 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 597E029DFC
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:29:35 -0500 (CDT)
+Message-ID: <52617E0C.5020500@sgi.com>
+Date: Fri, 18 Oct 2013 13:29:32 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfs_repair: add d_type when moving files to lost+found
-References: <52617708.9000206@redhat.com> <52617C02.3070007@sgi.com>
-In-Reply-To: <52617C02.3070007@sgi.com>
+References: <52617708.9000206@redhat.com>
+In-Reply-To: <52617708.9000206@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +23,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-oops ment to send this
-Looks good.
+This has been committed.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+Thanks
+--Rich
 
-On 10/18/2013 01:20 PM, Rich Johnston wrote:
-> This has been committed.
->
-> Thanks
-> --Rich
->
-> commit dd536e1212d9008a182627b6333d69b2f8c1c393
-> Author: Eric Sandeen <sandeen@redhat.com>
-> Date:   Fri Oct 18 17:57:37 2013 +0000
->
->      xfsprogs: Note projid32bit default change in mkfs.xfs manpage
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+commit 2cca1dbd1c3e12d270a9baa5f85e548e8a5a2125
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Fri Oct 18 17:59:36 2013 +0000
+
+     xfs_repair: add d_type when moving files to lost+found
 
 _______________________________________________
 xfs mailing list
