@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 49EEC7F4E
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:40:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2ACE78F8064
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 11:40:55 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A856B7F4E
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:47:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7AEF030407B
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 11:47:24 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id rTSASRaZbnBBHkya for <xfs@oss.sgi.com>;
-	Fri, 18 Oct 2013 11:40:54 -0700 (PDT)
-Message-ID: <526180B4.1030903@sandeen.net>
-Date: Fri, 18 Oct 2013 13:40:52 -0500
+	ESMTP id upPLBD6ITY6WzfSv for <xfs@oss.sgi.com>;
+	Fri, 18 Oct 2013 11:47:23 -0700 (PDT)
+Message-ID: <52618239.2090502@sandeen.net>
+Date: Fri, 18 Oct 2013 13:47:21 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [PATCH 1/2] xfstests XFS: verify extended attributes after
 	multi-stream xfsdump/xfsrestore
 References: <20131011041911.238407600@sgi.com>
-	<20131011042007.923283516@sgi.com>
-In-Reply-To: <20131011042007.923283516@sgi.com>
+	<20131011042007.923283516@sgi.com> <526180B4.1030903@sandeen.net>
+In-Reply-To: <526180B4.1030903@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,167 +32,87 @@ Sender: xfs-bounces@oss.sgi.com
 To: rjohnston@sgi.com
 Cc: xfs@oss.sgi.com
 
-On 10/10/13 11:19 PM, rjohnston@sgi.com wrote:
-> Verify extended attributes are not lost after multi-stream
-> xfsdump/xfsrestore of wholly-sparse files.  The restore succeeds,
-> however the extended attributes for that file are lost.
-> 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> 
-> diff --git a/tests/xfs/350 b/tests/xfs/350
-> new file mode 100755
-> index 0000000..88943e4
-> --- /dev/null
-> +++ b/tests/xfs/350
-> @@ -0,0 +1,72 @@
-> +#! /bin/bash
-> +# FS QA Test No. 350
-> +#
-> +# Verify multi-stream xfsdump/restore preserves extended attributes
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/dump
-> +. ./common/attr
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +# Extended attributes
-> +attr_name=attrname
-> +attr_value=1234
-> +
-> +rm -f $seqres.full
-> +
-> +_create_dumpdir_fill_ea 2>&1 >> $seqres.full
-> +
-> +# Create and add wholly-sparse file to the dump directory
-> +$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile 2>&1 >> $seqres.full ||
-> +_fail "could not create \"$dump_dir\"/sparsefile"
+On 10/18/13 1:40 PM, Eric Sandeen wrote:
+> On 10/10/13 11:19 PM, rjohnston@sgi.com wrote:
+>> Verify extended attributes are not lost after multi-stream
+>> xfsdump/xfsrestore of wholly-sparse files.  The restore succeeds,
+>> however the extended attributes for that file are lost.
+>>
+>> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+>>
+>> diff --git a/tests/xfs/350 b/tests/xfs/350
+>> new file mode 100755
+>> index 0000000..88943e4
+>> --- /dev/null
+>> +++ b/tests/xfs/350
+>> @@ -0,0 +1,72 @@
+>> +#! /bin/bash
+>> +# FS QA Test No. 350
+>> +#
+>> +# Verify multi-stream xfsdump/restore preserves extended attributes
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +    cd /
+>> +    rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +. ./common/dump
+>> +. ./common/attr
+>> +
+>> +# real QA test starts here
+>> +
+>> +# Modify as appropriate.
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +_require_scratch
+>> +
+>> +# Extended attributes
+>> +attr_name=attrname
+>> +attr_value=1234
+>> +
+>> +rm -f $seqres.full
+>> +
+>> +_create_dumpdir_fill_ea 2>&1 >> $seqres.full
 
-I . . guess that works w/o a continuation?  I'd have done this; note also
-the 2>&1 needs to go after the file redirect
-(http://www.tldp.org/LDP/abs/html/io-redirection.html)
+whoops here too.  Tho I think _create_dumpdir_fill_ea already
+does all the redirect you need.
 
-+$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile >> $seqres.full 2>&1  || \
-+	_fail "could not create \"$dump_dir\"/sparsefile"
-
-but my bash-fu is weak, so not sure about the continuation part.  Can't hurt? :)
-
-> +
-> +# Set the xattr on sparsefile
-> +$ATTR_PROG -s $attr_name -V $attr_value $dump_dir/sparsefile 2>&1 >> $seqres.full || _fail "could not set ATTR for \"$dump_dir\"/sparsefile"
-
-same deal for the redirect:  ">> $seqres.full 2>&1"
-
-> +
-> +_do_dump_multi_file --multi 4  2>&1 >> $seqres.full
-> +_do_restore_multi_file --multi 4 2>&1 >> $seqres.full
-
-">> $seqres.full 2>&1"
-
-Nitpicks, I guess, but if you wouldn't mind one more round...
+Was going to say you need a scratch_mkfs & mount too, but 
+_create_dumpdir_fill_ea() does all that under the covers?  Bleah!
+Comment to that effect wouldn't hurt.
 
 -Eric
-
-> +_diff_compare_eas 
-> +
-> +status=0
-> +exit 
-> diff --git a/tests/xfs/350.out b/tests/xfs/350.out
-> new file mode 100644
-> index 0000000..6798ded
-> --- /dev/null
-> +++ b/tests/xfs/350.out
-> @@ -0,0 +1,34 @@
-> +QA output created by 350
-> +Comparing dump directory with restore directory
-> +Looking at the extended attributes (EAs)
-> +EAs on dump
-> +User names
-> +Attribute "attr5" had a 8 byte value for DUMP_DIR/dir:
-> +dir_text
-> +Attribute "attr1" had a 9 byte value for DUMP_DIR/smalll:
-> +some_text
-> +Attribute "attrname" had a 4 byte value for DUMP_DIR/sparsefile:
-> +1234
-> +Attribute "attr3" had a 10 byte value for DUMP_DIR/sub/smalll:
-> +some_text3
-> +Root names
-> +Attribute "attr2" had a 10 byte value for DUMP_DIR/biggg:
-> +some_text2
-> +Attribute "attr4" had a 10 byte value for DUMP_DIR/sub/biggg:
-> +some_text4
-> +EAs on restore
-> +User names
-> +Attribute "attr5" had a 8 byte value for DUMP_DIR/dir:
-> +dir_text
-> +Attribute "attr1" had a 9 byte value for DUMP_DIR/smalll:
-> +some_text
-> +Attribute "attrname" had a 4 byte value for DUMP_DIR/sparsefile:
-> +1234
-> +Attribute "attr3" had a 10 byte value for DUMP_DIR/sub/smalll:
-> +some_text3
-> +Root names
-> +Attribute "attr2" had a 10 byte value for DUMP_DIR/biggg:
-> +some_text2
-> +Attribute "attr4" had a 10 byte value for DUMP_DIR/sub/biggg:
-> +some_text4
-> +Files 350.ea1 and 350.ea2 are identical
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 352a4c5..2cd3cf0 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -179,3 +179,4 @@
->  297 auto freeze
->  298 auto attr symlink quick
->  299 auto quota
-> +350 dump auto
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
