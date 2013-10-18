@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CAE8E7F50
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 17:41:38 -0500 (CDT)
-Message-ID: <5261B91F.1030008@sgi.com>
-Date: Fri, 18 Oct 2013 17:41:35 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6B27F7F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 17:43:45 -0500 (CDT)
+Message-ID: <5261B99D.4040909@sgi.com>
+Date: Fri, 18 Oct 2013 17:43:41 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] xfs: dirent dtype presence is dependent on directory
-	magic numbers
-References: <1380497826-13474-1-git-send-email-david@fromorbit.com>
-	<1380497826-13474-3-git-send-email-david@fromorbit.com>
-	<52616820.8000603@sgi.com> <20131018223049.GV4446@dastard>
-In-Reply-To: <20131018223049.GV4446@dastard>
+Subject: Re: [PATCH 08/32] xfs: create a shared header file for format-related
+	information
+References: <1380510944-8571-1-git-send-email-david@fromorbit.com>
+	<1380510944-8571-9-git-send-email-david@fromorbit.com>
+	<526168EB.1080403@sgi.com> <20131018224041.GW4446@dastard>
+In-Reply-To: <20131018224041.GW4446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +27,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-sorry oversight on reply the patch had the similar name
-Re: [PATCH 07/32] xfs: dirent dtype presence is dependent on directory 
-magic numbers
+Sorry that's why I responded to the wrong thread for patch 07/32
 
-On 10/18/2013 05:30 PM, D \ave Chinner wrote:
-> On Fri, Oct 18, 2013 at 11:56:00AM -0500, Rich Johnston wrote:
+On 10/18/2013 05:40 PM, Dave Chinner wrote:
+> On Fri, Oct 18, 2013 at 11:59:23AM -0500, Rich Johnston wrote:
 >> This has been committed.
 >>
 >> Thanks
 >> --Rich
 >>
->> commit 41315687d9db9b50876401e7b0ee20dd77cfc712
->> Author: Dave Chinner <dchinner@redhat.com>
->> Date:   Mon Sep 30 03:15:19 2013 +0000
+>> commit dd297fd6d366f62ca2f579e510e6287699d0bd5d
+>> Author: Dave Chinner <david@fromorbit.com>
+>> Date:   Mon Sep 30 03:15:20 2013 +0000
 >>
->>      xfs: dirent dtype presence is dependent on directory magic numbers
+>>      xfs: create a shared header file for format-related information
 >
-> Committed where, exactly?
+> Rich, none of the kernel patches for this rework have been committed
+> yet. I appreciate you catching up on outstanding patches, but lets
+> not jump the gun completely by commit stuff to userspace that isn't
+> yet in the kernel tree.
 >
-> This is a kernel patch that has already been committed and been
-> pushed upstream to linus as commit 6d31349....
+> As it is, the last version of the kernel patch for this change was
+> slightly modified due to review comments, which is why we should be
+> waiting for the kernel commits to shared files before finalising
+> and committing the userspace patches...
 >
 > Cheers,
 >
