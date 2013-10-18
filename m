@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9AA537F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 12:18:35 -0500 (CDT)
-Message-ID: <52616D67.7090307@sgi.com>
-Date: Fri, 18 Oct 2013 12:18:31 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 96E327F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 12:20:01 -0500 (CDT)
+Message-ID: <52616DBE.8020102@sgi.com>
+Date: Fri, 18 Oct 2013 12:19:58 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: handle symlinks etc in
-	fs_table_initialise_mounts()
-References: <5249AE5F.30305@redhat.com>
-In-Reply-To: <5249AE5F.30305@redhat.com>
+Subject: Re: [PATCH] xfsprogs: fix crc32 build on big endian
+References: <524F7753.8050801@redhat.com>
+In-Reply-To: <524F7753.8050801@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,18 +22,17 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
-Cc: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
 This has been committed.
 
 Thanks
 --Rich
 
-commit 050a7f1f79314470c18e9d11c28daf75dd959830
+commit b2dbd6a9a2df5099882bdfc068caa76cf334c99a
 Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Sep 30 17:01:19 2013 +0000
+Date:   Sat Oct 5 02:20:03 2013 +0000
 
-     xfsprogs: handle symlinks etc in fs_table_initialise_mounts()
+     xfsprogs: fix crc32 build on big endian
 
 _______________________________________________
 xfs mailing list
