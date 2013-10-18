@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F7DA7F3F
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 12:57:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 25D95AC001
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 10:57:39 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C964E7F3F
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 12:59:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 95305304066
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 10:59:39 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3zbyBHUpQhxUl0Mx for
-	<xfs@oss.sgi.com>; Fri, 18 Oct 2013 10:57:39 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9IHvcVi018612
+	cuda.sgi.com with ESMTP id 0R4wGl0ToItzEQfR for
+	<xfs@oss.sgi.com>; Fri, 18 Oct 2013 10:59:37 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9IHxb1x015813
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:57:38 -0400
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:59:37 -0400
 Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
 	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r9IHvbit024943
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:57:38 -0400
-Message-ID: <52617691.8090101@redhat.com>
-Date: Fri, 18 Oct 2013 12:57:37 -0500
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r9IHxaDU021298
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 18 Oct 2013 13:59:36 -0400
+Message-ID: <52617708.9000206@redhat.com>
+Date: Fri, 18 Oct 2013 12:59:36 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: Note projid32bit default change in mkfs.xfs manpage
+Subject: [PATCH] xfs_repair: add d_type when moving files to lost+found
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,29 +38,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-As of xfsprogs 3.2.0, the projid32bit default changed from 0
-to 1.  Document this.
+When we move disconnected inodes to lost+found, they aren't
+assigned a dtype.  Fix this by just setting XFS_DIR3_FT_UNKNOWN
+for now.  If the files are moved out of lost+found, the type
+will be properly set at that time.
 
-When we document -m crc etc, we'll also need to note that 0 is
-incompatible with crc=1.
+When repair gains more type knowledge we could use xfs_mode_to_ftype[]
+to set the proper type when moved, but right now it's not a big
+deal; UNKNOWN will suffice for files in lost+found, and prevents
+us from using an uninitialized value.
 
-Signed-off-by: Eric Sandeen <sandeen@redaht.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 61122f0..99f7013 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -362,7 +362,8 @@ than version 2.6.16.
- This is used to enable 32bit quota project identifiers. The
- .I value
- is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
--If the value is omitted, 0 is assumed.
-+If the value is omitted, 1 is assumed.  (This default changed
-+in release version 3.2.0.)
- .RE
- .TP
- .BI \-l " log_section_options"
+diff --git a/repair/phase6.c b/repair/phase6.c
+index f84bdc0..41f6bfc 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1041,6 +1041,8 @@ mv_orphanage(
+ 	xname.name = fname;
+ 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
+ 				(unsigned long long)ino);
++	/* XXX use xfs_mode_to_ftype[] when userspace gains it */
++	xname.type = XFS_DIR3_FT_UNKNOWN;
+ 
+ 	err = libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip, 0);
+ 	if (err)
 
 _______________________________________________
 xfs mailing list
