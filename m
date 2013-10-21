@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8188A7F50
-	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 13:37:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 70A6B304081
-	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 11:37:55 -0700 (PDT)
-Received: from mail-yh0-f49.google.com (mail-yh0-f49.google.com
-	[209.85.213.49]) by cuda.sgi.com with ESMTP id 2D0ElMBTnWWeJIUE
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Oct 2013 11:37:54 -0700 (PDT)
-Received: by mail-yh0-f49.google.com with SMTP id a41so1797118yho.22
-	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 11:37:53 -0700 (PDT)
-From: "Geyslan G. Bem" <geyslan@gmail.com>
-Subject: [PATCH] xfs: fix possible NULL dereference
-Date: Mon, 21 Oct 2013 15:32:46 -0300
-Message-Id: <1382380366-26540-1-git-send-email-geyslan@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0CFB07F50
+	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 14:59:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9EFF1AC002
+	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 12:59:39 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id WzeiCVvEoUEntbyV for <xfs@oss.sgi.com>;
+	Mon, 21 Oct 2013 12:59:35 -0700 (PDT)
+Message-ID: <526587A5.4000602@sandeen.net>
+Date: Mon, 21 Oct 2013 14:59:33 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstests: use -F for mkfs.ext4 in btrfs/012
+References: <1382371516-13720-1-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1382371516-13720-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +23,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: kernel-br@googlegroups.com
-Cc: Alex Elder <elder@kernel.org>, Ben Myers <bpm@sgi.com>, "Geyslan G. Bem" <geyslan@gmail.com>, open list <linux-kernel@vger.kernel.org>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-This patch puts a 'break' in the true branch, avoiding the 'icptr->ic_next'
-dereferencing.
+On 10/21/13 11:05 AM, Josef Bacik wrote:
+> I noticed this test was hanging because mkfs.ext4 wanted to make sure it was ok
+> to mkfs an entire device.  We need -F so it doesn't ask this question.  Thanks,
+> 
+> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 
-Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
----
- fs/xfs/xfs_log.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a2dea108..8cdeb7e 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3703,8 +3703,10 @@ xlog_verify_iclog(
- 	spin_lock(&log->l_icloglock);
- 	icptr = log->l_iclog;
- 	for (i=0; i < log->l_iclog_bufs; i++) {
--		if (icptr == NULL)
-+		if (!icptr) {
- 			xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
-+			break;
-+		}
- 		icptr = icptr->ic_next;
- 	}
- 	if (icptr != log->l_iclog)
--- 
-1.8.4
+> ---
+>  tests/btrfs/012 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/tests/btrfs/012 b/tests/btrfs/012
+> index de90149..f7e5da5 100755
+> --- a/tests/btrfs/012
+> +++ b/tests/btrfs/012
+> @@ -65,7 +65,7 @@ _require_command $E2FSCK_PROG e2fsck
+>  rm -f $seqres.full
+>  
+>  # Create & populate an ext4 filesystem
+> -$MKFS_EXT4_PROG -b 4096 $SCRATCH_DEV > $seqres.full 2>&1 || \
+> +$MKFS_EXT4_PROG -F -b 4096 $SCRATCH_DEV > $seqres.full 2>&1 || \
+>  	_notrun "Could not create ext4 filesystem"
+>  # Manual mount so we don't use -t btrfs or selinux context
+>  mount -t ext4 $SCRATCH_DEV $SCRATCH_MNT
+> 
 
 _______________________________________________
 xfs mailing list
