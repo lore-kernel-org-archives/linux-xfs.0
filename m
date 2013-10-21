@@ -1,20 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C3B4B7F50
-	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 15:58:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4C39BAC001
-	for <xfs@oss.sgi.com>; Mon, 21 Oct 2013 13:58:26 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YkmIZXci5HP6xtuG for <xfs@oss.sgi.com>;
-	Mon, 21 Oct 2013 13:58:25 -0700 (PDT)
-Message-ID: <5265956F.4010700@sandeen.net>
-Date: Mon, 21 Oct 2013 15:58:23 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix possible NULL dereference
-References: <1382380366-26540-1-git-send-email-geyslan@gmail.com>
-In-Reply-To: <1382380366-26540-1-git-send-email-geyslan@gmail.com>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, master,
+	updated. xfs-for-linus-v3.12-rc3-21-g865e944
+Message-Id: <20131021215759.969647F51@oss.sgi.com>
+Date: Mon, 21 Oct 2013 16:57:59 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,52 +12,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Geyslan G. Bem" <geyslan@gmail.com>
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, kernel-br@googlegroups.com, XFS FILESYSTEM <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 10/21/13 1:32 PM, Geyslan G. Bem wrote:
-> This patch puts a 'break' in the true branch, avoiding the 'icptr->ic_next'
-> dereferencing.
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+The branch, master has been updated
+  865e944 xfs: fold xfs_change_file_space into xfs_ioc_space
+  83aee9e xfs: simplify the fallocate path
+  5f8aca8 xfs: always hold the iolock when calling xfs_change_file_space
+  001a3e7 xfs: remove the unused XFS_ATTR_NONBLOCK flag
+  76ca4c2 xfs: always take the iolock around xfs_setattr_size
+      from  59e5a0e821d838854b3afd030d31f82cee3ecd58 (commit)
 
-Hm, yeah - cmn_err(CE_PANIC, " " ); used to BUG_ON, but the newer
-xfs_emerg() doesn't.
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-Dave, was that intentional?
+- Log -----------------------------------------------------------------
+commit 865e9446b4c17f78be0b1387426394b6bfc278f3
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Sat Oct 12 00:55:08 2013 -0700
 
-I wonder if there are more spots after xfs_emerg()'s which aren't
-defensive, because the code used to just panic there.
+    xfs: fold xfs_change_file_space into xfs_ioc_space
+    
+    Now that only one caller of xfs_change_file_space is left it can be merged
+    into said caller.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
 
--Eric
+commit 83aee9e4c2976143f35b3a42ad1faadf58c53ae7
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Sat Oct 12 00:55:07 2013 -0700
+
+    xfs: simplify the fallocate path
+    
+    Call xfs_alloc_file_space or xfs_free_file_space directly from
+    xfs_file_fallocate instead of going through xfs_change_file_space.
+    
+    This simplified the code by removing the unessecary marshalling of the
+    arguments into an xfs_flock64_t structure and allows removing checks that
+    are already done in the VFS code.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+commit 5f8aca8b43f41c4b2d4dc5389124a40cab92b644
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Sat Oct 12 00:55:06 2013 -0700
+
+    xfs: always hold the iolock when calling xfs_change_file_space
+    
+    Currently fallocate always holds the iolock when calling into
+    xfs_change_file_space, while the ioctl path lets some of the lower level
+    functions take it, but leave it out in others.
+    
+    This patch makes sure the ioctl path also always holds the iolock and
+    thus introduces consistent locking for the preallocation operations while
+    simplifying the code and allowing to kill the now unused XFS_ATTR_NOLOCK
+    flag.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+commit 001a3e73706fcb8c52dcca1d4742679384d04184
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Sat Oct 12 00:55:05 2013 -0700
+
+    xfs: remove the unused XFS_ATTR_NONBLOCK flag
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+commit 76ca4c238cf5858f8ba5bcd24c94c23717f1e14e
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Mon Oct 14 07:09:35 2013 -0700
+
+    xfs: always take the iolock around xfs_setattr_size
+    
+    There is no reason to conditionally take the iolock inside xfs_setattr_size
+    when we can let the caller handle it unconditionally, which just incrases
+    the lock hold time for the case where it was previously taken internally
+    by a few instructions.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_bmap_util.c | 277 ++++---------------------------------------------
+ fs/xfs/xfs_bmap_util.h |   9 +-
+ fs/xfs/xfs_file.c      |  76 +++++++++-----
+ fs/xfs/xfs_ioctl.c     | 133 ++++++++++++++++++++++--
+ fs/xfs/xfs_iops.c      |  39 +++----
+ fs/xfs/xfs_iops.h      |   8 +-
+ 6 files changed, 223 insertions(+), 319 deletions(-)
 
 
-> Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
-> ---
->  fs/xfs/xfs_log.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a2dea108..8cdeb7e 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3703,8 +3703,10 @@ xlog_verify_iclog(
->  	spin_lock(&log->l_icloglock);
->  	icptr = log->l_iclog;
->  	for (i=0; i < log->l_iclog_bufs; i++) {
-> -		if (icptr == NULL)
-> +		if (!icptr) {
->  			xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
-> +			break;
-> +		}
->  		icptr = icptr->ic_next;
->  	}
->  	if (icptr != log->l_iclog)
-> 
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
