@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4036E7F50
-	for <xfs@oss.sgi.com>; Sun, 20 Oct 2013 21:56:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 21035304059
-	for <xfs@oss.sgi.com>; Sun, 20 Oct 2013 19:56:20 -0700 (PDT)
-Received: from mail-bk0-f54.google.com (mail-bk0-f54.google.com
-	[209.85.214.54]) by cuda.sgi.com with ESMTP id GeP1COEHl36Fdjd5
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 20 Oct 2013 19:56:17 -0700 (PDT)
-Received: by mail-bk0-f54.google.com with SMTP id mz12so506618bkb.41
-	for <xfs@oss.sgi.com>; Sun, 20 Oct 2013 19:56:16 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A45037F50
+	for <xfs@oss.sgi.com>; Sun, 20 Oct 2013 23:03:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 32B41AC001
+	for <xfs@oss.sgi.com>; Sun, 20 Oct 2013 21:03:26 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	d0tvyUKQuOfGsIbr for <xfs@oss.sgi.com>;
+	Sun, 20 Oct 2013 21:03:23 -0700 (PDT)
+Date: Mon, 21 Oct 2013 15:03:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH -next] xfs: remove duplicated include from xfs_bmap.c
+Message-ID: <20131021040317.GD4446@dastard>
+References: <CAPgLHd-Pe_oBza-esdghKzFq5T2-Pj26YSBuEggAC9qR7vAdeg@mail.gmail.com>
 MIME-Version: 1.0
-Date: Mon, 21 Oct 2013 10:56:15 +0800
-Message-ID: <CAPgLHd-Pe_oBza-esdghKzFq5T2-Pj26YSBuEggAC9qR7vAdeg@mail.gmail.com>
-Subject: [PATCH -next] xfs: remove duplicated include from xfs_bmap.c
-From: Wei Yongjun <weiyj.lk@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAPgLHd-Pe_oBza-esdghKzFq5T2-Pj26YSBuEggAC9qR7vAdeg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,30 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com, elder@kernel.org
-Cc: yongjun_wei@trendmicro.com.cn, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: bpm@sgi.com, elder@kernel.org, yongjun_wei@trendmicro.com.cn, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Mon, Oct 21, 2013 at 10:56:15AM +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Remove duplicated include.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Remove duplicated include.
+That's fixed in a series of patches that has already been posted for
+review. See:
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- fs/xfs/xfs_bmap.c | 1 -
- 1 file changed, 1 deletion(-)
+http://oss.sgi.com/archives/xfs/2013-10/msg00374.html
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index e6b4202..92b97f7 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -34,7 +34,6 @@
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_btree.h"
--#include "xfs_mount.h"
- #include "xfs_itable.h"
- #include "xfs_inode_item.h"
- #include "xfs_extfree_item.h"
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
