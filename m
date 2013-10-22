@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0544B7F6B
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 03:08:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 84D50AC001
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 01:08:11 -0700 (PDT)
-Received: from mail-ob0-f169.google.com (mail-ob0-f169.google.com
-	[209.85.214.169]) by cuda.sgi.com with ESMTP id
-	l9BQOk7q02fQsWim (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 22 Oct 2013 01:08:10 -0700 (PDT)
-Received: by mail-ob0-f169.google.com with SMTP id wp4so7106967obc.0
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 01:08:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20131022001218.GH4446@dastard>
-References: <CAPU9cc3rV+E79HBE95=nsjgoC5=s85jBBZgcxL+d8KijVa0LyA@mail.gmail.com>
-	<20131022001218.GH4446@dastard>
-Date: Tue, 22 Oct 2013 10:08:09 +0200
-Message-ID: <CAPU9cc2EsoeNE+mMQSwmLVXyyPoE9jLVhDRcQLJxvWYTNU-33w@mail.gmail.com>
-Subject: Re: 128 bits extent bmap for file format 2
-From: Pradeep Kumar <praks411@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id D769E7F6B
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 03:12:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6DFEAAC001
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 01:12:26 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id iV4MzNeEGpLfG8Ht for
+	<xfs@oss.sgi.com>; Tue, 22 Oct 2013 01:12:25 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9M8CPux004876
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 04:12:25 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH v2] xfstests generic/320: heavy rm workload test
+Date: Tue, 22 Oct 2013 16:12:10 +0800
+Message-Id: <1382429530-20519-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1382360484-6570-1-git-send-email-eguan@redhat.com>
+References: <1382360484-6570-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,119 +27,187 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4505169289179177739=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
---===============4505169289179177739==
-Content-Type: multipart/alternative; boundary=047d7b3a9b12b7b7f304e94fe6dc
+This test is based on generic/273, a regression test for commit
 
---047d7b3a9b12b7b7f304e94fe6dc
-Content-Type: text/plain; charset=ISO-8859-1
+9a3a5da xfs: check for stale inode before acquiring iflock on push
 
-Hi Dave,
+On unpatched kernel, rm processes would hang.
 
-Thanks for the reply. I think I may get my solution. Can you explain the
-difference between the two?
-I've created sample xfs file using mkfs.xfs with mostly default parameter
-1. Sector Size = 512
-2. Block size = 4096
-3. AG Number = 2
-4. Number of blocks per AG = 6400.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+v2: Address Dave's comments
+ - don't check return value of mkdir
+ - don't cd to origin dir
+ - don't calculate fs size, already have fs size
+ - use $XFS_IO_PROG instead of dd
+ - remove leading "_" from local vars
+ - call _supported_fs etc. functions before any local functions
+ - set status=0 before exit
 
-So when I get absolute block 9420 from file extent data  I'm going to (6400
-+ 3020) , 3020 block of second AG which is wrong. The file start from 7628
-absolute block or (6400 + 1228), 1228 block of second AG.
-Please describe in some detail above the conversion which you are talking
-about.
+ tests/generic/320     | 121 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/320.out |   2 +
+ tests/generic/group   |   2 +-
+ 3 files changed, 124 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/320
+ create mode 100644 tests/generic/320.out
 
-Thanks and Regards,
-Pradeep
-
-
-
-On 22 October 2013 02:12, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Tue, Oct 22, 2013 at 01:32:22AM +0200, Pradeep Kumar wrote:
-> > Hi,
-> >
-> > I'm writing a small utility to parse XFS fs image on windows.
-> > I'm able to fetch the files in the first AG (0).
-> > However when it comes to the files which are in different AG I'm facing
-> > some problem in parsing extent bmap 128bits data of file inode (format ==
-> > 2).
->
-> Extents use filesystem block encodings, not disk addresses. Look up
-> the macros XFS_DADDR_TO_FSB and XFS_FSB_TO_DADDR.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-
---047d7b3a9b12b7b7f304e94fe6dc
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi Dave,<div><br><div>Thanks for the reply. I think I may =
-get my solution. Can you explain the difference between the two?</div><div>=
-I&#39;ve created sample xfs file using mkfs.xfs with mostly default paramet=
-er=A0</div>
-<div>1. Sector Size =3D 512</div><div>2. Block size =3D 4096</div><div>3. A=
-G Number =3D 2</div><div>4. Number of blocks per AG =3D 6400.</div><div><br=
-></div><div>So when I get absolute block 9420 from file extent data =A0I&#3=
-9;m going to (6400 + 3020) , 3020 block of second AG which is wrong. The fi=
-le start from 7628 absolute block or (6400 + 1228), 1228 block of second AG=
-.=A0</div>
-<div>Please describe in some detail above the conversion which you are talk=
-ing about.</div><div><br></div><div>Thanks and Regards,</div><div>Pradeep</=
-div><div><br></div></div></div><div class=3D"gmail_extra"><br><br><div clas=
-s=3D"gmail_quote">
-On 22 October 2013 02:12, Dave Chinner <span dir=3D"ltr">&lt;<a href=3D"mai=
-lto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&gt;</spa=
-n> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;b=
-order-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"im">On Tue, Oct 22, 2013 at 01:32:22AM +0200, Pradeep Kumar w=
-rote:<br>
-&gt; Hi,<br>
-&gt;<br>
-&gt; I&#39;m writing a small utility to parse XFS fs image on windows.<br>
-&gt; I&#39;m able to fetch the files in the first AG (0).<br>
-&gt; However when it comes to the files which are in different AG I&#39;m f=
-acing<br>
-&gt; some problem in parsing extent bmap 128bits data of file inode (format=
- =3D=3D<br>
-&gt; 2).<br>
-<br>
-</div>Extents use filesystem block encodings, not disk addresses. Look up<b=
-r>
-the macros XFS_DADDR_TO_FSB and XFS_FSB_TO_DADDR.<br>
-<br>
-Cheers,<br>
-<br>
-Dave.<br>
-<span class=3D"HOEnZb"><font color=3D"#888888">--<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-</font></span></blockquote></div><br></div>
-
---047d7b3a9b12b7b7f304e94fe6dc--
-
-
---===============4505169289179177739==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/tests/generic/320 b/tests/generic/320
+new file mode 100755
+index 0000000..09c533c
+--- /dev/null
++++ b/tests/generic/320
+@@ -0,0 +1,121 @@
++#! /bin/bash
++# FS QA Test No. generic/320
++#
++# heavy rm workload
++#
++# Regression test for commit:
++# 9a3a5da xfs: check for stale inode before acquiring iflock on push
++#
++# Based on generic/273
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os IRIX Linux
++_require_scratch
++
++threads=50
++count=2
++fs_size=$((2 * 1024 * 1024 * 1024))
++ORIGIN=$SCRATCH_MNT/origin
++
++threads_set()
++{
++	cpu_num=`grep -c processor /proc/cpuinfo`
++	threads=$(($cpu_num * 50))
++	if [ $threads -gt 200 ]
++	then
++		threads=200
++	fi
++}
++
++file_create()
++{
++	i=0
++	mkdir $ORIGIN
++
++	disksize=$(($fs_size / 3))
++	num=$(($disksize / $count / $threads / 4096))
++	while [ $i -lt $num ]; do
++		$XFS_IO_PROG -f -c "pwrite 0 $((4096*count))" $ORIGIN/file_$i >>$seqres.full 2>&1
++		i=$(($i + 1))
++	done
++}
++
++worker()
++{
++	suffix=$1
++
++	mkdir $SCRATCH_MNT/sub_$suffix
++
++	cp -r $ORIGIN/* $SCRATCH_MNT/sub_$suffix >>$seqres.full 2>&1
++	rm -rf $SCRATCH_MNT/sub_$suffix
++}
++
++do_workload()
++{
++	pids=""
++	loop=1
++
++	threads_set
++	file_create
++
++	while [ $loop -lt $threads ]; do
++		worker $loop &
++		pids="$pids $!"
++		loop=$(($loop + 1))
++	done
++
++	wait $pids
++}
++
++echo "Silence is golden"
++
++rm -f $seqres.full
++
++_scratch_mkfs_sized $fs_size >>$seqres.full 2>&1
++_scratch_mount >>$seqres.full 2>&1
++
++do_workload
++
++_check_scratch_fs
++status=0
++exit
+diff --git a/tests/generic/320.out b/tests/generic/320.out
+new file mode 100644
+index 0000000..1c4165d
+--- /dev/null
++++ b/tests/generic/320.out
+@@ -0,0 +1,2 @@
++QA output created by 320
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 3488c42..40da6dc 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -122,4 +122,4 @@
+ 317 auto metadata quick
+ 318 acl attr auto quick
+ 319 acl auto quick
+-
++320 auto rw
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4505169289179177739==--
