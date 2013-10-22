@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A13F07F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:03:42 -0500 (CDT)
-Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E5CA30408A
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 14:03:39 -0700 (PDT)
-Message-ID: <5266E829.1080704@sgi.com>
-Date: Tue, 22 Oct 2013 16:03:37 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 48BE87F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:06:18 -0500 (CDT)
+Message-ID: <5266E8BF.6040103@sgi.com>
+Date: Tue, 22 Oct 2013 16:06:07 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: Test xfs_fsr / swapext management of
-	di_forkoff w/ selinux
-References: <5260B62D.2010507@redhat.com> <52616072.6040808@sandeen.net>
-In-Reply-To: <52616072.6040808@sandeen.net>
+Subject: Re: [PATCH 7/8] xfstests: btrfs/017: add a regression test for
+	snapshot creation
+References: <1382120790-31060-1-git-send-email-jbacik@fusionio.com>
+	<1382120790-31060-7-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1382120790-31060-7-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +23,18 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fusionio.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Committed as test xfs/300.
+This has been committed.
 
+Thanks
 --Rich
 
-commit 5d88b638ff4ad68f5ecce96d5d4d3a85fc4a2a5c
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Fri Oct 18 16:23:14 2013 +0000
+commit 9d867b7e625690f03c73407923ae90caa7401abd
+Author: Josef Bacik <jbacik@fusionio.com>
+Date:   Fri Oct 18 18:26:29 2013 +0000
 
-     xfstests: Test xfs_fsr / swapext management of di_forkoff w/ selinux
+     xfstests: btrfs/017: add a regression test for snapshot creation
 
 _______________________________________________
 xfs mailing list
