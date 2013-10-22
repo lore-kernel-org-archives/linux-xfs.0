@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 955D47F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:12:56 -0500 (CDT)
-Date: Tue, 22 Oct 2013 18:12:52 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 04/19] xfs: create a shared header file for
-	format-related information
-Message-ID: <20131022231252.GQ1935@sgi.com>
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-5-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6757D7F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:23:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 54BE830408A
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:23:54 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	LJNIW5PqEY6BDMAL for <xfs@oss.sgi.com>;
+	Tue, 22 Oct 2013 16:23:53 -0700 (PDT)
+Date: Wed, 23 Oct 2013 10:23:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 1/4] xfsprog: add xfs sb v4 support for dirent
+	filetype field
+Message-ID: <20131022232333.GF2797@dastard>
+References: <20131017152804.204045257@sgi.com>
+	<20131017152955.415393417@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1381789085-21923-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <20131017152955.415393417@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,40 +27,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBPY3QgMTUsIDIwMTMgYXQgMDk6MTc6NTBBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IEFsbCBvZiB0aGUgYnVmZmVyIG9wZXJhdGlvbnMgc3RydWN0dXJlcyBhcmUgbmVlZGVk
-IHRvIGJlIGV4cG9ydGVkCj4gZm9yIHhmc19kYiwgc28gbW92ZSB0aGVtIGFsbCB0byBhIGNvbW1v
-biBsb2NhdGlvbiByYXRoZXIgdGhhbgo+IHNwcmVhZGluZyB0aGVtIGFsbCBvdmVyIHRoZSBwbGFj
-ZS4gVGhleSBhcmUgdmVyaWZ5aW5nIHRoZSBvbi1kaXNrCj4gZm9ybWF0LCBzbyB3aGlsZSB4ZnNf
-Zm9ybWF0LmggbWlnaHQgYmUgYSBnb29kIHBsYWNlLCBpdCBpcyBub3QgcGFydAo+IG9mIHRoZSBv
-biBkaXNrIGZvcm1hdC4KPiAKPiBIZW5jZSB3ZSBuZWVkIHRvIGNyZWF0ZSBhIG5ldyBoZWFkZXIg
-ZmlsZSB0aGF0IHdlIGNlbnRyYWxpc2UgdGhlc2UKPiByZWxhdGVkIGRlZmluaXRpb25zLiBTdGFy
-dCBieSBtb3ZpbmcgdGhlIGJmZmVyIG9wZXJhdGlvbnMKPiBzdHJ1Y3R1cmVzLCBhbmQgdGhlbiBh
-bHNvIG1vdmUgYWxsIHRoZSBvdGhlciBkZWZpbml0aW9ucyB0aGF0IGhhdmUKPiBjcmVwdCBpbnRv
-IHhmc19sb2dfZm9ybWF0LmggYW5kIHhmc19mb3JtYXQuaCBhcyB0aGVyZSB3YXMgbm8gb3RoZXIK
-PiBzaGFyZWQgaGVhZGVyIGZpbGUgdG8gcHV0IHRoZW0gaW4uCj4gCj4gU2lnbmVkLW9mZi1ieTog
-RGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IFJldmlld2VkLWJ5OiBDaHJpc3Rv
-cGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KCi9yb290L3hmcy9mcy94ZnMveGZzX2ZpbGUuYwovcm9v
-dC94ZnMvZnMveGZzL3hmc19maWxlLmM6IEluIGZ1bmN0aW9uIOKAmHhmc19maWxlX2ZhbGxvY2F0
-ZeKAmToKL3Jvb3QveGZzL2ZzL3hmcy94ZnNfZmlsZS5jOjg0NDogZXJyb3I6IOKAmFhGU19UUkFO
-U19XUklURUlE4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQovcm9v
-dC94ZnMvZnMveGZzL3hmc19maWxlLmM6ODQ0OiBlcnJvcjogKEVhY2ggdW5kZWNsYXJlZCBpZGVu
-dGlmaWVyIGlzIHJlcG9ydGVkIG9ubHkgb25jZQovcm9vdC94ZnMvZnMveGZzL3hmc19maWxlLmM6
-ODQ0OiBlcnJvcjogZm9yIGVhY2ggZnVuY3Rpb24gaXQgYXBwZWFycyBpbi4pCi9yb290L3hmcy9m
-cy94ZnMveGZzX2ZpbGUuYzo4NjA6IGVycm9yOiDigJhYRlNfSUNIR1RJTUVfTU9E4oCZIHVuZGVj
-bGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQovcm9vdC94ZnMvZnMveGZzL3hmc19m
-aWxlLmM6ODYwOiBlcnJvcjog4oCYWEZTX0lDSEdUSU1FX0NIR+KAmSB1bmRlY2xhcmVkIChmaXJz
-dCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKL3Jvb3QveGZzL2ZzL3hmcy94ZnNfZmlsZS5jOjg2NDog
-ZXJyb3I6IOKAmFhGU19UUkFOU19TWU5D4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlz
-IGZ1bmN0aW9uKQptYWtlWzFdOiAqKiogWy9yb290L3hmcy9mcy94ZnMveGZzX2ZpbGUub10gRXJy
-b3IgMQoKR2FoLiAgTWF5YmUgZHVlIHRvIHB1bGxpbmcgaW4gQ2hyaXN0b3BoJ3Mgc2VyaWVzLiAg
-SSdsbCBsb29rIGludG8gaXQgbW9yZQp0b21vcnJvdy4KCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Oct 17, 2013 at 10:28:05AM -0500, Mark Tinguely wrote:
+> Add xfsprog superblock v4 support for the inode type information
+> in the xfs directory feature in xfs_sb.h.
+> 
+> This support adds a feature bit for version 4 superblocks and
+> leaves the original superblock 5 incompatibility bit.
+> 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
