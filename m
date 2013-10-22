@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 853307F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 17:33:16 -0500 (CDT)
-Date: Tue, 22 Oct 2013 17:33:14 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 955D47F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:12:56 -0500 (CDT)
+Date: Tue, 22 Oct 2013 18:12:52 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: fix possible NULL dereference
-Message-ID: <20131022223314.GQ10553@sgi.com>
-References: <20131021231849.GL10553@sgi.com> <20131021235601.GG4446@dastard>
-	<5265C03B.50701@sandeen.net> <20131022001732.GI4446@dastard>
-	<CAGG-pUTh-PJJ4Nzo0r-f3VDPMc81U2z_NMX+Wcex3KzGs=U8cA@mail.gmail.com>
-	<20131022203946.GB2797@dastard> <5266E4BD.8030601@sandeen.net>
-	<20131022210300.GC2797@dastard> <5266EBF0.901@sandeen.net>
-	<20131022220254.GD2797@dastard>
+Subject: Re: [PATCH 04/19] xfs: create a shared header file for
+	format-related information
+Message-ID: <20131022231252.GQ1935@sgi.com>
+References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
+	<1381789085-21923-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131022220254.GD2797@dastard>
+In-Reply-To: <1381789085-21923-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,123 +20,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, Geyslan =?iso-8859-1?Q?Greg=F3rio?= Bem <geyslan@gmail.com>
-Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, XFS FILESYSTEM <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hey Gents,
-
-On Wed, Oct 23, 2013 at 09:02:54AM +1100, Dave Chinner wrote:
-> On Tue, Oct 22, 2013 at 04:19:44PM -0500, Eric Sandeen wrote:
-> > On 10/22/13 4:03 PM, Dave Chinner wrote:
-> > > On Tue, Oct 22, 2013 at 03:49:01PM -0500, Eric Sandeen wrote:
-> > >> On 10/22/13 3:39 PM, Dave Chinner wrote:
-> > >>> On Tue, Oct 22, 2013 at 08:12:51AM -0200, Geyslan Greg=F3rio Bem wr=
-ote:
-> > >>>> 2013/10/21 Dave Chinner <david@fromorbit.com>:
-> > >>>>> On Mon, Oct 21, 2013 at 07:00:59PM -0500, Eric Sandeen wrote:
-> > >>>>>> On 10/21/13 6:56 PM, Dave Chinner wrote:
-> > >>>>>>> On Mon, Oct 21, 2013 at 06:18:49PM -0500, Ben Myers wrote:
-> > >>>>>
-> > >>>>> Yes, but to continue the Devil's Advocate argument, the purpose of
-> > >>>>> debug code isn't to enlightent the casual reader or drive-by
-> > >>>>> patchers - it's to make life easier for people who actually spend
-> > >>>>> time debugging the code. And the people who need the debug code
-> > >>>>> are expected to understand why an ASSERT is not necessary. :)
-> > >>>>>
-> > >>>> Dave, Eric and Ben,
-> > >>>>
-> > >>>> This was catched by coverity (CID 102348).
-> > >>>
-> > >>> You should have put that in the patch description.
-> > >>>
-> > >>> Now I understand why there's been a sudden surge of irrelevant one
-> > >>> line changes from random people that have never touched XFS before.
-> > >>>
-> > >>> <sigh>
-> > >>>
-> > >>> Ok, lets churn the code just to shut the stupid checker up. This
-> > >>> doesn't fix a bug, it doesn't change behaviour, it just makes
-> > >>> coverity happy. Convert it to the for loop plus ASSERT I mentioned
-> > >>> in a previous message.
-> > >>
-> > >> You know, I respectfully disagree, but we might just have to agree
-> > >> to disagree.  The code, as it stands, tests for a null ptr
-> > >> and then dereferences it.  That's always going to raise some
-> > >> eyebrows, coverity or not, debug code or not, drive by or not.
-> > > =
-
-> > >> So even for future developers, making the code more self-
-> > >> documenting about this behavior would be a plus, whether it's by
-> > >> comment, by explicit ASSERT(), or whatever.  (I don't think
-> > >> that xfs_emerg() has quite enough context to make it obvious.)
-> > > =
-
-> > > Sure, but if weren't for the fact that Coverity warned about it,
-> > > nobody other that us people who work on the XFS code day in, day out
-> > > would have even cared about it.
-> > > =
-
-> > > That's kind of my point - again, as the Devil's Advocate - that
-> > > coverity is encouraging drive-by "fixes" by people who don't
-> > > actually understand any of the context, history and/or culture
-> > > surrounding the code being modified.
-> > =
-
-> > They shouldn't have to, the code (or comments therein) should
-> > make it obvious.  ;)  (in a perfect world...)
-> =
-
-> Obvious to whom, exactly?
-> =
-
-> That's the point I'm trying to make - "#ifdef DEBUG", two
-> comments indicating that it's validating the list and printing a
-> message just before it goes boom. That's pretty obvious code to
-> anyone who is used to tracking down corrupted list problems...
-> =
-
-> > > I have no problems with real bugs being fixed, but if we are
-> > > modifying code for no gain other than closing "coverity doesn't like
-> > > it" bugs, then we *should* be questioning whether the change is
-> > > really necessary.
-> > =
-
-> > But let's give Geyslan the benefit of the doubt, and realize that
-> > Coverity does find real things, and even if it originated w/ a
-> > Coverity CID, when one sees:
-> > =
-
-> > 	if (!a)
-> > 		printk("a thing\n")
-> > =
-
-> > 	a =3D a->b =3D . . . =
-
-> > =
-
-> > it looks suspicious to pretty much anyone.  I don't think Geyslan
-> > sent it to shut Coverity up, he sent it because it looked like
-> > a bug worth fixing (after Coverity spotted it).
-> > =
-
-> > Let's not be too hard on him for trying; I appreciate it more
-> > than spelling fixes and whitespace cleanups.  ;)
-> =
-
-> True, point taken. =
-
-
-So, uh, lets go with the ASSERT approach then?  It seems to be a reasonable
-middle ground.  ;)
-
-Regards,
-	Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBPY3QgMTUsIDIwMTMgYXQgMDk6MTc6NTBBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IEFsbCBvZiB0aGUgYnVmZmVyIG9wZXJhdGlvbnMgc3RydWN0dXJlcyBhcmUgbmVlZGVk
+IHRvIGJlIGV4cG9ydGVkCj4gZm9yIHhmc19kYiwgc28gbW92ZSB0aGVtIGFsbCB0byBhIGNvbW1v
+biBsb2NhdGlvbiByYXRoZXIgdGhhbgo+IHNwcmVhZGluZyB0aGVtIGFsbCBvdmVyIHRoZSBwbGFj
+ZS4gVGhleSBhcmUgdmVyaWZ5aW5nIHRoZSBvbi1kaXNrCj4gZm9ybWF0LCBzbyB3aGlsZSB4ZnNf
+Zm9ybWF0LmggbWlnaHQgYmUgYSBnb29kIHBsYWNlLCBpdCBpcyBub3QgcGFydAo+IG9mIHRoZSBv
+biBkaXNrIGZvcm1hdC4KPiAKPiBIZW5jZSB3ZSBuZWVkIHRvIGNyZWF0ZSBhIG5ldyBoZWFkZXIg
+ZmlsZSB0aGF0IHdlIGNlbnRyYWxpc2UgdGhlc2UKPiByZWxhdGVkIGRlZmluaXRpb25zLiBTdGFy
+dCBieSBtb3ZpbmcgdGhlIGJmZmVyIG9wZXJhdGlvbnMKPiBzdHJ1Y3R1cmVzLCBhbmQgdGhlbiBh
+bHNvIG1vdmUgYWxsIHRoZSBvdGhlciBkZWZpbml0aW9ucyB0aGF0IGhhdmUKPiBjcmVwdCBpbnRv
+IHhmc19sb2dfZm9ybWF0LmggYW5kIHhmc19mb3JtYXQuaCBhcyB0aGVyZSB3YXMgbm8gb3RoZXIK
+PiBzaGFyZWQgaGVhZGVyIGZpbGUgdG8gcHV0IHRoZW0gaW4uCj4gCj4gU2lnbmVkLW9mZi1ieTog
+RGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IFJldmlld2VkLWJ5OiBDaHJpc3Rv
+cGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KCi9yb290L3hmcy9mcy94ZnMveGZzX2ZpbGUuYwovcm9v
+dC94ZnMvZnMveGZzL3hmc19maWxlLmM6IEluIGZ1bmN0aW9uIOKAmHhmc19maWxlX2ZhbGxvY2F0
+ZeKAmToKL3Jvb3QveGZzL2ZzL3hmcy94ZnNfZmlsZS5jOjg0NDogZXJyb3I6IOKAmFhGU19UUkFO
+U19XUklURUlE4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQovcm9v
+dC94ZnMvZnMveGZzL3hmc19maWxlLmM6ODQ0OiBlcnJvcjogKEVhY2ggdW5kZWNsYXJlZCBpZGVu
+dGlmaWVyIGlzIHJlcG9ydGVkIG9ubHkgb25jZQovcm9vdC94ZnMvZnMveGZzL3hmc19maWxlLmM6
+ODQ0OiBlcnJvcjogZm9yIGVhY2ggZnVuY3Rpb24gaXQgYXBwZWFycyBpbi4pCi9yb290L3hmcy9m
+cy94ZnMveGZzX2ZpbGUuYzo4NjA6IGVycm9yOiDigJhYRlNfSUNIR1RJTUVfTU9E4oCZIHVuZGVj
+bGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQovcm9vdC94ZnMvZnMveGZzL3hmc19m
+aWxlLmM6ODYwOiBlcnJvcjog4oCYWEZTX0lDSEdUSU1FX0NIR+KAmSB1bmRlY2xhcmVkIChmaXJz
+dCB1c2UgaW4gdGhpcyBmdW5jdGlvbikKL3Jvb3QveGZzL2ZzL3hmcy94ZnNfZmlsZS5jOjg2NDog
+ZXJyb3I6IOKAmFhGU19UUkFOU19TWU5D4oCZIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlz
+IGZ1bmN0aW9uKQptYWtlWzFdOiAqKiogWy9yb290L3hmcy9mcy94ZnMveGZzX2ZpbGUub10gRXJy
+b3IgMQoKR2FoLiAgTWF5YmUgZHVlIHRvIHB1bGxpbmcgaW4gQ2hyaXN0b3BoJ3Mgc2VyaWVzLiAg
+SSdsbCBsb29rIGludG8gaXQgbW9yZQp0b21vcnJvdy4KCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
