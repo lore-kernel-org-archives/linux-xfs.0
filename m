@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 223907F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:26:51 -0500 (CDT)
-Message-ID: <5266ED97.1020308@sgi.com>
-Date: Tue, 22 Oct 2013 16:26:47 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 10BEF7F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:30:52 -0500 (CDT)
+Message-ID: <5266EE87.5000602@sgi.com>
+Date: Tue, 22 Oct 2013 16:30:47 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: stat the dev we're removing to make sure its'
-	really gone V3
-References: <1382372033-2742-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1382372033-2742-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstests: add regression test for kernel bz 60673 V2
+References: <1382377928-4657-1-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1382377928-4657-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,11 +28,11 @@ This has been committed.
 Thanks
 --Rich
 
-commit 22ebe357198ea2519af6fd7e9082b9ac432631de
+commit 630a2890fff1e3f8f53e9a708d5e6fb2b5158566
 Author: Josef Bacik <jbacik@fusionio.com>
-Date:   Mon Oct 21 16:13:53 2013 +0000
+Date:   Mon Oct 21 17:52:08 2013 +0000
 
-     xfstests: stat the dev we're removing to make sure its' really gone
+     xfstests: add regression test for kernel bz 60673 V2
 
 _______________________________________________
 xfs mailing list
