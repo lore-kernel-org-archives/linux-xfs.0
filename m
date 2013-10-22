@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6757D7F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:23:57 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id ED5DC7F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:23:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 54BE830408A
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:23:54 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DB4F630408A
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:23:58 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	LJNIW5PqEY6BDMAL for <xfs@oss.sgi.com>;
-	Tue, 22 Oct 2013 16:23:53 -0700 (PDT)
-Date: Wed, 23 Oct 2013 10:23:34 +1100
+	9nqF6tscASOdcjlW for <xfs@oss.sgi.com>;
+	Tue, 22 Oct 2013 16:23:57 -0700 (PDT)
+Date: Wed, 23 Oct 2013 10:23:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 1/4] xfsprog: add xfs sb v4 support for dirent
-	filetype field
-Message-ID: <20131022232333.GF2797@dastard>
+Subject: Re: [PATCH v3 2/4] xfsprog: add dirent filetype information for
+	xfs_info
+Message-ID: <20131022232354.GG2797@dastard>
 References: <20131017152804.204045257@sgi.com>
-	<20131017152955.415393417@sgi.com>
+	<20131017152955.518585653@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131017152955.415393417@sgi.com>
+In-Reply-To: <20131017152955.518585653@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,16 +34,14 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 17, 2013 at 10:28:05AM -0500, Mark Tinguely wrote:
-> Add xfsprog superblock v4 support for the inode type information
-> in the xfs directory feature in xfs_sb.h.
-> 
-> This support adds a feature bit for version 4 superblocks and
-> leaves the original superblock 5 incompatibility bit.
+On Thu, Oct 17, 2013 at 10:28:06AM -0500, Mark Tinguely wrote:
+> Make xfs_info aware of the directory inode type by using the
+> XFS_FSOP_GEOM_FLAGS_FTYPE set in the kernel.
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
