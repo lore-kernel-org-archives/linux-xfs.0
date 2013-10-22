@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B58F17F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 08:00:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52A5DAC007
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 06:00:18 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id BiLdsprZCyG02ZjH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 22 Oct 2013 06:00:17 -0700 (PDT)
-Message-ID: <52667716.5050703@oracle.com>
-Date: Tue, 22 Oct 2013 21:01:10 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0B6D57F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 08:10:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ECC6C30408E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 06:10:55 -0700 (PDT)
+Received: from mail-oa0-f42.google.com (mail-oa0-f42.google.com
+	[209.85.219.42]) by cuda.sgi.com with ESMTP id yHAwtGHlfn2tdFna
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 22 Oct 2013 06:10:54 -0700 (PDT)
+Received: by mail-oa0-f42.google.com with SMTP id k14so6527500oag.1
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 06:10:53 -0700 (PDT)
+In-Reply-To: <CAPU9cc3rV+E79HBE95=nsjgoC5=s85jBBZgcxL+d8KijVa0LyA@mail.gmail.com>
+References: <CAPU9cc3rV+E79HBE95=nsjgoC5=s85jBBZgcxL+d8KijVa0LyA@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: xfs Warnings in syslog
-References: <049e1508cbb35ecf7b38ea2dadddc6ec@niklasgoerke.de>
-	<52666FA8.4050101@oracle.com>
-	<CABYiri8CThqQ-E0MvB4=XbOt7jrQG_nw_2Sc7vt0VD_zbr_Ycw@mail.gmail.com>
-In-Reply-To: <CABYiri8CThqQ-E0MvB4=XbOt7jrQG_nw_2Sc7vt0VD_zbr_Ycw@mail.gmail.com>
+Subject: Re: 128 bits extent bmap for file format 2
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Date: Tue, 22 Oct 2013 09:11:06 -0400
+Message-ID: <a3208864-e046-4034-ac3b-1ce6f7ae352b@email.android.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,90 +26,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrey Korolyov <andrey@xdel.ru>
-Cc: ceph-devel <ceph-devel@vger.kernel.org>, Niklas Goerke <niklas@niklasgoerke.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Pradeep Kumar <praks411@gmail.com>, xfs@oss.sgi.com
 
-T24gMTAvMjIvMjAxMyAwODozNiBQTSwgQW5kcmV5IEtvcm9seW92IHdyb3RlOgoKPiBKdXN0IG15
-IHR3byBjZW50czoKPiAKPiBYRlMgaXMgYSBxdWl0ZSB1bnN0YWJsZSB3aXRoIENlcGggZXNwZWNp
-YWxseSBhbG9uZyB3aXRoIGhlYXZ5IENQVQo+IHVzYWdlIHVwIHRvIDMuNyhwcmltYXJpbHkgc29m
-dCBsb2NrdXBzKS4KCkknbSBub3QgdGhlIHJpZ2h0IHBlcnNvbiB0byBjbGFyaWZ5IHRoZSByZWFz
-b24gYXMgSSBvbmx5IGtuZXcgdGhhdApDZXBoIHJlY29tbWVuZCB0aGUgdXNlciB0byBkZXBsb3kg
-T1NEIGRhZW1vbiBvbiBYRlMuICBNYXliZSBzb21lb25lCmNhbiBoZWxwIHlvdSBvdXQgaWYgdGhv
-c2UgaXNzdWVzIGhhdmUgYmVlbiByZXBvcnRlZCB0byBYRlMgbGlzdCBhdAp0aGF0IHRpbWUuCgo+
-IEkgdXNlZCAzLjcgZm9yIGVpZ2h0IG1vbnRocwo+IGJlZm9yZSB1cGdyYWRlIG9uIHByb2R1Y3Rp
-b24gc3lzdGVtIGFuZCBpdCBwZXJmb3JtcyBqdXN0IHBlcmZlY3RseS4KClZlcnkgZ2xhZCB0byBo
-ZWFyIHRoYXQuCgpUaGFua3MsCi1KZWZmCgo+IAo+IE9uIFR1ZSwgT2N0IDIyLCAyMDEzIGF0IDE6
-MjkgUE0sIEplZmYgTGl1IDxqZWZmLmxpdUBvcmFjbGUuY29tPiB3cm90ZToKPj4gSGVsbG8sCj4+
-Cj4+IFNvIEl0J3MgYmV0dGVyIHRvIGFkZCBYRlMgbWFpbGluZyBsaXN0IHRvIHRoZSBDQy1saXN0
-LiA6KQo+Pgo+PiBJIHRoaW5rIHRoaXMgaXNzdWUgaGFzIGJlZW4gZml4ZWQgYnkgdXBzdHJlYW0g
-Y29tbWl0czoKPj4KPj4gRnJvbSBmZjlhMjhmNmMyNWQxOGE2MzVhYmNhYjFmNDlkYjY4MTA4MjAz
-ZGZiCj4+IEZyb206IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+Cj4+IERhdGU6IFRodSwgMTQgTWFy
-IDIwMTMgMTQ6MzA6NTQgKzAxMDAKPj4gU3ViamVjdDogW1BBVENIIDEvMV0geGZzOiBGaXggV0FS
-Tl9PTihkZWxhbGxvYykgaW4geGZzX3ZtX3JlbGVhc2VwYWdlKCkKPj4KPj4KPj4gVGhhbmtzLAo+
-PiAtSmVmZgo+Pgo+PiBPbiAxMC8yMi8yMDEzIDA3OjQ2IFBNLCBOaWtsYXMgR29lcmtlIHdyb3Rl
-Ogo+Pgo+Pj4gSGkKPj4+Cj4+PiBNeSBzeXNsb2cgYW5kIGRtZXNnIGFyZSBiZWluZyBmaWxsZWQg
-d2l0aCB0aGUgV2FybmluZ3MgYXR0YWNoZWQuCj4+PiBMb29raW5nIGF0IHRvZGF5cyBzeXNsb2cg
-SSBnb3QgdXAgdG8gMTEwMSBvZiB0aGVzZSB3YXJuaW5ncyBpbiB0aGUgdGltZQo+Pj4gZnJvbSAx
-MDo1MCB0byAxMToxMyAoYW5kIG9ubHkgaW4gdGhhdCB0aW1lLCBlbHNlIHRoZSBsb2cgd2FzIGNs
-ZWFuKS4gSQo+Pj4gZm91bmQgdGhlbSBvbiBhbGwgZm91ciBvZiBteSBPU0QgaG9zdHMsIGFsbCBh
-dCBhYm91dCB0aGUgc2FtZSB0aW1lLgo+Pj4gSSdtIHJ1bm5pbmcga2VybmVsIDMuMi4wLTQtYW1k
-NjQgb24gYSBkZWJpYW4gNy4wLiBDZXBoIGlzIG9uIHZlcnNpb24KPj4+IDAuNjcuNC4gSSBoYXZl
-IGdvdCAxNSBPU0RzIHBlciBPU0QgSG9zdC4KPj4+Cj4+PiBDZXBoIGRvZXMgbm90IHJlYWxseSBz
-ZWVtIHRvIGNhcmUgYWJvdXQgdGhpcywgc28gSSdtIG5vdCBzdXJlIHdoYXQgaXQgaXMKPj4+IGFs
-bCBhYm91dOKApgo+Pj4gU3RpbGwgdGhleSBhcmUgd2FybmluZ3MgaW4gc3lzbG9nIGFuZCBJIGhv
-cGUgeW91IGd1eXMgY2FuIHRlbGwgbWUgd2hhdAo+Pj4gd2VudCB3cm9uZyBoZXJlIGFuZCB3aGF0
-IEkgY2FuIGRvIGFib3V0IGl0Pwo+Pj4KPj4+IFRoYW5rIHlvdQo+Pj4gTmlrbGFzCj4+Pgo+Pj4K
-Pj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0OC4zODgwMThd
-IC0tLS0tLS0tLS0tLVsgY3V0Cj4+PiBoZXJlIF0tLS0tLS0tLS0tLS0KPj4+IE9jdCAyMiAxMTox
-MToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0OC4zODgwMzBdIFdBUk5JTkc6IGF0Cj4+
-PiAvYnVpbGQvbGludXgtczV4Mm9FL2xpbnV4LTMuMi40Ni9mcy94ZnMveGZzX2FvcHMuYzoxMDkx
-Cj4+PiB4ZnNfdm1fcmVsZWFzZXBhZ2UrMHg3Ni8weDhlIFt4ZnNdKCkKPj4+IE9jdCAyMiAxMTox
-MToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0OC4zODgwMzRdIEhhcmR3YXJlIG5hbWU6
-Cj4+PiBYOURSMy1GCj4+PiBPY3QgMjIgMTE6MTE6MTkgY3MtYmlnZm9vdDA2IGtlcm5lbDogWzk3
-NDQ2NDguMzg4MDM2XSBNb2R1bGVzIGxpbmtlZCBpbjoKPj4+IHhmcyBhdXRvZnM0IG5mc2QgbmZz
-IG5mc19hY2wgYXV0aF9ycGNnc3MgZnNjYWNoZSBsb2NrZCBzdW5ycGMgZXh0MyBqYmQKPj4+IGxv
-b3AgYWNwaV9jcHVmcmVxIG1wZXJmIGNvcmV0ZW1wIGNyYzMyY19pbnRlbCBnaGFzaF9jbG11bG5p
-X2ludGVsCj4+PiBzbmRfcGNtIGFlc25pX2ludGVsIHNuZF9wYWdlX2FsbG9jIGFlc194ODZfNjQg
-c25kX3RpbWVyIGFlc19nZW5lcmljIHMKPj4+IG5kIGNyeXB0ZCBzb3VuZGNvcmUgcGNzcGtyIHNi
-X2VkYWMgam95ZGV2IGV2ZGV2IGVkYWNfY29yZSBpVENPX3dkdAo+Pj4gaTJjX2k4MDEgaVRDT192
-ZW5kb3Jfc3VwcG9ydCBpMmNfY29yZSBpb2F0ZG1hIHByb2Nlc3NvciB0aGVybWFsX3N5cwo+Pj4g
-Y29udGFpbmVyIGJ1dHRvbiBleHQ0IGNyYzE2IGpiZDIgbWJjYWNoZSB1c2JoaWQgaGlkIHNlcyBl
-bmNsb3N1cmUgc2cKPj4+IHNkX21vZCBjcmNfdDEwZGlmIG1lZ2FyYWlkX3NhcyBlaGNpX2hjZCB1
-c2Jjb3JlIGlzY2kgbGlic2FzIHVzYl9jb21tb24gbGliYQo+Pj4gdGEgaXhnYmUgbWRpbyBzY3Np
-X3RyYW5zcG9ydF9zYXMgc2NzaV9tb2QgaWdiIGRjYSBbbGFzdCB1bmxvYWRlZDoKPj4+IHNjc2lf
-d2FpdF9zY2FuXQo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0
-NjQ4LjM4ODA5M10gUGlkOiAzNDU5NjA1LAo+Pj4gY29tbTogY2VwaC1vc2QgVGFpbnRlZDogRyAg
-ICAgICAgVyAgICAzLjIuMC00LWFtZDY0ICMxIERlYmlhbiAzLjIuNDYtMQo+Pj4gT2N0IDIyIDEx
-OjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0NjQ4LjM4ODA5Nl0gQ2FsbCBUcmFjZToK
-Pj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0OC4zODgxMDJd
-Cj4+PiBbPGZmZmZmZmZmODEwNDZiNzU+XSA/IHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4NzgvMHg4
-Ywo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0NjQ4LjM4ODEx
-NV0KPj4+IFs8ZmZmZmZmZmZhMDQ4Yjk4Yz5dID8geGZzX3ZtX3JlbGVhc2VwYWdlKzB4NzYvMHg4
-ZSBbeGZzXQo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0NjQ4
-LjM4ODEyMl0KPj4+IFs8ZmZmZmZmZmY4MTBiZWRjNT5dID8gaW52YWxpZGF0ZV9pbm9kZV9wYWdl
-KzB4NWUvMHg4MAo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0
-NjQ4LjM4ODEyOV0KPj4+IFs8ZmZmZmZmZmY4MTBiZWU1ZD5dID8gaW52YWxpZGF0ZV9tYXBwaW5n
-X3BhZ2VzKzB4NzYvMHgxMDIKPj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVs
-OiBbOTc0NDY0OC4zODgxMzVdCj4+PiBbPGZmZmZmZmZmODEwYjdiODM+XSA/IHN5c19mYWR2aXNl
-NjRfNjQrMHgxOWYvMHgxZTIKPj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVs
-OiBbOTc0NDY0OC4zODgxNDBdCj4+PiBbPGZmZmZmZmZmODEzNTNiNTI+XSA/IHN5c3RlbV9jYWxs
-X2Zhc3RwYXRoKzB4MTYvMHgxYgo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJu
-ZWw6IFs5NzQ0NjQ4LjM4ODE0NF0gLS0tWyBlbmQgdHJhY2UKPj4+IGU5NjQwZWQ2ZjgyZjA2NmQg
-XS0tLQo+Pj4gLS0KPj4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBs
-aW5lICJ1bnN1YnNjcmliZSBjZXBoLWRldmVsIiBpbgo+Pj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdl
-IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo+Pgo+Pgo+PiAtLQo+
-PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3Jp
-YmUgY2VwaC1kZXZlbCIgaW4KPj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2
-Z2VyLmtlcm5lbC5vcmcKPj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2Vy
-bmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4gLS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRo
-aXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgY2VwaC1kZXZlbCIgaW4KPiB0aGUg
-Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFq
-b3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
-bAoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+
+
+Pradeep Kumar <praks411@gmail.com> wrote:
+>Hi,
+>
+>I'm writing a small utility to parse XFS fs image on windows.
+>I'm able to fetch the files in the first AG (0).
+>However when it comes to the files which are in different AG I'm facing
+>some problem in parsing extent bmap 128bits data of file inode (format
+>==
+>2).
+>
+>Here is the sample 128bits data
+>1. 00 00 00 00 00 00 00 00 00 00 00 04 99 80 00 01 (LSB)
+>
+>After unpacking the bits are per doc and source code
+>In the above case I'm getting following
+>Num Of blocks = 1 (correct) (0 to 20 bits)
+>absolute block number = 9420 (0x24CC) (wrong) (21 to 72)
+>file offset = 0 (72 to 126)
+>
+>I'm always getting wrong absolute block number . Actual data is in
+>block
+>7628 (0x1DCC).
+>No matter what I try I'm always getting the same result. I've even
+>verified
+>this
+>by using the code from xfs_bmbt_get_all function from xfs source which
+>too
+>gives me same result (9420).
+>Please someone help me with this. I'm stuck on this from 3 days.
+>
+>Thanks and Regards,
+>Pradeep
+
+Pradeep,
+
+It would be cool if your utility could be incorporated into sleuthkit.  Sleuthkit has fat and NTFS parsers for sure already.  I think ext2 and ext3.  Adding a xfs parser would be a cool addition.
+
+ http://www.sleuthkit.org/sleuthkit/docs/api-docs/index.html#users_guide
+
+Fyi: sleuthkit has been around for a long time, but it is still actively maintained and heavily used.  It is in several linux distros, but is also available for windows.
+
+Greg
+-- 
+Sent from my Android phone with K-9 Mail. Please excuse my brevity.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
