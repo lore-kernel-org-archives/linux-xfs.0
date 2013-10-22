@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 569487F58
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:24:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E8F92AC001
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:24:15 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3AC207F50
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 18:26:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 21D3730408C
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:26:33 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	HQwqiXFollBD2KxH for <xfs@oss.sgi.com>;
-	Tue, 22 Oct 2013 16:24:14 -0700 (PDT)
-Date: Wed, 23 Oct 2013 10:24:10 +1100
+	nQkt4MEwWo9XDmnh for <xfs@oss.sgi.com>;
+	Tue, 22 Oct 2013 16:26:31 -0700 (PDT)
+Date: Wed, 23 Oct 2013 10:26:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 3/4] xfs_progs: add dirent filetype to xfs_db version
-Message-ID: <20131022232410.GH2797@dastard>
+Subject: Re: [PATCH v3 4/4] xfsprog: add mkfs.xfs sb v4 support for dirent
+	filetype field
+Message-ID: <20131022232629.GI2797@dastard>
 References: <20131017152804.204045257@sgi.com>
-	<20131017152955.604007124@sgi.com>
+	<20131017152955.689963160@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131017152955.604007124@sgi.com>
+In-Reply-To: <20131017152955.689963160@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,10 +34,17 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 17, 2013 at 10:28:07AM -0500, Mark Tinguely wrote:
-> Add directory inode type to the xfs_db version command.
+On Thu, Oct 17, 2013 at 10:28:08AM -0500, Mark Tinguely wrote:
+> Add directory inode type feature to mkfs.xfs and its manual page.
+> 
+> In sb v4, "mkfs.xfs -n ftype=1" turns on the feature.
+> 
+> The feature is automatically turned on for "-m crc=1", but reject
+> the use of the "-n ftype=0|1" with the "-m crc=1" option.
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+
+Looks OK now.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
