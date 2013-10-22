@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 48BE87F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:06:18 -0500 (CDT)
-Message-ID: <5266E8BF.6040103@sgi.com>
-Date: Tue, 22 Oct 2013 16:06:07 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 439017F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:09:07 -0500 (CDT)
+Message-ID: <5266E96F.9070202@sgi.com>
+Date: Tue, 22 Oct 2013 16:09:03 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 7/8] xfstests: btrfs/017: add a regression test for
-	snapshot creation
+Subject: Re: [PATCH 8/8] xfstests: btrfs/018: a regression test for subvolume
+	rename
 References: <1382120790-31060-1-git-send-email-jbacik@fusionio.com>
-	<1382120790-31060-7-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1382120790-31060-7-git-send-email-jbacik@fusionio.com>
+	<1382120790-31060-8-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1382120790-31060-8-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +30,11 @@ This has been committed.
 Thanks
 --Rich
 
-commit 9d867b7e625690f03c73407923ae90caa7401abd
+commit 09320abafa8d35105b36596f8400abf45ad59870
 Author: Josef Bacik <jbacik@fusionio.com>
-Date:   Fri Oct 18 18:26:29 2013 +0000
+Date:   Fri Oct 18 18:26:30 2013 +0000
 
-     xfstests: btrfs/017: add a regression test for snapshot creation
+     xfstests: btrfs/018: a regression test for subvolume rename
 
 _______________________________________________
 xfs mailing list
