@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 005BD7F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 15:25:58 -0500 (CDT)
-Message-ID: <5266DF4F.8010403@sgi.com>
-Date: Tue, 22 Oct 2013 15:25:51 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id A570A7F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 15:33:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3BDFAAC001
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 13:33:31 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	rCaXit3mAzIaYsnW for <xfs@oss.sgi.com>;
+	Tue, 22 Oct 2013 13:33:28 -0700 (PDT)
+Date: Wed, 23 Oct 2013 07:33:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs:xfs_dir2_node.c: pointer use before check for null
+Message-ID: <20131022203322.GA2797@dastard>
+References: <1382427375-8863-1-git-send-email-yefremov.denis@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/8] xfstests: generic/274 increase scratch fs size to 2g
-References: <1382120790-31060-1-git-send-email-jbacik@fusionio.com>
-	<1382120790-31060-5-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1382120790-31060-5-git-send-email-jbacik@fusionio.com>
+Content-Disposition: inline
+In-Reply-To: <1382427375-8863-1-git-send-email-yefremov.denis@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,50 +25,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Denis Efremov <yefremov.denis@gmail.com>
+Cc: ldv-project@linuxtesting.org, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
+On Tue, Oct 22, 2013 at 11:36:15AM +0400, Denis Efremov wrote:
+> Reorder of assert and args pointer dereference.
+> 
+> Found by Linux Driver Verification project (linuxtesting.org) -
+> PVS-Studio analyzer.
+> 
+> Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
+> ---
+>  fs/xfs/xfs_dir2_node.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+> index 4c3dba7..0ba7382 100644
+> --- a/fs/xfs/xfs_dir2_node.c
+> +++ b/fs/xfs/xfs_dir2_node.c
+> @@ -1365,8 +1365,8 @@ xfs_dir2_leafn_split(
+>  	 * Allocate space for a new leaf node.
+>  	 */
+>  	args = state->args;
+> -	mp = args->dp->i_mount;
+>  	ASSERT(args != NULL);
+> +	mp = args->dp->i_mount;
 
-Patch does not apply, already committed.
+Just remove the ASSERT. Either way we are going to panic.
 
-Thanks
---Rich
+Cheers,
 
-commit 859f127da2ee6d49faa41cafd4ed362aa526e4a0
-Author: Josef Bacik <jbacik@fusionio.com>
-Date:   Fri Jun 21 20:31:10 2013 +0000
-
-     xfstests: make fs for 274 larger
-
-     Btrfs will default to mixed block groups for 1 gigabyte file 
-systems and
-     smaller, which means data and metadata share the same area.  This makes
-     generic/274 fail for us because we cannot reserve enough metadata 
-space to do
-     our writes.  Bumping the scratch fs up to 2 gigabytes allows us to 
-do our normal
-     metadata/data separation and allows us to pass this test.  Thanks,
-
-     Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-     Reviewed-by: Ben Myers <bpm@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-diff --git a/tests/generic/274 b/tests/generic/274
-index da45fab..7c4887f 100755
---- a/tests/generic/274
-+++ b/tests/generic/274
-@@ -57,7 +57,7 @@ echo "------------------------------"
-  rm -f $seqres.full
-
-  umount $SCRATCH_DEV 2>/dev/null
--_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
-+_scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
-  _scratch_mount
-
-  # Create a 4k file and Allocate 4M past EOF on that file
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
