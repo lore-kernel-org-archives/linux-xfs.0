@@ -1,16 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 439017F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:09:07 -0500 (CDT)
-Message-ID: <5266E96F.9070202@sgi.com>
-Date: Tue, 22 Oct 2013 16:09:03 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F34FB7F4E
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 16:13:37 -0500 (CDT)
+Message-ID: <5266EA7F.1010808@sgi.com>
+Date: Tue, 22 Oct 2013 16:13:35 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 8/8] xfstests: btrfs/018: a regression test for subvolume
-	rename
-References: <1382120790-31060-1-git-send-email-jbacik@fusionio.com>
-	<1382120790-31060-8-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1382120790-31060-8-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstests: use minimum log size in xfs/016
+References: <1382116574-7766-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1382116574-7766-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,18 +21,18 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
 This has been committed.
 
 Thanks
 --Rich
 
-commit 09320abafa8d35105b36596f8400abf45ad59870
-Author: Josef Bacik <jbacik@fusionio.com>
-Date:   Fri Oct 18 18:26:30 2013 +0000
+commit bb4074a31abd36426ea6d2ba63764a21b0226635
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Fri Oct 18 17:16:14 2013 +0000
 
-     xfstests: btrfs/018: a regression test for subvolume rename
+     xfstests: use minimum log size in xfs/016
 
 _______________________________________________
 xfs mailing list
