@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0224B7F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 07:14:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9F80DAC001
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 05:14:06 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id aLiHqNdNQ2or0KpZ (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id B98EC7F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 07:28:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 37101AC003
+	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 05:28:35 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id rFtDjmULf3FYWdYI (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 22 Oct 2013 05:14:02 -0700 (PDT)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r9MCE07R010418
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 12:14:01 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r9MCE0bQ000261
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 12:14:00 GMT
-Received: from abhmt102.oracle.com (abhmt102.oracle.com [141.146.116.54])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r9MCE0gH000255 for <xfs@oss.sgi.com>; Tue, 22 Oct 2013 12:14:00 GMT
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Subject: [PATCH] xfstests: tests/generic: added -P option to df
-Date: Tue, 22 Oct 2013 16:13:55 +0400
-Message-Id: <1382444035-9502-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+	Tue, 22 Oct 2013 05:28:33 -0700 (PDT)
+Message-ID: <52666FA8.4050101@oracle.com>
+Date: Tue, 22 Oct 2013 20:29:28 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: xfs Warnings in syslog
+References: <049e1508cbb35ecf7b38ea2dadddc6ec@niklasgoerke.de>
+In-Reply-To: <049e1508cbb35ecf7b38ea2dadddc6ec@niklasgoerke.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,85 +24,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: vasily.isaenko@oracle.com
+To: Niklas Goerke <niklas@niklasgoerke.de>
+Cc: ceph-devel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Otherwise the testcases will fail if the scratch
-device has a long name (for example, if it's an LVM volume).
-Because df outputs its usage stats with two lines:
-
-/dev/mapper/xfstests-disk1
-                       3030800      4608   2868908   1% /tmp/mnt/disk1
-
-Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
----
- tests/generic/251 |    2 +-
- tests/generic/260 |    2 +-
- tests/generic/273 |    2 +-
- tests/generic/275 |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/tests/generic/251 b/tests/generic/251
-index 4126f15..eca3b0d 100755
---- a/tests/generic/251
-+++ b/tests/generic/251
-@@ -89,7 +89,7 @@ _guess_max_minlen()
- fstrim_loop()
- {
- 	trap "_destroy_fstrim; exit \$status" 2 15
--	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
-+	fsize=$(df -P | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
- 	mmlen=$(_guess_max_minlen)
- 
- 	while true ; do
-diff --git a/tests/generic/260 b/tests/generic/260
-index dc8b822..ad11d4f 100755
---- a/tests/generic/260
-+++ b/tests/generic/260
-@@ -48,7 +48,7 @@ _scratch_mount
- 
- _test_batched_discard $SCRATCH_MNT || _notrun "FITRIM not supported on $SCRATCH_DEV"
- 
--fssize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
-+fssize=$(df -k -P | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
- 
- beyond_eofs=$(_math "$fssize*2048")
- max_64bit=$(_math "2^64 - 1")
-diff --git a/tests/generic/273 b/tests/generic/273
-index d149808..3f46320 100755
---- a/tests/generic/273
-+++ b/tests/generic/273
-@@ -68,7 +68,7 @@ _file_create()
- 
- 	cd $SCRATCH_MNT/origin
- 
--	_disksize=`df --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
-+	_disksize=`df --block-size=1 -P $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
- 	_disksize=$(($_disksize / 3))
- 	_num=$(($_disksize / $count / $threads / 4096))
- 	_count=$count
-diff --git a/tests/generic/275 b/tests/generic/275
-index f83a644..5758878 100755
---- a/tests/generic/275
-+++ b/tests/generic/275
-@@ -76,7 +76,7 @@ rm -f $SCRATCH_MNT/tmp1
- sync
- echo "Post rm space:" >> $seqres.full
- df $SCRATCH_MNT >>$seqres.full 2>&1
--_freespace=`df -k $SCRATCH_MNT | tail -n 1 | awk '{print $4}'`
-+_freespace=`df -k -P $SCRATCH_MNT | tail -n 1 | awk '{print $4}'`
- [ $_freespace -gt 1024 ] && _fail "could not sufficiently fill filesystem"
- 
- # Try a write larger than available space
--- 
-1.7.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGVsbG8sCgpTbyBJdCdzIGJldHRlciB0byBhZGQgWEZTIG1haWxpbmcgbGlzdCB0byB0aGUgQ0Mt
+bGlzdC4gOikKCkkgdGhpbmsgdGhpcyBpc3N1ZSBoYXMgYmVlbiBmaXhlZCBieSB1cHN0cmVhbSBj
+b21taXRzOgoKRnJvbSBmZjlhMjhmNmMyNWQxOGE2MzVhYmNhYjFmNDlkYjY4MTA4MjAzZGZiCkZy
+b206IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+CkRhdGU6IFRodSwgMTQgTWFyIDIwMTMgMTQ6MzA6
+NTQgKzAxMDAKU3ViamVjdDogW1BBVENIIDEvMV0geGZzOiBGaXggV0FSTl9PTihkZWxhbGxvYykg
+aW4geGZzX3ZtX3JlbGVhc2VwYWdlKCkKCgpUaGFua3MsCi1KZWZmCgpPbiAxMC8yMi8yMDEzIDA3
+OjQ2IFBNLCBOaWtsYXMgR29lcmtlIHdyb3RlOgoKPiBIaQo+IAo+IE15IHN5c2xvZyBhbmQgZG1l
+c2cgYXJlIGJlaW5nIGZpbGxlZCB3aXRoIHRoZSBXYXJuaW5ncyBhdHRhY2hlZC4KPiBMb29raW5n
+IGF0IHRvZGF5cyBzeXNsb2cgSSBnb3QgdXAgdG8gMTEwMSBvZiB0aGVzZSB3YXJuaW5ncyBpbiB0
+aGUgdGltZQo+IGZyb20gMTA6NTAgdG8gMTE6MTMgKGFuZCBvbmx5IGluIHRoYXQgdGltZSwgZWxz
+ZSB0aGUgbG9nIHdhcyBjbGVhbikuIEkKPiBmb3VuZCB0aGVtIG9uIGFsbCBmb3VyIG9mIG15IE9T
+RCBob3N0cywgYWxsIGF0IGFib3V0IHRoZSBzYW1lIHRpbWUuCj4gSSdtIHJ1bm5pbmcga2VybmVs
+IDMuMi4wLTQtYW1kNjQgb24gYSBkZWJpYW4gNy4wLiBDZXBoIGlzIG9uIHZlcnNpb24KPiAwLjY3
+LjQuIEkgaGF2ZSBnb3QgMTUgT1NEcyBwZXIgT1NEIEhvc3QuCj4gCj4gQ2VwaCBkb2VzIG5vdCBy
+ZWFsbHkgc2VlbSB0byBjYXJlIGFib3V0IHRoaXMsIHNvIEknbSBub3Qgc3VyZSB3aGF0IGl0IGlz
+Cj4gYWxsIGFib3V04oCmCj4gU3RpbGwgdGhleSBhcmUgd2FybmluZ3MgaW4gc3lzbG9nIGFuZCBJ
+IGhvcGUgeW91IGd1eXMgY2FuIHRlbGwgbWUgd2hhdAo+IHdlbnQgd3JvbmcgaGVyZSBhbmQgd2hh
+dCBJIGNhbiBkbyBhYm91dCBpdD8KPiAKPiBUaGFuayB5b3UKPiBOaWtsYXMKPiAKPiAKPiBPY3Qg
+MjIgMTE6MTE6MTkgY3MtYmlnZm9vdDA2IGtlcm5lbDogWzk3NDQ2NDguMzg4MDE4XSAtLS0tLS0t
+LS0tLS1bIGN1dAo+IGhlcmUgXS0tLS0tLS0tLS0tLQo+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdm
+b290MDYga2VybmVsOiBbOTc0NDY0OC4zODgwMzBdIFdBUk5JTkc6IGF0Cj4gL2J1aWxkL2xpbnV4
+LXM1eDJvRS9saW51eC0zLjIuNDYvZnMveGZzL3hmc19hb3BzLmM6MTA5MQo+IHhmc192bV9yZWxl
+YXNlcGFnZSsweDc2LzB4OGUgW3hmc10oKQo+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYg
+a2VybmVsOiBbOTc0NDY0OC4zODgwMzRdIEhhcmR3YXJlIG5hbWU6Cj4gWDlEUjMtRgo+IE9jdCAy
+MiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0OC4zODgwMzZdIE1vZHVsZXMg
+bGlua2VkIGluOgo+IHhmcyBhdXRvZnM0IG5mc2QgbmZzIG5mc19hY2wgYXV0aF9ycGNnc3MgZnNj
+YWNoZSBsb2NrZCBzdW5ycGMgZXh0MyBqYmQKPiBsb29wIGFjcGlfY3B1ZnJlcSBtcGVyZiBjb3Jl
+dGVtcCBjcmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbAo+IHNuZF9wY20gYWVzbmlfaW50
+ZWwgc25kX3BhZ2VfYWxsb2MgYWVzX3g4Nl82NCBzbmRfdGltZXIgYWVzX2dlbmVyaWMgcwo+IG5k
+IGNyeXB0ZCBzb3VuZGNvcmUgcGNzcGtyIHNiX2VkYWMgam95ZGV2IGV2ZGV2IGVkYWNfY29yZSBp
+VENPX3dkdAo+IGkyY19pODAxIGlUQ09fdmVuZG9yX3N1cHBvcnQgaTJjX2NvcmUgaW9hdGRtYSBw
+cm9jZXNzb3IgdGhlcm1hbF9zeXMKPiBjb250YWluZXIgYnV0dG9uIGV4dDQgY3JjMTYgamJkMiBt
+YmNhY2hlIHVzYmhpZCBoaWQgc2VzIGVuY2xvc3VyZSBzZwo+IHNkX21vZCBjcmNfdDEwZGlmIG1l
+Z2FyYWlkX3NhcyBlaGNpX2hjZCB1c2Jjb3JlIGlzY2kgbGlic2FzIHVzYl9jb21tb24gbGliYQo+
+IHRhIGl4Z2JlIG1kaW8gc2NzaV90cmFuc3BvcnRfc2FzIHNjc2lfbW9kIGlnYiBkY2EgW2xhc3Qg
+dW5sb2FkZWQ6Cj4gc2NzaV93YWl0X3NjYW5dCj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3Qw
+NiBrZXJuZWw6IFs5NzQ0NjQ4LjM4ODA5M10gUGlkOiAzNDU5NjA1LAo+IGNvbW06IGNlcGgtb3Nk
+IFRhaW50ZWQ6IEcgICAgICAgIFcgICAgMy4yLjAtNC1hbWQ2NCAjMSBEZWJpYW4gMy4yLjQ2LTEK
+PiBPY3QgMjIgMTE6MTE6MTkgY3MtYmlnZm9vdDA2IGtlcm5lbDogWzk3NDQ2NDguMzg4MDk2XSBD
+YWxsIFRyYWNlOgo+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0
+OC4zODgxMDJdIAo+IFs8ZmZmZmZmZmY4MTA0NmI3NT5dID8gd2Fybl9zbG93cGF0aF9jb21tb24r
+MHg3OC8weDhjCj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0NjQ4
+LjM4ODExNV0gCj4gWzxmZmZmZmZmZmEwNDhiOThjPl0gPyB4ZnNfdm1fcmVsZWFzZXBhZ2UrMHg3
+Ni8weDhlIFt4ZnNdCj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0
+NjQ4LjM4ODEyMl0gCj4gWzxmZmZmZmZmZjgxMGJlZGM1Pl0gPyBpbnZhbGlkYXRlX2lub2RlX3Bh
+Z2UrMHg1ZS8weDgwCj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0
+NjQ4LjM4ODEyOV0gCj4gWzxmZmZmZmZmZjgxMGJlZTVkPl0gPyBpbnZhbGlkYXRlX21hcHBpbmdf
+cGFnZXMrMHg3Ni8weDEwMgo+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBb
+OTc0NDY0OC4zODgxMzVdIAo+IFs8ZmZmZmZmZmY4MTBiN2I4Mz5dID8gc3lzX2ZhZHZpc2U2NF82
+NCsweDE5Zi8weDFlMgo+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0
+NDY0OC4zODgxNDBdIAo+IFs8ZmZmZmZmZmY4MTM1M2I1Mj5dID8gc3lzdGVtX2NhbGxfZmFzdHBh
+dGgrMHgxNi8weDFiCj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0
+NjQ4LjM4ODE0NF0gLS0tWyBlbmQgdHJhY2UKPiBlOTY0MGVkNmY4MmYwNjZkIF0tLS0KPiAtLSAK
+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3Jp
+YmUgY2VwaC1kZXZlbCIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZn
+ZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5l
+bC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
+Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
