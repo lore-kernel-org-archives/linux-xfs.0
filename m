@@ -1,30 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 139DD7F4E
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 05:58:56 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EB2377F4E
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 06:24:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02079304087
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 03:58:53 -0700 (PDT)
-Received: from mail-ie0-f169.google.com (mail-ie0-f169.google.com
-	[209.85.223.169]) by cuda.sgi.com with ESMTP id
-	DHJgdW0ZNIsjZgMG (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 23 Oct 2013 03:58:52 -0700 (PDT)
-Received: by mail-ie0-f169.google.com with SMTP id ar20so984390iec.14
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 03:58:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5266EBF0.901@sandeen.net>
-References: <5265956F.4010700@sandeen.net> <20131021224459.GE16161@dastard>
-	<5265B4D2.3000907@sandeen.net> <20131021231849.GL10553@sgi.com>
-	<20131021235601.GG4446@dastard> <5265C03B.50701@sandeen.net>
-	<20131022001732.GI4446@dastard>
-	<CAGG-pUTh-PJJ4Nzo0r-f3VDPMc81U2z_NMX+Wcex3KzGs=U8cA@mail.gmail.com>
-	<20131022203946.GB2797@dastard> <5266E4BD.8030601@sandeen.net>
-	<20131022210300.GC2797@dastard> <5266EBF0.901@sandeen.net>
-Date: Wed, 23 Oct 2013 08:58:51 -0200
-Message-ID: <CAGG-pUTtYomspBXn=RE7YFU=vu6rWZ1fU7CBO45Mmodj8DZFiQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix possible NULL dereference
-From: =?UTF-8?Q?Geyslan_Greg=C3=B3rio_Bem?= <geyslan@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6750EAC00B
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 04:24:49 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qno2FkQWp5irVAye for
+	<xfs@oss.sgi.com>; Wed, 23 Oct 2013 04:24:48 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests btrfs/020: test device replace on RO btrfs
+Date: Wed, 23 Oct 2013 19:24:06 +0800
+Message-Id: <1382527446-16053-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,100 +20,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, XFS FILESYSTEM <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>, linux-btrfs@vger.kernel.org
 
-MjAxMy8xMC8yMiBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+Ogo+IE9uIDEwLzIy
-LzEzIDQ6MDMgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPj4gT24gVHVlLCBPY3QgMjIsIDIwMTMg
-YXQgMDM6NDk6MDFQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+Pj4gT24gMTAvMjIvMTMg
-MzozOSBQTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+Pj4+IE9uIFR1ZSwgT2N0IDIyLCAyMDEzIGF0
-IDA4OjEyOjUxQU0gLTAyMDAsIEdleXNsYW4gR3JlZ8OzcmlvIEJlbSB3cm90ZToKPj4+Pj4gMjAx
-My8xMC8yMSBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+Ogo+Pj4+Pj4gT24gTW9u
-LCBPY3QgMjEsIDIwMTMgYXQgMDc6MDA6NTlQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+
-Pj4+Pj4+IE9uIDEwLzIxLzEzIDY6NTYgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPj4+Pj4+Pj4g
-T24gTW9uLCBPY3QgMjEsIDIwMTMgYXQgMDY6MTg6NDlQTSAtMDUwMCwgQmVuIE15ZXJzIHdyb3Rl
-Ogo+Pj4+Pj4KPj4+Pj4+IFllcywgYnV0IHRvIGNvbnRpbnVlIHRoZSBEZXZpbCdzIEFkdm9jYXRl
-IGFyZ3VtZW50LCB0aGUgcHVycG9zZSBvZgo+Pj4+Pj4gZGVidWcgY29kZSBpc24ndCB0byBlbmxp
-Z2h0ZW50IHRoZSBjYXN1YWwgcmVhZGVyIG9yIGRyaXZlLWJ5Cj4+Pj4+PiBwYXRjaGVycyAtIGl0
-J3MgdG8gbWFrZSBsaWZlIGVhc2llciBmb3IgcGVvcGxlIHdobyBhY3R1YWxseSBzcGVuZAo+Pj4+
-Pj4gdGltZSBkZWJ1Z2dpbmcgdGhlIGNvZGUuIEFuZCB0aGUgcGVvcGxlIHdobyBuZWVkIHRoZSBk
-ZWJ1ZyBjb2RlCj4+Pj4+PiBhcmUgZXhwZWN0ZWQgdG8gdW5kZXJzdGFuZCB3aHkgYW4gQVNTRVJU
-IGlzIG5vdCBuZWNlc3NhcnkuIDopCj4+Pj4+Pgo+Pj4+PiBEYXZlLCBFcmljIGFuZCBCZW4sCj4+
-Pj4+Cj4+Pj4+IFRoaXMgd2FzIGNhdGNoZWQgYnkgY292ZXJpdHkgKENJRCAxMDIzNDgpLgo+Pj4+
-Cj4+Pj4gWW91IHNob3VsZCBoYXZlIHB1dCB0aGF0IGluIHRoZSBwYXRjaCBkZXNjcmlwdGlvbi4K
-Pj4+Pgo+Pj4+IE5vdyBJIHVuZGVyc3RhbmQgd2h5IHRoZXJlJ3MgYmVlbiBhIHN1ZGRlbiBzdXJn
-ZSBvZiBpcnJlbGV2YW50IG9uZQo+Pj4+IGxpbmUgY2hhbmdlcyBmcm9tIHJhbmRvbSBwZW9wbGUg
-dGhhdCBoYXZlIG5ldmVyIHRvdWNoZWQgWEZTIGJlZm9yZS4KPj4+Pgo+Pj4+IDxzaWdoPgo+Pj4+
-Cj4+Pj4gT2ssIGxldHMgY2h1cm4gdGhlIGNvZGUganVzdCB0byBzaHV0IHRoZSBzdHVwaWQgY2hl
-Y2tlciB1cC4gVGhpcwo+Pj4+IGRvZXNuJ3QgZml4IGEgYnVnLCBpdCBkb2Vzbid0IGNoYW5nZSBi
-ZWhhdmlvdXIsIGl0IGp1c3QgbWFrZXMKPj4+PiBjb3Zlcml0eSBoYXBweS4gQ29udmVydCBpdCB0
-byB0aGUgZm9yIGxvb3AgcGx1cyBBU1NFUlQgSSBtZW50aW9uZWQKPj4+PiBpbiBhIHByZXZpb3Vz
-IG1lc3NhZ2UuCj4+Pgo+Pj4gWW91IGtub3csIEkgcmVzcGVjdGZ1bGx5IGRpc2FncmVlLCBidXQg
-d2UgbWlnaHQganVzdCBoYXZlIHRvIGFncmVlCj4+PiB0byBkaXNhZ3JlZS4gIFRoZSBjb2RlLCBh
-cyBpdCBzdGFuZHMsIHRlc3RzIGZvciBhIG51bGwgcHRyCj4+PiBhbmQgdGhlbiBkZXJlZmVyZW5j
-ZXMgaXQuICBUaGF0J3MgYWx3YXlzIGdvaW5nIHRvIHJhaXNlIHNvbWUKPj4+IGV5ZWJyb3dzLCBj
-b3Zlcml0eSBvciBub3QsIGRlYnVnIGNvZGUgb3Igbm90LCBkcml2ZSBieSBvciBub3QuCj4+Cj4+
-PiBTbyBldmVuIGZvciBmdXR1cmUgZGV2ZWxvcGVycywgbWFraW5nIHRoZSBjb2RlIG1vcmUgc2Vs
-Zi0KPj4+IGRvY3VtZW50aW5nIGFib3V0IHRoaXMgYmVoYXZpb3Igd291bGQgYmUgYSBwbHVzLCB3
-aGV0aGVyIGl0J3MgYnkKPj4+IGNvbW1lbnQsIGJ5IGV4cGxpY2l0IEFTU0VSVCgpLCBvciB3aGF0
-ZXZlci4gIChJIGRvbid0IHRoaW5rCj4+PiB0aGF0IHhmc19lbWVyZygpIGhhcyBxdWl0ZSBlbm91
-Z2ggY29udGV4dCB0byBtYWtlIGl0IG9idmlvdXMuKQo+Pgo+PiBTdXJlLCBidXQgaWYgd2VyZW4n
-dCBmb3IgdGhlIGZhY3QgdGhhdCBDb3Zlcml0eSB3YXJuZWQgYWJvdXQgaXQsCj4+IG5vYm9keSBv
-dGhlciB0aGF0IHVzIHBlb3BsZSB3aG8gd29yayBvbiB0aGUgWEZTIGNvZGUgZGF5IGluLCBkYXkg
-b3V0Cj4+IHdvdWxkIGhhdmUgZXZlbiBjYXJlZCBhYm91dCBpdC4KPj4KPj4gVGhhdCdzIGtpbmQg
-b2YgbXkgcG9pbnQgLSBhZ2FpbiwgYXMgdGhlIERldmlsJ3MgQWR2b2NhdGUgLSB0aGF0Cj4+IGNv
-dmVyaXR5IGlzIGVuY291cmFnaW5nIGRyaXZlLWJ5ICJmaXhlcyIgYnkgcGVvcGxlIHdobyBkb24n
-dAo+PiBhY3R1YWxseSB1bmRlcnN0YW5kIGFueSBvZiB0aGUgY29udGV4dCwgaGlzdG9yeSBhbmQv
-b3IgY3VsdHVyZQo+PiBzdXJyb3VuZGluZyB0aGUgY29kZSBiZWluZyBtb2RpZmllZC4KPgpEYXZl
-LCBJZiBDb3Zlcml0eSBoYWQgbm90IGNhdWdodCB0aGlzLCBJIGNvdWxkIGhhdmUgbmV2ZXIgc2Vu
-dCBhIHBhdGNoCnRvIHhmcyBpbiBteSBlbnRpcmUgbGlmZS4KU28sIEkgbmVlZCBub3QgdG8ga25v
-dyB0aGUgeGZzIGN1bHR1cmUsIGNvZGUgb3IgY29udGV4dCB0byBpZGVudGlmeSBhCmZsYWdyYW50
-LCBpbnRlbnRpb25hbCBvciBub3QsIGNvZGUgdGhhdCBzZWVtcyBhIGJ1Zy4KT3BlbiBzb3VyY2Ug
-d29ybGQgd29ya3MgdGhpcyB3YXksIGFsbCBjYW4gaGVscCwgYnV0IG9ubHkgYSBmZXcgZGVjaWRl
-CnRvIGRvIGl0LiBBbmQgdGhlcmUgbWFueSB3YXlzIHRvIGRvIGl0OyBzdGF0aWMgYW5hbHlzaXMg
-aXMgb25seSBvbmUuCgo+IFRoZXkgc2hvdWxkbid0IGhhdmUgdG8sIHRoZSBjb2RlIChvciBjb21t
-ZW50cyB0aGVyZWluKSBzaG91bGQKPiBtYWtlIGl0IG9idmlvdXMuICA7KSAgKGluIGEgcGVyZmVj
-dCB3b3JsZC4uLikKPgo+PiBJIGhhdmUgbm8gcHJvYmxlbXMgd2l0aCByZWFsIGJ1Z3MgYmVpbmcg
-Zml4ZWQsIGJ1dCBpZiB3ZSBhcmUKPj4gbW9kaWZ5aW5nIGNvZGUgZm9yIG5vIGdhaW4gb3RoZXIg
-dGhhbiBjbG9zaW5nICJjb3Zlcml0eSBkb2Vzbid0IGxpa2UKPj4gaXQiIGJ1Z3MsIHRoZW4gd2Ug
-KnNob3VsZCogYmUgcXVlc3Rpb25pbmcgd2hldGhlciB0aGUgY2hhbmdlIGlzCj4+IHJlYWxseSBu
-ZWNlc3NhcnkuCj4KPiBCdXQgbGV0J3MgZ2l2ZSBHZXlzbGFuIHRoZSBiZW5lZml0IG9mIHRoZSBk
-b3VidCwgYW5kIHJlYWxpemUgdGhhdAo+IENvdmVyaXR5IGRvZXMgZmluZCByZWFsIHRoaW5ncywg
-YW5kIGV2ZW4gaWYgaXQgb3JpZ2luYXRlZCB3LyBhCj4gQ292ZXJpdHkgQ0lELCB3aGVuIG9uZSBz
-ZWVzOgo+Cj4gICAgICAgICBpZiAoIWEpCj4gICAgICAgICAgICAgICAgIHByaW50aygiYSB0aGlu
-Z1xuIikKPgo+ICAgICAgICAgYSA9IGEtPmIgPSAuIC4gLgo+Cj4gaXQgbG9va3Mgc3VzcGljaW91
-cyB0byBwcmV0dHkgbXVjaCBhbnlvbmUuICBJIGRvbid0IHRoaW5rIEdleXNsYW4KPiBzZW50IGl0
-IHRvIHNodXQgQ292ZXJpdHkgdXAsIGhlIHNlbnQgaXQgYmVjYXVzZSBpdCBsb29rZWQgbGlrZQo+
-IGEgYnVnIHdvcnRoIGZpeGluZyAoYWZ0ZXIgQ292ZXJpdHkgc3BvdHRlZCBpdCkuCj4KRXJpYywg
-eW91J3JlIHJpZ2h0LiBJbiB0aGlzIHBhcnRpY3VsYXIgY2FzZSwgSSBkaWRuJ3Qgc2VuZCB0byBz
-aHV0IENvdmVyaXR5IHVwLgpBbmQgeWVhaCwgaXQgbG9va2VkIGxpa2UgYSBidWcgdGhhdCB3b3J0
-aCB0byBmaXhpbmcuCgo+IExldCdzIG5vdCBiZSB0b28gaGFyZCBvbiBoaW0gZm9yIHRyeWluZzsg
-SSBhcHByZWNpYXRlIGl0IG1vcmUKPiB0aGFuIHNwZWxsaW5nIGZpeGVzIGFuZCB3aGl0ZXNwYWNl
-IGNsZWFudXBzLiAgOykKPgo+IEkgYWdyZWUgdGhhdCBzb21lIENvdmVyaXR5IENJRHMgYXJlIGZh
-bHNlLCBhbmQgd2Ugc2hvdWxkbid0Cj4gbWFuZ2xlIGNvZGUganVzdCB0byBtYWtlIGl0IGhhcHB5
-LCBidXQgSSBqdXN0IGRvbid0IHRoaW5rIHRoYXQncwo+IHdoYXQncyBnb2luZyBvbiBoZXJlLiAg
-TGV0J3MgaW1hZ2luZSBHZXlzbGFuIHNhdyAxMCBvdGhlciBDSURzCj4gYW5kIGVsZWN0ZWQgbm90
-IHRvIHNlbmQgY2hhbmdlcywgYmVjYXVzZSB0aGV5IGRpZG4ndCBsb29rIGxpa2UKPiB0aGV5IG5l
-ZWRlZCBmaXhpbmcsIGJ1dCB0aGlzIG9uZSBsb29rZWQgbGlrZSBhIGJvbmEgZmlkZSBidWcuCj4K
-WWVwLgoKPj4gQXNraW5nIHRoZSBxdWVzdGlvbiBtYXkgbm90IGNoYW5nZSB0aGUgb3V0Y29tZSwg
-YnV0IHdlIG5lZWQgdG8gYXNrCj4+IGFuZCBhbnN3ZXIgdGhlIHF1ZXN0aW9uIHJlZ2FyZGxlc3Mu
-Cj4KPj4+IChXZSBkb24ndCBoYXZlIHRvIGNoYW5nZSBjb2RlIHRvIHNodXQgdXAgY292ZXJpdHk7
-IHdlIGNhbiBmbGFnCj4+PiBpdCBpbiB0aGUgZGF0YWJhc2UgYW5kIG5vYm9keSBlbHNlIHdpbGwg
-c2VlIGl0LikKPj4KPj4gT25seSBpZiB5b3UgYXJlIHRoZSBmaXJzdCB0byBzZWUgaXQgYW5kIG1h
-a2UgYW4gZXhlY3V0aXZlIGRlY2lzaW9uCj4+IHRoYXQgaXQncyBub3QgbmVjZXNzYXJ5IHRvIGZp
-eC4uLi4gOi8KPgo+IE9yLCB5b3UgZmluZCBpdCwgc2VuZCBhIHBhdGNoIHRoYXQgc2VlbXMgcmVh
-c29uYWJsZSwgZ2V0IG1hc3NpdmUKPiBwdXNoYmFjaywgKGhvcGVmdWxseSkgZmxhZyBpdCwgYW5k
-IHJlc29sdmUgbmV2ZXIgY29tZSBiYWNrIHRvIHhmcwo+IGFnYWluLiAgOykKUmVhbGx5LCBGV0lX
-LCB0aGUgd2hvbGUgZGlzY3Vzc2lvbiB0byBtZSBpcyBzb21ld2hhdCBwcm9saXguIExldCdzIHNl
-ZToKCi0gV2UgaGF2ZSBhIENvdmVyaXR5IHNwb3QgKERlcmVmZXJlbmNlIGFmdGVyIE5VTEwgY2hl
-Y2spID0gQlVHLgotIFlvdSBpZGVudGlmaWVkIHRoYXQgd2FzIGludGVudGlvbmFsIGFuZCBpc24n
-dCBhIGJ1Zy4gT2s/Ci0gUmVnYXJkaW5nIHRoZSAicG9zc2libGUgbmV3IHBhdGNoIiBzdWJqZWN0
-LCBJIGh1bWJseSBwYXNzIHRoZSBiYWxsIHRvIHlvdS4KClRoYW5rIHlvdSBmb3IgdGhlIGF0dGVu
-dGlvbi4KCkdleXNsYW4KUmVnYXJkcy4KPgo+IC1FcmljCj4KPj4gQ2hlZXJzLAo+Pgo+PiBEYXZl
-Lgo+Pgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+btrfs replace on readonly fs should not be allowed.
+
+Regression test case for commit:
+bbb651e Btrfs: don't allow the replace procedure on read only filesystems
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/btrfs/020     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/020.out |  2 ++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 87 insertions(+)
+ create mode 100755 tests/btrfs/020
+ create mode 100644 tests/btrfs/020.out
+
+diff --git a/tests/btrfs/020 b/tests/btrfs/020
+new file mode 100755
+index 0000000..cd16dc0
+--- /dev/null
++++ b/tests/btrfs/020
+@@ -0,0 +1,84 @@
++#! /bin/bash
++# FS QA Test No. btrfs/020
++#
++# btrfs device replace test on RO fs
++#
++# Regression test for commit:
++# bbb651e Btrfs: don't allow the replace procedure on read only filesystems
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++
++status=1	# failure is the default!
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	$UMOUNT_PROG $loop_mnt
++	_destroy_loop_device $loop_dev1
++	losetup -d $loop_dev2 >/dev/null 2>&1
++	_destroy_loop_device $loop_dev3
++	rm -rf $loop_mnt
++	rm -f $fs_img1 $fs_img2 $fs_img3
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++
++rm -f $seqres.full
++echo "Silence is golden"
++
++loop_mnt=$TEST_DIR/$seq.$$.mnt
++fs_img1=$TEST_DIR/$seq.$$.img1
++fs_img2=$TEST_DIR/$seq.$$.img2
++fs_img3=$TEST_DIR/$seq.$$.img3
++mkdir $loop_mnt
++$XFS_IO_PROG -f -c "pwrite 0 256m" $fs_img1 >>$seqres.full 2>&1
++$XFS_IO_PROG -f -c "pwrite 0 256m" $fs_img2 >>$seqres.full 2>&1
++$XFS_IO_PROG -f -c "pwrite 0 256m" $fs_img3 >>$seqres.full 2>&1
++
++loop_dev1=`_create_loop_device $fs_img1`
++loop_dev2=`_create_loop_device $fs_img2`
++loop_dev3=`_create_loop_device $fs_img3`
++
++$MKFS_BTRFS_PROG -m raid1 -d raid1 $loop_dev1 $loop_dev2 >>$seqres.full 2>&1
++$MOUNT_PROG -o ro $loop_dev1 $loop_mnt
++
++# Fail the second device and replace with the third
++_destroy_loop_device $loop_dev2
++$BTRFS_UTIL_PROG replace start -B 2 $loop_dev3 $loop_mnt >>$seqres.full 2>&1 && \
++_fail "FAIL: Device replaced on RO btrfs"
++
++status=0
++exit
+diff --git a/tests/btrfs/020.out b/tests/btrfs/020.out
+new file mode 100644
+index 0000000..20d7944
+--- /dev/null
++++ b/tests/btrfs/020.out
+@@ -0,0 +1,2 @@
++QA output created by 020
++Silence is golden
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 2f74139..1159499 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -22,3 +22,4 @@
+ 017 auto quick
+ 018 auto quick
+ 019 auto quick
++020 auto quick
+-- 
+1.8.3.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
