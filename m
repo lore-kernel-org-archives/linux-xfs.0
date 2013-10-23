@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 68B987F37
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:03:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 56196304084
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 14:03:17 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B5B157F52
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:03:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9470B8F8071
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 14:03:26 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 9SWTba1p5CkCpTYD for <xfs@oss.sgi.com>;
-	Wed, 23 Oct 2013 14:03:14 -0700 (PDT)
-Message-ID: <52683990.9060606@sandeen.net>
-Date: Wed, 23 Oct 2013 16:03:12 -0500
+	ESMTP id cBXOqhmJIVX6yFmL for <xfs@oss.sgi.com>;
+	Wed, 23 Oct 2013 14:03:25 -0700 (PDT)
+Message-ID: <5268399C.4020505@sandeen.net>
+Date: Wed, 23 Oct 2013 16:03:24 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH V4 1/2] xfstests XFS: verify extended attributes after
-	multi-stream xfsdump/xfsrestore
+Subject: Re: [PATCH V4 2/2] xfstests: xfsdump/restore test for partial_reg:
+	Out of records. Extend attrs applied early
 References: <20131021193830.885912820@sgi.com>
-	<20131021193930.144165179@sgi.com>
-In-Reply-To: <20131021193930.144165179@sgi.com>
+	<20131021193930.267197519@sgi.com>
+In-Reply-To: <20131021193930.267197519@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +32,33 @@ Sender: xfs-bounces@oss.sgi.com
 To: rjohnston@sgi.com, xfs@oss.sgi.com
 
 On 10/21/13 3:02 PM, rjohnston@sgi.com wrote:
-> Verify extended attributes are not lost after multi-stream
-> xfsdump/xfsrestore of wholly-sparse files.  The restore succeeds,
-> however the extended attributes for that file are lost.
+> Multi-stream xfsdump/xfsrestore of more than partialmax wholly-sparse
+> files segfaults with the following warning:
+> 
+>   "partial_reg: Out of records. Extend attrs applied early."
+> 
+> Add a test that dumps and restores partialmax + 1 wholly-sparse files.
 > 
 > Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > 
-> diff --git a/tests/xfs/350 b/tests/xfs/350
+> ---
+> 
+> diff --git a/tests/xfs/351 b/tests/xfs/351
 > new file mode 100755
-> index 0000000..df4c258
+> index 0000000..c0d8afb
 > --- /dev/null
-> +++ b/tests/xfs/350
-> @@ -0,0 +1,73 @@
+> +++ b/tests/xfs/351
+> @@ -0,0 +1,68 @@
 > +#! /bin/bash
-> +# FS QA Test No. 350
+> +# FS QA Test No. 351
 > +#
-> +# Verify multi-stream xfsdump/restore preserves extended attributes
+> +# Dump and restore partialmax + 1 wholly-sparse files
 > +#
 > +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +# Copyright (c) 2013 SGI.  All Rights Reserved.
 > +#
 > +# This program is free software; you can redistribute it and/or
 > +# modify it under the terms of the GNU General Public License as
@@ -89,7 +94,6 @@ Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > +. ./common/rc
 > +. ./common/filter
 > +. ./common/dump
-> +. ./common/attr
 > +
 > +# real QA test starts here
 > +
@@ -98,89 +102,42 @@ Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > +_supported_os Linux
 > +_require_scratch
 > +
-> +# Extended attributes
-> +attr_name=attrname
-> +attr_value=1234
-> +
 > +rm -f $seqres.full
 > +
-> +_create_dumpdir_fill_ea
-> +
-> +# Create and add wholly-sparse file to the dump directory
-> +$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile >> $seqres.full 2>&1 \
-> +	|| _fail "could not create \"$dump_dir\"/sparsefile"
-> +
-> +# Set the xattr on sparsefile
-> +$ATTR_PROG -s $attr_name -V $attr_value $dump_dir/sparsefile >> $seqres.full 2>&1 \
-> +	|| _fail "could not set ATTR for \"$dump_dir\"/sparsefile"
-> +
-> +_do_dump_multi_file --multi 4  >> $seqres.full 2>&1
-> +_do_restore_multi_file --multi 4 >> $seqres.full 2>&1
-> +_diff_compare_eas
-> +
+> +echo "Silence is golden."
+> +_wipe_fs
+> +mkdir $dump_dir >> $seqres.full 2>&1 || _fail "mkdir \"$dump_dir\" failed"
+> +for i in `seq 1 4`; do
+> +	$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile$i \
+> +		>> $seqres.full 2>&1 || _fail "failed to create sparsefile\"$i\""
+> +done
+> +# Dump and restore the files
+> +_prepare_restore_dir
+> +$XFSDUMP_PROG -L session -M label1 -M label2 -f $tmp.stream1 \
+> +	-f $tmp.stream2 $SCRATCH_MNT -s $dump_sdir \
+> +	>> $seqres.full 2>&1 || _fail "dump failed"
+> +$XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $restore_dir \
+> +	>> $seqres.full 2>&1 || _fail "restore failed"
 > +status=0
-> +exit
-> diff --git a/tests/xfs/350.out b/tests/xfs/350.out
+> +exit 
+> diff --git a/tests/xfs/351.out b/tests/xfs/351.out
 > new file mode 100644
-> index 0000000..31a88b8
+> index 0000000..42cf52e
 > --- /dev/null
-> +++ b/tests/xfs/350.out
-> @@ -0,0 +1,46 @@
-> +QA output created by 350
-> +Creating directory system to dump using src/fill.
-> +Setup Attribute "attr1" set to a 9 byte value for smalll:
-> +some_text
-> +.Attribute "attr2" set to a 10 byte value for biggg:
-> +some_text2
-> +.Attribute "attr3" set to a 10 byte value for sub/smalll:
-> +some_text3
-> +.Attribute "attr4" set to a 10 byte value for sub/biggg:
-> +some_text4
-> +.Attribute "attr5" set to a 8 byte value for dir:
-> +dir_text
-> +...............
-> +Comparing dump directory with restore directory
-> +Looking at the extended attributes (EAs)
-> +EAs on dump
-> +User names
-> +Attribute "attr5" had a 8 byte value for DUMP_DIR/dir:
-> +dir_text
-> +Attribute "attr1" had a 9 byte value for DUMP_DIR/smalll:
-> +some_text
-> +Attribute "attrname" had a 4 byte value for DUMP_DIR/sparsefile:
-> +1234
-> +Attribute "attr3" had a 10 byte value for DUMP_DIR/sub/smalll:
-> +some_text3
-> +Root names
-> +Attribute "attr2" had a 10 byte value for DUMP_DIR/biggg:
-> +some_text2
-> +Attribute "attr4" had a 10 byte value for DUMP_DIR/sub/biggg:
-> +some_text4
-> +EAs on restore
-> +User names
-> +Attribute "attr5" had a 8 byte value for DUMP_DIR/dir:
-> +dir_text
-> +Attribute "attr1" had a 9 byte value for DUMP_DIR/smalll:
-> +some_text
-> +Attribute "attrname" had a 4 byte value for DUMP_DIR/sparsefile:
-> +1234
-> +Attribute "attr3" had a 10 byte value for DUMP_DIR/sub/smalll:
-> +some_text3
-> +Root names
-> +Attribute "attr2" had a 10 byte value for DUMP_DIR/biggg:
-> +some_text2
-> +Attribute "attr4" had a 10 byte value for DUMP_DIR/sub/biggg:
-> +some_text4
-> +Files 350.ea1 and 350.ea2 are identical
+> +++ b/tests/xfs/351.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 351
+> +Silence is golden.
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 17fff27..efa025d 100644
+> index 17fff27..53ea498 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
 > @@ -179,3 +179,4 @@
 >  297 auto freeze
 >  298 auto attr symlink quick
 >  299 auto quota
-> +350 auto dump
+> +351 auto dump
+> 
 > 
 > _______________________________________________
 > xfs mailing list
