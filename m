@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 458437F57
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 18:43:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 120C27F5E
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 18:43:19 -0500 (CDT)
 Received: from xmail.sgi.com (pv-excas3-dc21.corp.sgi.com [137.38.106.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2FF7830406B
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:43:12 -0700 (PDT)
-Message-ID: <52685F0D.4060104@sgi.com>
-Date: Wed, 23 Oct 2013 18:43:09 -0500
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 00CF530406B
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:43:19 -0700 (PDT)
+Message-ID: <52685F14.8000804@sgi.com>
+Date: Wed, 23 Oct 2013 18:43:16 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 4/4] xfsprog: add mkfs.xfs sb v4 support for dirent
-	filetype field
+Subject: Re: [PATCH v3 3/4] xfs_progs: add dirent filetype to xfs_db version
 References: <20131017152804.204045257@sgi.com>
-	<20131017152955.689963160@sgi.com>
-In-Reply-To: <20131017152955.689963160@sgi.com>
+	<20131017152955.604007124@sgi.com>
+In-Reply-To: <20131017152955.604007124@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,11 +32,11 @@ This has been committed.
 Thanks
 --Rich
 
-commit 4eb02d95b7e081b510a7015609f01385aab229a9
+commit 42737f1ad16213a3dab1756c9fffb494db8ef27e
 Author: Mark Tinguely <tinguely@sgi.com>
-Date:   Thu Oct 17 15:28:08 2013 +0000
+Date:   Thu Oct 17 15:28:07 2013 +0000
 
-     xfsprog: add mkfs.xfs sb v4 support for dirent filetype field
+     xfs_progs: add dirent filetype to xfs_db version
 
 _______________________________________________
 xfs mailing list
