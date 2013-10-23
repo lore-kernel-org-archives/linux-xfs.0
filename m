@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc3-28-gc963c61
-Message-Id: <20131023222201.F17087F4E@oss.sgi.com>
-Date: Wed, 23 Oct 2013 17:22:01 -0500 (CDT)
+Message-Id: <20131023222242.F03B87F51@oss.sgi.com>
+Date: Wed, 23 Oct 2013 17:22:42 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   c963c61 xfs: split xfs_rtalloc.c for userspace sanity
   a4fbe6a xfs: decouple inode and bmap btree header files
   239880e xfs: decouple log and transaction headers
