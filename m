@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8E3087F37
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 08:09:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7DCB43040C0
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 06:09:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id S4Nu7YOtloMIAxTH for
-	<xfs@oss.sgi.com>; Wed, 23 Oct 2013 06:09:34 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9ND9YM0016854
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 09:09:34 -0400
-Received: from orion.maiolino.org (ovpn-113-152.phx2.redhat.com [10.3.113.152])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r9ND9U2x007462
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 09:09:33 -0400
-Date: Wed, 23 Oct 2013 11:09:30 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfstests: generic/273: do not use /proc/cpuinfo
-Message-ID: <20131023130929.GC31449@orion.maiolino.org>
-References: <1382529524-2184-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-	<1382529524-2184-3-git-send-email-stanislav.kholmanskikh@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1382529524-2184-3-git-send-email-stanislav.kholmanskikh@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 70BDD7F37
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 08:42:30 -0500 (CDT)
+Received: from eagdhcp-232-150.americas.sgi.com
+	(eagdhcp-232-150.americas.sgi.com [128.162.232.150])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 41AFE30409B
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 06:42:30 -0700 (PDT)
+Received: from eagdhcp-232-150.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-150.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r9NDgUaT002267
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 08:42:30 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-150.americas.sgi.com)
+Message-Id: <20131023133932.145199412@sgi.com>
+Date: Wed, 23 Oct 2013 08:39:28 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [patch 5/4] xfsprogs: add field types to v4 xfs_db directory entries
+References: <20131017152804.204045257@sgi.com>
+Content-Disposition: inline;
+	filename=5-4-xfsprog-add-ftype-to-xfs_db-v4-dirs.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,48 +26,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: XFS Community List <xfs@oss.sgi.com>
 
-Looks good indeed.
+Display the inode type field that follows the name in xfs_db
+for dir2 (non-crc filesystems) that enabled the feature
+(mkfs -n ftype).
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-On Wed, Oct 23, 2013 at 03:58:44PM +0400, Stanislav Kholmanskikh wrote:
-> The content of /proc/cpuinfo file is platform-dependent.
-> So we can not use it reliably to check a number of available cpus.
-> It would be better to use sysfs interface, as _no_of_online_cpus() does.
-> 
-> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-> ---
->  tests/generic/273 |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/tests/generic/273 b/tests/generic/273
-> index d149808..c028438 100755
-> --- a/tests/generic/273
-> +++ b/tests/generic/273
-> @@ -47,7 +47,7 @@ count=2
->  
->  _threads_set()
->  {
-> -	_cpu_num=`cat /proc/cpuinfo | grep "processor" | wc -l`
-> +	_cpu_num=`_no_of_online_cpus`
->  	threads=$(($_cpu_num * 50))
->  	if [ $threads -gt 200 ]
->  	then
-> -- 
-> 1.7.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ db/dir2.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
--- 
-Carlos
+Index: b/db/dir2.c
+===================================================================
+--- a/db/dir2.c
++++ b/db/dir2.c
+@@ -52,6 +52,8 @@ static int	dir2_leaf_tail_count(void *ob
+ static int	dir2_leaf_tail_offset(void *obj, int startoff, int idx);
+ static int	dir2_node_btree_count(void *obj, int startoff);
+ static int	dir2_node_hdr_count(void *obj, int startoff);
++static int	dir3_data_union_ftype_offset(void *obj, int startoff, int idx);
++static int	dir2_data_union_ftype_count(void *obj, int startoff);
+ 
+ const field_t	dir2_hfld[] = {
+ 	{ "", FLDT_DIR2, OI(0), C1, 0, TYP_NONE },
+@@ -130,6 +132,8 @@ const field_t	dir2_data_union_flds[] = {
+ 	  dir2_data_union_namelen_count, FLD_COUNT, TYP_NONE },
+ 	{ "name", FLDT_CHARNS, OI(DEOFF(name)), dir2_data_union_name_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "filetype", FLDT_UINT8D, dir3_data_union_ftype_offset,
++	  dir2_data_union_ftype_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
+ 	{ "tag", FLDT_DIR2_DATA_OFF, dir2_data_union_tag_offset,
+ 	  dir2_data_union_tag_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
+ 	{ NULL }
+@@ -454,6 +458,14 @@ dir2_data_union_name_count(
+ }
+ 
+ static int
++dir2_data_union_ftype_count(
++	void			*obj,
++	int			startoff)
++{
++	return xfs_sb_version_hasftype(&mp->m_sb);
++}
++
++static int
+ dir2_data_union_namelen_count(
+ 	void			*obj,
+ 	int			startoff)
+
 
 _______________________________________________
 xfs mailing list
