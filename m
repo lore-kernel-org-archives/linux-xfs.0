@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5B157F52
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:03:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9470B8F8071
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 14:03:26 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id cBXOqhmJIVX6yFmL for <xfs@oss.sgi.com>;
-	Wed, 23 Oct 2013 14:03:25 -0700 (PDT)
-Message-ID: <5268399C.4020505@sandeen.net>
-Date: Wed, 23 Oct 2013 16:03:24 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4F6217F37
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:32:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A716304059
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 14:32:00 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	pWAUS7dentPhVYYO for <xfs@oss.sgi.com>;
+	Wed, 23 Oct 2013 14:31:57 -0700 (PDT)
+Date: Thu, 24 Oct 2013 08:31:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfstests: implemented _no_of_online_cpus() function
+Message-ID: <20131023213152.GP2797@dastard>
+References: <1382529524-2184-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+	<1382529524-2184-2-git-send-email-stanislav.kholmanskikh@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V4 2/2] xfstests: xfsdump/restore test for partial_reg:
-	Out of records. Extend attrs applied early
-References: <20131021193830.885912820@sgi.com>
-	<20131021193930.267197519@sgi.com>
-In-Reply-To: <20131021193930.267197519@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1382529524-2184-2-git-send-email-stanislav.kholmanskikh@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,121 +30,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com, xfs@oss.sgi.com
+To: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Cc: vasily.isaenko@oracle.com, xfs@oss.sgi.com
 
-On 10/21/13 3:02 PM, rjohnston@sgi.com wrote:
-> Multi-stream xfsdump/xfsrestore of more than partialmax wholly-sparse
-> files segfaults with the following warning:
+On Wed, Oct 23, 2013 at 03:58:43PM +0400, Stanislav Kholmanskikh wrote:
+> Its purpose is to get a number of online cpus.
 > 
->   "partial_reg: Out of records. Extend attrs applied early."
-> 
-> Add a test that dumps and restores partialmax + 1 wholly-sparse files.
-> 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> 
+> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
 > ---
+>  common/rc |   19 +++++++++++++++++++
+>  1 files changed, 19 insertions(+), 0 deletions(-)
 > 
-> diff --git a/tests/xfs/351 b/tests/xfs/351
-> new file mode 100755
-> index 0000000..c0d8afb
-> --- /dev/null
-> +++ b/tests/xfs/351
-> @@ -0,0 +1,68 @@
-> +#! /bin/bash
-> +# FS QA Test No. 351
-> +#
-> +# Dump and restore partialmax + 1 wholly-sparse files
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 SGI.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
+> diff --git a/common/rc b/common/rc
+> index 77e96c4..ff2f7fe 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2145,6 +2145,25 @@ _scale_fsstress_args()
+>      echo $args
+>  }
+>  
+> +_no_of_online_cpus()
 > +{
-> +    cd /
-> +    rm -f $tmp.*
-> +}
+> +	count=0
 > +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/dump
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +rm -f $seqres.full
-> +
-> +echo "Silence is golden."
-> +_wipe_fs
-> +mkdir $dump_dir >> $seqres.full 2>&1 || _fail "mkdir \"$dump_dir\" failed"
-> +for i in `seq 1 4`; do
-> +	$XFS_IO_PROG -f -c "truncate 1t" $dump_dir/sparsefile$i \
-> +		>> $seqres.full 2>&1 || _fail "failed to create sparsefile\"$i\""
-> +done
-> +# Dump and restore the files
-> +_prepare_restore_dir
-> +$XFSDUMP_PROG -L session -M label1 -M label2 -f $tmp.stream1 \
-> +	-f $tmp.stream2 $SCRATCH_MNT -s $dump_sdir \
-> +	>> $seqres.full 2>&1 || _fail "dump failed"
-> +$XFSRESTORE_PROG -F -f $tmp.stream1 -f $tmp.stream2 $restore_dir \
-> +	>> $seqres.full 2>&1 || _fail "restore failed"
-> +status=0
-> +exit 
-> diff --git a/tests/xfs/351.out b/tests/xfs/351.out
-> new file mode 100644
-> index 0000000..42cf52e
-> --- /dev/null
-> +++ b/tests/xfs/351.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 351
-> +Silence is golden.
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 17fff27..53ea498 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -179,3 +179,4 @@
->  297 auto freeze
->  298 auto attr symlink quick
->  299 auto quota
-> +351 auto dump
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> +	for i in `cat /sys/devices/system/cpu/online | $SED_PROG 's/,/ /g'`; do
+> +		count=$(( $count + 1 ))
+
+That's just as kernel/platform dependent as using /proc/cpuinfo.
+
+Indeed, note this in generic/273:
+
+_supported_os IRIX Linux
+
+It's supposed to work on Irix as well, which means using sysfs is
+just as wrong as using /proc/cpuinfo.
+
+sysconf is the prefered platform neutral interface for getting this
+sort of information. Something as simple as:
+
+$ getconf _NPROCESSORS_ONLN
+8
+$
+
+or adding a sysconf(_SC_NPROCESSORS_ONLN) call to src/features.c (if
+we don't want to rely on systems having getconf installed) would be
+much better than manually parsing magic proc or sysfs files.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
