@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1DEB67F37
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 17:23:56 -0500 (CDT)
-Date: Wed, 23 Oct 2013 17:23:52 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 19/19] xfs: convert directory vector functions to constants
-Message-ID: <20131023222352.GT1935@sgi.com>
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-20-git-send-email-david@fromorbit.com>
-	<20131016211615.GD1935@sgi.com> <20131016222317.GM4446@dastard>
-	<20131016225204.GE1935@sgi.com> <20131016230618.GF1935@sgi.com>
-	<20131017001758.GP4446@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131017001758.GP4446@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0A5897F55
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 18:27:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 806F5AC002
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:27:26 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	DiOFbiMHW23H7jjh for <xfs@oss.sgi.com>;
+	Wed, 23 Oct 2013 16:27:24 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VZ7pY-0003p2-T7
+	for xfs@oss.sgi.com; Thu, 24 Oct 2013 10:27:12 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VZ7pY-00078T-SG
+	for xfs@oss.sgi.com; Thu, 24 Oct 2013 10:27:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: validity check the directory block leaf entry count
+Date: Thu, 24 Oct 2013 10:27:12 +1100
+Message-Id: <1382570832-27396-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,86 +28,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Oct 17, 2013 at 11:17:58AM +1100, Dave Chinner wrote:
-> On Wed, Oct 16, 2013 at 06:06:18PM -0500, Ben Myers wrote:
-> > On Wed, Oct 16, 2013 at 05:52:04PM -0500, Ben Myers wrote:
-> > > On Thu, Oct 17, 2013 at 09:23:17AM +1100, Dave Chinner wrote:
-> > > > On Wed, Oct 16, 2013 at 04:16:15PM -0500, Ben Myers wrote:
-> > > > > On Tue, Oct 15, 2013 at 09:18:05AM +1100, Dave Chinner wrote:
-> > > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > > 
-> > > > > > Many of the vectorised function calls now take no parameters and
-> > > > > > return a constant value. There is no reason for these to be vectored
-> > > > > > functions, so convert them to constants
-> > > > > > 
-> > > > > > Binary sizes:
-> > > > > > 
-> > > > > >    text    data     bss     dec     hex filename
-> > > > > >  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
-> > > > > >  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
-> > > > > >  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
-> > > > > >  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
-> > > > > >  789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
-> > > > > >  789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
-> > > > > >  789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
-> > > > > >  791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
-> > > > > >  791701   96802    1096  889599   d92ff fs/xfs/xfs.o.p8
-> > > > > >  791205   96802    1096  889103   d91cf fs/xfs/xfs.o.p9
-> > > > > > 
-> > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > Hmmm.  This one doesn't seem to apply.  Maybe it's just me.
-> > > > 
-> > > > Applies without mismatch here on an 3.12-rc5 + oss-xfs/master tree
-> > > > here. What's the reject that you get?
-> > > 
-> > > Like so:
-> > > 
-> > > $ q pu
-> > > Applying patch xfs-convert-directory-vector-functions-to-constants.patch
-> > > patching file fs/xfs/xfs_da_btree.c
-> > > patching file fs/xfs/xfs_da_format.c
-> > > Hunk #13 FAILED at 571.
-> > > Hunk #14 FAILED at 608.
-> > > Hunk #15 succeeded at 641 (offset -74 lines).
-> > > Hunk #16 FAILED at 729.
-> > > Hunk #17 succeeded at 683 (offset -82 lines).
-> > > Hunk #18 FAILED at 779.
-> > > Hunk #19 succeeded at 728 (offset -87 lines).
-> > > Hunk #20 FAILED at 829.
-> > > 5 out of 20 hunks FAILED -- rejects in file fs/xfs/xfs_da_format.c
-> > > patching file fs/xfs/xfs_dir2.c
-> > > patching file fs/xfs/xfs_dir2.h
-> > > Hunk #4 FAILED at 92.
-> > > 1 out of 4 hunks FAILED -- rejects in file fs/xfs/xfs_dir2.h
-> > > patching file fs/xfs/xfs_dir2_block.c
-> > > patching file fs/xfs/xfs_dir2_data.c
-> > > patching file fs/xfs/xfs_dir2_leaf.c
-> > > patching file fs/xfs/xfs_dir2_node.c
-> > > Hunk #1 FAILED at 274.
-> > > Hunk #2 succeeded at 1267 (offset -1 lines).
-> > > Hunk #3 succeeded at 1299 (offset -1 lines).
-> > > Hunk #4 succeeded at 1408 (offset -1 lines).
-> > > 1 out of 4 hunks FAILED -- rejects in file fs/xfs/xfs_dir2_node.c
-> > > patching file fs/xfs/xfs_dir2_readdir.c
-> > > patching file fs/xfs/xfs_dir2_sf.c
-> > > Patch xfs-convert-directory-vector-functions-to-constants.patch does not apply (enforce with -f)
-> > > 
-> > > That's on 74564fb48.
-> > 
-> > To be more specific, these are the rejects.  Maybe I missed a patch.
-> 
-> Looks like you might be missing patch 18 as all the rejects are
-> against hunks introduced by that patch.
+From: Dave Chinner <dchinner@redhat.com>
 
-That was it, thanks.
+The directory block format verifier fails to check that the leaf
+entry count is in a valid range, and so if it is corrupted then it
+can lead to derefencing a pointer outside the block buffer. While we
+can't exactly validate the count without first walking the directory
+block, we can ensure the count lands in the valid area within the
+directory block and hence avoid out-of-block references.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_dir2_data.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 014fa6a..e0c8f57 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -65,7 +65,6 @@ __xfs_dir3_data_check(
+ 	const struct xfs_dir_ops *ops;
+ 
+ 	mp = bp->b_target->bt_mount;
+-	hdr = bp->b_addr;
+ 
+ 	/*
+ 	 * we can be passed a null dp here from a verifier, so we need to go the
+@@ -73,12 +72,25 @@ __xfs_dir3_data_check(
+ 	 */
+ 	ops = xfs_dir_get_ops(mp, dp);
+ 
++	hdr = bp->b_addr;
++	p = (char *)ops->data_entry_p(hdr);
++
+ 	switch (hdr->magic) {
+ 	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+ 	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+ 		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endp = (char *)lep;
++
++		/*
++		 * The number of leaf entries is limited by the size of the
++		 * block and the amount of space used by the data entries.
++		 * We don't know how much space is used by the data entries yet,
++		 * so just ensure that the count falls somewhere inside the
++		 * block right now.
++		 */
++		XFS_WANT_CORRUPTED_RETURN(be32_to_cpu(btp->count) <
++			((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry));
+ 		break;
+ 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+ 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+@@ -88,13 +100,12 @@ __xfs_dir3_data_check(
+ 		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
+ 		return EFSCORRUPTED;
+ 	}
+-	bf = ops->data_bestfree_p(hdr);
+-	p = (char *)ops->data_entry_p(hdr);
+ 
+-	count = lastfree = freeseen = 0;
+ 	/*
+ 	 * Account for zero bestfree entries.
+ 	 */
++	bf = ops->data_bestfree_p(hdr);
++	count = lastfree = freeseen = 0;
+ 	if (!bf[0].length) {
+ 		XFS_WANT_CORRUPTED_RETURN(!bf[0].offset);
+ 		freeseen |= 1 << 0;
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
