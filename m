@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7542B7F53
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 12:45:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 28B493040CB
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 10:45:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7bI8GbcKdYBal9ML for
-	<xfs@oss.sgi.com>; Wed, 23 Oct 2013 10:45:42 -0700 (PDT)
-Message-ID: <52680B43.6060707@redhat.com>
-Date: Wed, 23 Oct 2013 12:45:39 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 711F67F37
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 15:34:39 -0500 (CDT)
+Date: Wed, 23 Oct 2013 15:34:35 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: fix possible NULL dereference
+Message-ID: <20131023203435.GR1935@sgi.com>
+References: <20131021231849.GL10553@sgi.com> <20131021235601.GG4446@dastard>
+	<5265C03B.50701@sandeen.net> <20131022001732.GI4446@dastard>
+	<CAGG-pUTh-PJJ4Nzo0r-f3VDPMc81U2z_NMX+Wcex3KzGs=U8cA@mail.gmail.com>
+	<20131022203946.GB2797@dastard> <5266E4BD.8030601@sandeen.net>
+	<20131022210300.GC2797@dastard> <5266EBF0.901@sandeen.net>
+	<CAGG-pUTtYomspBXn=RE7YFU=vu6rWZ1fU7CBO45Mmodj8DZFiQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests btrfs/020: test device replace on RO btrfs
-References: <1382527446-16053-1-git-send-email-eguan@redhat.com>
-	<1382546683-454-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1382546683-454-1-git-send-email-eguan@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAGG-pUTtYomspBXn=RE7YFU=vu6rWZ1fU7CBO45Mmodj8DZFiQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,142 +23,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Geyslan =?iso-8859-1?Q?Greg=F3rio?= Bem <geyslan@gmail.com>
+Cc: Alex Elder <elder@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, open list <linux-kernel@vger.kernel.org>, XFS FILESYSTEM <xfs@oss.sgi.com>
 
-On 10/23/13 11:44 AM, Eryu Guan wrote:
-> btrfs replace on readonly fs should not be allowed.
-> 
-> Regression test case for commit:
-> bbb651e Btrfs: don't allow the replace procedure on read only filesystems
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+Hey Geyslan,
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+On Wed, Oct 23, 2013 at 08:58:51AM -0200, Geyslan Greg=F3rio Bem wrote:
+> - Regarding the "possible new patch" subject, I humbly pass the ball to y=
+ou.
+> =
 
-> ---
-> v2: Address Eric's review
->  - use truncate to create fs image instead of writing to each file
-> 
->  tests/btrfs/020     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/020.out |  2 ++
->  tests/btrfs/group   |  1 +
->  3 files changed, 87 insertions(+)
->  create mode 100755 tests/btrfs/020
->  create mode 100644 tests/btrfs/020.out
-> 
-> diff --git a/tests/btrfs/020 b/tests/btrfs/020
-> new file mode 100755
-> index 0000000..7464bd0
-> --- /dev/null
-> +++ b/tests/btrfs/020
-> @@ -0,0 +1,84 @@
-> +#! /bin/bash
-> +# FS QA Test No. btrfs/020
-> +#
-> +# btrfs device replace test on RO fs
-> +#
-> +# Regression test for commit:
-> +# bbb651e Btrfs: don't allow the replace procedure on read only filesystems
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +
-> +status=1	# failure is the default!
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	$UMOUNT_PROG $loop_mnt
-> +	_destroy_loop_device $loop_dev1
-> +	losetup -d $loop_dev2 >/dev/null 2>&1
-> +	_destroy_loop_device $loop_dev3
-> +	rm -rf $loop_mnt
-> +	rm -f $fs_img1 $fs_img2 $fs_img3
-> +}
-> +
-> +trap "_cleanup ; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +
-> +rm -f $seqres.full
-> +echo "Silence is golden"
-> +
-> +loop_mnt=$TEST_DIR/$seq.$$.mnt
-> +fs_img1=$TEST_DIR/$seq.$$.img1
-> +fs_img2=$TEST_DIR/$seq.$$.img2
-> +fs_img3=$TEST_DIR/$seq.$$.img3
-> +mkdir $loop_mnt
-> +$XFS_IO_PROG -f -c "truncate 256m" $fs_img1 >>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "truncate 256m" $fs_img2 >>$seqres.full 2>&1
-> +$XFS_IO_PROG -f -c "truncate 256m" $fs_img3 >>$seqres.full 2>&1
-> +
-> +loop_dev1=`_create_loop_device $fs_img1`
-> +loop_dev2=`_create_loop_device $fs_img2`
-> +loop_dev3=`_create_loop_device $fs_img3`
-> +
-> +$MKFS_BTRFS_PROG -m raid1 -d raid1 $loop_dev1 $loop_dev2 >>$seqres.full 2>&1
-> +$MOUNT_PROG -o ro $loop_dev1 $loop_mnt
-> +
-> +# Fail the second device and replace with the third
-> +_destroy_loop_device $loop_dev2
-> +$BTRFS_UTIL_PROG replace start -B 2 $loop_dev3 $loop_mnt >>$seqres.full 2>&1 && \
-> +_fail "FAIL: Device replaced on RO btrfs"
-> +
-> +status=0
-> +exit
-> diff --git a/tests/btrfs/020.out b/tests/btrfs/020.out
-> new file mode 100644
-> index 0000000..20d7944
-> --- /dev/null
-> +++ b/tests/btrfs/020.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 020
-> +Silence is golden
-> diff --git a/tests/btrfs/group b/tests/btrfs/group
-> index 2f74139..1159499 100644
-> --- a/tests/btrfs/group
-> +++ b/tests/btrfs/group
-> @@ -22,3 +22,4 @@
->  017 auto quick
->  018 auto quick
->  019 auto quick
-> +020 auto quick
-> 
+> Thank you for the attention.
+
+Thank you for the patch.  I would really prefer to commit this showing
+authorship from you, rather than a Reported-by.  Can I mark you down?
+
+Regards,
+	Ben
+
+---
+
+xfs: fix possible NULL dereference in xlog_verify_iclog
+
+In xlog_verify_iclog a debug check of the incore log buffers prints an
+error if icptr is null and then goes on to dereference the pointer
+regardless.  Convert this to an assert so that the intention is clear.
+This was reported by Coverty.
+
+Reported-by: Geyslan G. Bem <geyslan@gmail.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+---
+ fs/xfs/xfs_log.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+Index: b/fs/xfs/xfs_log.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- a/fs/xfs/xfs_log.c	2013-10-23 14:52:47.875216875 -0500
++++ b/fs/xfs/xfs_log.c	2013-10-23 14:53:53.775245830 -0500
+@@ -3714,11 +3714,9 @@ xlog_verify_iclog(
+ 	/* check validity of iclog pointers */
+ 	spin_lock(&log->l_icloglock);
+ 	icptr =3D log->l_iclog;
+-	for (i=3D0; i < log->l_iclog_bufs; i++) {
+-		if (icptr =3D=3D NULL)
+-			xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
+-		icptr =3D icptr->ic_next;
+-	}
++	for (i=3D0; i < log->l_iclog_bufs; i++, icptr =3D icptr->ic_next)
++      		ASSERT(icptr);
++
+ 	if (icptr !=3D log->l_iclog)
+ 		xfs_emerg(log->l_mp, "%s: corrupt iclog ring", __func__);
+ 	spin_unlock(&log->l_icloglock);
 
 _______________________________________________
 xfs mailing list
