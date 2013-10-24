@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CA1B17F37
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 10:42:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 662A9AC005
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 08:42:26 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F09977F4E
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 10:44:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D160B8F804C
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 08:44:15 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id CRoCZjrqtuW04GgY (version=TLSv1
+	by cuda.sgi.com with ESMTP id vLwoxlQRPPDtzPf3 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 24 Oct 2013 08:42:22 -0700 (PDT)
-Date: Thu, 24 Oct 2013 08:42:20 -0700
+	Thu, 24 Oct 2013 08:44:15 -0700 (PDT)
+Date: Thu, 24 Oct 2013 08:44:14 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: prevent stack overflows from page cache allocation
-Message-ID: <20131024154220.GA19055@infradead.org>
-References: <1382585110-1796-1-git-send-email-david@fromorbit.com>
-	<20131024084803.GA28144@infradead.org>
-	<20131024103751.GS2797@dastard>
+Subject: xfstest 318
+Message-ID: <20131024154414.GB19055@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131024103751.GS2797@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Oct 24, 2013 at 09:37:51PM +1100, Dave Chinner wrote:
-> Sure, if you want to. But doing that shouldn't prevent this fix from
-> being committed in the mean time, especially as other filesystems
-> already use this method for avoiding these problems.
+This test has always been failing for me on my Debian stable system
+with the output below, any idea why this could be?
 
-I'd much prefer aiming for the proper fix first.  If for some reason we
-can't get it done in time the workaround can be applied.
+--- tests/generic/318.out	2013-09-09 14:41:08.000000000 +0000
++++ /root/xfstests/results//generic/318.out.bad	2013-10-24 15:44:01.000000000 +0000
+@@ -17,7 +17,7 @@
+ # group: 65534
+ user::rw-
+ user:0:r-x	#effective:r--
+-user:1:rw-	#effective:r--
++user:3:rw-	#effective:r--
+ group::r--
+ group:0:--x	#effective:---
+ mask::r--
+@@ -43,7 +43,7 @@
+ # group: 65534
+ user::rw-
+ user:0:r-x	#effective:r--
+-user:1:rw-	#effective:r--
++user:3:rw-	#effective:r--
+ group::r--
+ group:0:--x	#effective:---
+ mask::r--
 
 _______________________________________________
 xfs mailing list
