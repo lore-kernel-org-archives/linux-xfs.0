@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ECDB27F37
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 16:23:15 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5770B7F37
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 16:24:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CC642304062
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 14:23:12 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E85D8AC002
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 14:24:52 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	rK2OeNCfDhCsC03G for <xfs@oss.sgi.com>;
-	Thu, 24 Oct 2013 14:23:10 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1VZSN1-00069z-Db
-	for xfs@oss.sgi.com; Fri, 25 Oct 2013 08:23:07 +1100
-Date: Fri, 25 Oct 2013 08:23:07 +1100
+	OIMRciW2WQE2zdSn for <xfs@oss.sgi.com>;
+	Thu, 24 Oct 2013 14:24:51 -0700 (PDT)
+Date: Fri, 25 Oct 2013 08:24:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: src/feature.c: print a number of online CPUs
-Message-ID: <20131024212307.GV2797@dastard>
-References: <20131023213152.GP2797@dastard>
-	<1382604998-11037-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-	<20131024104042.GT2797@dastard>
-	<20131024131800.GA27701@orion.maiolino.org>
+Subject: Re: [PATCH] xfs: prevent stack overflows from page cache allocation
+Message-ID: <20131024212448.GW2797@dastard>
+References: <1382585110-1796-1-git-send-email-david@fromorbit.com>
+	<20131024084803.GA28144@infradead.org>
+	<20131024103751.GS2797@dastard>
+	<20131024154220.GA19055@infradead.org>
+	<20131024164115.GU1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131024131800.GA27701@orion.maiolino.org>
+In-Reply-To: <20131024164115.GU1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,34 +33,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-[ insert comment about not top-posting on mainling lists ]
+On Thu, Oct 24, 2013 at 11:41:15AM -0500, Ben Myers wrote:
+> Hey,
+> 
+> On Thu, Oct 24, 2013 at 08:42:20AM -0700, Christoph Hellwig wrote:
+> > On Thu, Oct 24, 2013 at 09:37:51PM +1100, Dave Chinner wrote:
+> > > Sure, if you want to. But doing that shouldn't prevent this fix from
+> > > being committed in the mean time, especially as other filesystems
+> > > already use this method for avoiding these problems.
+> > 
+> > I'd much prefer aiming for the proper fix first.  If for some reason we
+> > can't get it done in time the workaround can be applied.
+> 
+> Dave probably has a customer waiting on this.
 
-On Thu, Oct 24, 2013 at 11:18:01AM -0200, Carlos Maiolino wrote:
-> > Actually, I'd say we shoul default to 1 cpu if we can't get the
-> > number of CPUs. Clearly we have at least one if we can run this
-> > code. :)
->
-> I'm not sure about setting the default to 1 cpu might me a good behavior. My
-> apologies if I'm saying something wrong, but, if the 'tester' are trying to do
-> some test trusting on the amount of cpus, it might not be a good behavior.
-> I was thinking, how about issue an error message if xfstests can't properly
-> detect the amount of cpus from the system, and add any kind of usage option to
-> specify the numbers of cpus? So in case of a error while detecting the amount of
-> cpus.
+Obviously. And being a kernel where we have a fixed ABI, we can't
+backport any fix that changes core code.
 
-I'd much prefer the test runs with a single CPU as a default rather
-than not run at all. Most systems the tests run on support these
-sysconf parameters, so it's going to do what we expect, but quite
-frankly most tests shoul dnot need to know the number of CPUs.
+> If pulling this in will make a
+> proper fix more difficult to do I can understand keeping the patch out.
 
-This one is probably misguided, anyway, in what it's doing - if we
-want to scale the load the test generates, then that's what
-$LOAD_FACTOR is for. Also, it' multiplies the number of CPUs by 50,
-then caps the result at 200, so in reality it's only scaling for up
-to 4 CPUs which doesn't really take into account the range of
-machines that we test on.
+It doesn't make a proper fix any harder - removing 2 lines of code
+is trivial.
+
+> Otherwise, can't we just remove this along with the other filesystems'
+> equivalent code when the proper fix is committed?
+
+Yes, we can.
 
 Cheers,
 
