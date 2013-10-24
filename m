@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 586B07F37
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 16:17:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 470998F8052
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 14:17:16 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ECDB27F37
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 16:23:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CC642304062
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 14:23:12 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	19AGQW9HDZrAIjfG for <xfs@oss.sgi.com>;
-	Thu, 24 Oct 2013 14:17:14 -0700 (PDT)
-Date: Fri, 25 Oct 2013 08:17:08 +1100
+	rK2OeNCfDhCsC03G for <xfs@oss.sgi.com>;
+	Thu, 24 Oct 2013 14:23:10 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1VZSN1-00069z-Db
+	for xfs@oss.sgi.com; Fri, 25 Oct 2013 08:23:07 +1100
+Date: Fri, 25 Oct 2013 08:23:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 4/4] xfsprog: add mkfs.xfs sb v4 support for dirent
-	filetype field
-Message-ID: <20131024211708.GU2797@dastard>
-References: <20131017152804.204045257@sgi.com>
-	<20131017152955.689963160@sgi.com>
-	<20131024161514.GA14558@infradead.org>
+Subject: Re: [PATCH] xfstests: src/feature.c: print a number of online CPUs
+Message-ID: <20131024212307.GV2797@dastard>
+References: <20131023213152.GP2797@dastard>
+	<1382604998-11037-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+	<20131024104042.GT2797@dastard>
+	<20131024131800.GA27701@orion.maiolino.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131024161514.GA14558@infradead.org>
+In-Reply-To: <20131024131800.GA27701@orion.maiolino.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +35,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Oct 24, 2013 at 09:15:14AM -0700, Christoph Hellwig wrote:
-> On Thu, Oct 17, 2013 at 10:28:08AM -0500, Mark Tinguely wrote:
-> > Add directory inode type feature to mkfs.xfs and its manual page.
-> > 
-> > In sb v4, "mkfs.xfs -n ftype=1" turns on the feature.
-> > 
-> > The feature is automatically turned on for "-m crc=1", but reject
-> > the use of the "-n ftype=0|1" with the "-m crc=1" option.
-> 
-> Seems like this causes a spurious failure in xfs/206:
+[ insert comment about not top-posting on mainling lists ]
 
-Yes, it will. the xfstests repair filter needs to be updated every
-time a new option is added to the output.
+On Thu, Oct 24, 2013 at 11:18:01AM -0200, Carlos Maiolino wrote:
+> > Actually, I'd say we shoul default to 1 cpu if we can't get the
+> > number of CPUs. Clearly we have at least one if we can run this
+> > code. :)
+>
+> I'm not sure about setting the default to 1 cpu might me a good behavior. My
+> apologies if I'm saying something wrong, but, if the 'tester' are trying to do
+> some test trusting on the amount of cpus, it might not be a good behavior.
+> I was thinking, how about issue an error message if xfstests can't properly
+> detect the amount of cpus from the system, and add any kind of usage option to
+> specify the numbers of cpus? So in case of a error while detecting the amount of
+> cpus.
+
+I'd much prefer the test runs with a single CPU as a default rather
+than not run at all. Most systems the tests run on support these
+sysconf parameters, so it's going to do what we expect, but quite
+frankly most tests shoul dnot need to know the number of CPUs.
+
+This one is probably misguided, anyway, in what it's doing - if we
+want to scale the load the test generates, then that's what
+$LOAD_FACTOR is for. Also, it' multiplies the number of CPUs by 50,
+then caps the result at 200, so in reality it's only scaling for up
+to 4 CPUs which doesn't really take into account the range of
+machines that we test on.
 
 Cheers,
 
