@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0478A7F5A
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 18:47:19 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A5A447F60
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 19:14:15 -0500 (CDT)
 Received: from xmail.sgi.com (pv-excas3-dc21.corp.sgi.com [137.38.106.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 71CFCAC002
-	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 16:47:18 -0700 (PDT)
-Message-ID: <52686003.30602@sgi.com>
-Date: Wed, 23 Oct 2013 18:47:15 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 23027AC002
+	for <xfs@oss.sgi.com>; Wed, 23 Oct 2013 17:14:12 -0700 (PDT)
+Message-ID: <52686651.4030804@sgi.com>
+Date: Wed, 23 Oct 2013 19:14:09 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 1/4] xfsprog: add xfs sb v4 support for dirent filetype
-	field
-References: <20131017152804.204045257@sgi.com>
-	<20131017152955.415393417@sgi.com>
-In-Reply-To: <20131017152955.415393417@sgi.com>
+Subject: Re: [PATCH V4 1/2] xfstests XFS: verify extended attributes after
+	multi-stream xfsdump/xfsrestore
+References: <20131021193830.885912820@sgi.com>
+	<20131021193930.144165179@sgi.com>
+In-Reply-To: <20131021193930.144165179@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,19 +26,19 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 This has been committed.
 
 Thanks
 --Rich
 
+commit 71026bf1f90cb376919fcc55636a665d287f394f
+Author: Rich Johnston <rjohnston@sgi.com>
+Date:   Mon Oct 21 20:02:31 2013 +0000
 
-commit 87e343bd0937e5bb75dd8bc46ba388b6f8c6552b
-Author: Mark Tinguely <tinguely@sgi.com>
-Date:   Thu Oct 17 15:28:05 2013 +0000
-
-     xfsprog: add xfs sb v4 support for dirent filetype field
+     xfstests XFS: verify extended attributes after multi-stream 
+xfsdump/xfsresto
 
 _______________________________________________
 xfs mailing list
