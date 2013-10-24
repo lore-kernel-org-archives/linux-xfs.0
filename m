@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B68E17F37
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 16:29:12 -0500 (CDT)
-Message-ID: <52699128.8070306@sgi.com>
-Date: Thu, 24 Oct 2013 16:29:12 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id B23F57F37
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 16:31:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9AE868F8054
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 14:31:22 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	H9cZnaDzKYgMUWyC for <xfs@oss.sgi.com>;
+	Thu, 24 Oct 2013 14:31:20 -0700 (PDT)
+Date: Fri, 25 Oct 2013 08:31:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 13/19] xfs: vectorise directory data operations
+Message-ID: <20131024213117.GX2797@dastard>
+References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
+	<1381789085-21923-14-git-send-email-david@fromorbit.com>
+	<20131024183909.GV1935@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 4/4] xfsprog: add mkfs.xfs sb v4 support for dirent
-	filetype field
-References: <20131017152804.204045257@sgi.com>
-	<20131017152955.689963160@sgi.com>
-	<20131024161514.GA14558@infradead.org>
-	<20131024211708.GU2797@dastard>
-In-Reply-To: <20131024211708.GU2797@dastard>
+Content-Disposition: inline
+In-Reply-To: <20131024183909.GV1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,35 +27,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 10/24/13 16:17, Dave Chinner wrote:
-> On Thu, Oct 24, 2013 at 09:15:14AM -0700, Christoph Hellwig wrote:
->> On Thu, Oct 17, 2013 at 10:28:08AM -0500, Mark Tinguely wrote:
->>> Add directory inode type feature to mkfs.xfs and its manual page.
->>>
->>> In sb v4, "mkfs.xfs -n ftype=1" turns on the feature.
->>>
->>> The feature is automatically turned on for "-m crc=1", but reject
->>> the use of the "-n ftype=0|1" with the "-m crc=1" option.
->>
->> Seems like this causes a spurious failure in xfs/206:
->
-> Yes, it will. the xfstests repair filter needs to be updated every
-> time a new option is added to the output.
->
-> Cheers,
->
-> Dave.
+On Thu, Oct 24, 2013 at 01:39:09PM -0500, Ben Myers wrote:
+> On Tue, Oct 15, 2013 at 09:17:59AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Following from the initial patches to vectorise the shortform
+> > directory encode/decode operations, convert half the data block
+> > operations to use the vector. The rest will be done in a second
+> > patch.
+> > 
+> > This further reduces the size of the built binary:
+> > 
+> >    text    data     bss     dec     hex filename
+> >  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
+> >  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
+> >  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
+> >  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Generally looks pretty good, I have a question below...
+> 
+> >  const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+> > @@ -223,6 +415,18 @@ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+> >  	.sf_put_ino = xfs_dir3_sfe_put_ino,
+> >  	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
+> >  	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
+> > +
+> > +	.data_entsize = xfs_dir3_data_entsize,
+> > +	.data_get_ftype = xfs_dir3_data_get_ftype,
+> > +	.data_put_ftype = xfs_dir3_data_put_ftype,
+> > +	.data_entry_tag_p = xfs_dir3_data_entry_tag_p,
+> > +
+> > +	.data_dot_offset = xfs_dir2_data_dot_offset,
+> > +	.data_dotdot_offset = xfs_dir2_data_dotdot_offset,
+> > +	.data_first_offset = xfs_dir2_data_first_offset,
+> > +	.data_dot_entry_p = xfs_dir2_data_dot_entry_p,
+> > +	.data_dotdot_entry_p = xfs_dir2_data_dotdot_entry_p,
+> > +	.data_first_entry_p = xfs_dir2_data_first_entry_p,
+> >  };
+> 
+> I think there may be a problem here.  Although the dirv2 functions for
+> ., .., and first entry offset account for the v2 header size, they
+> appear not to be accounting for the modified entry size due to the file
+> type field.  Am I missing something?
 
-Thanks for the heads up.
+The ftype field is handled by the alignment roundup. i.e. namelen is
+1 or two bytes, plus ftype is 2 or 3 bytes, roundup is to 8 bytes.
+Hence adding a byte for the ftype field is not a problem for these
+first entries because of their small, fixed size.
 
---Mark.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
