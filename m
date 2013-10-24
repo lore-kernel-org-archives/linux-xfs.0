@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2E2CC7F37
-	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 13:39:26 -0500 (CDT)
-Date: Thu, 24 Oct 2013 13:39:09 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 13/19] xfs: vectorise directory data operations
-Message-ID: <20131024183909.GV1935@sgi.com>
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-14-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1381789085-21923-14-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 860157F37
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 15:12:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B2DB304084
+	for <xfs@oss.sgi.com>; Thu, 24 Oct 2013 13:12:35 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id XSbHkJYmW76pFUIr (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 24 Oct 2013 13:12:30 -0700 (PDT)
+Date: Thu, 24 Oct 2013 16:11:55 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH] xfstests: generic/318 use symbolic namespaced ids
+Message-ID: <20131024161155.080eabad@oracle.com>
+In-Reply-To: <20131024154414.GB19055@infradead.org>
+References: <20131024154414.GB19055@infradead.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,107 +28,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 15, 2013 at 09:17:59AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Following from the initial patches to vectorise the shortform
-> directory encode/decode operations, convert half the data block
-> operations to use the vector. The rest will be done in a second
-> patch.
-> 
-> This further reduces the size of the built binary:
-> 
->    text    data     bss     dec     hex filename
->  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
->  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
->  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
->  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Christoph, I think the following should fix 318 for you.
 
-Generally looks pretty good, I have a question below...
+--
 
->  const struct xfs_dir_ops xfs_dir2_ftype_ops = {
-> @@ -223,6 +415,18 @@ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
->  	.sf_put_ino = xfs_dir3_sfe_put_ino,
->  	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
->  	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
-> +
-> +	.data_entsize = xfs_dir3_data_entsize,
-> +	.data_get_ftype = xfs_dir3_data_get_ftype,
-> +	.data_put_ftype = xfs_dir3_data_put_ftype,
-> +	.data_entry_tag_p = xfs_dir3_data_entry_tag_p,
-> +
-> +	.data_dot_offset = xfs_dir2_data_dot_offset,
-> +	.data_dotdot_offset = xfs_dir2_data_dotdot_offset,
-> +	.data_first_offset = xfs_dir2_data_first_offset,
-> +	.data_dot_entry_p = xfs_dir2_data_dot_entry_p,
-> +	.data_dotdot_entry_p = xfs_dir2_data_dotdot_entry_p,
-> +	.data_first_entry_p = xfs_dir2_data_first_entry_p,
->  };
+- use namespace ids that correspond to the initial acl ids
+  and match them symbolically in the output
 
-I think there may be a problem here.  Although the dirv2 functions for
-., .., and first entry offset account for the v2 header size, they
-appear not to be accounting for the modified entry size due to the file
-type field.  Am I missing something?
+- also ensure that all uids have a mapping in the namespace
+  so we don't get the unmapped uid (65534) in the output
 
-> @@ -1158,32 +1159,32 @@ xfs_dir2_sf_to_block(
->  	/*
->  	 * Create entry for .
->  	 */
-> -	dep = xfs_dir3_data_dot_entry_p(mp, hdr);
-> +	dep = dp->d_ops->data_dot_entry_p(hdr);
->  	dep->inumber = cpu_to_be64(dp->i_ino);
->  	dep->namelen = 1;
->  	dep->name[0] = '.';
-> -	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
-> -	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
-> +	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
-> +	tagp = dp->d_ops->data_entry_tag_p(dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-> -	xfs_dir2_data_log_entry(tp, bp, dep);
-> +	xfs_dir2_data_log_entry(tp, dp, bp, dep);
->  	blp[0].hashval = cpu_to_be32(xfs_dir_hash_dot);
->  	blp[0].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
->  				(char *)dep - (char *)hdr));
->  	/*
->  	 * Create entry for ..
->  	 */
-> -	dep = xfs_dir3_data_dotdot_entry_p(mp, hdr);
-> +	dep = dp->d_ops->data_dotdot_entry_p(hdr);
->  	dep->inumber = cpu_to_be64(dp->d_ops->sf_get_parent_ino(sfp));
->  	dep->namelen = 2;
->  	dep->name[0] = dep->name[1] = '.';
-> -	xfs_dir3_dirent_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
-> -	tagp = xfs_dir3_data_entry_tag_p(mp, dep);
-> +	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
-> +	tagp =dp->d_ops-> data_entry_tag_p(dep);
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ tests/generic/318     |   21 +++++++++++++++++++--
+ tests/generic/318.out |   20 ++++++++++----------
+ 2 files changed, 29 insertions(+), 12 deletions(-)
 
-	tagp = dp->d_ops->data_entry_tag_p(dep);
-
-> diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
-> index ccfeb4d..571e173 100644
-> --- a/fs/xfs/xfs_dir2_data.c
-> +++ b/fs/xfs/xfs_dir2_data.c
-> @@ -62,12 +62,26 @@ __xfs_dir3_data_check(
->  	char			*p;		/* current data position */
->  	int			stale;		/* count of stale leaves */
->  	struct xfs_name		name;
-> +	const struct xfs_dir_ops *ops;
->  
->  	mp = bp->b_target->bt_mount;
->  	hdr = bp->b_addr;
->  	bf = xfs_dir3_data_bestfree_p(hdr);
->  	p = (char *)xfs_dir3_data_entry_p(hdr);
->  
-> +	/*
-> +	 * we can be passed a null dp here froma verifier, so manually configure
-
-					   from a 
+diff --git a/tests/generic/318 b/tests/generic/318
+index d3bce51..810cff4 100755
+--- a/tests/generic/318
++++ b/tests/generic/318
+@@ -63,6 +63,23 @@ _require_scratch
+ _need_to_be_root
+ _acl_setup_ids
+ _require_acls
++ns_acl1=0
++ns_acl2=`expr $acl2 - $acl1`
++ns_acl3=`expr $acl3 - $acl1`
++
++_getfacl_filter_nsid()
++{
++    sed \
++       -e "s/user:$ns_acl1/user:nsid1/" \
++       -e "s/user:$ns_acl2/user:nsid2/" \
++       -e "s/user:$ns_acl3/user:nsid3/" \
++       -e "s/group:$ns_acl1/group:nsid1/" \
++       -e "s/group:$ns_acl2/group:nsid2/" \
++       -e "s/group:$ns_acl3/group:nsid3/" \
++       -e "s/: $ns_acl1/: nsid1/" \
++       -e "s/: $ns_acl2/: nsid2/" \
++       -e "s/: $ns_acl3/: nsid3/"
++}
+ 
+ _print_getfacls()
+ {
+@@ -70,7 +87,7 @@ _print_getfacls()
+     getfacl --absolute-names -n $file 2>/dev/null | _filter_scratch | _getfacl_filter_id
+ 
+     echo "From user_ns"
+-    $nsexec -U -M "0 $acl1 1000" -G "0 $acl2 1000" getfacl --absolute-names -n $file  2>/dev/null | _filter_scratch | _getfacl_filter_id
++    $nsexec -U -M "0 $acl1 1000" -G "0 $acl1 1000" getfacl --absolute-names -n $file 2>/dev/null | _filter_scratch | _getfacl_filter_nsid
+ }
+ 
+ umount $SCRATCH_DEV >/dev/null 2>&1
+@@ -85,7 +102,7 @@ chown $acl1.$acl1 $file
+ # set acls from init_user_ns, to be checked from inside the userns
+ setfacl -n -m u:$acl2:rw,g:$acl2:r $file
+ # set acls from inside userns, to be checked from init_user_ns
+-$nsexec -s -U -M "0 $acl1 1000" -G "0 $acl2 1000" setfacl -n -m u:root:rx,g:root:x $file
++$nsexec -s -U -M "0 $acl1 1000" -G "0 $acl1 1000" setfacl -n -m u:root:rx,g:$ns_acl2:x $file
+ 
+ _print_getfacls
+ 
+diff --git a/tests/generic/318.out b/tests/generic/318.out
+index e2b42a4..6ff2bf8 100644
+--- a/tests/generic/318.out
++++ b/tests/generic/318.out
+@@ -13,13 +13,13 @@ other::r--
+ 
+ From user_ns
+ # file: SCRATCH_MNT/file1
+-# owner: 0
+-# group: 65534
++# owner: nsid1
++# group: nsid1
+ user::rw-
+-user:0:r-x	#effective:r--
+-user:1:rw-	#effective:r--
++user:nsid1:r-x	#effective:r--
++user:nsid2:rw-	#effective:r--
+ group::r--
+-group:0:--x	#effective:---
++group:nsid2:--x	#effective:---
+ mask::r--
+ other::r--
+ 
+@@ -39,13 +39,13 @@ other::r--
+ 
+ From user_ns
+ # file: SCRATCH_MNT/file1
+-# owner: 0
+-# group: 65534
++# owner: nsid1
++# group: nsid1
+ user::rw-
+-user:0:r-x	#effective:r--
+-user:1:rw-	#effective:r--
++user:nsid1:r-x	#effective:r--
++user:nsid2:rw-	#effective:r--
+ group::r--
+-group:0:--x	#effective:---
++group:nsid2:--x	#effective:---
+ mask::r--
+ other::r--
+ 
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
