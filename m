@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 67E5F7F3F
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 06:29:36 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3C10A7F3F
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 06:55:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 411D030407E
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 04:29:36 -0700 (PDT)
-Date: Fri, 25 Oct 2013 04:29:34 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: prevent stack overflows from page cache allocation
-Message-ID: <20131025112934.GA1585@infradead.org>
-References: <1382585110-1796-1-git-send-email-david@fromorbit.com>
-	<20131024084803.GA28144@infradead.org>
-	<20131024103751.GS2797@dastard>
-	<20131024154220.GA19055@infradead.org>
-	<20131024164115.GU1935@sgi.com> <20131024212448.GW2797@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131024212448.GW2797@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BF552AC007
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 04:55:38 -0700 (PDT)
+Received: from mail-lb0-f172.google.com (mail-lb0-f172.google.com
+	[209.85.217.172]) by cuda.sgi.com with ESMTP id
+	OcWowRMEumZhvdKT (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 25 Oct 2013 04:55:36 -0700 (PDT)
+Received: by mail-lb0-f172.google.com with SMTP id c11so653898lbj.3
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 04:55:35 -0700 (PDT)
+From: Denis Efremov <yefremov.denis@gmail.com>
+Subject: [PATCH v2] xfs:xfs_dir2_node.c: pointer use before check for null
+Date: Fri, 25 Oct 2013 15:53:25 +0400
+Message-Id: <1382702005-32245-1-git-send-email-yefremov.denis@gmail.com>
+In-Reply-To: <20131022203322.GA2797@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+Cc: ldv-project@linuxtesting.org, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Denis Efremov <yefremov.denis@gmail.com>
 
-On Fri, Oct 25, 2013 at 08:24:48AM +1100, Dave Chinner wrote:
-> > > I'd much prefer aiming for the proper fix first.  If for some reason we
-> > > can't get it done in time the workaround can be applied.
-> > 
-> > Dave probably has a customer waiting on this.
-> 
-> Obviously. And being a kernel where we have a fixed ABI, we can't
-> backport any fix that changes core code.
+ASSERT on args takes place after args dereference.
+This assertion is redundant since we are going to panic anyway.
 
-No one is trying to tell you what to ship to your customers.  That
-doesn't mean we should aim for the right fix upstream.
+Found by Linux Driver Verification project (linuxtesting.org) -
+PVS-Studio analyzer.
 
-I don't really mind pushing patches like yours as a last resort when
-dealing with unrepsonsive or disagreeing maintainers like we had to do
-in the past, but trying to push the workaround without even attemping
-the proper fix is a bit sad.
+Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
+---
+ fs/xfs/xfs_dir2_node.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 4c3dba7..dc814df 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1366,7 +1366,6 @@ xfs_dir2_leafn_split(
+ 	 */
+ 	args = state->args;
+ 	mp = args->dp->i_mount;
+-	ASSERT(args != NULL);
+ 	ASSERT(oldblk->magic == XFS_DIR2_LEAFN_MAGIC);
+ 	error = xfs_da_grow_inode(args, &blkno);
+ 	if (error) {
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
