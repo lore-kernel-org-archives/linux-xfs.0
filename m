@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F7E47F3F
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 08:16:57 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 22B867F3F
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 08:19:07 -0500 (CDT)
 Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D203304048
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 06:16:54 -0700 (PDT)
-Message-ID: <526A6F75.7060600@sgi.com>
-Date: Fri, 25 Oct 2013 08:17:41 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A0FCDAC00B
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 06:19:06 -0700 (PDT)
+Message-ID: <526A6FF9.8000506@sgi.com>
+Date: Fri, 25 Oct 2013 08:19:53 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Archive old patches on "Patchwork XFS Filesystem from SGI"
+Subject: linux-3.12 userspace
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,14 +26,14 @@ To: xfs-oss <xfs@oss.sgi.com>
 
 Hey Folks,
 
-SGI uses Patchworks (http://patchwork.xfs.org/project/XFS/list/) to 
-track XFS patches.  I would like to archive any patches 6 months or 
-older. They should be reworked and resubmitted.
+Dave Chinner has a 32 part userspace patchset that needs to be reviewed
+and will be committed to coincide with the linux-3.12 kernel release.
 
-Archived patches are not deleted and can be viewed by changing the 
-default "Archived" checkbox from "No" to "Yes" or "Both".
+Are there other userspace patches that support 3.12 kernel features that
+need to be worked?
 
-If there are any objections please speak up.
+All other patches on the list will be held back until the linux-3.13
+merge window has opened.
 
 Thanks
 --Rich
