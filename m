@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AA2277F51
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 15:18:23 -0500 (CDT)
-Date: Fri, 25 Oct 2013 15:18:19 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 18/19] xfs: vectorise directory leaf operations
-Message-ID: <20131025201819.GZ1935@sgi.com>
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-19-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1381789085-21923-19-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CE07B7F51
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 15:56:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AA743304059
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 13:56:46 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 9j8B7TUi9YJa3p4X for <xfs@oss.sgi.com>;
+	Fri, 25 Oct 2013 13:56:44 -0700 (PDT)
+Message-Id: <20131025205246.269327744@suse.com>
+Date: Fri, 25 Oct 2013 16:52:46 -0400
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [patch 0/3] xfstests: tests for btrfs publishing/export patchset
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,38 +20,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>
 
-On Tue, Oct 15, 2013 at 09:18:04AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Next step in the vectorisation process is the directory free block
-> encode/decode operations. There are relatively few of these, though
-> there are quite a numberof calls to them.
-> 
-> Binary sizes:
-> 
->    text    data     bss     dec     hex filename
->  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
->  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
->  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
->  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
->  789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
->  789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
->  789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
->  791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
->  791701   96802    1096  889599   d92ff fs/xfs/xfs.o.p8
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+These are the tests that Josef requested accompany the submission of
+the btrfs publishing/export patchset[1].
 
-Looks good except for the two lines that snuck in from the previous patch.
+100: Test new global metadata reservation ioctl
+101: Test new sysfs exporting of allocation and device membership
+102: Test new sysfs exporting of feature bits
+103: Test setting/clearing feature bits via ioctl
+104: Test setting/clearing feature bits via sysfs
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+As part of the ioctl testing, I added a helper that can be extended
+easily to export simple information via ioctl. This means that the
+tests can be independent of btrfsprogs version or its output formatting.
+
+-Jeff
+
+[1] http://thread.gmane.org/gmane.comp.file-systems.btrfs/29307
+
 
 _______________________________________________
 xfs mailing list
