@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 910DC7F3F
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 11:24:13 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AD7527F3F
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 11:44:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F947AC020
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 09:24:10 -0700 (PDT)
-Received: from mail-ie0-f178.google.com (mail-ie0-f178.google.com
-	[209.85.223.178]) by cuda.sgi.com with ESMTP id
-	GM6oojB21f7zRoy1 (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D5AD8F8050
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 09:44:34 -0700 (PDT)
+Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com
+	[209.85.223.177]) by cuda.sgi.com with ESMTP id
+	sGiAJrc4KW0WbgxF (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 25 Oct 2013 09:24:07 -0700 (PDT)
-Received: by mail-ie0-f178.google.com with SMTP id x13so6782866ief.37
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 09:24:07 -0700 (PDT)
+	Fri, 25 Oct 2013 09:44:33 -0700 (PDT)
+Received: by mail-ie0-f177.google.com with SMTP id e14so6661958iej.8
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 09:44:32 -0700 (PDT)
 MIME-Version: 1.0
 In-Reply-To: <526A86F2.9070400@sandeen.net>
 References: <CAD+1EGPG1G9Q8kwaSUjxVjvx73UByLb3G0rmUbgJr+zD-CnjEw@mail.gmail.com>
 	<20131025164255.46d2829c@harpe.intellique.com>
 	<526A86F2.9070400@sandeen.net>
-Date: Sat, 26 Oct 2013 00:24:07 +0800
-Message-ID: <CAD+1EGMWm0dTUsdGQVrBr=ZBko8GM6e2A7tG3mA=b2FgZZmobw@mail.gmail.com>
+Date: Sat, 26 Oct 2013 00:44:32 +0800
+Message-ID: <CAD+1EGNMeSy9nPwfTZQ+Y0vrHg4V=gpJ2RifBUPfLNZQ4oHvSg@mail.gmail.com>
 Subject: Re: Questions about XFS
 From: harryxiyou <harryxiyou@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,45 +37,26 @@ To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
 T24gRnJpLCBPY3QgMjUsIDIwMTMgYXQgMTA6NTcgUE0sIEVyaWMgU2FuZGVlbiA8c2FuZGVlbkBz
-YW5kZWVuLm5ldD4gd3JvdGU6Cj4gd2VsbCwgeWVzIGFuZCBuby4gIEl0IHN1cHBvcnRzIHRoZSAi
-cmVhbHRpbWUgc3Vidm9sdW1lIiB3aGljaCBpcwo+IG5vdCByZWFsbHkgdGVjaG5pY2FsbHkgInJl
-YWx0aW1lLiIgIEl0IGRvZXMgaGF2ZSBhIG1vcmUgZGV0ZXJtaW5pc3RpYwo+IGFsbG9jYXRvciwg
-YnV0IGl0IGRvZXNuJ3QgaGF2ZSBHUklPIChHdWFyYW50ZWVkIFJlYWx0aW1lIEkvTykgbGlrZQo+
-IElSSVggZG9lcy4KCkhtbW0uLi4sIGhvd2V2ZXIsIEkgZmluZCB0aGUgbWFudWFsIG9mIG1rZnMu
-eGZzIHRlbGwgbWUgYXMgZm9sbG93cy4KCiAgICAgICAtciByZWFsdGltZV9zZWN0aW9uX29wdGlv
-bnMKICAgICAgICAgICAgICBUaGVzZSBvcHRpb25zIHNwZWNpZnkgdGhlIGxvY2F0aW9uLCBzaXpl
-LCBhbmQgIG90aGVyCnBhcmFtZXRlcnMgIG9mICB0aGUKICAgICAgICAgICAgICByZWFsLXRpbWUg
-IHNlY3Rpb24gIG9mIHRoZSBmaWxlc3lzdGVtLiBUaGUgdmFsaWQKcmVhbHRpbWVfc2VjdGlvbl9v
-cHRpb25zCiAgICAgICAgICAgICAgYXJlOgoKICAgICAgICAgICAgICAgICAgIHJ0ZGV2PWRldmlj
-ZQogICAgICAgICAgICAgICAgICAgICAgICAgIFRoaXMgaXMgdXNlZCB0byBzcGVjaWZ5IHRoZSBk
-ZXZpY2Ugd2hpY2gKc2hvdWxkICBjb250YWluICB0aGUKICAgICAgICAgICAgICAgICAgICAgICAg
-ICByZWFsLXRpbWUgIHNlY3Rpb24gb2YgdGhlIGZpbGVzeXN0ZW0uICBUaGUKc3Vib3B0aW9uIHZh
-bHVlIGlzCiAgICAgICAgICAgICAgICAgICAgICAgICAgdGhlIG5hbWUgb2YgYSBibG9jayBkZXZp
-Y2UuCgogICAgICAgICAgICAgICAgICAgZXh0c2l6ZT12YWx1ZQogICAgICAgICAgICAgICAgICAg
-ICAgICAgIFRoaXMgaXMgdXNlZCB0byBzcGVjaWZ5IHRoZSBzaXplIG9mIHRoZQpibG9ja3MgaW4g
-IHRoZSAgcmVhbC0KICAgICAgICAgICAgICAgICAgICAgICAgICB0aW1lIHNlY3Rpb24gb2YgdGhl
-IGZpbGVzeXN0ZW0uIFRoaXMgdmFsdWUKbXVzdCBiZSBhIG11bHRpcGxlCiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgb2YgdGhlIGZpbGVzeXN0ZW0gYmxvY2sgc2l6ZS4gVGhlIG1pbmltdW0KYWxs
-b3dlZCBzaXplIGlzIHRoZQogICAgICAgICAgICAgICAgICAgICAgICAgIGZpbGVzeXN0ZW0gIGJs
-b2NrICBzaXplICBvciAgNCBLaUIKKHdoaWNoZXZlciBpcyBsYXJnZXIpOyB0aGUKICAgICAgICAg
-ICAgICAgICAgICAgICAgICBkZWZhdWx0IHNpemUgaXMgdGhlIHN0cmlwZSB3aWR0aCBmb3Igc3Ry
-aXBlZAogdm9sdW1lcyAgb3IgIDY0CiAgICAgICAgICAgICAgICAgICAgICAgICAgS2lCICBmb3Ig
-IG5vbi1zdHJpcGVkICB2b2x1bWVzOyB0aGUgbWF4aW11bQphbGxvd2VkIHNpemUgaXMgMQogICAg
-ICAgICAgICAgICAgICAgICAgICAgIEdpQi4gVGhlIHJlYWwtdGltZSBleHRlbnQgc2l6ZSBzaG91
-bGQgYmUKY2FyZWZ1bGx5IGNob3NlbiAgdG8KICAgICAgICAgICAgICAgICAgICAgICAgICBtYXRj
-aCB0aGUgcGFyYW1ldGVycyBvZiB0aGUgcGh5c2ljYWwgbWVkaWEgdXNlZC4KCiAgICAgICAgICAg
-ICAgICAgICBzaXplPXZhbHVlCiAgICAgICAgICAgICAgICAgICAgICAgICAgVGhpcyAgaXMgIHVz
-ZWQgIHRvIHNwZWNpZnkgdGhlIHNpemUgb2YgdGhlCnJlYWwtdGltZSBzZWN0aW9uLgogICAgICAg
-ICAgICAgICAgICAgICAgICAgIFRoaXMgc3Vib3B0aW9uIGlzIG9ubHkgbmVlZGVkIGlmIHRoZQpy
-ZWFsLXRpbWUgc2VjdGlvbiBvZiB0aGUKICAgICAgICAgICAgICAgICAgICAgICAgICBmaWxlc3lz
-dGVtIHNob3VsZCBvY2N1cHkgbGVzcyBzcGFjZSB0aGFuIHRoZQpzaXplIG9mIHRoZSBwYXI/CiAg
-ICAgICAgICAgICAgICAgICAgICAgICAgdGl0aW9uIG9yIGxvZ2ljYWwgdm9sdW1lIGNvbnRhaW5p
-bmcgdGhlIHNlY3Rpb24uCgoKCkFmdGVyIEkgcnVuICJta2ZzLnhmcyAtciBydGRldj0vZGV2L3Nk
-YTMgZXh0c2l6ZT02NEsiLCBJIHdvbmRlciB3aGF0IHRoZQpkaWZmZXJlbmNlcyBiZXR3ZWVuICcv
-ZGV2L3NkYTMnIGFuZCAnL2Rldi9zZGEyJyAoL2Rldi9zZGEyIGlzIGNvbW1vbiBYRlMgb3IKRVhU
-MikuIFRoZSBkaWZmZXJlbmNlcyBhcmUgYXMgZm9sbG93cywgcmlnaHQ/CgoxLCBJL08gc3BlZWQg
-b2YgcmVhbC10aW1lICcvZGV2L3NkYTMnIGlzIGZhc3Rlcj8KMiwgVGhlIHBlcmZvcm1hbmNlIG9m
-ICcvZGV2L3NkYTPigJkgaXMgYmV0dGVyPwoKQW55dGhpbmcgZWxzZT8KCgoKLS0gClRoYW5rcwpX
-ZWl3ZWkgIEppYSAoSGFycnkgV2VpKQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+YW5kZWVuLm5ldD4gd3JvdGU6Cj4gT24gMTAvMjUvMTMgOTo0MiBBTSwgRW1tYW51ZWwgRmxvcmFj
+IHdyb3RlOgo+PiBMZSBGcmksIDI1IE9jdCAyMDEzIDIyOjI4OjEwICswODAwCj4+IGhhcnJ5eGl5
+b3UgPGhhcnJ5eGl5b3VAZ21haWwuY29tPiDDqWNyaXZhaXQ6Cj4+Cj4+PiAxLCBIb3cgdG8gaW5z
+dGFsbCBYRlMgb24gTGludXggT1MsIEkgc2hvdWxkIGRvIGxpa2UgYmVsb3csIHJpZ2h0Pwo+Pj4g
+ICAgYSwgRG93bmxvYWQgbGF0ZXN0IExpbnV4IEtlcm5lbCBTb3VyY2UgQ29kZXMuCj4+PiAgICBi
+LCBDb21waWxlIHRoZSBMaW51eCBLZXJuZWwgYW5kIHNlbGVjdCBYRlMgZmVhdHVyZSB3aGVuIEkg
+ZG8gdGhlCj4+PiBjb25maWd1cmF0aW9uIChtYWtlIG1lbnVjb25maWcpLgo+Pgo+PiBObywgWEZT
+IGlzIHN1cHBvcnRlZCBieSBhbGwgTGludXggZGlzdHJpYnV0aW9ucyBvdXQgb2YgdGhlIGJveC4g
+VG8gdXNlCj4+IFhGUywgeW91IG1heSBldmVudHVhbGx5IG5lZWQgdG8gaW5zdGFsbCB0aGUgeGZz
+LXByb2dzIHBhY2thZ2UuCj4+Cj4+Cj4+PiAyLCBEb2VzIFhGUyBzdXBwb3J0IHJlYWwtdGltZSBm
+ZWF0dXJlIGFmdGVyIEkgaW5zdGFsbCBpdCBvbiBMaW51eAo+Pj4gS2VybmVsPyBBbmQgaG93IHRv
+IHVzZSByZWFsLXRpbWUgZmVhdHVyZSBvbiBMaW51eCBLZXJuZWwuCj4+Pgo+Pgo+PiBZZXMuIFdo
+YXQgZG8geW91IHdhbnQgdG8gZG8gd2l0aCByZWFsdGltZSBYRlM/Cj4+Cj4KPiB3ZWxsLCB5ZXMg
+YW5kIG5vLiAgSXQgc3VwcG9ydHMgdGhlICJyZWFsdGltZSBzdWJ2b2x1bWUiIHdoaWNoIGlzCj4g
+bm90IHJlYWxseSB0ZWNobmljYWxseSAicmVhbHRpbWUuIiAgSXQgZG9lcyBoYXZlIGEgbW9yZSBk
+ZXRlcm1pbmlzdGljCj4gYWxsb2NhdG9yLCBidXQgaXQgZG9lc24ndCBoYXZlIEdSSU8gKEd1YXJh
+bnRlZWQgUmVhbHRpbWUgSS9PKSBsaWtlCj4gSVJJWCBkb2VzLgo+CgpXaGF0IGFib3V0IGxldCBM
+aW51eCBLZXJuZWwgc3VwcG9ydCBHUklPIGxpa2UgSVJJWCBkb2VzLiBJIHRoaW5rIHRoaXMKd291
+bGQgYmUgYSBnb29kIGZlYXR1cmUgZm9yIFhGUy4gQWN0dWFsbHksIEkgcHJlZmVyIGRlc2lnbmlu
+ZyBhbmQKaW1wbGVtZW50aW5nIHRoaXMgZmVhdHVyZSBmb3IgWEZTLgoKQW55IGNvbW1lbnRzPwoK
+CgotLSAKVGhhbmtzCldlaXdlaSAgSmlhIChIYXJyeSBXZWkpCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
