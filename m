@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3F86F29DFB
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 16:21:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 27553304066
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 14:21:16 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id DsLU5IpflIfkGhMX for <xfs@oss.sgi.com>;
-	Fri, 25 Oct 2013 14:21:11 -0700 (PDT)
-Message-ID: <526AE0BE.9060502@suse.com>
-Date: Fri, 25 Oct 2013 17:21:02 -0400
-From: Jeff Mahoney <jeffm@suse.com>
+	by oss.sgi.com (Postfix) with ESMTP id ABD237F51
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 16:47:58 -0500 (CDT)
+Date: Fri, 25 Oct 2013 16:47:58 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 19/19] xfs: convert directory vector functions to constants
+Message-ID: <20131025214758.GA1935@sgi.com>
+References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
+	<1381789085-21923-20-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [patch 0/3] xfstests: tests for btrfs publishing/export patchset
-References: <20131025205246.269327744@suse.com>
-In-Reply-To: <20131025205246.269327744@suse.com>
+Content-Disposition: inline
+In-Reply-To: <1381789085-21923-20-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,88 +19,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0672019926478448212=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---===============0672019926478448212==
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="ojf2fX8tGr722dOAPA6922ORSo2HQhJFv"
-
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ojf2fX8tGr722dOAPA6922ORSo2HQhJFv
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On 10/25/13, 4:52 PM, Jeff Mahoney wrote:
-> These are the tests that Josef requested accompany the submission of
-> the btrfs publishing/export patchset[1].
->=20
-> 100: Test new global metadata reservation ioctl
-> 101: Test new sysfs exporting of allocation and device membership
-> 102: Test new sysfs exporting of feature bits
-> 103: Test setting/clearing feature bits via ioctl
-> 104: Test setting/clearing feature bits via sysfs
->=20
-> As part of the ioctl testing, I added a helper that can be extended
-> easily to export simple information via ioctl. This means that the
-> tests can be independent of btrfsprogs version or its output formatting=
-=2E
->=20
-> -Jeff
->=20
-> [1] http://thread.gmane.org/gmane.comp.file-systems.btrfs/29307
-
-Apologies for the formatting of the subjects and lack of direct btrfs
-mention in the commits. I'll fix and resend.
-
--Jeff
+On Tue, Oct 15, 2013 at 09:18:05AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Many of the vectorised function calls now take no parameters and
+> return a constant value. There is no reason for these to be vectored
+> functions, so convert them to constants
+> 
+> Binary sizes:
+> 
+>    text    data     bss     dec     hex filename
+>  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
+>  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
+>  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
+>  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
+>  789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
+>  789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
+>  789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
+>  791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
+>  791701   96802    1096  889599   d92ff fs/xfs/xfs.o.p8
+>  791205   96802    1096  889103   d91cf fs/xfs/xfs.o.p9
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 
---=20
-Jeff Mahoney
-SUSE Labs
 
+> @@ -879,35 +817,35 @@ const struct xfs_dir_ops xfs_dir3_ops = {
+>  	.data_entry_p = xfs_dir3_data_entry_p,
+>  	.data_unused_p = xfs_dir3_data_unused_p,
+>  
+> -	.leaf_hdr_size = xfs_dir3_leaf_hdr_size,
+> +	.leaf_hdr_size = sizeof(struct xfs_dir3_leaf_hdr),
+>  	.leaf_hdr_to_disk = xfs_dir3_leaf_hdr_to_disk,
+>  	.leaf_hdr_from_disk = xfs_dir3_leaf_hdr_from_disk,
+>  	.leaf_max_ents = xfs_dir3_max_leaf_ents,
+>  	.leaf_ents_p = xfs_dir3_leaf_ents_p,
+>  
+> -	.node_hdr_size = xfs_da3_node_hdr_size,
+> +	.node_hdr_size = sizeof(struct xfs_da3_node_hdr),
+>  	.node_hdr_to_disk = xfs_da3_node_hdr_to_disk,
+>  	.node_hdr_from_disk = xfs_da3_node_hdr_from_disk,
+>  	.node_tree_p = xfs_da3_node_tree_p,
+>  
+> -	.free_hdr_size = xfs_dir3_free_hdr_size,
+> +	.free_hdr_size = sizeof(struct xfs_dir3_free_hdr),
+>  	.free_hdr_to_disk = xfs_dir3_free_hdr_to_disk,
+>  	.free_hdr_from_disk = xfs_dir3_free_hdr_from_disk,
+> -	.free_max_bests = xfs_dir2_free_max_bests,
+> +	.free_max_bests = xfs_dir3_free_max_bests,
+			  ^^^^^^^^^^^^^^^^^^^^^^^^
 
---ojf2fX8tGr722dOAPA6922ORSo2HQhJFv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+That looks like it fixes a bug introduced in one of the earlier patches.  Other
+than that this looks good.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.19 (Darwin)
+I like how . and .. offsets changed into constants.
 
-iQIcBAEBAgAGBQJSauDDAAoJEB57S2MheeWyVHMP/3knq3Uo7ro/0mdWprwdLAuU
-wALn9OD9uBmqNbjYOxveFfVs4jq6+CesHIqgWzOnpV0Hhx1MTkwvLX0iuQZBg7Bb
-kUsLlPEDHMwiT3BdtjnNkI5E2XFwq76B7+MX7IvxMFjK9AYv9bonne6QLkFOO7DK
-NgS+IvdJD1RrzRV/vhyY4Lwypq8RZ/7pjypplpxeugLRwEtfJpp2JH3Xr1MnEBQY
-0XysvqU1e1KJt7krRk8CPmjZosbjH84N2sELHMz8IjmgzOGOmg6UBTb9yZBCVCsq
-C1mGhPVnbrsdInmIbmz+nNK71hlfMfJd+vOLVYGRx4yNuegs00ZDpLhDxXZFSCqO
-+/0ksaRdL/VmkZTbHSuEufAVhVSQVoYSvpVEe0ct8RUM9SFBr8Iu4vT8Ravc9U6+
-02Fv3eww7eM+GRx12d1rKZRJOpTVbTgZm2L1C2ou0nFW6JgS18TxhXRcZ2X/MOTE
-lws5JAiDsc3VTu+NOh7Mh5SdOPzfE0XFREXOLKzr4YtYzbRKUwJ1XGKgRCl5XPB6
-WoKWi38kjB/VKRTTDmgOm8V3N3y9QBxOLQROORflixfPAFoWiak+VA/3M6fTYr/m
-gA7/jeGrU+FOJSkr8RR502QJMlZ8zxZ01szzTPD9GF97UPZRpFRiFkjm8XsFtIMK
-Blug9yfEZdr56hycd1/i
-=BCED
------END PGP SIGNATURE-----
-
---ojf2fX8tGr722dOAPA6922ORSo2HQhJFv--
-
-
---===============0672019926478448212==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Ben
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0672019926478448212==--
