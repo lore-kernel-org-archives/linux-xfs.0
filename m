@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3C10A7F3F
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 06:55:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BF552AC007
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 04:55:38 -0700 (PDT)
-Received: from mail-lb0-f172.google.com (mail-lb0-f172.google.com
-	[209.85.217.172]) by cuda.sgi.com with ESMTP id
-	OcWowRMEumZhvdKT (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 25 Oct 2013 04:55:36 -0700 (PDT)
-Received: by mail-lb0-f172.google.com with SMTP id c11so653898lbj.3
-	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 04:55:35 -0700 (PDT)
-From: Denis Efremov <yefremov.denis@gmail.com>
-Subject: [PATCH v2] xfs:xfs_dir2_node.c: pointer use before check for null
-Date: Fri, 25 Oct 2013 15:53:25 +0400
-Message-Id: <1382702005-32245-1-git-send-email-yefremov.denis@gmail.com>
-In-Reply-To: <20131022203322.GA2797@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F7E47F3F
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 08:16:57 -0500 (CDT)
+Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D203304048
+	for <xfs@oss.sgi.com>; Fri, 25 Oct 2013 06:16:54 -0700 (PDT)
+Message-ID: <526A6F75.7060600@sgi.com>
+Date: Fri, 25 Oct 2013 08:17:41 -0500
+From: Rich Johnston <rjohnston@sgi.com>
+MIME-Version: 1.0
+Subject: Archive old patches on "Patchwork XFS Filesystem from SGI"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,39 +18,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: ldv-project@linuxtesting.org, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Denis Efremov <yefremov.denis@gmail.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-ASSERT on args takes place after args dereference.
-This assertion is redundant since we are going to panic anyway.
+Hey Folks,
 
-Found by Linux Driver Verification project (linuxtesting.org) -
-PVS-Studio analyzer.
+SGI uses Patchworks (http://patchwork.xfs.org/project/XFS/list/) to 
+track XFS patches.  I would like to archive any patches 6 months or 
+older. They should be reworked and resubmitted.
 
-Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
----
- fs/xfs/xfs_dir2_node.c | 1 -
- 1 file changed, 1 deletion(-)
+Archived patches are not deleted and can be viewed by changing the 
+default "Archived" checkbox from "No" to "Yes" or "Both".
 
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 4c3dba7..dc814df 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1366,7 +1366,6 @@ xfs_dir2_leafn_split(
- 	 */
- 	args = state->args;
- 	mp = args->dp->i_mount;
--	ASSERT(args != NULL);
- 	ASSERT(oldblk->magic == XFS_DIR2_LEAFN_MAGIC);
- 	error = xfs_da_grow_inode(args, &blkno);
- 	if (error) {
--- 
-1.8.3.1
+If there are any objections please speak up.
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
