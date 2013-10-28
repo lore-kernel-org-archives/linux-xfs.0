@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 784667F3F
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 14:55:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 602FF7F3F
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 15:18:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5847A304048
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 12:55:34 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3AB65304064
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 13:18:06 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id N4QIwEWz1HN6n2Ft for <xfs@oss.sgi.com>;
-	Mon, 28 Oct 2013 12:55:33 -0700 (PDT)
-Message-ID: <526EC12D.90600@suse.com>
-Date: Mon, 28 Oct 2013 15:55:25 -0400
+	with ESMTP id NPgmnPqguOHXhmEI for <xfs@oss.sgi.com>;
+	Mon, 28 Oct 2013 13:18:03 -0700 (PDT)
+Message-ID: <526EC674.9060705@suse.com>
+Date: Mon, 28 Oct 2013 16:17:56 -0400
 From: Jeff Mahoney <jeffm@suse.com>
 MIME-Version: 1.0
-Subject: Re: [patch 1/3] [PATCH 1/3] xfstests: add test for global metadata
-	reservation publishing
-References: <20131025205246.269327744@suse.com>
-	<20131025205559.519204526@suse.com>
-	<20131028155948.GD4543@localhost.localdomain>
-In-Reply-To: <20131028155948.GD4543@localhost.localdomain>
+Subject: Re: [PATCH 2/3] xfstests: btrfs/022: test sysfs exports of allocation
+	and device membership info
+References: <20131028195204.611287480@sled1.home.jeffreymahoney.com>
+	<20131028195242.496745223@sled1.home.jeffreymahoney.com>
+In-Reply-To: <20131028195242.496745223@sled1.home.jeffreymahoney.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,226 +25,279 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3290007477858137506=="
+Content-Type: multipart/mixed; boundary="===============7684617980641652368=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, jbacik@fusionio.com
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---===============3290007477858137506==
+--===============7684617980641652368==
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="xC3Cgo0tcEhqUiVAqB3enagReaNxe0OD9"
+ boundary="KTj42JP8Ff8DjHsGHiUL27I4ic0ODbRoW"
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---xC3Cgo0tcEhqUiVAqB3enagReaNxe0OD9
+--KTj42JP8Ff8DjHsGHiUL27I4ic0ODbRoW
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 10/28/13, 11:59 AM, Josef Bacik wrote:
-> On Fri, Oct 25, 2013 at 04:52:47PM -0400, Jeff Mahoney wrote:
->> My publishing patchset added the ability for the kernel to report
->> the size of the global metadata reservation via ioctl and sysfs.
->>
->> This test confirms that we get sane results on an empty file system.
->>
->> ENOTTY and missing /sys/fs/btrfs/<fsid>/allocation are not considered
->> failures.
->>
->> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
->> ---
->>  src/Makefile             |  3 +-
->>  src/btrfs_ioctl_helper.c | 90 +++++++++++++++++++++++++++++++++++++++=
-+++++++
->>  tests/btrfs/100          | 92 +++++++++++++++++++++++++++++++++++++++=
-+++++++++
->>  tests/btrfs/100.out      |  2 ++
->>  4 files changed, 186 insertions(+), 1 deletion(-)
->>  create mode 100644 src/btrfs_ioctl_helper.c
->>  create mode 100755 tests/btrfs/100
->>  create mode 100644 tests/btrfs/100.out
->>
->> diff --git a/src/Makefile b/src/Makefile
->> index 84c8297..299f675 100644
->> --- a/src/Makefile
->> +++ b/src/Makefile
->> @@ -18,7 +18,8 @@ LINUX_TARGETS =3D xfsctl bstat t_mtab getdevicesize =
-preallo_rw_pattern_reader \
->>  	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
->>  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
->>  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
->> -	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
->> +	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec \
->> +	btrfs_ioctl_helper
->> =20
->>  SUBDIRS =3D
->> =20
->> diff --git a/src/btrfs_ioctl_helper.c b/src/btrfs_ioctl_helper.c
->> new file mode 100644
->> index 0000000..a88b7b5
->> --- /dev/null
->> +++ b/src/btrfs_ioctl_helper.c
->> @@ -0,0 +1,90 @@
->> +#include <sys/ioctl.h>
->> +#include <stdio.h>
->> +#include <sys/fcntl.h>
->> +#include <errno.h>
->> +#include <string.h>
->> +#include <stdint.h>
->> +#include <unistd.h>
->> +
->> +#ifndef BTRFS_IOCTL_MAGIC
->> +#define BTRFS_IOCTL_MAGIC 0x94
->> +#endif
->> +
->> +#ifndef BTRFS_IOC_GLOBAL_RSV
->> +#define BTRFS_IOC_GLOBAL_RSV _IOR(BTRFS_IOCTL_MAGIC, 20, uint64_t)
->> +#endif
->> +
->> +static int global_rsv_ioctl(int fd, int argc, char *argv[])
->> +{
->> +	uint64_t reserved;
->> +	int ret =3D ioctl(fd, BTRFS_IOC_GLOBAL_RSV, &reserved);
->> +	if (ret)
->> +		return -errno;
->> +
->> +	printf("%llu\n", (unsigned long long)reserved);
->> +	return 0;
->> +}
->> +
->> +#define IOCTL_TABLE_ENTRY(_ioctl_name, _handler) \
->> +	{ .name =3D #_ioctl_name, .ioctl_cmd =3D BTRFS_IOC_##_ioctl_name, \
->> +	  .handler =3D _handler, }
->> +
->> +struct ioctl_table_entry {
->> +	const char *name;
->> +	unsigned ioctl_cmd;
->> +	int (*handler)(int fd, int argc, char *argv[]);
->> +};
->> +
->> +static struct ioctl_table_entry ioctls[] =3D {
->> +	IOCTL_TABLE_ENTRY(GLOBAL_RSV, global_rsv_ioctl),
->> +};
->> +
->> +int
->> +main(int argc, char *argv[])
->> +{
->> +	int fd;
->> +	int ret;
->> +	struct ioctl_table_entry *entry =3D NULL;
->> +	int i;
->> +
->> +	if (argc < 3) {
->> +		fprintf(stderr,
->> +			"usage: %s <fs mount point> <ioctl name> [args..]\n",
->> +			argv[0]);
->> +		return 1;
->> +	}
->> +
->> +	fd =3D open(argv[1], O_RDONLY|O_DIRECTORY);
->> +	if (fd < 0) {
->> +		perror(argv[1]);
->> +		return 1;
->> +	}
->> +
->> +	for (i =3D 0; i < (sizeof(ioctls)/sizeof(ioctls[0])); i++) {
->> +		if (strcmp(argv[2], ioctls[i].name) =3D=3D 0) {
->> +			entry =3D &ioctls[i];
->> +			break;
->> +		}
->> +	}
->> +
->> +	if (!entry) {
->> +		fprintf(stderr, "ERROR: unknown ioctl %s\n", argv[2]);
->> +		close(fd);
->> +		return 1;
->> +	}
->> +
->> +	ret =3D entry->handler(fd, argc - 3, argv + 3);
->> +	if (ret =3D=3D -ENOTTY) {
->> +		printf("Not implemented.\n");
->> +		close(fd);
->> +		return 0;
->> +	} else if (ret) {
->> +		fprintf(stderr, "ERROR: %s failed: %s\n",
->> +			entry->name, strerror(-ret));
->> +		close(fd);
->> +		return 1;
->> +	}
->> +
->> +	close(fd);
->> +	return 0;
->> +}
->> diff --git a/tests/btrfs/100 b/tests/btrfs/100
->> new file mode 100755
->> index 0000000..d2a40b4
->> --- /dev/null
->> +++ b/tests/btrfs/100
->> @@ -0,0 +1,92 @@
->> +#!/bin/bash
->> +# FA QA Test No. 100
->> +#
->> +# Test global metadata reservation reporting
->> +#
->> +# 1) Create empty file system
->> +# 2) Call the BTRFS_IOC_GLOBAL_RSV ioctl and confirm it is 0 < x < 10=
-MB
->> +# 3) Read the /sys/fs/btrfs/<fsid>/allocation/global_rsv_reserved fil=
-e
->> +#    and confirm the value is 0 < x < 10 MB
->> +#
->> +#--------------------------------------------------------------------=
----
->> +# Copyright (c) 2013 SUSE, All Rights Reserved.
->> +#
->> +# This program is free software; you can redistribute it and/or
->> +# modify it under the terms of the GNU General Public License as
->> +# published by the Free Software Foundation.
->> +#
->> +# This program is distributed in the hope that it would be useful,
->> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> +# GNU General Public License for more details.
->> +#
->> +# You should have received a copy of the GNU General Public License
->> +# along with this program; if not, write the Free Software Foundation=
-,
->> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> +#--------------------------------------------------------------------=
----
->> +
->> +seq=3D$(basename $0)
->> +seqres=3D$RESULT_DIR/$seq
->> +echo "=3D=3D QA output created by $seq"
->> +
->> +here=3D$(pwd)
->> +tmp=3D/tmp/$$
->> +status=3D1
->> +
->> +# get standard environment, filters and checks
->> +. ./common/rc
->> +. ./common/filter.btrfs
->> +
->> +_supported_fs btrfs
->> +_supported_os Linux
->> +_require_scratch
->> +
->> +_scratch_mkfs > /dev/null 2>&1
->> +_scratch_mount
->> +
->> +fsid() {
->> +	$BTRFS_UTIL_PROG filesystem show $1|awk '/uuid:/ {print $NF}'
->> +}
->=20
-> This is the second place you use this, should go into common/rc or some=
- other
-> common place.  Thanks,
+On 10/28/13, 3:52 PM, Jeff Mahoney wrote:
+> This tests the sysfs publishing for btrfs allocation and device
+> membership info under a number of different layouts, similar to the
+> btrfs replace test. We test the allocation files only for existence and=
 
-Thanks for the review. I've posted an updated patchset that fixes these
-and other issues.
+> that they contain numerical values. We test the device membership
+> by mapping the devices used to create the file system to sysfs paths
+> and matching them against the paths used for the device membership
+> symlinks.
+>=20
+> Since this is a new feature, it passes on kernels without
+> a /sys/fs/btrfs/<fsid> directory.
+>=20
+> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> ---
+>  common/config       |    1 +
+>  tests/btrfs/022     |  190 +++++++++++++++++++++++++++++++++++++++++++=
+++++++++
+>  tests/btrfs/022.out |    2 +
+>  3 files changed, 193 insertions(+), 0 deletions(-)
+>  create mode 100755 tests/btrfs/022
+>  create mode 100644 tests/btrfs/022.out
+>=20
+> Index: xfstests/common/config
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfstests.orig/common/config
+> +++ xfstests/common/config
+> @@ -209,6 +209,7 @@ case "$HOSTOS" in
+>          export MKFS_UDF_PROG=3D"`set_prog_path mkudffs`"
+>          export MKFS_BTRFS_PROG=3D"`set_btrfs_mkfs_prog_path_with_opts`=
+"
+>          export BTRFS_UTIL_PROG=3D"`set_prog_path btrfs`"
+> +        export UDEVADM_PROG=3D"`set_prog_path udevadm`"
+>          export BTRFS_SHOW_SUPER_PROG=3D"`set_prog_path btrfs-show-supe=
+r`"
+>          export XFS_FSR_PROG=3D"`set_prog_path xfs_fsr`"
+>          export MKFS_NFS_PROG=3D"false"
+> Index: xfstests/tests/btrfs/022
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- /dev/null
+> +++ xfstests/tests/btrfs/022
+> @@ -0,0 +1,190 @@
+> +#! /bin/bash
+> +# FS QA Test No. 022
+> +#
+> +# Test of the btrfs sysfs publishing
+> +#
+> +#---------------------------------------------------------------------=
+--
+> +# Copyright (C) 2013 SUSE.  All rights reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,=
+
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#---------------------------------------------------------------------=
+--
+> +#
+> +
+> +seq=3D`basename $0`
+> +seqres=3D$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=3D`pwd`
+> +tmp=3D/tmp/$$
+> +status=3D1
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_need_to_be_root
+> +_supported_fs btrfs
+> +_require_scratch
+> +_require_scratch_dev_pool
+> +_require_command $UDEVADM_PROG
+> +
+> +rm -f $seqres.full
+> +rm -f $tmp.tmp
+> +
+> +check_file() {
+> +	local file=3D$1
+> +	base=3D"$(echo "$file" | sed -e 's#/sys/fs/btrfs/[0-9a-f-][0-9a-f-]*/=
+##')"
+> +	if [ ! -f "$file" ]; then
+> +		echo "$base missing."
+> +		return 0
+> +	else
+> +		value=3D"$(cat $file)"
+> +		if [ -n "$(echo $value | tr -d 0-9)" ]; then
+> +			echo "ERROR: $base: numerical value expected" \
+> +			     "(got $value)"
+> +			return 0
+> +		fi
+> +	fi
+> +	return 1
+> +}
+> +
+> +check_chunk() {
+> +	path=3D$1
+> +	mkfs_options=3D$2
+> +	error=3Dfalse
+> +
+> +	chunktype=3D$(basename $path)
+> +	if [ ! -d "$path" ]; then
+> +		echo "No $chunktype directory."
+> +		exit 1
+> +	fi
+> +
+> +	for file in bytes_may_use bytes_pinned bytes_reserved bytes_used \
+> +		    disk_total flags total_bytes total_bytes_pinned; do
+> +		if check_file "$path/$file"; then
+> +			error=3Dtrue
+> +		fi
+> +	done
+> +
+> +	if [ "$chunktype" =3D "data" -o "$chunktype" =3D "mixed" ]; then
+> +		opt=3D"-d"
+> +	elif [ "$chunktype" =3D "metadata" -o "$chunktype" =3D "system" ]; th=
+en
+> +		opt=3D"-m"
+> +	fi
+> +
+> +	profile=3D$(echo $mkfs_options | sed -e "s/.*$opt \([[:alnum:]]*\).*/=
+\1/")
+> +	if [ ! -d "$path/$profile" ]; then
+> +		echo "No $profile dir for $chunktype"
+> +		exit 1
+> +	fi
+> +
+> +	for file in total_bytes used_bytes; do
+> +		if check_file $path/$profile/$file; then
+> +			error=3Dtrue
+> +		fi
+> +	done
+> +
+> +	$error && exit 1
+> +}
+> +
+> +check_dev_link() {
+> +	local dev=3D$1
+> +	DEV=3D"/sys/$($UDEVADM_PROG info --query=3Dpath $dev)"
+> +	DEV=3D"$(readlink -f $DEV)"
+> +	found=3Dfalse
+> +	for link in $sysfs_base/devices/*; do
+> +		LINK=3D"$(readlink -f $link)"
+> +		if [ "$LINK" =3D "$DEV" ]; then
+> +			found=3Dtrue
+> +			break
+> +		fi
+> +	done
+> +	if ! $found; then
+> +		echo "Symlink for $dev missing in $sysfs_base/devices"
+> +		return 1
+> +	fi
+> +	return 0
+> +}
+> +
+> +workout()
+> +{
+> +	local mkfs_options=3D"$1"
+> +	local num_devs4raid=3D"$2"
+> +	local fssize
+> +
+> +	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt $num_devs4raid ]; then
+> +		echo "Skip workout $1 $2 $3 $4"
+> +		echo "Too few devices in SCRATCH_DEV_POOL $SCRATCH_DEV_POOL," \
+> +		     "required: $num_devs4raid"
+> +		echo "Skip workout $1 $2 $3 $4" >> $seqres.full
+> +		echo "Too few devices in SCRATCH_DEV_POOL $SCRATCH_DEV_POOL," \
+> +		     "required: $num_devs4raid" >> $seqres.full
+> +		return 0
+> +	fi
+> +
+> +	used_devs=3D$(echo $SCRATCH_DEV_POOL|tr '\t' ' '| \
+> +		    cut -d ' ' -f 1-$num_devs4raid)
+> +
+> +	_scratch_mkfs $mkfs_options $used_devs >> $seqres.full 2>&1 || \
+> +	_fail "mkfs failed"
+> +
+> +	_scratch_mount
+> +
+> +	# Check allocation
+> +	sysfs_base=3D"/sys/fs/btrfs/$(_btrfs_get_fsid $SCRATCH_DEV)"
+> +
+> +	# Feature isn't present for testing
+> +	if [ ! -d "$sysfs_base" ]; then
+> +		echo "Skipping sysfs test: $sysfs_base not found." \
+> +		     >> $seqres.full
+> +		return
+
+Oops. This doesn't umount when run with a proper device pool.
 
 -Jeff
+
+> +	fi
+> +
+> +	mixed=3Dfalse
+> +	case "$mkfs_options" in
+> +	*-M*)
+> +		mixed=3Dtrue;
+> +		;;
+> +	esac
+> +
+> +	check_chunk "$sysfs_base/allocation/system" "$mkfs_options"
+> +	if $mixed; then
+> +		check_chunk "$sysfs_base/allocation/mixed" "$mkfs_options"
+> +	else
+> +		check_chunk "$sysfs_base/allocation/data" "$mkfs_options"
+> +		check_chunk "$sysfs_base/allocation/metadata" "$mkfs_options"
+> +	fi
+> +
+> +	for dev in $used_devs; do
+> +		check_dev_link $dev || exit 1
+> +	done
+> +
+> +	umount $SCRATCH_MNT > /dev/null 2>&1
+> +}
+> +
+> +workout "-m single -d single" 1
+> +workout "-m single -d single -M" 1
+> +workout "-m dup -d single" 1
+> +workout "-m dup -d dup -M" 1
+> +workout "-m raid0 -d raid0" 2
+> +workout "-m raid1 -d raid1" 2
+> +workout "-m raid5 -d raid5" 2
+> +workout "-m raid6 -d raid6" 3
+> +workout "-m raid10 -d raid10" 4
+> +
+> +echo "Silence is golden."
+> +status=3D0
+> +exit
+> Index: xfstests/tests/btrfs/022.out
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- /dev/null
+> +++ xfstests/tests/btrfs/022.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 022
+> +Silence is golden
 
 
 --=20
@@ -253,7 +305,7 @@ Jeff Mahoney
 SUSE Labs
 
 
---xC3Cgo0tcEhqUiVAqB3enagReaNxe0OD9
+--KTj42JP8Ff8DjHsGHiUL27I4ic0ODbRoW
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -261,25 +313,25 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG/MacGPG2 v2.0.19 (Darwin)
 
-iQIcBAEBAgAGBQJSbsEwAAoJEB57S2MheeWyFrwQAJopxC7SFiq0ZMVSSR+92sYm
-3vz9HbiWKWgV41qFR1NtWkhSC9g1p9twVXwUn7yhYbBcwq4otp4v3sxkKxr5DZwa
-fadakQa4hRgOxHZGUGFj2dbIcJx0c5qNNwv6UTGegeDW5fw+88hdI7ufIqncdZ4n
-52Xpg6uO1WC7m2x44r4AC9eBRgpnTwsLt6HU2iXZNmhClHQ88c3HnDiYtFCZOv8v
-kfM3+cMlZ0QbFrDYQ65NcBo6ABI4yU/arDCCFP9Vdx7WgK3wqSlJhW/dC/0yJx1n
-NKs8nfHf7EED9ZcWwiwlNqKs6VxAqk9Y4mTjN51CtfrQObIFO7d930VpV0uaNwEJ
-LXJYdng9zGHDAFuPA2AcOG9XRzd76mtC0WQre6Ifypf89O+Rxen2oyAkOC9Z2ABS
-bqDI4SikRZxWnLi5e27854kStRAH0volJY7GKNZK6zQ2swrs2Q6bjGkSXSWclJPd
-grmpIDNx3YM0dFmHSbbh19BRe7poM6ttdsjjEgx6LsICCg2bXPV5Quf68YVqGNUY
-EeqtqZ60vw4KI0ElOOxlVgyrKsUuWuYls4SQK1wRnoZoqMzECcH9oPF91j6Evn7q
-TJaM2yNE1ej27r882+ehjFR4b4lfKEdTAO2XZZgV+pbKXzupygW785goJMpVj9X/
-8ZfZk/SpcQFr0wg8r7EX
-=DXEw
+iQIcBAEBAgAGBQJSbsZ3AAoJEB57S2MheeWyWR8P/i0x07SPcT4Fstn6sUws6W+G
+xhXuHhn6WrIuTkYwcy9EoTmpyVp/ZnzrdNGzMC3nEjgd98yyQtKqAVRlAIh7VsHX
+H3H23cVlgSv5AB8HFB6XI7xZ5ptCmdNJEs8cIcFNeq2SzzIooh8LTgeYtfSe/p0n
+zoekAKmerPN91MXvXHuOGVODiFxzCAbT3wB5Hbw0edWH+IrNwXll58WdtlTAlTot
+Cs1CJPIUVDlkKaR88Pq1uVdW2CrYnepDqFNdrCKkCFBDgiRZkUWM4zRt3GtiEMs9
+bEIdSmRMqnZPFI39fG0hysS1n+Pw6mdaQPths2GKI4UGV98Xn2Nv6cr5E+7HUQkw
+6kZihJpYa68SM/LpTfuWOE4waqGk7NJ2n+L0tEXa6mxCZM+me4B2eF/NLrBtnCez
+pz0w3SYwAhqE6UCGktkJS4AotMZgd0N8u9nEBELFsPdgHnLp/rI0LQuPAfEYyzU9
+lufdbfuvSW7Y4DWXLkQGyUheRE5BO20yyzNkuBl/s5eNj67hHmihI+6tiOO9NOrw
+88K68BpiFpD7POeNMABIx48+DWfSbgAeZjyilkZN+URpbLIdtOsbUviKPEbc6YkJ
+Bp9rdP6tpnte+RiiVHYsu+sySurrgER2OxgGBd5ujuvjHsyXXXpLHdrrRLtX6c77
+JlGOnncRu/PKcIGji4pF
+=YQV/
 -----END PGP SIGNATURE-----
 
---xC3Cgo0tcEhqUiVAqB3enagReaNxe0OD9--
+--KTj42JP8Ff8DjHsGHiUL27I4ic0ODbRoW--
 
 
---===============3290007477858137506==
+--===============7684617980641652368==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -290,4 +342,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3290007477858137506==--
+--===============7684617980641652368==--
