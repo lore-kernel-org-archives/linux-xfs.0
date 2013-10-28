@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7A2877F3F
-	for <xfs@oss.sgi.com>; Sun, 27 Oct 2013 18:02:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A44A304039
-	for <xfs@oss.sgi.com>; Sun, 27 Oct 2013 16:02:10 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D0EFB7F3F
+	for <xfs@oss.sgi.com>; Sun, 27 Oct 2013 21:23:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AC395304039
+	for <xfs@oss.sgi.com>; Sun, 27 Oct 2013 19:23:42 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	MI65auulcaDY4Fv7 for <xfs@oss.sgi.com>;
-	Sun, 27 Oct 2013 16:02:09 -0700 (PDT)
-Date: Mon, 28 Oct 2013 10:01:41 +1100
+	fBfAV9liVgyoZegI for <xfs@oss.sgi.com>;
+	Sun, 27 Oct 2013 19:23:40 -0700 (PDT)
+Date: Mon, 28 Oct 2013 13:23:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 13/19] xfs: vectorise directory data operations
-Message-ID: <20131027230141.GC2797@dastard>
-References: <1381789085-21923-1-git-send-email-david@fromorbit.com>
-	<1381789085-21923-14-git-send-email-david@fromorbit.com>
-	<20131024183909.GV1935@sgi.com> <20131024213117.GX2797@dastard>
-	<20131024214112.GZ10553@sgi.com> <20131024220844.GY2797@dastard>
-	<20131024222811.GA10553@sgi.com>
+Subject: Re: linux-3.12 userspace
+Message-ID: <20131028022334.GL4446@dastard>
+References: <526A6FF9.8000506@sgi.com> <526A87F4.2020207@sandeen.net>
+	<526AB077.6030800@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131024222811.GA10553@sgi.com>
+In-Reply-To: <526AB077.6030800@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,92 +30,126 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Oct 24, 2013 at 05:28:11PM -0500, Ben Myers wrote:
-> On Fri, Oct 25, 2013 at 09:08:44AM +1100, Dave Chinner wrote:
-> > On Thu, Oct 24, 2013 at 04:41:12PM -0500, Ben Myers wrote:
-> > > On Fri, Oct 25, 2013 at 08:31:17AM +1100, Dave Chinner wrote:
-> > > > On Thu, Oct 24, 2013 at 01:39:09PM -0500, Ben Myers wrote:
-> > > > > On Tue, Oct 15, 2013 at 09:17:59AM +1100, Dave Chinner wrote:
-> > > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > > 
-> > > > > > Following from the initial patches to vectorise the shortform
-> > > > > > directory encode/decode operations, convert half the data block
-> > > > > > operations to use the vector. The rest will be done in a second
-> > > > > > patch.
-> > > > > > 
-> > > > > > This further reduces the size of the built binary:
-> > > > > > 
-> > > > > >    text    data     bss     dec     hex filename
-> > > > > >  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
-> > > > > >  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
-> > > > > >  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
-> > > > > >  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
-> > > > > > 
-> > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > > > 
-> > > > > Generally looks pretty good, I have a question below...
-> > > > > 
-> > > > > >  const struct xfs_dir_ops xfs_dir2_ftype_ops = {
-> > > > > > @@ -223,6 +415,18 @@ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
-> > > > > >  	.sf_put_ino = xfs_dir3_sfe_put_ino,
-> > > > > >  	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
-> > > > > >  	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
-> > > > > > +
-> > > > > > +	.data_entsize = xfs_dir3_data_entsize,
-> > > > > > +	.data_get_ftype = xfs_dir3_data_get_ftype,
-> > > > > > +	.data_put_ftype = xfs_dir3_data_put_ftype,
-> > > > > > +	.data_entry_tag_p = xfs_dir3_data_entry_tag_p,
-> > > > > > +
-> > > > > > +	.data_dot_offset = xfs_dir2_data_dot_offset,
-> > > > > > +	.data_dotdot_offset = xfs_dir2_data_dotdot_offset,
-> > > > > > +	.data_first_offset = xfs_dir2_data_first_offset,
-> > > > > > +	.data_dot_entry_p = xfs_dir2_data_dot_entry_p,
-> > > > > > +	.data_dotdot_entry_p = xfs_dir2_data_dotdot_entry_p,
-> > > > > > +	.data_first_entry_p = xfs_dir2_data_first_entry_p,
-> > > > > >  };
-> > > > > 
-> > > > > I think there may be a problem here.  Although the dirv2 functions for
-> > > > > ., .., and first entry offset account for the v2 header size, they
-> > > > > appear not to be accounting for the modified entry size due to the file
-> > > > > type field.  Am I missing something?
-> > > > 
-> > > > The ftype field is handled by the alignment roundup. i.e. namelen is
-> > > > 1 or two bytes, plus ftype is 2 or 3 bytes, roundup is to 8 bytes.
-> > > > Hence adding a byte for the ftype field is not a problem for these
-> > > > first entries because of their small, fixed size.
-> > 
-> > I should point out that this code is functionally identical to the
-> > way the original macros treated the v4 ftype code. You reviewed that
-> > code and tested it and it as such this implicit use of padding was
-> > considered perfectly OK just a couple of months ago.....
-> 
-> It is a detail that I overlooked.  I try to do a thorough review... but
-> sometimes things don't register.
-> 
-> > > It should either be explicitly correct (and I think it is today), or we
-> > > need a comment to explain why it's not.  I would prefer the former.
-> > 
-> > Well, I'll add a patch at the end of the series to change it. I don't want to
-> > have to rebase the rest of the patches in the series just because of the
-> > don't apply because of context mismatches.
-> 
-> Sounds great.
-> 
-> > 
-> > Besides, the last patch in the series it replaces the offset functions with
-> > precalculated values. That replacement fixes the offset calculation to
-> > explicitly use dir2 hdrs and dir3 entsizes, so the problem goes away for
-> > those entries.
-> 
-> Ok, I'll look out for it then.
+On Fri, Oct 25, 2013 at 12:55:03PM -0500, Rich Johnston wrote:
+> On 10/25/2013 10:02 AM, Eric Sandeen wrote:
+> >On 10/25/13 8:19 AM, Rich Johnston wrote:
+> >>Hey Folks,
+> >>
+> >>Dave Chinner has a 32 part userspace patchset that needs to be
+> >>reviewed and will be committed to coincide with the linux-3.12
+> >>kernel release.
+>
+> I was referring to userspace ( hence the subject ;) ) matching
+> kernel.
 
-Given you found a few minor problems in the other patches (e.g.
-hunks in the wrong patches) I'll fix up all the patches and resend
-the series with all the updated tags on it...
+Kernel and userspace don't release on the same schedule.
+
+> >We'd want to get kernelspace merged in the xfs git tree well
+> >before the merge window,
+>
+> Yup Ben is working on it.
+
+Everyone can review kernel patches, not just Ben. The more eyes
+looking at the code the faster the process will go.
+
+> >and I don't think the kernel merge window needs to affect
+> >userspace merges.
+>
+> Umm yes I need to wait until the kernel supports the feature
+> before adding it to userspace.  AFAIR the goal was to have
+> userspace features match the kernelspace.
+
+The issue is not todo with release schedules, but whether patches
+are committed to the git trees or not.
+
+That is, for code shared between kernel and userspace, the process
+is effectively:
+
+kernel side:			userspace side:
+
+propose patch			propose equivalent patch
+review cycle:			review cycle:
+	address comments		address comments
+	update with userspace changes	update with kernel side changes
+	test				test
+	repost				repost
+reviewed-by given
+commit to xfs-oss tree
+				update match kernel commit
+				repost
+				commit to xfsprogs tree
+
+However, for pure userspace patches (like the write support for
+xfs_db patches), there is not co-ordination needed with the kernel
+patches. Those patches can be reviewed immediately, even if they
+have a dependency on the shared code patches. All that means is that
+they have to be committed *after* the above process for shared
+patches completes. 
+
+> >Can you talk in more specifics (which series/patches, for what
+> >codebase) you're proposing?
+>
+> Yes I was referring to "[PATCH 00/32] xfsprogs: V5 write support
+> for xfs_db" http://oss.sgi.com/archives/xfs/2013-09/msg00805.html
+> Which needs to be reviewed before I can pull it in.
+
+what that userspace series looks like from a
+process point of view is this:
+
+First N patches:
+	- shared code already committed to kernel
+	- review and commit required only
+Second M patches
+	- shared code not yet committed to kernel
+	- kernel and user review process as per above
+Last O patches
+	- userspace only patches
+	- review and commit required only
+	- commit dependent on previous shared patches being ready
+	  for commit.
+
+IOWs, N has no dependency, M are dependent on kernel commits, and O
+are dependent only on N and M being committed to userspace. At no
+stage does the fact that committing M first requires kernel commits
+prevent review of N, M or O from occurring....
+
+i.e. we can review userspace code without needing to immediately
+commit it!
+
+> I was asking for any other userspace patches that need to be
+> pulled in for the next userspace release so it matches kernel
+> 3.12.
+
+We don't do userspace releases to match kernel releases. They are
+independent and asynchronous. We try to have functional userspace changes
+committed to the dev tree to match kernel releases (e.g. mkfs/repair
+support for a new feature) but that doesn't mean that we need exact
+code parity between the kernel and userspace at the same time.
+
+> >In general I think we simply have a review bottleneck, but once
+> >patchsets are reviewed, in general, they should just get merged,
+> >especially in userspace, IMHO.
+>
+> No I was chastised for pulling in reviewed userspace patches too
+> early.  Kernel code was not fully hashed out.
+
+Sure, but that has nothing to do with release schedules for kernel
+and userspace code. That's a process problem, and one that should
+not happen because we've explained the reason for the process being
+the way it is several times in the past. It was highlighted again
+most recently with the build breakage that Mark caused by porting a
+userspace patch back to the the kernel and then not compile testing
+it before it was committed...
+
+Ben, as the XFS Maintainer, it is your responsibility to ensure that
+engineers doing work on your behalf understand what they are doing
+and what processes they need to follow. Can you please get together
+with Rich and provide him with the knowledge and oversight he needs
+to understand how to manage multiple developers and large patch
+series so he can avoid making further mistakes?
 
 Cheers,
 
