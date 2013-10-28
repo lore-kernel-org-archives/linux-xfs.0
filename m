@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 73EA47F3F
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 16:44:52 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2F1F37F4E
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 17:00:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 549B4304059
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 14:44:49 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	DrPWgJergEUYtxqC for <xfs@oss.sgi.com>;
-	Mon, 28 Oct 2013 14:44:47 -0700 (PDT)
-Date: Tue, 29 Oct 2013 08:44:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: tests/generic: added -P option to df
-Message-ID: <20131028214444.GE2797@dastard>
-References: <1382444035-9502-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1382444035-9502-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C0D39AC046
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 15:00:20 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id tl6o7GfLseFfCVkC for <xfs@oss.sgi.com>;
+	Mon, 28 Oct 2013 15:00:19 -0700 (PDT)
+Message-Id: <20131028204902.963851132@sled1.home.jeffreymahoney.com>
+Date: Mon, 28 Oct 2013 16:47:17 -0400
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [patch 2/3] xfstests: btrfs/022: test sysfs exports of allocation and
+	device membership info
+References: <20131028204715.921910478@sled1.home.jeffreymahoney.com>
+Content-Disposition: inline;
+	filename=0002-xfstests-btrfs-022-test-sysfs-exports-of-allocatio.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,48 +24,249 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Cc: vasily.isaenko@oracle.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, jbacik@fusionio.com
 
-On Tue, Oct 22, 2013 at 04:13:55PM +0400, Stanislav Kholmanskikh wrote:
-> Otherwise the testcases will fail if the scratch
-> device has a long name (for example, if it's an LVM volume).
-> Because df outputs its usage stats with two lines:
-> 
-> /dev/mapper/xfstests-disk1
->                        3030800      4608   2868908   1% /tmp/mnt/disk1
-> 
-> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-> ---
->  tests/generic/251 |    2 +-
->  tests/generic/260 |    2 +-
->  tests/generic/273 |    2 +-
->  tests/generic/275 |    2 +-
->  4 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/tests/generic/251 b/tests/generic/251
-> index 4126f15..eca3b0d 100755
-> --- a/tests/generic/251
-> +++ b/tests/generic/251
-> @@ -89,7 +89,7 @@ _guess_max_minlen()
->  fstrim_loop()
->  {
->  	trap "_destroy_fstrim; exit \$status" 2 15
-> -	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
-> +	fsize=$(df -P | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
+This tests the sysfs publishing for btrfs allocation and device
+membership info under a number of different layouts, similar to the
+btrfs replace test. We test the allocation files only for existence and
+that they contain numerical values. We test the device membership
+by mapping the devices used to create the file system to sysfs paths
+and matching them against the paths used for the device membership
+symlinks.
 
-Convert to $DF_PROG and add the -P flag to that variable, please.
+Since this is a new feature, it passes on kernels without
+a /sys/fs/btrfs/<fsid> directory.
 
-Cheers,
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ common/config       |    1 +
+ tests/btrfs/022     |  190 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/022.out |    2 +
+ 3 files changed, 193 insertions(+), 0 deletions(-)
+ create mode 100755 tests/btrfs/022
+ create mode 100644 tests/btrfs/022.out
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfstests/common/config
+===================================================================
+--- xfstests.orig/common/config
++++ xfstests/common/config
+@@ -209,6 +209,7 @@ case "$HOSTOS" in
+         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
+         export MKFS_BTRFS_PROG="`set_btrfs_mkfs_prog_path_with_opts`"
+         export BTRFS_UTIL_PROG="`set_prog_path btrfs`"
++        export UDEVADM_PROG="`set_prog_path udevadm`"
+         export BTRFS_SHOW_SUPER_PROG="`set_prog_path btrfs-show-super`"
+         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
+         export MKFS_NFS_PROG="false"
+Index: xfstests/tests/btrfs/022
+===================================================================
+--- /dev/null
++++ xfstests/tests/btrfs/022
+@@ -0,0 +1,190 @@
++#! /bin/bash
++# FS QA Test No. 022
++#
++# Test of the btrfs sysfs publishing
++#
++#-----------------------------------------------------------------------
++# Copyright (C) 2013 SUSE.  All rights reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_need_to_be_root
++_supported_fs btrfs
++_require_scratch
++_require_scratch_dev_pool
++_require_command $UDEVADM_PROG
++
++rm -f $seqres.full
++rm -f $tmp.tmp
++
++check_file() {
++	local file=$1
++	base="$(echo "$file" | sed -e 's#/sys/fs/btrfs/[0-9a-f-][0-9a-f-]*/##')"
++	if [ ! -f "$file" ]; then
++		echo "$base missing."
++		return 0
++	else
++		value="$(cat $file)"
++		if [ -n "$(echo $value | tr -d 0-9)" ]; then
++			echo "ERROR: $base: numerical value expected" \
++			     "(got $value)"
++			return 0
++		fi
++	fi
++	return 1
++}
++
++check_chunk() {
++	path=$1
++	mkfs_options=$2
++	error=false
++
++	chunktype=$(basename $path)
++	if [ ! -d "$path" ]; then
++		echo "No $chunktype directory."
++		exit 1
++	fi
++
++	for file in bytes_may_use bytes_pinned bytes_reserved bytes_used \
++		    disk_total flags total_bytes total_bytes_pinned; do
++		if check_file "$path/$file"; then
++			error=true
++		fi
++	done
++
++	if [ "$chunktype" = "data" -o "$chunktype" = "mixed" ]; then
++		opt="-d"
++	elif [ "$chunktype" = "metadata" -o "$chunktype" = "system" ]; then
++		opt="-m"
++	fi
++
++	profile=$(echo $mkfs_options | sed -e "s/.*$opt \([[:alnum:]]*\).*/\1/")
++	if [ ! -d "$path/$profile" ]; then
++		echo "No $profile dir for $chunktype"
++		exit 1
++	fi
++
++	for file in total_bytes used_bytes; do
++		if check_file $path/$profile/$file; then
++			error=true
++		fi
++	done
++
++	$error && exit 1
++}
++
++check_dev_link() {
++	local dev=$1
++	DEV="/sys/$($UDEVADM_PROG info --query=path $dev)"
++	DEV="$(readlink -f $DEV)"
++	found=false
++	for link in $sysfs_base/devices/*; do
++		LINK="$(readlink -f $link)"
++		if [ "$LINK" = "$DEV" ]; then
++			found=true
++			break
++		fi
++	done
++	if ! $found; then
++		echo "Symlink for $dev missing in $sysfs_base/devices"
++		return 1
++	fi
++	return 0
++}
++
++workout()
++{
++	local mkfs_options="$1"
++	local num_devs4raid="$2"
++	local fssize
++
++	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt $num_devs4raid ]; then
++		echo "Skip workout $1 $2 $3 $4"
++		echo "Too few devices in SCRATCH_DEV_POOL $SCRATCH_DEV_POOL," \
++		     "required: $num_devs4raid"
++		echo "Skip workout $1 $2 $3 $4" >> $seqres.full
++		echo "Too few devices in SCRATCH_DEV_POOL $SCRATCH_DEV_POOL," \
++		     "required: $num_devs4raid" >> $seqres.full
++		return 0
++	fi
++
++	used_devs=$(echo $SCRATCH_DEV_POOL|tr '\t' ' '| \
++		    cut -d ' ' -f 1-$num_devs4raid)
++
++	_scratch_mkfs $mkfs_options $used_devs >> $seqres.full 2>&1 || \
++	_fail "mkfs failed"
++
++	_scratch_mount
++
++	# Check allocation
++	sysfs_base="/sys/fs/btrfs/$(_btrfs_get_fsid $SCRATCH_DEV)"
++
++	# Feature isn't present for testing
++	if [ ! -d "$sysfs_base" ]; then
++		echo "Skipping sysfs test: $sysfs_base not found." \
++		     >> $seqres.full
++		return
++	fi
++
++	mixed=false
++	case "$mkfs_options" in
++	*-M*)
++		mixed=true;
++		;;
++	esac
++
++	check_chunk "$sysfs_base/allocation/system" "$mkfs_options"
++	if $mixed; then
++		check_chunk "$sysfs_base/allocation/mixed" "$mkfs_options"
++	else
++		check_chunk "$sysfs_base/allocation/data" "$mkfs_options"
++		check_chunk "$sysfs_base/allocation/metadata" "$mkfs_options"
++	fi
++
++	for dev in $used_devs; do
++		check_dev_link $dev || exit 1
++	done
++
++	umount $SCRATCH_MNT > /dev/null 2>&1
++}
++
++workout "-m single -d single" 1
++workout "-m single -d single -M" 1
++workout "-m dup -d single" 1
++workout "-m dup -d dup -M" 1
++workout "-m raid0 -d raid0" 2
++workout "-m raid1 -d raid1" 2
++workout "-m raid5 -d raid5" 2
++workout "-m raid6 -d raid6" 3
++workout "-m raid10 -d raid10" 4
++
++echo "Silence is golden."
++status=0
++exit
+Index: xfstests/tests/btrfs/022.out
+===================================================================
+--- /dev/null
++++ xfstests/tests/btrfs/022.out
+@@ -0,0 +1,2 @@
++QA output created by 022
++Silence is golden
+
 
 _______________________________________________
 xfs mailing list
