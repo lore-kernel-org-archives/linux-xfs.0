@@ -1,34 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D2617F52
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 02:26:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 62C4C8F804C
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 00:26:03 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 6e7veEEzZaRt3X3u (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 28 Oct 2013 00:26:02 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r9S7Q18r028174
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 07:26:02 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r9S7Q0jx004998
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 07:26:01 GMT
-Received: from abhmt116.oracle.com (abhmt116.oracle.com [141.146.116.68])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r9S7Q0xe018662 for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 07:26:00 GMT
-Message-ID: <526E1186.5040303@oracle.com>
-Date: Mon, 28 Oct 2013 11:25:58 +0400
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 92E347F3F
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 04:50:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1E765AC012
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 02:50:04 -0700 (PDT)
+Date: Mon, 28 Oct 2013 02:49:57 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: prevent stack overflows from page cache allocation
+Message-ID: <20131028094957.GA19041@infradead.org>
+References: <1382585110-1796-1-git-send-email-david@fromorbit.com>
+	<20131024084803.GA28144@infradead.org>
+	<20131024103751.GS2797@dastard>
+	<20131024154220.GA19055@infradead.org>
+	<20131024164115.GU1935@sgi.com> <20131024212448.GW2797@dastard>
+	<20131025112934.GA1585@infradead.org>
+	<20131027090409.GA2797@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: tests/generic: added -P option to df
-References: <1382444035-9502-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-In-Reply-To: <1382444035-9502-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20131027090409.GA2797@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,30 +27,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: vasily.isaenko@oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
+Thanks for the explanation Dave.  I suspected a generic bug because
+the two places mentioned are generic code.  Turns out only XFS and some
+cluster filesystems are affected because other filesystems do not call
+those under filesystem locks or i_mutex.
 
-On 10/22/2013 04:13 PM, Stanislav Kholmanskikh wrote:
-> Otherwise the testcases will fail if the scratch
-> device has a long name (for example, if it's an LVM volume).
-> Because df outputs its usage stats with two lines:
->
-> /dev/mapper/xfstests-disk1
->                         3030800      4608   2868908   1% /tmp/mnt/disk1
->
-> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-> ---
-
-Hi!
-
-Could anybody review it?
-
-Thanks.
+But it seem like AOP_FLAG_NOFS is indeed pointless and we should remove it,
+in XFS as part of this patch and everywhere else later after talking
+to the maintainers for the few other places using it.
 
 _______________________________________________
 xfs mailing list
