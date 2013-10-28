@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A95087F3F
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 14:54:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D0F6AC041
-	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 12:54:45 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 263BB7F50
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 14:54:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A2B21AC044
+	for <xfs@oss.sgi.com>; Mon, 28 Oct 2013 12:54:48 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id NoAVCzgWChHBo1zR for <xfs@oss.sgi.com>;
+	with ESMTP id uemTQxpkTy9IZE5H for <xfs@oss.sgi.com>;
 	Mon, 28 Oct 2013 12:54:43 -0700 (PDT)
-Message-Id: <20131028195242.357673025@sled1.home.jeffreymahoney.com>
-Date: Mon, 28 Oct 2013 15:52:05 -0400
+Message-Id: <20131028195204.611287480@sled1.home.jeffreymahoney.com>
+Date: Mon, 28 Oct 2013 15:52:04 -0400
 From: Jeff Mahoney <jeffm@suse.com>
-Subject: [PATCH 1/3] xfstests: btrfs/021: test global metadata reservation
-	reporting
-References: <20131028195204.611287480@sled1.home.jeffreymahoney.com>
-Content-Disposition: inline;
-	filename=0001-xfstests-btrfs-021-test-global-metadata-reservatio.patch
+Subject: [PATCH 0/3] xfstests: for btrfs publishing/export patchset (v2)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,253 +28,28 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-btrfs@vger.kernel.org, jbacik@fusionio.com
 
-Btrfs can now report the size of the global metadata reservation
-via icotl and sysfs.
+These are the tests that Josef requested accompany the submission of
+the btrfs publishing/export patchset[1].
 
-This test confirms that we get sane results on an empty file system.
+021: Test new global metadata reservation ioctl
+022: Test new sysfs exporting of allocation and device membership
+023: Test new sysfs exporting of feature bits
+024: Test setting/clearing feature bits via ioctl
+025: Test setting/clearing feature bits via sysfs
 
-ENOTTY and missing /sys/fs/btrfs/<fsid>/allocation are not considered
-failures.
+As part of the ioctl testing, I added a helper that can be extended
+easily to export simple information via ioctl. This means that the
+tests can be independent of btrfsprogs version or its output formatting.
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
----
- common/rc                |    6 +++
- src/Makefile             |    3 +-
- src/btrfs_ioctl_helper.c |   90 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/021          |   88 ++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/021.out      |    2 +
- 5 files changed, 188 insertions(+), 1 deletions(-)
- create mode 100644 src/btrfs_ioctl_helper.c
- create mode 100755 tests/btrfs/021
- create mode 100644 tests/btrfs/021.out
+V2:
+- Used next numbers in sequence
+- Better commit messages
+- Fixed handling of the missing feature cases
+- Fixed issues raised in Josef's review
 
-Index: xfstests/common/rc
-===================================================================
---- xfstests.orig/common/rc
-+++ xfstests/common/rc
-@@ -65,6 +65,12 @@ _btrfs_get_subvolid()
- 	$BTRFS_UTIL_PROG sub list $mnt | grep $name | awk '{ print $2 }'
- }
- 
-+_btrfs_get_fsid()
-+{
-+	local dev=$1
-+	$BTRFS_UTIL_PROG filesystem show $dev|awk '/uuid:/ {print $NF}'
-+}
-+
- # Prints the md5 checksum of a given file
- _md5_checksum()
- {
-Index: xfstests/src/Makefile
-===================================================================
---- xfstests.orig/src/Makefile
-+++ xfstests/src/Makefile
-@@ -18,7 +18,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getd
- 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
- 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
- 	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
--	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
-+	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec \
-+	btrfs_ioctl_helper
- 
- SUBDIRS =
- 
-Index: xfstests/src/btrfs_ioctl_helper.c
-===================================================================
---- /dev/null
-+++ xfstests/src/btrfs_ioctl_helper.c
-@@ -0,0 +1,90 @@
-+#include <sys/ioctl.h>
-+#include <stdio.h>
-+#include <sys/fcntl.h>
-+#include <errno.h>
-+#include <string.h>
-+#include <stdint.h>
-+#include <unistd.h>
-+
-+#ifndef BTRFS_IOCTL_MAGIC
-+#define BTRFS_IOCTL_MAGIC 0x94
-+#endif
-+
-+#ifndef BTRFS_IOC_GLOBAL_RSV
-+#define BTRFS_IOC_GLOBAL_RSV _IOR(BTRFS_IOCTL_MAGIC, 20, uint64_t)
-+#endif
-+
-+static int global_rsv_ioctl(int fd, int argc, char *argv[])
-+{
-+	uint64_t reserved;
-+	int ret = ioctl(fd, BTRFS_IOC_GLOBAL_RSV, &reserved);
-+	if (ret)
-+		return -errno;
-+
-+	printf("%llu\n", (unsigned long long)reserved);
-+	return 0;
-+}
-+
-+#define IOCTL_TABLE_ENTRY(_ioctl_name, _handler) \
-+	{ .name = #_ioctl_name, .ioctl_cmd = BTRFS_IOC_##_ioctl_name, \
-+	  .handler = _handler, }
-+
-+struct ioctl_table_entry {
-+	const char *name;
-+	unsigned ioctl_cmd;
-+	int (*handler)(int fd, int argc, char *argv[]);
-+};
-+
-+static struct ioctl_table_entry ioctls[] = {
-+	IOCTL_TABLE_ENTRY(GLOBAL_RSV, global_rsv_ioctl),
-+};
-+
-+int
-+main(int argc, char *argv[])
-+{
-+	int fd;
-+	int ret;
-+	struct ioctl_table_entry *entry = NULL;
-+	int i;
-+
-+	if (argc < 3) {
-+		fprintf(stderr,
-+			"usage: %s <fs mount point> <ioctl name> [args..]\n",
-+			argv[0]);
-+		return 1;
-+	}
-+
-+	fd = open(argv[1], O_RDONLY|O_DIRECTORY);
-+	if (fd < 0) {
-+		perror(argv[1]);
-+		return 1;
-+	}
-+
-+	for (i = 0; i < (sizeof(ioctls)/sizeof(ioctls[0])); i++) {
-+		if (strcmp(argv[2], ioctls[i].name) == 0) {
-+			entry = &ioctls[i];
-+			break;
-+		}
-+	}
-+
-+	if (!entry) {
-+		fprintf(stderr, "ERROR: unknown ioctl %s\n", argv[2]);
-+		close(fd);
-+		return 1;
-+	}
-+
-+	ret = entry->handler(fd, argc - 3, argv + 3);
-+	if (ret == -ENOTTY) {
-+		printf("Not implemented.\n");
-+		close(fd);
-+		return 0;
-+	} else if (ret) {
-+		fprintf(stderr, "ERROR: %s failed: %s\n",
-+			entry->name, strerror(-ret));
-+		close(fd);
-+		return 1;
-+	}
-+
-+	close(fd);
-+	return 0;
-+}
-Index: xfstests/tests/btrfs/021
-===================================================================
---- /dev/null
-+++ xfstests/tests/btrfs/021
-@@ -0,0 +1,88 @@
-+#!/bin/bash
-+# FA QA Test No. 021
-+#
-+# Test global metadata reservation reporting
-+#
-+# 1) Create empty file system
-+# 2) Call the BTRFS_IOC_GLOBAL_RSV ioctl and confirm it is 0 < x < 10MB
-+# 3) Read the /sys/fs/btrfs/<fsid>/allocation/global_rsv_reserved file
-+#    and confirm the value is 0 < x < 10 MB
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 SUSE, All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=$(basename $0)
-+seqres=$RESULT_DIR/$seq
-+echo "== QA output created by $seq"
-+
-+here=$(pwd)
-+tmp=/tmp/$$
-+status=1
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter.btrfs
-+
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
-+
-+# Check to see if the reservation is 0 < x <= 10MB
-+# At the time of this writing, it should always be exactly 4 MB
-+# but that is an implementation detail subject to change.
-+check_reserved() {
-+	reserved="$2"
-+	method="$3"
-+	if [ "$1" != 0 ]; then
-+		echo "$method: failed: $reserved"
-+		exit 1
-+	fi
-+	if [ "$reserved" = "Not implemented." ]; then
-+		echo "Skipping ioctl test. Not implemented." >> $seqres.full
-+		return
-+	fi
-+	if [ -n "$(echo $reserved | tr -d 0-9)" ]; then
-+		echo "ERROR: numerical value expected (got $reserved)"
-+		exit 1
-+	fi
-+	if [ "$reserved" -le 0 -o \
-+	       "$reserved" -gt "$(( 10 * 1024 * 1024 ))" ]; then
-+		echo "$method: out of range: $reserved."
-+		exit
-+	fi
-+}
-+
-+# ioctl
-+reserved="$(src/btrfs_ioctl_helper $SCRATCH_MNT GLOBAL_RSV 2>&1)"
-+check_reserved $? "$reserved" "ioctl"
-+
-+# sysfs
-+# If this directory is here, the files must be here as well
-+SYSFS_PREFIX="/sys/fs/btrfs/$(_btrfs_get_fsid $SCRATCH_DEV)/allocation"
-+if [ -d "$SYSFS_PREFIX" ]; then
-+	reserved="$(cat $SYSFS_PREFIX/global_rsv_reserved 2>&1)"
-+	check_reserved $? "$reserved" "sysfs:reserved"
-+	size="$(cat $SYSFS_PREFIX/global_rsv_size 2>&1)"
-+	check_reserved $? "$size" "sysfs:size"
-+fi
-+
-+echo "Silence is golden"
-+status=0
-+exit
-Index: xfstests/tests/btrfs/021.out
-===================================================================
---- /dev/null
-+++ xfstests/tests/btrfs/021.out
-@@ -0,0 +1,2 @@
-+QA output created by 021
-+Silence is golden
+-Jeff
 
+[1] http://thread.gmane.org/gmane.comp.file-systems.btrfs/29307
 
 _______________________________________________
 xfs mailing list
