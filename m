@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7B9227F3F
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D431B7F3F
 	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 06:12:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 16207AC002
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 04:12:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C17338F8033
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 04:12:08 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	w7V8Cf4BWg1tLO5k for <xfs@oss.sgi.com>;
+	bGGtHxmDod3Y6zuO for <xfs@oss.sgi.com>;
 	Tue, 29 Oct 2013 04:12:06 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vb7DM-0000PK-T0
+	(envelope-from <dave@fromorbit.com>) id 1Vb7DM-0000PM-U6
 	for xfs@oss.sgi.com; Tue, 29 Oct 2013 22:12:00 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vb7DM-000870-RO
+	(envelope-from <dave@disappointment.disaster>) id 1Vb7DM-000878-Sn
 	for xfs@oss.sgi.com; Tue, 29 Oct 2013 22:12:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/15] xfs: patches for 3.13
-Date: Tue, 29 Oct 2013 22:11:43 +1100
-Message-Id: <1383045118-31107-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/15] xfs: open code inc_inode_iversion when logging an inode
+Date: Tue, 29 Oct 2013 22:11:45 +1100
+Message-Id: <1383045118-31107-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1383045118-31107-1-git-send-email-david@fromorbit.com>
+References: <1383045118-31107-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,22 +37,68 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi Ben,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is a repost of the previous series with all the issues
-your review found fixed up. It also has a few new patches, the first
-of which is fixing the dir2/ftype offset issue you noticed.
+Michael L Semon reported that generic/069 runtime increased on v5
+superblocks by 100% compared to v4 superblocks. his perf-based
+analysis pointed directly at the timestamp updates being done by the
+write path in this workload. The append writers are doing 4-byte
+writes, so there are lots of timestamp updates occurring.
 
-The remaining new patches add a new validity check to the directory
-block checking code to avoid a reference outside the directory
-buffer, the patch to avoid stack overflows from the page cache which
-has been updated to remove the AOP_FLAG_NOFS usage in XFS, and then
-a final patch to clean up a bunch of new sparse warnings introduced
-by the recent round of code movement.
+The thing is, they aren't being triggered by timestamp changes -
+they are being triggered by the inode change counter needing to be
+updated. That is, every write(2) system call needs to bump the inode
+version count, and it does that through the timestamp update
+mechanism. Hence for v5 filesystems, test generic/069 is running 3
+orders of magnitude more timestmap update transactions on v5
+filesystems due to the fact it does a huge number of *4 byte*
+write(2) calls.
 
-Cheers,
+This isn't a real world scenario we really need to address - anyone
+doing such sequential IO should be using fwrite(3), not write(2).
+i.e. fwrite(3) buffers the writes in userspace to minimise the
+number of write(2) syscalls, and the problem goes away.
 
-Dave.
+However, there is a small change we can make to improve the
+situation - removing the expensive lock operation on the change
+counter update.  All inode version counter changes in XFS occur
+under the ip->i_ilock during a transaction, and therefore we
+don't actually need the spin lock that provides exclusive access to
+it through inc_inode_iversion().
+
+Hence avoid the lock and just open code the increment ourselves when
+logging the inode.
+
+Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans_inode.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 1bba7f6..50c3f56 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -111,12 +111,14 @@ xfs_trans_log_inode(
+ 
+ 	/*
+ 	 * First time we log the inode in a transaction, bump the inode change
+-	 * counter if it is configured for this to occur.
++	 * counter if it is configured for this to occur. We don't use
++	 * inode_inc_version() because there is no need for extra locking around
++	 * i_version as we already hold the inode locked exclusively for
++	 * metadata modification.
+ 	 */
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		inode_inc_iversion(VFS_I(ip));
+-		ip->i_d.di_changecount = VFS_I(ip)->i_version;
++		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
+ 		flags |= XFS_ILOG_CORE;
+ 	}
+ 
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
