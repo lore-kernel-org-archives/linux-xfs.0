@@ -1,33 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8E7847F3F
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 04:25:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F831AC002
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 02:25:33 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id lZgcGcw54Ll4lCFN (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 242117F3F
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 05:04:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 11C1D8F8052
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 03:04:10 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id FzFGIxpArTLj3bQf (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 02:25:31 -0700 (PDT)
+	Tue, 29 Oct 2013 03:04:08 -0700 (PDT)
 Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r9T9PUjB020251
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r9TA46Ji019323
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 09:25:31 GMT
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 10:04:07 GMT
 Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
 	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r9T9PTeD024139
+	r9TA45tn004596
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 09:25:30 GMT
-Received: from abhmt118.oracle.com (abhmt118.oracle.com [141.146.116.70])
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 10:04:06 GMT
+Received: from abhmt119.oracle.com (abhmt119.oracle.com [141.146.116.71])
 	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r9T9PTbn009169 for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 09:25:29 GMT
+	r9TA45rV025804 for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 10:04:05 GMT
 From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Subject: [PATCH V2] xfstests: added -P option to $DF_PROG
-Date: Tue, 29 Oct 2013 13:25:24 +0400
-Message-Id: <1383038724-4365-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-In-Reply-To: <20131028214444.GE2797@dastard>
-References: <20131028214444.GE2797@dastard>
+Subject: [PATCH V3] xfstests: src/feature.c: print a number of online CPUs
+Date: Tue, 29 Oct 2013 14:03:59 +0400
+Message-Id: <1383041039-5520-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+In-Reply-To: <20131028221540.GF2797@dastard>
+References: <20131028221540.GF2797@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,100 +44,99 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: vasily.isaenko@oracle.com
 
-Added -P option to $DF_PROG and changed the invocation of
-'df' command in generic/{251,260,273,275} testcases
-with $DF_PROG.
+For this purpose we use sysconf() as it is the
+preferred platform neutral interface for getting this
+sort of information.
 
-Otherwise the testcases will fail if the scratch
-device has a long name (for example, if it's an LVM volume).
-Because df outputs its usage stats with two lines:
-
-/dev/mapper/xfstests-disk1
-                       3030800      4608   2868908   1% /tmp/mnt/disk1
+Based on Dave Chinner proposal.
 
 Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
 ---
- common/config     |    2 +-
- tests/generic/251 |    2 +-
- tests/generic/260 |    2 +-
- tests/generic/273 |    2 +-
- tests/generic/275 |    6 +++---
- 5 files changed, 7 insertions(+), 7 deletions(-)
+ src/feature.c |   27 ++++++++++++++++++++++++---
+ 1 files changed, 24 insertions(+), 3 deletions(-)
 
-diff --git a/common/config b/common/config
-index db086fb..21ce833 100644
---- a/common/config
-+++ b/common/config
-@@ -150,7 +150,7 @@ export PS_ALL_FLAGS="-ef"
+diff --git a/src/feature.c b/src/feature.c
+index 2619ca5..334063b 100644
+--- a/src/feature.c
++++ b/src/feature.c
+@@ -30,6 +30,7 @@
+  * Return code: 0 is true, anything else is error/not supported
+  *
+  * Test for machine features
++ *   -o  report a number of online cpus
+  *   -s  report pagesize
+  *   -w  report bits per long
+  */
+@@ -39,6 +40,7 @@
+ #include <sys/quota.h>
+ #include <sys/resource.h>
+ #include <signal.h>
++#include <unistd.h>
  
- export DF_PROG="`set_prog_path df`"
- [ "$DF_PROG" = "" ] && _fatal "df not found"
--[ "$HOSTOS" = "Linux" ] && export DF_PROG="$DF_PROG -T"
-+[ "$HOSTOS" = "Linux" ] && export DF_PROG="$DF_PROG -T -P"
+ #ifdef HAVE_XFS_XQM_H
+ #include <xfs/xqm.h>
+@@ -64,7 +66,7 @@ usage(void)
+ 	fprintf(stderr, "Usage: feature [-v] -<q|u|g|p|U|G|P> <filesystem>\n");
+ 	fprintf(stderr, "       feature [-v] -c <file>\n");
+ 	fprintf(stderr, "       feature [-v] -t <file>\n");
+-	fprintf(stderr, "       feature -s | -w\n");
++	fprintf(stderr, "       feature -o | -s | -w\n");
+ 	exit(1);
+ }
  
- export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
- export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
-diff --git a/tests/generic/251 b/tests/generic/251
-index 4126f15..d88c48b 100755
---- a/tests/generic/251
-+++ b/tests/generic/251
-@@ -89,7 +89,7 @@ _guess_max_minlen()
- fstrim_loop()
- {
- 	trap "_destroy_fstrim; exit \$status" 2 15
--	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
-+	fsize=$($DF_PROG | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $3}')
- 	mmlen=$(_guess_max_minlen)
+@@ -212,9 +214,10 @@ main(int argc, char **argv)
+ 	int	uflag = 0;
+ 	int	Uflag = 0;
+ 	int	wflag = 0;
++	int	oflag = 0;
+ 	char	*fs = NULL;
  
- 	while true ; do
-diff --git a/tests/generic/260 b/tests/generic/260
-index dc8b822..2150cb0 100755
---- a/tests/generic/260
-+++ b/tests/generic/260
-@@ -48,7 +48,7 @@ _scratch_mount
+-	while ((c = getopt(argc, argv, "ctgGpPqsuUvw")) != EOF) {
++	while ((c = getopt(argc, argv, "ctgGopPqsuUvw")) != EOF) {
+ 		switch (c) {
+ 		case 'c':
+ 			cflag++;
+@@ -228,6 +231,9 @@ main(int argc, char **argv)
+ 		case 'G':
+ 			Gflag++;
+ 			break;
++		case 'o':
++			oflag++;
++			break;
+ 		case 'p':
+ 			pflag++;
+ 			break;
+@@ -262,7 +268,7 @@ main(int argc, char **argv)
+ 		if (optind != argc-1)	/* need a device */
+ 			usage();
+ 		fs = argv[argc-1];
+-	} else if (wflag || sflag) {
++	} else if (wflag || sflag || oflag) {
+ 		if (optind != argc)
+ 			usage();
+ 	} else 
+@@ -306,6 +312,21 @@ bozo!
+ #endif
+ 		exit(0);
+ 	}
++	if (oflag) {
++		long ncpus = -1;
++
++#if defined(_SC_NPROCESSORS_ONLN)
++		ncpus = sysconf(_SC_NPROCESSORS_ONLN);
++#elif defined(_SC_NPROC_ONLN)
++		ncpus = sysconf(_SC_NPROC_ONLN);
++#endif
++		if (ncpus == -1)
++			ncpus = 1;
++
++		printf("%ld\n", ncpus);
++
++		exit(0);
++	}
  
- _test_batched_discard $SCRATCH_MNT || _notrun "FITRIM not supported on $SCRATCH_DEV"
- 
--fssize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
-+fssize=$($DF_PROG -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $3}')
- 
- beyond_eofs=$(_math "$fssize*2048")
- max_64bit=$(_math "2^64 - 1")
-diff --git a/tests/generic/273 b/tests/generic/273
-index d149808..4caa109 100755
---- a/tests/generic/273
-+++ b/tests/generic/273
-@@ -68,7 +68,7 @@ _file_create()
- 
- 	cd $SCRATCH_MNT/origin
- 
--	_disksize=`df --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
-+	_disksize=`$DF_PROG --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
- 	_disksize=$(($_disksize / 3))
- 	_num=$(($_disksize / $count / $threads / 4096))
- 	_count=$count
-diff --git a/tests/generic/275 b/tests/generic/275
-index f83a644..7382edb 100755
---- a/tests/generic/275
-+++ b/tests/generic/275
-@@ -69,14 +69,14 @@ sync
- dd if=/dev/zero of=$SCRATCH_MNT/tmp4 bs=4K oflag=sync >>$seqres.full 2>&1
- # Save space usage info to the full file
- echo "Pre rm space:" >> $seqres.full
--df $SCRATCH_MNT >>$seqres.full 2>&1
-+$DF_PROG $SCRATCH_MNT >>$seqres.full 2>&1
- 
- # Should leave approx 256k free
- rm -f $SCRATCH_MNT/tmp1
- sync
- echo "Post rm space:" >> $seqres.full
--df $SCRATCH_MNT >>$seqres.full 2>&1
--_freespace=`df -k $SCRATCH_MNT | tail -n 1 | awk '{print $4}'`
-+$DF_PROG $SCRATCH_MNT >>$seqres.full 2>&1
-+_freespace=`$DF_PROG -k $SCRATCH_MNT | tail -n 1 | awk '{print $5}'`
- [ $_freespace -gt 1024 ] && _fail "could not sufficiently fill filesystem"
- 
- # Try a write larger than available space
+ 	fprintf(stderr, "feature: dunno what you're after.\n");
+ 	return(1);
 -- 
 1.7.1
 
