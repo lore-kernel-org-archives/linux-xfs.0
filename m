@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DC8257F3F
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 16:30:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CBB9C304048
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 14:30:20 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id msfdA7ec7CJXGJ82 for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 14:30:19 -0700 (PDT)
-Message-ID: <527028EA.8070506@sandeen.net>
-Date: Tue, 29 Oct 2013 16:30:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C89CC7F3F
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 17:05:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B8D288F8040
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 15:05:45 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	EZSYbahtLHGqdVuo for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 15:05:41 -0700 (PDT)
+Date: Wed, 30 Oct 2013 09:05:37 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: linux-3.12 userspace Take 2
-References: <526A6FF9.8000506@sgi.com> <526EE7CF.7090603@sgi.com>
+Message-ID: <20131029220537.GB6188@dastard>
+References: <526A6FF9.8000506@sgi.com>
+ <526EE7CF.7090603@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <526EE7CF.7090603@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,9 +30,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 10/28/13 5:40 PM, Rich Johnston wrote:
+On Mon, Oct 28, 2013 at 05:40:15PM -0500, Rich Johnston wrote:
 > Hey Folks,
 > 
 > Sorry for any confusion, let me try again.
@@ -38,87 +42,94 @@ On 10/28/13 5:40 PM, Rich Johnston wrote:
 > userspace patches that should be marked as critical and hold up the new
 > userspace release?
 
-Dave should definitely chime in too, but certainly at least the xfs_db
-patchset - and talking w/ Dave, there's still much repair work to be done.
+If you are talking about 3.2.0, then we are not yet even ready for a
+beta release as xfs_repair is not yet fully complete. There's still
+a siginificant amount of work needed to complete that. e.g:
 
-I'd personally like to see my xfs_fsr fix make it, but that's pretty
-small potatoes.
+	- dirent ftype check/repair/rebuild
+	- repair throws CORRUPTION_ERROR output from verifiers on
+	  broken filesystems instead of detecting and handling it
+	- repair doesn't check for CRC errors and consider them an
+	  error that needs fixing at all
+	- log zeroing invalidates all the metadata LSNs in the
+	  filesystem, so we need to track the maximum LSN in
+	  filesystem metadata and write a dummy record into the
+	  log with that in it if we've zeroed the log
 
-However, I'm not sure we need to be super "release" focused quite yet;
-more emphasis on reviewing & merging what's on the list will keep it
-all moving along, and we can worry about releases down the road.
-
-Once the xfs_db stuff goes in, maybe that would warrant another prerelease,
-though.
+There's a few other bits of new metadata that aren't fully
+validated/repaired, either, so there's still a bunch of
+infrastructure and repair work to be done before we can release a
+3.2.0 package. I'd say there's at least 50-100 patches in the above
+work still to be done....
 
 > Code shared by userspace and kernelspace are committed by different
 > maintainers, I propose we discuss how to make it clear which patch
-> series are tied together. This would aid reviewers and testers also.
+> series are tied together.
+
+Yes, I do that already.
+
+> This would aid reviewers and testers also.
 > 
->     One thought is to state in the kernel [PATCH 0/XX] email body
->     something like:
->         This kernel series shares the same headers as the
->         userspace series "NAME OF USERSPACE SERIES"
+> 	One thought is to state in the kernel [PATCH 0/XX] email body
+> 	something like:
+> 		This kernel series shares the same headers as the
+> 		userspace series "NAME OF USERSPACE SERIES"
 > 
->     and a similar email for the userspace series.
-> 
->     The second commit should contain the first series commit id to
->     tie them together.
+> 	and a similar email for the userspace series.
 
-Having two maintainers will make it more tricky, and you guys will
-have to communicate well in order for things to go smoothly.
+e.g. from the last xfs_db write series I posted:
 
-To be orderly about it, I think we must be in a "kernel comes first"
-mindset, i.e. changes are made there first, and then userspace, whether
-we're talking about shared code, or new interfaces.  That'll
-save us from "free()" type errors, among other things.  ;)
+"The first part of the patch series fixes a couple of minor bugs,
+followed by syncing up with the kernel code to match the series I
+just posted for 3.13. This is necessary for CRC support in xfs_db."
 
-(There will be some independent changes on both sides, but determining
-that independence should be part of review, i.e. "hey you need to change
-this in kernelspace first!")
+http://oss.sgi.com/archives/xfs/2013-09/msg00805.html
 
-So yes, if you have a userspace patchset that has kernelspace counterparts,
-wait for them to be committed by Ben.  And make sure they still match when
-they go into xfsprogs; if not, that should be noted, and the patch series
-reposted.
+> 	The second commit should contain the first series commit id to
+> 	tie them together.
 
-As long as kernelspace is being committed in a timely manner post-review,
-then userspace shouldn't lag that by much at all.
+Extracting commit ids from a different repository and then
+matching and adding them to patch headers individually is a painful,
+painful process. If the reviewers can't run a "git log" command
+themselves to check that the patch is in the kernel code, then I'd
+say they simply aren't qualified to review the code in the patch....
 
+> Userspace patch series will be committed when the entire patch
+> series has been reviewed.  Partial series commits will happen only
+> with the authors approval (confirmation posted to the list).
 
-I can see how it might be helpful if a 00/XX cover letter makes it clear
-that i.e. "patches 1 through 4 are to match kernel changes which have
-already been sent in series $BLAH" or "... which are already committed."
+Use your discretion. If a patch series is made up of "sync to kernel
+code" and "add new functionality", then the first "sync to kernel
+code" part can be committed before the "add new functionality" part
+has been fully reviewed.  If you are not sure, ask on the list.  It
+doesn't matter if the author doesn't respond - someone else can say
+"yes, makes sense to commit that portion"...
 
-If you want to adjust commit logs to note the kernel commit, you could,
-although sounds like a bit more work on the maintainer end, and maybe
-of limited value.
+However, this does not address the root cause of the problems that
+have lead to this discussion. It's the same problem we've had for
+the past year - patches sitting around for weeks or months before
+anyone other than me looks at them.
 
-In the long run, I think Dave was talking about not a copy, but actual
-shared code for libxfs, which would simplify all this.
+That's the real problem here - it's now 8 weeks since code that is a
+blocker for a 3.2.0 release was first posted, and not a single
+comment has been made about it. All this talk about kernel/userspace
+syncing is just a side show - it's never been a major issue before
+and it's not a major issue now. What is a major issue is that code
+is going unreviewed for weeks/months on end and we've been having
+this problem for at least a year now.
 
-But we're not there yet ...
+So let's try to address the real problem that needs solving here -
+getting patches reviewed and committed *promptly*. We don't need
+more process overhead to accomplish that - we need people to
+actually put time into reviewing code quickly and we need
+maintainers that commit reviewed patch series just as quickly.
 
-> Userspace patch series will be committed when the entire patch series
-> has been reviewed. Partial series commits will happen only with the
-> authors approval (confirmation posted to the list).
+Cheers,
 
-Yeah, I think that's the best plan.  If it seems that a large series
-is accomplishing several discrete changes, that could be noted in the
-cover letter as well, giving "permission" up front to do a partial merge
-when independent bits get reviewed, so the whole series doesn't need
-to wait if it doesn't have to.
-
--Eric
-
-> Thanks
-> --Rich
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
