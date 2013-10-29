@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E1EB97F4E
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 14:22:12 -0500 (CDT)
-Date: Tue, 29 Oct 2013 14:22:09 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 11/15] xfs: convert directory vector functions to constants
-Message-ID: <20131029192209.GE1935@sgi.com>
-References: <1383045118-31107-1-git-send-email-david@fromorbit.com>
-	<1383045118-31107-12-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1383045118-31107-12-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48A107F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 14:30:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 230A88F8064
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 12:30:50 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id b8XLVHSmlUXtdIB0 for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 12:30:48 -0700 (PDT)
+Message-Id: <20131029192919.775752425@suse.com>
+Date: Tue, 29 Oct 2013 15:26:54 -0400
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [patch 1/3] xfstests: btrfs/021: test global metadata reservation
+	reporting
+References: <20131029192653.194827430@suse.com>
+Content-Disposition: inline;
+	filename=0001-xfstests-btrfs-021-test-global-metadata-reservatio.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,37 +24,259 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>
 
-On Tue, Oct 29, 2013 at 10:11:54PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Many of the vectorised function calls now take no parameters and
-> return a constant value. There is no reason for these to be vectored
-> functions, so convert them to constants
-> 
-> Binary sizes:
-> 
->    text    data     bss     dec     hex filename
->  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
->  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
->  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
->  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
->  789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
->  789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
->  789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
->  791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
->  791701   96802    1096  889599   d92ff fs/xfs/xfs.o.p8
->  791205   96802    1096  889103   d91cf fs/xfs/xfs.o.p9
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Btrfs can now report the size of the global metadata reservation
+via icotl and sysfs.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+This test confirms that we get sane results on an empty file system.
+
+ENOTTY and missing /sys/fs/btrfs/<fsid>/allocation are not considered
+failures.
+
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ common/rc                |    6 +++
+ src/Makefile             |    3 +
+ src/btrfs_ioctl_helper.c |   90 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/021          |   88 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/021.out      |    2 +
+ tests/btrfs/group        |    1 
+ 6 files changed, 189 insertions(+), 1 deletion(-)
+ create mode 100644 src/btrfs_ioctl_helper.c
+ create mode 100755 tests/btrfs/021
+ create mode 100644 tests/btrfs/021.out
+
+--- a/common/rc	2013-10-28 16:47:03.000000000 -0400
++++ b/common/rc	2013-10-29 15:06:39.548830211 -0400
+@@ -65,6 +65,12 @@ _btrfs_get_subvolid()
+ 	$BTRFS_UTIL_PROG sub list $mnt | grep $name | awk '{ print $2 }'
+ }
+ 
++_btrfs_get_fsid()
++{
++	local dev=$1
++	$BTRFS_UTIL_PROG filesystem show $dev|awk '/uuid:/ {print $NF}'
++}
++
+ # Prints the md5 checksum of a given file
+ _md5_checksum()
+ {
+--- a/src/Makefile	2013-10-28 16:47:03.000000000 -0400
++++ b/src/Makefile	2013-10-28 16:47:05.000000000 -0400
+@@ -18,7 +18,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getd
+ 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+ 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+ 	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
+-	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
++	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec \
++	btrfs_ioctl_helper
+ 
+ SUBDIRS =
+ 
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ b/src/btrfs_ioctl_helper.c	2013-10-29 15:06:39.548830211 -0400
+@@ -0,0 +1,90 @@
++#include <sys/ioctl.h>
++#include <stdio.h>
++#include <sys/fcntl.h>
++#include <errno.h>
++#include <string.h>
++#include <stdint.h>
++#include <unistd.h>
++
++#ifndef BTRFS_IOCTL_MAGIC
++#define BTRFS_IOCTL_MAGIC 0x94
++#endif
++
++#ifndef BTRFS_IOC_GLOBAL_RSV
++#define BTRFS_IOC_GLOBAL_RSV _IOR(BTRFS_IOCTL_MAGIC, 20, uint64_t)
++#endif
++
++static int global_rsv_ioctl(int fd, int argc, char *argv[])
++{
++	uint64_t reserved;
++	int ret = ioctl(fd, BTRFS_IOC_GLOBAL_RSV, &reserved);
++	if (ret)
++		return -errno;
++
++	printf("%llu\n", (unsigned long long)reserved);
++	return 0;
++}
++
++#define IOCTL_TABLE_ENTRY(_ioctl_name, _handler) \
++	{ .name = #_ioctl_name, .ioctl_cmd = BTRFS_IOC_##_ioctl_name, \
++	  .handler = _handler, }
++
++struct ioctl_table_entry {
++	const char *name;
++	unsigned ioctl_cmd;
++	int (*handler)(int fd, int argc, char *argv[]);
++};
++
++static struct ioctl_table_entry ioctls[] = {
++	IOCTL_TABLE_ENTRY(GLOBAL_RSV, global_rsv_ioctl),
++};
++
++int
++main(int argc, char *argv[])
++{
++	int fd;
++	int ret;
++	struct ioctl_table_entry *entry = NULL;
++	int i;
++
++	if (argc < 3) {
++		fprintf(stderr,
++			"usage: %s <fs mount point> <ioctl name> [args..]\n",
++			argv[0]);
++		return 1;
++	}
++
++	fd = open(argv[1], O_RDONLY|O_DIRECTORY);
++	if (fd < 0) {
++		perror(argv[1]);
++		return 1;
++	}
++
++	for (i = 0; i < (sizeof(ioctls)/sizeof(ioctls[0])); i++) {
++		if (strcmp(argv[2], ioctls[i].name) == 0) {
++			entry = &ioctls[i];
++			break;
++		}
++	}
++
++	if (!entry) {
++		fprintf(stderr, "ERROR: unknown ioctl %s\n", argv[2]);
++		close(fd);
++		return 1;
++	}
++
++	ret = entry->handler(fd, argc - 3, argv + 3);
++	if (ret == -ENOTTY) {
++		printf("Not implemented.\n");
++		close(fd);
++		return 0;
++	} else if (ret) {
++		fprintf(stderr, "ERROR: %s failed: %s\n",
++			entry->name, strerror(-ret));
++		close(fd);
++		return 1;
++	}
++
++	close(fd);
++	return 0;
++}
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ b/tests/btrfs/021	2013-10-28 16:47:05.000000000 -0400
+@@ -0,0 +1,88 @@
++#!/bin/bash
++# FA QA Test No. 021
++#
++# Test global metadata reservation reporting
++#
++# 1) Create empty file system
++# 2) Call the BTRFS_IOC_GLOBAL_RSV ioctl and confirm it is 0 < x < 10MB
++# 3) Read the /sys/fs/btrfs/<fsid>/allocation/global_rsv_reserved file
++#    and confirm the value is 0 < x < 10 MB
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 SUSE, All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=$(basename $0)
++seqres=$RESULT_DIR/$seq
++echo "== QA output created by $seq"
++
++here=$(pwd)
++tmp=/tmp/$$
++status=1
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter.btrfs
++
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++# Check to see if the reservation is 0 < x <= 10MB
++# At the time of this writing, it should always be exactly 4 MB
++# but that is an implementation detail subject to change.
++check_reserved() {
++	reserved="$2"
++	method="$3"
++	if [ "$1" != 0 ]; then
++		echo "$method: failed: $reserved"
++		exit 1
++	fi
++	if [ "$reserved" = "Not implemented." ]; then
++		echo "Skipping ioctl test. Not implemented." >> $seqres.full
++		return
++	fi
++	if [ -n "$(echo $reserved | tr -d 0-9)" ]; then
++		echo "ERROR: numerical value expected (got $reserved)"
++		exit 1
++	fi
++	if [ "$reserved" -le 0 -o \
++	       "$reserved" -gt "$(( 10 * 1024 * 1024 ))" ]; then
++		echo "$method: out of range: $reserved."
++		exit
++	fi
++}
++
++# ioctl
++reserved="$(src/btrfs_ioctl_helper $SCRATCH_MNT GLOBAL_RSV 2>&1)"
++check_reserved $? "$reserved" "ioctl"
++
++# sysfs
++# If this directory is here, the files must be here as well
++SYSFS_PREFIX="/sys/fs/btrfs/$(_btrfs_get_fsid $SCRATCH_DEV)/allocation"
++if [ -d "$SYSFS_PREFIX" ]; then
++	reserved="$(cat $SYSFS_PREFIX/global_rsv_reserved 2>&1)"
++	check_reserved $? "$reserved" "sysfs:reserved"
++	size="$(cat $SYSFS_PREFIX/global_rsv_size 2>&1)"
++	check_reserved $? "$size" "sysfs:size"
++fi
++
++echo "Silence is golden"
++status=0
++exit
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ b/tests/btrfs/021.out	2013-10-29 14:44:42.155197193 -0400
+@@ -0,0 +1,2 @@
++== QA output created by 021
++Silence is golden
+--- a/tests/btrfs/group	2013-10-25 17:22:07.000000000 -0400
++++ b/tests/btrfs/group	2013-10-29 15:07:23.292109479 -0400
+@@ -23,3 +23,4 @@
+ 018 auto quick
+ 019 auto quick
+ 020 auto quick
++021 auto quick
+
 
 _______________________________________________
 xfs mailing list
