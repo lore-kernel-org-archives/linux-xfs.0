@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C89CC7F3F
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 17:05:45 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 779887F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 17:10:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B8D288F8040
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 15:05:45 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	EZSYbahtLHGqdVuo for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 15:05:41 -0700 (PDT)
-Date: Wed, 30 Oct 2013 09:05:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: linux-3.12 userspace Take 2
-Message-ID: <20131029220537.GB6188@dastard>
-References: <526A6FF9.8000506@sgi.com>
- <526EE7CF.7090603@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EF034AC093
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 15:10:24 -0700 (PDT)
+Received: from mail-la0-f42.google.com (mail-la0-f42.google.com
+	[209.85.215.42]) by cuda.sgi.com with ESMTP id ktO9AKl1XJ85ca2Q
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 29 Oct 2013 15:10:22 -0700 (PDT)
+Received: by mail-la0-f42.google.com with SMTP id ea20so429495lab.29
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 15:10:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <526EE7CF.7090603@sgi.com>
+Date: Tue, 29 Oct 2013 18:10:20 -0400
+Message-ID: <CALtWs4-q==CXVZ=jjRnrZGANP98y2Gyot_DV_hGTgxQoRF25UA@mail.gmail.com>
+Subject: agsize and performance
+From: K T <mailkarthikt@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,112 +24,325 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2021421853625565338=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Oct 28, 2013 at 05:40:15PM -0500, Rich Johnston wrote:
-> Hey Folks,
-> 
-> Sorry for any confusion, let me try again.
-> 
-> In preparation for the new userspace release, are there any outstanding
-> userspace patches that should be marked as critical and hold up the new
-> userspace release?
+--===============2021421853625565338==
+Content-Type: multipart/alternative; boundary=001a11c34e6c885e9804e9e87bbd
 
-If you are talking about 3.2.0, then we are not yet even ready for a
-beta release as xfs_repair is not yet fully complete. There's still
-a siginificant amount of work needed to complete that. e.g:
+--001a11c34e6c885e9804e9e87bbd
+Content-Type: text/plain; charset=ISO-8859-1
 
-	- dirent ftype check/repair/rebuild
-	- repair throws CORRUPTION_ERROR output from verifiers on
-	  broken filesystems instead of detecting and handling it
-	- repair doesn't check for CRC errors and consider them an
-	  error that needs fixing at all
-	- log zeroing invalidates all the metadata LSNs in the
-	  filesystem, so we need to track the maximum LSN in
-	  filesystem metadata and write a dummy record into the
-	  log with that in it if we've zeroed the log
+Hi,
 
-There's a few other bits of new metadata that aren't fully
-validated/repaired, either, so there's still a bunch of
-infrastructure and repair work to be done before we can release a
-3.2.0 package. I'd say there's at least 50-100 patches in the above
-work still to be done....
+I have a 1 TB SATA disk(WD1003FBYX) with XFS. In my tests, I preallocate a
+bunch of 10GB files and write data to the files one at a time. I have
+observed that the default mkfs setting(4 AGs) gives very low throughput.
+When I reformat the disk with a agsize of 256mb(agcount=3726), I see better
+throughput. I thought with a bigger agsize, the files will be made of fewer
+extents and hence perform better(due to lesser entries in the extent map
+getting updated). But, according to my tests, the opposite seems to be
+true. Can you please explain why this the case? Am I missing something?
 
-> Code shared by userspace and kernelspace are committed by different
-> maintainers, I propose we discuss how to make it clear which patch
-> series are tied together.
+My test parameters:
 
-Yes, I do that already.
+mkfs.xfs -f /dev/sdbf1
+mount  -o inode64 /dev/sdbf1 /mnt/test
+fallocate -l 10G fname
+dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
 
-> This would aid reviewers and testers also.
-> 
-> 	One thought is to state in the kernel [PATCH 0/XX] email body
-> 	something like:
-> 		This kernel series shares the same headers as the
-> 		userspace series "NAME OF USERSPACE SERIES"
-> 
-> 	and a similar email for the userspace series.
+# uname -a
+Linux gold 3.0.82-0.7-default #1 SMP Thu Jun 27 13:19:18 UTC 2013
+(6efde93) x86_64 x86_64 x86_64 GNU/Linux
+# cat /etc/SuSE-release
+SUSE Linux Enterprise Server 11 (x86_64)
+VERSION = 11
+PATCHLEVEL = 3
+# Intel(R) Xeon(R) CPU E5-2603 0 @ 1.80GHz
 
-e.g. from the last xfs_db write series I posted:
 
-"The first part of the patch series fixes a couple of minor bugs,
-followed by syncing up with the kernel code to match the series I
-just posted for 3.13. This is necessary for CRC support in xfs_db."
+------- Tests with agsize of 256MB -----------
+# mkfs.xfs -f /dev/sdbf1 -d agsize=256m
+meta-data=/dev/sdbf1             isize=256    agcount=3726, agsize=65536 blks
+         =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=244187136, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=65532, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-http://oss.sgi.com/archives/xfs/2013-09/msg00805.html
+# mount  -o inode64 /dev/sdbf1 /mnt/test
+# cd test
+# ls
+# fallocate -l 10g file.1
+# xfs_bmap -p -v file.1 | wc -l
+43
+# dd if=/dev/zero of=file.1 bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.56155 s, 37.7 MB/s
+(the first file write seems to be slow)
 
-> 	The second commit should contain the first series commit id to
-> 	tie them together.
+# fallocate -l 10g file.2
+# dd if=/dev/zero of=file.2 bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 1.57496 s, 85.2 MB/s
+# fallocate -l 10g file.3
+# dd if=/dev/zero of=file.3 bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 1.56151 s, 86.0 MB/s
 
-Extracting commit ids from a different repository and then
-matching and adding them to patch headers individually is a painful,
-painful process. If the reviewers can't run a "git log" command
-themselves to check that the patch is in the kernel code, then I'd
-say they simply aren't qualified to review the code in the patch....
+------- Tests with default mkfs parameters -----------
+# cd ..
+# umount test
+# mkfs.xfs -f /dev/sdbf1
+meta-data=/dev/sdbf1             isize=256    agcount=4, agsize=61047598 blks
+         =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=244190390, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=119233, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# mount  -o inode64 /dev/sdbf1 /mnt/test
+# cd test
 
-> Userspace patch series will be committed when the entire patch
-> series has been reviewed.  Partial series commits will happen only
-> with the authors approval (confirmation posted to the list).
+# fallocate -l 10g fle.1
 
-Use your discretion. If a patch series is made up of "sync to kernel
-code" and "add new functionality", then the first "sync to kernel
-code" part can be committed before the "add new functionality" part
-has been fully reviewed.  If you are not sure, ask on the list.  It
-doesn't matter if the author doesn't respond - someone else can say
-"yes, makes sense to commit that portion"...
+# xfs_bmap -p -v file.1 | wc -l
+3
+# xfs_bmap -p -v file.1
+file.1:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET           TOTAL FLAGS
+   0: [0..20971519]:   96..20971615      0 (96..20971615)   20971520 10000
 
-However, this does not address the root cause of the problems that
-have lead to this discussion. It's the same problem we've had for
-the past year - patches sitting around for weeks or months before
-anyone other than me looks at them.
+# dd if=/dev/zero of=file.1 bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.55862 s, 37.7 MB/s
+# xfs_bmap -p -v file.1
+file.1:
+ EXT: FILE-OFFSET         BLOCK-RANGE      AG AG-OFFSET             TOTAL FLAGS
+   0: [0..262143]:        96..262239        0 (96..262239)         262144 00000
+   1: [262144..20971519]: 262240..20971615  0 (262240..20971615) 20709376 10000
 
-That's the real problem here - it's now 8 weeks since code that is a
-blocker for a 3.2.0 release was first posted, and not a single
-comment has been made about it. All this talk about kernel/userspace
-syncing is just a side show - it's never been a major issue before
-and it's not a major issue now. What is a major issue is that code
-is going unreviewed for weeks/months on end and we've been having
-this problem for at least a year now.
+# fallocate -l 10g file.2
+# xfs_bmap -p -v file.2
+file.2:
+ EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET               TOTAL FLAGS
+   0: [0..20971519]:   20971616..41943135  0 (20971616..41943135) 20971520 10000
+# dd if=/dev/zero of=file.2 bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.56464 s, 37.7 MB/s
+# xfs_bmap -p -v file.2
+file.2:
+ EXT: FILE-OFFSET         BLOCK-RANGE        AG AG-OFFSET
+ TOTAL FLAGS
+   0: [0..262143]:        20971616..21233759  0 (20971616..21233759)
+262144 00000
+   1: [262144..20971519]: 21233760..41943135  0 (21233760..41943135)
+20709376 10000
 
-So let's try to address the real problem that needs solving here -
-getting patches reviewed and committed *promptly*. We don't need
-more process overhead to accomplish that - we need people to
-actually put time into reviewing code quickly and we need
-maintainers that commit reviewed patch series just as quickly.
+# fallocate -l 10g file.3
+# xfs_bmap -p -v file.3
+file.3:
+ EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET               TOTAL FLAGS
+   0: [0..20971519]:   41943136..62914655  0 (41943136..62914655) 20971520 10000
+# dd if=/dev/zero of=file.3 bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.55932 s, 37.7 MB/s
+# xfs_bmap -p -v file.3
+file.3:
+ EXT: FILE-OFFSET         BLOCK-RANGE        AG AG-OFFSET
+ TOTAL FLAGS
+   0: [0..262143]:        41943136..42205279  0 (41943136..42205279)
+262144 00000
+   1: [262144..20971519]: 42205280..62914655  0 (42205280..62914655)
+20709376 10000
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Karthik
+
+--001a11c34e6c885e9804e9e87bbd
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><span style=3D"color:rgb(0,0,0);white-space:pre-wrap">Hi,<=
+/span><div><span style=3D"color:rgb(0,0,0);white-space:pre-wrap"><br></span=
+></div><div><span style=3D"color:rgb(0,0,0);white-space:pre-wrap">I have a =
+1 TB SATA disk(WD1003FBYX) with XFS. In my tests, I preallocate a bunch of =
+10GB files and write data to the files one at a time. I have observed that =
+the default mkfs setting(4 AGs) gives very low throughput. When I reformat =
+the disk with a agsize of 256mb(</span><span style=3D"color:rgb(0,0,0);whit=
+e-space:pre-wrap">agcount=3D3726)</span><span style=3D"color:rgb(0,0,0);whi=
+te-space:pre-wrap">, I see better throughput. I thought with a bigger agsiz=
+e, the files will be made of fewer extents and hence perform better(due to =
+lesser entries in the extent map getting updated). But, according to my tes=
+ts, the opposite seems to be true. Can you please explain why this the case=
+? Am I missing something?</span></div>
+<div><div><pre style=3D"color:rgb(0,0,0);word-wrap:break-word;white-space:p=
+re-wrap">My test parameters:
+
+mkfs.xfs -f /dev/sdbf1
+mount  -o inode64 /dev/sdbf1 /mnt/test
+fallocate -l 10G fname
+dd if=3D/dev/zero of=3Dfname bs=3D2M count=3D64 oflag=3Ddirect,sync conv=3D=
+notrunc seek=3D0
+
+# uname -a
+Linux gold 3.0.82-0.7-default #1 SMP Thu Jun 27 13:19:18 UTC 2013 (6efde93)=
+ x86_64 x86_64 x86_64 GNU/Linux
+# cat /etc/SuSE-release
+SUSE Linux Enterprise Server 11 (x86_64)
+VERSION =3D 11
+PATCHLEVEL =3D 3
+# Intel(R) Xeon(R) CPU E5-2603 0 @ 1.80GHz
+
+
+------- Tests with agsize of 256MB -----------
+# mkfs.xfs -f /dev/sdbf1 -d agsize=3D256m
+meta-data=3D/dev/sdbf1             isize=3D256    agcount=3D3726, agsize=3D=
+65536 blks
+         =3D                       sectsz=3D512   attr=3D2, projid32bit=3D0
+data     =3D                       bsize=3D4096   blocks=3D244187136, imaxp=
+ct=3D25
+         =3D                       sunit=3D0      swidth=3D0 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
+log      =3Dinternal log           bsize=3D4096   blocks=3D65532, version=
+=3D2
+         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
+t=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+
+# mount  -o inode64 /dev/sdbf1 /mnt/test
+# cd test
+# ls
+# fallocate -l 10g file.1
+# xfs_bmap -p -v file.1 | wc -l
+43
+# dd if=3D/dev/zero of=3Dfile.1 bs=3D2M count=3D64 oflag=3Ddirect,sync conv=
+=3Dnotrunc seek=3D0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.56155 s, 37.7 MB/s
+(the first file write seems to be slow)
+
+# fallocate -l 10g file.2
+# dd if=3D/dev/zero of=3Dfile.2 bs=3D2M count=3D64 oflag=3Ddirect,sync conv=
+=3Dnotrunc seek=3D0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 1.57496 s, 85.2 MB/s
+# fallocate -l 10g file.3
+# dd if=3D/dev/zero of=3Dfile.3 bs=3D2M count=3D64 oflag=3Ddirect,sync conv=
+=3Dnotrunc seek=3D0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 1.56151 s, 86.0 MB/s
+
+------- Tests with default mkfs parameters -----------
+# cd ..
+# umount test
+# mkfs.xfs -f /dev/sdbf1
+meta-data=3D/dev/sdbf1             isize=3D256    agcount=3D4, agsize=3D610=
+47598 blks
+         =3D                       sectsz=3D512   attr=3D2, projid32bit=3D0
+data     =3D                       bsize=3D4096   blocks=3D244190390, imaxp=
+ct=3D25
+         =3D                       sunit=3D0      swidth=3D0 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
+log      =3Dinternal log           bsize=3D4096   blocks=3D119233, version=
+=3D2
+         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
+t=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+# mount  -o inode64 /dev/sdbf1 /mnt/test
+# cd test</pre><pre style=3D"color:rgb(0,0,0);word-wrap:break-word;white-sp=
+ace:pre-wrap"># fallocate -l 10g fle.1</pre><pre style=3D"color:rgb(0,0,0);=
+word-wrap:break-word;white-space:pre-wrap"># xfs_bmap -p -v file.1 | wc -l
+3
+# xfs_bmap -p -v file.1
+file.1:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET           TOTAL FLAGS
+   0: [0..20971519]:   96..20971615      0 (96..20971615)   20971520 10000
+
+# dd if=3D/dev/zero of=3Dfile.1 bs=3D2M count=3D64 oflag=3Ddirect,sync conv=
+=3Dnotrunc seek=3D0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.55862 s, 37.7 MB/s
+# xfs_bmap -p -v file.1
+file.1:
+ EXT: FILE-OFFSET         BLOCK-RANGE      AG AG-OFFSET             TOTAL F=
+LAGS
+   0: [0..262143]:        96..262239        0 (96..262239)         262144 0=
+0000
+   1: [262144..20971519]: 262240..20971615  0 (262240..20971615) 20709376 1=
+0000
+
+# fallocate -l 10g file.2
+# xfs_bmap -p -v file.2
+file.2:
+ EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET               TOTAL =
+FLAGS
+   0: [0..20971519]:   20971616..41943135  0 (20971616..41943135) 20971520 =
+10000
+# dd if=3D/dev/zero of=3Dfile.2 bs=3D2M count=3D64 oflag=3Ddirect,sync conv=
+=3Dnotrunc seek=3D0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.56464 s, 37.7 MB/s
+# xfs_bmap -p -v file.2
+file.2:
+ EXT: FILE-OFFSET         BLOCK-RANGE        AG AG-OFFSET               TOT=
+AL FLAGS
+   0: [0..262143]:        20971616..21233759  0 (20971616..21233759)   2621=
+44 00000
+   1: [262144..20971519]: 21233760..41943135  0 (21233760..41943135) 207093=
+76 10000
+
+# fallocate -l 10g file.3
+# xfs_bmap -p -v file.3
+file.3:
+ EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET               TOTAL =
+FLAGS
+   0: [0..20971519]:   41943136..62914655  0 (41943136..62914655) 20971520 =
+10000
+# dd if=3D/dev/zero of=3Dfile.3 bs=3D2M count=3D64 oflag=3Ddirect,sync conv=
+=3Dnotrunc seek=3D0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 3.55932 s, 37.7 MB/s
+# xfs_bmap -p -v file.3
+file.3:
+ EXT: FILE-OFFSET         BLOCK-RANGE        AG AG-OFFSET               TOT=
+AL FLAGS
+   0: [0..262143]:        41943136..42205279  0 (41943136..42205279)   2621=
+44 00000
+   1: [262144..20971519]: 42205280..62914655  0 (42205280..62914655) 207093=
+76 10000
+</pre></div><div><br></div></div><div>Thanks,</div><div>Karthik</div></div>
+
+--001a11c34e6c885e9804e9e87bbd--
+
+
+--===============2021421853625565338==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2021421853625565338==--
