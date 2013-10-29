@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 727997F3F
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 07:18:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42DFD304059
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 05:18:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ychBXl8Tz1xlfLuK for
-	<xfs@oss.sgi.com>; Tue, 29 Oct 2013 05:18:52 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9TCIpAv020955
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 08:18:51 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfstests: generic/317 318 need procfs uid_map/gid_map support
-Date: Tue, 29 Oct 2013 20:17:48 +0800
-Message-Id: <1383049068-3020-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BE0FF7F3F
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 09:35:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56448AC06B
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 07:35:08 -0700 (PDT)
+Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com
+	[209.85.223.181]) by cuda.sgi.com with ESMTP id
+	VDJlE48dltFTnNRG (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 07:35:07 -0700 (PDT)
+Received: by mail-ie0-f181.google.com with SMTP id ar20so14365582iec.12
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 07:35:06 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 29 Oct 2013 22:35:06 +0800
+Message-ID: <CAD+1EGMos6SgyKDAKc8LHajUMbd9acZ9ghKCG=ksKZnhTxawDw@mail.gmail.com>
+Subject: XFS real-time allocator
+From: harryxiyou <harryxiyou@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,73 +25,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
 
-generic/317 and 318 need /proc/<pid>/[uid_map|gid_map], test fail on
-older kernels without that support.
+Hi all,
 
-Add a _require_ugid_map() function and called by 317 and 318.
+I have created a real-time partition as follows.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- common/rc         | 10 ++++++++++
- tests/generic/317 |  1 +
- tests/generic/318 |  1 +
- 3 files changed, 12 insertions(+)
+root@node2:~# mkfs.xfs -f -r rtdev=/dev/sda3 /dev/sda4
 
-diff --git a/common/rc b/common/rc
-index b5eb582..ea3af12 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2142,6 +2142,16 @@ _require_dumpe2fs()
- 	fi
- }
- 
-+_require_ugid_map()
-+{
-+	if [ ! -e /proc/self/uid_map ]; then
-+		_notrun "This test requires procfs uid_map support."
-+	fi
-+	if [ ! -e /proc/self/gid_map ]; then
-+		_notrun "This test requires procfs gid_map support."
-+	fi
-+}
-+
- _create_loop_device()
- {
- 	file=$1
-diff --git a/tests/generic/317 b/tests/generic/317
-index 6d8d3c4..c042f79 100644
---- a/tests/generic/317
-+++ b/tests/generic/317
-@@ -63,6 +63,7 @@ rm -f $seqres.full
- _require_scratch
- _need_to_be_root
- _require_user
-+_require_ugid_map
- qa_user_id=`grep $qa_user /etc/passwd |awk -F: '{print $3}'`
- 
- _filter_output()
-diff --git a/tests/generic/318 b/tests/generic/318
-index d3bce51..3e8eb50 100755
---- a/tests/generic/318
-+++ b/tests/generic/318
-@@ -63,6 +63,7 @@ _require_scratch
- _need_to_be_root
- _acl_setup_ids
- _require_acls
-+_require_ugid_map
- 
- _print_getfacls()
- {
+meta-data=/dev/sda4              isize=256    agcount=4, agsize=56122440 blks
+
+         =                       sectsz=512   attr=2, projid32bit=0
+
+data     =                       bsize=4096   blocks=224489757, imaxpct=25
+
+         =                       sunit=0      swidth=0 blks
+
+naming   =version 2              bsize=4096   ascii-ci=0
+
+log      =internal log           bsize=4096   blocks=109614, version=2
+
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+
+realtime =/dev/sda3              extsz=4096   blocks=14865657,
+rtextents=14865657
+
+
+I wonder how to use its real-time feature. And I should call some interfaces
+supported by XFS in the user/kernel-space, right?
+
+
 -- 
-1.8.3.1
+Thanks
+Weiwei  Jia (Harry Wei)
 
 _______________________________________________
 xfs mailing list
