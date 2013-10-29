@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE47A7F3F
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 06:12:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9BD6B304048
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 04:12:09 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9C64F7F3F
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 06:12:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 898B4304048
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 04:12:10 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	YYkQkMxo0tTZCdl9 for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 04:12:07 -0700 (PDT)
+	owHORgxDT7Wviriu for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 04:12:08 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vb7DM-0000PL-TW
-	for xfs@oss.sgi.com; Tue, 29 Oct 2013 22:12:00 +1100
+	(envelope-from <dave@fromorbit.com>) id 1Vb7DN-0000Pr-75
+	for xfs@oss.sgi.com; Tue, 29 Oct 2013 22:12:01 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vb7DM-000873-SE
-	for xfs@oss.sgi.com; Tue, 29 Oct 2013 22:12:00 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1Vb7DN-00088B-5Q
+	for xfs@oss.sgi.com; Tue, 29 Oct 2013 22:12:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/15] xfs: xfs_remove deadlocks due to inverted AGF vs AGI
-	lock ordering
-Date: Tue, 29 Oct 2013 22:11:44 +1100
-Message-Id: <1383045118-31107-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 15/15] xfs: fix static and extern sparse warnings
+Date: Tue, 29 Oct 2013 22:11:58 +1100
+Message-Id: <1383045118-31107-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383045118-31107-1-git-send-email-david@fromorbit.com>
 References: <1383045118-31107-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,166 +39,226 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Removing an inode from the namespace involves removing the directory
-entry and dropping the link count on the inode. Removing the
-directory entry can result in locking an AGF (directory blocks were
-freed) and removing a link count can result in placing the inode on
-an unlinked list which results in locking an AGI.
+The kbuild test robot indicated that there were some new sparse
+warnings in fs/xfs/xfs_dquot_buf.c. Actually, there were a lot more
+that is wasn't warning about, so fix them all up.
 
-The big problem here is that we have an ordering constraint on AGF
-and AGI locking - inode allocation locks the AGI, then can allocate
-a new extent for new inodes, locking the AGF after the AGI.
-Similarly, freeing the inode removes the inode from the unlinked
-list, requiring that we lock the AGI first, and then freeing the
-inode can result in an inode chunk being freed and hence freeing
-disk space requiring that we lock an AGF.
-
-Hence the ordering that is imposed by other parts of the code is AGI
-before AGF. This means we cannot remove the directory entry before
-we drop the inode reference count and put it on the unlinked list as
-this results in a lock order of AGF then AGI, and this can deadlock
-against inode allocation and freeing. Therefore we must drop the
-link counts before we remove the directory entry.
-
-This is still safe from a transactional point of view - it is not
-until we get to xfs_bmap_finish() that we have the possibility of
-multiple transactions in this operation. Hence as long as we remove
-the directory entry and drop the link count in the first transaction
-of the remove operation, there are no transactional constraints on
-the ordering here.
-
-Change the ordering of the operations in the xfs_remove() function
-to align the ordering of AGI and AGF locking to match that of the
-rest of the code.
-
+Reported-by: kbuild test robot
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 72 +++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 44 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_alloc_btree.c  |  1 +
+ fs/xfs/xfs_attr_leaf.c    |  1 +
+ fs/xfs/xfs_attr_remote.c  |  1 +
+ fs/xfs/xfs_bit.c          |  1 +
+ fs/xfs/xfs_bmap_btree.c   |  1 +
+ fs/xfs/xfs_buf_item.c     |  2 +-
+ fs/xfs/xfs_da_format.c    | 11 ++++++-----
+ fs/xfs/xfs_dquot_buf.c    |  3 ++-
+ fs/xfs/xfs_ialloc_btree.c |  1 +
+ fs/xfs/xfs_rtbitmap.c     |  1 +
+ fs/xfs/xfs_sb.c           |  1 +
+ fs/xfs/xfs_super.c        |  2 +-
+ 12 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 326b94d..001aa89 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2404,6 +2404,33 @@ xfs_iunpin_wait(
- 		__xfs_iunpin_wait(ip);
+diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
+index 698587f..1308542 100644
+--- a/fs/xfs/xfs_alloc_btree.c
++++ b/fs/xfs/xfs_alloc_btree.c
+@@ -17,6 +17,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index fdf9992..7b126f4 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -18,6 +18,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index 2e55304..739e0a5 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -18,6 +18,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_bit.c b/fs/xfs/xfs_bit.c
+index 16ce44a..0e8885a 100644
+--- a/fs/xfs/xfs_bit.c
++++ b/fs/xfs/xfs_bit.c
+@@ -17,6 +17,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_log_format.h"
++#include "xfs_bit.h"
+ 
+ /*
+  * XFS bit manipulation routines, used in non-realtime code.
+diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+index 2fb4a22..706bc3f 100644
+--- a/fs/xfs/xfs_bmap_btree.c
++++ b/fs/xfs/xfs_bmap_btree.c
+@@ -17,6 +17,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index b6d20c5..a64f67b 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -809,7 +809,7 @@ xfs_buf_item_init(
+  * Mark bytes first through last inclusive as dirty in the buf
+  * item's bitmap.
+  */
+-void
++static void
+ xfs_buf_item_log_segment(
+ 	struct xfs_buf_log_item	*bip,
+ 	uint			first,
+diff --git a/fs/xfs/xfs_da_format.c b/fs/xfs/xfs_da_format.c
+index 5a5767c..d224441 100644
+--- a/fs/xfs/xfs_da_format.c
++++ b/fs/xfs/xfs_da_format.c
+@@ -18,6 +18,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+@@ -706,7 +707,7 @@ xfs_dir3_free_hdr_to_disk(
+ 	hdr3->nused = cpu_to_be32(from->nused);
  }
  
-+/*
-+ * Removing an inode from the namespace involves removing the directory entry
-+ * and dropping the link count on the inode. Removing the directory entry can
-+ * result in locking an AGF (directory blocks were freed) and removing a link
-+ * count can result in placing the inode on an unlinked list which results in
-+ * locking an AGI.
-+ *
-+ * The big problem here is that we have an ordering constraint on AGF and AGI
-+ * locking - inode allocation locks the AGI, then can allocate a new extent for
-+ * new inodes, locking the AGF after the AGI. Similarly, freeing the inode
-+ * removes the inode from the unlinked list, requiring that we lock the AGI
-+ * first, and then freeing the inode can result in an inode chunk being freed
-+ * and hence freeing disk space requiring that we lock an AGF.
-+ *
-+ * Hence the ordering that is imposed by other parts of the code is AGI before
-+ * AGF. This means we cannot remove the directory entry before we drop the inode
-+ * reference count and put it on the unlinked list as this results in a lock
-+ * order of AGF then AGI, and this can deadlock against inode allocation and
-+ * freeing. Therefore we must drop the link counts before we remove the
-+ * directory entry.
-+ *
-+ * This is still safe from a transactional point of view - it is not until we
-+ * get to xfs_bmap_finish() that we have the possibility of multiple
-+ * transactions in this operation. Hence as long as we remove the directory
-+ * entry and drop the link count in the first transaction of the remove
-+ * operation, there are no transactional constraints on the ordering here.
-+ */
- int
- xfs_remove(
- 	xfs_inode_t             *dp,
-@@ -2473,6 +2500,7 @@ xfs_remove(
- 	/*
- 	 * If we're removing a directory perform some additional validation.
- 	 */
-+	cancel_flags |= XFS_TRANS_ABORT;
- 	if (is_dir) {
- 		ASSERT(ip->i_d.di_nlink >= 2);
- 		if (ip->i_d.di_nlink != 2) {
-@@ -2483,31 +2511,16 @@ xfs_remove(
- 			error = XFS_ERROR(ENOTEMPTY);
- 			goto out_trans_cancel;
- 		}
--	}
+-const struct xfs_dir_ops xfs_dir2_ops = {
++static const struct xfs_dir_ops xfs_dir2_ops = {
+ 	.sf_entsize = xfs_dir2_sf_entsize,
+ 	.sf_nextentry = xfs_dir2_sf_nextentry,
+ 	.sf_get_ftype = xfs_dir2_sfe_get_ftype,
+@@ -756,7 +757,7 @@ const struct xfs_dir_ops xfs_dir2_ops = {
+ 	.db_to_fdindex = xfs_dir2_db_to_fdindex,
+ };
  
--	xfs_bmap_init(&free_list, &first_block);
--	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
--					&first_block, &free_list, resblks);
--	if (error) {
--		ASSERT(error != ENOENT);
--		goto out_bmap_cancel;
--	}
--	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
--	if (is_dir) {
--		/*
--		 * Drop the link from ip's "..".
--		 */
-+		/* Drop the link from ip's "..".  */
- 		error = xfs_droplink(tp, dp);
- 		if (error)
--			goto out_bmap_cancel;
-+			goto out_trans_cancel;
+-const struct xfs_dir_ops xfs_dir2_ftype_ops = {
++static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+ 	.sf_entsize = xfs_dir3_sf_entsize,
+ 	.sf_nextentry = xfs_dir3_sf_nextentry,
+ 	.sf_get_ftype = xfs_dir3_sfe_get_ftype,
+@@ -806,7 +807,7 @@ const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+ 	.db_to_fdindex = xfs_dir2_db_to_fdindex,
+ };
  
--		/*
--		 * Drop the "." link from ip to self.
--		 */
-+		/* Drop the "." link from ip to self.  */
- 		error = xfs_droplink(tp, ip);
- 		if (error)
--			goto out_bmap_cancel;
-+			goto out_trans_cancel;
- 	} else {
- 		/*
- 		 * When removing a non-directory we need to log the parent
-@@ -2516,20 +2529,24 @@ xfs_remove(
- 		 */
- 		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 	}
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-const struct xfs_dir_ops xfs_dir3_ops = {
++static const struct xfs_dir_ops xfs_dir3_ops = {
+ 	.sf_entsize = xfs_dir3_sf_entsize,
+ 	.sf_nextentry = xfs_dir3_sf_nextentry,
+ 	.sf_get_ftype = xfs_dir3_sfe_get_ftype,
+@@ -856,14 +857,14 @@ const struct xfs_dir_ops xfs_dir3_ops = {
+ 	.db_to_fdindex = xfs_dir3_db_to_fdindex,
+ };
  
--	/*
--	 * Drop the link from dp to ip.
--	 */
-+	/* Drop the link from dp to ip. */
- 	error = xfs_droplink(tp, ip);
- 	if (error)
--		goto out_bmap_cancel;
-+		goto out_trans_cancel;
+-const struct xfs_dir_ops xfs_dir2_nondir_ops = {
++static const struct xfs_dir_ops xfs_dir2_nondir_ops = {
+ 	.node_hdr_size = sizeof(struct xfs_da_node_hdr),
+ 	.node_hdr_to_disk = xfs_da2_node_hdr_to_disk,
+ 	.node_hdr_from_disk = xfs_da2_node_hdr_from_disk,
+ 	.node_tree_p = xfs_da2_node_tree_p,
+ };
  
--	/*
--	 * Determine if this is the last link while
--	 * we are in the transaction.
--	 */
-+	/* Determine if this is the last link while the inode is locked */
- 	link_zero = (ip->i_d.di_nlink == 0);
+-const struct xfs_dir_ops xfs_dir3_nondir_ops = {
++static const struct xfs_dir_ops xfs_dir3_nondir_ops = {
+ 	.node_hdr_size = sizeof(struct xfs_da3_node_hdr),
+ 	.node_hdr_to_disk = xfs_da3_node_hdr_to_disk,
+ 	.node_hdr_from_disk = xfs_da3_node_hdr_from_disk,
+diff --git a/fs/xfs/xfs_dquot_buf.c b/fs/xfs/xfs_dquot_buf.c
+index aaaf41b..d401457 100644
+--- a/fs/xfs/xfs_dquot_buf.c
++++ b/fs/xfs/xfs_dquot_buf.c
+@@ -18,6 +18,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+@@ -267,7 +268,7 @@ xfs_dquot_buf_read_verify(
+  * the buffer after the update is done. This ensures that the dquot in the
+  * buffer always has an up-to-date CRC value.
+  */
+-void
++static void
+ xfs_dquot_buf_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+index 1fa142d..c8fa5bb 100644
+--- a/fs/xfs/xfs_ialloc_btree.c
++++ b/fs/xfs/xfs_ialloc_btree.c
+@@ -17,6 +17,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_rtbitmap.c b/fs/xfs/xfs_rtbitmap.c
+index e30efe8..b1f2fe8 100644
+--- a/fs/xfs/xfs_rtbitmap.c
++++ b/fs/xfs/xfs_rtbitmap.c
+@@ -37,6 +37,7 @@
+ #include "xfs_buf.h"
+ #include "xfs_icache.h"
+ #include "xfs_dinode.h"
++#include "xfs_rtalloc.h"
  
-+	xfs_bmap_init(&free_list, &first_block);
-+	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
-+					&first_block, &free_list, resblks);
-+	if (error) {
-+		ASSERT(error != ENOENT);
-+		goto out_bmap_cancel;
-+	}
-+
- 	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * remove transaction goes to disk before returning to
-@@ -2559,7 +2576,6 @@ xfs_remove(
  
-  out_bmap_cancel:
- 	xfs_bmap_cancel(&free_list);
--	cancel_flags |= XFS_TRANS_ABORT;
-  out_trans_cancel:
- 	xfs_trans_cancel(tp, cancel_flags);
-  std_return:
+ /*
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index 05b5493..13c7834 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -17,6 +17,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5ee4ceb..f317488 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1155,7 +1155,7 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+  * Note: xfs_log_quiesce() stops background log work - the callers must ensure
+  * it is started again when appropriate.
+  */
+-void
++static void
+ xfs_quiesce_attr(
+ 	struct xfs_mount	*mp)
+ {
 -- 
 1.8.4.rc3
 
