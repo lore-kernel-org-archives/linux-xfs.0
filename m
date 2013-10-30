@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2F16A7F74
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F2DF28F8059
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:38 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2A13D7F7E
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E8519304048
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:39 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	CSLR3aeAmfMvYu1A for <xfs@oss.sgi.com>;
+	j3AREYgr3nBiAvF5 for <xfs@oss.sgi.com>;
 	Tue, 29 Oct 2013 21:31:37 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yp-Rr
-	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
+	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yr-SN
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:26 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007ep-Qp
+	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007eu-Ro
 	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 18/30] db: introduce verifier support into set_cur
-Date: Wed, 30 Oct 2013 15:31:09 +1100
-Message-Id: <1383107481-28937-19-git-send-email-david@fromorbit.com>
+Subject: [PATCH 19/30] db: indicate if the CRC on a buffer is correct or not
+Date: Wed, 30 Oct 2013 15:31:10 +1100
+Message-Id: <1383107481-28937-20-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,187 +39,303 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To be able to use read and write verifiers, we need to pass the
-verifier to the IO routines. We do this via the set_cur() function
-used to trigger reading the buffer.
+When dumping metadata that has a CRC in it, output not only the CRC
+but text to tell us whether the value is correct or not. Hence we
+can see at a glance if there's something wrong or not.
 
-For most metadata types, there is only one type of verifier needed.
-For these, we can simply add the verifier to the type table entry
-for the given type and use that directly. This type entry is already
-carried around by the IO context, so if we ever need to get it again
-we have direct access to it in the context we'll be doing IO.
-
-Only attach the verifiers to the v5 filesystem type table; there is
-not need for them on v4 filesystems as we don't have to verify or
-calculate CRCs for them.
-
-There are some metadata types that have more than one buffer format,
-or aren't based in directly in buffers. For these, leave the type
-table verifier NULL for now - these will need to be addressed
-individually.
+Do this by peeking at the buffer attached to the current IO
+contexted. If there was a CRC error, then it will be marked with a
+EFSCORRUPTED error. Use this to determine what to output.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/io.c   | 13 +++++++---
- db/type.c | 88 ++++++++++++++++++++++++++++++++++-----------------------------
- db/type.h |  1 +
- 3 files changed, 59 insertions(+), 43 deletions(-)
+ db/agf.c     |  2 +-
+ db/agfl.c    |  2 +-
+ db/agi.c     |  2 +-
+ db/btblock.c | 10 +++++-----
+ db/dir2.c    |  4 ++--
+ db/dquot.c   |  2 +-
+ db/field.c   |  5 +++++
+ db/field.h   |  4 ++++
+ db/fprint.c  | 39 +++++++++++++++++++++++++++++++++++++++
+ db/fprint.h  |  2 ++
+ db/inode.c   |  2 +-
+ db/io.h      |  6 ++++++
+ db/sb.c      |  2 +-
+ db/symlink.c |  2 +-
+ 14 files changed, 70 insertions(+), 14 deletions(-)
 
-diff --git a/db/io.c b/db/io.c
-index 9129963..c9452f2 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -480,12 +480,14 @@ set_cur(
- 	xfs_ino_t	dirino;
- 	xfs_ino_t	ino;
- 	__uint16_t	mode;
-+	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
- 
- 	if (iocur_sp < 0) {
- 		dbprintf(_("set_cur no stack element to set\n"));
- 		return;
- 	}
- 
-+
- 	ino = iocur_top->ino;
- 	dirino = iocur_top->dirino;
- 	mode = iocur_top->mode;
-@@ -507,12 +509,17 @@ set_cur(
- 			return;
- 		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
- 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
--					bbmap->nmaps, 0, NULL);
-+					bbmap->nmaps, 0, ops);
- 	} else {
--		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
-+		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
- 		iocur_top->bbmap = NULL;
- 	}
--	if (!bp || bp->b_error)
-+
-+	/*
-+	 * keep the buffer even if the verifier says it is corrupted.
-+	 * We're a diagnostic tool, after all.
-+	 */
-+	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
- 		return;
- 	iocur_top->buf = bp->b_addr;
- 	iocur_top->bp = bp;
-diff --git a/db/type.c b/db/type.c
-index 64e2ef4..b3f3d87 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -50,50 +50,58 @@ static const cmdinfo_t	type_cmd =
- 	  N_("set/show current data type"), NULL };
- 
- static const typ_t	__typtab[] = {
--	{ TYP_AGF, "agf", handle_struct, agf_hfld },
--	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld },
--	{ TYP_AGI, "agi", handle_struct, agi_hfld },
--	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
--	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld },
--	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld },
--	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld },
--	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld },
--	{ TYP_DATA, "data", handle_block, NULL },
--	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
--	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
--	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld },
--	{ TYP_INODATA, "inodata", NULL, NULL },
--	{ TYP_INODE, "inode", handle_struct, inode_hfld },
--	{ TYP_LOG, "log", NULL, NULL },
--	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
--	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
--	{ TYP_SB, "sb", handle_struct, sb_hfld },
--	{ TYP_SYMLINK, "symlink", handle_string, NULL },
--	{ TYP_TEXT, "text", handle_text, NULL },
-+	{ TYP_AGF, "agf", handle_struct, agf_hfld, NULL },
-+	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld, NULL },
-+	{ TYP_AGI, "agi", handle_struct, agi_hfld, NULL },
-+	{ TYP_ATTR, "attr", handle_struct, attr_hfld, NULL },
-+	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld, NULL },
-+	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld, NULL },
-+	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld, NULL },
-+	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld, NULL },
-+	{ TYP_DATA, "data", handle_block, NULL, NULL },
-+	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld, NULL },
-+	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld, NULL },
-+	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld, NULL },
-+	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
-+	{ TYP_INODE, "inode", handle_struct, inode_hfld, NULL },
-+	{ TYP_LOG, "log", NULL, NULL, NULL },
-+	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
-+	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
-+	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL },
-+	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL },
-+	{ TYP_TEXT, "text", handle_text, NULL, NULL },
- 	{ TYP_NONE, NULL }
+diff --git a/db/agf.c b/db/agf.c
+index 389cb43..d9a07ca 100644
+--- a/db/agf.c
++++ b/db/agf.c
+@@ -71,7 +71,7 @@ const field_t	agf_flds[] = {
+ 	{ "btreeblks", FLDT_UINT32D, OI(OFF(btreeblks)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ NULL }
  };
  
- static const typ_t	__typtab_crc[] = {
--	{ TYP_AGF, "agf", handle_struct, agf_hfld },
--	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
--	{ TYP_AGI, "agi", handle_struct, agi_hfld },
--	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld },
--	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
--	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
--	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
--	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
--	{ TYP_DATA, "data", handle_block, NULL },
--	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld },
--	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
--	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
--	{ TYP_INODATA, "inodata", NULL, NULL },
--	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld },
--	{ TYP_LOG, "log", NULL, NULL },
--	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
--	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
--	{ TYP_SB, "sb", handle_struct, sb_hfld },
--	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld },
--	{ TYP_TEXT, "text", handle_text, NULL },
-+	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
-+	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
-+	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
-+	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
-+	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
-+		&xfs_bmbt_buf_ops },
-+	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-+		&xfs_bmbt_buf_ops },
-+	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld,
-+		&xfs_allocbt_buf_ops },
-+	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
-+		&xfs_allocbt_buf_ops },
-+	{ TYP_DATA, "data", handle_block, NULL, NULL },
-+	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld, NULL },
-+	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
-+		&xfs_dquot_buf_ops },
-+	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
-+		&xfs_inobt_buf_ops },
-+	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
-+	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
-+		&xfs_inode_buf_ops },
-+	{ TYP_LOG, "log", NULL, NULL, NULL },
-+	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
-+	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
-+	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops },
-+	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
-+		&xfs_symlink_buf_ops },
-+	{ TYP_TEXT, "text", handle_text, NULL, NULL },
- 	{ TYP_NONE, NULL }
+diff --git a/db/agfl.c b/db/agfl.c
+index e2340e6..b29538f 100644
+--- a/db/agfl.c
++++ b/db/agfl.c
+@@ -58,7 +58,7 @@ const field_t	agfl_crc_flds[] = {
+ 	{ "seqno", FLDT_AGNUMBER, OI(OFF(seqno)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ "bno", FLDT_AGBLOCKNZ, OI(OFF(bno)), agfl_bno_size,
+ 	  FLD_ARRAY|FLD_COUNT, TYP_DATA },
+ 	{ NULL }
+diff --git a/db/agi.c b/db/agi.c
+index 6b2e889..398bdbb 100644
+--- a/db/agi.c
++++ b/db/agi.c
+@@ -56,7 +56,7 @@ const field_t	agi_flds[] = {
+ 	  CI(XFS_AGI_UNLINKED_BUCKETS), FLD_ARRAY, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ NULL }
  };
  
-diff --git a/db/type.h b/db/type.h
-index c41aca4d..3bb26f1 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -42,6 +42,7 @@ typedef struct typ
- 	char			*name;
- 	pfunc_t			pfunc;
- 	const struct field	*fields;
-+	const struct xfs_buf_ops *bops;
- } typ_t;
- extern const typ_t	*typtab, *cur_typ;
+diff --git a/db/btblock.c b/db/btblock.c
+index 34188db..1ea0cff 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -295,7 +295,7 @@ const field_t	bmapbta_crc_flds[] = {
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(u.l.bb_lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
+ 	{ "owner", FLDT_INO, OI(OFF(u.l.bb_owner)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
+ 	{ "recs", FLDT_BMAPBTAREC, btblock_rec_offset, btblock_rec_count,
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ "keys", FLDT_BMAPBTAKEY, btblock_key_offset, btblock_key_count,
+@@ -314,7 +314,7 @@ const field_t	bmapbtd_crc_flds[] = {
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(u.l.bb_lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
+ 	{ "owner", FLDT_INO, OI(OFF(u.l.bb_owner)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
+ 	{ "recs", FLDT_BMAPBTDREC, btblock_rec_offset, btblock_rec_count,
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ "keys", FLDT_BMAPBTDKEY, btblock_key_offset, btblock_key_count,
+@@ -405,7 +405,7 @@ const field_t	inobt_crc_flds[] = {
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
+ 	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
+ 	{ "recs", FLDT_INOBTREC, btblock_rec_offset, btblock_rec_count,
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ "keys", FLDT_INOBTKEY, btblock_key_offset, btblock_key_count,
+@@ -471,7 +471,7 @@ const field_t	bnobt_crc_flds[] = {
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
+ 	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
+ 	{ "recs", FLDT_BNOBTREC, btblock_rec_offset, btblock_rec_count,
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ "keys", FLDT_BNOBTKEY, btblock_key_offset, btblock_key_count,
+@@ -533,7 +533,7 @@ const field_t	cntbt_crc_flds[] = {
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
+ 	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
+ 	{ "recs", FLDT_CNTBTREC, btblock_rec_offset, btblock_rec_count,
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ "keys", FLDT_CNTBTKEY, btblock_key_offset, btblock_key_count,
+diff --git a/db/dir2.c b/db/dir2.c
+index 8b08d48..2ec64e0 100644
+--- a/db/dir2.c
++++ b/db/dir2.c
+@@ -922,7 +922,7 @@ const field_t	dir3_data_union_flds[] = {
+ #define	DBH3OFF(f)	bitize(offsetof(struct xfs_dir3_blk_hdr, f))
+ const field_t	dir3_blkhdr_flds[] = {
+ 	{ "magic", FLDT_UINT32X, OI(DBH3OFF(magic)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(DBH3OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(DBH3OFF(crc)), C1, 0, TYP_NONE },
+ 	{ "bno", FLDT_DFSBNO, OI(DBH3OFF(blkno)), C1, 0, TYP_BMAPBTD },
+ 	{ "lsn", FLDT_UINT64X, OI(DBH3OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(DBH3OFF(uuid)), C1, 0, TYP_NONE },
+@@ -959,7 +959,7 @@ const field_t	dir3_free_hdr_flds[] = {
+ #define	DB3OFF(f)	bitize(offsetof(struct xfs_da3_blkinfo, f))
+ const field_t	da3_blkinfo_flds[] = {
+ 	{ "hdr", FLDT_DA_BLKINFO, OI(DB3OFF(hdr)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(DB3OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(DB3OFF(crc)), C1, 0, TYP_NONE },
+ 	{ "bno", FLDT_DFSBNO, OI(DB3OFF(blkno)), C1, 0, TYP_BMAPBTD },
+ 	{ "lsn", FLDT_UINT64X, OI(DB3OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
+diff --git a/db/dquot.c b/db/dquot.c
+index 6927956..2f7d463 100644
+--- a/db/dquot.c
++++ b/db/dquot.c
+@@ -48,7 +48,7 @@ const field_t	dqblk_flds[] = {
+ 	{ "diskdq", FLDT_DISK_DQUOT, OI(DDOFF(diskdq)), C1, 0, TYP_NONE },
+ 	{ "fill", FLDT_CHARS, OI(DDOFF(fill)), CI(DDSZC(fill)), FLD_SKIPALL,
+ 	  TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(DDOFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(DDOFF(crc)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(DDOFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(DDOFF(uuid)), C1, 0, TYP_NONE },
+ 	{ NULL }
+diff --git a/db/field.c b/db/field.c
+index c6d7404..4582097 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -163,6 +163,11 @@ const ftattr_t	ftattrtab[] = {
+ 	  0, fa_agblock, NULL },
+ 	{ FLDT_CNTBTREC, "cntbtrec", fp_sarray, (char *)cntbt_rec_flds,
+ 	  SI(bitsz(xfs_alloc_rec_t)), 0, NULL, cntbt_rec_flds },
++
++/* CRC field */
++	{ FLDT_CRC, "crc", fp_crc, "%#x (%s)", SI(bitsz(__uint32_t)),
++	  0, NULL, NULL },
++
+ 	{ FLDT_DEV, "dev", fp_num, "%#x", SI(bitsz(xfs_dev_t)), 0, NULL, NULL },
+ 	{ FLDT_DFILOFFA, "dfiloffa", fp_num, "%llu", SI(bitsz(xfs_dfiloff_t)),
+ 	  0, fa_dfiloffa, NULL },
+diff --git a/db/field.h b/db/field.h
+index aecdf9f..6343c9a 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -80,6 +80,10 @@ typedef enum fldt	{
+ 	FLDT_CNTBTKEY,
+ 	FLDT_CNTBTPTR,
+ 	FLDT_CNTBTREC,
++
++	/* CRC field type */
++	FLDT_CRC,
++
+ 	FLDT_DEV,
+ 	FLDT_DFILOFFA,
+ 	FLDT_DFILOFFD,
+diff --git a/db/fprint.c b/db/fprint.c
+index 1d2f29c..435d984 100644
+--- a/db/fprint.c
++++ b/db/fprint.c
+@@ -30,6 +30,7 @@
+ #include "output.h"
+ #include "sig.h"
+ #include "malloc.h"
++#include "io.h"
  
+ int
+ fp_charns(
+@@ -184,3 +185,41 @@ fp_uuid(
+ 	}
+ 	return 1;
+ }
++
++/*
++ * CRC is correct is the current buffer it is being pulled out
++ * of is not marked with a EFSCORRUPTED error.
++ */
++int
++fp_crc(
++	void	*obj,
++	int	bit,
++	int	count,
++	char	*fmtstr,
++	int	size,
++	int	arg,
++	int	base,
++	int	array)
++{
++	int		bitpos;
++	int		i;
++	__int64_t	val;
++	char		*ok;
++
++	ok = iocur_crc_valid() ? "correct" : "bad";
++
++	for (i = 0, bitpos = bit;
++	     i < count && !seenint();
++	     i++, bitpos += size) {
++		if (array)
++			dbprintf("%d:", i + base);
++		val = getbitval(obj, bitpos, size, BVUNSIGNED);
++		if (size > 32)
++			dbprintf(fmtstr, val, ok);
++		else
++			dbprintf(fmtstr, (__int32_t)val, ok);
++		if (i < count - 1)
++			dbprintf(" ");
++	}
++	return 1;
++}
+diff --git a/db/fprint.h b/db/fprint.h
+index b032dbd..6a6d77e 100644
+--- a/db/fprint.h
++++ b/db/fprint.h
+@@ -29,3 +29,5 @@ extern int	fp_time(void *obj, int bit, int count, char *fmtstr, int size,
+ 			int arg, int base, int array);
+ extern int	fp_uuid(void *obj, int bit, int count, char *fmtstr, int size,
+ 			int arg, int base, int array);
++extern int	fp_crc(void *obj, int bit, int count, char *fmtstr, int size,
++		       int arg, int base, int array);
+diff --git a/db/inode.c b/db/inode.c
+index 634dc30..ec533ee 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -168,7 +168,7 @@ const field_t	inode_core_flds[] = {
+ };
+ 
+ const field_t	inode_v3_flds[] = {
+-	{ "crc", FLDT_UINT32X, OI(COFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(COFF(crc)), C1, 0, TYP_NONE },
+ 	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
+diff --git a/db/io.h b/db/io.h
+index 2c47ccc..d647284 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -58,3 +58,9 @@ extern void     write_cur(void);
+ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ 			bbmap_t *bbmap);
+ extern void     ring_add(void);
++
++static inline bool
++iocur_crc_valid()
++{
++	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
++}
+diff --git a/db/sb.c b/db/sb.c
+index 4929152..6cb665d 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -118,7 +118,7 @@ const field_t	sb_flds[] = {
+ 		C1, 0, TYP_NONE },
+ 	{ "features_log_incompat", FLDT_UINT32X, OI(OFF(features_log_incompat)),
+ 		C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ "pquotino", FLDT_INO, OI(OFF(pquotino)), C1, 0, TYP_INODE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ NULL }
+diff --git a/db/symlink.c b/db/symlink.c
+index 9f3d0b9..a4f420f 100644
+--- a/db/symlink.c
++++ b/db/symlink.c
+@@ -69,7 +69,7 @@ const struct field	symlink_crc_flds[] = {
+ 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
+ 	{ "offset", FLDT_UINT32D, OI(OFF(offset)), C1, 0, TYP_NONE },
+ 	{ "bytes", FLDT_UINT32D, OI(OFF(bytes)), C1, 0, TYP_NONE },
+-	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "owner", FLDT_INO, OI(OFF(owner)), C1, 0, TYP_NONE },
+ 	{ "bno", FLDT_DFSBNO, OI(OFF(blkno)), C1, 0, TYP_BMAPBTD },
 -- 
 1.8.4.rc3
 
