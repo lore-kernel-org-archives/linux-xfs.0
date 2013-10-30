@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4FEE57F6B
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ECC2DAC0A3
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:32 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 12C727F61
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 86D7EAC0A3
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:36 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	XvCYHUZn2J6sc5wB for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 21:31:31 -0700 (PDT)
+	cwJEgj3moxV4OLT6 for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 21:31:34 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yP-Kd
-	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
+	(envelope-from <dave@fromorbit.com>) id 1VbNRG-0002z8-2x
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:26 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007dr-Jh
-	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1VbNRG-0007fi-28
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/30] libxfs: unify xfs_btree.c with kernel code
-Date: Wed, 30 Oct 2013 15:30:57 +1100
-Message-Id: <1383107481-28937-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 29/30] xfs: support larger inode clusters on v5 filesystems
+Date: Wed, 30 Oct 2013 15:31:20 +1100
+Message-Id: <1383107481-28937-30-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,133 +39,119 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The libxfs/xfs_btree.c code does not contain a small amount of code
-for btree block readahead that the kernel code does. Instead, it
-short circuits it at a higher layer and doesn't include the lower
-layer functions. There is no harm in calling the lower lay functions
-and have them do nothing, and doing so unifies the kernel and
-userspace code.
+To allow the kernel to use larger inode clusters than the standard
+8192 bytes, we need to set the inode alignment fields appropriately
+so that the kernel is consistent in it's inode to buffer mappings.
+We set the alignment to allow a constant 32 inodes per cluster,
+instead of a fixed 8k cluster size.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs.h       |  8 +++++---
- libxfs/xfs_btree.c | 48 +++++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 48 insertions(+), 8 deletions(-)
+ include/libxfs.h |  2 +-
+ mkfs/xfs_mkfs.c  |  5 ++++-
+ repair/sb.c      | 41 ++++++++++++++++++++++++++++-------------
+ 3 files changed, 33 insertions(+), 15 deletions(-)
 
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 31acf1b..364fd83 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -319,10 +319,12 @@ roundup_64(__uint64_t x, __uint32_t y)
- 
- #define xfs_trans_buf_copy_type(dbp, sbp)
- 
--#define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
-+/* no readahead, need to avoid set-but-unused var warnings. */
-+#define xfs_buf_readahead(a,d,c,ops)		({	\
-+	xfs_daddr_t __d = d;				\
-+	__d = __d; /* no set-but-unused warning */	\
-+})
- #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
--#define xfs_btree_reada_bufl(m,fsb,c,ops)	((void) 0)
--#define xfs_btree_reada_bufs(m,fsb,c,x,ops)	((void) 0)
- #define xfs_buftrace(x,y)			((void) 0)	/* debug only */
- 
- #define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 0099926..ce149ad 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -396,7 +396,6 @@ static inline size_t xfs_btree_block_len(struct xfs_btree_cur *cur)
- 			return XFS_BTREE_LBLOCK_CRC_LEN;
- 		return XFS_BTREE_LBLOCK_LEN;
- 	}
--
- 	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS)
- 		return XFS_BTREE_SBLOCK_CRC_LEN;
- 	return XFS_BTREE_SBLOCK_LEN;
-@@ -493,7 +492,7 @@ xfs_btree_ptr_addr(
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 049b217..9d7c579 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -182,7 +182,7 @@ typedef struct xfs_mount {
+ 	__uint8_t		m_sectbb_log;	/* sectorlog - BBSHIFT */
+ 	__uint8_t		m_agno_log;	/* log #ag's */
+ 	__uint8_t		m_agino_log;	/* #bits for agino in inum */
+-	__uint16_t		m_inode_cluster_size;/* min inode buf size */
++	uint			m_inode_cluster_size;/* min inode buf size */
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 04ccc83..54a3637 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2532,7 +2532,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	} else
+ 		sbp->sb_logsunit = 0;
+ 	if (iaflag) {
+-		sbp->sb_inoalignmt = XFS_INODE_BIG_CLUSTER_SIZE >> blocklog;
++		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
++		if (crcs_enabled)
++			cluster_size *= isize / XFS_DINODE_MIN_SIZE;
++		sbp->sb_inoalignmt = cluster_size >> blocklog;
+ 		iaflag = sbp->sb_inoalignmt != 0;
+ 	} else
+ 		sbp->sb_inoalignmt = 0;
+diff --git a/repair/sb.c b/repair/sb.c
+index 2e35a4c..c54d89b 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -169,17 +169,37 @@ find_secondary_sb(xfs_sb_t *rsb)
  }
  
  /*
-- * Get a the root block which is stored in the inode.
-+ * Get the root block which is stored in the inode.
-  *
-  * For now this btree implementation assumes the btree root is always
-  * stored in the if_broot field of an inode fork.
-@@ -716,6 +715,46 @@ xfs_btree_read_bufl(
- 	return 0;
- }
- 
-+/*
-+ * Read-ahead the block, don't wait for it, don't return a buffer.
-+ * Long-form addressing.
-+ */
-+/* ARGSUSED */
-+void
-+xfs_btree_reada_bufl(
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	xfs_fsblock_t		fsbno,		/* file system block number */
-+	xfs_extlen_t		count,		/* count of filesystem blocks */
-+	const struct xfs_buf_ops *ops)
-+{
-+	xfs_daddr_t		d;
-+
-+	ASSERT(fsbno != NULLFSBLOCK);
-+	d = XFS_FSB_TO_DADDR(mp, fsbno);
-+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
-+}
-+
-+/*
-+ * Read-ahead the block, don't wait for it, don't return a buffer.
-+ * Short-form addressing.
-+ */
-+/* ARGSUSED */
-+void
-+xfs_btree_reada_bufs(
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	xfs_agnumber_t		agno,		/* allocation group number */
-+	xfs_agblock_t		agbno,		/* allocation group block number */
-+	xfs_extlen_t		count,		/* count of filesystem blocks */
-+	const struct xfs_buf_ops *ops)
-+{
-+	xfs_daddr_t		d;
-+
-+	ASSERT(agno != NULLAGNUMBER);
-+	ASSERT(agbno != NULLAGBLOCK);
-+	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
-+}
-+
- STATIC int
- xfs_btree_readahead_lblock(
- 	struct xfs_btree_cur	*cur,
-@@ -1339,7 +1378,7 @@ xfs_btree_log_block(
- 			 * We don't log the CRC when updating a btree
- 			 * block but instead recreate it during log
- 			 * recovery.  As the log buffers have checksums
--			 * of their this is safe and avoids logging a crc
-+			 * of their own this is safe and avoids logging a crc
- 			 * update in a lot of places.
- 			 */
- 			if (fields == XFS_BB_ALL_BITS)
-@@ -1629,7 +1668,7 @@ xfs_lookup_get_search_key(
- 
- /*
-  * Lookup the record.  The cursor is made to point to it, based on dir.
-- * Return 0 if can't find any such record, 1 for success.
-+ * stat is set to 0 if can't find any such record, 1 for success.
+- * calculate what inode alignment field ought to be
+- * based on internal superblock info
++ * Calculate what inode alignment field ought to be
++ * based on internal superblock info and determine if it is valid.
++ *
++ * For v5 superblocks, the inode alignment will either match that of the
++ * standard XFS_INODE_BIG_CLUSTER_SIZE, or it will be scaled based on the inode
++ * size. Either value is valid in this case.
++ *
++ * Return true if the alignment is valid, false otherwise.
   */
- int					/* error */
- xfs_btree_lookup(
-@@ -2701,7 +2740,6 @@ xfs_btree_make_block_unfull(
+-static int
+-calc_ino_align(xfs_sb_t *sb)
++static bool
++sb_validate_ino_align(struct xfs_sb *sb)
+ {
+-	xfs_extlen_t align;
++	xfs_extlen_t	align;
  
- 		if (numrecs < cur->bc_ops->get_dmaxrecs(cur, level)) {
- 			/* A root block that can be made bigger. */
++	if (!xfs_sb_version_hasalign(sb))
++		return true;
++
++	/* standard cluster size alignment is always valid */
+ 	align = XFS_INODE_BIG_CLUSTER_SIZE >> sb->sb_blocklog;
++	if (align == sb->sb_inoalignmt)
++		return true;
++
++	/* alignment scaled by inode size is v5 only for now */
++	if (!xfs_sb_version_hascrc(sb))
++		return false;
+ 
+-	return(align);
++	align *= sb->sb_inodesize / XFS_DINODE_MIN_SIZE;
++	if (align == sb->sb_inoalignmt)
++		return true;
++
++	return false;
+ }
+ 
+ /*
+@@ -228,7 +248,6 @@ int
+ verify_sb(xfs_sb_t *sb, int is_primary_sb)
+ {
+ 	__uint32_t	bsize;
+-	xfs_extlen_t	align;
+ 	int		i;
+ 
+ 	/* check magic number and version number */
+@@ -364,12 +383,8 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
+ 	/*
+ 	 * verify correctness of inode alignment if it's there
+ 	 */
+-	if (xfs_sb_version_hasalign(sb))  {
+-		align = calc_ino_align(sb);
 -
- 			xfs_iroot_realloc(ip, 1, cur->bc_private.b.whichfork);
- 		} else {
- 			/* A root block that needs replacing */
+-		if (align != sb->sb_inoalignmt)
+-			return(XR_BAD_INO_ALIGN);
+-	}
++	if (!sb_validate_ino_align(sb))
++		return(XR_BAD_INO_ALIGN);
+ 
+ 	/*
+ 	 * verify max. % of inodes (sb_imax_pct)
 -- 
 1.8.4.rc3
 
