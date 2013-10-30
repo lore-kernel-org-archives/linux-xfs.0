@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 19E937F52
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 17:10:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 06A318F8066
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 15:10:35 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	6Q4EAtQjVtjZy2CR for <xfs@oss.sgi.com>;
-	Wed, 30 Oct 2013 15:10:34 -0700 (PDT)
-Date: Thu, 31 Oct 2013 09:10:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfstests: add regression test for running btrfs
-	balance and defrag concurrently
-Message-ID: <20131030221027.GI6188@dastard>
-References: <1383142372-18852-1-git-send-email-bo.li.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id D68597F52
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 17:39:04 -0500 (CDT)
+Date: Wed, 30 Oct 2013 17:39:04 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 01/15] xfs: xfs_remove deadlocks due to inverted AGF vs
+	AGI lock ordering
+Message-ID: <20131030223904.GM1935@sgi.com>
+References: <1383045118-31107-1-git-send-email-david@fromorbit.com>
+	<1383045118-31107-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1383142372-18852-1-git-send-email-bo.li.liu@oracle.com>
+In-Reply-To: <1383045118-31107-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,152 +24,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Liu Bo <bo.li.liu@oracle.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 30, 2013 at 10:12:52PM +0800, Liu Bo wrote:
-> The test aims to trigger snapshot-aware defrag path in write endio by
-> running balance, which is not expected and leads to a crash.
+On Tue, Oct 29, 2013 at 10:11:44PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
-> ---
-> v2: remove useless words as required.
+> Removing an inode from the namespace involves removing the directory
+> entry and dropping the link count on the inode. Removing the
+> directory entry can result in locking an AGF (directory blocks were
+> freed) and removing a link count can result in placing the inode on
+> an unlinked list which results in locking an AGI.
 > 
->  tests/btrfs/021     |   90 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/021.out |    2 +
->  tests/btrfs/group   |    1 +
->  3 files changed, 93 insertions(+), 0 deletions(-)
->  create mode 100755 tests/btrfs/021
->  create mode 100644 tests/btrfs/021.out
+> The big problem here is that we have an ordering constraint on AGF
+> and AGI locking - inode allocation locks the AGI, then can allocate
+> a new extent for new inodes, locking the AGF after the AGI.
+> Similarly, freeing the inode removes the inode from the unlinked
+> list, requiring that we lock the AGI first, and then freeing the
+> inode can result in an inode chunk being freed and hence freeing
+> disk space requiring that we lock an AGF.
 > 
-> diff --git a/tests/btrfs/021 b/tests/btrfs/021
-> new file mode 100755
-> index 0000000..23eff47
-> --- /dev/null
-> +++ b/tests/btrfs/021
-> @@ -0,0 +1,90 @@
-> +#! /bin/bash
-> +# FS QA Test No. 021
-> +#
-> +# A regression test of running btrfs balance and defrag concurrently.
-> +#
-> +# The test aims to trigger snapshot-aware defrag path in endio by
-> +# running balance, which is not expected and leads to a crash.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Oracle.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +run_test()
-> +{
-> +	$BTRFS_UTIL_PROG balance start $SCRATCH_MNT >> $seqres.full &
-> +
-> +	sleep 0.5
-> +
-> +	find $SCRATCH_MNT -type f -print0 | xargs -0 $BTRFS_UTIL_PROG filesystem defrag -f
+> Hence the ordering that is imposed by other parts of the code is AGI
+> before AGF. This means we cannot remove the directory entry before
+> we drop the inode reference count and put it on the unlinked list as
+> this results in a lock order of AGF then AGI, and this can deadlock
+> against inode allocation and freeing. Therefore we must drop the
+> link counts before we remove the directory entry.
+> 
+> This is still safe from a transactional point of view - it is not
+> until we get to xfs_bmap_finish() that we have the possibility of
+> multiple transactions in this operation. Hence as long as we remove
+> the directory entry and drop the link count in the first transaction
+> of the remove operation, there are no transactional constraints on
+> the ordering here.
+> 
+> Change the ordering of the operations in the xfs_remove() function
+> to align the ordering of AGI and AGF locking to match that of the
+> rest of the code.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Lines longer than 80 columns.
+These two codepaths look plausible for the deadlock you described:
 
-> +
-> +	sync
-> +	wait
-> +}
-> +
-> +# Modify as appropriate.
+inode allocation locking:
+xfs_create
+  xfs_dir_ialloc
+    xfs_ialloc
+      xfs_dialloc
+        xfs_ialloc_read_agi              * takes agi
+        xfs_ialloc_ag_alloc
+          xfs_alloc_vextent
+            xfs_alloc_fix_freelist
+              xfs_alloc_read_agf         * takes agf
 
-Comment not needed.
+vs
 
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs > /dev/null 2>&1
-> +_scratch_mount
-> +
-> +
-> +for ((j=0; j<100; j++))
-> +do
-> +	touch $SCRATCH_MNT/padding-$j
-> +done
-> +
-> +for ((j=0; j<50; j++))
-> +do
-> +	for i in `seq 20 -1 1`
+xfs_remove
+  xfs_dir_removename
+    xfs_dir2_node_removename
+      xfs_dir2_leafn_remove
+        xfs_dir2_shrink_inode
+          xfs_bunmapi
+          . xfs_bmap_del_extent
+          .   xfs_btree_delete
+          .     xfs_btree_delrec
+          .       .free_block
+          .         xfs_bmbt_free_block
+          .           xfs_bmap_add_free  * adds to free list, doesn't take agf
+            xfs_bmap_extents_to_btree
+              xfs_alloc_vextent          * takes agf
+  xfs_droplink
+    xfs_iunlink
+      xfs_read_agi       * takes agi
 
-Please us a single syntax for for loops.
+I was thinking I'd find something in .free_block, but I didn't.  But it does
+look like we'll take the agf if we have to convert between directory formats in
+xfs_dir2_leafn_remove, and it looks like there are a few more opportunities to
+take the agf in xfs_bunmapi...
 
-for j in `seq 0 50`; do
-	for i in `seq 20 -1 1`; do
-...
+Looks good.
 
-> +	do
-> +		dd if=/dev/zero of=$SCRATCH_MNT/foo-$j bs=4k count=1 seek=$i oflag=direct conv=notrunc 2>/dev/null;
-> +	done
-
-Using xfs_io is preferable to dd.
-
-		$XFS_IO_PROG -f -d -c "pwrite $(($i * 4096)) 4096" \
-			$SCRATCH_MNT/foo-$j | _filter_xfs_io
-> +done
-> +
-> +sync
-
-Why do direct IO if you then run sync? If you are trying to fragment
-the file, then please add a comment that you are doing a backwards
-write to fragment it and how it interacts with the "touch loop"
-above it. That way, if in future backwards writes are fixed to no
-longer fragment files, we know that this test needs a new method of
-fragmenting files...
-
-> +# success, all done
-> +echo "Silence is golden"
-
-And with the use of the _filter_xfs_io, you get detection of write
-failures due to xfs_io failures because the golden image match will
-fail....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
