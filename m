@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0CDAA7F52
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 16:40:23 -0500 (CDT)
-Date: Wed, 30 Oct 2013 16:40:18 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 14/15] xfs: prevent stack overflows from page cache
-	allocation
-Message-ID: <20131030214018.GL1935@sgi.com>
-References: <1383045118-31107-1-git-send-email-david@fromorbit.com>
-	<1383045118-31107-15-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CE1057F52
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 17:00:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BBC0B304032
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 14:59:59 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	UxGr7SbmeALm5xp2 for <xfs@oss.sgi.com>;
+	Wed, 30 Oct 2013 14:59:58 -0700 (PDT)
+Date: Thu, 31 Oct 2013 08:59:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 25/30] libxfs: fix root inode handling inconsistencies
+Message-ID: <20131030215940.GH6188@dastard>
+References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
+	<1383107481-28937-26-git-send-email-david@fromorbit.com>
+	<20131030102318.GA31519@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1383045118-31107-15-git-send-email-david@fromorbit.com>
+In-Reply-To: <20131030102318.GA31519@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,41 +31,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 29, 2013 at 10:11:57PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Oct 30, 2013 at 03:23:18AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 30, 2013 at 03:31:16PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > When "mounting" a filesystem via libxfs_mount(), callers can tell
+> > libxfs to read the root and realtime inodes into cache. However,
+> > when unmounting the filesystem, libxfs_unmount() used to
+> > unconditionally free root inodes if they were present.
+> > 
+> > This leads to interesting issues like in mkfs, when it handles
+> > creation, reading and freeing of the root and rt inodes itself.
+> > It, however, passes in the flag to tell libxfs_mount() to read the
+> > root inode, and so when unmounting throws an error like:
+> > 
+> > cache_node_put: node put on refcount 0 (node=0x684610)
+> > 
+> > When a second libxfs_iput() call is made on the root inode.
+> > 
+> > Clean this up and fix up all the callers that use magic numbers
+> > rather than symbolic values to tell libxfs tomount the root inodes.
 > 
-> Page cache allocation doesn't always go through ->begin_write and
-> hence we don't always get the opportunity to set the allocation
-> context to GFP_NOFS. Failing to do this means we open up the direct
-> relcaim stack to recurse into the filesystem and consume a
-> significant amount of stack.
-> 
-> On RHEL6.4 kernels we are seeing ra_submit() and
-> generic_file_splice_read() from an nfsd context recursing into the
-> filesystem via the inode cache shrinker and evicting inodes. This is
-> causing truncation to be run (e.g EOF block freeing) and causing
-> bmap btree block merges and free space btree block splits to occur.
-> These btree manipulations are occurring with the call chain already
-> 30 functions deep and hence there is not enough stack space to
-> complete such operations.
-> 
-> To avoid these specific overruns, we need to prevent the page cache
-> allocation from recursing via direct reclaim. We can do that because
-> the allocation functions take the allocation context from that which
-> is stored in the mapping for the inode. We don't set that right now,
-> so the default is GFP_HIGHUSER_MOVABLE, which is effectively a
-> GFP_KERNEL context. We need it to be the equivalent of GFP_NOFS, so
-> when we initialise an inode, set the mapping gfp mask appropriately.
-> 
-> This makes the use of AOP_FLAG_NOFS redundant from other parts of
-> the XFS IO path, so get rid of it.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> I think the right fix is to kill LIBXFS_MOUNT_ROOTINOS as nothing
+> ever uses mp->m_rootip.
 
-Applied this.
+Good point - I never looked at the users of mp->m_rootip, so didn't
+notice this. I'll redo this patch to kill LIBXFS_MOUNT_ROOTINOS.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
