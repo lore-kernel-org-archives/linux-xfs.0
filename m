@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 97CE97F4E
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:24:10 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A251F7F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E1F68F8064
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:24:07 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id nONRRy1fJSoEVjwE (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 21:24:06 -0700 (PDT)
-Message-ID: <52708A25.80602@oracle.com>
-Date: Wed, 30 Oct 2013 12:25:09 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix mkfs filter on xfs/096
-References: <1383105535-28686-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1383105535-28686-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8E9D18F8059
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:33 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	E3ynCRaTbx7iRsh7 for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 21:31:31 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yW-My
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007e6-Lw
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 09/30] libxfs: bring across inode buffer readahead verifier
+	changes
+Date: Wed, 30 Oct 2013 15:31:00 +1100
+Message-Id: <1383107481-28937-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1383107481-28937-1-git-send-email-david@fromorbit.com>
+References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +31,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 10/30/2013 11:58 AM, Dave Chinner wrote:
+From: Dave Chinner <dchinner@redhat.com>
 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Needs to filter out the new ftype field.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  tests/xfs/096 | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/tests/xfs/096 b/tests/xfs/096
-> index 44b19b0..b2719bc 100755
-> --- a/tests/xfs/096
-> +++ b/tests/xfs/096
-> @@ -87,6 +87,7 @@ _mkfs_filter()
->  	-e 's/\(realtime[ 	]*=\).*extsz/\1REALTIME               extsz/' \
->  	-e '/.*crc=/d' \
->  	-e 's/ *$//' \
-> +	-e 's/ ftype=[01]//' \
->     | grep -v parent
->  }
->  
+These were made for log recovery readahead in the kernel, so are not
+directly used in userspace. Hence bringing the change across is
+simply to keep files in sync.
 
-Looks good to me, thanks.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ libxfs/xfs_inode_buf.c | 41 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 36 insertions(+), 5 deletions(-)
 
-Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index b096f77..67d5eb4 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -46,9 +46,22 @@ xfs_inobp_check(
+ }
+ #endif
+ 
++/*
++ * If we are doing readahead on an inode buffer, we might be in log recovery
++ * reading an inode allocation buffer that hasn't yet been replayed, and hence
++ * has not had the inode cores stamped into it. Hence for readahead, the buffer
++ * may be potentially invalid.
++ *
++ * If the readahead buffer is invalid, we don't want to mark it with an error,
++ * but we do want to clear the DONE status of the buffer so that a followup read
++ * will re-read it from disk. This will ensure that we don't get an unnecessary
++ * warnings during log recovery and we don't get unnecssary panics on debug
++ * kernels.
++ */
+ static void
+ xfs_inode_buf_verify(
+-	struct xfs_buf	*bp)
++	struct xfs_buf	*bp,
++	bool		readahead)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	int		i;
+@@ -69,6 +82,11 @@ xfs_inode_buf_verify(
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
++			if (readahead) {
++				bp->b_flags &= ~XBF_DONE;
++				return;
++			}
++
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+ 					     mp, dip);
+@@ -87,14 +105,21 @@ static void
+ xfs_inode_buf_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
++}
++
++static void
++xfs_inode_buf_readahead_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_inode_buf_verify(bp, true);
+ }
+ 
+ static void
+ xfs_inode_buf_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
+ }
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ops = {
+@@ -102,6 +127,12 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+ 
++const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
++	.verify_read = xfs_inode_buf_readahead_verify,
++	.verify_write = xfs_inode_buf_write_verify,
++};
++
++
+ /*
+  * This routine is called to map an inode to the buffer containing the on-disk
+  * version of the inode.  It returns a pointer to the buffer containing the
+@@ -191,7 +222,7 @@ xfs_dinode_from_disk(
+ 		to->di_ino = be64_to_cpu(from->di_ino);
+ 		to->di_lsn = be64_to_cpu(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
++		uuid_copy(&to->di_uuid, &from->di_uuid);
+ 	}
+ }
+ 
+@@ -237,7 +268,7 @@ xfs_dinode_to_disk(
+ 		to->di_ino = cpu_to_be64(from->di_ino);
+ 		to->di_lsn = cpu_to_be64(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
++		uuid_copy(&to->di_uuid, &from->di_uuid);
+ 		to->di_flushiter = 0;
+ 	} else {
+ 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
