@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A251F7F4E
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8E9D18F8059
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:33 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 39EEE7F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C9010AC0A3
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:30 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	E3ynCRaTbx7iRsh7 for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 21:31:31 -0700 (PDT)
+	vwx8jAj1AQxQgnbE for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 21:31:29 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yW-My
+	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yK-HB
 	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007e6-Lw
+	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007dS-Ga
 	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/30] libxfs: bring across inode buffer readahead verifier
-	changes
-Date: Wed, 30 Oct 2013 15:31:00 +1100
-Message-Id: <1383107481-28937-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/30] xfsprogs: fix automatic dependency generation
+Date: Wed, 30 Oct 2013 15:30:52 +1100
+Message-Id: <1383107481-28937-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,110 +39,54 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-These were made for log recovery readahead in the kernel, so are not
-directly used in userspace. Hence bringing the change across is
-simply to keep files in sync.
+Adding are removing a header file does not result in dependency
+regeneration like it should. make clean will rebuild the
+dependencies, but a normal make won't. Fix it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_inode_buf.c | 41 ++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 36 insertions(+), 5 deletions(-)
+ include/buildrules | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index b096f77..67d5eb4 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -46,9 +46,22 @@ xfs_inobp_check(
- }
- #endif
+diff --git a/include/buildrules b/include/buildrules
+index 49cb2a4..edb1beb 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -79,18 +79,30 @@ endif # _BUILDRULES_INCLUDED_
+ $(_FORCE):
  
-+/*
-+ * If we are doing readahead on an inode buffer, we might be in log recovery
-+ * reading an inode allocation buffer that hasn't yet been replayed, and hence
-+ * has not had the inode cores stamped into it. Hence for readahead, the buffer
-+ * may be potentially invalid.
-+ *
-+ * If the readahead buffer is invalid, we don't want to mark it with an error,
-+ * but we do want to clear the DONE status of the buffer so that a followup read
-+ * will re-read it from disk. This will ensure that we don't get an unnecessary
-+ * warnings during log recovery and we don't get unnecssary panics on debug
-+ * kernels.
-+ */
- static void
- xfs_inode_buf_verify(
--	struct xfs_buf	*bp)
-+	struct xfs_buf	*bp,
-+	bool		readahead)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	int		i;
-@@ -69,6 +82,11 @@ xfs_inode_buf_verify(
- 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
- 						XFS_ERRTAG_ITOBP_INOTOBP,
- 						XFS_RANDOM_ITOBP_INOTOBP))) {
-+			if (readahead) {
-+				bp->b_flags &= ~XBF_DONE;
-+				return;
-+			}
+ # dependency build is automatic, relies on gcc -MM to generate.
++#
++# This is a bit messy. It regenerates the depenencies on each build so
++# that we catch files being added and removed. There are other ways of doing
++# this (e.g. per-file dependency files) but that requires more in-depth changes
++# to the build system. Compile time is not an issue for us, so the
++# rebuild on every make invocation isn't a problem we need to care about. Just
++# do it silently so it doesn't make the build unnecessarily noisy.
 +
- 			xfs_buf_ioerror(bp, EFSCORRUPTED);
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
- 					     mp, dip);
-@@ -87,14 +105,21 @@ static void
- xfs_inode_buf_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_inode_buf_verify(bp);
-+	xfs_inode_buf_verify(bp, false);
-+}
+ .PHONY : depend ltdepend install-qa
+ 
+ MAKEDEP := $(MAKEDEPEND) $(CFLAGS)
+ 
+-ltdepend: .ltdep
++ltdepend: rmltdep .ltdep
 +
-+static void
-+xfs_inode_buf_readahead_verify(
-+	struct xfs_buf	*bp)
-+{
-+	xfs_inode_buf_verify(bp, true);
- }
++rmltdep:
++	@rm -f .ltdep
  
- static void
- xfs_inode_buf_write_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_inode_buf_verify(bp);
-+	xfs_inode_buf_verify(bp, false);
- }
+ .ltdep: $(CFILES) $(HFILES)
+-	@echo "    [LTDEP]"
+ 	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
  
- const struct xfs_buf_ops xfs_inode_buf_ops = {
-@@ -102,6 +127,12 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
- 	.verify_write = xfs_inode_buf_write_verify,
- };
- 
-+const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
-+	.verify_read = xfs_inode_buf_readahead_verify,
-+	.verify_write = xfs_inode_buf_write_verify,
-+};
+-depend: .dep
++depend: rmdep .dep
 +
-+
- /*
-  * This routine is called to map an inode to the buffer containing the on-disk
-  * version of the inode.  It returns a pointer to the buffer containing the
-@@ -191,7 +222,7 @@ xfs_dinode_from_disk(
- 		to->di_ino = be64_to_cpu(from->di_ino);
- 		to->di_lsn = be64_to_cpu(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
--		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
-+		uuid_copy(&to->di_uuid, &from->di_uuid);
- 	}
- }
++rmdep:
++	@rm -f .dep
  
-@@ -237,7 +268,7 @@ xfs_dinode_to_disk(
- 		to->di_ino = cpu_to_be64(from->di_ino);
- 		to->di_lsn = cpu_to_be64(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
--		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
-+		uuid_copy(&to->di_uuid, &from->di_uuid);
- 		to->di_flushiter = 0;
- 	} else {
- 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
+ .dep: $(CFILES) $(HFILES)
+-	@echo "    [DEP]"
+ 	$(Q)$(MAKEDEP) $(CFILES) > .dep
 -- 
 1.8.4.rc3
 
