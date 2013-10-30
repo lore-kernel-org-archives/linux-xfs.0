@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F12B97F3F
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 04:45:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C2D4D304048
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 02:45:14 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Vdwmte5DTgXUGdW7 for
-	<xfs@oss.sgi.com>; Wed, 30 Oct 2013 02:45:10 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9U9j97u019132
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 05:45:10 -0400
-Date: Wed, 30 Oct 2013 17:45:07 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfstests ext4/306: regression test for ext4 resize with
-	non-extent files
-Message-ID: <20131030094507.GV2675@dhcp-13-216.nay.redhat.com>
-References: <1377860767-13304-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6DB697F3F
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 04:59:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EA920AC0A5
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 02:59:13 -0700 (PDT)
+Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [217.188.63.246]) by
+	cuda.sgi.com with ESMTP id G6ar3IVDRgkkSNIV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 30 Oct 2013 02:59:12 -0700 (PDT)
+Date: Wed, 30 Oct 2013 10:59:03 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: agsize and performance
+Message-ID: <20131030095903.GA8077@citd.de>
+References: <CALtWs4-q==CXVZ=jjRnrZGANP98y2Gyot_DV_hGTgxQoRF25UA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1377860767-13304-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <CALtWs4-q==CXVZ=jjRnrZGANP98y2Gyot_DV_hGTgxQoRF25UA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,157 +29,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eric Sandeen <esandeen@redhat.com>
+To: K T <mailkarthikt@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 30, 2013 at 07:06:07PM +0800, Eryu Guan wrote:
-> From: Eric Sandeen <esandeen@redhat.com>
+On 29.10.2013 18:10, K T wrote:
+> Hi,
 > 
-> Regression test for:
+> I have a 1 TB SATA disk(WD1003FBYX) with XFS. In my tests, I preallocate a
+> bunch of 10GB files and write data to the files one at a time. I have
+> observed that the default mkfs setting(4 AGs) gives very low throughput.
+> When I reformat the disk with a agsize of 256mb(agcount=3726), I see better
+> throughput. I thought with a bigger agsize, the files will be made of fewer
+> extents and hence perform better(due to lesser entries in the extent map
+> getting updated). But, according to my tests, the opposite seems to be
+> true. Can you please explain why this the case? Am I missing something?
 > 
-> c5c72d8 ext4: fix online resizing for ext3-compat file systems
+> My test parameters:
 > 
-> Signed-off-by: Eric Sandeen <esandeen@redhat.com>
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
-> 
-> This test is originally written by Eric and doesn't get merged. I did
-> minor update and resent.
-> 
-> V2: s/dangerous/auto/
-> V3: remove "Silence is golden" output since it's not silent
+> mkfs.xfs -f /dev/sdbf1
+> mount  -o inode64 /dev/sdbf1 /mnt/test
+> fallocate -l 10G fname
+> dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
 
-Any more comments?
+I get the same bad performance with your dd statement.
 
-Thanks,
-Eryu Guan
-> 
->  tests/ext4/306     | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/ext4/306.out | 13 +++++++++
->  tests/ext4/group   |  1 +
->  3 files changed, 96 insertions(+)
->  create mode 100755 tests/ext4/306
->  create mode 100644 tests/ext4/306.out
-> 
-> diff --git a/tests/ext4/306 b/tests/ext4/306
-> new file mode 100755
-> index 0000000..398c4c0
-> --- /dev/null
-> +++ b/tests/ext4/306
-> @@ -0,0 +1,82 @@
-> +#! /bin/bash
-> +# FS QA Test No. ext4/306
-> +#
-> +# Test that blocks are available to non-extent files after a resize2fs
-> +# Regression test for commit:
-> +# c5c72d8 ext4: fix online resizing for ext3-compat file systems
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +PIDS=""
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    _scratch_unmount
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs ext4
-> +_supported_os Linux
-> +
-> +_require_scratch
-> +
-> +# This needs to mount ext3; might require ext3 driver, or ext4
-> +# might handle it itself.  Find out if we have it one way or another.
-> +modprobe ext3 > /dev/null 2>&1
-> +grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
-> +
-> +rm -f $seqres.full
-> +
-> +# Make a small ext3 fs, (extents disabled) & mount it
-> +yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> +_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
-> +# Create a small non-extent-based file
-> +echo "Create 1m testfile1"
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
-> +echo "Create testfile2 to fill the fs"
-> +# A large non-extent-based file filling the fs; this will run out & fail
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
-> +
-> +# Remount as ext4
-> +_scratch_unmount
-> +_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
-> +df -h $SCRATCH_MNT >> $seqres.full
-> +
-> +# Grow it by 512m
-> +echo "Resize to 1g"
-> +resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
-> +df -h $SCRATCH_MNT >> $seqres.full
-> +
-> +# See if we can add more blocks to the files
-> +echo "append 2m to testfile1"
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
-> +echo "append 2m to testfile2"
-> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
-> +
-> +status=0
-> +exit
-> diff --git a/tests/ext4/306.out b/tests/ext4/306.out
-> new file mode 100644
-> index 0000000..ee6c90c
-> --- /dev/null
-> +++ b/tests/ext4/306.out
-> @@ -0,0 +1,13 @@
-> +QA output created by 306
-> +Create 1m testfile1
-> +wrote 1048576/1048576 bytes at offset 0
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +Create testfile2 to fill the fs
-> +pwrite64: No space left on device
-> +Resize to 1g
-> +append 2m to testfile1
-> +wrote 2097152/2097152 bytes at offset 1048576
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +append 2m to testfile2
-> +wrote 2097152/2097152 bytes at offset 536870912
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> diff --git a/tests/ext4/group b/tests/ext4/group
-> index 53af708..7e1a68b 100644
-> --- a/tests/ext4/group
-> +++ b/tests/ext4/group
-> @@ -9,3 +9,4 @@
->  303 aio dangerous ioctl rw stress
->  304 aio dangerous ioctl rw stress
->  305 auto
-> +306 auto rw resize quick
-> -- 
-> 1.8.3.1
-> 
+fallocate -l 10G fname
+time dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync conv=notrunc seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 4,24088 s, 31,6 MB/s
+
+After pondering the really hard to read dd-man-page.
+Sync is for 'synchronized' I/O. aka REALLY BAD PERFORMANCE. And i assume 
+you don't really that.
+
+I think what you meant is fsync. (a.k.a. File (and Metadata) has hit 
+stable-storage before dd exits).
+That is: conv=fsync
+
+So:
+time dd if=/dev/zero of=fname bs=2M count=64 oflag=direct conv=notrunc,fsync seek=0
+64+0 records in
+64+0 records out
+134217728 bytes (134 MB) copied, 1,44088 s, 93,2 MB/s
+
+That gets much better performance, and in my case it can't get any 
+better because the HDD (and encryption) just can't go any faster.
+
+
+
+
+-- 
+
+Matthias
 
 _______________________________________________
 xfs mailing list
