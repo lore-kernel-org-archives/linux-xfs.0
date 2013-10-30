@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 61BCF29E05
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 11:24:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F2CE5AC02D
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 09:24:41 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id W28VdDxeJMVVeR1v (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Oct 2013 09:24:41 -0700 (PDT)
-Date: Wed, 30 Oct 2013 09:24:41 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests 317
-Message-ID: <20131030162441.GA1112@infradead.org>
-References: <20131024161235.GA29381@infradead.org>
-	<20131024162557.6dd72435@oracle.com>
-	<20131025093333.GB24583@infradead.org>
-	<20131028114328.4b05e0ee@oracle.com>
-	<20131030161955.GA28755@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B9F587F3F
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 13:09:55 -0500 (CDT)
+Date: Wed, 30 Oct 2013 13:09:52 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 11/15 V2] xfs: convert directory vector functions to
+	constants
+Message-ID: <20131030180952.GI1935@sgi.com>
+References: <1383045118-31107-1-git-send-email-david@fromorbit.com>
+	<1383045118-31107-12-git-send-email-david@fromorbit.com>
+	<20131029221502.GC6188@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131030161955.GA28755@infradead.org>
+In-Reply-To: <20131029221502.GC6188@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,34 +25,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 30, 2013 at 09:19:55AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 28, 2013 at 11:43:28AM -0400, Dwight Engen wrote:
-> > Hi Cristoph, on my system (where fsgqa is id 501) the one liner the
-> > test is running is:
-> > 
-> > # ./src/nsexec -s -U -M "0 501 1000" -G "0 501 1000" ./src/lstat64
-> > Usage: lstat64 [-t] filename ...
+On Wed, Oct 30, 2013 at 09:15:02AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> The id here is 1000 and the following works just fine:
+> Many of the vectorised function calls now take no parameters and
+> return a constant value. There is no reason for these to be vectored
+> functions, so convert them to constants
 > 
-> /src/nsexec -s -U -M "0 1000 1000" -G "0 1000 1000" ./src/lstat64
-> Usage: lstat64 [-t] filename ...
+> Binary sizes:
+> 
+>    text    data     bss     dec     hex filename
+>  794490   96802    1096  892388   d9de4 fs/xfs/xfs.o.orig
+>  792986   96802    1096  890884   d9804 fs/xfs/xfs.o.p1
+>  792350   96802    1096  890248   d9588 fs/xfs/xfs.o.p2
+>  789293   96802    1096  887191   d8997 fs/xfs/xfs.o.p3
+>  789005   96802    1096  886903   d8997 fs/xfs/xfs.o.p4
+>  789061   96802    1096  886959   d88af fs/xfs/xfs.o.p5
+>  789733   96802    1096  887631   d8b4f fs/xfs/xfs.o.p6
+>  791421   96802    1096  889319   d91e7 fs/xfs/xfs.o.p7
+>  791701   96802    1096  889599   d92ff fs/xfs/xfs.o.p8
+>  791205   96802    1096  889103   d91cf fs/xfs/xfs.o.p9
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-But:
-
-./src/nsexec -s -U -M "0 1000 1000" -G "0 501 1000" /root/xfstests/src/lstat64
-execvp: Permission denied
-
-
-Which is probably due to:
-root@vm:~/xfstests# ls -ld ~ 
-drwx------ 6 root root 4096 Oct 30 16:24 /root
-
-
-Guess we need a relative path here?
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
