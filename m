@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D218A7F52
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 15:08:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 495AD7F52
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 15:31:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A2D21304048
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 13:08:18 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ZzpDxJJ9RDyT0Qvp for <xfs@oss.sgi.com>;
-	Wed, 30 Oct 2013 13:08:14 -0700 (PDT)
-Message-ID: <5271672C.7070101@sandeen.net>
-Date: Wed, 30 Oct 2013 15:08:12 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B7024AC03C
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 13:31:40 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id rvhBj4OumqZpuHgC
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 13:31:39 -0700 (PDT)
+Message-ID: <52716CAC.5040607@hardwarefreak.com>
+Date: Wed, 30 Oct 2013 15:31:40 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix possible NULL dereference
-References: <20131021231849.GL10553@sgi.com>
-	<20131021235601.GG4446@dastard>	<5265C03B.50701@sandeen.net>
-	<20131022001732.GI4446@dastard>	<CAGG-pUTh-PJJ4Nzo0r-f3VDPMc81U2z_NMX+Wcex3KzGs=U8cA@mail.gmail.com>	<20131022203946.GB2797@dastard>
-	<5266E4BD.8030601@sandeen.net>	<20131022210300.GC2797@dastard>
-	<5266EBF0.901@sandeen.net>	<CAGG-pUTtYomspBXn=RE7YFU=vu6rWZ1fU7CBO45Mmodj8DZFiQ@mail.gmail.com>
-	<20131023203435.GR1935@sgi.com>
-In-Reply-To: <20131023203435.GR1935@sgi.com>
+Subject: Re: agsize and performance
+References: <CALtWs4-q==CXVZ=jjRnrZGANP98y2Gyot_DV_hGTgxQoRF25UA@mail.gmail.com>	<20131030095903.GA8077@citd.de>
+	<CALtWs494cAew-SxMZqZecA+RHSOpAxhQpps-o6Cbe5Qj1GybFw@mail.gmail.com>
+In-Reply-To: <CALtWs494cAew-SxMZqZecA+RHSOpAxhQpps-o6Cbe5Qj1GybFw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,46 +29,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, =?ISO-8859-1?Q?Geyslan_Greg=F3rio_Bem?= <geyslan@gmail.com>
-Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, XFS FILESYSTEM <xfs@oss.sgi.com>
+To: K T <mailkarthikt@gmail.com>, Matthias Schniedermeyer <ms@citd.de>
+Cc: xfs@oss.sgi.com
 
-On 10/23/13 3:34 PM, Ben Myers wrote:
-
-> xfs: fix possible NULL dereference in xlog_verify_iclog
+On 10/30/2013 9:46 AM, K T wrote:
+> I meant sync not fsync(O_SYNC flag).
 > 
-> In xlog_verify_iclog a debug check of the incore log buffers prints an
-> error if icptr is null and then goes on to dereference the pointer
-> regardless.  Convert this to an assert so that the intention is clear.
-> This was reported by Coverty.
-> 
-> Reported-by: Geyslan G. Bem <geyslan@gmail.com>
-> Signed-off-by: Ben Myers <bpm@sgi.com>
+> My main question is why there is better throughput when I make the agsize
+> smaller?
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+The transfer rate of a spinning rust drive is greatest on the outer
+cylinders and least on the inner cylinders.
 
-> ---
->  fs/xfs/xfs_log.c |    8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
+A default mkfs.xfs with 4 AGs causes the first directory created to be
+placed in AG0 on the outer cylinders.  The 4th dir will be placed in AG3
+on the inner cylinders.  Thus writing to the 4th directory will be
+significantly slower, 4x or more, than to the 1st directory.
+
+With 3726 allocation groups, the first few hundred directories you
+create will be on the outer cylinders of the drive and writes to these
+will be about the same speed, and much greater than to AG3 in the
+default case.
+
+You omitted data showing which AGs your tests were writing to in each
+case, as best I could tell.  But given the above, it's most likely that
+this is the cause of the behavior you are seeing.
+
+
+
+> On Wed, Oct 30, 2013 at 5:59 AM, Matthias Schniedermeyer <ms@citd.de> wrote:
 > 
-> Index: b/fs/xfs/xfs_log.c
-> ===================================================================
-> --- a/fs/xfs/xfs_log.c	2013-10-23 14:52:47.875216875 -0500
-> +++ b/fs/xfs/xfs_log.c	2013-10-23 14:53:53.775245830 -0500
-> @@ -3714,11 +3714,9 @@ xlog_verify_iclog(
->  	/* check validity of iclog pointers */
->  	spin_lock(&log->l_icloglock);
->  	icptr = log->l_iclog;
-> -	for (i=0; i < log->l_iclog_bufs; i++) {
-> -		if (icptr == NULL)
-> -			xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
-> -		icptr = icptr->ic_next;
-> -	}
-> +	for (i=0; i < log->l_iclog_bufs; i++, icptr = icptr->ic_next)
-> +      		ASSERT(icptr);
-> +
->  	if (icptr != log->l_iclog)
->  		xfs_emerg(log->l_mp, "%s: corrupt iclog ring", __func__);
->  	spin_unlock(&log->l_icloglock);
+>> On 29.10.2013 18:10, K T wrote:
+>>> Hi,
+>>>
+>>> I have a 1 TB SATA disk(WD1003FBYX) with XFS. In my tests, I preallocate
+>> a
+>>> bunch of 10GB files and write data to the files one at a time. I have
+>>> observed that the default mkfs setting(4 AGs) gives very low throughput.
+>>> When I reformat the disk with a agsize of 256mb(agcount=3726), I see
+>> better
+>>> throughput. I thought with a bigger agsize, the files will be made of
+>> fewer
+>>> extents and hence perform better(due to lesser entries in the extent map
+>>> getting updated). But, according to my tests, the opposite seems to be
+>>> true. Can you please explain why this the case? Am I missing something?
+>>>
+>>> My test parameters:
+>>>
+>>> mkfs.xfs -f /dev/sdbf1
+>>> mount  -o inode64 /dev/sdbf1 /mnt/test
+>>> fallocate -l 10G fname
+>>> dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync conv=notrunc
+>> seek=0
+>>
+>> I get the same bad performance with your dd statement.
+>>
+>> fallocate -l 10G fname
+>> time dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync
+>> conv=notrunc seek=0
+>> 64+0 records in
+>> 64+0 records out
+>> 134217728 bytes (134 MB) copied, 4,24088 s, 31,6 MB/s
+>>
+>> After pondering the really hard to read dd-man-page.
+>> Sync is for 'synchronized' I/O. aka REALLY BAD PERFORMANCE. And i assume
+>> you don't really that.
+>>
+>> I think what you meant is fsync. (a.k.a. File (and Metadata) has hit
+>> stable-storage before dd exits).
+>> That is: conv=fsync
+>>
+>> So:
+>> time dd if=/dev/zero of=fname bs=2M count=64 oflag=direct
+>> conv=notrunc,fsync seek=0
+>> 64+0 records in
+>> 64+0 records out
+>> 134217728 bytes (134 MB) copied, 1,44088 s, 93,2 MB/s
+>>
+>> That gets much better performance, and in my case it can't get any
+>> better because the HDD (and encryption) just can't go any faster.
+>>
+>>
+>>
+>>
+>> --
+>>
+>> Matthias
+>>
+> 
+> 
 > 
 > _______________________________________________
 > xfs mailing list
