@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0161929E05
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 10:27:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 80C7DAC01A
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 08:27:59 -0700 (PDT)
-Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [217.188.63.246]) by
-	cuda.sgi.com with ESMTP id FtEVk1ScrgY14BM4 (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B6B2629E05
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 11:20:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 96E0630405F
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 09:19:58 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id DUBbpAYkH0BrOdJJ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Oct 2013 08:27:57 -0700 (PDT)
-Date: Wed, 30 Oct 2013 16:27:52 +0100
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: agsize and performance
-Message-ID: <20131030152752.GA26172@citd.de>
-References: <CALtWs4-q==CXVZ=jjRnrZGANP98y2Gyot_DV_hGTgxQoRF25UA@mail.gmail.com>
-	<20131030095903.GA8077@citd.de>
-	<CALtWs494cAew-SxMZqZecA+RHSOpAxhQpps-o6Cbe5Qj1GybFw@mail.gmail.com>
+	Wed, 30 Oct 2013 09:19:57 -0700 (PDT)
+Date: Wed, 30 Oct 2013 09:19:55 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfstests 317
+Message-ID: <20131030161955.GA28755@infradead.org>
+References: <20131024161235.GA29381@infradead.org>
+	<20131024162557.6dd72435@oracle.com>
+	<20131025093333.GB24583@infradead.org>
+	<20131028114328.4b05e0ee@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CALtWs494cAew-SxMZqZecA+RHSOpAxhQpps-o6Cbe5Qj1GybFw@mail.gmail.com>
+In-Reply-To: <20131028114328.4b05e0ee@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,83 +32,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: K T <mailkarthikt@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 30.10.2013 10:46, K T wrote:
-> I meant sync not fsync(O_SYNC flag).
-
-What kind of workloads needs sync I/O?
-
-> My main question is why there is better throughput when I make the agsize
-> smaller?
-
-Unfortunatly i can't help you here, i'm no expert in things XFS.
-I thought you didn't really meant to use sync I/O.
-
-> On Wed, Oct 30, 2013 at 5:59 AM, Matthias Schniedermeyer <ms@citd.de> wrote:
+On Mon, Oct 28, 2013 at 11:43:28AM -0400, Dwight Engen wrote:
+> Hi Cristoph, on my system (where fsgqa is id 501) the one liner the
+> test is running is:
 > 
-> > On 29.10.2013 18:10, K T wrote:
-> > > Hi,
-> > >
-> > > I have a 1 TB SATA disk(WD1003FBYX) with XFS. In my tests, I preallocate
-> > a
-> > > bunch of 10GB files and write data to the files one at a time. I have
-> > > observed that the default mkfs setting(4 AGs) gives very low throughput.
-> > > When I reformat the disk with a agsize of 256mb(agcount=3726), I see
-> > better
-> > > throughput. I thought with a bigger agsize, the files will be made of
-> > fewer
-> > > extents and hence perform better(due to lesser entries in the extent map
-> > > getting updated). But, according to my tests, the opposite seems to be
-> > > true. Can you please explain why this the case? Am I missing something?
-> > >
-> > > My test parameters:
-> > >
-> > > mkfs.xfs -f /dev/sdbf1
-> > > mount  -o inode64 /dev/sdbf1 /mnt/test
-> > > fallocate -l 10G fname
-> > > dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync conv=notrunc
-> > seek=0
-> >
-> > I get the same bad performance with your dd statement.
-> >
-> > fallocate -l 10G fname
-> > time dd if=/dev/zero of=fname bs=2M count=64 oflag=direct,sync
-> > conv=notrunc seek=0
-> > 64+0 records in
-> > 64+0 records out
-> > 134217728 bytes (134 MB) copied, 4,24088 s, 31,6 MB/s
-> >
-> > After pondering the really hard to read dd-man-page.
-> > Sync is for 'synchronized' I/O. aka REALLY BAD PERFORMANCE. And i assume
-> > you don't really that.
-> >
-> > I think what you meant is fsync. (a.k.a. File (and Metadata) has hit
-> > stable-storage before dd exits).
-> > That is: conv=fsync
-> >
-> > So:
-> > time dd if=/dev/zero of=fname bs=2M count=64 oflag=direct
-> > conv=notrunc,fsync seek=0
-> > 64+0 records in
-> > 64+0 records out
-> > 134217728 bytes (134 MB) copied, 1,44088 s, 93,2 MB/s
-> >
-> > That gets much better performance, and in my case it can't get any
-> > better because the HDD (and encryption) just can't go any faster.
-> >
-> >
-> >
-> >
-> > --
-> >
-> > Matthias
-> >
+> # ./src/nsexec -s -U -M "0 501 1000" -G "0 501 1000" ./src/lstat64
+> Usage: lstat64 [-t] filename ...
 
--- 
+The id here is 1000 and the following works just fine:
 
-Matthias
+/src/nsexec -s -U -M "0 1000 1000" -G "0 1000 1000" ./src/lstat64
+Usage: lstat64 [-t] filename ...
 
 _______________________________________________
 xfs mailing list
