@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8B2F67F4E
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:32:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FAF88F8059
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:32:06 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	NFY7t5ZBfyCZ1ziy for <xfs@oss.sgi.com>;
-	Tue, 29 Oct 2013 21:32:04 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yy-Vk
-	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:26 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007fO-V6
-	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 25/30] libxfs: fix root inode handling inconsistencies
-Date: Wed, 30 Oct 2013 15:31:16 +1100
-Message-Id: <1383107481-28937-26-git-send-email-david@fromorbit.com>
-In-Reply-To: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F12B97F3F
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 04:45:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C2D4D304048
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 02:45:14 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Vdwmte5DTgXUGdW7 for
+	<xfs@oss.sgi.com>; Wed, 30 Oct 2013 02:45:10 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9U9j97u019132
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 05:45:10 -0400
+Date: Wed, 30 Oct 2013 17:45:07 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfstests ext4/306: regression test for ext4 resize with
+	non-extent files
+Message-ID: <20131030094507.GV2675@dhcp-13-216.nay.redhat.com>
+References: <1377860767-13304-1-git-send-email-eguan@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1377860767-13304-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,75 +30,161 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eric Sandeen <esandeen@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Aug 30, 2013 at 07:06:07PM +0800, Eryu Guan wrote:
+> From: Eric Sandeen <esandeen@redhat.com>
+> 
+> Regression test for:
+> 
+> c5c72d8 ext4: fix online resizing for ext3-compat file systems
+> 
+> Signed-off-by: Eric Sandeen <esandeen@redhat.com>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+> 
+> This test is originally written by Eric and doesn't get merged. I did
+> minor update and resent.
+> 
+> V2: s/dangerous/auto/
+> V3: remove "Silence is golden" output since it's not silent
 
-When "mounting" a filesystem via libxfs_mount(), callers can tell
-libxfs to read the root and realtime inodes into cache. However,
-when unmounting the filesystem, libxfs_unmount() used to
-unconditionally free root inodes if they were present.
+Any more comments?
 
-This leads to interesting issues like in mkfs, when it handles
-creation, reading and freeing of the root and rt inodes itself.
-It, however, passes in the flag to tell libxfs_mount() to read the
-root inode, and so when unmounting throws an error like:
-
-cache_node_put: node put on refcount 0 (node=0x684610)
-
-When a second libxfs_iput() call is made on the root inode.
-
-Clean this up and fix up all the callers that use magic numbers
-rather than symbolic values to tell libxfs tomount the root inodes.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- copy/xfs_copy.c | 3 ++-
- mkfs/xfs_mkfs.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index bb37279..b6695d7 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -684,7 +684,8 @@ main(int argc, char **argv)
- 	sb = &mbuf.m_sb;
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
- 
--	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
-+	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev,
-+			  LIBXFS_MOUNT_ROOTINOS);
- 	if (mp == NULL) {
- 		do_log(_("%s: %s filesystem failed to initialize\n"
- 			"%s: Aborting.\n"), progname, source_name, progname);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 355708c..04ccc83 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2582,6 +2582,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
- 	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-+	libxfs_purgebuf(buf);
- 
- 	/*
- 	 * If the data area is a file, then grow it out to its final size
-@@ -2616,7 +2617,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
- 		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
- 
--	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
-+	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
- 	if (mp == NULL) {
- 		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
- 			progname);
--- 
-1.8.4.rc3
+Thanks,
+Eryu Guan
+> 
+>  tests/ext4/306     | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/ext4/306.out | 13 +++++++++
+>  tests/ext4/group   |  1 +
+>  3 files changed, 96 insertions(+)
+>  create mode 100755 tests/ext4/306
+>  create mode 100644 tests/ext4/306.out
+> 
+> diff --git a/tests/ext4/306 b/tests/ext4/306
+> new file mode 100755
+> index 0000000..398c4c0
+> --- /dev/null
+> +++ b/tests/ext4/306
+> @@ -0,0 +1,82 @@
+> +#! /bin/bash
+> +# FS QA Test No. ext4/306
+> +#
+> +# Test that blocks are available to non-extent files after a resize2fs
+> +# Regression test for commit:
+> +# c5c72d8 ext4: fix online resizing for ext3-compat file systems
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +PIDS=""
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    _scratch_unmount
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs ext4
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +
+> +# This needs to mount ext3; might require ext3 driver, or ext4
+> +# might handle it itself.  Find out if we have it one way or another.
+> +modprobe ext3 > /dev/null 2>&1
+> +grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
+> +
+> +rm -f $seqres.full
+> +
+> +# Make a small ext3 fs, (extents disabled) & mount it
+> +yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
+> +_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
+> +# Create a small non-extent-based file
+> +echo "Create 1m testfile1"
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
+> +echo "Create testfile2 to fill the fs"
+> +# A large non-extent-based file filling the fs; this will run out & fail
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
+> +
+> +# Remount as ext4
+> +_scratch_unmount
+> +_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
+> +df -h $SCRATCH_MNT >> $seqres.full
+> +
+> +# Grow it by 512m
+> +echo "Resize to 1g"
+> +resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
+> +df -h $SCRATCH_MNT >> $seqres.full
+> +
+> +# See if we can add more blocks to the files
+> +echo "append 2m to testfile1"
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
+> +echo "append 2m to testfile2"
+> +$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
+> +
+> +status=0
+> +exit
+> diff --git a/tests/ext4/306.out b/tests/ext4/306.out
+> new file mode 100644
+> index 0000000..ee6c90c
+> --- /dev/null
+> +++ b/tests/ext4/306.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 306
+> +Create 1m testfile1
+> +wrote 1048576/1048576 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +Create testfile2 to fill the fs
+> +pwrite64: No space left on device
+> +Resize to 1g
+> +append 2m to testfile1
+> +wrote 2097152/2097152 bytes at offset 1048576
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +append 2m to testfile2
+> +wrote 2097152/2097152 bytes at offset 536870912
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> diff --git a/tests/ext4/group b/tests/ext4/group
+> index 53af708..7e1a68b 100644
+> --- a/tests/ext4/group
+> +++ b/tests/ext4/group
+> @@ -9,3 +9,4 @@
+>  303 aio dangerous ioctl rw stress
+>  304 aio dangerous ioctl rw stress
+>  305 auto
+> +306 auto rw resize quick
+> -- 
+> 1.8.3.1
+> 
 
 _______________________________________________
 xfs mailing list
