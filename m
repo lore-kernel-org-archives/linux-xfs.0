@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 249507F62
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 10CC08F8065
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:39 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id BB3647F72
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:31:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8F64C8F8059
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 21:31:37 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	xbkoZyZcXIoCuW8Z for <xfs@oss.sgi.com>;
+	Yd3aCYb9GSXEu08j for <xfs@oss.sgi.com>;
 	Tue, 29 Oct 2013 21:31:36 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yl-Px
-	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
+	(envelope-from <dave@fromorbit.com>) id 1VbNRF-0002yw-UY
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:26 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007ea-PQ
+	(envelope-from <dave@disappointment.disaster>) id 1VbNRF-0007fE-Tv
 	for xfs@oss.sgi.com; Wed, 30 Oct 2013 15:31:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/30] db: separate out straight buffer IO from map based IO.
-Date: Wed, 30 Oct 2013 15:31:06 +1100
-Message-Id: <1383107481-28937-16-git-send-email-david@fromorbit.com>
+Subject: [PATCH 23/30] db: add a special attribute buffer verifier
+Date: Wed, 30 Oct 2013 15:31:14 +1100
+Message-Id: <1383107481-28937-24-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,274 +39,109 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-First step in converting to libxfs based IO.
+Because we only have a single attribute type that is used for all
+the attribute buffer types, we need to provide a special verifier
+for the read code. That verifier needs to know all the attribute
+types and when it find one it knows about, switch to the correct
+verifier and call it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/init.c |   7 ++--
- db/io.c   | 125 +++++++++++++++++++++++++++++++++++++++++++++++++-------------
- db/io.h   |   5 +--
- 3 files changed, 104 insertions(+), 33 deletions(-)
+ db/attr.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h |  2 ++
+ db/type.c |  3 ++-
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-diff --git a/db/init.c b/db/init.c
-index 2932e51..0e88b56 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -55,7 +55,7 @@ init(
- 	char		**argv)
- {
- 	xfs_sb_t	*sbp;
--	void		*bufp = NULL;
-+	char		bufp[BBSIZE];
- 	int		c;
+diff --git a/db/attr.c b/db/attr.c
+index cd95a0a..359af7b 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -25,6 +25,7 @@
+ #include "attr.h"
+ #include "io.h"
+ #include "init.h"
++#include "output.h"
  
- 	setlocale(LC_ALL, "");
-@@ -115,15 +115,14 @@ init(
- 		exit(1);
- 	}
+ static int	attr_leaf_entries_count(void *obj, int startoff);
+ static int	attr_leaf_hdr_count(void *obj, int startoff);
+@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
+ 	{ NULL }
+ };
  
--	if (read_bbs(XFS_SB_DADDR, 1, &bufp, NULL)) {
-+	if (read_buf(XFS_SB_DADDR, 1, bufp)) {
- 		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
- 			"bytes)\n"), progname, fsdevice);
- 		exit(1);
- 	}
- 
- 	/* copy SB from buffer to in-core, converting architecture as we go */
--	libxfs_sb_from_disk(&xmount.m_sb, bufp);
--	xfree(bufp);
-+	libxfs_sb_from_disk(&xmount.m_sb, (struct xfs_dsb *)bufp);
- 
- 	sbp = &xmount.m_sb;
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-diff --git a/db/io.c b/db/io.c
-index 39a1827..fa11646 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -417,8 +417,61 @@ ring_add(void)
- 	}
- }
- 
--
- int
-+read_buf(
-+	xfs_daddr_t	bbno,
-+	int		count,
-+	void		*bufp)
-+{
-+	int		err;
-+
-+	err = pread64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
-+	if (err < 0)
-+		err = errno;
-+	else if (err < count)
-+		err = -1;
-+	return err;
-+}
-+
-+static int
-+write_buf(
-+	xfs_daddr_t	bbno,
-+	int		count,
-+	void		*bufp)
-+{
-+	int		err;
-+
-+	err = pwrite64(x.dfd, bufp, BBTOB(count), BBTOB(bbno));
-+	if (err < 0)
-+		err = errno;
-+	else if (err < count)
-+		err = -1;
-+	return err;
-+}
-+
++/*
++ * Special read verifier for attribute buffers. detect the magic number
++ * appropriately and set the correct verifier and call it.
++ */
 +static void
-+write_cur_buf(void)
++xfs_attr3_db_read_verify(
++	struct xfs_buf		*bp)
 +{
-+	int ret;
++	__be32			magic32;
++	__be16			magic16;
 +
-+	ret = write_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
 +
-+	if (ret == -1)
-+		dbprintf(_("incomplete write, block: %lld\n"),
-+			 (iocur_base + iocur_sp)->bb);
-+	else if (ret != 0)
-+		dbprintf(_("write error: %s\n"), strerror(ret));
++	switch (magic16) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		bp->b_ops = &xfs_attr3_leaf_buf_ops;
++		goto verify;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		goto verify;
++	default:
++		break;
++	}
 +
-+	/* re-read buffer from disk */
-+	ret = read_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-+	if (ret == -1)
-+		dbprintf(_("incomplete read, block: %lld\n"),
-+			 (iocur_base + iocur_sp)->bb);
-+	else if (ret != 0)
-+		dbprintf(_("read error: %s\n"), strerror(ret));
-+}
-+
-+static int
- write_bbs(
- 	__int64_t       bbno,
- 	int             count,
-@@ -430,15 +483,14 @@ write_bbs(
- 	int		j;
- 	int		rval = EINVAL;	/* initialize for zero `count' case */
- 
--	for (j = 0; j < count; j += bbmap ? 1 : count) {
--		if (bbmap)
--			bbno = bbmap->b[j];
-+	for (j = 0; j < count; j++) {
-+		bbno = bbmap->b[j];
- 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
- 			rval = errno;
- 			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
- 			return rval;
- 		}
--		c = BBTOB(bbmap ? 1 : count);
-+		c = BBTOB(1);
- 		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
- 		if (i < 0) {
- 			rval = errno;
-@@ -452,7 +504,7 @@ write_bbs(
- 	return rval;
- }
- 
--int
-+static int
- read_bbs(
- 	__int64_t	bbno,
- 	int		count,
-@@ -473,9 +525,8 @@ read_bbs(
- 		buf = xmalloc(c);
- 	else
- 		buf = *bufp;
--	for (j = 0; j < count; j += bbmap ? 1 : count) {
--		if (bbmap)
--			bbno = bbmap->b[j];
-+	for (j = 0; j < count; j++) {
-+		bbno = bbmap->b[j];
- 		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
- 			rval = errno;
- 			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
-@@ -483,7 +534,7 @@ read_bbs(
- 				xfree(buf);
- 			buf = NULL;
- 		} else {
--			c = BBTOB(bbmap ? 1 : count);
-+			c = BBTOB(1);
- 			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
- 			if (i < 0) {
- 				rval = errno;
-@@ -506,22 +557,19 @@ read_bbs(
- 	return rval;
- }
- 
--void
--write_cur(void)
-+static void
-+write_cur_bbs(void)
- {
- 	int ret;
- 
--	if (iocur_sp < 0) {
--		dbprintf(_("nothing to write\n"));
--		return;
--	}
- 	ret = write_bbs(iocur_top->bb, iocur_top->blen, iocur_top->buf,
--		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
-+			&iocur_top->bbmap);
- 	if (ret == -1)
- 		dbprintf(_("incomplete write, block: %lld\n"),
- 			 (iocur_base + iocur_sp)->bb);
- 	else if (ret != 0)
- 		dbprintf(_("write error: %s\n"), strerror(ret));
-+
- 	/* re-read buffer from disk */
- 	ret = read_bbs(iocur_top->bb, iocur_top->blen, &iocur_top->buf,
- 		iocur_top->use_bbmap ? &iocur_top->bbmap : NULL);
-@@ -533,6 +581,20 @@ write_cur(void)
- }
- 
- void
-+write_cur(void)
-+{
-+	if (iocur_sp < 0) {
-+		dbprintf(_("nothing to write\n"));
++	switch (magic32) {
++	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
++		bp->b_ops = &xfs_attr3_rmt_buf_ops;
++		break;
++	default:
++		dbprintf(_("Unknown attribute buffer type!\n"));
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +		return;
 +	}
-+
-+	if (iocur_top->use_bbmap)
-+		write_cur_bbs();
-+	else
-+		write_cur_buf();
++verify:
++	bp->b_ops->verify_read(bp);
 +}
 +
-+void
- set_cur(
- 	const typ_t	*t,
- 	__int64_t	d,
-@@ -549,17 +611,32 @@ set_cur(
- 		return;
- 	}
++static void
++xfs_attr3_db_write_verify(
++	struct xfs_buf		*bp)
++{
++	dbprintf(_("Writing unknown attribute buffer type!\n"));
++	xfs_buf_ioerror(bp, EFSCORRUPTED);
++}
++
++const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
++	.verify_read = xfs_attr3_db_read_verify,
++	.verify_write = xfs_attr3_db_write_verify,
++};
+diff --git a/db/attr.h b/db/attr.h
+index 3065372..bc3431f 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -33,3 +33,5 @@ extern const field_t	attr3_node_hdr_flds[];
  
--#ifdef DEBUG
--	if (bbmap)
--		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
--#endif
- 	ino = iocur_top->ino;
- 	dirino = iocur_top->dirino;
- 	mode = iocur_top->mode;
- 	pop_cur();
- 	push_cur();
--	if (read_bbs(d, c, &iocur_top->buf, bbmap))
--		return;
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
 +
-+	if (bbmap) {
-+#ifdef DEBUG
-+		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
-+#endif
-+
-+		if (read_bbs(d, c, &iocur_top->buf, bbmap))
-+			return;
-+		iocur_top->bbmap = *bbmap;
-+		iocur_top->use_bbmap = 1;
-+	} else {
-+		if (!iocur_top->buf) {
-+			iocur_top->buf = malloc(BBTOB(c));
-+			if (!iocur_top->buf)
-+				return;
-+		}
-+		if (read_buf(d, c, iocur_top->buf))
-+			return;
-+		iocur_top->use_bbmap = 0;
-+	}
-+
- 	iocur_top->bb = d;
- 	iocur_top->blen = c;
- 	iocur_top->boff = 0;
-@@ -570,8 +647,6 @@ set_cur(
- 	iocur_top->ino = ino;
- 	iocur_top->dirino = dirino;
- 	iocur_top->mode = mode;
--	if ((iocur_top->use_bbmap = (bbmap != NULL)))
--		iocur_top->bbmap = *bbmap;
- 
- 	/* store location in ring */
- 	if (ring_flag)
-diff --git a/db/io.h b/db/io.h
-index 549aad9..9ea6223 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -52,10 +52,7 @@ extern void	off_cur(int off, int len);
- extern void	pop_cur(void);
- extern void	print_iocur(char *tag, iocur_t *ioc);
- extern void	push_cur(void);
--extern int	read_bbs(__int64_t daddr, int count, void **bufp,
--			 bbmap_t *bbmap);
--extern int	write_bbs(__int64_t daddr, int count, void *bufp,
--			  bbmap_t *bbmap);
-+extern int	read_buf(__int64_t daddr, int count, void *bufp);
- extern void     write_cur(void);
- extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
++extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
+diff --git a/db/type.c b/db/type.c
+index 2c3431e..04d0d56 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -77,7 +77,8 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+ 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
++		&xfs_attr3_db_buf_ops },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
 -- 
 1.8.4.rc3
 
