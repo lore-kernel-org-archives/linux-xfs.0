@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4B2C87F3F
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 22:55:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CCD2DAC0A4
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 20:55:50 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id seRdciVmCeZuTzw7 for
-	<xfs@oss.sgi.com>; Tue, 29 Oct 2013 20:55:46 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9U3tksr028981
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 23:55:46 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfstests: fix compile error of src/fssum.c on bigendian host
-Date: Wed, 30 Oct 2013 11:55:43 +0800
-Message-Id: <1383105343-15348-1-git-send-email-eguan@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 2C3C77F3F
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 22:59:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4A0BAC0A3
+	for <xfs@oss.sgi.com>; Tue, 29 Oct 2013 20:59:05 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	gKyff9p6mQAVwIbY for <xfs@oss.sgi.com>;
+	Tue, 29 Oct 2013 20:59:04 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1VbMvn-0002u8-SX
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 14:58:55 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1VbMvn-0007TI-Rh
+	for xfs@oss.sgi.com; Wed, 30 Oct 2013 14:58:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfstests: fix mkfs filter on xfs/096
+Date: Wed, 30 Oct 2013 14:58:55 +1100
+Message-Id: <1383105535-28686-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,31 +34,30 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
 
-Definition of htonll() is needed on bigendian host too, otherwise
-src/fssum.c won't compile on ppc64/s390x hosts.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
+Needs to filter out the new ftype field.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- src/fssum.c | 2 ++
- 1 file changed, 2 insertions(+)
+ tests/xfs/096 | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/src/fssum.c b/src/fssum.c
-index c75ff8b..c26d32b 100644
---- a/src/fssum.c
-+++ b/src/fssum.c
-@@ -50,6 +50,8 @@
- 
- #if __BYTE_ORDER == __LITTLE_ENDIAN
- #define htonll(x)     __bswap_64 (x)
-+#else
-+#define htonll(x)     (x)
- #endif
- #endif
+diff --git a/tests/xfs/096 b/tests/xfs/096
+index 44b19b0..b2719bc 100755
+--- a/tests/xfs/096
++++ b/tests/xfs/096
+@@ -87,6 +87,7 @@ _mkfs_filter()
+ 	-e 's/\(realtime[ 	]*=\).*extsz/\1REALTIME               extsz/' \
+ 	-e '/.*crc=/d' \
+ 	-e 's/ *$//' \
++	-e 's/ ftype=[01]//' \
+    | grep -v parent
+ }
  
 -- 
-1.8.3.1
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
