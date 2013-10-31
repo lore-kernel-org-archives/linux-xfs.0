@@ -1,30 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 54B917FAA
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 11:16:02 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A0ED87F83
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 13:03:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F28AEAC00A
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 09:15:58 -0700 (PDT)
-Received: from mail-ie0-f180.google.com (mail-ie0-f180.google.com
-	[209.85.223.180]) by cuda.sgi.com with ESMTP id
-	HZ3pqaJAi8IkAXhh (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 09:15:58 -0700 (PDT)
-Received: by mail-ie0-f180.google.com with SMTP id e14so5248137iej.39
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 09:15:57 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71E0A8F804B
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 11:03:24 -0700 (PDT)
+Date: Thu, 31 Oct 2013 21:00:10 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] xfs: underflow bug in xfs_attrlist_by_handle()
+Message-ID: <20131031180010.GA24839@longonot.mountain>
 MIME-Version: 1.0
-In-Reply-To: <20131031155503.GO1935@sgi.com>
-References: <5265C03B.50701@sandeen.net> <20131022001732.GI4446@dastard>
-	<CAGG-pUTh-PJJ4Nzo0r-f3VDPMc81U2z_NMX+Wcex3KzGs=U8cA@mail.gmail.com>
-	<20131022203946.GB2797@dastard> <5266E4BD.8030601@sandeen.net>
-	<20131022210300.GC2797@dastard> <5266EBF0.901@sandeen.net>
-	<CAGG-pUTtYomspBXn=RE7YFU=vu6rWZ1fU7CBO45Mmodj8DZFiQ@mail.gmail.com>
-	<20131023203435.GR1935@sgi.com> <5271672C.7070101@sandeen.net>
-	<20131031155503.GO1935@sgi.com>
-Date: Thu, 31 Oct 2013 14:15:57 -0200
-Message-ID: <CAGG-pUQawQ0WGkL9tovQ+ejpmAvEpkrOB-uznD03SjBMUcmAJA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix possible NULL dereference
-From: =?ISO-8859-1?Q?Geyslan_Greg=F3rio_Bem?= <geyslan@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20131025144452.GA28451@ngolde.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,37 +25,45 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, open list <linux-kernel@vger.kernel.org>, XFS FILESYSTEM <xfs@oss.sgi.com>
+Cc: Fabian Yamaguchi <fabs@goesec.de>, security@kernel.org, Alex Elder <elder@kernel.org>, Nico Golde <nico@ngolde.de>, xfs@oss.sgi.com
 
-2013/10/31 Ben Myers <bpm@sgi.com>:
-> Hey Geyslan,
->
-> On Wed, Oct 30, 2013 at 03:08:12PM -0500, Eric Sandeen wrote:
->> On 10/23/13 3:34 PM, Ben Myers wrote:
->>
->> > xfs: fix possible NULL dereference in xlog_verify_iclog
->> >
->> > In xlog_verify_iclog a debug check of the incore log buffers prints an
->> > error if icptr is null and then goes on to dereference the pointer
->> > regardless.  Convert this to an assert so that the intention is clear.
->> > This was reported by Coverty.
->> >
->> > Reported-by: Geyslan G. Bem <geyslan@gmail.com>
->> > Signed-off-by: Ben Myers <bpm@sgi.com>
->>
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->
-> Applied this.  Many thanks!  ;)
->
-> -Ben
+If we allocate less than sizeof(struct attrlist) then we end up
+corrupting memory or doing a ZERO_PTR_SIZE dereference.
 
-It was a pleasure. o/
+This can only be triggered with CAP_SYS_ADMIN.
 
--- 
-Regards,
+Reported-by: Nico Golde <nico@ngolde.de>
+Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Geyslan G. Bem
-hackingbits.com
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 4d61340..33ad9a7 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -442,7 +442,8 @@ xfs_attrlist_by_handle(
+ 		return -XFS_ERROR(EPERM);
+ 	if (copy_from_user(&al_hreq, arg, sizeof(xfs_fsop_attrlist_handlereq_t)))
+ 		return -XFS_ERROR(EFAULT);
+-	if (al_hreq.buflen > XATTR_LIST_MAX)
++	if (al_hreq.buflen < sizeof(struct attrlist) ||
++	    al_hreq.buflen > XATTR_LIST_MAX)
+ 		return -XFS_ERROR(EINVAL);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index e8fb123..a7992f8 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -356,7 +356,8 @@ xfs_compat_attrlist_by_handle(
+ 	if (copy_from_user(&al_hreq, arg,
+ 			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
+ 		return -XFS_ERROR(EFAULT);
+-	if (al_hreq.buflen > XATTR_LIST_MAX)
++	if (al_hreq.buflen < sizeof(struct attrlist) ||
++	    al_hreq.buflen > XATTR_LIST_MAX)
+ 		return -XFS_ERROR(EINVAL);
+ 
+ 	/*
 
 _______________________________________________
 xfs mailing list
