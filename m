@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2B2AD7F54
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 06:15:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BCD39AC001
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 04:15:31 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id oBenuQGPri4SScB1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 04:15:30 -0700 (PDT)
-Date: Thu, 31 Oct 2013 04:15:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix _filter_ro_mount and make xfs/200 pass
-	with old mount
-Message-ID: <20131031111529.GA24560@infradead.org>
-References: <1383216916-2211-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C00677F56
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 07:13:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AE400304071
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 05:13:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HHpBReTKrHnXZFk1 for
+	<xfs@oss.sgi.com>; Thu, 31 Oct 2013 05:13:00 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r9VCCxkW018004
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 08:12:59 -0400
+Received: from orion.maiolino.org (ovpn-113-27.phx2.redhat.com [10.3.113.27])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id r9VCCtUm002643
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 08:12:58 -0400
+Date: Thu, 31 Oct 2013 10:12:54 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfstests: fix compile error of src/fssum.c on bigendian
+	host
+Message-ID: <20131031121254.GB14337@orion.maiolino.org>
+References: <1383105343-15348-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1383216916-2211-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1383105343-15348-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,18 +39,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Oct 31, 2013 at 06:55:16PM +0800, Eryu Guan wrote:
-> We just want to remove "block device" in _filter_ro_mount(), so add
-> "mount:" back.
+Looks good,
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+On Wed, Oct 30, 2013 at 11:55:43AM +0800, Eryu Guan wrote:
+> Definition of htonll() is needed on bigendian host too, otherwise
+> src/fssum.c won't compile on ppc64/s390x hosts.
 > 
-> Add one more call of _filter_ro_mount() in xfs/200 to match 200.out.
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+>  src/fssum.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/src/fssum.c b/src/fssum.c
+> index c75ff8b..c26d32b 100644
+> --- a/src/fssum.c
+> +++ b/src/fssum.c
+> @@ -50,6 +50,8 @@
+>  
+>  #if __BYTE_ORDER == __LITTLE_ENDIAN
+>  #define htonll(x)     __bswap_64 (x)
+> +#else
+> +#define htonll(x)     (x)
+>  #endif
+>  #endif
+>  
+> -- 
+> 1.8.3.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Thanks, I've seen this issue too but didn't have time to debug it yet.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
