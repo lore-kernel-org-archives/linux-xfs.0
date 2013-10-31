@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AD2FB7FB8
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 10:55:06 -0500 (CDT)
-Date: Thu, 31 Oct 2013 10:55:03 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2114B7FC1
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 10:56:05 -0500 (CDT)
+Date: Thu, 31 Oct 2013 10:56:03 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: fix possible NULL dereference
-Message-ID: <20131031155503.GO1935@sgi.com>
-References: <5265C03B.50701@sandeen.net> <20131022001732.GI4446@dastard>
-	<CAGG-pUTh-PJJ4Nzo0r-f3VDPMc81U2z_NMX+Wcex3KzGs=U8cA@mail.gmail.com>
-	<20131022203946.GB2797@dastard> <5266E4BD.8030601@sandeen.net>
-	<20131022210300.GC2797@dastard> <5266EBF0.901@sandeen.net>
-	<CAGG-pUTtYomspBXn=RE7YFU=vu6rWZ1fU7CBO45Mmodj8DZFiQ@mail.gmail.com>
-	<20131023203435.GR1935@sgi.com> <5271672C.7070101@sandeen.net>
+Subject: Re: [PATCH v2] xfs:xfs_dir2_node.c: pointer use before check for null
+Message-ID: <20131031155602.GP1935@sgi.com>
+References: <20131022203322.GA2797@dastard>
+	<1382702005-32245-1-git-send-email-yefremov.denis@gmail.com>
+	<20131025150609.GB10553@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5271672C.7070101@sandeen.net>
+In-Reply-To: <20131025150609.GB10553@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +24,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Geyslan =?iso-8859-1?Q?Greg=F3rio?= Bem <geyslan@gmail.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, XFS FILESYSTEM <xfs@oss.sgi.com>
+To: Denis Efremov <yefremov.denis@gmail.com>
+Cc: ldv-project@linuxtesting.org, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hey Geyslan,
-
-On Wed, Oct 30, 2013 at 03:08:12PM -0500, Eric Sandeen wrote:
-> On 10/23/13 3:34 PM, Ben Myers wrote:
-> 
-> > xfs: fix possible NULL dereference in xlog_verify_iclog
+On Fri, Oct 25, 2013 at 10:06:09AM -0500, Ben Myers wrote:
+> On Fri, Oct 25, 2013 at 03:53:25PM +0400, Denis Efremov wrote:
+> > ASSERT on args takes place after args dereference.
+> > This assertion is redundant since we are going to panic anyway.
 > > 
-> > In xlog_verify_iclog a debug check of the incore log buffers prints an
-> > error if icptr is null and then goes on to dereference the pointer
-> > regardless.  Convert this to an assert so that the intention is clear.
-> > This was reported by Coverty.
+> > Found by Linux Driver Verification project (linuxtesting.org) -
+> > PVS-Studio analyzer.
 > > 
-> > Reported-by: Geyslan G. Bem <geyslan@gmail.com>
-> > Signed-off-by: Ben Myers <bpm@sgi.com>
+> > Signed-off-by: Denis Efremov <yefremov.denis@gmail.com>
 > 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> Looks good. 
+> 
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-Applied this.  Many thanks!  ;)
-
--Ben
+Applied.  Thanks Denis.
 
 _______________________________________________
 xfs mailing list
