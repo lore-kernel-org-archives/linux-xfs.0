@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 90CAF7F52
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 23:14:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1FA6CAC001
-	for <xfs@oss.sgi.com>; Wed, 30 Oct 2013 21:13:54 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	HbshMcypFaje7k5T for <xfs@oss.sgi.com>;
-	Wed, 30 Oct 2013 21:13:49 -0700 (PDT)
-Date: Thu, 31 Oct 2013 15:13:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 25/30 V2] libxfs: fix root inode handling inconsistencies
-Message-ID: <20131031041343.GK6188@dastard>
-References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-26-git-send-email-david@fromorbit.com>
-	<20131030102318.GA31519@infradead.org>
-	<20131030215940.GH6188@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131030215940.GH6188@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F1F307F52
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 04:34:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D289730405F
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 02:34:37 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id CpxyH2nYScnuUvp5 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 31 Oct 2013 02:34:37 -0700 (PDT)
+From: Liu Bo <bo.li.liu@oracle.com>
+Subject: [PATCH v3] xfstests: add regression test for running btrfs balance
+	and defrag concurrently
+Date: Thu, 31 Oct 2013 17:34:22 +0800
+Message-Id: <1383212062-30153-1-git-send-email-bo.li.liu@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,226 +22,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: linux-btrfs@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+The test aims to trigger snapshot-aware defrag path in write endio by
+running balance, which is not expected and leads to a crash.
 
-When "mounting" a filesystem via libxfs_mount(), callers can tell
-libxfs to read the root and realtime inodes into cache. However,
-when unmounting the filesystem, libxfs_unmount() used to
-unconditionally free root inodes if they were present.
-
-This leads to interesting issues like in mkfs, when it handles
-creation, reading and freeing of the root and rt inodes itself.
-It, however, passes in the flag to tell libxfs_mount() to read the
-root inode, and so when unmounting throws an error like:
-
-cache_node_put: node put on refcount 0 (node=0x684610)
-
-when a second libxfs_iput() call is made on the root inode.
-
-As it turns out, nothing ever uses mp->m_rootip and so we don't need
-to read it in or free it, or even have a pointer to it in the struct
-xfs_mount, so kill the m_rootip and LIBXFS_MOUNT_ROOTINOS parameter
-completely.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
 ---
-V2: just kill m_rootino and LIBXFS_MOUNT_ROOTINOS altogether.
+v3:
+- replace dd with xfs_io, which is preferable in xfstests.
+- unify the for loop style.
+- remove unneeded comments as required.
+v2: remove unneeded comments as required.
 
- copy/xfs_copy.c  |  2 +-
- db/init.c        | 13 +++++--------
- include/libxfs.h | 12 +++++-------
- libxfs/init.c    | 27 ++++-----------------------
- mkfs/proto.c     |  1 -
- mkfs/xfs_mkfs.c  |  4 ++--
- repair/phase6.c  |  2 --
- 7 files changed, 17 insertions(+), 44 deletions(-)
+ tests/btrfs/021     | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/021.out |  2 ++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 96 insertions(+)
+ create mode 100755 tests/btrfs/021
+ create mode 100644 tests/btrfs/021.out
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index bb37279..9986fbf 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -684,7 +684,7 @@ main(int argc, char **argv)
- 	sb = &mbuf.m_sb;
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
- 
--	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
-+	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 0);
- 	if (mp == NULL) {
- 		do_log(_("%s: %s filesystem failed to initialize\n"
- 			"%s: Aborting.\n"), progname, source_name, progname);
-diff --git a/db/init.c b/db/init.c
-index a9b357b..7dd31ca 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -144,15 +144,12 @@ init(
- 	}
- 
- 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
--				LIBXFS_MOUNT_ROOTINOS | LIBXFS_MOUNT_DEBUGGER);
-+			  LIBXFS_MOUNT_DEBUGGER);
- 	if (!mp) {
--		mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
--				LIBXFS_MOUNT_DEBUGGER);
--		if (!mp) {
--			fprintf(stderr, _("%s: device %s unusable (not an XFS "
--				"filesystem?)\n"), progname, fsdevice);
--			exit(1);
--		}
-+		fprintf(stderr,
-+			_("%s: device %s unusable (not an XFS filesystem?)\n"),
-+			progname, fsdevice);
-+		exit(1);
- 	}
- 	blkbb = 1 << mp->m_blkbb_log;
- 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index d28ac48..169dfc5 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -167,7 +167,6 @@ typedef struct xfs_mount {
- 	uint			m_rsumsize;	/* size of rt summary, bytes */
- 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
- 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
--	struct xfs_inode	*m_rootip;	/* pointer to root directory */
- 	struct xfs_buftarg	*m_ddev_targp;
- 	struct xfs_buftarg	*m_logdev_targp;
- 	struct xfs_buftarg	*m_rtdev_targp;
-@@ -259,12 +258,11 @@ typedef struct xfs_perag {
- 	int		pagb_count;	/* pagb slots in use */
- } xfs_perag_t;
- 
--#define LIBXFS_MOUNT_ROOTINOS		0x0001
--#define LIBXFS_MOUNT_DEBUGGER		0x0002
--#define LIBXFS_MOUNT_32BITINODES	0x0004
--#define LIBXFS_MOUNT_32BITINOOPT	0x0008
--#define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
--#define LIBXFS_MOUNT_ATTR2		0x0020
-+#define LIBXFS_MOUNT_DEBUGGER		0x0001
-+#define LIBXFS_MOUNT_32BITINODES	0x0002
-+#define LIBXFS_MOUNT_32BITINOOPT	0x0004
-+#define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
-+#define LIBXFS_MOUNT_ATTR2		0x0010
- 
- #define LIBXFS_IHASHSIZE(sbp)		(1<<10)
- #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 229aa50..6be0ac4 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -688,8 +688,6 @@ libxfs_mount(
- 	libxfs_buftarg_init(mp, dev, logdev, rtdev);
- 
- 	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
--	if (flags & LIBXFS_MOUNT_ROOTINOS)
--		mp->m_flags |= LIBXFS_MOUNT_ROOTINOS;
- 
- 	mp->m_sb = *sb;
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
-@@ -813,30 +811,15 @@ libxfs_mount(
- 		exit(1);
- 	}
- 
--	/*
--	 * mkfs calls mount before the root inode is allocated.
--	 */
--	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO) {
--		error = libxfs_iget(mp, NULL, sbp->sb_rootino, 0,
--				&mp->m_rootip, 0);
--		if (error) {
--			fprintf(stderr, _("%s: cannot read root inode (%d)\n"),
--				progname, error);
--			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
--				return NULL;
--		}
--		ASSERT(mp->m_rootip != NULL);
--	}
--	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
--		if (mp->m_rootip)
--			libxfs_iput(mp->m_rootip, 0);
-+	/* set up the realtime inodes if they exist */
-+	error = rtmount_inodes(mp);
-+	if (error)
- 		return NULL;
--	}
- 
- 	/*
- 	 * mkfs calls mount before the AGF/AGI structures are written.
- 	 */
--	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO &&
-+	if (sbp->sb_rootino != NULLFSINO &&
- 	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
- 		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
- 		if (error) {
-@@ -869,8 +852,6 @@ libxfs_umount(xfs_mount_t *mp)
- 	int			agno;
- 
- 	libxfs_rtmount_destroy(mp);
--	if ((mp->m_flags & LIBXFS_MOUNT_ROOTINOS) && mp->m_rootip)
--		libxfs_iput(mp->m_rootip, 0);
- 	libxfs_icache_purge();
- 	libxfs_bcache_purge();
- 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 0cdef41..4cc0df6 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -543,7 +543,6 @@ parseproto(
- 			pip = ip;
- 			mp->m_sb.sb_rootino = ip->i_ino;
- 			libxfs_mod_sb(tp, XFS_SB_ROOTINO);
--			mp->m_rootip = ip;
- 			isroot = 1;
- 		} else {
- 			libxfs_trans_ijoin(tp, pip, 0);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 355708c..d37e948 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2582,6 +2582,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
- 	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-+	libxfs_purgebuf(buf);
- 
- 	/*
- 	 * If the data area is a file, then grow it out to its final size
-@@ -2616,7 +2617,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
- 		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
- 
--	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
-+	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
- 	if (mp == NULL) {
- 		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
- 			progname);
-@@ -2887,7 +2888,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	/*
- 	 * Allocate the root inode and anything else in the proto file.
- 	 */
--	mp->m_rootip = NULL;
- 	parse_proto(mp, &fsx, &protostring);
- 
- 	/*
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 2a37438..5307acf 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -856,8 +856,6 @@ mk_root_dir(xfs_mount_t *mp)
- 	ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
- 	ip->i_df.if_u1.if_extents = NULL;
- 
--	mp->m_rootip = ip;
--
- 	/*
- 	 * initialize the directory
- 	 */
+diff --git a/tests/btrfs/021 b/tests/btrfs/021
+new file mode 100755
+index 0000000..e6d645c
+--- /dev/null
++++ b/tests/btrfs/021
+@@ -0,0 +1,93 @@
++#! /bin/bash
++# FS QA Test No. 021
++#
++# A regression test of running btrfs balance and defrag concurrently.
++#
++# The test aims to trigger snapshot-aware defrag path in endio by
++# running balance, which is not expected and leads to a crash.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++run_test()
++{
++	$BTRFS_UTIL_PROG balance start $SCRATCH_MNT >> $seqres.full &
++
++	sleep 0.5
++
++	find $SCRATCH_MNT -type f -print0 | xargs -0 \
++	$BTRFS_UTIL_PROG filesystem defrag -f
++
++	sync
++	wait
++}
++
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++rm -f $seqres.full
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++# This is going to reproduce a race senario between balance and the writeback
++# of snapshot-aware defragment.
++
++# we first create a few files to get higher btree height.
++for j in `seq 0 100`; do
++	touch $SCRATCH_MNT/padding-$j
++done
++
++# Get 50 files with fragments by using backwards writes.
++for j in `seq 0 50`; do
++	for i in `seq 20 -1 1`; do
++		$XFS_IO_PROG -f -d -c "pwrite $(($i * 4096)) 4096" \
++		$SCRATCH_MNT/foo-$j >> $seqres.full | _filter_xfs_io
++	done
++done
++
++# Make sure that our metadata makes it self on disk.
++sync
++
++run_test
++
++# success, all done
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/btrfs/021.out b/tests/btrfs/021.out
+new file mode 100644
+index 0000000..09f4062
+--- /dev/null
++++ b/tests/btrfs/021.out
+@@ -0,0 +1,2 @@
++QA output created by 021
++Silence is golden
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 1159499..410f8ed 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -23,3 +23,4 @@
+ 018 auto quick
+ 019 auto quick
+ 020 auto quick
++021 auto quick
+-- 
+1.8.2.1
 
 _______________________________________________
 xfs mailing list
