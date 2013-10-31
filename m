@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 68CCB7F8A
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 09:48:57 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 98E427F99
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 09:49:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E70E8AC004
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 07:48:56 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 26556AC009
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 07:49:12 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Z6DeXFTE8IXHKjyJ (version=TLSv1 cipher=AES256-SHA
+	ESMTP id Duuu5COSoCj7xpPi (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 07:48:55 -0700 (PDT)
-Date: Thu, 31 Oct 2013 07:48:55 -0700
+	Thu, 31 Oct 2013 07:49:11 -0700 (PDT)
+Date: Thu, 31 Oct 2013 07:49:10 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 10/30] libxfs: Minor cleanup and bug fix sync
-Message-ID: <20131031144855.GJ22359@infradead.org>
+Subject: Re: [PATCH 11/30] xfs: remove newlines from strings passed to
+	__xfs_printk
+Message-ID: <20131031144910.GK22359@infradead.org>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-11-git-send-email-david@fromorbit.com>
+	<1383107481-28937-12-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1383107481-28937-11-git-send-email-david@fromorbit.com>
+In-Reply-To: <1383107481-28937-12-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,16 +34,16 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 30, 2013 at 03:31:01PM +1100, Dave Chinner wrote:
+On Wed, Oct 30, 2013 at 03:31:02PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> These bring all the small single line comment, whitespace and minor
-> code differences into sync with the kernel code. Anything left at
-> this point is an intentional difference.
+> __xfs_printk adds its own "\n".  Having it in the original string
+> leads to unintentional blank lines from these messages.
+> 
+> Ported from kernel commit 08e96e1a.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
