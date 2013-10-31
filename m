@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C7DC47FA8
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 10:10:50 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 390B97FAF
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 10:40:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A7350304059
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 08:10:47 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 1tKJDCcyRNMiPPRl (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 08:10:46 -0700 (PDT)
-Date: Thu, 31 Oct 2013 08:10:46 -0700
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3A58AC004
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 08:40:32 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id uT58zcgRyZhJ7LtY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 31 Oct 2013 08:40:31 -0700 (PDT)
+Date: Thu, 31 Oct 2013 08:40:30 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 17/30] db: rewrite IO engine to use libxfs
-Message-ID: <20131031151046.GB7457@infradead.org>
-References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-18-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: generic/317 use relative paths to avoid
+	traversal permission problems
+Message-ID: <20131031154030.GA6065@infradead.org>
+References: <20131024161235.GA29381@infradead.org>
+	<20131024162557.6dd72435@oracle.com>
+	<20131025093333.GB24583@infradead.org>
+	<20131028114328.4b05e0ee@oracle.com>
+	<20131030161955.GA28755@infradead.org>
+	<20131030162441.GA1112@infradead.org>
+	<20131030143050.34a3b120@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1383107481-28937-18-git-send-email-david@fromorbit.com>
+In-Reply-To: <20131030143050.34a3b120@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +36,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Dwight Engen <dwight.engen@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 30, 2013 at 03:31:08PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Now that we have buffers and xfs_buf_maps, it is relatively easy to
-> convert the IO engine to use libxfs routines. This gets rid of the
-> most of the differences between mapped and straight buffer reads,
-> and tracks xfs_bufs directly in the IO context that is being used.
-> 
-> This is not yet a perfect solution, as xfs_db does different sized
-> IOs for the same block range which will throw warnings like:
-> 
-> xfs_db> inode 64
-> 7ffff7fde740: Badness in key lookup (length)
-> bp=(bno 0x40, len 8192 bytes) key=(bno 0x40, len 4096 bytes)
-> xfs_db>
+On Wed, Oct 30, 2013 at 02:30:50PM -0400, Dwight Engen wrote:
+> Yep, that makes sense. I modeled this on 219 which was using
+> $here/src/lstat64 but didn't think about the fact that in my test fsgqa
+> might have traversal problems. I see plenty of other tests are using
+> relative paths so the following patch should (hopefully) fix 317 for you.
+> Thanks for tracking it down.
 
-Maybe we should use uncached buffer I/O in xfs_db, similar to what we do
-in the mount path in the kernel?
+Thanks, this fixes the problem for me.
 
->  	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
-> +	if (flags & LIBXFS_MOUNT_ROOTINOS)
-> +		mp->m_flags |= LIBXFS_MOUNT_ROOTINOS;
-> +
->  	mp->m_sb = *sb;
->  	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
->  	sbp = &(mp->m_sb);
-> @@ -866,6 +869,8 @@ libxfs_umount(xfs_mount_t *mp)
->  	int			agno;
->  
->  	libxfs_rtmount_destroy(mp);
-> +	if ((mp->m_flags & LIBXFS_MOUNT_ROOTINOS) && mp->m_rootip)
-> +		libxfs_iput(mp->m_rootip, 0);
-
-Seems like the patch to remove m_rootip should go before this one?
-
-> -struct xfs_buf *
-> -libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
-> -		int flags, const struct xfs_buf_ops *ops)
-> +int
-> +libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
-> +		    struct xfs_buf_map *map, int nmaps, int flags)
-
-Shouldn't these sort of changes go into a separate patch?
-
-
-Otherwise looks good to me.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
