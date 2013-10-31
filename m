@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C9D27F52
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 16:50:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D5D66AC005
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 14:50:24 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A92F77F54
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 16:59:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 444478F8039
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 14:59:55 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	7lbzk55JZiME2csT for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 14:50:22 -0700 (PDT)
-Date: Fri, 1 Nov 2013 08:50:20 +1100
+	R1UCOMJEzXZFQuiT for <xfs@oss.sgi.com>;
+	Thu, 31 Oct 2013 14:59:53 -0700 (PDT)
+Date: Fri, 1 Nov 2013 08:59:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 15/30] db: separate out straight buffer IO from map based
-	IO.
-Message-ID: <20131031215020.GN4446@dastard>
+Subject: Re: [PATCH 17/30] db: rewrite IO engine to use libxfs
+Message-ID: <20131031215950.GO4446@dastard>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-16-git-send-email-david@fromorbit.com>
-	<20131031145609.GO22359@infradead.org>
+	<1383107481-28937-18-git-send-email-david@fromorbit.com>
+	<20131031151046.GB7457@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131031145609.GO22359@infradead.org>
+In-Reply-To: <20131031151046.GB7457@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,99 +34,64 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 31, 2013 at 07:56:09AM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 30, 2013 at 03:31:06PM +1100, Dave Chinner wrote:
+On Thu, Oct 31, 2013 at 08:10:46AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 30, 2013 at 03:31:08PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > First step in converting to libxfs based IO.
+> > Now that we have buffers and xfs_buf_maps, it is relatively easy to
+> > convert the IO engine to use libxfs routines. This gets rid of the
+> > most of the differences between mapped and straight buffer reads,
+> > and tracks xfs_bufs directly in the IO context that is being used.
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > This is not yet a perfect solution, as xfs_db does different sized
+> > IOs for the same block range which will throw warnings like:
+> > 
+> > xfs_db> inode 64
+> > 7ffff7fde740: Badness in key lookup (length)
+> > bp=(bno 0x40, len 8192 bytes) key=(bno 0x40, len 4096 bytes)
+> > xfs_db>
 > 
-> The patch description is a little too short, there's not real
-> explanation of what it actually does.
+> Maybe we should use uncached buffer I/O in xfs_db, similar to what we do
+> in the mount path in the kernel?
 
-I can fix that.
+Possibly. I have thought about it, but we'd need a new interface and
+a rework of the libxfs read/write code to do that, and that has
+wider impact than just xfs_db. I also found lots of interesting
+issues as a result of the re-read behaviour which I wouldn't have
+easily found otherwise. i.e. the output is an early warning that
+something isn't quite right in xfs_db, so it does have some use
+right now.
 
-> 
-> > -	if (read_bbs(XFS_SB_DADDR, 1, &bufp, NULL)) {
-> > +	if (read_buf(XFS_SB_DADDR, 1, bufp)) {
-> 
-> E.g. why isn't this already using the normal libxfs routines?
-> 
-> (there probably is an explanation but I don't quite see it yet..)
-
-Because the first step is to get rid of the dependency on a basic
-block map array interface for all callers. i.e. this patch separates
-out the read/write functions into contiguous buffer IO and
-non-contiguous buffer IO to match the two libxfs_buf IO interfaces.
-
-> >  int
-> > +read_buf(
-> > +	xfs_daddr_t	bbno,
-> > +	int		count,
-> > +	void		*bufp)
-> > +{
-> 
-> Is read_buf really a good name for something that is a trivial pread
-> wrapper and doesn't deal with buffers?  Should the function have some
-> comments explaining when to use it?  The same also applies to the write
-> side.
-
-It ends up going away - it's just a temporary step in switching over
-to the libxfs code. i.e. this changes the API without changing the
-implementation.
-
-> > +static void
-> > +write_cur_buf(void)
-> > +{
-> > +	int ret;
+> >  	mp->m_flags = (LIBXFS_MOUNT_32BITINODES|LIBXFS_MOUNT_32BITINOOPT);
+> > +	if (flags & LIBXFS_MOUNT_ROOTINOS)
+> > +		mp->m_flags |= LIBXFS_MOUNT_ROOTINOS;
 > > +
-> > +	ret = write_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-> > +
-> > +	if (ret == -1)
-> > +		dbprintf(_("incomplete write, block: %lld\n"),
-> > +			 (iocur_base + iocur_sp)->bb);
-> > +	else if (ret != 0)
-> > +		dbprintf(_("write error: %s\n"), strerror(ret));
-> > +
-> > +	/* re-read buffer from disk */
-> > +	ret = read_buf(iocur_top->bb, iocur_top->blen, iocur_top->buf);
-> > +	if (ret == -1)
-> > +		dbprintf(_("incomplete read, block: %lld\n"),
-> > +			 (iocur_base + iocur_sp)->bb);
-> > +	else if (ret != 0)
-> > +		dbprintf(_("read error: %s\n"), strerror(ret));
-> > +}
+> >  	mp->m_sb = *sb;
+> >  	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
+> >  	sbp = &(mp->m_sb);
+> > @@ -866,6 +869,8 @@ libxfs_umount(xfs_mount_t *mp)
+> >  	int			agno;
+> >  
+> >  	libxfs_rtmount_destroy(mp);
+> > +	if ((mp->m_flags & LIBXFS_MOUNT_ROOTINOS) && mp->m_rootip)
+> > +		libxfs_iput(mp->m_rootip, 0);
 > 
-> What is the point of the write and re-read cycle?
+> Seems like the patch to remove m_rootip should go before this one?
 
-That's just what the current code does - I'm not changing the logic
-of operation here. I can add patches at the end of the series to do
-this - I assume it was intended to catch bad writes (e.g. media
-errors) back in the days of Irix...
+Yeah, good idea.
 
-> > +	for (j = 0; j < count; j++) {
-> > +		bbno = bbmap->b[j];
-> >  		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
-> >  			rval = errno;
-> >  			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
-> >  			return rval;
-> >  		}
-> > -		c = BBTOB(bbmap ? 1 : count);
-> > +		c = BBTOB(1);
-> >  		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
+> > -struct xfs_buf *
+> > -libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+> > -		int flags, const struct xfs_buf_ops *ops)
+> > +int
+> > +libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
+> > +		    struct xfs_buf_map *map, int nmaps, int flags)
 > 
-> Shoiuldn't this use the write_buf helper above?
+> Shouldn't these sort of changes go into a separate patch?
 
-Possibly, but this is just removing the single contiguous buffer
-case from the implementation now that it is never called in that
-way. The entire implemenation is converted to libxfs_buf*map IO
-calls later on, so there's not much point modifying it further at
-this point.
+I can do that.
 
-> And read_buf here?
-
-Same again.
+Thanks for looking at these patches, Christoph.
 
 Cheers,
 
