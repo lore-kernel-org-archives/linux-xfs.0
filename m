@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7AC587F54
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 23:27:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2DD6D8F8059
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 21:27:42 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4736F7F58
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 23:27:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 899E2AC005
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 21:27:41 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	vBYkazKHktxUFVF6 for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 21:27:40 -0700 (PDT)
+	9fUVIWUZL9KhKYCZ for <xfs@oss.sgi.com>;
+	Thu, 31 Oct 2013 21:27:39 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vc6KR-0008Gp-3E
+	(envelope-from <dave@fromorbit.com>) id 1Vc6KR-0008Gq-3o
 	for xfs@oss.sgi.com; Fri, 01 Nov 2013 15:27:23 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vc6KR-0005lP-21
+	(envelope-from <dave@disappointment.disaster>) id 1Vc6KR-0005lU-2b
 	for xfs@oss.sgi.com; Fri, 01 Nov 2013 15:27:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] xfs: xfs_remove deadlocks due to inverted AGF vs AGI lock
-	ordering
-Date: Fri,  1 Nov 2013 15:27:16 +1100
-Message-Id: <1383280040-21979-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/5] xfs: open code inc_inode_iversion when logging an inode
+Date: Fri,  1 Nov 2013 15:27:17 +1100
+Message-Id: <1383280040-21979-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383280040-21979-1-git-send-email-david@fromorbit.com>
 References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,167 +39,64 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Removing an inode from the namespace involves removing the directory
-entry and dropping the link count on the inode. Removing the
-directory entry can result in locking an AGF (directory blocks were
-freed) and removing a link count can result in placing the inode on
-an unlinked list which results in locking an AGI.
+Michael L Semon reported that generic/069 runtime increased on v5
+superblocks by 100% compared to v4 superblocks. his perf-based
+analysis pointed directly at the timestamp updates being done by the
+write path in this workload. The append writers are doing 4-byte
+writes, so there are lots of timestamp updates occurring.
 
-The big problem here is that we have an ordering constraint on AGF
-and AGI locking - inode allocation locks the AGI, then can allocate
-a new extent for new inodes, locking the AGF after the AGI.
-Similarly, freeing the inode removes the inode from the unlinked
-list, requiring that we lock the AGI first, and then freeing the
-inode can result in an inode chunk being freed and hence freeing
-disk space requiring that we lock an AGF.
+The thing is, they aren't being triggered by timestamp changes -
+they are being triggered by the inode change counter needing to be
+updated. That is, every write(2) system call needs to bump the inode
+version count, and it does that through the timestamp update
+mechanism. Hence for v5 filesystems, test generic/069 is running 3
+orders of magnitude more timestmap update transactions on v5
+filesystems due to the fact it does a huge number of *4 byte*
+write(2) calls.
 
-Hence the ordering that is imposed by other parts of the code is AGI
-before AGF. This means we cannot remove the directory entry before
-we drop the inode reference count and put it on the unlinked list as
-this results in a lock order of AGF then AGI, and this can deadlock
-against inode allocation and freeing. Therefore we must drop the
-link counts before we remove the directory entry.
+This isn't a real world scenario we really need to address - anyone
+doing such sequential IO should be using fwrite(3), not write(2).
+i.e. fwrite(3) buffers the writes in userspace to minimise the
+number of write(2) syscalls, and the problem goes away.
 
-This is still safe from a transactional point of view - it is not
-until we get to xfs_bmap_finish() that we have the possibility of
-multiple transactions in this operation. Hence as long as we remove
-the directory entry and drop the link count in the first transaction
-of the remove operation, there are no transactional constraints on
-the ordering here.
+However, there is a small change we can make to improve the
+situation - removing the expensive lock operation on the change
+counter update.  All inode version counter changes in XFS occur
+under the ip->i_ilock during a transaction, and therefore we
+don't actually need the spin lock that provides exclusive access to
+it through inc_inode_iversion().
 
-Change the ordering of the operations in the xfs_remove() function
-to align the ordering of AGI and AGF locking to match that of the
-rest of the code.
+Hence avoid the lock and just open code the increment ourselves when
+logging the inode.
 
+Reported-by: Michael L. Semon <mlsemon35@gmail.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_inode.c | 72 +++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 44 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_trans_inode.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 326b94d..001aa89 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2404,6 +2404,33 @@ xfs_iunpin_wait(
- 		__xfs_iunpin_wait(ip);
- }
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 1bba7f6..50c3f56 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -111,12 +111,14 @@ xfs_trans_log_inode(
  
-+/*
-+ * Removing an inode from the namespace involves removing the directory entry
-+ * and dropping the link count on the inode. Removing the directory entry can
-+ * result in locking an AGF (directory blocks were freed) and removing a link
-+ * count can result in placing the inode on an unlinked list which results in
-+ * locking an AGI.
-+ *
-+ * The big problem here is that we have an ordering constraint on AGF and AGI
-+ * locking - inode allocation locks the AGI, then can allocate a new extent for
-+ * new inodes, locking the AGF after the AGI. Similarly, freeing the inode
-+ * removes the inode from the unlinked list, requiring that we lock the AGI
-+ * first, and then freeing the inode can result in an inode chunk being freed
-+ * and hence freeing disk space requiring that we lock an AGF.
-+ *
-+ * Hence the ordering that is imposed by other parts of the code is AGI before
-+ * AGF. This means we cannot remove the directory entry before we drop the inode
-+ * reference count and put it on the unlinked list as this results in a lock
-+ * order of AGF then AGI, and this can deadlock against inode allocation and
-+ * freeing. Therefore we must drop the link counts before we remove the
-+ * directory entry.
-+ *
-+ * This is still safe from a transactional point of view - it is not until we
-+ * get to xfs_bmap_finish() that we have the possibility of multiple
-+ * transactions in this operation. Hence as long as we remove the directory
-+ * entry and drop the link count in the first transaction of the remove
-+ * operation, there are no transactional constraints on the ordering here.
-+ */
- int
- xfs_remove(
- 	xfs_inode_t             *dp,
-@@ -2473,6 +2500,7 @@ xfs_remove(
  	/*
- 	 * If we're removing a directory perform some additional validation.
+ 	 * First time we log the inode in a transaction, bump the inode change
+-	 * counter if it is configured for this to occur.
++	 * counter if it is configured for this to occur. We don't use
++	 * inode_inc_version() because there is no need for extra locking around
++	 * i_version as we already hold the inode locked exclusively for
++	 * metadata modification.
  	 */
-+	cancel_flags |= XFS_TRANS_ABORT;
- 	if (is_dir) {
- 		ASSERT(ip->i_d.di_nlink >= 2);
- 		if (ip->i_d.di_nlink != 2) {
-@@ -2483,31 +2511,16 @@ xfs_remove(
- 			error = XFS_ERROR(ENOTEMPTY);
- 			goto out_trans_cancel;
- 		}
--	}
- 
--	xfs_bmap_init(&free_list, &first_block);
--	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
--					&first_block, &free_list, resblks);
--	if (error) {
--		ASSERT(error != ENOENT);
--		goto out_bmap_cancel;
--	}
--	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
--	if (is_dir) {
--		/*
--		 * Drop the link from ip's "..".
--		 */
-+		/* Drop the link from ip's "..".  */
- 		error = xfs_droplink(tp, dp);
- 		if (error)
--			goto out_bmap_cancel;
-+			goto out_trans_cancel;
- 
--		/*
--		 * Drop the "." link from ip to self.
--		 */
-+		/* Drop the "." link from ip to self.  */
- 		error = xfs_droplink(tp, ip);
- 		if (error)
--			goto out_bmap_cancel;
-+			goto out_trans_cancel;
- 	} else {
- 		/*
- 		 * When removing a non-directory we need to log the parent
-@@ -2516,20 +2529,24 @@ xfs_remove(
- 		 */
- 		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		inode_inc_iversion(VFS_I(ip));
+-		ip->i_d.di_changecount = VFS_I(ip)->i_version;
++		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
+ 		flags |= XFS_ILOG_CORE;
  	}
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
  
--	/*
--	 * Drop the link from dp to ip.
--	 */
-+	/* Drop the link from dp to ip. */
- 	error = xfs_droplink(tp, ip);
- 	if (error)
--		goto out_bmap_cancel;
-+		goto out_trans_cancel;
- 
--	/*
--	 * Determine if this is the last link while
--	 * we are in the transaction.
--	 */
-+	/* Determine if this is the last link while the inode is locked */
- 	link_zero = (ip->i_d.di_nlink == 0);
- 
-+	xfs_bmap_init(&free_list, &first_block);
-+	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
-+					&first_block, &free_list, resblks);
-+	if (error) {
-+		ASSERT(error != ENOENT);
-+		goto out_bmap_cancel;
-+	}
-+
- 	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * remove transaction goes to disk before returning to
-@@ -2559,7 +2576,6 @@ xfs_remove(
- 
-  out_bmap_cancel:
- 	xfs_bmap_cancel(&free_list);
--	cancel_flags |= XFS_TRANS_ABORT;
-  out_trans_cancel:
- 	xfs_trans_cancel(tp, cancel_flags);
-  std_return:
 -- 
 1.8.4.rc3
 
