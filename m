@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4736F7F58
+	by oss.sgi.com (Postfix) with ESMTP id 7BFCB7F55
 	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 23:27:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 899E2AC005
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 21:27:41 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B64EFAC007
+	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 21:27:44 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9fUVIWUZL9KhKYCZ for <xfs@oss.sgi.com>;
+	Sr6TNGuF4rKG6chH for <xfs@oss.sgi.com>;
 	Thu, 31 Oct 2013 21:27:39 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vc6KR-0008Gq-3o
+	(envelope-from <dave@fromorbit.com>) id 1Vc6KR-0008Gt-5I
 	for xfs@oss.sgi.com; Fri, 01 Nov 2013 15:27:23 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vc6KR-0005lU-2b
+	(envelope-from <dave@disappointment.disaster>) id 1Vc6KR-0005lj-4C
 	for xfs@oss.sgi.com; Fri, 01 Nov 2013 15:27:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/5] xfs: open code inc_inode_iversion when logging an inode
-Date: Fri,  1 Nov 2013 15:27:17 +1100
-Message-Id: <1383280040-21979-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/5] xfs: increase inode cluster size for v5 filesystems
+Date: Fri,  1 Nov 2013 15:27:20 +1100
+Message-Id: <1383280040-21979-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383280040-21979-1-git-send-email-david@fromorbit.com>
 References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,64 +39,124 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Michael L Semon reported that generic/069 runtime increased on v5
-superblocks by 100% compared to v4 superblocks. his perf-based
-analysis pointed directly at the timestamp updates being done by the
-write path in this workload. The append writers are doing 4-byte
-writes, so there are lots of timestamp updates occurring.
+v5 filesystems use 512 byte inodes as a minimum, so read inodes in
+clusters that are effectively half the size of a v4 filesystem with
+256 byte inodes. For v5 fielsystems, scale the inode cluster size
+with the size of the inode so that we keep a constant 32 inodes per
+cluster ratio for all inode IO.
 
-The thing is, they aren't being triggered by timestamp changes -
-they are being triggered by the inode change counter needing to be
-updated. That is, every write(2) system call needs to bump the inode
-version count, and it does that through the timestamp update
-mechanism. Hence for v5 filesystems, test generic/069 is running 3
-orders of magnitude more timestmap update transactions on v5
-filesystems due to the fact it does a huge number of *4 byte*
-write(2) calls.
+This only works if mkfs.xfs sets the inode alignment appropriately
+for larger inode clusters, so this functionality is made conditional
+on mkfs doing the right thing. xfs_repair needs to know about
+the inode alignment changes, too.
 
-This isn't a real world scenario we really need to address - anyone
-doing such sequential IO should be using fwrite(3), not write(2).
-i.e. fwrite(3) buffers the writes in userspace to minimise the
-number of write(2) syscalls, and the problem goes away.
+Wall time:
+	create	bulkstat	find+stat	ls -R	unlink
+v4	237s	161s		173s		201s	299s
+v5	235s	163s		205s		 31s	356s
+patched	234s	160s		182s		 29s	317s
 
-However, there is a small change we can make to improve the
-situation - removing the expensive lock operation on the change
-counter update.  All inode version counter changes in XFS occur
-under the ip->i_ilock during a transaction, and therefore we
-don't actually need the spin lock that provides exclusive access to
-it through inc_inode_iversion().
+System time:
+	create	bulkstat	find+stat	ls -R	unlink
+v4	2601s	2490s		1653s		1656s	2960s
+v5	2637s	2497s		1681s		  20s	3216s
+patched	2613s	2451s		1658s		  20s	3007s
 
-Hence avoid the lock and just open code the increment ourselves when
-logging the inode.
+So, wall time same or down across the board, system time same or
+down across the board, and cache hit rates all improve except for
+the ls -R case which is a pure cold cache directory read workload
+on v5 filesystems...
 
-Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+So, this patch removes most of the performance and CPU usage
+differential between v4 and v5 filesystems on traversal related
+workloads.
+
+Note: while this patch is currently for v5 filesystems only, there
+is no reason it can't be ported back to v4 filesystems.  This hasn't
+been done here because bringing the code back to v4 requires
+forwards and backwards kernel compatibility testing.  i.e. to
+deterine if older kernels(*) do the right thing with larger inode
+alignments but still only using 8k inode cluster sizes. None of this
+testing and validation on v4 filesystems has been done, so for the
+moment larger inode clusters is limited to v5 superblocks.
+
+(*) a current default config v4 filesystem should mount just fine on
+2.6.23 (when lazy-count support was introduced), and so if we change
+the alignment emitted by mkfs without a feature bit then we have to
+make sure it works properly on all kernels since 2.6.23. And if we
+allow it to be changed when the lazy-count bit is not set, then it's
+all kernels since v2 logs were introduced that need to be tested for
+compatibility...
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_trans_inode.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_mount.c      | 15 +++++++++++++++
+ fs/xfs/xfs_mount.h      |  2 +-
+ fs/xfs/xfs_trans_resv.c |  3 +--
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index 1bba7f6..50c3f56 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -111,12 +111,14 @@ xfs_trans_log_inode(
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index da88f16..02df7b4 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -41,6 +41,7 @@
+ #include "xfs_fsops.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_dinode.h"
+ 
+ 
+ #ifdef HAVE_PERCPU_SB
+@@ -718,8 +719,22 @@ xfs_mountfs(
+ 	 * Set the inode cluster size.
+ 	 * This may still be overridden by the file system
+ 	 * block size if it is larger than the chosen cluster size.
++	 *
++	 * For v5 filesystems, scale the cluster size with the inode size to
++	 * keep a constant ratio of inode per cluster buffer, but only if mkfs
++	 * has set the inode alignment value appropriately for larger cluster
++	 * sizes.
+ 	 */
+ 	mp->m_inode_cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		int	new_size = mp->m_inode_cluster_size;
++
++		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
++		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
++			mp->m_inode_cluster_size = new_size;
++		xfs_info(mp, "Using inode cluster size of %d bytes",
++			 mp->m_inode_cluster_size);
++	}
  
  	/*
- 	 * First time we log the inode in a transaction, bump the inode change
--	 * counter if it is configured for this to occur.
-+	 * counter if it is configured for this to occur. We don't use
-+	 * inode_inc_version() because there is no need for extra locking around
-+	 * i_version as we already hold the inode locked exclusively for
-+	 * metadata modification.
- 	 */
- 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
- 	    IS_I_VERSION(VFS_I(ip))) {
--		inode_inc_iversion(VFS_I(ip));
--		ip->i_d.di_changecount = VFS_I(ip)->i_version;
-+		ip->i_d.di_changecount = ++VFS_I(ip)->i_version;
- 		flags |= XFS_ILOG_CORE;
- 	}
- 
+ 	 * Set inode alignment fields
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 1d8101a..a466c5e 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -112,7 +112,7 @@ typedef struct xfs_mount {
+ 	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
+ 	__uint8_t		m_agno_log;	/* log #ag's */
+ 	__uint8_t		m_agino_log;	/* #bits for agino in inum */
+-	__uint16_t		m_inode_cluster_size;/* min inode buf size */
++	uint			m_inode_cluster_size;/* min inode buf size */
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index d53d9f0..2fd59c0 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -385,8 +385,7 @@ xfs_calc_ifree_reservation(
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+-		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+-		    XFS_INODE_CLUSTER_SIZE(mp)) +
++		max_t(uint, XFS_FSB_TO_B(mp, 1), XFS_INODE_CLUSTER_SIZE(mp)) +
+ 		xfs_calc_buf_res(1, 0) +
+ 		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
+ 				 mp->m_in_maxlevels, 0) +
 -- 
 1.8.4.rc3
 
