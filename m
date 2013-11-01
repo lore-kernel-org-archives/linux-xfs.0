@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B74C57F51
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 03:16:44 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B171D7F58
+	for <xfs@oss.sgi.com>; Fri,  1 Nov 2013 05:31:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4A5F8AC001
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 01:16:44 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id YKLSyyx3LQeb9kiM (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 04 Nov 2013 01:16:43 -0800 (PST)
-Date: Mon, 4 Nov 2013 01:16:43 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 27/30] libxfs: work around do_div() not handling 32 bit
-	numerators
-Message-ID: <20131104091643.GG23564@infradead.org>
-References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-28-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 715C38F8040
+	for <xfs@oss.sgi.com>; Fri,  1 Nov 2013 03:31:15 -0700 (PDT)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id scH8XTAaFZygbhsN for
+	<xfs@oss.sgi.com>; Fri, 01 Nov 2013 03:31:13 -0700 (PDT)
+Message-ID: <52738187.1000807@cn.fujitsu.com>
+Date: Fri, 01 Nov 2013 18:25:11 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1383107481-28937-28-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: simplify kmem_{zone_}zalloc
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,46 +25,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: bpm@sgi.com, elder@kernel.org
+Cc: guz.fnst@cn.fujitsu.com, linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Wed, Oct 30, 2013 at 03:31:18PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The libxfs dquot buffer code uses do_div() with a 32 bit numerator.
-> This gives incorrect results as do_div() passes the numerator by
-> reference as a pointer to a 64 bit value. Hence it does the division
-> using 32 bits of garbage gives the wrong result. The kernel code
-> handles 32 bit numerators just fine, so this patch is a temporary
-> workaround in the dquot buffer code until we fix do_div() to handle
-> 32 bit numerators correctly.
-
-The right fix is to simply stop using do_div here, both in kernel and
-userspace.
-
-> 
->  xfs_calc_dquots_per_chunk(
->  	struct xfs_mount	*mp,
->  	unsigned int		nbblks)	/* basic block units */
->  {
-> -	unsigned int	ndquots;
-> +	uint64_t	ndquots;
->  
->  	ASSERT(nbblks > 0);
->  	ndquots = BBTOB(nbblks);
->  	do_div(ndquots, sizeof(xfs_dqblk_t));
->  
-> -	return ndquots;
-> +	return (int)ndquots;
-
-	ndquots = BBTOB(nbblks) / sizeof(xfs_dqblk_t);
+Introduce flag KM_ZERO which is used to alloc zeroed entry, and convert
+kmem_{zone_}zalloc to call kmem_{zone_}alloc() with KM_ZERO directly,
+in order to avoid the setting to zero step.
 
 
-Also the current xfs_calc_dquots_per_chunk doesn't use the mp argument
-anyway, but all callers do.  I think in the end we'd want to take that
-in from the calers end end up with a version that includes the
-check from the quotainfo.  But for getting userspace up and running my
-above minimal version should do it.
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ fs/xfs/kmem.c |   14 ++------------
+ fs/xfs/kmem.h |    7 ++++++-
+ 2 files changed, 8 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index a02cfb9..d56fcc9 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -65,12 +65,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ void *
+ kmem_zalloc(size_t size, xfs_km_flags_t flags)
+ {
+-	void	*ptr;
+-
+-	ptr = kmem_alloc(size, flags);
+-	if (ptr)
+-		memset((char *)ptr, 0, (int)size);
+-	return ptr;
++	return kmem_alloc(size, flags | KM_ZERO);
+ }
+ 
+ void *
+@@ -132,10 +127,5 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ void *
+ kmem_zone_zalloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ {
+-	void	*ptr;
+-
+-	ptr = kmem_zone_alloc(zone, flags);
+-	if (ptr)
+-		memset((char *)ptr, 0, kmem_cache_size(zone));
+-	return ptr;
++	return kmem_zone_alloc(zone, flags | KM_ZERO);
+ }
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 3a7371c..8ea21fd 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -32,6 +32,7 @@ typedef unsigned __bitwise xfs_km_flags_t;
+ #define KM_NOSLEEP	((__force xfs_km_flags_t)0x0002u)
+ #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
+ #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
++#define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
+ 
+ /*
+  * We use a special process flag to avoid recursive callbacks into
+@@ -43,7 +44,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ {
+ 	gfp_t	lflags;
+ 
+-	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL));
++	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
+ 
+ 	if (flags & KM_NOSLEEP) {
+ 		lflags = GFP_ATOMIC | __GFP_NOWARN;
+@@ -52,6 +53,10 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ 		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
+ 			lflags &= ~__GFP_FS;
+ 	}
++
++	if (flags & KM_ZERO)
++		lflags |= __GFP_ZERO;
++
+ 	return lflags;
+ }
+ 
+-- 
+1.7.7
+
 
 _______________________________________________
 xfs mailing list
