@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F26EC7F6F
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 12:15:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E075D8F8059
-	for <xfs@oss.sgi.com>; Thu, 31 Oct 2013 10:14:57 -0700 (PDT)
-Received: from server506.appriver.com (server506h.appriver.com [50.56.144.38])
-	by cuda.sgi.com with ESMTP id SXMicDKNgT1FxAAW (version=TLSv1
-	cipher=DES-CBC3-SHA bits=168 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Oct 2013 10:14:54 -0700 (PDT)
-Subject: Re: [PATCH 04/23] block: Abstract out bvec iterator
-MIME-Version: 1.0 (Apple Message framework v1085)
-From: Ed Cashin <ecashin@coraid.com>
-In-Reply-To: <1383077896-4132-5-git-send-email-kmo@daterainc.com>
-Date: Thu, 31 Oct 2013 13:14:48 -0400
-Message-ID: <B60197FE-BC53-4EBA-8F78-02E4D9D31844@coraid.com>
-References: <1383077896-4132-1-git-send-email-kmo@daterainc.com>
-	<1383077896-4132-5-git-send-email-kmo@daterainc.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 392F329E04
+	for <xfs@oss.sgi.com>; Fri,  1 Nov 2013 11:09:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C28C6AC005
+	for <xfs@oss.sgi.com>; Fri,  1 Nov 2013 09:09:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rwxwzGCIRmnfDUol for
+	<xfs@oss.sgi.com>; Fri, 01 Nov 2013 09:09:10 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rA1G9AvY030692
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 1 Nov 2013 12:09:10 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests: _filter_mkfs should consume input from stdin first
+	to avoid EPIPE
+Date: Sat,  2 Nov 2013 00:08:49 +0800
+Message-Id: <1383322129-20322-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,27 +26,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kent Overstreet <kmo@daterainc.com>
-Cc: Dave Kleikamp <shaggy@kernel.org>, Jeremy Fitzhardinge <jeremy@goop.org>, Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>, Jan Beulich <jbeulich@suse.com>, Mike Snitzer <snitzer@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Neil Brown <neilb@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Selvan Mani <smani@micron.com>, Namjae Jeon <namjae.jeon@samsung.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Chris Mason <chris.mason@fusionio.com>, nab@linux-iscsi.org, dm-devel@redhat.com, Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, Ian Campbell <Ian.Campbell@citrix.com>, Joshua Morris <josh.h.morris@us.ibm.com>, Alasdair Kergon <agk@redhat.com>, Nick Piggin <npiggin@kernel.dk>, =?iso-8859-1?Q?Roger_Pau_Monn=E9?= <roger.pau@citrix.com>, Joe Perches <joe@perches.com>, Len Brown <len.brown@intel.com>, Minchan Kim <minchan@kernel.org>, Jie Liu <jeff.liu@oracle.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Stefano Stabellini <stefano.stabellini@eu.citrix.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Philip Kelleher <pjk1939@linux.vnet.ibm.com>, Steven Whitehouse <swhiteho@redhat.com>, hch@infradead.org, Christian Borntraeger <borntraeger@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Mel Gorman <mgorman@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Wilcox <willy@linux.intel.com>, Lars Ellenberg <drbd-dev@lists.linbit.com>, Ben Hutchings <ben@decadent.org.uk>, Prasad Joshi <prasadjoshi.linux@gmail.com>, Nitin Gupta <ngupta@vflare.org>, Alex Elder <elder@inktank.com>, Dan Magenheimer <dan.magenheimer@oracle.com>, Peng Tao <tao.peng@emc.com>, Sage Weil <sage@inktank.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Pankaj Kumar <pankaj.km@samsung.com>, Trond Myklebust <Trond.Myklebust@netapp.com>, Joern Engel <joern@logfs.org>, Rusty Russell <rusty@rustcorp.com.au>, Steven Rostedt <rostedt@goodmis.org>, xfs@oss.sgi.com, "Rafael J. Wysocki" <rjw@sisk.pl>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ben Myers <bpm@sgi.com>, Jerome Marchand <jmarchand@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Adamson <andros@netapp.com>, Sam Bradshaw <sbradshaw@micron.com>, Jaegeuk Kim <jaegeuk.kim@samsung.com>, ceph-devel@vger.kernel.org, Yehuda Sadeh <yehuda@inktank.com>, axboe@kernel.dk, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sunil Mushran <sunil.mushran@gmail.com>, Geoff Levand <geoff@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Asai Thambi S P <asamymuthupa@micron.com>, linux-kernel@vger.kernel.org, "James E.J.
-	Bottomley" <JBottomley@parallels.com>, fanchaoting <fanchaoting@cn.fujitsu.com>, Benny Halevy <bhalevy@tonian.com>, Jiang Liu <jiang.liu@huawei.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, tj@kernel.org, linux390@de.ibm.com, Mark Fasheh <mfasheh@suse.com>, Wei Yongjun <yongjun_wei@trendmicro.com.cn>, Frederic Weisbecker <fweisbec@gmail.com>, Guo Chao <yan@linux.vnet.ibm.com>, Joel Becker <jlbec@evilplan.org>
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-On Oct 29, 2013, at 4:17 PM, Kent Overstreet wrote:
+_filter_mkfs is a filter so that it should read from stdin first
+before printing anything out. Otherwise the command prior to the
+pipeline may get EPIPE.
 
-> Immutable biovecs are going to require an explicit iterator. To
-> implement immutable bvecs, a later patch is going to add a bi_bvec_done
-> member to this struct; for now, this patch effectively just renames
-> things.
+I saw this when testing extN with generic/204, _scratch_mkfs_sized was
+unable to create fs because of EPIPE, then _scratch_mount failed.
 
-Ack.  These patches pass sanity-check testing, too, for aoe.
+generic/204 12s ... [failed, exit status 1] - output mismatch (see /root/xfstests/results//generic/204.out.bad)
+    --- tests/generic/204.out   2013-11-01 16:47:56.728591856 +0800
+    +++ /root/xfstests/results//generic/204.out.bad     2013-11-01 22:52:53.207828779 +0800
+    @@ -1,2 +1,7 @@
+     QA output created by 204
+    -*** done
+    +mount: wrong fs type, bad option, bad superblock on /dev/sda6,
+    +       missing codepage or helper program, or other error
+    +       In some cases useful info is found in syslog - try
+    +       dmesg | tail  or so
+    +
 
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ common/filter | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/common/filter b/common/filter
+index e37ce69..faf33e3 100644
+--- a/common/filter
++++ b/common/filter
+@@ -134,16 +134,19 @@ _filter_date()
+ # Non XFS filesystems always return a 4k block size and a 256 byte inode.
+ _filter_mkfs()
+ {
++    local tmp=/tmp/mkfs_filter
++    cat - >$tmp
++
+     case $FSTYP in
+     xfs)
+ 	;;
+     *)
+ 	perl -e 'print STDERR "dbsize=4096\nisize=256\n"'
++	rm -f $tmp
+ 	return ;;
+     esac
+ 
+-    set -
+-    perl -ne '
++    cat $tmp | perl -ne '
+     if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
+ 	print STDERR "ddev=$1\nisize=$2\nagcount=$3\nagsize=$4\n";
+ 	print STDOUT "meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks\n";
+@@ -175,6 +178,7 @@ _filter_mkfs()
+ 	print STDERR "rtdev=$1\nrtextsz=$2\nrtblocks=$3\nrtextents=$4\n";
+ 	print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
+     }'
++    rm -f $tmp
+ }
+ 
+ 
 -- 
-  Ed Cashin
-  ecashin@coraid.com
-
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
