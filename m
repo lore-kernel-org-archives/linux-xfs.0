@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.12-rc3-46-g2732036
-Message-Id: <20131104231144.14D357F90@oss.sgi.com>
-Date: Mon,  4 Nov 2013 17:11:43 -0600 (CST)
+Message-Id: <20131104231155.E12817F96@oss.sgi.com>
+Date: Mon,  4 Nov 2013 17:11:55 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   2732036 xfs: xfs_remove deadlocks due to inverted AGF vs AGI lock ordering
   bb86d21 xfs: fix the extent count when allocating an new indirection array entry
       from  10e6e65dfcedff63275c3d649d329c044caa8e26 (commit)
