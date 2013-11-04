@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AFE287F77
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 14:21:06 -0600 (CST)
-Message-ID: <527801B4.1040108@sgi.com>
-Date: Mon, 4 Nov 2013 14:21:08 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1FD117F78
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 14:25:53 -0600 (CST)
+Message-ID: <527802D2.80900@sgi.com>
+Date: Mon, 4 Nov 2013 14:25:54 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: generic/318 use symbolic namespaced ids
-References: <20131024154414.GB19055@infradead.org>	<20131024161155.080eabad@oracle.com>	<20131025093154.GA24583@infradead.org>
-	<5277FF72.1010005@sgi.com>
-In-Reply-To: <5277FF72.1010005@sgi.com>
+References: <20131024154414.GB19055@infradead.org>
+	<20131024161155.080eabad@oracle.com>
+In-Reply-To: <20131024161155.080eabad@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,20 +22,19 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Dwight Engen <dwight.engen@oracle.com>
+To: Dwight Engen <dwight.engen@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On 11/04/2013 02:11 PM, Rich Johnston wrote:
+This has been committed.
 
->>
-> Hey Dwight,
->
-> This still fails for me.
->
-> --Rich
->
+Thanks
+--Rich
 
-Unsend sorry yes it does fix it, sorry for the noise.
+commit c4d4fb21ef3b08e530512071e798bffeea6f2c74
+Author: Dwight Engen <dwight.engen@oracle.com>
+Date:   Thu Oct 24 20:11:55 2013 +0000
+
+     xfstests: generic/318 use symbolic namespaced ids
 
 _______________________________________________
 xfs mailing list
