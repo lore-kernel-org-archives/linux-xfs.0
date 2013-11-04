@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E30E7F69
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 04:27:19 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 166947F67
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 08:24:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E1E08F8052
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 02:27:16 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id 8W09BeM87ODsKR8r for
-	<xfs@oss.sgi.com>; Mon, 04 Nov 2013 02:27:14 -0800 (PST)
-Message-ID: <52777511.1020605@cn.fujitsu.com>
-Date: Mon, 04 Nov 2013 18:21:05 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 057C7304051
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 06:24:26 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id C2PZ5PhbIY23LLlA for <xfs@oss.sgi.com>;
+	Mon, 04 Nov 2013 06:24:25 -0800 (PST)
+Message-ID: <5277AE19.0@sandeen.net>
+Date: Mon, 04 Nov 2013 08:24:25 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfs: simplify kmem_{zone_}zalloc
+Subject: Re: How to use increased number of ACL entries?
+References: <20131103081704.GE9974@fit.vutbr.cz>	<20131104003915.GN6188@dastard>	<5277086E.6030905@sandeen.net>
+	<52771FFE.8030009@gmail.com>
+In-Reply-To: <52771FFE.8030009@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,127 +28,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com, elder@kernel.org
-Cc: guz.fnst@cn.fujitsu.com, linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: "Michael L. Semon" <mlsemon35@gmail.com>, Dave Chinner <david@fromorbit.com>, Kasparek Tomas <kasparek@fit.vutbr.cz>
+Cc: xfs@oss.sgi.com
 
-Introduce flag KM_ZERO which is used to alloc zeroed entry, and convert
-kmem_{zone_}zalloc to call kmem_{zone_}alloc() with KM_ZERO directly,
-in order to avoid the setting to zero step. 
-And following Dave's suggestion, make kmem_{zone_}zalloc static inline
-into kmem.h as they're now just a simple wrapper.
+On 11/3/13, 10:18 PM, Michael L. Semon wrote:
+> On 11/03/2013 09:37 PM, Eric Sandeen wrote:
+>> On 11/3/13, 6:39 PM, Dave Chinner wrote:
+>>> On Sun, Nov 03, 2013 at 09:17:04AM +0100, Kasparek Tomas wrote:
+>>>> Hello,
+>>>>
+>>>> I'm trying to get more then 25 ACLs entries to work according to
+>>>> http://oss.sgi.com/pipermail/xfs/2013-May/026544.html . I'm running 3.10.x
+>>>> kernel which seems to contain these changes. I understand, that this is
+>>>> on-disk format change, so I expect to need new xfsprogs too. I tried the
+>>>> version from CentOS 6.4 (3.1.1) and one from git repo (
+>>>> git://oss.sgi.com/xfs/cmds/xfsprogs), but still it fails to create more then
+>>>> 25 ACL entries (21 user defined). Is there something I'm still missing?
+>>>
+>>> You haven't told mkfs to change the on disk format to enable more
+>>> than 25 ACLs. Only the version from git will do it, and your CentOS
+>>> kernel will not support it.
+>>
+>> but the 3.10.x kernel you're running will IIRC; use "-m crc=1" on the mkfs.xfs
+>> commandline from a git mkfs.xfs.
+>>
+>> -Eric
+>>  
+>>> Cheers,
+>>>
+>>> Dave.
+> 
+> Y'know, Eric, your best suggestions are always made when I'm working on a 
+> non-test PC that I don't really want to touch ;-)  But anyway, (i686 Pentium 
+> 4, kernel 3.10.17)...
+> 
+> git xfsprogs will make the filesystem in question:
+> 
+> root@bpserver:/storage/devel/git-xfsprogs# mkfs/mkfs.xfs /dev/sdb3
+> mkfs.xfs: /dev/sdb3 appears to contain an existing filesystem (swap).
+> mkfs.xfs: Use the -f option to force overwrite.
+> root@bpserver:/storage/devel/git-xfsprogs# mkfs/mkfs.xfs -f -m crc=1 /dev/sdb3
+> meta-data=/dev/sdb3              isize=512    agcount=4, agsize=65536 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1
+> data     =                       bsize=4096   blocks=262144, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal log           bsize=4096   blocks=12800, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> However, it should be dirent (ftype=1 in the above output) that keeps a 
+> vanilla 3.10.17 kernel from mounting the resulting filesystem:
 
-V2:
-  Make kmem_{zone_}zalloc static inline into kmem.h as Dave suggested.
+I'm sorry, you are right - it hit kernel v3.11:
 
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- fs/xfs/kmem.c |   22 ----------------------
- fs/xfs/kmem.h |   21 ++++++++++++++++++---
- 2 files changed, 18 insertions(+), 25 deletions(-)
+5c87d4bc1a86bd6e6754ac3d6e111d776ddcfe57 xfs: increase number of ACL entries for V5 superblocks
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index a02cfb9..66a36be 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -63,17 +63,6 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- }
- 
- void *
--kmem_zalloc(size_t size, xfs_km_flags_t flags)
--{
--	void	*ptr;
--
--	ptr = kmem_alloc(size, flags);
--	if (ptr)
--		memset((char *)ptr, 0, (int)size);
--	return ptr;
--}
--
--void *
- kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- {
- 	void	*ptr;
-@@ -128,14 +117,3 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
- 		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	} while (1);
- }
--
--void *
--kmem_zone_zalloc(kmem_zone_t *zone, xfs_km_flags_t flags)
--{
--	void	*ptr;
--
--	ptr = kmem_zone_alloc(zone, flags);
--	if (ptr)
--		memset((char *)ptr, 0, kmem_cache_size(zone));
--	return ptr;
--}
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 3a7371c..64db0e5 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -32,6 +32,7 @@ typedef unsigned __bitwise xfs_km_flags_t;
- #define KM_NOSLEEP	((__force xfs_km_flags_t)0x0002u)
- #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
- #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
-+#define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
- 
- /*
-  * We use a special process flag to avoid recursive callbacks into
-@@ -43,7 +44,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
- {
- 	gfp_t	lflags;
- 
--	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL));
-+	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
- 
- 	if (flags & KM_NOSLEEP) {
- 		lflags = GFP_ATOMIC | __GFP_NOWARN;
-@@ -52,11 +53,14 @@ kmem_flags_convert(xfs_km_flags_t flags)
- 		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
- 			lflags &= ~__GFP_FS;
- 	}
-+
-+	if (flags & KM_ZERO)
-+		lflags |= __GFP_ZERO;
-+
- 	return lflags;
- }
- 
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
--extern void *kmem_zalloc(size_t, xfs_km_flags_t);
- extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
- extern void *kmem_realloc(const void *, size_t, size_t, xfs_km_flags_t);
- extern void  kmem_free(const void *);
-@@ -64,6 +68,12 @@ extern void  kmem_free(const void *);
- 
- extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
- 
-+static inline void *
-+kmem_zalloc(size_t size, xfs_km_flags_t flags)
-+{
-+	return kmem_alloc(size, flags | KM_ZERO);
-+}
-+
- /*
-  * Zone interfaces
-  */
-@@ -102,6 +112,11 @@ kmem_zone_destroy(kmem_zone_t *zone)
- }
- 
- extern void *kmem_zone_alloc(kmem_zone_t *, xfs_km_flags_t);
--extern void *kmem_zone_zalloc(kmem_zone_t *, xfs_km_flags_t);
-+
-+static inline void *
-+kmem_zone_zalloc(kmem_zone_t *zone, xfs_km_flags_t flags)
-+{
-+	return kmem_zone_alloc(zone, flags | KM_ZERO);
-+}
- 
- #endif /* __XFS_SUPPORT_KMEM_H__ */
--- 
-1.7.7
+$ git describe --contains 5c87d4bc1a86bd6e6754ac3d6e111d776ddcfe57
+v3.11-rc1~18^2~41
 
+-Eric
 
 _______________________________________________
 xfs mailing list
