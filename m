@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 800BA7FC8
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 14:38:27 -0600 (CST)
-Received: from eagdhcp-232-150.americas.sgi.com
-	(eagdhcp-232-150.americas.sgi.com [128.162.232.150])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 49B8430406A
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 12:38:27 -0800 (PST)
-Received: from eagdhcp-232-150.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-150.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	rA5KcGNr034043
-	for <xfs@oss.sgi.com>; Tue, 5 Nov 2013 14:38:16 -0600 (CST)
-	(envelope-from tinguely@eagdhcp-232-150.americas.sgi.com)
-Message-Id: <20131105202719.667077352@eagdhcp-232-150.americas.sgi.com>
-Date: Tue, 05 Nov 2013 14:27:07 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: fix unlock in xfs_bmap_add_attrfork
-Content-Disposition: inline;
-	filename=xfs-fix-unlock-in-xfs_bmap_add_attrfork.patch
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B509429E1A
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 16:03:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A8E7D8F8059
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 14:03:20 -0800 (PST)
+Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
+	[209.85.216.52]) by cuda.sgi.com with ESMTP id X2u5LEIqMEqO7pAX
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Nov 2013 14:03:19 -0800 (PST)
+Received: by mail-qa0-f52.google.com with SMTP id ii20so918444qab.18
+	for <xfs@oss.sgi.com>; Tue, 05 Nov 2013 14:03:19 -0800 (PST)
+Message-ID: <52796B21.5080706@gmail.com>
+Date: Tue, 05 Nov 2013 17:03:13 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
+MIME-Version: 1.0
+Subject: Re: How to use increased number of ACL entries?
+References: <20131103081704.GE9974@fit.vutbr.cz>
+	<20131104003915.GN6188@dastard> <5277086E.6030905@sandeen.net>
+	<52771FFE.8030009@gmail.com> <5277AE19.0@sandeen.net>
+	<20131104151050.GS9974@fit.vutbr.cz>
+	<20131104204647.GO6188@dastard>
+In-Reply-To: <20131104204647.GO6188@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,111 +30,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Kasparek Tomas <kasparek@fit.vutbr.cz>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-xfs_trans_ijoin() activates the inode in a transaction and
-also can specify which lock to free when the transaction is
-committed or canceled.
+On 11/04/2013 03:46 PM, Dave Chinner wrote:
+> On Mon, Nov 04, 2013 at 04:10:50PM +0100, Kasparek Tomas wrote:
+>> On Mon, Nov 04, 2013 at 08:24:25AM -0600, Eric Sandeen wrote:
+>>>> However, it should be dirent (ftype=1 in the above output) that keeps a 
+>>>> vanilla 3.10.17 kernel from mounting the resulting filesystem:
+>>>
+>>> I'm sorry, you are right - it hit kernel v3.11:
+>>>
+>>> 5c87d4bc1a86bd6e6754ac3d6e111d776ddcfe57 xfs: increase number of ACL entries for V5 superblocks
+>>>
+>>> $ git describe --contains 5c87d4bc1a86bd6e6754ac3d6e111d776ddcfe57
+>>> v3.11-rc1~18^2~41
+>>
+>> And get to stable 3.10 later.
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=0a8aa1939777dd114479677f0044652c1fd72398
+> 
+> No, that never went into the 3.10 stable tree, and nor should it.
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
-xfs_bmap_add_attrfork adds the XFS_ILOCK_EXCL flag when calling
-xfs_trans_ijoin() so it wrong to also free this lock before doing
-a xfs_trans_cancel. Add the unlock to the error case before the
-xfs_trans_ijoin and remove the unlock from the error recovery.
-While here, clean up the goto names.
+>From the patch in the link above, I get this snippet from 3.10.17's 
+xfs_acl.c...
 
-It seem doubtful that this routine fails, I found this visually
-looking for another issue.
+	/*
+	 * If we have a cached ACLs value just return it, not need to
+	 * go out to the disk.
+	 */
+	len = XFS_ACL_MAX_SIZE(ip->i_mount);
+	xfs_acl = kzalloc(len, GFP_KERNEL);
+	if (!xfs_acl)
+		return ERR_PTR(-ENOMEM);
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- fs/xfs/xfs_bmap.c |   28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+...and this from 3.10.17's xfs_acl.h...
 
-Index: b/fs/xfs/xfs_bmap.c
-===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -1137,9 +1137,11 @@ xfs_bmap_add_attrfork(
- 	int			committed;	/* xaction was committed */
- 	int			logflags;	/* logging flags */
- 	int			error;		/* error return value */
-+	int			cancel_flags;
- 
- 	ASSERT(XFS_IFORK_Q(ip) == 0);
- 
-+	cancel_flags = XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT;
- 	mp = ip->i_mount;
- 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_ADDAFORK);
-@@ -1148,18 +1150,20 @@ xfs_bmap_add_attrfork(
- 		tp->t_flags |= XFS_TRANS_RESERVE;
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_addafork, blks, 0);
- 	if (error)
--		goto error0;
-+		goto trans_cancel;
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
- 			XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
- 			XFS_QMOPT_RES_REGBLKS);
- 	if (error) {
-+		cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
--		return error;
-+		goto trans_cancel;
-+	}
-+	if (XFS_IFORK_Q(ip)) {
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		goto trans_cancel;
- 	}
--	if (XFS_IFORK_Q(ip))
--		goto error1;
- 	if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS) {
- 		/*
- 		 * For inodes coming from pre-6.2 filesystems.
-@@ -1191,7 +1195,7 @@ xfs_bmap_add_attrfork(
- 	default:
- 		ASSERT(0);
- 		error = XFS_ERROR(EINVAL);
--		goto error1;
-+		goto trans_cancel;
- 	}
- 
- 	ASSERT(ip->i_afp == NULL);
-@@ -1219,7 +1223,7 @@ xfs_bmap_add_attrfork(
- 	if (logflags)
- 		xfs_trans_log_inode(tp, ip, logflags);
- 	if (error)
--		goto error2;
-+		goto bmap_cancel;
- 	if (!xfs_sb_version_hasattr(&mp->m_sb) ||
- 	   (!xfs_sb_version_hasattr2(&mp->m_sb) && version == 2)) {
- 		__int64_t sbfields = 0;
-@@ -1242,14 +1246,12 @@ xfs_bmap_add_attrfork(
- 
- 	error = xfs_bmap_finish(&tp, &flist, &committed);
- 	if (error)
--		goto error2;
-+		goto bmap_cancel;
- 	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
--error2:
-+bmap_cancel:
- 	xfs_bmap_cancel(&flist);
--error1:
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--error0:
--	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
-+trans_cancel:
-+	xfs_trans_cancel(tp, cancel_flags);
- 	return error;
- }
- 
+/*
+ * The number of ACL entries allowed is defined by the on-disk format.
+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
+ * limited only by the maximum size of the xattr that stores the information.
+ */
+#define XFS_ACL_MAX_ENTRIES(mp)	\
+	(xfs_sb_version_hascrc(&mp->m_sb) \
+		?  (XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
+						sizeof(struct xfs_acl_entry) \
+		: 25)
 
+#define XFS_ACL_MAX_SIZE(mp) \
+	(sizeof(struct xfs_acl) + \
+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
+
+...so that patch seems to have made it into vanilla 3.10.17 somehow.  
+I checked the Changelogs for 3.10.x but don't know how to check a 
+Changelog for just 3.10 stable.  Therefore, I unpacked a kernel.org 3.10 
+tarball, and these changes are in there as well.
+
+For lack of skills, I can point only to this in the kernel git, where 
+this is the master branch.  xfs-oss/master is downloaded but not merged:
+
+commit e6395b68ad09a835f058da31bad0fe23d3882659
+Merge: 29eb778 0a8aa19
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu Jun 6 16:15:25 2013 -0700
+
+    Merge tag 'for-linus-v3.10-rc5' of git://oss.sgi.com/xfs/xfs
+
+    Pull more xfs updates from Ben Myers:
+     "Here are several fixes for filesystems with CRC support turned on:
+      fixes for quota, remote attributes, and recovery.  There is also some
+      feature work related to CRCs: the implementation of CRCs for the inode
+      unlinked lists, disabling noattr2/attr2 options when appropriate, and
+      bumping the maximum number of ACLs.
+
+Maybe somebody with a git of stable could shed some light...
+
+Thanks for reading!
+
+Michael
 
 _______________________________________________
 xfs mailing list
