@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D1447FBA
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 13:57:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27B06AC00B
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 11:56:57 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	MTafHgKgIrwspB0F for <xfs@oss.sgi.com>;
-	Tue, 05 Nov 2013 11:56:55 -0800 (PST)
-Date: Wed, 6 Nov 2013 06:56:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: increase inode cluster size for v5 filesystems
-Message-ID: <20131105195650.GA6188@dastard>
-References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
-	<1383280040-21979-6-git-send-email-david@fromorbit.com>
-	<20131105164307.GD32110@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131105164307.GD32110@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 800BA7FC8
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 14:38:27 -0600 (CST)
+Received: from eagdhcp-232-150.americas.sgi.com
+	(eagdhcp-232-150.americas.sgi.com [128.162.232.150])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 49B8430406A
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 12:38:27 -0800 (PST)
+Received: from eagdhcp-232-150.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-150.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	rA5KcGNr034043
+	for <xfs@oss.sgi.com>; Tue, 5 Nov 2013 14:38:16 -0600 (CST)
+	(envelope-from tinguely@eagdhcp-232-150.americas.sgi.com)
+Message-Id: <20131105202719.667077352@eagdhcp-232-150.americas.sgi.com>
+Date: Tue, 05 Nov 2013 14:27:07 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfs: fix unlock in xfs_bmap_add_attrfork
+Content-Disposition: inline;
+	filename=xfs-fix-unlock-in-xfs_bmap_add_attrfork.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +25,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Nov 05, 2013 at 08:43:07AM -0800, Christoph Hellwig wrote:
-> > +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > +		int	new_size = mp->m_inode_cluster_size;
-> > +
-> > +		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
-> > +		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
-> > +			mp->m_inode_cluster_size = new_size;
-> > +		xfs_info(mp, "Using inode cluster size of %d bytes",
-> > +			 mp->m_inode_cluster_size);
-> 
-> printing this on every mount seem a bit too verbose.
+xfs_trans_ijoin() activates the inode in a transaction and
+also can specify which lock to free when the transaction is
+committed or canceled.
 
-I'd like to leave it there until we remove the experimental tag from
-the v5 superblock configuration, as there is no good way of
-determining that someone is using a mkfs patched to enable this
-feature yet...
+xfs_bmap_add_attrfork adds the XFS_ILOCK_EXCL flag when calling
+xfs_trans_ijoin() so it wrong to also free this lock before doing
+a xfs_trans_cancel. Add the unlock to the error case before the
+xfs_trans_ijoin and remove the unlock from the error recovery.
+While here, clean up the goto names.
 
-Cheers,
+It seem doubtful that this routine fails, I found this visually
+looking for another issue.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ fs/xfs/xfs_bmap.c |   28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+Index: b/fs/xfs/xfs_bmap.c
+===================================================================
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -1137,9 +1137,11 @@ xfs_bmap_add_attrfork(
+ 	int			committed;	/* xaction was committed */
+ 	int			logflags;	/* logging flags */
+ 	int			error;		/* error return value */
++	int			cancel_flags;
+ 
+ 	ASSERT(XFS_IFORK_Q(ip) == 0);
+ 
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT;
+ 	mp = ip->i_mount;
+ 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_ADDAFORK);
+@@ -1148,18 +1150,20 @@ xfs_bmap_add_attrfork(
+ 		tp->t_flags |= XFS_TRANS_RESERVE;
+ 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_addafork, blks, 0);
+ 	if (error)
+-		goto error0;
++		goto trans_cancel;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
+ 			XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
+ 			XFS_QMOPT_RES_REGBLKS);
+ 	if (error) {
++		cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		return error;
++		goto trans_cancel;
++	}
++	if (XFS_IFORK_Q(ip)) {
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		goto trans_cancel;
+ 	}
+-	if (XFS_IFORK_Q(ip))
+-		goto error1;
+ 	if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS) {
+ 		/*
+ 		 * For inodes coming from pre-6.2 filesystems.
+@@ -1191,7 +1195,7 @@ xfs_bmap_add_attrfork(
+ 	default:
+ 		ASSERT(0);
+ 		error = XFS_ERROR(EINVAL);
+-		goto error1;
++		goto trans_cancel;
+ 	}
+ 
+ 	ASSERT(ip->i_afp == NULL);
+@@ -1219,7 +1223,7 @@ xfs_bmap_add_attrfork(
+ 	if (logflags)
+ 		xfs_trans_log_inode(tp, ip, logflags);
+ 	if (error)
+-		goto error2;
++		goto bmap_cancel;
+ 	if (!xfs_sb_version_hasattr(&mp->m_sb) ||
+ 	   (!xfs_sb_version_hasattr2(&mp->m_sb) && version == 2)) {
+ 		__int64_t sbfields = 0;
+@@ -1242,14 +1246,12 @@ xfs_bmap_add_attrfork(
+ 
+ 	error = xfs_bmap_finish(&tp, &flist, &committed);
+ 	if (error)
+-		goto error2;
++		goto bmap_cancel;
+ 	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-error2:
++bmap_cancel:
+ 	xfs_bmap_cancel(&flist);
+-error1:
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-error0:
+-	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
++trans_cancel:
++	xfs_trans_cancel(tp, cancel_flags);
+ 	return error;
+ }
+ 
+
 
 _______________________________________________
 xfs mailing list
