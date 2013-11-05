@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D5C2E7F9D
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 18:52:55 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3F9447F99
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 19:56:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FB27AC002
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 16:52:55 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 19E4F8F8064
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 17:55:57 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GQMBVEXIPm9t2jKf for <xfs@oss.sgi.com>;
-	Mon, 04 Nov 2013 16:52:53 -0800 (PST)
-Date: Tue, 5 Nov 2013 11:52:48 +1100
+	PDJpO7DRWA2OBcpF for <xfs@oss.sgi.com>;
+	Mon, 04 Nov 2013 17:55:56 -0800 (PST)
+Date: Tue, 5 Nov 2013 12:55:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 26/30] xfs_db: avoid libxfs buffer lookup warnings
-Message-ID: <20131105005248.GV6188@dastard>
+Subject: Re: [PATCH 27/30] libxfs: work around do_div() not handling 32 bit
+	numerators
+Message-ID: <20131105015553.GW6188@dastard>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-27-git-send-email-david@fromorbit.com>
-	<20131104091245.GF23564@infradead.org>
+	<1383107481-28937-28-git-send-email-david@fromorbit.com>
+	<20131104091643.GG23564@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131104091245.GF23564@infradead.org>
+In-Reply-To: <20131104091643.GG23564@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,96 +35,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 04, 2013 at 01:12:45AM -0800, Christoph Hellwig wrote:
+On Mon, Nov 04, 2013 at 01:16:43AM -0800, Christoph Hellwig wrote:
+> On Wed, Oct 30, 2013 at 03:31:18PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The libxfs dquot buffer code uses do_div() with a 32 bit numerator.
+> > This gives incorrect results as do_div() passes the numerator by
+> > reference as a pointer to a 64 bit value. Hence it does the division
+> > using 32 bits of garbage gives the wrong result. The kernel code
+> > handles 32 bit numerators just fine, so this patch is a temporary
+> > workaround in the dquot buffer code until we fix do_div() to handle
+> > 32 bit numerators correctly.
+> 
+> The right fix is to simply stop using do_div here, both in kernel and
+> userspace.
+
+Oh, right, I was thinking that BBTOB() resulted in a u64 value like
+BTOBB() and BTOBBT() do. It doesn't have a built in cast, so takes
+whatever type the source variable has.
+
+> >  xfs_calc_dquots_per_chunk(
+> >  	struct xfs_mount	*mp,
+> >  	unsigned int		nbblks)	/* basic block units */
+> >  {
+> > -	unsigned int	ndquots;
+> > +	uint64_t	ndquots;
 > >  
-> > +/*
-> > + * We are now using libxfs for our IO backend, so we should always try to use
-> > + * inode cluster buffers rather than filesystem block sized buffers for reading
-> > + * inodes. This means that we always use the same buffers as libxfs operations
-> > + * does, and that avoids buffer cache issues caused by overlapping buffers. This
-> > + * can be seen clearly when trying to read the root inode. Much of this logic is
-> > + * similar to libxfs_imap().
-> > + */
-> >  void
-> >  set_cur_inode(
-> >  	xfs_ino_t	ino)
-> > @@ -632,6 +640,9 @@ set_cur_inode(
-> >  	xfs_agnumber_t	agno;
-> >  	xfs_dinode_t	*dip;
-> >  	int		offset;
-> > +	int		numblks = blkbb;
-> > +	xfs_agblock_t	cluster_agbno;
-> > +
+> >  	ASSERT(nbblks > 0);
+> >  	ndquots = BBTOB(nbblks);
+> >  	do_div(ndquots, sizeof(xfs_dqblk_t));
 > >  
-> >  	agno = XFS_INO_TO_AGNO(mp, ino);
-> >  	agino = XFS_INO_TO_AGINO(mp, ino);
-> > @@ -644,6 +655,24 @@ set_cur_inode(
-> >  		return;
-> >  	}
-> >  	cur_agno = agno;
-> > +
-> > +	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize &&
-> > +	    mp->m_inoalign_mask) {
-> > +		xfs_agblock_t	chunk_agbno;
-> > +		xfs_agblock_t	offset_agbno;
-> > +		int		blks_per_cluster;
-> > +
-> > +		blks_per_cluster = mp->m_inode_cluster_size >>
-> > +							mp->m_sb.sb_blocklog;
-> > +		offset_agbno = agbno & mp->m_inoalign_mask;
-> > +		chunk_agbno = agbno - offset_agbno;
-> > +		cluster_agbno = chunk_agbno +
-> > +			((offset_agbno / blks_per_cluster) * blks_per_cluster);
-> > +		offset += ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock);
-> > +		numblks = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> > +	} else
-> > +		cluster_agbno = agbno;
-> > +
+> > -	return ndquots;
+> > +	return (int)ndquots;
 > 
-> Seems like this should be a separate patch?
+> 	ndquots = BBTOB(nbblks) / sizeof(xfs_dqblk_t);
 
-Yes, probably should be.
+Yup, that should work.
 
-> > -	if (iocur_top->bp)
-> > +	if (iocur_top->bp) {
-> >  		libxfs_putbuf(iocur_top->bp);
-> > +		iocur_top->bp = NULL;
-> > +	}
-> 
-> This should probably be folded into the patch that started using buffers
-> in xfs_db.
+> Also the current xfs_calc_dquots_per_chunk doesn't use the mp argument
+> anyway, but all callers do.  I think in the end we'd want to take that
+> in from the calers end end up with a version that includes the
+> check from the quotainfo.  But for getting userspace up and running my
+> above minimal version should do it.
 
-Will do.
-
-> 
-> > +	int		icache_flags;	/* cache init flags */
-> > +	int		bcache_flags;	/* cache init flags */
-> 
-> The icache_flags aren't used anywhere.  Also I'd really prefer to have
-> my patch to kill the inode cache istead of adding more changes to it.
-
-Sure - should I prepend your series to kill the icache to this one?
-
-> > +#ifdef IO_BCOMPARE_CHECK
-> > +		if (!(libxfs_bcache->c_flags & CACHE_MISCOMPARE_PURGE)) {
-> > +			fprintf(stderr,
-> > +	"%lx: Badness in key lookup (length)\n"
-> > +	"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
-> > +				pthread_self(),
-> > +				(unsigned long long)bp->b_bn, (int)bp->b_bcount,
-> > +				(unsigned long long)bkey->blkno,
-> > +				BBTOB(bkey->bblen));
-> > +		}
-> >  #endif
-> 
-> What is the point of the IO_BCOMPARE_CHECK ifdef if we unconditionally
-> define it?
-
-I'd like to - eventually - turn it off. In fact, I'd like to end up
-with a real debug xfsprogs build like we do for the kernel code so
-that the version that distros ship don't have this noise enabled but
-developers can easily enable all the different debug/tracing stuff
-to be able to find problems in the code....
+Yes, changed to fix. I'll drive further cleanups from the kernel
+side here...
 
 Cheers,
 
