@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 702A97F93
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 18:25:14 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id D5C2E7F9D
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 18:52:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0450DAC002
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 16:25:10 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FB27AC002
+	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 16:52:55 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	zoo3kTgmcgGWxWlz for <xfs@oss.sgi.com>;
-	Mon, 04 Nov 2013 16:25:09 -0800 (PST)
-Date: Tue, 5 Nov 2013 11:25:06 +1100
+	GQMBVEXIPm9t2jKf for <xfs@oss.sgi.com>;
+	Mon, 04 Nov 2013 16:52:53 -0800 (PST)
+Date: Tue, 5 Nov 2013 11:52:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 21/30] db: verify and calculate dquot CRCs
-Message-ID: <20131105002506.GU6188@dastard>
+Subject: Re: [PATCH 26/30] xfs_db: avoid libxfs buffer lookup warnings
+Message-ID: <20131105005248.GV6188@dastard>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-22-git-send-email-david@fromorbit.com>
-	<20131104090627.GB23564@infradead.org>
+	<1383107481-28937-27-git-send-email-david@fromorbit.com>
+	<20131104091245.GF23564@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131104090627.GB23564@infradead.org>
+In-Reply-To: <20131104091245.GF23564@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,43 +34,96 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 04, 2013 at 01:06:27AM -0800, Christoph Hellwig wrote:
-> On Wed, Oct 30, 2013 at 03:31:12PM +1100, Dave Chinner wrote:
-> > When we set the current Io cursor to point at a dquot block, verify
-> > that the dquot CRC is intact. And prior to writing such an IO
-> > cursor, calculate the dquot CRC.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  db/io.c | 5 ++++-
-> >  db/io.h | 1 +
-> >  2 files changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/db/io.c b/db/io.c
-> > index 8ddb5e5..7281148 100644
-> > --- a/db/io.c
-> > +++ b/db/io.c
-> > @@ -464,7 +464,9 @@ write_cur(void)
+On Mon, Nov 04, 2013 at 01:12:45AM -0800, Christoph Hellwig wrote:
 > >  
-> >  	if (iocur_top->ino_buf)
-> >  		libxfs_dinode_calc_crc(mp, iocur_top->data);
-> > -
-> > +	if (iocur_top->dquot_buf)
-> > +		xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
-> > +				 XFS_DQUOT_CRC_OFF);
+> > +/*
+> > + * We are now using libxfs for our IO backend, so we should always try to use
+> > + * inode cluster buffers rather than filesystem block sized buffers for reading
+> > + * inodes. This means that we always use the same buffers as libxfs operations
+> > + * does, and that avoids buffer cache issues caused by overlapping buffers. This
+> > + * can be seen clearly when trying to read the root inode. Much of this logic is
+> > + * similar to libxfs_imap().
+> > + */
+> >  void
+> >  set_cur_inode(
+> >  	xfs_ino_t	ino)
+> > @@ -632,6 +640,9 @@ set_cur_inode(
+> >  	xfs_agnumber_t	agno;
+> >  	xfs_dinode_t	*dip;
+> >  	int		offset;
+> > +	int		numblks = blkbb;
+> > +	xfs_agblock_t	cluster_agbno;
+> > +
+> >  
+> >  	agno = XFS_INO_TO_AGNO(mp, ino);
+> >  	agino = XFS_INO_TO_AGINO(mp, ino);
+> > @@ -644,6 +655,24 @@ set_cur_inode(
+> >  		return;
+> >  	}
+> >  	cur_agno = agno;
+> > +
+> > +	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize &&
+> > +	    mp->m_inoalign_mask) {
+> > +		xfs_agblock_t	chunk_agbno;
+> > +		xfs_agblock_t	offset_agbno;
+> > +		int		blks_per_cluster;
+> > +
+> > +		blks_per_cluster = mp->m_inode_cluster_size >>
+> > +							mp->m_sb.sb_blocklog;
+> > +		offset_agbno = agbno & mp->m_inoalign_mask;
+> > +		chunk_agbno = agbno - offset_agbno;
+> > +		cluster_agbno = chunk_agbno +
+> > +			((offset_agbno / blks_per_cluster) * blks_per_cluster);
+> > +		offset += ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock);
+> > +		numblks = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> > +	} else
+> > +		cluster_agbno = agbno;
+> > +
 > 
-> The patch looks good to get going, but it seems we'd be better off going
-> through an ops vector here in some form..
+> Seems like this should be a separate patch?
 
-Potentially - if we need a third object-within-a-buffer verification
-then it will be worthwhile to do this. However, for the moment we
-only have to support inodes and dquots and so for the moment I don't
-see that further abstraction is necessary.
+Yes, probably should be.
 
-Hence right now I'd prefer to make it explicit that we are doing
-these CRC calculations here and just keep in mind that if we are
-going to add more we need to abstract it into an ops vector at that
-time...
+> > -	if (iocur_top->bp)
+> > +	if (iocur_top->bp) {
+> >  		libxfs_putbuf(iocur_top->bp);
+> > +		iocur_top->bp = NULL;
+> > +	}
+> 
+> This should probably be folded into the patch that started using buffers
+> in xfs_db.
+
+Will do.
+
+> 
+> > +	int		icache_flags;	/* cache init flags */
+> > +	int		bcache_flags;	/* cache init flags */
+> 
+> The icache_flags aren't used anywhere.  Also I'd really prefer to have
+> my patch to kill the inode cache istead of adding more changes to it.
+
+Sure - should I prepend your series to kill the icache to this one?
+
+> > +#ifdef IO_BCOMPARE_CHECK
+> > +		if (!(libxfs_bcache->c_flags & CACHE_MISCOMPARE_PURGE)) {
+> > +			fprintf(stderr,
+> > +	"%lx: Badness in key lookup (length)\n"
+> > +	"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
+> > +				pthread_self(),
+> > +				(unsigned long long)bp->b_bn, (int)bp->b_bcount,
+> > +				(unsigned long long)bkey->blkno,
+> > +				BBTOB(bkey->bblen));
+> > +		}
+> >  #endif
+> 
+> What is the point of the IO_BCOMPARE_CHECK ifdef if we unconditionally
+> define it?
+
+I'd like to - eventually - turn it off. In fact, I'd like to end up
+with a real debug xfsprogs build like we do for the kernel code so
+that the version that distros ship don't have this noise enabled but
+developers can easily enable all the different debug/tracing stuff
+to be able to find problems in the code....
 
 Cheers,
 
