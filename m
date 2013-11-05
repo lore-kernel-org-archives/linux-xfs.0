@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3F9447F99
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 19:56:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 19E4F8F8064
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 17:55:57 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	PDJpO7DRWA2OBcpF for <xfs@oss.sgi.com>;
-	Mon, 04 Nov 2013 17:55:56 -0800 (PST)
-Date: Tue, 5 Nov 2013 12:55:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 27/30] libxfs: work around do_div() not handling 32 bit
-	numerators
-Message-ID: <20131105015553.GW6188@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ED26D7F8E
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 03:05:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9416FAC002
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 01:05:44 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id jParny7Dlob6bG72 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 Nov 2013 01:05:38 -0800 (PST)
+Date: Tue, 5 Nov 2013 01:05:38 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 25/30 V2] libxfs: fix root inode handling inconsistencies
+Message-ID: <20131105090538.GA6114@infradead.org>
 References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-28-git-send-email-david@fromorbit.com>
-	<20131104091643.GG23564@infradead.org>
+	<1383107481-28937-26-git-send-email-david@fromorbit.com>
+	<20131030102318.GA31519@infradead.org>
+	<20131030215940.GH6188@dastard> <20131031041343.GK6188@dastard>
+	<20131031150024.GP22359@infradead.org>
+	<20131031220438.GP4446@dastard>
+	<20131101130316.GB14898@infradead.org>
+	<20131104232242.GS6188@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131104091643.GG23564@infradead.org>
+In-Reply-To: <20131104232242.GS6188@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,61 +36,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Nov 04, 2013 at 01:16:43AM -0800, Christoph Hellwig wrote:
-> On Wed, Oct 30, 2013 at 03:31:18PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Tue, Nov 05, 2013 at 10:22:42AM +1100, Dave Chinner wrote:
+> > xfs_initialize_perag_data does the following:
 > > 
-> > The libxfs dquot buffer code uses do_div() with a 32 bit numerator.
-> > This gives incorrect results as do_div() passes the numerator by
-> > reference as a pointer to a 64 bit value. Hence it does the division
-> > using 32 bits of garbage gives the wrong result. The kernel code
-> > handles 32 bit numerators just fine, so this patch is a temporary
-> > workaround in the dquot buffer code until we fix do_div() to handle
-> > 32 bit numerators correctly.
+> >  - read in AGI/AGF.  This is something we lazily do whenever we need it
+> >    anyway, so no one should rely on it.
+> >  - update the in-core superblock global counters.  Seems like the old
+> >    xfs_check relies on this and still needs an equivalent if we care
+> >    enough.  No one else seems to care.
 > 
-> The right fix is to simply stop using do_div here, both in kernel and
-> userspace.
+> So you are suggesting that I move that initialisation to the
+> xfs_check code rather than just doing it in the mount code? Or
+> something else?
 
-Oh, right, I was thinking that BBTOB() resulted in a u64 value like
-BTOBB() and BTOBBT() do. It doesn't have a built in cast, so takes
-whatever type the source variable has.
-
-> >  xfs_calc_dquots_per_chunk(
-> >  	struct xfs_mount	*mp,
-> >  	unsigned int		nbblks)	/* basic block units */
-> >  {
-> > -	unsigned int	ndquots;
-> > +	uint64_t	ndquots;
-> >  
-> >  	ASSERT(nbblks > 0);
-> >  	ndquots = BBTOB(nbblks);
-> >  	do_div(ndquots, sizeof(xfs_dqblk_t));
-> >  
-> > -	return ndquots;
-> > +	return (int)ndquots;
-> 
-> 	ndquots = BBTOB(nbblks) / sizeof(xfs_dqblk_t);
-
-Yup, that should work.
-
-> Also the current xfs_calc_dquots_per_chunk doesn't use the mp argument
-> anyway, but all callers do.  I think in the end we'd want to take that
-> in from the calers end end up with a version that includes the
-> check from the quotainfo.  But for getting userspace up and running my
-> above minimal version should do it.
-
-Yes, changed to fix. I'll drive further cleanups from the kernel
-side here...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+That seems to be the sanest option if it works out.  Otherwise we'd need
+to keep a flag to let libxfs do it.
 
 _______________________________________________
 xfs mailing list
