@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6E73E29E2A
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6167230405F
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:46 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 12C4F29E29
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DC69E304051
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:43 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	zhe0npGMzin25jo7 for <xfs@oss.sgi.com>;
-	Tue, 05 Nov 2013 17:07:45 -0800 (PST)
+	J0yvaDwgflfBo876 for <xfs@oss.sgi.com>;
+	Tue, 05 Nov 2013 17:07:41 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003P4-Ml
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003Ov-JJ
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-00005D-MG
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008WU-II
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 37/37] repair: fix leaf node directory data check
-Date: Wed,  6 Nov 2013 12:07:23 +1100
-Message-Id: <1383700043-32305-38-git-send-email-david@fromorbit.com>
+Subject: [PATCH 32/37] db: enable metadump on CRC filesystems
+Date: Wed,  6 Nov 2013 12:07:18 +1100
+Message-Id: <1383700043-32305-33-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,41 +39,85 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When walking the leaf node format blocks (LEAFN) in the hash index
-of a large directory, we could trip over btree node blocks (DA_NODE)
-in the address space if there are enough entries in the directory.
-These cause a verifier failure, and hence the directory is
-considered corrupt and is trashed and rebuilt unnecesarily. Fix this
-by using the correct verifier that can handle both types of blocks
-without triggering failures.
+Now that we can calculate CRCs through xfs_db, we can add support
+for recalculating CRCs on obfuscated metadump images. This simply
+requires us to call the write verifier manually before writing the
+buffer to the metadump image.
+
+We don't need to do anything special to mdrestore, as the metadata
+blocks it reads from the image file will already have all the
+correct CRCs in them. Hence it can be mostly oblivious to the fact
+that the filesystem it is restoring contains CRCs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/phase6.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ db/metadump.c             | 24 +++++++++++++++++++-----
+ mdrestore/xfs_mdrestore.c |  3 ---
+ 2 files changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 5307acf..d2d4a44 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1937,8 +1937,16 @@ longform_dir2_check_node(
- 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
- 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
- 			break;
+diff --git a/db/metadump.c b/db/metadump.c
+index ac6a4d6..117dc42 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -172,6 +172,22 @@ write_buf(
+ 	__int64_t	off;
+ 	int		i;
+ 
++	/*
++	 * Run the write verifier to recalculate the buffer CRCs and check
++	 * we are writing something valid to disk
++	 */
++	if (buf->bp && buf->bp->b_ops) {
++		buf->bp->b_error = 0;
++		buf->bp->b_ops->verify_write(buf->bp);
++		if (buf->bp->b_error) {
++			fprintf(stderr,
++	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
++				__func__, (long long)buf->bp->b_bn,
++				buf->bp->b_bcount);
++			return buf->bp->b_error;
++		}
++	}
 +
-+		/*
-+		 * we need to use the da3 node verifier here as it handles the
-+		 * fact that reading the leaf hash tree blocks can return either
-+		 * leaf or node blocks and calls the correct verifier. If we get
-+		 * a node block, then we'll skip it below based on a magic
-+		 * number check.
-+		 */
- 		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
--				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops)) {
-+				XFS_DATA_FORK, &xfs_da3_node_buf_ops)) {
- 			do_warn(
- 	_("can't read leaf block %u for directory inode %" PRIu64 "\n"),
- 				da_bno, ip->i_ino);
+ 	for (i = 0, off = buf->bb, data = buf->data;
+ 			i < buf->blen;
+ 			i++, off++, data += BBSIZE) {
+@@ -1727,6 +1743,9 @@ copy_inode_chunk(
+ 
+ 		if (!process_inode(agno, agino + i, dip))
+ 			goto pop_out;
++
++		/* calculate the new CRC for the inode */
++		xfs_dinode_calc_crc(mp, dip);
+ 	}
+ skip_processing:
+ 	if (!write_buf(iocur_top))
+@@ -2053,11 +2072,6 @@ metadump_f(
+ 		return 0;
+ 	}
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) && dont_obfuscate == 0) {
+-		print_warning("Can't obfuscate CRC enabled filesystems yet.");
+-		return 0;
+-	}
+-
+ 	metablock = (xfs_metablock_t *)calloc(BBSIZE + 1, BBSIZE);
+ 	if (metablock == NULL) {
+ 		print_warning("memory allocation failure");
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index fe61766..e57bdb2 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -109,9 +109,6 @@ perform_restore(
+ 	if (sb.sb_magicnum != XFS_SB_MAGIC)
+ 		fatal("bad magic number for primary superblock\n");
+ 
+-	if (xfs_sb_version_hascrc(&sb))
+-		fatal("Can't restore CRC enabled filesystems yet.\n");
+-
+ 	((xfs_dsb_t*)block_buffer)->sb_inprogress = 1;
+ 
+ 	if (is_target_file)  {
 -- 
 1.8.4.rc3
 
