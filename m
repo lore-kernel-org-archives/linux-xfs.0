@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1768E7F94
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 16:41:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 94046AC005
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 14:41:52 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DF93C29E23
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 16:48:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A35C6304043
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 14:48:49 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xLVsLrOsjPu84g58 for <xfs@oss.sgi.com>;
-	Wed, 06 Nov 2013 14:41:50 -0800 (PST)
-Date: Thu, 7 Nov 2013 09:41:45 +1100
+	uZB3VtVUl1VVtZsB for <xfs@oss.sgi.com>;
+	Wed, 06 Nov 2013 14:48:48 -0800 (PST)
+Date: Thu, 7 Nov 2013 09:48:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: fix unlock in xfs_bmap_add_attrfork
-Message-ID: <20131106224145.GH6188@dastard>
-References: <20131106211618.754470168@sgi.com>
+Subject: Re: [PATCH] xfsdump: don't assume getdents exists
+Message-ID: <20131106224844.GI6188@dastard>
+References: <20131106213635.GC24712@redacted.bos.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131106211618.754470168@sgi.com>
+In-Reply-To: <20131106213635.GC24712@redacted.bos.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,83 +29,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Kyle McMartin <kyle@redhat.com>
+Cc: sandeen@redhat.com, xfs@oss.sgi.com
 
-On Wed, Nov 06, 2013 at 03:14:58PM -0600, Mark Tinguely wrote:
-> xfs_trans_ijoin() activates the inode in a transaction and
-> also can specify which lock to free when the transaction is
-> committed or canceled.
+On Wed, Nov 06, 2013 at 04:36:35PM -0500, Kyle McMartin wrote:
+> New Linux ports are using a standard syscall list that does not include
+> deprecated syscalls where 64-bit clean alternatives exist. As a result,
+> on arm64, __NR_getdents is undefined, resulting in xfsdump failing to
+> build.
 > 
-> xfs_bmap_add_attrfork call locks and add the lock to the
-> transaction but also manually removes the lock. Change the
-> routine to not add the lock to the transaction and manually
-> remove lock on completion.
+> To avoid that, in the case where __NR_getdents is unset in unistd.h,
+> avoid building the fallback path entirely, since
+> __ASSUME_GETDENTS64_SYSCALL will be true, the SYS_getdents64 case will
+> be the primary (and only) path used.
 > 
-> While here, clean up the xfs_trans_cancel flags and goto names.
+> Signed-off-by: Kyle McMartin <kyle@redhat.com>
 > 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> --- a/common/getdents.c
+> +++ b/common/getdents.c
 
-All good, except for:
+Oh, how that code makes my eyes bleed. :/
 
-> @@ -1242,14 +1244,15 @@ xfs_bmap_add_attrfork(
+> @@ -70,6 +70,9 @@ extern int __have_no_getdents64;
+>  # ifndef SYS_getdents64
+>  #  define SYS_getdents64 __NR_getdents64
+>  # endif
+> +# ifndef __NR_getdents
+> +#  define __ONLY_GETDENTS64_SYSCALL     1
+> +# endif
+>  #endif
 >  
->  	error = xfs_bmap_finish(&tp, &flist, &committed);
->  	if (error)
-> -		goto error2;
-> -	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-> -error2:
-> +		goto bmap_cancel;
-> +	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-> +	goto unlock_return;
-> +bmap_cancel:
->  	xfs_bmap_cancel(&flist);
-> -error1:
-> +trans_cancel:
-> +	xfs_trans_cancel(tp, cancel_flags);
-> +unlock_return:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -error0:
-> -	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
->  	return error;
+>  
+> @@ -207,6 +210,13 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
+>  # endif
+>      }
+>  #endif
+> +/* Newer Linux ports are not adding deprecated syscalls, so to avoid compile
+> + * failures since SYS_getdents will be undefined, we check for that and only
+> + * build the fall-back case if SYS_getdents is defined. We know that
+> + * __ASSUME_GETDENTS64_SYSCALL is set, since __NR_getdents64 must exist on
+> + * those platforms.
+> + */
+> +#ifndef __ONLY_GETDENTS64_SYSCALL
+>    {
+>      size_t red_nbytes;
+>      struct kernel_dirent *skdp, *kdp;
+> @@ -265,4 +275,5 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
+>      }
+>  
+>    return (char *) dp - buf;
+> +#endif
 >  }
 
-This hunk. It ends up looking like this:
+It's not pretty - but that code has already broken the ugly stick so
+it isn't making the situation any worse.
 
-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-	goto unlock_return;
-bmap_cancel:
-	xfs_bmap_cancel(&flist);
-trans_cancel:
-	xfs_trans_cancel(tp, cancel_flags);
-unlock_return:
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-	return error;
-}
-
-Which jumps over error handling cases on a successful completion.
-The conventional way of doing this is having the successful return
-case run straight through to the return, and having the error stack
-either jump back into it like so:
-
-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-unlock_return:
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-	return error;
-
-bmap_cancel:
-	xfs_bmap_cancel(&flist);
-trans_cancel:
-	xfs_trans_cancel(tp, cancel_flags);
-	goto unlock_return;
-}
-
-or do an additional unlock and return directly in the error stack
-and let the compiler optimise it appropriately.
-
-Cheers,
-
-Dave.
+Acked-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
