@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8C62F29E1C
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 04:25:40 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 81CC129E23
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 04:39:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 55084304048
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 02:25:40 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A5CC30407B
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 02:39:11 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id IASPT5t6kWy6P1kU (version=TLSv1 cipher=AES256-SHA
+	ESMTP id zrO4wuEsHhLR6vCq (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 06 Nov 2013 02:25:39 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1Ve0It-0002Sz-5i
-	for xfs@oss.sgi.com; Wed, 06 Nov 2013 10:25:39 +0000
-Date: Wed, 6 Nov 2013 02:25:39 -0800
+	Wed, 06 Nov 2013 02:39:10 -0800 (PST)
+Date: Wed, 6 Nov 2013 02:39:10 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsprogs: add generated crc files to .gitignore
-Message-ID: <20131106102539.GA9481@infradead.org>
+Subject: Re: [PATCH 37/37] repair: fix leaf node directory data check
+Message-ID: <20131106103910.GA21067@infradead.org>
+References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
+	<1383700043-32305-38-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1383700043-32305-38-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On Wed, Nov 06, 2013 at 12:07:23PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When walking the leaf node format blocks (LEAFN) in the hash index
+> of a large directory, we could trip over btree node blocks (DA_NODE)
+> in the address space if there are enough entries in the directory.
+> These cause a verifier failure, and hence the directory is
+> considered corrupt and is trashed and rebuilt unnecesarily. Fix this
+> by using the correct verifier that can handle both types of blocks
+> without triggering failures.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Looks good,
 
-diff --git a/.gitignore b/.gitignore
-index 446d84e..913b371 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -67,3 +67,8 @@ cscope.*
- /quota/xfs_quota
- /repair/xfs_repair
- /rtcp/xfs_rtcp
-+
-+# generated crc files
-+/libxfs/crc32selftest
-+/libxfs/crc32table.h
-+/libxfs/gen_crc32table
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
