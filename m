@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D034629E2E
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:50 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0EE4729E2F
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3270304051
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 00D8A304051
 	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:50 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	9mLANeErqezweoHH for <xfs@oss.sgi.com>;
+	YQrkv8hULTUiYJx8 for <xfs@oss.sgi.com>;
 	Tue, 05 Nov 2013 17:07:49 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003OA-5n
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003O2-48
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008Us-5F
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008Ud-3P
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/37] xfs: fix the wrong new_size/rnew_size at
-	xfs_iext_realloc_direct()
-Date: Wed,  6 Nov 2013 12:06:58 +1100
-Message-Id: <1383700043-32305-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/37] libxfs: bring across inode buffer readahead verifier
+	changes
+Date: Wed,  6 Nov 2013 12:06:55 +1100
+Message-Id: <1383700043-32305-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,51 +40,110 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-At xfs_iext_realloc_direct(), the new_size is changed by adding
-if_bytes if originally the extent records are stored at the inline
-extent buffer, and we have to switch from it to a direct extent
-list for those new allocated extents, this is wrong.
-
-This patch fix above problem and revise the new_size comments at
-xfs_iext_realloc_direct() to make it more readable.  Also, fix the
-comments while switching from the inline extent buffer to a direct
-extent list to reflect this change.
-
-Ported from kernel commit 17ec81c1.
+These were made for log recovery readahead in the kernel, so are not
+directly used in userspace. Hence bringing the change across is
+simply to keep files in sync.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_inode_fork.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ libxfs/xfs_inode_buf.c | 41 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 36 insertions(+), 5 deletions(-)
 
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 190690c..dfa86ae 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -1330,7 +1330,7 @@ xfs_iext_remove_indirect(
- void
- xfs_iext_realloc_direct(
- 	xfs_ifork_t	*ifp,		/* inode fork pointer */
--	int		new_size)	/* new size of extents */
-+	int		new_size)	/* new size of extents after adding */
- {
- 	int		rnew_size;	/* real new size of extents */
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index b096f77..67d5eb4 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -46,9 +46,22 @@ xfs_inobp_check(
+ }
+ #endif
  
-@@ -1368,13 +1368,8 @@ xfs_iext_realloc_direct(
- 				rnew_size - ifp->if_real_bytes);
- 		}
++/*
++ * If we are doing readahead on an inode buffer, we might be in log recovery
++ * reading an inode allocation buffer that hasn't yet been replayed, and hence
++ * has not had the inode cores stamped into it. Hence for readahead, the buffer
++ * may be potentially invalid.
++ *
++ * If the readahead buffer is invalid, we don't want to mark it with an error,
++ * but we do want to clear the DONE status of the buffer so that a followup read
++ * will re-read it from disk. This will ensure that we don't get an unnecessary
++ * warnings during log recovery and we don't get unnecssary panics on debug
++ * kernels.
++ */
+ static void
+ xfs_inode_buf_verify(
+-	struct xfs_buf	*bp)
++	struct xfs_buf	*bp,
++	bool		readahead)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	int		i;
+@@ -69,6 +82,11 @@ xfs_inode_buf_verify(
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP,
+ 						XFS_RANDOM_ITOBP_INOTOBP))) {
++			if (readahead) {
++				bp->b_flags &= ~XBF_DONE;
++				return;
++			}
++
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+ 					     mp, dip);
+@@ -87,14 +105,21 @@ static void
+ xfs_inode_buf_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
++}
++
++static void
++xfs_inode_buf_readahead_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_inode_buf_verify(bp, true);
+ }
+ 
+ static void
+ xfs_inode_buf_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_inode_buf_verify(bp);
++	xfs_inode_buf_verify(bp, false);
+ }
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ops = {
+@@ -102,6 +127,12 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+ 
++const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
++	.verify_read = xfs_inode_buf_readahead_verify,
++	.verify_write = xfs_inode_buf_write_verify,
++};
++
++
+ /*
+  * This routine is called to map an inode to the buffer containing the on-disk
+  * version of the inode.  It returns a pointer to the buffer containing the
+@@ -191,7 +222,7 @@ xfs_dinode_from_disk(
+ 		to->di_ino = be64_to_cpu(from->di_ino);
+ 		to->di_lsn = be64_to_cpu(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
++		uuid_copy(&to->di_uuid, &from->di_uuid);
  	}
--	/*
--	 * Switch from the inline extent buffer to a direct
--	 * extent list. Be sure to include the inline extent
--	 * bytes in new_size.
--	 */
-+	/* Switch from the inline extent buffer to a direct extent list */
- 	else {
--		new_size += ifp->if_bytes;
- 		if (!is_power_of_2(new_size)) {
- 			rnew_size = roundup_pow_of_two(new_size);
- 		}
+ }
+ 
+@@ -237,7 +268,7 @@ xfs_dinode_to_disk(
+ 		to->di_ino = cpu_to_be64(from->di_ino);
+ 		to->di_lsn = cpu_to_be64(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+-		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
++		uuid_copy(&to->di_uuid, &from->di_uuid);
+ 		to->di_flushiter = 0;
+ 	} else {
+ 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
 -- 
 1.8.4.rc3
 
