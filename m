@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8B5D029E27
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5E6B629E26
 	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FD08304051
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:39 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F14B8F8089
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:42 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	WFXCLcRUQEDYMnaz for <xfs@oss.sgi.com>;
-	Tue, 05 Nov 2013 17:07:37 -0800 (PST)
+	ouxNJHIZCHljb7ks for <xfs@oss.sgi.com>;
+	Tue, 05 Nov 2013 17:07:40 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003Nu-28
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003Ns-0s
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008UO-1d
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008UE-0O
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/37] libxfs: unify xfs_btree.c with kernel code
-Date: Wed,  6 Nov 2013 12:06:52 +1100
-Message-Id: <1383700043-32305-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/37] xfs: split dquot buffer operations out
+Date: Wed,  6 Nov 2013 12:06:50 +1100
+Message-Id: <1383700043-32305-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,133 +39,329 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The libxfs/xfs_btree.c code does not contain a small amount of code
-for btree block readahead that the kernel code does. Instead, it
-short circuits it at a higher layer and doesn't include the lower
-layer functions. There is no harm in calling the lower lay functions
-and have them do nothing, and doing so unifies the kernel and
-userspace code.
+Parts of userspace want to be able to read and modify dquot buffers
+(e.g. xfs_db) so we need to split out the reading and writing of
+these buffers so it is easy to shared code with libxfs in userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs.h       |  8 +++++---
- libxfs/xfs_btree.c | 48 +++++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 48 insertions(+), 8 deletions(-)
+ include/libxfs.h       |   9 ++
+ libxfs/Makefile        |   1 +
+ libxfs/xfs_dquot_buf.c | 273 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 283 insertions(+)
+ create mode 100644 libxfs/xfs_dquot_buf.c
 
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 31acf1b..364fd83 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -319,10 +319,12 @@ roundup_64(__uint64_t x, __uint32_t y)
- 
- #define xfs_trans_buf_copy_type(dbp, sbp)
- 
--#define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
-+/* no readahead, need to avoid set-but-unused var warnings. */
-+#define xfs_buf_readahead(a,d,c,ops)		({	\
-+	xfs_daddr_t __d = d;				\
-+	__d = __d; /* no set-but-unused warning */	\
-+})
- #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
--#define xfs_btree_reada_bufl(m,fsb,c,ops)	((void) 0)
--#define xfs_btree_reada_bufs(m,fsb,c,x,ops)	((void) 0)
- #define xfs_buftrace(x,y)			((void) 0)	/* debug only */
- 
- #define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 0099926..ce149ad 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -396,7 +396,6 @@ static inline size_t xfs_btree_block_len(struct xfs_btree_cur *cur)
- 			return XFS_BTREE_LBLOCK_CRC_LEN;
- 		return XFS_BTREE_LBLOCK_LEN;
- 	}
--
- 	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS)
- 		return XFS_BTREE_SBLOCK_CRC_LEN;
- 	return XFS_BTREE_SBLOCK_LEN;
-@@ -493,7 +492,7 @@ xfs_btree_ptr_addr(
- }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 835ba37..f10ab59 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -216,6 +216,15 @@ typedef struct xfs_mount {
+ 	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
+ 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
+ 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
++
++	/*
++	 * anonymous struct to allow xfs_dquot_buf.c to compile.
++	 * Pointer is always null in userspace, so code does not use it at all
++	 */
++	struct {
++		int	qi_dqperchunk;
++	}			*m_quotainfo;
++
+ } xfs_mount_t;
  
  /*
-- * Get a the root block which is stored in the inode.
-+ * Get the root block which is stored in the inode.
-  *
-  * For now this btree implementation assumes the btree root is always
-  * stored in the if_broot field of an inode fork.
-@@ -716,6 +715,46 @@ xfs_btree_read_bufl(
- 	return 0;
- }
- 
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index f0cbae3..4522218 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -29,6 +29,7 @@ CFILES = cache.c \
+ 	xfs_dir2_leaf.c \
+ 	xfs_dir2_node.c \
+ 	xfs_dir2_sf.c \
++	xfs_dquot_buf.c \
+ 	xfs_ialloc.c \
+ 	xfs_inode_buf.c \
+ 	xfs_inode_fork.c \
+diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
+new file mode 100644
+index 0000000..620d9d3
+--- /dev/null
++++ b/libxfs/xfs_dquot_buf.c
+@@ -0,0 +1,273 @@
 +/*
-+ * Read-ahead the block, don't wait for it, don't return a buffer.
-+ * Long-form addressing.
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2013 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+/* ARGSUSED */
-+void
-+xfs_btree_reada_bufl(
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	xfs_fsblock_t		fsbno,		/* file system block number */
-+	xfs_extlen_t		count,		/* count of filesystem blocks */
-+	const struct xfs_buf_ops *ops)
-+{
-+	xfs_daddr_t		d;
++#include "xfs.h"
 +
-+	ASSERT(fsbno != NULLFSBLOCK);
-+	d = XFS_FSB_TO_DADDR(mp, fsbno);
-+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
++int
++xfs_calc_dquots_per_chunk(
++	struct xfs_mount	*mp,
++	unsigned int		nbblks)	/* basic block units */
++{
++	unsigned int	ndquots;
++
++	ASSERT(nbblks > 0);
++	ndquots = BBTOB(nbblks);
++	do_div(ndquots, sizeof(xfs_dqblk_t));
++
++	return ndquots;
 +}
 +
 +/*
-+ * Read-ahead the block, don't wait for it, don't return a buffer.
-+ * Short-form addressing.
++ * Do some primitive error checking on ondisk dquot data structures.
 + */
-+/* ARGSUSED */
-+void
-+xfs_btree_reada_bufs(
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	xfs_agnumber_t		agno,		/* allocation group number */
-+	xfs_agblock_t		agbno,		/* allocation group block number */
-+	xfs_extlen_t		count,		/* count of filesystem blocks */
-+	const struct xfs_buf_ops *ops)
++int
++xfs_dqcheck(
++	struct xfs_mount *mp,
++	xfs_disk_dquot_t *ddq,
++	xfs_dqid_t	 id,
++	uint		 type,	  /* used only when IO_dorepair is true */
++	uint		 flags,
++	char		 *str)
 +{
-+	xfs_daddr_t		d;
++	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
++	int		errs = 0;
 +
-+	ASSERT(agno != NULLAGNUMBER);
-+	ASSERT(agbno != NULLAGBLOCK);
-+	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
++	/*
++	 * We can encounter an uninitialized dquot buffer for 2 reasons:
++	 * 1. If we crash while deleting the quotainode(s), and those blks got
++	 *    used for user data. This is because we take the path of regular
++	 *    file deletion; however, the size field of quotainodes is never
++	 *    updated, so all the tricks that we play in itruncate_finish
++	 *    don't quite matter.
++	 *
++	 * 2. We don't play the quota buffers when there's a quotaoff logitem.
++	 *    But the allocation will be replayed so we'll end up with an
++	 *    uninitialized quota block.
++	 *
++	 * This is all fine; things are still consistent, and we haven't lost
++	 * any quota information. Just don't complain about bad dquot blks.
++	 */
++	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC)) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, magic 0x%x != 0x%x",
++			str, id, be16_to_cpu(ddq->d_magic), XFS_DQUOT_MAGIC);
++		errs++;
++	}
++	if (ddq->d_version != XFS_DQUOT_VERSION) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, version 0x%x != 0x%x",
++			str, id, ddq->d_version, XFS_DQUOT_VERSION);
++		errs++;
++	}
++
++	if (ddq->d_flags != XFS_DQ_USER &&
++	    ddq->d_flags != XFS_DQ_PROJ &&
++	    ddq->d_flags != XFS_DQ_GROUP) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : XFS dquot ID 0x%x, unknown flags 0x%x",
++			str, id, ddq->d_flags);
++		errs++;
++	}
++
++	if (id != -1 && id != be32_to_cpu(ddq->d_id)) {
++		if (flags & XFS_QMOPT_DOWARN)
++			xfs_alert(mp,
++			"%s : ondisk-dquot 0x%p, ID mismatch: "
++			"0x%x expected, found id 0x%x",
++			str, ddq, id, be32_to_cpu(ddq->d_id));
++		errs++;
++	}
++
++	if (!errs && ddq->d_id) {
++		if (ddq->d_blk_softlimit &&
++		    be64_to_cpu(ddq->d_bcount) >
++				be64_to_cpu(ddq->d_blk_softlimit)) {
++			if (!ddq->d_btimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) BLK TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++		if (ddq->d_ino_softlimit &&
++		    be64_to_cpu(ddq->d_icount) >
++				be64_to_cpu(ddq->d_ino_softlimit)) {
++			if (!ddq->d_itimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) INODE TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++		if (ddq->d_rtb_softlimit &&
++		    be64_to_cpu(ddq->d_rtbcount) >
++				be64_to_cpu(ddq->d_rtb_softlimit)) {
++			if (!ddq->d_rtbtimer) {
++				if (flags & XFS_QMOPT_DOWARN)
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) RTBLK TIMER NOT STARTED",
++					str, (int)be32_to_cpu(ddq->d_id), ddq);
++				errs++;
++			}
++		}
++	}
++
++	if (!errs || !(flags & XFS_QMOPT_DQREPAIR))
++		return errs;
++
++	if (flags & XFS_QMOPT_DOWARN)
++		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
++
++	/*
++	 * Typically, a repair is only requested by quotacheck.
++	 */
++	ASSERT(id != -1);
++	ASSERT(flags & XFS_QMOPT_DQREPAIR);
++	memset(d, 0, sizeof(xfs_dqblk_t));
++
++	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
++	d->dd_diskdq.d_flags = type;
++	d->dd_diskdq.d_id = cpu_to_be32(id);
++
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
++		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++	}
++
++	return errs;
 +}
 +
- STATIC int
- xfs_btree_readahead_lblock(
- 	struct xfs_btree_cur	*cur,
-@@ -1339,7 +1378,7 @@ xfs_btree_log_block(
- 			 * We don't log the CRC when updating a btree
- 			 * block but instead recreate it during log
- 			 * recovery.  As the log buffers have checksums
--			 * of their this is safe and avoids logging a crc
-+			 * of their own this is safe and avoids logging a crc
- 			 * update in a lot of places.
- 			 */
- 			if (fields == XFS_BB_ALL_BITS)
-@@ -1629,7 +1668,7 @@ xfs_lookup_get_search_key(
- 
- /*
-  * Lookup the record.  The cursor is made to point to it, based on dir.
-- * Return 0 if can't find any such record, 1 for success.
-+ * stat is set to 0 if can't find any such record, 1 for success.
-  */
- int					/* error */
- xfs_btree_lookup(
-@@ -2701,7 +2740,6 @@ xfs_btree_make_block_unfull(
- 
- 		if (numrecs < cur->bc_ops->get_dmaxrecs(cur, level)) {
- 			/* A root block that can be made bigger. */
--
- 			xfs_iroot_realloc(ip, 1, cur->bc_private.b.whichfork);
- 		} else {
- 			/* A root block that needs replacing */
++STATIC bool
++xfs_dquot_buf_verify_crc(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	int			ndquots;
++	int			i;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return true;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_calc_dquots_per_chunk(mp,
++					XFS_BB_TO_FSB(mp, bp->b_length));
++
++	for (i = 0; i < ndquots; i++, d++) {
++		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF))
++			return false;
++		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
++			return false;
++	}
++	return true;
++}
++
++STATIC bool
++xfs_dquot_buf_verify(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	xfs_dqid_t		id = 0;
++	int			ndquots;
++	int			i;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_calc_dquots_per_chunk(mp, bp->b_length);
++
++	/*
++	 * On the first read of the buffer, verify that each dquot is valid.
++	 * We don't know what the id of the dquot is supposed to be, just that
++	 * they should be increasing monotonically within the buffer. If the
++	 * first id is corrupt, then it will fail on the second dquot in the
++	 * buffer so corruptions could point to the wrong dquot in this case.
++	 */
++	for (i = 0; i < ndquots; i++) {
++		struct xfs_disk_dquot	*ddq;
++		int			error;
++
++		ddq = &d[i].dd_diskdq;
++
++		if (i == 0)
++			id = be32_to_cpu(ddq->d_id);
++
++		error = xfs_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
++				       "xfs_dquot_buf_verify");
++		if (error)
++			return false;
++	}
++	return true;
++}
++
++static void
++xfs_dquot_buf_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++}
++
++/*
++ * we don't calculate the CRC here as that is done when the dquot is flushed to
++ * the buffer after the update is done. This ensures that the dquot in the
++ * buffer always has an up-to-date CRC value.
++ */
++void
++xfs_dquot_buf_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++}
++
++const struct xfs_buf_ops xfs_dquot_buf_ops = {
++	.verify_read = xfs_dquot_buf_read_verify,
++	.verify_write = xfs_dquot_buf_write_verify,
++};
++
 -- 
 1.8.4.rc3
 
