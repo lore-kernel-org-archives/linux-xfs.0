@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9F8FE29E28
+	by oss.sgi.com (Postfix) with ESMTP id A95F829E55
 	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2736EAC002
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3DDE9AC00B
 	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:51 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	N78DvbC7qr1B8zKr for <xfs@oss.sgi.com>;
-	Tue, 05 Nov 2013 17:07:48 -0800 (PST)
+	weHAbb3YInp4zIZu for <xfs@oss.sgi.com>;
+	Tue, 05 Nov 2013 17:07:49 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003OE-7s
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003O6-5E
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008V7-7E
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008Un-4d
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/37] libxfs: fix root inode handling inconsistencies
-Date: Wed,  6 Nov 2013 12:07:01 +1100
-Message-Id: <1383700043-32305-16-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/37] xfs: remove newlines from strings passed to __xfs_printk
+Date: Wed,  6 Nov 2013 12:06:57 +1100
+Message-Id: <1383700043-32305-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,331 +39,78 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When "mounting" a filesystem via libxfs_mount(), callers can tell
-libxfs to read the root and realtime inodes into cache. However,
-when unmounting the filesystem, libxfs_unmount() used to
-unconditionally free root inodes if they were present.
+__xfs_printk adds its own "\n".  Having it in the original string
+leads to unintentional blank lines from these messages.
 
-This leads to interesting issues like in mkfs, when it handles
-creation, reading and freeing of the root and rt inodes itself.
-It, however, passes in the flag to tell libxfs_mount() to read the
-root inodes and so can result in unbalanced freeing of inodes when
-cleaning up during the unmount proceedure.
-
-As it turns out, nothing ever uses mp->m_rootip and so we don't need
-to read it in or free it, or even have a pointer to it in the struct
-xfs_mount. Similarly, the only user of the realtime inodes is mkfs,
-and it initialises them itself. Hence we can kill the m_rootip and
-the realtime inode mounting code.
-
-This leaves one user of LIBXFS_MOUNT_ROOTINOS - xfs_db - and that is
-only used to initialise the in-core superblock counter values from
-the ag header for xfs_check. Move this code to the xfs_db init
-functions so we can get rid of the mount parameter previously used
-to trigger all these behavours (LIBXFS_MOUNT_ROOTINOS) completely.
+Ported from kernel commit 08e96e1a.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- copy/xfs_copy.c  |   2 +-
- db/init.c        |  26 +++++++----
- include/libxfs.h |  12 +++---
- libxfs/init.c    | 128 -------------------------------------------------------
- mkfs/proto.c     |   1 -
- mkfs/xfs_mkfs.c  |   4 +-
- repair/phase6.c  |   2 -
- 7 files changed, 26 insertions(+), 149 deletions(-)
+ libxfs/xfs_bmap.c         | 2 +-
+ libxfs/xfs_dir2_node.c    | 2 +-
+ libxfs/xfs_sb.c           | 4 ++--
+ libxlog/xfs_log_recover.c | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index bb37279..9986fbf 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -684,7 +684,7 @@ main(int argc, char **argv)
- 	sb = &mbuf.m_sb;
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
- 
--	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 1);
-+	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 0);
- 	if (mp == NULL) {
- 		do_log(_("%s: %s filesystem failed to initialize\n"
- 			"%s: Aborting.\n"), progname, source_name, progname);
-diff --git a/db/init.c b/db/init.c
-index 2932e51..54f3f9e 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -149,18 +149,28 @@ init(
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 3e80c64..c45b91a 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -1447,7 +1447,7 @@ xfs_bmap_search_extents(
+ 		xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
+ 				"Access to block zero in inode %llu "
+ 				"start_block: %llx start_off: %llx "
+-				"blkcnt: %llx extent-state: %x lastx: %x\n",
++				"blkcnt: %llx extent-state: %x lastx: %x",
+ 			(unsigned long long)ip->i_ino,
+ 			(unsigned long long)gotp->br_startblock,
+ 			(unsigned long long)gotp->br_startoff,
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 10d1d81..ced8c58 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -1083,7 +1083,7 @@ xfs_dir2_leafn_rebalance(
+ 		state->inleaf = 1;
+ 		blk2->index = 0;
+ 		xfs_alert(args->dp->i_mount,
+-	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d\n",
++	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d",
+ 			__func__, blk1->index);
  	}
- 
- 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
--				LIBXFS_MOUNT_ROOTINOS | LIBXFS_MOUNT_DEBUGGER);
-+			  LIBXFS_MOUNT_DEBUGGER);
- 	if (!mp) {
--		mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
--				LIBXFS_MOUNT_DEBUGGER);
--		if (!mp) {
--			fprintf(stderr, _("%s: device %s unusable (not an XFS "
--				"filesystem?)\n"), progname, fsdevice);
--			exit(1);
--		}
-+		fprintf(stderr,
-+			_("%s: device %s unusable (not an XFS filesystem?)\n"),
-+			progname, fsdevice);
-+		exit(1);
- 	}
- 	blkbb = 1 << mp->m_blkbb_log;
- 
-+	/*
-+	 * xfs_check needs corrected incore superblock values
-+	 */
-+	if (sbp->sb_rootino != NULLFSINO &&
-+	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-+		int error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
-+		if (error) {
-+			fprintf(stderr, _("%s: cannot init perag data (%d)\n"),
-+				progname, error);
-+			exit(EXIT_FAILURE);
-+		}
-+	}
-+
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
- 		type_set_tab_crc();
- 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index f10ab59..3df8c07 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -167,7 +167,6 @@ typedef struct xfs_mount {
- 	uint			m_rsumsize;	/* size of rt summary, bytes */
- 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
- 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
--	struct xfs_inode	*m_rootip;	/* pointer to root directory */
- 	struct xfs_buftarg	*m_ddev_targp;
- 	struct xfs_buftarg	*m_logdev_targp;
- 	struct xfs_buftarg	*m_rtdev_targp;
-@@ -259,12 +258,11 @@ typedef struct xfs_perag {
- 	int		pagb_count;	/* pagb slots in use */
- } xfs_perag_t;
- 
--#define LIBXFS_MOUNT_ROOTINOS		0x0001
--#define LIBXFS_MOUNT_DEBUGGER		0x0002
--#define LIBXFS_MOUNT_32BITINODES	0x0004
--#define LIBXFS_MOUNT_32BITINOOPT	0x0008
--#define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
--#define LIBXFS_MOUNT_ATTR2		0x0020
-+#define LIBXFS_MOUNT_DEBUGGER		0x0001
-+#define LIBXFS_MOUNT_32BITINODES	0x0002
-+#define LIBXFS_MOUNT_32BITINOOPT	0x0004
-+#define LIBXFS_MOUNT_COMPAT_ATTR	0x0008
-+#define LIBXFS_MOUNT_ATTR2		0x0010
- 
- #define LIBXFS_IHASHSIZE(sbp)		(1<<10)
- #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
-diff --git a/libxfs/init.c b/libxfs/init.c
-index db7eeea..ee6165e 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -409,94 +409,6 @@ manage_zones(int release)
- 	xfs_dir_startup();
  }
- 
--/*
-- * Get the bitmap and summary inodes into the mount structure
-- * at mount time.
-- */
--static int
--rtmount_inodes(xfs_mount_t *mp)
--{
--	int		error;
--	xfs_sb_t	*sbp;
--
--	sbp = &mp->m_sb;
--	if (sbp->sb_rbmino == NULLFSINO)
--		return 0;
--	error = libxfs_iget(mp, NULL, sbp->sb_rbmino, 0, &mp->m_rbmip, 0);
--	if (error) {
--		fprintf(stderr,
--			_("%s: cannot read realtime bitmap inode (%d)\n"),
--			progname, error);
--		return error;
--	}
--	ASSERT(mp->m_rbmip != NULL);
--	ASSERT(sbp->sb_rsumino != NULLFSINO);
--	error = libxfs_iget(mp, NULL, sbp->sb_rsumino, 0, &mp->m_rsumip, 0);
--	if (error) {
--		libxfs_iput(mp->m_rbmip, 0);
--		fprintf(stderr,
--			_("%s: cannot read realtime summary inode (%d)\n"),
--			progname, error);
--		return error;
--	}
--	ASSERT(mp->m_rsumip != NULL);
--	return 0;
--}
--
--/*
-- * Initialize realtime fields in the mount structure.
-- */
--static int
--rtmount_init(
--	xfs_mount_t	*mp,	/* file system mount structure */
--	int		flags)
--{
--	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
--	xfs_daddr_t	d;	/* address of last block of subvolume */
--	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
--
--	sbp = &mp->m_sb;
--	if (sbp->sb_rblocks == 0)
--		return 0;
--	if (mp->m_rtdev_targp->dev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
--		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
--			progname);
--		return -1;
--	}
--	mp->m_rsumlevels = sbp->sb_rextslog + 1;
--	mp->m_rsumsize =
--		(uint)sizeof(xfs_suminfo_t) * mp->m_rsumlevels *
--		sbp->sb_rbmblocks;
--	mp->m_rsumsize = roundup(mp->m_rsumsize, sbp->sb_blocksize);
--	mp->m_rbmip = mp->m_rsumip = NULL;
--
--	/*
--	 * Allow debugger to be run without the realtime device present.
--	 */
--	if (flags & LIBXFS_MOUNT_DEBUGGER)
--		return 0;
--
--	/*
--	 * Check that the realtime section is an ok size.
--	 */
--	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
--	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
--		fprintf(stderr, _("%s: realtime init - %llu != %llu\n"),
--			progname, (unsigned long long) XFS_BB_TO_FSB(mp, d),
--			(unsigned long long) mp->m_sb.sb_rblocks);
--		return -1;
--	}
--	bp = libxfs_readbuf(mp->m_rtdev,
--			d - XFS_FSB_TO_BB(mp, 1), XFS_FSB_TO_BB(mp, 1), 0, NULL);
--	if (bp == NULL) {
--		fprintf(stderr, _("%s: realtime size check failed\n"),
--			progname);
--		return -1;
--	}
--	libxfs_putbuf(bp);
--	return 0;
--}
--
- static int
- libxfs_initialize_perag(
- 	xfs_mount_t	*mp,
-@@ -796,13 +708,6 @@ libxfs_mount(
- 			libxfs_putbuf(bp);
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 8b90b88..11353bb 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -215,13 +215,13 @@ xfs_mount_validate_sb(
+ 	if (xfs_sb_version_has_pquotino(sbp)) {
+ 		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
+ 			xfs_notice(mp,
+-			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
++			   "Version 5 of Super block has XFS_OQUOTA bits.");
+ 			return XFS_ERROR(EFSCORRUPTED);
+ 		}
+ 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
+ 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
+ 			xfs_notice(mp,
+-"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
++"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.");
+ 			return XFS_ERROR(EFSCORRUPTED);
  	}
  
--	/* Initialize realtime fields in the mount structure */
--	if (rtmount_init(mp, flags)) {
--		fprintf(stderr, _("%s: realtime device init failed\n"),
--			progname);
--			return NULL;
--	}
--
- 	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
- 	if (error) {
- 		fprintf(stderr, _("%s: perag init failed\n"),
-@@ -810,39 +715,6 @@ libxfs_mount(
- 		exit(1);
- 	}
- 
--	/*
--	 * mkfs calls mount before the root inode is allocated.
--	 */
--	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO) {
--		error = libxfs_iget(mp, NULL, sbp->sb_rootino, 0,
--				&mp->m_rootip, 0);
--		if (error) {
--			fprintf(stderr, _("%s: cannot read root inode (%d)\n"),
--				progname, error);
--			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
--				return NULL;
--		}
--		ASSERT(mp->m_rootip != NULL);
--	}
--	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
--		if (mp->m_rootip)
--			libxfs_iput(mp->m_rootip, 0);
--		return NULL;
--	}
--
--	/*
--	 * mkfs calls mount before the AGF/AGI structures are written.
--	 */
--	if ((flags & LIBXFS_MOUNT_ROOTINOS) && sbp->sb_rootino != NULLFSINO &&
--	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
--		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
--		if (error) {
--			fprintf(stderr, _("%s: cannot init perag data (%d)\n"),
--				progname, error);
--			return NULL;
--		}
--	}
--
- 	return mp;
- }
- 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 0cdef41..4cc0df6 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -543,7 +543,6 @@ parseproto(
- 			pip = ip;
- 			mp->m_sb.sb_rootino = ip->i_ino;
- 			libxfs_mod_sb(tp, XFS_SB_ROOTINO);
--			mp->m_rootip = ip;
- 			isroot = 1;
- 		} else {
- 			libxfs_trans_ijoin(tp, pip, 0);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 355708c..d37e948 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2582,6 +2582,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	memset(XFS_BUF_PTR(buf), 0, sectorsize);
- 	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-+	libxfs_purgebuf(buf);
- 
- 	/*
- 	 * If the data area is a file, then grow it out to its final size
-@@ -2616,7 +2617,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
- 		&sbp->sb_uuid, logversion, lsunit, XLOG_FMT);
- 
--	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 1);
-+	mp = libxfs_mount(mp, sbp, xi.ddev, xi.logdev, xi.rtdev, 0);
- 	if (mp == NULL) {
- 		fprintf(stderr, _("%s: filesystem failed to initialize\n"),
- 			progname);
-@@ -2887,7 +2888,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	/*
- 	 * Allocate the root inode and anything else in the proto file.
- 	 */
--	mp->m_rootip = NULL;
- 	parse_proto(mp, &fsx, &protostring);
- 
- 	/*
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 2a37438..5307acf 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -856,8 +856,6 @@ mk_root_dir(xfs_mount_t *mp)
- 	ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
- 	ip->i_df.if_u1.if_extents = NULL;
- 
--	mp->m_rootip = ip;
--
- 	/*
- 	 * initialize the directory
- 	 */
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index f3cda77..3f22921 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -1330,7 +1330,7 @@ xlog_unpack_data_crc(
+ 	if (crc != rhead->h_crc) {
+ 		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
+ 			xfs_alert(log->l_mp,
+-		"log record CRC mismatch: found 0x%x, expected 0x%x.\n",
++		"log record CRC mismatch: found 0x%x, expected 0x%x.",
+ 					le32_to_cpu(rhead->h_crc),
+ 					le32_to_cpu(crc));
+ 			xfs_hex_dump(dp, 32);
 -- 
 1.8.4.rc3
 
