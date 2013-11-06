@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 69A077F61
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 15:32:00 -0600 (CST)
-Date: Wed, 6 Nov 2013 15:31:59 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 5/5] xfs: increase inode cluster size for v5 filesystems
-Message-ID: <20131106213159.GV1935@sgi.com>
-References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
-	<1383280040-21979-6-git-send-email-david@fromorbit.com>
-	<20131105164307.GD32110@infradead.org>
-	<20131105195650.GA6188@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9F0B77F61
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 15:36:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7C7D28F8092
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 13:36:39 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id a1SftEQEbLr7LTpT for
+	<xfs@oss.sgi.com>; Wed, 06 Nov 2013 13:36:38 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rA6LacPA014527
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 6 Nov 2013 16:36:38 -0500
+Date: Wed, 6 Nov 2013 16:36:35 -0500
+From: Kyle McMartin <kyle@redhat.com>
+Subject: [PATCH] xfsdump: don't assume getdents exists
+Message-ID: <20131106213635.GC24712@redacted.bos.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131105195650.GA6188@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +31,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: sandeen@redhat.com
+Cc: xfs@oss.sgi.com
 
-Hi Dave,
+New Linux ports are using a standard syscall list that does not include
+deprecated syscalls where 64-bit clean alternatives exist. As a result,
+on arm64, __NR_getdents is undefined, resulting in xfsdump failing to
+build.
 
-On Wed, Nov 06, 2013 at 06:56:50AM +1100, Dave Chinner wrote:
-> On Tue, Nov 05, 2013 at 08:43:07AM -0800, Christoph Hellwig wrote:
-> > > +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > > +		int	new_size = mp->m_inode_cluster_size;
-> > > +
-> > > +		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
-> > > +		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
-> > > +			mp->m_inode_cluster_size = new_size;
-> > > +		xfs_info(mp, "Using inode cluster size of %d bytes",
-> > > +			 mp->m_inode_cluster_size);
-> > 
-> > printing this on every mount seem a bit too verbose.
-> 
-> I'd like to leave it there until we remove the experimental tag from
-> the v5 superblock configuration, as there is no good way of
-> determining that someone is using a mkfs patched to enable this
-> feature yet...
+To avoid that, in the case where __NR_getdents is unset in unistd.h,
+avoid building the fallback path entirely, since
+__ASSUME_GETDENTS64_SYSCALL will be true, the SYS_getdents64 case will
+be the primary (and only) path used.
 
-I don't think I have a problem with bumping up the inode cluster size, but I am
-a little concerned about two aspects of this patch:
+Signed-off-by: Kyle McMartin <kyle@redhat.com>
 
-1) Backward compatability issue with earlier v5 filesystems that don't support
-the larger inode cluster.  I know it's experimental, but what do those failures
-look like?  This strikes me as being kind of scary.
-
-2) I don't like to overload the inode alignment mkfs option to do this.  I
-think it would be better if we explicitly set the inode cluster size at mkfs
-time.
-
-Or maybe this one should have an incompatability bit.  Maybe it doesn't need to
-be a separate mkfs option.
-
--Ben
+--- a/common/getdents.c
++++ b/common/getdents.c
+@@ -70,6 +70,9 @@ extern int __have_no_getdents64;
+ # ifndef SYS_getdents64
+ #  define SYS_getdents64 __NR_getdents64
+ # endif
++# ifndef __NR_getdents
++#  define __ONLY_GETDENTS64_SYSCALL     1
++# endif
+ #endif
+ 
+ 
+@@ -207,6 +210,13 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
+ # endif
+     }
+ #endif
++/* Newer Linux ports are not adding deprecated syscalls, so to avoid compile
++ * failures since SYS_getdents will be undefined, we check for that and only
++ * build the fall-back case if SYS_getdents is defined. We know that
++ * __ASSUME_GETDENTS64_SYSCALL is set, since __NR_getdents64 must exist on
++ * those platforms.
++ */
++#ifndef __ONLY_GETDENTS64_SYSCALL
+   {
+     size_t red_nbytes;
+     struct kernel_dirent *skdp, *kdp;
+@@ -265,4 +275,5 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
+     }
+ 
+   return (char *) dp - buf;
++#endif
+ }
 
 _______________________________________________
 xfs mailing list
