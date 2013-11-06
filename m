@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F392F7F51
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 03:12:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AFCB68F8040
-	for <xfs@oss.sgi.com>; Mon,  4 Nov 2013 01:12:46 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id xR67t8Bjq9aQmGGC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 04 Nov 2013 01:12:45 -0800 (PST)
-Date: Mon, 4 Nov 2013 01:12:45 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 26/30] xfs_db: avoid libxfs buffer lookup warnings
-Message-ID: <20131104091245.GF23564@infradead.org>
-References: <1383107481-28937-1-git-send-email-david@fromorbit.com>
-	<1383107481-28937-27-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1383107481-28937-27-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 00FF229E4E
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5F8BAC006
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:48 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	PfV80MAMd4SHPKP3 for <xfs@oss.sgi.com>;
+	Tue, 05 Nov 2013 17:07:47 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003Oo-II
+	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008WP-Hh
+	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 31/37] db: Unwind the IO stack on exit
+Date: Wed,  6 Nov 2013 12:07:17 +1100
+Message-Id: <1383700043-32305-32-git-send-email-david@fromorbit.com>
+In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
+References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,89 +30,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
->  
-> +/*
-> + * We are now using libxfs for our IO backend, so we should always try to use
-> + * inode cluster buffers rather than filesystem block sized buffers for reading
-> + * inodes. This means that we always use the same buffers as libxfs operations
-> + * does, and that avoids buffer cache issues caused by overlapping buffers. This
-> + * can be seen clearly when trying to read the root inode. Much of this logic is
-> + * similar to libxfs_imap().
-> + */
->  void
->  set_cur_inode(
->  	xfs_ino_t	ino)
-> @@ -632,6 +640,9 @@ set_cur_inode(
->  	xfs_agnumber_t	agno;
->  	xfs_dinode_t	*dip;
->  	int		offset;
-> +	int		numblks = blkbb;
-> +	xfs_agblock_t	cluster_agbno;
-> +
->  
->  	agno = XFS_INO_TO_AGNO(mp, ino);
->  	agino = XFS_INO_TO_AGINO(mp, ino);
-> @@ -644,6 +655,24 @@ set_cur_inode(
->  		return;
->  	}
->  	cur_agno = agno;
-> +
-> +	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize &&
-> +	    mp->m_inoalign_mask) {
-> +		xfs_agblock_t	chunk_agbno;
-> +		xfs_agblock_t	offset_agbno;
-> +		int		blks_per_cluster;
-> +
-> +		blks_per_cluster = mp->m_inode_cluster_size >>
-> +							mp->m_sb.sb_blocklog;
-> +		offset_agbno = agbno & mp->m_inoalign_mask;
-> +		chunk_agbno = agbno - offset_agbno;
-> +		cluster_agbno = chunk_agbno +
-> +			((offset_agbno / blks_per_cluster) * blks_per_cluster);
-> +		offset += ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock);
-> +		numblks = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> +	} else
-> +		cluster_agbno = agbno;
-> +
+From: Dave Chinner <dchinner@redhat.com>
 
-Seems like this should be a separate patch?
+xfs_db can build up a large IO stack by the time it has run to
+completion. If we don't unwind this IO stack before we shut down the
+libxfs caches, metadump and other db programs will exit with
+unreleased buffers and emit warnings like:
 
-> -	if (iocur_top->bp)
-> +	if (iocur_top->bp) {
->  		libxfs_putbuf(iocur_top->bp);
-> +		iocur_top->bp = NULL;
-> +	}
+cache_purge: shake on cache 0x69e4f0 left 7 nodes!?
 
-This should probably be folded into the patch that started using buffers
-in xfs_db.
+Hence we need to unwind the iostack as we shut down.
 
-> +	int		icache_flags;	/* cache init flags */
-> +	int		bcache_flags;	/* cache init flags */
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ db/init.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-The icache_flags aren't used anywhere.  Also I'd really prefer to have
-my patch to kill the inode cache istead of adding more changes to it.
-
-> +#ifdef IO_BCOMPARE_CHECK
-> +		if (!(libxfs_bcache->c_flags & CACHE_MISCOMPARE_PURGE)) {
-> +			fprintf(stderr,
-> +	"%lx: Badness in key lookup (length)\n"
-> +	"bp=(bno 0x%llx, len %u bytes) key=(bno 0x%llx, len %u bytes)\n",
-> +				pthread_self(),
-> +				(unsigned long long)bp->b_bn, (int)bp->b_bcount,
-> +				(unsigned long long)bkey->blkno,
-> +				BBTOB(bkey->bblen));
-> +		}
->  #endif
-
-What is the point of the IO_BCOMPARE_CHECK ifdef if we unconditionally
-define it?
+diff --git a/db/init.c b/db/init.c
+index 4bc048a..8ad21da 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -183,9 +183,11 @@ main(
+ 	int	c, i, done = 0;
+ 	char	*input;
+ 	char	**v;
++	int	start_iocur_sp;
+ 
+ 	pushfile(stdin);
+ 	init(argc, argv);
++	start_iocur_sp = iocur_sp;
+ 
+ 	for (i = 0; !done && i < ncmdline; i++) {
+ 		v = breakline(cmdline[i], &c);
+@@ -209,10 +211,11 @@ main(
+ 
+ close_devices:
+ 	/*
+-	 * make sure that we pop the last buffer context we held so that the
+-	 * buffer is released before purge the caches during unmount.
++	 * Make sure that we pop the all the buffer contexts we hold so that
++	 * they are released before we purge the caches during unmount.
+ 	 */
+-	pop_cur();
++	while (iocur_sp > start_iocur_sp)
++		pop_cur();
+ 	libxfs_umount(mp);
+ 	if (x.ddev)
+ 		libxfs_device_close(x.ddev);
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
