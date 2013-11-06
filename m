@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5EA4129E2E
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8C7F729E36
 	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8934AC005
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:46 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 60BA18F808E
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:47 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	PH7i8TERYkcitaxZ for <xfs@oss.sgi.com>;
+	CYxu0FTtakFtJNr6 for <xfs@oss.sgi.com>;
 	Tue, 05 Nov 2013 17:07:45 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003P3-MD
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003OR-Be
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-000058-LP
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008Vb-BA
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 36/37] repair: Increase default repair parallelism on large
-	filesystems
-Date: Wed,  6 Nov 2013 12:07:22 +1100
-Message-Id: <1383700043-32305-37-git-send-email-david@fromorbit.com>
+Subject: [PATCH 21/37] db: introduce verifier support into set_cur
+Date: Wed,  6 Nov 2013 12:07:07 +1100
+Message-Id: <1383700043-32305-22-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,61 +39,188 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Large filesystems or high AG count filesystems generally have more
-inherent parallelism in the backing storage. We shoul dmake use of
-this by default to speed up repair times. Make xfs_repair use an
-"auto-stride" configuration on filesystems with enough AGs to be
-considered "multidisk" configurations.
+To be able to use read and write verifiers, we need to pass the
+verifier to the IO routines. We do this via the set_cur() function
+used to trigger reading the buffer.
 
-This difference in elaspsed time to repair a 100TB filesystem with
-50 million inodes in it with all metadata in flash is:
+For most metadata types, there is only one type of verifier needed.
+For these, we can simply add the verifier to the type table entry
+for the given type and use that directly. This type entry is already
+carried around by the IO context, so if we ever need to get it again
+we have direct access to it in the context we'll be doing IO.
 
-		Time	IOPS	BW	CPU	RAM
-vanilla:	2719s	 2900	 55MB/s	 25%	0.95GB
-patched:	 908s	varied	varied	varied	2.33GB
+Only attach the verifiers to the v5 filesystem type table; there is
+not need for them on v4 filesystems as we don't have to verify or
+calculate CRCs for them.
 
-With the patched kernel, there were IO peaks of over 1.3GB/s during
-AG scanning. Some phases now run at noticably different speeds
-	- phase 3 ran at ~180% CPU, 18,000 IOPS and 130MB/s,
-	- phase 4 ran at ~280% CPU, 12,000 IOPS and 100MB/s
-	- the other phases were similar to the vanilla repair.
-
-Memory usage is increased because of the increased buffer cache
-size as a result of concurrent AG scanning using it.
+There are some metadata types that have more than one buffer format,
+or aren't based in directly in buffers. For these, leave the type
+table verifier NULL for now - these will need to be addressed
+individually.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/xfs_repair.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ db/io.c   | 13 +++++++---
+ db/type.c | 88 ++++++++++++++++++++++++++++++++++-----------------------------
+ db/type.h |  1 +
+ 3 files changed, 59 insertions(+), 43 deletions(-)
 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 78f8363..a863337 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -614,6 +614,23 @@ main(int argc, char **argv)
- 	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
- 			XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
+diff --git a/db/io.c b/db/io.c
+index ca89354..2d1cc56 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -482,12 +482,14 @@ set_cur(
+ 	xfs_ino_t	dirino;
+ 	xfs_ino_t	ino;
+ 	__uint16_t	mode;
++	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
  
-+	/*
-+	 * Automatic striding for high agcount filesystems.
-+	 *
-+	 * More AGs indicates that the filesystem is either large or can handle
-+	 * more IO parallelism. Either way, we should try to process multiple
-+	 * AGs at a time in such a configuration to try to saturate the
-+	 * underlying storage and speed the repair process. Only do this if
-+	 * prefetching is enabled.
-+	 *
-+	 * Given mkfs defaults for 16AGs for "multidisk" configurations, we want
-+	 * to target these for an increase in thread count. Hence a stride value
-+	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
-+	 * on such filesystems.
-+	 */
-+	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
-+		ag_stride = 15;
+ 	if (iocur_sp < 0) {
+ 		dbprintf(_("set_cur no stack element to set\n"));
+ 		return;
+ 	}
+ 
 +
- 	if (ag_stride) {
- 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
- 		thread_init();
+ 	ino = iocur_top->ino;
+ 	dirino = iocur_top->dirino;
+ 	mode = iocur_top->mode;
+@@ -509,12 +511,17 @@ set_cur(
+ 			return;
+ 		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
+ 		bp = libxfs_readbuf_map(mp->m_ddev_targp, bbmap->b,
+-					bbmap->nmaps, 0, NULL);
++					bbmap->nmaps, 0, ops);
+ 	} else {
+-		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, NULL);
++		bp = libxfs_readbuf(mp->m_ddev_targp, d, c, 0, ops);
+ 		iocur_top->bbmap = NULL;
+ 	}
+-	if (!bp || bp->b_error)
++
++	/*
++	 * keep the buffer even if the verifier says it is corrupted.
++	 * We're a diagnostic tool, after all.
++	 */
++	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
+ 		return;
+ 	iocur_top->buf = bp->b_addr;
+ 	iocur_top->bp = bp;
+diff --git a/db/type.c b/db/type.c
+index 64e2ef4..b3f3d87 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -50,50 +50,58 @@ static const cmdinfo_t	type_cmd =
+ 	  N_("set/show current data type"), NULL };
+ 
+ static const typ_t	__typtab[] = {
+-	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+-	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld },
+-	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+-	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
+-	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld },
+-	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld },
+-	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld },
+-	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld },
+-	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
+-	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+-	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld },
+-	{ TYP_INODATA, "inodata", NULL, NULL },
+-	{ TYP_INODE, "inode", handle_struct, inode_hfld },
+-	{ TYP_LOG, "log", NULL, NULL },
+-	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+-	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+-	{ TYP_SB, "sb", handle_struct, sb_hfld },
+-	{ TYP_SYMLINK, "symlink", handle_string, NULL },
+-	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_AGF, "agf", handle_struct, agf_hfld, NULL },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld, NULL },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld, NULL },
++	{ TYP_ATTR, "attr", handle_struct, attr_hfld, NULL },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_hfld, NULL },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_hfld, NULL },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_hfld, NULL },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld, NULL },
++	{ TYP_DATA, "data", handle_block, NULL, NULL },
++	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld, NULL },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld, NULL },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld, NULL },
++	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_hfld, NULL },
++	{ TYP_LOG, "log", NULL, NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL },
++	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL },
++	{ TYP_TEXT, "text", handle_text, NULL, NULL },
+ 	{ TYP_NONE, NULL }
+ };
+ 
+ static const typ_t	__typtab_crc[] = {
+-	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+-	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
+-	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld },
+-	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
+-	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
+-	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
+-	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
+-	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld },
+-	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+-	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
+-	{ TYP_INODATA, "inodata", NULL, NULL },
+-	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld },
+-	{ TYP_LOG, "log", NULL, NULL },
+-	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
+-	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
+-	{ TYP_SB, "sb", handle_struct, sb_hfld },
+-	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld },
+-	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
++		&xfs_bmbt_buf_ops },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
++		&xfs_bmbt_buf_ops },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld,
++		&xfs_allocbt_buf_ops },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld,
++		&xfs_allocbt_buf_ops },
++	{ TYP_DATA, "data", handle_block, NULL, NULL },
++	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld, NULL },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
++		&xfs_dquot_buf_ops },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
++		&xfs_inobt_buf_ops },
++	{ TYP_INODATA, "inodata", NULL, NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
++		&xfs_inode_buf_ops },
++	{ TYP_LOG, "log", NULL, NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops },
++	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
++		&xfs_symlink_buf_ops },
++	{ TYP_TEXT, "text", handle_text, NULL, NULL },
+ 	{ TYP_NONE, NULL }
+ };
+ 
+diff --git a/db/type.h b/db/type.h
+index c41aca4d..3bb26f1 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -42,6 +42,7 @@ typedef struct typ
+ 	char			*name;
+ 	pfunc_t			pfunc;
+ 	const struct field	*fields;
++	const struct xfs_buf_ops *bops;
+ } typ_t;
+ extern const typ_t	*typtab, *cur_typ;
+ 
 -- 
 1.8.4.rc3
 
