@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B9BC729E2B
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 04:54:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2761AAC002
-	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 02:54:53 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id Edr9yRntAxRA2XH6 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 06 Nov 2013 02:54:51 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 444277F59
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 04:59:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C696AAC002
+	for <xfs@oss.sgi.com>; Wed,  6 Nov 2013 02:59:37 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Q7NDRkhSBT412hVc (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 06 Nov 2013 02:59:32 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1Ve0l9-0000nZ-4p
-	for xfs@oss.sgi.com; Wed, 06 Nov 2013 10:54:51 +0000
-Date: Wed, 6 Nov 2013 02:54:51 -0800
+	Hat Linux)) id 1Ve0pg-000224-C7
+	for xfs@oss.sgi.com; Wed, 06 Nov 2013 10:59:32 +0000
+Date: Wed, 6 Nov 2013 02:59:32 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: xfstest failures
-Message-ID: <20131106105451.GA31283@infradead.org>
+Subject: [PATCH] xfststs: add a helper to get the minimum dio size
+Message-ID: <20131106105932.GA7807@infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="X1bOJ3K7DJ5YkBrT"
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,245 +26,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Various tests opencode checks to find out the minimum support direct I/O
+size.  Replace those with a generic helper that handles network filesystems as
+well.  Also remove the Linux 2.4 workaround we had in once place.
 
---X1bOJ3K7DJ5YkBrT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Unfortunately it seems our number of test failures is still through the
-roof, mostly due to the lack of updates in xfstests for other changes.
-
-To start with the quick group in xfs I see:
-
-generic/263
-
-	This seems to be an old issue we've largely been ignoring
-	forever IIRC.  Maybe we finally need an xfail group?
-
-xfs/033
-
-	xfs_Repair now aborts due to a verifier failure in
-	xfs_trans_read_buf.  I think this is a real bug introduced
-	in xfs_repair when new changes were brought in.  Output diff
-	attached.
-
-xfs/187
-
-	Echoes "Need to update test 187 so that initial subtests do not
-	use features2".  Why do we make this a fail rather than notrun?
-
-xfs/199
-
-	Has an unexpected XFS_SB_VERSION2_PROJID32BIT in sb_features.
-	Given that we switched to projid32 by default this should have
-	been updated.
-
-xfs/206
-
-	Does not expect the ftype flag.  Didn't we change a generic
-	filter to take care of this?
-
-xfs/296
-
-	Checking for capability on restored file
-	-RESTORE_DIR/DUMP_SUBDIR/testfile cap_setgid,cap_setuid+ep
-	-# file: RESTORE_DIR/DUMP_SUBDIR/testfile
-	-security.capability
-
-	Seems like theres some issues with file capabilities.
-
---X1bOJ3K7DJ5YkBrT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="33.diff"
-
---- tests/xfs/033.out	2013-09-09 14:41:08.000000000 +0000
-+++ /root/xfstests/results//xfs/033.out.bad	2013-11-06 10:54:25.000000000 +0000
-@@ -30,165 +30,9 @@
-         - reset superblock...
- Phase 6 - check inode connectivity...
- reinitializing root directory
--        - resetting contents of realtime bitmap and summary inodes
--        - traversing filesystem ...
--        - traversal finished ...
--        - moving disconnected inodes to lost+found ...
--Phase 7 - verify and correct link counts...
--resetting inode INO nlinks from 1 to 2
--done
--Corrupting rt bitmap inode - setting bits to 0
--Wrote X.XXKb (value 0x0)
--Phase 1 - find and verify superblock...
--Phase 2 - using <TYPEOF> log
--        - zero log...
--        - scan filesystem freespace and inode maps...
--        - found root inode chunk
--Phase 3 - for each AG...
--        - scan and clear agi unlinked lists...
--        - process known inodes and perform inode discovery...
--bad magic number 0x0 on inode INO
--bad version number 0x0 on inode INO
--bad magic number 0x0 on inode INO, resetting magic number
--bad version number 0x0 on inode INO, resetting version number
--imap claims a free inode INO is in use, correcting imap and clearing inode
--cleared realtime bitmap inode INO
--        - process newly discovered inodes...
--Phase 4 - check for duplicate blocks...
--        - setting up duplicate extent list...
--        - check for inodes claiming duplicate blocks...
--Phase 5 - rebuild AG headers and trees...
--        - reset superblock...
--Phase 6 - check inode connectivity...
--reinitializing realtime bitmap inode
--        - resetting contents of realtime bitmap and summary inodes
--        - traversing filesystem ...
--        - traversal finished ...
--        - moving disconnected inodes to lost+found ...
--Phase 7 - verify and correct link counts...
--done
--Corrupting rt summary inode - setting bits to 0
--Wrote X.XXKb (value 0x0)
--Phase 1 - find and verify superblock...
--Phase 2 - using <TYPEOF> log
--        - zero log...
--        - scan filesystem freespace and inode maps...
--        - found root inode chunk
--Phase 3 - for each AG...
--        - scan and clear agi unlinked lists...
--        - process known inodes and perform inode discovery...
--bad magic number 0x0 on inode INO
--bad version number 0x0 on inode INO
--bad magic number 0x0 on inode INO, resetting magic number
--bad version number 0x0 on inode INO, resetting version number
--imap claims a free inode INO is in use, correcting imap and clearing inode
--cleared realtime summary inode INO
--        - process newly discovered inodes...
--Phase 4 - check for duplicate blocks...
--        - setting up duplicate extent list...
--        - check for inodes claiming duplicate blocks...
--Phase 5 - rebuild AG headers and trees...
--        - reset superblock...
--Phase 6 - check inode connectivity...
--reinitializing realtime summary inode
--        - resetting contents of realtime bitmap and summary inodes
--        - traversing filesystem ...
--        - traversal finished ...
--        - moving disconnected inodes to lost+found ...
--Phase 7 - verify and correct link counts...
--done
--Corrupting root inode - setting bits to -1
--Wrote X.XXKb (value 0xffffffff)
--Phase 1 - find and verify superblock...
--Phase 2 - using <TYPEOF> log
--        - zero log...
--        - scan filesystem freespace and inode maps...
--        - found root inode chunk
--Phase 3 - for each AG...
--        - scan and clear agi unlinked lists...
--        - process known inodes and perform inode discovery...
--bad magic number 0xffff on inode INO
--bad version number 0xffffffff on inode INO
--bad (negative) size -1 on inode INO
--bad magic number 0xffff on inode INO, resetting magic number
--bad version number 0xffffffff on inode INO, resetting version number
--bad (negative) size -1 on inode INO
--cleared root inode INO
--        - process newly discovered inodes...
--Phase 4 - check for duplicate blocks...
--        - setting up duplicate extent list...
--root inode lost
--        - check for inodes claiming duplicate blocks...
--Phase 5 - rebuild AG headers and trees...
--        - reset superblock...
--Phase 6 - check inode connectivity...
--reinitializing root directory
--        - resetting contents of realtime bitmap and summary inodes
--        - traversing filesystem ...
--        - traversal finished ...
--        - moving disconnected inodes to lost+found ...
--Phase 7 - verify and correct link counts...
--resetting inode INO nlinks from 1 to 2
--done
--Corrupting rt bitmap inode - setting bits to -1
--Wrote X.XXKb (value 0xffffffff)
--Phase 1 - find and verify superblock...
--Phase 2 - using <TYPEOF> log
--        - zero log...
--        - scan filesystem freespace and inode maps...
--        - found root inode chunk
--Phase 3 - for each AG...
--        - scan and clear agi unlinked lists...
--        - process known inodes and perform inode discovery...
--bad magic number 0xffff on inode INO
--bad version number 0xffffffff on inode INO
--bad (negative) size -1 on inode INO
--bad magic number 0xffff on inode INO, resetting magic number
--bad version number 0xffffffff on inode INO, resetting version number
--bad (negative) size -1 on inode INO
--cleared realtime bitmap inode INO
--        - process newly discovered inodes...
--Phase 4 - check for duplicate blocks...
--        - setting up duplicate extent list...
--        - check for inodes claiming duplicate blocks...
--Phase 5 - rebuild AG headers and trees...
--        - reset superblock...
--Phase 6 - check inode connectivity...
--reinitializing realtime bitmap inode
--        - resetting contents of realtime bitmap and summary inodes
--        - traversing filesystem ...
--        - traversal finished ...
--        - moving disconnected inodes to lost+found ...
--Phase 7 - verify and correct link counts...
--done
--Corrupting rt summary inode - setting bits to -1
--Wrote X.XXKb (value 0xffffffff)
--Phase 1 - find and verify superblock...
--Phase 2 - using <TYPEOF> log
--        - zero log...
--        - scan filesystem freespace and inode maps...
--        - found root inode chunk
--Phase 3 - for each AG...
--        - scan and clear agi unlinked lists...
--        - process known inodes and perform inode discovery...
--bad magic number 0xffff on inode INO
--bad version number 0xffffffff on inode INO
--bad (negative) size -1 on inode INO
--bad magic number 0xffff on inode INO, resetting magic number
--bad version number 0xffffffff on inode INO, resetting version number
--bad (negative) size -1 on inode INO
--cleared realtime summary inode INO
--        - process newly discovered inodes...
--Phase 4 - check for duplicate blocks...
--        - setting up duplicate extent list...
--        - check for inodes claiming duplicate blocks...
--Phase 5 - rebuild AG headers and trees...
--        - reset superblock...
--Phase 6 - check inode connectivity...
--reinitializing realtime summary inode
--        - resetting contents of realtime bitmap and summary inodes
--        - traversing filesystem ...
--        - traversal finished ...
--        - moving disconnected inodes to lost+found ...
--Phase 7 - verify and correct link counts...
--done
-+xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
-+cache_node_purge: refcount was 1, not zero (node=0x20bc810)
+diff --git a/common/rc b/common/rc
+index ea3af12..64139c8 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2179,6 +2179,21 @@ _scale_fsstress_args()
+     echo $args
+ }
+ 
++#
++# Return the logical block size if running on a block device,
++# else substitute the page size.
++#
++_min_dio_alignment()
++{
++    dev=$1
 +
-+fatal error -- could not iget root inode -- error - 117
-+_check_xfs_filesystem: filesystem on /dev/vdc is inconsistent (c) (see /root/xfstests/results//xfs/033.full)
-+_check_xfs_filesystem: filesystem on /dev/vdc is inconsistent (r) (see /root/xfstests/results//xfs/033.full)
-
---X1bOJ3K7DJ5YkBrT
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
++    if [ -b "$dev" ]; then
++        blockdev --getss $dev
++    else
++        $here/src/feature -s
++    fi
++}
++
+ run_check()
+ {
+ 	echo "# $@" >> $seqres.full 2>&1
+diff --git a/tests/generic/091 b/tests/generic/091
+index cee012d..d0f5800 100755
+--- a/tests/generic/091
++++ b/tests/generic/091
+@@ -54,11 +54,7 @@ run_fsx()
+ }
+ 
+ psize=`$here/src/feature -s`
+-bsize=`blockdev --getss $TEST_DEV`
+-kernel=`uname -r  | sed -e 's/\(2\..\).*/\1/'`
+-
+-# 2.4 Linux kernels support bsize aligned direct I/O only
+-[ "$HOSTOS" = "Linux" -a "$kernel" = "2.4" ] && bsize=$psize
++bsize=`_min_dio_alignment $TEST_DEV`
+ 
+ # fsx usage:
+ # 
+diff --git a/tests/generic/240 b/tests/generic/240
+index e692318..d3fd442 100755
+--- a/tests/generic/240
++++ b/tests/generic/240
+@@ -60,7 +60,7 @@ rm -f $seqres.full
+ 
+ rm -f $TEST_DIR/aiodio_sparse
+ 
+-logical_block_size=`blockdev --getss $TEST_DEV`
++logical_block_size=`_min_dio_alignment $TEST_DEV`
+ fs_block_size=`stat -f $TEST_DIR | grep "Block size:" | awk '{print $3}'`
+ 
+ if [ $fs_block_size -le $logical_block_size ]; then
+diff --git a/tests/generic/263 b/tests/generic/263
+index 377b199..094c3d1 100755
+--- a/tests/generic/263
++++ b/tests/generic/263
+@@ -54,7 +54,7 @@ run_fsx()
+ }
+ 
+ psize=`$here/src/feature -s`
+-bsize=`blockdev --getss $TEST_DEV`
++bsize=`_min_dio_alignment $TEST_DEV`
+ 
+ run_fsx -N 10000  -o 8192   -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z
+ run_fsx -N 10000  -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---X1bOJ3K7DJ5YkBrT--
