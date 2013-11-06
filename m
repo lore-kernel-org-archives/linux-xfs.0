@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A95F829E55
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:51 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id E755529E36
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:52 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3DDE9AC00B
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:51 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E76BAC002
+	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:52 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	weHAbb3YInp4zIZu for <xfs@oss.sgi.com>;
-	Tue, 05 Nov 2013 17:07:49 -0800 (PST)
+	E5Vz3zbgiqBmAN9N for <xfs@oss.sgi.com>;
+	Tue, 05 Nov 2013 17:07:50 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003O6-5E
+	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003O5-4W
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008Un-4d
+	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008Ui-3z
 	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/37] xfs: remove newlines from strings passed to __xfs_printk
-Date: Wed,  6 Nov 2013 12:06:57 +1100
-Message-Id: <1383700043-32305-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/37] libxfs: Minor cleanup and bug fix sync
+Date: Wed,  6 Nov 2013 12:06:56 +1100
+Message-Id: <1383700043-32305-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,78 +39,229 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-__xfs_printk adds its own "\n".  Having it in the original string
-leads to unintentional blank lines from these messages.
-
-Ported from kernel commit 08e96e1a.
+These bring all the small single line comment, whitespace and minor
+code differences into sync with the kernel code. Anything left at
+this point is an intentional difference.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_bmap.c         | 2 +-
- libxfs/xfs_dir2_node.c    | 2 +-
- libxfs/xfs_sb.c           | 4 ++--
- libxlog/xfs_log_recover.c | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ include/xfs_fs.h         | 4 ++--
+ include/xfs_quota_defs.h | 4 ++++
+ libxfs/xfs_attr_leaf.c   | 4 +---
+ libxfs/xfs_bmap.c        | 6 +++---
+ libxfs/xfs_bmap_btree.c  | 2 +-
+ libxfs/xfs_dir2_leaf.c   | 1 -
+ libxfs/xfs_dir2_node.c   | 2 +-
+ libxfs/xfs_ialloc.c      | 4 ++--
+ libxfs/xfs_inode_buf.c   | 2 ++
+ libxfs/xfs_inode_fork.c  | 5 +++--
+ libxfs/xfs_trans_resv.c  | 2 +-
+ 11 files changed, 20 insertions(+), 16 deletions(-)
 
+diff --git a/include/xfs_fs.h b/include/xfs_fs.h
+index c43ba98..554fd66 100644
+--- a/include/xfs_fs.h
++++ b/include/xfs_fs.h
+@@ -358,7 +358,7 @@ typedef struct xfs_error_injection {
+  * Speculative preallocation trimming.
+  */
+ #define XFS_EOFBLOCKS_VERSION		1
+-struct xfs_eofblocks {
++struct xfs_fs_eofblocks {
+ 	__u32		eof_version;
+ 	__u32		eof_flags;
+ 	uid_t		eof_uid;
+@@ -516,7 +516,7 @@ typedef struct xfs_swapext
+ /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+ #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+-#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
++#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ 
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/include/xfs_quota_defs.h b/include/xfs_quota_defs.h
+index e6b0d6e..b3b2b10 100644
+--- a/include/xfs_quota_defs.h
++++ b/include/xfs_quota_defs.h
+@@ -154,4 +154,8 @@ typedef __uint16_t	xfs_qwarncnt_t;
+ 		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+ 
++extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
++		       xfs_dqid_t id, uint type, uint flags, char *str);
++extern int xfs_calc_dquots_per_chunk(struct xfs_mount *mp, unsigned int nbblks);
++
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index c09b0f3..fd52397 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -599,7 +599,7 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
+ 	xfs_attr_sf_entry_t *sfe;
+ 	int i;
+ 
+-	ASSERT(args->dp->i_d.di_aformat == XFS_IFINLINE);
++	ASSERT(args->dp->i_afp->if_flags == XFS_IFINLINE);
+ 	sf = (xfs_attr_shortform_t *)args->dp->i_afp->if_u1.if_data;
+ 	sfe = &sf->list[0];
+ 	for (i = 0; i < sf->hdr.count;
+@@ -909,7 +909,6 @@ out:
+ 	return error;
+ }
+ 
+-
+ /*========================================================================
+  * Routines used for growing the Btree.
+  *========================================================================*/
+@@ -1270,7 +1269,6 @@ xfs_attr3_leaf_compact(
+ 	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
+ 						ichdr_dst->freemap[0].base;
+ 
+-
+ 	/* write the header back to initialise the underlying buffer */
+ 	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);
+ 
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 3e80c64..c45b91a 100644
+index 7336abf..3e80c64 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -1447,7 +1447,7 @@ xfs_bmap_search_extents(
- 		xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
- 				"Access to block zero in inode %llu "
- 				"start_block: %llx start_off: %llx "
--				"blkcnt: %llx extent-state: %x lastx: %x\n",
-+				"blkcnt: %llx extent-state: %x lastx: %x",
- 			(unsigned long long)ip->i_ino,
- 			(unsigned long long)gotp->br_startblock,
- 			(unsigned long long)gotp->br_startoff,
+@@ -510,8 +510,8 @@ xfs_bmap_trace_exlist(
+ 
+ /*
+  * Validate that the bmbt_irecs being returned from bmapi are valid
+- * given the callers original parameters.  Specifically check the
+- * ranges of the returned irecs to ensure that they only extent beyond
++ * given the caller's original parameters.  Specifically check the
++ * ranges of the returned irecs to ensure that they only extend beyond
+  * the given parameters if the XFS_BMAPI_ENTIRE flag was set.
+  */
+ STATIC void
+@@ -1515,7 +1515,7 @@ xfs_bmap_first_unused(
+ }
+ 
+ /*
+- * Returns the file-relative block number of the last block + 1 before
++ * Returns the file-relative block number of the last block - 1 before
+  * last_block (input value) in the file.
+  * This is not based on i_size, it is based on the extent records.
+  * Returns 0 for local files, as they do not have extent records.
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 2f6b48a..6211dc2 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -737,7 +737,7 @@ xfs_bmbt_verify(
+ 	 * precise.
+ 	 */
+ 	level = be16_to_cpu(block->bb_level);
+-	if (level > MAX(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
++	if (level > max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
+ 		return false;
+ 	if (be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
+ 		return false;
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index c035c4d..683536e 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -1072,7 +1072,6 @@ xfs_dir3_leaf_compact_x1(
+ 	*highstalep = highstale;
+ }
+ 
+-
+ /*
+  * Log the bests entries indicated from a leaf1 block.
+  */
 diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 10d1d81..ced8c58 100644
+index 6a245e5..10d1d81 100644
 --- a/libxfs/xfs_dir2_node.c
 +++ b/libxfs/xfs_dir2_node.c
-@@ -1083,7 +1083,7 @@ xfs_dir2_leafn_rebalance(
- 		state->inleaf = 1;
- 		blk2->index = 0;
- 		xfs_alert(args->dp->i_mount,
--	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d\n",
-+	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d",
- 			__func__, blk1->index);
- 	}
- }
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 8b90b88..11353bb 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -215,13 +215,13 @@ xfs_mount_validate_sb(
- 	if (xfs_sb_version_has_pquotino(sbp)) {
- 		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
- 			xfs_notice(mp,
--			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
-+			   "Version 5 of Super block has XFS_OQUOTA bits.");
- 			return XFS_ERROR(EFSCORRUPTED);
- 		}
- 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
- 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
- 			xfs_notice(mp,
--"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
-+"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.");
- 			return XFS_ERROR(EFSCORRUPTED);
- 	}
+@@ -1796,7 +1796,7 @@ xfs_dir2_node_addname_int(
+ 		/*
+ 		 * Look at the current free entry.  Is it good enough?
+ 		 *
+-		 * The bests initialisation should be where the buffer is read in
++		 * The bests initialisation should be where the bufer is read in
+ 		 * the above branch. But gcc is too stupid to realise that bests
+ 		 * and the freehdr are actually initialised if they are placed
+ 		 * there, so we have to do it here to avoid warnings. Blech.
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 4683287..afe1a82 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -484,7 +484,7 @@ xfs_ialloc_next_ag(
  
-diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-index f3cda77..3f22921 100644
---- a/libxlog/xfs_log_recover.c
-+++ b/libxlog/xfs_log_recover.c
-@@ -1330,7 +1330,7 @@ xlog_unpack_data_crc(
- 	if (crc != rhead->h_crc) {
- 		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
- 			xfs_alert(log->l_mp,
--		"log record CRC mismatch: found 0x%x, expected 0x%x.\n",
-+		"log record CRC mismatch: found 0x%x, expected 0x%x.",
- 					le32_to_cpu(rhead->h_crc),
- 					le32_to_cpu(crc));
- 			xfs_hex_dump(dp, 32);
+ /*
+  * Select an allocation group to look for a free inode in, based on the parent
+- * inode and then mode.  Return the allocation group buffer.
++ * inode and the mode.  Return the allocation group buffer.
+  */
+ STATIC xfs_agnumber_t
+ xfs_ialloc_ag_select(
+@@ -706,7 +706,7 @@ xfs_dialloc_ag(
+ 		error = xfs_inobt_get_rec(cur, &rec, &j);
+ 		if (error)
+ 			goto error0;
+-		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++		XFS_WANT_CORRUPTED_GOTO(j == 1, error0);
+ 
+ 		if (rec.ir_freecount > 0) {
+ 			/*
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 67d5eb4..b796556 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -101,6 +101,7 @@ xfs_inode_buf_verify(
+ 	xfs_inobp_check(mp, bp);
+ }
+ 
++
+ static void
+ xfs_inode_buf_read_verify(
+ 	struct xfs_buf	*bp)
+@@ -299,6 +300,7 @@ xfs_dinode_verify(
+ 		return false;
+ 	return true;
+ }
++
+ void
+ xfs_dinode_calc_crc(
+ 	struct xfs_mount	*mp,
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index 1c006f9..190690c 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -138,7 +138,8 @@ xfs_iformat_fork(
+ 			}
+ 
+ 			di_size = be64_to_cpu(dip->di_size);
+-			if (unlikely(di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
++			if (unlikely(di_size < 0 ||
++				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+ 				xfs_warn(ip->i_mount,
+ 			"corrupt inode %Lu (bad size %Ld for local inode).",
+ 					(unsigned long long) ip->i_ino,
+@@ -444,7 +445,7 @@ xfs_iread_extents(
+  *
+  * The caller must not request to add more records than would fit in
+  * the on-disk inode root.  If the if_broot is currently NULL, then
+- * if we adding records one will be allocated.  The caller must also
++ * if we are adding records, one will be allocated.  The caller must also
+  * not request that the number of records go below zero, although
+  * it can go to zero.
+  *
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index 3e14b1c..1e59fad 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -49,7 +49,7 @@ xfs_calc_buf_res(
+ 
+ /*
+  * Logging inodes is really tricksy. They are logged in memory format,
+- * which means that what we write into the log doesn't directory translate into
++ * which means that what we write into the log doesn't directly translate into
+  * the amount of space they use on disk.
+  *
+  * Case in point - btree format forks in memory format use more space than the
 -- 
 1.8.4.rc3
 
