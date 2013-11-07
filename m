@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 132427FEF
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 14:49:05 -0600 (CST)
-Date: Thu, 7 Nov 2013 14:49:01 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xfstest failures
-Message-ID: <20131107204901.GL10553@sgi.com>
-References: <20131106105451.GA31283@infradead.org>
-	<20131106161825.GU1935@sgi.com> <527A887F.2030807@sandeen.net>
-	<20131107081710.GC25157@infradead.org>
-	<527B948C.9060905@sandeen.net>
-	<20131107132739.GA16608@infradead.org>
-	<527B99C3.6090903@sandeen.net>
-	<20131107134848.GA1163@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3AA107FEF
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 14:50:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C6238F8081
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 12:50:26 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 9IHvRm9RdvmZ7YRf (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Nov 2013 12:50:24 -0800 (PST)
+Date: Thu, 7 Nov 2013 12:50:23 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 17/37] db: separate out straight buffer IO from map based
+	IO.
+Message-ID: <20131107205023.GA23118@infradead.org>
+References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
+	<1383700043-32305-18-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131107134848.GA1163@infradead.org>
+In-Reply-To: <1383700043-32305-18-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,20 +31,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 07, 2013 at 05:48:48AM -0800, Christoph Hellwig wrote:
-> On Thu, Nov 07, 2013 at 07:46:43AM -0600, Eric Sandeen wrote:
-> > Would an expected failure be only for tests which are known to be
-> > not-fixed anywhere?
-> 
-> 
-> Exactly.  If you want to be fancy we could allow a drop-in file to
-> override it if you want something for RHEL testing or similar
+Looks good with the extensive commit message,
 
-Good idea to have an override, since everybody has multiple flavors to test
-which all have different sets of tests that fail.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
