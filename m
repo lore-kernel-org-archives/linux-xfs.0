@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3130729E41
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 19:07:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 204BB30405F
-	for <xfs@oss.sgi.com>; Tue,  5 Nov 2013 17:07:48 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	tmPZz7VYvVC7h7HJ for <xfs@oss.sgi.com>;
-	Tue, 05 Nov 2013 17:07:46 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vdrak-0003On-Ha
-	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vdrak-0008WK-H8
-	for xfs@oss.sgi.com; Wed, 06 Nov 2013 12:07:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 30/37] libxfs: work around do_div() not handling 32 bit
-	numerators
-Date: Wed,  6 Nov 2013 12:07:16 +1100
-Message-Id: <1383700043-32305-31-git-send-email-david@fromorbit.com>
-In-Reply-To: <1383700043-32305-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id E199B7FEF
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 14:55:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3490304062
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 12:55:59 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id EiVoGMaWclsKsoKT (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Nov 2013 12:55:58 -0800 (PST)
+Date: Thu, 7 Nov 2013 12:55:58 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 31/37] db: Unwind the IO stack on exit
+Message-ID: <20131107205558.GF23118@infradead.org>
 References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
+	<1383700043-32305-32-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1383700043-32305-32-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +26,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Nov 06, 2013 at 12:07:17PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> xfs_db can build up a large IO stack by the time it has run to
+> completion. If we don't unwind this IO stack before we shut down the
+> libxfs caches, metadump and other db programs will exit with
+> unreleased buffers and emit warnings like:
+> 
+> cache_purge: shake on cache 0x69e4f0 left 7 nodes!?
+> 
+> Hence we need to unwind the iostack as we shut down.
 
-The libxfs dquot buffer code uses do_div() with a 32 bit numerator.
-This gives incorrect results as do_div() passes the numerator by
-reference as a pointer to a 64 bit value. Hence it does the division
-using 32 bits of garbage gives the wrong result.
+Seems like this should be folded into patch 20, as that adds the
+first pop, but it seems to fail goind all the way.
 
-As per Christoph's suggestion, we can kill the usage of do_div()
-here completely and just do the division directly, both in userspace
-and kernel space.
+Otherwise looks good,
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- libxfs/xfs_dquot_buf.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
-index 620d9d3..6bbb0ff 100644
---- a/libxfs/xfs_dquot_buf.c
-+++ b/libxfs/xfs_dquot_buf.c
-@@ -23,13 +23,8 @@ xfs_calc_dquots_per_chunk(
- 	struct xfs_mount	*mp,
- 	unsigned int		nbblks)	/* basic block units */
- {
--	unsigned int	ndquots;
--
- 	ASSERT(nbblks > 0);
--	ndquots = BBTOB(nbblks);
--	do_div(ndquots, sizeof(xfs_dqblk_t));
--
--	return ndquots;
-+	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
- }
- 
- /*
--- 
-1.8.4.rc3
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
