@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6AFA029E04
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 06:02:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 55034304053
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 04:01:59 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 8kq6WukqO4ejq4Bl (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Nov 2013 04:01:58 -0800 (PST)
-Date: Thu, 7 Nov 2013 04:01:57 -0800
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 38C657F6D
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 06:23:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D20C2AC005
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 04:23:30 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id dTszZ2Y2K94JEE4J (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Nov 2013 04:23:29 -0800 (PST)
+Date: Thu, 7 Nov 2013 04:23:28 -0800
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: xfstest failures
-Message-ID: <20131107120157.GA4683@infradead.org>
+Message-ID: <20131107122328.GA23032@infradead.org>
 References: <20131106105451.GA31283@infradead.org>
 	<20131106194417.GF6188@dastard>
 	<20131107082234.GA30243@infradead.org>
@@ -33,17 +33,23 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 On Thu, Nov 07, 2013 at 10:57:22PM +1100, Dave Chinner wrote:
-> Actually, it doesn't. v4 configs give the same notrun output, which
-> is wrong but doesn't result in a failure (hence I didn't notice it).
-> Now that you've reported it I've just found a bug in the
-> _requires_attr_v1 function that makes it always fail and notrun the
-> test....
+> However, Christoph, you should not have found this stuff given it's
+> been almost 5 months since I sent patches to handle these cases.
+> This is a perfect example of what is wrong with the way XFS is being
+> maintained right now.
 
-It fails for me running latests xfstests, latest xfsprogs an latest xfs
-tree in a x86 VM running the default mkfs options.
+> That's the fundamental problem here.  When I change stuff, I can't
+> get the maintainers to do anything with the code I post unless I put
+> on my cranky pants and start shouting and making people cry. I hate
+> having to do this, but it seems like it's the only thing that the
+> maintainers respond to.
+>
+I've not seen them reposted either.  While review and commit latencie
+can vary and be very high the most effective counter measure is frequent
+reposts.
 
 _______________________________________________
 xfs mailing list
