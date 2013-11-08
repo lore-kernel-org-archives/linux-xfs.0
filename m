@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8DC767FC6
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 23:23:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6A422304059
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 21:23:36 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id hBBYGIoCwezSmZsG (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Nov 2013 21:23:32 -0800 (PST)
-Message-ID: <527C7594.1020504@oracle.com>
-Date: Fri, 08 Nov 2013 13:24:36 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EAF687FBF
+	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 05:04:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CAC908F8074
+	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 03:04:16 -0800 (PST)
+Message-ID: <527CC50D.4060905@redhat.com>
+Date: Fri, 08 Nov 2013 06:03:41 -0500
+From: Ric Wheeler <rwheeler@redhat.com>
 MIME-Version: 1.0
-Subject: Re: xfs: update maintainers file
+Subject: XFS leadership and a new co-maintainer candidate
 References: <20131107220208.GY1935@sgi.com> <527C0F64.3010906@sgi.com>
 	<527C4B27.6020205@redhat.com>
 In-Reply-To: <527C4B27.6020205@redhat.com>
@@ -25,65 +21,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Ben Myers <bpm@sgi.com>, elder@kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Ric Wheeler <rwheeler@redhat.com>, Mark Tinguely <tinguely@sgi.com>, Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, elder@kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi folks,
+In the XFS community, we have 2 clear leaders in terms of contributions of 
+significant feaures and depth of knowledge - Christoph and Dave.
 
-I think I'm not the right person to reply this discussion because am still on the road
-of how to cooperate with others in open source community, as well as I have not made
-much contribution to XFS until now.
+If you look at the number of patches submitted by developers since 3.0 who have 
+more than 10 patches, we get the following:
 
-However, I'd to show some humble opinions from a user and a trivial developer's point
-of view.
+     319 Author: Dave Chinner <dchinner@redhat.com>
+     163 Author: Christoph Hellwig <hch@infradead.org>
+      51 Author: Christoph Hellwig <hch@lst.de>
+      35 Author: Linus Torvalds <torvalds@linux-foundation.org>
+      34 Author: Chandra Seetharaman <sekharan@us.ibm.com>
+      29 Author: Al Viro <viro@zeniv.linux.org.uk>
+      28 Author: Brian Foster <bfoster@redhat.com>
+      25 Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+      24 Author: Jeff Liu <jeff.liu@oracle.com>
+      21 Author: Jie Liu <jeff.liu@oracle.com>
+      20 Author: Mark Tinguely <tinguely@sgi.com>
+      16 Author: Dave Chinner <david@fromorbit.com>
+      12 Author: Eric Sandeen <sandeen@redhat.com>
+      12 Author: Carlos Maiolino <cmaiolino@redhat.com>
 
-First all all, that's fine if we have a co-maintainer who can take the role when Ben
-is on leave or busy working on other things, and also, this role may be able to supply
-more help to some new comers for patch review, coaching, etc... I felt Mark has already
-paid a lot of effort and performed very well in this role.  At least, I got several
-offline emails form Mark with the patch review status and comments, which are all helpful
-to me. 
+If we as a community had more capacity for patch review, Dave's numbers would 
+have jumped up even higher :)
 
-Secondly, I want to show respect and admiration to our core developers who are devote
-themselves to promote XFS in the past years.  Without those talent guys, I think XFS can
-not move ahead rapidly with so much significant performance improvements and new features.
-However, how can we credit them for their prominent achievements(i.e, show honor)?
-As mentioned above, I have no deep knowledge about the community rule, but I found out
-there are several projects are maintained with more than 2 maintainers, e.g, XEN hypervisor
-interface, VEM subsystem, a few projects even have 4 maintainers, e.g, TMP driver.
-So I was wonder why we can not have more maintainers given that XFS code base become more
-and more large(more than one hundred thousand lines via simple `wc -l` though we have much
-code comments).
+It is certainly very welcome to bring new developers into our community, but if 
+we are going to add a co-maintainer for XFS, we really need to have one of our 
+two leading developers in that role.
 
-I really felt frustrated from Dave's:"Quite frankly, XFS upstream is completely dysfunctional
-right now and, as such, it's no longer a fun thing to work on.", as Dave had made lots of
-contributions and going crazy hacking.
+Best regards,
 
-I wrote this just because I love this project, I still remember/appreciate Christoph gave me
-a quick response to my first email in XFS two years ago, so that I can start to learn kernel
-hacking from then on.
+Ric
 
 
-Thanks,
--Jeff
 
-On 11/08/2013 10:23 AM, Ric Wheeler wrote:
-
+On 11/07/2013 09:23 PM, Ric Wheeler wrote:
 > Hi Ben,
-> 
-> How exactly did we decide to add a new co-maintainer? Shouldn't we have
-> some discussion on the list and see some substantial history of
-> contributions?
-> 
+>
+> How exactly did we decide to add a new co-maintainer? Shouldn't we have some 
+> discussion on the list and see some substantial history of contributions?
+>
 > Best regards,
-> 
+>
 > Ric
-> 
-> 
+>
+>
 > On 11/07/2013 05:08 PM, Mark Tinguely wrote:
 >> Updated maintainer info.
 >>
@@ -111,12 +100,11 @@ On 11/08/2013 10:23 AM, Ric Wheeler wrote:
 >> xfs mailing list
 >> xfs@oss.sgi.com
 >> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+>
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-
 
 _______________________________________________
 xfs mailing list
