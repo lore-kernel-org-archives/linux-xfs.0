@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A0FD27FF1
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 17:18:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9242A304059
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 15:18:16 -0800 (PST)
-Received: from mail-ie0-f173.google.com (mail-ie0-f173.google.com
-	[209.85.223.173]) by cuda.sgi.com with ESMTP id
-	yYiHHBzbNSR5O9Bp (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Nov 2013 15:18:12 -0800 (PST)
-Received: by mail-ie0-f173.google.com with SMTP id u16so2067726iet.18
-	for <xfs@oss.sgi.com>; Thu, 07 Nov 2013 15:18:11 -0800 (PST)
-Message-ID: <527C1FB5.80305@ieee.org>
-Date: Thu, 07 Nov 2013 17:18:13 -0600
-From: Alex Elder <elder@ieee.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 20B767F85
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 20:23:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E9E9F8F8070
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 18:23:43 -0800 (PST)
+Message-ID: <527C4B27.6020205@redhat.com>
+Date: Thu, 07 Nov 2013 21:23:35 -0500
+From: Ric Wheeler <rwheeler@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] update maintainers file
+Subject: Re: xfs: update maintainers file
 References: <20131107220208.GY1935@sgi.com> <527C0F64.3010906@sgi.com>
-	<20131107223250.GM10553@sgi.com>
-In-Reply-To: <20131107223250.GM10553@sgi.com>
+In-Reply-To: <527C0F64.3010906@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +20,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>
-Cc: elder@kernel.org, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>, Ben Myers <bpm@sgi.com>
+Cc: elder@kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
 
-On 11/07/2013 04:32 PM, Ben Myers wrote:
-> Awhile back Alex reminded me to remove his entry from the MAINTAINERS
-> file, as he was my backup.  Now Mark has this role in case I go off my
-> meds or something, and Alex will no longer get spammed with XFS patches.
-> 
+Hi Ben,
+
+How exactly did we decide to add a new co-maintainer? Shouldn't we have some 
+discussion on the list and see some substantial history of contributions?
+
+Best regards,
+
+Ric
+
+
+On 11/07/2013 05:08 PM, Mark Tinguely wrote:
+> Updated maintainer info.
+>
 > Signed-off-by: Ben Myers <bpm@sgi.com>
-
-Reviewed-by: Alex Elder <elder@linaro.org>
-
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 > ---
-> [v2: meaningful commit message, as suggested by Eric]
-> 
 >  MAINTAINERS |    2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
+>
 > Index: b/MAINTAINERS
 > ===================================================================
-> --- a/MAINTAINERS	2013-11-07 15:42:04.554561805 -0600
-> +++ b/MAINTAINERS	2013-11-07 15:42:59.034889770 -0600
-> @@ -9388,7 +9388,7 @@ F:	drivers/xen/*swiotlb*
+> --- a/MAINTAINERS    2013-11-07 15:42:04.554561805 -0600
+> +++ b/MAINTAINERS    2013-11-07 15:42:59.034889770 -0600
+> @@ -9388,7 +9388,7 @@ F:    drivers/xen/*swiotlb*
 >  XFS FILESYSTEM
->  P:	Silicon Graphics Inc
->  M:	Ben Myers <bpm@sgi.com>
-> -M:	Alex Elder <elder@kernel.org>
-> +M:	Mark Tinguely <tinguely@sgi.com>
->  M:	xfs@oss.sgi.com
->  L:	xfs@oss.sgi.com
->  W:	http://oss.sgi.com/projects/xfs
-> 
+>  P:    Silicon Graphics Inc
+>  M:    Ben Myers <bpm@sgi.com>
+> -M:    Alex Elder <elder@kernel.org>
+> +M:    Mark Tinguely <tinguely@sgi.com>
+>  M:    xfs@oss.sgi.com
+>  L:    xfs@oss.sgi.com
+>  W:    http://oss.sgi.com/projects/xfs
+>
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
