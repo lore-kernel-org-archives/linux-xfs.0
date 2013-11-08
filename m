@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 57D627FB5
-	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 13:45:54 -0600 (CST)
-Date: Fri, 8 Nov 2013 13:45:50 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D4CB47FA3
+	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 16:17:47 -0600 (CST)
+Date: Fri, 8 Nov 2013 16:17:44 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: XFS leadership and a new co-maintainer candidate
-Message-ID: <20131108194550.GZ1935@sgi.com>
+Subject: Re: [PATCH] update xfs maintainers
+Message-ID: <20131108221744.GQ10553@sgi.com>
 References: <20131107220208.GY1935@sgi.com> <527C0F64.3010906@sgi.com>
 	<527C4B27.6020205@redhat.com> <527CC50D.4060905@redhat.com>
-	<20131108180337.GO10553@sgi.com> <527D28DC.6060305@redhat.com>
+	<20131108180337.GO10553@sgi.com>
+	<20131108193424.GA11052@infradead.org>
+	<20131108204605.GA1935@sgi.com> <527D4E8D.3000109@redhat.com>
+	<20131108220309.GB1935@sgi.com> <527D60B1.7000901@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <527D28DC.6060305@redhat.com>
+In-Reply-To: <527D60B1.7000901@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,70 +32,111 @@ Cc: elder@kernel.org, Mark Tinguely <tinguely@sgi.com>, "linux-kernel@vger.kerne
 
 Hey Ric,
 
-On Fri, Nov 08, 2013 at 01:09:32PM -0500, Ric Wheeler wrote:
-> On 11/08/2013 01:03 PM, Ben Myers wrote:
+On Fri, Nov 08, 2013 at 05:07:45PM -0500, Ric Wheeler wrote:
+> On 11/08/2013 05:03 PM, Ben Myers wrote:
 > >Hey Ric,
 > >
-> >On Fri, Nov 08, 2013 at 06:03:41AM -0500, Ric Wheeler wrote:
-> >>In the XFS community, we have 2 clear leaders in terms of
-> >>contributions of significant feaures and depth of knowledge -
-> >>Christoph and Dave.
+> >On Fri, Nov 08, 2013 at 03:50:21PM -0500, Ric Wheeler wrote:
+> >>On 11/08/2013 03:46 PM, Ben Myers wrote:
+> >>>Hey Christoph,
+> >>>
+> >>>On Fri, Nov 08, 2013 at 11:34:24AM -0800, Christoph Hellwig wrote:
+> >>>>On Fri, Nov 08, 2013 at 12:03:37PM -0600, Ben Myers wrote:
+> >>>>>Mark is replacing Alex as my backup because Alex is really busy at
+> >>>>>Linaro and asked to be taken off awhile ago.  The holiday season is
+> >>>>>coming up and I fully intend to go off my meds, turn in to Fonzy the
+> >>>>>bear, and eat my hat.  I need someone to watch the shop while I'm off
+> >>>>>exploring on Mars.  I trust Mark to do that because he is totally
+> >>>>>awesome.
+> >>>>Doing this as an unilateral decisions is not something that will win you
+> >>>>a fan base.
+> >>>It's posted for review.
+> >>>
+> >>>>While we never had anything reassembling a democracy in Linux Kernel
+> >>>>development making decisions without even contacting the major
+> >>>>contributor is wrong, twice so if the maintainer is a relatively minor
+> >>>>contributor to start with.
+> >>>>
+> >>>>Just because it recent came up elsewhere I'd like to recite the
+> >>>>definition from Trond here again:
+> >>>>
+> >>>>	http://lists.linux-foundation.org/pipermail/ksummit-2012-discuss/2012-June/000066.html
+> >>>>
+> >>>>By many of the creative roles enlisted there it's clear that Dave should
+> >>>>be the maintainer.  He's been the main contributor and chief architect
+> >>>>for XFS for many year, while the maintainers came and went at the mercy
+> >>>>of SGI.  This is not meant to bad mouth either of you as I think you're
+> >>>>doing a reasonably good job compared to other maintainers, but at the
+> >>>>same time the direction is set by other people that have a much longer
+> >>>>involvement with the project, and having them officially in control
+> >>>>would help us forward a lot.  It would also avoid having to spend
+> >>>>considerable resources to train every new generation of SGI maintainer.
+> >>>>
+> >>>>Coming to and end I would like to maintain Dave Chinner as the primary
+> >>>>XFS maintainer for all the work he has done as biggest contributor and
+> >>>>architect of XFS since longer than I can remember, and I would love to
+> >>>>retain Ben Myers as a co-maintainer for all the good work he has done
+> >>>>maintaining and reviewing patches since November 2011.
+> >>>I think we're doing a decent job too.  So thanks for that much at least.  ;)
+> >>>>I would also like to use this post as a public venue to condemn the
+> >>>>unilateral smokey backroom decisions about XFS maintainership that SGI is
+> >>>>trying to enforce on the community.
+> >>>That really didn't happen Christoph.  It's not in my tree or in a pull request.
+> >>>
+> >>>Linus, let me know what you want to do.  I do think we're doing a fair job over
+> >>>here, and (geez) I'm just trying to add Mark as my backup since Alex is too
+> >>>busy.  I know the RH people want more control, and that's understandable, but
+> >>>they really don't need to replace me to get their code in.  Ouch.
+> >>>
+> >>>Thanks,
+> >>>	Ben
+> >>Christoph is not a Red Hat person.
 > >>
-> >>If you look at the number of patches submitted by developers since
-> >>3.0 who have more than 10 patches, we get the following:
+> >>Jeff is from Oracle.
 > >>
-> >>     319 Author: Dave Chinner <dchinner@redhat.com>
-> >>     163 Author: Christoph Hellwig <hch@infradead.org>
-> >>      51 Author: Christoph Hellwig <hch@lst.de>
-> >>      35 Author: Linus Torvalds <torvalds@linux-foundation.org>
-> >>      34 Author: Chandra Seetharaman <sekharan@us.ibm.com>
-> >>      29 Author: Al Viro <viro@zeniv.linux.org.uk>
-> >>      28 Author: Brian Foster <bfoster@redhat.com>
-> >>      25 Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> >>      24 Author: Jeff Liu <jeff.liu@oracle.com>
-> >>      21 Author: Jie Liu <jeff.liu@oracle.com>
-> >>      20 Author: Mark Tinguely <tinguely@sgi.com>
-> >>      16 Author: Dave Chinner <david@fromorbit.com>
-> >>      12 Author: Eric Sandeen <sandeen@redhat.com>
-> >>      12 Author: Carlos Maiolino <cmaiolino@redhat.com>
-> >>
-> >>If we as a community had more capacity for patch review, Dave's
-> >>numbers would have jumped up even higher :)
-> >>
-> >>It is certainly very welcome to bring new developers into our
-> >>community, but if we are going to add a co-maintainer for XFS, we
-> >>really need to have one of our two leading developers in that role.
-> >Mark is replacing Alex as my backup because Alex is really busy at
-> >Linaro and asked to be taken off awhile ago.  The holiday season is
-> >coming up and I fully intend to go off my meds, turn in to Fonzy the
-> >bear, and eat my hat.  I need someone to watch the shop while I'm off
-> >exploring on Mars.  I trust Mark to do that because he is totally
-> >awesome.
-> >
-> >-Ben
+> >>This is not a Red Hat vs SGI thing,
+> >Sorry if my read on that was wrong.
 > 
-> I don't mean any disrepect to you or to Mark,
-       
-Don't worry about it, I have plenty to spare.  ;P
-
-> but maintainership is
-> something that you earn over time by proving yourself in the
-> community as a developer and a leader of the technology on a
-> personal level.
+> I do appreciate the work and effort you and the SGI team put in but
+> think that this will be a good way to keep the community happier and
+> even more productive going forward.
 >
-> It is not something that gets managed by the community of developers
-> and has the key role of keeping the most frequent developers engaged
-> and happy.  That has not been working for us as a community lately.
+> >>Dave simply has earned the right
+> >>to take on the formal leadership role of maintainer.
+> >Then we're gonna need some Reviewed-bys.  ;)
 > 
-> Dave Chinner is the obvious person to take on the maintainer role as
-> someone who has an order of magnitude more code contributed than
-> either of you (even combined).
+> Those should come from the developers, thanks!
+
+I actually do need your Reviewed-by.   We'll try and get this one in 3.13.  ;)
+
+Thanks,
+	Ben
+
+> >From: Ben Myers <bpm@sgi.com>
+> >
+> >xfs: update maintainers
+> >
+> >Add Dave as maintainer of XFS.
+> >
+> >Signed-off-by: Ben Myers <bpm@sgi.com>
+> >---
+> >  MAINTAINERS |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> >Index: b/MAINTAINERS
+> >===================================================================
+> >--- a/MAINTAINERS	2013-11-08 15:20:18.935186245 -0600
+> >+++ b/MAINTAINERS	2013-11-08 15:22:50.685245977 -0600
+> >@@ -9387,8 +9387,8 @@ F:	drivers/xen/*swiotlb*
+> >  XFS FILESYSTEM
+> >  P:	Silicon Graphics Inc
+> >+M:	Dave Chinner <dchinner@fromorbit.com>
+> >  M:	Ben Myers <bpm@sgi.com>
+> >-M:	Alex Elder <elder@kernel.org>
+> >  M:	xfs@oss.sgi.com
+> >  L:	xfs@oss.sgi.com
+> >  W:	http://oss.sgi.com/projects/xfs
 > 
-> Christoph, if he has time, would also be an excellent candidate.
-
-Eric is also a good choice.  I'd be happy to add all three.
-
--Ben
 
 _______________________________________________
 xfs mailing list
