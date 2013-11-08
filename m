@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A48D7F94
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 20:30:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BEF00AC005
-	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 18:30:54 -0800 (PST)
-Received: from mail-ob0-f182.google.com (mail-ob0-f182.google.com
-	[209.85.214.182]) by cuda.sgi.com with ESMTP id
-	AqN4OCyIJH2m6QXK (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Nov 2013 18:30:53 -0800 (PST)
-Received: by mail-ob0-f182.google.com with SMTP id wp18so992870obc.27
-	for <xfs@oss.sgi.com>; Thu, 07 Nov 2013 18:30:52 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8DC767FC6
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 23:23:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6A422304059
+	for <xfs@oss.sgi.com>; Thu,  7 Nov 2013 21:23:36 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id hBBYGIoCwezSmZsG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Nov 2013 21:23:32 -0800 (PST)
+Message-ID: <527C7594.1020504@oracle.com>
+Date: Fri, 08 Nov 2013 13:24:36 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <527C4B27.6020205@redhat.com>
+Subject: Re: xfs: update maintainers file
 References: <20131107220208.GY1935@sgi.com> <527C0F64.3010906@sgi.com>
 	<527C4B27.6020205@redhat.com>
-Date: Fri, 8 Nov 2013 10:30:52 +0800
-Message-ID: <CAEH94Lj0frd4CU+X_+GLiEQe6oLU4bgmwMV=du9Juqnuj-kg8w@mail.gmail.com>
-Subject: Re: xfs: update maintainers file
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+In-Reply-To: <527C4B27.6020205@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,27 +30,61 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ric Wheeler <rwheeler@redhat.com>
-Cc: elder@kernel.org, Mark Tinguely <tinguely@sgi.com>, xfstests <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ben Myers <bpm@sgi.com>, elder@kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-+1,
+Hi folks,
 
-We should take the contribution of some core developers and their
-willingness into account, not only the benefit of some company.
+I think I'm not the right person to reply this discussion because am still on the road
+of how to cooperate with others in open source community, as well as I have not made
+much contribution to XFS until now.
 
-On Fri, Nov 8, 2013 at 10:23 AM, Ric Wheeler <rwheeler@redhat.com> wrote:
+However, I'd to show some humble opinions from a user and a trivial developer's point
+of view.
+
+First all all, that's fine if we have a co-maintainer who can take the role when Ben
+is on leave or busy working on other things, and also, this role may be able to supply
+more help to some new comers for patch review, coaching, etc... I felt Mark has already
+paid a lot of effort and performed very well in this role.  At least, I got several
+offline emails form Mark with the patch review status and comments, which are all helpful
+to me. 
+
+Secondly, I want to show respect and admiration to our core developers who are devote
+themselves to promote XFS in the past years.  Without those talent guys, I think XFS can
+not move ahead rapidly with so much significant performance improvements and new features.
+However, how can we credit them for their prominent achievements(i.e, show honor)?
+As mentioned above, I have no deep knowledge about the community rule, but I found out
+there are several projects are maintained with more than 2 maintainers, e.g, XEN hypervisor
+interface, VEM subsystem, a few projects even have 4 maintainers, e.g, TMP driver.
+So I was wonder why we can not have more maintainers given that XFS code base become more
+and more large(more than one hundred thousand lines via simple `wc -l` though we have much
+code comments).
+
+I really felt frustrated from Dave's:"Quite frankly, XFS upstream is completely dysfunctional
+right now and, as such, it's no longer a fun thing to work on.", as Dave had made lots of
+contributions and going crazy hacking.
+
+I wrote this just because I love this project, I still remember/appreciate Christoph gave me
+a quick response to my first email in XFS two years ago, so that I can start to learn kernel
+hacking from then on.
+
+
+Thanks,
+-Jeff
+
+On 11/08/2013 10:23 AM, Ric Wheeler wrote:
+
 > Hi Ben,
->
-> How exactly did we decide to add a new co-maintainer? Shouldn't we have some
-> discussion on the list and see some substantial history of contributions?
->
+> 
+> How exactly did we decide to add a new co-maintainer? Shouldn't we have
+> some discussion on the list and see some substantial history of
+> contributions?
+> 
 > Best regards,
->
+> 
 > Ric
->
->
->
+> 
+> 
 > On 11/07/2013 05:08 PM, Mark Tinguely wrote:
->>
 >> Updated maintainer info.
 >>
 >> Signed-off-by: Ben Myers <bpm@sgi.com>
@@ -80,19 +111,12 @@ On Fri, Nov 8, 2013 at 10:23 AM, Ric Wheeler <rwheeler@redhat.com> wrote:
 >> xfs mailing list
 >> xfs@oss.sgi.com
 >> http://oss.sgi.com/mailman/listinfo/xfs
->
->
+> 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
 
-
-
--- 
-Regards,
-
-Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
