@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5EAD77FAE
-	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 06:47:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3DE1C8F804C
-	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 04:47:45 -0800 (PST)
-Received: from niklasgoerke.de (niklasgoerke.de [46.38.232.61]) by
-	cuda.sgi.com with ESMTP id ICHol9v7gUg1wYos (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 08 Nov 2013 04:47:43 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id AA6C07FA3
+	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 12:03:41 -0600 (CST)
+Date: Fri, 8 Nov 2013 12:03:37 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: XFS leadership and a new co-maintainer candidate
+Message-ID: <20131108180337.GO10553@sgi.com>
+References: <20131107220208.GY1935@sgi.com> <527C0F64.3010906@sgi.com>
+	<527C4B27.6020205@redhat.com> <527CC50D.4060905@redhat.com>
 MIME-Version: 1.0
-Date: Fri, 08 Nov 2013 13:47:40 +0100
-From: Niklas Goerke <niklas@niklasgoerke.de>
-Subject: Re: xfs Warnings in syslog
-In-Reply-To: <CABYiri8CThqQ-E0MvB4=XbOt7jrQG_nw_2Sc7vt0VD_zbr_Ycw@mail.gmail.com>
-References: <049e1508cbb35ecf7b38ea2dadddc6ec@niklasgoerke.de>
-	<52666FA8.4050101@oracle.com>
-	<CABYiri8CThqQ-E0MvB4=XbOt7jrQG_nw_2Sc7vt0VD_zbr_Ycw@mail.gmail.com>
-Message-ID: <5c1ac60220546b99bf67bfed8f200fff@niklasgoerke.de>
+Content-Disposition: inline
+In-Reply-To: <527CC50D.4060905@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,91 +19,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrey Korolyov <andrey@xdel.ru>
-Cc: Jeff Liu <jeff.liu@oracle.com>, ceph-devel <ceph-devel@vger.kernel.org>, xfs@oss.sgi.com
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: elder@kernel.org, Mark Tinguely <tinguely@sgi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-SSdtIHNvcnJ5IGZvciByZXBvcnRpbmcgYmFjayBvbmx5IG5vdywgYnV0IEkgZGlkIG5vdCBnZXQg
-dG8gdHJ5IGl0IG91dCAKZWFybGllci4KSSB1cGdyYWRlZCBvbmUgb2YgbXkgbm9kZXMgdG8ga2Vy
-bmVsIDMuMTAgYW5kIHRoZSBtZXNzYWdlcyBkaWQgbm90IGNvbWUgCnVwIHlldC4gSXQgc2VlbXMg
-dGhlIGtlcm5lbCB1cGdyYWRlIGRpZCB0aGUgam9iLgoKVGhhbmsgeW91IHZlcnkgbXVjaCBmb3Ig
-eW91ciBoZWxwIQoKT24gVHVlLCAyMiBPY3QgMjAxMyAxMzozNjo1NiArMDEwMCwgQW5kcmV5IEtv
-cm9seW92IHdyb3RlOgo+IEp1c3QgbXkgdHdvIGNlbnRzOgo+Cj4gWEZTIGlzIGEgcXVpdGUgdW5z
-dGFibGUgd2l0aCBDZXBoIGVzcGVjaWFsbHkgYWxvbmcgd2l0aCBoZWF2eSBDUFUKPiB1c2FnZSB1
-cCB0byAzLjcocHJpbWFyaWx5IHNvZnQgbG9ja3VwcykuIEkgdXNlZCAzLjcgZm9yIGVpZ2h0IG1v
-bnRocwo+IGJlZm9yZSB1cGdyYWRlIG9uIHByb2R1Y3Rpb24gc3lzdGVtIGFuZCBpdCBwZXJmb3Jt
-cyBqdXN0IHBlcmZlY3RseS4KPgo+IE9uIFR1ZSwgT2N0IDIyLCAyMDEzIGF0IDE6MjkgUE0sIEpl
-ZmYgTGl1IDxqZWZmLmxpdUBvcmFjbGUuY29tPiAKPiB3cm90ZToKPj4gSGVsbG8sCj4+Cj4+IFNv
-IEl0J3MgYmV0dGVyIHRvIGFkZCBYRlMgbWFpbGluZyBsaXN0IHRvIHRoZSBDQy1saXN0LiA6KQo+
-Pgo+PiBJIHRoaW5rIHRoaXMgaXNzdWUgaGFzIGJlZW4gZml4ZWQgYnkgdXBzdHJlYW0gY29tbWl0
-czoKPj4KPj4gRnJvbSBmZjlhMjhmNmMyNWQxOGE2MzVhYmNhYjFmNDlkYjY4MTA4MjAzZGZiCj4+
-IEZyb206IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+Cj4+IERhdGU6IFRodSwgMTQgTWFyIDIwMTMg
-MTQ6MzA6NTQgKzAxMDAKPj4gU3ViamVjdDogW1BBVENIIDEvMV0geGZzOiBGaXggV0FSTl9PTihk
-ZWxhbGxvYykgaW4gCj4+IHhmc192bV9yZWxlYXNlcGFnZSgpCj4+Cj4+Cj4+IFRoYW5rcywKPj4g
-LUplZmYKPj4KPj4gT24gMTAvMjIvMjAxMyAwNzo0NiBQTSwgTmlrbGFzIEdvZXJrZSB3cm90ZToK
-Pj4KPj4+IEhpCj4+Pgo+Pj4gTXkgc3lzbG9nIGFuZCBkbWVzZyBhcmUgYmVpbmcgZmlsbGVkIHdp
-dGggdGhlIFdhcm5pbmdzIGF0dGFjaGVkLgo+Pj4gTG9va2luZyBhdCB0b2RheXMgc3lzbG9nIEkg
-Z290IHVwIHRvIDExMDEgb2YgdGhlc2Ugd2FybmluZ3MgaW4gdGhlIAo+Pj4gdGltZQo+Pj4gZnJv
-bSAxMDo1MCB0byAxMToxMyAoYW5kIG9ubHkgaW4gdGhhdCB0aW1lLCBlbHNlIHRoZSBsb2cgd2Fz
-IAo+Pj4gY2xlYW4pLiBJCj4+PiBmb3VuZCB0aGVtIG9uIGFsbCBmb3VyIG9mIG15IE9TRCBob3N0
-cywgYWxsIGF0IGFib3V0IHRoZSBzYW1lIHRpbWUuCj4+PiBJJ20gcnVubmluZyBrZXJuZWwgMy4y
-LjAtNC1hbWQ2NCBvbiBhIGRlYmlhbiA3LjAuIENlcGggaXMgb24gCj4+PiB2ZXJzaW9uCj4+PiAw
-LjY3LjQuIEkgaGF2ZSBnb3QgMTUgT1NEcyBwZXIgT1NEIEhvc3QuCj4+Pgo+Pj4gQ2VwaCBkb2Vz
-IG5vdCByZWFsbHkgc2VlbSB0byBjYXJlIGFib3V0IHRoaXMsIHNvIEknbSBub3Qgc3VyZSB3aGF0
-IAo+Pj4gaXQgaXMKPj4+IGFsbCBhYm91dOKApgo+Pj4gU3RpbGwgdGhleSBhcmUgd2FybmluZ3Mg
-aW4gc3lzbG9nIGFuZCBJIGhvcGUgeW91IGd1eXMgY2FuIHRlbGwgbWUgCj4+PiB3aGF0Cj4+PiB3
-ZW50IHdyb25nIGhlcmUgYW5kIHdoYXQgSSBjYW4gZG8gYWJvdXQgaXQ/Cj4+Pgo+Pj4gVGhhbmsg
-eW91Cj4+PiBOaWtsYXMKPj4+Cj4+Pgo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBr
-ZXJuZWw6IFs5NzQ0NjQ4LjM4ODAxOF0gLS0tLS0tLS0tLS0tWyAKPj4+IGN1dAo+Pj4gaGVyZSBd
-LS0tLS0tLS0tLS0tCj4+PiBPY3QgMjIgMTE6MTE6MTkgY3MtYmlnZm9vdDA2IGtlcm5lbDogWzk3
-NDQ2NDguMzg4MDMwXSBXQVJOSU5HOiBhdAo+Pj4gL2J1aWxkL2xpbnV4LXM1eDJvRS9saW51eC0z
-LjIuNDYvZnMveGZzL3hmc19hb3BzLmM6MTA5MQo+Pj4geGZzX3ZtX3JlbGVhc2VwYWdlKzB4NzYv
-MHg4ZSBbeGZzXSgpCj4+PiBPY3QgMjIgMTE6MTE6MTkgY3MtYmlnZm9vdDA2IGtlcm5lbDogWzk3
-NDQ2NDguMzg4MDM0XSBIYXJkd2FyZSAKPj4+IG5hbWU6Cj4+PiBYOURSMy1GCj4+PiBPY3QgMjIg
-MTE6MTE6MTkgY3MtYmlnZm9vdDA2IGtlcm5lbDogWzk3NDQ2NDguMzg4MDM2XSBNb2R1bGVzIAo+
-Pj4gbGlua2VkIGluOgo+Pj4geGZzIGF1dG9mczQgbmZzZCBuZnMgbmZzX2FjbCBhdXRoX3JwY2dz
-cyBmc2NhY2hlIGxvY2tkIHN1bnJwYyBleHQzIAo+Pj4gamJkCj4+PiBsb29wIGFjcGlfY3B1ZnJl
-cSBtcGVyZiBjb3JldGVtcCBjcmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbAo+Pj4gc25k
-X3BjbSBhZXNuaV9pbnRlbCBzbmRfcGFnZV9hbGxvYyBhZXNfeDg2XzY0IHNuZF90aW1lciBhZXNf
-Z2VuZXJpYyAKPj4+IHMKPj4+IG5kIGNyeXB0ZCBzb3VuZGNvcmUgcGNzcGtyIHNiX2VkYWMgam95
-ZGV2IGV2ZGV2IGVkYWNfY29yZSBpVENPX3dkdAo+Pj4gaTJjX2k4MDEgaVRDT192ZW5kb3Jfc3Vw
-cG9ydCBpMmNfY29yZSBpb2F0ZG1hIHByb2Nlc3NvciB0aGVybWFsX3N5cwo+Pj4gY29udGFpbmVy
-IGJ1dHRvbiBleHQ0IGNyYzE2IGpiZDIgbWJjYWNoZSB1c2JoaWQgaGlkIHNlcyBlbmNsb3N1cmUg
-Cj4+PiBzZwo+Pj4gc2RfbW9kIGNyY190MTBkaWYgbWVnYXJhaWRfc2FzIGVoY2lfaGNkIHVzYmNv
-cmUgaXNjaSBsaWJzYXMgCj4+PiB1c2JfY29tbW9uIGxpYmEKPj4+IHRhIGl4Z2JlIG1kaW8gc2Nz
-aV90cmFuc3BvcnRfc2FzIHNjc2lfbW9kIGlnYiBkY2EgW2xhc3QgdW5sb2FkZWQ6Cj4+PiBzY3Np
-X3dhaXRfc2Nhbl0KPj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0
-NDY0OC4zODgwOTNdIFBpZDogMzQ1OTYwNSwKPj4+IGNvbW06IGNlcGgtb3NkIFRhaW50ZWQ6IEcg
-ICAgICAgIFcgICAgMy4yLjAtNC1hbWQ2NCAjMSBEZWJpYW4gCj4+PiAzLjIuNDYtMQo+Pj4gT2N0
-IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0NjQ4LjM4ODA5Nl0gQ2FsbCBU
-cmFjZToKPj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYga2VybmVsOiBbOTc0NDY0OC4z
-ODgxMDJdCj4+PiBbPGZmZmZmZmZmODEwNDZiNzU+XSA/IHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4
-NzgvMHg4Ywo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5NzQ0NjQ4
-LjM4ODExNV0KPj4+IFs8ZmZmZmZmZmZhMDQ4Yjk4Yz5dID8geGZzX3ZtX3JlbGVhc2VwYWdlKzB4
-NzYvMHg4ZSBbeGZzXQo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6IFs5
-NzQ0NjQ4LjM4ODEyMl0KPj4+IFs8ZmZmZmZmZmY4MTBiZWRjNT5dID8gaW52YWxpZGF0ZV9pbm9k
-ZV9wYWdlKzB4NWUvMHg4MAo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3QwNiBrZXJuZWw6
-IFs5NzQ0NjQ4LjM4ODEyOV0KPj4+IFs8ZmZmZmZmZmY4MTBiZWU1ZD5dID8gaW52YWxpZGF0ZV9t
-YXBwaW5nX3BhZ2VzKzB4NzYvMHgxMDIKPj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYg
-a2VybmVsOiBbOTc0NDY0OC4zODgxMzVdCj4+PiBbPGZmZmZmZmZmODEwYjdiODM+XSA/IHN5c19m
-YWR2aXNlNjRfNjQrMHgxOWYvMHgxZTIKPj4+IE9jdCAyMiAxMToxMToxOSBjcy1iaWdmb290MDYg
-a2VybmVsOiBbOTc0NDY0OC4zODgxNDBdCj4+PiBbPGZmZmZmZmZmODEzNTNiNTI+XSA/IHN5c3Rl
-bV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgxYgo+Pj4gT2N0IDIyIDExOjExOjE5IGNzLWJpZ2Zvb3Qw
-NiBrZXJuZWw6IFs5NzQ0NjQ4LjM4ODE0NF0gLS0tWyBlbmQgCj4+PiB0cmFjZQo+Pj4gZTk2NDBl
-ZDZmODJmMDY2ZCBdLS0tCj4+PiAtLQo+Pj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6
-IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIAo+Pj4gY2VwaC1kZXZlbCIgaW4KPj4+IHRoZSBi
-b2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4+PiBNb3JlIG1h
-am9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
-bWwKPj4KPj4KPj4gLS0KPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhl
-IGxpbmUgInVuc3Vic2NyaWJlIAo+PiBjZXBoLWRldmVsIiBpbgo+PiB0aGUgYm9keSBvZiBhIG1l
-c3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+PiBNb3JlIG1ham9yZG9tbyBpbmZv
-IGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPiAtLQo+IFRv
-IHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBj
-ZXBoLWRldmVsIiAKPiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdl
-ci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVs
-Lm9yZy9tYWpvcmRvbW8taW5mby5odG1sCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hey Ric,
+
+On Fri, Nov 08, 2013 at 06:03:41AM -0500, Ric Wheeler wrote:
+> In the XFS community, we have 2 clear leaders in terms of
+> contributions of significant feaures and depth of knowledge -
+> Christoph and Dave.
+> 
+> If you look at the number of patches submitted by developers since
+> 3.0 who have more than 10 patches, we get the following:
+> 
+>     319 Author: Dave Chinner <dchinner@redhat.com>
+>     163 Author: Christoph Hellwig <hch@infradead.org>
+>      51 Author: Christoph Hellwig <hch@lst.de>
+>      35 Author: Linus Torvalds <torvalds@linux-foundation.org>
+>      34 Author: Chandra Seetharaman <sekharan@us.ibm.com>
+>      29 Author: Al Viro <viro@zeniv.linux.org.uk>
+>      28 Author: Brian Foster <bfoster@redhat.com>
+>      25 Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+>      24 Author: Jeff Liu <jeff.liu@oracle.com>
+>      21 Author: Jie Liu <jeff.liu@oracle.com>
+>      20 Author: Mark Tinguely <tinguely@sgi.com>
+>      16 Author: Dave Chinner <david@fromorbit.com>
+>      12 Author: Eric Sandeen <sandeen@redhat.com>
+>      12 Author: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> If we as a community had more capacity for patch review, Dave's
+> numbers would have jumped up even higher :)
+> 
+> It is certainly very welcome to bring new developers into our
+> community, but if we are going to add a co-maintainer for XFS, we
+> really need to have one of our two leading developers in that role.
+
+Mark is replacing Alex as my backup because Alex is really busy at
+Linaro and asked to be taken off awhile ago.  The holiday season is
+coming up and I fully intend to go off my meds, turn in to Fonzy the
+bear, and eat my hat.  I need someone to watch the shop while I'm off
+exploring on Mars.  I trust Mark to do that because he is totally
+awesome.
+
+-Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
