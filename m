@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DAF227FAB
-	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 12:21:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5A4B2AC003
-	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 10:21:17 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id J2cUoKKEXKAxmKRJ for <xfs@oss.sgi.com>;
-	Fri, 08 Nov 2013 10:21:15 -0800 (PST)
-Message-ID: <527D2BA0.7000504@sandeen.net>
-Date: Fri, 08 Nov 2013 12:21:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4287A7FA4
+	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 15:13:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 336AC304067
+	for <xfs@oss.sgi.com>; Fri,  8 Nov 2013 13:13:06 -0800 (PST)
+Message-ID: <527D4E8D.3000109@redhat.com>
+Date: Fri, 08 Nov 2013 15:50:21 -0500
+From: Ric Wheeler <rwheeler@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/5] xfs: increase inode cluster size for v5 filesystems
-References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
-	<1383280040-21979-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1383280040-21979-6-git-send-email-david@fromorbit.com>
+Subject: Re: XFS leadership and a new co-maintainer candidate
+References: <20131107220208.GY1935@sgi.com> <527C0F64.3010906@sgi.com>
+	<527C4B27.6020205@redhat.com> <527CC50D.4060905@redhat.com>
+	<20131108180337.GO10553@sgi.com>
+	<20131108193424.GA11052@infradead.org>
+	<20131108204605.GA1935@sgi.com>
+In-Reply-To: <20131108204605.GA1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,206 +24,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, elder@kernel.org, Mark Tinguely <tinguely@sgi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 10/31/13, 11:27 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> v5 filesystems use 512 byte inodes as a minimum, so read inodes in
+On 11/08/2013 03:46 PM, Ben Myers wrote:
+> Hey Christoph,
+>
+> On Fri, Nov 08, 2013 at 11:34:24AM -0800, Christoph Hellwig wrote:
+>> On Fri, Nov 08, 2013 at 12:03:37PM -0600, Ben Myers wrote:
+>>> Mark is replacing Alex as my backup because Alex is really busy at
+>>> Linaro and asked to be taken off awhile ago.  The holiday season is
+>>> coming up and I fully intend to go off my meds, turn in to Fonzy the
+>>> bear, and eat my hat.  I need someone to watch the shop while I'm off
+>>> exploring on Mars.  I trust Mark to do that because he is totally
+>>> awesome.
+>>
+>> Doing this as an unilateral decisions is not something that will win you
+>> a fan base.
+> It's posted for review.
+>
+>> While we never had anything reassembling a democracy in Linux Kernel
+>> development making decisions without even contacting the major
+>> contributor is wrong, twice so if the maintainer is a relatively minor
+>> contributor to start with.
+>>
+>> Just because it recent came up elsewhere I'd like to recite the
+>> definition from Trond here again:
+>>
+>> 	http://lists.linux-foundation.org/pipermail/ksummit-2012-discuss/2012-June/000066.html
+>>
+>> By many of the creative roles enlisted there it's clear that Dave should
+>> be the maintainer.  He's been the main contributor and chief architect
+>> for XFS for many year, while the maintainers came and went at the mercy
+>> of SGI.  This is not meant to bad mouth either of you as I think you're
+>> doing a reasonably good job compared to other maintainers, but at the
+>> same time the direction is set by other people that have a much longer
+>> involvement with the project, and having them officially in control
+>> would help us forward a lot.  It would also avoid having to spend
+>> considerable resources to train every new generation of SGI maintainer.
+>>
+>> Coming to and end I would like to maintain Dave Chinner as the primary
+>> XFS maintainer for all the work he has done as biggest contributor and
+>> architect of XFS since longer than I can remember, and I would love to
+>> retain Ben Myers as a co-maintainer for all the good work he has done
+>> maintaining and reviewing patches since November 2011.
+> I think we're doing a decent job too.  So thanks for that much at least.  ;)
+>   
+>> I would also like to use this post as a public venue to condemn the
+>> unilateral smokey backroom decisions about XFS maintainership that SGI is
+>> trying to enforce on the community.
+> That really didn't happen Christoph.  It's not in my tree or in a pull request.
+>
+> Linus, let me know what you want to do.  I do think we're doing a fair job over
+> here, and (geez) I'm just trying to add Mark as my backup since Alex is too
+> busy.  I know the RH people want more control, and that's understandable, but
+> they really don't need to replace me to get their code in.  Ouch.
+>
+> Thanks,
+> 	Ben
 
-I think you meant :
+Christoph is not a Red Hat person.
 
-"..., so today we read inodes in clusters that are..."
-         ^^^^^^^^
+Jeff is from Oracle.
 
-- changes the meaning quite a bit.  :)
+This is not a Red Hat vs SGI thing, Dave simply has earned the right to take on 
+the formal leadership role of maintainer.
 
-> clusters that are effectively half the size of a v4 filesystem with
-> 256 byte inodes. For v5 fielsystems, scale the inode cluster size
-> with the size of the inode so that we keep a constant 32 inodes per
-> cluster ratio for all inode IO.
-> 
-> This only works if mkfs.xfs sets the inode alignment appropriately
-> for larger inode clusters, so this functionality is made conditional
-> on mkfs doing the right thing. xfs_repair needs to know about
-> the inode alignment changes, too.
-> 
-> Wall time:
-> 	create	bulkstat	find+stat	ls -R	unlink
-> v4	237s	161s		173s		201s	299s
-> v5	235s	163s		205s		 31s	356s
-> patched	234s	160s		182s		 29s	317s
-> 
-> System time:
-> 	create	bulkstat	find+stat	ls -R	unlink
-> v4	2601s	2490s		1653s		1656s	2960s
-> v5	2637s	2497s		1681s		  20s	3216s
-> patched	2613s	2451s		1658s		  20s	3007s
-> 
-> So, wall time same or down across the board, system time same or
-> down across the board, and cache hit rates all improve except for
-> the ls -R case which is a pure cold cache directory read workload
-> on v5 filesystems...
-> 
-> So, this patch removes most of the performance and CPU usage
-> differential between v4 and v5 filesystems on traversal related
-> workloads.
+Regards,
 
-We already have some issues w/ larger inode clusters & freespace
-fragmentation resulting in the inability to create new clusters,
-right?
-
-How might this impact that problem?  I understand that it may be
-a tradeoff.
-
-> Note: while this patch is currently for v5 filesystems only, there
-> is no reason it can't be ported back to v4 filesystems.  This hasn't
-> been done here because bringing the code back to v4 requires
-> forwards and backwards kernel compatibility testing.  i.e. to
-> deterine if older kernels(*) do the right thing with larger inode
-> alignments but still only using 8k inode cluster sizes. None of this
-> testing and validation on v4 filesystems has been done, so for the
-> moment larger inode clusters is limited to v5 superblocks.
-
-Thanks for that explanation.
-
-> (*) a current default config v4 filesystem should mount just fine on
-> 2.6.23 (when lazy-count support was introduced), and so if we change
-> the alignment emitted by mkfs without a feature bit then we have to
-> make sure it works properly on all kernels since 2.6.23. And if we
-> allow it to be changed when the lazy-count bit is not set, then it's
-> all kernels since v2 logs were introduced that need to be tested for
-> compatibility...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_mount.c      | 15 +++++++++++++++
->  fs/xfs/xfs_mount.h      |  2 +-
->  fs/xfs/xfs_trans_resv.c |  3 +--
->  3 files changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index da88f16..02df7b4 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -41,6 +41,7 @@
->  #include "xfs_fsops.h"
->  #include "xfs_trace.h"
->  #include "xfs_icache.h"
-> +#include "xfs_dinode.h"
->  
->  
->  #ifdef HAVE_PERCPU_SB
-> @@ -718,8 +719,22 @@ xfs_mountfs(
->  	 * Set the inode cluster size.
->  	 * This may still be overridden by the file system
->  	 * block size if it is larger than the chosen cluster size.
-> +	 *
-> +	 * For v5 filesystems, scale the cluster size with the inode size to
-> +	 * keep a constant ratio of inode per cluster buffer, but only if mkfs
-> +	 * has set the inode alignment value appropriately for larger cluster
-> +	 * sizes.
->  	 */
->  	mp->m_inode_cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
-
-Just thinking out loud here: So this is runtime only; nothing on disk sets
-the cluster size explicitly (granted, it never did).
-
-So moving back and forth across newer/older kernels will create clusters 
-of different sizes on the same filesystem, right?
-
-(In the very distant past, this same change could have happened if
-the amount of memory in a box changed (!) - see commit
-425f9ddd534573f58df8e7b633a534fcfc16d44d; prior to that we set
-m_inode_cluster_size on the fly as well).
-
-But sb_inoalignmt is a mkfs-set, on-disk feature.  So we might start with
-i.e. this, where A1 are 8k alignment points, and 512 byte inodes, in clusters
-of size 8k / 16 inodes:
-
-A1           A1           A1           A1           
-[ 16 inodes ][ 16 inodes ]             [ 16 inodes ]
-
-and in this case we couldn't bump up m_inode_cluster_size, lest we
-allocate a larger cluster on the smaller alignment & overlap:
-
-A1           A1           A1           A1           
-[ 16 inodes ][ 16 inodes ]             [ 16 inodes ] <--- existing
-                         [        32 inodes        ] <--- new
-
-But if we had a larger (say, 16k) inode alignment, like:  we could
-safely do:
-
-A1                        A2                        A2          
-[ 16 inodes ]                                       [ 16 inodes ]
-                          [        32 inodes       ] <--- new
-
-and be ok.
-
-So the only other thing I wonder about is when we are handling
-pre-existing, smaller-than m_inode_cluster_size clusters.
-
-i.e. xfs_ifree_cluster() figures out the number of blocks &
-number of inodes in a cluster, based on the (now not
-constant) m_inode_cluster_size.
-
-What stops us from going off the end of a smaller cluster?
-</handwave>
-
-I'm not up to speed on inode IO TBH, so will dig into it a little more.
-
-Aside from all those vague questions, this seems sane.  ;)
-
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		int	new_size = mp->m_inode_cluster_size;
-> +
-> +		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
-> +		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
-> +			mp->m_inode_cluster_size = new_size;
-> +		xfs_info(mp, "Using inode cluster size of %d bytes",
-> +			 mp->m_inode_cluster_size);
-> +	}
->  
->  	/*
->  	 * Set inode alignment fields
-
-next 2 hunks are just tidying, right.
-
-Thanks,
--Eric
-
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 1d8101a..a466c5e 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -112,7 +112,7 @@ typedef struct xfs_mount {
->  	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
->  	__uint8_t		m_agno_log;	/* log #ag's */
->  	__uint8_t		m_agino_log;	/* #bits for agino in inum */
-> -	__uint16_t		m_inode_cluster_size;/* min inode buf size */
-> +	uint			m_inode_cluster_size;/* min inode buf size */
->  	uint			m_blockmask;	/* sb_blocksize-1 */
->  	uint			m_blockwsize;	/* sb_blocksize in words */
->  	uint			m_blockwmask;	/* blockwsize-1 */
-> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-> index d53d9f0..2fd59c0 100644
-> --- a/fs/xfs/xfs_trans_resv.c
-> +++ b/fs/xfs/xfs_trans_resv.c
-> @@ -385,8 +385,7 @@ xfs_calc_ifree_reservation(
->  		xfs_calc_inode_res(mp, 1) +
->  		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
->  		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> -		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
-> -		    XFS_INODE_CLUSTER_SIZE(mp)) +
-> +		max_t(uint, XFS_FSB_TO_B(mp, 1), XFS_INODE_CLUSTER_SIZE(mp)) +
->  		xfs_calc_buf_res(1, 0) +
->  		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
->  				 mp->m_in_maxlevels, 0) +
-> 
+Ric
 
 _______________________________________________
 xfs mailing list
