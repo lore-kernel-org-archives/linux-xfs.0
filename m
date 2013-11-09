@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CB67229E10
-	for <xfs@oss.sgi.com>; Sat,  9 Nov 2013 05:44:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ABDFA304053
-	for <xfs@oss.sgi.com>; Sat,  9 Nov 2013 03:44:43 -0800 (PST)
-Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
-	[209.85.223.179]) by cuda.sgi.com with ESMTP id
-	NXo35aFHzc4IuWXt (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 09 Nov 2013 03:44:42 -0800 (PST)
-Received: by mail-ie0-f179.google.com with SMTP id u16so1772180iet.10
-	for <xfs@oss.sgi.com>; Sat, 09 Nov 2013 03:44:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <527E0AE6.6010202@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 402E67F7B
+	for <xfs@oss.sgi.com>; Sat,  9 Nov 2013 06:05:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1FFC88F8049
+	for <xfs@oss.sgi.com>; Sat,  9 Nov 2013 04:04:59 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id LFrko4OslFCxQYyy for
+	<xfs@oss.sgi.com>; Sat, 09 Nov 2013 04:04:55 -0800 (PST)
+Received: from merkaba.localnet (ppp-88-217-108-215.dynamic.mnet-online.de
+	[88.217.108.215])
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id 2C346FC
+	for <xfs@oss.sgi.com>; Sat,  9 Nov 2013 13:04:55 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: How to feel the real time feature of XFS from userspace
+Date: Sat, 09 Nov 2013 13:04:54 +0100
+Message-ID: <1572637.YaJSgEV5nT@merkaba>
+In-Reply-To: <527DEB69.8050502@oracle.com>
 References: <CAD+1EGPf=ddMP4vdDxkkWnJH2q9fCSa5uTT-eRAxYLAEtPrLwg@mail.gmail.com>
 	<527DEB69.8050502@oracle.com>
-	<CAD+1EGNxBnSSXGqi7edgdu7uquOOiPWVd7v-avRrJxzKhSY_UQ@mail.gmail.com>
-	<527E0AE6.6010202@oracle.com>
-Date: Sat, 9 Nov 2013 19:44:42 +0800
-Message-ID: <CAD+1EGPRJhiYvLyZnPyYktBGSScB0MzFj1G-ADP7pVtg-x527Q@mail.gmail.com>
-Subject: Re: How to feel the real time feature of XFS from userspace
-From: harryxiyou <harryxiyou@gmail.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,37 +28,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Nov 9, 2013 at 6:13 PM, Jeff Liu <jeff.liu@oracle.com> wrote:
-> Hi Harry,
-
-Hi Jeff,
-
-> As this inode has been marked to realtime, the subsequent write via
-> directIO will allocate
-> extents via it's specific allocation algorithm rather than the general
-> approach, and the
-> extent length is specified with fsx_extsize.
-> AFAICS, the realtime file data will be allocated on realtime volume
-> while the metadata will
-> still be allocated from the data volume.
->
-
-I see. However, I think current real-time feature of XFS should be enhanced
-and could write/read specific data during specific time interval. I have no
-exact ideas about this. I would do if I could. Anyway, thanks for your replies.
-
--- 
-Thanks
-Weiwei  Jia (Harry Wei)
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gU2Ftc3RhZywgOS4gTm92ZW1iZXIgMjAxMywgMTU6NTk6Mzcgc2NocmllYiBKZWZmIExpdToK
+PiBPbiAxMS8wOS8yMDEzIDAxOjIzIFBNLCBoYXJyeXhpeW91IHdyb3RlOgo+ID4gSGkgYWxsLAo+
+ID4gCj4gPiBJIGhhdmUgZm9ybWF0IGJsb2NrIGRldmljZSB3aXRoIFhGUyBhcyBmb2xsb3dzLgo+
+ID4gCj4gPiByb290QG5vZGUyOn4jIG1rZnMueGZzIC1mIC1yIHJ0ZGV2PS9kZXYvc2RhMyAvZGV2
+L3NkYTQKPiA+IAo+ID4gbWV0YS1kYXRhPS9kZXYvc2RhNCAgICAgICAgICAgICAgaXNpemU9MjU2
+ICAgIGFnY291bnQ9NCwgYWdzaXplPTU2MTIyNDQwCj4gPiBibGtzPiAKPiA+ICAgICAgICAgID0g
+ICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIsIHByb2ppZDMyYml0PTAK
+PiA+IAo+ID4gZGF0YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJs
+b2Nrcz0yMjQ0ODk3NTcsIGltYXhwY3Q9MjUKPiA+IAo+ID4gICAgICAgICAgPSAgICAgICAgICAg
+ICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3aWR0aD0wIGJsa3MKPiA+IAo+ID4gbmFtaW5nICAg
+PXZlcnNpb24gMiAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGFzY2lpLWNpPTAKPiA+IAo+ID4g
+bG9nICAgICAgPWludGVybmFsIGxvZyAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0xMDk2
+MTQsIHZlcnNpb249Mgo+ID4gCj4gPiAgICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBz
+ZWN0c3o9NTEyICAgc3VuaXQ9MCBibGtzLCBsYXp5LWNvdW50PTEKPiA+IAo+ID4gcmVhbHRpbWUg
+PS9kZXYvc2RhMyAgICAgICAgICAgICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0xNDg2NTY1NywKPiA+
+IHJ0ZXh0ZW50cz0xNDg2NTY1Nwo+ID4gCj4gPiAKPiA+IEFuZCBJIGFsc28gd3JpdGUgdXNlci1z
+cGFjZSBjb2RlcyBhcyBmb2xsb3dzLgo+ID4gCj4gPiByb290QG5vZGUyOn4vdGVzdCMgY2F0IHhm
+cy5jCj4gPiAjaW5jbHVkZSA8c3RkaW8uaD4KPiA+ICNpbmNsdWRlIDx1bmlzdGQuaD4KPiA+ICNp
+bmNsdWRlIDxzeXMvdHlwZXMuaD4KPiA+ICNpbmNsdWRlIDxzeXMvc3RhdC5oPgo+ID4gI2luY2x1
+ZGUgPGZjbnRsLmg+Cj4gPiAjaW5jbHVkZSA8eGZzL3hmcy5oPgo+ID4gI2luY2x1ZGUgPHhmcy94
+ZnNfZnMuaD4KPiA+IAo+ID4gaW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKiphcmd2KSB7Cj4gPiBp
+bnQgZmQ7Cj4gPiBpbnQgeGZzX3JldCA9IDA7Cj4gPiAKPiA+IGZkID0gb3BlbigiLi8xIiwgT19S
+RFdSKTsKPiA+IGlmIChmZCA8IDApIHsKPiA+IGZwcmludGYoc3RkZXJyLCAib3BlbiBlcnJvciFc
+biIpOwo+ID4gcmV0dXJuIC0xOwo+ID4gfQo+ID4geGZzX3JldCA9IHhmc2N0bCgiLi8xIiwgZmQs
+IFhGU19JT0NfRlNHRVRYQVRUUiwgTlVMTCk7Cj4gPiAKPiA+IHJldHVybiAwOwo+ID4gfQo+ID4g
+Cj4gPiAKPiA+IE5vdywgSSBhbSB3b25kZXJpbmcgaG93IHRvIGZlZWwgdGhlIHJlYWwgdGltZSBm
+ZWF0dXJlIG9mIFhGUyBmcm9tCj4gPiB1c2Vyc3BhY2U/IENvdWxkIGFueW9uZSBwbGVhc2UgZ2l2
+ZSBtZSBzb21lIHN1Z2dlc3Rpb25zPyBUaGFua3MgaW4KPiA+IGFkdmFuY2UuCj4gCj4gTW91bnQg
+eW91ciByZWFsdGltZSBkZXZpY2UgYXQgZmlyc3Q6Cj4gbW91bnQgLW8gcnRkZXY9L2Rldi9zZGEz
+IC9kZXYvc2RhNCAvbW91bnRfcG9pbnQKPiAKPiBUaGVuIHlvdSBuZWVkIHRvIG1hcmsgdGhlIGF0
+dHJpYnV0ZSBiaXQgc2V0IHdpdGggWEZTX1hGTEFHX1JFQUxUSU1FIHZpYQo+IHhmc2N0bCgzKSBh
+ZnRlciBmaWxlIGNyZWF0aW9uIGJlZm9yZSB3cml0aW5nIGFueSBkYXRhIHRvIHRoZSBmaWxlLCBo
+ZW5jZQo+IHlvdXIgZGVtbyBjb2RlIHdvdWxkIGxvb2tzIGxpa2U6Cj4gCj4gc3RydWN0IGZzeGF0
+dHIJYXR0cjsKPiAKPiBhdHRyLmZzeF94ZmxhZ3MgfD0gWEZTX1hGTEFHX1JFQUxUSU1FOwo+IHhm
+c19yZXQgPSB4ZnNjdGwodGFyZ2V0X2ZpbGVfcGF0aCwgZmQsIFhGU19JT0NfRlNTRVRYQVRUUiwg
+JmF0dHIpOwo+IC4uLgo+IAo+IEkgd291bGQgc3VnZ2VzdCB5b3UgdGFrZSBhIGxvb2sgYXQgdGhl
+IHNvdXJjZSBvZiB4ZnNfcmN0cCg4KSBhdCB4ZnNwcm9ncyB0bwo+IGdldCBtb3JlIGluZm8uCj4g
+Cj4gQlRXLCBJIHJlbWVtYmVyIERhdmUgb25jZSBtZW50aW9uZWQgdGhhdCB0aGUgcmVhbHRpbWUg
+ZmVhdHVyZSBvbiBMaW51eCBpcwo+IG5vdCB3aWRlbHkgdGVzdGVkIGFuZCBub3QgcmVjb21tZW5k
+ZWQgZm9yIHByb2R1Y3Rpb24gdXNlLgoKV2VsbCwgdGhpcyBzb3VuZHMgc2NhcnksIGV4Y2VwdCBm
+cm9tIHhmc19ydGNwKDgpOgoKQ0FWRUFUUwogICAgICAgQ3VycmVudGx5LCAgcmVhbHRpbWUgIHBh
+cnRpdGlvbnMgIGFyZSBub3Qgc3VwcG9ydGVkCiAgICAgICB1bmRlciB0aGUgTGludXggdmVyc2lv
+biBvZiBYRlMsIGFuZCB1c2Ugb2YgYSAgcmVhbOKAkAogICAgICAgdGltZSAgcGFydGl0aW9uICBX
+SUxMICBDQVVTRSBDT1JSVVBUSU9OIG9uIHRoZSBkYXRhCiAgICAgICBwYXJ0aXRpb24uIEFzIHN1
+Y2gsIHRoaXMgY29tbWFuZCBpcyBtYWRlICBhdmFpbGFibGUKICAgICAgIGZvciBjdXJpb3VzIERF
+VkVMT1BFUlMgT05MWSBhdCB0aGlzIHBvaW50IGluIHRpbWUuCgpFc3BlY2lhbGx5IHRoZSBjb3Jy
+dXB0aW9uIHBhcnQgb2YgaXQuCgpXaGF0cyB0aGUgY3VycmVudCBzdGF0ZT8gV291bGQgYmUgaW50
+ZXJlc3RlZCB0byBrbm93IGl0IGR1ZSB0byB0aGUgTGludXggClBlcmZvcm1hbmNlIEFuYWx5c2lz
+ICYgVHVuaW5nIGNvdXJzZXMgSSBob2xkLgoKQ2lhbywKLS0gCk1hcnRpbiAnSGVsaW9zJyBTdGVp
+Z2Vyd2FsZCAtIGh0dHA6Ly93d3cuTGljaHR2b2xsLmRlCkdQRzogMDNCMCAwRDZDIDAwNDAgMDcx
+MCA0QUZBICBCODJGIDk5MUIgRUFBQyBBNTk5IDg0QzcKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
