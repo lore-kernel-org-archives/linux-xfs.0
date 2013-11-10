@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 24C717F86
-	for <xfs@oss.sgi.com>; Sun, 10 Nov 2013 09:06:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 3EA417F82
+	for <xfs@oss.sgi.com>; Sun, 10 Nov 2013 14:33:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 10CC5304032
-	for <xfs@oss.sgi.com>; Sun, 10 Nov 2013 07:06:28 -0800 (PST)
-Received: from mail.stepping-stone.ch (mail.stepping-stone.ch
-	[194.176.109.206]) by cuda.sgi.com with ESMTP id
-	zZQLr0TT7tvmYSgX (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 10 Nov 2013 07:06:23 -0800 (PST)
-Message-ID: <1384095977.245087.88.camel@storm>
-Subject: Re: Setting project quotas on special files
-From: Tiziano =?ISO-8859-1?Q?M=FCller?= <tiziano.mueller@stepping-stone.ch>
-Date: Sun, 10 Nov 2013 16:06:17 +0100
-In-Reply-To: <527F63FC.1050005@oracle.com>
-References: <1384069188.245087.68.camel@storm> <527F63FC.1050005@oracle.com>
-Mime-Version: 1.0
-Reply-To: tiziano.mueller@stepping-stone.ch
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D737304039
+	for <xfs@oss.sgi.com>; Sun, 10 Nov 2013 12:33:42 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	5ansDHeuVpWd3xOP for <xfs@oss.sgi.com>;
+	Sun, 10 Nov 2013 12:33:40 -0800 (PST)
+Date: Mon, 11 Nov 2013 07:33:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstest failures
+Message-ID: <20131110203331.GO6188@dastard>
+References: <20131106105451.GA31283@infradead.org>
+	<20131106161825.GU1935@sgi.com> <527A887F.2030807@sandeen.net>
+	<20131107081710.GC25157@infradead.org>
+	<527B948C.9060905@sandeen.net>
+	<20131107132739.GA16608@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131107132739.GA16608@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,97 +29,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Jeff Liu <jeff.liu@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Myers <bpm@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-SGkgSmVmZgoKU29ycnkgZm9yIHRvcC1wb3N0aW5nLCBidXQgaXQgbWF5IGJlIGJldHRlciB0byBp
-bGx1c3RyYXRlIHRoaXMgd2l0aCBhbgppc29sYXRlZCBleGFtcGxlOgoKSSBoYXZlIGEgdm9sdW1l
-IG5hbWVkICJiYWNrdXAiIG1vdW50ZWQgd2l0aCBvcHRpb24gInBxdW90YSIsIHRoZW4gSSBkbwp0
-aGUgZm9sbG93aW5nIGluc2lkZSB0aGF0IG1vdW50cG9pbnQ6Cgpsb2NhbGhvc3QgYmFja3VwICMg
-bWtkaXIgdGVzdApsb2NhbGhvc3QgYmFja3VwICMgbG4gLXMgL2ludmFsaWQvbG9jYXRpb24gdGVz
-dC9zeW1saW5rQQpsb2NhbGhvc3QgYmFja3VwICMgZWNobyA0MjovdmFyL2JhY2t1cC90ZXN0ID4+
-IC9ldGMvcHJvamVjdHMKbG9jYWxob3N0IGJhY2t1cCAjIGVjaG8gdGVzdDo0MiA+PiAvZXRjL3By
-b2ppZApsb2NhbGhvc3QgYmFja3VwICMgeGZzX3F1b3RhIC14IC1jICdwcm9qZWN0IC1zIHRlc3Qn
-IC92YXIvYmFja3VwClNldHRpbmcgdXAgcHJvamVjdCB0ZXN0IChwYXRoIC92YXIvYmFja3VwL3Rl
-c3QpLi4uCnhmc19xdW90YTogc2tpcHBpbmcgc3BlY2lhbCBmaWxlIC92YXIvYmFja3VwL3Rlc3Qv
-c3ltbGlua0EKUHJvY2Vzc2VkIDEgKC9ldGMvcHJvamVjdHMgYW5kIGNtZGxpbmUpIHBhdGhzIGZv
-ciBwcm9qZWN0IHRlc3Qgd2l0aCByZWN1cnNpb24gZGVwdGggaW5maW5pdGUgKC0xKS4KbG9jYWxo
-b3N0IGJhY2t1cCAjIGNwIC1hbCB0ZXN0L3N5bWxpbmtBIHRlc3Qvc3ltbGlua0IKY3A6IGNhbm5v
-dCBjcmVhdGUgaGFyZCBsaW5rICJ0ZXN0L3N5bWxpbmtCIiB0byAidGVzdC9zeW1saW5rQSI6IElu
-dmFsaWQgY3Jvc3MtZGV2aWNlIGxpbmsKbG9jYWxob3N0IGJhY2t1cCAjIAoKQ3JlYXRpbmcgYSBz
-eW1saW5rIGFmdGVyIHNldHRpbmcgdXAgcHJvamVjdCBxdW90YXMgaW4gdGhlIHNhbWUgZGlyZWN0
-b3J5CnlpZWxkcyBhIGRpZmZlcmVudCBiZWhhdmlvdXI6Cgpsb2NhbGhvc3QgYmFja3VwICMgbG4g
-LXMgL2ludmFsaWQvbG9jYXRpb24gdGVzdC9zeW1saW5rQwpsb2NhbGhvc3QgYmFja3VwICMgY3Ag
-LWFsIHRlc3Qvc3ltbGlua0MgdGVzdC9zeW1saW5rRApsb2NhbGhvc3QgYmFja3VwICMgCgpUaGUg
-Zm9sbG93aW5nIHNob3dzIHRoYXQgYSBzeW1saW5rIGFsb25lIChhbmQgbm90IGl0cyB0YXJnZXQp
-IGNhbiBoYXZlIGEKcHJvamVjdCBpZCBhc3NpZ25lZCBhbmQgdGhhdCB0aGUgcHJvamVjdCBpZCBt
-dXN0IGJlIGFzc2lnbmVkIHRvIGJlIGFibGUKdG8gY3JlYXRlIGEgaGFyZGxpbmsgb2YgYSBzeW1s
-aW5rIChubyBtYXR0ZXIgd2hlcmUgaXQgcG9pbnRzIHRvKS4KCkZvciBlYWNoIG9mIHRoZSBzeW1s
-aW5rcyB0ZXN0L3N5bWxpbmt7QSxCfSBydW4gYHN0YXRgIHRvIGdldCB0aGUgaW5vZGUKdGhlbiB1
-c2UgeGZzX2RiIG9uIHRoYXQgaW5vZGUgdG8gZ2V0IHRoZSBhdHRyaWJ1dGVzOgoKbG9jYWxob3N0
-IGJhY2t1cCAjICB4ZnNfZGIgLXIgLWMgJ2lub2RlIDQzNjInIC1jICdwJyAvZGV2L3ZkYjEgIHwg
-Z3JlcCBwcm9qaWQKY29yZS5wcm9qaWRfbG8gPSAwCmNvcmUucHJvamlkX2hpID0gMApsb2NhbGhv
-c3QgYmFja3VwICMgIHhmc19kYiAtciAtYyAnaW5vZGUgNDM2MycgLWMgJ3AnIC9kZXYvdmRiMSAg
-fCBncmVwIHByb2ppZApjb3JlLnByb2ppZF9sbyA9IDQyCmNvcmUucHJvamlkX2hpID0gMAoKVW5m
-b3J0dW5hdGVseSB4ZnNfaW8gdHJpZXMgdG8gZm9sbG93IHRoZSBzeW1saW5rcyBzbyBpdCBjYW4g
-bm90IGJlIHVzZWQKdG8gc2V0IHRoZSBwcm9qZWN0IG1hbnVhbGx5LgoKV2hhdCB3b3JrcyB0aG91
-Z2ggaXMgcmVuYW1pbmcgdGhlIGZpbGU6Cgpsb2NhbGhvc3QgYmFja3VwICMgbXYgdGVzdC9zeW1s
-aW5rQSB0ZXN0L3N5bWxpbmtBdG1wCmxvY2FsaG9zdCBiYWNrdXAgIyBtdiB0ZXN0L3N5bWxpbmtB
-dG1wIHRlc3Qvc3ltbGlua0EKbG9jYWxob3N0IGJhY2t1cCAjIHN0YXQgdGVzdC9zeW1saW5rQQog
-IEZpbGU6IOKAmHRlc3Qvc3ltbGlua0HigJkgLT4g4oCYL2ludmFsaWQvbG9jYXRpb27igJkKICBT
-aXplOiAxNyAgICAgICAgCUJsb2NrczogMCAgICAgICAgICBJTyBCbG9jazogNDA5NiAgIHN5bWJv
-bGljIGxpbmsKRGV2aWNlOiBmZTExaC82NTA0MWQJSW5vZGU6IDQzNjQgICAgICAgIExpbmtzOiAx
-CkFjY2VzczogKDA3NzcvbHJ3eHJ3eHJ3eCkgIFVpZDogKCAgICAwLyAgICByb290KSAgIEdpZDog
-KCAgICAwLyAgICByb290KQpBY2Nlc3M6IDIwMTMtMTEtMTAgMTU6NDk6NDQuODcwMDY4MTc4ICsw
-MTAwCk1vZGlmeTogMjAxMy0xMS0xMCAxNTo0OTo0NC44NzAwNjgxNzggKzAxMDAKQ2hhbmdlOiAy
-MDEzLTExLTEwIDE2OjAwOjU0Ljk1NzU3MTUwNCArMDEwMAogQmlydGg6IC0KbG9jYWxob3N0IGJh
-Y2t1cCAjIHhmc19kYiAtciAtYyAnaW5vZGUgNDM2NCcgLWMgJ3AnIC9kZXYvdmRiMSAgfCBncmVw
-CnByb2ppZApjb3JlLnByb2ppZF9sbyA9IDQyCmNvcmUucHJvamlkX2hpID0gMApsb2NhbGhvc3Qg
-YmFja3VwICMgY3AgLWFsIHRlc3Qvc3ltbGlua0EgdGVzdC9zeW1saW5rQgpsb2NhbGhvc3QgYmFj
-a3VwICMgCgpCZXN0IHJlZ2FyZHMsClRpemlhbm8KCkFtIFNvbm50YWcsIGRlbiAxMC4xMS4yMDEz
-LCAwMjo0NiAtMDgwMCBzY2hyaWViIEplZmYgTGl1Ogo+IE9uIDExLzEwIDIwMTMgMTU6MzkgUE0s
-IFRpemlhbm8gTcO8bGxlciB3cm90ZToKPiA+IEhpIGV2ZXJ5b25lCj4gPgo+ID4gSXQgc3RhcnRl
-ZCB3aXRoIHRoZSBmb2xsb3dpbmcgZXJyb3I6Cj4gPgo+ID4gICAgZGV2ICMgY3AgLWFsIGR2ZCBk
-dmQyCj4gPiAgICBjcDogY2Fubm90IGNyZWF0ZSBoYXJkIGxpbmsg4oCYZHZkMuKAmSB0byDigJhk
-dmTigJk6IEludmFsaWQgY3Jvc3MtZGV2aWNlIGxpbmsKPiA+Cj4gPiAiZHZkIiBpcyBpbiB0aGlz
-IGNhc2UgYSBzeW1saW5rIChidXQgSSBhbHNvIGRpZCB0aGUgdGVzdCB3aXRoIHNwZWNpYWwKPiA+
-IGRldmljZXMpLgo+IFRoaXMgZGVmaW5pdGVseSB3b3VsZCBmYWlsIGlmIHlvdSB0cnlpbmcgdG8g
-Y3JlYXRlIGhhcmQgbGlua3MgYWNyb3NzCj4gdm9sdW1lcy4KPiA+Cj4gPiBXaGF0IEkgZGlkIHdh
-czogY29weSB0aGF0IHN5bWxpbmsgZnJvbSBzb21ld2hlcmUgZWxzZSwgdHJ5aW5nIHRvIHR1cm4g
-b24KPiA+IHByb2plY3QgcXVvdGFzIG9uIGEgcGFyZW50IGRpcmVjdG95IG9mIHRoYXQgImRldiIg
-ZGlyZWN0b3J5IHdoaWNoIGdpdmVzCj4gPiBtZToKPiA+Cj4gPiAgIHhmc19xdW90YTogc2tpcHBp
-bmcgc3BlY2lhbCBmaWxlIC92YXIvZm9vL2Rldi9kdmQKPiBzeW1saW5rIGZpbGVzIHdpbGwgYmUg
-c2tpcHBlZCBhbmQgeGZzX3F1b3RhIGNvbnNpZGVyIGl0IGFzIHNwZWNpYWwgZmlsZQo+IGp1c3Qg
-bGlrZSBmaWZvLCBzb2NrLCBldGMuLi4KPiAKPiBJZiB4ZnNfcXVvdGEgZG8gY2hlY2sgd2l0aCBm
-b2xsb3cgc3ltbGlua3MsIHRoZW4gdGhlIHByb2plY3QgaWQgaXMgcG90ZW50aWFsbHkKPiBhcHBs
-aWVkIHRvIGZpbGVzIG9uIGFub3RoZXIgZmlsZXN5c3RlbS4gCj4gCj4gPgo+ID4gV2hlbiBJIGV4
-YW1pbmUgdGhlIGlub2RlIHVzaW5nIHhmc19kYiBJIGdldCBmb3IgbXkgImR2ZCIgc3ltbGluazoK
-PiA+Cj4gPiAgIGNvcmUucHJvamlkX2xvID0gMAo+ID4gICBjb3JlLnByb2ppZF9oaSA9IDAKPiA+
-Cj4gPiBXaGVuIEkgY3JlYXRlIGEgbmV3IHN5bWxpbmsgImZvbyIgKHdpdGggdGhlIHNhbWUgdWlk
-K2dpZCBhcyAiZHZkIikgYW5kCj4gPiBleGFtaW5lIGl0J3MgaW5vZGUgdXNpbmcgeGZzX2RiOgo+
-ID4KPiA+ICAgY29yZS5wcm9qaWRfbG8gPSAyMzk4Cj4gPiAgIGNvcmUucHJvamlkX2hpID0gNjEK
-PiA+Cj4gPiBXaGF0IEkgdGhlcmVmb3JlIHNlZW0gdG8gZW5jb3VudGVyIGlzIHRoZSBwcm9ibGVt
-IG1lbnRpb25lZCBpbiB4ZnNfcXVvdGEKPiA+IGZvciB0aGUgcHJvamVjdCBzdWJjb21tYW5kOgo+
-ID4KPiA+ICAgQW4gYXR0ZW1wdCB0byBjcmVhdGUgYSBoYXJkIGxpbmsgdG8gYSBmaWxlIGluIHRo
-ZSB0cmVlIHdpbGwgb25seSBzdWNjZWVkIGlmIHRoZSBwcm9qZWN0IGlkZW50aeKAkAo+ID4gICAg
-ICAgIGZpZXIgbWF0Y2hlcyB0aGUgcHJvamVjdCBpZGVudGlmaWVyIGZvciB0aGUgdHJlZS4KPiA+
-Cj4gPiBJIGNvdWxkIG5vdyB1c2UgeGZzX2lvIHRvIGZpeCBhbGwgc3BlY2lhbCBmaWxlcyBvbmNl
-IChzaW5jZSBuZXdseQo+ID4gY3JlYXRlZCBvbmVzIHdpbGwgY2FycnkgdGhlIHByb2plY3QgaWQg
-ZGlyZWN0bHkpLCBidXQgd2h5IGRvZXMKPiA+ICJ4ZnNfcXVvdGEgLXggLWMgJ3Byb2plY3QgLXMg
-dGVzdDEnIC92YXIiIHNraXAgc3BlY2lhbCBmaWxlcyBpZiBpdCBpcwo+ID4gY2xlYXJseSBwb3Nz
-aWJsZSBhbmQgcmVxdWlyZWQgdG8gc2V0IHRoZSBwcm9qZWN0IGlkIG9uIHRoZW0gdG8gaGF2ZQo+
-ID4gaGFyZGxpbmtzIHdvcmtpbmcgYWdhaW4gd2l0aGluIHRoZSBwcm9qZWN0IGRpcj8KPiBTb3Jy
-eSBpZiBJIG1pc3VuZGVyc3Rvb2QgeW91ciBxdWVzdGlvbiwgYnV0IHRoZSBleGlzdGluZyBoYXJk
-IGxpbmsgZmlsZXMKPiB3b3VsZAo+IG5vdGJlIHNraXBwZWQgSU1PLiAgRm9yIHRoZSBwcm9qZWN0
-IHN1YmNvbW1hbmQsIGl0IG1lYW5zIHdlIGNvdWxkIG5vdCBjcmVhdGUKPiBoYXJkbGlua3MgY3Jv
-c3MgZGlmZmVyZW50IHByb2plY3QgdHJlZXMuCj4gCj4gVGhhbmtzLAo+IC1KZWZmCj4gCj4gX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMgbWFpbGlu
-ZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCgotLSAKc3RlcHBpbmcgc3RvbmUgR21iSApOZXVmZWxkc3RyYXNzZSA5CkNILTMw
-MTIgQmVybgpUZWxlZm9uOiArNDEgMzEgMzMyIDUzIDYzCnd3dy5zdGVwcGluZy1zdG9uZS5jaAp0
-aXppYW5vLm11ZWxsZXJAc3RlcHBpbmctc3RvbmUuY2gKCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Nov 07, 2013 at 05:27:39AM -0800, Christoph Hellwig wrote:
+> On Thu, Nov 07, 2013 at 07:24:28AM -0600, Eric Sandeen wrote:
+> > On 11/7/13, 2:17 AM, Christoph Hellwig wrote:
+> > > On Wed, Nov 06, 2013 at 12:20:47PM -0600, Eric Sandeen wrote:
+> > >> that's right, it's a known bug w/ a testcase but no fix yet.
+> > >>
+> > >> I looked a bit, but ugh, xfsdump.
+> > > 
+> > > Maybe it's time you come up with an xfail mechanism at least?
+> > 
+> > What's the proposal there, a "fail" group for things known to still
+> > fail everywhere?
+> > 
+> > so i.e. ./check -x fail ?  I can easily send a patch for that if
+> > that's what folks want.
+> 
+> A mechnism to annotate a test as xfail, so that check would output them
+> at the end ala:
+> 
+> Expected failures:  common/263
+> Unexpected successes: reiser4/001
+
+If you have a test that fails in your test environment and you don't
+want to run it, use the expunged test mechanism. You can maintain it
+yourself for your own test environment.
+
+$ cat tests/xfs/expunged
+078
+$ sudo MKFS_OPTIONS="-m crc=1" ./check -X expunged xfs/078
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test2 3.12.0-rc7-dgc+
+MKFS_OPTIONS  -- -f -m crc=1 /dev/vdb
+MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+
+xfs/078       [expunged]
+Passed all 0 tests
+
+If we really want to, we can add default expunged files for
+different distros so they don't run tests that are known to fail and
+are not likely to be fixed automatically.
+
+That handles the "test doesn't fail everywhere" problem that xfail
+has....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
