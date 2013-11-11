@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A74F67F5A
-	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 13:42:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 96C398F8040
-	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 11:42:43 -0800 (PST)
-Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com
-	[66.111.4.25]) by cuda.sgi.com with ESMTP id NbjmZcnXZFH1GpcM
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Nov 2013 11:42:42 -0800 (PST)
-Message-ID: <52813330.1020308@itwm.fraunhofer.de>
-Date: Mon, 11 Nov 2013 20:42:40 +0100
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id D6EBF7F6A
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 14:56:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9FB448F8040
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 12:56:07 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	hzrRklffNaYFa5gd for <linux-xfs@oss.sgi.com>;
+	Mon, 11 Nov 2013 12:56:02 -0800 (PST)
+Date: Tue, 12 Nov 2013 07:55:58 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: ag selection
-References: <l5r3tf$m0j$1@ger.gmane.org>	<20131111175313.GA16643@orion.maiolino.org>	<20131111175550.GB16643@orion.maiolino.org>
-	<528120B7.9030802@itwm.fraunhofer.de>
-	<5281223A.7010503@sandeen.net>
-In-Reply-To: <5281223A.7010503@sandeen.net>
+Message-ID: <20131111205558.GU6188@dastard>
+References: <l5r3tf$m0j$1@ger.gmane.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <l5r3tf$m0j$1@ger.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +25,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: linux-xfs@oss.sgi.com
 
-Hello Eric,
+On Mon, Nov 11, 2013 at 06:25:13PM +0100, Bernd Schubert wrote:
+> Hi all,
+> 
+> for streaming writes onto a raid6 the current round-robin ag
+> selection seems does not seem to be optimal. Writing 4 files from 4
+> threads into a single directory we get 900 MB/s,
 
-On 11/11/2013 07:30 PM, Eric Sandeen wrote:
-> On 11/11/13, 12:23 PM, Bernd Schubert wrote:
->
->> One of my colleagues benchmarked this on one of our fast systems and another
->> colleague current needs this system for other tests, so I don't have the
->> exact parameters. However, it was for sure formated with options like these:
->>
->> mkfs.xfs -d su=256k,sw=10 -l version=2,su=256k -isize=512 /dev/sdX
->>
->> and mounted with these options:
->>
->> mount -onoatime,nodiratime,largeio,inode64,swalloc,allocsize=131072k,nobarrier /dev/sdX <mountpoint>
->
-> With all due respect, this is excessive knob-twiddling.  Slow down.  ;)
->
-> * V2 logs are default already, so -l version=2 is redundant.
+IOWs, writing all 4 files into the same AG, interleaving them in to
+the same physical location on disk.
 
-Well, some of our customer are using fhgfs + xfs on old systems and we 
-don't want to create a list
+> writing 4 files in
+> 4 different directories we only get 700 MB/s (12 disks with with hw
+> megaraid-sas).
 
-"with kernel/xfsprogs version < xyz, you need knob abc..."
+And that writes the 4 files into 4 different AGs, separating them
+into physically different regions of the disk. There's seeks between
+the streams there, and often cheap RAID controllers have problems
+with internal caching algorithms being unable to minimise seeks
+between streams effectively.
 
-So better add it by default, as long as it does not hurt.
+> The current round-robin scheme seems to be optimized
+> for linear raid0?
 
-> * noatime implies nodiratime, so specifying both is redundant.
+Not at all - sequential writes of large files are optimised to
+maintain high sequential *read* rates of the data that is being
+written. Also, RAID 0 and RAID 6 have exactly the same
+characteristics for this workload, so the behaviour you are seeing
+is more likely due to XFS is writing to slower areas of the disks
+when more streams are running in more AGs.
 
-Ok, I didn't add it to our default options, but I also didn't care about 
-it.
+i.e. 900MB/s might be what you get at the outer edge of the disks,
+but you might only get 500MB/s at the inner edges. When writing into
+4 AGs at once, they are not all going to the outer edge, and hence
+you see a much truer reflection of the speed of your storage than
+the single AG case.
 
+Keep in mind the inode64 AG selection algorithm is optimised to
+spread the allocation load out over the entire filesystem address
+space via rotating the directory structure. It does this to
+increases allocation parallelism and reduce filesystem hotspots,
+to improves individual locality of disparate sets of data, and in
+general is significantly faster than any other AG selection
+algorithm that anyone has managed to come up with.
 
-> * "largeio" only changes the st_blksize value reported (from default page size to, in your case, the total stripe width).  Does that actually affect your application behavior?
+> With small AGs one could also argue, that choosing
+> AGs which are not far away from each other (in respect to the number
+> of blocks) also adds more parallel disk access for small and medium
+> sized files.
+> 
+> Any objections against a patch to improve the AG selection?
 
-Fhgfs does not care about it, but for some backup tools (I think rsync 
-does/did? read it) it helps.
+Define "improve". I'm interested in hearing new idea on how we might
+be able to make different allocation decisions, but changing
+algorithms is not just a matter of changing code.
 
-
->
-> Backing up, what kernel & what userspace versions are you testing?
-
-xfsprogs-3.1.1-10.el6 + kernel 3.11.
-
-
+At minimum, changing the way allocation is done will drastically
+change the aging characteristics of the filesystem, and so what
+might work really well for empty filesystems (like ext4's linear
+allocation algorithms) really hurts performance as filesystems get
+older and free space gets less contiguous....
 
 Cheers,
-Bernd
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
