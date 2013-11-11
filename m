@@ -1,23 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0630D7F82
-	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 02:26:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E7A27304053
-	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 00:26:44 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 101FC7F73
+	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 03:35:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D598A304043
+	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 01:35:03 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Dvq8ShmC87GdFHQl (version=TLSv1
+	cuda.sgi.com with ESMTP id 1GQgctuFpytHInDf (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 11 Nov 2013 00:26:43 -0800 (PST)
-Message-ID: <528094BC.4010203@oracle.com>
-Date: Mon, 11 Nov 2013 16:26:36 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: Setting project quotas on special files
-References: <1384069188.245087.68.camel@storm> <527F63FC.1050005@oracle.com>	
-	<1384095977.245087.88.camel@storm> <52807C95.7010501@oracle.com>
-	<1384155489.245087.112.camel@storm>
-In-Reply-To: <1384155489.245087.112.camel@storm>
+	Mon, 11 Nov 2013 01:35:02 -0800 (PST)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rAB9Z16L018984
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 09:35:02 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAB9Z0Dr019482
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 09:35:01 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAB9Z0em026689 for <xfs@oss.sgi.com>; Mon, 11 Nov 2013 09:35:00 GMT
+From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Subject: [PATCH] xfstests: generic/273: use src/feature -o
+Date: Mon, 11 Nov 2013 13:34:54 +0400
+Message-Id: <1384162494-17002-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+In-Reply-To: <20131024010929.GR2797@dastard>
+References: <20131024010929.GR2797@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,98 +36,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: tiziano.mueller@stepping-stone.ch, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: vasily.isaenko@oracle.com
 
-T24gMTEvMTEgMjAxMyAxNTozOCBQTSwgVGl6aWFubyBNw7xsbGVyIHdyb3RlOgo+IEhpIEplZmYK
-PiAKPiBBbSBNb250YWcsIGRlbiAxMS4xMS4yMDEzLCAxNDo0MyArMDgwMCBzY2hyaWViIEplZmYg
-TGl1Ogo+PiBIaSBUaXppYW5vLAo+Pgo+PiBPbiAxMS8xMCAyMDEzIDIzOjA2IFBNLCBUaXppYW5v
-IE3DvGxsZXIgd3JvdGU6Cj4+Pgo+Pj4gSGkgSmVmZgo+Pj4KPj4+IFNvcnJ5IGZvciB0b3AtcG9z
-dGluZywgYnV0IGl0IG1heSBiZSBiZXR0ZXIgdG8gaWxsdXN0cmF0ZSB0aGlzIHdpdGggYW4KPj4+
-IGlzb2xhdGVkIGV4YW1wbGU6Cj4+Pgo+Pj4gSSBoYXZlIGEgdm9sdW1lIG5hbWVkICJiYWNrdXAi
-IG1vdW50ZWQgd2l0aCBvcHRpb24gInBxdW90YSIsIHRoZW4gSSBkbwo+Pj4gdGhlIGZvbGxvd2lu
-ZyBpbnNpZGUgdGhhdCBtb3VudHBvaW50Ogo+Pj4KPj4+IGxvY2FsaG9zdCBiYWNrdXAgIyBta2Rp
-ciB0ZXN0Cj4+PiBsb2NhbGhvc3QgYmFja3VwICMgbG4gLXMgL2ludmFsaWQvbG9jYXRpb24gdGVz
-dC9zeW1saW5rQQo+Pj4gbG9jYWxob3N0IGJhY2t1cCAjIGVjaG8gNDI6L3Zhci9iYWNrdXAvdGVz
-dCA+PiAvZXRjL3Byb2plY3RzCj4+PiBsb2NhbGhvc3QgYmFja3VwICMgZWNobyB0ZXN0OjQyID4+
-IC9ldGMvcHJvamlkCj4+PiBsb2NhbGhvc3QgYmFja3VwICMgeGZzX3F1b3RhIC14IC1jICdwcm9q
-ZWN0IC1zIHRlc3QnIC92YXIvYmFja3VwCj4+PiBTZXR0aW5nIHVwIHByb2plY3QgdGVzdCAocGF0
-aCAvdmFyL2JhY2t1cC90ZXN0KS4uLgo+Pj4geGZzX3F1b3RhOiBza2lwcGluZyBzcGVjaWFsIGZp
-bGUgL3Zhci9iYWNrdXAvdGVzdC9zeW1saW5rQQo+PiBTbyB0aGUgc3ltbGluayBmaWxlIGlzIHNr
-aXBwZWQuCj4+Cj4+PiBQcm9jZXNzZWQgMSAoL2V0Yy9wcm9qZWN0cyBhbmQgY21kbGluZSkgcGF0
-aHMgZm9yIHByb2plY3QgdGVzdCB3aXRoIHJlY3Vyc2lvbiBkZXB0aCBpbmZpbml0ZSAoLTEpLgo+
-Pj4gbG9jYWxob3N0IGJhY2t1cCAjIGNwIC1hbCB0ZXN0L3N5bWxpbmtBIHRlc3Qvc3ltbGlua0IK
-Pj4+IGNwOiBjYW5ub3QgY3JlYXRlIGhhcmQgbGluayAidGVzdC9zeW1saW5rQiIgdG8gInRlc3Qv
-c3ltbGlua0EiOiBJbnZhbGlkIGNyb3NzLWRldmljZSBsaW5rCj4+IFRoaXMgaXMgZXhwZWN0ZWQg
-YXMgeW91IGF0dGVtcHRpbmcgdG8gY3JlYXRlIGEgaGFyZGxpbmsgZmlsZSB1cG9uIGEgc3ltbGlu
-awo+PiB3aGljaCBpcyBsb2NhdGVkIGF0IGEgZGlmZmVyZW50IHZvbHVtZQo+IAo+IE5vLCAnY3Ag
-LWFsJyBkb2VzIG5vdCBmb2xsb3cgdGhlIHN5bWxpbmsgKHdoaWNoIGlzIGludmFsaWQgaW4gdGhp
-cwo+IGV4YW1wbGUgYnR3KSBidXQgdHJpZXMgdG8gY3JlYXRlIGEgaGFyZGxpbmsgZm9yIHRoYXQg
-c3ltbGluay4KPiAKPj4gIGFuZCB0aGUgc3ltbGluayB3YXMgbm90IGluaGVyaXRlZAo+PiBmcm9t
-IHRoZSBwcm9qZWN0IGlkKDQyIGluIHRoaXMgY2FzZSkgYXQgdGhpcyBzdGFnZShpLmUsIGl0J3Mg
-cHJvamlkIGlzIDAgYXMKPj4gYSBkZWZhdWx0IHByb2ppZCwgd2hpY2ggaXMgZGlmZmVyZW50IHRv
-IDQyKS4KPiAKPiBZZXMuCj4gCj4+Cj4+IFRoaXMgcmVzdHJpY3Rpb24gY2FuIGJlIGdvdCBmcm9t
-IHhmc192bl9saW5rKCk6Cj4+Cj4+IC8qCj4+ICAqIElmIHdlIGFyZSB1c2luZyBwcm9qZWN0IGlu
-aGVyaXRhbmNlLCB3ZSBvbmx5IGFsbG93IGhhcmQgbGluawo+PiAgKiBjcmVhdGlvbiBpbiBvdXIg
-dHJlZSB3aGVuIHRoZSBwcm9qZWN0IElEcyBhcmUgdGhlIHNhbWU7IGVsc2UKPj4gICogdGhlIHRy
-ZWUgcXVvdGEgbWVjaGFuaXNtIGNvdWxkIGJlIGNpcmN1bXZlbnRlZC4KPj4gICovCj4+ICBpZiAo
-dW5saWtlbHkoKHRkcC0+aV9kLmRpX2ZsYWdzICYgWEZTX0RJRkxBR19QUk9KSU5IRVJJVCkgJiYK
-Pj4gICAgICAoeGZzX2dldF9wcm9qaWQodGRwKSAhPSB4ZnNfZ2V0X3Byb2ppZChzaXApKSkpIHsK
-Pj4gIAllcnJvciA9IFhGU19FUlJPUihFWERFVik7Cj4+ICAJZ290byBlcnJvcl9yZXR1cm47Cj4+
-ICB9Cj4+Cj4+PiBsb2NhbGhvc3QgYmFja3VwICMgCj4+Pgo+Pj4gQ3JlYXRpbmcgYSBzeW1saW5r
-IGFmdGVyIHNldHRpbmcgdXAgcHJvamVjdCBxdW90YXMgaW4gdGhlIHNhbWUgZGlyZWN0b3J5Cj4+
-PiB5aWVsZHMgYSBkaWZmZXJlbnQgYmVoYXZpb3VyOgo+Pj4KPj4+IGxvY2FsaG9zdCBiYWNrdXAg
-IyBsbiAtcyAvaW52YWxpZC9sb2NhdGlvbiB0ZXN0L3N5bWxpbmtDCj4+IFNvIGEgc3ltbGluayBm
-aWxlIGlzIGNyZWF0ZWQgYW5kIGl0IGlzIGluaGVyaXRlZCB0aGUgcHJvamlkIGluIHRoaXMgY2Fz
-ZSwgYmVjYXVzZQo+PiBzeW1saW5rIGZpbGUgcXVvdGEgc3BhY2UgaXMgYWNjb3VudGVkIGFjY29y
-ZGluZyB0byBpdCdzIHBhdGggbGVuZ3RoLiBJT1dzLCBpdCB3b3VsZAo+PiBiZSByZWZsZWN0IG9u
-IHhmc19xdW90YSAteGMgJ3JlcG9ydCAtW2J8aF0nIGlmIHlvdSBjcmVhdGUgaXQgd2l0aCBhIGxv
-bmdlciBwYXRoIG5hbWUKPj4gZXhjZWVkcyB0aGUgaW5saW5lIGlub2RlIHNwYWNlLgo+Pgo+Pj4g
-bG9jYWxob3N0IGJhY2t1cCAjIGNwIC1hbCB0ZXN0L3N5bWxpbmtDIHRlc3Qvc3ltbGlua0QKPj4g
-VGhlcmVmb3JlIGNyZWF0ZSBhIGhhcmRsaW5rIGZyb20gdGhpcyBzeW1saW5rIGZpbGUgd2l0aCBh
-biBpbmhlcml0ZWQgcHJvamlkIGlzCj4+IGRlc2lyZWQgdG8gc3VjY2VlZC4KPj4KPj4+IGxvY2Fs
-aG9zdCBiYWNrdXAgIyAKPj4+Cj4+PiBUaGUgZm9sbG93aW5nIHNob3dzIHRoYXQgYSBzeW1saW5r
-IGFsb25lIChhbmQgbm90IGl0cyB0YXJnZXQpIGNhbiBoYXZlIGEKPj4+IHByb2plY3QgaWQgYXNz
-aWduZWQgYW5kIHRoYXQgdGhlIHByb2plY3QgaWQgbXVzdCBiZSBhc3NpZ25lZCB0byBiZSBhYmxl
-Cj4+PiB0byBjcmVhdGUgYSBoYXJkbGluayBvZiBhIHN5bWxpbmsgKG5vIG1hdHRlciB3aGVyZSBp
-dCBwb2ludHMgdG8pLgo+Pj4KPj4+IEZvciBlYWNoIG9mIHRoZSBzeW1saW5rcyB0ZXN0L3N5bWxp
-bmt7QSxCfSBydW4gYHN0YXRgIHRvIGdldCB0aGUgaW5vZGUKPj4+IHRoZW4gdXNlIHhmc19kYiBv
-biB0aGF0IGlub2RlIHRvIGdldCB0aGUgYXR0cmlidXRlczoKPj4+Cj4+PiBsb2NhbGhvc3QgYmFj
-a3VwICMgIHhmc19kYiAtciAtYyAnaW5vZGUgNDM2MicgLWMgJ3AnIC9kZXYvdmRiMSAgfCBncmVw
-IHByb2ppZAo+Pj4gY29yZS5wcm9qaWRfbG8gPSAwCj4+PiBjb3JlLnByb2ppZF9oaSA9IDAKPj4+
-IGxvY2FsaG9zdCBiYWNrdXAgIyAgeGZzX2RiIC1yIC1jICdpbm9kZSA0MzYzJyAtYyAncCcgL2Rl
-di92ZGIxICB8IGdyZXAgcHJvamlkCj4+PiBjb3JlLnByb2ppZF9sbyA9IDQyCj4+PiBjb3JlLnBy
-b2ppZF9oaSA9IDAKPj4gSnVzdCBhcyBhYm92ZSBtZW50aW9uZWQuLi4KPj4KPj4+IFVuZm9ydHVu
-YXRlbHkgeGZzX2lvIHRyaWVzIHRvIGZvbGxvdyB0aGUgc3ltbGlua3Mgc28gaXQgY2FuIG5vdCBi
-ZSB1c2VkCj4+PiB0byBzZXQgdGhlIHByb2plY3QgbWFudWFsbHkuCj4+IFdlbGwsIHdoeSB5b3Ug
-d2FudCB0byBzZXQgcHJvamVjdCBxdW90YSB2aWEgeGZzX2lvIG1hbnVhbGx5PyA6LVAuCj4gCj4g
-VG8gc2V0IHRoZSBwcm9qZWN0IGlkIGZvciBzcGVjaWFsIGZpbGVzIHdoaWNoIGRpZCBub3QgZ2V0
-IHRoZSBwcm9qZWN0IGlkCj4gc2V0IGR1cmluZyAieGZzX3F1b3RhIC14IC1jICdwcm9qZWN0IC1z
-IHRlc3QnIiwgd2hpY2ggd2FzIGxlYXZpbmcgbXkKPiB0cmVlIGluIGEgc29tZXdoYXQgaW5jb25z
-aXN0ZW50IHN0YXRlIHdydCB0aGUgcHJvamVjdCBpZC4KT2gsIG5vdyBJIGNhbiB1bmRlcnN0YW5k
-IHRoYXQgeW91IHdhbnQgdG8gc2V0IHByb2ppZCB0byBzcGVjaWFsIGZpbGVzLgo+IAo+IEFzIERh
-dmUgd3JvdGUgbWUgb24gSVJDLCB0aGUgZm9sbG93aW5nIHdvcmtzIChJIG9ubHkgdGVzdGVkIGl0
-LCBjcmVkaXQKPiBnb2VzIHRvIGhpbSk6Cj4gCj4gMS4gZmluZCB0aGUgaW5vZGUgb2YgYWxsIHNw
-ZWNpYWwgZmlsZXMgd2hlcmUgdGhlIHByb2plY3QgaWQgd2FzIG5vdCBzZXQKPiAyLiBkZXRlcm1p
-bmUgdGhlIHByb2plY3QgaWQgdG8gYmUgc2V0IGJ5IHJlY29yZGluZyB0aGVpciBwYXJlbnQKPiBk
-aXJlY3RvcmllJ3MgcHJvamVjdCBpZC4gWW91IHdpbGwgZW5kIHVwIHdpdGggYSB0dXBsZSAoZm9y
-IDE2IGJpdAo+IHByb2plY3QgaWRzKTogKGlub2RlLCBwcm9qaWRfbG8pLCByZXNwLiBhIHRyaXBs
-ZSAoZm9yIDMyIGJpdCBwcm9qZWN0Cj4gaWRzKTogKGlub2RlLCBwcm9qaWRfbG8sIHByb2ppZF9o
-aSkKPiAzLiB1bW91bnQgdGhlIHZvbHVtZQo+IDQuIHVzZSAneGZzX2RiIC14IC1jICJpbm9kZSA8
-aW5vZGU+IiAtYyAid3JpdGUgY29yZS5wcm9qaWRfbG8KPiA8cHJvamlkX2xvPiIgLWMgIndyaXRl
-IGNvcmUucHJvamlkX2hpIDxwcm9qaWRfaGk+IiA8ZGV2PicgdG8gc2V0IHRoZQo+IHByb2plY3Qg
-aWQgb24gdGhvc2UgaW5vZGVzIG1hbnVhbGx5Cj4gNS4gbW91bnQgdGhlIHZvbHVtZSBidXQgd2l0
-aG91dCAicHF1b3RhIiBhbmQgdW1vdW50IGFnYWluICh0aGlzIHdpbGwKPiB0cmlnZ2VyIGEgcXVv
-dGFjaGVjayBvbiB0aGUgbmV4dCBtb3VudCB3aXRoIHBxdW90YSkKPiA2LiBtb3VudCB0aGUgdm9s
-dW1lIHdpdGggdGhlICJwcXVvdGEiIG9wdGlvbiBhZ2Fpbgo+IAo+IEFzIGZvciB0aGUgIndoeSBj
-YW4geGZzX3F1b3RhIG5vdCBzZXQgdGhlIHByb2plY3QgaWQgb24gc3BlY2lhbCBmaWxlcyI6Cj4g
-aXQgZG9lcyBpdCB2aWEgaW9jdGwoMiksIHdoaWNoIG5lZWRzIGEgZmlsZSBoYW5kbGUsIHdoaWNo
-IGlzIHJldHJpZXZlZAo+IHZpYSBvcGVuKDIpLCB3aGljaCAiZm9sbG93cyIgdGhlIHN5bWxpbmtz
-L2RldmljZSBmaWxlcy4KVGhhbmsgZm9yIGxldHRpbmcgbWUga25vdyB0aGlzIGFzIHdlbGwsIEkg
-aGF2ZSBiZWVuIGJsb2NrZWQgZm9yIGxvZ2dpbmcgaW50byBJUkMKdGhlc2UgZGF5cyBkdWUgdG8g
-bmV0d29yayBpc3N1ZS4KClRoYW5rcywKLUplZmYKCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Due to partially committed series (fd080d64b6e9677cb9d0a15dc7e308b6ca0e273f)
+generic/273 test uses '_no_of_online_cpus' function which is not defined.
+
+Now it's safe to switch it to 'src/feature -o'.
+
+Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+---
+ tests/generic/273 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/tests/generic/273 b/tests/generic/273
+index c028438..ab04dfa 100755
+--- a/tests/generic/273
++++ b/tests/generic/273
+@@ -47,7 +47,7 @@ count=2
+ 
+ _threads_set()
+ {
+-	_cpu_num=`_no_of_online_cpus`
++	_cpu_num=`$here/src/feature -o`
+ 	threads=$(($_cpu_num * 50))
+ 	if [ $threads -gt 200 ]
+ 	then
+-- 
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
