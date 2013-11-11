@@ -1,29 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 473947F6B
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 11:25:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 20D0930406A
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 09:25:38 -0800 (PST)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id 40BIhXglSWVnVd74 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Mon, 11 Nov 2013 09:25:36 -0800 (PST)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1VfvEx-0005YX-5V
-	for linux-xfs@oss.sgi.com; Mon, 11 Nov 2013 18:25:31 +0100
-Received: from router1.itwm.fhg.de ([131.246.191.250])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 18:25:31 +0100
-Received: from bernd.schubert by router1.itwm.fhg.de with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 18:25:31 +0100
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Subject: ag selection
-Date: Mon, 11 Nov 2013 18:25:13 +0100
-Message-ID: <l5r3tf$m0j$1@ger.gmane.org>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 14A6B7F6B
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 11:53:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0338B8F80BA
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Nov 2013 09:53:22 -0800 (PST)
+Date: Mon, 11 Nov 2013 15:53:14 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: ag selection
+Message-ID: <20131111175313.GA16643@orion.maiolino.org>
+References: <l5r3tf$m0j$1@ger.gmane.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <l5r3tf$m0j$1@ger.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +21,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-xfs@oss.sgi.com
 
-Hi all,
+On Mon, Nov 11, 2013 at 06:25:13PM +0100, Bernd Schubert wrote:
+> Hi all,
+> 
+> for streaming writes onto a raid6 the current round-robin ag
+> selection seems does not seem to be optimal. Writing 4 files from 4
+> threads into a single directory we get 900 MB/s, writing 4 files in
+> 4 different directories we only get 700 MB/s (12 disks with with hw
+> megaraid-sas). The current round-robin scheme seems to be optimized
+> for linear raid0? With small AGs one could also argue, that choosing
+> AGs which are not far away from each other (in respect to the number
+> of blocks) also adds more parallel disk access for small and medium
+> sized files.
+> 
+> Any objections against a patch to improve the AG selection?
+> 
 
-for streaming writes onto a raid6 the current round-robin ag selection 
-seems does not seem to be optimal. Writing 4 files from 4 threads into a 
-single directory we get 900 MB/s, writing 4 files in 4 different 
-directories we only get 700 MB/s (12 disks with with hw megaraid-sas). 
-The current round-robin scheme seems to be optimized for linear raid0? 
-With small AGs one could also argue, that choosing AGs which are not far 
-away from each other (in respect to the number of blocks) also adds more 
-parallel disk access for small and medium sized files.
+I wouldn't say this it is optimized specifically for raid 0 environments but I
+lack some knowledge on this choice. The mainly reason for the round-robing IIRC,
+was to avoid lock contention in a single AG. spreading different files along the
+whole disk, and also making it able to allocate them contiguously along the disk.
 
-Any objections against a patch to improve the AG selection?
+But, I'm not sure what kind of optimization you have in mind and I believe
+another engineers will also need some extra information about what optimization
+you have in mind, what kind of tests you're doing (Direct I/O, buffered,
+pre-allocation), etc.. You'll also need to post filesystem configurations like
+FS aligment (su, sw options), etc.
 
+For different write patterns, you might also want to take a look at the
+rotor_step procfs option, and some other options dedicated to streaming writes,
+that might help you in this case.
 
-Thanks,
-Bernd
+Just my $0.02
+
+> 
+> Thanks,
+> Bernd
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
