@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 474F729E17
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 12:30:36 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0B97F29E17
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 12:32:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D6EE1AC008
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 10:30:32 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6268AC001
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 10:32:25 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id LqQCmesTEjyZNiPd (version=TLSv1
+	by cuda.sgi.com with ESMTP id qsH0FDLzLC5cCzWn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 Nov 2013 10:30:32 -0800 (PST)
-Date: Tue, 12 Nov 2013 10:30:31 -0800
+	Tue, 12 Nov 2013 10:32:24 -0800 (PST)
+Date: Tue, 12 Nov 2013 10:32:24 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfststs: add a helper to get the minimum dio size
-Message-ID: <20131112183031.GA8106@infradead.org>
-References: <20131106105932.GA7807@infradead.org>
-	<52826FBC.4000003@sandeen.net>
+Subject: Re: [PATCH] xfstests: stop special casing nfs and udf
+Message-ID: <20131112183224.GA12213@infradead.org>
+References: <20131107204635.GA22954@infradead.org>
+	<52827113.3080609@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52826FBC.4000003@sandeen.net>
+In-Reply-To: <52827113.3080609@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,19 +33,31 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Nov 12, 2013 at 12:13:16PM -0600, Eric Sandeen wrote:
-> On 11/6/13, 4:59 AM, Christoph Hellwig wrote:
-> > Various tests opencode checks to find out the minimum support direct I/O
-> > size.  Replace those with a generic helper that handles network filesystems as
-> > well.  Also remove the Linux 2.4 workaround we had in once place.
+On Tue, Nov 12, 2013 at 12:18:59PM -0600, Eric Sandeen wrote:
+> On 11/7/13, 2:46 PM, Christoph Hellwig wrote:
+> > For historical reasons beyond my knowledge xfstests tries to abuse the
+> > scratch device as test device for nfs and udf.  Because not all test
+> > have inherited the right usage of the _setup_testdir and _cleanup_testdir
+> > helpers this leads to lots of unessecary test failures.
+> > 
+> > Remove the special casing, which gets nfs down to a minimal number of
+> > failures.
 > > 
 > > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> No callers of min_dio_alignment w/o a blockdev right?  But I guess
-> that fallback is harmless.
+> 
+> Oof, that was a lot of cruft.  Were you able to run UDF tests with
+> these changes?  I wonder if Jan is using this for UDF?
 
-All network filesystems will not have a device here.  Not sure how the
-btrfs pool names work, but that would be another suspect.
+I didn't bother testing udf, but it's just another block based
+filesystem, so unlike NFS I didn't expect breakage.  Let me give it a
+spin..
+
+> (I don't have the UDF verifier that many(/all?) of the UDF tests
+> require).
+
+Last time I did run xfstests on UDF it wasn't required, just an
+additional tool to verify the fs consistency.
 
 _______________________________________________
 xfs mailing list
