@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7247B7F58
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 08:03:49 -0600 (CST)
-Message-ID: <52823550.30107@sgi.com>
-Date: Tue, 12 Nov 2013 08:04:00 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 79AC07F5D
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 08:12:40 -0600 (CST)
+Message-ID: <52823762.4040704@sgi.com>
+Date: Tue, 12 Nov 2013 08:12:50 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH RESEND] xfstests: fix compile error of src/fssum.c on
-	bigendian host
-References: <1384229813-30532-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1384229813-30532-1-git-send-email-eguan@redhat.com>
+Subject: Re: [PATCH v3] xfstests: add regression test for running btrfs balance
+	and defrag concurrently
+References: <1383212062-30153-1-git-send-email-bo.li.liu@oracle.com>
+In-Reply-To: <1383212062-30153-1-git-send-email-bo.li.liu@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,18 +22,20 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: Liu Bo <bo.li.liu@oracle.com>, linux-btrfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
 This has been committed.
 
 Thanks
 --Rich
 
-commit 3d2a446df422c5a1b9ab561ae73e66b68a5aa4c3
-Author: Eryu Guan <eguan@redhat.com>
-Date:   Tue Nov 12 04:16:53 2013 +0000
+commit 6bd85c0a995af4df28b354450e6df658257b559b
+Author: Liu Bo <bo.li.liu@oracle.com>
+Date:   Thu Oct 31 09:34:22 2013 +0000
 
-     xfstests: fix compile error of src/fssum.c on bigendian host
+     xfstests: add regression test for running btrfs balance and defrag 
+concurrently
 
 _______________________________________________
 xfs mailing list
