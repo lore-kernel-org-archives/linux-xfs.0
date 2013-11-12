@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 55D807F82
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 11:36:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F0018F8049
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 09:36:58 -0800 (PST)
-Date: Tue, 12 Nov 2013 09:36:56 -0800
+	by oss.sgi.com (Postfix) with ESMTP id 05B037F90
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 11:38:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D44A28F8049
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 09:38:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id ETNiwm2PCLHU6Yd3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 09:38:30 -0800 (PST)
+Date: Tue, 12 Nov 2013 09:38:30 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4] xfs: fix unlock in xfs_bmap_add_attrfork
-Message-ID: <20131112173656.GE19554@infradead.org>
-References: <20131107204358.901127238@.sgi.com>
+Subject: Re: [PATCH] xfsprogs: remove xfs_check references from fsck.xfs
+	script & manpage
+Message-ID: <20131112173830.GF19554@infradead.org>
+References: <528257D0.7050404@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131107204358.901127238@.sgi.com>
+In-Reply-To: <528257D0.7050404@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,22 +30,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Nov 07, 2013 at 03:43:28PM -0600, Mark Tinguely wrote:
-> xfs_trans_ijoin() activates the inode in a transaction and
-> also can specify which lock to free when the transaction is
-> committed or canceled.
+On Tue, Nov 12, 2013 at 10:31:12AM -0600, Eric Sandeen wrote:
+> xfs_check is deprecated & slated for removal in June 2014.
 > 
-> xfs_bmap_add_attrfork call locks and adds the lock to the
-> transaction but also manually removes the lock. Change the
-> routine to not add the lock to the transaction and manually
-> remove lock on completion.
+> We can stop referring to it now, though - pointing fsck.xfs
+> users to it doesn't make sense at this point.
 > 
-> While here, clean up the xfs_trans_cancel flags and goto names.
-> 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
 Looks good,
 
