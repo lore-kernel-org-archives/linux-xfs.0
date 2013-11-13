@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C58347F5E
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:05:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E7DF304059
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:05:19 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id MXHIe1tzGsCeXRzU (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 13 Nov 2013 08:05:18 -0800 (PST)
-Date: Wed, 13 Nov 2013 08:05:17 -0800
+	by oss.sgi.com (Postfix) with ESMTP id 82F137F5E
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:05:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 67739304064
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:05:40 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 60j3lTa8D47KJyRB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 13 Nov 2013 08:05:39 -0800 (PST)
+Date: Wed, 13 Nov 2013 08:05:38 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 20/36] db: rewrite IO engine to use libxfs
-Message-ID: <20131113160517.GA32627@infradead.org>
+Subject: Re: [PATCH 24/36] db: verify and calculate dquot CRCs
+Message-ID: <20131113160538.GB32627@infradead.org>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
-	<1384324860-25677-21-git-send-email-david@fromorbit.com>
+	<1384324860-25677-25-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1384324860-25677-21-git-send-email-david@fromorbit.com>
+In-Reply-To: <1384324860-25677-25-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,6 +32,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
+
+On Wed, Nov 13, 2013 at 05:40:48PM +1100, Dave Chinner wrote:
+> When we set the current Io cursor to point at a dquot block, verify
+> that the dquot CRC is intact. And prior to writing such an IO
+> cursor, calculate the dquot CRC.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Looks good,
 
