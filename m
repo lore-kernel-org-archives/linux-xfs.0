@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2CD167F74
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1346F304066
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:27 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id EB4237F3F
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3123304066
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2eRIhLxiQrW8tEa2 for
+	cuda.sgi.com with ESMTP id JDAs2KZFZ1DJtSSl for
 	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from int-mx02.intmail.prod.int.phx2.redhat.com
 	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuPX1006266
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOEK014557
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:25 -0500
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id rADFuOj8030014
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:25 -0500
+	id rADFuOSS030016
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 15/20] xfsprogs/repair: pass btree block magic as param to
-	build_ino_tree()
-Date: Wed, 13 Nov 2013 10:56:17 -0500
-Message-Id: <1384358182-37967-16-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 12/20] xfsprogs/db: finobt support
+Date: Wed, 13 Nov 2013 10:56:14 -0500
+Message-Id: <1384358182-37967-13-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 References: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,76 +38,57 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-A minor cleanup to build_ino_tree() to provide the appropriate
-magic value for btree block initialization from the caller. This
-facilitates use of separate magic values for finobt blocks when
-building the free inode btree.
+Add the AGI finobt fields and fibt layouts.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase5.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ db/agi.c     |  2 ++
+ db/btblock.c | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 77eb125..10ed1eb 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1097,7 +1097,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
-  */
- static void
- build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs)
-+		bt_status_t *btree_curs, __uint32_t magic)
- {
- 	xfs_agnumber_t		i;
- 	xfs_agblock_t		j;
-@@ -1135,11 +1135,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
--			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
-+			xfs_btree_init_block(mp, lptr->buf_p, magic,
- 						i, 0, agno,
- 						XFS_BTREE_CRC_BLOCKS);
- 		else
--			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
-+			xfs_btree_init_block(mp, lptr->buf_p, magic,
- 						i, 0, agno, 0);
- 	}
+diff --git a/db/agi.c b/db/agi.c
+index 398bdbb..6f167ac 100644
+--- a/db/agi.c
++++ b/db/agi.c
+@@ -57,6 +57,8 @@ const field_t	agi_flds[] = {
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_INOBT },
++	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
  
-@@ -1166,11 +1166,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
--			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
-+			xfs_btree_init_block(mp, lptr->buf_p, magic,
- 						0, 0, agno,
- 						XFS_BTREE_CRC_BLOCKS);
- 		else
--			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
-+			xfs_btree_init_block(mp, lptr->buf_p, magic,
- 						0, 0, agno, 0);
- 
- 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-@@ -1483,6 +1483,7 @@ phase5_func(
- 	xfs_extlen_t	freeblks2;
- #endif
- 	xfs_agblock_t	num_extents;
-+	__uint32_t	magic;
- 
- 	if (verbose)
- 		do_log(_("        - agno = %d\n"), agno);
-@@ -1616,7 +1617,9 @@ phase5_func(
- 		/*
- 		 * build inode allocation tree.  this also build the agi
- 		 */
--		build_ino_tree(mp, agno, &ino_btree_curs);
-+		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
-+				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
-+		build_ino_tree(mp, agno, &ino_btree_curs, magic);
- 		write_cursor(&ino_btree_curs);
- 		/*
- 		 * tear down cursors
+diff --git a/db/btblock.c b/db/btblock.c
+index 1ea0cff..cdb8b1d 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -60,6 +60,12 @@ struct xfs_db_btree {
+ 		sizeof(xfs_inobt_rec_t),
+ 		sizeof(__be32),
+ 	},
++	{	XFS_FIBT_MAGIC,
++		XFS_BTREE_SBLOCK_LEN,
++		sizeof(xfs_inobt_key_t),
++		sizeof(xfs_inobt_rec_t),
++		sizeof(__be32),
++	},
+ 	{	XFS_BMAP_CRC_MAGIC,
+ 		XFS_BTREE_LBLOCK_CRC_LEN,
+ 		sizeof(xfs_bmbt_key_t),
+@@ -84,6 +90,12 @@ struct xfs_db_btree {
+ 		sizeof(xfs_inobt_rec_t),
+ 		sizeof(__be32),
+ 	},
++	{	XFS_FIBT_CRC_MAGIC,
++		XFS_BTREE_SBLOCK_CRC_LEN,
++		sizeof(xfs_inobt_key_t),
++		sizeof(xfs_inobt_rec_t),
++		sizeof(__be32),
++	},
+ 	{	0,
+ 	},
+ };
 -- 
 1.8.1.4
 
