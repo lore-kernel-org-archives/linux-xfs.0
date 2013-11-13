@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DF7367FD7
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3B1230406B
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:31 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D1B727FF4
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 98A7A8F8035
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:32 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	N2Yk5eLAuvLwIi2F for <xfs@oss.sgi.com>;
-	Tue, 12 Nov 2013 22:41:30 -0800 (PST)
+	IvhtxBjNX4HdoEDV for <xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 22:41:31 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bU-0v
+	(envelope-from <dave@fromorbit.com>) id 1VgU8N-0005bK-Us
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8N-0006i3-W7
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8N-0006ho-U4
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/36] libxfs: bring across inode buffer readahead verifier
-	changes
-Date: Wed, 13 Nov 2013 17:40:33 +1100
-Message-Id: <1384324860-25677-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/36] libxfs: unify xfs_btree.c with kernel code
+Date: Wed, 13 Nov 2013 17:40:30 +1100
+Message-Id: <1384324860-25677-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,111 +39,134 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-These were made for log recovery readahead in the kernel, so are not
-directly used in userspace. Hence bringing the change across is
-simply to keep files in sync.
+The libxfs/xfs_btree.c code does not contain a small amount of code
+for btree block readahead that the kernel code does. Instead, it
+short circuits it at a higher layer and doesn't include the lower
+layer functions. There is no harm in calling the lower lay functions
+and have them do nothing, and doing so unifies the kernel and
+userspace code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_inode_buf.c | 41 ++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 36 insertions(+), 5 deletions(-)
+ libxfs/xfs.h       |  8 +++++---
+ libxfs/xfs_btree.c | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 48 insertions(+), 8 deletions(-)
 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index b096f77..67d5eb4 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -46,9 +46,22 @@ xfs_inobp_check(
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 31acf1b..364fd83 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -319,10 +319,12 @@ roundup_64(__uint64_t x, __uint32_t y)
+ 
+ #define xfs_trans_buf_copy_type(dbp, sbp)
+ 
+-#define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
++/* no readahead, need to avoid set-but-unused var warnings. */
++#define xfs_buf_readahead(a,d,c,ops)		({	\
++	xfs_daddr_t __d = d;				\
++	__d = __d; /* no set-but-unused warning */	\
++})
+ #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
+-#define xfs_btree_reada_bufl(m,fsb,c,ops)	((void) 0)
+-#define xfs_btree_reada_bufs(m,fsb,c,x,ops)	((void) 0)
+ #define xfs_buftrace(x,y)			((void) 0)	/* debug only */
+ 
+ #define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 0099926..ce149ad 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -396,7 +396,6 @@ static inline size_t xfs_btree_block_len(struct xfs_btree_cur *cur)
+ 			return XFS_BTREE_LBLOCK_CRC_LEN;
+ 		return XFS_BTREE_LBLOCK_LEN;
+ 	}
+-
+ 	if (cur->bc_flags & XFS_BTREE_CRC_BLOCKS)
+ 		return XFS_BTREE_SBLOCK_CRC_LEN;
+ 	return XFS_BTREE_SBLOCK_LEN;
+@@ -493,7 +492,7 @@ xfs_btree_ptr_addr(
  }
- #endif
+ 
+ /*
+- * Get a the root block which is stored in the inode.
++ * Get the root block which is stored in the inode.
+  *
+  * For now this btree implementation assumes the btree root is always
+  * stored in the if_broot field of an inode fork.
+@@ -716,6 +715,46 @@ xfs_btree_read_bufl(
+ 	return 0;
+ }
  
 +/*
-+ * If we are doing readahead on an inode buffer, we might be in log recovery
-+ * reading an inode allocation buffer that hasn't yet been replayed, and hence
-+ * has not had the inode cores stamped into it. Hence for readahead, the buffer
-+ * may be potentially invalid.
-+ *
-+ * If the readahead buffer is invalid, we don't want to mark it with an error,
-+ * but we do want to clear the DONE status of the buffer so that a followup read
-+ * will re-read it from disk. This will ensure that we don't get an unnecessary
-+ * warnings during log recovery and we don't get unnecssary panics on debug
-+ * kernels.
++ * Read-ahead the block, don't wait for it, don't return a buffer.
++ * Long-form addressing.
 + */
- static void
- xfs_inode_buf_verify(
--	struct xfs_buf	*bp)
-+	struct xfs_buf	*bp,
-+	bool		readahead)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	int		i;
-@@ -69,6 +82,11 @@ xfs_inode_buf_verify(
- 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
- 						XFS_ERRTAG_ITOBP_INOTOBP,
- 						XFS_RANDOM_ITOBP_INOTOBP))) {
-+			if (readahead) {
-+				bp->b_flags &= ~XBF_DONE;
-+				return;
-+			}
++/* ARGSUSED */
++void
++xfs_btree_reada_bufl(
++	struct xfs_mount	*mp,		/* file system mount point */
++	xfs_fsblock_t		fsbno,		/* file system block number */
++	xfs_extlen_t		count,		/* count of filesystem blocks */
++	const struct xfs_buf_ops *ops)
++{
++	xfs_daddr_t		d;
 +
- 			xfs_buf_ioerror(bp, EFSCORRUPTED);
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
- 					     mp, dip);
-@@ -87,14 +105,21 @@ static void
- xfs_inode_buf_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_inode_buf_verify(bp);
-+	xfs_inode_buf_verify(bp, false);
++	ASSERT(fsbno != NULLFSBLOCK);
++	d = XFS_FSB_TO_DADDR(mp, fsbno);
++	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
 +}
 +
-+static void
-+xfs_inode_buf_readahead_verify(
-+	struct xfs_buf	*bp)
++/*
++ * Read-ahead the block, don't wait for it, don't return a buffer.
++ * Short-form addressing.
++ */
++/* ARGSUSED */
++void
++xfs_btree_reada_bufs(
++	struct xfs_mount	*mp,		/* file system mount point */
++	xfs_agnumber_t		agno,		/* allocation group number */
++	xfs_agblock_t		agbno,		/* allocation group block number */
++	xfs_extlen_t		count,		/* count of filesystem blocks */
++	const struct xfs_buf_ops *ops)
 +{
-+	xfs_inode_buf_verify(bp, true);
- }
- 
- static void
- xfs_inode_buf_write_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_inode_buf_verify(bp);
-+	xfs_inode_buf_verify(bp, false);
- }
- 
- const struct xfs_buf_ops xfs_inode_buf_ops = {
-@@ -102,6 +127,12 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
- 	.verify_write = xfs_inode_buf_write_verify,
- };
- 
-+const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
-+	.verify_read = xfs_inode_buf_readahead_verify,
-+	.verify_write = xfs_inode_buf_write_verify,
-+};
++	xfs_daddr_t		d;
 +
++	ASSERT(agno != NULLAGNUMBER);
++	ASSERT(agbno != NULLAGBLOCK);
++	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
++	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, ops);
++}
 +
+ STATIC int
+ xfs_btree_readahead_lblock(
+ 	struct xfs_btree_cur	*cur,
+@@ -1339,7 +1378,7 @@ xfs_btree_log_block(
+ 			 * We don't log the CRC when updating a btree
+ 			 * block but instead recreate it during log
+ 			 * recovery.  As the log buffers have checksums
+-			 * of their this is safe and avoids logging a crc
++			 * of their own this is safe and avoids logging a crc
+ 			 * update in a lot of places.
+ 			 */
+ 			if (fields == XFS_BB_ALL_BITS)
+@@ -1629,7 +1668,7 @@ xfs_lookup_get_search_key(
+ 
  /*
-  * This routine is called to map an inode to the buffer containing the on-disk
-  * version of the inode.  It returns a pointer to the buffer containing the
-@@ -191,7 +222,7 @@ xfs_dinode_from_disk(
- 		to->di_ino = be64_to_cpu(from->di_ino);
- 		to->di_lsn = be64_to_cpu(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
--		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
-+		uuid_copy(&to->di_uuid, &from->di_uuid);
- 	}
- }
+  * Lookup the record.  The cursor is made to point to it, based on dir.
+- * Return 0 if can't find any such record, 1 for success.
++ * stat is set to 0 if can't find any such record, 1 for success.
+  */
+ int					/* error */
+ xfs_btree_lookup(
+@@ -2701,7 +2740,6 @@ xfs_btree_make_block_unfull(
  
-@@ -237,7 +268,7 @@ xfs_dinode_to_disk(
- 		to->di_ino = cpu_to_be64(from->di_ino);
- 		to->di_lsn = cpu_to_be64(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
--		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
-+		uuid_copy(&to->di_uuid, &from->di_uuid);
- 		to->di_flushiter = 0;
- 	} else {
- 		to->di_flushiter = cpu_to_be16(from->di_flushiter);
+ 		if (numrecs < cur->bc_ops->get_dmaxrecs(cur, level)) {
+ 			/* A root block that can be made bigger. */
+-
+ 			xfs_iroot_realloc(ip, 1, cur->bc_private.b.whichfork);
+ 		} else {
+ 			/* A root block that needs replacing */
 -- 
 1.8.4.rc3
 
