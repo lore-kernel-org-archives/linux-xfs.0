@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 012FB7F8B
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8D53A7F9A
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 78BE9AC003
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:22 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7263E304066
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:23 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Fm3i5Gam87hLQVwh for <xfs@oss.sgi.com>;
-	Tue, 12 Nov 2013 22:41:21 -0800 (PST)
+	6U4Y82ePIjt9YnYE for <xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 22:41:22 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8N-0005bC-RB
-	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:03 +1100
+	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bw-BP
+	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8N-0006hM-Py
-	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:03 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006jQ-AQ
+	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/36 V5] xfsprogs: CRC write support for xfs_db +
-Date: Wed, 13 Nov 2013 17:40:24 +1100
-Message-Id: <1384324860-25677-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 26/36] db: add a special attribute buffer verifier
+Date: Wed, 13 Nov 2013 17:40:50 +1100
+Message-Id: <1384324860-25677-27-git-send-email-david@fromorbit.com>
+In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
+References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,26 +37,114 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the latest version of the xfs_db write support patch set.
+Because we only have a single attribute type that is used for all
+the attribute buffer types, we need to provide a special verifier
+for the read code. That verifier needs to know all the attribute
+types and when it find one it knows about, switch to the correct
+verifier and call it.
 
-Changes since V4:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ db/attr.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h |  2 ++
+ db/type.c |  3 ++-
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-- Added reviewed-by tags to allt eh reviewd patches
-- Fixed the wrong subject line for patch 28
-- fixed libxfs root inode handling (patch 15)
-- folded db buffer unwinding on exit patch into the original IO
-  rewrite patch (patch 20)
-
-There are still a couple of unreviewed patches in the list - 20, 24,
-31 and 37, so those are the the blockers at this point. Patches 1-16
-shoul dbe fine to commit as presented - they should be the same as
-last posting except for the addition of the reviewed by tags.
-
-Cheers,
-
-Dave.
+diff --git a/db/attr.c b/db/attr.c
+index cd95a0a..359af7b 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -25,6 +25,7 @@
+ #include "attr.h"
+ #include "io.h"
+ #include "init.h"
++#include "output.h"
+ 
+ static int	attr_leaf_entries_count(void *obj, int startoff);
+ static int	attr_leaf_hdr_count(void *obj, int startoff);
+@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++/*
++ * Special read verifier for attribute buffers. detect the magic number
++ * appropriately and set the correct verifier and call it.
++ */
++static void
++xfs_attr3_db_read_verify(
++	struct xfs_buf		*bp)
++{
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
++
++	switch (magic16) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		bp->b_ops = &xfs_attr3_leaf_buf_ops;
++		goto verify;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		goto verify;
++	default:
++		break;
++	}
++
++	switch (magic32) {
++	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
++		bp->b_ops = &xfs_attr3_rmt_buf_ops;
++		break;
++	default:
++		dbprintf(_("Unknown attribute buffer type!\n"));
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++verify:
++	bp->b_ops->verify_read(bp);
++}
++
++static void
++xfs_attr3_db_write_verify(
++	struct xfs_buf		*bp)
++{
++	dbprintf(_("Writing unknown attribute buffer type!\n"));
++	xfs_buf_ioerror(bp, EFSCORRUPTED);
++}
++
++const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
++	.verify_read = xfs_attr3_db_read_verify,
++	.verify_write = xfs_attr3_db_write_verify,
++};
+diff --git a/db/attr.h b/db/attr.h
+index 3065372..bc3431f 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -33,3 +33,5 @@ extern const field_t	attr3_node_hdr_flds[];
+ 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
++
++extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
+diff --git a/db/type.c b/db/type.c
+index 2c3431e..04d0d56 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -77,7 +77,8 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
+ 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
+-	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
++	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
++		&xfs_attr3_db_buf_ops },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
