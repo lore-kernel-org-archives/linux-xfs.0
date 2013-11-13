@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 82E2A7F4E
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:37:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 06DF1AC004
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 06:37:11 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EA4AB7F37
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D06718F8040
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TOCa83CLsLfNEkm1 for
-	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 06:37:11 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADEb9Cj020841
+	cuda.sgi.com with ESMTP id UASy4VSqn863qDLx for
+	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOHP017191
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:37:10 -0500
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id rADEb9k0025764
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:37:09 -0500
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id rADFuOZT020732
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 11/11] xfs: enable the finobt feature on v5 superblocks
-Date: Wed, 13 Nov 2013 09:37:07 -0500
-Message-Id: <1384353427-36205-12-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
-References: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 10/20] xfs: enable the finobt feature on v5 superblocks
+Date: Wed, 13 Nov 2013 10:56:12 -0500
+Message-Id: <1384358182-37967-11-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
+References: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,13 +44,13 @@ finobt and non-finobt formatted filesystems.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_sb.h | 3 ++-
+ include/xfs_sb.h | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+diff --git a/include/xfs_sb.h b/include/xfs_sb.h
 index 070a7f6..9919fb8 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
+--- a/include/xfs_sb.h
++++ b/include/xfs_sb.h
 @@ -586,7 +586,8 @@ xfs_sb_has_compat_feature(
  }
  
