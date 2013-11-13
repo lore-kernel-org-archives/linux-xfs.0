@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CA2187F58
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 11:52:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9C0CA8F8035
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:52:13 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id DB02E7F54
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 11:56:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B0C788F8050
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:08 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MFmAIXuu2BNQwlkZ for
-	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:52:12 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADHqCsZ004598
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 12:52:12 -0500
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id rADHqBMJ016891
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 12:52:12 -0500
-Message-ID: <5283BC4B.9090204@redhat.com>
-Date: Wed, 13 Nov 2013 11:52:11 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	cuda.sgi.com with ESMTP id HzivW8M66avrvmsZ for
+	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:04 -0800 (PST)
+Message-ID: <5283BD1A.8000704@redhat.com>
+Date: Wed, 13 Nov 2013 12:55:38 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: remove unused "verbose" argument from xfs_setsize_buftarg
-	path
+Subject: Re: [PATCH v2 00/11] xfs: introduce the free inode btree
+References: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
+	<20131113161711.GA14300@infradead.org>
+In-Reply-To: <20131113161711.GA14300@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,69 +28,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The "verbose" argument has been unused since 
-ffe37436 xfs: stop using the page cache to back the buffer cache
+On 11/13/2013 11:17 AM, Christoph Hellwig wrote:
+> I have to admit that I haven't followed this series as closely as I
+> should, but could you summarize the performance of it?  What workloads
+> does it help most, what workloads does it hurt and how much?
+> 
 
-Remove it, and then give the function a better (?) name since
-no flags are involved.
+Hi Christoph,
 
-Fix inconsistent comment spacing while we're at it.
+Sure... this work is based on Dave's write up here:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+http://oss.sgi.com/archives/xfs/2013-08/msg00344.html
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2634700..85d916a 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1602,11 +1602,10 @@ xfs_free_buftarg(
- }
- 
- STATIC int
--xfs_setsize_buftarg_flags(
-+__xfs_setsize_buftarg(
- 	xfs_buftarg_t		*btp,
- 	unsigned int		blocksize,
--	unsigned int		sectorsize,
--	int			verbose)
-+	unsigned int		sectorsize)
- {
- 	btp->bt_bsize = blocksize;
- 	btp->bt_sshift = ffs(sectorsize) - 1;
-@@ -1627,17 +1626,17 @@ xfs_setsize_buftarg_flags(
- }
- 
- /*
-- *	When allocating the initial buffer target we have not yet
-- *	read in the superblock, so don't know what sized sectors
-- *	are being used at this early stage.  Play safe.
-+ * When allocating the initial buffer target we have not yet
-+ * read in the superblock, so don't know what sized sectors
-+ * are being used at this early stage.  Play safe.
-  */
- STATIC int
- xfs_setsize_buftarg_early(
- 	xfs_buftarg_t		*btp,
- 	struct block_device	*bdev)
- {
--	return xfs_setsize_buftarg_flags(btp,
--			PAGE_SIZE, bdev_logical_block_size(bdev), 0);
-+	return __xfs_setsize_buftarg(btp,
-+			PAGE_SIZE, bdev_logical_block_size(bdev));
- }
- 
- int
-@@ -1646,7 +1645,7 @@ xfs_setsize_buftarg(
- 	unsigned int		blocksize,
- 	unsigned int		sectorsize)
- {
--	return xfs_setsize_buftarg_flags(btp, blocksize, sectorsize, 1);
-+	return __xfs_setsize_buftarg(btp, blocksize, sectorsize);
- }
- 
- xfs_buftarg_t *
+... where he also explains the general idea, which is basically to
+improve inode allocation performance on a large fs' that happens to be
+sparsely populated with inode chunks with free inodes. We do this by
+creating a second inode btree that only tracks inode chunks with at
+least one free inode.
+
+So far I've only really ad hoc tested the focused case: create millions
+of inodes on an fs, strategically remove an inode towards the end of the
+ag such that there is one existing inode chunk with a single free inode,
+then go and create a file.
+
+The current implementation hits the fallback search in xfs_dialloc_ag()
+(the for loop prior to 'alloc_inode:') and degrades to a couple seconds
+or so (on my crappy single spindle setup). Alternatively, the finobt in
+this scenario contains a single record with the chunk with the free
+inode, so the record lookup and allocation time is basically constant
+(e.g., we eliminate the need to ever run the full ag scan).
+
+Sorry I don't have more specific numbers at the moment. Most of my
+testing so far has been the focused case and general reliability
+testing. I'll need to find some hardware worthy of performance testing,
+particularly to check for any potential negative effects of managing the
+secondary tree. I suppose I wouldn't expect it to be much worse than the
+overhead of managing two free space trees, but we'll see.
+Thoughts/suggestions appreciated, thanks.
+
+Brian
+
 
 _______________________________________________
 xfs mailing list
