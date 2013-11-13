@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F35197F52
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:37:11 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6BC507F54
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:37:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F241AC00A
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F19BCAC013
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 06:37:11 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0HKxLWvRfFZEUQKZ for
-	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 06:37:10 -0800 (PST)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADEb8Tr020839
+	cuda.sgi.com with ESMTP id tDmsVZhJfDxQDm9X for
+	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 06:37:11 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADEb9hh029092
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:37:09 -0500
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:37:10 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id rADEb83h011968
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:37:08 -0500
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id rADEb9Pe031365
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:37:09 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 00/11] xfs: introduce the free inode btree
-Date: Wed, 13 Nov 2013 09:36:56 -0500
-Message-Id: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 09/11] xfs: add finobt support to growfs
+Date: Wed, 13 Nov 2013 09:37:05 -0500
+Message-Id: <1384353427-36205-10-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
+References: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,71 +38,65 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+Add finobt support to growfs. Initialize the agi root/level fields
+and the root finobt block.
 
-The free inode btree adds a new inode btree to XFS with the intent to
-track only inode chunks with at least one free inode. Patches 1-3 add
-the necessary support for the new XFS_BTNUM_FINOBT type and introduce a
-read-only v5 superblock flag. Patch 4 updates the transaction
-reservations for inode allocation operations to account for the finobt.
-Patches 5-9 add support to manage the finobt on inode chunk allocation,
-inode allocation, inode free (and chunk deletion) and growfs. Patch 10
-adds support to report finobt status in the fs geometry. Patch 11 adds
-the feature bit to the associated mask. Thoughts, reviews, flames
-appreciated.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_fsops.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-Brian
-
-v2:
-- Rebase to latest xfs tree (minor shifting around of some header bits).
-- Added "xfs: report finobt status in fs geometry" patch to series.
-v1:
-- Separate patch to enable rw finobt support at end of series.
-- Rework xfs_ialloc_log_agi() to log the agi in two distinct regions.
-- Rework xfs_ialloc_btree.c changes to use separate finobt handlers
-  where appropriate.
-- Fix bug to show fibt2 stats data in stat proc file.
-- Move finobt log reservation calculations into separate helper, made
-  conditional and merged to a single patch.
-- Use reserved block pool in xfs_inactive() codepath instead of flush.
-- Moved and cleaned up xfs_inobt_insert() to use inobt helpers.
-- Enhanced lookup algorithm for allocation (xfs_dialloc_ag()).
-- Refactored xfs_difree() to use xfs_difree_inobt() and
-  xfs_difree_finobt(), cleaned up the latter.
-
-Brian Foster (11):
-  xfs: refactor xfs_ialloc_btree.c to support multiple inobt numbers
-  xfs: reserve v5 superblock read-only compat. feature bit for finobt
-  xfs: support the XFS_BTNUM_FINOBT free inode btree type
-  xfs: update inode allocation/free transaction reservations for finobt
-  xfs: insert newly allocated inode chunks into the finobt
-  xfs: use and update the finobt on inode allocation
-  xfs: refactor xfs_difree() inobt bits into xfs_difree_inobt() helper
-  xfs: update the finobt on inode free
-  xfs: add finobt support to growfs
-  xfs: report finobt status in fs geometry
-  xfs: enable the finobt feature on v5 superblocks
-
- fs/xfs/xfs_ag.h           |  32 ++-
- fs/xfs/xfs_btree.c        |   6 +-
- fs/xfs/xfs_btree.h        |   3 +
- fs/xfs/xfs_format.h       |  14 +-
- fs/xfs/xfs_fs.h           |   1 +
- fs/xfs/xfs_fsops.c        |  36 ++-
- fs/xfs/xfs_ialloc.c       | 616 ++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_ialloc_btree.c |  68 ++++-
- fs/xfs/xfs_ialloc_btree.h |   3 +-
- fs/xfs/xfs_inode.c        |   4 +-
- fs/xfs/xfs_itable.c       |   6 +-
- fs/xfs/xfs_log_recover.c  |   2 +
- fs/xfs/xfs_sb.h           |  10 +-
- fs/xfs/xfs_stats.c        |   1 +
- fs/xfs/xfs_stats.h        |  18 +-
- fs/xfs/xfs_trans_resv.c   |  47 +++-
- fs/xfs/xfs_trans_space.h  |   7 +-
- fs/xfs/xfs_types.h        |   2 +-
- 18 files changed, 746 insertions(+), 130 deletions(-)
-
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index a6e54b3..63d9424 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -312,6 +312,10 @@ xfs_growfs_data_private(
+ 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+ 			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
++		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
++			agi->agi_free_level = cpu_to_be32(1);
++		}
+ 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+ 			agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+ 
+@@ -403,6 +407,34 @@ xfs_growfs_data_private(
+ 		xfs_buf_relse(bp);
+ 		if (error)
+ 			goto error0;
++
++		/*
++		 * FINO btree root block
++		 */
++		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++			bp = xfs_growfs_get_hdr_buf(mp,
++				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
++				BTOBB(mp->m_sb.sb_blocksize), 0,
++				&xfs_inobt_buf_ops);
++			if (!bp) {
++				error = ENOMEM;
++				goto error0;
++			}
++
++			if (xfs_sb_version_hascrc(&mp->m_sb))
++				xfs_btree_init_block(mp, bp, XFS_FIBT_CRC_MAGIC,
++						     0, 0, agno,
++						     XFS_BTREE_CRC_BLOCKS);
++			else
++				xfs_btree_init_block(mp, bp, XFS_FIBT_MAGIC, 0,
++						     0, agno, 0);
++
++			error = xfs_bwrite(bp);
++			xfs_buf_relse(bp);
++			if (error)
++				goto error0;
++		}
++
+ 	}
+ 	xfs_trans_agblocks_delta(tp, nfree);
+ 	/*
 -- 
 1.8.1.4
 
