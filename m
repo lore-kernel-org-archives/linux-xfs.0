@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BC3597F50
+	by oss.sgi.com (Postfix) with ESMTP id AFD9D7F37
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8EE898F8035
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 963D18F8040
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dYats4u9MSSj8urt for
+	cuda.sgi.com with ESMTP id DdkS7Rk03kGhQL4J for
 	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:24 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOD2015046
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOst017179
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id rADFuN7c013417
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id rADFuNKk001402
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 01/20] xfs: refactor xfs_ialloc_btree.c to support multiple
-	inobt numbers
-Date: Wed, 13 Nov 2013 10:56:03 -0500
-Message-Id: <1384358182-37967-2-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 02/20] xfs: reserve v5 superblock read-only compat. feature
+	bit for finobt
+Date: Wed, 13 Nov 2013 10:56:04 -0500
+Message-Id: <1384358182-37967-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 References: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,106 +39,49 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The introduction of the free inode btree (finobt) requires that
-xfs_ialloc_btree.c handle multiple trees. Refactor xfs_ialloc_btree.c
-so the caller specifies the btree type on cursor initialization to
-prepare for addition of the finobt.
+Reserve a v5 read-only compatibility feature bit for the finobt and
+create the xfs_sb_version_hasfinobt() helper to determine whether
+an fs has the feature enabled.
+
+The finobt does not change existing on-disk structures, but must
+remain consistent with the ialloc btree. Modifications from older
+kernels would violate that constrant. Therefore, we restrict older
+kernels to read-only mounts of finobt-enabled filesystems.
+
+Note that this does not yet enable the ability to rw mount a finobt
+fs (by setting the feature bit in the XFS_SB_FEAT_RO_COMPAT_ALL
+mask).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <david@fromorbit.com>
 ---
- include/xfs_ialloc_btree.h | 3 ++-
- libxfs/xfs_ialloc.c        | 8 ++++----
- libxfs/xfs_ialloc_btree.c  | 8 +++++---
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ include/xfs_sb.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/include/xfs_ialloc_btree.h b/include/xfs_ialloc_btree.h
-index f38b220..d7ebea7 100644
---- a/include/xfs_ialloc_btree.h
-+++ b/include/xfs_ialloc_btree.h
-@@ -58,7 +58,8 @@ struct xfs_mount;
- 		 ((index) - 1) * sizeof(xfs_inobt_ptr_t)))
- 
- extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
--		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
-+		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t,
-+		xfs_btnum_t);
- extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
- 
- #endif	/* __XFS_IALLOC_BTREE_H__ */
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index afe1a82..337a4c6 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -432,7 +432,7 @@ xfs_ialloc_ag_alloc(
- 	/*
- 	 * Insert records describing the new inode chunk into the btree.
- 	 */
--	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno);
-+	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno, XFS_BTNUM_INO);
- 	for (thisino = newino;
- 	     thisino < newino + newlen;
- 	     thisino += XFS_INODES_PER_CHUNK) {
-@@ -678,7 +678,7 @@ xfs_dialloc_ag(
- 	ASSERT(pag->pagi_freecount > 0);
- 
-  restart_pagno:
--	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
- 	/*
- 	 * If pagino is 0 (this is the root inode allocation) use newino.
- 	 * This must work because we've just allocated some.
-@@ -1140,7 +1140,7 @@ xfs_difree(
- 	/*
- 	 * Initialize the cursor.
- 	 */
--	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
- 
- 	error = xfs_check_agi_freecount(cur, agi);
- 	if (error)
-@@ -1271,7 +1271,7 @@ xfs_imap_lookup(
- 	 * we have a record, we need to ensure it contains the inode number
- 	 * we are looking up.
- 	 */
--	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
- 	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
- 	if (!error) {
- 		if (i)
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 27a5dd9..0b9b91a 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -30,7 +30,8 @@ xfs_inobt_dup_cursor(
- 	struct xfs_btree_cur	*cur)
- {
- 	return xfs_inobt_init_cursor(cur->bc_mp, cur->bc_tp,
--			cur->bc_private.a.agbp, cur->bc_private.a.agno);
-+			cur->bc_private.a.agbp, cur->bc_private.a.agno,
-+			cur->bc_btnum);
+diff --git a/include/xfs_sb.h b/include/xfs_sb.h
+index 35061d4..070a7f6 100644
+--- a/include/xfs_sb.h
++++ b/include/xfs_sb.h
+@@ -585,6 +585,7 @@ xfs_sb_has_compat_feature(
+ 	return (sbp->sb_features_compat & feature) != 0;
  }
  
- STATIC void
-@@ -377,7 +378,8 @@ xfs_inobt_init_cursor(
- 	struct xfs_mount	*mp,		/* file system mount point */
- 	struct xfs_trans	*tp,		/* transaction pointer */
- 	struct xfs_buf		*agbp,		/* buffer for agi structure */
--	xfs_agnumber_t		agno)		/* allocation group number */
-+	xfs_agnumber_t		agno,		/* allocation group number */
-+	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
- {
- 	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
- 	struct xfs_btree_cur	*cur;
-@@ -387,7 +389,7 @@ xfs_inobt_init_cursor(
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
- 	cur->bc_nlevels = be32_to_cpu(agi->agi_level);
--	cur->bc_btnum = XFS_BTNUM_INO;
-+	cur->bc_btnum = btnum;
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
++#define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL 0
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+@@ -639,6 +640,12 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+ }
  
- 	cur->bc_ops = &xfs_inobt_ops;
++static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
++{
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
++}
++
+ /*
+  * end of superblock version macros
+  */
 -- 
 1.8.1.4
 
