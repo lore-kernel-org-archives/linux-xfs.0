@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E5A2C7F69
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 17:38:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 82827AC00A
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 15:38:13 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kS29KowdRRirGWv2 for <xfs@oss.sgi.com>;
-	Tue, 12 Nov 2013 15:38:11 -0800 (PST)
-Date: Wed, 13 Nov 2013 10:38:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 36/37] repair: Increase default repair parallelism on
-	large filesystems
-Message-ID: <20131112233807.GD6188@dastard>
-References: <1383700043-32305-1-git-send-email-david@fromorbit.com>
-	<1383700043-32305-37-git-send-email-david@fromorbit.com>
-	<20131106104111.GB21067@infradead.org>
-	<20131106191345.GD6188@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 1A7587F89
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 19:16:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9F144AC004
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 17:16:06 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id AVyyIET4Xz4FcFYQ for <xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 17:16:05 -0800 (PST)
+Message-ID: <5282D2D3.3040601@sandeen.net>
+Date: Tue, 12 Nov 2013 19:16:03 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131106191345.GD6188@dastard>
+Subject: Re: [PATCH 0/5] xfs: more patches for 3.13
+References: <1383280040-21979-1-git-send-email-david@fromorbit.com>	<20131106230133.GX1935@sgi.com>
+	<20131107015706.GM6188@dastard>
+In-Reply-To: <20131107015706.GM6188@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +28,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>, Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 07, 2013 at 06:13:45AM +1100, Dave Chinner wrote:
-> On Wed, Nov 06, 2013 at 02:41:11AM -0800, Christoph Hellwig wrote:
-> > On Wed, Nov 06, 2013 at 12:07:22PM +1100, Dave Chinner wrote:
-> > > +	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
-> > > +		ag_stride = 15;
-> > 
-> > Shouldn't we have a define for the agcount shared by mkfs and repair, and
-> > derive the stride from it?
-> > 
-> > Otherwise looks fine.
+On 11/6/13, 7:57 PM, Dave Chinner wrote:
+> On Wed, Nov 06, 2013 at 05:01:33PM -0600, Ben Myers wrote:
+>> On Fri, Nov 01, 2013 at 03:27:15PM +1100, Dave Chinner wrote:
+>>> Hi folks,
+>>>
+>>> The following series follows up the recently committed series of
+>>> patches for 3.13. The first two patches are the remaining
+>>> uncommitted patches from the previous series.
+>>>
+>>> The next two patches are tracing patches, one for AIL manipulations
+>>> and the other for AGF and AGI read operations. Both of these were
+>>> written during recent debugging sessions, and both proved useful so
+>>> should be added to the menagerie of tracepoints we already have
+>>> avaialble.
+>>>
+>>> The final patch is the increasing of the inode cluster size for v5
+>>> filesystems. I'd like to get this into v5 filesystems for 3.13 so we
+>>> get wider exposure of it ASAP so we have more data available to be
+>>> able to make informed decisions about how to bring this back to v4
+>>> filesystems in a safe and controlled manner.
+>>
+>> Applied 3 and 4.  I still don't understand why the locking on patch 2 is
+>> correct.  Seems like the readers of i_version hold different locks than we do
+>> when we log the inode.  Maybe Christoph can help me with that.
 > 
-> Yes, we could.
+> Readers don't need to hold a spinlock, and many don't. The spinlock
+> is only there to prevent concurrent updates from "losing" an update
+> due to races.  All modifications to XFS inodes occur via
+> transactions, inodes are locked exclusively in transactions and
+> hence we will never lose i_version updates due to races. Hence we
+> don't need the spinlock during the update, either.
 
-More complex than it looks - the mkfs calculation in
-calc_default_ag_geometry() is based on byte counts and a sliding
-scale of shifts and hence the resultant multidisk AG counts are
-implicit side effects of the those AG size calculations. Hence to
-make use of a common #define for this sort of striding, we'd need to
-rewrite calc_default_ag_geometry().
+I'm not completely convinced that readers don't need to.  What happens when
+we read in the middle of an update?  Especially when a 32-bit box reads the
+64-bit value in the middle of an update?
 
-I'll do that in a separate patch series, as it's not directly
-related to this initial introduction of the feature to repair.
+NFS is the only reader we care about (right?)
 
-Cheers,
+I see a several paths to i_version reads in nfs; so far I'm finding locked reads:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+<2 callers of nfs_refresh_inode_locked>
+	spin_lock(&inode->i_lock);
+	nfs_refresh_inode_locked
+		nfs_update_inode
+			nfs_wcc_update_inode
+				(... && inode->i_version == fattr->pre_change_attr)
+		...
+		if (inode->i_version != fattr->change_attr) {
+		...
+		nfs_check_inode_attributes
+			(... && inode->i_version != fattr->change_attr)
+
+---
+
+update_changeattr
+	spin_lock(&dir->i_lock);
+	if (!cinfo->atomic || cinfo->before != dir->i_version)
+
+---
+
+nfs_post_op_update_inode_force_wcc
+	 spin_lock(&inode->i_lock);
+	 fattr->pre_change_attr = inode->i_version;
+
+---
+
+I haven't audited everything but do you have an example of an unlocked
+reader (which is relevant to xfs)?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
