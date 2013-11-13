@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 329CC7FB1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AA6B67FB3
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 14F23304067
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 81A7F8F8035
 	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:26 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	BR0XHaAuKDKCoRPA for <xfs@oss.sgi.com>;
+	mpZhfZg3nzUCMZ6e for <xfs@oss.sgi.com>;
 	Tue, 12 Nov 2013 22:41:24 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bz-Cs
+	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005cF-Ft
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006ja-Bs
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006ju-EU
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 28/36] xfs_db: use inode cluster buffers for inode IO
-Date: Wed, 13 Nov 2013 17:40:52 +1100
-Message-Id: <1384324860-25677-29-git-send-email-david@fromorbit.com>
+Subject: [PATCH 32/36] xfs: support larger inode clusters on v5 filesystems
+Date: Wed, 13 Nov 2013 17:40:56 +1100
+Message-Id: <1384324860-25677-33-git-send-email-david@fromorbit.com>
 In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,101 +39,120 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we mount the filesystem inside xfs_db, libxfs is tasked with
-reading some information from disk, such as root inodes. Because
-libxfs does this inode reading, it uses inode cluster buffers to
-read the inodes. xfs_db, OTOH, just uses FSB sized buffers to read
-inodes, and hence xfs_db throws a warning when reading the root
-inode block like so:
-
-$ sudo xfs_db -c "sb 0" -c "p rootino" -c "inode 32" /dev/vda
-Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!
-Use of these features is at your own risk!
-rootino = 32
-7f59f20e6740: Badness in key lookup (length)
-bp=(bno 0x20, len 8192 bytes) key=(bno 0x20, len 1024 bytes)
-$
-
-There is another way this can happen, and that is dumping raw data
-from disk using either the "fsb NNN" or "daddr MMM" commands to dump
-untyped information. This is always read in sector or filesystem
-block units, and so will cause similar badness warnings.
-
-To avoid this problem when reading inodes, teach xfs_db to read
-inode clusters rather individual filesystem blocks when asked to
-read an inode.
+To allow the kernel to use larger inode clusters than the standard
+8192 bytes, we need to set the inode alignment fields appropriately
+so that the kernel is consistent in it's inode to buffer mappings.
+We set the alignment to allow a constant 32 inodes per cluster,
+instead of a fixed 8k cluster size.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/inode.c | 33 +++++++++++++++++++++++++++++++--
- 1 file changed, 31 insertions(+), 2 deletions(-)
+ include/libxfs.h |  2 +-
+ mkfs/xfs_mkfs.c  |  5 ++++-
+ repair/sb.c      | 41 ++++++++++++++++++++++++++++-------------
+ 3 files changed, 33 insertions(+), 15 deletions(-)
 
-diff --git a/db/inode.c b/db/inode.c
-index 4090855..24170ba 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -623,6 +623,14 @@ inode_u_symlink_count(
- 		(int)be64_to_cpu(dip->di_size) : 0;
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 40a950e..4bf331c 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -181,7 +181,7 @@ typedef struct xfs_mount {
+ 	__uint8_t		m_sectbb_log;	/* sectorlog - BBSHIFT */
+ 	__uint8_t		m_agno_log;	/* log #ag's */
+ 	__uint8_t		m_agino_log;	/* #bits for agino in inum */
+-	__uint16_t		m_inode_cluster_size;/* min inode buf size */
++	uint			m_inode_cluster_size;/* min inode buf size */
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3a032c0..d82128c 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2532,7 +2532,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	} else
+ 		sbp->sb_logsunit = 0;
+ 	if (iaflag) {
+-		sbp->sb_inoalignmt = XFS_INODE_BIG_CLUSTER_SIZE >> blocklog;
++		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
++		if (crcs_enabled)
++			cluster_size *= isize / XFS_DINODE_MIN_SIZE;
++		sbp->sb_inoalignmt = cluster_size >> blocklog;
+ 		iaflag = sbp->sb_inoalignmt != 0;
+ 	} else
+ 		sbp->sb_inoalignmt = 0;
+diff --git a/repair/sb.c b/repair/sb.c
+index 2e35a4c..c54d89b 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -169,17 +169,37 @@ find_secondary_sb(xfs_sb_t *rsb)
  }
  
-+/*
-+ * We are now using libxfs for our IO backend, so we should always try to use
-+ * inode cluster buffers rather than filesystem block sized buffers for reading
-+ * inodes. This means that we always use the same buffers as libxfs operations
-+ * does, and that avoids buffer cache issues caused by overlapping buffers. This
-+ * can be seen clearly when trying to read the root inode. Much of this logic is
-+ * similar to libxfs_imap().
-+ */
- void
- set_cur_inode(
- 	xfs_ino_t	ino)
-@@ -632,6 +640,9 @@ set_cur_inode(
- 	xfs_agnumber_t	agno;
- 	xfs_dinode_t	*dip;
- 	int		offset;
-+	int		numblks = blkbb;
-+	xfs_agblock_t	cluster_agbno;
-+
+ /*
+- * calculate what inode alignment field ought to be
+- * based on internal superblock info
++ * Calculate what inode alignment field ought to be
++ * based on internal superblock info and determine if it is valid.
++ *
++ * For v5 superblocks, the inode alignment will either match that of the
++ * standard XFS_INODE_BIG_CLUSTER_SIZE, or it will be scaled based on the inode
++ * size. Either value is valid in this case.
++ *
++ * Return true if the alignment is valid, false otherwise.
+  */
+-static int
+-calc_ino_align(xfs_sb_t *sb)
++static bool
++sb_validate_ino_align(struct xfs_sb *sb)
+ {
+-	xfs_extlen_t align;
++	xfs_extlen_t	align;
  
- 	agno = XFS_INO_TO_AGNO(mp, ino);
- 	agino = XFS_INO_TO_AGINO(mp, ino);
-@@ -644,6 +655,24 @@ set_cur_inode(
- 		return;
- 	}
- 	cur_agno = agno;
++	if (!xfs_sb_version_hasalign(sb))
++		return true;
 +
-+	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize &&
-+	    mp->m_inoalign_mask) {
-+		xfs_agblock_t	chunk_agbno;
-+		xfs_agblock_t	offset_agbno;
-+		int		blks_per_cluster;
++	/* standard cluster size alignment is always valid */
+ 	align = XFS_INODE_BIG_CLUSTER_SIZE >> sb->sb_blocklog;
++	if (align == sb->sb_inoalignmt)
++		return true;
 +
-+		blks_per_cluster = mp->m_inode_cluster_size >>
-+							mp->m_sb.sb_blocklog;
-+		offset_agbno = agbno & mp->m_inoalign_mask;
-+		chunk_agbno = agbno - offset_agbno;
-+		cluster_agbno = chunk_agbno +
-+			((offset_agbno / blks_per_cluster) * blks_per_cluster);
-+		offset += ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock);
-+		numblks = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+	} else
-+		cluster_agbno = agbno;
++	/* alignment scaled by inode size is v5 only for now */
++	if (!xfs_sb_version_hascrc(sb))
++		return false;
+ 
+-	return(align);
++	align *= sb->sb_inodesize / XFS_DINODE_MIN_SIZE;
++	if (align == sb->sb_inoalignmt)
++		return true;
 +
++	return false;
+ }
+ 
+ /*
+@@ -228,7 +248,6 @@ int
+ verify_sb(xfs_sb_t *sb, int is_primary_sb)
+ {
+ 	__uint32_t	bsize;
+-	xfs_extlen_t	align;
+ 	int		i;
+ 
+ 	/* check magic number and version number */
+@@ -364,12 +383,8 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
  	/*
- 	 * First set_cur to the block with the inode
- 	 * then use off_cur to get the right part of the buffer.
-@@ -651,8 +680,8 @@ set_cur_inode(
- 	ASSERT(typtab[TYP_INODE].typnm == TYP_INODE);
+ 	 * verify correctness of inode alignment if it's there
+ 	 */
+-	if (xfs_sb_version_hasalign(sb))  {
+-		align = calc_ino_align(sb);
+-
+-		if (align != sb->sb_inoalignmt)
+-			return(XR_BAD_INO_ALIGN);
+-	}
++	if (!sb_validate_ino_align(sb))
++		return(XR_BAD_INO_ALIGN);
  
- 	/* ingore ring update here, do it explicitly below */
--	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, agbno),
--		blkbb, DB_RING_IGN, NULL);
-+	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, cluster_agbno),
-+		numblks, DB_RING_IGN, NULL);
- 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
- 	dip = iocur_top->data;
- 	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
+ 	/*
+ 	 * verify max. % of inodes (sb_imax_pct)
 -- 
 1.8.4.rc3
 
