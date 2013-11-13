@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C33077F37
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 12:50:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9EB50304059
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:50:55 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id u1AUrAXA8145pGVF for
-	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:50:54 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADIorl4019966
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 13:50:54 -0500
-Message-ID: <5283CA0B.1030300@redhat.com>
-Date: Wed, 13 Nov 2013 12:50:51 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 14EBA7F50
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 12:56:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D98E28F8035
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:46 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id W17C6nybZ2lAJYoC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 13 Nov 2013 10:56:46 -0800 (PST)
+Date: Wed, 13 Nov 2013 10:56:45 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
+	xfs_buftarg
+Message-ID: <20131113185645.GA20869@infradead.org>
+References: <5283C41D.7070503@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: remove unused "verbose" argument from
-	xfs_setsize_buftarg path
-References: <5283BC4B.9090204@redhat.com> <5283C81C.3020001@redhat.com>
-In-Reply-To: <5283C81C.3020001@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <5283C41D.7070503@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,82 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 11/13/13, 12:42 PM, Brian Foster wrote:
-> On 11/13/2013 12:52 PM, Eric Sandeen wrote:
->> The "verbose" argument has been unused since 
->> ffe37436 xfs: stop using the page cache to back the buffer cache
->>
->> Remove it, and then give the function a better (?) name since
->> no flags are involved.
->>
->> Fix inconsistent comment spacing while we're at it.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
->> index 2634700..85d916a 100644
->> --- a/fs/xfs/xfs_buf.c
->> +++ b/fs/xfs/xfs_buf.c
->> @@ -1602,11 +1602,10 @@ xfs_free_buftarg(
->>  }
->>  
->>  STATIC int
->> -xfs_setsize_buftarg_flags(
->> +__xfs_setsize_buftarg(
->>  	xfs_buftarg_t		*btp,
->>  	unsigned int		blocksize,
->> -	unsigned int		sectorsize,
->> -	int			verbose)
->> +	unsigned int		sectorsize)
->>  {
->>  	btp->bt_bsize = blocksize;
->>  	btp->bt_sshift = ffs(sectorsize) - 1;
->> @@ -1627,17 +1626,17 @@ xfs_setsize_buftarg_flags(
->>  }
->>  
->>  /*
->> - *	When allocating the initial buffer target we have not yet
->> - *	read in the superblock, so don't know what sized sectors
->> - *	are being used at this early stage.  Play safe.
->> + * When allocating the initial buffer target we have not yet
->> + * read in the superblock, so don't know what sized sectors
->> + * are being used at this early stage.  Play safe.
->>   */
->>  STATIC int
->>  xfs_setsize_buftarg_early(
->>  	xfs_buftarg_t		*btp,
->>  	struct block_device	*bdev)
->>  {
->> -	return xfs_setsize_buftarg_flags(btp,
->> -			PAGE_SIZE, bdev_logical_block_size(bdev), 0);
->> +	return __xfs_setsize_buftarg(btp,
->> +			PAGE_SIZE, bdev_logical_block_size(bdev));
->>  }
->>  
->>  int
->> @@ -1646,7 +1645,7 @@ xfs_setsize_buftarg(
->>  	unsigned int		blocksize,
->>  	unsigned int		sectorsize)
->>  {
->> -	return xfs_setsize_buftarg_flags(btp, blocksize, sectorsize, 1);
->> +	return __xfs_setsize_buftarg(btp, blocksize, sectorsize);
->>  }
->>  
+On Wed, Nov 13, 2013 at 12:25:33PM -0600, Eric Sandeen wrote:
+> Pure RFC; this might be crazy.  Here's the problem I'm trying to solve:
 > 
-> At this point is there a need for the separate __xfs_setsize_buftarg()
-> helper? E.g., fold the implementation into xfs_setsize_buftarg() and let
-> xfs_setsize_buftarg_early() call xfs_setsize_buftarg()..?
+> Today, mkfs.xfs will select a 4k sector size for a 4k physical / 512 logical
+> drive.  (that change was done by me).  The thought was that it'd be an
+> efficiency gain to not make the drive do the (possible) RMW cycles on
+> 512-byte log IO, primarily.
 > 
-> Brian
+> However, now this restricts all DIO to 4k alignment, not the otherwise-
+> possible 512.
 > 
+> This came up when qemu-kvm, in cache=none mode, tries to boot off an
+> image hosted on such a filesystem, and its bios wants to do a 512 byte
+> direct IO read off the disk - it fails.
+> 
+> But I'm wondering - the buftarg's bt_sshift and bt_smask are only used
+> in a few places.  
 
-Oh that probably makes sense.  :)  I got tunnel vision.   I'll send V2.
+No need to mess with kernel code IFF we want to change that, just keep
+the sector size at 512 bytes and set a log stripe unit at mkfs time.
 
-Thanks,
--Eric
+I have to admit that I'm not really sure if that's what we really want,
+through.  A drive that has a larger physical block size will need
+read-modify-write cycles internally, which we try to avoid.
 
 _______________________________________________
 xfs mailing list
