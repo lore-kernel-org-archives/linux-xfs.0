@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B46EB7F55
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 15:10:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2D8E7AC006
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 13:10:22 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	fBMQZSpHH8dvymRZ for <xfs@oss.sgi.com>;
-	Wed, 13 Nov 2013 13:10:20 -0800 (PST)
-Date: Thu, 14 Nov 2013 08:10:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 00/11] xfs: introduce the free inode btree
-Message-ID: <20131113211017.GI6188@dastard>
-References: <1384353427-36205-1-git-send-email-bfoster@redhat.com>
-	<20131113161711.GA14300@infradead.org>
-	<5283BD1A.8000704@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A8A327F37
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 15:26:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 89D8E8F8033
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 13:26:55 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7mK5Ddk0gdeu64El for
+	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 13:26:54 -0800 (PST)
+Message-ID: <5283EE9C.6050008@redhat.com>
+Date: Wed, 13 Nov 2013 16:26:52 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5283BD1A.8000704@redhat.com>
+Subject: Re: [PATCH V2] xfs: simplify xfs_setsize_buftarg callchain; remove
+	unused arg
+References: <5283BC4B.9090204@redhat.com> <5283E6D9.6070306@sandeen.net>
+In-Reply-To: <5283E6D9.6070306@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +28,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Nov 13, 2013 at 12:55:38PM -0500, Brian Foster wrote:
-> On 11/13/2013 11:17 AM, Christoph Hellwig wrote:
-> > I have to admit that I haven't followed this series as closely as I
-> > should, but could you summarize the performance of it?  What workloads
-> > does it help most, what workloads does it hurt and how much?
-> > 
+On 11/13/2013 03:53 PM, Eric Sandeen wrote:
+> The "verbose" argument to xfs_setsize_buftarg_flags() has been
+> unused since:
 > 
-> Hi Christoph,
+> ffe37436 xfs: stop using the page cache to back the buffer cache
 > 
-> Sure... this work is based on Dave's write up here:
+> Remove it, and fold the function into xfs_setsize_buftarg()
+> now that there's no need for different types of callers.
 > 
-> http://oss.sgi.com/archives/xfs/2013-08/msg00344.html
+> Fix inconsistent comment spacing while we're at it.
 > 
-> ... where he also explains the general idea, which is basically to
-> improve inode allocation performance on a large fs' that happens to be
-> sparsely populated with inode chunks with free inodes. We do this by
-> creating a second inode btree that only tracks inode chunks with at
-> least one free inode.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-This is a common problem for people use hard-link based backups
-repositories when they start removing backups. It results in random
-inode removal, and so allocation never hits the "no free inodes"
-fast path. As a result, allocation speed can drop a couple of orders
-of magnitude due to the added CPU overhead of searching for free
-inodes to allocate. It is completely unpredictable as to when it will
-occur, so one backup might run at full speed, and the next might
-take 3-4x as long to complete....
+Looks good to me.
 
-> Sorry I don't have more specific numbers at the moment. Most of my
-> testing so far has been the focused case and general reliability
-> testing. I'll need to find some hardware worthy of performance testing,
-> particularly to check for any potential negative effects of managing the
-> secondary tree. I suppose I wouldn't expect it to be much worse than the
-> overhead of managing two free space trees, but we'll see.
-> Thoughts/suggestions appreciated, thanks.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-The problem can be demonstrated with a single CPU and a single
-spindle. Create a single AG filesystem of a 100GB, and populate it
-with 10 million inodes.
-
-Time how long it takes to create another 10000 inodes in a new
-directory. Measure CPU usage.
-
-Randomly delete 10,000 inodes from the original population to
-sparsely populate the inobt with 10000 free inodes.
-
-Time how long it takes to create another 10000 inodes in a new
-directory. Measure CPU usage.
-
-The difference in time and CPU will be diretly related to the
-addition time spent searching the inobt for free inodes...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> V2: Fold old helper function into xfs_setsize_buftarg,
+> per Brian's suggestion.
+> 
+>  xfs_buf.c |   26 ++++++++------------------
+>  1 file changed, 8 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 2634700..0ce3b7b 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1601,12 +1601,11 @@ xfs_free_buftarg(
+>  	kmem_free(btp);
+>  }
+>  
+> -STATIC int
+> -xfs_setsize_buftarg_flags(
+> +int
+> +xfs_setsize_buftarg(
+>  	xfs_buftarg_t		*btp,
+>  	unsigned int		blocksize,
+> -	unsigned int		sectorsize,
+> -	int			verbose)
+> +	unsigned int		sectorsize)
+>  {
+>  	btp->bt_bsize = blocksize;
+>  	btp->bt_sshift = ffs(sectorsize) - 1;
+> @@ -1627,26 +1626,17 @@ xfs_setsize_buftarg_flags(
+>  }
+>  
+>  /*
+> - *	When allocating the initial buffer target we have not yet
+> - *	read in the superblock, so don't know what sized sectors
+> - *	are being used at this early stage.  Play safe.
+> + * When allocating the initial buffer target we have not yet
+> + * read in the superblock, so don't know what sized sectors
+> + * are being used at this early stage.  Play safe.
+>   */
+>  STATIC int
+>  xfs_setsize_buftarg_early(
+>  	xfs_buftarg_t		*btp,
+>  	struct block_device	*bdev)
+>  {
+> -	return xfs_setsize_buftarg_flags(btp,
+> -			PAGE_SIZE, bdev_logical_block_size(bdev), 0);
+> -}
+> -
+> -int
+> -xfs_setsize_buftarg(
+> -	xfs_buftarg_t		*btp,
+> -	unsigned int		blocksize,
+> -	unsigned int		sectorsize)
+> -{
+> -	return xfs_setsize_buftarg_flags(btp, blocksize, sectorsize, 1);
+> +	return xfs_setsize_buftarg(btp, PAGE_SIZE,
+> +				   bdev_logical_block_size(bdev));
+>  }
+>  
+>  xfs_buftarg_t *
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
