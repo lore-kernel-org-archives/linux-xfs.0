@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9E98E7FA9
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:29 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 766787FBC
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 24511AC004
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:29 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 59AE730406B
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:30 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	qbXNt9AzSMhDAKlM for <xfs@oss.sgi.com>;
-	Tue, 12 Nov 2013 22:41:27 -0800 (PST)
+	En8ESTopkTAGpvIk for <xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 22:41:28 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005cA-Eq
+	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bm-6m
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006jp-Dm
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006ir-5l
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 31/36] db: enable metadump on CRC filesystems
-Date: Wed, 13 Nov 2013 17:40:55 +1100
-Message-Id: <1384324860-25677-32-git-send-email-david@fromorbit.com>
+Subject: [PATCH 19/36] libxfs: refactor libxfs_buf_read_map for xfs_db
+Date: Wed, 13 Nov 2013 17:40:43 +1100
+Message-Id: <1384324860-25677-20-git-send-email-david@fromorbit.com>
 In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,85 +39,120 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that we can calculate CRCs through xfs_db, we can add support
-for recalculating CRCs on obfuscated metadump images. This simply
-requires us to call the write verifier manually before writing the
-buffer to the metadump image.
+xfs_db requires low level read/write buffer primitives that are the
+equivalent of libxfs_readbufr/writebufr. The implementation of
+libxfs_writebufr already handles discontiguous buffers, but there is
+no equivalent libxfs_readbufr_map support in the code.
 
-We don't need to do anything special to mdrestore, as the metadata
-blocks it reads from the image file will already have all the
-correct CRCs in them. Hence it can be mostly oblivious to the fact
-that the filesystem it is restoring contains CRCs.
+Refactor libxfs_readbuf_map into two parts - one that does the
+buffer cache lookup, and the other that does the read IO. This
+provides the implementation of libxfs_readbufr_map that is required
+for xfs_db.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/metadump.c             | 24 +++++++++++++++++++-----
- mdrestore/xfs_mdrestore.c |  3 ---
- 2 files changed, 19 insertions(+), 8 deletions(-)
+ include/libxfs.h |  3 +++
+ libxfs/rdwr.c    | 61 +++++++++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 43 insertions(+), 21 deletions(-)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index ac6a4d6..117dc42 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -172,6 +172,22 @@ write_buf(
- 	__int64_t	off;
- 	int		i;
+diff --git a/include/libxfs.h b/include/libxfs.h
+index e017b32..b097bd2 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -444,7 +444,10 @@ extern xfs_buf_t *libxfs_getbufr(struct xfs_buftarg *, xfs_daddr_t, int);
+ extern void	libxfs_putbufr(xfs_buf_t *);
  
-+	/*
-+	 * Run the write verifier to recalculate the buffer CRCs and check
-+	 * we are writing something valid to disk
-+	 */
-+	if (buf->bp && buf->bp->b_ops) {
-+		buf->bp->b_error = 0;
-+		buf->bp->b_ops->verify_write(buf->bp);
-+		if (buf->bp->b_error) {
-+			fprintf(stderr,
-+	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
-+				__func__, (long long)buf->bp->b_bn,
-+				buf->bp->b_bcount);
-+			return buf->bp->b_error;
-+		}
-+	}
-+
- 	for (i = 0, off = buf->bb, data = buf->data;
- 			i < buf->blen;
- 			i++, off++, data += BBSIZE) {
-@@ -1727,6 +1743,9 @@ copy_inode_chunk(
+ extern int	libxfs_writebuf_int(xfs_buf_t *, int);
++extern int	libxfs_writebufr(struct xfs_buf *);
+ extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
++extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *,
++				    struct xfs_buf_map *, int, int);
  
- 		if (!process_inode(agno, agino + i, dip))
- 			goto pop_out;
-+
-+		/* calculate the new CRC for the inode */
-+		xfs_dinode_calc_crc(mp, dip);
- 	}
- skip_processing:
- 	if (!write_buf(iocur_top))
-@@ -2053,11 +2072,6 @@ metadump_f(
- 		return 0;
- 	}
+ extern int libxfs_bhash_size;
  
--	if (xfs_sb_version_hascrc(&mp->m_sb) && dont_obfuscate == 0) {
--		print_warning("Can't obfuscate CRC enabled filesystems yet.");
--		return 0;
--	}
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index f507855..7eaea0a 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -719,30 +719,18 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+ 	return bp;
+ }
+ 
+-struct xfs_buf *
+-libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+-		int flags, const struct xfs_buf_ops *ops)
++int
++libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
++		    struct xfs_buf_map *map, int nmaps, int flags)
+ {
+-	xfs_buf_t	*bp;
+-	int		error = 0;
+-	int		fd;
+-	int		i;
+-	char		*buf;
 -
- 	metablock = (xfs_metablock_t *)calloc(BBSIZE + 1, BBSIZE);
- 	if (metablock == NULL) {
- 		print_warning("memory allocation failure");
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index fe61766..e57bdb2 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -109,9 +109,6 @@ perform_restore(
- 	if (sb.sb_magicnum != XFS_SB_MAGIC)
- 		fatal("bad magic number for primary superblock\n");
- 
--	if (xfs_sb_version_hascrc(&sb))
--		fatal("Can't restore CRC enabled filesystems yet.\n");
+-	if (nmaps == 1)
+-		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
+-					flags, ops);
 -
- 	((xfs_dsb_t*)block_buffer)->sb_inprogress = 1;
+-	bp = libxfs_getbuf_map(btp, map, nmaps);
+-	if (!bp)
+-		return NULL;
++	int	fd = libxfs_device_to_fd(btp->dev);
++	int	error = 0;
++	char	*buf;
++	int	i;
  
- 	if (is_target_file)  {
+-	bp->b_error = 0;
+-	bp->b_ops = ops;
+-	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+-		return bp;
++	ASSERT(BBTOB(len) <= bp->b_bcount);
+ 
+-	ASSERT(bp->b_nmaps = nmaps);
++	ASSERT(bp->b_nmaps == nmaps);
+ 
+ 	fd = libxfs_device_to_fd(btp->dev);
+ 	buf = bp->b_addr;
+@@ -762,6 +750,37 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+ 		offset += len;
+ 	}
+ 
++	if (!error);
++		bp->b_flags |= LIBXFS_B_UPTODATE;
++#ifdef IO_DEBUG
++	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
++		pthread_self(), __FUNCTION__, , error,
++		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
++#endif
++	return error;
++}
++
++struct xfs_buf *
++libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
++		int flags, const struct xfs_buf_ops *ops)
++{
++	struct xfs_buf	*bp;
++	int		error = 0;
++
++	if (nmaps == 1)
++		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
++					flags, ops);
++
++	bp = libxfs_getbuf_map(btp, map, nmaps);
++	if (!bp)
++		return NULL;
++
++	bp->b_error = 0;
++	bp->b_ops = ops;
++	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
++		return bp;
++
++	error = libxfs_readbufr_map(btp, bp, map, nmaps, flags);
+ 	if (!error) {
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+ 		if (bp->b_ops)
 -- 
 1.8.4.rc3
 
