@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 88B167FBA
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BD8F67FBB
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C53230406B
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 824208F8035
 	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:27 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7cAeEDDCfrLzuj4l for <xfs@oss.sgi.com>;
+	U2WrJL2mIBvqsmrD for <xfs@oss.sgi.com>;
 	Tue, 12 Nov 2013 22:41:25 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bl-6F
+	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bs-9e
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006im-5D
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006jB-7p
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 18/36] db: rewrite bbmap to use xfs_buf_map
-Date: Wed, 13 Nov 2013 17:40:42 +1100
-Message-Id: <1384324860-25677-19-git-send-email-david@fromorbit.com>
+Subject: [PATCH 23/36] db: verify and calculate inode CRCs
+Date: Wed, 13 Nov 2013 17:40:47 +1100
+Message-Id: <1384324860-25677-24-git-send-email-david@fromorbit.com>
 In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,154 +39,127 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Use the libxfs struct xfs_buf_map for recording the extent layout of
-discontiguous buffers and convert the read/write to decode them
-directory and use read_buf/write_buf to do the extent IO. This
-brings the physical xfs_db IO code to be very close to the model
-that libxfs uses.
+When we set the current IO cursor to point at an inode, verify that
+the inode CRC is intact. And prior to writing such an IO cursor,
+calculate the inode CRC.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/bmap.c | 15 ++++-----------
- db/io.c   | 58 ++++++++++++----------------------------------------------
- db/io.h   |  3 ++-
- 3 files changed, 18 insertions(+), 58 deletions(-)
+ db/inode.c             | 2 ++
+ db/io.c                | 4 ++++
+ db/io.h                | 6 +++++-
+ include/libxfs.h       | 4 ++++
+ libxfs/xfs_inode_buf.c | 8 ++++----
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/db/bmap.c b/db/bmap.c
-index 0ef7a62..3951b9f 100644
---- a/db/bmap.c
-+++ b/db/bmap.c
-@@ -293,20 +293,13 @@ make_bbmap(
- 	int		nex,
- 	bmap_ext_t	*bmp)
- {
--	int		d;
--	xfs_dfsbno_t	dfsbno;
- 	int		i;
--	int		j;
--	int		k;
- 
--	for (i = 0, d = 0; i < nex; i++) {
--		dfsbno = bmp[i].startblock;
--		for (j = 0; j < bmp[i].blockcount; j++, dfsbno++) {
--			for (k = 0; k < blkbb; k++)
--				bbmap->b[d++] =
--					XFS_FSB_TO_DADDR(mp, dfsbno) + k;
--		}
-+	for (i = 0; i < nex; i++) {
-+		bbmap->b[i].bm_bn = XFS_FSB_TO_DADDR(mp, bmp[i].startblock);
-+		bbmap->b[i].bm_len = XFS_FSB_TO_BB(mp, bmp[i].blockcount);
- 	}
-+	bbmap->nmaps = nex;
- }
- 
- static xfs_fsblock_t
+diff --git a/db/inode.c b/db/inode.c
+index ec533ee..4090855 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -655,6 +655,8 @@ set_cur_inode(
+ 		blkbb, DB_RING_IGN, NULL);
+ 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
+ 	dip = iocur_top->data;
++	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
++	iocur_top->ino_buf = 1;
+ 	iocur_top->ino = ino;
+ 	iocur_top->mode = be16_to_cpu(dip->di_mode);
+ 	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
 diff --git a/db/io.c b/db/io.c
-index fa11646..01a5970 100644
+index 2d1cc56..6e3282e 100644
 --- a/db/io.c
 +++ b/db/io.c
-@@ -478,28 +478,16 @@ write_bbs(
- 	void            *bufp,
- 	bbmap_t		*bbmap)
- {
--	int		c;
--	int		i;
- 	int		j;
- 	int		rval = EINVAL;	/* initialize for zero `count' case */
- 
--	for (j = 0; j < count; j++) {
--		bbno = bbmap->b[j];
--		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
--			rval = errno;
--			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
--			return rval;
--		}
--		c = BBTOB(1);
--		i = (int)write(x.dfd, (char *)bufp + BBTOB(j), c);
--		if (i < 0) {
--			rval = errno;
--		} else if (i < c) {
--			rval = -1;
--		} else
--			rval = 0;
-+	for (j = 0; j < count;) {
-+		rval = write_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
-+			     (char *)bufp + BBTOB(j));
- 		if (rval)
- 			break;
-+
-+		j += bbmap->b[j].bm_len;
+@@ -464,6 +464,9 @@ write_cur(void)
+ 		return;
  	}
- 	return rval;
- }
-@@ -512,45 +500,23 @@ read_bbs(
- 	bbmap_t		*bbmap)
- {
- 	void		*buf;
--	int		c;
--	int		i;
- 	int		j;
- 	int		rval = EINVAL;
  
- 	if (count <= 0)
- 		count = 1;
- 
--	c = BBTOB(count);
- 	if (*bufp == NULL)
--		buf = xmalloc(c);
-+		buf = xmalloc(BBTOB(count));
++	if (iocur_top->ino_buf)
++		libxfs_dinode_calc_crc(mp, iocur_top->data);
++
+ 	if (iocur_top->bbmap)
+ 		write_cur_bbs();
  	else
- 		buf = *bufp;
--	for (j = 0; j < count; j++) {
--		bbno = bbmap->b[j];
--		if (lseek64(x.dfd, bbno << BBSHIFT, SEEK_SET) < 0) {
--			rval = errno;
--			dbprintf(_("can't seek in filesystem at bb %lld\n"), bbno);
--			if (*bufp == NULL)
--				xfree(buf);
--			buf = NULL;
--		} else {
--			c = BBTOB(1);
--			i = (int)read(x.dfd, (char *)buf + BBTOB(j), c);
--			if (i < 0) {
--				rval = errno;
--				if (*bufp == NULL)
--					xfree(buf);
--				buf = NULL;
--			} else if (i < c) {
--				rval = -1;
--				if (*bufp == NULL)
--					xfree(buf);
--				buf = NULL;
--			} else
--				rval = 0;
--		}
--		if (buf == NULL)
-+	for (j = 0; j < count;) {
-+		rval = read_buf(bbmap->b[j].bm_bn, bbmap->b[j].bm_len,
-+			     (char *)buf + BBTOB(j));
-+		if (rval)
- 			break;
-+
-+		j += bbmap->b[j].bm_len;
- 	}
- 	if (*bufp == NULL)
- 		*bufp = buf;
+@@ -536,6 +539,7 @@ set_cur(
+ 	iocur_top->ino = ino;
+ 	iocur_top->dirino = dirino;
+ 	iocur_top->mode = mode;
++	iocur_top->ino_buf = 0;
+ 
+ 	/* store location in ring */
+ 	if (ring_flag)
 diff --git a/db/io.h b/db/io.h
-index 9ea6223..c7641d5 100644
+index d647284..1f8270d 100644
 --- a/db/io.h
 +++ b/db/io.h
-@@ -20,7 +20,8 @@ struct typ;
+@@ -38,6 +38,8 @@ typedef struct iocur {
+ 	const struct typ	*typ;	/* type of "data" */
+ 	bbmap_t			*bbmap;	/* map daddr if fragmented */
+ 	struct xfs_buf		*bp;	/* underlying buffer */
++	int			ino_crc_ok:1;
++	int			ino_buf:1;
+ } iocur_t;
  
- #define	BBMAP_SIZE		(XFS_MAX_BLOCKSIZE / BBSIZE)
- typedef struct bbmap {
--	__int64_t		b[BBMAP_SIZE];
-+	int			nmaps;
-+	struct xfs_buf_map	b[BBMAP_SIZE];
- } bbmap_t;
+ #define DB_RING_ADD 1                   /* add to ring on set_cur */
+@@ -62,5 +64,7 @@ extern void     ring_add(void);
+ static inline bool
+ iocur_crc_valid()
+ {
+-	return (iocur_top->bp && iocur_top->bp->b_error != EFSCORRUPTED);
++	return (iocur_top->bp &&
++		iocur_top->bp->b_error != EFSCORRUPTED &&
++		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
+ }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index b097bd2..cbb5757 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -748,6 +748,10 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
+ #define libxfs_idata_realloc		xfs_idata_realloc
+ #define libxfs_idestroy_fork		xfs_idestroy_fork
  
- typedef struct iocur {
++#define libxfs_dinode_verify		xfs_dinode_verify
++bool xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
++		       struct xfs_dinode *dip);
++
+ /* xfs_sb.h */
+ #define libxfs_mod_sb			xfs_mod_sb
+ #define libxfs_sb_from_disk		xfs_sb_from_disk
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index b796556..728ef71 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -276,10 +276,10 @@ xfs_dinode_to_disk(
+ 	}
+ }
+ 
+-static bool
++bool
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+-	struct xfs_inode	*ip,
++	xfs_ino_t		ino,
+ 	struct xfs_dinode	*dip)
+ {
+ 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+@@ -294,7 +294,7 @@ xfs_dinode_verify(
+ 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+ 			      offsetof(struct xfs_dinode, di_crc)))
+ 		return false;
+-	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
++	if (be64_to_cpu(dip->di_ino) != ino)
+ 		return false;
+ 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
+ 		return false;
+@@ -346,7 +346,7 @@ xfs_iread(
+ 		return error;
+ 
+ 	/* even unallocated inodes are verified */
+-	if (!xfs_dinode_verify(mp, ip, dip)) {
++	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
+ 		xfs_alert(mp, "%s: validation failed for inode %lld failed",
+ 				__func__, ip->i_ino);
+ 
 -- 
 1.8.4.rc3
 
