@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED8497F54
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63E2AAC013
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:26 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BC3597F50
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8EE898F8035
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XVHFx0r7X0bW62M9 for
-	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOLN030029
+	cuda.sgi.com with ESMTP id dYats4u9MSSj8urt for
+	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:24 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOD2015046
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:25 -0500
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id rADFuOgs020730
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id rADFuN7c013417
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 08/20] xfs: update the finobt on inode free
-Date: Wed, 13 Nov 2013 10:56:10 -0500
-Message-Id: <1384358182-37967-9-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 01/20] xfs: refactor xfs_ialloc_btree.c to support multiple
+	inobt numbers
+Date: Wed, 13 Nov 2013 10:56:03 -0500
+Message-Id: <1384358182-37967-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 References: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,147 +39,106 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-An inode free operation can have several effects on the finobt. If
-all inodes have been freed and the chunk deallocated, we remove the
-finobt record. If the inode chunk was previously full, we must
-insert a new record based on the existing inobt record. Otherwise,
-we modify the record in place.
-
-Create the xfs_ifree_finobt() function to identify the potential
-scenarios and update the finobt appropriately.
+The introduction of the free inode btree (finobt) requires that
+xfs_ialloc_btree.c handle multiple trees. Refactor xfs_ialloc_btree.c
+so the caller specifies the btree type on cursor initialization to
+prepare for addition of the finobt.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 ---
- libxfs/xfs_ialloc.c | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 109 insertions(+)
+ include/xfs_ialloc_btree.h | 3 ++-
+ libxfs/xfs_ialloc.c        | 8 ++++----
+ libxfs/xfs_ialloc_btree.c  | 8 +++++---
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
+diff --git a/include/xfs_ialloc_btree.h b/include/xfs_ialloc_btree.h
+index f38b220..d7ebea7 100644
+--- a/include/xfs_ialloc_btree.h
++++ b/include/xfs_ialloc_btree.h
+@@ -58,7 +58,8 @@ struct xfs_mount;
+ 		 ((index) - 1) * sizeof(xfs_inobt_ptr_t)))
+ 
+ extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
+-		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
++		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t,
++		xfs_btnum_t);
+ extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
+ 
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
 diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index d8405e7..834a740 100644
+index afe1a82..337a4c6 100644
 --- a/libxfs/xfs_ialloc.c
 +++ b/libxfs/xfs_ialloc.c
-@@ -1455,6 +1455,106 @@ error0:
+@@ -432,7 +432,7 @@ xfs_ialloc_ag_alloc(
+ 	/*
+ 	 * Insert records describing the new inode chunk into the btree.
+ 	 */
+-	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	for (thisino = newino;
+ 	     thisino < newino + newlen;
+ 	     thisino += XFS_INODES_PER_CHUNK) {
+@@ -678,7 +678,7 @@ xfs_dialloc_ag(
+ 	ASSERT(pag->pagi_freecount > 0);
+ 
+  restart_pagno:
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	/*
+ 	 * If pagino is 0 (this is the root inode allocation) use newino.
+ 	 * This must work because we've just allocated some.
+@@ -1140,7 +1140,7 @@ xfs_difree(
+ 	/*
+ 	 * Initialize the cursor.
+ 	 */
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 
+ 	error = xfs_check_agi_freecount(cur, agi);
+ 	if (error)
+@@ -1271,7 +1271,7 @@ xfs_imap_lookup(
+ 	 * we have a record, we need to ensure it contains the inode number
+ 	 * we are looking up.
+ 	 */
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
+ 	if (!error) {
+ 		if (i)
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 27a5dd9..0b9b91a 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -30,7 +30,8 @@ xfs_inobt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_inobt_init_cursor(cur->bc_mp, cur->bc_tp,
+-			cur->bc_private.a.agbp, cur->bc_private.a.agno);
++			cur->bc_private.a.agbp, cur->bc_private.a.agno,
++			cur->bc_btnum);
  }
  
- /*
-+ * Free an inode in the free inode btree.
-+ */
-+STATIC int
-+xfs_difree_finobt(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	struct xfs_buf			*agbp,
-+	xfs_agino_t			agino,
-+	struct xfs_inobt_rec_incore	*ibtrec) /* inobt record */
-+{
-+	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
-+	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_inobt_rec_incore	rec;
-+	int				offset = agino - ibtrec->ir_startino;
-+	int				error;
-+	int				i;
-+
-+	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_FINO);
-+
-+	error = xfs_inobt_lookup(cur, ibtrec->ir_startino, XFS_LOOKUP_EQ, &i);
-+	if (error)
-+		goto error;
-+	if (i == 0) {
-+		/*
-+		 * If the record does not exist in the finobt, we must have just
-+		 * freed an inode in a previously fully allocated chunk. If not,
-+		 * something is out of sync.
-+		 */
-+		XFS_WANT_CORRUPTED_GOTO(ibtrec->ir_freecount == 1, error);
-+
-+		error = xfs_inobt_insert_rec(cur, ibtrec->ir_freecount,
-+					     ibtrec->ir_free, &i);
-+		if (error)
-+			goto error;
-+		ASSERT(i == 1);
-+
-+		goto out;
-+	}
-+
-+	/*
-+	 * Read and update the existing record.
-+	 */
-+	error = xfs_inobt_get_rec(cur, &rec, &i);
-+	if (error)
-+		goto error;
-+	XFS_WANT_CORRUPTED_GOTO(i == 1, error);
-+
-+	rec.ir_free |= XFS_INOBT_MASK(offset);
-+	rec.ir_freecount++;
-+
-+	XFS_WANT_CORRUPTED_GOTO((rec.ir_free == ibtrec->ir_free) &&
-+				(rec.ir_freecount == ibtrec->ir_freecount),
-+				error);
-+
-+	/*
-+	 * The content of inobt records should always match between the inobt
-+	 * and finobt. The lifecycle of records in the finobt is different from
-+	 * the inobt in that the finobt only tracks records with at least one
-+	 * free inode. This is to optimize lookup for inode allocation purposes.
-+	 * The following checks determine whether to update the existing record or
-+	 * remove it entirely.
-+	 */
-+
-+	if (rec.ir_freecount == XFS_IALLOC_INODES(mp) &&
-+	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
-+		/*
-+		 * If all inodes are free and we're in !ikeep mode, the entire
-+		 * inode chunk has been deallocated. Remove the record from the
-+		 * finobt.
-+		 */
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto error;
-+		ASSERT(i == 1);
-+	} else {
-+		/*
-+		 * The existing finobt record was modified and has a combination
-+		 * of allocated and free inodes or is completely free and ikeep
-+		 * is enabled. Update the record.
-+		 */
-+		error = xfs_inobt_update(cur, &rec);
-+		if (error)
-+			goto error;
-+	}
-+
-+out:
-+	error = xfs_check_agi_freecount(cur, agi);
-+	if (error)
-+		goto error;
-+
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	return 0;
-+
-+error:
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	return error;
-+}
-+
-+/*
-  * Free disk inode.  Carefully avoids touching the incore inode, all
-  * manipulations incore are the caller's responsibility.
-  * The on-disk inode is not changed by this operation, only the
-@@ -1522,6 +1622,15 @@ xfs_difree(
- 	if (error)
- 		goto error0;
+ STATIC void
+@@ -377,7 +378,8 @@ xfs_inobt_init_cursor(
+ 	struct xfs_mount	*mp,		/* file system mount point */
+ 	struct xfs_trans	*tp,		/* transaction pointer */
+ 	struct xfs_buf		*agbp,		/* buffer for agi structure */
+-	xfs_agnumber_t		agno)		/* allocation group number */
++	xfs_agnumber_t		agno,		/* allocation group number */
++	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
+ {
+ 	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
+ 	struct xfs_btree_cur	*cur;
+@@ -387,7 +389,7 @@ xfs_inobt_init_cursor(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_nlevels = be32_to_cpu(agi->agi_level);
+-	cur->bc_btnum = XFS_BTNUM_INO;
++	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
  
-+	/*
-+	 * Fix up the free inode btree.
-+	 */
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+		error = xfs_difree_finobt(mp, tp, agbp, agino, &rec);
-+		if (error)
-+			goto error0;
-+	}
-+
- 	return 0;
- 
- error0:
+ 	cur->bc_ops = &xfs_inobt_ops;
 -- 
 1.8.1.4
 
