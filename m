@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EB4237F3F
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:31 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id EA6987F37
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 09:56:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3123304066
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D178D30406A
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JDAs2KZFZ1DJtSSl for
+	cuda.sgi.com with ESMTP id WNlP7HDyyLZOdmdy for
 	<xfs@oss.sgi.com>; Wed, 13 Nov 2013 07:56:25 -0800 (PST)
 Received: from int-mx02.intmail.prod.int.phx2.redhat.com
 	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOEK014557
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rADFuOLd014556
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:25 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id rADFuOSS030016
+	id rADFuOj6030014
 	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:56:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 12/20] xfsprogs/db: finobt support
-Date: Wed, 13 Nov 2013 10:56:14 -0500
-Message-Id: <1384358182-37967-13-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 09/20] xfs: report finobt status in fs geometry
+Date: Wed, 13 Nov 2013 10:56:11 -0500
+Message-Id: <1384358182-37967-10-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 References: <1384358182-37967-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,57 +38,26 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add the AGI finobt fields and fibt layouts.
+Define the XFS_FSOP_GEOM_FLAGS_FINOBT fs geometry flag and set the
+associated bit if the filesystem supports the free inode btree.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- db/agi.c     |  2 ++
- db/btblock.c | 12 ++++++++++++
- 2 files changed, 14 insertions(+)
+ include/xfs_fs.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/db/agi.c b/db/agi.c
-index 398bdbb..6f167ac 100644
---- a/db/agi.c
-+++ b/db/agi.c
-@@ -57,6 +57,8 @@ const field_t	agi_flds[] = {
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_INOBT },
-+	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
+diff --git a/include/xfs_fs.h b/include/xfs_fs.h
+index 554fd66..59c40fc 100644
+--- a/include/xfs_fs.h
++++ b/include/xfs_fs.h
+@@ -238,6 +238,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+ #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
+ #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
++#define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
  
-diff --git a/db/btblock.c b/db/btblock.c
-index 1ea0cff..cdb8b1d 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -60,6 +60,12 @@ struct xfs_db_btree {
- 		sizeof(xfs_inobt_rec_t),
- 		sizeof(__be32),
- 	},
-+	{	XFS_FIBT_MAGIC,
-+		XFS_BTREE_SBLOCK_LEN,
-+		sizeof(xfs_inobt_key_t),
-+		sizeof(xfs_inobt_rec_t),
-+		sizeof(__be32),
-+	},
- 	{	XFS_BMAP_CRC_MAGIC,
- 		XFS_BTREE_LBLOCK_CRC_LEN,
- 		sizeof(xfs_bmbt_key_t),
-@@ -84,6 +90,12 @@ struct xfs_db_btree {
- 		sizeof(xfs_inobt_rec_t),
- 		sizeof(__be32),
- 	},
-+	{	XFS_FIBT_CRC_MAGIC,
-+		XFS_BTREE_SBLOCK_CRC_LEN,
-+		sizeof(xfs_inobt_key_t),
-+		sizeof(xfs_inobt_rec_t),
-+		sizeof(__be32),
-+	},
- 	{	0,
- 	},
- };
+ 
+ /*
 -- 
 1.8.1.4
 
