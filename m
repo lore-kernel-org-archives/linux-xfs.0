@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6A55D7F56
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:09:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4BB60304059
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:09:39 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ADA127F6F
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 10:10:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 303BBAC004
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 08:10:31 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id E0xNNwQfAPOlCecK (version=TLSv1
+	by cuda.sgi.com with ESMTP id jmJOfLyNTvcv9STy (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 13 Nov 2013 08:09:38 -0800 (PST)
-Date: Wed, 13 Nov 2013 08:09:37 -0800
+	Wed, 13 Nov 2013 08:10:30 -0800 (PST)
+Date: Wed, 13 Nov 2013 08:10:29 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 31/36] db: enable metadump on CRC filesystems
-Message-ID: <20131113160937.GC32627@infradead.org>
+Subject: Re: [PATCH 35/36] repair: Increase default repair parallelism on
+	large filesystems
+Message-ID: <20131113161029.GD32627@infradead.org>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
-	<1384324860-25677-32-git-send-email-david@fromorbit.com>
+	<1384324860-25677-36-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1384324860-25677-32-git-send-email-david@fromorbit.com>
+In-Reply-To: <1384324860-25677-36-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,25 +34,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 13, 2013 at 05:40:55PM +1100, Dave Chinner wrote:
+On Wed, Nov 13, 2013 at 05:40:59PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Now that we can calculate CRCs through xfs_db, we can add support
-> for recalculating CRCs on obfuscated metadump images. This simply
-> requires us to call the write verifier manually before writing the
-> buffer to the metadump image.
+> Large filesystems or high AG count filesystems generally have more
+> inherent parallelism in the backing storage. We shoul dmake use of
+> this by default to speed up repair times. Make xfs_repair use an
+> "auto-stride" configuration on filesystems with enough AGs to be
+> considered "multidisk" configurations.
 > 
-> We don't need to do anything special to mdrestore, as the metadata
-> blocks it reads from the image file will already have all the
-> correct CRCs in them. Hence it can be mostly oblivious to the fact
-> that the filesystem it is restoring contains CRCs.
+> This difference in elaspsed time to repair a 100TB filesystem with
+> 50 million inodes in it with all metadata in flash is:
+> 
+> 		Time	IOPS	BW	CPU	RAM
+> vanilla:	2719s	 2900	 55MB/s	 25%	0.95GB
+> patched:	 908s	varied	varied	varied	2.33GB
+> 
+> With the patched kernel, there were IO peaks of over 1.3GB/s during
+> AG scanning. Some phases now run at noticably different speeds
+> 	- phase 3 ran at ~180% CPU, 18,000 IOPS and 130MB/s,
+> 	- phase 4 ran at ~280% CPU, 12,000 IOPS and 100MB/s
+> 	- the other phases were similar to the vanilla repair.
+> 
+> Memory usage is increased because of the increased buffer cache
+> size as a result of concurrent AG scanning using it.
 
-All the changes in here look reasonable, but don't we need a way to
-recalculate dquot crcs in metadump as well?  We seem to need a special
-case for them elsewhere at least.
+Looks good as long as you stick your promise to clean up the magic
+numbers later.
 
-Do we have a testcase that exercises metadump on a filesystems with
-quotas enabled and check that they still work after restore?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
