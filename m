@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8D53A7F9A
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:23 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C62707F9A
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7263E304066
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:23 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB42D304067
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:24 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	6U4Y82ePIjt9YnYE for <xfs@oss.sgi.com>;
-	Tue, 12 Nov 2013 22:41:22 -0800 (PST)
+	QldEiPDhSlNkyZxl for <xfs@oss.sgi.com>;
+	Tue, 12 Nov 2013 22:41:23 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bw-BP
+	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005cJ-HS
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006jQ-AQ
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006k9-Ga
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 26/36] db: add a special attribute buffer verifier
-Date: Wed, 13 Nov 2013 17:40:50 +1100
-Message-Id: <1384324860-25677-27-git-send-email-david@fromorbit.com>
+Subject: [PATCH 35/36] repair: Increase default repair parallelism on large
+	filesystems
+Date: Wed, 13 Nov 2013 17:40:59 +1100
+Message-Id: <1384324860-25677-36-git-send-email-david@fromorbit.com>
 In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,110 +40,61 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because we only have a single attribute type that is used for all
-the attribute buffer types, we need to provide a special verifier
-for the read code. That verifier needs to know all the attribute
-types and when it find one it knows about, switch to the correct
-verifier and call it.
+Large filesystems or high AG count filesystems generally have more
+inherent parallelism in the backing storage. We shoul dmake use of
+this by default to speed up repair times. Make xfs_repair use an
+"auto-stride" configuration on filesystems with enough AGs to be
+considered "multidisk" configurations.
+
+This difference in elaspsed time to repair a 100TB filesystem with
+50 million inodes in it with all metadata in flash is:
+
+		Time	IOPS	BW	CPU	RAM
+vanilla:	2719s	 2900	 55MB/s	 25%	0.95GB
+patched:	 908s	varied	varied	varied	2.33GB
+
+With the patched kernel, there were IO peaks of over 1.3GB/s during
+AG scanning. Some phases now run at noticably different speeds
+	- phase 3 ran at ~180% CPU, 18,000 IOPS and 130MB/s,
+	- phase 4 ran at ~280% CPU, 12,000 IOPS and 100MB/s
+	- the other phases were similar to the vanilla repair.
+
+Memory usage is increased because of the increased buffer cache
+size as a result of concurrent AG scanning using it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/attr.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- db/attr.h |  2 ++
- db/type.c |  3 ++-
- 3 files changed, 55 insertions(+), 1 deletion(-)
+ repair/xfs_repair.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/db/attr.c b/db/attr.c
-index cd95a0a..359af7b 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -25,6 +25,7 @@
- #include "attr.h"
- #include "io.h"
- #include "init.h"
-+#include "output.h"
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 78f8363..a863337 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -614,6 +614,23 @@ main(int argc, char **argv)
+ 	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
+ 			XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
  
- static int	attr_leaf_entries_count(void *obj, int startoff);
- static int	attr_leaf_hdr_count(void *obj, int startoff);
-@@ -522,3 +523,53 @@ const field_t	attr3_leaf_hdr_flds[] = {
- 	{ NULL }
- };
- 
-+/*
-+ * Special read verifier for attribute buffers. detect the magic number
-+ * appropriately and set the correct verifier and call it.
-+ */
-+static void
-+xfs_attr3_db_read_verify(
-+	struct xfs_buf		*bp)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
++	/*
++	 * Automatic striding for high agcount filesystems.
++	 *
++	 * More AGs indicates that the filesystem is either large or can handle
++	 * more IO parallelism. Either way, we should try to process multiple
++	 * AGs at a time in such a configuration to try to saturate the
++	 * underlying storage and speed the repair process. Only do this if
++	 * prefetching is enabled.
++	 *
++	 * Given mkfs defaults for 16AGs for "multidisk" configurations, we want
++	 * to target these for an increase in thread count. Hence a stride value
++	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
++	 * on such filesystems.
++	 */
++	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
++		ag_stride = 15;
 +
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-+		bp->b_ops = &xfs_attr3_leaf_buf_ops;
-+		goto verify;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		goto verify;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
-+		bp->b_ops = &xfs_attr3_rmt_buf_ops;
-+		break;
-+	default:
-+		dbprintf(_("Unknown attribute buffer type!\n"));
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+verify:
-+	bp->b_ops->verify_read(bp);
-+}
-+
-+static void
-+xfs_attr3_db_write_verify(
-+	struct xfs_buf		*bp)
-+{
-+	dbprintf(_("Writing unknown attribute buffer type!\n"));
-+	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+}
-+
-+const struct xfs_buf_ops xfs_attr3_db_buf_ops = {
-+	.verify_read = xfs_attr3_db_read_verify,
-+	.verify_write = xfs_attr3_db_write_verify,
-+};
-diff --git a/db/attr.h b/db/attr.h
-index 3065372..bc3431f 100644
---- a/db/attr.h
-+++ b/db/attr.h
-@@ -33,3 +33,5 @@ extern const field_t	attr3_node_hdr_flds[];
- 
- extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
- extern int	attr_size(void *obj, int startoff, int idx);
-+
-+extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
-diff --git a/db/type.c b/db/type.c
-index 2c3431e..04d0d56 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -77,7 +77,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_AGF, "agf", handle_struct, agf_hfld, &xfs_agf_buf_ops },
- 	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld, &xfs_agfl_buf_ops },
- 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agfl_buf_ops },
--	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld, NULL },
-+	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
-+		&xfs_attr3_db_buf_ops },
- 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
- 		&xfs_bmbt_buf_ops },
- 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
+ 	if (ag_stride) {
+ 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
+ 		thread_init();
 -- 
 1.8.4.rc3
 
