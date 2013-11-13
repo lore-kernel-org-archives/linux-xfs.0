@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E05EE7FAA
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:28 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9E98E7FA9
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 00:41:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BB0858F8035
-	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:28 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 24511AC004
+	for <xfs@oss.sgi.com>; Tue, 12 Nov 2013 22:41:29 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	fhDg84aEaRTTUEAm for <xfs@oss.sgi.com>;
+	qbXNt9AzSMhDAKlM for <xfs@oss.sgi.com>;
 	Tue, 12 Nov 2013 22:41:27 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005bX-2G
+	(envelope-from <dave@fromorbit.com>) id 1VgU8O-0005cA-Eq
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006iD-1H
+	(envelope-from <dave@disappointment.disaster>) id 1VgU8O-0006jp-Dm
 	for xfs@oss.sgi.com; Wed, 13 Nov 2013 17:41:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/36] xfs: remove newlines from strings passed to __xfs_printk
-Date: Wed, 13 Nov 2013 17:40:35 +1100
-Message-Id: <1384324860-25677-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 31/36] db: enable metadump on CRC filesystems
+Date: Wed, 13 Nov 2013 17:40:55 +1100
+Message-Id: <1384324860-25677-32-git-send-email-david@fromorbit.com>
 In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,79 +39,85 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-__xfs_printk adds its own "\n".  Having it in the original string
-leads to unintentional blank lines from these messages.
+Now that we can calculate CRCs through xfs_db, we can add support
+for recalculating CRCs on obfuscated metadump images. This simply
+requires us to call the write verifier manually before writing the
+buffer to the metadump image.
 
-Ported from kernel commit 08e96e1a.
+We don't need to do anything special to mdrestore, as the metadata
+blocks it reads from the image file will already have all the
+correct CRCs in them. Hence it can be mostly oblivious to the fact
+that the filesystem it is restoring contains CRCs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_bmap.c         | 2 +-
- libxfs/xfs_dir2_node.c    | 2 +-
- libxfs/xfs_sb.c           | 4 ++--
- libxlog/xfs_log_recover.c | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ db/metadump.c             | 24 +++++++++++++++++++-----
+ mdrestore/xfs_mdrestore.c |  3 ---
+ 2 files changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 3e80c64..c45b91a 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -1447,7 +1447,7 @@ xfs_bmap_search_extents(
- 		xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
- 				"Access to block zero in inode %llu "
- 				"start_block: %llx start_off: %llx "
--				"blkcnt: %llx extent-state: %x lastx: %x\n",
-+				"blkcnt: %llx extent-state: %x lastx: %x",
- 			(unsigned long long)ip->i_ino,
- 			(unsigned long long)gotp->br_startblock,
- 			(unsigned long long)gotp->br_startoff,
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 10d1d81..ced8c58 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -1083,7 +1083,7 @@ xfs_dir2_leafn_rebalance(
- 		state->inleaf = 1;
- 		blk2->index = 0;
- 		xfs_alert(args->dp->i_mount,
--	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d\n",
-+	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d",
- 			__func__, blk1->index);
+diff --git a/db/metadump.c b/db/metadump.c
+index ac6a4d6..117dc42 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -172,6 +172,22 @@ write_buf(
+ 	__int64_t	off;
+ 	int		i;
+ 
++	/*
++	 * Run the write verifier to recalculate the buffer CRCs and check
++	 * we are writing something valid to disk
++	 */
++	if (buf->bp && buf->bp->b_ops) {
++		buf->bp->b_error = 0;
++		buf->bp->b_ops->verify_write(buf->bp);
++		if (buf->bp->b_error) {
++			fprintf(stderr,
++	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
++				__func__, (long long)buf->bp->b_bn,
++				buf->bp->b_bcount);
++			return buf->bp->b_error;
++		}
++	}
++
+ 	for (i = 0, off = buf->bb, data = buf->data;
+ 			i < buf->blen;
+ 			i++, off++, data += BBSIZE) {
+@@ -1727,6 +1743,9 @@ copy_inode_chunk(
+ 
+ 		if (!process_inode(agno, agino + i, dip))
+ 			goto pop_out;
++
++		/* calculate the new CRC for the inode */
++		xfs_dinode_calc_crc(mp, dip);
  	}
- }
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 8b90b88..11353bb 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -215,13 +215,13 @@ xfs_mount_validate_sb(
- 	if (xfs_sb_version_has_pquotino(sbp)) {
- 		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
- 			xfs_notice(mp,
--			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
-+			   "Version 5 of Super block has XFS_OQUOTA bits.");
- 			return XFS_ERROR(EFSCORRUPTED);
- 		}
- 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
- 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
- 			xfs_notice(mp,
--"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
-+"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.");
- 			return XFS_ERROR(EFSCORRUPTED);
+ skip_processing:
+ 	if (!write_buf(iocur_top))
+@@ -2053,11 +2072,6 @@ metadump_f(
+ 		return 0;
  	}
  
-diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-index f3cda77..3f22921 100644
---- a/libxlog/xfs_log_recover.c
-+++ b/libxlog/xfs_log_recover.c
-@@ -1330,7 +1330,7 @@ xlog_unpack_data_crc(
- 	if (crc != rhead->h_crc) {
- 		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
- 			xfs_alert(log->l_mp,
--		"log record CRC mismatch: found 0x%x, expected 0x%x.\n",
-+		"log record CRC mismatch: found 0x%x, expected 0x%x.",
- 					le32_to_cpu(rhead->h_crc),
- 					le32_to_cpu(crc));
- 			xfs_hex_dump(dp, 32);
+-	if (xfs_sb_version_hascrc(&mp->m_sb) && dont_obfuscate == 0) {
+-		print_warning("Can't obfuscate CRC enabled filesystems yet.");
+-		return 0;
+-	}
+-
+ 	metablock = (xfs_metablock_t *)calloc(BBSIZE + 1, BBSIZE);
+ 	if (metablock == NULL) {
+ 		print_warning("memory allocation failure");
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index fe61766..e57bdb2 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -109,9 +109,6 @@ perform_restore(
+ 	if (sb.sb_magicnum != XFS_SB_MAGIC)
+ 		fatal("bad magic number for primary superblock\n");
+ 
+-	if (xfs_sb_version_hascrc(&sb))
+-		fatal("Can't restore CRC enabled filesystems yet.\n");
+-
+ 	((xfs_dsb_t*)block_buffer)->sb_inprogress = 1;
+ 
+ 	if (is_target_file)  {
 -- 
 1.8.4.rc3
 
