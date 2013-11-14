@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4AD6F7F56
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 08:09:21 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CAD147F3F
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 08:56:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 26183304064
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 06:09:18 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id DESpn9xYQGA9uZan (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 06:09:16 -0800 (PST)
-Date: Thu, 14 Nov 2013 06:09:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs/quota: fix NULL pointer dereference in report_f
-Message-ID: <20131114140916.GA13501@infradead.org>
-References: <52849CC5.10109@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 68970AC002
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 06:56:03 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id kE9mPN8hw8x1126q for <xfs@oss.sgi.com>;
+	Thu, 14 Nov 2013 06:56:02 -0800 (PST)
+Message-ID: <5284E484.6090001@sandeen.net>
+Date: Thu, 14 Nov 2013 08:56:04 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52849CC5.10109@oracle.com>
+Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
+	xfs_buftarg
+References: <5283C41D.7070503@redhat.com>
+	<20131113185645.GA20869@infradead.org>
+	<5283CE2E.2070702@sandeen.net> <20131113212658.GJ6188@dastard>
+	<20131114133749.GA26268@infradead.org>
+In-Reply-To: <20131114133749.GA26268@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +31,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Nov 14, 2013 at 05:49:57PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
+On 11/14/13, 7:37 AM, Christoph Hellwig wrote:
+> On Thu, Nov 14, 2013 at 08:26:58AM +1100, Dave Chinner wrote:
+>> Seems like that's the avenue for improvement here to me. i.e. expose
+>> the correct values to the guest so it's mkfs does the right thing.
+>> Or, alternatively, make qemu buffer non-aligned/sized IOs itself
+>> internally.
 > 
-> Run xfs_quota report against an invalid XFS path without desired quota
-> limitation is enabled will hit SEGSEGV as fs_path is uninitialized, e.g.
+> I've implemented the support to expose these to the guest in qemu
+> years ago.  But the problem remains that this is information which
+> needs to be attached to the image, which can't really work with raw
+> images, and no one has bother to implement the support to store it
+> for say qcow2.
 > 
-> # xfs_quota -xc 'report -up' /invalid_path
-> xfs_quota: cannot setup path for mount /invalid_path: No such file or directory
-> Segmentation fault (core dumped)
-> 
-> (gdb) r -xc 'report -up' /invalid_path
-> xfs_quota: cannot setup path for mount /invalid_path: No such file or directory
-> 
-> Program received signal SIGSEGV, Segmentation fault.
-> 0x0000000000408b4d in report_f (argc=2, argv=0x105ea70) at report.c:627
-> 627			else if (fs_path->fs_flags & FS_MOUNT_POINT)
-> 
-> This patch fix report_f() to only do report if the fs_path is initialized.
 
-quot_f in quot.c and various functions in state.c seem to have the same
-issue, and need fixing as well.
+Ok but once again - this is not a guest mkfs issue.  The reported
+problem is that the guest cannot _boot_ in cache=none mode because
+the bios attempts a 512-byte DIO.
 
-I'd love to avoid having to expose fs_path as a global and just have a
-few safe accessors:
+Yes, this is all qemu's fault.   We can fight that in the court
+of public opinion, I guess.
 
-char *global_fsname(void)
-{
-	return fs_path ? fs_path->fs_name : NULL;
-}
-
-char *global_dir(void)
-{
-	return fs_path ? fs_path->fs_dir : NULL;
-}
-
-char *global_mountpoint(void)
-{
-	if (fs_path && (fs_path->fs_flags & FS_MOUNT_POINT))
-		return fs_path->fs_dir;
-	return NULL;
-}
-
-Together with moving a bit of code from quota/init.c to libxcmd/path.c
-that should allow mkaing fs_path and fs_table static there.
-
-
-I'd also really love to see a regression test for xfstests.
+-Eric
 
 _______________________________________________
 xfs mailing list
