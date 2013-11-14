@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CAA717F3F
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:55:39 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7BC297F54
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:59:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9FB8D8F8049
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:55:39 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3937AC00A
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:59:58 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KCSYCWpIgbS4Tmyp for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 10:55:38 -0800 (PST)
-Received: from Liberator.local (c-98-240-215-156.hsd1.mn.comcast.net
-	[98.240.215.156])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 712646AB3132
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:55:38 -0600 (CST)
-Message-ID: <52851CA9.8080903@sandeen.net>
-Date: Thu, 14 Nov 2013 12:55:37 -0600
+	ESMTP id 8NVfZUL5tUdkYn6E for <xfs@oss.sgi.com>;
+	Thu, 14 Nov 2013 10:59:57 -0800 (PST)
+Message-ID: <52851DAC.2040804@sandeen.net>
+Date: Thu, 14 Nov 2013 12:59:56 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH RFC] xfsprogs: suggest "-d" option for repair of RO mount
-References: <528261AD.50501@redhat.com>
-	<20131113125921.GC24615@orion.maiolino.org>
-In-Reply-To: <20131113125921.GC24615@orion.maiolino.org>
+Subject: Re: [PATCH] xfstest generic/280: wait for setquota to finish before
+	umount
+References: <1382637381-4847-1-git-send-email-guangyu.sun@oracle.com>
+In-Reply-To: <1382637381-4847-1-git-send-email-guangyu.sun@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,66 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Guangyu Sun <guangyu.sun@oracle.com>, xfs@oss.sgi.com
 
-On 11/13/13, 6:59 AM, Carlos Maiolino wrote:
-> Hm, even in single user with a RO root filesystem, changing filesystem
-> on-disk filesystem structures without have them replied in memory looks
-> dangerous to me, you will keep data consistency since the fs is RO, but how
-> about memory? You might have a discrepancy between memory and disk metadata
-> contents causing in-memory only problems?
+On 10/24/13, 12:56 PM, Guangyu Sun wrote:
+> While running xfstest 280, we occasionally got such error:
 > 
+>   setquota: Cannot set quota for user 0 from kernel on
+>   /dev/mapper/xfstests-disk1: No such device
+>   setquota: Cannot write quota for 0 on /dev/mapper/xfstests-disk1: No such
+>   device
+> 
+> setquota calls syscall quotactl, and the kernel will wait for the filesystem
+> to unfreeze and then performs command. Then kernel will double check if the
+> device is still mounted. If not, an ENODEV will be thrown.
+> 
+> While in the testcase, unfreeze and umount might be so close that the device
+> got umounted before quotactl is performed.
+> 
+> Reported-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+> Signed-off-by: Guangyu Sun <guangyu.sun@oracle.com>
 
-The possibility is already there; it's just a question of whether we
-suggest using it.  And my other patch suggests an immediate reboot
-when it's done, for just those reasons.
+Wanted to make sure the sleep didn't disturb the deadlock it's testing,
+and it doesn't.  So:
 
-A user needs some way to repair their root disk if they can't boot
-a rescue environment... and ext2/3/4 have been doing this since forever.
+Reviewed-by: Eric Sandeen <sandeen@redaht.com>
 
-I know, none of the above are exactly arguments that its' safe... :)
-
+Thanks,
 -Eric
 
-> On Tue, Nov 12, 2013 at 11:13:17AM -0600, Eric Sandeen wrote:
->> How dangerous is dangerous?
->>
->> We could offer the suggestion of a "-d" repair, if we're
->> in single-user mode with the root fs mounted readonly.
->>
->> This change suggests -d to repair any RO mounted fs.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/repair/init.c b/repair/init.c
->> index c3f380b..a7a7613 100644
->> --- a/repair/init.c
->> +++ b/repair/init.c
->> @@ -97,8 +97,17 @@ xfs_init(libxfs_init_t *args)
->>  	else
->>  		args->isreadonly = LIBXFS_EXCLUSIVELY;
->>  
->> -	if (!libxfs_init(args))
->> +	if (!libxfs_init(args)) {
->> +		/* would -d be an option? */
->> +		if (!no_modify && !dangerously) {
->> +			args->isreadonly = (LIBXFS_ISINACTIVE |
->> +					    LIBXFS_DANGEROUSLY);
->> +			if (libxfs_init(args))
->> +				fprintf(stderr,
->> +_("Unmount or use -d to repair a read-only mounted filesystem\n"));
->> +		}
->>  		do_error(_("couldn't initialize XFS library\n"));
->> +	}
->>  
->>  	ts_create();
->>  	increase_rlimit();
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
+> ---
+>  tests/generic/280 |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/tests/generic/280 b/tests/generic/280
+> index 5491a6b..815a2c5 100755
+> --- a/tests/generic/280
+> +++ b/tests/generic/280
+> @@ -63,6 +63,7 @@ xfs_freeze -f $SCRATCH_MNT
+>  setquota -u root 1 2 3 4 $SCRATCH_MNT &
+>  sleep 1
+>  xfs_freeze -u $SCRATCH_MNT
+> +sleep 1
+>  umount $SCRATCH_DEV
+>  
+>  # Failure comes in the form of a deadlock.
 > 
 
 _______________________________________________
