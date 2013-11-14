@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3C6177F50
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 04:11:28 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id BB3F87F51
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 04:25:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0921D8F804B
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:11:24 -0800 (PST)
-Received: from smtprelay06.ispgateway.de (smtprelay06.ispgateway.de
-	[80.67.31.95]) by cuda.sgi.com with ESMTP id RDJQHGOFYziCCAD1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 826CE8F8035
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:25:23 -0800 (PST)
+Received: from smtprelay01.ispgateway.de (smtprelay01.ispgateway.de
+	[80.67.31.24]) by cuda.sgi.com with ESMTP id N1QXalJFy9gOIggo
 	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:11:23 -0800 (PST)
+	<xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:25:22 -0800 (PST)
 Received: from [62.224.102.21] (helo=r008.localnet)
-	by smtprelay06.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
+	by smtprelay01.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
 	(Exim 4.68) (envelope-from <guido@ambient-entertainment.de>)
-	id 1VgttR-00062a-Hg
-	for xfs@oss.sgi.com; Thu, 14 Nov 2013 11:11:21 +0100
+	id 1Vgu6y-0003j5-7D
+	for xfs@oss.sgi.com; Thu, 14 Nov 2013 11:25:20 +0100
 From: Guido Winkelmann <guido@ambient-entertainment.de>
 Subject: Re: Files not touched in weeks got truncated after a crash
-Date: Thu, 14 Nov 2013 11:11:12 +0100
-Message-ID: <6414439.XpxSIk2GZ9@r008>
-In-Reply-To: <CAAxjCEz5ncQGfpZTfeps1r+U0q8E26P5_t6Mk_QP4FekvbRivA@mail.gmail.com>
-References: <2662179.4mj0dgORXu@r008> <5283E387.70704@gmail.com>
-	<CAAxjCEz5ncQGfpZTfeps1r+U0q8E26P5_t6Mk_QP4FekvbRivA@mail.gmail.com>
+Date: Thu, 14 Nov 2013 11:25:19 +0100
+Message-ID: <1858382.C5yFZBoLx8@r008>
+In-Reply-To: <1384361504.4299.132.camel@localhost.localdomain>
+References: <2662179.4mj0dgORXu@r008>
+	<1384361504.4299.132.camel@localhost.localdomain>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -36,25 +36,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Wednesday 13 November 2013 22:43:23 Stefan Ring wrote:
->On Wed, Nov 13, 2013 at 9:39 PM, Ric Wheeler <ricwheeler@gmail.com> wrote:
->> You should update your kernel - this sounds like an issue that Dave fixed
->> quite a few months back (and got shipped in RHEL and other distros, I don't
->> know about when Centos would pick it up)
->
->It's in the CentOS 6.4 kernel, according to the release notes:
->https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6
->/html/6.4_Technical_Notes/kernel.html (BZ#855139)
+On Wednesday 13 November 2013 16:51:44 Roger Willcocks wrote:
+>Syncing won't protect you from hardware failures.
 
-Hm, this could be it, but it still sounds a bit unlikely.
-The bug description implies that the filesystem would have to have been idling 
-from the point where the affected files were written until the point of the 
-system crash (or unclean unmount), such that the old, and by that time 
-incorrect, metadata updates would still linger in the journal, but that was 
-not really the case here. The filesystem was quite busy during those weeks....
+Obviously not, but it might - should, I would argue - lessen the impact of 
+one.
 
-Also, the bug report speaks only of zero-length files, while many of our files 
-had been truncated to lengths other than zero.
+>Without more details about what happened to the external RAID and what
+>you did to recover it's impossible to answer your question.
+
+Well, if I understood the admin correctly, the backplane in the RAID in 
+question died, probably from a short-circuit on the board. (But I think that 
+latter part was just speculation.) He removed the harddisks from that 
+enclosure, put them into another one of the same make and model, mirrored over 
+the configuration from the broken to the working one and reattached it to the 
+server. The server was shut down in the mean time.
 
 	Guido
 
