@@ -1,32 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E550E7F37
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 03:50:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BC344304059
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 01:50:04 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id qs39fMN4sdNv29Mm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 01:50:03 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rAE9o2R3007675
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 09:50:03 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rAE9o26w028326
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 09:50:02 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rAE9o1SH028302 for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 09:50:01 GMT
-Message-ID: <52849CC5.10109@oracle.com>
-Date: Thu, 14 Nov 2013 17:49:57 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3C6177F50
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 04:11:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0921D8F804B
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:11:24 -0800 (PST)
+Received: from smtprelay06.ispgateway.de (smtprelay06.ispgateway.de
+	[80.67.31.95]) by cuda.sgi.com with ESMTP id RDJQHGOFYziCCAD1
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:11:23 -0800 (PST)
+Received: from [62.224.102.21] (helo=r008.localnet)
+	by smtprelay06.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68) (envelope-from <guido@ambient-entertainment.de>)
+	id 1VgttR-00062a-Hg
+	for xfs@oss.sgi.com; Thu, 14 Nov 2013 11:11:21 +0100
+From: Guido Winkelmann <guido@ambient-entertainment.de>
+Subject: Re: Files not touched in weeks got truncated after a crash
+Date: Thu, 14 Nov 2013 11:11:12 +0100
+Message-ID: <6414439.XpxSIk2GZ9@r008>
+In-Reply-To: <CAAxjCEz5ncQGfpZTfeps1r+U0q8E26P5_t6Mk_QP4FekvbRivA@mail.gmail.com>
+References: <2662179.4mj0dgORXu@r008> <5283E387.70704@gmail.com>
+	<CAAxjCEz5ncQGfpZTfeps1r+U0q8E26P5_t6Mk_QP4FekvbRivA@mail.gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs/quota: fix NULL pointer dereference in report_f
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,46 +34,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+On Wednesday 13 November 2013 22:43:23 Stefan Ring wrote:
+>On Wed, Nov 13, 2013 at 9:39 PM, Ric Wheeler <ricwheeler@gmail.com> wrote:
+>> You should update your kernel - this sounds like an issue that Dave fixed
+>> quite a few months back (and got shipped in RHEL and other distros, I don't
+>> know about when Centos would pick it up)
+>
+>It's in the CentOS 6.4 kernel, according to the release notes:
+>https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6
+>/html/6.4_Technical_Notes/kernel.html (BZ#855139)
 
-Run xfs_quota report against an invalid XFS path without desired quota
-limitation is enabled will hit SEGSEGV as fs_path is uninitialized, e.g.
+Hm, this could be it, but it still sounds a bit unlikely.
+The bug description implies that the filesystem would have to have been idling 
+from the point where the affected files were written until the point of the 
+system crash (or unclean unmount), such that the old, and by that time 
+incorrect, metadata updates would still linger in the journal, but that was 
+not really the case here. The filesystem was quite busy during those weeks....
 
-# xfs_quota -xc 'report -up' /invalid_path
-xfs_quota: cannot setup path for mount /invalid_path: No such file or directory
-Segmentation fault (core dumped)
+Also, the bug report speaks only of zero-length files, while many of our files 
+had been truncated to lengths other than zero.
 
-(gdb) r -xc 'report -up' /invalid_path
-xfs_quota: cannot setup path for mount /invalid_path: No such file or directory
-
-Program received signal SIGSEGV, Segmentation fault.
-0x0000000000408b4d in report_f (argc=2, argv=0x105ea70) at report.c:627
-627			else if (fs_path->fs_flags & FS_MOUNT_POINT)
-
-This patch fix report_f() to only do report if the fs_path is initialized.
-
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- quota/report.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/quota/report.c b/quota/report.c
-index 70894a2..8e3316e 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -624,7 +624,7 @@ report_f(
- 		if (flags & ALL_MOUNTS_FLAG)
- 			report_any_type(fp, form, type, NULL,
- 					lower, upper, flags);
--		else if (fs_path->fs_flags & FS_MOUNT_POINT)
-+		else if (fs_path && (fs_path->fs_flags & FS_MOUNT_POINT))
- 			report_any_type(fp, form, type, fs_path->fs_dir,
- 					lower, upper, flags);
- 	} else while (argc > optind) {
--- 
-1.8.3.2
+	Guido
 
 _______________________________________________
 xfs mailing list
