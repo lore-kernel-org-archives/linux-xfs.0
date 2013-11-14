@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C9D187F37
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 18:35:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A56318F804B
-	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 16:35:08 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id JoO5zVaZ7TY61mzF for <xfs@oss.sgi.com>;
-	Wed, 13 Nov 2013 16:35:07 -0800 (PST)
-Message-ID: <52841AB9.9050906@sandeen.net>
-Date: Wed, 13 Nov 2013 18:35:05 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 4D8EB7F37
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 19:16:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 179B98F804B
+	for <xfs@oss.sgi.com>; Wed, 13 Nov 2013 17:16:38 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	j9QziosdMd7BTTwG for <xfs@oss.sgi.com>;
+	Wed, 13 Nov 2013 17:16:36 -0800 (PST)
+Date: Thu, 14 Nov 2013 12:16:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/5] xfs: more patches for 3.13
+Message-ID: <20131114011610.GM6188@dastard>
+References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
+	<20131106230133.GX1935@sgi.com> <20131107015706.GM6188@dastard>
+	<5282D2D3.3040601@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
-	xfs_buftarg
-References: <5283C41D.7070503@redhat.com>
-In-Reply-To: <5283C41D.7070503@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <5282D2D3.3040601@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +31,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On 11/13/13, 12:25 PM, Eric Sandeen wrote:
-> Pure RFC; this might be crazy.  Here's the problem I'm trying to solve:
+On Tue, Nov 12, 2013 at 07:16:03PM -0600, Eric Sandeen wrote:
+> On 11/6/13, 7:57 PM, Dave Chinner wrote:
+> > On Wed, Nov 06, 2013 at 05:01:33PM -0600, Ben Myers wrote:
+> >> On Fri, Nov 01, 2013 at 03:27:15PM +1100, Dave Chinner wrote:
+> >>> Hi folks,
+> >>>
+> >>> The following series follows up the recently committed series of
+> >>> patches for 3.13. The first two patches are the remaining
+> >>> uncommitted patches from the previous series.
+> >>>
+> >>> The next two patches are tracing patches, one for AIL manipulations
+> >>> and the other for AGF and AGI read operations. Both of these were
+> >>> written during recent debugging sessions, and both proved useful so
+> >>> should be added to the menagerie of tracepoints we already have
+> >>> avaialble.
+> >>>
+> >>> The final patch is the increasing of the inode cluster size for v5
+> >>> filesystems. I'd like to get this into v5 filesystems for 3.13 so we
+> >>> get wider exposure of it ASAP so we have more data available to be
+> >>> able to make informed decisions about how to bring this back to v4
+> >>> filesystems in a safe and controlled manner.
+> >>
+> >> Applied 3 and 4.  I still don't understand why the locking on patch 2 is
+> >> correct.  Seems like the readers of i_version hold different locks than we do
+> >> when we log the inode.  Maybe Christoph can help me with that.
+> > 
+> > Readers don't need to hold a spinlock, and many don't. The spinlock
+> > is only there to prevent concurrent updates from "losing" an update
+> > due to races.  All modifications to XFS inodes occur via
+> > transactions, inodes are locked exclusively in transactions and
+> > hence we will never lose i_version updates due to races. Hence we
+> > don't need the spinlock during the update, either.
 > 
-> Today, mkfs.xfs will select a 4k sector size for a 4k physical / 512 logical
-> drive.  (that change was done by me).  The thought was that it'd be an
-> efficiency gain to not make the drive do the (possible) RMW cycles on
-> 512-byte log IO, primarily.
+> I'm not completely convinced that readers don't need to.  What happens when
+> we read in the middle of an update?  Especially when a 32-bit box reads the
+> 64-bit value in the middle of an update?
 > 
-> However, now this restricts all DIO to 4k alignment, not the otherwise-
-> possible 512.
+> NFS is the only reader we care about (right?)
+> 
+> I see a several paths to i_version reads in nfs; so far I'm finding locked reads:
+> 
+> <2 callers of nfs_refresh_inode_locked>
+> 	spin_lock(&inode->i_lock);
+> 	nfs_refresh_inode_locked
+> 		nfs_update_inode
+> 			nfs_wcc_update_inode
+> 				(... && inode->i_version == fattr->pre_change_attr)
+> 		...
+> 		if (inode->i_version != fattr->change_attr) {
+> 		...
+> 		nfs_check_inode_attributes
+> 			(... && inode->i_version != fattr->change_attr)
 
-So, backing up... ;)
 
-XFS isn't doing anything wrong here.  It can make sector sizes as it pleases,
-and apps had darned well better accommodate its whims if they do direct IO.
+That's client side, not server side, so that's the NFS client inode
+it is locking, not the server side XFS inode.
 
-But some apps don't.  And users are sad and confused, and grow to dislike
-XFS, because it all worked just fine on that other filesystem, so screw you
-XFS, and your flux capacitor drives with your power-fail interrupts!
+> ---
+> 
+> update_changeattr
+> 	spin_lock(&dir->i_lock);
+> 	if (!cinfo->atomic || cinfo->before != dir->i_version)
 
-So my overarching goal here is to have XFS do its internal IO as efficiently
-as possible on an "advanced format" drive, i.e. in 4k chunks, but not to
-break apps that don't bother to check whether ye olde 512 DIO will work,
-if the underlying storage can actually handle it.
+Again, client side.
 
-We could even ensure that XFS_IOC_DIOINFO offers up "4k" as the answer
-to miniosz, so that apps which bother to ask get the optimal answer.
+> ---
+> 
+> nfs_post_op_update_inode_force_wcc
+> 	 spin_lock(&inode->i_lock);
+> 	 fattr->pre_change_attr = inode->i_version;
 
-But if we know, deep in our hearts, that a 512 byte DIO is ok, let's
-let it pass.
+Client side.
 
-Hacking up bt_sshift and friends might be the wrong way to do it, although
-I'm not so sure - that's really all it's used for (today).
+> 
+> ---
+> 
+> I haven't audited everything but do you have an example of an unlocked
+> reader (which is relevant to xfs)?
 
-Christoph's suggestion to leave sector size at 512 but set a log stripe seems
-interesting, too.
+Server side, where i_version is pulled out of an XFS inode:
 
-Or, we could stop setting 4k sectors for AF drives.
+$ git grep i_version fs/nfsd
+fs/nfsd/nfs3xdr.c:      fhp->fh_post_change = fhp->fh_dentry->d_inode->i_version;
+fs/nfsd/nfs4xdr.c:              write64(p, inode->i_version);
+fs/nfsd/nfsfh.h:                fhp->fh_pre_change = inode->i_version;
+$
 
-Or we could just carry on, and keep telling users that it's their fault,
-their app's fault, etc...
+the nfsfh.h hit is in fill_pre_wcc(), which appears to be called
+under i_mutex but not i_lock. The xdr encoding functions don't
+appear to be holding i_lock, and may be holding i_mutex, but I
+haven't looked that far.
 
-(I'm sympathetic to pushing the envelope and dragging apps into the 21st
-century, but it's s double edged sword).
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
