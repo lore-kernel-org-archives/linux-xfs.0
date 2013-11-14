@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7BC297F54
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:59:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F3937AC00A
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:59:58 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 8NVfZUL5tUdkYn6E for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 10:59:57 -0800 (PST)
-Message-ID: <52851DAC.2040804@sandeen.net>
-Date: Thu, 14 Nov 2013 12:59:56 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstest generic/280: wait for setquota to finish before
-	umount
-References: <1382637381-4847-1-git-send-email-guangyu.sun@oracle.com>
-In-Reply-To: <1382637381-4847-1-git-send-email-guangyu.sun@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6776E7F54
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 13:50:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 522D9304067
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 11:50:54 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id JIVVyuicsGqzOd6F (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 14 Nov 2013 11:50:53 -0800 (PST)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rAEJopge017071
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 19:50:52 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAEJooHd025384
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 19:50:51 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAEJooPI008683 for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 19:50:50 GMT
+From: Guangyu Sun <guangyu.sun@oracle.com>
+Subject: [PATCH] xfsprogs: properly check size arguments for growfs
+Date: Thu, 14 Nov 2013 11:50:08 -0800
+Message-Id: <1384458608-16056-1-git-send-email-guangyu.sun@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +34,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Guangyu Sun <guangyu.sun@oracle.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Koen De Wit <koen.de.wit@oracle.com>, Guangyu Sun <guangyu.sun@oracle.com>
 
-On 10/24/13, 12:56 PM, Guangyu Sun wrote:
-> While running xfstest 280, we occasionally got such error:
-> 
->   setquota: Cannot set quota for user 0 from kernel on
->   /dev/mapper/xfstests-disk1: No such device
->   setquota: Cannot write quota for 0 on /dev/mapper/xfstests-disk1: No such
->   device
-> 
-> setquota calls syscall quotactl, and the kernel will wait for the filesystem
-> to unfreeze and then performs command. Then kernel will double check if the
-> device is still mounted. If not, an ENODEV will be thrown.
-> 
-> While in the testcase, unfreeze and umount might be so close that the device
-> got umounted before quotactl is performed.
-> 
-> Reported-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-> Signed-off-by: Guangyu Sun <guangyu.sun@oracle.com>
+xfs_growfs has lowercase options to grow a filesystem as big as possible
+(e.g. the -d option) and uppercase options to grow a filesystem to a
+specified size, expressed in blocks. (e.g. the "-D size" option)
 
-Wanted to make sure the sleep didn't disturb the deadlock it's testing,
-and it doesn't.  So:
+If the size parameter is not numerical, the parameter is either trimmed or
+ignored. In the latter case, the filesystem is grown as big as possible. This
+may happen when users accidentally specify the size in a format similar to
+mkfs.xfs (e.g. "-D 100m" or "-D size=16384")
 
-Reviewed-by: Eric Sandeen <sandeen@redaht.com>
+In both cases, xfs_growfs should return an error instead of resizing the
+filesystem.
 
-Thanks,
--Eric
+To reproduce:
+  # mkfs.xfs -f -d size=20m -L koenfs /dev/dm-3
+  # mount /dev/dm-3 //mnt
+  # xfs_growfs -D 10000andmorethan10invalidcharacters /mnt
+  (...)
+  data blocks changed from 5120 to 10000
+  # xfs_growfs -D invalidargument20000containingnumbers /mnt
+  (...)
+  data blocks changed from 10000 to 19659543
 
-> ---
->  tests/generic/280 |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/tests/generic/280 b/tests/generic/280
-> index 5491a6b..815a2c5 100755
-> --- a/tests/generic/280
-> +++ b/tests/generic/280
-> @@ -63,6 +63,7 @@ xfs_freeze -f $SCRATCH_MNT
->  setquota -u root 1 2 3 4 $SCRATCH_MNT &
->  sleep 1
->  xfs_freeze -u $SCRATCH_MNT
-> +sleep 1
->  umount $SCRATCH_DEV
->  
->  # Failure comes in the form of a deadlock.
-> 
+Reported-by: Koen De Wit <koen.de.wit@oracle.com>
+Signed-off-by: Guangyu Sun <guangyu.sun@oracle.com>
+---
+ growfs/xfs_growfs.c |   22 +++++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 2df68fb..4ed8eb8 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -123,6 +123,7 @@ main(int argc, char **argv)
+ 	int			projid32bit;
+ 	int			crcs_enabled;
+ 	int			ftype_enabled = 0;
++	char			*endptr;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -137,7 +138,12 @@ main(int argc, char **argv)
+ 	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
+ 		switch (c) {
+ 		case 'D':
+-			dsize = strtoll(optarg, NULL, 10);
++			dsize = strtoll(optarg, &endptr, 10);
++			if (endptr) {
++				fprintf(stderr, _("%s: %s is not a valid "
++					"number\n"), progname, optarg);
++				return 1;
++			}
+ 			/* fall through */
+ 		case 'd':
+ 			dflag = 1;
+@@ -150,7 +156,12 @@ main(int argc, char **argv)
+ 			lflag = iflag = 1;
+ 			break;
+ 		case 'L':
+-			lsize = strtoll(optarg, NULL, 10);
++			lsize = strtoll(optarg, &endptr, 10);
++			if (endptr) {
++				fprintf(stderr, _("%s: %s is not a valid "
++					"number\n"), progname, optarg);
++				return 1;
++			}
+ 			/* fall through */
+ 		case 'l':
+ 			lflag = 1;
+@@ -166,7 +177,12 @@ main(int argc, char **argv)
+ 			progname = optarg;
+ 			break;
+ 		case 'R':
+-			rsize = strtoll(optarg, NULL, 10);
++			rsize = strtoll(optarg, &endptr, 10);
++			if (endptr) {
++				fprintf(stderr, _("%s: %s is not a valid "
++					"number\n"), progname, optarg);
++				return 1;
++			}
+ 			/* fall through */
+ 		case 'r':
+ 			rflag = 1;
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
