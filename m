@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEC7C7F37
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 09:18:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B31E4304064
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 07:18:52 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 57kumJpkHzSjadri for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 07:18:51 -0800 (PST)
-Message-ID: <5284E9D9.8090706@sandeen.net>
-Date: Thu, 14 Nov 2013 09:18:49 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C21047F37
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:18:17 -0600 (CST)
+Message-ID: <5284F7D8.5030805@sgi.com>
+Date: Thu, 14 Nov 2013 10:18:32 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
-	xfs_buftarg
-References: <5283C41D.7070503@redhat.com> <52841AB9.9050906@sandeen.net>
-	<20131114064932.GO6188@dastard>
-In-Reply-To: <20131114064932.GO6188@dastard>
+Subject: Re: [PATCH 00/36 V5] xfsprogs: CRC write support for xfs_db +
+References: <1384324860-25677-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1384324860-25677-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,115 +17,230 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On 11/14/13, 12:49 AM, Dave Chinner wrote:
-> On Wed, Nov 13, 2013 at 06:35:05PM -0600, Eric Sandeen wrote:
->> On 11/13/13, 12:25 PM, Eric Sandeen wrote:
->>> Pure RFC; this might be crazy.  Here's the problem I'm trying to solve:
->>>
->>> Today, mkfs.xfs will select a 4k sector size for a 4k physical / 512 logical
->>> drive.  (that change was done by me).  The thought was that it'd be an
->>> efficiency gain to not make the drive do the (possible) RMW cycles on
->>> 512-byte log IO, primarily.
->>>
->>> However, now this restricts all DIO to 4k alignment, not the otherwise-
->>> possible 512.
->>
->> So, backing up... ;)
->>
->> XFS isn't doing anything wrong here.  It can make sector sizes as it pleases,
->> and apps had darned well better accommodate its whims if they do direct IO.
->>
->> But some apps don't.  And users are sad and confused, and grow to dislike
->> XFS, because it all worked just fine on that other filesystem, so screw you
->> XFS, and your flux capacitor drives with your power-fail interrupts!
-> 
-> Funny how it's always XFS is at fault, when the same problem with 4k
-> sectors will occur on ext4, for example....
+This patchset has been committed.
 
-Yep on a non-existent hard 4k disk, ext4 would have the same problem.
+Thanks
+--Rich
 
-Meanwhile in the world of actual hardware, ext4 is fine.  (there's no
-similar sector-size switch for ext4).
+commit 9b981421f503ba679097f8cd749af37cc42f5fd7
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:41:00 2013 +0000
 
-Again; I'm NOT saying xfs is doing anything wrong, or is at fault.
+     repair: fix leaf node directory data check
 
-We can be right all the way to the grave, if apps never get fixed,
-and users have a choice of fs.
+commit 0cce4aa198f0470817bedb3781ea5b6955e43076
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:59 2013 +0000
 
-...
+     repair: Increase default repair parallelism on large filesystems
 
->> We could even ensure that XFS_IOC_DIOINFO offers up "4k" as the answer
->> to miniosz, so that apps which bother to ask get the optimal answer.
-> 
-> Funnily enough, it does:
-> 
-> 		da.d_mem = da.d_miniosz = 1 << target->bt_sshift;
+commit 61510437c627b529feb95ebffddd73df5ed5b104
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:58 2013 +0000
 
-...
+     repair: prefetching is turned off unnecessarily
 
-Of course it does today; I was talking about whether we could report this
-but still allow 512 under the covers.
- 
->> Or, we could stop setting 4k sectors for AF drives.
-> 
-> And just take the RMW penalty?
+commit ba3615fc784f03d9cb25fb7cc9240ea56b4b7a4b
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:57 2013 +0000
 
-that, and the bonus of existing applications continuing to function.
- 
->> Or we could just carry on, and keep telling users that it's their fault,
->> their app's fault, etc...
-> 
-> ... and getting the problems fixed so they go away forever.
+     xfsprogs: kill experimental warnings for v5 filesystems
 
-... or not.  *cough*64 bit inodes*cough*
+commit 7b5f9801f4d569ab9fdbdd1e39aa59585d296872
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:56 2013 +0000
 
->> (I'm sympathetic to pushing the envelope and dragging apps into the 21st
->> century, but it's s double edged sword).
-> 
-> Yes, it is, but if we don't take a stand and say "we, as an
-> ecosystem, need to support 4k sectors *everywhere*", then we are
-> going to have such problems *forever*. This isn't purely an XFS
-> problem - this is something that the entire storage stack needs to
-> support, from the hardware at the very bottom to the applications at
-> the very top.
-> 
-> XFS is stuck in the middle, where we cop it from both
-> the hardware side ("why don't you support our hardware efficiently
-> yet?") and from the application side when we do ("4k sectors break
-> our assumptions!"). It's a no win situation for us no matter what we
-> do, and history has shown that when we don't take a strong
-> leadership position the problems don't get solved.
-> 
-> So, let's take the initiative and make sure that everyone knows how
-> to deal with these problems and get them fixed in the right places.
-> I don't want to be spending the next 10 years complaining about a
-> lack of 4k sector support in qemu. It's too much like the inode64
-> saga over all over again.
+     xfs: support larger inode clusters on v5 filesystems
 
-which, TBH, has still never been fully addressed.
+commit 8ab75c4d9176d8831fd137cf0e7916032d8216da
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:55 2013 +0000
 
-> Let's face it, it wouldn't be right if XFS wasn't fighting some
-> battle to drag Linux kicking and screaming into the present...
+     db: enable metadump on CRC filesystems
 
-Well.  With my distro hat on I might have to be pragmatic, and keep
-things working that are required to work.
+commit 839dac7f06d54600b3092a7ad9cb903315a27f97
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:54 2013 +0000
 
-Upstream, sure, we can keep beating users with a stick until they
-force their app writers to make things work for them again.  ;)
+     libxfs: work around do_div() not handling 32 bit numerators
 
-(Again, though, as middle ground - if there were a way for XFS to do
-all internal IO efficiently as 4k-aligned, but allow applications
-to do 512 emulation, that would be, IMHO, a great thing.  I'm not
-yet sure what it would take.)
+commit ba9ecd40b3792961f12102af55c759d0432a6486
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:53 2013 +0000
 
--Eric
+     xfs_db: avoid libxfs buffer lookup warnings
+
+commit 06d80a7c09287581002c275fd21cfecdbdefcc15
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:52 2013 +0000
+
+     xfs_db: use inode cluster buffers for inode IO
+
+commit d14bf4dda7f5a59ba3fbaed38cd829db5f68a105
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:51 2013 +0000
+
+     db: re-enable write support for v5 filesystems.
+
+commit 2847273f74b3b14ba3cb9ab876b910da12ed2dbe
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:50 2013 +0000
+
+     db: add a special attribute buffer verifier
+
+commit fc068a1902148eaaad7a7e5e9972155dd68a647c
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:49 2013 +0000
+
+     db: add a special directory buffer verifier
+
+commit 66a40d020d7abb6fe09693f4392b6af2b30aa3b3
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Wed Nov 13 06:40:48 2013 +0000
+
+     db: verify and calculate dquot CRCs
+
+commit a73b88f29a82a21ef6f50298d2d14ae1d91b321d
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:47 2013 +0000
+
+     db: verify and calculate inode CRCs
+
+commit 0522f1cc3ab1638e18a636b6a8cf6db8b1d277f6
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:46 2013 +0000
+
+     db: indicate if the CRC on a buffer is correct or not
+
+commit 6fea8f830a6cc04d5429de31f40d15b94d0fe8da
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:45 2013 +0000
+
+     db: introduce verifier support into set_cur
+
+commit 72298d16b17776f7a57a5244776591653387846b
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:44 2013 +0000
+
+     db: rewrite IO engine to use libxfs
+
+commit 800db1c1581d68cc3e44980b0be9c5ff7b7fd6d9
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:43 2013 +0000
+
+     libxfs: refactor libxfs_buf_read_map for xfs_db
+
+commit 48e32b40a611384836e593251cbe9d840db00ac9
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:42 2013 +0000
+
+     db: rewrite bbmap to use xfs_buf_map
+
+commit 2a8b3fdf37d30bd4e0bec834168dd4fd9d8b4f58
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:41 2013 +0000
+
+     db: separate out straight buffer IO from map based IO.
+
+commit 3a19fb7dce9d570e78deaf5c26c0ab8a4a5bef67
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Wed Nov 13 06:40:40 2013 +0000
+
+     libxfs: stop caching inode structures
+
+commit 9aa5711629b47642bb5b688a6a1410d223456fc8
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:39 2013 +0000
+
+     libxfs: fix root inode handling inconsistencies
+
+commit 6aa3d87bc45348dc0948ae0cea57bf3033d64694
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:38 2013 +0000
+
+commit c9522f4d8790ecd61c4e74746b607787485f2027
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:37 2013 +0000
+
+     xfs: fix node forward in xfs_node_toosmall
+
+commit 3e23516ae60421652fd41354307a6a5181d401eb
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:36 2013 +0000
+
+     xfs: fix the wrong new_size/rnew_size at xfs_iext_realloc_direct()
+
+commit 12864fd992dd5d6bc3c089aeb6422c8d235a28f0
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:35 2013 +0000
+
+     xfs: remove newlines from strings passed to __xfs_printk
+
+commit e6d77a21f263ea403bef0940a524212e6fa03d04
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:34 2013 +0000
+
+     libxfs: Minor cleanup and bug fix sync
+
+commit f85fc6220f1c7fdb467a4d5b43e9bfbd2fb36c1d
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:33 2013 +0000
+
+     libxfs: bring across inode buffer readahead verifier changes
+
+commit 2ceff9cee1f513ff633aa0d6997374da313c8c55
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:32 2013 +0000
+
+     libxfs: xfs_rtalloc.c becomes xfs_rtbitmap.c
+
+commit 9c6ebc42e2f1cf4b114c5cecbf373b8922959e69
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:31 2013 +0000
+
+     libxfs: bmap btree owner swap support
+
+commit 10851b189f50f357eab3ce787533e505babd00d2
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:30 2013 +0000
+
+     libxfs: unify xfs_btree.c with kernel code
+
+commit 34b8c759723757e5b4a4c9da6c3a790eb405000f
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:29 2013 +0000
+
+     xfs: decouple inode and bmap btree header files
+
+commit 32390f05a6a2c1a30b5f05141d705fb7c686079c
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:28 2013 +0000
+
+     xfs: split dquot buffer operations out
+
+commit 4b1bcf9627153a77acbb2b0e6f0eb3d5b5102ceb
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Wed Nov 13 06:40:27 2013 +0000
+
+     xfs: create a shared header file for format-related information
+
+commit 389b3b078ccc03da48d3cc0387fb5c5508e15d0f
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:26 2013 +0000
+
+     xfs: fix some minor sparse warnings
+
+commit 270c31284f7d05557a31ef1304d582897bf4ffcc
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Nov 13 06:40:25 2013 +0000
+
+     xfsprogs: fix automatic dependency generation
 
 _______________________________________________
 xfs mailing list
