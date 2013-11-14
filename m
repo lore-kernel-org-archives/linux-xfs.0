@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1FE8A7F50
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:04:16 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E5FE97F37
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:24:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ABA01AC009
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:04:12 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ssIFSN2AYMTS0W71 for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 10:04:11 -0800 (PST)
-Message-ID: <52851099.2050707@sandeen.net>
-Date: Thu, 14 Nov 2013 12:04:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C3EA304048
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:24:02 -0800 (PST)
+Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
+	[209.85.223.179]) by cuda.sgi.com with ESMTP id
+	yWC31BpL0SBhLOkY (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 14 Nov 2013 10:24:00 -0800 (PST)
+Received: by mail-ie0-f179.google.com with SMTP id u16so3091570iet.24
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:24:00 -0800 (PST)
+Received: from [172.22.22.4] (c-71-195-31-37.hsd1.mn.comcast.net.
+	[71.195.31.37])
+	by mx.google.com with ESMTPSA id v2sm5797315igz.3.2013.11.14.10.23.59
+	for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Thu, 14 Nov 2013 10:23:59 -0800 (PST)
+Message-ID: <5285154A.2050301@ieee.org>
+Date: Thu, 14 Nov 2013 12:24:10 -0600
+From: Alex Elder <elder@ieee.org>
 MIME-Version: 1.0
-Subject: Re: xfs_repair
-References: <CAD5ewrp2X_CyffUt6KUCd9bRE-BJ9_Q2OmZuzPv+d1VBf09OyA@mail.gmail.com>
-In-Reply-To: <CAD5ewrp2X_CyffUt6KUCd9bRE-BJ9_Q2OmZuzPv+d1VBf09OyA@mail.gmail.com>
+Subject: Re: [PATCH] update xfs maintainers
+References: <20131107220208.GY1935@sgi.com>
+	<527C0F64.3010906@sgi.com>	<527C4B27.6020205@redhat.com>
+	<527CC50D.4060905@redhat.com>	<20131108180337.GO10553@sgi.com>	<20131108193424.GA11052@infradead.org>	<20131108204605.GA1935@sgi.com>
+	<527D4E8D.3000109@redhat.com> <20131108220309.GB1935@sgi.com>
+In-Reply-To: <20131108220309.GB1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +40,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roman Hlynovskiy <roman.hlynovskiy@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 11/14/13, 11:51 AM, Roman Hlynovskiy wrote:
-> hello, after a server crush we are trying to get back access to data on another server.
+On 11/08/2013 04:03 PM, Ben Myers wrote:
+> Hey Ric,
 > 
-> out setup is the following:
-> 4 disks in md-array, lvm over it and xfs
+> On Fri, Nov 08, 2013 at 03:50:21PM -0500, Ric Wheeler wrote:
+>> On 11/08/2013 03:46 PM, Ben Myers wrote:
+>>> Hey Christoph,
+>>>
+>>> On Fri, Nov 08, 2013 at 11:34:24AM -0800, Christoph Hellwig wrote:
+>>>> On Fri, Nov 08, 2013 at 12:03:37PM -0600, Ben Myers wrote:
+>>>>> Mark is replacing Alex as my backup because Alex is really busy at
+>>>>> Linaro and asked to be taken off awhile ago.  The holiday season is
+>>>>> coming up and I fully intend to go off my meds, turn in to Fonzy the
+>>>>> bear, and eat my hat.  I need someone to watch the shop while I'm off
+>>>>> exploring on Mars.  I trust Mark to do that because he is totally
+>>>>> awesome.
+>>>>
+>>>> Doing this as an unilateral decisions is not something that will win you
+>>>> a fan base.
+>>> It's posted for review.
+>>>
+>>>> While we never had anything reassembling a democracy in Linux Kernel
+>>>> development making decisions without even contacting the major
+>>>> contributor is wrong, twice so if the maintainer is a relatively minor
+>>>> contributor to start with.
+>>>>
+>>>> Just because it recent came up elsewhere I'd like to recite the
+>>>> definition from Trond here again:
+>>>>
+>>>> 	http://lists.linux-foundation.org/pipermail/ksummit-2012-discuss/2012-June/000066.html
+>>>>
+>>>> By many of the creative roles enlisted there it's clear that Dave should
+>>>> be the maintainer.  He's been the main contributor and chief architect
+>>>> for XFS for many year, while the maintainers came and went at the mercy
+>>>> of SGI.  This is not meant to bad mouth either of you as I think you're
+>>>> doing a reasonably good job compared to other maintainers, but at the
+>>>> same time the direction is set by other people that have a much longer
+>>>> involvement with the project, and having them officially in control
+>>>> would help us forward a lot.  It would also avoid having to spend
+>>>> considerable resources to train every new generation of SGI maintainer.
+>>>>
+>>>> Coming to and end I would like to maintain Dave Chinner as the primary
+>>>> XFS maintainer for all the work he has done as biggest contributor and
+>>>> architect of XFS since longer than I can remember, and I would love to
+>>>> retain Ben Myers as a co-maintainer for all the good work he has done
+>>>> maintaining and reviewing patches since November 2011.
+>>> I think we're doing a decent job too.  So thanks for that much at least.  ;)
+>>>> I would also like to use this post as a public venue to condemn the
+>>>> unilateral smokey backroom decisions about XFS maintainership that SGI is
+>>>> trying to enforce on the community.
+>>> That really didn't happen Christoph.  It's not in my tree or in a pull request.
+>>>
+>>> Linus, let me know what you want to do.  I do think we're doing a fair job over
+>>> here, and (geez) I'm just trying to add Mark as my backup since Alex is too
+>>> busy.  I know the RH people want more control, and that's understandable, but
+>>> they really don't need to replace me to get their code in.  Ouch.
+>>>
+>>> Thanks,
+>>> 	Ben
+>>
+>> Christoph is not a Red Hat person.
+>>
+>> Jeff is from Oracle.
+>>
+>> This is not a Red Hat vs SGI thing,
 > 
-> xfs_check just stops with 'out of memory error'
-
-xfs_check is deprecated & doesn't scale; don't bother.
-Use xfs_repair -n if you want a readonly check.
-
-> xfs_repair after a long list of complains says:
+> Sorry if my read on that was wrong.
+>        
+>> Dave simply has earned the right
+>> to take on the formal leadership role of maintainer.
 > 
-> corrupt dinode 2473604576, extent total = 1, nblocks = 0.  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com <mailto:xfs@oss.sgi.com>.
-> cache_node_purge: refcount was 1, not zero (node=0xb43ab688)
+> Then we're gonna need some Reviewed-bys.  ;)
 > 
-> fatal error -- 117 - couldn't iget disconnected inode
+> From: Ben Myers <bpm@sgi.com>
+> 
+> xfs: update maintainers 
+> 
+> Add Dave as maintainer of XFS.
 
-Are you using latest xfsprogs?
+Just so everybody knows I'm cool with this...
 
-> I captured this metadata file, but it's 2GB size.
-> is there a chance to fix the fs?
+Reviewed by: Alex Elder <elder@kernel.org>
+(Or Signed-off-by if that's appropriate.)
 
-how big is it if you compress it?
+					-Alex
 
--Eric
+> Signed-off-by: Ben Myers <bpm@sgi.com>
+> ---
+>  MAINTAINERS |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: b/MAINTAINERS
+> ===================================================================
+> --- a/MAINTAINERS	2013-11-08 15:20:18.935186245 -0600
+> +++ b/MAINTAINERS	2013-11-08 15:22:50.685245977 -0600
+> @@ -9387,8 +9387,8 @@ F:	drivers/xen/*swiotlb*
+>  
+>  XFS FILESYSTEM
+>  P:	Silicon Graphics Inc
+> +M:	Dave Chinner <dchinner@fromorbit.com>
+>  M:	Ben Myers <bpm@sgi.com>
+> -M:	Alex Elder <elder@kernel.org>
+>  M:	xfs@oss.sgi.com
+>  L:	xfs@oss.sgi.com
+>  W:	http://oss.sgi.com/projects/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
