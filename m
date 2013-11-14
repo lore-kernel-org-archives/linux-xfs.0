@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E5FE97F37
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:24:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C3EA304048
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:24:02 -0800 (PST)
-Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
-	[209.85.223.179]) by cuda.sgi.com with ESMTP id
-	yWC31BpL0SBhLOkY (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A1237F37
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:24:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A449CAC018
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:24:51 -0800 (PST)
+Received: from mail-ie0-f170.google.com (mail-ie0-f170.google.com
+	[209.85.223.170]) by cuda.sgi.com with ESMTP id
+	ApzGNzcJpkIJj2h0 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 10:24:00 -0800 (PST)
-Received: by mail-ie0-f179.google.com with SMTP id u16so3091570iet.24
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:24:00 -0800 (PST)
-Received: from [172.22.22.4] (c-71-195-31-37.hsd1.mn.comcast.net.
-	[71.195.31.37])
-	by mx.google.com with ESMTPSA id v2sm5797315igz.3.2013.11.14.10.23.59
-	for <xfs@oss.sgi.com>
-	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-	Thu, 14 Nov 2013 10:23:59 -0800 (PST)
-Message-ID: <5285154A.2050301@ieee.org>
-Date: Thu, 14 Nov 2013 12:24:10 -0600
+	Thu, 14 Nov 2013 10:24:50 -0800 (PST)
+Received: by mail-ie0-f170.google.com with SMTP id to1so3323852ieb.29
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 10:24:50 -0800 (PST)
+Message-ID: <5285157C.7040701@ieee.org>
+Date: Thu, 14 Nov 2013 12:25:00 -0600
 From: Alex Elder <elder@ieee.org>
 MIME-Version: 1.0
 Subject: Re: [PATCH] update xfs maintainers
@@ -40,7 +34,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>, Ric Wheeler <rwheeler@redhat.com>
+Cc: elder@kernel.org, Mark Tinguely <tinguely@sgi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
 On 11/08/2013 04:03 PM, Ben Myers wrote:
 > Hey Ric,
@@ -119,15 +114,17 @@ On 11/08/2013 04:03 PM, Ben Myers wrote:
 > xfs: update maintainers 
 > 
 > Add Dave as maintainer of XFS.
+> 
+> Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Just so everybody knows I'm cool with this...
+And just so everybody knows I'm cool with this...
 
-Reviewed by: Alex Elder <elder@kernel.org>
-(Or Signed-off-by if that's appropriate.)
+Reviewed-by: Alex Elder <elder@kernel.org>
+
+(Or use Signed-off-by: if you think that's more appropriate.)
 
 					-Alex
 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
 > ---
 >  MAINTAINERS |    2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
