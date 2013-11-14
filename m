@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 797CC7F54
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 14:54:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3DC99304039
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:54:05 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2QMNymL7Q89Nj4EP for
-	<xfs@oss.sgi.com>; Thu, 14 Nov 2013 12:54:03 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rAEKs3Vc025669
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 15:54:03 -0500
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id rAEKs2ro001089
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 15:54:02 -0500
-Message-ID: <5285386A.8020800@redhat.com>
-Date: Thu, 14 Nov 2013 14:54:02 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 58AAF7F5E
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 15:02:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 37A358F8049
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 13:02:09 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	9Uu0jdaCG8JLOdum for <xfs@oss.sgi.com>;
+	Thu, 14 Nov 2013 13:02:04 -0800 (PST)
+Date: Fri, 15 Nov 2013 08:01:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
+	xfs_buftarg
+Message-ID: <20131114210156.GP6188@dastard>
+References: <5283C41D.7070503@redhat.com>
+	<20131113185645.GA20869@infradead.org>
+	<5283CE2E.2070702@sandeen.net> <20131113212658.GJ6188@dastard>
+	<20131114133749.GA26268@infradead.org>
+	<5284E484.6090001@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: Fix stray semicolon in libxfs/rdwr.c
+Content-Disposition: inline
+In-Reply-To: <5284E484.6090001@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,33 +34,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-The commit:
+On Thu, Nov 14, 2013 at 08:56:04AM -0600, Eric Sandeen wrote:
+> On 11/14/13, 7:37 AM, Christoph Hellwig wrote:
+> > On Thu, Nov 14, 2013 at 08:26:58AM +1100, Dave Chinner wrote:
+> >> Seems like that's the avenue for improvement here to me. i.e. expose
+> >> the correct values to the guest so it's mkfs does the right thing.
+> >> Or, alternatively, make qemu buffer non-aligned/sized IOs itself
+> >> internally.
+> > 
+> > I've implemented the support to expose these to the guest in qemu
+> > years ago.  But the problem remains that this is information which
+> > needs to be attached to the image, which can't really work with raw
+> > images, and no one has bother to implement the support to store it
+> > for say qcow2.
+> > 
+> 
+> Ok but once again - this is not a guest mkfs issue.  The reported
+> problem is that the guest cannot _boot_ in cache=none mode because
+> the bios attempts a 512-byte DIO.
 
-800db1c1 libxfs: refactor libxfs_buf_read_map for xfs_db
+A different viewpoint: How can we make sure real 4k sector hardware
+works with Linux when it comes along if we can't emulate it via
+qemu + virtualisation?
 
-introduced a stray semicolon during the refactoring.  Luckily it
-only breaks the error case.
+People often use qemu + virutalisation as a method of testing code
+for hardware they don't have access to, and this just seems like
+another of those things that we should have working in this
+environment long before real hardware comes along and requires it...
 
-(Caught by Coverity, CID 1128894)
+Cheers,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 0aa2eba..0219a08 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -754,7 +754,7 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
- 		offset += len;
- 	}
- 
--	if (!error);
-+	if (!error)
- 		bp->b_flags |= LIBXFS_B_UPTODATE;
- #ifdef IO_DEBUG
- 	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
