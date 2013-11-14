@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BB3F87F51
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 04:25:23 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B6A6C7F3F
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 07:10:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 826CE8F8035
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:25:23 -0800 (PST)
-Received: from smtprelay01.ispgateway.de (smtprelay01.ispgateway.de
-	[80.67.31.24]) by cuda.sgi.com with ESMTP id N1QXalJFy9gOIggo
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Nov 2013 02:25:22 -0800 (PST)
-Received: from [62.224.102.21] (helo=r008.localnet)
-	by smtprelay01.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68) (envelope-from <guido@ambient-entertainment.de>)
-	id 1Vgu6y-0003j5-7D
-	for xfs@oss.sgi.com; Thu, 14 Nov 2013 11:25:20 +0100
-From: Guido Winkelmann <guido@ambient-entertainment.de>
-Subject: Re: Files not touched in weeks got truncated after a crash
-Date: Thu, 14 Nov 2013 11:25:19 +0100
-Message-ID: <1858382.C5yFZBoLx8@r008>
-In-Reply-To: <1384361504.4299.132.camel@localhost.localdomain>
-References: <2662179.4mj0dgORXu@r008>
-	<1384361504.4299.132.camel@localhost.localdomain>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FB72AC00A
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 05:10:09 -0800 (PST)
+Received: from mail-pb0-f54.google.com (mail-pb0-f54.google.com
+	[209.85.160.54]) by cuda.sgi.com with ESMTP id q1ljzLRu81KOPbVB
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 14 Nov 2013 05:10:05 -0800 (PST)
+Received: by mail-pb0-f54.google.com with SMTP id ro12so2010319pbb.13
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 05:10:05 -0800 (PST)
+Received: from [172.20.3.35] ([59.10.106.2]) by mx.google.com with ESMTPSA id
+	sg1sm51517078pbb.16.2013.11.14.05.10.03 for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Thu, 14 Nov 2013 05:10:04 -0800 (PST)
+Message-ID: <5284CB99.6030702@gmail.com>
+Date: Thu, 14 Nov 2013 22:09:45 +0900
+From: Ric Wheeler <ricwheeler@gmail.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
+	xfs_buftarg
+References: <5283C41D.7070503@redhat.com> <52841AB9.9050906@sandeen.net>
+	<20131114064932.GO6188@dastard>
+In-Reply-To: <20131114064932.GO6188@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +32,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Wednesday 13 November 2013 16:51:44 Roger Willcocks wrote:
->Syncing won't protect you from hardware failures.
 
-Obviously not, but it might - should, I would argue - lessen the impact of 
-one.
+(large snip)
 
->Without more details about what happened to the external RAID and what
->you did to recover it's impossible to answer your question.
+On 11/14/2013 03:49 PM, Dave Chinner wrote:
+>> (I'm sympathetic to pushing the envelope and dragging apps into the 21st
+>> >century, but it's s double edged sword).
+> Yes, it is, but if we don't take a stand and say "we, as an
+> ecosystem, need to support 4k sectors*everywhere*", then we are
+> going to have such problems*forever*. This isn't purely an XFS
+> problem - this is something that the entire storage stack needs to
+> support, from the hardware at the very bottom to the applications at
+> the very top.
+>
+> XFS is stuck in the middle, where we cop it from both
+> the hardware side ("why don't you support our hardware efficiently
+> yet?") and from the application side when we do ("4k sectors break
+> our assumptions!"). It's a no win situation for us no matter what we
+> do, and history has shown that when we don't take a strong
+> leadership position the problems don't get solved.
+>
+> So, let's take the initiative and make sure that everyone knows how
+> to deal with these problems and get them fixed in the right places.
+> I don't want to be spending the next 10 years complaining about a
+> lack of 4k sector support in qemu. It's too much like the inode64
+> saga over all over again.
+>
+> Let's face it, it wouldn't be right if XFS wasn't fighting some
+> battle to drag Linux kicking and screaming into the present...
+>
+> Cheers,
+>
+> Dave.
 
-Well, if I understood the admin correctly, the backplane in the RAID in 
-question died, probably from a short-circuit on the board. (But I think that 
-latter part was just speculation.) He removed the harddisks from that 
-enclosure, put them into another one of the same make and model, mirrored over 
-the configuration from the broken to the working one and reattached it to the 
-server. The server was shut down in the mean time.
+I would agree that we should not to hit our 4K sector support, have we reached 
+out the the KVM/QEMU people to see if we can get them to fix this on their side?
 
-	Guido
+Ric
+
+
 
 _______________________________________________
 xfs mailing list
