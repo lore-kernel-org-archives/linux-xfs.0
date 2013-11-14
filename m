@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 694C97F60
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 15:04:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 064F7AC001
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 13:04:09 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 867837F52
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 16:09:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 638E3304048
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 14:09:10 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	IthPHPt50t0UJXVc for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 13:04:08 -0800 (PST)
-Date: Fri, 15 Nov 2013 08:04:06 +1100
+	9R0rNbEUCSea3olI for <xfs@oss.sgi.com>;
+	Thu, 14 Nov 2013 14:09:09 -0800 (PST)
+Date: Fri, 15 Nov 2013 09:09:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: Fix stray semicolon in libxfs/rdwr.c
-Message-ID: <20131114210406.GQ6188@dastard>
-References: <5285386A.8020800@redhat.com>
+Subject: Re: [PATCH] xfs_repair: correct docs for "-t" units
+Message-ID: <20131114220904.GR6188@dastard>
+References: <528534B0.8070709@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5285386A.8020800@redhat.com>
+In-Reply-To: <528534B0.8070709@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,35 +32,17 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Nov 14, 2013 at 02:54:02PM -0600, Eric Sandeen wrote:
-> The commit:
+On Thu, Nov 14, 2013 at 02:38:08PM -0600, Eric Sandeen wrote:
+> usage() says that the xfs_repair -t reporting interval is
+> in minutes, and the manpage says nothing at all about units.
 > 
-> 800db1c1 libxfs: refactor libxfs_buf_read_map for xfs_db
+> Actually, it's in seconds.
 > 
-> introduced a stray semicolon during the refactoring.  Luckily it
-> only breaks the error case.
+> Clarify in both places that the interval is specified in
+> seconds.
 > 
-> (Caught by Coverity, CID 1128894)
-
-My fault, but really, this is something that gcc should warn about
-because it's almost always a bug....
-
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-> 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 0aa2eba..0219a08 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -754,7 +754,7 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
->  		offset += len;
->  	}
->  
-> -	if (!error);
-> +	if (!error)
->  		bp->b_flags |= LIBXFS_B_UPTODATE;
->  #ifdef IO_DEBUG
->  	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
 
 Looks good.
 
