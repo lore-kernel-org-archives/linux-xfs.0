@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BDC8C7F7B
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:12:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F940AC007
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:12:16 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qE999CsfNE3BCe5y for
-	<xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:12:15 -0800 (PST)
-Date: Fri, 15 Nov 2013 18:12:59 +0100
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: introduce list_get_first/last (Was: [PATCH 3/6] gfs2: simplify
-	current_tail() via list_last_entry_or_null())
-Message-ID: <20131115171259.GA10687@redhat.com>
-References: <5285A3F4.4040000@oracle.com> <20131115163957.GA28467@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6B0A47F9D
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:13:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 59C2D8F8066
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:13:58 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id zx41Laxz9AUqy4mk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Nov 2013 09:13:57 -0800 (PST)
+Date: Fri, 15 Nov 2013 09:13:56 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 2/4] xfs: introduce a new helper
+	xfs_inobt_lookup_grab_ichunk()
+Message-ID: <20131115171356.GB16942@infradead.org>
+References: <5281F518.3080106@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131115163957.GA28467@redhat.com>
+In-Reply-To: <5281F518.3080106@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +31,74 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
-Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, akpm@linux-foundation.org
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 11/15, Oleg Nesterov wrote:
->
-> But probably list_last_entry() makes sense in the "else" branch,
-> athough this is minor.
->
->
-> Off-topic. Not sure this really makes sense, but I was thinking about
->
-> 	list_get_first(pos, head, member)	\
-> 		((pos) = list_first_entry(head, typeof(*pos), member))
->
-> and list_get_first() last of course. The obvious advantage is that
-> compared to
->
-> 	tr = list_last_entry(sdp->sd_ail1_list, struct gfs2_trans, tr_list);
->
-> above you do not need to type "struct gfs2_trans",
->
-> 	list_get_last(tr, sdp->sd_ail1_list, tr_list);
->
-> looks a bit better.
+> Refactor xfs_bulkstat() to make use of the founction.
 
-And list.h can use it too.
+                                         ... function.
 
-So how about the patch below? I can't decide whether it cleanups or
-uglfies the code, I do not trust my taste ;) But to me it looks a
-bit better this way.
+> +int
+> +xfs_inobt_lookup_grab_ichunk(
+> +	struct xfs_btree_cur		*cur,	/* btree cursor */
+> +	xfs_agino_t			agino,	/* starting inode of chunk */
+> +	struct xfs_inobt_rec_incore	*irec,	/* btree record */
+> +	int				*stat)	/* success/failure */
+> +{
+> +	int				idx;	/* Index into inode chunk */
+> +	int				error;
+> +
+> +	/* Lookup the inode chunk that this inode lives in */
+> +	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, stat);
+> +	if (error || !*stat)
+> +		return error;
+> +
+> +	/* Get the record, should always work */
+> +	error = xfs_inobt_get_rec(cur, irec, stat);
+> +	ASSERT(!error && *stat);
 
-Oleg.
---
+If it wails it's a corruption error, so this shouldn't be an assert,
+but rather an XFS_WANT_CORRUPTED_GOTO/RETURN
 
-diff --git a/include/linux/list.h b/include/linux/list.h
-index ef95941..f52aba8 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -372,6 +372,12 @@ static inline void list_splice_tail_init(struct list_head *list,
- #define list_last_entry(ptr, type, member) \
- 	list_entry((ptr)->prev, type, member)
- 
-+#define list_get_first(pos, head, member)	\
-+	((pos) = list_first_entry(head, typeof(*(pos)), member))
-+
-+#define list_get_last(pos, head, member)	\
-+	((pos) = list_last_entry(head, typeof(*(pos)), member))
-+
- /**
-  * list_first_entry_or_null - get the first element from a list
-  * @ptr:	the list head to take the element from.
-@@ -443,7 +449,7 @@ static inline void list_splice_tail_init(struct list_head *list,
-  * @member:	the name of the list_struct within the struct.
-  */
- #define list_for_each_entry(pos, head, member)				\
--	for (pos = list_first_entry(head, typeof(*pos), member);	\
-+	for (list_get_first(pos, head, member);				\
- 	     &pos->member != (head);					\
- 	     pos = list_next_entry(pos, member))
- 
-@@ -454,7 +460,7 @@ static inline void list_splice_tail_init(struct list_head *list,
-  * @member:	the name of the list_struct within the struct.
-  */
- #define list_for_each_entry_reverse(pos, head, member)			\
--	for (pos = list_last_entry(head, typeof(*pos), member);		\
-+	for (list_get_last(pos, head, member);				\
- 	     &pos->member != (head); 					\
- 	     pos = list_prev_entry(pos, member))
- 
-@@ -517,7 +523,7 @@ static inline void list_splice_tail_init(struct list_head *list,
-  * @member:	the name of the list_struct within the struct.
-  */
- #define list_for_each_entry_safe(pos, n, head, member)			\
--	for (pos = list_first_entry(head, typeof(*pos), member),	\
-+	for (list_get_first(pos, head, member),				\
- 		n = list_next_entry(pos, member);			\
- 	     &pos->member != (head); 					\
- 	     pos = n, n = list_next_entry(n, member))
-@@ -564,7 +570,7 @@ static inline void list_splice_tail_init(struct list_head *list,
-  * of list entry.
-  */
- #define list_for_each_entry_safe_reverse(pos, n, head, member)		\
--	for (pos = list_last_entry(head, typeof(*pos), member),		\
-+	for (list_get_last(pos, head, member),				\
- 		n = list_prev_entry(pos, member);			\
- 	     &pos->member != (head); 					\
- 	     pos = n, n = list_prev_entry(n, member))
+> +	if (error || !*stat)
+> +		return error;
+> +
+> +	*stat = 0;
+
+Btw, I don't think we need to pass around the status pointer here,
+the caller doesn't care about the internal lookup status, just if
+we succeeded or failed.
+
+> +	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino)
+> +		return error;
+
+error will usually be zero here, shouldn't we return a real error?
+
+> +	idx = agino - irec->ir_startino + 1;
+> +	/*
+> +	 * We got a right chunk and there are some left inodes allocated at it.
+> +	 */
+> +	if (idx < XFS_INODES_PER_CHUNK &&
+> +	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
+> +		int	i;
+> +
+> +		/*
+> +		 * Grab the chunk record.  Mark all the uninteresting inodes free
+> +		 * (because they're before our start point).
+> +		 */
+> +		for (i = 0; i < idx; i++) {
+> +			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
+> +				irec->ir_freecount++;
+> +		}
+> +
+> +		irec->ir_free |= xfs_inobt_maskn(0, idx);
+> +		*stat = 1;
+> +	}
+
+
+At this point the function is so bulkstate specific that it should stay
+in xfs_itable.c and have a name more like xfs_bulkstate_grab_ichunk.
+
+I still like factoring it out though, thanks for the work!
 
 _______________________________________________
 xfs mailing list
