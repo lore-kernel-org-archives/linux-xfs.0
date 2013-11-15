@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6E6597F83
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:19:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED80FAC007
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:19:57 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kS9OCavEuS6vjnK6 for <xfs@oss.sgi.com>;
-	Fri, 15 Nov 2013 09:19:56 -0800 (PST)
-Message-ID: <528657BB.8090206@sandeen.net>
-Date: Fri, 15 Nov 2013 11:19:55 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A9A077F93
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:26:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 78A57304059
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:26:27 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id yATTHzhRKP6DnWIV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Nov 2013 09:26:26 -0800 (PST)
+Date: Fri, 15 Nov 2013 09:26:26 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 4/4] xfs: implement parallism quota check
+Message-ID: <20131115172626.GD16942@infradead.org>
+References: <5281F527.3040200@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/5] xfs: more patches for 3.13
-References: <1383280040-21979-1-git-send-email-david@fromorbit.com>	<20131106230133.GX1935@sgi.com>
-	<20131107015706.GM6188@dastard>	<5282D2D3.3040601@sandeen.net>
-	<20131114011610.GM6188@dastard>
-In-Reply-To: <20131114011610.GM6188@dastard>
+Content-Disposition: inline
+In-Reply-To: <5281F527.3040200@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +29,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 11/13/13, 7:16 PM, Dave Chinner wrote:
+As Dave pointed out this really should be xfs_bukstat_ag.  But looking
+at the code you're almost 90% there anyway.
 
-> That's client side, not server side, so that's the NFS client inode
-> it is locking, not the server side XFS inode.
+The actual workqueue code should probably stay in the quota files as
+other users of the per-ag bulkstate would drive the parallelsim by
+themselves.  
 
-Ah, geez, you're right. (x3)
+> +STATIC void
+> +xfs_qm_dq_adjust_worker(
+> +	struct work_struct	*work)
+> +{
+> +	struct xfs_dq_adjuster	*qa = container_of(work,
+> +				      struct xfs_dq_adjuster, qa_work);
+> +	int			error;
+> +
+> +	error = xfs_qm_dqusage_adjust_perag(qa);
+> +	complete(&qa->qa_complete);
 
-<snip>
+Seems like xfs_quotacheck should just have a nr_inprogress counter
+and a single waitqueue, that way we'd only wake the waiter once 
+the whole quotacheck is done.
 
-> Server side, where i_version is pulled out of an XFS inode:
-> 
-> $ git grep i_version fs/nfsd
-> fs/nfsd/nfs3xdr.c:      fhp->fh_post_change = fhp->fh_dentry->d_inode->i_version;
-> fs/nfsd/nfs4xdr.c:              write64(p, inode->i_version);
-> fs/nfsd/nfsfh.h:                fhp->fh_pre_change = inode->i_version;
-> $
-> 
-> the nfsfh.h hit is in fill_pre_wcc(), which appears to be called
-> under i_mutex but not i_lock. The xdr encoding functions don't
-> appear to be holding i_lock, and may be holding i_mutex, but I
-> haven't looked that far.
+Actually you even just do a flush_workqueue on the workqueue as it's
+per-quotacheck, which simplifies this even more.
 
-I'm still not sure how 
+> +STATIC int
+> +xfs_qm_init_quotacheck(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_quotacheck	*qc)
+> +{
+> +	memset(qc, 0, sizeof(*qc));
+> +
+> +	INIT_LIST_HEAD(&qc->qc_adjusters);
+> +	spin_lock_init(&qc->qc_lock);
+> +	qc->qc_mp = mp;
+> +	qc->qc_wq = alloc_workqueue("xfs-dqcheck/%s", WQ_NON_REENTRANT,
 
-> Cheers,
-> 
-> Dave.
-> 
+The WQ_NON_REENTRANT behaviour is now the default, no need to use the
+flag.
+
+> +				    0, mp->m_fsname);
+> +	if (!qc->qc_wq) {
+> +		list_del(&qc->qc_adjusters);
+
+I don't see why you'd do a list_del here given that we never added
+anything to the list.  either way no need for the list once we use
+the flush_workqueue trick above :)
+
+In fact once that is implemented the xfs_quotacheck structure will
+contain nothing but the workqueue and can go away entirely.
+
+> +STATIC struct xfs_dq_adjuster *
+> +xfs_qm_alloc_adjuster(
+> +	struct xfs_quotacheck	*qc,
+> +	xfs_agnumber_t		agno)
+> +{
+> +	struct xfs_dq_adjuster	*qa;
+> +
+> +	qa = kzalloc(sizeof(*qa), GFP_NOFS);
+> +	if (!qa)
+> +		return NULL;
+
+> +		spin_lock(&qc->qc_lock);
+> +		qa = xfs_qm_alloc_adjuster(qc, i);
+> +		if (!qa) {
+> +			error = ENOMEM;
+> +			spin_unlock(&qc->qc_lock);
+> +			goto out_destroy_adjusters;
+> +		}
+> +		queue_work(qc->qc_wq, &qa->qa_work);
+> +		spin_unlock(&qc->qc_lock);
+
+This gives you a sleeping allocation under a spinlock.  But I can't
+really find any reason for the lock to be taken here anyway, nor
+anywhere else.
+
+But to catch this please test the code with lockdep enabled for the
+next version.
+
+Thanks for looking into this!
 
 _______________________________________________
 xfs mailing list
