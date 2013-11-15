@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 24EA37F9D
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:34:17 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 6682B7F9D
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:38:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1377E304067
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:34:17 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 36B1C304059
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:38:49 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id KLWQyRGMAkQfsncf (version=TLSv1
+	by cuda.sgi.com with ESMTP id b1Xx0EGNAAjGcL0C (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Nov 2013 09:34:16 -0800 (PST)
+	Fri, 15 Nov 2013 09:38:48 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1VhNHb-000540-Ri
-	for xfs@oss.sgi.com; Fri, 15 Nov 2013 17:34:15 +0000
-Date: Fri, 15 Nov 2013 09:34:15 -0800
+	Hat Linux)) id 1VhNM0-0006TQ-3J
+	for xfs@oss.sgi.com; Fri, 15 Nov 2013 17:38:48 +0000
+Date: Fri, 15 Nov 2013 09:38:48 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix the comment explaining xfs_trans_dqlockedjoin
-Message-ID: <20131115173415.GA19381@infradead.org>
-References: <20131106114536.GA18548@infradead.org>
+Subject: [PATCH] xfs: remove unused FI_ flags
+Message-ID: <20131115173848.GA24872@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131106114536.GA18548@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,33 +32,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Not the most important patch ever, but I think it should still be picked
-up :)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-On Wed, Nov 06, 2013 at 03:45:36AM -0800, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index cd2a10e..4117286 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -295,8 +295,8 @@ xfs_trans_mod_dquot(
->  /*
->   * Given an array of dqtrx structures, lock all the dquots associated and join
->   * them to the transaction, provided they have been modified.  We know that the
-> - * highest number of dquots of one type - usr, grp OR prj - involved in a
-> - * transaction is 2 so we don't need to make this very generic.
-> + * highest number of dquots of one type - usr, grp and prj - involved in a
-> + * transaction is 3 so we don't need to make this very generic.
->   */
->  STATIC void
->  xfs_trans_dqlockedjoin(
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+---
+ fs/xfs/xfs_vnode.h |    9 ---------
+ 1 file changed, 9 deletions(-)
+
+Index: xfs/fs/xfs/xfs_vnode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnode.h	2013-10-11 17:03:21.244338013 +0100
++++ xfs/fs/xfs/xfs_vnode.h	2013-10-22 07:21:09.236045186 +0100
+@@ -35,15 +35,6 @@ struct attrlist_cursor_kern;
+ 	{ IO_INVIS,	"INVIS"}
+ 
+ /*
+- * Flush/Invalidate options for vop_toss/flush/flushinval_pages.
+- */
+-#define FI_NONE			0	/* none */
+-#define FI_REMAPF		1	/* Do a remapf prior to the operation */
+-#define FI_REMAPF_LOCKED	2	/* Do a remapf prior to the operation.
+-					   Prevent VM access to the pages until
+-					   the operation completes. */
+-
+-/*
+  * Some useful predicates.
+  */
+ #define VN_MAPPED(vp)	mapping_mapped(vp->i_mapping)
 
 _______________________________________________
 xfs mailing list
