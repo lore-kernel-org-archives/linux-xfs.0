@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 27E5F7F72
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:33:31 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 545057F72
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:34:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 10ECE304048
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:33:31 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id g0Mols0Pta9HfODU (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DAD79AC00C
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:34:34 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id g90QzApYxXYSspVr (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 20:33:30 -0800 (PST)
-Message-ID: <5285A3F4.4040000@oracle.com>
-Date: Fri, 15 Nov 2013 12:32:52 +0800
+	Thu, 14 Nov 2013 20:34:33 -0800 (PST)
+Message-ID: <5285A434.2080608@oracle.com>
+Date: Fri, 15 Nov 2013 12:33:56 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 3/6] gfs2: simplify current_tail() via
+Subject: [PATCH 4/6] ubifs: simplify drop_last_node() via
 	list_last_entry_or_null()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,34 +32,33 @@ Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundati
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Simplify the code in current_tail() via list_last_entry_or_null().
+Simplify the code in drop_last_node() via list_last_entry_or_null().
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/gfs2/log.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ fs/ubifs/recovery.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
-index 610613f..555f767 100644
---- a/fs/gfs2/log.c
-+++ b/fs/gfs2/log.c
-@@ -441,13 +441,9 @@ static unsigned int current_tail(struct gfs2_sbd *sdp)
+diff --git a/fs/ubifs/recovery.c b/fs/ubifs/recovery.c
+index 065096e..e46c394 100644
+--- a/fs/ubifs/recovery.c
++++ b/fs/ubifs/recovery.c
+@@ -603,12 +603,10 @@ static void drop_last_group(struct ubifs_scan_leb *sleb, int *offs)
+  */
+ static void drop_last_node(struct ubifs_scan_leb *sleb, int *offs)
+ {
+-	struct ubifs_scan_node *snod;
+-
+-	if (!list_empty(&sleb->nodes)) {
+-		snod = list_entry(sleb->nodes.prev, struct ubifs_scan_node,
+-				  list);
++	struct ubifs_scan_node *snod = list_last_entry_or_null(&sleb->nodes,
++				       struct ubifs_scan_node, list);
  
- 	spin_lock(&sdp->sd_ail_lock);
- 
--	if (list_empty(&sdp->sd_ail1_list)) {
--		tail = sdp->sd_log_head;
--	} else {
--		tr = list_entry(sdp->sd_ail1_list.prev, struct gfs2_trans,
--				tr_list);
--		tail = tr->tr_first;
--	}
-+	tr = list_last_entry_or_null(&sdp->sd_ail1_list, struct gfs2_trans,
-+				     tr_list);
-+	tail = tr ? tr->tr_first : sdp->sd_log_head;
- 
- 	spin_unlock(&sdp->sd_ail_lock);
- 
++	if (snod) {
+ 		dbg_rcvry("dropping last node at %d:%d",
+ 			  sleb->lnum, snod->offs);
+ 		*offs = snod->offs;
 -- 
 1.8.3.2
 
