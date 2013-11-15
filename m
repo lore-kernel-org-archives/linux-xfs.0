@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A70F17F50
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 19:42:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 96D9D304059
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 17:42:37 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1310E7F5F
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:30:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5D5F8F8035
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:30:35 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id QfAyPsoEl58pqTNT (version=TLSv1
+	cuda.sgi.com with ESMTP id QiCBA0psdTL2ZrWX (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 17:42:36 -0800 (PST)
-Message-ID: <52857BEB.4010406@oracle.com>
-Date: Fri, 15 Nov 2013 09:42:03 +0800
+	Thu, 14 Nov 2013 20:30:34 -0800 (PST)
+Message-ID: <5285A33C.4040808@oracle.com>
+Date: Fri, 15 Nov 2013 12:29:48 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs/quota: fix NULL pointer dereference in report_f
-References: <52849CC5.10109@oracle.com> <20131114140916.GA13501@infradead.org>
-In-Reply-To: <20131114140916.GA13501@infradead.org>
+Subject: [PATCH 0/6] list: introduce list_last_entry_or_null()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,68 +26,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-kernel@vger.kernel.org
+Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundation.org, oleg@redhat.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, akpm@linux-foundation.org
 
-On 11/14 2013 22:09 PM, Christoph Hellwig wrote:
-> On Thu, Nov 14, 2013 at 05:49:57PM +0800, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> Run xfs_quota report against an invalid XFS path without desired quota
->> limitation is enabled will hit SEGSEGV as fs_path is uninitialized, e.g.
->>
->> # xfs_quota -xc 'report -up' /invalid_path
->> xfs_quota: cannot setup path for mount /invalid_path: No such file or directory
->> Segmentation fault (core dumped)
->>
->> (gdb) r -xc 'report -up' /invalid_path
->> xfs_quota: cannot setup path for mount /invalid_path: No such file or directory
->>
->> Program received signal SIGSEGV, Segmentation fault.
->> 0x0000000000408b4d in report_f (argc=2, argv=0x105ea70) at report.c:627
->> 627			else if (fs_path->fs_flags & FS_MOUNT_POINT)
->>
->> This patch fix report_f() to only do report if the fs_path is initialized.
-> 
-> quot_f in quot.c and various functions in state.c seem to have the same
-> issue, and need fixing as well.
-As per a rough tryout while fixing this problem, it seems that most of those
-functions are just not be invoked since other precheck-ups were failed before
-calling them.  We have another old fix for stat_f():
+Hi Folks,
 
-commit 04418c5901b846cf904d929210cb71dfba44e9a7
-Author: Donald Douwsma <donaldd@sgi.com>
-Date:   Mon Jul 23 04:14:27 2007 +0000
+This patch is trying to introduce a new list helper to retrieve the
+last entry or return NULL if the list is empty corresponding to it,
+which is inspired by Jiri Pirko's list_first_entry_or_null().
 
-    Fix null pointer dereference in state_f.
-    Merge of master-melb:xfs-cmds:29194a by kenmcd.
+With this trivial helper, we could get a little benefit to simplify
+the code logic of xfs_ail_max() and make the code looks a bit more
+consistent with xfs_ail_min() which has already been simplified
+via list_first_entry_or_null().
 
-> I'd love to avoid having to expose fs_path as a global and just have a
-> few safe accessors:
-> 
-> char *global_fsname(void)
-> {
-> 	return fs_path ? fs_path->fs_name : NULL;
-> }
-> 
-> char *global_dir(void)
-> {
-> 	return fs_path ? fs_path->fs_dir : NULL;
-> }
-> 
-> char *global_mountpoint(void)
-> {
-> 	if (fs_path && (fs_path->fs_flags & FS_MOUNT_POINT))
-> 		return fs_path->fs_dir;
-> 	return NULL;
-> }
-> 
-> Together with moving a bit of code from quota/init.c to libxcmd/path.c
-> that should allow mkaing fs_path and fs_table static there.
-Sounds reasonable to me, thanks for your suggestion.
-> 
-> I'd also really love to see a regression test for xfstests.
-I'll take care of it, let me double check all those sub-commands at first.
+Moreover, as a per simple grep against fs as well as driver's tree,
+I think there are some other places could make use of it for similar
+purpose, here I spread this helper over some file systems as well.
+
+Any comments are welcome!
 
 Thanks,
 -Jeff
