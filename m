@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9520B7F77
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:35:22 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8D3287F81
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:35:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38AB4AC00B
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:35:22 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id cO5tUoPwuCPEOiyt (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5893B8F8052
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:35:56 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id ECAWLcI7nDQaSaQ2 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 20:35:21 -0800 (PST)
-Message-ID: <5285A464.1070904@oracle.com>
-Date: Fri, 15 Nov 2013 12:34:44 +0800
+	Thu, 14 Nov 2013 20:35:55 -0800 (PST)
+Message-ID: <5285A483.3040009@oracle.com>
+Date: Fri, 15 Nov 2013 12:35:15 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 5/6] jfs: simplify lmNextPage() via list_last_entry_or_null()
+Subject: [PATCH 6/6] jfs: simplify lmLogSync() via list_last_entry_or_null()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,29 +31,34 @@ Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundati
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Simplify the code in lmNextPage via list_last_entry_or_null().
+Simplify the code in lmLogSync() via list_last_entry_or_null().
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/jfs/jfs_logmgr.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ fs/jfs/jfs_logmgr.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
-index 360d27c..7b565d0 100644
+index 7b565d0..2f90779 100644
 --- a/fs/jfs/jfs_logmgr.c
 +++ b/fs/jfs/jfs_logmgr.c
-@@ -591,10 +591,7 @@ static int lmNextPage(struct jfs_log * log)
- 	 *	write or queue the full page at the tail of write queue
- 	 */
- 	/* get the tail tblk on commit queue */
--	if (list_empty(&log->cqueue))
--		tblk = NULL;
--	else
--		tblk = list_entry(log->cqueue.prev, struct tblock, cqueue);
-+	tblk = list_last_entry_or_null(&log->cqueue, struct tblock, cqueue);
+@@ -963,13 +963,9 @@ static int lmLogSync(struct jfs_log * log, int hard_sync)
  
- 	/* every tblk who has COMMIT record on the current page,
- 	 * and has not been committed, must be on commit queue
+ 	if (log->sync == log->syncpt) {
+ 		LOGSYNC_LOCK(log, flags);
+-		if (list_empty(&log->synclist))
+-			log->sync = log->lsn;
+-		else {
+-			lp = list_entry(log->synclist.next,
+-					struct logsyncblk, synclist);
+-			log->sync = lp->lsn;
+-		}
++		lp = list_last_entry_or_null(&log->synclist, struct logsyncblk,
++					     synclist);
++		log->sync = lp ? lp->lsn : log->lsn;
+ 		LOGSYNC_UNLOCK(log, flags);
+ 
+ 	}
 -- 
 1.8.3.2
 
