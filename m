@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 545057F72
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:34:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DAD79AC00C
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:34:34 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 9520B7F77
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:35:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 38AB4AC00B
+	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:35:22 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id g90QzApYxXYSspVr (version=TLSv1
+	cuda.sgi.com with ESMTP id cO5tUoPwuCPEOiyt (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 20:34:33 -0800 (PST)
-Message-ID: <5285A434.2080608@oracle.com>
-Date: Fri, 15 Nov 2013 12:33:56 +0800
+	Thu, 14 Nov 2013 20:35:21 -0800 (PST)
+Message-ID: <5285A464.1070904@oracle.com>
+Date: Fri, 15 Nov 2013 12:34:44 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 4/6] ubifs: simplify drop_last_node() via
-	list_last_entry_or_null()
+Subject: [PATCH 5/6] jfs: simplify lmNextPage() via list_last_entry_or_null()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +31,29 @@ Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundati
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Simplify the code in drop_last_node() via list_last_entry_or_null().
+Simplify the code in lmNextPage via list_last_entry_or_null().
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/ubifs/recovery.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ fs/jfs/jfs_logmgr.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/fs/ubifs/recovery.c b/fs/ubifs/recovery.c
-index 065096e..e46c394 100644
---- a/fs/ubifs/recovery.c
-+++ b/fs/ubifs/recovery.c
-@@ -603,12 +603,10 @@ static void drop_last_group(struct ubifs_scan_leb *sleb, int *offs)
-  */
- static void drop_last_node(struct ubifs_scan_leb *sleb, int *offs)
- {
--	struct ubifs_scan_node *snod;
--
--	if (!list_empty(&sleb->nodes)) {
--		snod = list_entry(sleb->nodes.prev, struct ubifs_scan_node,
--				  list);
-+	struct ubifs_scan_node *snod = list_last_entry_or_null(&sleb->nodes,
-+				       struct ubifs_scan_node, list);
+diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
+index 360d27c..7b565d0 100644
+--- a/fs/jfs/jfs_logmgr.c
++++ b/fs/jfs/jfs_logmgr.c
+@@ -591,10 +591,7 @@ static int lmNextPage(struct jfs_log * log)
+ 	 *	write or queue the full page at the tail of write queue
+ 	 */
+ 	/* get the tail tblk on commit queue */
+-	if (list_empty(&log->cqueue))
+-		tblk = NULL;
+-	else
+-		tblk = list_entry(log->cqueue.prev, struct tblock, cqueue);
++	tblk = list_last_entry_or_null(&log->cqueue, struct tblock, cqueue);
  
-+	if (snod) {
- 		dbg_rcvry("dropping last node at %d:%d",
- 			  sleb->lnum, snod->offs);
- 		*offs = snod->offs;
+ 	/* every tblk who has COMMIT record on the current page,
+ 	 * and has not been committed, must be on commit queue
 -- 
 1.8.3.2
 
