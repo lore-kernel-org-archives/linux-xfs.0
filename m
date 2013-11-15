@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 26B377F7B
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:03:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1913B304053
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:03:31 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id tKuIX8nvc0Fe7jGA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Nov 2013 09:03:27 -0800 (PST)
-Date: Fri, 15 Nov 2013 09:03:25 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 1/4] xfs: introduce a new helper
-	xfs_inobt_reada_chunk()
-Message-ID: <20131115170325.GA16942@infradead.org>
-References: <5281F509.7020105@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BDC8C7F7B
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:12:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F940AC007
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:12:16 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qE999CsfNE3BCe5y for
+	<xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:12:15 -0800 (PST)
+Date: Fri, 15 Nov 2013 18:12:59 +0100
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: introduce list_get_first/last (Was: [PATCH 3/6] gfs2: simplify
+	current_tail() via list_last_entry_or_null())
+Message-ID: <20131115171259.GA10687@redhat.com>
+References: <5285A3F4.4040000@oracle.com> <20131115163957.GA28467@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5281F509.7020105@oracle.com>
+In-Reply-To: <20131115163957.GA28467@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,43 +30,92 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, akpm@linux-foundation.org
 
-I like the factoring, but it could go a littler further.  Comments
-below:
+On 11/15, Oleg Nesterov wrote:
+>
+> But probably list_last_entry() makes sense in the "else" branch,
+> athough this is minor.
+>
+>
+> Off-topic. Not sure this really makes sense, but I was thinking about
+>
+> 	list_get_first(pos, head, member)	\
+> 		((pos) = list_first_entry(head, typeof(*pos), member))
+>
+> and list_get_first() last of course. The obvious advantage is that
+> compared to
+>
+> 	tr = list_last_entry(sdp->sd_ail1_list, struct gfs2_trans, tr_list);
+>
+> above you do not need to type "struct gfs2_trans",
+>
+> 	list_get_last(tr, sdp->sd_ail1_list, tr_list);
+>
+> looks a bit better.
 
->  /*
-> + * Loop over all clusters in a chunk for a given incore inode
-> + * allocation btree record.  Do a readahead if there are any
-> + * allocated inodes in that cluster.
-> + */
+And list.h can use it too.
 
-Try to use the full 80 lines available to you for comment.
+So how about the patch below? I can't decide whether it cleanups or
+uglfies the code, I do not trust my taste ;) But to me it looks a
+bit better this way.
 
-> +	xfs_agblock_t			agbno = XFS_AGINO_TO_AGBNO(mp,
-> +						irec->ir_startino);
-> +	int				nicluster, nbcluster;
-> +	int				chunkidx;
-> +
-> +	nicluster = mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp) ?
-> +		    mp->m_sb.sb_inopblock :
-> +		    (XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
-> +	nbcluster = nicluster >> mp->m_sb.sb_inopblog;
+Oleg.
+--
 
-I'd prefer to factor this out even further. xfs_ialloc_inode_init and
-xfs_ifree_cluster already have two pieces of code that calculate these
-two (with more readable names) and an additional nuber buffers counter
-we won't need here, it might make most sense to factor that into a
-single common helper.
-
-> +/*
-> + * Lookup clusters in inode chunk for a given incore inobt record,
-> + * do readahead if there are any allocated inodes in that cluster.
-> + */
-> +void xfs_inobt_reada_chunk(struct xfs_mount *mp, xfs_agnumber_t agno,
-> +			   struct xfs_inobt_rec_incore *irec);
-
-No need to duplicate the comment in the header.
+diff --git a/include/linux/list.h b/include/linux/list.h
+index ef95941..f52aba8 100644
+--- a/include/linux/list.h
++++ b/include/linux/list.h
+@@ -372,6 +372,12 @@ static inline void list_splice_tail_init(struct list_head *list,
+ #define list_last_entry(ptr, type, member) \
+ 	list_entry((ptr)->prev, type, member)
+ 
++#define list_get_first(pos, head, member)	\
++	((pos) = list_first_entry(head, typeof(*(pos)), member))
++
++#define list_get_last(pos, head, member)	\
++	((pos) = list_last_entry(head, typeof(*(pos)), member))
++
+ /**
+  * list_first_entry_or_null - get the first element from a list
+  * @ptr:	the list head to take the element from.
+@@ -443,7 +449,7 @@ static inline void list_splice_tail_init(struct list_head *list,
+  * @member:	the name of the list_struct within the struct.
+  */
+ #define list_for_each_entry(pos, head, member)				\
+-	for (pos = list_first_entry(head, typeof(*pos), member);	\
++	for (list_get_first(pos, head, member);				\
+ 	     &pos->member != (head);					\
+ 	     pos = list_next_entry(pos, member))
+ 
+@@ -454,7 +460,7 @@ static inline void list_splice_tail_init(struct list_head *list,
+  * @member:	the name of the list_struct within the struct.
+  */
+ #define list_for_each_entry_reverse(pos, head, member)			\
+-	for (pos = list_last_entry(head, typeof(*pos), member);		\
++	for (list_get_last(pos, head, member);				\
+ 	     &pos->member != (head); 					\
+ 	     pos = list_prev_entry(pos, member))
+ 
+@@ -517,7 +523,7 @@ static inline void list_splice_tail_init(struct list_head *list,
+  * @member:	the name of the list_struct within the struct.
+  */
+ #define list_for_each_entry_safe(pos, n, head, member)			\
+-	for (pos = list_first_entry(head, typeof(*pos), member),	\
++	for (list_get_first(pos, head, member),				\
+ 		n = list_next_entry(pos, member);			\
+ 	     &pos->member != (head); 					\
+ 	     pos = n, n = list_next_entry(n, member))
+@@ -564,7 +570,7 @@ static inline void list_splice_tail_init(struct list_head *list,
+  * of list entry.
+  */
+ #define list_for_each_entry_safe_reverse(pos, n, head, member)		\
+-	for (pos = list_last_entry(head, typeof(*pos), member),		\
++	for (list_get_last(pos, head, member),				\
+ 		n = list_prev_entry(pos, member);			\
+ 	     &pos->member != (head); 					\
+ 	     pos = n, n = list_prev_entry(n, member))
 
 _______________________________________________
 xfs mailing list
