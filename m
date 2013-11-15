@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0E5137F89
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 22:50:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E658C8F8033
-	for <xfs@oss.sgi.com>; Thu, 14 Nov 2013 20:50:48 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id zlgnKvyvIlgiyTMc (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Nov 2013 20:50:47 -0800 (PST)
-Message-ID: <5285A7FF.1000901@oracle.com>
-Date: Fri, 15 Nov 2013 12:50:07 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A86177F83
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 08:09:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B1AA304039
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 06:09:32 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 3JKUzDlKiDNnF3NT (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Nov 2013 06:09:28 -0800 (PST)
+Date: Fri, 15 Nov 2013 06:09:28 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsprogs/quota: fix NULL pointer dereference in report_f
+Message-ID: <20131115140928.GB17561@infradead.org>
+References: <52849CC5.10109@oracle.com> <20131114140916.GA13501@infradead.org>
+	<52857BEB.4010406@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 6/6] jfs: simplify lmLogSync() via
-	list_last_entry_or_null()
-References: <5285A483.3040009@oracle.com>
-In-Reply-To: <5285A483.3040009@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <52857BEB.4010406@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: shaggy@kernel.org
-Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundation.org, oleg@redhat.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Dave and all,
+On Fri, Nov 15, 2013 at 09:42:03AM +0800, Jeff Liu wrote:
+> As per a rough tryout while fixing this problem, it seems that most of those
+> functions are just not be invoked since other precheck-ups were failed before
+> calling them.  We have another old fix for stat_f():
 
-Please ignore this patch from this series.
-
-On 11/15 2013 12:35 PM, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> Simplify the code in lmLogSync() via list_last_entry_or_null().
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  fs/jfs/jfs_logmgr.c | 10 +++-------
->  1 file changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
-> index 7b565d0..2f90779 100644
-> --- a/fs/jfs/jfs_logmgr.c
-> +++ b/fs/jfs/jfs_logmgr.c
-> @@ -963,13 +963,9 @@ static int lmLogSync(struct jfs_log * log, int hard_sync)
->  
->  	if (log->sync == log->syncpt) {
->  		LOGSYNC_LOCK(log, flags);
-> -		if (list_empty(&log->synclist))
-> -			log->sync = log->lsn;
-> -		else {
-> -			lp = list_entry(log->synclist.next,
-> -					struct logsyncblk, synclist);
-> -			log->sync = lp->lsn;
-> -		}
-> +		lp = list_last_entry_or_null(&log->synclist, struct logsyncblk,
-> +					     synclist);
-Here it could be simplified via list_first_entry_or_null(), my apology for this mistake.
-> +		log->sync = lp ? lp->lsn : log->lsn;
->  		LOGSYNC_UNLOCK(log, flags);
->  
->  	}
-> 
-
-Thanks,
--Jeff
+Most or all?  If this is the only case I'm fine with putting your
+patch in a quick fix, even if I'd prefer the version I suggested for
+the long run.
 
 _______________________________________________
 xfs mailing list
