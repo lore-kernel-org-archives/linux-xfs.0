@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6309D7F91
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 10:39:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 551D78F8052
-	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 08:39:13 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QExVKkfPJIKXTIox for
-	<xfs@oss.sgi.com>; Fri, 15 Nov 2013 08:39:09 -0800 (PST)
-Date: Fri, 15 Nov 2013 17:39:57 +0100
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH 3/6] gfs2: simplify current_tail() via
-	list_last_entry_or_null()
-Message-ID: <20131115163957.GA28467@redhat.com>
-References: <5285A3F4.4040000@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 26B377F7B
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 11:03:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1913B304053
+	for <xfs@oss.sgi.com>; Fri, 15 Nov 2013 09:03:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id tKuIX8nvc0Fe7jGA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Nov 2013 09:03:27 -0800 (PST)
+Date: Fri, 15 Nov 2013 09:03:25 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 1/4] xfs: introduce a new helper
+	xfs_inobt_reada_chunk()
+Message-ID: <20131115170325.GA16942@infradead.org>
+References: <5281F509.7020105@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5285A3F4.4040000@oracle.com>
+In-Reply-To: <5281F509.7020105@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +31,43 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
-Cc: jfs-discussion@lists.sourceforge.net, jiri@resnulli.us, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, akpm@linux-foundation.org
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 11/15, Jeff Liu wrote:
->
-> @@ -441,13 +441,9 @@ static unsigned int current_tail(struct gfs2_sbd *sdp)
->  
->  	spin_lock(&sdp->sd_ail_lock);
->  
-> -	if (list_empty(&sdp->sd_ail1_list)) {
-> -		tail = sdp->sd_log_head;
-> -	} else {
-> -		tr = list_entry(sdp->sd_ail1_list.prev, struct gfs2_trans,
-> -				tr_list);
-> -		tail = tr->tr_first;
-> -	}
-> +	tr = list_last_entry_or_null(&sdp->sd_ail1_list, struct gfs2_trans,
-> +				     tr_list);
-> +	tail = tr ? tr->tr_first : sdp->sd_log_head;
->  
+I like the factoring, but it could go a littler further.  Comments
+below:
 
-Personally I agree with Steven. At least in this case
-list_last_entry_or_null() doesn't really help to simplify the code.
+>  /*
+> + * Loop over all clusters in a chunk for a given incore inode
+> + * allocation btree record.  Do a readahead if there are any
+> + * allocated inodes in that cluster.
+> + */
 
-But probably list_last_entry() makes sense in the "else" branch,
-athough this is minor.
+Try to use the full 80 lines available to you for comment.
 
+> +	xfs_agblock_t			agbno = XFS_AGINO_TO_AGBNO(mp,
+> +						irec->ir_startino);
+> +	int				nicluster, nbcluster;
+> +	int				chunkidx;
+> +
+> +	nicluster = mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp) ?
+> +		    mp->m_sb.sb_inopblock :
+> +		    (XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
+> +	nbcluster = nicluster >> mp->m_sb.sb_inopblog;
 
-Off-topic. Not sure this really makes sense, but I was thinking about
+I'd prefer to factor this out even further. xfs_ialloc_inode_init and
+xfs_ifree_cluster already have two pieces of code that calculate these
+two (with more readable names) and an additional nuber buffers counter
+we won't need here, it might make most sense to factor that into a
+single common helper.
 
-	list_get_first(pos, head, member)	\
-		((pos) = list_first_entry(head, typeof(*pos), member))
+> +/*
+> + * Lookup clusters in inode chunk for a given incore inobt record,
+> + * do readahead if there are any allocated inodes in that cluster.
+> + */
+> +void xfs_inobt_reada_chunk(struct xfs_mount *mp, xfs_agnumber_t agno,
+> +			   struct xfs_inobt_rec_incore *irec);
 
-and list_get_first() last of course. The obvious advantage is that
-compared to
-
-	tr = list_last_entry(sdp->sd_ail1_list, struct gfs2_trans, tr_list);
-
-above you do not need to type "struct gfs2_trans",
-
-	list_get_last(tr, sdp->sd_ail1_list, tr_list);
-
-looks a bit better.
-
-Oleg.
+No need to duplicate the comment in the header.
 
 _______________________________________________
 xfs mailing list
