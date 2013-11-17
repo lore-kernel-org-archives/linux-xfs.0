@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 484C77F54
-	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 06:36:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 273998F804B
-	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 04:36:16 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 1OrllWUY78H78XyH (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BEE857F5A
+	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 07:01:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 86A6A304032
+	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 05:01:43 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id eLCKLjXjwYfAd3o4 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 17 Nov 2013 04:36:15 -0800 (PST)
-Message-ID: <5288B81D.5000504@oracle.com>
-Date: Sun, 17 Nov 2013 20:35:41 +0800
+	Sun, 17 Nov 2013 05:01:39 -0800 (PST)
+Message-ID: <5288BE14.1050302@oracle.com>
+Date: Sun, 17 Nov 2013 21:01:08 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 2/4] xfs: introduce a new helper
-	xfs_inobt_lookup_grab_ichunk()
-References: <5281F518.3080106@oracle.com>
-	<20131115171356.GB16942@infradead.org>
-In-Reply-To: <20131115171356.GB16942@infradead.org>
+Subject: Re: [RFC PATCH 4/4] xfs: implement parallism quota check
+References: <5281F527.3040200@oracle.com>
+	<20131115172626.GD16942@infradead.org>
+In-Reply-To: <20131115172626.GD16942@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,78 +32,110 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+On 11/16 2013 01:26 AM, Christoph Hellwig wrote:
+> As Dave pointed out this really should be xfs_bukstat_ag.  But looking
+> at the code you're almost 90% there anyway.
+One main reason I did not make a per ag bulkstat is because bulkstat() will
+skip an allocation group if read agi buffer failed, i.e,
 
-On 11/16 2013 01:13 AM, Christoph Hellwig wrote:
->> Refactor xfs_bulkstat() to make use of the founction.
+while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
+	cond_resched();
+	error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
+	if (error) {
+		/*
+		 * Skip this allocation group and go to the next one.
+		 */
+		agno++;
+                agino = 0;
+		continue;
+	}
+	....
+}
+
+Should it capture this issue and drop a warning in this case?
+
+> The actual workqueue code should probably stay in the quota files as
+> other users of the per-ag bulkstate would drive the parallelsim by
+> themselves.  
 > 
->                                          ... function.
-> 
->> +int
->> +xfs_inobt_lookup_grab_ichunk(
->> +	struct xfs_btree_cur		*cur,	/* btree cursor */
->> +	xfs_agino_t			agino,	/* starting inode of chunk */
->> +	struct xfs_inobt_rec_incore	*irec,	/* btree record */
->> +	int				*stat)	/* success/failure */
+>> +STATIC void
+>> +xfs_qm_dq_adjust_worker(
+>> +	struct work_struct	*work)
 >> +{
->> +	int				idx;	/* Index into inode chunk */
->> +	int				error;
+>> +	struct xfs_dq_adjuster	*qa = container_of(work,
+>> +				      struct xfs_dq_adjuster, qa_work);
+>> +	int			error;
 >> +
->> +	/* Lookup the inode chunk that this inode lives in */
->> +	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, stat);
->> +	if (error || !*stat)
->> +		return error;
+>> +	error = xfs_qm_dqusage_adjust_perag(qa);
+>> +	complete(&qa->qa_complete);
+> 
+> Seems like xfs_quotacheck should just have a nr_inprogress counter
+> and a single waitqueue, that way we'd only wake the waiter once 
+> the whole quotacheck is done.
+> 
+> Actually you even just do a flush_workqueue on the workqueue as it's
+> per-quotacheck, which simplifies this even more.
+It looks perform flush_work() should just works fine, I do see less coding
+efforts in this way although the revised version is not yet ready to post. 
+>> +STATIC int
+>> +xfs_qm_init_quotacheck(
+>> +	struct xfs_mount	*mp,
+>> +	struct xfs_quotacheck	*qc)
+>> +{
+>> +	memset(qc, 0, sizeof(*qc));
 >> +
->> +	/* Get the record, should always work */
->> +	error = xfs_inobt_get_rec(cur, irec, stat);
->> +	ASSERT(!error && *stat);
+>> +	INIT_LIST_HEAD(&qc->qc_adjusters);
+>> +	spin_lock_init(&qc->qc_lock);
+>> +	qc->qc_mp = mp;
+>> +	qc->qc_wq = alloc_workqueue("xfs-dqcheck/%s", WQ_NON_REENTRANT,
 > 
-> If it wails it's a corruption error, so this shouldn't be an assert,
-> but rather an XFS_WANT_CORRUPTED_GOTO/RETURN
-Indeed.
+> The WQ_NON_REENTRANT behaviour is now the default, no need to use the
+> flag.
+Well, I realized this change before, but forgot to get rid of this flag
+for rebasing the code after writing it done for several months.
 > 
->> +	if (error || !*stat)
->> +		return error;
+>> +				    0, mp->m_fsname);
+>> +	if (!qc->qc_wq) {
+>> +		list_del(&qc->qc_adjusters);
+> 
+> I don't see why you'd do a list_del here given that we never added
+> anything to the list.  either way no need for the list once we use
+> the flush_workqueue trick above :)
+Ah, a stupid mistake! :-P.
+> In fact once that is implemented the xfs_quotacheck structure will
+> contain nothing but the workqueue and can go away entirely.
+> 
+>> +STATIC struct xfs_dq_adjuster *
+>> +xfs_qm_alloc_adjuster(
+>> +	struct xfs_quotacheck	*qc,
+>> +	xfs_agnumber_t		agno)
+>> +{
+>> +	struct xfs_dq_adjuster	*qa;
 >> +
->> +	*stat = 0;
+>> +	qa = kzalloc(sizeof(*qa), GFP_NOFS);
+>> +	if (!qa)
+>> +		return NULL;
 > 
-> Btw, I don't think we need to pass around the status pointer here,
-> the caller doesn't care about the internal lookup status, just if
-> we succeeded or failed.
-Yes, I'll fix it in next version.
-> 
->> +	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino)
->> +		return error;
-> 
-> error will usually be zero here, shouldn't we return a real error?
-In xfs_imap_lookup(), it return EINVAL if the given inode is not inside the
-returned record, looks we should follow up the same rule here.
-
-> 
->> +	idx = agino - irec->ir_startino + 1;
->> +	/*
->> +	 * We got a right chunk and there are some left inodes allocated at it.
->> +	 */
->> +	if (idx < XFS_INODES_PER_CHUNK &&
->> +	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
->> +		int	i;
->> +
->> +		/*
->> +		 * Grab the chunk record.  Mark all the uninteresting inodes free
->> +		 * (because they're before our start point).
->> +		 */
->> +		for (i = 0; i < idx; i++) {
->> +			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
->> +				irec->ir_freecount++;
+>> +		spin_lock(&qc->qc_lock);
+>> +		qa = xfs_qm_alloc_adjuster(qc, i);
+>> +		if (!qa) {
+>> +			error = ENOMEM;
+>> +			spin_unlock(&qc->qc_lock);
+>> +			goto out_destroy_adjusters;
 >> +		}
->> +
->> +		irec->ir_free |= xfs_inobt_maskn(0, idx);
->> +		*stat = 1;
->> +	}
+>> +		queue_work(qc->qc_wq, &qa->qa_work);
+>> +		spin_unlock(&qc->qc_lock);
 > 
+> This gives you a sleeping allocation under a spinlock.  But I can't
+> really find any reason for the lock to be taken here anyway, nor
+> anywhere else.
+Sorry, I can not recall it all why I need to introduce a spinlock here.
+but yes, that is not a normal way and especially cause a sleeping allocation.
 > 
-> At this point the function is so bulkstate specific that it should stay
-> in xfs_itable.c and have a name more like xfs_bulkstate_grab_ichunk.
-Nice point. :)
+> But to catch this please test the code with lockdep enabled for the
+> next version.
+Sure.
+
 
 Thanks,
 -Jeff
