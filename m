@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E95E57F37
-	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 13:35:27 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F26DB7F37
+	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 13:48:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 76FACAC001
-	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 11:35:24 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D06EB304032
+	for <xfs@oss.sgi.com>; Sun, 17 Nov 2013 11:48:34 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	la5qGtr9JY2rlZ8H for <xfs@oss.sgi.com>;
-	Sun, 17 Nov 2013 11:35:22 -0800 (PST)
-Date: Mon, 18 Nov 2013 06:35:18 +1100
+	GKckzV1m3ZyEGfqf for <xfs@oss.sgi.com>;
+	Sun, 17 Nov 2013 11:48:33 -0800 (PST)
+Date: Mon, 18 Nov 2013 06:48:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfsprogs: properly check size arguments for growfs
-Message-ID: <20131117193518.GS6188@dastard>
-References: <1384459290-16291-1-git-send-email-guangyu.sun@oracle.com>
+Subject: Re: [PATCH 0/5] xfs: more patches for 3.13
+Message-ID: <20131117194830.GT6188@dastard>
+References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
+	<20131106230133.GX1935@sgi.com> <20131107015706.GM6188@dastard>
+	<5282D2D3.3040601@sandeen.net> <20131114011610.GM6188@dastard>
+	<528657BB.8090206@sandeen.net> <52866008.4010309@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1384459290-16291-1-git-send-email-guangyu.sun@oracle.com>
+In-Reply-To: <52866008.4010309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +32,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Guangyu Sun <guangyu.sun@oracle.com>
-Cc: Koen De Wit <koen.de.wit@oracle.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Nov 14, 2013 at 12:01:30PM -0800, Guangyu Sun wrote:
-> xfs_growfs has lowercase options to grow a filesystem as big as possible
-> (e.g. the -d option) and uppercase options to grow a filesystem to a
-> specified size, expressed in blocks. (e.g. the "-D size" option)
+On Fri, Nov 15, 2013 at 11:55:20AM -0600, Eric Sandeen wrote:
+> On 11/15/13, 11:19 AM, Eric Sandeen wrote:
+> > On 11/13/13, 7:16 PM, Dave Chinner wrote:
+> > 
+> >> That's client side, not server side, so that's the NFS client inode
+> >> it is locking, not the server side XFS inode.
+> > 
+> > Ah, geez, you're right. (x3)
+> > 
+> > <snip>
+> > 
+> >> Server side, where i_version is pulled out of an XFS inode:
+> >>
+> >> $ git grep i_version fs/nfsd
+> >> fs/nfsd/nfs3xdr.c:      fhp->fh_post_change = fhp->fh_dentry->d_inode->i_version;
+> >> fs/nfsd/nfs4xdr.c:              write64(p, inode->i_version);
+> >> fs/nfsd/nfsfh.h:                fhp->fh_pre_change = inode->i_version;
+> >> $
+> >>
+> >> the nfsfh.h hit is in fill_pre_wcc(), which appears to be called
+> >> under i_mutex but not i_lock. The xdr encoding functions don't
+> >> appear to be holding i_lock, and may be holding i_mutex, but I
+> >> haven't looked that far.
+> > 
+> > I'm still not sure how  . . . 
 > 
-> If the size parameter is not numerical, the parameter is either trimmed or
-> ignored. In the latter case, the filesystem is grown as big as possible. This
-> may happen when users accidentally specify the size in a format similar to
-> mkfs.xfs (e.g. "-D 100m" or "-D size=16384")
+> ugh didn't mean to send this reply quite yet, sorry.
 > 
-> In both cases, xfs_growfs should return an error instead of resizing the
-> filesystem.
+> Not sure how we do an unlocked read on a 32-bit machine that doesn't potentially
+> get the wrong answer.  I talked to Bruce about it a bit; nothing jumped out at
+> us.  At worst (?) it seems that if you happened to race on a read at exactly
+> the 2^32'nd modification, you might go backwards.  
 > 
-> To reproduce:
->   # mkfs.xfs -f -d size=20m -L koenfs /dev/dm-3
->   # mount /dev/dm-3 //mnt
->   # xfs_growfs -D 10000andmorethan10invalidcharacters /mnt
->   (...)
->   data blocks changed from 5120 to 10000
->   # xfs_growfs -D invalidargument20000containingnumbers /mnt
->   (...)
->   data blocks changed from 10000 to 19659543
-> 
-> Reported-by: Koen De Wit <koen.de.wit@oracle.com>
-> Signed-off-by: Guangyu Sun <guangyu.sun@oracle.com>
+> As Bruce says, even if so, maybe "so rare we don't care?"
 
-Perhaps this should be changed to use cvtnum() from libxcmd? That
-will fix the input validation problem, and also allow xfs_growfs to
-all the different methods of specifying size that we use elsewhere
-in xfsprogs...
+Especially as it requires 2^32 modifications to first be made to the
+file before there's even the possibility of a high word race on a
+read and then there's only one increment we could race with before
+it doesn't chnge again for another 2^32 modifications.
+
+Hence, at 1 in 4 billion modifications potentially causing a problem,
+I'd agree with the "so rare we don't care" assessment.
 
 Cheers,
 
