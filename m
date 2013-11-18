@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C655529E04
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 14:30:36 -0600 (CST)
-Date: Mon, 18 Nov 2013 14:30:33 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DE35E29E04
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 14:31:15 -0600 (CST)
+Date: Mon, 18 Nov 2013 14:31:12 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/5] xfs: more patches for 3.13
-Message-ID: <20131118203033.GH1935@sgi.com>
-References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH v4] xfs: fix unlock in xfs_bmap_add_attrfork
+Message-ID: <20131118203112.GI1935@sgi.com>
+References: <20131107204358.901127238@.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1383280040-21979-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20131107204358.901127238@.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,27 +22,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Nov 01, 2013 at 03:27:15PM +1100, Dave Chinner wrote:
-> The following series follows up the recently committed series of
-> patches for 3.13. The first two patches are the remaining
-> uncommitted patches from the previous series.
-> 
-> The next two patches are tracing patches, one for AIL manipulations
-> and the other for AGF and AGI read operations. Both of these were
-> written during recent debugging sessions, and both proved useful so
-> should be added to the menagerie of tracepoints we already have
-> avaialble.
-> 
-> The final patch is the increasing of the inode cluster size for v5
-> filesystems. I'd like to get this into v5 filesystems for 3.13 so we
-> get wider exposure of it ASAP so we have more data available to be
-> able to make informed decisions about how to bring this back to v4
-> filesystems in a safe and controlled manner.
 
-Applied #2 and #5.
+On Thu, Nov 07, 2013 at 03:43:28PM -0600, Mark Tinguely wrote:
+> xfs_trans_ijoin() activates the inode in a transaction and
+> also can specify which lock to free when the transaction is
+> committed or canceled.
+> 
+> xfs_bmap_add_attrfork call locks and adds the lock to the
+> transaction but also manually removes the lock. Change the
+> routine to not add the lock to the transaction and manually
+> remove lock on completion.
+> 
+> While here, clean up the xfs_trans_cancel flags and goto names.
+> 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+
+Applied.
 
 _______________________________________________
 xfs mailing list
