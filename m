@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 69CFC29E04
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 16:44:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4A66D8F8040
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 14:44:53 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	2SyEZF2LdXd6llDJ for <xfs@oss.sgi.com>;
-	Mon, 18 Nov 2013 14:44:51 -0800 (PST)
-Date: Tue, 19 Nov 2013 09:44:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: setfacl fix
-Message-ID: <20131118224426.GW6188@dastard>
-References: <CAH2r5msswZg_NvY9qMNknh2FWht1jMgwW1s2umtaBj3mHreDAw@mail.gmail.com>
-	<20131116145507.GA22395@infradead.org>
-	<CAH2r5mtXjnAOpKzZzta_yWDGyEPzR7h1wb0UW2pnoicm9Qsgxg@mail.gmail.com>
-	<20131118152723.GA19649@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3743A29E04
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 16:45:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BD28BAC004
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 14:45:44 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id JQ0ghYEfWuPDEInk for <xfs@oss.sgi.com>;
+	Mon, 18 Nov 2013 14:45:43 -0800 (PST)
+Message-ID: <528A987E.2040103@sandeen.net>
+Date: Mon, 18 Nov 2013 16:45:18 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131118152723.GA19649@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: open code inc_inode_iversion when logging an
+	inode
+References: <1383280040-21979-1-git-send-email-david@fromorbit.com>	<1383280040-21979-3-git-send-email-david@fromorbit.com>	<528A8C90.3010401@sandeen.net>
+	<20131118222826.GJ1935@sgi.com>
+In-Reply-To: <20131118222826.GJ1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,52 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Steve French <smfrench@gmail.com>, xfs@oss.sgi.com, samba-technical <samba-technical@lists.samba.org>, "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 18, 2013 at 07:27:23AM -0800, Christoph Hellwig wrote:
-> On Sat, Nov 16, 2013 at 03:38:09PM -0600, Steve French wrote:
-> > Makes sense to add a setfacl/getfacl test to xfstest and was trying to
-> > build updated xfstests and look at what has changed but ran into a
-> > strange error building xfstests and didn't see an obvious answer when
-> > googling for it.  Any idea how to workaround the build failure?
-> > 
-> > Building src
-> >     [DEP]
-> >     [CC]    dirstress
-> > gcc: error: /lib64/libhandle.so: Too many levels of symbolic links
+On 11/18/13, 4:28 PM, Ben Myers wrote:
+> On Mon, Nov 18, 2013 at 03:54:24PM -0600, Eric Sandeen wrote:
 
-What's the circular link chain?
+<snip>
 
-> > These are the steps I went through from a fairly clean Fedora 19 64
-> > system before the make failure:
+>> Well, ok.  Maybe worth a note about why the unlocked read is 99.9999% ok...
+>>
+>> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> No idea.  Maybe some of the RedHat people on the xfs list have more
-> experience with Fedora than I have.
+> Ah, sorry Eric, I didn't realize you were still reviewing this guy.  I pulled
+> him in a bit earlier in the day.
 
-Don't look at me - I use Debian for all my upstream stuff.... ;)
+No worries.  I'm very slow.  ;)
 
-> > git clone git://oss.sgi.com/xfs/cmds/xfstests
-> > git clone git://oss.sgi.com/xfs/cmds/xfsprogs
-> > sudo yum install uuid-devel e2fsprogs-devel libuuid-devel
-> > libattr-devel libacl-devel
-> > cd xfsprogs
-> > make
-> > sudo make install-qa
-> > cd ../xfstests
-> > ./configure
-> > make (which failed with the symlink error above)
-
-Having the output of all the steps, especially the xfsprogs
-install-qa step is probably going to be necessary to debug this. You
-probably want to run "make Q= install-qa" so that it runs verbosely.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
