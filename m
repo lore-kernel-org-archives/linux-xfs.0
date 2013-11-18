@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 959D729E04
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 16:26:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 83956304039
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 14:26:53 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jSMqE3sIy3BkuGYd for <xfs@oss.sgi.com>;
-	Mon, 18 Nov 2013 14:26:51 -0800 (PST)
-Date: Tue, 19 Nov 2013 09:26:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfsprogs: suggest "-d" option for repair of RO mount
-Message-ID: <20131118222647.GV6188@dastard>
-References: <528261AD.50501@redhat.com>
- <528A39FD.5090109@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AC5F529E04
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 16:28:30 -0600 (CST)
+Date: Mon, 18 Nov 2013 16:28:26 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 2/5] xfs: open code inc_inode_iversion when logging an
+	inode
+Message-ID: <20131118222826.GJ1935@sgi.com>
+References: <1383280040-21979-1-git-send-email-david@fromorbit.com>
+	<1383280040-21979-3-git-send-email-david@fromorbit.com>
+	<528A8C90.3010401@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <528A39FD.5090109@sandeen.net>
+In-Reply-To: <528A8C90.3010401@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +26,51 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 18, 2013 at 10:02:05AM -0600, Eric Sandeen wrote:
-> We can offer the suggestion of a "-d" repair, if we're
-> in single-user mode with i.e. the root fs mounted readonly.
+On Mon, Nov 18, 2013 at 03:54:24PM -0600, Eric Sandeen wrote:
+> On 10/31/13, 11:27 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Michael L Semon reported that generic/069 runtime increased on v5
+> > superblocks by 100% compared to v4 superblocks. his perf-based
+> > analysis pointed directly at the timestamp updates being done by the
+> > write path in this workload. The append writers are doing 4-byte
+> > writes, so there are lots of timestamp updates occurring.
+> > 
+> > The thing is, they aren't being triggered by timestamp changes -
+> > they are being triggered by the inode change counter needing to be
+> > updated. That is, every write(2) system call needs to bump the inode
+> > version count, and it does that through the timestamp update
+> > mechanism. Hence for v5 filesystems, test generic/069 is running 3
+> > orders of magnitude more timestmap update transactions on v5
+> > filesystems due to the fact it does a huge number of *4 byte*
+> > write(2) calls.
+> > 
+> > This isn't a real world scenario we really need to address - anyone
+> > doing such sequential IO should be using fwrite(3), not write(2).
+> > i.e. fwrite(3) buffers the writes in userspace to minimise the
+> > number of write(2) syscalls, and the problem goes away.
+> > 
+> > However, there is a small change we can make to improve the
+> > situation - removing the expensive lock operation on the change
+> > counter update.  All inode version counter changes in XFS occur
+> > under the ip->i_ilock during a transaction, and therefore we
+> > don't actually need the spin lock that provides exclusive access to
+> > it through inc_inode_iversion().
+> > 
+> > Hence avoid the lock and just open code the increment ourselves when
+> > logging the inode.
 > 
-> This change suggests -d to repair any RO mounted fs.
+> Well, ok.  Maybe worth a note about why the unlocked read is 99.9999% ok...
 > 
-> e2fsck allows this, and users are used to being able to
-> do it in single-user mode.  A separate patch will recommend
-> a reboot after repair completes.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> V2: Now with more danger!
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Exciting! Looks good.
+Ah, sorry Eric, I didn't realize you were still reviewing this guy.  I pulled
+him in a bit earlier in the day.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
