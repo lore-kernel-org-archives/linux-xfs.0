@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E4AFD29DF9
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 06:40:23 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9132429DF9
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 07:10:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7457BAC006
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 04:40:20 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 7GvhLIsym8uLbeZ2 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Nov 2013 04:40:19 -0800 (PST)
-Message-ID: <528A0AE5.40702@oracle.com>
-Date: Mon, 18 Nov 2013 20:41:09 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7042E304066
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 05:10:42 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id b9ZFyH17Jr1k4kuJ (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 Nov 2013 05:10:41 -0800 (PST)
+Date: Mon, 18 Nov 2013 05:10:40 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/2] xfs: tiny xfs_setattr_mode cleanup
+Message-ID: <20131118131040.GA21649@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 4/4] xfs: implement parallism quota check
-References: <5281F527.3040200@oracle.com>
-	<20131115172626.GD16942@infradead.org>
-	<5288BE14.1050302@oracle.com> <20131118110449.GB1304@infradead.org>
-In-Reply-To: <20131118110449.GB1304@infradead.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,47 +27,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 11/18 2013 07:04 PM, Christoph Hellwig wrote:
+Remove the pointless tp argument, and properly align the local variable
+declarations.
 
-> On Sun, Nov 17, 2013 at 09:01:08PM +0800, Jeff Liu wrote:
->> On 11/16 2013 01:26 AM, Christoph Hellwig wrote:
->>> As Dave pointed out this really should be xfs_bukstat_ag.  But looking
->>> at the code you're almost 90% there anyway.
->> One main reason I did not make a per ag bulkstat is because bulkstat() will
->> skip an allocation group if read agi buffer failed, i.e,
->>
->> while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
->> 	cond_resched();
->> 	error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
->> 	if (error) {
->> 		/*
->> 		 * Skip this allocation group and go to the next one.
->> 		 */
->> 		agno++;
->>                 agino = 0;
->> 		continue;
->> 	}
->> 	....
->> }
->>
->> Should it capture this issue and drop a warning in this case?
-> 
-> I've been thinking hard about this, but I can't really see any reason
-> why we would skip an AG instead of propagating the error.  The only
-> error xfs_ialloc_read_agi can return is an I/O error from reading
-> the buffer from disk, and we'd really want to propagate that sort
-> of I/O errror.  I'd suggest a patch at the beginning of the series
-> to just change that behavior for all the two places in bulkstat that
-> call xfs_ialloc_read_agi.  None of the other callers seem to behave
-> this way either.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ok, thanks for clearing up my confusion.
+---
+ fs/xfs/xfs_iops.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Thanks,
--Jeff
+Index: linux/fs/xfs/xfs_iops.c
+===================================================================
+--- linux.orig/fs/xfs/xfs_iops.c	2013-11-14 17:58:06.612700222 +0100
++++ linux/fs/xfs/xfs_iops.c	2013-11-18 11:54:46.083792257 +0100
+@@ -459,14 +459,12 @@ xfs_vn_getattr(
+ 
+ static void
+ xfs_setattr_mode(
+-	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	struct iattr		*iattr)
+ {
+-	struct inode	*inode = VFS_I(ip);
+-	umode_t		mode = iattr->ia_mode;
++	struct inode		*inode = VFS_I(ip);
++	umode_t			mode = iattr->ia_mode;
+ 
+-	ASSERT(tp);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+ 	ip->i_d.di_mode &= S_IFMT;
+@@ -633,7 +631,7 @@ xfs_setattr_nonsize(
+ 	 * Change file access modes.
+ 	 */
+ 	if (mask & ATTR_MODE)
+-		xfs_setattr_mode(tp, ip, iattr);
++		xfs_setattr_mode(ip, iattr);
+ 
+ 	/*
+ 	 * Change file access or modified times.
+@@ -871,7 +869,7 @@ xfs_setattr_size(
+ 	 * Change file access modes.
+ 	 */
+ 	if (mask & ATTR_MODE)
+-		xfs_setattr_mode(tp, ip, iattr);
++		xfs_setattr_mode(ip, iattr);
+ 
+ 	if (mask & ATTR_CTIME) {
+ 		inode->i_ctime = iattr->ia_ctime;
 
 _______________________________________________
 xfs mailing list
