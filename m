@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AD3457F56
-	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 06:17:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FC1B304053
-	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 04:17:22 -0800 (PST)
-Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
-	[209.85.220.47]) by cuda.sgi.com with ESMTP id c1SeugC49eFwbWJv
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 19 Nov 2013 04:17:21 -0800 (PST)
-Received: by mail-pa0-f47.google.com with SMTP id kq14so3662629pab.6
-	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 04:17:21 -0800 (PST)
-Date: Tue, 19 Nov 2013 20:20:02 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: [BUG] ext2/3/4: dio reads stale data when we do some append dio
-	writes
-Message-ID: <20131119122002.GB5339@gmail.com>
-References: <20131119095302.GA4534@gmail.com>
-	<20131119102235.GA5010@infradead.org>
-	<20131119104508.GA4630@gmail.com>
-	<20131119110147.GA3323@infradead.org>
-	<20131119111947.GA4782@gmail.com>
-	<20131119111826.GA20485@infradead.org>
-	<20131119120112.GN11434@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D0697F59
+	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 09:17:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F14AAC008
+	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 07:17:35 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id KpxS8PKVCrBiNhgH (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Nov 2013 07:17:21 -0800 (PST)
+Date: Tue, 19 Nov 2013 07:17:07 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] fs: fix iversion handling
+Message-ID: <20131119151707.GA13412@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131119120112.GN11434@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,49 +27,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Nov 19, 2013 at 11:01:12PM +1100, Dave Chinner wrote:
-> On Tue, Nov 19, 2013 at 03:18:26AM -0800, Christoph Hellwig wrote:
-> > On Tue, Nov 19, 2013 at 07:19:47PM +0800, Zheng Liu wrote:
-> > > Yes, I know that XFS has a shared/exclusive lock.  I guess that is why
-> > > it can pass the test.  But another question is why xfs fails when we do
-> > > some append dio writes with doing buffered read.
-> > 
-> > Can you provide a test case for that issue?
-> 
-> For XFS, appending direct IO writes only hold the IOLOCK exclusive
-> for as long as it takes to guarantee that the the region between the
-> old EOF and the new EOF is full of zeros before it is demoted.  i.e.
-> once the region is guaranteed not to expose stale data, the
-> exclusive IO lock is demoted to to a shared lock and a buffered read
-> is then allowed to proceed concurrently with the DIO write.
-> 
-> Hence even appending writes occur concurrently with buffered reads,
-> and if the read overlaps the block at the old EOF then the page
-> brought into the page cache will have zeros in it.
-> 
-> FWIW, there's a wonderful comment in generic_file_direct_write()
-> that pretty much covers this case:
-> 
->         /*
->          * Finally, try again to invalidate clean pages which might have been
->          * cached by non-direct readahead, or faulted in by get_user_pages()
->          * if the source of the write was an mmap'ed region of the file
->          * we're writing.  Either one is a pretty crazy thing to do,
->          * so we don't support it 100%.  If this invalidation
->          * fails, tough, the write still worked...
->          */
-> 
-> The kernel code simply does not have the exclusion mechanisms to
-> make concurrent buffered and direct IO robust. This is one of the
-> problems (amongst many) that we've been looking to solve with an VFS
-> level IO range lock of some kind....
+Currently notify_change directly updates i_version for size updates,
+which not only is counter to how all other fields are updated through
+struct iattr, but also breaks XFS, which need inode updates to happen
+under its own lock, and synchronized to the structure that gets written
+to the log.
 
-Thanks for pointing it out.
+Remove the update in the common code, and it to btrfs and ext4,
+XFS already does a proper updaste internally and currently gets a
+double update with the existing code.
 
-                                                - Zheng
+IMHO this is 3.13 and -stable material and should go in through the XFS
+tree.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/attr.c
+===================================================================
+--- xfs.orig/fs/attr.c	2013-11-19 16:08:42.275415189 +0100
++++ xfs/fs/attr.c	2013-11-19 16:08:51.803414994 +0100
+@@ -182,11 +182,6 @@ int notify_change(struct dentry * dentry
+ 			return -EPERM;
+ 	}
+ 
+-	if ((ia_valid & ATTR_SIZE) && IS_I_VERSION(inode)) {
+-		if (attr->ia_size != inode->i_size)
+-			inode_inc_iversion(inode);
+-	}
+-
+ 	if ((ia_valid & ATTR_MODE)) {
+ 		umode_t amode = attr->ia_mode;
+ 		/* Flag setting protected by i_mutex */
+Index: xfs/fs/btrfs/inode.c
+===================================================================
+--- xfs.orig/fs/btrfs/inode.c	2013-11-19 16:08:42.275415189 +0100
++++ xfs/fs/btrfs/inode.c	2013-11-19 16:08:51.803414994 +0100
+@@ -4345,8 +4345,12 @@ static int btrfs_setsize(struct inode *i
+ 	 * these flags set.  For all other operations the VFS set these flags
+ 	 * explicitly if it wants a timestamp update.
+ 	 */
+-	if (newsize != oldsize && (!(mask & (ATTR_CTIME | ATTR_MTIME))))
+-		inode->i_ctime = inode->i_mtime = current_fs_time(inode->i_sb);
++	if (newsize != oldsize) {
++		inode_inc_iversion(inode);
++		if (!(mask & (ATTR_CTIME | ATTR_MTIME)))
++			inode->i_ctime = inode->i_mtime =
++				current_fs_time(inode->i_sb);
++	}
+ 
+ 	if (newsize > oldsize) {
+ 		truncate_pagecache(inode, newsize);
+Index: xfs/fs/ext4/inode.c
+===================================================================
+--- xfs.orig/fs/ext4/inode.c	2013-11-19 16:08:42.275415189 +0100
++++ xfs/fs/ext4/inode.c	2013-11-19 16:08:51.803414994 +0100
+@@ -4594,6 +4594,10 @@ int ext4_setattr(struct dentry *dentry,
+ 			if (attr->ia_size > sbi->s_bitmap_maxbytes)
+ 				return -EFBIG;
+ 		}
++
++		if (IS_I_VERSION(inode) && attr->ia_size != inode->i_size)
++			inode_inc_iversion(inode);
++
+ 		if (S_ISREG(inode->i_mode) &&
+ 		    (attr->ia_size < inode->i_size)) {
+ 			if (ext4_should_order_data(inode)) {
 
 _______________________________________________
 xfs mailing list
