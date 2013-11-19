@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 692447F4E
-	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 00:57:37 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B41CE7F4E
+	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 02:41:15 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 380648F804B
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 22:57:34 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 1eUucq1CixGUHSoV (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 83747304039
+	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 00:41:12 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 76qopHYSJ2iVcoWg (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Nov 2013 22:57:29 -0800 (PST)
-From: Anand Jain <anand.jain@oracle.com>
-Subject: [PATCH] xfstests: btrfs/023: test if raids are actually created
-Date: Tue, 19 Nov 2013 15:06:25 +0800
-Message-Id: <1384844785-24799-1-git-send-email-anand.jain@oracle.com>
-In-Reply-To: <1384763177-3402-1-git-send-email-anand.jain@oracle.com>
-References: <1384763177-3402-1-git-send-email-anand.jain@oracle.com>
+	Tue, 19 Nov 2013 00:41:11 -0800 (PST)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rAJ8f94M027253
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 08:41:10 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAJ8f9qb011458
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 08:41:09 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAJ8f8HM011400 for <xfs@oss.sgi.com>; Tue, 19 Nov 2013 08:41:08 GMT
+Message-ID: <528B2476.9050404@oracle.com>
+Date: Tue, 19 Nov 2013 16:42:30 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: fix infinite loop by detaching the group/project hints
+	from user dquot
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,146 +36,172 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
-Cc: sandeen@sandeen.net
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-A test case to verify if the given raid option for the
-metadata and data are actually created.
+From: Jie Liu <jeff.liu@oracle.com>
 
-Signed-off-by: Anand Jain <anand.jain@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+xfs_quota(8) will hang up if trying to turn group quota or project
+quota before the user quota is off, this could be 100% reproduced by:
+# mount -ouquota,gquota /dev/sda7 /xfs
+# mkdir /xfs/test
+# xfs_quota -xc 'off -g' /xfs
+# echo w > /proc/sysrq-trigger
+  SysRq : Show Blocked State
+  task                        PC stack   pid father
+  xfs_quota       D 0000000000000000     0 27574   2551 0x00000000
+  [snip]
+  Call Trace:
+  [<ffffffff81aaa21d>] schedule+0xad/0xc0
+  [<ffffffff81aa327e>] schedule_timeout+0x35e/0x3c0
+  [<ffffffff8114b506>] ? mark_held_locks+0x176/0x1c0
+  [<ffffffff810ad6c0>] ? call_timer_fn+0x2c0/0x2c0
+  [<ffffffffa0c25380>] ? xfs_qm_shrink_count+0x30/0x30 [xfs]
+  [<ffffffff81aa3306>] schedule_timeout_uninterruptible+0x26/0x30
+  [<ffffffffa0c26155>] xfs_qm_dquot_walk+0x235/0x260 [xfs]
+  [<ffffffffa0c059d8>] ? xfs_perag_get+0x1d8/0x2d0 [xfs]
+  [<ffffffffa0c05805>] ? xfs_perag_get+0x5/0x2d0 [xfs]
+  [<ffffffffa0b7707e>] ? xfs_inode_ag_iterator+0xae/0xf0 [xfs]
+  [<ffffffffa0c22280>] ? xfs_trans_free_dqinfo+0x50/0x50 [xfs]
+  [<ffffffffa0b7709f>] ? xfs_inode_ag_iterator+0xcf/0xf0 [xfs]
+  [<ffffffffa0c261e6>] xfs_qm_dqpurge_all+0x66/0xb0 [xfs]
+  [<ffffffffa0c2497a>] xfs_qm_scall_quotaoff+0x20a/0x5f0 [xfs]
+  [<ffffffffa0c2b8f6>] xfs_fs_set_xstate+0x136/0x180 [xfs]
+  [<ffffffff8136cf7a>] do_quotactl+0x53a/0x6b0
+  [<ffffffff812fba4b>] ? iput+0x5b/0x90
+  [<ffffffff8136d257>] SyS_quotactl+0x167/0x1d0
+  [<ffffffff814cf2ee>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+  [<ffffffff81abcd19>] system_call_fastpath+0x16/0x1b
+
+It's fine if we turn user quota off at first, then turn off other
+kind of quotas if they are enabled since the group/project dquot
+refcount is decreased to zero once the user quota if off.  Otherwse,
+those dquots refcount is non-zero due to the user dquot maybe refer
+to them as hint(s).  Hence, above operation hit an infinite loop at
+xfs_qm_dquot_walk() to purge dquot cache.
+
+This problem has been around since Linux 3.4, it was introduced by:
+	b84a3a96751f93071c1863f2962273973c8b8f5e
+	xfs: remove the per-filesystem list of dquots
+
+Originally we will release the group dquot pointers because the user
+dquots maybe carrying around as a hint via xfs_qm_detach_gdquots().
+However, with this change, there is no such work to be done before
+purge group/project dquot cache.
+
+This fix introduce a similar routine to the old xfs_qm_detach_gdquots(),
+it will detach the group/project hints by searching the user dquot radix
+tree and release those hints if they are there.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- v3: need to differentiate between RAID10 and RAID1 in the output,
-     fixed the grep
- v2: a copied comment removed as Eric pointed out
+ fs/xfs/xfs_qm.c |   79 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 77 insertions(+), 2 deletions(-)
 
- tests/btrfs/023     |   90 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/023.out |    2 +
- tests/btrfs/group   |    1 +
- 3 files changed, 93 insertions(+), 0 deletions(-)
- create mode 100755 tests/btrfs/023
- create mode 100644 tests/btrfs/023.out
-
-diff --git a/tests/btrfs/023 b/tests/btrfs/023
-new file mode 100755
-index 0000000..da1f818
---- /dev/null
-+++ b/tests/btrfs/023
-@@ -0,0 +1,90 @@
-+#! /bin/bash
-+# FS QA Test No. 023
-+#
-+# Test to verify if the group profile is created
-+#
-+# The test aims to create the raid and verify that its created
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 14a4996..410adf4 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -60,6 +60,77 @@ STATIC void	xfs_qm_dqfree_one(struct xfs_dquot *dqp);
+  */
+ #define XFS_DQ_LOOKUP_BATCH	32
+ 
++/*
++ * Release the group or project dquot pointers the user dquots may be
++ * carrying around as a hint.
++ */
++STATIC void
++xfs_qm_dqdetach_hint(
++	struct xfs_mount	*mp,
++	int			type)
 +{
-+    cd /
-+    rm -f $tmp.*
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, XFS_DQ_USER);
++	uint32_t		next_index;
++	int			skipped;
++	int			nr_found;
++
++	ASSERT(type == XFS_DQ_GROUP || type == XFS_DQ_PROJ);
++
++restart:
++	next_index = 0;
++	skipped = 0;
++	nr_found = 0;
++
++	while (1) {
++		struct xfs_dquot *batch[XFS_DQ_LOOKUP_BATCH];
++		int		i;
++
++		mutex_lock(&qi->qi_tree_lock);
++		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
++					next_index, XFS_DQ_LOOKUP_BATCH);
++		if (!nr_found) {
++			mutex_unlock(&qi->qi_tree_lock);
++			break;
++		}
++
++		for (i = 0; i < nr_found; i++) {
++			struct xfs_dquot *dqp = batch[i];
++			struct xfs_dquot *dqhintp;
++
++			next_index = be32_to_cpu(dqp->q_core.d_id) + 1;
++
++			xfs_dqlock(dqp);
++			if (dqp->dq_flags & XFS_DQ_FREEING) {
++				xfs_dqunlock(dqp);
++				skipped++;
++				continue;
++			}
++
++			if (type == XFS_DQ_GROUP) {
++				dqhintp = dqp->q_gdquot;
++				if (dqhintp)
++					dqp->q_gdquot = NULL;
++			} else {
++				dqhintp = dqp->q_pdquot;
++				if (dqhintp)
++					dqp->q_pdquot = NULL;
++			}
++			xfs_dqunlock(dqp);
++
++			if (dqhintp)
++				xfs_qm_dqrele(dqhintp);
++		}
++
++		mutex_unlock(&qi->qi_tree_lock);
++	}
++
++	if (skipped) {
++		delay(1);
++		goto restart;
++	}
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch_dev_pool 4
-+rm -f $seqres.full
-+
-+create_group_profile()
-+{
-+	local mkfs_options="-d$1 -m$1"
-+
-+	_scratch_pool_mkfs $mkfs_options >> $seqres.full 2>&1 || _fail "mkfs failed"
-+}
-+
-+check_group_profile()
-+{
-+	local test_raid="$1"
-+
-+	_scratch_mount
-+	$BTRFS_UTIL_PROG filesystem df $SCRATCH_MNT > $tmp.tmp 2>&1
-+	_scratch_unmount
-+	cat $tmp.tmp >> $seqres.full
-+	grep Data $tmp.tmp | grep -q "${test_raid}:"
-+	[ $? -eq 0 ] || _fail "$test_raid not found for Data"
-+	grep Metadata $tmp.tmp | grep -q "${test_raid}:"
-+	[ $? -eq 0 ] || _fail "$test_raid not found for Metadata"
-+}
-+
-+create_group_profile "raid0"
-+check_group_profile "RAID0"
-+
-+create_group_profile "raid1"
-+check_group_profile "RAID1"
-+
-+create_group_profile "raid10"
-+check_group_profile "RAID10"
-+
-+create_group_profile "raid5"
-+check_group_profile "RAID5"
-+
-+create_group_profile "raid6"
-+check_group_profile "RAID6"
-+
-+# success, all done
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/btrfs/023.out b/tests/btrfs/023.out
-new file mode 100644
-index 0000000..5c4197b
---- /dev/null
-+++ b/tests/btrfs/023.out
-@@ -0,0 +1,2 @@
-+QA output created by 023
-+Silence is golden
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 410f8ed..35db67b 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -24,3 +24,4 @@
- 019 auto quick
- 020 auto quick
- 021 auto quick
-+023 auto
+ STATIC int
+ xfs_qm_dquot_walk(
+ 	struct xfs_mount	*mp,
+@@ -224,10 +295,14 @@ xfs_qm_dqpurge_all(
+ {
+ 	if (flags & XFS_QMOPT_UQUOTA)
+ 		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
+-	if (flags & XFS_QMOPT_GQUOTA)
++	if (flags & XFS_QMOPT_GQUOTA) {
++		xfs_qm_dqdetach_hint(mp, XFS_DQ_GROUP);
+ 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
+-	if (flags & XFS_QMOPT_PQUOTA)
++	}
++	if (flags & XFS_QMOPT_PQUOTA) {
++		xfs_qm_dqdetach_hint(mp, XFS_DQ_PROJ);
+ 		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
++	}
+ }
+ 
+ /*
 -- 
-1.7.1
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
