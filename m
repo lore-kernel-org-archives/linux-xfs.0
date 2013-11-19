@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BACDE29E04
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 18:57:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A87B28F8040
-	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 16:57:47 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	U123qTIeIDy4NSBX for <xfs@oss.sgi.com>;
-	Mon, 18 Nov 2013 16:57:44 -0800 (PST)
-Date: Tue, 19 Nov 2013 11:57:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Filesystem writes on RAID5 too slow
-Message-ID: <20131119005740.GY6188@dastard>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
-	<528A5C45.4080906@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5971829E04
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 19:59:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 08806AC006
+	for <xfs@oss.sgi.com>; Mon, 18 Nov 2013 17:59:53 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id om4OCL09vhuFYxTY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 Nov 2013 17:59:52 -0800 (PST)
+Message-ID: <528AC834.8050305@oracle.com>
+Date: Tue, 19 Nov 2013 10:08:52 +0800
+From: Anand Jain <Anand.Jain@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <528A5C45.4080906@redhat.com>
+Subject: Re: [PATCH] xfstests: btrfs/023: test if raids are actually created
+References: <1384763177-3402-1-git-send-email-anand.jain@oracle.com>
+	<528A8BB3.4070108@sandeen.net>
+In-Reply-To: <528A8BB3.4070108@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,127 +25,181 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Nov 18, 2013 at 12:28:21PM -0600, Eric Sandeen wrote:
-> On 11/18/13, 10:02 AM, Martin Boutin wrote:
-> > Dear list,
-> > 
-> > I am writing about an apparent issue (or maybe it is normal, that's my
-> > question) regarding filesystem write speed in in a linux raid device.
-> > More specifically, I have linux-3.10.10 running in an Intel Haswell
-> > embedded system with 3 HDDs in a RAID-5 configuration.
-> > The hard disks have 4k physical sectors which are reported as 512
-> > logical size. I made sure the partitions underlying the raid device
-> > start at sector 2048.
-> 
-> (fixed cc: to xfs list)
-> 
-> > The RAID device has version 1.2 metadata and 4k (bytes) of data
-> > offset, therefore the data should also be 4k aligned. The raid chunk
-> > size is 512K.
-> > 
-> > I have the md0 raid device formatted as ext3 with a 4k block size, and
-> > stride and stripes correctly chosen to match the raid chunk size, that
-> > is, stride=128,stripe-width=256.
-> > 
-> > While I was working in a small university project, I just noticed that
-> > the write speeds when using a filesystem over raid are *much* slower
-> > than when writing directly to the raid device (or even compared to
-> > filesystem read speeds).
-> > 
-> > The command line for measuring filesystem read and write speeds was:
-> > 
-> > $ dd if=/tmp/diskmnt/filerd.zero of=/dev/null bs=1M count=1000 iflag=direct
-> > $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
-> > 
-> > The command line for measuring raw read and write speeds was:
-> > 
-> > $ dd if=/dev/md0 of=/dev/null bs=1M count=1000 iflag=direct
-> > $ dd if=/dev/zero of=/dev/md0 bs=1M count=1000 oflag=direct
-> > 
-> > Here are some speed measures using dd (an average of 20 runs).:
-> > 
-> > device       raw/fs  mode   speed (MB/s)    slowdown (%)
-> > /dev/md0    raw    read    207
-> > /dev/md0    raw    write    209
-> > /dev/md1    raw    read    214
-> > /dev/md1    raw    write    212
 
-So, that's writing to the first 1GB of /dev/md0, and all the writes
-are going to be aligned to the MD stripe.
 
-> > /dev/md0    xfs    read    188    9
-> > /dev/md0    xfs    write    35    83o
+On 11/19/2013 05:50 AM, Eric Sandeen wrote:
+> On 11/18/13, 2:26 AM, Anand Jain wrote:
+>> A test case to verify if the given raid option for the
+>> metadata and data are actually created.
+>>
+>> Signed-off-by: Anand Jain <anand.jain@oracle.com>
+>> ---
+>>   tests/btrfs/023     |   91 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   tests/btrfs/023.out |    2 +
+>>   tests/btrfs/group   |    1 +
+>>   3 files changed, 94 insertions(+), 0 deletions(-)
+>>   create mode 100755 tests/btrfs/023
+>>   create mode 100644 tests/btrfs/023.out
+>>
+>> diff --git a/tests/btrfs/023 b/tests/btrfs/023
+>> new file mode 100755
+>> index 0000000..77934fd
+>> --- /dev/null
+>> +++ b/tests/btrfs/023
+>> @@ -0,0 +1,91 @@
+>> +#! /bin/bash
+>> +# FS QA Test No. 022
+>> +#
+>> +# Test to verify if the group profile is created
+>> +#
+>> +# The test aims to create the raid and verify that its created
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (c) 2013 Oracle.  All Rights Reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +    cd /
+>> +    rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +
+>> +# real QA test starts here
+>> +_supported_fs btrfs
+>> +_supported_os Linux
+>> +_require_scratch_dev_pool 4
+>> +rm -f $seqres.full
+>> +
+>> +create_group_profile()
+>> +{
+>> +	local mkfs_options="-d$1 -m$1"
+>> +
+>> +	# _scratch_mkfs adds the 1st device again (which is $SCRATCH_DEV)
+>
+> The comment doesn't make anything clearer to me - you say what _scratch_mkfs
+> does but then you call _scratch_pool_mkfs.  I could look, of course, but the
+> purpose of a comment is to make things clearer, not to make the reader wonder
+> why you wrote the comment.  ;)
 
-And these will not be written to the first 1GB of the block device
-but somewhere else. Most likely a region that hasn't otherwise been
-used, and so isn't going to be overwriting the same blocks like the
-/dev/md0 case is going to be. Perhaps there's some kind of stripe
-caching effect going on here? Was the md device fully initialised
-before you ran these tests?
+  Its cut and paste error I will remove the comment.
 
-> > 
-> > /dev/md1    ext3    read    199    7
-> > /dev/md1    ext3    write    36    83
-> > 
-> > /dev/md0    ufs    read    212    0
-> > /dev/md0    ufs    write    53    75
-> > 
-> > /dev/md0    ext2    read    202    2
-> > /dev/md0    ext2    write    34    84
 
-I suspect what you are seeing here is either the latency introduced
-by having to allocate blocks before issuing the IO, or the file
-layout due to allocation is not idea. Single threaded direct IO is
-latency bound, not bandwidth bound and, as such, is IO size
-sensitive. Allocation for direct IO is also IO size sensitive -
-there's typically an allocation per IO, so the more IO you have to
-do, the more allocation that occurs.
+>> +	_scratch_pool_mkfs $mkfs_options >> $seqres.full 2>&1 || _fail "mkfs failed"
+>> +}
+>> +
+>> +check_group_profile()
+>> +{
+>> +	local test_raid="$1"
+>> +
+>> +	_scratch_mount
+>> +	$BTRFS_UTIL_PROG filesystem df $SCRATCH_MNT > $tmp.tmp 2>&1
+>> +	_scratch_unmount
+>> +	cat $tmp.tmp >> $seqres.full
+>> +	grep Data $tmp.tmp | grep -q $test_raid
+>> +	[ $? -eq 0 ] || _fail "$test_raid not found for Data"
+>> +	grep Metadata $tmp.tmp | grep -q $test_raid
+>> +	[ $? -eq 0 ] || _fail "$test_raid not found for Metadata"
+>
+> Should these be more specific?  I.e. do you want to do:
+>
+> grep "^Data, " | grep -q $test_raid
+>
+> because (at least in my version of btrfs-progs) there are two Data
+> lines in the df output (and two Metadata lines as well).
 
-So, on XFS, what does "xfs_bmap -vvp /tmp/diskmnt/filewr.zero"
-output for the file you wrote? Specifically, I'm interested whether
-it aligned the allocations to the stripe unit boundary, and if so,
-what offset into the device those extents sit at....
+> Which reminds me, has df output changed semi-recently, and do you need
+> to handle that?  (Maybe that's what the non-specific grep accomplishes?)
 
-Also, you should run iostat and blktrace to determine if MD is
-doing RMW cycles when being written to through the filesystem.
+  Its generic enough to ignore minor format changes and check if
+  there is Data/Metadata and the given-raid. I can't think of anything
+  which break this.
 
-> > Is it possible that the filesystem has such enormous impact in the
-> > write speed? We are talking about a slowdown of 80%!!! Even a
-> > filesystem as simple as ufs has a slowdown of 75%! What am I missing?
-> 
-> One thing you're missing is enough info to debug this.
-> 
-> /proc/mdstat, kernel version, xfs_info output, mkfs commandlines used,
-> partition table details, etc.
-
-THere's a good list here:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-> If something is misaligned and you are doing RMW for these IOs it could
-> hurt a lot.
-> 
+> Also, I'm curious (maybe I just haven't been keeping up) - was there a bug
+> where mkfs succeeded but didn't make the requested raid level?
+>
+> thanks,
 > -Eric
-> 
-> > Thank you,
-> > 
-> 
+>
+>
+>
+>> +}
+>> +
+>> +create_group_profile "raid0"
+>> +check_group_profile "RAID0"
+>> +
+>> +create_group_profile "raid1"
+>> +check_group_profile "RAID1"
+>> +
+>> +create_group_profile "raid10"
+>> +check_group_profile "RAID10"
+>> +
+>> +create_group_profile "raid5"
+>> +check_group_profile "RAID5"
+>> +
+>> +create_group_profile "raid6"
+>> +check_group_profile "RAID6"
+>> +
+>> +# success, all done
+>> +echo "Silence is golden"
+>> +status=0
+>> +exit
+>> diff --git a/tests/btrfs/023.out b/tests/btrfs/023.out
+>> new file mode 100644
+>> index 0000000..5c4197b
+>> --- /dev/null
+>> +++ b/tests/btrfs/023.out
+>> @@ -0,0 +1,2 @@
+>> +QA output created by 023
+>> +Silence is golden
+>> diff --git a/tests/btrfs/group b/tests/btrfs/group
+>> index 410f8ed..35db67b 100644
+>> --- a/tests/btrfs/group
+>> +++ b/tests/btrfs/group
+>> @@ -24,3 +24,4 @@
+>>   019 auto quick
+>>   020 auto quick
+>>   021 auto quick
+>> +023 auto
+>>
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-Dave Chinner
-david@fromorbit.com
+>
 
 _______________________________________________
 xfs mailing list
