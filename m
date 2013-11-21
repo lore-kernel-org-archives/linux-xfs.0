@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 02C817F3F
-	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 21:21:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C517AC005
-	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 19:21:52 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HNqta4quPv1JJQ0R for <xfs@oss.sgi.com>;
-	Wed, 20 Nov 2013 19:21:50 -0800 (PST)
-Date: Thu, 21 Nov 2013 14:21:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: use correct size value in generic/273
-Message-ID: <20131121032138.GD6188@dastard>
-References: <1384970070-58732-1-git-send-email-bfoster@redhat.com>
-	<20131121024605.GB6188@dastard> <528D76F7.5060505@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id ED52B7F50
+	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 21:49:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7AA6CAC007
+	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 19:49:36 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id BuASdHYBxSp5CJFv for <xfs@oss.sgi.com>;
+	Wed, 20 Nov 2013 19:49:34 -0800 (PST)
+Message-ID: <528D82CC.5060503@sandeen.net>
+Date: Wed, 20 Nov 2013 21:49:32 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <528D76F7.5060505@sandeen.net>
+Subject: Re: [PATCH V3] xfsprogs: update version for 3.2.0-alpha2
+References: <20131118150313.940966335@sgi.com>
+	<20131119171527.125924934@sgi.com>
+In-Reply-To: <20131119171527.125924934@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,97 +28,291 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: rjohnston@sgi.com, xfs@oss.sgi.com
 
-On Wed, Nov 20, 2013 at 08:59:03PM -0600, Eric Sandeen wrote:
-> On 11/20/13, 8:46 PM, Dave Chinner wrote:
-> > On Wed, Nov 20, 2013 at 12:54:30PM -0500, Brian Foster wrote:
-> >> generic/273 factors the "space available" output from df into the
-> >> calculation for the size of the origin data set. Recent commit
-> >>
-> >>   bfdd1e72b358 xfstests: added -P option to $DF_PROG
-> >>
-> >> ... converted the use of 'df' to $DF_PROG. This implicitly adds the
-> >> -T parameter to add the fs type column, shifts the available space
-> >> column over by one and unintentionally causes 273 to look at "used
-> >> space" and create too small of a data set for a useful test.
-> >> Realign to the to the available space value.
-> >>
-> >> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> >> ---
-> >>  tests/generic/273 | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/tests/generic/273 b/tests/generic/273
-> >> index 63bbf9b..2d54493 100755
-> >> --- a/tests/generic/273
-> >> +++ b/tests/generic/273
-> >> @@ -68,7 +68,7 @@ _file_create()
-> >>  
-> >>  	cd $SCRATCH_MNT/origin
-> >>  
-> >> -	_disksize=`$DF_PROG --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
-> >> +	_disksize=`$DF_PROG --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 4]; break}}}'`
-> >>  	_disksize=$(($_disksize / 3))
-> >>  	_num=$(($_disksize / $count / $threads / 4096))
-> >>  	_count=$count
-> > 
-> > Just what is this bunch of unmaintainable line noise actually doing?
-> > 
-> > $ df -T -P --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 4]; break}}}'
-> > 5282562048
-> > $
-> > 
-> > Ok, someone didn't know about --output:
+On 11/19/13, 11:14 AM, rjohnston@sgi.com wrote:
+> Update the VERSION, configure.ac and doc/CHANGES file for alpha
+> release, 3.2.0-alpha2
 > 
-> I sure didn't.  Not in my manpage or in my df --help output...  Is it new?
-
-It must be - I noticed it a while back when I upgraded a 5 year old
-coreutils package to 8.21, so it's sometime in the past 5 years it
-was added ;)
-
-> presumably from long lvm devicenames.
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 > 
-> # df --block-size=1 /dev/mapper/vg_bp05-lv_home
-> Filesystem           1B-blocks      Used Available Use% Mounted on
-> /dev/mapper/vg_bp05-lv_home
->                      437264879616 254143942656 183120936960  59% /home
-
-The "-P" option prevents that from occurring - from the info page:
-
-`-P'
-`--portability'
-     Use the POSIX output format.  This is like the default format
-     except for the following:
-
-       1. The information about each file system is always printed on
-          exactly one line; a mount device is never put on a line by
-          itself.  This means that if the mount device name is more
-          than 20 characters long (e.g., for some network mounts), the
-          columns are misaligned.
-
-So that's no longer an issue when we use $DF_PROG....
-
-> > $ df -T -P --block-size=1 $SCRATCH_DEV | tail -1 | awk '// { print $5 }'
-> > 5282562048
-> > $
-> > 
-> > Looks a little easier to understand, yes?
+> ---
+> V2
+>   - Add alpha1 and alpha2 content details
+> V3
+>   - Shorten content details (sent wrong version in V2)
 > 
-> yeah, and I guess it does work:
+> diff --git a/VERSION b/VERSION
+> index f4ab52c..f3b53c1 100644
+> --- a/VERSION
+> +++ b/VERSION
+> @@ -3,5 +3,5 @@
+>  #
+>  PKG_MAJOR=3
+>  PKG_MINOR=2
+> -PKG_REVISION=0-alpha1
+> +PKG_REVISION=0-alpha2
+>  PKG_BUILD=1
+> diff --git a/configure.ac b/configure.ac
+> index 949dd06..ae17c68 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -1,4 +1,4 @@
+> -AC_INIT([xfsprogs], [3.2.0-alpha1])
+> +AC_INIT([xfsprogs], [3.2.0-alpha2])
+>  AC_PREREQ(2.50)
+>  AC_CONFIG_AUX_DIR([.])
+>  AC_CONFIG_MACRO_DIR([m4])
+> diff --git a/doc/CHANGES b/doc/CHANGES
+> index 5a292d7..3006efd 100644
+> --- a/doc/CHANGES
+> +++ b/doc/CHANGES
+> @@ -1,6 +1,96 @@
+> +xfsprogs-3.2.0-alpha2 (19 November 2013)
+> +	- Alpha release for the purpose of testing the CRC feature during the
+> +	  v3.12 kernel -rc series.
+
+3.12-rcX has come & gone, just say "testing the CRC feature"
+("in kernels 3.12 and newer" if you like)
+
+Honestly, this changelog is very mechanical & unhelpful.  Up 'til now,
+we've had a fairly easy to read narrative of changes.  This git log format
+is a departure from that.
+
+There's so much here ones eyes kind of glaze over.  And re-specifying
+"xfsprogs:" in the xfsprogs changelog... not so useful.  Especially
+when it's misspelled.
+
+So rather than i.e.
+
++	- xfsprogs: Note projid32bit default change in mkfs.xfs manpage
+
+say
+
++	- mkfs.xfs now enables 32-bit project IDs by default for all filesystems
+
+Lots of the stuff below is just internal gyrations no user will
+care about.
+
+Just hit the highlights:
+
+* What new features?
+* What changes in behavior?
+* What bugs were fixed?
+
+you have a lot of leeway, but use your editorial powers to create
+something useful to a user by distilling this noise into a narrative.
+And fix spelling as needed.  ;)
+
+If you'd like me to just write the changelog so we can get it out the
+door, let me know.
+
+Otherwise, lots of random suggestions below; not all inclusive.  Understand
+what changed, and use your discretion to communicate something useful
+to the reader.
+
+> +	- xfsprogs: fix Out-of-bounds access in repair/dinode.c
+> +	- xfsprogs: avoid array overflow in pf_batch_read()
+> +	- mkfs: add noalign option to usage()
+> +	- xfsprogs: initialize filetype for xfs_name_dot
+> +	- xfsprogs: fix potential memory leak in repare/sb.c
+> +	- xfsprogs: fix potential memory leak in verify_set_primary_sb()
+> +	- xfsprogs: fix return value of verify_set_primary_sb()
+
+- Fix several Coverity-found memory leaks
+
+> +	- libxfs: fix missing filetype updates to xfs_dir2.c
+> +	- xfs: check magic numbers in dir3 leaf verifier first
+> +	- xfs: ensure we copy buffer type in da btree root splits
+> +	- xfs: don't assert fail on bad inode numbers
+> +	- xfs: dirent dtype presence is dependent on directory magic numbers
+> +	- xfsprogs: handle symlinks etc in fs_table_initialise_mounts()
+
+- Properly handle symlinks to devices on various tool commandlines.
+
+> +	- xfsprogs: fix crc32 build on big endian
+
+- Fix build on big endian machines.
+
+> +	- xfsprogs: remove incorrect l_sectBBsize assignment in xfs_repair
+
+- Fix xfs_repair's dirty log detection for 4k sector logs, broken in Alpha1.
+
+> +	- xfsprogs: restrict platform_test_xfs_fd to regular files
+> +	- Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
+> +	- xfsprogs: fix a warning in the deb build
+> +	- xfs_repair: avoid segfault if reporting progress early in repair
+
+- Fix a segfault in xfs_repair when issuing progress reports.
+
+> +	- xfsprogs: initialize filetype for lost+found creation
+> +	- xfs_repair: test for bad level in dir2 node
+> +	- xfsprogs: Note projid32bit default change in mkfs.xfs manpage
+> +	- xfs_repair: add d_type when moving files to lost+found
+
+- Ensure all files created during xfs_repair have a proper d_type set.
+
+> +	- xfsprogs: fix resource leak in longform_dir2_rebuild()
+> +	- xfs: unify directory/attribute format definitions
+> +	- xfsprog: add xfs sb v4 support for dirent filetype field
+
+- This release adds directory entry filetype support for version 4 superblocks.
+
+> +	- xfsprog: add dirent filetype information for xfs_info
+> +	- xfs_progs: add dirent filetype to xfs_db version
+> +	- xfsprog: add mkfs.xfs sb v4 support for dirent filetype field
+> +	- xfsprogs: add generated crc files to .gitignore
+
+Since this is a release, to be packaged up in a tarball, nobody cares
+about .gitignore.
+
+> +	- xfsprogs: remove xfs_check references from fsck.xfs script & manpage
+> +	- xfsprogs: fix automatic dependency generation
+> +	- xfs: create a shared header file for format-related information
+> +	- xfs: split dquot buffer operations out
+> +	- xfs: decouple inode and bmap btree header files
+> +	- libxfs: unify xfs_btree.c with kernel code
+
+- Sync up libxfs with kernel code.
+
+> +	- libxfs: bmap btree owner swap support
+> +	- xfs: remove newlines from strings passed to __xfs_printk
+> +	- xfs: fix the wrong new_size/rnew_size at xfs_iext_realloc_direct()
+> +	- xfs: fix node forward in xfs_node_toosmall
+> +	- xfs: don't emit corruption noise on fs probes
+
+. . . this makes no sense in userspace; just an artifact
+of syncing I guess.
+
+> +	- libxfs: fix root inode handling inconsistencies
+> +	- libxfs: stop caching inode structures
+
+'cause why?  The changelog for this is very detailed, distill it
+into something a user would care about.
+
+> +	- db: introduce verifier support into set_cur
+> +	- db: re-enable write support for v5 filesystems.
+> +	- xfs_db: use inode cluster buffers for inode IO
+> +	- xfs_db: avoid libxfs buffer lookup warnings
+
+etc etc etc. . . .
+
+- Enable version 5 superblock write support in xfs_db.
+
+> +	- libxfs: work around do_div() not handling 32 bit numerators
+> +	- db: enable metadump on CRC filesystems
+
+- Enable xfs_metadump for CRC filesystems.
+
+> +	- xfs: support larger inode clusters on v5 filesystems
+> +	- xfsprogs: kill experimental warnings for v5 filesystems
+
+worth noting
+
+> +	- repair: prefetching is turned off unnecessarily
+> +	- repair: Increase default repair parallelism on large filesystems
+> +	- xfs_fsr: fix SWAPEXT failures under selinux
+
+worth noting
+
+> +	- xfs_repair: correct docs for "-t" units
+> +
+>  xfsprogs-3.2.0-alpha1 (26 September 2013)
+>  	- Alpha release for the purpose of testing the CRC feature during the
+>  	  v3.12 kernel -rc series.
+
+The whuh?  The reader might want to know what this CRC thing is.
+
+"This release adds . . . for the purpose of . . . enabled by . . . 
+the current state is . . . still unimplemented are ..."
+
+> +	- xfs_logprint: print all AGI unlinked buckets
+> +	- xfs_fsr: file reads should be O_DIRECT
+> +	- xfsprogs: Die dir1 Die!
+
+- Remove all vestiges of old, unsupported version 1 directory code.
+
+> +	- xfsprogs: add CRC32c infrastructure
+> +	- xfsprogs: updata libxlog to current kernel code
+
+collapse all that sort of thing into
+
+- Sync up libxfs with kernel code.
+
+> +	- xfs_logprint: fix continuation transactions
+> +	- xfsprogs: define umode_t for build if not defined already
+> +	- xfsprogs: fix make deb
+> +	- mkfs: add missing noalign suboption information
+> +	- mkfs: fix realtime device initialisation
+> +	- xfs_metadump: manpage fix regarding frozen fs
+> +	- logprint: fix wrapped log dump issue
+> +	- libxfs: add crc format changes to generic btrees
+> +	- xfsprogs: fixes and updates to current kernel code tarball
+> +		http://oss.sgi.com/archives/xfs/2013-05/msg00013.html
+
+tarball?
+
+> +	- xfsprogs: add recent kernel CRC fixes (12 part patchset)
+> +		http://oss.sgi.com/archives/xfs/2013-06/msg00201.html
+> +	- mkfs.xfs: fix protofile name create block reservation
+> +	- xfsprogs/io: add readdir command
+
+worth noting; feature
+
+> +	- xfsprogs: Various Coverity bug fixes
+
+worth noting probably
+
+> +	- xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
+
+nobody cares  ;)
+
+> +	- xfsprogs: Start using pquotaino from on-disk superblock
+> +	- xfsprogs: fix inode crash in xfs_repair
+
+What's an "inode crash?"
+
+- Fix potential segfault in xfs_repair when creating lost+found.
+
+> +	- xfsprogs: fix Out-of-bounds access in repair/dinode.c
+> +	- xfs_repair: add prototype for alloc_ex_data()
+> +	- xfs_repair: zero out unused parts of superblocks
+
+- Zero out unused parts of on-disk superblocks during repair, to avoid
+  metadata verifier failures at runtime.
+
+etc.  You get the idea...
+
+
+Thanks,
+-Eric
+
+> +	- xfs_db: add header to freesp -d output
+> +	- xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
+> +	- xfsprogs: bring code up to date with kernel (55 part series)
+> +       		updated version of the patchset posted here: 
+> +		http://oss.sgi.com/archives/xfs/2013-07/msg00454.html
+>  
+>  xfsprogs-3.1.11 (8 May 2013)
+>  	- Support for relative paths in xfs_quota thanks to Satoru Takeuchi.
+> @@ -35,8 +125,8 @@ xfsprogs-3.1.11 (8 May 2013)
+>  	- Remove unconditional ASSERT(0) in xfs_repair.
+>  	- Reduce bb_numrecs in bno/cnt btrees when log consumes all agf space.
+>  	- Add depraction message for xfs_check.
+> -	- xfs_quota allow user or group names beginning with digits reported by
+> -	  James Carter.
+> +	- xfs_quota allow user or group names beginning with digits reported
+> +	  by James Carter.
+>  	- Fix manpages and usage() spelling, errors and omissions.
+>  	- Validate the extent count is at least within the positive
+>  	  range of a signed 32 bit integer before using it.
 > 
-> # df -T -P --block-size=1 /dev/mapper/vg_bp05-lv_home | tail -1 | awk '// { print $5 }'
-> 183120936960
-
-Great!
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
