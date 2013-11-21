@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B992129DF9
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 16:07:24 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2B4D429DF9
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 16:12:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D180AC007
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:07:20 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 14D06304053
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:12:20 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	lvzwQpFM6CW0cD6L for <xfs@oss.sgi.com>;
-	Thu, 21 Nov 2013 14:07:18 -0800 (PST)
-Date: Fri, 22 Nov 2013 09:07:13 +1100
+	aruUfG6xRPh77Mjc for <xfs@oss.sgi.com>;
+	Thu, 21 Nov 2013 14:12:18 -0800 (PST)
+Date: Fri, 22 Nov 2013 09:12:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS umount with IO errors seems to lead to memory corruption
-Message-ID: <20131121220713.GB6502@dastard>
-References: <CAOcd+r3i0mDK2vAnZ-0s6VGnSsJwWxnEB2uMrcz+WSJAxx2bmA@mail.gmail.com>
+Subject: Re: Cleancache support in XFS
+Message-ID: <20131121221214.GC6502@dastard>
+References: <518222D3.3080109@zynstra.com>
+	<20130522192834.GD10617@phenom.dumpdata.com>
+	<519F1708.10603@zynstra.com>
+	<20130607170826.GA6925@phenom.dumpdata.com>
+	<51E8E834.6080509@zynstra.com>
+	<20130722154812.GC30300@phenom.dumpdata.com>
+	<51EE2F54.80701@zynstra.com> <20130723082700.GK19986@dastard>
+	<528E0C3F.3010401@zynstra.com> <20131121160741.GK1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAOcd+r3i0mDK2vAnZ-0s6VGnSsJwWxnEB2uMrcz+WSJAxx2bmA@mail.gmail.com>
+In-Reply-To: <20131121160741.GK1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,78 +32,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: James Dingwall <james.dingwall@zynstra.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, xfs@oss.sgi.com
 
-[cc'd the correct xfs list. PLease use xfs@oss.sgi.com in future.]
+On Thu, Nov 21, 2013 at 10:07:41AM -0600, Ben Myers wrote:
+> Hi James,
+> 
+> On Thu, Nov 21, 2013 at 01:35:59PM +0000, James Dingwall wrote:
+> > Dave Chinner wrote:
+> > >On Tue, Jul 23, 2013 at 08:23:00AM +0100, James Dingwall wrote:
+> > >>Konrad Rzeszutek Wilk wrote:
+> > >>>On Fri, Jul 19, 2013 at 08:18:12AM +0100, James Dingwall wrote:
+> > >>>>Konrad Rzeszutek Wilk wrote:
+> > >>>>>On Fri, May 24, 2013 at 08:30:16AM +0100, James Dingwall wrote:
+> > >>>>>>Konrad Rzeszutek Wilk wrote:
+> > >>>>>>>On Thu, May 02, 2013 at 09:24:51AM +0100, James Dingwall wrote:
+> > >>>>>>>>Dave Chinner wrote:
+> > >>>>>>>>>On Wed, May 01, 2013 at 11:20:44AM -0500, Ben Myers wrote:
+> > >>>>>>>>>>Hi James,
+> > >>>>>>>Hey folks,
+> > >>>>>>>I am walking through my vacation-emails-mbox.
+> > >>>>>>>
+> > >>>>>>>>>>On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
+> > >>>>>>>>>>>In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
+> > >>>>>>>>>>>
+> > >>>>>>>>>>>$ grep -r cleancache fs/xfs
+> > >>>>>>>>>>>on the 3.9 kernel source suggests that no patch was submitted to
+> > >>>>>>>>>>>enable cleancache for the XFS filesystem.  Since it was suggested
+> > >>>>>>>>>>>that this could be a one liner I've had a go and my first effort is
+> > >>>>>>>>>>>inline below.  While this seems to compile OK I have no experience
+> > >>>>>>>>>>>in filesystems so I would appreciate it if anyone can point out that
+> > >>>>>>>>>>>it is obviously wrong and likely to eat my data before I try booting
+> > >>>>>>>>>>>the kernel.
+> > >>>>>>>>>>>
+> > >>>>>>>>>>>If it seems a reasonable attempt what would be the best way to check
+> > >>>>>>>>>>>that it isn't doing nasty things?
+> > >>>>>>>>>>Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
+> > >>>>>>>>>>includes a list of attributes the filesystem needs to have to work properly
+> > >>>>>>>>>>with cleancache.
+> > >>>>>>>>>So, those points are:
+> > >>>>>>>>I had started to look at these too but I feel very out of my depth!
+> > >>>>>>>>I had similar conclusions to what Dave wrote but I don't think my
+> > >>>>>>>>thoughts should carry very much (any) weight.  Anyway I gambled and
+> > >>>>>>>>booted my xen domU with this patch and so far so good...  xen top
+> > >>>>>>>>shows that tmem is now being used where previously it wasn't.  I'll
+> > >>>>>>>>try running the xfstests at the weekend after a couple more days up
+> > >>>>>>>>time to see what happens.
+> > >>>>>>>And how did it go?
+> > >>>>>>I am running the patch I created on 3.9.3 on half of my xen guests
+> > >>>>>>now and have not noticed any stability or filesystem problems.  xl
+> > >>>>>>top with 'T' shows that the guests running with it are using
+> > >>>>>>ephemeral pages were those without do not.  I did do some runs with
+> > >>>>>>xfstests which had some failures but they were present with and
+> > >>>>>>without the patch.  The best I can really offer is that it works for
+> > >>>>>>me, ymmv.  The patch is available as commit
+> > >>>>>>c725011c4fc5d47e12d131f61bd91a58a40036b5 in
+> > >>>>>>https://github.com/JKDingwall/linux.git xfs-enable-cleancache or in
+> > >>>>>>the first message of this thread.
+> > >>>>>Hey James,
+> > >>>>>
+> > >>>>>I've run this patch on my local tree and it looks to work right. I am
+> > >>>>>saying "looks" as I am hitting some other issue that I believe are
+> > >>>>>unralted to the patch - but I need to figure them out before I can
+> > >>>>>comfortably say: "Yes, this looks right and works for me as well."
+> > >>>>>
+> > >>>>>Stay tuned.
+> > >>>>Just to add that I have also had no observable problems running this
+> > >>>>patch on 3.10.0 or 3.10.1.
+> > >>>Yup. And I tested it as well. In other words if you would like to add
+> > >>>Acked-by from me that would be super. Thanks!
+> > >>My patch is now available in https://github.com/JKDingwall/linux.git
+> > >>xfs-enable-cleancache as commit id
+> > >>6d50663e4ec88b7e1fd872b12ac310b1f4bb38c6.  I have rebased it on 3.10
+> > >>with KRW's Acked-by and my Signed-off-by in the commit message.  Is
+> > >>it reasonable for this to be considered for 3.12 or would further
+> > >>testing be required?
+> > >I think that's sufficient. Send it to the list ;)
+> > >
+> > >Cheers,
+> > >
+> > >Dave.
+> > I had a quick look through the 3.12 sources today and noted that
+> > this patch did not seem to get picked up.  I'm still running with it
+> > and am now on 3.12 with no observed problems.  I'm happy to rebase
+> > against 3.12 if required but it seems simple enough it should go on
+> > cleanly to the current development tree.
+> 
+> It hasn't been picked up because I'm not quite convinced it's ok to do this.
+> See if you can get a Dave, Christoph, or Eric to offer a Reviewed-by with a
+> little explanation of why this is ok and I'll pull it in.  ;)
 
-On Thu, Nov 21, 2013 at 08:04:36PM +0200, Alex Lyakas wrote:
-> Greetings,
-> I am using stock XFS from kernel 3.8.13, compiled with kmemleak
-> enabled. I am testing a particular scenario, in which the underlying
-> block device returns IO errors during XFS umount. Almost in all cases
-> this results in kernel crashes in various places, and sometimes
-> kmemleak complains, and sometimes CPU soft lockup happens. It always
-> happens after XFS messages like:
+Like I said back in July, it's OK because they performed a
+substantial amount of testing like we asked them to it didn't show
+up any obvious regressions.
 
-What testing are you doing?
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
-reporting_a_problem.3F
-
->  kernel: [  600.190509] XFS (dm-22): metadata I/O error: block
-> 0x7600030 ("xlog_iodone") error 125 numblks 64
->  kernel: [  600.192267] XFS (dm-22): xfs_do_force_shutdown(0x2) called
-> from line 1115 of file
-> /mnt/compile/linux-stable/source/fs/xfs/xfs_log.c.  Return address =3D
-> 0xffffffffa05cffa1
->  kernel: [  600.192319] XFS (dm-22): Log I/O Error Detected.  Shutting
-> down filesystem
->  kernel: [  600.192392] XFS (dm-22): Unable to update superblock
-> counters. Freespace may not be correct on next mount.
->  kernel: [  600.192398] XFS (dm-22): xfs_log_force: error 5 returned.
->  kernel: [  600.193687] XFS (=90=BA.Z): Please umount the filesystem and
-> rectify the problem(s)
-> =
-
-> you can see here the garbage that XFS prints instead of the block device =
-name.
-> In [1] and [2] I am attaching more kernel log from two such crashes.
-
-So, something is corrupting memory and stamping all over the XFS
-structures.
-
-What's error 125?
-
-#define ECANCELED       125     /* Operation Canceled */
-
-I can't find an driver that actually returns that error to
-filesystems, which....
-
-
->  kernel: [  600.227881] Modules linked in: xfs raid1 xfrm_user
-> xfrm4_tunnel tunnel4 ipcomp xfrm_ipcomp esp4 ah4 scst_vdisk(O)
-> iscsi_scst(O) scst(O) dm_zcache(O) dm_btrfs(O) btrfs(O) libcrc32c
-> dm_iostat(O)
-
-.... given you have a bunch of out of tree modules loaded (and some which
-are experiemental) suggests that you have a problem with your
-storage...
-
-So, something is corrupting memory across a large number of
-subsystems, and the trigger is some custom code to run error
-injection. Can you reproduce the problem with something like
-dm-faulty?
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
