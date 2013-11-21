@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 32C367F37
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 08:28:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 13446304064
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 06:28:35 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id TYFFEdRDq2rpNbDm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Nov 2013 06:28:35 -0800 (PST)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rALESXkT019218
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:28:34 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rALESXSG014054
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:28:33 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rALESXC8003470 for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:28:33 GMT
-Message-ID: <528E188C.6070208@oracle.com>
-Date: Thu, 21 Nov 2013 22:28:28 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8D1EF7F37
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 10:07:45 -0600 (CST)
+Date: Thu, 21 Nov 2013 10:07:41 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Cleancache support in XFS
+Message-ID: <20131121160741.GK1935@sgi.com>
+References: <20130501223022.GQ10481@dastard> <518222D3.3080109@zynstra.com>
+	<20130522192834.GD10617@phenom.dumpdata.com>
+	<519F1708.10603@zynstra.com>
+	<20130607170826.GA6925@phenom.dumpdata.com>
+	<51E8E834.6080509@zynstra.com>
+	<20130722154812.GC30300@phenom.dumpdata.com>
+	<51EE2F54.80701@zynstra.com> <20130723082700.GK19986@dastard>
+	<528E0C3F.3010401@zynstra.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: integrate xfs_quota_priv header file to xfs_qm
+Content-Disposition: inline
+In-Reply-To: <528E0C3F.3010401@zynstra.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,126 +29,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: James Dingwall <james.dingwall@zynstra.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+Hi James,
 
-The xfs_quota_priv header file is only included by xfs_qm header and
-there is no much users for its contents, hence we can move those stuff
-to xfs_qm header file and kill it.
+On Thu, Nov 21, 2013 at 01:35:59PM +0000, James Dingwall wrote:
+> Dave Chinner wrote:
+> >On Tue, Jul 23, 2013 at 08:23:00AM +0100, James Dingwall wrote:
+> >>Konrad Rzeszutek Wilk wrote:
+> >>>On Fri, Jul 19, 2013 at 08:18:12AM +0100, James Dingwall wrote:
+> >>>>Konrad Rzeszutek Wilk wrote:
+> >>>>>On Fri, May 24, 2013 at 08:30:16AM +0100, James Dingwall wrote:
+> >>>>>>Konrad Rzeszutek Wilk wrote:
+> >>>>>>>On Thu, May 02, 2013 at 09:24:51AM +0100, James Dingwall wrote:
+> >>>>>>>>Dave Chinner wrote:
+> >>>>>>>>>On Wed, May 01, 2013 at 11:20:44AM -0500, Ben Myers wrote:
+> >>>>>>>>>>Hi James,
+> >>>>>>>Hey folks,
+> >>>>>>>I am walking through my vacation-emails-mbox.
+> >>>>>>>
+> >>>>>>>>>>On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
+> >>>>>>>>>>>In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
+> >>>>>>>>>>>
+> >>>>>>>>>>>$ grep -r cleancache fs/xfs
+> >>>>>>>>>>>on the 3.9 kernel source suggests that no patch was submitted to
+> >>>>>>>>>>>enable cleancache for the XFS filesystem.  Since it was suggested
+> >>>>>>>>>>>that this could be a one liner I've had a go and my first effort is
+> >>>>>>>>>>>inline below.  While this seems to compile OK I have no experience
+> >>>>>>>>>>>in filesystems so I would appreciate it if anyone can point out that
+> >>>>>>>>>>>it is obviously wrong and likely to eat my data before I try booting
+> >>>>>>>>>>>the kernel.
+> >>>>>>>>>>>
+> >>>>>>>>>>>If it seems a reasonable attempt what would be the best way to check
+> >>>>>>>>>>>that it isn't doing nasty things?
+> >>>>>>>>>>Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
+> >>>>>>>>>>includes a list of attributes the filesystem needs to have to work properly
+> >>>>>>>>>>with cleancache.
+> >>>>>>>>>So, those points are:
+> >>>>>>>>I had started to look at these too but I feel very out of my depth!
+> >>>>>>>>I had similar conclusions to what Dave wrote but I don't think my
+> >>>>>>>>thoughts should carry very much (any) weight.  Anyway I gambled and
+> >>>>>>>>booted my xen domU with this patch and so far so good...  xen top
+> >>>>>>>>shows that tmem is now being used where previously it wasn't.  I'll
+> >>>>>>>>try running the xfstests at the weekend after a couple more days up
+> >>>>>>>>time to see what happens.
+> >>>>>>>And how did it go?
+> >>>>>>I am running the patch I created on 3.9.3 on half of my xen guests
+> >>>>>>now and have not noticed any stability or filesystem problems.  xl
+> >>>>>>top with 'T' shows that the guests running with it are using
+> >>>>>>ephemeral pages were those without do not.  I did do some runs with
+> >>>>>>xfstests which had some failures but they were present with and
+> >>>>>>without the patch.  The best I can really offer is that it works for
+> >>>>>>me, ymmv.  The patch is available as commit
+> >>>>>>c725011c4fc5d47e12d131f61bd91a58a40036b5 in
+> >>>>>>https://github.com/JKDingwall/linux.git xfs-enable-cleancache or in
+> >>>>>>the first message of this thread.
+> >>>>>Hey James,
+> >>>>>
+> >>>>>I've run this patch on my local tree and it looks to work right. I am
+> >>>>>saying "looks" as I am hitting some other issue that I believe are
+> >>>>>unralted to the patch - but I need to figure them out before I can
+> >>>>>comfortably say: "Yes, this looks right and works for me as well."
+> >>>>>
+> >>>>>Stay tuned.
+> >>>>Just to add that I have also had no observable problems running this
+> >>>>patch on 3.10.0 or 3.10.1.
+> >>>Yup. And I tested it as well. In other words if you would like to add
+> >>>Acked-by from me that would be super. Thanks!
+> >>My patch is now available in https://github.com/JKDingwall/linux.git
+> >>xfs-enable-cleancache as commit id
+> >>6d50663e4ec88b7e1fd872b12ac310b1f4bb38c6.  I have rebased it on 3.10
+> >>with KRW's Acked-by and my Signed-off-by in the commit message.  Is
+> >>it reasonable for this to be considered for 3.12 or would further
+> >>testing be required?
+> >I think that's sufficient. Send it to the list ;)
+> >
+> >Cheers,
+> >
+> >Dave.
+> I had a quick look through the 3.12 sources today and noted that
+> this patch did not seem to get picked up.  I'm still running with it
+> and am now on 3.12 with no observed problems.  I'm happy to rebase
+> against 3.12 if required but it seems simple enough it should go on
+> cleanly to the current development tree.
 
-This patch also remove an unused macro DQFLAGTO_TYPESTR.
+It hasn't been picked up because I'm not quite convinced it's ok to do this.
+See if you can get a Dave, Christoph, or Eric to offer a Reviewed-by with a
+little explanation of why this is ok and I'll pull it in.  ;)
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_qm.h         | 36 +++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_quota_priv.h | 42 ------------------------------------------
- 2 files changed, 35 insertions(+), 43 deletions(-)
- delete mode 100644 fs/xfs/xfs_quota_priv.h
-
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index a788b66..ae02b84 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -20,13 +20,47 @@
- 
- #include "xfs_dquot_item.h"
- #include "xfs_dquot.h"
--#include "xfs_quota_priv.h"
- 
- struct xfs_inode;
- 
- extern struct kmem_zone	*xfs_qm_dqtrxzone;
- 
- /*
-+ * Number of bmaps that we ask from bmapi when doing a quotacheck.
-+ * We make this restriction to keep the memory usage to a minimum.
-+ */
-+#define XFS_DQITER_MAP_SIZE	10
-+
-+#define XFS_IS_DQUOT_UNINITIALIZED(dqp) ( \
-+	!dqp->q_core.d_blk_hardlimit && \
-+	!dqp->q_core.d_blk_softlimit && \
-+	!dqp->q_core.d_rtb_hardlimit && \
-+	!dqp->q_core.d_rtb_softlimit && \
-+	!dqp->q_core.d_ino_hardlimit && \
-+	!dqp->q_core.d_ino_softlimit && \
-+	!dqp->q_core.d_bcount && \
-+	!dqp->q_core.d_rtbcount && \
-+	!dqp->q_core.d_icount)
-+
-+/*
-+ * Number of bmaps that we ask from bmapi when doing a quotacheck.
-+ * We make this restriction to keep the memory usage to a minimum.
-+ */
-+#define XFS_DQITER_MAP_SIZE	10
-+
-+#define XFS_IS_DQUOT_UNINITIALIZED(dqp) ( \
-+	!dqp->q_core.d_blk_hardlimit && \
-+	!dqp->q_core.d_blk_softlimit && \
-+	!dqp->q_core.d_rtb_hardlimit && \
-+	!dqp->q_core.d_rtb_softlimit && \
-+	!dqp->q_core.d_ino_hardlimit && \
-+	!dqp->q_core.d_ino_softlimit && \
-+	!dqp->q_core.d_bcount && \
-+	!dqp->q_core.d_rtbcount && \
-+	!dqp->q_core.d_icount)
-+
-+
-+/*
-  * This defines the unit of allocation of dquots.
-  * Currently, it is just one file system block, and a 4K blk contains 30
-  * (136 * 30 = 4080) dquots. It's probably not worth trying to make
-diff --git a/fs/xfs/xfs_quota_priv.h b/fs/xfs/xfs_quota_priv.h
-deleted file mode 100644
-index 6d86219..0000000
---- a/fs/xfs/xfs_quota_priv.h
-+++ /dev/null
-@@ -1,42 +0,0 @@
--/*
-- * Copyright (c) 2000-2003 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_QUOTA_PRIV_H__
--#define __XFS_QUOTA_PRIV_H__
--
--/*
-- * Number of bmaps that we ask from bmapi when doing a quotacheck.
-- * We make this restriction to keep the memory usage to a minimum.
-- */
--#define XFS_DQITER_MAP_SIZE	10
--
--#define XFS_IS_DQUOT_UNINITIALIZED(dqp) ( \
--	!dqp->q_core.d_blk_hardlimit && \
--	!dqp->q_core.d_blk_softlimit && \
--	!dqp->q_core.d_rtb_hardlimit && \
--	!dqp->q_core.d_rtb_softlimit && \
--	!dqp->q_core.d_ino_hardlimit && \
--	!dqp->q_core.d_ino_softlimit && \
--	!dqp->q_core.d_bcount && \
--	!dqp->q_core.d_rtbcount && \
--	!dqp->q_core.d_icount)
--
--#define DQFLAGTO_TYPESTR(d)	(((d)->dq_flags & XFS_DQ_USER) ? "USR" : \
--				 (((d)->dq_flags & XFS_DQ_GROUP) ? "GRP" : \
--				 (((d)->dq_flags & XFS_DQ_PROJ) ? "PRJ":"???")))
--
--#endif	/* __XFS_QUOTA_PRIV_H__ */
--- 
-1.8.3.2
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
