@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B00B37F52
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 07:02:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 71C34304053
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 05:02:06 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	32JBhvqCHqsQYE4b for <xfs@oss.sgi.com>;
-	Thu, 21 Nov 2013 05:02:00 -0800 (PST)
-Date: Fri, 22 Nov 2013 00:01:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: prevent spurious "head behind tail" warnings
-Message-ID: <20131121130156.GA6502@dastard>
-References: <1384900659-22215-1-git-send-email-david@fromorbit.com>
-	<528BEF71.1000607@sgi.com> <20131121014255.GZ6188@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B9F497F56
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 07:31:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A7D268F8052
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 05:31:40 -0800 (PST)
+Received: from mail-ve0-f182.google.com (mail-ve0-f182.google.com
+	[209.85.128.182]) by cuda.sgi.com with ESMTP id
+	ETWVWZjLzrZN0WiZ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Nov 2013 05:31:39 -0800 (PST)
+Received: by mail-ve0-f182.google.com with SMTP id jy13so1414986veb.41
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 05:31:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131121014255.GZ6188@dastard>
+In-Reply-To: <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
+	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
+	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
+	<20131121092606.GU11434@dastard>
+	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+Date: Thu, 21 Nov 2013 08:31:38 -0500
+Message-ID: <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
+Subject: Re: Filesystem writes on RAID5 too slow
+From: Martin Boutin <martboutin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,294 +35,334 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Nov 21, 2013 at 12:42:55PM +1100, Dave Chinner wrote:
-> On Tue, Nov 19, 2013 at 05:08:33PM -0600, Mark Tinguely wrote:
-> > On 11/19/13 16:37, Dave Chinner wrote:
-> > >From: Dave Chinner<dchinner@redhat.com>
-> > >
-> > >When xlog_space_left() cracks the grant head and the log tail, it
-> > >does so without locking to synchronise the sampling of the
-> > >variables. It samples the grant head first, so if there is a delay
-> > >before it smaples the log tail, there is a window where the log tail
-> > >could have moved onwards and be moved past the sampled value of the
-> > >grant head. This then leads to the "xlog_space_left: head behind
-> > >tail" warning message.
-> > >
-> > >To avoid spurious output in this situation, swap the order in which
-> > >the variables are cracked. This means that the head may grant head
-> > >may move if there is a delay, but the log tail will be stable, hence
-> > >ensure the tail does not jump the head accidentally.
-> > >
-> > >While this avoids the spurious head behind tail problem, it
-> > >introduces the opposite problem - the head can move more than a full
-> > >cycle past the tail. The code already handles this case by
-> > >indicating that the log is full (i.e. zero space available) but
-> > >that's still (generally) a spurious situation.
-> > >
-> > >Hence, if we detect that the head is more than a cycle ahead of the
-> > >tail or the head is behind the tail, start the calculation again by
-> > >resampling the variables and trying again. If we get too many
-> > >resamples, then throw a warning and return a full or empty log
-> > >appropriately.
-> > >
-> > >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> > >---
-> > 
-> > I am still getting the debug message:
-> > 
-> >   xlog_verify_grant_tail: space > BBTOB(tail_blocks)
-> 
-> I'm not sure why that is relevant to this patch - it doesn't touch
-> xlog_verify_grant_tail(), nor does it change the functioning of the
-> code except to remove false positive warnings.
-> 
-> Further, the comment about xlog_verify_grant_tail() says:
-> 
->   * This check is run unlocked, so can give false positives. 
-> 
-> That's exactly what this patch addresses for xlog_space_left() -
-> it prevents false positives when it is run unlocked. So we could do
-> exactly the same thing to xlog_verify_grant_tail() as well. Patch
-> attached below.
-> 
-> > This is a real over grant.
-> 
-> Evidence, please.
+$ uname -a
+Linux haswell1 3.10.10 #1 SMP PREEMPT Wed Oct 2 11:22:22 CEST 2013
+i686 GNU/Linux
 
-So, I've done some more testing with these patches, and found a
-couple of interesting things.  I found that xfs/297 with a bunch of
-memory, VM and lock debugging turned on has fairly reliably
-reproduced the messages from both functions, albeit slowly (taking
-10 minutes a cycle, 3-4 cycles to get a single xlog_space_left()
-failure).
+$ xfs_repair -V
+xfs_repair version 3.1.4
 
-First thing I did was remove the "print once" flag from
-xlog_verify_grant_tail(), and I generally see 2-3 outputs from it
-during a run, usaully tens to hundreds of seconds apart. No hangs,
-and the difference in byte counts generally is under 200k.
+$ cat /proc/cpuinfo | grep processor
+processor    : 0
+processor    : 1
 
-It then made it print each retry, knowing that it wouldn't swamp the
-logs. What each event gave was this:
+$ mkfs.xfs -s size=4096 -f -l size=32m /dev/md0
+$ mount -t xfs /dev/md0 /tmp/diskmnt/
+$ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1.0 GB) copied, 28.0304 s, 37.4 MB/s
 
-[  201.796132] XFS (vdb): xlog_verify_grant_tail: retries 0, head_bytes > BBTOB(tail_blocks) (8365828/8126464)
-[  201.798514] XFS (vdb): xlog_verify_grant_tail: retries 1, head_bytes > BBTOB(tail_blocks) (8365828/8126464)
-[  201.800890] XFS (vdb): xlog_verify_grant_tail: retries 2, head_bytes > BBTOB(tail_blocks) (8365828/8126464)
-[  201.802951] XFS (vdb): xlog_verify_grant_tail: retries 3, head_bytes > BBTOB(tail_blocks) (8365828/8126464)
-[  201.805238] XFS (vdb): xlog_verify_grant_tail: retries 4, head_bytes > BBTOB(tail_blocks) (8365828/8126464)
-[  201.807378] XFS (vdb): xlog_verify_grant_tail: retries 5, head_bytes > BBTOB(tail_blocks) (8365828/8126464)
-[  201.809619] XFS (vdb): xlog_verify_grant_tail: head_bytes > BBTOB(tail_blocks) (8365828/8126464)
+$ cat /proc/meminfo
+MemTotal:        1313956 kB
+MemFree:         1099936 kB
+Buffers:           13232 kB
+Cached:           141452 kB
+SwapCached:            0 kB
+Active:           128960 kB
+Inactive:          55936 kB
+Active(anon):      30548 kB
+Inactive(anon):     1096 kB
+Active(file):      98412 kB
+Inactive(file):    54840 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+HighTotal:        626696 kB
+HighFree:         452472 kB
+LowTotal:         687260 kB
+LowFree:          647464 kB
+SwapTotal:         72256 kB
+SwapFree:          72256 kB
+Dirty:                 8 kB
+Writeback:             0 kB
+AnonPages:         30172 kB
+Mapped:            15764 kB
+Shmem:              1432 kB
+Slab:              14720 kB
+SReclaimable:       6632 kB
+SUnreclaim:         8088 kB
+KernelStack:        1792 kB
+PageTables:         1176 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:      729232 kB
+Committed_AS:     734116 kB
+VmallocTotal:     327680 kB
+VmallocUsed:       10192 kB
+VmallocChunk:     294904 kB
+DirectMap4k:       12280 kB
+DirectMap4M:      692224 kB
 
-Which, as you can see, resampling didn't help prevent the message
-output at all. The region of the log that this warning comes up in
-is random; there is no pattern to it the repeated occurrences. Hence
-I will drop the repeated sampling part of the patches, but keep the
-memory barrier and preemption disabling around the sampling...
+$ cat /proc/mounts
+(...)
+/dev/md0 /tmp/diskmnt xfs
+rw,relatime,attr2,inode64,sunit=1024,swidth=2048,noquota 0 0
 
-Scratch that - I just had the repeated sampling avoid a warning -
-the fifth sample saw the problem go away....
+$ cat /proc/partitions
+major minor  #blocks  name
 
-[  140.728172] XFS (vdb): xlog_verify_grant_tail: retries 0, head_bytes > BBTOB(tail_blocks) (4099150/3932160)
-[  140.731761] XFS (vdb): xlog_verify_grant_tail: retries 1, head_bytes > BBTOB(tail_blocks) (4099150/3932160)
-[  140.735495] XFS (vdb): xlog_verify_grant_tail: retries 2, head_bytes > BBTOB(tail_blocks) (4099150/3932160)
-[  140.739059] XFS (vdb): xlog_verify_grant_tail: retries 3, head_bytes > BBTOB(tail_blocks) (4099150/3932160)
-[  140.742561] XFS (vdb): xlog_verify_grant_tail: retries 4, head_bytes > BBTOB(tail_blocks) (4099150/3932160)
+   8        0  976762584 sda
+   8        1   10281600 sda1
+   8        2  966479960 sda2
+   8       16  976762584 sdb
+   8       17   10281600 sdb1
+   8       18  966479960 sdb2
+   8       32  976762584 sdc
+   8       33   10281600 sdc1
+   8       34  966479960 sdc2
+   (...)
+   9        1   20560896 md1
+   9        0 1932956672 md0
 
-What this points out is that the while the problem state is
-temporary, the cause of it is not racing updates during sampling. We
-do, indeed, appear to have a temporary state where the grant head
-has passed over the log tail. By the next check, the grant head no
-longer covers the tail.
+# same layout for other disks
+$ fdisk -c -u /dev/sda
 
-The next step is to dump the stack when-ever such a warning is
-emitted to find out what if there is a specific operation is that
-is triggering them. All are coming from this path:
+The device presents a logical sector size that is smaller than
+the physical sector size. Aligning to a physical sector (or optimal
+I/O) size boundary is recommended, or performance may be impacted.
 
-.....
-  xfs_trans_reserve
-    xfs_log_reserve
-      xlog_verify_grant_tail
+Command (m for help): p
 
-And so are occurring after the grant head has been moved forward by
-the log reservation. That's rather interesting.
+Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
 
-xlog_verify_grant_tail() verifies the log tail against the write
-grant head, not the reserve grant head. The reserve grant head is
-what prevents log space overcommit, and that's the one that the
-xfs_log_reserve sleeps on waiting for log space to become available.
-Once space is available on the reserve grant head, it adds the space
-to both the reserve grant and the write grant.
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048    20565247    10281600   83  Linux
+/dev/sda2        20565248  1953525167   966479960   83  Linux
 
-Hence we know that we haven't unintentionally overcommitted the
-reserve head via transaction reservations, so why does the write
-head go past the log tail, and how is it different to the reserve
-grant head.
+# unfortunately I had to reinitelize the array and recovery takes a
+while.. it does not impact performance much though.
+$ cat /proc/mdstat
+Personalities : [linear] [raid6] [raid5] [raid4]
+md0 : active raid5 sda2[0] sdc2[3] sdb2[1]
+      1932956672 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [UU_]
+      [>....................]  recovery =  2.4% (23588740/966478336)
+finish=156.6min speed=100343K/sec
+      bitmap: 0/1 pages [0KB], 2097152KB chunk
 
-Well, the write grant and the reserve grant are mostly tracking the
-same thing. The difference comes, however, in permanent
-transactions. While the permanent transaction has reservations for
-multiple commits available (which they start with) both the write
-grant and the reserve grant are updated during transaction commit
 
-xfs_trans_commit
-  xfs_log_commit_cil
-    xfs_log_done
-      xlog_regrant_reserve_log_space
-	ticket->t_unit--
-	xlog_grant_sub_space(reserve head, unused resv);
-	xlog_grant_sub_space(write head, unused resv);
+# sda sdb and sdc are the same model
+$ hdparm -I /dev/sda
 
-At this point, if the permanent log transaction still has reserved
-units available, it returns. We'll come back to this.
+/dev/sda:
 
-For a rolling transaction, just before transaction commit, the
-transaction will have been duplicated via xfs_trans_dup(). This
-takes a reference to the ticket, and attaches it to the new
-transaction. The old transaction is then committed like above, and
-we continue with the same ticket in the above but with one less
-reservation unit.
+ATA device, with non-removable media
+    Model Number:       HGST HCC541010A9E680
+    (...)
+    Firmware Revision:  JA0OA560
+    Transport:          Serial, ATA8-AST, SATA 1.0a, SATA II
+Extensions, SATA Rev 2.5, SATA Rev 2.6; Revision: ATA8-AST T13 Project
+D1697 Revision 0b
+Standards:
+    Used: unknown (minor revision code 0x0028)
+    Supported: 8 7 6 5
+    Likely used: 8
+Configuration:
+    Logical        max    current
+    cylinders    16383    16383
+    heads        16    16
+    sectors/track    63    63
+    --
+    CHS current addressable sectors:   16514064
+    LBA    user addressable sectors:  268435455
+    LBA48  user addressable sectors: 1953525168
+    Logical  Sector size:                   512 bytes
+    Physical Sector size:                  4096 bytes
+    Logical Sector-0 offset:                  0 bytes
+    device size with M = 1024*1024:      953869 MBytes
+    device size with M = 1000*1000:     1000204 MBytes (1000 GB)
+    cache/buffer size  = 8192 KBytes (type=DualPortCache)
+    Form Factor: 2.5 inch
+    Nominal Media Rotation Rate: 5400
+Capabilities:
+    LBA, IORDY(can be disabled)
+    Queue depth: 32
+    Standby timer values: spec'd by Standard, no device specific minimum
+    R/W multiple sector transfer: Max = 16    Current = 16
+    Advanced power management level: 128
+    DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+         Cycle time: min=120ns recommended=120ns
+    PIO: pio0 pio1 pio2 pio3 pio4
+         Cycle time: no flow control=120ns  IORDY flow control=120ns
 
-We then call xfs_trans_reserve on the ticket again, and that enters
-xfs_log_regrant rather than xfs_log_reserve like the original ticket
-reservation would have. if the ticket still has reservation units
-left on it, it does nothing that push the AIL and reset the
-reservation for the new transaction.
+$ hdparm -I /dev/sd{a,b,c} | grep "Write cache"
+       *    Write cache
+       *    Write cache
+       *    Write cache
+# therefore write cache is enabled in all drives
 
-Where it gets interesting is when the ticket unit reservation runs
-out, and we have to get new reservations to continue a rolling
-transaction. Very few permanent log transactions actually need this.
-In fact, I think xfs_itruncate_extents() is the only code that makes
-use of this facility, as all other transactions have bound limits in
-the code. xfs_itruncate_extents() can remove an unbound number of
-extents, and hence the rolling transaction is essentially unbound in
-size. Remember this, too.
+$ xfs_info /dev/md0
+meta-data=/dev/md0               isize=256    agcount=32, agsize=15101312 blks
+         =                       sectsz=4096  attr=2
+data     =                       bsize=4096   blocks=483239168, imaxpct=5
+         =                       sunit=128    swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=8192, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-So, when we run out of reservation units on the ticket, we do this:
+$ xfs_bmap -vvp /tmp/diskmnt/filewr.zero
+/tmp/diskmnt/filewr.zero:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
+   0: [0..2047999]:    2049056..4097055  0 (2049056..4097055) 2048000 01111
+ FLAG Values:
+    010000 Unwritten preallocated extent
+    001000 Doesn't begin on stripe unit
+    000100 Doesn't end   on stripe unit
+    000010 Doesn't begin on stripe width
+    000001 Doesn't end   on stripe width
+# this does not look good, does it?
 
-xfs_trans_dup
-xfs_trans_commit
-  xfs_log_commit_cil
-    xfs_log_done
-      xlog_regrant_reserve_log_space
-	xlog_grant_sub_space(reserve head, unused resv);
-	xlog_grant_sub_space(write head, unused resv);
-	xlog_grant_add_space(reserve head, unit reservation);
+# run while dd was executing, looks like we have almost the half
+writes as reads....
+$ iostat -d -k 30 2 /dev/sda2 /dev/sdb2 /dev/sdc2
+Linux 3.10.10 (haswell1)     11/21/2013     _i686_    (2 CPU)
 
-i.e. is simply steals the unit reservation from the reserve head
-*without caring about the amount of reservation space that is
-available*. This can push the reserve grant head past the tail if
-the reservation space is already full.
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+sda2             13.75      6639.52       232.17   78863819    2757731
+sdb2             13.74      6639.42       232.24   78862660    2758483
+sdc2             13.68        55.86      6813.67     663443   80932375
 
-While this might seem bad and wrong, it actually isn't because the
-ticket doesn't yet have *write grant space*. So, following the
-commit, we do:
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+sda2             78.27     11191.20     22556.07     335736     676682
+sdb2             78.30     11175.73     22589.13     335272     677674
+sdc2             78.30      5506.13     28258.47     165184     847754
 
-xfs_trans_reserve
-  xfs_log_regrant
-    xlog_grant_head_check(write head, space needed)
-    xlog_grant_add_space(write head, space needed)
+Thanks
+- Martin
 
-It's the xlog_grant_head_check() that blocks waiting for write grant
-space to come available, and hence we dont over-commit the log space
-in such permanent transactions. Yes, we overcommit the reservation
-spae, but we never overcommit the write space and hence we don't
-overcommit the log space in this situation.
-
-But, what is does point out is that the reserve head can *validly*
-overcommit log space and overlap the tail of the log. This doesn't
-explain the write grant head getting ahead of the log tail, but
-let's ignore that and look at ithe warnings I'm getting from
-xlog_space_left() for a moment.
-
-[ 1458.577318] XFS (vdb): xlog_space_left: The grant head is in front of the log tail.
-[ 1458.577318]   tail_cycle = 17, tail_bytes = 10223616
-[ 1458.577318]   GH   cycle = 19, GH   bytes = 74284
-[ 1458.577320] XFS: Assertion failed: 0, file: fs/xfs/xfs_log.c, line: 1194
-[ 1458.580128] invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
-[ 1458.580128] Modules linked in:
-[ 1458.580128] CPU: 0 PID: 16722 Comm: fsstress Not tainted 3.12.0-dgc+ #60
-[ 1458.580128] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[ 1458.580128] task: ffff88006d29e1c0 ti: ffff8800592e2000 task.ti: ffff8800592e2000
-[ 1458.580128] RIP: 0010:[<ffffffff8149cf32>]  [<ffffffff8149cf32>] assfail+0x22/0x30
-[ 1458.580128] RSP: 0018:ffff8800592e3b58  EFLAGS: 00010292
-[ 1458.580128] RAX: 000000000000003c RBX: ffff88007764da68 RCX: 000000000000006c
-[ 1458.580128] RDX: 00000000000000f2 RSI: 0000000000000046 RDI: 0000000000000246
-[ 1458.580128] RBP: ffff8800592e3b58 R08: 0000000000000096 R09: 0000000000001383
-[ 1458.580128] R10: 0000000000000000 R11: 0000000000001382 R12: 000000000001222c
-[ 1458.580128] R13: ffff8800592e3c8c R14: 0000000000000000 R15: 0000000000000000
-[ 1458.580128] FS:  00007f42f1fbe700(0000) GS:ffff88007f800000(0000) knlGS:0000000000000000
-[ 1458.580128] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[ 1458.580128] CR2: 00007f42f14c4c60 CR3: 000000005fd19000 CR4: 00000000000006f0
-[ 1458.580128] Stack:
-[ 1458.580128]  ffff8800592e3b98 ffffffff814f7a47 ffff880000000013 ffffffff0001222c
-[ 1458.580128]  ffff8800517ec4f0 ffff8800517ec4f0 ffff88007764da68 00000000000005be
-[ 1458.580128]  ffff8800592e3bb8 ffffffff814f8480 ffff88006312be00 ffff88007764da68
-[ 1458.580128] Call Trace:
-[ 1458.580128]  [<ffffffff814f7a47>] xlog_space_left+0xf7/0x160
-[ 1458.580128]  [<ffffffff814f8480>] xlog_grant_push_ail+0x50/0xf0
-[ 1458.580128]  [<ffffffff814fa19e>] xfs_log_regrant+0x5e/0x190
-[ 1458.580128]  [<ffffffff814a426d>] xfs_trans_reserve+0xfd/0x310
-[ 1458.580128]  [<ffffffff814a5596>] ? xfs_trans_commit+0xf6/0x2d0
-[ 1458.580128]  [<ffffffff814861fa>] xfs_bmap_finish+0x11a/0x1e0
-[ 1458.580128]  [<ffffffff814e5dfb>] xfs_itruncate_extents+0x24b/0x440
-[ 1458.580128]  [<ffffffff814e62c8>] xfs_inactive_truncate+0xd8/0x140
-[ 1458.580128]  [<ffffffff814e74f0>] xfs_inactive+0x1d0/0x1f0
-[ 1458.580128]  [<ffffffff814a0656>] xfs_fs_evict_inode+0xa6/0xf0
-[ 1458.580128]  [<ffffffff811bd2a8>] evict+0xb8/0x1b0
-[ 1458.580128]  [<ffffffff811bda45>] iput+0x105/0x190
-[ 1458.580128]  [<ffffffff811b01e2>] do_unlinkat+0x182/0x2a0
-[ 1458.580128]  [<ffffffff811a44ee>] ? ____fput+0xe/0x10
-[ 1458.580128]  [<ffffffff810af96c>] ? task_work_run+0xac/0xe0
-[ 1458.580128]  [<ffffffff81ae3655>] ? do_device_not_available+0x35/0x60
-[ 1458.580128]  [<ffffffff811b3446>] SyS_unlink+0x16/0x20
-[ 1458.580128]  [<ffffffff81aead69>] system_call_fastpath+0x16/0x1b
-
-First thing to note: this has come from xfs_itruncate_extents(),
-pushing the AIL from the xfs_log_regrant(). There's a good chance we
-have just overcommitted the reserve grant head here, because
-xlog_grant_push ail() does:
-
-	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
-
-Yup, in the situation where we have just validly overcommitted the
-reserve grant space, xlog_space_left has detected that we've
-overcommited the reserve grant space and assert failed.
-
-The fact that overrun here is by a couple of hundred kilobytes is no
-surprise - it's in the ballpark of a itruncate transaction unit
-reservation (IIRC ~150-200k), and there can be multiple threads in
-the same overcommit state at the same time so seeing 300-400k as the
-overcommit is not unexpected.
-
-Further, this overcommit situation is handled just fine by the
-xlog_space_left() - it returns 0 bytes of log space available - and
-so there are no problems with this situation at all.  In fact, now I
-understand why the original code in xlog_space_left() handled this
-situation silently without emmitting an error:
-
-	else if (tail_cycle + 1 < head_cycle)
-		return 0;
-
-200 lines of explanation for 2 lines of code might be some kind of
-record. :/
-
-What that means, though, is that I still haven't been able to
-reproduce the "head behind tail" conditions that people are
-complaining about, and i don't yet have an answer to the
-xlog_verify_grant_tail() issue.
-
-I'll take on xlog_verify_grant_tail() where I left it in the
-morning.  It's going on midnight and I've already drunk enough
-expensive scotch for the evening plowing through this...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On Thu, Nov 21, 2013 at 4:50 AM, Martin Boutin <martboutin@gmail.com> wrote:
+> On Thu, Nov 21, 2013 at 4:26 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> On Thu, Nov 21, 2013 at 04:11:41AM -0500, Martin Boutin wrote:
+>>> On Mon, Nov 18, 2013 at 7:57 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> > On Mon, Nov 18, 2013 at 12:28:21PM -0600, Eric Sandeen wrote:
+>>> >> On 11/18/13, 10:02 AM, Martin Boutin wrote:
+>>> >> > Dear list,
+>>> >> >
+>>> >> > I am writing about an apparent issue (or maybe it is normal, that's my
+>>> >> > question) regarding filesystem write speed in in a linux raid device.
+>>> >> > More specifically, I have linux-3.10.10 running in an Intel Haswell
+>>> >> > embedded system with 3 HDDs in a RAID-5 configuration.
+>>> >> > The hard disks have 4k physical sectors which are reported as 512
+>>> >> > logical size. I made sure the partitions underlying the raid device
+>>> >> > start at sector 2048.
+>>> >>
+>>> >> (fixed cc: to xfs list)
+>>> >>
+>>> >> > The RAID device has version 1.2 metadata and 4k (bytes) of data
+>>> >> > offset, therefore the data should also be 4k aligned. The raid chunk
+>>> >> > size is 512K.
+>>> >> >
+>>> >> > I have the md0 raid device formatted as ext3 with a 4k block size, and
+>>> >> > stride and stripes correctly chosen to match the raid chunk size, that
+>>> >> > is, stride=128,stripe-width=256.
+>>> >> >
+>>> >> > While I was working in a small university project, I just noticed that
+>>> >> > the write speeds when using a filesystem over raid are *much* slower
+>>> >> > than when writing directly to the raid device (or even compared to
+>>> >> > filesystem read speeds).
+>>> >> >
+>>> >> > The command line for measuring filesystem read and write speeds was:
+>>> >> >
+>>> >> > $ dd if=/tmp/diskmnt/filerd.zero of=/dev/null bs=1M count=1000 iflag=direct
+>>> >> > $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
+>>> >> >
+>>> >> > The command line for measuring raw read and write speeds was:
+>>> >> >
+>>> >> > $ dd if=/dev/md0 of=/dev/null bs=1M count=1000 iflag=direct
+>>> >> > $ dd if=/dev/zero of=/dev/md0 bs=1M count=1000 oflag=direct
+>>> >> >
+>>> >> > Here are some speed measures using dd (an average of 20 runs).:
+>>> >> >
+>>> >> > device       raw/fs  mode   speed (MB/s)    slowdown (%)
+>>> >> > /dev/md0    raw    read    207
+>>> >> > /dev/md0    raw    write    209
+>>> >> > /dev/md1    raw    read    214
+>>> >> > /dev/md1    raw    write    212
+>>> >
+>>> > So, that's writing to the first 1GB of /dev/md0, and all the writes
+>>> > are going to be aligned to the MD stripe.
+>>> >
+>>> >> > /dev/md0    xfs    read    188    9
+>>> >> > /dev/md0    xfs    write    35    83o
+>>> >
+>>> > And these will not be written to the first 1GB of the block device
+>>> > but somewhere else. Most likely a region that hasn't otherwise been
+>>> > used, and so isn't going to be overwriting the same blocks like the
+>>> > /dev/md0 case is going to be. Perhaps there's some kind of stripe
+>>> > caching effect going on here? Was the md device fully initialised
+>>> > before you ran these tests?
+>>> >
+>>> >> >
+>>> >> > /dev/md1    ext3    read    199    7
+>>> >> > /dev/md1    ext3    write    36    83
+>>> >> >
+>>> >> > /dev/md0    ufs    read    212    0
+>>> >> > /dev/md0    ufs    write    53    75
+>>> >> >
+>>> >> > /dev/md0    ext2    read    202    2
+>>> >> > /dev/md0    ext2    write    34    84
+>>> >
+>>> > I suspect what you are seeing here is either the latency introduced
+>>> > by having to allocate blocks before issuing the IO, or the file
+>>> > layout due to allocation is not idea. Single threaded direct IO is
+>>> > latency bound, not bandwidth bound and, as such, is IO size
+>>> > sensitive. Allocation for direct IO is also IO size sensitive -
+>>> > there's typically an allocation per IO, so the more IO you have to
+>>> > do, the more allocation that occurs.
+>>>
+>>> I just did a few more tests, this time with ext4:
+>>>
+>>> device       raw/fs  mode   speed (MB/s)    slowdown (%)
+>>> /dev/md0    ext4    read    199    4%
+>>> /dev/md0    ext4    write    210    0%
+>>>
+>>> This time, no slowdown at all on ext4. I believe this is due to the
+>>> multiblock allocation feature of ext4 (I'm using O_DIRECT, so it
+>>> should be it). So I guess for the other filesystems, it was indeed
+>>> the latency introduced by block allocation.
+>>
+>> Except that XFS does extent based allocation as well, so that's not
+>> likely the reason. The fact that ext4 doesn't see a slowdown like
+>> every other filesystem really doesn't make a lot of sense to
+>> me, either from an IO dispatch point of view or an IO alignment
+>> point of view.
+>>
+>> Why? Because all the filesystems align identically to the underlying
+>> device and all should be doing 4k block aligned IO, and XFS has
+>> roughly the same allocation overhead for this workload as ext4.
+>> Did you retest XFS or any of the other filesystems directly after
+>> running the ext4 tests (i.e. confirm you are testing apples to
+>> apples)?
+>
+> Yes I did, the performance figures did not change for either XFS or ext3.
+>>
+>> What we need to determine why other filesystems are slow (and why
+>> ext4 is fast) is more information about your configuration and block
+>> traces showing what is happening at the IO level, like was requested
+>> in a previous email....
+>
+> Ok, I'm going to try coming up with meaningful data. Thanks.
+>>
+>> Cheers,
+>>
+>> Dave.
+>> --
+>> Dave Chinner
+>> david@fromorbit.com
+>
+>
+>
+> --
+> Martin Boutin
 
 _______________________________________________
 xfs mailing list
