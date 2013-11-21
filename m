@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 00F9829DF9
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 12:08:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B508AC00D
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 10:08:30 -0800 (PST)
-Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
-	cuda.sgi.com with ESMTP id C8tfYBKOosBzzxxb (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Nov 2013 10:08:29 -0800 (PST)
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-9.4) with ESMTP id
-	rALI8Qcm025665
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 19:08:26 +0100
-Message-ID: <528E4C19.70507@itwm.fraunhofer.de>
-Date: Thu, 21 Nov 2013 19:08:25 +0100
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+	by oss.sgi.com (Postfix) with ESMTP id B992129DF9
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 16:07:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D180AC007
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:07:20 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	lvzwQpFM6CW0cD6L for <xfs@oss.sgi.com>;
+	Thu, 21 Nov 2013 14:07:18 -0800 (PST)
+Date: Fri, 22 Nov 2013 09:07:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS umount with IO errors seems to lead to memory corruption
+Message-ID: <20131121220713.GB6502@dastard>
+References: <CAOcd+r3i0mDK2vAnZ-0s6VGnSsJwWxnEB2uMrcz+WSJAxx2bmA@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: bio_add_page rw mode check by merge_bvec_fn
-References: <528E4A50.7040609@itwm.fraunhofer.de>
-In-Reply-To: <528E4A50.7040609@itwm.fraunhofer.de>
+Content-Disposition: inline
+In-Reply-To: <CAOcd+r3i0mDK2vAnZ-0s6VGnSsJwWxnEB2uMrcz+WSJAxx2bmA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,84 +25,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kmo@daterainc.com>
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-[CCing linux-fsdevel instead of accidental fhgfs cc]
+[cc'd the correct xfs list. PLease use xfs@oss.sgi.com in future.]
 
-On 11/21/2013 07:00 PM, Bernd Schubert wrote:
-> Hi all,
->
-> raid5_mergeable_bvec() (q->merge_bvec_fn) checks for the rw-type and
-> makes decisions based on that if the bio is mergable or not. But so far
-> this value is only initialized on calling submit_bio(),
-> at least not by ext4 and xfs. I have not checked other file system so far.
->
-> Question 1: merge_bvec_fn is supposed to be removed, is is
-> still worth to fix the usage of merge_bvec_fn?
->
-> Question 2: If it is still supposed to be fixed, how do want to have
-> it? So far I have two patches for xfs and ext4 to set the rw type
-> directly there, but maybe bio_add_page should get an int rw_type
-> parameter and set bio->bi_rw itself?
->
->
->
-> diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
-> index d488f80..4cddc15 100644
-> --- a/fs/ext4/page-io.c
-> +++ b/fs/ext4/page-io.c
-> @@ -370,6 +370,7 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
->          bio->bi_bdev = bh->b_bdev;
->          bio->bi_end_io = ext4_end_bio;
->          bio->bi_private = ext4_get_io_end(io->io_end);
-> +       bio->bi_rw |= io->io_op;
->          io->io_bio = bio;
->          io->io_next_block = bh->b_blocknr;
->          return 0;
->
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 71c8c9d..b48048f 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -401,7 +401,8 @@ xfs_submit_ioend_bio(
->
->   STATIC struct bio *
->   xfs_alloc_ioend_bio(
-> -       struct buffer_head      *bh)
-> +       struct buffer_head      *bh,
-> +       struct writeback_control *wbc)
->   {
->          int                     nvecs = bio_get_nr_vecs(bh->b_bdev);
->          struct bio              *bio = bio_alloc(GFP_NOIO, nvecs);
-> @@ -409,6 +410,7 @@ xfs_alloc_ioend_bio(
->          ASSERT(bio->bi_private == NULL);
->          bio->bi_sector = bh->b_blocknr * (bh->b_size >> 9);
->          bio->bi_bdev = bh->b_bdev;
-> +       bio->bi_rw |= (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE;
->          return bio;
->   }
->
-> @@ -511,7 +513,8 @@ xfs_submit_ioend(
->
->                          if (!bio) {
->    retry:
-> -                               bio = xfs_alloc_ioend_bio(bh);
-> +                               bio = xfs_alloc_ioend_bio(bh, wbc);
-> +
->                          } else if (bh->b_blocknr != lastblock + 1) {
->                                  xfs_submit_ioend_bio(wbc, ioend, bio);
->                                  goto retry;
->
->
->
-> Thanks,
-> Bernd
->
+On Thu, Nov 21, 2013 at 08:04:36PM +0200, Alex Lyakas wrote:
+> Greetings,
+> I am using stock XFS from kernel 3.8.13, compiled with kmemleak
+> enabled. I am testing a particular scenario, in which the underlying
+> block device returns IO errors during XFS umount. Almost in all cases
+> this results in kernel crashes in various places, and sometimes
+> kmemleak complains, and sometimes CPU soft lockup happens. It always
+> happens after XFS messages like:
+
+What testing are you doing?
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
+reporting_a_problem.3F
+
+>  kernel: [  600.190509] XFS (dm-22): metadata I/O error: block
+> 0x7600030 ("xlog_iodone") error 125 numblks 64
+>  kernel: [  600.192267] XFS (dm-22): xfs_do_force_shutdown(0x2) called
+> from line 1115 of file
+> /mnt/compile/linux-stable/source/fs/xfs/xfs_log.c.  Return address =3D
+> 0xffffffffa05cffa1
+>  kernel: [  600.192319] XFS (dm-22): Log I/O Error Detected.  Shutting
+> down filesystem
+>  kernel: [  600.192392] XFS (dm-22): Unable to update superblock
+> counters. Freespace may not be correct on next mount.
+>  kernel: [  600.192398] XFS (dm-22): xfs_log_force: error 5 returned.
+>  kernel: [  600.193687] XFS (=90=BA.Z): Please umount the filesystem and
+> rectify the problem(s)
+> =
+
+> you can see here the garbage that XFS prints instead of the block device =
+name.
+> In [1] and [2] I am attaching more kernel log from two such crashes.
+
+So, something is corrupting memory and stamping all over the XFS
+structures.
+
+What's error 125?
+
+#define ECANCELED       125     /* Operation Canceled */
+
+I can't find an driver that actually returns that error to
+filesystems, which....
+
+
+>  kernel: [  600.227881] Modules linked in: xfs raid1 xfrm_user
+> xfrm4_tunnel tunnel4 ipcomp xfrm_ipcomp esp4 ah4 scst_vdisk(O)
+> iscsi_scst(O) scst(O) dm_zcache(O) dm_btrfs(O) btrfs(O) libcrc32c
+> dm_iostat(O)
+
+.... given you have a bunch of out of tree modules loaded (and some which
+are experiemental) suggests that you have a problem with your
+storage...
+
+So, something is corrupting memory across a large number of
+subsystems, and the trigger is some custom code to run error
+injection. Can you reproduce the problem with something like
+dm-faulty?
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
