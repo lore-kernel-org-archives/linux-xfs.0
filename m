@@ -1,11 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8E1257F37
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 10:44:03 -0600 (CST)
-Subject: [GIT PULL] XFS update #2 for 3.13-rc1
-Message-Id: <20131121164359.EA9BD4266DC@whiskey.americas.sgi.com>
-Date: Thu, 21 Nov 2013 10:43:59 -0600 (CST)
-From: bpm@sgi.com (Ben Myers)
+	by oss.sgi.com (Postfix) with ESMTP id 9390C29DF9
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 12:00:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80817304039
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 10:00:57 -0800 (PST)
+Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
+	cuda.sgi.com with ESMTP id vfKJ47GhMuSzwaes (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Nov 2013 10:00:52 -0800 (PST)
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-9.4) with ESMTP id
+	rALI0oP8023141
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 19:00:50 +0100
+Message-ID: <528E4A50.7040609@itwm.fraunhofer.de>
+Date: Thu, 21 Nov 2013 19:00:48 +0100
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+MIME-Version: 1.0
+Subject: bio_add_page rw mode check by merge_bvec_fn
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,60 +27,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: fsdevel@fhgfs.com, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kmo@daterainc.com>
 
-Hi Linus,
+Hi all,
 
-   Please pull this xfs update for 3.13-rc1.  There are a couple of patches
-   that I wasn't quite sure about in time for our initial 3.13 pull request, a
-   bugfix, and an update to add Dave to MAINTAINERS.
+raid5_mergeable_bvec() (q->merge_bvec_fn) checks for the rw-type and
+makes decisions based on that if the bio is mergable or not. But so far
+this value is only initialized on calling submit_bio(), 
+at least not by ext4 and xfs. I have not checked other file system so far.
+
+Question 1: merge_bvec_fn is supposed to be removed, is is
+still worth to fix the usage of merge_bvec_fn?
+
+Question 2: If it is still supposed to be fixed, how do want to have 
+it? So far I have two patches for xfs and ext4 to set the rw type 
+directly there, but maybe bio_add_page should get an int rw_type 
+parameter and set bio->bi_rw itself?
+
+
+
+diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+index d488f80..4cddc15 100644
+--- a/fs/ext4/page-io.c
++++ b/fs/ext4/page-io.c
+@@ -370,6 +370,7 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
+        bio->bi_bdev = bh->b_bdev;
+        bio->bi_end_io = ext4_end_bio;
+        bio->bi_private = ext4_get_io_end(io->io_end);
++       bio->bi_rw |= io->io_op;
+        io->io_bio = bio;
+        io->io_next_block = bh->b_blocknr;
+        return 0;
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 71c8c9d..b48048f 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -401,7 +401,8 @@ xfs_submit_ioend_bio(
+ 
+ STATIC struct bio *
+ xfs_alloc_ioend_bio(
+-       struct buffer_head      *bh)
++       struct buffer_head      *bh,
++       struct writeback_control *wbc)
+ {
+        int                     nvecs = bio_get_nr_vecs(bh->b_bdev);
+        struct bio              *bio = bio_alloc(GFP_NOIO, nvecs);
+@@ -409,6 +410,7 @@ xfs_alloc_ioend_bio(
+        ASSERT(bio->bi_private == NULL);
+        bio->bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+        bio->bi_bdev = bh->b_bdev;
++       bio->bi_rw |= (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE;
+        return bio;
+ }
+ 
+@@ -511,7 +513,8 @@ xfs_submit_ioend(
+ 
+                        if (!bio) {
+  retry:
+-                               bio = xfs_alloc_ioend_bio(bh);
++                               bio = xfs_alloc_ioend_bio(bh, wbc);
++
+                        } else if (bh->b_blocknr != lastblock + 1) {
+                                xfs_submit_ioend_bio(wbc, ioend, bio);
+                                goto retry;
+
+
 
 Thanks,
-	Ben
-
-The following changes since commit 359d992bcd398273637cd9edde10afca953783c4:
-
-  xfs: simplify kmem_{zone_}zalloc (2013-11-06 16:31:27 -0600)
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-v3.13-rc1-2
-
-for you to fetch changes up to 2fe8c1c08b3fbd87dd2641c8f032ff6e965d5803:
-
-  xfs: open code inc_inode_iversion when logging an inode (2013-11-18 09:42:08 -0600)
-
-----------------------------------------------------------------
-xfs: update #2 for v3.13-rc1
-
-Here we have a performance fix for inode iversion, increased inode cluster size
-for v5 superblock filesystems, a fix for error handling in
-xfs_bmap_add_attrfork, and a MAINTAINERS update to add Dave.
-
-----------------------------------------------------------------
-Ben Myers (1):
-      xfs: update maintainers
-
-Dave Chinner (2):
-      xfs: increase inode cluster size for v5 filesystems
-      xfs: open code inc_inode_iversion when logging an inode
-
-Mark Tinguely (1):
-      xfs: fix unlock in xfs_bmap_add_attrfork
-
- MAINTAINERS              |  2 +-
- fs/xfs/xfs_bmap.c        | 38 +++++++++++++++++++++-----------------
- fs/xfs/xfs_mount.c       | 15 +++++++++++++++
- fs/xfs/xfs_mount.h       |  2 +-
- fs/xfs/xfs_trans_inode.c |  8 +++++---
- fs/xfs/xfs_trans_resv.c  |  3 +--
- 6 files changed, 44 insertions(+), 24 deletions(-)
+Bernd
 
 _______________________________________________
 xfs mailing list
