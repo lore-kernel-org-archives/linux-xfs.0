@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2B4D429DF9
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 16:12:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 14D06304053
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 14:12:20 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D3BE929DF9
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 17:41:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 93FF88F8049
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 15:41:27 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	aruUfG6xRPh77Mjc for <xfs@oss.sgi.com>;
-	Thu, 21 Nov 2013 14:12:18 -0800 (PST)
-Date: Fri, 22 Nov 2013 09:12:14 +1100
+	lCkMire8WxGFSYpq for <xfs@oss.sgi.com>;
+	Thu, 21 Nov 2013 15:41:25 -0800 (PST)
+Date: Fri, 22 Nov 2013 10:41:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Cleancache support in XFS
-Message-ID: <20131121221214.GC6502@dastard>
-References: <518222D3.3080109@zynstra.com>
-	<20130522192834.GD10617@phenom.dumpdata.com>
-	<519F1708.10603@zynstra.com>
-	<20130607170826.GA6925@phenom.dumpdata.com>
-	<51E8E834.6080509@zynstra.com>
-	<20130722154812.GC30300@phenom.dumpdata.com>
-	<51EE2F54.80701@zynstra.com> <20130723082700.GK19986@dastard>
-	<528E0C3F.3010401@zynstra.com> <20131121160741.GK1935@sgi.com>
+Subject: Re: Filesystem writes on RAID5 too slow
+Message-ID: <20131121234116.GD6502@dastard>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
+	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
+	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
+	<20131121092606.GU11434@dastard>
+	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131121160741.GK1935@sgi.com>
+In-Reply-To: <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,101 +34,143 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: James Dingwall <james.dingwall@zynstra.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, xfs@oss.sgi.com
+To: Martin Boutin <martboutin@gmail.com>
+Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Nov 21, 2013 at 10:07:41AM -0600, Ben Myers wrote:
-> Hi James,
-> 
-> On Thu, Nov 21, 2013 at 01:35:59PM +0000, James Dingwall wrote:
-> > Dave Chinner wrote:
-> > >On Tue, Jul 23, 2013 at 08:23:00AM +0100, James Dingwall wrote:
-> > >>Konrad Rzeszutek Wilk wrote:
-> > >>>On Fri, Jul 19, 2013 at 08:18:12AM +0100, James Dingwall wrote:
-> > >>>>Konrad Rzeszutek Wilk wrote:
-> > >>>>>On Fri, May 24, 2013 at 08:30:16AM +0100, James Dingwall wrote:
-> > >>>>>>Konrad Rzeszutek Wilk wrote:
-> > >>>>>>>On Thu, May 02, 2013 at 09:24:51AM +0100, James Dingwall wrote:
-> > >>>>>>>>Dave Chinner wrote:
-> > >>>>>>>>>On Wed, May 01, 2013 at 11:20:44AM -0500, Ben Myers wrote:
-> > >>>>>>>>>>Hi James,
-> > >>>>>>>Hey folks,
-> > >>>>>>>I am walking through my vacation-emails-mbox.
-> > >>>>>>>
-> > >>>>>>>>>>On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
-> > >>>>>>>>>>>In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
-> > >>>>>>>>>>>
-> > >>>>>>>>>>>$ grep -r cleancache fs/xfs
-> > >>>>>>>>>>>on the 3.9 kernel source suggests that no patch was submitted to
-> > >>>>>>>>>>>enable cleancache for the XFS filesystem.  Since it was suggested
-> > >>>>>>>>>>>that this could be a one liner I've had a go and my first effort is
-> > >>>>>>>>>>>inline below.  While this seems to compile OK I have no experience
-> > >>>>>>>>>>>in filesystems so I would appreciate it if anyone can point out that
-> > >>>>>>>>>>>it is obviously wrong and likely to eat my data before I try booting
-> > >>>>>>>>>>>the kernel.
-> > >>>>>>>>>>>
-> > >>>>>>>>>>>If it seems a reasonable attempt what would be the best way to check
-> > >>>>>>>>>>>that it isn't doing nasty things?
-> > >>>>>>>>>>Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
-> > >>>>>>>>>>includes a list of attributes the filesystem needs to have to work properly
-> > >>>>>>>>>>with cleancache.
-> > >>>>>>>>>So, those points are:
-> > >>>>>>>>I had started to look at these too but I feel very out of my depth!
-> > >>>>>>>>I had similar conclusions to what Dave wrote but I don't think my
-> > >>>>>>>>thoughts should carry very much (any) weight.  Anyway I gambled and
-> > >>>>>>>>booted my xen domU with this patch and so far so good...  xen top
-> > >>>>>>>>shows that tmem is now being used where previously it wasn't.  I'll
-> > >>>>>>>>try running the xfstests at the weekend after a couple more days up
-> > >>>>>>>>time to see what happens.
-> > >>>>>>>And how did it go?
-> > >>>>>>I am running the patch I created on 3.9.3 on half of my xen guests
-> > >>>>>>now and have not noticed any stability or filesystem problems.  xl
-> > >>>>>>top with 'T' shows that the guests running with it are using
-> > >>>>>>ephemeral pages were those without do not.  I did do some runs with
-> > >>>>>>xfstests which had some failures but they were present with and
-> > >>>>>>without the patch.  The best I can really offer is that it works for
-> > >>>>>>me, ymmv.  The patch is available as commit
-> > >>>>>>c725011c4fc5d47e12d131f61bd91a58a40036b5 in
-> > >>>>>>https://github.com/JKDingwall/linux.git xfs-enable-cleancache or in
-> > >>>>>>the first message of this thread.
-> > >>>>>Hey James,
-> > >>>>>
-> > >>>>>I've run this patch on my local tree and it looks to work right. I am
-> > >>>>>saying "looks" as I am hitting some other issue that I believe are
-> > >>>>>unralted to the patch - but I need to figure them out before I can
-> > >>>>>comfortably say: "Yes, this looks right and works for me as well."
-> > >>>>>
-> > >>>>>Stay tuned.
-> > >>>>Just to add that I have also had no observable problems running this
-> > >>>>patch on 3.10.0 or 3.10.1.
-> > >>>Yup. And I tested it as well. In other words if you would like to add
-> > >>>Acked-by from me that would be super. Thanks!
-> > >>My patch is now available in https://github.com/JKDingwall/linux.git
-> > >>xfs-enable-cleancache as commit id
-> > >>6d50663e4ec88b7e1fd872b12ac310b1f4bb38c6.  I have rebased it on 3.10
-> > >>with KRW's Acked-by and my Signed-off-by in the commit message.  Is
-> > >>it reasonable for this to be considered for 3.12 or would further
-> > >>testing be required?
-> > >I think that's sufficient. Send it to the list ;)
-> > >
-> > >Cheers,
-> > >
-> > >Dave.
-> > I had a quick look through the 3.12 sources today and noted that
-> > this patch did not seem to get picked up.  I'm still running with it
-> > and am now on 3.12 with no observed problems.  I'm happy to rebase
-> > against 3.12 if required but it seems simple enough it should go on
-> > cleanly to the current development tree.
-> 
-> It hasn't been picked up because I'm not quite convinced it's ok to do this.
-> See if you can get a Dave, Christoph, or Eric to offer a Reviewed-by with a
-> little explanation of why this is ok and I'll pull it in.  ;)
+On Thu, Nov 21, 2013 at 08:31:38AM -0500, Martin Boutin wrote:
+> $ uname -a
+> Linux haswell1 3.10.10 #1 SMP PREEMPT Wed Oct 2 11:22:22 CEST 2013
+> i686 GNU/Linux
 
-Like I said back in July, it's OK because they performed a
-substantial amount of testing like we asked them to it didn't show
-up any obvious regressions.
+Oh, it's 32 bit system. Things you don't know from the obfuscating
+codenames everyone uses these days...
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+> $ mkfs.xfs -s size=4096 -f -l size=32m /dev/md0
+> $ mount -t xfs /dev/md0 /tmp/diskmnt/
+> $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
+> 1000+0 records in
+> 1000+0 records out
+> 1048576000 bytes (1.0 GB) copied, 28.0304 s, 37.4 MB/s
+....
+> $ cat /proc/mounts
+> (...)
+> /dev/md0 /tmp/diskmnt xfs
+> rw,relatime,attr2,inode64,sunit=1024,swidth=2048,noquota 0 0
+
+sunit/swidth is 512k/1MB
+
+> # same layout for other disks
+> $ fdisk -c -u /dev/sda
+....
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sda1            2048    20565247    10281600   83  Linux
+
+Aligned to 1 MB.
+
+> /dev/sda2        20565248  1953525167   966479960   83  Linux
+
+And that isn't aligned to 1MB. 20565248 / 2048 = 10041.625. It is
+aligned to 4k, though, so there shouldn't be any hardware RMW
+cycles.
+
+> $ xfs_info /dev/md0
+> meta-data=/dev/md0               isize=256    agcount=32, agsize=15101312 blks
+>          =                       sectsz=4096  attr=2
+> data     =                       bsize=4096   blocks=483239168, imaxpct=5
+>          =                       sunit=12
+
+sunit/swidth of 512k/1MB, so it matches the MD device.
+
+> $ xfs_bmap -vvp /tmp/diskmnt/filewr.zero
+> /tmp/diskmnt/filewr.zero:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
+>    0: [0..2047999]:    2049056..4097055  0 (2049056..4097055) 2048000 01111
+>  FLAG Values:
+>     010000 Unwritten preallocated extent
+>     001000 Doesn't begin on stripe unit
+>     000100 Doesn't end   on stripe unit
+>     000010 Doesn't begin on stripe width
+>     000001 Doesn't end   on stripe width
+> # this does not look good, does it?
+
+Yup, looks broken.
+
+/me digs through git. 
+
+Yup, commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") broke
+the code that sets stripe unit alignment for the initial allocation
+way back in 3.2.
+
+[ Hmmm, that would explain the very occasional failure that
+generic/223 throws outi (maybe once a month I see it fail). ]
+
+Which means MD is doing RMW cycles for it's parity calculations, and
+that's where performance is going south.
+
+Current code:
+
+$ xfs_io -fd -c "truncate 0" -c "falloc 0 1g" -c "bmap -vvp" -c "pwrite 0 1g -b 1280k" testfile
+testfile:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET          TOTAL FLAGS
+   0: [0..2097151]:    1056..2098207     0 (1056..2098207)  2097152 11111
+ FLAG Values:
+    010000 Unwritten preallocated extent
+    001000 Doesn't begin on stripe unit
+    000100 Doesn't end   on stripe unit
+    000010 Doesn't begin on stripe width
+    000001 Doesn't end   on stripe width
+wrote 1073741824/1073741824 bytes at offset 0
+1 GiB, 1024 ops; 0:00:02.00 (343.815 MiB/sec and 268.6054 ops/sec)
+$
+
+Which indicates that even if we take direct IO based allocation out
+of the picture, the allocation does not get aligned properly. This
+in on a 3.5TB 12 SAS disk MD RAID6 with sunit=64k,swidth=640k.
+
+With a fixed kernel:
+
+$ xfs_io -fd -c "truncate 0" -c "falloc 0 1g" -c "bmap -vvp" -c "pwrite 0 1g -b 1280k" testfile
+testfile:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
+   0: [0..2097151]:    6293504..8390655  0 (6293504..8390655) 2097152 10000
+ FLAG Values:
+    010000 Unwritten preallocated extent
+    001000 Doesn't begin on stripe unit
+    000100 Doesn't end   on stripe unit
+    000010 Doesn't begin on stripe width
+    000001 Doesn't end   on stripe width
+wrote 1073741824/1073741824 bytes at offset 0
+1 GiB, 820 ops; 0:00:02.00 (415.192 MiB/sec and 332.4779 ops/sec)
+$
+
+It;s clear we have completely stripe swidth aligned allocation and it's 25% faster.
+
+Take fallocate out of the picture so the direct IO does the
+allocation:
+
+$ xfs_io -fd -c "truncate 0" -c "pwrite 0 1g -b 1280k" -c "bmap -vvp" testfile
+wrote 1073741824/1073741824 bytes at offset 0
+1 GiB, 820 ops; 0:00:02.00 (368.241 MiB/sec and 294.8807 ops/sec)
+testfile:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
+   0: [0..2097151]:    2099200..4196351  0 (2099200..4196351) 2097152 00000
+ FLAG Values:
+    010000 Unwritten preallocated extent
+    001000 Doesn't begin on stripe unit
+    000100 Doesn't end   on stripe unit
+    000010 Doesn't begin on stripe width
+    000001 Doesn't end   on stripe width
+
+It's slower than with preallocation (no surprise - no allocation
+overhead per write(2) call after preallocation is done) but the
+allocation is still correctly aligned.
+
+The patch below should fix the unaligned allocation problem you are
+seeing, but because XFS defaults to stripe unit alignment for large
+allocations, you might still see RMW cycles when it aligns to a
+stripe unit that is not the first in a MD stripe. I'll have a quick
+look at fixing that behaviour when the swalloc mount option is
+specified....
 
 Cheers,
 
@@ -138,6 +178,59 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+xfs: align initial file allocations correctly.
+
+From: Dave Chinner <dchinner@redhat.com>
+
+The function xfs_bmap_isaeof() is used to indicate that an
+allocation is occurring at or past the end of file, and as such
+should be aligned to the underlying storage geometry if possible.
+
+Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
+behaviour of this function for empty files - it turned off
+allocation alignment for this case accidentally. Hence large initial
+allocations from direct IO are not getting correctly aligned to the
+underlying geometry, and that is cause write performance to drop in
+alignment sensitive configurations.
+
+Fix it by considering allocation into empty files as requiring
+aligned allocation again.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 3ef11b2..8401f11 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -1635,7 +1635,7 @@ xfs_bmap_last_extent(
+  * blocks at the end of the file which do not start at the previous data block,
+  * we will try to align the new blocks at stripe unit boundaries.
+  *
+- * Returns 0 in bma->aeof if the file (fork) is empty as any new write will be
++ * Returns 1 in bma->aeof if the file (fork) is empty as any new write will be
+  * at, or past the EOF.
+  */
+ STATIC int
+@@ -1650,9 +1650,14 @@ xfs_bmap_isaeof(
+ 	bma->aeof = 0;
+ 	error = xfs_bmap_last_extent(NULL, bma->ip, whichfork, &rec,
+ 				     &is_empty);
+-	if (error || is_empty)
++	if (error)
+ 		return error;
+ 
++	if (is_empty) {
++		bma->aeof = 1;
++		return 0;
++	}
++
+ 	/*
+ 	 * Check if we are allocation or past the last extent, or at least into
+ 	 * the last delayed allocated extent.
 
 _______________________________________________
 xfs mailing list
