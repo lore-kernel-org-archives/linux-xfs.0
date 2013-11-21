@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB7A77F3F
-	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 19:43:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68D6FAC004
-	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 17:43:04 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 6C6347F3F
+	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 20:19:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E02A5AC005
+	for <xfs@oss.sgi.com>; Wed, 20 Nov 2013 18:19:39 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	1DsMh8MGxEuqMHlZ for <xfs@oss.sgi.com>;
-	Wed, 20 Nov 2013 17:42:59 -0800 (PST)
-Date: Thu, 21 Nov 2013 12:42:55 +1100
+	08vsfyA3qFFwloqA for <xfs@oss.sgi.com>;
+	Wed, 20 Nov 2013 18:19:37 -0800 (PST)
+Date: Thu, 21 Nov 2013 13:19:33 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: prevent spurious "head behind tail" warnings
-Message-ID: <20131121014255.GZ6188@dastard>
+Message-ID: <20131121021933.GA6188@dastard>
 References: <1384900659-22215-1-git-send-email-david@fromorbit.com>
-	<528BEF71.1000607@sgi.com>
+	<528BEF71.1000607@sgi.com> <528BF327.2050802@sandeen.net>
+	<528BF7F2.3050708@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <528BEF71.1000607@sgi.com>
+In-Reply-To: <528BF7F2.3050708@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,113 +32,119 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Tue, Nov 19, 2013 at 05:08:33PM -0600, Mark Tinguely wrote:
-> On 11/19/13 16:37, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
+On Tue, Nov 19, 2013 at 05:44:50PM -0600, Mark Tinguely wrote:
+> On 11/19/13 17:24, Eric Sandeen wrote:
+> >On 11/19/13, 5:08 PM, Mark Tinguely wrote:
+> >>On 11/19/13 16:37, Dave Chinner wrote:
+> >>>From: Dave Chinner<dchinner@redhat.com>
+> >>>
+> >>>When xlog_space_left() cracks the grant head and the log tail, it
+> >>>does so without locking to synchronise the sampling of the
+> >>>variables. It samples the grant head first, so if there is a delay
+> >>>before it smaples the log tail, there is a window where the log tail
+> >>>could have moved onwards and be moved past the sampled value of the
+> >>>grant head. This then leads to the "xlog_space_left: head behind
+> >>>tail" warning message.
+> >>>
+> >>>To avoid spurious output in this situation, swap the order in which
+> >>>the variables are cracked. This means that the head may grant head
+> >>>may move if there is a delay, but the log tail will be stable, hence
+> >>>ensure the tail does not jump the head accidentally.
+> >>>
+> >>>While this avoids the spurious head behind tail problem, it
+> >>>introduces the opposite problem - the head can move more than a full
+> >>>cycle past the tail. The code already handles this case by
+> >>>indicating that the log is full (i.e. zero space available) but
+> >>>that's still (generally) a spurious situation.
+> >>>
+> >>>Hence, if we detect that the head is more than a cycle ahead of the
+> >>>tail or the head is behind the tail, start the calculation again by
+> >>>resampling the variables and trying again. If we get too many
+> >>>resamples, then throw a warning and return a full or empty log
+> >>>appropriately.
+> >>>
+> >>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >>>---
+> >>
+> >>I am still getting the debug message:
+> >>
+> >>   xlog_verify_grant_tail: space>  BBTOB(tail_blocks)
+> >>
+> >>This is a real over grant. It has been a while since I did all the tests, but basically the only way to stop it is to have a lock between checking for xlog_space_left() and actually reserving the space.
+> >>
+> >>I am not a fan of another band-aid on a problem that is caused because we are granting space without locks.
 > >
-> >When xlog_space_left() cracks the grant head and the log tail, it
-> >does so without locking to synchronise the sampling of the
-> >variables. It samples the grant head first, so if there is a delay
-> >before it smaples the log tail, there is a window where the log tail
-> >could have moved onwards and be moved past the sampled value of the
-> >grant head. This then leads to the "xlog_space_left: head behind
-> >tail" warning message.
+> >Mark, can you remind us of your testcase that produces this?
+> >(sorry, I guess I should search for that old thread...)
 > >
-> >To avoid spurious output in this situation, swap the order in which
-> >the variables are cracked. This means that the head may grant head
-> >may move if there is a delay, but the log tail will be stable, hence
-> >ensure the tail does not jump the head accidentally.
+> >Thanks,
+> >-Eric
 > >
-> >While this avoids the spurious head behind tail problem, it
-> >introduces the opposite problem - the head can move more than a full
-> >cycle past the tail. The code already handles this case by
-> >indicating that the log is full (i.e. zero space available) but
-> >that's still (generally) a spurious situation.
-> >
-> >Hence, if we detect that the head is more than a cycle ahead of the
-> >tail or the head is behind the tail, start the calculation again by
-> >resampling the variables and trying again. If we get too many
-> >resamples, then throw a warning and return a full or empty log
-> >appropriately.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >---
+> >>--Mark.
 > 
-> I am still getting the debug message:
+> xfstest 273 hits it 100% of the time for me, as does 32+ process
+> fsstress, pretty much any high log usage test.
+
+Yet I do those sorts of tests all the time on lots of different
+machines and I rarely see either of the warnings that we are talking
+about here. I sent the xlog_space_left() patch because a user
+reported their log being spammed, not because they had a problem
+with a filesystem hanging on log space.
+
+i.e. spam == false positive, log space hang == real problem.
+
+> I know Brian hit this with xfstest 273 when he was testing for
+> commit 9a3a5dab.
 > 
->   xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+> Using xfstest 273, I was seeing ten of thousand of bytes of over
+> commit.
 
-I'm not sure why that is relevant to this patch - it doesn't touch
-xlog_verify_grant_tail(), nor does it change the functioning of the
-code except to remove false positive warnings.
+That doesn't mean it's real.
 
-Further, the comment about xlog_verify_grant_tail() says:
+By definition, a false positive shows exactly the same numbers as a
+real problem. The only way to determine it is a false positive is to
+use some other method of verifying the numbers. That could be
+checking the state of other related variables or simply resampling
+the variables multiple times to reduce the probability that the
+problem was caused by a temporary condition (i.e. a race).
 
-  * This check is run unlocked, so can give false positives. 
+In this case, resampling them from their source is used to reverify
+them, and if we get continual failures being detected, then the
+likelihood of them being a false positive is very low.
 
-That's exactly what this patch addresses for xlog_space_left() -
-it prevents false positives when it is run unlocked. So we could do
-exactly the same thing to xlog_verify_grant_tail() as well. Patch
-attached below.
+> From what I recall, I tried a separate lock for the
+> write/reserve grant heads,
 
-> This is a real over grant.
+We already have a per-grant head lock, and most of the calls to
+xlog_space_left() are called under it. Hence the problem I'm
+addressing is not a result of the grant head changing - the problem
+is the log tail is updated concurrently. No amount of locking being
+added to the grant heads will fix that problem.
 
-Evidence, please.
+And regardless of the fact that xlog_verify_grant_tail() samples the
+write grant head with locks (it's a atomic64_t to do this safely),
+the problem is that log tail can then change before it is sampled.
+No amount of locking the grant heads will fix that problem, either.
 
-> It has been a while since I did all the
-> tests, but basically the only way to stop it is to have a lock
-> between checking for xlog_space_left() and actually reserving the
-> space.
+> put locks to make sure the verifier was
+> not getting stale information, ordered the write/reserve ungrants
+> relative to the grants, put in cache smp_mb() call. Some attempts
+> were more successful than others, but the only way I could prevent
+> the overgrant completely was to put back the global lock between the
+> checking for space and the granting of space.
 
-Yes, so you demonstrated, but that change also completely destroyed
-scalability of the transaction subsystem in the process, hence is a
-non-starter, especially just to silence a debug-only false positive.
-IOWs, there was no evidence provided that the message was the result
-of an actual leak (i.e. a problem in the algorithm) rather than it
-being a false positive.
+Which won't have solved the problem of concurrent log tail updates
+occurring after the grant head has been sampled. All this change
+does is modify the concurrency patterns and hence made the race
+condition much harder to hit by disabling pre-emption across
+functions.
 
-The first step in determining if we really have a problem here is to
-cut the false positive rate, and that's exactly what I'm addressing
-here. Hence when we see this warning being emitted we will have a
-much higher confidence that it is a real problem and not a false
-positive.
-
-> I am not a fan of another band-aid on a problem that is caused
-> because we are granting space without locks.
-
-Lockless algorithms *by their very nature* involve verifying what
-was grabbed without a lock is valid before using it. It's a
-fundamental principle underlying lockless algorithms, whether they
-be lockless due to use of cmpxchg (like the log grant code) or RCU
-(like the xfs inode cache) or just plain old memory barriers to
-enforce memory access ordering.
-
-Just because the original code didn't do this doesn't mean doing it
-now is a band-aid. I understand lockless algorithms a whole lot
-better than I did 3 years ago when I wrote the original algorithm,
-and as such can see things I didn't clearly understand back then.
-Indeed, the comments indicate that I knew there were problems (i.e.
-false positive detection issues), but didn't understand them well
-enough to be able to mitigate them. I certainly understand them well
-enough now, so I'd hardly call mitigating known issues like this a
-band-aid.
-
-Looking at the bigger picture, we're adding lockless algorithms
-rapidly throughout the kernel.  Hence it's critical that kernel
-developers understand how lockless algorithms work and realise that
-locks are no longer the preferred solution to the scalability
-problem. If a lockless algorithm is broken, then we need to
-understand exactly how it is broken, determine whether it can be
-fixed (e.g. is it just missing a critical memory barrier?), and as
-a last resort, if it needs to be replaced then we need to design
-a new algorithm that scales equivalently well.
-
-We need to start by killing as many false positives the lockless
-algorithm throws out and see what remains. We have no real evidence
-that there are fundamental problems with the lockless algorithm, so
-let's address the issues we know about first and go from there.
+IOWs, we can probably get exactly the same result from adding
+"preempt_disable(); ....  preempt_enable();" around the variable
+sampling so that we cannot be pre-empted at all between the two
+samples being taken.
 
 Cheers,
 
@@ -145,132 +152,6 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-xfs: prevent spurious "space > BBTOB(tail_blocks)" warnings
-
-When xlog_verify_grant_tail() cracks the grant head and the log
-tail, it does so without locking to synchronise the sampling of the
-variables. It samples the grant head first, so if there is a delay
-before it samples the log tail, there is a window where the log tail
-could have moved onwards and be moved past the sampled value of the
-grant head. This then leads to the "xlog_verify_grant_tail: space >
-BBTOB(tail_blocks)" warning message.
-
-To avoid spurious output in this situation, swap the order in which
-the variables are cracked. This means that the head may grant head
-may move if there is a delay, but the log tail will be stable, hence
-ensure the tail does not jump the head accidentally.
-
-While this avoids the spurious head behind tail problem, it
-introduces the opposite problem - the head can move more than a full
-cycle past the tail.
-
-Hence, if we detect that the head is more than a cycle ahead of the
-tail or the head is behind the tail, start the calculation again by
-resampling the variables and trying again. If we get too many
-resamples, then throw a warning.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
----
- fs/xfs/xfs_log.c | 82 +++++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 64 insertions(+), 18 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0cfcc20..6857e09 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3682,26 +3682,72 @@ STATIC void
- xlog_verify_grant_tail(
- 	struct xlog	*log)
- {
--	int		tail_cycle, tail_blocks;
--	int		cycle, space;
--
--	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &space);
--	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
--	if (tail_cycle != cycle) {
--		if (cycle - 1 != tail_cycle &&
--		    !(log->l_flags & XLOG_TAIL_WARN)) {
--			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
--				"%s: cycle - 1 != tail_cycle", __func__);
--			log->l_flags |= XLOG_TAIL_WARN;
--		}
-+	int		tail_cycle;
-+	int		tail_blocks;
-+	int		head_cycle;
-+	int		head_bytes;
-+	int		retries = 0;
-+#define XLOG_VERIFY_MAX_RETRIES	5
- 
--		if (space > BBTOB(tail_blocks) &&
--		    !(log->l_flags & XLOG_TAIL_WARN)) {
--			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
--				"%s: space > BBTOB(tail_blocks)", __func__);
--			log->l_flags |= XLOG_TAIL_WARN;
--		}
-+
-+	/*
-+	 * If we've already detected an problem here, don't bother checking
-+	 * again.
-+	 */
-+	if (log->l_flags & XLOG_TAIL_WARN)
-+		return;
-+	do {
-+		/*
-+		 * sample tail before head to avoid spurious warnings due to
-+		 * racing tail updates. We dump a memory barrier here to make
-+		 * sure we pick up the latest values that have been written by
-+		 * other threads each time through.
-+		 */
-+		smp_mb();
-+		xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle,
-+				      &tail_blocks);
-+		xlog_crack_grant_head(&log->l_write_head.grant, &head_cycle,
-+				      &head_bytes);
-+
-+		/*
-+		 * if the cycles are the same, the head and tail can't be
-+		 * overlapping, so everything is ok and we are done.
-+		 */
-+		if (tail_cycle == head_cycle)
-+			return;
-+
-+		/*
-+		 * if the tail is on the previous cycle to the head and the head
-+		 * is before the tail, then all is good.
-+		 */
-+		if (tail_cycle == head_cycle - 1 &&
-+		    BBTOB(tail_blocks) >= head_bytes)
-+			return;
-+
-+		/*
-+		 * Cycles don't match or the head overlapped the tail.
-+		 * Invalid, so let's go around again and resample to ensure this
-+		 * isn't a false positive.
-+		 */
-+	} while (retries++ < XLOG_VERIFY_MAX_RETRIES);
-+
-+	/*
-+	 * OK, we're in trouble now - the head and tail are out of sync. Time to
-+	 * issue a warning about it
-+	 */
-+	if (head_cycle - 1 != tail_cycle) {
-+		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
-+			"%s: head cycle - 1 != tail_cycle (0x%x/0x%x)",
-+			      __func__, head_cycle, tail_cycle);
-+	}
-+
-+	if (head_bytes > BBTOB(tail_blocks)) {
-+		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
-+			"%s: head_bytes > BBTOB(tail_blocks) (0x%x/0x%x)",
-+			      __func__, head_bytes, BBTOB(tail_blocks));
- 	}
-+
-+	log->l_flags |= XLOG_TAIL_WARN;
- }
- 
- /* check if it will fit */
 
 _______________________________________________
 xfs mailing list
