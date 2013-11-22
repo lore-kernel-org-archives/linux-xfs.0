@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D5007F37
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 18:32:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 65BD38F8040
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 16:32:25 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id jLXflrVh3To9vkcT for <xfs@oss.sgi.com>;
-	Thu, 21 Nov 2013 16:32:24 -0800 (PST)
-Received: from Liberator.local (c-98-240-215-156.hsd1.mn.comcast.net
-	[98.240.215.156])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id E91FA63C5FC1
-	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 18:32:23 -0600 (CST)
-Message-ID: <528EA617.4080004@sandeen.net>
-Date: Thu, 21 Nov 2013 18:32:23 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CAF207F50
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 19:16:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B336D304064
+	for <xfs@oss.sgi.com>; Thu, 21 Nov 2013 17:16:31 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	JVbOvx7Bk4WegaXg for <xfs@oss.sgi.com>;
+	Thu, 21 Nov 2013 17:16:29 -0800 (PST)
+Date: Fri, 22 Nov 2013 12:16:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Alpha2 changelog
+Message-ID: <20131122011625.GE6502@dastard>
+References: <528EA617.4080004@sandeen.net>
 MIME-Version: 1.0
-Subject: Alpha2 changelog
+Content-Disposition: inline
+In-Reply-To: <528EA617.4080004@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +25,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Here's my stab at a changelog.  If you did something since 3.11, and it sho=
-uld be highlighted but it's not, now's your chance!
-
-xfsprogs-3.2.0-alpha2 (19 November 2013)
-        - Alpha release for the purpose of testing the CRC feature in kerne=
-ls
-          3.10 and newer
-        - Enable xfs_db write support and xfs_metadump support for CRC enab=
-led
-          filesystems.
-        - Add directory entry filetype support for non-CRC filesystems.
-        - Remove experimental warnings for CRC filesystems.
-        - Ensure all inodes created by xfs_repair have a proper d_type set.
-        - Fix build on big endian machines.
-        - Properly handle symlinks to devices on various tool commandlines.
-        - Fix xfs_repair's dirty log detection for 4k sector logs, broken
-          in Alpha1.
-        - Fix a potential segfault in xfs_repair when issuing progress repo=
-rts.
-        - Fix potential xfs_fsr failures when running w/ selinux.
-        - Update config.guess/config.sub for arm64, thanks to Colin Watson.
-        - Add FALLOC_FL_COLLAPSE_RANGE support to the xfs_io fallocate comm=
-and,
-          thanks to Namjae Jeon.
-        - Stop wasting memory by caching inode structures in xfs_repair -
-          they are never re-used.  Thanks to Christoph Hellwig.
-        - Fix several Coverity-found defects, thanks to Li Zhong.
-        - Fix platform_test_xfs_fd to return false on special files which
-          cannot take an xfs ioctl.
-        - Sync up libxfs with kernel code.
-
-
-xfsprogs-3.2.0-alpha1 (26 September 2013)
-        - Alpha release for the purpose of testing the CRC feature in kerne=
-ls
-          3.10 and newer
-        - Remove all vestiges of old, unsupported version 1 directory code.
-        - Add a =93readdir=94 command to xfs_io, thanks to Brian Foster.
-        - Fix potential segfault in xfs_repair when creating lost+found.
-        - Zero out unused parts of on-disk superblocks during repair, to av=
-oid
-          metadata verifier failures at runtime.
-        - Add directory entry type support to mkfs.xfs and xfs_db.
-        - Add the icreate transaction to xfs_logprint, and fix continuation
-          transactions.
-        - Print all AGI unlinked buckets in xfs_logprint.
-        - Fix mkfs.xfs ENOSPC with protofile which creates a very large
-          directory.
-        - Fix several Coverity-found defects, thanks to Li Zhong.
-        - Do all file reads in xfs_fsr using O_DIRECT.
-        - Sync up libxfs with kernel code.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBOb3YgMjEsIDIwMTMgYXQgMDY6MzI6MjNQTSAtMDYwMCwgRXJpYyBTYW5kZWVuIHdy
+b3RlOgo+IEhlcmUncyBteSBzdGFiIGF0IGEgY2hhbmdlbG9nLiAgSWYgeW91IGRpZCBzb21ldGhp
+bmcgc2luY2UgMy4xMSwgYW5kIGl0IHNob3VsZCBiZSBoaWdobGlnaHRlZCBidXQgaXQncyBub3Qs
+IG5vdydzIHlvdXIgY2hhbmNlIQo+IAo+IHhmc3Byb2dzLTMuMi4wLWFscGhhMiAoMTkgTm92ZW1i
+ZXIgMjAxMykKPiAgICAgICAgIC0gQWxwaGEgcmVsZWFzZSBmb3IgdGhlIHB1cnBvc2Ugb2YgdGVz
+dGluZyB0aGUgQ1JDIGZlYXR1cmUgaW4ga2VybmVscwo+ICAgICAgICAgICAzLjEwIGFuZCBuZXdl
+cgo+ICAgICAgICAgLSBFbmFibGUgeGZzX2RiIHdyaXRlIHN1cHBvcnQgYW5kIHhmc19tZXRhZHVt
+cCBzdXBwb3J0IGZvciBDUkMgZW5hYmxlZAo+ICAgICAgICAgICBmaWxlc3lzdGVtcy4KPiAgICAg
+ICAgIC0gQWRkIGRpcmVjdG9yeSBlbnRyeSBmaWxldHlwZSBzdXBwb3J0IGZvciBub24tQ1JDIGZp
+bGVzeXN0ZW1zLgo+ICAgICAgICAgLSBSZW1vdmUgZXhwZXJpbWVudGFsIHdhcm5pbmdzIGZvciBD
+UkMgZmlsZXN5c3RlbXMuCj4gICAgICAgICAtIEVuc3VyZSBhbGwgaW5vZGVzIGNyZWF0ZWQgYnkg
+eGZzX3JlcGFpciBoYXZlIGEgcHJvcGVyIGRfdHlwZSBzZXQuCj4gICAgICAgICAtIEZpeCBidWls
+ZCBvbiBiaWcgZW5kaWFuIG1hY2hpbmVzLgo+ICAgICAgICAgLSBQcm9wZXJseSBoYW5kbGUgc3lt
+bGlua3MgdG8gZGV2aWNlcyBvbiB2YXJpb3VzIHRvb2wgY29tbWFuZGxpbmVzLgo+ICAgICAgICAg
+LSBGaXggeGZzX3JlcGFpcidzIGRpcnR5IGxvZyBkZXRlY3Rpb24gZm9yIDRrIHNlY3RvciBsb2dz
+LCBicm9rZW4KPiAgICAgICAgICAgaW4gQWxwaGExLgo+ICAgICAgICAgLSBGaXggYSBwb3RlbnRp
+YWwgc2VnZmF1bHQgaW4geGZzX3JlcGFpciB3aGVuIGlzc3VpbmcgcHJvZ3Jlc3MgcmVwb3J0cy4K
+PiAgICAgICAgIC0gRml4IHBvdGVudGlhbCB4ZnNfZnNyIGZhaWx1cmVzIHdoZW4gcnVubmluZyB3
+LyBzZWxpbnV4Lgo+ICAgICAgICAgLSBVcGRhdGUgY29uZmlnLmd1ZXNzL2NvbmZpZy5zdWIgZm9y
+IGFybTY0LCB0aGFua3MgdG8gQ29saW4gV2F0c29uLgo+ICAgICAgICAgLSBBZGQgRkFMTE9DX0ZM
+X0NPTExBUFNFX1JBTkdFIHN1cHBvcnQgdG8gdGhlIHhmc19pbyBmYWxsb2NhdGUgY29tbWFuZCwK
+PiAgICAgICAgICAgdGhhbmtzIHRvIE5hbWphZSBKZW9uLgoKVGhhdCBnb3QgcmV2ZXJ0ZWQgYXMg
+dGhlIGtlcm5lbCBwYXJ0cyBoYXZlbid0IGdvbmUgdXBzdHJlYW0geWV0LgoKPiAgICAgICAgIC0g
+U3RvcCB3YXN0aW5nIG1lbW9yeSBieSBjYWNoaW5nIGlub2RlIHN0cnVjdHVyZXMgaW4geGZzX3Jl
+cGFpciAtCj4gICAgICAgICAgIHRoZXkgYXJlIG5ldmVyIHJlLXVzZWQuICBUaGFua3MgdG8gQ2hy
+aXN0b3BoIEhlbGx3aWcuCj4gICAgICAgICAtIEZpeCBzZXZlcmFsIENvdmVyaXR5LWZvdW5kIGRl
+ZmVjdHMsIHRoYW5rcyB0byBMaSBaaG9uZy4KPiAgICAgICAgIC0gRml4IHBsYXRmb3JtX3Rlc3Rf
+eGZzX2ZkIHRvIHJldHVybiBmYWxzZSBvbiBzcGVjaWFsIGZpbGVzIHdoaWNoCj4gICAgICAgICAg
+IGNhbm5vdCB0YWtlIGFuIHhmcyBpb2N0bC4KPiAgICAgICAgIC0gU3luYyB1cCBsaWJ4ZnMgd2l0
+aCBrZXJuZWwgY29kZS4KCgktIGltcHJvdmVkIHhmc19yZXBhaXIgcGVyZm9ybWFuY2Ugb24gbGFy
+Z2UgZmlsZXN5c3RlbXMKCSAgKGFsd2F5cyB1c2UgcHJlZmV0Y2ggYW5kIHN0cmlkZWQgQUcgc2Nh
+bm5pbmcKCSAgZnVuY3Rpb25hbGl0eSkKCj4geGZzcHJvZ3MtMy4yLjAtYWxwaGExICgyNiBTZXB0
+ZW1iZXIgMjAxMykKPiAgICAgICAgIC0gQWxwaGEgcmVsZWFzZSBmb3IgdGhlIHB1cnBvc2Ugb2Yg
+dGVzdGluZyB0aGUgQ1JDIGZlYXR1cmUgaW4ga2VybmVscwo+ICAgICAgICAgICAzLjEwIGFuZCBu
+ZXdlcgo+ICAgICAgICAgLSBSZW1vdmUgYWxsIHZlc3RpZ2VzIG9mIG9sZCwgdW5zdXBwb3J0ZWQg
+dmVyc2lvbiAxIGRpcmVjdG9yeSBjb2RlLgo+ICAgICAgICAgLSBBZGQgYSDigJxyZWFkZGly4oCd
+IGNvbW1hbmQgdG8geGZzX2lvLCB0aGFua3MgdG8gQnJpYW4gRm9zdGVyLgo+ICAgICAgICAgLSBG
+aXggcG90ZW50aWFsIHNlZ2ZhdWx0IGluIHhmc19yZXBhaXIgd2hlbiBjcmVhdGluZyBsb3N0K2Zv
+dW5kLgo+ICAgICAgICAgLSBaZXJvIG91dCB1bnVzZWQgcGFydHMgb2Ygb24tZGlzayBzdXBlcmJs
+b2NrcyBkdXJpbmcgcmVwYWlyLCB0byBhdm9pZAo+ICAgICAgICAgICBtZXRhZGF0YSB2ZXJpZmll
+ciBmYWlsdXJlcyBhdCBydW50aW1lLgo+ICAgICAgICAgLSBBZGQgZGlyZWN0b3J5IGVudHJ5IHR5
+cGUgc3VwcG9ydCB0byBta2ZzLnhmcyBhbmQgeGZzX2RiLgo+ICAgICAgICAgLSBBZGQgdGhlIGlj
+cmVhdGUgdHJhbnNhY3Rpb24gdG8geGZzX2xvZ3ByaW50LCBhbmQgZml4IGNvbnRpbnVhdGlvbgo+
+ICAgICAgICAgICB0cmFuc2FjdGlvbnMuCj4gICAgICAgICAtIFByaW50IGFsbCBBR0kgdW5saW5r
+ZWQgYnVja2V0cyBpbiB4ZnNfbG9ncHJpbnQuCj4gICAgICAgICAtIEZpeCBta2ZzLnhmcyBFTk9T
+UEMgd2l0aCBwcm90b2ZpbGUgd2hpY2ggY3JlYXRlcyBhIHZlcnkgbGFyZ2UKPiAgICAgICAgICAg
+ZGlyZWN0b3J5Lgo+ICAgICAgICAgLSBGaXggc2V2ZXJhbCBDb3Zlcml0eS1mb3VuZCBkZWZlY3Rz
+LCB0aGFua3MgdG8gTGkgWmhvbmcuCj4gICAgICAgICAtIERvIGFsbCBmaWxlIHJlYWRzIGluIHhm
+c19mc3IgdXNpbmcgT19ESVJFQ1QuCj4gICAgICAgICAtIFN5bmMgdXAgbGlieGZzIHdpdGgga2Vy
+bmVsIGNvZGUuCgoJLSBBZGQgc3VwcG9ydCBmb3IgY29uY3VycmVudCBncm91cCBhbmQgcHJvamVj
+dCBxdW90YSB1c2FnZQoJICBvbiBDUkMgZW5hYmxlZCBmaWxlc3lzdGVtcy4KCS0gRW5zdXJlIG1r
+ZnMgY3JlYXRlcyBsb2cgc2l6ZXMgdGhhdCBhcmUgYWx3YXlzIGxhcmdlIGVub3VnaAoJICBmb3Ig
+dGhlIGNvbmZpZ3VyZWQgZmlsZXlzdGVtIGdlb21ldHJ5LgoKSSB0aGluayB0aGF0IGNvdmVycyBt
+b3N0IHRoaW5ncy4gVGhhbmtzIGZvciBkb2luZyB0aGlzLCBFcmljLgoKQ2hlZXJzLAoKRGF2ZS4K
+LS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
