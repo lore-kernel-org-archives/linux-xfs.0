@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 673467F51
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 08:57:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D2859AC008
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 06:57:09 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id qWOWk1X9EIwsD67C for <xfs@oss.sgi.com>;
-	Fri, 22 Nov 2013 06:57:08 -0800 (PST)
-Message-ID: <528F70C2.6090404@sandeen.net>
-Date: Fri, 22 Nov 2013 08:57:06 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 7344B7F51
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 09:10:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CFD78AC008
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 07:10:40 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id q6TcFDvhhvzjXhCG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Nov 2013 07:10:39 -0800 (PST)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rAMFAa7S010659
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 15:10:38 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAMFAaha011949
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 15:10:36 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAMFAZJ9011935 for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 15:10:35 GMT
+Message-ID: <528F743D.9010800@oracle.com>
+Date: Fri, 22 Nov 2013 23:11:57 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH RFC] xfs: set block device logical sector size on
-	xfs_buftarg
-References: <5283C41D.7070503@redhat.com>	<20131113185645.GA20869@infradead.org>	<5283CE2E.2070702@sandeen.net>
-	<20131113212658.GJ6188@dastard>	<20131114133749.GA26268@infradead.org>	<5284E484.6090001@sandeen.net>
-	<20131114210156.GP6188@dastard> <528F66A4.7060200@redhat.com>
-In-Reply-To: <528F66A4.7060200@redhat.com>
+Subject: [PATCH] xfs: fix assertion failure at xfs_setattr_nonsize
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,59 +39,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ric Wheeler <rwheeler@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 11/22/13, 8:13 AM, Ric Wheeler wrote:
+From: Jie Liu <jeff.liu@oracle.com>
 
-<snip>
+For CRC enabled v5 super block, change a file's ownership can simply
+trigger ASSERT failure at xfs_setattr_nonsize() if both group and
+project quota are enabled, e.g,
 
-> I think you do that by using SCSI debug to get a 4K sector drive -
-> that is how we tested for RHEL6 for example. Layering on restrictions
-> to hardware in the file system seems a bit harsh.
-> 
-> The QEMU crowd will be working to get better support for 4K drives in
-> the future, but I think that we are effectively going to cause a huge
-> field issue here since these 512/4K drives are extremely common..
-> 
-> Given the SCSI debug method for this, does that mean you retract your
-> objections and will support Eric's patch :) ?
+[  305.337609] XFS: Assertion failed: !XFS_IS_PQUOTA_ON(mp), file: fs/xfs/xfs_iops.c, line: 621
+[  305.339250] Kernel BUG at ffffffffa0a7fa32 [verbose debug info unavailable]
+[  305.383939] Call Trace:
+[  305.385536]  [<ffffffffa0a7d95a>] xfs_setattr_nonsize+0x69a/0x720 [xfs]
+[  305.387142]  [<ffffffffa0a7dea9>] xfs_vn_setattr+0x29/0x70 [xfs]
+[  305.388727]  [<ffffffff811ca388>] notify_change+0x1a8/0x350
+[  305.390298]  [<ffffffff811ac39d>] chown_common+0xfd/0x110
+[  305.391868]  [<ffffffff811ad6bf>] SyS_fchownat+0xaf/0x110
+[  305.393440]  [<ffffffff811ad760>] SyS_lchown+0x20/0x30
+[  305.394995]  [<ffffffff8170f7dd>] system_call_fastpath+0x1a/0x1f
+[  305.399870] RIP  [<ffffffffa0a7fa32>] assfail+0x22/0x30 [xfs]
 
-FWIW, my patch is a disaster, but I'll work on something along those
-lines that's not a disaster, so we can discuss it properly.  ;)
+To remain the current semantics under the debug mode, this fix add
+an additional judgement to make this assertion only works for non-CRC
+enabled version.
 
-To make this go, I think we need to add a structure member to the
-xfs_buftarg which describes the logical sector size, and use that
-to enforce minimum IO sizes.  The current sector size fields can
-remain in place for the mkfs-specified, presumably physical sector
-size.
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ fs/xfs/xfs_iops.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Then, since the sector sizes in the sb, mp, and buftarg have been
-disassociated a bit, I'll need to audit things like the sub-block
-zeroing paths so that we DTRT on a sub-block DIO.
-
-At that point, the "sector size" semantics in the mkfs.xfs manpage
-get a little weird; if we specify a sector size of 4k, how can
-we do sub-sector IOs?
-
-What the mkfs option really means at that point is that the specified
-size is the minimum size and alignment which will be generated from
-within the filesystem for metadata; we can make it clear that the
-underlying logical sector size is still the constraint for userspace
-DIO.
-
-I'm not quite sure what the XFS_IOC_DIOINFO ioctl should advertise,
-at that point.
-
-Anyway, that's about where I'm at in my brain with all this, will
-try to get something that actually works relatively soon.
-
--Eric
-
-> Regards,
-> 
-> Ric
-> 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 27e0e54..586f1f2 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -618,7 +618,10 @@ xfs_setattr_nonsize(
+ 		}
+ 		if (!gid_eq(igid, gid)) {
+ 			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
+-				ASSERT(!XFS_IS_PQUOTA_ON(mp));
++#ifdef DEBUG
++				if (!xfs_sb_version_has_pquotino(&mp->m_sb))
++					ASSERT(!XFS_IS_PQUOTA_ON(mp));
++#endif
+ 				ASSERT(mask & ATTR_GID);
+ 				ASSERT(gdqp);
+ 				olddquot2 = xfs_qm_vop_chown(tp, ip,
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
