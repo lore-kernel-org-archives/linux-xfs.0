@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CC7F07F50
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 09:36:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 42D54AC009
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 07:36:23 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id H57wpYArBwRCCvcd (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 22 Nov 2013 07:36:22 -0800 (PST)
-Date: Fri, 22 Nov 2013 07:36:18 -0800
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AE09F7F50
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 09:38:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 80E218F804C
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 07:38:08 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id gI4lU1osuBNCOuLH (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Nov 2013 07:38:07 -0800 (PST)
+Date: Fri, 22 Nov 2013 07:38:07 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: bio_add_page rw mode check by merge_bvec_fn
-Message-ID: <20131122153618.GB15143@infradead.org>
-References: <528E4A50.7040609@itwm.fraunhofer.de>
-	<528E4C19.70507@itwm.fraunhofer.de>
+Subject: Re: [PATCH] xfs: integrate xfs_quota_priv header file to xfs_qm
+Message-ID: <20131122153807.GC15143@infradead.org>
+References: <528E188C.6070208@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <528E4C19.70507@itwm.fraunhofer.de>
+In-Reply-To: <528E188C.6070208@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +29,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>, xfs@oss.sgi.com, Kent Overstreet <kmo@daterainc.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-While this is trivial to fix it's also fairly unexpected and easy
-to get wrong for new callers.  Neil, can you explain why you
-desperately need it?
+On Thu, Nov 21, 2013 at 10:28:28PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> The xfs_quota_priv header file is only included by xfs_qm header and
+> there is no much users for its contents, hence we can move those stuff
+> to xfs_qm header file and kill it.
+> 
+> This patch also remove an unused macro DQFLAGTO_TYPESTR.
+
+Looks like you pasted the remaining defintions twice into the new
+location.
+
+Except for that looks fine to me.
 
 _______________________________________________
 xfs mailing list
