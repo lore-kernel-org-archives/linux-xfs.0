@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F5FF7F52
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 03:21:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C1827AC004
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 01:21:42 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id AqR5WyyDfS7YA1dI (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 22 Nov 2013 01:21:41 -0800 (PST)
-Date: Fri, 22 Nov 2013 01:21:36 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Filesystem writes on RAID5 too slow
-Message-ID: <20131122092136.GD32568@infradead.org>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
-	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
-	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
-	<20131121092606.GU11434@dastard>
-	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
-	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
-	<20131121234116.GD6502@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8122C7F50
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 03:56:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A0E6304053
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 01:56:47 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id xu8zwcAMxd3B9yRI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Nov 2013 01:56:45 -0800 (PST)
+Message-ID: <528F2A40.8060502@oracle.com>
+Date: Fri, 22 Nov 2013 17:56:16 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131121234116.GD6502@dastard>
+Subject: Re: [PATCH] xfs: make quota metadata truncation behavior consistent
+	to user space
+References: <528EF3D0.70102@oracle.com> <20131122091827.GC32568@infradead.org>
+In-Reply-To: <20131122091827.GC32568@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,35 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-> From: Dave Chinner <dchinner@redhat.com>
+On 11/22 2013 17:18, Christoph Hellwig wrote:
+> On Fri, Nov 22, 2013 at 02:04:00PM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> In xfs_qm_scall_trunc_qfiles(), we ignore the error if failed to remove
+>> the users quota metadata and proceed to remove groups and projects if
+>> they are being there.  However, in user space, the remove operation will
+>> break and return if failed to remove any kind of quota.
+>> Also for v5 super block, we can enabled both group and project quota at
+>> the same time, in this case the current error handling will cover the
+>> group error with projects but they might failed due to different reasons.
+>>
+>> It seems we'd better the error handling consistent to the user space and
+>> don't trying to remove another kind of quota metadata if the previous
+>> operation is failed.
 > 
-> The function xfs_bmap_isaeof() is used to indicate that an
-> allocation is occurring at or past the end of file, and as such
-> should be aligned to the underlying storage geometry if possible.
-> 
-> Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-> behaviour of this function for empty files - it turned off
-> allocation alignment for this case accidentally. Hence large initial
-> allocations from direct IO are not getting correctly aligned to the
-> underlying geometry, and that is cause write performance to drop in
-> alignment sensitive configurations.
-> 
-> Fix it by considering allocation into empty files as requiring
-> aligned allocation again.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Looks good.  Just curious, did you manage to reproduce an error
+> truncating the quota files?
+Yup, I thought it over how to break it while occasionally glanced over this
+function for backporting upstream patches this morning, but can not figure
+out a simple method.
 
-Ooops.  The fix looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-
-Might be worth cooking up a test for this, scsi_debug can expose
-geometry, and we already have it wired to to large sector size
-testing in xfstests.
+Thanks,
+-Jeff 
 
 _______________________________________________
 xfs mailing list
