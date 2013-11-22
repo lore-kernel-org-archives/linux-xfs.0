@@ -1,18 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6A6797F3F
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 15:10:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4307F8F8065
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 13:10:06 -0800 (PST)
-Message-ID: <528FC827.7080100@redhat.com>
-Date: Fri, 22 Nov 2013 15:09:59 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 57BC97F3F
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 16:40:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D89EEAC001
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 14:40:44 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	0hjuToJTlszGAjQd for <xfs@oss.sgi.com>;
+	Fri, 22 Nov 2013 14:40:43 -0800 (PST)
+Date: Sat, 23 Nov 2013 09:40:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Filesystem writes on RAID5 too slow
+Message-ID: <20131122224038.GH6502@dastard>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
+	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
+	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
+	<20131121092606.GU11434@dastard>
+	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
+	<20131121234116.GD6502@dastard>
+	<20131122092136.GD32568@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH V4] xfsprogs: update version for 3.2.0-alpha2
-References: <20131118150313.940966335@sgi.com>
-	<20131122183757.113479216@sgi.com>
-In-Reply-To: <20131122183757.113479216@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20131122092136.GD32568@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,86 +32,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7818644359970552058=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
---===============7818644359970552058==
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-
-On 11/22/13, 12:37 PM, rjohnston@sgi.com wrote:
-> Update the VERSION, configure.ac and doc/CHANGES file for alpha
-> release, 3.2.0-alpha2
+On Fri, Nov 22, 2013 at 01:21:36AM -0800, Christoph Hellwig wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The function xfs_bmap_isaeof() is used to indicate that an
+> > allocation is occurring at or past the end of file, and as such
+> > should be aligned to the underlying storage geometry if possible.
+> > 
+> > Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
+> > behaviour of this function for empty files - it turned off
+> > allocation alignment for this case accidentally. Hence large initial
+> > allocations from direct IO are not getting correctly aligned to the
+> > underlying geometry, and that is cause write performance to drop in
+> > alignment sensitive configurations.
+> > 
+> > Fix it by considering allocation into empty files as requiring
+> > aligned allocation again.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> ---
-> V4
-> Updated doc/CHANGES per suggestions by Eric and Dave.
-> Added SOB by Eric
+> Ooops.  The fix looks good,
 > 
-
-<snip>
-
->  xfsprogs-3.2.0-alpha1 (26 September 2013)
-> -	- Alpha release for the purpose of testing the CRC feature during the
-> -	  v3.12 kernel -rc series.
-> +	- Alpha release for the purpose of testing the CRC feature in
-> +	  kernels 3.10 and newer.
-> +	- Remove all vestiges of old, unsupported version 1 directory code.
-> +	- Add a “readdir” command to xfs_io, thanks to Brian Foster.
-                ^^^       ^^
-That got a bit weird, probably my fault.
-
-Thanks,
--Eric
-
-> +	- Fix potential segfault in xfs_repair when creating lost+found.
-> +	- Zero out unused parts of on-disk superblocks during repair, to
-> +	  avoid metadata verifier failures at runtime.
-> +	- Add directory entry type support to mkfs.xfs and xfs_db.
-> +	- Add the icreate transaction to xfs_logprint, and fix continuation
-> +	  transactions.
-> +	- Add the lseek SEEK_DATA/SEEK_HOLE support into xfs_io.
-> +	- Print all AGI unlinked buckets in xfs_logprint.
-> +	- Fix mkfs.xfs ENOSPC with protofile which creates a very large
-> +	  directory.
-> +	- Fix several Coverity-found defects, thanks to Li Zhong.
-> +	- Do all file reads in xfs_fsr using O_DIRECT.
-> +	- Sync up libxfs with kernel code.
-> +	- Add support for concurrent group and project quota usage on CRC
-> +	  enabled filesystems.
-> +	- Ensure mkfs creates log sizes that are always large enough for
-> +	  the configured fileystem geometry.
->  
->  xfsprogs-3.1.11 (8 May 2013)
->  	- Support for relative paths in xfs_quota thanks to Satoru Takeuchi.
-> @@ -35,8 +80,8 @@ xfsprogs-3.1.11 (8 May 2013)
->  	- Remove unconditional ASSERT(0) in xfs_repair.
->  	- Reduce bb_numrecs in bno/cnt btrees when log consumes all agf space.
->  	- Add depraction message for xfs_check.
-> -	- xfs_quota allow user or group names beginning with digits reported by
-> -	  James Carter.
-> +	- xfs_quota allow user or group names beginning with digits reported
-> +	  by James Carter.
->  	- Fix manpages and usage() spelling, errors and omissions.
->  	- Validate the extent count is at least within the positive
->  	  range of a signed 32 bit integer before using it.
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
 > 
+> Might be worth cooking up a test for this, scsi_debug can expose
+> geometry, and we already have it wired to to large sector size
+> testing in xfstests.
 
+We don't need to screw around with the sector size - that is
+irrelevant to the problem, and we have an allocation alignment
+test that is supposed to catch these issues: generic/223.
 
---===============7818644359970552058==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+As I said, I have seen occasional failures of that test (once a
+month, on average) as a result of this bug. It was simply not often
+enough - running in a hard loop didn't increase the frequency of
+failures - to be able debug it or to reach my "there's a regression
+I need to look at" threshold. Perhaps we need to revisit that test
+and see if we can make it more likely to trigger failures...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7818644359970552058==--
