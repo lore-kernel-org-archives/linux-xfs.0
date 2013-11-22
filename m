@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7D9277F52
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 03:18:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E0F87AC008
-	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 01:18:33 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id H44vz9etj7r55eTw (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 22 Nov 2013 01:18:28 -0800 (PST)
-Date: Fri, 22 Nov 2013 01:18:27 -0800
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C31747F52
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 03:23:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 980D5304053
+	for <xfs@oss.sgi.com>; Fri, 22 Nov 2013 01:23:28 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id ANjYpR1HQ5eLVzPn (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Nov 2013 01:23:27 -0800 (PST)
+Date: Fri, 22 Nov 2013 01:23:25 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: make quota metadata truncation behavior consistent
-	to user space
-Message-ID: <20131122091827.GC32568@infradead.org>
-References: <528EF3D0.70102@oracle.com>
+Subject: Re: Filesystem writes on RAID5 too slow
+Message-ID: <20131122092325.GA8512@infradead.org>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
+	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
+	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
+	<20131121092606.GU11434@dastard>
+	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
+	<CACtJ3HZdF+y9-f6v8Zo6D=uFVPsqZZbQy2vVeXmfTA9a7vwAwg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <528EF3D0.70102@oracle.com>
+In-Reply-To: <CACtJ3HZdF+y9-f6v8Zo6D=uFVPsqZZbQy2vVeXmfTA9a7vwAwg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +35,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Martin Boutin <martboutin@gmail.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Nov 22, 2013 at 02:04:00PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> In xfs_qm_scall_trunc_qfiles(), we ignore the error if failed to remove
-> the users quota metadata and proceed to remove groups and projects if
-> they are being there.  However, in user space, the remove operation will
-> break and return if failed to remove any kind of quota.
-> Also for v5 super block, we can enabled both group and project quota at
-> the same time, in this case the current error handling will cover the
-> group error with projects but they might failed due to different reasons.
-> 
-> It seems we'd better the error handling consistent to the user space and
-> don't trying to remove another kind of quota metadata if the previous
-> operation is failed.
+On Thu, Nov 21, 2013 at 11:35:14AM -0500, Martin Boutin wrote:
+> Sorry for the spam but I just noticed that the XFS stripe unit does not
+> match the strip unit of the underlying RAID device. I tried to do a
+> mkfs.xfs with a stripe of 512KiB but mkfs.xfs complains that the
+> maximum stripe width is 256KiB.
 
-Looks good.  Just curious, did you manage to reproduce an error
-truncating the quota files?
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yeah.  Btw, I've generally seen best results using 32k stripes, but that
+should only matter for log intensive loads and not simple writes.
+Similarly your 32mb log seems awfully small, but not really relevant for
+this workload.
 
 _______________________________________________
 xfs mailing list
