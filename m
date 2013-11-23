@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 27D7A7F63
-	for <xfs@oss.sgi.com>; Sat, 23 Nov 2013 09:15:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E1378304051
-	for <xfs@oss.sgi.com>; Sat, 23 Nov 2013 07:15:38 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id hmEYsUWGSalyWtoj (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DDE047F53
+	for <xfs@oss.sgi.com>; Sat, 23 Nov 2013 09:15:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CDD978F8039
+	for <xfs@oss.sgi.com>; Sat, 23 Nov 2013 07:15:35 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 7bJIgTA6qRX6BlFu (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Sat, 23 Nov 2013 07:15:34 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1VkEvm-0001Rl-HS
+	Hat Linux)) id 1VkEvm-0001PQ-1k
 	for xfs@oss.sgi.com; Sat, 23 Nov 2013 15:15:34 +0000
-Message-Id: <20131123151534.470066699@bombadil.infradead.org>
-Date: Sat, 23 Nov 2013 07:11:58 -0800
+Message-Id: <20131123151533.956509245@bombadil.infradead.org>
+Date: Sat, 23 Nov 2013 07:11:54 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 7/7] xfs: remove opencoded versions of xfs_bmap_cancel
+Subject: [PATCH 3/7] xfs: remove the dquot log format from the dquot log item
 References: <20131123151151.716201348@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0007-xfs-remove-opencoded-versions-of-xfs_bmap_cancel.patch
+	filename=0003-xfs-remove-the-dquot-log-format-from-the-dquot-log-i.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,126 +34,76 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-And fold the now otherwise unused xfs_bmap_del_free into xfs_bmap_cancel.
+No need to keep the dquot log format around all the time, we can easily
+generate it at iop_format time.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap.c        |   33 +++++++++------------------------
- fs/xfs/xfs_bmap_util.c   |    6 +-----
- fs/xfs/xfs_bmap_util.h   |    3 ---
- fs/xfs/xfs_log_recover.c |    8 ++------
- 4 files changed, 12 insertions(+), 38 deletions(-)
+ fs/xfs/xfs_dquot_item.c |   26 ++++++++++----------------
+ fs/xfs/xfs_dquot_item.h |    1 -
+ 2 files changed, 10 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 66bf92a..3a5383f 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -646,39 +646,24 @@ xfs_bmap_add_free(
- }
- 
- /*
-- * Remove the entry "free" from the free item list.  Prev points to the
-- * previous entry, unless "free" is the head of the list.
-- */
--void
--xfs_bmap_del_free(
--	xfs_bmap_free_t		*flist,	/* free item list header */
--	xfs_bmap_free_item_t	*prev,	/* previous item on list, if any */
--	xfs_bmap_free_item_t	*free)	/* list item to be freed */
--{
--	if (prev)
--		prev->xbfi_next = free->xbfi_next;
--	else
--		flist->xbf_first = free->xbfi_next;
--	flist->xbf_count--;
--	kmem_zone_free(xfs_bmap_free_item_zone, free);
--}
--
--/*
-  * Free up any items left in the list.
-  */
- void
- xfs_bmap_cancel(
--	xfs_bmap_free_t		*flist)	/* list of bmap_free_items */
-+	struct xfs_bmap_free	*flist)
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 5f446a7..2df55fe 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -60,15 +60,21 @@ xfs_qm_dquot_logitem_format(
+ 	struct xfs_log_vec	*lv)
  {
--	xfs_bmap_free_item_t	*free;	/* free list item */
--	xfs_bmap_free_item_t	*next;
-+	struct xfs_bmap_free_item *free;
+ 	struct xfs_dq_logitem	*qlip = DQUOT_ITEM(lip);
++	struct xfs_dq_logformat	*qlf;
+ 	struct xfs_log_iovec	*vec;
  
- 	if (flist->xbf_count == 0)
- 		return;
-+
- 	ASSERT(flist->xbf_first != NULL);
--	for (free = flist->xbf_first; free; free = next) {
--		next = free->xbfi_next;
--		xfs_bmap_del_free(flist, NULL, free);
-+	while ((free = flist->xbf_first)) {
-+		flist->xbf_first = free->xbfi_next;
-+		flist->xbf_count--;
-+
-+		kmem_zone_free(xfs_bmap_free_item_zone, free);
-+
- 	}
- 	ASSERT(flist->xbf_count == 0);
- }
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index d90ce2c..268dbcf 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -139,11 +139,7 @@ xfs_bmap_finish(
- 	}
- 
- 	efd = xfs_trans_log_efd(ntp, efi, flist);
+-	qlip->qli_format.qlf_size = 2;
 -
--	for (free = flist->xbf_first; free != NULL; free = next) {
--		next = free->xbfi_next;
--		xfs_bmap_del_free(flist, NULL, free);
--	}
-+	xfs_bmap_cancel(flist);
- 	return 0;
+ 	vec = xlog_first_iovec(lv);
+-	memcpy(vec->i_addr, &qlip->qli_format, sizeof(xfs_dq_logformat_t));
+-	vec->i_len = sizeof(xfs_dq_logformat_t);
++	vec->i_len = sizeof(struct xfs_dq_logformat);
+ 	vec->i_type = XLOG_REG_TYPE_QFORMAT;
+ 
++	qlf = vec->i_addr;
++	qlf->qlf_type = XFS_LI_DQUOT;
++	qlf->qlf_size = 2;
++	qlf->qlf_id = be32_to_cpu(qlip->qli_dquot->q_core.d_id);
++	qlf->qlf_blkno = qlip->qli_dquot->q_blkno;
++	qlf->qlf_len = 1;
++	qlf->qlf_boffset = qlip->qli_dquot->q_bufoffset;
++
+ 	vec = xlog_next_iovec(lv, vec);
+ 	memcpy(vec->i_addr, &qlip->qli_dquot->q_core, sizeof(xfs_disk_dquot_t));
+ 	vec->i_len = sizeof(xfs_disk_dquot_t);
+@@ -261,18 +267,6 @@ xfs_qm_dquot_logitem_init(
+ 	xfs_log_item_init(dqp->q_mount, &lp->qli_item, XFS_LI_DQUOT,
+ 					&xfs_dquot_item_ops);
+ 	lp->qli_dquot = dqp;
+-	lp->qli_format.qlf_type = XFS_LI_DQUOT;
+-	lp->qli_format.qlf_id = be32_to_cpu(dqp->q_core.d_id);
+-	lp->qli_format.qlf_blkno = dqp->q_blkno;
+-	lp->qli_format.qlf_len = 1;
+-	/*
+-	 * This is just the offset of this dquot within its buffer
+-	 * (which is currently 1 FSB and probably won't change).
+-	 * Hence 32 bits for this offset should be just fine.
+-	 * Alternatively, we can store (bufoffset / sizeof(xfs_dqblk_t))
+-	 * here, and recompute it at recovery time.
+-	 */
+-	lp->qli_format.qlf_boffset = (__uint32_t)dqp->q_bufoffset;
  }
  
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 900747b..54f81f8 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -80,9 +80,6 @@ int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
- 		xfs_bmap_format_t formatter, void *arg);
+ /*------------------  QUOTAOFF LOG ITEMS  -------------------*/
+diff --git a/fs/xfs/xfs_dquot_item.h b/fs/xfs/xfs_dquot_item.h
+index 5acae2a..925cbe9 100644
+--- a/fs/xfs/xfs_dquot_item.h
++++ b/fs/xfs/xfs_dquot_item.h
+@@ -27,7 +27,6 @@ typedef struct xfs_dq_logitem {
+ 	xfs_log_item_t		 qli_item;	   /* common portion */
+ 	struct xfs_dquot	*qli_dquot;	   /* dquot ptr */
+ 	xfs_lsn_t		 qli_flush_lsn;	   /* lsn at last flush */
+-	xfs_dq_logformat_t	 qli_format;	   /* logged structure */
+ } xfs_dq_logitem_t;
  
- /* functions in xfs_bmap.c that are only needed by xfs_bmap_util.c */
--void	xfs_bmap_del_free(struct xfs_bmap_free *flist,
--			  struct xfs_bmap_free_item *prev,
--			  struct xfs_bmap_free_item *free);
- int	xfs_bmap_extsize_align(struct xfs_mount *mp, struct xfs_bmbt_irec *gotp,
- 			       struct xfs_bmbt_irec *prevp, xfs_extlen_t extsz,
- 			       int rt, int eof, int delay, int convert,
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b679a0b..e4b2de0 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3617,7 +3617,7 @@ xlog_recover_process_efi(
- {
- 	struct xfs_trans	*tp;
- 	struct xfs_efd_log_item *efdp;
--	struct xfs_bmap_free_item *free, *next;
-+	struct xfs_bmap_free_item *free;
- 	xfs_fsblock_t		startblock_fsb;
- 	int			error = 0;
- 
-@@ -3659,11 +3659,7 @@ xlog_recover_process_efi(
- 	}
- 
- 	efdp = xfs_trans_log_efd(tp, efip, &efip->efi_flist);
--
--	for (free = efip->efi_flist.xbf_first; free != NULL; free = next) {
--		next = free->xbfi_next;
--		xfs_bmap_del_free(&efip->efi_flist, NULL, free);
--	}
-+	xfs_bmap_cancel(&efip->efi_flist);
- 
- 	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
- 	error = xfs_trans_commit(tp, 0);
+ typedef struct xfs_qoff_logitem {
 -- 
 1.7.10.4
 
