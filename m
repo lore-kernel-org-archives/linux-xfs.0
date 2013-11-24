@@ -1,22 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E62D77F54
-	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 09:28:05 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1821B7F54
+	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 09:37:00 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C6E84304059
-	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 07:28:02 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id hFPg0LR6hczG5ahS (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DF33F8F804C
+	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 07:36:56 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 7rgPBKjTj1xi6Nkm (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 24 Nov 2013 07:28:01 -0800 (PST)
-Date: Sun, 24 Nov 2013 15:27:58 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131124152758.GL10323@ZenIV.linux.org.uk>
-References: <20131124140413.GA19271@infradead.org>
+	Sun, 24 Nov 2013 07:36:55 -0800 (PST)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rAOFas2j022283
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 15:36:54 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAOFarpr010108
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 15:36:54 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAOFar53007428 for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 15:36:53 GMT
+Message-ID: <52921D12.7040104@oracle.com>
+Date: Sun, 24 Nov 2013 23:36:50 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131124140413.GA19271@infradead.org>
+Subject: [PATCH] xfs: return ENOSPC when trying to set more ACLs than
+	XFS_ACL_MAX_ENTRIES
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +40,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sun, Nov 24, 2013 at 06:04:13AM -0800, Christoph Hellwig wrote:
-> Seems I can reproduce this by doing a full xfstests run and then
-> shutting down the VM.  Doesn't seem to happen with the XFS tree
-> which is still based on 3.12-rc1.
+From: Jie Liu <jeff.liu@oracle.com>
 
-may_lookup() with LOOKUP_RCU in nd->flags and NULL nd->inode, by
-the look of it...  Interesting.
+We currently return EINVAL when trying to set more ACL entries than
+XFS_ACL_MAX_ENTRIES(), but it would be a bit more meaningful to return
+ENOSPC in this situation, because the later is used to indicate there
+is no more space to store new ACLs IMHO.
 
-AFAICS, path_init() initializes nd->inode on all success exits.
-As for the places where we reassign nd->inode, we have the following:
-fs/namei.c:681: nd->inode = nd->path.dentry->d_inode;
-	nd_jump_link(), we would've already left RCU mode
-fs/namei.c:856:         nd->inode = nd->path.dentry->d_inode;
-	follow_link() - ditto.
-fs/namei.c:1160:        nd->inode = nd->path.dentry->d_inode;
-	follow_dotdot_rcu()
-fs/namei.c:1257:        nd->inode = nd->path.dentry->d_inode;
-	follow_dotdot() - not in RCU mode
-fs/namei.c:1547:        nd->inode = inode;
-	walk_component() - inode can't be NULL here, variable has
-been explicitly compared with NULL a few lines prior
-fs/namei.c:1825:                nd->inode = inode;
-	path_init() with LOOKUP_ROOT; not from stat(2) and it would've
-already oopsed with NULL inode anyway.
-fs/namei.c:1892:        nd->inode = nd->path.dentry->d_inode;
-	path_init()
-fs/namei.c:3006:        nd->inode = inode;
-	do_last(), not from stat(2) and no may_lookup() done past that
-point anyway.
-fs/namei.c:3077:        nd->inode = dir->d_inode;
-	do_last(), not from stat(2)
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ fs/xfs/xfs_acl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-which seems to leave two candidates - follow_dotdot_rcu() and path_init(),
-both setting nd->inode to nd->path.dentry->d_inode...
-
-Could you try to reproduce it with something like
-	if (read_seqretry(&mount_lock, nd->m_seq))
-		goto failed;
-slapped before the success exit in follow_dotdot_rcu(), just to see if
-we are hitting some races with umount here?
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 370eb3e..4e54a4d 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -397,7 +397,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
+ 	if (error)
+ 		goto out_release;
+ 
+-	error = -EINVAL;
++	error = -ENOSPC;
+ 	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
+ 		goto out_release;
+ 
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
