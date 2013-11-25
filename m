@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C3C617F3F
-	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 22:57:26 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6F82B7F3F
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 02:51:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A4159304051
-	for <xfs@oss.sgi.com>; Sun, 24 Nov 2013 20:57:23 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id uWDz1JvTnDrLdV5X (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 24 Nov 2013 20:57:22 -0800 (PST)
-Message-ID: <5292D8AB.5080003@oracle.com>
-Date: Mon, 25 Nov 2013 12:57:15 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4DA358F8039
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 00:51:03 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	kUoJ2EpIx8VvmoKP for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 00:51:01 -0800 (PST)
+Date: Mon, 25 Nov 2013 19:50:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/7] xfs: defer EFI and EFD log formatting until
+	iop_format time
+Message-ID: <20131125085049.GB8803@dastard>
+References: <20131123151151.716201348@bombadil.infradead.org>
+	<20131123151534.204073240@bombadil.infradead.org>
+	<20131124091830.GA6253@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: return ENOSPC when trying to set more ACLs than
-	XFS_ACL_MAX_ENTRIES
-References: <52921D12.7040104@oracle.com> <5292C557.9020008@sandeen.net>
-In-Reply-To: <5292C557.9020008@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20131124091830.GA6253@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,67 +32,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
+On Sun, Nov 24, 2013 at 01:18:30AM -0800, Christoph Hellwig wrote:
+> On Sat, Nov 23, 2013 at 07:11:56AM -0800, Christoph Hellwig wrote:
+> > No need to allocate large chunks of memory to format each extent into
+> > an array when logging the EFI or EFD items.  Instead just point to the
+> > bmap free list and only generate the log format at iop_format time.
+> > 
+> > Also get rid of the now almost empty xfs_trans_extfree.c by merging it
+> > into xfs_extfree_item.c.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Turns out this version can fairly easily cause use after frees, so it'll
+> need a bit of an overhaul to get the lifetime rules right.
 
-On 11/25 2013 11:34 AM, Eric Sandeen wrote:
-> On 11/24/13, 9:36 AM, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> We currently return EINVAL when trying to set more ACL entries than
->> XFS_ACL_MAX_ENTRIES(), but it would be a bit more meaningful to return
->> ENOSPC in this situation, because the later is used to indicate there
->> is no more space to store new ACLs IMHO.
-> 
-> I'm not quite convinced that it's better; the user will get an
-> error string of "no space left on device" which is misleading too,
-I admit that both looks misleading...
-> and I'd argue that it's no better than "invalid argument."
-> 
-> To me, I think it's not worth changing, but others may disagree.
-> 
-> (I guess looking at ext4, it uses ENOSPC for some similar constraints,
-> so maybe three is precedent for this)
-Btrfs also uses ENOSPC, but JFS would return something like "Argument list too long"
-in this case.
+Yeah, you can't use the freelist structure like that - it's a
+linked, which you copy the freelist structure when logging the
+EFI/EFD, and then free the items on the linked list. Then when
+formatting the structure, you walk the list attached to the copy of
+the freelist structure, which has alreayd been freed.
 
-Thanks,
--Jeff
-> 
-> The setxattr(2) man page says:
-> 
->> If there is insufficient space remaining to store the extended
->> attribute, errno is set to either ENOSPC
-> 
-> but it doesn't say space in _what_ ...
-> 
-> -Eric
-> 
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->> ---
->>  fs/xfs/xfs_acl.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
->> index 370eb3e..4e54a4d 100644
->> --- a/fs/xfs/xfs_acl.c
->> +++ b/fs/xfs/xfs_acl.c
->> @@ -397,7 +397,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
->>  	if (error)
->>  		goto out_release;
->>  
->> -	error = -EINVAL;
->> +	error = -ENOSPC;
->>  	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
->>  		goto out_release;
->>  
->>
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Basically, we've got a bunch of nasty life cycle issues around the
+EFI/EFD that need to be fixed. Firstly, the EFD code assumes that
+the EFI always outlives it, but we don't take a reference when we
+connect the EFD to the EFI - the EFI is created with the reference
+for the EFD already added to it. Then in abort cases we simply free
+the EFI, even though there may be an EFD that still references it...
+
+So I think that this needs to be fixed up before you can even
+consider sharing something like a reference counted freelist
+structure between the EFI/EFD structures....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
