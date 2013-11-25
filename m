@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 266C77F57
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 15:40:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 141DD304039
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:40:28 -0800 (PST)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id bl587fyMJCy3Ourx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Nov 2013 13:40:26 -0800 (PST)
-Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id 1985F7C06A2
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 14:40:26 -0700 (MST)
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH 1/2] xfstests: add generic/321 to test fsync() on directories
-	V2
-Date: Mon, 25 Nov 2013 16:40:21 -0500
-Message-ID: <1385415622-9303-1-git-send-email-jbacik@fusionio.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A66BA7F62
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 15:46:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 70FB88F8052
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:46:20 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	qZWYnefwtn01EVkq for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 13:46:18 -0800 (PST)
+Date: Tue, 26 Nov 2013 08:46:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 4/4] xfs: allow linkat() on O_TMPFILE files
+Message-ID: <20131125214611.GI8803@dastard>
+References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
+	<1385379154-3802-5-git-send-email-zwu.kernel@gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1385379154-3802-5-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,394 +30,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-Btrfs had some issues with fsync()'ing directories and fsync()'ing after
-renames.  These three new tests cover the 3 different issues we were seeing.
-This breaks out the dmflakey stuff into a common helper to be shared between
-generic/311 and generic/321. Thanks,
+On Mon, Nov 25, 2013 at 07:32:34PM +0800, Zhi Yong Wu wrote:
+> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> 
+> Enable O_TMPFILE support in linkat().
+> 
+> http://oss.sgi.com/archives/xfs/2013-08/msg00341.html
+> 
+> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> ---
+>  fs/xfs/xfs_inode.c      |   23 +++++++++++++++++++++--
+>  fs/xfs/xfs_trans_resv.c |   13 +++++++++++++
+>  fs/xfs/xfs_trans_resv.h |    2 ++
+>  3 files changed, 36 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index e1832de..7ab029b 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -62,6 +62,8 @@ kmem_zone_t *xfs_inode_zone;
+>  
+>  STATIC int xfs_iflush_int(xfs_inode_t *, xfs_buf_t *);
+>  
+> +STATIC int xfs_iunlink_remove(xfs_trans_t *, xfs_inode_t *);
+> +
+>  /*
+>   * helper function to extract extent size hint from inode
+>   */
+> @@ -1119,7 +1121,9 @@ xfs_bumplink(
+>  {
+>  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+>  
+> -	ASSERT(ip->i_d.di_nlink > 0);
+> +	if ((VFS_I(ip)->i_nlink == 0) &&
+> +	    !(VFS_I(ip)->i_state & I_LINKABLE))
+> +		ASSERT(ip->i_d.di_nlink > 0);
+>  	ip->i_d.di_nlink++;
+>  	inc_nlink(VFS_I(ip));
+>  	if ((ip->i_d.di_version == 1) &&
+> @@ -1473,6 +1477,7 @@ xfs_link(
+>  {
+>  	xfs_mount_t		*mp = tdp->i_mount;
+>  	xfs_trans_t		*tp;
+> +	struct xfs_trans_res	*tres;
+>  	int			error;
+>  	xfs_bmap_free_t         free_list;
+>  	xfs_fsblock_t           first_block;
+> @@ -1498,7 +1503,14 @@ xfs_link(
+>  	tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
+>  	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+>  	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+> -	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, resblks, 0);
+> +
+> +	if ((VFS_I(sip)->i_nlink == 0) &&
+> +	    (VFS_I(sip)->i_state & I_LINKABLE))
+> +		tres = &M_RES(mp)->tr_link_tmpfile;
+> +	else
+> +		tres = &M_RES(mp)->tr_link;
+> +
+> +	error = xfs_trans_reserve(tp, tres, resblks, 0);
 
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
----
-V1->V2: actually add common/dmflakey to the patch
+Uggh. For the small amount of extra space needed for the unlinked
+list reservation, I would simply add it to the tr_link reservation
+and be done with it. That gets rid of the need for the noise here.
 
- common/dmflakey       |  74 ++++++++++++++++++++++++++
- tests/generic/311     |  56 +++-----------------
- tests/generic/321     | 140 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/321.out |   9 ++++
- tests/generic/group   |   1 +
- 5 files changed, 231 insertions(+), 49 deletions(-)
- create mode 100644 common/dmflakey
- create mode 100644 tests/generic/321
- create mode 100644 tests/generic/321.out
+>  	if (error == ENOSPC) {
+>  		resblks = 0;
+>  		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, 0, 0);
+> @@ -1530,6 +1542,13 @@ xfs_link(
+>  
+>  	xfs_bmap_init(&free_list, &first_block);
+>  
+> +	if ((VFS_I(sip)->i_nlink == 0) &&
+> +	    (VFS_I(sip)->i_state & I_LINKABLE)) {
+> +		error = xfs_iunlink_remove(tp, sip);
+> +		if (error)
+> +			goto abort_return;
+> +	}
+> +
+>  	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+>  					&first_block, &free_list, resblks);
+>  	if (error)
+> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+> index f1eebe4..7c1234e 100644
+> --- a/fs/xfs/xfs_trans_resv.c
+> +++ b/fs/xfs/xfs_trans_resv.c
+> @@ -228,6 +228,15 @@ xfs_calc_link_reservation(
+>  				      XFS_FSB_TO_B(mp, 1))));
+>  }
+>  
+> +STATIC uint
+> +xfs_calc_link_tmpfile_reservation(
+> +	struct xfs_mount        *mp)
+> +{
+> +	return xfs_calc_link_reservation(mp) +
+> +		xfs_calc_buf_res(2, XFS_FSB_TO_B(mp, 1)) +
+> +		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize);
+> +}
 
-diff --git a/common/dmflakey b/common/dmflakey
-new file mode 100644
-index 0000000..bc984bd
---- /dev/null
-+++ b/common/dmflakey
-@@ -0,0 +1,74 @@
-+##/bin/bash
-+#
-+# Copyright (c) 2013 Fusion IO, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#
-+# common functions for setting up and tearing down a dmflakey device
-+
-+FLAKEY_ALLOW_WRITES=0
-+FLAKEY_DROP_WRITES=1
-+
-+_init_flakey()
-+{
-+	local BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-+	FLAKEY_DEV=/dev/mapper/flakey-test
-+	FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 180 0"
-+	FLAKEY_TABLE_DROP="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
-+	$DMSETUP_PROG create flakey-test --table "$FLAKEY_TABLE" || \
-+		_fatal "failed to create flakey device"
-+}
-+
-+_mount_flakey()
-+{
-+	mount -t $FSTYP $MOUNT_OPTIONS $FLAKEY_DEV $SCRATCH_MNT
-+}
-+
-+_unmount_flakey()
-+{
-+	$UMOUNT_PROG $SCRATCH_MNT
-+}
-+
-+_cleanup_flakey()
-+{
-+	# If dmsetup load fails then we need to make sure to do resume here
-+	# otherwise the umount will hang
-+	$DMSETUP_PROG resume flakey-test > /dev/null 2>&1
-+	$UMOUNT_PROG $SCRATCH_MNT > /dev/null 2>&1
-+	$DMSETUP_PROG remove flakey-test > /dev/null 2>&1
-+}
-+
-+# _load_flakey_table <table> [lockfs]
-+#
-+# This defaults to --nolockfs, which doesn't freeze_fs() before loading the new
-+# table, so it simulates power failure.
-+_load_flakey_table()
-+{
-+
-+	table="$FLAKEY_TABLE"
-+	[ $1 -eq $FLAKEY_DROP_WRITES ] && table="$FLAKEY_TABLE_DROP"
-+
-+	suspend_opt="--nolockfs"
-+	[ $# -gt 1 ] && [ $2 -eq 1 ] && suspend_opt=""
-+
-+	$DMSETUP_PROG suspend $suspend_opt flakey-test
-+	[ $? -ne 0 ] && _fatal "failed to suspend flakey-test"
-+
-+	$DMSETUP_PROG load flakey-test --table "$table"
-+	[ $? -ne 0 ] && _fatal "failed to load table into flakey-test"
-+
-+	$DMSETUP_PROG resume flakey-test
-+	[ $? -ne 0 ] && _fatal  "failed to resumeflakey-test"
-+}
-diff --git a/tests/generic/311 b/tests/generic/311
-index 675d927..6802a96 100644
---- a/tests/generic/311
-+++ b/tests/generic/311
-@@ -41,17 +41,14 @@ status=1	# failure is the default!
- 
- _cleanup()
- {
--	# If dmsetup load fails then we need to make sure to do resume here
--	# otherwise the umount will hang
--	$DMSETUP_PROG resume flakey-test > /dev/null 2>&1
--	$UMOUNT_PROG $SCRATCH_MNT > /dev/null 2>&1
--	$DMSETUP_PROG remove flakey-test > /dev/null 2>&1
-+	_cleanup_flakey
- }
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/dmflakey
- 
- # real QA test starts here
- _supported_fs generic
-@@ -63,49 +60,12 @@ _require_dm_flakey
- [ -x $here/src/fsync-tester ] || _notrun "fsync-tester not build"
- 
- rm -f $seqres.full
--BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
--FLAKEY_DEV=/dev/mapper/flakey-test
- SEED=1
- testfile=$SCRATCH_MNT/$seq.fsync
--FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 180 0"
--FLAKEY_TABLE_DROP="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
--_TEST_OPTIONS=""
--
--_mount_flakey()
--{
--	mount -t $FSTYP $MOUNT_OPTIONS $FLAKEY_DEV $SCRATCH_MNT
--}
--
--_unmount_flakey()
--{
--	$UMOUNT_PROG $SCRATCH_MNT
--}
--
--_load_flakey_table()
--{
--	# _load_flakey_table <table>
--
--	table="$FLAKEY_TABLE"
--	[ $1 -eq 1 ] && table="$FLAKEY_TABLE_DROP"
--
--	suspend_opt=""
--	[ $nolockfs -eq 1 ] && suspend_opt="--nolockfs"
--
--	$DMSETUP_PROG suspend $suspend_opt flakey-test
--	[ $? -ne 0 ] && _fatal "failed to suspend flakey-test"
--
--	$DMSETUP_PROG load flakey-test --table "$table"
--	[ $? -ne 0 ] && _fatal "failed to load table into flakey-test"
--
--	$DMSETUP_PROG resume flakey-test
--	[ $? -ne 0 ] && _fatal  "failed to resumeflakey-test"
--}
- 
- _run_test()
- {
- 	# _run_test <testnum> <0 - buffered | 1 - O_DIRECT>
--	allow_writes=0
--	drop_writes=1
- 	test_num=$1
- 
- 	direct_opt=""
-@@ -115,11 +75,11 @@ _run_test()
- 	[ $? -ne 0 ] && _fatal "fsync tester exited abnormally"
- 
- 	_md5_checksum $testfile
--	_load_flakey_table $drop_writes
-+	_load_flakey_table $FLAKEY_DROP_WRITES $lockfs
- 	_unmount_flakey
- 
- 	#Ok mount so that any recovery that needs to happen is done
--	_load_flakey_table $allow_writes
-+	_load_flakey_table $FLAKEY_ALLOW_WRITES
- 	_mount_flakey
- 	_md5_checksum $testfile
- 
-@@ -134,23 +94,21 @@ _run_test()
- _scratch_mkfs >> $seqres.full 2>&1
- 
- # Create a basic flakey device that will never error out
--$DMSETUP_PROG create flakey-test --table "$FLAKEY_TABLE"
--[ $? -ne 0 ] && _fatal "failed to create flakey device"
--
-+_init_flakey
- _mount_flakey
- 
- buffered=0
- direct=1
- 
- for i in $(seq 1 20); do
--	nolockfs=0
-+	lockfs=1
- 	SEED=$i
- 	echo "Running test $i buffered, normal suspend"
- 	_run_test $i $buffered
- 	echo "Running test $i direct, normal suspend"
- 	_run_test $i $direct
- 
--	nolockfs=1
-+	lockfs=0
- 	echo "Running test $i buffered, nolockfs"
- 	_run_test $i $buffered
- 	echo "Running test $i direct, nolockfs"
-diff --git a/tests/generic/321 b/tests/generic/321
-new file mode 100644
-index 0000000..1d17147
---- /dev/null
-+++ b/tests/generic/321
-@@ -0,0 +1,140 @@
-+#! /bin/bash
-+# FS QA Test No. 321
-+#
-+# Runs various dir fsync tests to cover fsync'ing directory corner cases.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Fusion IO. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+	_cleanup_flakey
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmflakey
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_need_to_be_root
-+_require_scratch
-+_require_dm_flakey
-+
-+rm -f $seqres.full
-+
-+_clean_working_dir()
-+{
-+	_mount_flakey
-+	rm -rf $SCRATCH_MNT/*
-+	_unmount_flakey
-+}
-+
-+# Btrfs wasn't making sure the directory survived fsync
-+_directory_test()
-+{
-+	echo "fsync new directory"
-+	_mount_flakey
-+	mkdir $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
-+	_load_flakey_table $FLAKEY_DROP_WRITES
-+	_unmount_flakey
-+
-+	_load_flakey_table $FLAKEY_ALLOW_WRITES
-+	_mount_flakey
-+	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
-+	_unmount_flakey
-+	_check_scratch_fs $FLAKEY_DEV
-+	[ $? -ne 0 ] && _fatal "fsck failed"
-+}
-+
-+# Btrfs was losing a rename into a new directory
-+_rename_test()
-+{
-+	echo "rename fsync test"
-+	_mount_flakey
-+	touch $SCRATCH_MNT/foo
-+	mkdir $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foo
-+	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar/foo
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar/foo
-+	_load_flakey_table $FLAKEY_DROP_WRITES
-+	_unmount_flakey
-+
-+	_load_flakey_table $FLAKEY_ALLOW_WRITES
-+	_mount_flakey
-+	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
-+	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
-+	_unmount_flakey
-+	_check_scratch_fs $FLAKEY_DEV
-+	[ $? -ne 0 ] && _fatal "fsck failed"
-+}
-+
-+# Btrfs was failing to replay a log when we had a inode with a smaller inode
-+# number that is renamed into a directory with a higher inode number
-+_replay_rename_test()
-+{
-+	echo "replay rename fsync test"
-+	_mount_flakey
-+	touch $SCRATCH_MNT/foo
-+	mkdir $SCRATCH_MNT/bar
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foo
-+	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar/foo
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
-+
-+	# This is to force btrfs to relog the entire inode including the ref so
-+	# we are sure to try and replay the ref along with the dir_index item
-+	setfattr -n user.foo -v blah $SCRATCH_MNT/bar/foo >> $seqres.full 2>&1
-+
-+	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar/foo
-+	_load_flakey_table $FLAKEY_DROP_WRITES
-+	_unmount_flakey
-+
-+	_load_flakey_table $FLAKEY_ALLOW_WRITES
-+	_mount_flakey
-+	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
-+	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
-+	_unmount_flakey
-+	_check_scratch_fs $FLAKEY_DEV
-+	[ $? -ne 0 ] && _fatal "fsck failed"
-+}
-+
-+_scratch_mkfs >> $seqres.full 2>&1
-+
-+# Create a basic flakey device that will never error out
-+_init_flakey
-+
-+_directory_test
-+_clean_working_dir
-+_rename_test
-+_clean_working_dir
-+_replay_rename_test
-+
-+status=0
-+exit
-diff --git a/tests/generic/321.out b/tests/generic/321.out
-new file mode 100644
-index 0000000..9ed630f
---- /dev/null
-+++ b/tests/generic/321.out
-@@ -0,0 +1,9 @@
-+QA output created by 321
-+fsync new directory
-+drwxr-xr-x bar
-+rename fsync test
-+drwxr-xr-x bar
-+-rw-r--r-- foo
-+replay rename fsync test
-+drwxr-xr-x bar
-+-rw-r--r-- foo
-diff --git a/tests/generic/group b/tests/generic/group
-index 40da6dc..25dddd8 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -123,3 +123,4 @@
- 318 acl attr auto quick
- 319 acl auto quick
- 320 auto rw
-+321 auto quick metadata log
+As per above, fold this into xfs_calc_link_reservation() by adding a:
+
+
+		+ xfs_calc_iunlink_remove_resv(mp);
+
+to the end of it.  Then you can also modify
+xfs_calc_ifree_reservation() to use the same
+xfs_calc_iunlink_remove_resv() function as well.
+
+[ And similarly, looking back on the previous patch
+xfs_calc_iunlink_add_resv can be used in xfs_calc_remove_reservation
+so all the unlinked list manipulations are covered by the same
+reservation calculations. ]
+
+Cheers,
+
+Dave.
 -- 
-1.8.3.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
