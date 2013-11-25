@@ -1,17 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 13EB17F3F
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 04:27:43 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B32EB7F3F
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 05:32:44 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F0658304048
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 02:27:42 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id 4pbpqupzULaBNLiM for
-	<xfs@oss.sgi.com>; Mon, 25 Nov 2013 02:27:41 -0800 (PST)
-From: Miao Xie <miaox@cn.fujitsu.com>
-Subject: [PATCH] xfstests,btrfs: add wrong compress type regression test
-Date: Mon, 25 Nov 2013 18:28:44 +0800
-Message-Id: <1385375324-11019-1-git-send-email-miaox@cn.fujitsu.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F43AAC002
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 03:32:44 -0800 (PST)
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151]) by
+	cuda.sgi.com with ESMTP id cSgW1nTCjffVrFr3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 03:32:43 -0800 (PST)
+Received: from /spool/local
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
+	Mon, 25 Nov 2013 04:32:42 -0700
+Received: from b03cxnp08026.gho.boulder.ibm.com
+	(b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id D748C19D8045
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 04:32:34 -0700 (MST)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by b03cxnp08026.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with
+	ESMTP id rAP9Upwa19792008
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 10:30:52 +0100
+Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP
+	id rAPBWdkk024499
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 04:32:40 -0700
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: [RFC PATCH 0/4] xfs: add O_TMPFILE support
+Date: Mon, 25 Nov 2013 19:32:30 +0800
+Message-Id: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,131 +43,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-A test to check if the oops will happen when the users write some
-data into the files whose compress flag is set but the compression
-of the fs is disabled.
+From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
----
- tests/btrfs/022     | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/022.out |  5 ++++
- tests/btrfs/group   |  1 +
- 3 files changed, 88 insertions(+)
- create mode 100755 tests/btrfs/022
- create mode 100644 tests/btrfs/022.out
+HI, folks
 
-diff --git a/tests/btrfs/022 b/tests/btrfs/022
-new file mode 100755
-index 0000000..0755fb5
---- /dev/null
-+++ b/tests/btrfs/022
-@@ -0,0 +1,82 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/008
-+#
-+# btrfs wrong compression type regression test, from a user report on
-+# linux-btrfs.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Fujitsu.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+
-+__workout()
-+{
-+	work_file="$SCRATCH_MNT/tmpfile"
-+
-+	touch $work_file || _fail "failed create test file"
-+	chattr =c $work_file || _fail "failed change attribute of test file"
-+	dd if=/dev/zero of=$work_file bs=1M count=1 oflag=sync &> /dev/null
-+	if [ $? -ne 0 ]; then
-+		_fail "failed write data into the test file"
-+	fi
-+}
-+
-+echo "*** test nodatacow"
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount "-o nodatacow"
-+__workout
-+_scratch_unmount
-+
-+echo "*** test compress=no"
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount "-o compress=no"
-+__workout
-+_scratch_unmount
-+
-+echo "*** test compress-force=no"
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount "-o compress-force=no"
-+__workout
-+_scratch_unmount
-+
-+echo "*** done"
-+status=0 ; exit
-diff --git a/tests/btrfs/022.out b/tests/btrfs/022.out
-new file mode 100644
-index 0000000..611fd67
---- /dev/null
-+++ b/tests/btrfs/022.out
-@@ -0,0 +1,5 @@
-+QA output created by 022
-+*** test nodatacow
-+*** test compress=no
-+*** test compress-force=no
-+*** done
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 410f8ed..c2adb2f 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -24,3 +24,4 @@
- 019 auto quick
- 020 auto quick
- 021 auto quick
-+022 auto quick
+The patchset is trying to add O_TMPFILE support to xfs. To make sure
+that it is going ahead in the right direction, although it is only one
+code draft, and hasn't strictly been tested, it is still post out ASAP.
+
+For more information, please refer to Dave Chinner's RFD links:
+  1.) http://oss.sgi.com/archives/xfs/2013-08/msg00339.html
+  2.) http://oss.sgi.com/archives/xfs/2013-08/msg00336.html
+  3.) http://oss.sgi.com/archives/xfs/2013-08/msg00341.html
+
+Any comments are appreciated, thanks.
+
+Zhi Yong Wu (4):
+  xfs: adjust the interface of xfs_qm_vop_dqalloc()
+  xfs: add xfs_create_tmpfile() for O_TMPFILE support
+  xfs: add a new method xfs_vn_tmpfile()
+  xfs: allow linkat() on O_TMPFILE files
+
+ fs/xfs/xfs_inode.c       |  154 +++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.h       |    2 +
+ fs/xfs/xfs_ioctl.c       |    2 +-
+ fs/xfs/xfs_iops.c        |   24 +++++++-
+ fs/xfs/xfs_qm.c          |   50 +++++++++------
+ fs/xfs/xfs_quota.h       |    6 +-
+ fs/xfs/xfs_shared.h      |    4 +-
+ fs/xfs/xfs_symlink.c     |    2 +-
+ fs/xfs/xfs_trans_resv.c  |   48 ++++++++++++++
+ fs/xfs/xfs_trans_resv.h  |    4 +
+ fs/xfs/xfs_trans_space.h |    2 +
+ 11 files changed, 270 insertions(+), 28 deletions(-)
+
 -- 
-1.8.3.1
+1.7.6.5
 
 _______________________________________________
 xfs mailing list
