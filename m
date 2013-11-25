@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 27A707F4E
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 15:01:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FA85AC001
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:01:27 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A08607F4E
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 15:36:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 709718F8050
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:36:22 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	n6fVIi3LCQc5ti6l for <xfs@oss.sgi.com>;
-	Mon, 25 Nov 2013 13:01:25 -0800 (PST)
-Date: Tue, 26 Nov 2013 08:00:55 +1100
+	rlVwlzi8IpmpZ6W8 for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 13:36:20 -0800 (PST)
+Date: Tue, 26 Nov 2013 08:36:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests,btrfs: add wrong compress type regression test
-Message-ID: <20131125210055.GG8803@dastard>
-References: <1385375324-11019-1-git-send-email-miaox@cn.fujitsu.com>
+Subject: Re: [RFC PATCH 2/4] xfs: add xfs_create_tmpfile() for O_TMPFILE
+	support
+Message-ID: <20131125213601.GH8803@dastard>
+References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
+	<1385379154-3802-3-git-send-email-zwu.kernel@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1385375324-11019-1-git-send-email-miaox@cn.fujitsu.com>
+In-Reply-To: <1385379154-3802-3-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,119 +31,206 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Miao Xie <miaox@cn.fujitsu.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On Mon, Nov 25, 2013 at 06:28:44PM +0800, Miao Xie wrote:
-> A test to check if the oops will happen when the users write some
-> data into the files whose compress flag is set but the compression
-> of the fs is disabled.
+On Mon, Nov 25, 2013 at 07:32:32PM +0800, Zhi Yong Wu wrote:
+> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 > 
-> Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
+> The function is used to create one O_TMPFILE file.
+> 
+> http://oss.sgi.com/archives/xfs/2013-08/msg00339.html
+> 
+> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 > ---
->  tests/btrfs/022     | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/022.out |  5 ++++
->  tests/btrfs/group   |  1 +
->  3 files changed, 88 insertions(+)
->  create mode 100755 tests/btrfs/022
->  create mode 100644 tests/btrfs/022.out
+>  fs/xfs/xfs_inode.c       |  129 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_inode.h       |    2 +
+>  fs/xfs/xfs_shared.h      |    4 +-
+>  fs/xfs/xfs_trans_resv.c  |   35 ++++++++++++
+>  fs/xfs/xfs_trans_resv.h  |    2 +
+>  fs/xfs/xfs_trans_space.h |    2 +
+>  6 files changed, 173 insertions(+), 1 deletions(-)
 > 
-> diff --git a/tests/btrfs/022 b/tests/btrfs/022
-> new file mode 100755
-> index 0000000..0755fb5
-> --- /dev/null
-> +++ b/tests/btrfs/022
-> @@ -0,0 +1,82 @@
-> +#! /bin/bash
-> +# FS QA Test No. btrfs/008
-> +#
-> +# btrfs wrong compression type regression test, from a user report on
-> +# linux-btrfs.
-
-That doesn't tell me what is being tested. The commit message above
-is what should be here.
-
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Fujitsu.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +
-> +status=1	# failure is the default!
-> +
-> +_cleanup()
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 1c23bdf..e1832de 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1337,6 +1337,135 @@ xfs_create(
+>  }
+>  
+>  int
+> +xfs_create_tmpfile(
+> +	xfs_mount_t		*mp,
+> +	umode_t			mode,
+> +	dev_t			rdev,
+> +	xfs_inode_t		**ipp)
 > +{
-> +	rm -f $tmp.*
+> +	struct xfs_inode	*ip = NULL;
+> +	struct xfs_trans	*tp = NULL;
+> +	int			error;
+> +	uint			cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+> +	struct xfs_dquot	*udqp = NULL;
+> +	struct xfs_dquot	*gdqp = NULL;
+> +	struct xfs_dquot	*pdqp = NULL;
+> +	struct xfs_trans_res	*tres;
+> +	uint			resblks;
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return XFS_ERROR(EIO);
+> +
+> +	/*
+> +	 * Make sure that we have allocated dquot(s) on disk.
+> +	 */
+> +	error = xfs_qm_vop_dqalloc(NULL, mp, xfs_kuid_to_uid(current_fsuid()),
+> +					xfs_kgid_to_gid(current_fsgid()),
+> +					XFS_PROJID_DEFAULT,
+> +					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+> +					&udqp, &gdqp, &pdqp);
+> +	if (error)
+> +		return error;
+
+Is XFS_PROJID_DEFAULT correct here? If we are getting a parent inode
+from ->tmpfile, then this should be handled the same way as for
+xfs_create.
+
+> +
+> +	resblks = XFS_CREATE_TMPFILE_SPACE_RES(mp);
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE_TMPFILE);
+> +
+> +	/*
+> +	 * Initially assume that the file does not exist and
+> +	 * reserve the resources for that case.  If that is not
+> +	 * the case we'll drop the one we have and get a more
+> +	 * appropriate transaction later.
+> +	 */
+> +	tres = &M_RES(mp)->tr_create_tmpfile;
+> +	error = xfs_trans_reserve(tp, tres, resblks, 0);
+> +	if (error == ENOSPC) {
+> +		/* flush outstanding delalloc blocks and retry */
+> +		xfs_flush_inodes(mp);
+> +		error = xfs_trans_reserve(tp, tres, resblks, 0);
+> +	}
+> +	if (error == ENOSPC) {
+> +		/* No space at all so try a "no-allocation" reservation */
+> +		resblks = 0;
+> +		error = xfs_trans_reserve(tp, tres, 0, 0);
+> +	}
+> +	if (error) {
+> +		cancel_flags = 0;
+> +		goto out_trans_cancel;
+> +	}
+
+I don't think this is necessary here. The ENOSPC flushing in
+xfs_create() is done to ensure we have space for directory block
+creation, not so much for inode allocation. Hence it doesn't make a
+lot of sense to have this here....
+
+> +	/*
+> +	 * Reserve disk quota and the inode.
+> +	 */
+> +	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+> +						pdqp, resblks, 1, 0);
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+> +	/*
+> +	 * A newly created regular or special file just has one directory
+> +	 * entry pointing to them, but a directory also the "." entry
+> +	 * pointing to itself.
+> +	 */
+> +	error = xfs_dir_ialloc(&tp, NULL, mode, 1, rdev,
+> +				XFS_PROJID_DEFAULT, resblks > 0,
+> +				&ip, NULL);
+> +	if (error) {
+> +		if (error == ENOSPC)
+> +			goto out_trans_cancel;
+> +		goto out_trans_abort;
+> +	}
+> +
+> +	/*
+> +	 * If this is a synchronous mount, make sure that the
+> +	 * create transaction goes to disk before returning to
+> +	 * the user.
+> +	 */
+> +	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
+> +		xfs_trans_set_sync(tp);
+
+I'm not sure that XFS_MOUNT_DIRSYNC shoul dbe checked here, as there
+is no directory operations to synchronise at all...
+
+> +STATIC uint
+> +xfs_calc_icreate_tmpfile_reservation(xfs_mount_t *mp)
+> +{
+> +	return XFS_DQUOT_LOGRES(mp) +
+> +		xfs_calc_icreate_resv_alloc(mp) +
+> +		xfs_calc_inode_res(mp, 1) +
+> +		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+> +		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize);
 > +}
 > +
-> +trap "_cleanup ; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +__workout()
+> +STATIC uint
+> +__xfs_calc_create_tmpfile_reservation(
+> +	struct xfs_mount	*mp)
 > +{
-> +	work_file="$SCRATCH_MNT/tmpfile"
+> +	return XFS_DQUOT_LOGRES(mp) +
+> +		xfs_calc_create_resv_alloc(mp) +
+> +		xfs_calc_inode_res(mp, 1) +
+> +		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+> +		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize);
+> +}
+
+What exactly is being modified here? All of the other reservations
+have comments explaining what each of the individual components of
+the reservation are. Yes, I can see that there's an inode, a
+filesystem block and 2 sectors being reserved, but what are they?
+
+It's also double counting the XFS_DQUOT_LOGRES(), as they are
+accounted for in xfs_calc_[i]create_reservation().
+
+Also, the directory create reservations are broken up into two
+components - the inode allocation and the common directory name
+creation component, and so the tmpfile reservation should probably
+be broken up the same way. i.e this:
+
 > +
-> +	touch $work_file || _fail "failed create test file"
-> +	chattr =c $work_file || _fail "failed change attribute of test file"
-> +	dd if=/dev/zero of=$work_file bs=1M count=1 oflag=sync &> /dev/null
-> +	if [ $? -ne 0 ]; then
-> +		_fail "failed write data into the test file"
-> +	fi
+> +STATIC uint
+> +xfs_calc_create_tmpfile_reservation(
+> +	struct xfs_mount        *mp)
+> +{
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		return xfs_calc_icreate_tmpfile_reservation(mp);
+> +	return __xfs_calc_create_tmpfile_reservation(mp);
+> +}
 
-There is no need to run _fail on all of these commands. If touch
-fails, it will emit an error that will end up in the output file,
-and the golden output match will fail and the diff will tell you
-exactly what the error was.
+Could simply be:
 
-Also, xfs_io is preferable to using dd, and filtering the output
-into the output file will give error detection and reporting, just
-like for touch and chattr....
-
-__workout()
+STATIC uint
+xfs_calc_create_tmpfile_reservation(
+	struct xfs_mount        *mp)
 {
-	work_file="$SCRATCH_MNT/tmpfile"
+	uint	res;
 
-	touch $work_file
-	chattr =c $work_file
-	$XFS_IO_PROG -f -c "pwrite 0 1M" -c sync $work_file | _filter_xfs_io
+	if (xfs_sb_version_hascrc(&mp->m_sb))
+		res = xfs_calc_icreate_resv_alloc(mp);
+	else
+		res = xfs_calc_create_resv_alloc(mp);
+	return res + xfs_calc_iunlink_add_resv(mp);
 }
 
-> +echo "*** test nodatacow"
-> +_scratch_mkfs > /dev/null 2>&1
-> +_scratch_mount "-o nodatacow"
-> +__workout
-> +_scratch_unmount
 
-_check_scratch_fs?
+> diff --git a/fs/xfs/xfs_trans_space.h b/fs/xfs/xfs_trans_space.h
+> index 7d2c920..16fba89 100644
+> --- a/fs/xfs/xfs_trans_space.h
+> +++ b/fs/xfs/xfs_trans_space.h
+> @@ -61,6 +61,8 @@
+>  	(XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK) + XFS_B_TO_FSB(mp, v))
+>  #define	XFS_CREATE_SPACE_RES(mp,nl)	\
+>  	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
+> +#define	XFS_CREATE_TMPFILE_SPACE_RES(mp)	\
+> +	XFS_IALLOC_SPACE_RES(mp)
+
+I wouldn't bother with this macro - just use XFS_IALLOC_SPACE_RES()
+directly.
 
 Cheers,
 
