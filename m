@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6B14E7F4E
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 10:07:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 58BF330407B
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 08:06:58 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 3aOzsbkuBWmeOz55 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Nov 2013 08:06:51 -0800 (PST)
-Date: Mon, 25 Nov 2013 08:06:48 -0800
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DC9E97F51
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 10:12:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BB4EB8F8078
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 08:12:18 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id QHrMiys2FuSBJFfd (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 08:12:17 -0800 (PST)
+Date: Mon, 25 Nov 2013 08:12:16 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131125160648.GA4933@infradead.org>
-References: <20131124140413.GA19271@infradead.org>
-	<20131124152758.GL10323@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 1/2] xfstests: add generic/321 to test fsync() on
+	directories V2
+Message-ID: <20131125161216.GA5085@infradead.org>
+References: <1384538464-7384-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131124152758.GL10323@ZenIV.linux.org.uk>
+In-Reply-To: <1384538464-7384-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,38 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Nov 24, 2013 at 03:27:58PM +0000, Al Viro wrote:
-> which seems to leave two candidates - follow_dotdot_rcu() and path_init(),
-> both setting nd->inode to nd->path.dentry->d_inode...
+On Fri, Nov 15, 2013 at 01:01:03PM -0500, Josef Bacik wrote:
+> Btrfs had some issues with fsync()'ing directories and fsync()'ing after
+> renames.  These three new tests cover the 3 different issues we were seeing.
+> This breaks out the dmflakey stuff into a common helper to be shared between
+> generic/311 and generic/321. Thanks,
 > 
-> Could you try to reproduce it with something like
-> 	if (read_seqretry(&mount_lock, nd->m_seq))
-> 		goto failed;
-> slapped before the success exit in follow_dotdot_rcu(), just to see if
-> we are hitting some races with umount here?
+> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 
-Still reproducable with the diff below.  Fixed by reverting the RCU'd
-vfsmounts.
-
-
-diff --git a/fs/namei.c b/fs/namei.c
-index 8f77a8c..856e4d5 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -1158,6 +1158,10 @@ static int follow_dotdot_rcu(struct nameidata *nd)
- 	}
- 	follow_mount_rcu(nd);
- 	nd->inode = nd->path.dentry->d_inode;
-+
-+	if (read_seqretry(&mount_lock, nd->m_seq))
-+		goto failed;
-+
- 	return 0;
- 
- failed:
+This doesn't seem to actually create the common/dmflakey file.
 
 _______________________________________________
 xfs mailing list
