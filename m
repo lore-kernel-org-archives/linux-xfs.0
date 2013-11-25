@@ -1,15 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7F4767F4E
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:35:58 -0600 (CST)
-Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F05A2AC001
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 11:35:54 -0800 (PST)
-Message-ID: <5293A699.20908@sgi.com>
-Date: Mon, 25 Nov 2013 13:35:53 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id BBEF97F4E
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 14:45:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56403AC002
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 12:45:56 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ArBsR8meigd7MG64 for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 12:45:54 -0800 (PST)
+Date: Tue, 26 Nov 2013 07:45:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/7] xfs: let iop_format write directly into the linear
+	buffer
+Message-ID: <20131125204525.GF8803@dastard>
+References: <20131123151151.716201348@bombadil.infradead.org>
+	<20131123151533.726941044@bombadil.infradead.org>
+	<20131125091527.GD8803@dastard>
+	<20131125133755.GB21992@infradead.org>
 MIME-Version: 1.0
-Subject: [ANNOUNCE] xfsprogs v3.2.0-alpha2
+Content-Disposition: inline
+In-Reply-To: <20131125133755.GB21992@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,53 +29,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Alpha version 3.2.0-alpha2 of xfsprogs has been released.
+On Mon, Nov 25, 2013 at 05:37:55AM -0800, Christoph Hellwig wrote:
+> On Mon, Nov 25, 2013 at 08:15:27PM +1100, Dave Chinner wrote:
+> > 	- xfs_buf_item_straddle() factoring
+> 
+> This could probably be split out.
+> 
+> > 	- removal of the special cases for no endian swapping around
+> > 	  xfs_inode_item_format_extents()
+> 
+> This can only be done after we have the new iop_format, or rather must
+> be because the old way doesn't work really well.  I'll have to see if
+> it can be a separate one, but it would have to be after the actual
+> iop_format change.
 
-The source code can be accessed via git using this URL:
+I think the current code could be changed first, just to remove the
+special cases (i.e. the ifdef NATIVE_HOST/else conditionals) by
+always calling xfs_inode_item_format_extents(). That's easy enough
+to do and then the iop_format change can simple change it to calling
+xfs_iextent_copy() directly...
 
-      git://oss.sgi.com/xfs/cmds/xfsprogs.git
+> > 	- a separate patch to introduce xlog_first/next/last_iovec(),
+> > 	  as I had to find those first to understand how the new
+> > 	  code worked
+> 
+> What's the point of a separate patch if we don't make use of it yet?
 
-A gzipped-tar archive of the source code is available here:
+The problem I had looking at the patch was that the actual
+implementation of critical infrastructure the entire patch relies on
+is the last thing in the patch.  I found myself constant scrolling
+through the patch to check what the infrastructure changes did and
+losing context because of this....
 
-      ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.2.0-alpha2.tar.gz
+> > 	- a new xlog_copy_iovec() function instead of open coding
+> > 	  the same 3 lines of code in 14 different places:
+> > 
+> > static inline void
+> > xlog_copy_iovec(
+> > 	struct xfs_log_iovec	*vec,
+> > 	void			*src,
+> > 	int			len,
+> > 	int			type)
+> > {
+> > 	memcpy(vec->i_addr, src_ptr, len);
+> > 	vec->i_len = len;
+> > 	vec->i_type = type;
+> > }
+> 
+> I went forth and back between having this a couple of times and found
+> having the helper more confusing than not.  If there's enough strong
+> opinion to have it I can add it back.
 
-The development tree previously hosted on kernel.org for this code has 
-been deprecated:
+I'd prefer to have a helper than have the same boilerplate code
+repeated 14 times purely from a maintenance POV. It's easy to find
+all the callers, it's easy to check that they do the right thing,
+and in future there's only one piece of code to modify for all the
+simple log item formatting operations....
 
-      git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Cheers,
 
-Below is a summary (from the doc/CHANGES file) of the changes:
-
-xfsprogs-3.2.0-alpha2 (25 November 2013)
-         - Alpha release for the purpose of testing the CRC feature in
-           kernels 3.10 and newer.
-         - Enable xfs_db write support and xfs_metadump support for CRC
-           enabled filesystems.
-         - Add directory entry filetype support for non-CRC filesystems.
-         - Remove experimental warnings for CRC filesystems.
-         - Ensure all inodes created by xfs_repair have a proper d_type set.
-         - Fix build on big endian machines.
-         - Properly handle symlinks to devices on various tool commandlines.
-         - Fix xfs_repair's dirty log detection for 4k sector logs, broken
-           in Alpha1.
-         - Fix a potential segfault in xfs_repair when issuing progress
-           reports.
-         - Fix potential xfs_fsr failures when running w/ selinux.
-         - Update config.guess/config.sub for arm64, thanks to Colin Watson.
-         - Stop wasting memory by caching inode structures in xfs_repair -
-           they are never re-used.  Thanks to Christoph Hellwig.
-         - Fix several Coverity-found defects, thanks to Li Zhong.
-         - Fix platform_test_xfs_fd to return false on special files which
-           cannot take an xfs ioctl.
-         - Sync up libxfs with kernel code.
-         - Improved xfs_repair performance on large filesystems
-           (always use prefetch and strided AG scanning functionality)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
