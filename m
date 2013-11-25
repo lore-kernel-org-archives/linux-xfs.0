@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A08607F4E
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 15:36:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 709718F8050
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:36:22 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	rlVwlzi8IpmpZ6W8 for <xfs@oss.sgi.com>;
-	Mon, 25 Nov 2013 13:36:20 -0800 (PST)
-Date: Tue, 26 Nov 2013 08:36:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 2/4] xfs: add xfs_create_tmpfile() for O_TMPFILE
-	support
-Message-ID: <20131125213601.GH8803@dastard>
-References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
-	<1385379154-3802-3-git-send-email-zwu.kernel@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CD9897F4E
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 15:37:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 57D08AC002
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 13:37:56 -0800 (PST)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id 4JrZCQvPnzAmfqrc (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 13:37:55 -0800 (PST)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 195BB9A06AF
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 14:37:54 -0700 (MST)
+Date: Mon, 25 Nov 2013 16:37:51 -0500
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: Re: [PATCH 1/2] xfstests: add generic/321 to test fsync() on
+	directories V2
+Message-ID: <20131125213751.GA3949@localhost.localdomain>
+References: <1384538464-7384-1-git-send-email-jbacik@fusionio.com>
+	<20131125161216.GA5085@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1385379154-3802-3-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <20131125161216.GA5085@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,213 +34,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
 
-On Mon, Nov 25, 2013 at 07:32:32PM +0800, Zhi Yong Wu wrote:
-> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+On Mon, Nov 25, 2013 at 08:12:16AM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 15, 2013 at 01:01:03PM -0500, Josef Bacik wrote:
+> > Btrfs had some issues with fsync()'ing directories and fsync()'ing after
+> > renames.  These three new tests cover the 3 different issues we were seeing.
+> > This breaks out the dmflakey stuff into a common helper to be shared between
+> > generic/311 and generic/321. Thanks,
+> > 
+> > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 > 
-> The function is used to create one O_TMPFILE file.
-> 
-> http://oss.sgi.com/archives/xfs/2013-08/msg00339.html
-> 
-> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> ---
->  fs/xfs/xfs_inode.c       |  129 ++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_inode.h       |    2 +
->  fs/xfs/xfs_shared.h      |    4 +-
->  fs/xfs/xfs_trans_resv.c  |   35 ++++++++++++
->  fs/xfs/xfs_trans_resv.h  |    2 +
->  fs/xfs/xfs_trans_space.h |    2 +
->  6 files changed, 173 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 1c23bdf..e1832de 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1337,6 +1337,135 @@ xfs_create(
->  }
->  
->  int
-> +xfs_create_tmpfile(
-> +	xfs_mount_t		*mp,
-> +	umode_t			mode,
-> +	dev_t			rdev,
-> +	xfs_inode_t		**ipp)
-> +{
-> +	struct xfs_inode	*ip = NULL;
-> +	struct xfs_trans	*tp = NULL;
-> +	int			error;
-> +	uint			cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
-> +	struct xfs_dquot	*udqp = NULL;
-> +	struct xfs_dquot	*gdqp = NULL;
-> +	struct xfs_dquot	*pdqp = NULL;
-> +	struct xfs_trans_res	*tres;
-> +	uint			resblks;
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return XFS_ERROR(EIO);
-> +
-> +	/*
-> +	 * Make sure that we have allocated dquot(s) on disk.
-> +	 */
-> +	error = xfs_qm_vop_dqalloc(NULL, mp, xfs_kuid_to_uid(current_fsuid()),
-> +					xfs_kgid_to_gid(current_fsgid()),
-> +					XFS_PROJID_DEFAULT,
-> +					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
-> +					&udqp, &gdqp, &pdqp);
-> +	if (error)
-> +		return error;
+> This doesn't seem to actually create the common/dmflakey file.
 
-Is XFS_PROJID_DEFAULT correct here? If we are getting a parent inode
-from ->tmpfile, then this should be handled the same way as for
-xfs_create.
+Eek sorry about that, I'll resend.
 
-> +
-> +	resblks = XFS_CREATE_TMPFILE_SPACE_RES(mp);
-> +	tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE_TMPFILE);
-> +
-> +	/*
-> +	 * Initially assume that the file does not exist and
-> +	 * reserve the resources for that case.  If that is not
-> +	 * the case we'll drop the one we have and get a more
-> +	 * appropriate transaction later.
-> +	 */
-> +	tres = &M_RES(mp)->tr_create_tmpfile;
-> +	error = xfs_trans_reserve(tp, tres, resblks, 0);
-> +	if (error == ENOSPC) {
-> +		/* flush outstanding delalloc blocks and retry */
-> +		xfs_flush_inodes(mp);
-> +		error = xfs_trans_reserve(tp, tres, resblks, 0);
-> +	}
-> +	if (error == ENOSPC) {
-> +		/* No space at all so try a "no-allocation" reservation */
-> +		resblks = 0;
-> +		error = xfs_trans_reserve(tp, tres, 0, 0);
-> +	}
-> +	if (error) {
-> +		cancel_flags = 0;
-> +		goto out_trans_cancel;
-> +	}
-
-I don't think this is necessary here. The ENOSPC flushing in
-xfs_create() is done to ensure we have space for directory block
-creation, not so much for inode allocation. Hence it doesn't make a
-lot of sense to have this here....
-
-> +	/*
-> +	 * Reserve disk quota and the inode.
-> +	 */
-> +	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
-> +						pdqp, resblks, 1, 0);
-> +	if (error)
-> +		goto out_trans_cancel;
-> +
-> +	/*
-> +	 * A newly created regular or special file just has one directory
-> +	 * entry pointing to them, but a directory also the "." entry
-> +	 * pointing to itself.
-> +	 */
-> +	error = xfs_dir_ialloc(&tp, NULL, mode, 1, rdev,
-> +				XFS_PROJID_DEFAULT, resblks > 0,
-> +				&ip, NULL);
-> +	if (error) {
-> +		if (error == ENOSPC)
-> +			goto out_trans_cancel;
-> +		goto out_trans_abort;
-> +	}
-> +
-> +	/*
-> +	 * If this is a synchronous mount, make sure that the
-> +	 * create transaction goes to disk before returning to
-> +	 * the user.
-> +	 */
-> +	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
-> +		xfs_trans_set_sync(tp);
-
-I'm not sure that XFS_MOUNT_DIRSYNC shoul dbe checked here, as there
-is no directory operations to synchronise at all...
-
-> +STATIC uint
-> +xfs_calc_icreate_tmpfile_reservation(xfs_mount_t *mp)
-> +{
-> +	return XFS_DQUOT_LOGRES(mp) +
-> +		xfs_calc_icreate_resv_alloc(mp) +
-> +		xfs_calc_inode_res(mp, 1) +
-> +		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> +		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize);
-> +}
-> +
-> +STATIC uint
-> +__xfs_calc_create_tmpfile_reservation(
-> +	struct xfs_mount	*mp)
-> +{
-> +	return XFS_DQUOT_LOGRES(mp) +
-> +		xfs_calc_create_resv_alloc(mp) +
-> +		xfs_calc_inode_res(mp, 1) +
-> +		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-> +		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize);
-> +}
-
-What exactly is being modified here? All of the other reservations
-have comments explaining what each of the individual components of
-the reservation are. Yes, I can see that there's an inode, a
-filesystem block and 2 sectors being reserved, but what are they?
-
-It's also double counting the XFS_DQUOT_LOGRES(), as they are
-accounted for in xfs_calc_[i]create_reservation().
-
-Also, the directory create reservations are broken up into two
-components - the inode allocation and the common directory name
-creation component, and so the tmpfile reservation should probably
-be broken up the same way. i.e this:
-
-> +
-> +STATIC uint
-> +xfs_calc_create_tmpfile_reservation(
-> +	struct xfs_mount        *mp)
-> +{
-> +	if (xfs_sb_version_hascrc(&mp->m_sb))
-> +		return xfs_calc_icreate_tmpfile_reservation(mp);
-> +	return __xfs_calc_create_tmpfile_reservation(mp);
-> +}
-
-Could simply be:
-
-STATIC uint
-xfs_calc_create_tmpfile_reservation(
-	struct xfs_mount        *mp)
-{
-	uint	res;
-
-	if (xfs_sb_version_hascrc(&mp->m_sb))
-		res = xfs_calc_icreate_resv_alloc(mp);
-	else
-		res = xfs_calc_create_resv_alloc(mp);
-	return res + xfs_calc_iunlink_add_resv(mp);
-}
-
-
-> diff --git a/fs/xfs/xfs_trans_space.h b/fs/xfs/xfs_trans_space.h
-> index 7d2c920..16fba89 100644
-> --- a/fs/xfs/xfs_trans_space.h
-> +++ b/fs/xfs/xfs_trans_space.h
-> @@ -61,6 +61,8 @@
->  	(XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK) + XFS_B_TO_FSB(mp, v))
->  #define	XFS_CREATE_SPACE_RES(mp,nl)	\
->  	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
-> +#define	XFS_CREATE_TMPFILE_SPACE_RES(mp)	\
-> +	XFS_IALLOC_SPACE_RES(mp)
-
-I wouldn't bother with this macro - just use XFS_IALLOC_SPACE_RES()
-directly.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Josef
 
 _______________________________________________
 xfs mailing list
