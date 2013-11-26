@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3DF297F4E
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 21:58:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2954F304048
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 19:58:27 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id pvkyhv4D5VQla7QI
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 19:58:26 -0800 (PST)
-Message-ID: <52941C5D.1000305@hardwarefreak.com>
-Date: Mon, 25 Nov 2013 21:58:21 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D4DB77F4E
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 00:00:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 71964AC004
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 21:59:57 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 3HyjoiOkmFOhkpBy (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 21:59:56 -0800 (PST)
+Date: Mon, 25 Nov 2013 21:59:50 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 2/4] xfs: add xfs_create_tmpfile() for O_TMPFILE
+	support
+Message-ID: <20131126055950.GA1376@infradead.org>
+References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
+	<1385379154-3802-3-git-send-email-zwu.kernel@gmail.com>
+	<20131125213601.GH8803@dastard>
 MIME-Version: 1.0
-Subject: Re: ARC-1120 and MD very sloooow
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>
-	<20131126025210.GL8803@dastard>
-In-Reply-To: <20131126025210.GL8803@dastard>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20131125213601.GH8803@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +33,38 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On 11/25/2013 8:52 PM, Dave Chinner wrote:
-...
-> sunit/swidth is in filesystem blocks, not sectors. Hence
-> sunit is 1MB, swidth = 2MB. While it's not quite correct
-> (su=512k,sw=1m), it's not actually a problem...
+On Tue, Nov 26, 2013 at 08:36:01AM +1100, Dave Chinner wrote:
+> 
+> Is XFS_PROJID_DEFAULT correct here? If we are getting a parent inode
+> from ->tmpfile, then this should be handled the same way as for
+> xfs_create.
 
-Well that's what I thought as well, and I was puzzled by the 8 blocks
-value for the log sunit.  So I double checked before posting, and 'man
-mkfs.xfs' told me
+It should.  And while we're at it that code from create and symlink
+should be factored into:
 
-	sunit=value
-              This is used to specify the stripe unit for a RAID device
-              or a logical volume. The  value  has  to  be specified in
-              512-byte block units.
+static inline projid_t xfs_initial_projid(struct xfs_inode *dp)
+{
+	 if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+	 	return xfs_get_projid(dp);
+	return XFS_PROJID_DEFAULT;
+}
 
-So apparently the units of 'sunit' are different depending on which XFS
-tool one is using.  That's a bit confusing.  And 'man xfs_info'
-(xfs_growfs) doesn't tell us that sunit is given in filesystem blocks.
-I'm using xfsprogs 3.1.4 so maybe these have been corrected since.
+fist.
 
-> Well, mkfs.xfs just uses what it gets from the kernel, so it
-> might have been told the wrong thing by MD itself.  However, you can
-> modify sunit/swidth by mount options, so you can't directly trust
-> what is reported from xfs_info to be what mkfs actually set
-> originally.
+> I don't think this is necessary here. The ENOSPC flushing in
+> xfs_create() is done to ensure we have space for directory block
+> creation, not so much for inode allocation. Hence it doesn't make a
+> lot of sense to have this here....
 
-Got it.
+Point.  I take back my earlier comment that it should be factored.
 
-> Again, lsunit is in filesystem blocks, so it is 32k, not 4k. And
-> yes, the default lsunit when the sunit > 256k is 32k. So, nothing
-> wrong there, either.
+> I'm not sure that XFS_MOUNT_DIRSYNC shoul dbe checked here, as there
+> is no directory operations to synchronise at all...
 
-So where should I have looked to confirm sunit reported by xfs_info is
-in fs block (4KB) multiples, not the in the 512B multiples of mkfs.xfs?
-
-> The usual: "iostat -x -d -m 5" output while the test is running.
-> Also, you are using buffered IO, so changing it to use direct IO
-> will tell us exactly what the disks are doing when Io is issued.
-> blktrace is your friend here....
-
-It'll be interesting to see where this troubleshooting leads.  Buffered
-single stream write speed is ~6x slower than read w/RAID10.  That makes
-me wonder if the controller and drive write caches have been disabled.
-That could explain this.
-
--- 
-Stan
+It probably shouldn't indeed.  Reminds me of my old patch to make this
+a flag to xfs_trans_commit instead of all that boilerplate code..
 
 _______________________________________________
 xfs mailing list
