@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B041E7F3F
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 07:11:41 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D05A97F3F
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 07:38:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3A5CFAC008
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 05:11:38 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id OA9xEzLvzboaFZGS (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BEBD530407A
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 05:38:26 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id oPSk9FfMjYX6cMOn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 Nov 2013 05:11:36 -0800 (PST)
-Date: Tue, 26 Nov 2013 13:11:34 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131126131134.GM10323@ZenIV.linux.org.uk>
-References: <20131124140413.GA19271@infradead.org>
-	<20131124152758.GL10323@ZenIV.linux.org.uk>
-	<20131125160648.GA4933@infradead.org>
+	Tue, 26 Nov 2013 05:38:25 -0800 (PST)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rAQDcOhg005302
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 13:38:25 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAQDcNK0001193
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 13:38:23 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAQDcNnC001186 for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 13:38:23 GMT
+Message-ID: <5294A449.9010202@oracle.com>
+Date: Tue, 26 Nov 2013 21:38:17 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131125160648.GA4933@infradead.org>
+Subject: [PATCH v2 0/3] xfs:  fix quota related problems
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +39,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Nov 25, 2013 at 08:06:48AM -0800, Christoph Hellwig wrote:
-> On Sun, Nov 24, 2013 at 03:27:58PM +0000, Al Viro wrote:
-> > which seems to leave two candidates - follow_dotdot_rcu() and path_init(),
-> > both setting nd->inode to nd->path.dentry->d_inode...
-> > 
-> > Could you try to reproduce it with something like
-> > 	if (read_seqretry(&mount_lock, nd->m_seq))
-> > 		goto failed;
-> > slapped before the success exit in follow_dotdot_rcu(), just to see if
-> > we are hitting some races with umount here?
-> 
-> Still reproducable with the diff below.  Fixed by reverting the RCU'd
-> vfsmounts.
+Hi Folks,
 
-.config, please - all I'm seeing on mine is a bloody awful leak somewhere
-in VM that I'd been hunting for last week, so the damn thing gets OOMed
-halfway through xfstests run ;-/
+Here is the revised version for fixing the infinite loop when turning group/project
+quota off but keep user quota being active.  After this fix, I ran into another
+assertion failure which can be triggered by running fsstress and turning group/project
+quota off concurrently.
+
+Since the tests will fail without applying the previous fix:
+[PATCH v2] xfs: fix assertion failure at xfs_setattr_nonsize
+
+So I wrapped it up in this series as the 1st fix, maintainers please ignore that in
+another post, the 2nd patch is used to fix the infinite loop, the 3rd one is trying
+to solve the assertion issue.
+
+Dave,
+
+Since the infinite loop and assertion issue are failed due to different issues, I
+wonder if we'd better to add two test cases to cover them separately or not? i.e,
+One sanity check to verify turning group/project off quota with user quota is active,
+another test to verify turning group/project quota off with fsstress is running.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
