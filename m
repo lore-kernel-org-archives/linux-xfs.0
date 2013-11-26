@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B3C6F7F4E
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 00:15:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9C5D5304053
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 22:15:11 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id E8B987F4E
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 00:41:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B5656304032
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 22:41:12 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	7IRy7psni3KxDTqk for <xfs@oss.sgi.com>;
-	Mon, 25 Nov 2013 22:15:09 -0800 (PST)
-Date: Tue, 26 Nov 2013 17:14:59 +1100
+	36PEgeVc5Kt6cOZk for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 22:41:11 -0800 (PST)
+Date: Tue, 26 Nov 2013 17:41:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: ARC-1120 and MD very sloooow
-Message-ID: <20131126061458.GM8803@dastard>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>
-	<528FBBE5.80404@hardwarefreak.com>
-	<1385369796.2076.16.camel@bews002.euractiv.com>
-	<5293EF32.9090301@hardwarefreak.com>
-	<20131126025210.GL8803@dastard>
-	<52941C5D.1000305@hardwarefreak.com>
+Subject: Re: [PATCH v2] xfstests,btrfs: add wrong compress type regression test
+Message-ID: <20131126064107.GN8803@dastard>
+References: <20131125210055.GG8803@dastard>
+	<1385445677-27762-1-git-send-email-miaox@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52941C5D.1000305@hardwarefreak.com>
+In-Reply-To: <1385445677-27762-1-git-send-email-miaox@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,72 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Miao Xie <miaox@cn.fujitsu.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Nov 25, 2013 at 09:58:21PM -0600, Stan Hoeppner wrote:
-> On 11/25/2013 8:52 PM, Dave Chinner wrote:
-> ...
-> > sunit/swidth is in filesystem blocks, not sectors. Hence
-> > sunit is 1MB, swidth = 2MB. While it's not quite correct
-> > (su=512k,sw=1m), it's not actually a problem...
+On Tue, Nov 26, 2013 at 02:01:17PM +0800, Miao Xie wrote:
+> Btrfs would crash when the users wrote some data into a file with compress
+> flag but the compression of the fs was disabled. This test case is to check
+> this bug still happen or not.
 > 
-> Well that's what I thought as well, and I was puzzled by the 8 blocks
-> value for the log sunit.  So I double checked before posting, and 'man
-> mkfs.xfs' told me
-> 
-> 	sunit=value
->               This is used to specify the stripe unit for a RAID device
->               or a logical volume. The  value  has  to  be specified in
->               512-byte block units.
-> 
-> So apparently the units of 'sunit' are different depending on which XFS
-> tool one is using. 
+> Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
+> ---
+> Changlog v1 -> v2:
+> - address the commit from Dave Chinner.
 
-No they don't. sunit as a mkfs input value is determined by 512 byte
-units. The output is given in units of "blks" i.e. the log block
-size:
+Testing every change before posting them for review is a good habit
+to develop. This:
 
-$ mkfs.xfs -N -l sunit=64 /dev/vdb
-....
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=8 blks, lazy-count=1
+> +	$XFS_IO_PROG -f -c "pwrite 0 1M" -c sync $work_file | _filter_xfs_io
 
-Which is given by the "bsize=4096" variable and so are, in this
-case, 4k in size.  input = 64 * 512 bytes = 8 * 4096 bytes = output
+will dump this:
 
-Remember, you can specify su rather than sunit, and they are
-specified in sectors, filesystem blocks or bytes, and the output is
-still in units of log block size:
+wrote 1048576/1048576 bytes at offset 0
+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+command "sync" not found
 
-# mkfs.xfs -N -b size=4096 -l su=8b /dev/vdb
-....
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=8 blks, lazy-count=1
+into the output file and hence the test will fail as the golden
+image file in the patch was not updated to match the new test output.
 
-# mkfs.xfs -N -l su=32k /dev/vdb
-....
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=8 blks, lazy-count=1
-
-IOws, the input units can vary, but the output units are always the
-same.
-
-> That's a bit confusing.  And 'man xfs_info'
-> (xfs_growfs) doesn't tell us that sunit is given in filesystem blocks.
-> I'm using xfsprogs 3.1.4 so maybe these have been corrected since.
-
-It might seem confusing at first, but it's actually quite
-consistent...
-
-> > Again, lsunit is in filesystem blocks, so it is 32k, not 4k. And
-> > yes, the default lsunit when the sunit > 256k is 32k. So, nothing
-> > wrong there, either.
-> 
-> So where should I have looked to confirm sunit reported by xfs_info is
-> in fs block (4KB) multiples, not the in the 512B multiples of mkfs.xfs?
-
-Explained above.
+It also points out that "-c sync" command is invalid - the
+command to fsync a file is "-c fsync".
 
 Cheers,
 
