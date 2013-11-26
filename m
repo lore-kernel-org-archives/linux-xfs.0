@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 42B2D7F4E
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 00:13:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 20A638F8052
-	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 22:13:52 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id sZWY4LJYQXbupaPt for
-	<xfs@oss.sgi.com>; Mon, 25 Nov 2013 22:13:48 -0800 (PST)
-From: Miao Xie <miaox@cn.fujitsu.com>
-Subject: [PATCH v2] xfstests,btrfs: add wrong compress type regression test
-Date: Tue, 26 Nov 2013 14:01:17 +0800
-Message-Id: <1385445677-27762-1-git-send-email-miaox@cn.fujitsu.com>
-In-Reply-To: <20131125210055.GG8803@dastard>
-References: <20131125210055.GG8803@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B3C6F7F4E
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 00:15:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9C5D5304053
+	for <xfs@oss.sgi.com>; Mon, 25 Nov 2013 22:15:11 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	7IRy7psni3KxDTqk for <xfs@oss.sgi.com>;
+	Mon, 25 Nov 2013 22:15:09 -0800 (PST)
+Date: Tue, 26 Nov 2013 17:14:59 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: ARC-1120 and MD very sloooow
+Message-ID: <20131126061458.GM8803@dastard>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>
+	<528FBBE5.80404@hardwarefreak.com>
+	<1385369796.2076.16.camel@bews002.euractiv.com>
+	<5293EF32.9090301@hardwarefreak.com>
+	<20131126025210.GL8803@dastard>
+	<52941C5D.1000305@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52941C5D.1000305@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,141 +30,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Btrfs would crash when the users wrote some data into a file with compress
-flag but the compression of the fs was disabled. This test case is to check
-this bug still happen or not.
+On Mon, Nov 25, 2013 at 09:58:21PM -0600, Stan Hoeppner wrote:
+> On 11/25/2013 8:52 PM, Dave Chinner wrote:
+> ...
+> > sunit/swidth is in filesystem blocks, not sectors. Hence
+> > sunit is 1MB, swidth = 2MB. While it's not quite correct
+> > (su=512k,sw=1m), it's not actually a problem...
+> 
+> Well that's what I thought as well, and I was puzzled by the 8 blocks
+> value for the log sunit.  So I double checked before posting, and 'man
+> mkfs.xfs' told me
+> 
+> 	sunit=value
+>               This is used to specify the stripe unit for a RAID device
+>               or a logical volume. The  value  has  to  be specified in
+>               512-byte block units.
+> 
+> So apparently the units of 'sunit' are different depending on which XFS
+> tool one is using. 
 
-Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
----
-Changlog v1 -> v2:
-- address the commit from Dave Chinner.
----
- tests/btrfs/022     | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/022.out |  5 ++++
- tests/btrfs/group   |  1 +
- 3 files changed, 89 insertions(+)
- create mode 100755 tests/btrfs/022
- create mode 100644 tests/btrfs/022.out
+No they don't. sunit as a mkfs input value is determined by 512 byte
+units. The output is given in units of "blks" i.e. the log block
+size:
 
-diff --git a/tests/btrfs/022 b/tests/btrfs/022
-new file mode 100755
-index 0000000..2f32bf1
---- /dev/null
-+++ b/tests/btrfs/022
-@@ -0,0 +1,83 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/008
-+#
-+# btrfs wrong compression type regression test. This test is used to check
-+# the oops will happen when the users write some data into the files whose
-+# compress flag is set but the compression of the fs is disabled.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Fujitsu.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+
-+__workout()
-+{
-+	work_file="$SCRATCH_MNT/tmpfile"
-+
-+	touch $work_file
-+	chattr =c $work_file
-+	$XFS_IO_PROG -f -c "pwrite 0 1M" -c sync $work_file | _filter_xfs_io
-+}
-+
-+echo "*** test nodatacow"
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount "-o nodatacow"
-+__workout
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "*** test compress=no"
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount "-o compress=no"
-+__workout
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "*** test compress-force=no"
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount "-o compress-force=no"
-+__workout
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "*** done"
-+status=0 ; exit
-diff --git a/tests/btrfs/022.out b/tests/btrfs/022.out
-new file mode 100644
-index 0000000..611fd67
---- /dev/null
-+++ b/tests/btrfs/022.out
-@@ -0,0 +1,5 @@
-+QA output created by 022
-+*** test nodatacow
-+*** test compress=no
-+*** test compress-force=no
-+*** done
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 410f8ed..c2adb2f 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -24,3 +24,4 @@
- 019 auto quick
- 020 auto quick
- 021 auto quick
-+022 auto quick
+$ mkfs.xfs -N -l sunit=64 /dev/vdb
+....
+log      =internal log           bsize=4096   blocks=12800, version=2
+         =                       sectsz=512   sunit=8 blks, lazy-count=1
+
+Which is given by the "bsize=4096" variable and so are, in this
+case, 4k in size.  input = 64 * 512 bytes = 8 * 4096 bytes = output
+
+Remember, you can specify su rather than sunit, and they are
+specified in sectors, filesystem blocks or bytes, and the output is
+still in units of log block size:
+
+# mkfs.xfs -N -b size=4096 -l su=8b /dev/vdb
+....
+log      =internal log           bsize=4096   blocks=12800, version=2
+         =                       sectsz=512   sunit=8 blks, lazy-count=1
+
+# mkfs.xfs -N -l su=32k /dev/vdb
+....
+log      =internal log           bsize=4096   blocks=12800, version=2
+         =                       sectsz=512   sunit=8 blks, lazy-count=1
+
+IOws, the input units can vary, but the output units are always the
+same.
+
+> That's a bit confusing.  And 'man xfs_info'
+> (xfs_growfs) doesn't tell us that sunit is given in filesystem blocks.
+> I'm using xfsprogs 3.1.4 so maybe these have been corrected since.
+
+It might seem confusing at first, but it's actually quite
+consistent...
+
+> > Again, lsunit is in filesystem blocks, so it is 32k, not 4k. And
+> > yes, the default lsunit when the sunit > 256k is 32k. So, nothing
+> > wrong there, either.
+> 
+> So where should I have looked to confirm sunit reported by xfs_info is
+> in fs block (4KB) multiples, not the in the 512B multiples of mkfs.xfs?
+
+Explained above.
+
+Cheers,
+
+Dave.
 -- 
-1.8.3.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
