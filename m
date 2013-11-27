@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 306197F3F
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 10:35:53 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C42CE7F57
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 20:31:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 19FF3304081
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 08:35:53 -0800 (PST)
-Date: Tue, 26 Nov 2013 11:35:48 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: Cleancache support in XFS
-Message-ID: <20131126163548.GD2959@phenom.dumpdata.com>
-References: <20130522192834.GD10617@phenom.dumpdata.com>
-	<519F1708.10603@zynstra.com>
-	<20130607170826.GA6925@phenom.dumpdata.com>
-	<51E8E834.6080509@zynstra.com>
-	<20130722154812.GC30300@phenom.dumpdata.com>
-	<51EE2F54.80701@zynstra.com> <20130723082700.GK19986@dastard>
-	<528E0C3F.3010401@zynstra.com> <20131121160741.GK1935@sgi.com>
-	<20131121221214.GC6502@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3C0C6AC003
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 18:31:23 -0800 (PST)
+Received: from boogeyman.armory.com
+	(adsl-76-230-21-225.dsl.pltn13.sbcglobal.net [76.230.21.225])
+	by cuda.sgi.com with ESMTP id 71fY36iwpGcOVMq0 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 26 Nov 2013 18:31:21 -0800 (PST)
+Date: Tue, 26 Nov 2013 18:31:19 -0800
+From: Phil White <cerise-xfs@l.armory.com>
+Subject: Problem with mkfs.xfs on a regular file
+Message-ID: <20131127023119.GB13101@boogeyman>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131121221214.GC6502@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,113 +28,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: James Dingwall <james.dingwall@zynstra.com>, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Nov 22, 2013 at 09:12:14AM +1100, Dave Chinner wrote:
-> On Thu, Nov 21, 2013 at 10:07:41AM -0600, Ben Myers wrote:
-> > Hi James,
-> > 
-> > On Thu, Nov 21, 2013 at 01:35:59PM +0000, James Dingwall wrote:
-> > > Dave Chinner wrote:
-> > > >On Tue, Jul 23, 2013 at 08:23:00AM +0100, James Dingwall wrote:
-> > > >>Konrad Rzeszutek Wilk wrote:
-> > > >>>On Fri, Jul 19, 2013 at 08:18:12AM +0100, James Dingwall wrote:
-> > > >>>>Konrad Rzeszutek Wilk wrote:
-> > > >>>>>On Fri, May 24, 2013 at 08:30:16AM +0100, James Dingwall wrote:
-> > > >>>>>>Konrad Rzeszutek Wilk wrote:
-> > > >>>>>>>On Thu, May 02, 2013 at 09:24:51AM +0100, James Dingwall wrote:
-> > > >>>>>>>>Dave Chinner wrote:
-> > > >>>>>>>>>On Wed, May 01, 2013 at 11:20:44AM -0500, Ben Myers wrote:
-> > > >>>>>>>>>>Hi James,
-> > > >>>>>>>Hey folks,
-> > > >>>>>>>I am walking through my vacation-emails-mbox.
-> > > >>>>>>>
-> > > >>>>>>>>>>On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
-> > > >>>>>>>>>>>In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
-> > > >>>>>>>>>>>
-> > > >>>>>>>>>>>$ grep -r cleancache fs/xfs
-> > > >>>>>>>>>>>on the 3.9 kernel source suggests that no patch was submitted to
-> > > >>>>>>>>>>>enable cleancache for the XFS filesystem.  Since it was suggested
-> > > >>>>>>>>>>>that this could be a one liner I've had a go and my first effort is
-> > > >>>>>>>>>>>inline below.  While this seems to compile OK I have no experience
-> > > >>>>>>>>>>>in filesystems so I would appreciate it if anyone can point out that
-> > > >>>>>>>>>>>it is obviously wrong and likely to eat my data before I try booting
-> > > >>>>>>>>>>>the kernel.
-> > > >>>>>>>>>>>
-> > > >>>>>>>>>>>If it seems a reasonable attempt what would be the best way to check
-> > > >>>>>>>>>>>that it isn't doing nasty things?
-> > > >>>>>>>>>>Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
-> > > >>>>>>>>>>includes a list of attributes the filesystem needs to have to work properly
-> > > >>>>>>>>>>with cleancache.
-> > > >>>>>>>>>So, those points are:
-> > > >>>>>>>>I had started to look at these too but I feel very out of my depth!
-> > > >>>>>>>>I had similar conclusions to what Dave wrote but I don't think my
-> > > >>>>>>>>thoughts should carry very much (any) weight.  Anyway I gambled and
-> > > >>>>>>>>booted my xen domU with this patch and so far so good...  xen top
-> > > >>>>>>>>shows that tmem is now being used where previously it wasn't.  I'll
-> > > >>>>>>>>try running the xfstests at the weekend after a couple more days up
-> > > >>>>>>>>time to see what happens.
-> > > >>>>>>>And how did it go?
-> > > >>>>>>I am running the patch I created on 3.9.3 on half of my xen guests
-> > > >>>>>>now and have not noticed any stability or filesystem problems.  xl
-> > > >>>>>>top with 'T' shows that the guests running with it are using
-> > > >>>>>>ephemeral pages were those without do not.  I did do some runs with
-> > > >>>>>>xfstests which had some failures but they were present with and
-> > > >>>>>>without the patch.  The best I can really offer is that it works for
-> > > >>>>>>me, ymmv.  The patch is available as commit
-> > > >>>>>>c725011c4fc5d47e12d131f61bd91a58a40036b5 in
-> > > >>>>>>https://github.com/JKDingwall/linux.git xfs-enable-cleancache or in
-> > > >>>>>>the first message of this thread.
-> > > >>>>>Hey James,
-> > > >>>>>
-> > > >>>>>I've run this patch on my local tree and it looks to work right. I am
-> > > >>>>>saying "looks" as I am hitting some other issue that I believe are
-> > > >>>>>unralted to the patch - but I need to figure them out before I can
-> > > >>>>>comfortably say: "Yes, this looks right and works for me as well."
-> > > >>>>>
-> > > >>>>>Stay tuned.
-> > > >>>>Just to add that I have also had no observable problems running this
-> > > >>>>patch on 3.10.0 or 3.10.1.
-> > > >>>Yup. And I tested it as well. In other words if you would like to add
-> > > >>>Acked-by from me that would be super. Thanks!
-> > > >>My patch is now available in https://github.com/JKDingwall/linux.git
-> > > >>xfs-enable-cleancache as commit id
-> > > >>6d50663e4ec88b7e1fd872b12ac310b1f4bb38c6.  I have rebased it on 3.10
-> > > >>with KRW's Acked-by and my Signed-off-by in the commit message.  Is
-> > > >>it reasonable for this to be considered for 3.12 or would further
-> > > >>testing be required?
-> > > >I think that's sufficient. Send it to the list ;)
-> > > >
-> > > >Cheers,
-> > > >
-> > > >Dave.
-> > > I had a quick look through the 3.12 sources today and noted that
-> > > this patch did not seem to get picked up.  I'm still running with it
-> > > and am now on 3.12 with no observed problems.  I'm happy to rebase
-> > > against 3.12 if required but it seems simple enough it should go on
-> > > cleanly to the current development tree.
-> > 
-> > It hasn't been picked up because I'm not quite convinced it's ok to do this.
-> > See if you can get a Dave, Christoph, or Eric to offer a Reviewed-by with a
-> > little explanation of why this is ok and I'll pull it in.  ;)
-> 
-> Like I said back in July, it's OK because they performed a
-> substantial amount of testing like we asked them to it didn't show
-> up any obvious regressions.
-> 
-> Reviewed-by: Dave Chinner <david@fromorbit.com>
+Gents:
 
-Yeey! (and I should have so read this before I sent the other email out).
+I was making an image for a VM using everyone's favorite fs with a line
+that looked something like this:
+-------------
+dd if=/dev/zero of=~/image bs=1024 count=1048576 && ./mkfs/mkfs.xfs && mount -o loop ~/image /mnt/loop
+-------------
 
-Should the patch be rebased and resent? Thanks.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
+mkfs.xfs gave me this output:
+-------------
+meta-data=/root/image            isize=256    agcount=4, agsize=65536 blks
+         =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=262144, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+existing superblock read failed: Invalid argument
+mkfs.xfs: pwrite64 failed: Invalid argument
+mkfs.xfs: read failed: Invalid argument
+-------------
+
+And, of course, it failed to mount.
+
+Knowing that this was using a possibly old version of xfsprogs (3.1.10, it
+turned out), I grabbed the git tree and tried that.  The same problem occurred.
+
+The "existing superblock read" problem was from mkfs/xfs_mkfs.c @ 806 in
+zero_old_xfs_structures():
+-------------
+        if (pread(xi->dfd, buf, new_sb->sb_sectsize, 0) != new_sb->sb_sectsize) {
+                fprintf(stderr, _("existing superblock read failed: %s\n"),
+                        strerror(errno));
+                free(buf);
+                return;
+        }
+-------------
+
+The pwrite64 problem was from libxfs/rdwr.c @ 806 in __write_buf():
+-------------
+        sts = pwrite64(fd, buf, len, offset);
+        if (sts < 0) {
+                int error = errno;
+                fprintf(stderr, _("%s: pwrite64 failed: %s\n"),
+                        progname, strerror(error));
+                if (flags & LIBXFS_B_EXIT)
+                        exit(1);
+                return error;
+        } else if (sts != len) {
+                fprintf(stderr, _("%s: error - pwrite64 only %d of %d bytes\n"),
+                        progname, sts, len);
+                if (flags & LIBXFS_B_EXIT)
+                        exit(1);
+                return EIO;
+        }
+-------------
+
+While it occurred to me that the problem might just be line 806 of some files
+in xfsprogs, I threw it under a debugger and took a closer look.  The file
+descriptor value in xi->dfd pointed at ~/image.  errno was set to 22.  I
+thought that might indicate a problem with lseek(), so I rewrote the pwrite64()
+and pread() as lseek()s and read()/write()
+
+As you may have guessed, this did me no good at all.
+
+It's trying to read/write 512 bytes at the beginning of the file which seems
+reasonably innocuous.  I double checked the man page which says that under
+2.6, O_DIRECT writes can be aligned to 512 bytes without a problem.  sbp comes
+out with 4096 in blocksize and 512 in sectsize when zero_old_xfs_structures()
+is called and the first error comes up, so I'm at a loss for what's going wrong.
+
+-Phil
 
 _______________________________________________
 xfs mailing list
