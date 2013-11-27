@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 803B97F4E
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 15:51:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5ED77304067
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 13:51:47 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 0FD327F4E
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 16:19:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E262A304048
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 14:19:29 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	P3e7vLIzr9Srjzs9 for <xfs@oss.sgi.com>;
-	Wed, 27 Nov 2013 13:51:45 -0800 (PST)
-Date: Thu, 28 Nov 2013 08:51:40 +1100
+	OrvrMeUUwsN2RE9O for <xfs@oss.sgi.com>;
+	Wed, 27 Nov 2013 14:19:27 -0800 (PST)
+Date: Thu, 28 Nov 2013 09:19:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131127215140.GH10988@dastard>
-References: <20131124140413.GA19271@infradead.org>
-	<20131124152758.GL10323@ZenIV.linux.org.uk>
-	<20131125160648.GA4933@infradead.org>
-	<20131126131134.GM10323@ZenIV.linux.org.uk>
-	<20131126141253.GA28062@infradead.org>
-	<20131127064351.GN10323@ZenIV.linux.org.uk>
+Subject: Re: [BUG] Call trace during snapshot start/stop sequence
+Message-ID: <20131127221923.GI10988@dastard>
+References: <5295C307.6030804@open-e.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131127064351.GN10323@ZenIV.linux.org.uk>
+In-Reply-To: <5295C307.6030804@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +25,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Buba=C5=82a?= <arkadiusz.bubala@open-e.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Nov 27, 2013 at 06:43:51AM +0000, Al Viro wrote:
-> On Tue, Nov 26, 2013 at 06:12:53AM -0800, Christoph Hellwig wrote:
-> > On Tue, Nov 26, 2013 at 01:11:34PM +0000, Al Viro wrote:
-> > > .config, please - all I'm seeing on mine is a bloody awful leak somewhere
-> > > in VM that I'd been hunting for last week, so the damn thing gets OOMed
-> > > halfway through xfstests run ;-/
-> 
-> > #
-> > # Automatically generated file; DO NOT EDIT.
-> > # Linux/x86 3.12.0-hubcap2 Kernel Configuration
-> [snip]
-> 
-> Could you post the output of your xfstests run?  FWIW, with your .config
-> I'm seeing the same leak (shut down by turning spinlock debugging off,
-> it's split page table locks that end up leaking when they are separately
-> allocated) *and* xfs/253 seems to be sitting there indefinitely once
-> we get to it - about 100% system time, no blocked processes, xfs_db running
-> all the time for hours.  No oopsen on halt with that sucker skipped *or*
-> interrupted halfway through.
-
-IOWs, you've got a version of xfs_db that has the infinite loop bug
-that the xfs/253 is trying to tickle:
-
-# This test was created to verify fixes for problems where metadump
-# would never complete due to an inability to find a suitable
-# obfuscated name to use.
-
-Upgrade your xfsprogs package to 3.1.11 and the problem should go
-away.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBOb3YgMjcsIDIwMTMgYXQgMTE6MDE6NDNBTSArMDEwMCwgQXJrYWRpdXN6IEJ1YmHF
+gmEgd3JvdGU6Cj4gSGVsbG8sCj4gCj4gd2UncmUgcnVubmluZyB0ZXN0IHNjcmlwdCB0aGF0IHN0
+YXJ0cyBhbmQgc3RvcHMKPiBzbmFwc2hvdHMgaW4gYSBsb29wIHdoaWxlIG92ZXJmaWxsaW5nIHRo
+ZW0uICBBZnRlciBhIGZldyBkYXlzIG9mIHJ1bm5pbmcKPiBzeXN0ZW0gaGFuZ3MuIFdlJ3ZlIGNh
+cHR1cmVkIGZvbGxvd2luZyBjYWxsIHRyYWNlOgo+IAo+IFsxMTY2NDkuNzU1NzYxXSBYRlMgKGRt
+LTQyKTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAweGZhMmIwNgo+ICgieGxvZ19pb2RvbmUi
+KSBlcnJvciA1IGJ1ZiBjb3VudCAxMDI0Cj4gWzExNjY0OS45NDcyNDddIFhGUyAoZG0tNDIpOiBM
+b2cgSS9PIEVycm9yIERldGVjdGVkLiAgU2h1dHRpbmcgZG93bgo+IGZpbGVzeXN0ZW0KPiBbMTE2
+NjUwLjA3Mzg4MV0gWEZTIChkbS00Mik6IFBsZWFzZSB1bW91bnQgdGhlIGZpbGVzeXN0ZW0gYW5k
+IHJlY3RpZnkKPiB0aGUgcHJvYmxlbShzKQoKU28sIGFuIEVJTyBlcnJvciBvbiBhIGxvZyBJTywg
+cmVzdWx0aW5nIGluIGEgc2h1dGRvd24uLi4uCgo+IFsxMTY2NTAuMjA3MTg2XSBCVUc6IHVuYWJs
+ZSB0byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0Cj4gMDAwMDAwMDAwMDAwMTBhOAoK
+VGhhdCdzIGFuIGludGVyZXN0aW5nIG9mZnNldCAtIHF1aXRlIGxhcmdlIGZvciBhIG51bGwgcG9p
+bnRlcgpkZXJlZmVyZW5jZS4KCj4gWzExNjY1MC4zMzUxODVdIElQOiBbPGZmZmZmZmZmODEwMmUx
+ZDY+XSBfX3RpY2tldF9zcGluX2xvY2srMHg2LzB4MjAKPiBbMTE2NjUwLjQ1MTA1Ml0gUEdEIDAK
+PiBbMTE2NjUwLjUxODE1MV0gT29wczogMDAwMiBbIzFdIFNNUAo+IFsxMTY2NTAuNTk5NDc3XSBD
+UFUgMAo+IFsxMTY2NTAuNjIyODM4XSBNb2R1bGVzIGxpbmtlZCBpbjogaXNjc2lfc2NzdChPKSBz
+Y3N0X3ZkaXNrKE8pIHNjc3QoTykKPiBkcmJkKE8pIHR3b2Zpc2hfeDg2XzY0IHR3b2Zpc2hfZ2Vu
+ZXJpYyB0d29maXNoX2NvbW1vbgo+IHNlcnBlbnRfc3NlMl94ODZfNjQgbHJ3IHh0cyBnZjFdCj4g
+WzExNjY1MS40Nzk3MzBdCj4gWzExNjY1MS41NDA2NzRdIFBpZDogMzAxNzMsIGNvbW06IGt3b3Jr
+ZXIvMDo1IFRhaW50ZWQ6IEcgICAgICAgICAgIE8KPiAzLjQuNjMtb2U2NC0wMDAwMC1nMWEzMzkw
+MiAjMzggSW50ZWwgQ29ycG9yYXRpb24gUzEyMDBCVEwvUzEyMDBCVEwKClJ1bm5pbmcgYSBjdXN0
+b20gYnVpbHQgMy40LjYzIGtlcm5lbCB3aXRoIGEgYnVuY2ggb2Ygb3V0IG9mIHRyZWUKbW9kdWxl
+cyBpbnN0YWxsZWQuIGNhbiB5b3UgcmVwcm9kdWNlIHRoaXMgb24gYSB2YW5pbGxhIDMuMTIga2Vy
+bmVsPwoKPiBbMTE2NjUzLjkyMzgzM10gQ2FsbCBUcmFjZToKPiBbMTE2NjUzLjk5NTAwNl0gIFs8
+ZmZmZmZmZmY4MTVmNGI0NT5dID8gX3Jhd19zcGluX2xvY2srMHg1LzB4MTAKPiBbMTE2NjU0LjEw
+MzQ2Ml0gIFs8ZmZmZmZmZmY4MTI2ODVmMj5dID8geGxvZ19zdGF0ZV9kb25lX3N5bmNpbmcrMHgz
+Mi8weGMwCj4gWzExNjY1NC4yMjE3MTZdICBbPGZmZmZmZmZmODEwNTE4NDM+XSA/IHByb2Nlc3Nf
+b25lX3dvcmsrMHhmMy8weDMyMAo+IFsxMTY2NTQuMzMzMTk1XSAgWzxmZmZmZmZmZjgxMDUzNGYy
+Pl0gPyB3b3JrZXJfdGhyZWFkKzB4ZTIvMHgyODAKPiBbMTE2NjU0LjQ0MTAzMV0gIFs8ZmZmZmZm
+ZmY4MTA1MzQxMD5dID8gZ2N3cV9tYXlkYXlfdGltZW91dCsweDgwLzB4ODAKPiBbMTE2NjU0LjU1
+MzUxMl0gIFs8ZmZmZmZmZmY4MTA1Nzc2Yj5dID8ga3RocmVhZCsweDliLzB4YjAKCldoaWNoIGlz
+IHRoaXMgbGluZToKClNUQVRJQyB2b2lkCnhsb2dfc3RhdGVfZG9uZV9zeW5jaW5nKAogICAgICAg
+IHhsb2dfaW5fY29yZV90ICAqaWNsb2csCiAgICAgICAgaW50ICAgICAgICAgICAgIGFib3J0ZWQp
+CnsKICAgICAgICBzdHJ1Y3QgeGxvZyAgICAgICAgKmxvZyA9IGljbG9nLT5pY19sb2c7CgogICAg
+ICAgIHNwaW5fbG9jaygmbG9nLT5sX2ljbG9nbG9jayk7CgpTbywgdGhlIGljbG9nbG9jayBpcyBh
+dCBvZmZzZXQgMjk2IGJ5dGVzIGludG8gdGhlIHN0cnVjdCB4bG9nLCBhbmQKdGhlIGljbG9nIHN0
+cnVjdHVyZSBpcyBvbmx5IDI1NiBieXRlcyBpbiBzaXplIGl0c2VsZiwgc28gdGhhdApzdHJ1Y3R1
+cmUgb2Zmc2V0IGlzIHdheSBvdXRzaWRlIGFueXRoaW5nIHRoZSBjb2RlIHNob3VsZCBiZSB0cnlp
+bmcKdG8gYWNjZXNzIChpZ25vcmluZyB0aGUgbnVsbCBwb2ludGVyIGlzc3VlKS4gRXZlbiBpZiB3
+ZSBhc3N1bWUgdGhhdAp0aGUgMHgxMDAwIGJpdCBpcyBhIG1lbW9yeSBjb3JydXB0aW9uLCBvZmZz
+ZXQgMHhhOCBsYW5kcyBpbiBhIGhvbGUKaW4gdGhlIHN0cnVjdCB4bG9nX2luX2NvcmUsIGFuZCBp
+c2luIHRoZSBtaWRkbGUgb2YgYSBidW5jaCBvZiBsb2cKc2l6ZSBjb25zdGFudHMgaW4gdGhlIHN0
+cnVjdCB4bG9nIChsX3NlY3RCQnNpemUgdG8gYmUgZXhhY3QpLgoKU28gdGhpcyBkb2Vzbid0IG1h
+a2UgbXVjaCBzZW5zZSB0byBtZS4KCkJUVywgeW91IHNob3VsZCBjb21waWxlIHlvdSBrZXJuZWxz
+IHdpdGggZnJhbWUgcG9pbnRlcnMgZW5hYmxlZCBzbwp0aGF0IHRoZSBrZXJuZWwgZW1pdHMgc3Rh
+Y2sgdHJhY2VzIHRoYXQgY2FuIGJlIHRydXN0ZWQgcmF0aGVyIHRoYW4KanVzdCBkdW1waW5nIGEg
+bGlzdCBvZiBzeW1ib2xzIGZvdW5kIG9uIHRoZSBzdGFjay4uLgoKPiBJdCBsb29rcyBsaWtlIGEg
+cmFjZSBjb25kaXRpb24uCgpMb29rcyBtb3JlIGxpa2UgbWVtb3J5IGNvcnJ1cHRpb24gdG8gbWUu
+Li4uCgo+IFRlc3Qgc2NyaXB0IHNvdXJjZToKCkknbGwgc2VlIGlmIEkgY2FuIHJlcHJvZHVjZSBp
+dCBsb2NhbGx5LgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3Ji
+aXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
+ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
+bi9saXN0aW5mby94ZnMK
