@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B04DB7F51
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 04:09:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2D150AC001
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 02:09:11 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id whtWDSQNY79wT7kS (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 27 Nov 2013 02:09:10 -0800 (PST)
-Date: Wed, 27 Nov 2013 02:09:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 803B97F4E
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 15:51:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5ED77304067
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 13:51:47 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	P3e7vLIzr9Srjzs9 for <xfs@oss.sgi.com>;
+	Wed, 27 Nov 2013 13:51:45 -0800 (PST)
+Date: Thu, 28 Nov 2013 08:51:40 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131127100906.GA19740@infradead.org>
+Message-ID: <20131127215140.GH10988@dastard>
 References: <20131124140413.GA19271@infradead.org>
 	<20131124152758.GL10323@ZenIV.linux.org.uk>
 	<20131125160648.GA4933@infradead.org>
@@ -57,38 +57,22 @@ On Wed, Nov 27, 2013 at 06:43:51AM +0000, Al Viro wrote:
 > all the time for hours.  No oopsen on halt with that sucker skipped *or*
 > interrupted halfway through.
 
-Might be that your xfsprogs is old enough that it has a bug that test
-wants to verify is fixed.
+IOWs, you've got a version of xfs_db that has the infinite loop bug
+that the xfs/253 is trying to tickle:
 
-> Setup is kvm on 3.3GHz amd64 6-core, with 4Gb given to guest (after having
-> one too many OOMs on leaks).  virtio disk, with raw image sitting in a file
-> on host, xfstests from current git, squeeze/amd64 userland on guest.
-> Reasonably fast host disks (not that the sucker had been IO-bound, anyway).
-> Tried both with UP and 4-way SMP guest, same picture on both...
+# This test was created to verify fixes for problems where metadump
+# would never complete due to an inability to find a suitable
+# obfuscated name to use.
 
-I'm running on my laptop with a Dual Core 2.5Ghz i5, on preallocated
-raw files on XFS on an older Intel SSD. Qemu command line:
+Upgrade your xfsprogs package to 3.1.11 and the problem should go
+away.
 
-kvm \
-	-m 2048 \
-	-smp 4 \
-	-kernel arch/x86/boot/bzImage \
-	-append "root=/dev/vda console=tty0
-	console=ttyS0,115200n8" \
-	-nographic \
-	-drive if=virtio,file=/work/images/debian.qcow2,cache=none,serial="test1234" \
-	-drive if=virtio,file=/work/images/test.img,cache=none,aio=native \
-	-drive if=virtio,file=/work/images/scratch.img,cache=none,aio=native
+Cheers,
 
-
-It's probably enough to run
-./check with -g quick to reproduce it, too - let me verify that which
-I'd have to do to catch the output anyway.
-
-Also if you want to look me into something else feel free - it's very
-reproducable here.  Wish I could be more help here, but with all the
-RCU and micro optimizations in the path lookup code I can't claim to
-really understand it anymore.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
