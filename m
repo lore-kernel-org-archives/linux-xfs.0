@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 227067F57
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 20:36:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8FDBCAC003
-	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 18:36:46 -0800 (PST)
-Received: from boogeyman.armory.com
-	(adsl-76-230-21-225.dsl.pltn13.sbcglobal.net [76.230.21.225])
-	by cuda.sgi.com with ESMTP id fotkCW5HEodeS2D9 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 Nov 2013 18:36:44 -0800 (PST)
-Date: Tue, 26 Nov 2013 18:36:43 -0800
-From: Phil White <cerise@armory.com>
-Subject: Re: Problem with mkfs.xfs on a regular file
-Message-ID: <20131127023643.GC13101@boogeyman>
-References: <20131127023119.GB13101@boogeyman>
-MIME-Version: 1.0
-Content-Disposition: inline
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 89A957F5D
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 20:38:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6AF32304039
+	for <xfs@oss.sgi.com>; Tue, 26 Nov 2013 18:38:23 -0800 (PST)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id plNFQ6AclRUkkVrY for
+	<xfs@oss.sgi.com>; Tue, 26 Nov 2013 18:38:22 -0800 (PST)
+Date: Tue, 26 Nov 2013 21:38:20 -0500 (EST)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <1428728255.17190956.1385519900454.JavaMail.root@redhat.com>
 In-Reply-To: <20131127023119.GB13101@boogeyman>
+References: <20131127023119.GB13101@boogeyman>
+Subject: Re: Problem with mkfs.xfs on a regular file
+MIME-Version: 1.0
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Phil White <cerise-xfs@littlegreenmen.armory.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 26, 2013 at 06:31:19PM -0800, Phil White wrote:
-> Gents:
-> 
-> I was making an image for a VM using everyone's favorite fs with a line
-> that looked something like this:
-> -------------
-> dd if=/dev/zero of=~/image bs=1024 count=1048576 && ./mkfs/mkfs.xfs && mount -o loop ~/image /mnt/loop
-> -------------
 
-Obviously, I intended "mkfs.xfs -f /root/image".
 
-Why is proofreading *AFTER* you send an email so much more effective?
+----- Original Message -----
+> ...
+> It's trying to read/write 512 bytes at the beginning of the file which seems
+> reasonably innocuous.  I double checked the man page which says that under
+> 2.6, O_DIRECT writes can be aligned to 512 bytes without a problem.  sbp
+> comes
+> out with 4096 in blocksize and 512 in sectsize when zero_old_xfs_structures()
+> is called and the first error comes up, so I'm at a loss for what's going
+> wrong.
 
--Phil
+The filesystem backing the new /root/image file doesn't support direct I/O?
+
+cheers.
+
+--
+Nathan
 
 _______________________________________________
 xfs mailing list
