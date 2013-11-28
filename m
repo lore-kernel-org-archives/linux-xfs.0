@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 65D2D7F54
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:01:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 35C2D304051
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:01:14 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	TP7DqZSdIaojZ5XH for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 02:01:12 -0800 (PST)
-Date: Thu, 28 Nov 2013 21:01:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Problem with mkfs.xfs on a regular file
-Message-ID: <20131128100107.GN10988@dastard>
-References: <20131127023119.GB13101@boogeyman> <20131127024713.GE10988@dastard>
-	<5296ACFB.4030901@sandeen.net> <20131128051626.GM10988@dastard>
-	<5296D5EB.2080008@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 1D3F57F59
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:01:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AD29304048
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:01:32 -0800 (PST)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
+	by cuda.sgi.com with ESMTP id 1Zjr2KIFv3TmQawh (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 02:01:31 -0800 (PST)
+Message-ID: <52971442.8080701@open-e.com>
+Date: Thu, 28 Nov 2013 11:00:34 +0100
+From: =?UTF-8?B?QXJrYWRpdXN6IEJ1YmHFgmE=?= <arkadiusz.bubala@open-e.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5296D5EB.2080008@sandeen.net>
+Subject: Re: [BUG] Call trace during snapshot start/stop sequence
+References: <5295C307.6030804@open-e.com> <20131127221923.GI10988@dastard>
+	<20131127230608.GJ10988@dastard>
+In-Reply-To: <20131127230608.GJ10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,98 +25,171 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Phil White <cerise-xfs@l.armory.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Nov 27, 2013 at 11:34:35PM -0600, Eric Sandeen wrote:
-> On 11/27/13, 11:16 PM, Dave Chinner wrote:
-> > So, it failed to write using direct IO because of IO alignment
-> > because I didn't tell mkfs that it was running on a file. i.e. I
-> > forgot the "-d file" option.
-> > 
-> > $ sudo mkfs.xfs -d size=1g,name=/storage/fubar.img
-> > meta-data=/storage/fubar.img     isize=256    agcount=4, agsize=65536 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=0
-> > data     =                       bsize=4096   blocks=262144, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =internal log           bsize=4096   blocks=7344, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > mkfs.xfs: pwrite64 failed: Invalid argument
-> > mkfs.xfs: read failed: Invalid argument
-> > 
-> > Yup, still fails. Let's force it!
-> > 
-> > $ sudo mkfs.xfs -f -d size=1g,name=/storage/fubar.img
-> > meta-data=/storage/fubar.img     isize=256    agcount=4, agsize=65536 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=0
-> > data     =                       bsize=4096   blocks=262144, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =internal log           bsize=4096   blocks=7344, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > existing superblock read failed: Invalid argument
-> > mkfs.xfs: pwrite64 failed: Invalid argument
-> > mkfs.xfs: read failed: Invalid argument
-> > 
-> > And there's the identical failure to what was reported.
-> > 
-> > So, user error - the user is telling mkfs.xfs that it is making a
-> > filesystem on a block device named "/storage/fubar.img".  The same
-> > thing happens with the normal method of specifying the block device:
-> 
-> If only we had some way to tell, programatically, whether the mkfs target
-> was a regular file or a block device, eh? ;)
-> 
-> Seriously, I always thought the requirment to specify "-d file" was silly.
-> And now I think it's even more silly, if it actually is required for
-> proper behavior...
-
-It has always been required if you want mkfs to create the file for
-you. And given that doing stuff like ioctl(BLKDISCARD) on files is
-completely wrong, so I think it really is needed...
-
-> > What mkfs needs to do is reject devices that are files when "-d
-> > file", "-l file" and "-r file" is not specified, and the problem
-> > will go away because it will catch users who forget to tell mkfs
-> > that it is supposed to be operating on an image file...
-> 
-> Or maybe just stat() it, and DTRT?
-
-Well, we need to stat it to make sure that it's a file if "-d file"
-is specified, and a block device if it's not. That will prevent this
-problem.  Every other xfsprogs utility has to be told that it is
-being pointed at an image file rather than a block device, so why
-should mkfs be any different?
-
-Indeed, if we don't require users to tell mkfs that it's a file,
-what do we do with non-existent  device names when they are provided
-by the user? Just create the file rather than returning ENOENT? So
-suddenly /dev/ fills up with fileystem images because of typos?
-
-Principle of Least Surprise says that ENOENT is the correct
-behaviour, hence it follows that "-d file" is needed and should be
-properly checked and enforced. I'll add this to the start of the
-patch set I'm currently working on that fixes all of the mkfs input
-parameter validation problems I've found over the past couple of
-weeks...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGVsbG8sCnRoYW5rIHlvdSBmb3IgdmFsdWFibGUgaW5mb3JtYXRpb24uCgpPbiAyOC4xMS4yMDEz
+IDAwOjA2LCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4KPj4gUnVubmluZyBhIGN1c3RvbSBidWlsdCAz
+LjQuNjMga2VybmVsIHdpdGggYSBidW5jaCBvZiBvdXQgb2YgdHJlZQo+PiBtb2R1bGVzIGluc3Rh
+bGxlZC4gY2FuIHlvdSByZXByb2R1Y2UgdGhpcyBvbiBhIHZhbmlsbGEgMy4xMiBrZXJuZWw/Cj4+
+Cj4+ICAgICAgCk9rLCB3ZSdsbCB0cnkuCgo+IFRoZSBzY3JpcHQgaXMgZnVsbCBvZiBidWdzLCBh
+bmQgaSBkb24ndCBoYXZlIHRpbWUgdG8gZGVidWcgaXQgLSBpdAo+IGhhcmQgY29kZXMgL2Rldi9z
+ZGEgaW4gcGxhY2VzIGRlc3BpdGUgdGFraW5nIHRoZSBkZXZpY2UgYXMgYSBDTEkKPiBwYXJhbWV0
+ZXIuIEl0IGhhcyBoYXJkIGNvZGVkIG1vdW50IHBvaW50cy4gIEl0IHNvbWV0aW1lcyBmYWlscyB0
+bwo+IG1ha2UgdGhlIGZpbGVzeXN0ZW0gb24gdGhlIGJhc2UgTFYgYWZ0ZXIgaXQncyBiZWVuIGNy
+ZWF0ZWQuCj4gc3RhcnRfc25hcCgpIGFwcGVhcnMgdG8gZmFpbCBmb3Igc29tZSByZWFzb24sIGFz
+IGl0IGRvZXNuJ3QgcmVzdWx0Cj4gaW4gbW91bnRlZCBzbmFwc2hvdHMuIHN0b3Bfc25hcCBmYWls
+cyBhcyB3ZWxsOgo+Cj4gU3RhcnRpbmcgc25hcDE5IDogVGh1cnNkYXkgMjggTm92ZW1iZXIgIDEw
+OjAxOjI2IEVTVCAyMDEzCj4gICAgTG9naWNhbCB2b2x1bWUgbHYxK3NuYXAxOSBjb252ZXJ0ZWQg
+dG8gc25hcHNob3QuCj4gWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gWyBGQUlMIF0g
+Q2FuJ3QgcmVtb3ZlIHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4g
+WyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNu
+YXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3Qg
+dW1vdW50IHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90Cj4gWyBGQUlM
+IF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90
+Cj4gWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgcmVtb3Zl
+IHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2Fu
+J3QgcmVtb3ZlIHNuYXBzaG90Cj4gWyBPSyBdIGx2MStzbmFwMTkgYWN0aXZhdGVkLgo+IFN0YXJ0
+aW5nIHRpbWUgOiAzNyBzLgo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+IFN0b3BwaW5n
+IHNuYXAwIDogVGh1cnNkYXkgMjggTm92ZW1iZXIgIDEwOjAyOjA2IEVTVCAyMDEzCj4gWyBGQUlM
+IF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gWyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90
+Cj4gWyBGQUlMIF0gbHYwK3NuYXAwMCBzdGlsbCBhY3RpdmUgISEhCj4gWyBPSyBdIGx2MCtzbmFw
+MDAgdW1vdW50ZWQuCj4gU3RvcHBpbmcgdGltZSA6IDAgcy4KPgo+IEkndmUgZ290IG5vIGlkZWEg
+aXMgdGhpcyBpcyBpbnRlbmRlZCBiZWhhdmlvdXIsIGJ1dCBpdCBzdXJlIGRvZXNuJ3QKPiBzZWVt
+IHJpZ2h0IHRvIG1lLi4uCj4KPgo+ICAgIApZZXMsIHNvbWV0aW1lcyB1bW91bnQgYW5kIHJlbW92
+ZSBvcGVyYXRpb25zIGZhaWwuIFRoaXMgc2NyaXB0IHRlc3RzIApzeXN0ZW0gc3RhYmlsaXR5IGFu
+ZCB0aGVzZSBtZXNzYWdlcyBhcmUgZGVidWcgaW5mbyBvbmx5LgpJJ3ZlIGZpeGVkIGl0LiBOb3cg
+aXQgdGFrZXMgdHdvIHBhcmFtZXRlcnM6IGRldmljZSBhbmQgbW91bnQgcG9pbnQuCgojIS9iaW4v
+YmFzaAoKREVWPSQxCk1PVU5UUE9JTlQ9JDIKCmZ1bmN0aW9uIHByaW50X3VzYWdlKCkKewogICAg
+IGVjaG8gIlVzYWdlOiAkMCBkZXZpY2UgbW91bnRwb2ludCIKICAgICBleGl0IDE7Cn0KCmlmIFsg
+LXogIiRERVYiIF07IHRoZW4KICAgICBwcmludF91c2FnZQpmaQoKaWYgWyAteiAiJE1PVU5UUE9J
+TlQiIF07IHRoZW4KICAgICBwcmludF91c2FnZQpmaQoKZnVuY3Rpb24gb3ZlcmxvYWQoKQp7CkNP
+VU5UPSQxCnRlbXBfQ09VTlQ9JENPVU5UOwoKd2hpbGUgWyAtZiAuL3J1biBdOyBkbwogICAgIHdo
+aWxlIFsgJENPVU5UIC1nZSAxIF07IGRvCiAgICAgICAgIGlmIFsgLWYgLi9ydW4gXTsgdGhlbgog
+ICAgICAgICAgICAgZGQgYnM9MTAyNCBjb3VudD0xMDI0MDAgaWY9L2Rldi96ZXJvIG9mPS8kMi8i
+XyIkQ09VTlQgJj4gCi9kZXYvbnVsbAogICAgICAgICBmaTsKICAgICAgICAgbGV0IENPVU5UPSRD
+T1VOVC0xCiAgICAgZG9uZTsKCiAgICAgcm0gJDIvKjsKICAgICBDT1VOVD0kdGVtcF9DT1VOVDsK
+CmRvbmU7Cn0KCgpmdW5jdGlvbiBjcmVhdGVfdmcoKQp7CiAgICAgI2NyZWF0ZSBwaHlzaWNhbCB2
+b2x1bWUKICAgICBwdmNyZWF0ZSAkREVWCiAgICAgaWYgW1sgJD8gLWd0IDAgXV07IHRoZW4KICAg
+ICAgICAgZWNobyAiWyBGQUlMIF0gVW5hYmxlIHRvIGNyZWF0ZSBwaHlzaWNhbCB2b2x1bWUiCiAg
+ICAgICAgIGV4aXQgMQogICAgIGZpCiAgICAgI2NyZWF0ZSB2b2x1bWUgZ3JvdXAKICAgICB2Z2Ny
+ZWF0ZSAtdiAtcyAzMk0gJFZHICRERVYKICAgICBpZiBbWyAkPyAtZ3QgMCBdXTsgdGhlbgogICAg
+ICAgICBlY2hvICJbIEZBSUwgXSBVbmFibGUgdG8gY3JlYXRlIHZvbHVtZSBncm91cCIKICAgICAg
+ICAgZXhpdCAxCiAgICAgZmkKfQoKZnVuY3Rpb24gY3JlYXRlX2x2KCkKewogICAgIGxvY2FsIExW
+PSIkMSIKICAgICAjY3JlYXRlIGxvZ2ljYWwgdm9sdW1lCiAgICAgbHZjcmVhdGUgLWwgNTAwIC1u
+ICIkVkcrJExWIiAiJFZHIgogICAgIGlmIFtbICQ/IC1ndCAwIF1dOyB0aGVuCiAgICAgICAgIGVj
+aG8gIlsgRkFJTCBdIFVuYWJsZSB0byBjcmVhdGUgTFYiCiAgICAgICAgIGV4aXQgMQogICAgIGZp
+CiAgICAgbWtmcyAtdCB4ZnMgLWYgLWwgbGF6eS1jb3VudD0wIC9kZXYvJFZHLyIkVkcrJExWIiAm
+Pi9kZXYvbnVsbAogICAgIGlmIFtbICQ/IC1ndCAwIF1dOyB0aGVuCiAgICAgICAgIGVjaG8gIlsg
+RkFJTCBdIENhbid0IGNyZWF0ZSBmaWxlc3lzdGVtIgogICAgICAgICBleGl0IDEKICAgICBmaQp9
+CgpmdW5jdGlvbiBjcmVhdGVfc25hcHNob3RzKCkKewogICAgIGZvciAoKGk9MDsgaSA8IDIwOyBp
+KyspKTsgZG8KICAgICAgICAgaWYgW1sgJGkgLWx0IDEwIF1dOyB0aGVuCiAgICAgICAgICAgICBs
+dmNyZWF0ZSAtbCAiNjQiIC1uICJzbmFwMCRpIiAiJFZHIgogICAgICAgICAgICAgaWYgW1sgJD8g
+LWd0IDAgXV07IHRoZW4KICAgICAgICAgICAgICAgICBlY2hvICJbIEZBSUwgXSBVbmFibGUgdG8g
+Y3JlYXRlIHNuYXBzaG90IExWIgogICAgICAgICAgICAgICAgIGV4aXQgMQogICAgICAgICAgICAg
+ZmkKICAgICAgICAgZWxzZQogICAgICAgICAgICAgbHZjcmVhdGUgLWwgIjY0IiAtbiAic25hcCRp
+IiAiJFZHIgogICAgICAgICAgICAgaWYgW1sgJD8gLWd0IDAgXV07IHRoZW4KICAgICAgICAgICAg
+ICAgICBlY2hvICJbIEZBSUwgXSBVbmFibGUgdG8gY3JlYXRlIHNuYXBzaG90IExWIgogICAgICAg
+ICAgICAgICAgIGV4aXQgMQogICAgICAgICAgICAgZmkKICAgICAgICAgZmkKICAgICBkb25lCn0K
+CmZ1bmN0aW9uIGFzc2lnbl9zbmFwc2hvdHMoKQp7CiAgICAgZm9yICgoaT0wOyBpIDwgMjA7IGkr
+KykpOyBkbwogICAgICAgICBpZiBbWyAkaSAtbHQgMTAgXV07IHRoZW4KICAgICAgICAgICAgIGx2
+cmVuYW1lICIkVkciICJzbmFwMCRpIiAibHYwK3NuYXAwJGkiCiAgICAgICAgICAgICBpZiBbWyAk
+PyAtZ3QgMCBdXTsgdGhlbgogICAgICAgICAgICAgICAgIGVjaG8gIlsgRkFJTCBdIFVuYWJsZSB0
+byByZW5hbWUgc25hcHNob3QgTFYiCiAgICAgICAgICAgICAgICAgZXhpdCAxCiAgICAgICAgICAg
+ICBmaQogICAgICAgICBlbHNlCiAgICAgICAgICAgICBsdnJlbmFtZSAiJFZHIiAic25hcCRpIiAi
+bHYxK3NuYXAkaSIKICAgICAgICAgICAgIGlmIFtbICQ/IC1ndCAwIF1dOyB0aGVuCiAgICAgICAg
+ICAgICAgICAgZWNobyAiWyBGQUlMIF0gVW5hYmxlIHRvIHJlbmFtZSBzbmFwc2hvdCBMViIKICAg
+ICAgICAgICAgICAgICBleGl0IDEKICAgICAgICAgICAgIGZpCiAgICAgICAgIGZpCiAgICAgZG9u
+ZQp9CgpmdW5jdGlvbiBtb3VudF92b2x1bWUoKQp7CiAgICAgbG9jYWwgTVZHPSQxCiAgICAgbG9j
+YWwgTUxWPSQyCiAgICAgbWtkaXIgLXAgIiRNT1VOVFBPSU5ULyRNVkcrJE1MViIKICAgICBpZiBb
+WyAkPyAtZ3QgMCBdXTsgdGhlbgogICAgICAgICBlY2hvICJbIEZBSUwgXSBVbmFibGUgdG8gY3Jl
+YXRlIG1vdW50aW5nIHBvaW50IgogICAgICAgICBleGl0IDEKICAgICBmaQogICAgIG1vdW50IC10
+IHhmcyAtbyAKZGVmYXVsdHMsdXNycXVvdGEsZ3JwcXVvdGEsbm91dWlkLG5vYXRpbWUsbm9kaXJh
+dGltZSAKIi9kZXYvJE1WRy8kTVZHKyRNTFYiICIkTU9VTlRQT0lOVC8kTVZHKyRNTFYiCiAgICAg
+aWYgW1sgJD8gLWd0IDAgXV07IHRoZW4KICAgICAgICAgZWNobyAiWyBGQUlMIF0gVW5hYmxlIHRv
+IG1vdW50IExWIgogICAgICAgICBleGl0IDEKICAgICBmaQp9CgpmdW5jdGlvbiBzdGFydF9vdmVy
+bG9hZCgpCnsKICAgICB0b3VjaCAuL3J1bgogICAgIG1rZGlyIC1wICIkTU9VTlRQT0lOVC8kMSsk
+Mi90ZXN0IgogICAgIG92ZXJsb2FkIDUwICIkTU9VTlRQT0lOVC8kMSskMi90ZXN0IiAkMyAmCiAg
+ICAgZWNobyAib3ZlcmxvYWQgJDEgJE1PVU5UUE9JTlQvJDErJDIvdGVzdCAkMyAmIgogICAgIHNs
+ZWVwIDQ7CiAgICAgZWNobyAiWyBPSyBdIGNvcHlpbmcgZmlsZXMgdG8gJDIgc3RhcnRlZCIKfQoK
+ZnVuY3Rpb24gZ2V0X3NuYXBzaG90X3N0YXR1cygpCnsKICAgICBsdmRpc3BsYXkgL2Rldi8kMS8k
+MiB8IGF3ayAnICQwfiJMViBzbmFwc2hvdCBzdGF0dXMiIHsgcHJpbnQgJDQgfSAnCn0KCmZ1bmN0
+aW9uIHJlbW92ZV9zbmFwc2hvdCgpCnsKICAgICBsb2NhbCBMVkc9JDEKICAgICBsb2NhbCBMTFY9
+JDIKICAgICBsb2NhbCBMU05BUD0kMwogICAgIHVtb3VudCAiJE1PVU5UUE9JTlQvJExTTkFQIgog
+ICAgIGlmIFtbICQ/IC1ndCAwIF1dOyB0aGVuCiAgICAgICAgIGVjaG8gIlsgRkFJTCBdIENhbid0
+IHVtb3VudCBzbmFwc2hvdCIKICAgICBmaQogICAgIGx2cmVtb3ZlIC1zZiAgIi9kZXYvJExWRy8k
+TFNOQVAiCiAgICAgaWYgW1sgJD8gLWd0IDAgXV07IHRoZW4KICAgICAgICAgZWNobyAiWyBGQUlM
+IF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90IgogICAgIGZpCn0KCmZ1bmN0aW9uIGNyZWF0ZV9zbmFw
+c2hvdCgpCnsKICAgICBsb2NhbCBMVkc9JDEKICAgICBsb2NhbCBMTFY9JDIKICAgICBsb2NhbCBM
+U05BUD0kMwogICAgIGZvcigoaXQ9MDsgaXQ8NzsgaXQrKykpOyBkbwogICAgICAgICBsb2NhbCBF
+UlJPUj0wCiAgICAgICAgIGxvY2FsIFNUQVRVUz1gZ2V0X3NuYXBzaG90X3N0YXR1cyAkTFZHICRM
+U05BUGAKICAgICAgICAgaWYgW1sgIiRTVEFUVVMiID09ICJhY3RpdmUiIF1dOyB0aGVuCiAgICAg
+ICAgICAgICByZW1vdmVfc25hcHNob3QgJExWRyAiJExMViskTFNOQVAiCiAgICAgICAgIGZpCiAg
+ICAgICAgIFNUQVRVUz1gZ2V0X3NuYXBzaG90X3N0YXR1cyAkTFZHICRMU05BUGAKICAgICAgICAg
+aWYgW1sgIiRTVEFUVVMiID09ICJhY3RpdmUiIF1dOyB0aGVuCiAgICAgICAgICAgICByZW1vdmVf
+c25hcHNob3QgICRMVkcgIiRMTFYrJExTTkFQIgogICAgICAgICBmaQogICAgICAgICBDSFVOS1NJ
+WkU9NTEyCiAgICAgICAgIGZvciAoKGlsZT0wO2lsZTxpdC8yO2lsZSsrKSk7IGRvCiAgICAgICAg
+ICAgICBDSFVOS1NJWkU9JCgoQ0hVTktTSVpFLzIpKQogICAgICAgICBkb25lCiAgICAgICAgIGx2
+Y29udmVydCAtcyAtYyAkQ0hVTktTSVpFICIvZGV2LyRMVkcvJExWRyskTExWIiAiL2Rldi8kTFZH
+LyRMU05BUCIKICAgICAgICAgaWYgW1sgJD8gLWd0IDAgXV07IHRoZW4KICAgICAgICAgICAgIEVS
+Uk9SPTEKICAgICAgICAgZmkKICAgICAgICAgI21vdW50IHNuYXBzaG90CiAgICAgICAgIG1rZGly
+IC1wICIkTU9VTlRQT0lOVC8kTFNOQVAiCiAgICAgICAgIG1vdW50IC10IHhmcyAtbyBub3V1aWQs
+bm9hdGltZSAiL2Rldi8kTFZHLyRMU05BUCIgCiIkTU9VTlRQT0lOVC8kTFNOQVAiCiAgICAgICAg
+IGlmIFtbICQ/IC1ndCAwIF1dOyB0aGVuCiAgICAgICAgICAgICBFUlJPUj0yCiAgICAgICAgIGZp
+CiAgICAgICAgIGNyZWF0ZV90aW1lPWBkYXRlICIrJVktJW0tJWQgJUg6JU06JVMiYAogICAgICAg
+ICBpZiBbICRFUlJPUiAtbmUgMCBdOyB0aGVuCiAgICAgICAgICAgICByZW1vdmVfc25hcHNob3Qg
+JExWRyAkTExWICRMU05BUAogICAgICAgICAgICAgc2xlZXAgNQogICAgICAgICBlbHNlCiAgICAg
+ICAgICAgICBicmVhazsKICAgICAgICAgZmkKICAgICBkb25lCgp9CgpmdW5jdGlvbiBzdGFydF9z
+bmFwKCkKewogICAgIGxvY2FsIGk7CiAgICAgZm9yKChpPTA7IGk8MjA7IGkrKykpOyBkbwogICAg
+ICAgICBlY2hvICJTdGFydGluZyBzbmFwJGkgOiBgZGF0ZWAiCiAgICAgICAgIGxvY2FsIFNUQVJU
+PWBkYXRlICslc2AKICAgICAgICAgaWYgW1sgJGkgLWx0IDEwIF1dOyB0aGVuCiAgICAgICAgIHNu
+YXBuYW1lPSJsdjArc25hcDAiJGkKICAgICAgICAgY3JlYXRlX3NuYXBzaG90ICRWRyAibHYwIiAk
+c25hcG5hbWUKICAgICAgICAgZWxzZQogICAgICAgICAgICAgc25hcG5hbWU9Imx2MStzbmFwIiRp
+CiAgICAgICAgIGNyZWF0ZV9zbmFwc2hvdCAkVkcgImx2MSIgJHNuYXBuYW1lCiAgICAgICAgIGZp
+CiAgICAgICAgIGlmIFsgLXogImBsdnMgfCBncmVwICRzbmFwbmFtZSB8IGdyZXAgJFZHK2x2YCIg
+XTsgdGhlbgogICAgICAgICAgICAgZWNobyAiWyBGQUlMIF0gJHNuYXBuYW1lIG5vdCBhY3RpdmF0
+ZWQgISEhIgogICAgICAgICBlbHNlCiAgICAgICAgICAgICBlY2hvICJbIE9LIF0gJHNuYXBuYW1l
+IGFjdGl2YXRlZC4iCiAgICAgICAgIGZpCiAgICAgICAgIGlmIFsgLXogImBtb3VudCB8IGdyZXAg
+JHNuYXBuYW1lYCIgXTsgdGhlbgogICAgICAgICAgICAgZWNobyAiWyBGQUlMIF0gJHNuYXBuYW1l
+IG5vdCBtb3VudGVkICEhISIgPj4gJExPR0ZJTEUKICAgICAgICAgZWxzZQogICAgICAgICAgICAg
+ZWNobyAiWyBPSyBdICRzbmFwbmFtZSBtb3VudGVkLiIKICAgICAgICAgZmkKICAgICAgICAgbG9j
+YWwgU1RPUD0kW2BkYXRlICslc2AtJFNUQVJUXQogICAgICAgICBlY2hvICJTdGFydGluZyB0aW1l
+IDogJFNUT1Agcy4iCiAgICAgICAgIGVjaG8gIi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSIK
+ICAgICAgICAgc2xlZXAgMgogICAgIGRvbmU7Cn0KCmZ1bmN0aW9uIHN0b3Bfc25hcCgpCnsKICAg
+ICBsb2NhbCBpCiAgICAgZm9yKChpPTA7IGk8MjA7IGkrKykpOyBkbwogICAgICAgICBlY2hvICJT
+dG9wcGluZyBzbmFwJGkgOiBgZGF0ZWAiCiAgICAgICAgIGxvY2FsIFNUQVJUPWBkYXRlICslc2AK
+ICAgICAgICAgaWYgW1sgJGkgLWx0IDEwIF1dOyB0aGVuCiAgICAgICAgICAgICBzbmFwbmFtZT0i
+bHYwK3NuYXAwIiRpCiAgICAgICAgICAgICByZW1vdmVfc25hcHNob3QgJFZHICJsdjAiICRzbmFw
+bmFtZQogICAgICAgICBlbHNlCiAgICAgICAgICAgICBzbmFwbmFtZT0ibHYxK3NuYXAiJGkKICAg
+ICAgICAgICAgIHJlbW92ZV9zbmFwc2hvdCAkVkcgImx2MSIgJHNuYXBuYW1lCiAgICAgICAgIGZp
+CiAgICAgICAgIGlmIFsgImBsdnMgfCBncmVwICRzbmFwbmFtZSB8IGdyZXAgJFZHK2x2YCIgXTsg
+dGhlbgogICAgICAgICAgICAgZWNobyAiWyBGQUlMIF0gJHNuYXBuYW1lIHN0aWxsIGFjdGl2ZSAh
+ISEiCiAgICAgICAgIGVsc2UKICAgICAgICAgICAgIGVjaG8gIlsgT0sgXSAkc25hcG5hbWUgZGVh
+Y3RpdmF0ZWQuIgogICAgICAgICBmaTsKICAgICAgICAgaWYgWyAgImBtb3VudCB8IGdyZXAgJHNu
+YXBuYW1lYCIgXTsgdGhlbgogICAgICAgICAgICAgZWNobyAiWyBGQUlMIF0gJHNuYXBuYW1lIHN0
+aWxsIG1vdW50ZWQgISEhIiA+PiAkTE9HRklMRQogICAgICAgICBlbHNlCiAgICAgICAgICAgICBl
+Y2hvICJbIE9LIF0gJHNuYXBuYW1lIHVtb3VudGVkLiIKICAgICAgICAgZmk7CiAgICAgICAgIGxv
+Y2FsIFNUT1A9JFtgZGF0ZSArJXNgLSRTVEFSVF0KICAgICAgICAgZWNobyAiU3RvcHBpbmcgdGlt
+ZSA6ICRTVE9QIHMuIgogICAgICAgICBlY2hvICItLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0i
+CiAgICAgICAgIHNsZWVwIDIKICAgICBkb25lOwp9CgpWRz0idmcwIgoKZWNobyAiLS0tLS0tLS0g
+Q3JlYXRpbmcgJFZHIG9uICRERVYuLi4iCmNyZWF0ZV92ZwplY2hvICJbIE9LIF0gVm9sdW1lIGdy
+b3VwIGNyZWF0ZWQgc3VjY2Vzc2Z1bGx5IgplY2hvICItLS0tLS0tLSBDcmVhdGluZyBsb2dpY2Fs
+IHZvbHVtZXMgb24gJFZHLi4uIgpjcmVhdGVfbHYgImx2MCIKY3JlYXRlX2x2ICJsdjEiCmVjaG8g
+IlsgT0sgXSBMb2dpY2FsIHZvbHVtZXMgY3JlYXRlZCBzdWNjZXNzZnVsbHkiCmVjaG8gIi0tLS0t
+LS0tIE1vdW50aW5nIGxvZ2ljYWwgdm9sdW1lcy4uLiIKbW91bnRfdm9sdW1lICIkVkciICJsdjAi
+Cm1vdW50X3ZvbHVtZSAiJFZHIiAibHYxIgplY2hvICJbIE9LIF0gTG9naWNhbCB2b2x1bWVzIG1v
+dW50ZWQgc3VjY2Vzc2Z1bGx5IgplY2hvICItLS0tLS0tLSBDcmVhdGluZyBzbmFwc2hvdHMuLi4i
+CmNyZWF0ZV9zbmFwc2hvdHMKZWNobyAiWyBPSyBdIFNuYXBzaG90cyBjcmVhdGVkIHN1Y2Nlc3Nm
+dWxseSIKZWNobyAiLS0tLS0tLS0gQXNzaWduaW5nIHNuYXBzaG90cy4uLiIKYXNzaWduX3NuYXBz
+aG90cwplY2hvICJbIE9LIF0gU25hcHNob3RzIGFzc2lnbmVkIHN1Y2Nlc3NmdWxseSIKZWNobyAi
+LS0tLS0tLS0gU3RhcnQgb3ZlcmxvYWQuLi4iCnN0YXJ0X292ZXJsb2FkICIkVkciICJsdjAiCnN0
+YXJ0X292ZXJsb2FkICIkVkciICJsdjEiCgp3aGlsZSB0cnVlOyBkbwogICAgIHN0YXJ0X3NuYXAg
+Mj4gL2Rldi9udWxsCiAgICAgc3RvcF9zbmFwICAyPiAvZGV2L251bGwKZG9uZQoKcm0gLi9ydW4K
+Ci0tIApCZXN0IHJlZ2FyZHMKQXJrYWRpdXN6IEJ1YmHFgmEKT3Blbi1FIFBvbGFuZCBTcC4geiBv
+Lm8uCnd3dy5vcGVuLWUuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
