@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C5AB97F4E
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 17:06:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B16BD8F806F
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 15:06:15 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 952E67F4E
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 18:34:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 73950304039
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 16:34:33 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ICnvfcuGbl2E2s7X for <xfs@oss.sgi.com>;
-	Wed, 27 Nov 2013 15:06:13 -0800 (PST)
-Date: Thu, 28 Nov 2013 10:06:08 +1100
+	a7uFUcGS1ywCk1ig for <xfs@oss.sgi.com>;
+	Wed, 27 Nov 2013 16:34:29 -0800 (PST)
+Date: Thu, 28 Nov 2013 11:34:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] Call trace during snapshot start/stop sequence
-Message-ID: <20131127230608.GJ10988@dastard>
-References: <5295C307.6030804@open-e.com>
- <20131127221923.GI10988@dastard>
+Subject: Re: [PATCH] xfstests: add a new test case to test i_size updated
+	properly under dio
+Message-ID: <20131128003416.GL10988@dastard>
+References: <1385013394-20379-1-git-send-email-wenqing.lz@taobao.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131127221923.GI10988@dastard>
+In-Reply-To: <1385013394-20379-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,90 +26,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Buba=C5=82a?= <arkadiusz.bubala@open-e.com>
-Cc: xfs@oss.sgi.com
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Zheng Liu <wenqing.lz@taobao.com>, Rich Johnston <rjohnston@sgi.com>, xfs@oss.sgi.com
 
-T24gVGh1LCBOb3YgMjgsIDIwMTMgYXQgMDk6MTk6MjNBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIFdlZCwgTm92IDI3LCAyMDEzIGF0IDExOjAxOjQzQU0gKzAxMDAsIEFya2FkaXVz
-eiBCdWJhxYJhIHdyb3RlOgo+ID4gSGVsbG8sCj4gPiAKPiA+IHdlJ3JlIHJ1bm5pbmcgdGVzdCBz
-Y3JpcHQgdGhhdCBzdGFydHMgYW5kIHN0b3BzCj4gPiBzbmFwc2hvdHMgaW4gYSBsb29wIHdoaWxl
-IG92ZXJmaWxsaW5nIHRoZW0uICBBZnRlciBhIGZldyBkYXlzIG9mIHJ1bm5pbmcKPiA+IHN5c3Rl
-bSBoYW5ncy4gV2UndmUgY2FwdHVyZWQgZm9sbG93aW5nIGNhbGwgdHJhY2U6Cj4gPiAKPiA+IFsx
-MTY2NDkuNzU1NzYxXSBYRlMgKGRtLTQyKTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAweGZh
-MmIwNgo+ID4gKCJ4bG9nX2lvZG9uZSIpIGVycm9yIDUgYnVmIGNvdW50IDEwMjQKPiA+IFsxMTY2
-NDkuOTQ3MjQ3XSBYRlMgKGRtLTQyKTogTG9nIEkvTyBFcnJvciBEZXRlY3RlZC4gIFNodXR0aW5n
-IGRvd24KPiA+IGZpbGVzeXN0ZW0KPiA+IFsxMTY2NTAuMDczODgxXSBYRlMgKGRtLTQyKTogUGxl
-YXNlIHVtb3VudCB0aGUgZmlsZXN5c3RlbSBhbmQgcmVjdGlmeQo+ID4gdGhlIHByb2JsZW0ocykK
-PiAKPiBTbywgYW4gRUlPIGVycm9yIG9uIGEgbG9nIElPLCByZXN1bHRpbmcgaW4gYSBzaHV0ZG93
-bi4uLi4KPiAKPiA+IFsxMTY2NTAuMjA3MTg2XSBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVs
-IHBhZ2luZyByZXF1ZXN0IGF0Cj4gPiAwMDAwMDAwMDAwMDAxMGE4Cj4gCj4gVGhhdCdzIGFuIGlu
-dGVyZXN0aW5nIG9mZnNldCAtIHF1aXRlIGxhcmdlIGZvciBhIG51bGwgcG9pbnRlcgo+IGRlcmVm
-ZXJlbmNlLgo+IAo+ID4gWzExNjY1MC4zMzUxODVdIElQOiBbPGZmZmZmZmZmODEwMmUxZDY+XSBf
-X3RpY2tldF9zcGluX2xvY2srMHg2LzB4MjAKPiA+IFsxMTY2NTAuNDUxMDUyXSBQR0QgMAo+ID4g
-WzExNjY1MC41MTgxNTFdIE9vcHM6IDAwMDIgWyMxXSBTTVAKPiA+IFsxMTY2NTAuNTk5NDc3XSBD
-UFUgMAo+ID4gWzExNjY1MC42MjI4MzhdIE1vZHVsZXMgbGlua2VkIGluOiBpc2NzaV9zY3N0KE8p
-IHNjc3RfdmRpc2soTykgc2NzdChPKQo+ID4gZHJiZChPKSB0d29maXNoX3g4Nl82NCB0d29maXNo
-X2dlbmVyaWMgdHdvZmlzaF9jb21tb24KPiA+IHNlcnBlbnRfc3NlMl94ODZfNjQgbHJ3IHh0cyBn
-ZjFdCj4gPiBbMTE2NjUxLjQ3OTczMF0KPiA+IFsxMTY2NTEuNTQwNjc0XSBQaWQ6IDMwMTczLCBj
-b21tOiBrd29ya2VyLzA6NSBUYWludGVkOiBHICAgICAgICAgICBPCj4gPiAzLjQuNjMtb2U2NC0w
-MDAwMC1nMWEzMzkwMiAjMzggSW50ZWwgQ29ycG9yYXRpb24gUzEyMDBCVEwvUzEyMDBCVEwKPiAK
-PiBSdW5uaW5nIGEgY3VzdG9tIGJ1aWx0IDMuNC42MyBrZXJuZWwgd2l0aCBhIGJ1bmNoIG9mIG91
-dCBvZiB0cmVlCj4gbW9kdWxlcyBpbnN0YWxsZWQuIGNhbiB5b3UgcmVwcm9kdWNlIHRoaXMgb24g
-YSB2YW5pbGxhIDMuMTIga2VybmVsPwo+IAo+ID4gWzExNjY1My45MjM4MzNdIENhbGwgVHJhY2U6
-Cj4gPiBbMTE2NjUzLjk5NTAwNl0gIFs8ZmZmZmZmZmY4MTVmNGI0NT5dID8gX3Jhd19zcGluX2xv
-Y2srMHg1LzB4MTAKPiA+IFsxMTY2NTQuMTAzNDYyXSAgWzxmZmZmZmZmZjgxMjY4NWYyPl0gPyB4
-bG9nX3N0YXRlX2RvbmVfc3luY2luZysweDMyLzB4YzAKPiA+IFsxMTY2NTQuMjIxNzE2XSAgWzxm
-ZmZmZmZmZjgxMDUxODQzPl0gPyBwcm9jZXNzX29uZV93b3JrKzB4ZjMvMHgzMjAKPiA+IFsxMTY2
-NTQuMzMzMTk1XSAgWzxmZmZmZmZmZjgxMDUzNGYyPl0gPyB3b3JrZXJfdGhyZWFkKzB4ZTIvMHgy
-ODAKPiA+IFsxMTY2NTQuNDQxMDMxXSAgWzxmZmZmZmZmZjgxMDUzNDEwPl0gPyBnY3dxX21heWRh
-eV90aW1lb3V0KzB4ODAvMHg4MAo+ID4gWzExNjY1NC41NTM1MTJdICBbPGZmZmZmZmZmODEwNTc3
-NmI+XSA/IGt0aHJlYWQrMHg5Yi8weGIwCj4gCj4gV2hpY2ggaXMgdGhpcyBsaW5lOgo+IAo+IFNU
-QVRJQyB2b2lkCj4geGxvZ19zdGF0ZV9kb25lX3N5bmNpbmcoCj4gICAgICAgICB4bG9nX2luX2Nv
-cmVfdCAgKmljbG9nLAo+ICAgICAgICAgaW50ICAgICAgICAgICAgIGFib3J0ZWQpCj4gewo+ICAg
-ICAgICAgc3RydWN0IHhsb2cgICAgICAgICpsb2cgPSBpY2xvZy0+aWNfbG9nOwo+IAo+ICAgICAg
-ICAgc3Bpbl9sb2NrKCZsb2ctPmxfaWNsb2dsb2NrKTsKPiAKPiBTbywgdGhlIGljbG9nbG9jayBp
-cyBhdCBvZmZzZXQgMjk2IGJ5dGVzIGludG8gdGhlIHN0cnVjdCB4bG9nLCBhbmQKPiB0aGUgaWNs
-b2cgc3RydWN0dXJlIGlzIG9ubHkgMjU2IGJ5dGVzIGluIHNpemUgaXRzZWxmLCBzbyB0aGF0Cj4g
-c3RydWN0dXJlIG9mZnNldCBpcyB3YXkgb3V0c2lkZSBhbnl0aGluZyB0aGUgY29kZSBzaG91bGQg
-YmUgdHJ5aW5nCj4gdG8gYWNjZXNzIChpZ25vcmluZyB0aGUgbnVsbCBwb2ludGVyIGlzc3VlKS4g
-RXZlbiBpZiB3ZSBhc3N1bWUgdGhhdAo+IHRoZSAweDEwMDAgYml0IGlzIGEgbWVtb3J5IGNvcnJ1
-cHRpb24sIG9mZnNldCAweGE4IGxhbmRzIGluIGEgaG9sZQo+IGluIHRoZSBzdHJ1Y3QgeGxvZ19p
-bl9jb3JlLCBhbmQgaXNpbiB0aGUgbWlkZGxlIG9mIGEgYnVuY2ggb2YgbG9nCj4gc2l6ZSBjb25z
-dGFudHMgaW4gdGhlIHN0cnVjdCB4bG9nIChsX3NlY3RCQnNpemUgdG8gYmUgZXhhY3QpLgo+IAo+
-IFNvIHRoaXMgZG9lc24ndCBtYWtlIG11Y2ggc2Vuc2UgdG8gbWUuCj4gCj4gQlRXLCB5b3Ugc2hv
-dWxkIGNvbXBpbGUgeW91IGtlcm5lbHMgd2l0aCBmcmFtZSBwb2ludGVycyBlbmFibGVkIHNvCj4g
-dGhhdCB0aGUga2VybmVsIGVtaXRzIHN0YWNrIHRyYWNlcyB0aGF0IGNhbiBiZSB0cnVzdGVkIHJh
-dGhlciB0aGFuCj4ganVzdCBkdW1waW5nIGEgbGlzdCBvZiBzeW1ib2xzIGZvdW5kIG9uIHRoZSBz
-dGFjay4uLgo+IAo+ID4gSXQgbG9va3MgbGlrZSBhIHJhY2UgY29uZGl0aW9uLgo+IAo+IExvb2tz
-IG1vcmUgbGlrZSBtZW1vcnkgY29ycnVwdGlvbiB0byBtZS4uLi4KPiAKPiA+IFRlc3Qgc2NyaXB0
-IHNvdXJjZToKPiAKPiBJJ2xsIHNlZSBpZiBJIGNhbiByZXByb2R1Y2UgaXQgbG9jYWxseS4KClRo
-ZSBzY3JpcHQgaXMgZnVsbCBvZiBidWdzLCBhbmQgaSBkb24ndCBoYXZlIHRpbWUgdG8gZGVidWcg
-aXQgLSBpdApoYXJkIGNvZGVzIC9kZXYvc2RhIGluIHBsYWNlcyBkZXNwaXRlIHRha2luZyB0aGUg
-ZGV2aWNlIGFzIGEgQ0xJCnBhcmFtZXRlci4gSXQgaGFzIGhhcmQgY29kZWQgbW91bnQgcG9pbnRz
-LiAgSXQgc29tZXRpbWVzIGZhaWxzIHRvCm1ha2UgdGhlIGZpbGVzeXN0ZW0gb24gdGhlIGJhc2Ug
-TFYgYWZ0ZXIgaXQncyBiZWVuIGNyZWF0ZWQuCnN0YXJ0X3NuYXAoKSBhcHBlYXJzIHRvIGZhaWwg
-Zm9yIHNvbWUgcmVhc29uLCBhcyBpdCBkb2Vzbid0IHJlc3VsdAppbiBtb3VudGVkIHNuYXBzaG90
-cy4gc3RvcF9zbmFwIGZhaWxzIGFzIHdlbGw6CgpTdGFydGluZyBzbmFwMTkgOiBUaHVyc2RheSAy
-OCBOb3ZlbWJlciAgMTA6MDE6MjYgRVNUIDIwMTMKICBMb2dpY2FsIHZvbHVtZSBsdjErc25hcDE5
-IGNvbnZlcnRlZCB0byBzbmFwc2hvdC4KWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Clsg
-RkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hvdApbIEZBSUwgXSBDYW4ndCB1bW91bnQgc25hcHNo
-b3QKWyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90ClsgRkFJTCBdIENhbid0IHVtb3VudCBz
-bmFwc2hvdApbIEZBSUwgXSBDYW4ndCByZW1vdmUgc25hcHNob3QKWyBGQUlMIF0gQ2FuJ3QgdW1v
-dW50IHNuYXBzaG90ClsgRkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hvdApbIEZBSUwgXSBDYW4n
-dCB1bW91bnQgc25hcHNob3QKWyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90ClsgRkFJTCBd
-IENhbid0IHVtb3VudCBzbmFwc2hvdApbIEZBSUwgXSBDYW4ndCByZW1vdmUgc25hcHNob3QKWyBG
-QUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90ClsgRkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hv
-dApbIE9LIF0gbHYxK3NuYXAxOSBhY3RpdmF0ZWQuClN0YXJ0aW5nIHRpbWUgOiAzNyBzLgotLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KU3RvcHBpbmcgc25hcDAgOiBUaHVyc2RheSAyOCBOb3Zl
-bWJlciAgMTA6MDI6MDYgRVNUIDIwMTMKWyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Clsg
-RkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hvdApbIEZBSUwgXSBsdjArc25hcDAwIHN0aWxsIGFj
-dGl2ZSAhISEKWyBPSyBdIGx2MCtzbmFwMDAgdW1vdW50ZWQuClN0b3BwaW5nIHRpbWUgOiAwIHMu
-CgpJJ3ZlIGdvdCBubyBpZGVhIGlzIHRoaXMgaXMgaW50ZW5kZWQgYmVoYXZpb3VyLCBidXQgaXQg
-c3VyZSBkb2Vzbid0CnNlZW0gcmlnaHQgdG8gbWUuLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZl
-IENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Nov 21, 2013 at 01:56:34PM +0800, Zheng Liu wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
+> 
+> In this commit a new test case is added to test that i_size is updated
+> properly under dio reads/writes.  We add a program in /src dir, which
+> has a writer to issue some append dio writes.  Meanwhile it has a
+> reader in this test do some dio reads.  As we expect, reader should read
+> nothing or data with 'a'.  But it might read some data with '0'.
+> 
+> This program is used to simulate binary log operations of database
+> application.  In these applications it implements an master/slave
+> synchronziation for database.
+> 
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Rich Johnston <rjohnston@sgi.com>
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> ---
+>  src/Makefile          |    2 +-
+>  src/diotest.c         |  166 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/321     |   56 +++++++++++++++++
+>  tests/generic/321.out |    1 +
+>  tests/generic/group   |    1 +
+>  5 files changed, 225 insertions(+), 1 deletion(-)
+>  create mode 100644 src/diotest.c
+>  create mode 100755 tests/generic/321
+>  create mode 100644 tests/generic/321.out
+> 
+> diff --git a/src/Makefile b/src/Makefile
+> index 84c8297..8c4f592 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -18,7 +18,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+>  	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+>  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+>  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
+> -	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
+> +	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec diotest
+
+Fails to compile:
+
+/tmp/cc54N2JC.o: In function `main':
+/home/dave/src/xfstests-dev/src/diotest.c:120: undefined reference to `pthread_create'
+/home/dave/src/xfstests-dev/src/diotest.c:135: undefined reference to `pthread_join'
+
+It needs to be linked against libpthread, I think, so that needs to
+be added to the LLDLIBS line, and the appropriate autoconf detection
+macros added. You shoul dbe able to just copy the some
+detection/infrastructure macros across from xfsprogs...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
