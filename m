@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2FC927F51
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:47:29 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4D7E97F51
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:50:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E1C1AC001
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:47:28 -0800 (PST)
-Received: from mail-oa0-f46.google.com (mail-oa0-f46.google.com
-	[209.85.219.46]) by cuda.sgi.com with ESMTP id EkIcyhNodk4NzN03
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3816F8F8065
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:50:41 -0800 (PST)
+Received: from mail-oa0-f44.google.com (mail-oa0-f44.google.com
+	[209.85.219.44]) by cuda.sgi.com with ESMTP id qpHZZMZmyJgauC5V
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:47:27 -0800 (PST)
-Received: by mail-oa0-f46.google.com with SMTP id o6so8990934oag.33
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:47:26 -0800 (PST)
+	<xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:50:40 -0800 (PST)
+Received: by mail-oa0-f44.google.com with SMTP id m1so9037203oag.3
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:50:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131128103930.GB26927@infradead.org>
+In-Reply-To: <20131128103549.GA26927@infradead.org>
 References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
-	<1385379154-3802-5-git-send-email-zwu.kernel@gmail.com>
-	<20131125135149.GD30189@infradead.org>
-	<CAEH94LiiRgQGzf+YGy23SJDhHJ_1grC3kniLqXDdUQFJ09McTA@mail.gmail.com>
-	<20131128103930.GB26927@infradead.org>
-Date: Thu, 28 Nov 2013 18:47:26 +0800
-Message-ID: <CAEH94LjwAFhDDiXVZJ8m=m4yVNVZ=1jdYCGv4cmD=NB1huutJg@mail.gmail.com>
-Subject: Re: [RFC PATCH 4/4] xfs: allow linkat() on O_TMPFILE files
+	<20131128103549.GA26927@infradead.org>
+Date: Thu, 28 Nov 2013 18:50:39 +0800
+Message-ID: <CAEH94LhyKoOhaUG1ToomqT_LnxG1rxcTJ2WK3D2N_Eu7pgKQhQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/4] xfs: add O_TMPFILE support
 From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -37,49 +34,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
 
-You are right for both following cases, and will fix them, thanks.
-
-On Thu, Nov 28, 2013 at 6:39 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Thu, Nov 28, 2013 at 10:37:29AM +0800, Zhi Yong Wu wrote:
->> On Mon, Nov 25, 2013 at 9:51 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> >> -     ASSERT(ip->i_d.di_nlink > 0);
->> >> +     if ((VFS_I(ip)->i_nlink == 0) &&
->> >> +         !(VFS_I(ip)->i_state & I_LINKABLE))
->> >> +             ASSERT(ip->i_d.di_nlink > 0);
->> >
->> >         ASSERT(ip->i_d.di_nlink > 0 || (VFS_I(ip)->i_state & I_LINKABLE));
->> This is wrong, and it should be
->>           ASSERT(ip->i_d.di_nlink > 0 || !(VFS_I(ip)->i_state & I_LINKABLE));
+On Thu, Nov 28, 2013 at 6:35 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Nov 25, 2013 at 07:32:30PM +0800, Zhi Yong Wu wrote:
+>> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+>>
+>> HI, folks
+>>
+>> The patchset is trying to add O_TMPFILE support to xfs. To make sure
+>> that it is going ahead in the right direction, although it is only one
+>> code draft, and hasn't strictly been tested, it is still post out ASAP.
 >
-> Why we want to assrrt that either the link count is bigger than 0,
-> or that the I_LINKABLE flag is set (for files created using O_TMPFILE)
+> Btw, for the real submission we need proper xfstests coverage, I can't
+ok, i will try to run xfstests before real submission is done.
+> really believe how the other filesystems added it without QA coverage :(
+heh, i guess that you should ask those fs maintainers this question.
 >
->> >> +
->> >> +     if ((VFS_I(sip)->i_nlink == 0) &&
->> >> +         (VFS_I(sip)->i_state & I_LINKABLE))
->> >> +             tres = &M_RES(mp)->tr_link_tmpfile;
->> >> +     else
->> >> +             tres = &M_RES(mp)->tr_link;
->> >
->> > Just check i_nlink, and for consistency it might make sense to just use
->> > the xfs_inode one.  The VFS already made sure we don't inodes with
->> but struct xfs_inode has no stuff similar to i_nlink....
->
-> ip->i_d.di_nlink is the equivalent.
->
->> > I_LINKABLE and a zero link count.
->> No, pls see the chunk of code:
->> int vfs_link(struct dentry *old_dentry, struct inode *dir, struct
->> dentry *new_dentry)
->> {
->> ...
->>     /* Make sure we don't allow creating hardlink to an unlinked file */
->>     if (inode->i_nlink == 0 && !(inode->i_state & I_LINKABLE))
->>         error =  -ENOENT;
->
-> This makes sure we never created a link if the count is zero unless
-> the I_LINKABLE is set, so we'll never see a zero link count without
-> I_LINKABLE.
+> Besides the obvious test programs there's a reproducer for a a simple
+> bug already in commit dda5690defe4af62ee120f055e98e40d97e4c760 in the
+> kernel tree.
+ok, will test if this bug is triggered.
 >
 
 
