@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 739B37F37
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 15:16:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EC4C304039
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 13:16:56 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 790BC7F37
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 15:19:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5AD068F8054
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 13:19:03 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VRFouRmKYT20hlP3 for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 13:16:54 -0800 (PST)
-Date: Fri, 29 Nov 2013 08:16:50 +1100
+	Zhj0BC5KnBKiKLPn for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 13:19:01 -0800 (PST)
+Date: Fri, 29 Nov 2013 08:18:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] Call trace during snapshot start/stop sequence
-Message-ID: <20131128211650.GQ10988@dastard>
-References: <5295C307.6030804@open-e.com> <20131127221923.GI10988@dastard>
-	<20131127230608.GJ10988@dastard> <52971442.8080701@open-e.com>
+Subject: Re: [ANNOUNCE] xfsprogs v3.2.0-alpha2
+Message-ID: <20131128211858.GR10988@dastard>
+References: <5293A699.20908@sgi.com>
+ <20131128104002.GC26927@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52971442.8080701@open-e.com>
+In-Reply-To: <20131128104002.GC26927@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,54 +26,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Buba=C5=82a?= <arkadiusz.bubala@open-e.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Rich Johnston <rjohnston@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-T24gVGh1LCBOb3YgMjgsIDIwMTMgYXQgMTE6MDA6MzRBTSArMDEwMCwgQXJrYWRpdXN6IEJ1YmHF
-gmEgd3JvdGU6Cj4gSGVsbG8sCj4gdGhhbmsgeW91IGZvciB2YWx1YWJsZSBpbmZvcm1hdGlvbi4K
-PiAKPiBPbiAyOC4xMS4yMDEzIDAwOjA2LCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPgo+ID4+UnVu
-bmluZyBhIGN1c3RvbSBidWlsdCAzLjQuNjMga2VybmVsIHdpdGggYSBidW5jaCBvZiBvdXQgb2Yg
-dHJlZQo+ID4+bW9kdWxlcyBpbnN0YWxsZWQuIGNhbiB5b3UgcmVwcm9kdWNlIHRoaXMgb24gYSB2
-YW5pbGxhIDMuMTIga2VybmVsPwo+ID4+Cj4gT2ssIHdlJ2xsIHRyeS4KPiAKPiA+VGhlIHNjcmlw
-dCBpcyBmdWxsIG9mIGJ1Z3MsIGFuZCBpIGRvbid0IGhhdmUgdGltZSB0byBkZWJ1ZyBpdCAtIGl0
-Cj4gPmhhcmQgY29kZXMgL2Rldi9zZGEgaW4gcGxhY2VzIGRlc3BpdGUgdGFraW5nIHRoZSBkZXZp
-Y2UgYXMgYSBDTEkKPiA+cGFyYW1ldGVyLiBJdCBoYXMgaGFyZCBjb2RlZCBtb3VudCBwb2ludHMu
-ICBJdCBzb21ldGltZXMgZmFpbHMgdG8KPiA+bWFrZSB0aGUgZmlsZXN5c3RlbSBvbiB0aGUgYmFz
-ZSBMViBhZnRlciBpdCdzIGJlZW4gY3JlYXRlZC4KPiA+c3RhcnRfc25hcCgpIGFwcGVhcnMgdG8g
-ZmFpbCBmb3Igc29tZSByZWFzb24sIGFzIGl0IGRvZXNuJ3QgcmVzdWx0Cj4gPmluIG1vdW50ZWQg
-c25hcHNob3RzLiBzdG9wX3NuYXAgZmFpbHMgYXMgd2VsbDoKPiA+Cj4gPlN0YXJ0aW5nIHNuYXAx
-OSA6IFRodXJzZGF5IDI4IE5vdmVtYmVyICAxMDowMToyNiBFU1QgMjAxMwo+ID4gICBMb2dpY2Fs
-IHZvbHVtZSBsdjErc25hcDE5IGNvbnZlcnRlZCB0byBzbmFwc2hvdC4KPiA+WyBGQUlMIF0gQ2Fu
-J3QgdW1vdW50IHNuYXBzaG90Cj4gPlsgRkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hvdAo+ID5b
-IEZBSUwgXSBDYW4ndCB1bW91bnQgc25hcHNob3QKPiA+WyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNu
-YXBzaG90Cj4gPlsgRkFJTCBdIENhbid0IHVtb3VudCBzbmFwc2hvdAo+ID5bIEZBSUwgXSBDYW4n
-dCByZW1vdmUgc25hcHNob3QKPiA+WyBGQUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gPlsg
-RkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hvdAo+ID5bIEZBSUwgXSBDYW4ndCB1bW91bnQgc25h
-cHNob3QKPiA+WyBGQUlMIF0gQ2FuJ3QgcmVtb3ZlIHNuYXBzaG90Cj4gPlsgRkFJTCBdIENhbid0
-IHVtb3VudCBzbmFwc2hvdAo+ID5bIEZBSUwgXSBDYW4ndCByZW1vdmUgc25hcHNob3QKPiA+WyBG
-QUlMIF0gQ2FuJ3QgdW1vdW50IHNuYXBzaG90Cj4gPlsgRkFJTCBdIENhbid0IHJlbW92ZSBzbmFw
-c2hvdAo+ID5bIE9LIF0gbHYxK3NuYXAxOSBhY3RpdmF0ZWQuCj4gPlN0YXJ0aW5nIHRpbWUgOiAz
-NyBzLgo+ID4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiA+U3RvcHBpbmcgc25hcDAgOiBU
-aHVyc2RheSAyOCBOb3ZlbWJlciAgMTA6MDI6MDYgRVNUIDIwMTMKPiA+WyBGQUlMIF0gQ2FuJ3Qg
-dW1vdW50IHNuYXBzaG90Cj4gPlsgRkFJTCBdIENhbid0IHJlbW92ZSBzbmFwc2hvdAo+ID5bIEZB
-SUwgXSBsdjArc25hcDAwIHN0aWxsIGFjdGl2ZSAhISEKPiA+WyBPSyBdIGx2MCtzbmFwMDAgdW1v
-dW50ZWQuCj4gPlN0b3BwaW5nIHRpbWUgOiAwIHMuCj4gPgo+ID5JJ3ZlIGdvdCBubyBpZGVhIGlz
-IHRoaXMgaXMgaW50ZW5kZWQgYmVoYXZpb3VyLCBidXQgaXQgc3VyZSBkb2Vzbid0Cj4gPnNlZW0g
-cmlnaHQgdG8gbWUuLi4KPiA+Cj4gPgo+IFllcywgc29tZXRpbWVzIHVtb3VudCBhbmQgcmVtb3Zl
-IG9wZXJhdGlvbnMgZmFpbC4KClRoZXkgYWx3YXlzIGZhaWwgaGVyZSAtIHNuYXBzaG90cyBhcmUg
-bm90IGJlaW5nIG1vdW50ZWQgYXQgYWxsCihub3RoaW5nIGluIGRtZXNnIGFib3V0IFhGUyBmaWxl
-c3lzdGVtcyBiZWluZyBtb3VudGVkIGR1cmluZyB0aGUKdGVzdCBhdCBhbGwpLCBzbyB0aGUgdGVz
-dCBkb2VzIG5vdCBhcHBlYXIgdG8gYmUgZG9pbmcgd2hhdCB5b3UKZXhwZWN0IHRvIGJlIGRvaW5n
-Li4uCgo+IFRoaXMgc2NyaXB0IHRlc3RzCj4gc3lzdGVtIHN0YWJpbGl0eSBhbmQgdGhlc2UgbWVz
-c2FnZXMgYXJlIGRlYnVnIGluZm8gb25seS4KCkl0IHJhbiBvdmVybmlnaHQgb24gYSBUT1QgMy4x
-My1yYzEga2VybmVsIHdpdGggbWVtb3J5IGxlYWsgYW5kCnBvaXNvbmluZyB0dXJuZWQgb24sIGlz
-c3VpbmcgdGhvc2UgZmFpbCBtZXNzYWdlcyBhbmQgbm90aGluZwpicm9rZS4uLgoKPiBJJ3ZlIGZp
-eGVkIGl0LiBOb3cgaXQgdGFrZXMgdHdvIHBhcmFtZXRlcnM6IGRldmljZSBhbmQgbW91bnQgcG9p
-bnQuCgpJJ2xsIHRyeSBpdCBhZ2Fpbi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5l
-cgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
-LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Nov 28, 2013 at 02:40:02AM -0800, Christoph Hellwig wrote:
+> On Mon, Nov 25, 2013 at 01:35:53PM -0600, Rich Johnston wrote:
+> > Alpha version 3.2.0-alpha2 of xfsprogs has been released.
+> 
+> So what issues keep us issueing alpha release instead of making a proper
+> .0 release?
+
+There's still things to fix in xfs_repair before we do a full
+release. Run xfs/291 recently?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
