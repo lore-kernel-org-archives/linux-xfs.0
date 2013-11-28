@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BB0E97F4E
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 20:37:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FAC5AC001
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 18:37:31 -0800 (PST)
-Received: from mail-ob0-f182.google.com (mail-ob0-f182.google.com
-	[209.85.214.182]) by cuda.sgi.com with ESMTP id
-	J9yPesg06qeIFoTk (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 27 Nov 2013 18:37:30 -0800 (PST)
-Received: by mail-ob0-f182.google.com with SMTP id wp4so8293696obc.13
-	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 18:37:29 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6D3637F4E
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 20:39:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 43DBD8F8040
+	for <xfs@oss.sgi.com>; Wed, 27 Nov 2013 18:39:59 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id yUUMsW4aoGOM6cUQ for <xfs@oss.sgi.com>;
+	Wed, 27 Nov 2013 18:39:57 -0800 (PST)
+Message-ID: <5296ACFB.4030901@sandeen.net>
+Date: Wed, 27 Nov 2013 20:39:55 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20131125135149.GD30189@infradead.org>
-References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
-	<1385379154-3802-5-git-send-email-zwu.kernel@gmail.com>
-	<20131125135149.GD30189@infradead.org>
-Date: Thu, 28 Nov 2013 10:37:29 +0800
-Message-ID: <CAEH94LiiRgQGzf+YGy23SJDhHJ_1grC3kniLqXDdUQFJ09McTA@mail.gmail.com>
-Subject: Re: [RFC PATCH 4/4] xfs: allow linkat() on O_TMPFILE files
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: Re: Problem with mkfs.xfs on a regular file
+References: <20131127023119.GB13101@boogeyman> <20131127024713.GE10988@dastard>
+In-Reply-To: <20131127024713.GE10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,73 +27,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, Phil White <cerise-xfs@l.armory.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 25, 2013 at 9:51 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> -     ASSERT(ip->i_d.di_nlink > 0);
->> +     if ((VFS_I(ip)->i_nlink == 0) &&
->> +         !(VFS_I(ip)->i_state & I_LINKABLE))
->> +             ASSERT(ip->i_d.di_nlink > 0);
->
->         ASSERT(ip->i_d.di_nlink > 0 || (VFS_I(ip)->i_state & I_LINKABLE));
-This is wrong, and it should be
-          ASSERT(ip->i_d.di_nlink > 0 || !(VFS_I(ip)->i_state & I_LINKABLE));
+On 11/26/13, 8:47 PM, Dave Chinner wrote:
+> On Tue, Nov 26, 2013 at 06:31:19PM -0800, Phil White wrote:
+>> Gents:
+>>
+>> I was making an image for a VM using everyone's favorite fs with a line
+>> that looked something like this:
+>> -------------
+>> dd if=/dev/zero of=~/image bs=1024 count=1048576 && ./mkfs/mkfs.xfs && mount -o loop ~/image /mnt/loop
+>> -------------
+>>
+>>
+>> mkfs.xfs gave me this output:
+>> -------------
+>> meta-data=/root/image            isize=256    agcount=4, agsize=65536 blks
+>>          =                       sectsz=512   attr=2, projid32bit=0
+>> data     =                       bsize=4096   blocks=262144, imaxpct=25
+>>          =                       sunit=0      swidth=0 blks
+>> naming   =version 2              bsize=4096   ascii-ci=0
+>> log      =internal log           bsize=4096   blocks=2560, version=2
+>>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>> existing superblock read failed: Invalid argument
+>> mkfs.xfs: pwrite64 failed: Invalid argument
+>> mkfs.xfs: read failed: Invalid argument
+>> -------------
+> .....
+>>
+>> While it occurred to me that the problem might just be line 806 of some files
+>> in xfsprogs, I threw it under a debugger and took a closer look.  The file
+>> descriptor value in xi->dfd pointed at ~/image.  errno was set to 22.  I
+>> thought that might indicate a problem with lseek(), so I rewrote the pwrite64()
+>> and pread() as lseek()s and read()/write()
+>>
+>> As you may have guessed, this did me no good at all.
+>>
+>> It's trying to read/write 512 bytes at the beginning of the file which seems
+>> reasonably innocuous.  I double checked the man page which says that under
+>> 2.6, O_DIRECT writes can be aligned to 512 bytes without a problem.
+> 
+> That doesn't mean it is correct, because the man page also says:
+> 
+> " In Linux alignment restrictions vary by filesystem and kernel
+> version and might be absent entirely."
+> 
+> So, I bet that your underlying filesystem (i.e. the host filesystem)
+> has a sector size of 4k, and that's why direct Io on 512 byte
+> alignment is failing. In that case, run "mkfs.xfs -s size=4k ..."
+> and mkfs should just work fine...
 
->
->> @@ -1498,7 +1503,14 @@ xfs_link(
->>       tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
->>       cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
->>       resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
->> -     error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, resblks, 0);
->> +
->> +     if ((VFS_I(sip)->i_nlink == 0) &&
->> +         (VFS_I(sip)->i_state & I_LINKABLE))
->> +             tres = &M_RES(mp)->tr_link_tmpfile;
->> +     else
->> +             tres = &M_RES(mp)->tr_link;
->
-> Just check i_nlink, and for consistency it might make sense to just use
-> the xfs_inode one.  The VFS already made sure we don't inodes with
-but struct xfs_inode has no stuff similar to i_nlink....
+Sadly, no.  Or at least, probably not.
 
-> I_LINKABLE and a zero link count.
-No, pls see the chunk of code:
-int vfs_link(struct dentry *old_dentry, struct inode *dir, struct
-dentry *new_dentry)
-{
-...
-    /* Make sure we don't allow creating hardlink to an unlinked file */
-    if (inode->i_nlink == 0 && !(inode->i_state & I_LINKABLE))
-        error =  -ENOENT;
-    else if (max_links && inode->i_nlink >= max_links)
-        error = -EMLINK;
-    else
-        error = dir->i_op->link(old_dentry, dir, new_dentry);
+__initbuf
+	memalign(libxfs_device_alignment(), bytes);
 
-    if (!error && (inode->i_state & I_LINKABLE)) {
-        spin_lock(&inode->i_lock);
-        inode->i_state &= ~I_LINKABLE;
-        spin_unlock(&inode->i_lock);
-    }
-...
-}
+where libxfs_device_alignment() does:
 
-When xfs_link() is called, I_LINKABLE flag isn't cleared.
+platform_align_blockdev
+	        if (!max_block_alignment)
+			return getpagesize();
+		return max_block_alignment;
+  
+and through twisty paths through platform_findsizes(), max_block_alignment is BBSIZE, or 512.
 
->
->> +     if ((VFS_I(sip)->i_nlink == 0) &&
->> +         (VFS_I(sip)->i_state & I_LINKABLE)) {
->
-> Same here.
->
+IOWS: xfsprogs is a braindead package that doesn't know how to properly handle non-512-aligned DIO.  ;)  </snark>
 
+We should fix xfsprogs, but I'm also looking making 4k "sector" xfs able to do 512 DIOs as long as the device under it can do 512 DIOS.
 
+We got into the 4k DIO alignment because mkfs.xfs saw a 512 logical / 4k physical drive, and chose 4k for its own internal sector size, which is great in terms of doing metadata IO efficiently, but not so great in terms of rejecting 512 byte IOs that the drive could otherwise do.
 
--- 
-Regards,
-
-Zhi Yong Wu
+-Eric
 
 _______________________________________________
 xfs mailing list
