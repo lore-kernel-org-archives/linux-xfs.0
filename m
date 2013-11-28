@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 845B37F59
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:05:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5CD3B304048
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:05:54 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	lXe4hKT3L5PEumR4 for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 02:05:49 -0800 (PST)
-Date: Thu, 28 Nov 2013 21:05:21 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
-	(mode:0x250)
-Message-ID: <20131128100521.GO10988@dastard>
-References: <20131128091322.GC5337@easter-eggs.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9BFA57F51
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:35:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 31E75AC003
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:35:52 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id fHgDXfjEEQ9jGbEL (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 02:35:50 -0800 (PST)
+Date: Thu, 28 Nov 2013 02:35:49 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 0/4] xfs: add O_TMPFILE support
+Message-ID: <20131128103549.GA26927@infradead.org>
+References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131128091322.GC5337@easter-eggs.com>
+In-Reply-To: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Lacour <elacour@easter-eggs.com>
-Cc: xfs@oss.sgi.com
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On Thu, Nov 28, 2013 at 10:13:22AM +0100, Emmanuel Lacour wrote:
+On Mon, Nov 25, 2013 at 07:32:30PM +0800, Zhi Yong Wu wrote:
+> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 > 
-> Dear XFS users,
+> HI, folks
 > 
-> 
-> I run a Ceph cluster using XFS on Debian wheezy servers and Linux 3.10
-> (debian backports). I see the following line in our logs:
-> 
-> XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
-> 
-> does this reveal a problem in my setup or may I ignore it? If it's a
-> problem, can someone give me any hint on solving this?
+> The patchset is trying to add O_TMPFILE support to xfs. To make sure
+> that it is going ahead in the right direction, although it is only one
+> code draft, and hasn't strictly been tested, it is still post out ASAP.
 
-It might be, but you need to provide more information for us to be
-able to make any intelligent comment on the message. Start here:
+Btw, for the real submission we need proper xfstests coverage, I can't
+really believe how the other filesystems added it without QA coverage :(
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Besides the obvious test programs there's a reproducer for a a simple
+bug already in commit dda5690defe4af62ee120f055e98e40d97e4c760 in the
+kernel tree.
 
 _______________________________________________
 xfs mailing list
