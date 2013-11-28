@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E76E7F50
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 13:59:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 77398304053
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 11:59:54 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id mLx5unKOPPqtauXo
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 11:59:53 -0800 (PST)
-Message-ID: <5297A0B4.5020303@hardwarefreak.com>
-Date: Thu, 28 Nov 2013 13:59:48 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id 02C607F37
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 15:12:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D08CC304048
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 13:12:22 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	zcBdHZiGaXcDU2S2 for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 13:12:18 -0800 (PST)
+Date: Fri, 29 Nov 2013 08:12:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Problem with mkfs.xfs on a regular file
+Message-ID: <20131128211213.GP10988@dastard>
+References: <20131127023119.GB13101@boogeyman> <20131127024713.GE10988@dastard>
+	<5296ACFB.4030901@sandeen.net> <20131128051626.GM10988@dastard>
+	<5296D5EB.2080008@sandeen.net> <20131128100107.GN10988@dastard>
+	<52976210.5070804@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: ARC-1120 and MD very sloooow
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com>	<20131126061458.GM8803@dastard>	<529455CB.6050907@hardwarefreak.com>
-	<CAMqSRmCJEp1i9QXGRBZ+2Ohv95=JfTkwO9oTnE3fkX0K1f6hug@mail.gmail.com>
-In-Reply-To: <CAMqSRmCJEp1i9QXGRBZ+2Ohv95=JfTkwO9oTnE3fkX0K1f6hug@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <52976210.5070804@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,95 +32,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Phil White <cerise-xfs@l.armory.com>, xfs@oss.sgi.com
 
-On 11/28/2013 9:59 AM, Jimmy Thrasibule wrote:
->> Right.  It's unusual to see this many mount options.  FYI, the XFS
->> default is relatime, which is nearly identical to noatime.  Specifying
->> noatime won't gain you anything.  Do you really need nosuid, nodev, noexec?
+On Thu, Nov 28, 2013 at 09:32:32AM -0600, Eric Sandeen wrote:
+> On 11/28/13, 4:01 AM, Dave Chinner wrote:
+> > On Wed, Nov 27, 2013 at 11:34:35PM -0600, Eric Sandeen wrote:
 > 
-> Well better say what I don't want on the filesystem no?
+> <snip>
 > 
->  >Do you also see the low write speed and slow ls on md0, any/all of your
->> md/RAID10 arrays?
+> >> Or maybe just stat() it, and DTRT?
+> > 
+> > Well, we need to stat it to make sure that it's a file if "-d file"
+> > is specified, and a block device if it's not. That will prevent this
+> > problem.  Every other xfsprogs utility has to be told that it is
+> > being pointed at an image file rather than a block device, so why
+> > should mkfs be any different?
 > 
-> Yes, all drive operations are slow, unfortunately, I have no drives in
-> the machine
-> that are not managed by the controller to push tests further.
+> The option is there but again I never really knew why.  They work
+> fine without -f, at least in general:
 
-Testing a single drive might provide a useful comparison.
+Just like mkfs works fine, *in general*. That doesn't mean they will always
+work, though:
 
->> The usual: "iostat -x -d -m 5" output while the test is running.
->> Also, you are using buffered IO, so changing it to use direct IO
->> will tell us exactly what the disks are doing when Io is issued.
->> blktrace is your friend here....
+$ sudo xfs_repair -n /storage/broken.img 
+Phase 1 - find and verify superblock...
+xfs_repair: read failed: Invalid argument
+
+Repair fails on the file which has a smaller sector size than the
+host filesystem, unless you tell it is working on a file, not a
+block device:
+
+$ sudo xfs_repair -n -f /storage/broken.img 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+would have corrected attribute entry count in inode 649642 from 40 to 0
+local inode 649790 attr too small (size = 1, min size = 4)
+bad attribute fork in inode 649790, would clear attr fork
+would have cleared inode 649790
+....
+
+And so behaviour is identical to mkfs...
+
+>         - scan filesystem freespace and inode maps...
+> ...
 > 
-> I've ran the following:
->
->     # dd if=/dev/zero of=/srv/store/video/test.zero bs=512K count=6000
-> oflag=direct
->     6000+0 records in
->     6000+0 records out
->     3145728000 bytes (3.1 GB) copied, 179.945 s, 17.5 MB/s
-
-While O_DIRECT writing will give a more accurate picture of the
-throughput at the disks, single threaded O_DIRECT is usually not a good
-test due to serialization.  That said, 17.5MB/s is very slow even for a
-single thread.
-
->     # dd if=/srv/store/video/test.zero of=/dev/null iflag=direct
->     6144000+0 records in
->     6144000+0 records out
->     3145728000 bytes (3.1 GB) copied, 984.317 s, 3.2 MB/s
-
-This is useless.  Never use O_DIRECT on input with dd.  The result will
-always be ~20x lower than actual drive throughput.
-
-> Traces are huge for the read test so I put them on Google Drive + SHA1 sums:
-> https://drive.google.com/folderview?id=0BxJZG8aWsaMaVWkyQk1ELU5yX2c
+> $ xfs_metadump fsfile fsfile.meta
 > 
-> Drives `sdc` to `sdf` are part of the RAID10 array. Only drives `sdc` and `sde`
-> are used when reading.
+> $ file fsfile.meta
+> fsfile.meta: XFS filesystem metadump image
 > 
->> That makes me wonder if the controller and drive write caches have been disabled.
->> That could explain this.
+> etc
 > 
-> Caching is enabled for the controller but not much information.
+> > Indeed, if we don't require users to tell mkfs that it's a file,
+> > what do we do with non-existent  device names when they are provided
+> > by the user? Just create the file rather than returning ENOENT? So
+> > suddenly /dev/ fills up with fileystem images because of typos?
 > 
->     > sys info
->     The System Information
->     ===========================================
->     Main Processor     : 500MHz
->     CPU ICache Size    : 32KB
->     CPU DCache Size    : 32KB
->     CPU SCache Size    : 0KB
->     System Memory      : 128MB/333MHz/ECC
->     Firmware Version   : V1.49 2010-12-02
->     BOOT ROM Version   : V1.49 2010-12-02
->     Serial Number      : Y611CAABAR200126
->     Controller Name    : ARC-1120
->     ===========================================
+> That won't happen because it doesn't create a new file unless -d file
+> is specified, so I guess that's one difference.  i.e. with -d file
+> it'll create a file of the requested size; without it, it will mkfs
+> it to whatever size the file already is, or if it doesn't exist,
+> return -ENOENT.
+> 
+> > Principle of Least Surprise says that ENOENT is the correct
+> > behaviour, hence it follows that "-d file" is needed and should be
+> > properly checked and enforced. I'll add this to the start of the
+> > patch set I'm currently working on that fixes all of the mkfs input
+> > parameter validation problems I've found over the past couple of
+> > weeks...
+> 
+> Well, I hope it doesn't stop mkfs.xfs from mkfs'ing an existing
+> file image, which has always worked before...
 
-This doesn't tell you if the read/write cache is enabled or disabled.
-This is simply the controller information summary.
+that's what stat() is for.
 
-> By the way is enabling the controller cache a good idea? I would disable
-> it and let the kernel manage.
+Cheers,
 
-With any decent RAID card the cache is enabled automatically for reads.
- The write cache will only be enabled automatically if a battery module
-is present and the firmware test shows it is in good condition.  Some
-controllers allow manually enabling the write cache without battery.
-This is usually not advised.  Since barriers are enabled in XFS by
-default, you may try enabling write cache on the controller to see if
-this helps performance.  It may not depending on how the controller
-handles barriers.  And of course, using md you'll want drive caches
-enabled or performance will be horrible.  Which is why I recommending
-checking to make sure they're enabled.
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
