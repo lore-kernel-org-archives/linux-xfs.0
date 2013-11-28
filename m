@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D7EA7F53
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:44:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64A9E8F8065
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:44:33 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 9dcdWrIbw9j7qHhJ (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 02:44:32 -0800 (PST)
-Date: Thu, 28 Nov 2013 02:44:32 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 3/3] xfs: fix false assertion at
-	xfs_qm_vop_create_dqattach
-Message-ID: <20131128104432.GF26927@infradead.org>
-References: <5294A46E.1070303@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2FC927F51
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 04:47:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E1C1AC001
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:47:28 -0800 (PST)
+Received: from mail-oa0-f46.google.com (mail-oa0-f46.google.com
+	[209.85.219.46]) by cuda.sgi.com with ESMTP id EkIcyhNodk4NzN03
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:47:27 -0800 (PST)
+Received: by mail-oa0-f46.google.com with SMTP id o6so8990934oag.33
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 02:47:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5294A46E.1070303@oracle.com>
+In-Reply-To: <20131128103930.GB26927@infradead.org>
+References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
+	<1385379154-3802-5-git-send-email-zwu.kernel@gmail.com>
+	<20131125135149.GD30189@infradead.org>
+	<CAEH94LiiRgQGzf+YGy23SJDhHJ_1grC3kniLqXDdUQFJ09McTA@mail.gmail.com>
+	<20131128103930.GB26927@infradead.org>
+Date: Thu, 28 Nov 2013 18:47:26 +0800
+Message-ID: <CAEH94LjwAFhDDiXVZJ8m=m4yVNVZ=1jdYCGv4cmD=NB1huutJg@mail.gmail.com>
+Subject: Re: [RFC PATCH 4/4] xfs: allow linkat() on O_TMPFILE files
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,47 +34,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
 
-On Tue, Nov 26, 2013 at 09:38:54PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> After the previous fix, there still has another ASSERT failure if turning
-> off any type of quota while fsstress is running at the same time.
-> 
-> Backtrace in this case:
-> 
-> [   50.867897] XFS: Assertion failed: XFS_IS_GQUOTA_ON(mp), file: fs/xfs/xfs_qm.c, line: 2118
-> [   50.867924] ------------[ cut here ]------------
-> ... <snip>
-> [   50.867957] Kernel BUG at ffffffffa0b55a32 [verbose debug info unavailable]
-> [   50.867999] invalid opcode: 0000 [#1] SMP
-> [   50.869407] Call Trace:
-> [   50.869446]  [<ffffffffa0bc408a>] xfs_qm_vop_create_dqattach+0x19a/0x2d0 [xfs]
-> [   50.869512]  [<ffffffffa0b9cc45>] xfs_create+0x5c5/0x6a0 [xfs]
-> [   50.869564]  [<ffffffffa0b5307c>] xfs_vn_mknod+0xac/0x1d0 [xfs]
-> [   50.869615]  [<ffffffffa0b531d6>] xfs_vn_mkdir+0x16/0x20 [xfs]
-> [   50.869655]  [<ffffffff811becd5>] vfs_mkdir+0x95/0x130
-> [   50.869689]  [<ffffffff811bf63a>] SyS_mkdirat+0xaa/0xe0
-> [   50.869723]  [<ffffffff811bf689>] SyS_mkdir+0x19/0x20
-> [   50.869757]  [<ffffffff8170f7dd>] system_call_fastpath+0x1a/0x1f
-> [   50.869793] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 <snip>
-> [   50.870003] RIP  [<ffffffffa0b55a32>] assfail+0x22/0x30 [xfs]
-> [   50.870050]  RSP <ffff88002941fd60>
-> [   50.879251] ---[ end trace c93a2b342341c65b ]---
-> 
-> We're hitting the ASSERT(XFS_IS_*QUOTA_ON(mp)) in xfs_qm_vop_create_dqattach(),
-> however the assertion itself is not right IMHO.  While performing quota off, we
-> firstly clear the XFS_*QUOTA_ACTIVE bit(s) from struct xfs_mount without taking
-> any special locks, see xfs_qm_scall_quotaoff().  Hence there is no guarantee
-> that the desired quota is still active.
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+You are right for both following cases, and will fix them, thanks.
 
-Looks good to me,
+On Thu, Nov 28, 2013 at 6:39 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Nov 28, 2013 at 10:37:29AM +0800, Zhi Yong Wu wrote:
+>> On Mon, Nov 25, 2013 at 9:51 PM, Christoph Hellwig <hch@infradead.org> wrote:
+>> >> -     ASSERT(ip->i_d.di_nlink > 0);
+>> >> +     if ((VFS_I(ip)->i_nlink == 0) &&
+>> >> +         !(VFS_I(ip)->i_state & I_LINKABLE))
+>> >> +             ASSERT(ip->i_d.di_nlink > 0);
+>> >
+>> >         ASSERT(ip->i_d.di_nlink > 0 || (VFS_I(ip)->i_state & I_LINKABLE));
+>> This is wrong, and it should be
+>>           ASSERT(ip->i_d.di_nlink > 0 || !(VFS_I(ip)->i_state & I_LINKABLE));
+>
+> Why we want to assrrt that either the link count is bigger than 0,
+> or that the I_LINKABLE flag is set (for files created using O_TMPFILE)
+>
+>> >> +
+>> >> +     if ((VFS_I(sip)->i_nlink == 0) &&
+>> >> +         (VFS_I(sip)->i_state & I_LINKABLE))
+>> >> +             tres = &M_RES(mp)->tr_link_tmpfile;
+>> >> +     else
+>> >> +             tres = &M_RES(mp)->tr_link;
+>> >
+>> > Just check i_nlink, and for consistency it might make sense to just use
+>> > the xfs_inode one.  The VFS already made sure we don't inodes with
+>> but struct xfs_inode has no stuff similar to i_nlink....
+>
+> ip->i_d.di_nlink is the equivalent.
+>
+>> > I_LINKABLE and a zero link count.
+>> No, pls see the chunk of code:
+>> int vfs_link(struct dentry *old_dentry, struct inode *dir, struct
+>> dentry *new_dentry)
+>> {
+>> ...
+>>     /* Make sure we don't allow creating hardlink to an unlinked file */
+>>     if (inode->i_nlink == 0 && !(inode->i_state & I_LINKABLE))
+>>         error =  -ENOENT;
+>
+> This makes sure we never created a link if the count is zero unless
+> the I_LINKABLE is set, so we'll never see a zero link count without
+> I_LINKABLE.
+>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+
+-- 
+Regards,
+
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
