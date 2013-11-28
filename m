@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 70C2E29E04
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 09:38:31 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0C6227F50
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 09:59:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E4C9CAC005
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 07:38:27 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id d4ha53JXRZWiboVa for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 07:38:26 -0800 (PST)
-Message-ID: <52976371.2030009@sandeen.net>
-Date: Thu, 28 Nov 2013 09:38:25 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DFF02304051
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 07:59:45 -0800 (PST)
+Received: from mail-pd0-f181.google.com (mail-pd0-f181.google.com
+	[209.85.192.181]) by cuda.sgi.com with ESMTP id
+	FrbmunSEvPakG0Dh (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 07:59:44 -0800 (PST)
+Received: by mail-pd0-f181.google.com with SMTP id p10so12117087pdj.26
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 07:59:44 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: Problem with mkfs.xfs on a regular file
-References: <20131127023119.GB13101@boogeyman>
-	<20131127024713.GE10988@dastard>	<5296ACFB.4030901@sandeen.net>
-	<20131128051626.GM10988@dastard>	<5296D5EB.2080008@sandeen.net>
-	<20131128100107.GN10988@dastard> <20131128114705.GJ13101@boogeyman>
-In-Reply-To: <20131128114705.GJ13101@boogeyman>
+In-Reply-To: <529455CB.6050907@hardwarefreak.com>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>
+	<528FBBE5.80404@hardwarefreak.com>
+	<1385369796.2076.16.camel@bews002.euractiv.com>
+	<5293EF32.9090301@hardwarefreak.com>
+	<20131126025210.GL8803@dastard>
+	<52941C5D.1000305@hardwarefreak.com>
+	<20131126061458.GM8803@dastard>
+	<529455CB.6050907@hardwarefreak.com>
+Date: Thu, 28 Nov 2013 16:59:43 +0100
+Message-ID: <CAMqSRmCJEp1i9QXGRBZ+2Ohv95=JfTkwO9oTnE3fkX0K1f6hug@mail.gmail.com>
+Subject: Re: ARC-1120 and MD very sloooow
+From: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +38,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Phil White <cerise-xfs@l.armory.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 11/28/13, 5:47 AM, Phil White wrote:
-> On Thu, Nov 28, 2013 at 09:01:07PM +1100, Dave Chinner wrote:
->> On Wed, Nov 27, 2013 at 11:34:35PM -0600, Eric Sandeen wrote:
->>> If only we had some way to tell, programatically, whether the mkfs target
->>> was a regular file or a block device, eh? ;)
->>>
->>> Seriously, I always thought the requirment to specify "-d file" was silly.
->>> And now I think it's even more silly, if it actually is required for
->>> proper behavior...
->>
->> It has always been required if you want mkfs to create the file for
->> you. And given that doing stuff like ioctl(BLKDISCARD) on files is
->> completely wrong, so I think it really is needed...
->>
->>>> What mkfs needs to do is reject devices that are files when "-d
->>>> file", "-l file" and "-r file" is not specified, and the problem
->>>> will go away because it will catch users who forget to tell mkfs
->>>> that it is supposed to be operating on an image file...
->>>
->>> Or maybe just stat() it, and DTRT?
->>
->> Well, we need to stat it to make sure that it's a file if "-d file"
->> is specified, and a block device if it's not. That will prevent this
->> problem.  Every other xfsprogs utility has to be told that it is
->> being pointed at an image file rather than a block device, so why
->> should mkfs be any different?
-> 
-> FWIW, I have a patch to just stat() and discard LIBXFS_DIRECT if the
-> target is not a block device.  It worked for what I was doing and I
-> wouldn't mind cleaning it up if need be.
+> Right.  It's unusual to see this many mount options.  FYI, the XFS
+> default is relatime, which is nearly identical to noatime.  Specifying
+> noatime won't gain you anything.  Do you really need nosuid, nodev, noexec?
 
-I wonder if that's a little too surgical; today if we specify -d file,
-we get xi.disfile=1, and set xi.dcreat=1 as well as long as -N wasn't specified.
+Well better say what I don't want on the filesystem no?
 
-Having xi.disfile set affects a few other behaviors after all, so
-I just wonder if we should stat it early, set xi.disfile, and let all the
-normal paths take it from there.  I'm not quite sure.
+ >Do you also see the low write speed and slow ls on md0, any/all of your
+> md/RAID10 arrays?
 
-> The main thing is that it seems to me that mkfs mandates that the situation
-> I outlined shouldn't ever fail.  That's probably something worth adding to
-> xfstests as well.
-> 
-> And writing that test, I suppose, is something I don't mind doing either.
+Yes, all drive operations are slow, unfortunately, I have no drives in
+the machine
+that are not managed by the controller to push tests further.
 
-Tests are always welcome, that'd be great!
+> The usual: "iostat -x -d -m 5" output while the test is running.
+> Also, you are using buffered IO, so changing it to use direct IO
+> will tell us exactly what the disks are doing when Io is issued.
+> blktrace is your friend here....
 
-Thanks,
--Eric
+I've ran the following:
+
+
+    # dd if=/dev/zero of=/srv/store/video/test.zero bs=512K count=6000
+oflag=direct
+    6000+0 records in
+    6000+0 records out
+    3145728000 bytes (3.1 GB) copied, 179.945 s, 17.5 MB/s
+
+    # dd if=/srv/store/video/test.zero of=/dev/null iflag=direct
+    6144000+0 records in
+    6144000+0 records out
+    3145728000 bytes (3.1 GB) copied, 984.317 s, 3.2 MB/s
+
+
+Traces are huge for the read test so I put them on Google Drive + SHA1 sums:
+https://drive.google.com/folderview?id=0BxJZG8aWsaMaVWkyQk1ELU5yX2c
+
+Drives `sdc` to `sdf` are part of the RAID10 array. Only drives `sdc` and `sde`
+are used when reading.
+
+> That makes me wonder if the controller and drive write caches have been disabled.
+> That could explain this.
+
+Caching is enabled for the controller but not much information.
+
+
+    > sys info
+    The System Information
+    ===========================================
+    Main Processor     : 500MHz
+    CPU ICache Size    : 32KB
+    CPU DCache Size    : 32KB
+    CPU SCache Size    : 0KB
+    System Memory      : 128MB/333MHz/ECC
+    Firmware Version   : V1.49 2010-12-02
+    BOOT ROM Version   : V1.49 2010-12-02
+    Serial Number      : Y611CAABAR200126
+    Controller Name    : ARC-1120
+    ===========================================
+
+
+By the way is enabling the controller cache a good idea? I would disable
+it and let the kernel manage.
+
+--
+Jimmy
 
 _______________________________________________
 xfs mailing list
