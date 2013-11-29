@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BD2FE7F37
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 19:44:01 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B747B7F59
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 19:44:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 698558F8035
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 17:44:01 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4A4B2AC002
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 17:44:04 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FJyYcbtYiNO9uoy2 for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 17:43:58 -0800 (PST)
+	lVw4tQkWaJPJbEXI for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 17:44:02 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VmD7Y-0006Ie-P0
+	(envelope-from <dave@fromorbit.com>) id 1VmD7Y-0006Im-S6
 	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:52 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VmD7Y-0002eP-O9
+	(envelope-from <dave@disappointment.disaster>) id 1VmD7Y-0002ej-R6
 	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/15] mkfs: validate logarithmic parameters sanely
-Date: Fri, 29 Nov 2013 12:43:41 +1100
-Message-Id: <1385689430-10103-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/15] mkfs: add respecification detection to generic parsing
+Date: Fri, 29 Nov 2013 12:43:45 +1100
+Message-Id: <1385689430-10103-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1385689430-10103-1-git-send-email-david@fromorbit.com>
 References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,187 +39,288 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Testing logarithmic paramters like "-n log=<num>" shows that we do a
-terrible job of validating such input. e.g.:
-
-# mkfs.xfs -f -n log=456858480 /dev/vda
-.....
-naming   =version 2              bsize=65536  ascii-ci=0 ftype=0
-....
-
-Yeah, I just asked for a block size of 2^456858480, and it didn't
-get rejected. Great, isn't it?
-
-So, factor out the parsing of logarithmic parameters, and pass in
-the maximum valid value that they can take. These maximum values
-might not be completely accurate (e.g. block/sector sizes will
-affect the eventual valid maximum) but we can get rid of all the
-overflows and stupidities before we get to fine-grained validity
-checking later in mkfs once things like block and sector sizes have
-been finalised.
+Add flags to the generic input parameter tables so that
+respecification can be detected in a generic manner.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 79 +++++++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 51 insertions(+), 28 deletions(-)
+ mkfs/xfs_mkfs.c | 64 +++++++++++++++------------------------------------------
+ 1 file changed, 17 insertions(+), 47 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 126cbea..fbb2a35 100644
+index 2f51f5b..af9b9c4 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -982,6 +982,27 @@ getbool(
- 	return c ? true : false;
- }
+@@ -57,15 +57,17 @@ static long long cvtnum(unsigned int blocksize,
+ struct opt_params {
+ 	const char	name;
+ 	const char	*subopts[MAX_SUBOPTS];
++
+ 	struct subopt_param {
+ 		int		index;
++		bool		seen;
+ 		long long	minval;
+ 		long long	maxval;
+ 		long long	defaultval;
+ 	}		subopt_params[MAX_SUBOPTS];
+ };
  
-+static int
-+getnum_checked(
-+	const char	*str,
-+	long long	min_val,
-+	long long	max_val,
-+	const char	*illegal_str,
-+	char		reqval_char,
-+	char		*reqval_opts[],
-+	int		reqval_optind)
-+{
-+	long long	c;
-+
-+	if (!str || *str == '\0')
-+		reqval(reqval_char, reqval_opts, reqval_optind);
-+
-+	c = getnum(str, 0, 0, false);
-+	if (c < min_val || c > max_val)
-+		illegal(str, illegal_str);
-+	return c;
-+}
-+
- int
- main(
- 	int			argc,
-@@ -1132,16 +1153,16 @@ main(
+-const struct opt_params bopts = {
++struct opt_params bopts = {
+ 	.name = 'b',
+ 	.subopts = {
+ #define	B_LOG		0
+@@ -88,7 +90,7 @@ const struct opt_params bopts = {
+ 	},
+ };
  
- 				switch (getsubopt(&p, (constpp)bopts, &value)) {
+-const struct opt_params dopts = {
++struct opt_params dopts = {
+ 	.name = 'd',
+ 	.subopts = {
+ #define	D_AGCOUNT	0
+@@ -197,7 +199,7 @@ const struct opt_params dopts = {
+ };
+ 
+ 
+-const struct opt_params iopts = {
++struct opt_params iopts = {
+ 	.name = 'i',
+ 	.subopts = {
+ #define	I_ALIGN		0
+@@ -255,7 +257,7 @@ const struct opt_params iopts = {
+ 	},
+ };
+ 
+-const struct opt_params lopts = {
++struct opt_params lopts = {
+ 	.name = 'l',
+ 	.subopts = {
+ #define	L_AGNUM		0
+@@ -340,7 +342,7 @@ const struct opt_params lopts = {
+ 	},
+ };
+ 
+-const struct opt_params nopts = {
++struct opt_params nopts = {
+ 	.name = 'n',
+ 	.subopts = {
+ #define	N_LOG		0
+@@ -377,7 +379,7 @@ const struct opt_params nopts = {
+ 	},
+ };
+ 
+-const struct opt_params ropts = {
++struct opt_params ropts = {
+ 	.name = 'r',
+ 	.subopts = {
+ #define	R_EXTSIZE	0
+@@ -416,7 +418,7 @@ const struct opt_params ropts = {
+ 	},
+ };
+ 
+-const struct opt_params sopts = {
++struct opt_params sopts = {
+ 	.name = 's',
+ 	.subopts = {
+ #define	S_LOG		0
+@@ -453,7 +455,7 @@ const struct opt_params sopts = {
+ 	},
+ };
+ 
+-const struct opt_params mopts = {
++struct opt_params mopts = {
+ 	.name = 'm',
+ 	.subopts = {
+ #define	M_CRC		0
+@@ -1261,10 +1263,10 @@ illegal_option(
+ static int
+ getnum_checked(
+ 	const char		*str,
+-	const struct opt_params	*opts,
++	struct opt_params	*opts,
+ 	int			index)
+ {
+-	const struct subopt_param *sp = &opts->subopt_params[index];
++	struct subopt_param *sp = &opts->subopt_params[index];
+ 	long long		c;
+ 
+ 	if (sp->index != index) {
+@@ -1274,6 +1276,11 @@ getnum_checked(
+ 		reqval(opts->name, (char **)opts->subopts, index);
+ 	}
+ 
++	/* check for respecification of the option */
++	if (sp->seen)
++		respec(opts->name, (char **)opts->subopts, index);
++	sp->seen = true;
++
+ 	if (!str || *str == '\0') {
+ 		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+@@ -1438,8 +1445,6 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
  				case B_LOG:
--					if (!value || *value == '\0')
--						reqval('b', bopts, B_LOG);
- 					if (blflag)
- 						respec('b', bopts, B_LOG);
+-					if (blflag)
+-						respec('b', subopts, B_LOG);
  					if (bsflag)
- 						conflict('b', bopts, B_SIZE,
+ 						conflict('b', subopts, B_SIZE,
  							 B_LOG);
--					blocklog = getnum(value, 0, 0, false);
--					if (blocklog <= 0)
--						illegal(value, "b log");
-+					blocklog = getnum_checked(value,
-+							XFS_MIN_BLOCKSIZE_LOG,
-+							XFS_MAX_BLOCKSIZE_LOG,
-+							"b log", 'b', bopts,
-+							B_LOG);
- 					blocksize = 1 << blocklog;
- 					blflag = 1;
+@@ -1478,9 +1483,6 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case D_AGCOUNT:
+-					if (daflag)
+-						respec('d', subopts, D_AGCOUNT);
+-
+ 					agcount = getnum_checked(value, &dopts,
+ 								 D_AGCOUNT);
+ 					daflag = 1;
+@@ -1517,8 +1519,6 @@ main(
+ 					dsize = value;
  					break;
-@@ -1278,16 +1299,16 @@ main(
+ 				case D_SUNIT:
+-					if (dsunit)
+-						respec('d', subopts, D_SUNIT);
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SUNIT);
+@@ -1526,8 +1526,6 @@ main(
+ 								 D_SUNIT);
+ 					break;
+ 				case D_SWIDTH:
+-					if (dswidth)
+-						respec('d', subopts, D_SWIDTH);
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SWIDTH);
+@@ -1548,8 +1546,6 @@ main(
+ 						illegal(value, "d su");
+ 					break;
+ 				case D_SW:
+-					if (dsw)
+-						respec('d', subopts, D_SW);
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SW);
+@@ -1572,8 +1568,6 @@ main(
  					nodsflag = 1;
  					break;
  				case D_SECTLOG:
--					if (!value || *value == '\0')
--						reqval('d', dopts, D_SECTLOG);
- 					if (slflag)
- 						respec('d', dopts, D_SECTLOG);
+-					if (slflag)
+-						respec('d', subopts, D_SECTLOG);
  					if (ssflag)
- 						conflict('d', dopts, D_SECTSIZE,
+ 						conflict('d', subopts, D_SECTSIZE,
  							 D_SECTLOG);
--					sectorlog = getnum(value, 0, 0, false);
--					if (sectorlog <= 0)
--						illegal(value, "d sectlog");
-+					sectorlog = getnum_checked(value,
-+							XFS_MIN_SECTORSIZE_LOG,
-+							XFS_MAX_SECTORSIZE_LOG,
-+							"d sectlog", 'd', dopts,
-+							D_SECTLOG);
- 					sectorsize = 1 << sectorlog;
- 					slflag = 1;
+@@ -1636,8 +1630,6 @@ main(
+ 							value, &iopts, I_ALIGN);
  					break;
-@@ -1352,9 +1373,11 @@ main(
- 					if (isflag)
- 						conflict('i', iopts, I_SIZE,
+ 				case I_LOG:
+-					if (ilflag)
+-						respec('i', subopts, I_LOG);
+ 					if (ipflag)
+ 						conflict('i', subopts, I_PERBLOCK,
  							 I_LOG);
--					inodelog = getnum(value, 0, 0, false);
--					if (inodelog <= 0)
--						illegal(value, "i log");
-+					inodelog = getnum_checked(value,
-+							XFS_DINODE_MIN_LOG,
-+							XFS_DINODE_MAX_LOG,
-+							"i log", 'i', iopts,
-+							I_LOG);
- 					isize = 1 << inodelog;
+@@ -1650,8 +1642,6 @@ main(
  					ilflag = 1;
  					break;
-@@ -1514,16 +1537,16 @@ main(
+ 				case I_MAXPCT:
+-					if (imflag)
+-						respec('i', subopts, I_MAXPCT);
+ 					imaxpct = getnum_checked(value, &iopts,
+ 								 I_MAXPCT);
+ 					imflag = 1;
+@@ -1660,8 +1650,6 @@ main(
+ 					if (ilflag)
+ 						conflict('i', subopts, I_LOG,
+ 							 I_PERBLOCK);
+-					if (ipflag)
+-						respec('i', subopts, I_PERBLOCK);
+ 					if (isflag)
+ 						conflict('i', subopts, I_SIZE,
+ 							 I_PERBLOCK);
+@@ -1678,8 +1666,6 @@ main(
+ 					if (ipflag)
+ 						conflict('i', subopts, I_PERBLOCK,
+ 							 I_SIZE);
+-					if (isflag)
+-						respec('i', subopts, I_SIZE);
+ 					isize = getnum_checked(value, &iopts,
+ 							       I_SIZE);
+ 					if (!ispow2(isize))
+@@ -1711,8 +1697,6 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case L_AGNUM:
+-					if (laflag)
+-						respec('l', subopts, L_AGNUM);
+ 					if (ldflag)
+ 						conflict('l', subopts, L_AGNUM, L_DEV);
+ 					logagno = getnum_checked(value, &lopts,
+@@ -1734,8 +1718,6 @@ main(
+ 					if (xi.lisfile)
+ 						conflict('l', subopts, L_FILE,
+ 							 L_INTERNAL);
+-					if (liflag)
+-						respec('l', subopts, L_INTERNAL);
+ 
+ 					loginternal = getnum_checked(value,
+ 							&lopts, L_INTERNAL);
+@@ -1752,8 +1734,6 @@ main(
+ 						illegal(value, "l su");
+ 					break;
+ 				case L_SUNIT:
+-					if (lsunit)
+-						respec('l', subopts, L_SUNIT);
+ 					lsunit = getnum_checked(value, &lopts,
+ 								 L_SUNIT);
+ 					break;
+@@ -1773,8 +1753,6 @@ main(
+ 					xi.logname = value;
+ 					break;
+ 				case L_VERSION:
+-					if (lvflag)
+-						respec('l', subopts, L_VERSION);
+ 					sb_feat.log_version =
+ 						getnum_checked(value, &lopts,
+ 							       L_VERSION);
+@@ -1789,8 +1767,6 @@ main(
  					lsflag = 1;
  					break;
  				case L_SECTLOG:
--					if (!value || *value == '\0')
--						reqval('l', lopts, L_SECTLOG);
- 					if (lslflag)
- 						respec('l', lopts, L_SECTLOG);
+-					if (lslflag)
+-						respec('l', subopts, L_SECTLOG);
  					if (lssflag)
- 						conflict('l', lopts, L_SECTSIZE,
+ 						conflict('l', subopts, L_SECTSIZE,
  							 L_SECTLOG);
--					lsectorlog = getnum(value, 0, 0, false);
--					if (lsectorlog <= 0)
--						illegal(value, "l sectlog");
-+					lsectorlog = getnum_checked(value,
-+							XFS_MIN_SECTORSIZE_LOG,
-+							XFS_MAX_SECTORSIZE_LOG,
-+							"l sectlog", 'l', lopts,
-+							L_SECTLOG);
- 					lsectorsize = 1 << lsectorlog;
- 					lslflag = 1;
- 					break;
-@@ -1588,16 +1611,16 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
- 
- 				switch (getsubopt(&p, (constpp)nopts, &value)) {
+@@ -1865,8 +1841,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
  				case N_LOG:
--					if (!value || *value == '\0')
--						reqval('n', nopts, N_LOG);
- 					if (nlflag)
- 						respec('n', nopts, N_LOG);
+-					if (nlflag)
+-						respec('n', subopts, N_LOG);
  					if (nsflag)
- 						conflict('n', nopts, N_SIZE,
+ 						conflict('n', subopts, N_SIZE,
  							 N_LOG);
--					dirblocklog = getnum(value, 0, 0, false);
--					if (dirblocklog <= 0)
--						illegal(value, "n log");
-+					dirblocklog = getnum_checked(value,
-+							XFS_MIN_REC_DIRSIZE,
-+							XFS_MAX_BLOCKSIZE_LOG,
-+							"n log", 'n', nopts,
-+							N_LOG);
- 					dirblocksize = 1 << dirblocklog;
- 					nlflag = 1;
+@@ -1909,8 +1883,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 					nvflag = 1;
  					break;
-@@ -1716,16 +1739,16 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
- 				switch (getsubopt(&p, (constpp)sopts, &value)) {
+ 				case N_FTYPE:
+-					if (nftype)
+-						respec('n', subopts, N_FTYPE);
+ 					if (sb_feat.crcs_enabled) {
+ 						fprintf(stderr,
+ _("cannot specify both -m crc=1 and -n ftype\n"));
+@@ -1993,8 +1965,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 						  &value)) {
  				case S_LOG:
  				case S_SECTLOG:
--					if (!value || *value == '\0')
--						reqval('s', sopts, S_SECTLOG);
- 					if (slflag || lslflag)
- 						respec('s', sopts, S_SECTLOG);
+-					if (slflag || lslflag)
+-						respec('s', subopts, S_SECTLOG);
  					if (ssflag || lssflag)
- 						conflict('s', sopts, S_SECTSIZE,
- 							 S_SECTLOG);
--					sectorlog = getnum(value, 0, 0, false);
--					if (sectorlog <= 0)
--						illegal(value, "s sectlog");
-+					sectorlog = getnum_checked(value,
-+							XFS_MIN_SECTORSIZE_LOG,
-+							XFS_MAX_SECTORSIZE_LOG,
-+							"s sectlog", 's', sopts,
-+							S_SECTLOG);
- 					lsectorlog = sectorlog;
- 					sectorsize = 1 << sectorlog;
- 					lsectorsize = sectorsize;
+ 						conflict('s', subopts,
+ 							 S_SECTSIZE, S_SECTLOG);
 -- 
 1.8.4.rc3
 
