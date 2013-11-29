@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 98E7F7F52
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 20:17:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3635CAC009
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:17:55 -0800 (PST)
-Received: from mail-ve0-f179.google.com (mail-ve0-f179.google.com
-	[209.85.128.179]) by cuda.sgi.com with ESMTP id
-	cwswQXW3cCVuhrB8 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 18:17:54 -0800 (PST)
-Received: by mail-ve0-f179.google.com with SMTP id jw12so6496499veb.38
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:17:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131129020703.GR10323@ZenIV.linux.org.uk>
+	by oss.sgi.com (Postfix) with ESMTP id 236D87F37
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 20:41:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A4CC1AC002
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:41:27 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id nQ5JGMuBmzCzBJxD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 18:41:26 -0800 (PST)
+Date: Fri, 29 Nov 2013 02:41:21 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
+Message-ID: <20131129024121.GS10323@ZenIV.linux.org.uk>
 References: <20131125160648.GA4933@infradead.org>
 	<20131126131134.GM10323@ZenIV.linux.org.uk>
 	<20131126141253.GA28062@infradead.org>
@@ -23,12 +22,10 @@ References: <20131125160648.GA4933@infradead.org>
 	<20131128212301.GP10323@ZenIV.linux.org.uk>
 	<20131128225102.GS10988@dastard>
 	<20131128234441.GQ10323@ZenIV.linux.org.uk>
-	<20131129014648.GU10988@dastard>
-	<20131129020703.GR10323@ZenIV.linux.org.uk>
-Date: Thu, 28 Nov 2013 18:17:53 -0800
-Message-ID: <CA+55aFzQrUwZx76bS7g+_COpMiRUm2a42n32BK653AYb4DRnvA@mail.gmail.com>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-From: Linus Torvalds <torvalds@linux-foundation.org>
+	<CA+55aFxLZxy75fO4ZXO4Stiu1sMx1q=eJ7HSk-UTCX61jPrirA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFxLZxy75fO4ZXO4Stiu1sMx1q=eJ7HSk-UTCX61jPrirA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,24 +38,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@zeniv.linux.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, Nov 28, 2013 at 6:07 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
->    Thus the
-> comment about unbalanced dput() somewhere; the question is _where_ had
-> that dput() been.
+On Thu, Nov 28, 2013 at 06:07:27PM -0800, Linus Torvalds wrote:
 
-Clearing the LOOKUP_RCU bit is what I was looking at, because doing
-that without doing the proper successful lockref_get_not_dead() ends
-up being equivalent to missing a dget(), not an extra dput(). Which
-was why I was looking at unlazy_walk() -> terminate_walk().
+> HOWEVER. It's certainly *not* valid if "current->fs->root/pwd" points
+> to it. So yeah, there must have been an extra dput() somewhere. Or,
+> more likely, I think, we don't get the refcount to some dentry
+> properly any more.
+> 
+> I don't see where, though. You did change where "LOOKUP_RCU" is
+> cleared in unlazy_walk() but you did add that
+> 
+>         nd->path.dentry = NULL;
+> 
+> and that looks like it should be ok. And I don't see what else would care.
 
-But I really don't see anything wrong. That was the only really
-obvious sequence where you changed things. Everything else seems to be
-a pretty 1:1 conversion.
+*nod*
 
-            Linus
+BTW, vfsmount refcount is 12, so we *definitely* nowhere near the
+final mntput(), etc. and mnt->mnt_root itself should also have
+contributed.
+
+I'm going to try to find out _which_ test buggers the refcount - at
+least that way I'll have something resembling a usable reproducer...
 
 _______________________________________________
 xfs mailing list
