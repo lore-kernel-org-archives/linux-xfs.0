@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BBC637F52
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 20:07:17 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8AC929E04
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 20:07:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9DB948F804C
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:07:14 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id zoPWqQdZbE921f7o (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 18:07:13 -0800 (PST)
-Date: Fri, 29 Nov 2013 02:07:03 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131129020703.GR10323@ZenIV.linux.org.uk>
-References: <20131125160648.GA4933@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 97B0F304053
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:07:29 -0800 (PST)
+Received: from mail-vb0-f47.google.com (mail-vb0-f47.google.com
+	[209.85.212.47]) by cuda.sgi.com with ESMTP id 1aLgdvrXA8WWzAop
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:07:28 -0800 (PST)
+Received: by mail-vb0-f47.google.com with SMTP id x11so6321146vbb.34
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 18:07:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131128234441.GQ10323@ZenIV.linux.org.uk>
+References: <20131124140413.GA19271@infradead.org>
+	<20131124152758.GL10323@ZenIV.linux.org.uk>
+	<20131125160648.GA4933@infradead.org>
 	<20131126131134.GM10323@ZenIV.linux.org.uk>
 	<20131126141253.GA28062@infradead.org>
 	<20131127064351.GN10323@ZenIV.linux.org.uk>
@@ -22,10 +24,10 @@ References: <20131125160648.GA4933@infradead.org>
 	<20131128212301.GP10323@ZenIV.linux.org.uk>
 	<20131128225102.GS10988@dastard>
 	<20131128234441.GQ10323@ZenIV.linux.org.uk>
-	<20131129014648.GU10988@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131129014648.GU10988@dastard>
+Date: Thu, 28 Nov 2013 18:07:27 -0800
+Message-ID: <CA+55aFxLZxy75fO4ZXO4Stiu1sMx1q=eJ7HSk-UTCX61jPrirA@mail.gmail.com>
+Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,27 +40,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Nov 29, 2013 at 12:46:48PM +1100, Dave Chinner wrote:
-> > 	* d_count(dentry) is -128
-> 
-> void lockref_mark_dead(struct lockref *lockref)
-> {
->         assert_spin_locked(&lockref->lock);
->         lockref->count = -128;
-> }
+On Thu, Nov 28, 2013 at 3:44 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+>         * d_count(dentry) is -128
+>         * dentry->d_inode is NULL
+>
+> In other words, what we get is an extra dput() somewhere.  The trouble is,
+> all likely places I'm seeing in the "RCU'd vfsmounts" seem to be OK...
+> In theory, we might be hitting a _missing_ dput(), with counter wrapping
+> around, but that doesn't seem likely...
 
-... done once refcount reaches zero and we decide to evict the sucker.
-Which, for dentry that happens to be
-	* pwd of at least one process
-	* root of at least one process
-	* root dentry of a filesystem that contains at least one
-binary being executed
-means that we have dropped several references too many.  Thus the
-comment about unbalanced dput() somewhere; the question is _where_ had
-that dput() been.
+So d_count = -128 means that it's dead (see lockref_mark_dead). So it
+goes from 0 (last refcount entry) to dead when it transitions into
+dentry_kill. Which explains the inode being NULL too, because that
+means it's gone through dentry_iput() as well.
+
+And if it was just a normal dentry being passed around as the result
+of a lookup, then because we still have LOOKUP_RCU set, such a dentry
+is technically "valid" - it just hasn't gotten to the point where
+we'll fail it.
+
+HOWEVER. It's certainly *not* valid if "current->fs->root/pwd" points
+to it. So yeah, there must have been an extra dput() somewhere. Or,
+more likely, I think, we don't get the refcount to some dentry
+properly any more.
+
+I don't see where, though. You did change where "LOOKUP_RCU" is
+cleared in unlazy_walk() but you did add that
+
+        nd->path.dentry = NULL;
+
+and that looks like it should be ok. And I don't see what else would care.
+
+                   Linus
 
 _______________________________________________
 xfs mailing list
