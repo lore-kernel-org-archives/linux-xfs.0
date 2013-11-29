@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D9E47F3F
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 03:36:48 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 81A6E7F4E
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 13:43:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EE67B8F8064
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 01:36:44 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ocNTrJ4HArV79knD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 29 Nov 2013 01:36:43 -0800 (PST)
-Message-ID: <52986001.9040101@oracle.com>
-Date: Fri, 29 Nov 2013 17:36:01 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 60A9B8F804B
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 11:43:46 -0800 (PST)
+Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
+	[140.211.169.12]) by cuda.sgi.com with ESMTP id
+	ACMCtqQAcE4OfTin for <xfs@oss.sgi.com>;
+	Fri, 29 Nov 2013 11:43:45 -0800 (PST)
+Date: Fri, 29 Nov 2013 11:44:38 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
+Message-ID: <20131129194438.GA11052@kroah.com>
+References: <20131128162618.GO10323@ZenIV.linux.org.uk>
+	<20131128212301.GP10323@ZenIV.linux.org.uk>
+	<20131128225102.GS10988@dastard>
+	<20131128234441.GQ10323@ZenIV.linux.org.uk>
+	<CA+55aFxLZxy75fO4ZXO4Stiu1sMx1q=eJ7HSk-UTCX61jPrirA@mail.gmail.com>
+	<20131129024121.GS10323@ZenIV.linux.org.uk>
+	<20131129035939.GT10323@ZenIV.linux.org.uk>
+	<20131129040658.GU10323@ZenIV.linux.org.uk>
+	<20131129041416.GV10323@ZenIV.linux.org.uk>
+	<20131129065941.GW10323@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/3] xfs: fix infinite loop by detaching the
-	group/project hints from user dquot
-References: <5294A469.1060000@oracle.com>
-	<20131128104336.GE26927@infradead.org>
-In-Reply-To: <20131128104336.GE26927@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20131129065941.GW10323@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,87 +38,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
 
-On 11/28 2013 18:43 PM, Christoph Hellwig wrote:
-> On Tue, Nov 26, 2013 at 09:38:49PM +0800, Jeff Liu wrote:
->> +	if (flags & XFS_QMOPT_UQUOTA)
->> +		return xfs_qm_dqpurge(dqp, NULL);
+On Fri, Nov 29, 2013 at 06:59:41AM +0000, Al Viro wrote:
+> On Fri, Nov 29, 2013 at 04:14:16AM +0000, Al Viro wrote:
 > 
-> To me it doesn't make any sense to overload this function for the user
-> quotas that don't have hints.
-To me it would like a silly compromise.
+> > And yes, it has fixed the problem with generic/234.  I'll do full xfstests
+> > run to see if there's anything else, but this one is obviously needed.
+> > I'll send it with sane commit message (along with follow_dotdot_rcu()
+> > fix) later tonight.  path_init() race is a separate story - that one should
+> > probably go separately, since we'll want it in all branches starting with
+> > early 2011 or so.
 > 
-> I'd suggest dropping this hunk and keeping a separate walk for
-> releasing the uquots.
-I thought this over and yup, that is an overload if neither group nor project
-are enabled, or we don't want to turn user quota off.
+> OK, it survives.  However, looking a bit more at follow_dotdot_rcu()...
+> AFAICS, we have a narrow oopsable race, from 2.6.38 and to 3.12 - think what
+> happens if we are walking through /tmp/foo/bar/../baz in RCU mode and we'd just
+> reached /tmp/foo/bar.  handle_dotdot() is called, calling follow_dotdot_rcu().
+> OK, we are not about to cross a mountpoint.  Read ->d_seq of /tmp/foo into
+> seq, check that nd->seq matches /tmp/foo/bar (it does, everything's fine)
+> and set nd->path.dentry to /tmp/foo, with nd->seq set to seq.  Then
+> we check if the /tmp/foo is overmounted by something; it isn't and now we set
+> nd->inode.
+> 
+> Sure, it's _very_ hard to get into trouble here - we need somebody to remove
+> /tmp/foo/bar *and* /tmp/foo while we'd been walking vfsmount hash,
+> but in theory it is not impossible to get NULL nd->inode.  Then
+> link_path_walk() gets to checking that we have a directory and we get
+> an oops on checking inode flags.
+> 
+> I really don't like the way we have nd->inode updates scattered all over
+> the place in fs/namei.c ;-/  I'm looking into possible ways to deal
+> with it sanely, but that'll have to wait for tomorrow...
+> 
+> Anyway, I've pushed the minimal regression fix to vfs.git; please, pull
+> from
+> git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git for-linus
+> 
+> Shortlog:
+> Al Viro (1):
+>       fix bogus path_put() of nd->root after some unlazy_walk() failures
 
-But even so, we currently also have overloads by checking group/project hints
-before releasing any type of quota in xfs_qm_purge().  In this point, this fix
-can reduce a bit overloads by moving those checkups to xfs_qm_purge_hints() if
-we want to turn group/project quotas off.
+So, should d870b4a191a389c661cd40aacb06981c26b5e504 be queued up for
+-stable releases to resolve this issue there as well, or am I
+misunderstanding your post above?
 
-If we considering to drop above hunk to release user quota separately, we finally
-would have to walk through user quota to remove those hints again, i.e,
+thanks,
 
-/* Remove group/project hints from user dquot */
-STATIC int
-xfs_qm_dqpurge_hints(
-	struct xfs_dquot        *dqp,
-	void                    *data)
-{
-	uint                    flags = *((uint *)data);
-	struct xfs_dquot        *gdqp;
-	struct xfs_dquot        *pdqp;
-
-	xfs_dqlock(dqp);
-	if (dqp->dq_flags & XFS_DQ_FREEING) {
-		xfs_dqunlock(dqp);
-		return EAGAIN;
-	}
-
-	/* If this quota has a hint attached, prepare for releasing it now */
-        gdqp = dqp->q_gdquot;
-	if (gdqp)
-		dqp->q_gdquot = NULL;
-
-	pdqp = dqp->q_pdquot;
-	if (pdqp)
-		dqp->q_pdquot = NULL;
-
-	xfs_dqunlock(dqp);
-
-	if (gdqp)
-		xfs_qm_dqrele(gdqp);
-	if (pdqp)
-		xfs_qm_dqrele(pdqp);
-
-	return 0;
-}
-
-void
-xfs_qm_dqpurge_all()
-{
-	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, NULL);
-
-	if (flags & XFS_QMOPT_UQUOTA)
-		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
-	if (flags & XFS_QMOPT_GQUOTA)
-		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
-	if (flags & XFS_QMOPT_PQUOTA)
-		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
-}
-
-Above code is what I can figured out as per your suggestions for now, but it
-would introduce overheads for walking through user dquots to release hints
-separately if we want to turn user quota off.
-
-Any thoughts?
-
-Thanks,
--Jeff
+greg k-h
 
 _______________________________________________
 xfs mailing list
