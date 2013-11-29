@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2134A7F5D
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 02:40:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ADF7DAC003
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 00:40:01 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id qaRzgl2UIVqWs1OK (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 29 Nov 2013 00:40:00 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 1B2F07F50
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 02:40:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D722AC002
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 00:40:05 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 5Fa2uYwwkwcevfSG (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Nov 2013 00:40:01 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1VmJcG-00009c-Dx
+	Hat Linux)) id 1VmJcG-0000AE-Jp
 	for xfs@oss.sgi.com; Fri, 29 Nov 2013 08:40:00 +0000
-Message-Id: <20131129084000.310003388@bombadil.infradead.org>
-Date: Fri, 29 Nov 2013 00:39:21 -0800
+Message-Id: <20131129084000.509159807@bombadil.infradead.org>
+Date: Fri, 29 Nov 2013 00:39:22 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 02/10] xfs: refactor xfs_buf_item_format_segment
+Subject: [PATCH 03/10] xfs: refactor xfs_inode_item_size
 References: <20131129083919.207915844@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0002-xfs-refactor-xfs_buf_item_format_segment.patch
+	filename=0003-xfs-refactor-xfs_inode_item_size.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,122 +34,148 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add two helpers to make the code more readable.
+Split out two helpers to size the data and attribute to make the
+function more readable.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf_item.c |   72 ++++++++++++++++++++++++++-----------------------
- 1 file changed, 39 insertions(+), 33 deletions(-)
+ fs/xfs/xfs_inode_item.c |   62 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 35 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index a64f67b..a30c1fb 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -182,6 +182,34 @@ xfs_buf_item_size(
- 	trace_xfs_buf_item_size(bip);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 7c0d391f..050d254 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -39,27 +39,14 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
+ 	return container_of(lip, struct xfs_inode_log_item, ili_item);
  }
  
-+static inline struct xfs_log_iovec *
-+xfs_buf_item_copy_iovec(
-+	struct xfs_log_iovec	*vecp,
-+	struct xfs_buf		*bp,
-+	uint			offset,
-+	int			first_bit,
-+	uint			nbits)
-+{
-+	offset += first_bit * XFS_BLF_CHUNK;
-+
-+	vecp->i_type = XLOG_REG_TYPE_BCHUNK;
-+	vecp->i_addr = xfs_buf_offset(bp, offset);
-+	vecp->i_len = nbits * XFS_BLF_CHUNK;
-+	return vecp + 1;
-+}
-+
-+static inline bool
-+xfs_buf_item_straddle(
-+	struct xfs_buf		*bp,
-+	uint			offset,
-+	int			next_bit,
-+	int			last_bit)
-+{
-+	return xfs_buf_offset(bp, offset + (next_bit << XFS_BLF_SHIFT)) !=
-+		(xfs_buf_offset(bp, offset + (last_bit << XFS_BLF_SHIFT)) +
-+		 XFS_BLF_CHUNK);
-+}
-+
- static struct xfs_log_iovec *
- xfs_buf_item_format_segment(
- 	struct xfs_buf_log_item	*bip,
-@@ -196,7 +224,6 @@ xfs_buf_item_format_segment(
- 	int		last_bit;
- 	int		next_bit;
- 	uint		nbits;
--	uint		buffer_offset;
- 
- 	/* copy the flags across from the base format item */
- 	blfp->blf_flags = bip->__bli_format.blf_flags;
-@@ -239,7 +266,6 @@ xfs_buf_item_format_segment(
- 	/*
- 	 * Fill in an iovec for each set of contiguous chunks.
- 	 */
 -
- 	last_bit = first_bit;
- 	nbits = 1;
- 	for (;;) {
-@@ -252,42 +278,22 @@ xfs_buf_item_format_segment(
- 		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
- 					(uint)last_bit + 1);
- 		/*
--		 * If we run out of bits fill in the last iovec and get
--		 * out of the loop.
--		 * Else if we start a new set of bits then fill in the
--		 * iovec for the series we were looking at and start
--		 * counting the bits in the new one.
--		 * Else we're still in the same set of bits so just
--		 * keep counting and scanning.
-+		 * If we run out of bits fill in the last iovec and get out of
-+		 * the loop.  Else if we start a new set of bits then fill in
-+		 * the iovec for the series we were looking at and start
-+		 * counting the bits in the new one.  Else we're still in the
-+		 * same set of bits so just keep counting and scanning.
- 		 */
- 		if (next_bit == -1) {
--			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
--			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
--			vecp->i_len = nbits * XFS_BLF_CHUNK;
--			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
-+			xfs_buf_item_copy_iovec(vecp, bp, offset,
-+						first_bit, nbits);
- 			nvecs++;
- 			break;
--		} else if (next_bit != last_bit + 1) {
--			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
--			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
--			vecp->i_len = nbits * XFS_BLF_CHUNK;
--			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
--			nvecs++;
--			vecp++;
--			first_bit = next_bit;
--			last_bit = next_bit;
--			nbits = 1;
--		} else if (xfs_buf_offset(bp, offset +
--					      (next_bit << XFS_BLF_SHIFT)) !=
--			   (xfs_buf_offset(bp, offset +
--					       (last_bit << XFS_BLF_SHIFT)) +
--			    XFS_BLF_CHUNK)) {
--			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
--			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
--			vecp->i_len = nbits * XFS_BLF_CHUNK;
--			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
-+		} else if (next_bit != last_bit + 1 ||
-+		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
-+			vecp = xfs_buf_item_copy_iovec(vecp, bp, offset,
-+						       first_bit, nbits);
- 			nvecs++;
--			vecp++;
- 			first_bit = next_bit;
- 			last_bit = next_bit;
- 			nbits = 1;
+-/*
+- * This returns the number of iovecs needed to log the given inode item.
+- *
+- * We need one iovec for the inode log format structure, one for the
+- * inode core, and possibly one for the inode data/extents/b-tree root
+- * and one for the inode attribute data/extents/b-tree root.
+- */
+ STATIC void
+-xfs_inode_item_size(
+-	struct xfs_log_item	*lip,
++xfs_inode_item_data_fork_size(
++	struct xfs_inode_log_item *iip,
+ 	int			*nvecs,
+ 	int			*nbytes)
+ {
+-	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+ 
+-	*nvecs += 2;
+-	*nbytes += sizeof(struct xfs_inode_log_format) +
+-		   xfs_icdinode_size(ip->i_d.di_version);
+-
+ 	switch (ip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
+@@ -70,7 +57,6 @@ xfs_inode_item_size(
+ 			*nvecs += 1;
+ 		}
+ 		break;
+-
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
+ 		    ip->i_df.if_broot_bytes > 0) {
+@@ -78,7 +64,6 @@ xfs_inode_item_size(
+ 			*nvecs += 1;
+ 		}
+ 		break;
+-
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
+ 		    ip->i_df.if_bytes > 0) {
+@@ -90,19 +75,20 @@ xfs_inode_item_size(
+ 	case XFS_DINODE_FMT_DEV:
+ 	case XFS_DINODE_FMT_UUID:
+ 		break;
+-
+ 	default:
+ 		ASSERT(0);
+ 		break;
+ 	}
++}
+ 
+-	if (!XFS_IFORK_Q(ip))
+-		return;
+-
++STATIC void
++xfs_inode_item_attr_fork_size(
++	struct xfs_inode_log_item *iip,
++	int			*nvecs,
++	int			*nbytes)
++{
++	struct xfs_inode	*ip = iip->ili_inode;
+ 
+-	/*
+-	 * Log any necessary attribute data.
+-	 */
+ 	switch (ip->i_d.di_aformat) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
+@@ -113,7 +99,6 @@ xfs_inode_item_size(
+ 			*nvecs += 1;
+ 		}
+ 		break;
+-
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if ((iip->ili_fields & XFS_ILOG_ABROOT) &&
+ 		    ip->i_afp->if_broot_bytes > 0) {
+@@ -121,7 +106,6 @@ xfs_inode_item_size(
+ 			*nvecs += 1;
+ 		}
+ 		break;
+-
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
+ 		    ip->i_afp->if_bytes > 0) {
+@@ -129,7 +113,6 @@ xfs_inode_item_size(
+ 			*nvecs += 1;
+ 		}
+ 		break;
+-
+ 	default:
+ 		ASSERT(0);
+ 		break;
+@@ -137,6 +120,31 @@ xfs_inode_item_size(
+ }
+ 
+ /*
++ * This returns the number of iovecs needed to log the given inode item.
++ *
++ * We need one iovec for the inode log format structure, one for the
++ * inode core, and possibly one for the inode data/extents/b-tree root
++ * and one for the inode attribute data/extents/b-tree root.
++ */
++STATIC void
++xfs_inode_item_size(
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
++{
++	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
++	struct xfs_inode	*ip = iip->ili_inode;
++
++	*nvecs += 2;
++	*nbytes += sizeof(struct xfs_inode_log_format) +
++		   xfs_icdinode_size(ip->i_d.di_version);
++
++	xfs_inode_item_data_fork_size(iip, nvecs, nbytes);
++	if (XFS_IFORK_Q(ip))
++		xfs_inode_item_attr_fork_size(iip, nvecs, nbytes);
++}
++
++/*
+  * xfs_inode_item_format_extents - convert in-core extents to on-disk form
+  *
+  * For either the data or attr fork in extent format, we need to endian convert
 -- 
 1.7.10.4
 
