@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E0E437F5E
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 19:44:06 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 8249229E19
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 19:44:08 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B19598F8035
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 17:44:06 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 524F38F8035
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 17:44:08 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	CaBax0CkFgPr80eY for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 17:44:04 -0800 (PST)
+	ywJwYA8Ug3keDbsG for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 17:44:06 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VmD7Y-0006In-Sf
+	(envelope-from <dave@fromorbit.com>) id 1VmD7Y-0006Iw-V5
 	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:53 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VmD7Y-0002eo-Rn
+	(envelope-from <dave@disappointment.disaster>) id 1VmD7Y-0002f8-UO
 	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/15] mkfs: table based parsing for converted parameters
-Date: Fri, 29 Nov 2013 12:43:46 +1100
-Message-Id: <1385689430-10103-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 15/15] mkfs: don't treat files as though they are block devices
+Date: Fri, 29 Nov 2013 12:43:50 +1100
+Message-Id: <1385689430-10103-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1385689430-10103-1-git-send-email-david@fromorbit.com>
 References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,464 +39,351 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-All the parameters that can be passed as block or sector sizes need
-to be passed the block and sector sizes that they should be using
-for conversion. For parameter parsing, it is always the same two
-variables, so to make things easy just declare them as global
-variables so we can avoid needing to pass them to getnum_checked().
+If the device is actually a file, and "-d file" is not specified,
+mkfs will try to treat it as a block device and get stuff wrong.
+Image files don't necessarily have the same sector sizes as the
+block device or filesystem underlying the image file, nor should we
+be issuing discard ioctls on image files.
 
-We also need to mark these parameters are requiring conversion so
-that we don't need to pass this information manually to
-getnum_checked(). Further, some of these options are required to
-have a power of 2 value, so add optional checking for that as well.
+To fix this sanely, only require "-d file" if the device name is
+invalid to trigger creation of the file. Otherwise, use stat() to
+determine if the device is a file or block device and deal with that
+appropriately by setting the "isfile" variables and turning off
+direct IO. Then ensure that we check the "isfile" options before
+doing things that are specific to block devices.
+
+Other file/blockdev issues fixed:
+	- use getstr to detect specifying the data device name
+	  twice.
+	- check file/size/name parameters before anything else.
+	- overwrite checks need to be done before the image file is
+	  opened and potentially truncated.
+	- blkid_get_topology() should not be called for image files,
+	  so warn when it is called that way.
+	- zero_old_xfs_structures() emits a spurious error:
+		"existing superblock read failed: Success"
+	  when it is run on a truncated image file. Don't warn if we
+	  see this problem on an image file.
+	- Don't issue discards on image files.
+	- Use fsync() for image files, not BLKFLSBUF in
+	  platform_flush_device() for Linux.
+
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 171 ++++++++++++++++++++++----------------------------------
- 1 file changed, 68 insertions(+), 103 deletions(-)
+ libxfs/linux.c  |  11 +++-
+ mkfs/xfs_mkfs.c | 167 +++++++++++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 126 insertions(+), 52 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index af9b9c4..e7bee06 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -52,6 +52,13 @@ static int  ispow2(unsigned int i);
- static long long cvtnum(unsigned int blocksize,
- 			unsigned int sectorsize, const char *s);
- 
-+/*
-+ * The configured block and sector sizes are defined as global variables so
-+ * that they don't need to be passed to functions that require them.
-+ */
-+unsigned int		blocksize;
-+unsigned int		sectorsize;
-+
- #define MAX_SUBOPTS	16
- #define SUBOPT_NEEDS_VAL	(-1LL)
- struct opt_params {
-@@ -61,6 +68,8 @@ struct opt_params {
- 	struct subopt_param {
- 		int		index;
- 		bool		seen;
-+		bool		convert;
-+		bool		is_power_2;
- 		long long	minval;
- 		long long	maxval;
- 		long long	defaultval;
-@@ -83,6 +92,8 @@ struct opt_params bopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = B_SIZE,
-+		  .convert = true,
-+		  .is_power_2 = true,
- 		  .minval = XFS_MIN_BLOCKSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -140,6 +151,9 @@ struct opt_params dopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SIZE,
-+		  .convert = true,
-+		  .minval = XFS_AG_MIN_BYTES,
-+		  .maxval = LLONG_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SUNIT,
-@@ -153,11 +167,15 @@ struct opt_params dopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_AGSIZE,
-+		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
- 		  .maxval = XFS_AG_MAX_BYTES,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SU,
-+		  .convert = true,
-+		  .minval = 0,
-+		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SW,
-@@ -171,6 +189,8 @@ struct opt_params dopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SECTSIZE,
-+		  .convert = true,
-+		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -235,11 +255,13 @@ struct opt_params iopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_PERBLOCK,
-+		  .is_power_2 = true,
- 		  .minval = XFS_MIN_INODE_PERBLOCK,
- 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_SIZE,
-+		  .is_power_2 = true,
- 		  .minval = XFS_DINODE_MIN_SIZE,
- 		  .maxval = XFS_DINODE_MAX_SIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -298,6 +320,9 @@ struct opt_params lopts = {
- 		  .defaultval = 1,
- 		},
- 		{ .index = L_SIZE,
-+		  .convert = true,
-+		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
-+		  .maxval = XFS_MAX_LOG_BYTES,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_VERSION,
-@@ -311,6 +336,9 @@ struct opt_params lopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SU,
-+		  .convert = true,
-+		  .minval = XLOG_MIN_RECORD_BSIZE,
-+		  .maxval = XLOG_MAX_RECORD_BSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_DEV,
-@@ -322,6 +350,8 @@ struct opt_params lopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SECTSIZE,
-+		  .convert = true,
-+		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -362,6 +392,8 @@ struct opt_params nopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_SIZE,
-+		  .convert = true,
-+		  .is_power_2 = true,
- 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -398,9 +430,15 @@ struct opt_params ropts = {
- 	},
- 	.subopt_params = {
- 		{ .index = R_EXTSIZE,
-+		  .convert = true,
-+		  .minval = XFS_MIN_RTEXTSIZE,
-+		  .maxval = XFS_MAX_RTEXTSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_SIZE,
-+		  .convert = true,
-+		  .minval = 0,
-+		  .maxval = LLONG_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_DEV,
-@@ -443,11 +481,15 @@ struct opt_params sopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SIZE,
-+		  .convert = true,
-+		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SECTSIZE,
-+		  .convert = true,
-+		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
- 		  .maxval = XFS_MAX_SECTORSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -1230,15 +1272,15 @@ sb_set_features(
- long long
- getnum(
- 	const char	*str,
--	unsigned int	blocksize,
--	unsigned int	sectorsize,
-+	unsigned int	blksize,
-+	unsigned int	sectsize,
- 	bool		convert)
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index 2e07d54..2fd529c 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -123,7 +123,16 @@ platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fata
+ void
+ platform_flush_device(int fd, dev_t device)
  {
- 	long long	i;
- 	char		*sp;
- 
- 	if (convert)
--		return cvtnum(blocksize, sectorsize, str);
-+		return cvtnum(blksize, sectsize, str);
- 
- 	i = strtoll(str, &sp, 0);
- 	if (i == 0 && sp == str)
-@@ -1287,9 +1329,11 @@ getnum_checked(
- 		return sp->defaultval;
- 	}
- 
--	c = getnum(str, 0, 0, false);
-+	c = getnum(str, blocksize, sectorsize, sp->convert);
- 	if (c < sp->minval || c > sp->maxval)
- 		illegal_option(str, opts, index);
-+	if (sp->is_power_2 && !ispow2(c))
-+		illegal_option(str, opts, index);
- 	return c;
+-	if (major(device) != RAMDISK_MAJOR)
++	struct stat64	st;
++	if (major(device) == RAMDISK_MAJOR)
++		return;
++
++	if (fstat64(fd, &st) < 0)
++		return;
++
++	if (S_ISREG(st.st_mode))
++		fsync(fd);
++	else
+ 		ioctl(fd, BLKFLSBUF, 0);
  }
  
-@@ -1307,7 +1351,6 @@ main(
- 	struct xfs_btree_block	*block;
- 	int			blflag;
- 	int			blocklog;
--	unsigned int		blocksize;
- 	int			bsflag;
- 	int			bsize;
- 	xfs_buf_t		*buf;
-@@ -1377,7 +1420,6 @@ main(
- 	char			*rtsize;
- 	xfs_sb_t		*sbp;
- 	int			sectorlog;
--	unsigned int		sectorsize;
- 	__uint64_t		sector_mask;
- 	int			slflag;
- 	int			ssflag;
-@@ -1454,18 +1496,11 @@ main(
- 					blflag = 1;
- 					break;
- 				case B_SIZE:
--					if (!value || *value == '\0')
--						reqval('b', subopts, B_SIZE);
--					if (bsflag)
--						respec('b', subopts, B_SIZE);
- 					if (blflag)
- 						conflict('b', subopts, B_LOG,
- 							 B_SIZE);
--					blocksize = getnum(value, blocksize,
--							sectorsize, true);
--					if (blocksize <= 0 ||
--					    !ispow2(blocksize))
--						illegal(value, "b size");
-+					blocksize = getnum_checked(value, &bopts,
-+								  B_SIZE);
- 					blocklog = libxfs_highbit32(blocksize);
- 					bsflag = 1;
- 					break;
-@@ -1488,14 +1523,8 @@ main(
- 					daflag = 1;
- 					break;
- 				case D_AGSIZE:
--					if (!value || *value == '\0')
--						reqval('d', subopts, D_AGSIZE);
--					if (dasize)
--						respec('d', subopts, D_AGSIZE);
--					agsize = getnum(value, blocksize,
--							sectorsize, true);
--					if ((__int64_t)agsize <= 0)
--						illegal(value, "d agsize");
-+					agsize = getnum_checked(value, &dopts,
-+								 D_AGSIZE);
- 					dasize = 1;
- 					break;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 88dd53e..c1e3e9d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -701,7 +701,7 @@ calc_stripe_factors(
+  */
+ static int
+ check_overwrite(
+-	char		*device)
++	const char	*device)
+ {
+ 	const char	*type;
+ 	blkid_probe	pr = NULL;
+@@ -718,7 +718,7 @@ check_overwrite(
+ 	fd = open(device, O_RDONLY);
+ 	if (fd < 0)
+ 		goto out;
+-	platform_findsizes(device, fd, &size, &bsz);
++	platform_findsizes((char *)device, fd, &size, &bsz);
+ 	close(fd);
+ 
+ 	/* nothing to overwrite on a 0-length device */
+@@ -765,7 +765,6 @@ check_overwrite(
+ 			"according to blkid\n"), progname, device);
+ 	}
+ 	ret = 1;
+-
+ out:
+ 	if (pr)
+ 		blkid_free_probe(pr);
+@@ -791,8 +790,12 @@ static void blkid_get_topology(
+ 	struct stat statbuf;
+ 
+ 	/* can't get topology info from a file */
+-	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode))
++	if (!stat(device, &statbuf) && S_ISREG(statbuf.st_mode)) {
++		fprintf(stderr,
++	_("%s: Warning: trying to probe topology of a file %s!\n"),
++			progname, device);
+ 		return;
++	}
+ 
+ 	pr = blkid_new_probe_from_filename(device);
+ 	if (!pr)
+@@ -870,7 +873,7 @@ static void get_topology(
+ #else /* ENABLE_BLKID */
+ static int
+ check_overwrite(
+-	char		*device)
++	const char	*device)
+ {
+ 	char		*type;
+ 
+@@ -927,6 +930,75 @@ static void get_topology(
+ #endif /* ENABLE_BLKID */
+ 
+ static void
++check_device_type(
++	const char	*name,
++	int		*isfile,
++	bool		no_size,
++	bool		no_name,
++	int		*create,
++	bool		force_overwrite,
++	const char	*optname)
++{
++	struct stat64 statbuf;
++
++	if (*isfile && (no_size || no_name)) {
++		fprintf(stderr,
++	_("if -%s file then -%s name and -%s size are required\n"),
++			optname, optname, optname);
++		usage();
++	}
++
++	if (stat64(name, &statbuf)) {
++		if (errno == ENOENT && *isfile) {
++			if (create)
++				*create = 1;
++			return;
++		}
++
++		fprintf(stderr,
++	_("Error accessing specified device %s: %s\n"),
++				name, strerror(errno));
++		usage();
++		return;
++	}
++
++	if (!force_overwrite && check_overwrite(name)) {
++		fprintf(stderr,
++	_("%s: Use the -f option to force overwrite.\n"),
++			progname);
++		exit(1);
++	}
++
++	/*
++	 * We only want to completely truncate and recreate an existing file if
++	 * we were specifically told it was a file. Set the create flag only in
++	 * this case to trigger that behaviour.
++	 */
++	if (S_ISREG(statbuf.st_mode)) {
++		if (!*isfile)
++			*isfile = 1;
++		else if (create)
++			*create = 1;
++		return;
++	}
++
++	if (S_ISBLK(statbuf.st_mode)) {
++		if (*isfile) {
++			fprintf(stderr,
++	_("specified \"-%s file\" on a block device %s\n"),
++				optname, name);
++			usage();
++		}
++		return;
++	}
++
++	fprintf(stderr,
++	_("specified device %s not a file or block device\n"),
++		name);
++	usage();
++}
++
++static void
+ fixup_log_stripe_unit(
+ 	int		lsflag,
+ 	int		sunit,
+@@ -1203,11 +1275,19 @@ zero_old_xfs_structures(
+ 	}
+ 	memset(buf, 0, new_sb->sb_sectsize);
+ 
+-	if (pread(xi->dfd, buf, new_sb->sb_sectsize, 0) != new_sb->sb_sectsize) {
+-		fprintf(stderr, _("existing superblock read failed: %s\n"),
+-			strerror(errno));
+-		free(buf);
+-		return;
++	/*
++	 * If we are creating an image file, it might be of zero length at this
++	 * point in time. Hence reading the existing superblock is going to
++	 * return zero bytes. It's not a failure we need to warn about in this
++	 * case.
++	 */
++	off = pread(xi->dfd, buf, new_sb->sb_sectsize, 0);
++	if (off != new_sb->sb_sectsize) {
++		if (!xi->disfile)
++			fprintf(stderr,
++	_("error reading existing superblock: %s\n"),
++				strerror(errno));
++		goto done;
+ 	}
+ 	libxfs_sb_from_disk(&sb, buf);
+ 
+@@ -1645,8 +1725,6 @@ main(
  				case D_FILE:
-@@ -1533,17 +1562,11 @@ main(
- 								 D_SWIDTH);
+ 					xi.disfile = getnum(value, &dopts,
+ 							    D_FILE);
+-					if (xi.disfile && !Nflag)
+-						xi.dcreat = 1;
  					break;
- 				case D_SU:
--					if (!value || *value == '\0')
--						reqval('d', subopts, D_SU);
--					if (dsu)
--						respec('d', subopts, D_SU);
- 					if (nodsflag)
- 						conflict('d', subopts, D_NOALIGN,
- 							 D_SU);
--					dsu = getnum(value, blocksize,
--						     sectorsize, true);
--					if (dsu < 0)
--						illegal(value, "d su");
-+					dsu = getnum_checked(value, &dopts,
-+								 D_SU);
+ 				case D_NAME:
+ 					xi.dname = getstr(value, &dopts, D_NAME);
+@@ -1768,8 +1846,6 @@ main(
+ 				case L_FILE:
+ 					xi.lisfile = getnum(value, &lopts,
+ 							    L_FILE);
+-					if (xi.lisfile)
+-						xi.lcreat = 1;
  					break;
- 				case D_SW:
- 					if (nodsflag)
-@@ -1577,18 +1600,11 @@ main(
- 					slflag = 1;
+ 				case L_INTERNAL:
+ 					loginternal = getnum(value, &lopts,
+@@ -1926,8 +2002,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 				case R_FILE:
+ 					xi.risfile = getnum(value, &ropts,
+ 							    R_FILE);
+-					if (xi.risfile)
+-						xi.rcreat = 1;
  					break;
- 				case D_SECTSIZE:
--					if (!value || *value == '\0')
--						reqval('d', subopts, D_SECTSIZE);
--					if (ssflag)
--						respec('d', subopts, D_SECTSIZE);
- 					if (slflag)
- 						conflict('d', subopts, D_SECTLOG,
- 							 D_SECTSIZE);
--					sectorsize = getnum(value, blocksize,
--							    sectorsize, true);
--					if (sectorsize <= 0 ||
--					    !ispow2(sectorsize))
--						illegal(value, "d sectsize");
-+					sectorsize = getnum_checked(value,
-+							&dopts, D_SECTSIZE);
- 					sectorlog =
- 						libxfs_highbit32(sectorsize);
- 					ssflag = 1;
-@@ -1655,8 +1671,6 @@ main(
- 							 I_PERBLOCK);
- 					inopblock = getnum_checked(value, &iopts,
- 								   I_PERBLOCK);
--					if (!ispow2(inopblock))
--						illegal(value, "i perblock");
- 					ipflag = 1;
- 					break;
- 				case I_SIZE:
-@@ -1668,8 +1682,6 @@ main(
- 							 I_SIZE);
- 					isize = getnum_checked(value, &iopts,
- 							       I_SIZE);
--					if (!ispow2(isize))
--						illegal(value, "i size");
- 					inodelog = libxfs_highbit32(isize);
- 					isflag = 1;
- 					break;
-@@ -1724,14 +1736,8 @@ main(
- 					liflag = 1;
- 					break;
- 				case L_SU:
--					if (!value || *value == '\0')
--						reqval('l', subopts, L_SU);
--					if (lsu)
--						respec('l', subopts, L_SU);
--					lsu = getnum(value, blocksize,
--						     sectorsize, true);
--					if (lsu < 0)
--						illegal(value, "l su");
-+					lsu = getnum_checked(value, &lopts,
-+								 L_SU);
- 					break;
- 				case L_SUNIT:
- 					lsunit = getnum_checked(value, &lopts,
-@@ -1776,18 +1782,11 @@ main(
- 					lslflag = 1;
- 					break;
- 				case L_SECTSIZE:
--					if (!value || *value == '\0')
--						reqval('l', subopts, L_SECTSIZE);
--					if (lssflag)
--						respec('l', subopts, L_SECTSIZE);
- 					if (lslflag)
- 						conflict('l', subopts, L_SECTLOG,
- 							 L_SECTSIZE);
--					lsectorsize = getnum(value, blocksize,
--							     sectorsize, true);
--					if (lsectorsize <= 0 ||
--					    !ispow2(lsectorsize))
--						illegal(value, "l sectsize");
-+					lsectorsize = getnum_checked(value,
-+							&lopts, L_SECTSIZE);
- 					lsectorlog =
- 						libxfs_highbit32(lsectorsize);
- 					lssflag = 1;
-@@ -1850,18 +1849,11 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
- 					nlflag = 1;
- 					break;
- 				case N_SIZE:
--					if (!value || *value == '\0')
--						reqval('n', subopts, N_SIZE);
--					if (nsflag)
--						respec('n', subopts, N_SIZE);
- 					if (nlflag)
- 						conflict('n', subopts, N_LOG,
- 							 N_SIZE);
--					dirblocksize = getnum(value, blocksize,
--							      sectorsize, true);
--					if (dirblocksize <= 0 ||
--					    !ispow2(dirblocksize))
--						illegal(value, "n size");
-+					dirblocksize = getnum_checked(value,
-+								&nopts, N_SIZE);
- 					dirblocklog =
- 						libxfs_highbit32(dirblocksize);
- 					nsflag = 1;
-@@ -1977,18 +1969,11 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
- 					break;
- 				case S_SIZE:
- 				case S_SECTSIZE:
--					if (!value || *value == '\0')
--						reqval('s', subopts, S_SECTSIZE);
--					if (ssflag || lssflag)
--						respec('s', subopts, S_SECTSIZE);
- 					if (slflag || lslflag)
- 						conflict('s', subopts, S_SECTLOG,
- 							 S_SECTSIZE);
--					sectorsize = getnum(value, blocksize,
--							    sectorsize, true);
--					if (sectorsize <= 0 ||
--					    !ispow2(sectorsize))
--						illegal(value, "s sectsize");
-+					sectorsize = getnum_checked(value,
-+							&sopts, S_SECTSIZE);
- 					lsectorsize = sectorsize;
- 					sectorlog =
- 						libxfs_highbit32(sectorsize);
-@@ -2197,9 +2182,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 				case R_NAME:
+ 				case R_DEV:
+@@ -1994,13 +2068,7 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 		fprintf(stderr, _("extra arguments\n"));
+ 		usage();
+ 	} else if (argc - optind == 1) {
+-		dfile = xi.volname = argv[optind];
+-		if (xi.dname) {
+-			fprintf(stderr,
+-				_("cannot specify both %s and -d name=%s\n"),
+-				xi.volname, xi.dname);
+-			usage();
+-		}
++		dfile = xi.volname = getstr(argv[optind], &dopts, D_NAME);
+ 	} else
+ 		dfile = xi.dname;
+ 
+@@ -2027,6 +2095,26 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 		lsectorsize = sectorsize;
+ 	}
+ 
++	/*
++	 * Before anything else, verify that we are correctly operating on
++	 * files or block devices and set the control parameters correctly.
++	 * Explicitly disable direct IO for image files so we don't error out on
++	 * sector size mismatches between the new filesystem and the underlying
++	 * host filesystem.
++	 */
++	check_device_type(dfile, &xi.disfile, !dsize, !xi.dname,
++			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
++	if (!loginternal)
++		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
++				  Nflag ? NULL : &xi.lcreat,
++				  force_overwrite, "l");
++	if (xi.rtname)
++		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
++				  Nflag ? NULL : &xi.rcreat,
++				  force_overwrite, "r");
++	if (xi.disfile || xi.lisfile || xi.risfile)
++		xi.isdirect = 0;
++
+ 	memset(&ft, 0, sizeof(ft));
+ 	get_topology(&xi, &ft, force_overwrite);
+ 
+@@ -2167,11 +2255,6 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	}
+ 
+ 
+-	if (xi.disfile && (!dsize || !xi.dname)) {
+-		fprintf(stderr,
+-	_("if -d file then -d name and -d size are required\n"));
+-		usage();
+-	}
  	if (dsize) {
  		__uint64_t dbytes;
  
--		dbytes = getnum(dsize, blocksize, sectorsize, true);
--		if ((__int64_t)dbytes < 0)
--			illegal(dsize, "d size");
-+		dbytes = getnum_checked(dsize, &dopts, D_SIZE);
- 		if (dbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal data length %lld, not a multiple of %d\n"),
-@@ -2236,9 +2219,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+@@ -2204,11 +2287,6 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 		usage();
+ 	}
+ 
+-	if (xi.lisfile && (!logsize || !xi.logname)) {
+-		fprintf(stderr,
+-		_("if -l file then -l name and -l size are required\n"));
+-		usage();
+-	}
  	if (logsize) {
  		__uint64_t logbytes;
  
--		logbytes = getnum(logsize, blocksize, sectorsize, true);
--		if ((__int64_t)logbytes < 0)
--			illegal(logsize, "l size");
-+		logbytes = getnum_checked(logsize, &lopts, L_SIZE);
- 		if (logbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal log length %lld, not a multiple of %d\n"),
-@@ -2260,9 +2241,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+@@ -2226,11 +2304,6 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 				(long long)logbytes, blocksize,
+ 				(long long)(logblocks << blocklog));
+ 	}
+-	if (xi.risfile && (!rtsize || !xi.rtname)) {
+-		fprintf(stderr,
+-		_("if -r file then -r name and -r size are required\n"));
+-		usage();
+-	}
  	if (rtsize) {
  		__uint64_t rtbytes;
  
--		rtbytes = getnum(rtsize, blocksize, sectorsize, true);
--		if ((__int64_t)rtbytes < 0)
--			illegal(rtsize, "r size");
-+		rtbytes = getnum_checked(rtsize, &ropts, R_SIZE);
- 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal rt length %lld, not a multiple of %d\n"),
-@@ -2282,27 +2261,13 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
- 	if (rtextsize) {
- 		__uint64_t rtextbytes;
+@@ -2354,22 +2427,14 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	xi.rtsize &= sector_mask;
+ 	xi.logBBsize &= (__uint64_t)-1 << (MAX(lsectorlog, 10) - BBSHIFT);
  
--		rtextbytes = getnum(rtextsize, blocksize, sectorsize, true);
--		if ((__int64_t)rtextbytes < 0)
--			illegal(rtsize, "r extsize");
-+		rtextbytes = getnum_checked(rtextsize, &ropts, R_EXTSIZE);
- 		if (rtextbytes % blocksize) {
- 			fprintf(stderr,
- 		_("illegal rt extent size %lld, not a multiple of %d\n"),
- 				(long long)rtextbytes, blocksize);
- 			usage();
- 		}
--		if (rtextbytes > XFS_MAX_RTEXTSIZE) {
+-	if (!force_overwrite) {
+-		if (check_overwrite(dfile) ||
+-		    check_overwrite(logfile) ||
+-		    check_overwrite(xi.rtname)) {
 -			fprintf(stderr,
--				_("rt extent size %s too large, maximum %d\n"),
--				rtextsize, XFS_MAX_RTEXTSIZE);
--			usage();
+-			_("%s: Use the -f option to force overwrite.\n"),
+-				progname);
+-			exit(1);
 -		}
--		if (rtextbytes < XFS_MIN_RTEXTSIZE) {
--			fprintf(stderr,
--				_("rt extent size %s too small, minimum %d\n"),
--				rtextsize, XFS_MIN_RTEXTSIZE);
--			usage();
--		}
- 		rtextblocks = (xfs_extlen_t)(rtextbytes >> blocklog);
- 	} else {
- 		/*
+-	}
+ 
++	/* don't do discards on print-only runs or on files */
+ 	if (discard && !Nflag) {
+-		discard_blocks(xi.ddev, xi.dsize);
+-		if (xi.rtdev)
++		if (!xi.disfile)
++			discard_blocks(xi.ddev, xi.dsize);
++		if (xi.rtdev && !xi.risfile)
+ 			discard_blocks(xi.rtdev, xi.rtsize);
+-		if (xi.logdev && xi.logdev != xi.ddev)
++		if (xi.logdev && xi.logdev != xi.ddev && !xi.lisfile)
+ 			discard_blocks(xi.logdev, xi.logBBsize);
+ 	}
+ 
 -- 
 1.8.4.rc3
 
