@@ -1,33 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B6C7E29E19
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 01:03:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54036AC002
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 23:03:44 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 64DC329E19
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 01:03:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 503228F8054
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 23:03:45 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id JVEmC4OiD2reKpFy (version=TLSv1
+	cuda.sgi.com with ESMTP id SNPtjbUNogpNzGZJ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 23:03:43 -0800 (PST)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	Thu, 28 Nov 2013 23:03:44 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rAT73fuP009580
+	ESMTP id rAT73hpN009606
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 07:03:42 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rAT73ebH016377
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 07:03:44 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAT73hrr028211
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 07:03:41 GMT
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rAT73ell015590 for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 07:03:40 GMT
-Message-ID: <52983C48.50007@oracle.com>
-Date: Fri, 29 Nov 2013 15:03:36 +0800
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 07:03:43 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rAT73hCK028207 for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 07:03:43 GMT
+Message-ID: <52983C4B.1090202@oracle.com>
+Date: Fri, 29 Nov 2013 15:03:39 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/3] xfstests: Introduce xfs/323 to verify turn group/project
-	quotas off
+Subject: [PATCH 3/3] xfstests: introduce xfs/324 to verify turn group/project
+	quota off along with fsstress
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,29 +44,29 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Introduce xfs/323 to verify that turn group/project quotas off
-while user quotas is on.
+Introduce xfs/324 to verify that we can turn group/project quotas off
+while user quota is on and fsstress is running.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- tests/xfs/323     | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/323.out |  7 +++++
+ tests/xfs/324     | 89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/324.out |  7 +++++
  tests/xfs/group   |  1 +
- 3 files changed, 91 insertions(+)
- create mode 100755 tests/xfs/323
- create mode 100644 tests/xfs/323.out
+ 3 files changed, 97 insertions(+)
+ create mode 100755 tests/xfs/324
+ create mode 100644 tests/xfs/324.out
 
-diff --git a/tests/xfs/323 b/tests/xfs/323
+diff --git a/tests/xfs/324 b/tests/xfs/324
 new file mode 100755
-index 0000000..d84f77c
+index 0000000..98f5f73
 --- /dev/null
-+++ b/tests/xfs/323
-@@ -0,0 +1,83 @@
++++ b/tests/xfs/324
+@@ -0,0 +1,89 @@
 +#! /bin/bash
-+# FS QA Test No. 323
++# FS QA Test No. 324
 +#
-+# Test to verify that turn group/project quotas off while user quotas
-+# are left on.
++# Test to verify that turn group/project quotas off while fstress and
++# user quotas are left on.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2013 Oracle, Inc.  All Rights Reserved.
@@ -115,58 +115,64 @@ index 0000000..d84f77c
 +_require_xfs_crc_sb
 +
 +_qmount_option "uquota,gquota,pquota"
-+_qmount
 +
-+TESTDIR=$SCRATCH_MNT/testdir
++STRESS_DIR=$SCRATCH_MNT/testdir
 +
-+mkdir -p $TESTDIR
++_exercise()
++{
++	type=$1
++
++	_qmount
++	mkdir -p $STRESS_DIR
++
++	$FSSTRESS_PROG -d $STRESS_DIR -n 100 -p 1000 $FSSTRESS_AVOID >>/dev/null 2>&1 &
++
++	xfs_quota -x -c "off -$type" $SCRATCH_DEV
++
++	killall -q $FSSTRESS_PROG
++	wait
++
++	rm -rf $STRESS_DIR
++	umount $SCRATCH_MNT
++}
++
 +echo "*** turn off group quotas"
-+xfs_quota -x -c 'off -g' $SCRATCH_MNT
-+rmdir $TESTDIR
-+echo "*** umount"
-+umount $SCRATCH_MNT
++_exercise g
++echo "*** done"
 +
-+_qmount
-+mkdir -p $TESTDIR
 +echo "*** turn off project quotas"
-+xfs_quota -x -c 'off -p' $SCRATCH_MNT
-+rmdir $TESTDIR
-+echo "*** umount"
-+umount $SCRATCH_MNT
++_exercise p
++echo "*** done"
 +
-+_qmount
-+mkdir -p $TESTDIR
 +echo "*** turn off group/project quotas"
-+xfs_quota -x -c 'off -gp' $SCRATCH_MNT
-+rmdir $TESTDIR
-+echo "*** umount"
-+umount $SCRATCH_MNT
++_exercise gp
++echo "*** done"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/323.out b/tests/xfs/323.out
+diff --git a/tests/xfs/324.out b/tests/xfs/324.out
 new file mode 100644
-index 0000000..88f16a3
+index 0000000..0f67d93
 --- /dev/null
-+++ b/tests/xfs/323.out
++++ b/tests/xfs/324.out
 @@ -0,0 +1,7 @@
-+QA output created by 323
++QA output created by 324
 +*** turn off group quotas
-+*** umount
++*** done
 +*** turn off project quotas
-+*** umount
++*** done
 +*** turn off group/project quotas
-+*** umount
++*** done
 diff --git a/tests/xfs/group b/tests/xfs/group
-index dcdeb98..b420e12 100644
+index b420e12..b0aa5df 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -183,3 +183,4 @@
- 301 auto dump
+@@ -184,3 +184,4 @@
  302 auto dump
  322 auto quick quota
-+323 auto quick quota
+ 323 auto quick quota
++324 auto quota
 -- 
 1.8.3.2
 
