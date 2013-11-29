@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B747B7F59
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 19:44:04 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A99367F5D
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 19:44:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4A4B2AC002
-	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 17:44:04 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 284B7AC002
+	for <xfs@oss.sgi.com>; Thu, 28 Nov 2013 17:44:06 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	lVw4tQkWaJPJbEXI for <xfs@oss.sgi.com>;
-	Thu, 28 Nov 2013 17:44:02 -0800 (PST)
+	n3OID3HtGm8LdZgq for <xfs@oss.sgi.com>;
+	Thu, 28 Nov 2013 17:44:04 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1VmD7Y-0006Im-S6
-	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:52 +1100
+	(envelope-from <dave@fromorbit.com>) id 1VmD7Y-0006Io-TI
+	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:53 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1VmD7Y-0002ej-R6
+	(envelope-from <dave@disappointment.disaster>) id 1VmD7Y-0002et-SO
 	for xfs@oss.sgi.com; Fri, 29 Nov 2013 12:43:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/15] mkfs: add respecification detection to generic parsing
-Date: Fri, 29 Nov 2013 12:43:45 +1100
-Message-Id: <1385689430-10103-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/15] mkfs: merge getnum
+Date: Fri, 29 Nov 2013 12:43:47 +1100
+Message-Id: <1385689430-10103-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1385689430-10103-1-git-send-email-david@fromorbit.com>
 References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,288 +39,571 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add flags to the generic input parameter tables so that
-respecification can be detected in a generic manner.
+getnum() is now only called by getnum_checked(). Move the two
+together into a single getnum() function and change all the callers
+back to getnum().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 64 +++++++++++++++------------------------------------------
- 1 file changed, 17 insertions(+), 47 deletions(-)
+ include/xfs_mkfs.h |   4 +-
+ mkfs/proto.c       |  20 ++++++
+ mkfs/xfs_mkfs.c    | 202 ++++++++++++++++++++++++-----------------------------
+ 3 files changed, 113 insertions(+), 113 deletions(-)
 
+diff --git a/include/xfs_mkfs.h b/include/xfs_mkfs.h
+index f5639b0..a4312e1 100644
+--- a/include/xfs_mkfs.h
++++ b/include/xfs_mkfs.h
+@@ -57,8 +57,8 @@
+ #define XFS_NOMULTIDISK_AGLOG		2	/* 4 AGs */
+ #define XFS_MULTIDISK_AGCOUNT		(1 << XFS_MULTIDISK_AGLOG)
+ 
+-extern long long getnum(const char *str, unsigned int blocksize,
+-			unsigned int sectorsize, bool convert);
++extern long long cvtnum(unsigned int blksize, unsigned int sectsize,
++			const char *str);
+ 
+ /* proto.c */
+ extern char *setup_proto (char *fname);
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index da5115b..0477d65 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -43,6 +43,26 @@ static long filesize(int fd);
+ 	((uint)(MKFS_BLOCKRES_INODE + XFS_DA_NODE_MAXDEPTH + \
+ 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
+ 
++static long long
++getnum(
++	const char	*str,
++	unsigned int	blksize,
++	unsigned int	sectsize,
++	bool		convert)
++{
++	long long	i;
++	char		*sp;
++
++	if (convert)
++		return cvtnum(blksize, sectsize, str);
++
++	i = strtoll(str, &sp, 0);
++	if (i == 0 && sp == str)
++		return -1LL;
++	if (*sp != '\0')
++		return -1LL; /* trailing garbage */
++	return i;
++}
+ 
+ char *
+ setup_proto(
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 2f51f5b..af9b9c4 100644
+index e7bee06..827c300 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -57,15 +57,17 @@ static long long cvtnum(unsigned int blocksize,
- struct opt_params {
- 	const char	name;
- 	const char	*subopts[MAX_SUBOPTS];
-+
- 	struct subopt_param {
- 		int		index;
-+		bool		seen;
- 		long long	minval;
- 		long long	maxval;
- 		long long	defaultval;
- 	}		subopt_params[MAX_SUBOPTS];
- };
+@@ -49,9 +49,6 @@ static void respec(char opt, char *tab[], int idx);
+ static void unknown(char opt, char *s);
+ static int  ispow2(unsigned int i);
  
--const struct opt_params bopts = {
-+struct opt_params bopts = {
- 	.name = 'b',
- 	.subopts = {
- #define	B_LOG		0
-@@ -88,7 +90,7 @@ const struct opt_params bopts = {
- 	},
- };
+-static long long cvtnum(unsigned int blocksize,
+-			unsigned int sectorsize, const char *s);
+-
+ /*
+  * The configured block and sector sizes are defined as global variables so
+  * that they don't need to be passed to functions that require them.
+@@ -1269,27 +1266,6 @@ sb_set_features(
+ 	sbp->sb_features_log_incompat = 0;
+ }
  
--const struct opt_params dopts = {
-+struct opt_params dopts = {
- 	.name = 'd',
- 	.subopts = {
- #define	D_AGCOUNT	0
-@@ -197,7 +199,7 @@ const struct opt_params dopts = {
- };
+-long long
+-getnum(
+-	const char	*str,
+-	unsigned int	blksize,
+-	unsigned int	sectsize,
+-	bool		convert)
+-{
+-	long long	i;
+-	char		*sp;
+-
+-	if (convert)
+-		return cvtnum(blksize, sectsize, str);
+-
+-	i = strtoll(str, &sp, 0);
+-	if (i == 0 && sp == str)
+-		return -1LL;
+-	if (*sp != '\0')
+-		return -1LL; /* trailing garbage */
+-	return i;
+-}
+-
+ static __attribute__((noreturn)) void
+ illegal_option(
+ 	const char	*value,
+@@ -1302,8 +1278,8 @@ illegal_option(
+ 	usage();
+ }
  
- 
--const struct opt_params iopts = {
-+struct opt_params iopts = {
- 	.name = 'i',
- 	.subopts = {
- #define	I_ALIGN		0
-@@ -255,7 +257,7 @@ const struct opt_params iopts = {
- 	},
- };
- 
--const struct opt_params lopts = {
-+struct opt_params lopts = {
- 	.name = 'l',
- 	.subopts = {
- #define	L_AGNUM		0
-@@ -340,7 +342,7 @@ const struct opt_params lopts = {
- 	},
- };
- 
--const struct opt_params nopts = {
-+struct opt_params nopts = {
- 	.name = 'n',
- 	.subopts = {
- #define	N_LOG		0
-@@ -377,7 +379,7 @@ const struct opt_params nopts = {
- 	},
- };
- 
--const struct opt_params ropts = {
-+struct opt_params ropts = {
- 	.name = 'r',
- 	.subopts = {
- #define	R_EXTSIZE	0
-@@ -416,7 +418,7 @@ const struct opt_params ropts = {
- 	},
- };
- 
--const struct opt_params sopts = {
-+struct opt_params sopts = {
- 	.name = 's',
- 	.subopts = {
- #define	S_LOG		0
-@@ -453,7 +455,7 @@ const struct opt_params sopts = {
- 	},
- };
- 
--const struct opt_params mopts = {
-+struct opt_params mopts = {
- 	.name = 'm',
- 	.subopts = {
- #define	M_CRC		0
-@@ -1261,10 +1263,10 @@ illegal_option(
- static int
- getnum_checked(
+-static int
+-getnum_checked(
++static long long
++getnum(
  	const char		*str,
--	const struct opt_params	*opts,
-+	struct opt_params	*opts,
+ 	struct opt_params	*opts,
  	int			index)
- {
--	const struct subopt_param *sp = &opts->subopt_params[index];
-+	struct subopt_param *sp = &opts->subopt_params[index];
- 	long long		c;
+@@ -1323,13 +1299,32 @@ getnum_checked(
+ 		respec(opts->name, (char **)opts->subopts, index);
+ 	sp->seen = true;
  
- 	if (sp->index != index) {
-@@ -1274,6 +1276,11 @@ getnum_checked(
- 		reqval(opts->name, (char **)opts->subopts, index);
- 	}
- 
-+	/* check for respecification of the option */
-+	if (sp->seen)
-+		respec(opts->name, (char **)opts->subopts, index);
-+	sp->seen = true;
-+
++	/* empty strings might just return a default value */
  	if (!str || *str == '\0') {
  		if (sp->defaultval == SUBOPT_NEEDS_VAL)
  			reqval(opts->name, (char **)opts->subopts, index);
-@@ -1438,8 +1445,6 @@ main(
- 				switch (getsubopt(&p, (constpp)subopts,
- 						  &value)) {
- 				case B_LOG:
--					if (blflag)
--						respec('b', subopts, B_LOG);
+ 		return sp->defaultval;
+ 	}
+ 
+-	c = getnum(str, blocksize, sectorsize, sp->convert);
++	/*
++	 * Some values are pure numbers, others can have suffixes that define
++	 * the units of the number. Those get passed to cvtnum(), otherwise we
++	 * convert it ourselves to guarantee there is no trailing garbage in the
++	 * number.
++	 */
++	if (sp->convert)
++		c = cvtnum(blocksize, sectorsize, str);
++	else {
++		char		*sp;
++
++		c = strtoll(str, &sp, 0);
++		if (c == 0 && sp == str)
++			illegal_option(str, opts, index);
++		if (*sp != '\0')
++			illegal_option(str, opts, index);
++	}
++
++	/* Validity check the result. */
+ 	if (c < sp->minval || c > sp->maxval)
+ 		illegal_option(str, opts, index);
+ 	if (sp->is_power_2 && !ispow2(c))
+@@ -1490,8 +1485,7 @@ main(
  					if (bsflag)
  						conflict('b', subopts, B_SIZE,
  							 B_LOG);
-@@ -1478,9 +1483,6 @@ main(
+-					blocklog = getnum_checked(value, &bopts,
+-								  B_LOG);
++					blocklog = getnum(value, &bopts, B_LOG);
+ 					blocksize = 1 << blocklog;
+ 					blflag = 1;
+ 					break;
+@@ -1499,8 +1493,8 @@ main(
+ 					if (blflag)
+ 						conflict('b', subopts, B_LOG,
+ 							 B_SIZE);
+-					blocksize = getnum_checked(value, &bopts,
+-								  B_SIZE);
++					blocksize = getnum(value, &bopts,
++							   B_SIZE);
+ 					blocklog = libxfs_highbit32(blocksize);
+ 					bsflag = 1;
+ 					break;
+@@ -1518,18 +1512,17 @@ main(
  				switch (getsubopt(&p, (constpp)subopts,
  						  &value)) {
  				case D_AGCOUNT:
--					if (daflag)
--						respec('d', subopts, D_AGCOUNT);
--
- 					agcount = getnum_checked(value, &dopts,
- 								 D_AGCOUNT);
+-					agcount = getnum_checked(value, &dopts,
+-								 D_AGCOUNT);
++					agcount = getnum(value, &dopts,
++							 D_AGCOUNT);
  					daflag = 1;
-@@ -1517,8 +1519,6 @@ main(
- 					dsize = value;
  					break;
- 				case D_SUNIT:
--					if (dsunit)
--						respec('d', subopts, D_SUNIT);
+ 				case D_AGSIZE:
+-					agsize = getnum_checked(value, &dopts,
+-								 D_AGSIZE);
++					agsize = getnum(value, &dopts, D_AGSIZE);
+ 					dasize = 1;
+ 					break;
+ 				case D_FILE:
+-					xi.disfile = getnum_checked(value,
+-								&dopts, D_FILE);
++					xi.disfile = getnum(value, &dopts,
++							    D_FILE);
+ 					if (xi.disfile && !Nflag)
+ 						xi.dcreat = 1;
+ 					break;
+@@ -1551,29 +1544,26 @@ main(
  					if (nodsflag)
  						conflict('d', subopts, D_NOALIGN,
  							 D_SUNIT);
-@@ -1526,8 +1526,6 @@ main(
- 								 D_SUNIT);
+-					dsunit = getnum_checked(value, &dopts,
+-								 D_SUNIT);
++					dsunit = getnum(value, &dopts, D_SUNIT);
  					break;
  				case D_SWIDTH:
--					if (dswidth)
--						respec('d', subopts, D_SWIDTH);
  					if (nodsflag)
  						conflict('d', subopts, D_NOALIGN,
  							 D_SWIDTH);
-@@ -1548,8 +1546,6 @@ main(
- 						illegal(value, "d su");
+-					dswidth = getnum_checked(value, &dopts,
+-								 D_SWIDTH);
++					dswidth = getnum(value, &dopts,
++							 D_SWIDTH);
+ 					break;
+ 				case D_SU:
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SU);
+-					dsu = getnum_checked(value, &dopts,
+-								 D_SU);
++					dsu = getnum(value, &dopts, D_SU);
  					break;
  				case D_SW:
--					if (dsw)
--						respec('d', subopts, D_SW);
  					if (nodsflag)
  						conflict('d', subopts, D_NOALIGN,
  							 D_SW);
-@@ -1572,8 +1568,6 @@ main(
- 					nodsflag = 1;
+-					dsw = getnum_checked(value, &dopts,
+-								 D_SW);
++					dsw = getnum(value, &dopts, D_SW);
  					break;
- 				case D_SECTLOG:
--					if (slflag)
--						respec('d', subopts, D_SECTLOG);
+ 				case D_NOALIGN:
+ 					if (dsu)
+@@ -1594,8 +1584,8 @@ main(
  					if (ssflag)
  						conflict('d', subopts, D_SECTSIZE,
  							 D_SECTLOG);
-@@ -1636,8 +1630,6 @@ main(
- 							value, &iopts, I_ALIGN);
+-					sectorlog = getnum_checked(value, &dopts,
+-								   D_SECTLOG);
++					sectorlog = getnum(value, &dopts,
++							   D_SECTLOG);
+ 					sectorsize = 1 << sectorlog;
+ 					slflag = 1;
+ 					break;
+@@ -1603,28 +1593,27 @@ main(
+ 					if (slflag)
+ 						conflict('d', subopts, D_SECTLOG,
+ 							 D_SECTSIZE);
+-					sectorsize = getnum_checked(value,
+-							&dopts, D_SECTSIZE);
++					sectorsize = getnum(value, &dopts,
++							    D_SECTSIZE);
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+ 					ssflag = 1;
+ 					break;
+ 				case D_RTINHERIT:
+-					c = getnum_checked(value, &dopts,
+-							   D_RTINHERIT);
++					c = getnum(value, &dopts, D_RTINHERIT);
+ 					if (c)
+ 						fsx.fsx_xflags |=
+ 							XFS_DIFLAG_RTINHERIT;
+ 					break;
+ 				case D_PROJINHERIT:
+-					fsx.fsx_projid = getnum_checked(value,
+-							&dopts, D_PROJINHERIT);
++					fsx.fsx_projid = getnum(value, &dopts,
++								D_PROJINHERIT);
+ 					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_PROJINHERIT;
+ 					break;
+ 				case D_EXTSZINHERIT:
+-					fsx.fsx_extsize = getnum_checked(value,
+-							&dopts, D_EXTSZINHERIT);
++					fsx.fsx_extsize = getnum(value, &dopts,
++								 D_EXTSZINHERIT);
+ 					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_EXTSZINHERIT;
+ 					break;
+@@ -1642,8 +1631,8 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case I_ALIGN:
+-					sb_feat.inode_align = getnum_checked(
+-							value, &iopts, I_ALIGN);
++					sb_feat.inode_align = getnum(value,
++								&iopts, I_ALIGN);
  					break;
  				case I_LOG:
--					if (ilflag)
--						respec('i', subopts, I_LOG);
  					if (ipflag)
- 						conflict('i', subopts, I_PERBLOCK,
+@@ -1652,14 +1641,13 @@ main(
+ 					if (isflag)
+ 						conflict('i', subopts, I_SIZE,
  							 I_LOG);
-@@ -1650,8 +1642,6 @@ main(
+-					inodelog = getnum_checked(value, &iopts,
+-								  I_LOG);
++					inodelog = getnum(value, &iopts, I_LOG);
+ 					isize = 1 << inodelog;
  					ilflag = 1;
  					break;
  				case I_MAXPCT:
--					if (imflag)
--						respec('i', subopts, I_MAXPCT);
- 					imaxpct = getnum_checked(value, &iopts,
- 								 I_MAXPCT);
+-					imaxpct = getnum_checked(value, &iopts,
+-								 I_MAXPCT);
++					imaxpct = getnum(value, &iopts,
++							 I_MAXPCT);
  					imflag = 1;
-@@ -1660,8 +1650,6 @@ main(
- 					if (ilflag)
- 						conflict('i', subopts, I_LOG,
- 							 I_PERBLOCK);
--					if (ipflag)
--						respec('i', subopts, I_PERBLOCK);
+ 					break;
+ 				case I_PERBLOCK:
+@@ -1669,8 +1657,8 @@ main(
  					if (isflag)
  						conflict('i', subopts, I_SIZE,
  							 I_PERBLOCK);
-@@ -1678,8 +1666,6 @@ main(
+-					inopblock = getnum_checked(value, &iopts,
+-								   I_PERBLOCK);
++					inopblock = getnum(value, &iopts,
++							   I_PERBLOCK);
+ 					ipflag = 1;
+ 					break;
+ 				case I_SIZE:
+@@ -1680,20 +1668,18 @@ main(
  					if (ipflag)
  						conflict('i', subopts, I_PERBLOCK,
  							 I_SIZE);
--					if (isflag)
--						respec('i', subopts, I_SIZE);
- 					isize = getnum_checked(value, &iopts,
- 							       I_SIZE);
- 					if (!ispow2(isize))
-@@ -1711,8 +1697,6 @@ main(
- 				switch (getsubopt(&p, (constpp)subopts,
- 						  &value)) {
+-					isize = getnum_checked(value, &iopts,
+-							       I_SIZE);
++					isize = getnum(value, &iopts, I_SIZE);
+ 					inodelog = libxfs_highbit32(isize);
+ 					isflag = 1;
+ 					break;
+ 				case I_ATTR:
+ 					sb_feat.attr_version =
+-						getnum_checked(value, &iopts,
+-							       I_ATTR);
++						getnum(value, &iopts, I_ATTR);
+ 					break;
+ 				case I_PROJID32BIT:
+ 					sb_feat.projid16bit =
+-						!getnum_checked(value, &iopts,
+-								I_PROJID32BIT);
++						!getnum(value, &iopts,
++							I_PROJID32BIT);
+ 					break;
+ 				default:
+ 					unknown('i', value);
+@@ -1711,16 +1697,15 @@ main(
  				case L_AGNUM:
--					if (laflag)
--						respec('l', subopts, L_AGNUM);
  					if (ldflag)
  						conflict('l', subopts, L_AGNUM, L_DEV);
- 					logagno = getnum_checked(value, &lopts,
-@@ -1734,8 +1718,6 @@ main(
+-					logagno = getnum_checked(value, &lopts,
+-								 L_AGNUM);
++					logagno = getnum(value, &lopts, L_AGNUM);
+ 					laflag = 1;
+ 					break;
+ 				case L_FILE:
+ 					if (loginternal)
+ 						conflict('l', subopts, L_INTERNAL,
+ 							 L_FILE);
+-					xi.lisfile = getnum_checked(value,
+-								&lopts, L_FILE);
++					xi.lisfile = getnum(value, &lopts,
++							    L_FILE);
  					if (xi.lisfile)
+ 						xi.lcreat = 1;
+ 					break;
+@@ -1731,17 +1716,15 @@ main(
  						conflict('l', subopts, L_FILE,
  							 L_INTERNAL);
--					if (liflag)
--						respec('l', subopts, L_INTERNAL);
  
- 					loginternal = getnum_checked(value,
- 							&lopts, L_INTERNAL);
-@@ -1752,8 +1734,6 @@ main(
- 						illegal(value, "l su");
+-					loginternal = getnum_checked(value,
+-							&lopts, L_INTERNAL);
++					loginternal = getnum(value, &lopts,
++							     L_INTERNAL);
+ 					liflag = 1;
+ 					break;
+ 				case L_SU:
+-					lsu = getnum_checked(value, &lopts,
+-								 L_SU);
++					lsu = getnum(value, &lopts, L_SU);
  					break;
  				case L_SUNIT:
--					if (lsunit)
--						respec('l', subopts, L_SUNIT);
- 					lsunit = getnum_checked(value, &lopts,
- 								 L_SUNIT);
+-					lsunit = getnum_checked(value, &lopts,
+-								 L_SUNIT);
++					lsunit = getnum(value, &lopts, L_SUNIT);
  					break;
-@@ -1773,8 +1753,6 @@ main(
- 					xi.logname = value;
+ 				case L_NAME:
+ 				case L_DEV:
+@@ -1760,8 +1743,7 @@ main(
  					break;
  				case L_VERSION:
--					if (lvflag)
--						respec('l', subopts, L_VERSION);
  					sb_feat.log_version =
- 						getnum_checked(value, &lopts,
- 							       L_VERSION);
-@@ -1789,8 +1767,6 @@ main(
- 					lsflag = 1;
+-						getnum_checked(value, &lopts,
+-							       L_VERSION);
++						getnum(value, &lopts, L_VERSION);
+ 					lvflag = 1;
  					break;
- 				case L_SECTLOG:
--					if (lslflag)
--						respec('l', subopts, L_SECTLOG);
+ 				case L_SIZE:
+@@ -1776,8 +1758,8 @@ main(
  					if (lssflag)
  						conflict('l', subopts, L_SECTSIZE,
  							 L_SECTLOG);
-@@ -1865,8 +1841,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
- 				switch (getsubopt(&p, (constpp)subopts,
+-					lsectorlog = getnum_checked(value,
+-							&lopts, L_SECTLOG);
++					lsectorlog = getnum(value, &lopts,
++							    L_SECTLOG);
+ 					lsectorsize = 1 << lsectorlog;
+ 					lslflag = 1;
+ 					break;
+@@ -1785,15 +1767,15 @@ main(
+ 					if (lslflag)
+ 						conflict('l', subopts, L_SECTLOG,
+ 							 L_SECTSIZE);
+-					lsectorsize = getnum_checked(value,
+-							&lopts, L_SECTSIZE);
++					lsectorsize = getnum(value, &lopts,
++							     L_SECTSIZE);
+ 					lsectorlog =
+ 						libxfs_highbit32(lsectorsize);
+ 					lssflag = 1;
+ 					break;
+ 				case L_LAZYSBCNTR:
+ 					sb_feat.lazy_sb_counters =
+-						getnum_checked(value, &lopts,
++							getnum(value, &lopts,
+ 							       L_LAZYSBCNTR);
+ 					break;
+ 				default:
+@@ -1816,8 +1798,7 @@ main(
  						  &value)) {
- 				case N_LOG:
--					if (nlflag)
--						respec('n', subopts, N_LOG);
+ 				case M_CRC:
+ 					sb_feat.crcs_enabled =
+-						getnum_checked(value, &mopts,
+-							       M_CRC);
++						getnum(value, &mopts, M_CRC);
+ 					if (sb_feat.crcs_enabled && nftype) {
+ 						fprintf(stderr,
+ _("cannot specify both -m crc=1 and -n ftype\n"));
+@@ -1843,8 +1824,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
  					if (nsflag)
  						conflict('n', subopts, N_SIZE,
  							 N_LOG);
-@@ -1909,8 +1883,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+-					dirblocklog = getnum_checked(value,
+-								&nopts, N_LOG);
++					dirblocklog = getnum(value, &nopts,
++							     N_LOG);
+ 					dirblocksize = 1 << dirblocklog;
+ 					nlflag = 1;
+ 					break;
+@@ -1852,8 +1833,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 					if (nlflag)
+ 						conflict('n', subopts, N_LOG,
+ 							 N_SIZE);
+-					dirblocksize = getnum_checked(value,
+-								&nopts, N_SIZE);
++					dirblocksize = getnum(value, &nopts,
++							      N_SIZE);
+ 					dirblocklog =
+ 						libxfs_highbit32(dirblocksize);
+ 					nsflag = 1;
+@@ -1868,9 +1849,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 						sb_feat.nci = true;
+ 					} else {
+ 						sb_feat.dir_version =
+-							getnum_checked(value,
+-								&nopts,
+-								N_VERSION);
++							getnum(value, &nopts,
++							       N_VERSION);
+ 					}
  					nvflag = 1;
  					break;
- 				case N_FTYPE:
--					if (nftype)
--						respec('n', subopts, N_FTYPE);
- 					if (sb_feat.crcs_enabled) {
- 						fprintf(stderr,
+@@ -1880,8 +1860,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
  _("cannot specify both -m crc=1 and -n ftype\n"));
-@@ -1993,8 +1965,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
- 						  &value)) {
- 				case S_LOG:
- 				case S_SECTLOG:
--					if (slflag || lslflag)
--						respec('s', subopts, S_SECTLOG);
+ 						usage();
+ 					}
+-					sb_feat.dirftype = getnum_checked(value,
+-								&nopts, N_FTYPE);
++					sb_feat.dirftype = getnum(value, &nopts,
++								  N_FTYPE);
+ 					nftype = 1;
+ 					break;
+ 				default:
+@@ -1919,8 +1899,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 					rtextsize = value;
+ 					break;
+ 				case R_FILE:
+-					xi.risfile = getnum_checked(value,
+-								&ropts, R_FILE);
++					xi.risfile = getnum(value, &ropts,
++							    R_FILE);
+ 					if (xi.risfile)
+ 						xi.rcreat = 1;
+ 					break;
+@@ -1960,8 +1940,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
  					if (ssflag || lssflag)
  						conflict('s', subopts,
  							 S_SECTSIZE, S_SECTLOG);
+-					sectorlog = getnum_checked(value, &sopts,
+-								   S_SECTLOG);
++					sectorlog = getnum(value, &sopts,
++							   S_SECTLOG);
+ 					lsectorlog = sectorlog;
+ 					sectorsize = 1 << sectorlog;
+ 					lsectorsize = sectorsize;
+@@ -1972,8 +1952,8 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
+ 					if (slflag || lslflag)
+ 						conflict('s', subopts, S_SECTLOG,
+ 							 S_SECTSIZE);
+-					sectorsize = getnum_checked(value,
+-							&sopts, S_SECTSIZE);
++					sectorsize = getnum(value, &sopts,
++							    S_SECTSIZE);
+ 					lsectorsize = sectorsize;
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+@@ -2182,7 +2162,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	if (dsize) {
+ 		__uint64_t dbytes;
+ 
+-		dbytes = getnum_checked(dsize, &dopts, D_SIZE);
++		dbytes = getnum(dsize, &dopts, D_SIZE);
+ 		if (dbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal data length %lld, not a multiple of %d\n"),
+@@ -2219,7 +2199,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	if (logsize) {
+ 		__uint64_t logbytes;
+ 
+-		logbytes = getnum_checked(logsize, &lopts, L_SIZE);
++		logbytes = getnum(logsize, &lopts, L_SIZE);
+ 		if (logbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal log length %lld, not a multiple of %d\n"),
+@@ -2241,7 +2221,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	if (rtsize) {
+ 		__uint64_t rtbytes;
+ 
+-		rtbytes = getnum_checked(rtsize, &ropts, R_SIZE);
++		rtbytes = getnum(rtsize, &ropts, R_SIZE);
+ 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal rt length %lld, not a multiple of %d\n"),
+@@ -2261,7 +2241,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+ 	if (rtextsize) {
+ 		__uint64_t rtextbytes;
+ 
+-		rtextbytes = getnum_checked(rtextsize, &ropts, R_EXTSIZE);
++		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
+ 		if (rtextbytes % blocksize) {
+ 			fprintf(stderr,
+ 		_("illegal rt extent size %lld, not a multiple of %d\n"),
+@@ -3314,8 +3294,8 @@ unknown(
+ 
+ long long
+ cvtnum(
+-	unsigned int	blocksize,
+-	unsigned int	sectorsize,
++	unsigned int	blksize,
++	unsigned int	sectsize,
+ 	const char	*s)
+ {
+ 	long long	i;
+@@ -3328,9 +3308,9 @@ cvtnum(
+ 		return i;
+ 
+ 	if (*sp == 'b' && sp[1] == '\0')
+-		return i * blocksize;
++		return i * blksize;
+ 	if (*sp == 's' && sp[1] == '\0')
+-		return i * sectorsize;
++		return i * sectsize;
+ 
+ 	if (*sp == 'k' && sp[1] == '\0')
+ 		return 1024LL * i;
 -- 
 1.8.4.rc3
 
