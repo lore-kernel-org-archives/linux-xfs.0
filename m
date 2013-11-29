@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 81A6E7F4E
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 13:43:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 60A9B8F804B
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 11:43:46 -0800 (PST)
-Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
-	[140.211.169.12]) by cuda.sgi.com with ESMTP id
-	ACMCtqQAcE4OfTin for <xfs@oss.sgi.com>;
-	Fri, 29 Nov 2013 11:43:45 -0800 (PST)
-Date: Fri, 29 Nov 2013 11:44:38 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131129194438.GA11052@kroah.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7E29A7F50
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 14:17:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5CE8D304059
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 12:17:26 -0800 (PST)
+Received: from mail-ve0-f180.google.com (mail-ve0-f180.google.com
+	[209.85.128.180]) by cuda.sgi.com with ESMTP id
+	jh4rimEVTHlskjOk (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Nov 2013 12:17:24 -0800 (PST)
+Received: by mail-ve0-f180.google.com with SMTP id jz11so7382591veb.11
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 12:17:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131129194438.GA11052@kroah.com>
 References: <20131128162618.GO10323@ZenIV.linux.org.uk>
 	<20131128212301.GP10323@ZenIV.linux.org.uk>
 	<20131128225102.GS10988@dastard>
@@ -23,9 +24,11 @@ References: <20131128162618.GO10323@ZenIV.linux.org.uk>
 	<20131129040658.GU10323@ZenIV.linux.org.uk>
 	<20131129041416.GV10323@ZenIV.linux.org.uk>
 	<20131129065941.GW10323@ZenIV.linux.org.uk>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131129065941.GW10323@ZenIV.linux.org.uk>
+	<20131129194438.GA11052@kroah.com>
+Date: Fri, 29 Nov 2013 12:17:23 -0800
+Message-ID: <CA+55aFxgPQq_1n8Pv6gmMk+=yX9YkA10y6EpS1ECY8OB8-wFig@mail.gmail.com>
+Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,54 +41,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-On Fri, Nov 29, 2013 at 06:59:41AM +0000, Al Viro wrote:
-> On Fri, Nov 29, 2013 at 04:14:16AM +0000, Al Viro wrote:
-> 
-> > And yes, it has fixed the problem with generic/234.  I'll do full xfstests
-> > run to see if there's anything else, but this one is obviously needed.
-> > I'll send it with sane commit message (along with follow_dotdot_rcu()
-> > fix) later tonight.  path_init() race is a separate story - that one should
-> > probably go separately, since we'll want it in all branches starting with
-> > early 2011 or so.
-> 
-> OK, it survives.  However, looking a bit more at follow_dotdot_rcu()...
-> AFAICS, we have a narrow oopsable race, from 2.6.38 and to 3.12 - think what
-> happens if we are walking through /tmp/foo/bar/../baz in RCU mode and we'd just
-> reached /tmp/foo/bar.  handle_dotdot() is called, calling follow_dotdot_rcu().
-> OK, we are not about to cross a mountpoint.  Read ->d_seq of /tmp/foo into
-> seq, check that nd->seq matches /tmp/foo/bar (it does, everything's fine)
-> and set nd->path.dentry to /tmp/foo, with nd->seq set to seq.  Then
-> we check if the /tmp/foo is overmounted by something; it isn't and now we set
-> nd->inode.
-> 
-> Sure, it's _very_ hard to get into trouble here - we need somebody to remove
-> /tmp/foo/bar *and* /tmp/foo while we'd been walking vfsmount hash,
-> but in theory it is not impossible to get NULL nd->inode.  Then
-> link_path_walk() gets to checking that we have a directory and we get
-> an oops on checking inode flags.
-> 
-> I really don't like the way we have nd->inode updates scattered all over
-> the place in fs/namei.c ;-/  I'm looking into possible ways to deal
-> with it sanely, but that'll have to wait for tomorrow...
-> 
-> Anyway, I've pushed the minimal regression fix to vfs.git; please, pull
-> from
-> git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git for-linus
-> 
-> Shortlog:
-> Al Viro (1):
->       fix bogus path_put() of nd->root after some unlazy_walk() failures
+On Fri, Nov 29, 2013 at 11:44 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>
+> So, should d870b4a191a3 be queued up for
+> -stable releases to resolve this issue there as well, or am I
+> misunderstanding your post above?
 
-So, should d870b4a191a389c661cd40aacb06981c26b5e504 be queued up for
--stable releases to resolve this issue there as well, or am I
-misunderstanding your post above?
+No, the bug d870b4a191a3 fixes is new to the 3.13 merge window (it's
+due to the newly RCU'd vfsmounts).
 
-thanks,
+But Al seems to have found another race that has been around for a
+while. But that's a separate issue, and there's no patch for that yet
+(and nobody has ever hit it, because we'd scream bloody murder if they
+did).
 
-greg k-h
+Al - even in your scenario I don't see a NULL nd->inode, because when
+we do an rmdir we remove the dentry, we don't turn it into a negative
+one. Afaik, it would be a violation of all our dentry rules to change
+the dentry->d_inode field while the dentry is live. The only way to
+get a negative dentry (ie d_inode == NULL) should be from lookup (and
+from a rename that switches the dentries around, but even then the
+d_inode _stays_ NULL, it's just that we move the dentry itself
+around).
+
+That said, I do agree that the games we play with "nd->inode" are not
+at all obvious. And I'm not actually convinced we need "nd->inode" AT
+ALL these days. We used to have it for other reasons, but afaik these
+days the only actual users are
+
+ - some sanity tests in the lookup code
+
+ - a few "inode_permission()" calls that I suspect could equally well
+just use path.dentry->inode. Because either the dentry is stable, or
+we're in RCU lookup and we'll revalidate it anyway.
+
+Maybe I'm wrong. But iirc, the big reason for 'nd->inode' originally
+was that it was the inode that was verified against the dentry
+sequence number that we then passed on as a stable inode to the
+low-level filesysystems. But that whole calling convention got cleaned
+up with commits 12f8ad4b0533 and da53be12bbb4, and I really think most
+of the historical reasons for having that nd->inode have gone away.
+
+I dunno. I didn't check the three remaining "inode_permission()"
+users, and maybe I missed some other use too. So maybe it's still
+required, but my initial reaction when looking at it was "why do we
+even have it any more"?
+
+            Linus
 
 _______________________________________________
 xfs mailing list
