@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 74B077F52
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 17:55:52 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 206C57F54
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 18:18:42 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 637A0304051
-	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 15:55:49 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id C4CDMEepNiLTx3KA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 29 Nov 2013 15:55:45 -0800 (PST)
-Date: Fri, 29 Nov 2013 23:55:37 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
-Message-ID: <20131129235537.GX10323@ZenIV.linux.org.uk>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 01846304051
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 16:18:38 -0800 (PST)
+Received: from mail-ve0-f177.google.com (mail-ve0-f177.google.com
+	[209.85.128.177]) by cuda.sgi.com with ESMTP id
+	I94UHCDK7en5M7kA (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Nov 2013 16:18:37 -0800 (PST)
+Received: by mail-ve0-f177.google.com with SMTP id db12so7256985veb.36
+	for <xfs@oss.sgi.com>; Fri, 29 Nov 2013 16:18:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131129235537.GX10323@ZenIV.linux.org.uk>
 References: <20131128225102.GS10988@dastard>
 	<20131128234441.GQ10323@ZenIV.linux.org.uk>
 	<CA+55aFxLZxy75fO4ZXO4Stiu1sMx1q=eJ7HSk-UTCX61jPrirA@mail.gmail.com>
@@ -23,9 +24,11 @@ References: <20131128225102.GS10988@dastard>
 	<20131129065941.GW10323@ZenIV.linux.org.uk>
 	<20131129194438.GA11052@kroah.com>
 	<CA+55aFxgPQq_1n8Pv6gmMk+=yX9YkA10y6EpS1ECY8OB8-wFig@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+55aFxgPQq_1n8Pv6gmMk+=yX9YkA10y6EpS1ECY8OB8-wFig@mail.gmail.com>
+	<20131129235537.GX10323@ZenIV.linux.org.uk>
+Date: Fri, 29 Nov 2013 16:18:36 -0800
+Message-ID: <CA+55aFw7xmens_+Db0bXCMn8NRbtjRXH69+cPz622YNBxEPfsw@mail.gmail.com>
+Subject: Re: inode_permission NULL pointer dereference in 3.13-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,39 +41,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
+To: Al Viro <viro@zeniv.linux.org.uk>
 Cc: Christoph Hellwig <hch@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Nov 29, 2013 at 12:17:23PM -0800, Linus Torvalds wrote:
+On Fri, Nov 29, 2013 at 3:55 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> Look at the end of vfs_rmdir(); d_delete() in there will turn dentry
+> negative if nobody else hold references to it.  So yes, dentry of
+> directory *can* go negative under you, unless you've grabbed a reference.
+> Which we do not do in RCU mode, obviously.
 
-> Al - even in your scenario I don't see a NULL nd->inode, because when
-> we do an rmdir we remove the dentry, we don't turn it into a negative
-> one. Afaik, it would be a violation of all our dentry rules to change
-> the dentry->d_inode field while the dentry is live. The only way to
-> get a negative dentry (ie d_inode == NULL) should be from lookup (and
-> from a rename that switches the dentries around, but even then the
-> d_inode _stays_ NULL, it's just that we move the dentry itself
-> around).
+Ugh. Right you are. I thought we tried to avoid that, but clearly we don't.
 
-Look at the end of vfs_rmdir(); d_delete() in there will turn dentry
-negative if nobody else hold references to it.  So yes, dentry of
-directory *can* go negative under you, unless you've grabbed a reference.
-Which we do not do in RCU mode, obviously.
+I wonder if we could try to avoid it, just unhash and kill the dentry.
+And then do this all at dentry release time instead (so after the
+appropriate RCU grace period). Because it really would be lovely if
+d_inode was stable.
 
-What would be a violation of all rules is dentry held by somebody else
-becoming negative.  And d_delete() avoids that, but the whole point of
-RCU-mode pathwalk is to _not_ hold intermediates.  So nd->inode is
-needed.  Sure, it'll get ->d_seq bumped, but that won't do you much good
-when it comes to attempt to dereference nd->inode.  Sure, we can turn
-all places that access nd->inode into
-	struct dentry *dentry = nd->path.dentry;
-	struct inode *inode = dentry->d_inode;
-	if (read_seqcount_retry(&dentry->d_seq, nd->seq))
-		/* too fucking bad, we'd lost the race */
-	else
-		/* use inode */
-but it will be just as messy as maintaining nd->inode _and_ quite a bit
-slower.
+But I guess we might have filesystems that expect the synchronous
+d_iput() for last use, and maybe there's even some performance
+advantage to re-using the dentry for some loads..
+
+            Linus
 
 _______________________________________________
 xfs mailing list
