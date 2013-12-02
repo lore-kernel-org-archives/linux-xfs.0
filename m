@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2893A7F56
-	for <xfs@oss.sgi.com>; Sun,  1 Dec 2013 07:35:14 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 095EA7F57
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 04:40:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C8387304032
-	for <xfs@oss.sgi.com>; Sun,  1 Dec 2013 05:35:13 -0800 (PST)
-Received: from alt-proxy27.mail.unifiedlayer.com
-	(alt-proxy27.mail.unifiedlayer.com [69.89.19.24]) by
-	cuda.sgi.com with SMTP id QfGHlbEFBKY6BtN0 for
-	<xfs@oss.sgi.com>; Sun, 01 Dec 2013 05:35:10 -0800 (PST)
-Subject: Re: [PATCH 10/18] hfsplus: use generic posix ACL infrastructure
-Mime-Version: 1.0 (Apple Message framework v1085)
-From: Vyacheslav Dubeyko <slava@dubeyko.com>
-In-Reply-To: <20131201120655.410590428@bombadil.infradead.org>
-Date: Sun, 1 Dec 2013 17:36:51 +0300
-Message-Id: <3F8D73A0-9449-42FB-8CFA-D1E4C86FF0B2@dubeyko.com>
-References: <20131201115903.910559036@bombadil.infradead.org>
-	<20131201120655.410590428@bombadil.infradead.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CFDE88F8064
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 02:40:20 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id GrzUaHAmscALGivT (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 02:40:19 -0800 (PST)
+Date: Mon, 2 Dec 2013 02:40:16 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/15] xfsprogs: use common code for multi-disk detection
+Message-ID: <20131202104016.GA21394@infradead.org>
+References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
+	<1385689430-10103-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1385689430-10103-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-
-On Dec 1, 2013, at 2:59 PM, Christoph Hellwig wrote:
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-> fs/hfsplus/acl.h       |    9 +--
-> fs/hfsplus/dir.c       |    1 +
-> fs/hfsplus/inode.c     |    3 +-
-> fs/hfsplus/posix_acl.c |  161 +++++-------------------------------------------
-> fs/hfsplus/xattr.c     |    5 +-
-> fs/hfsplus/xattr.h     |    2 -
-> 6 files changed, 24 insertions(+), 157 deletions(-)
+On Fri, Nov 29, 2013 at 12:43:36PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
+> Both xfs_repair and mkfs.xfs need to agree on what is a "multidisk:
+> configuration - mkfs for determining the AG count of the filesystem,
+> repair for determining how to automatically parallelise it's
+> execution. This requires a bunch of common defines that both mkfs
+> and reapir need to share.
+> 
+> In fact, most of the defines in xfs_mkfs.h could be shared with
+> other programs (i.e. all the defaults mkfs uses) and so it is
+> simplest to move xfs_mkfs.h to the shared include directory and add
+> the new defines to it directly.
 
-Reviewed-by: Vyacheslav Dubeyko <slava@dubeyko.com>
-
-The patch looks correct. I think only that it makes sense to add debug messages
-in hfsplus_get_posix_acl() and hfsplus_set_posix_acl(). Previously, debug
-messages were in hfsplus_xattr_get_posix_acl() and hfsplus_xattr_set_posix_acl()
-but the patch removes these methods.
-
-Thanks,
-Vyacheslav Dubeyko.
+I have to say I do not like making the mkfs header public at all.
+There's things like local prototypes in there that shouldn't be in
+include/, and the name is wrong, too.  include/xfs_geom.h maybe?
 
 _______________________________________________
 xfs mailing list
