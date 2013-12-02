@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2520F29DF9
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 17:25:13 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 292A429DF9
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 17:25:54 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 066258F808F
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 15:25:09 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B56F5AC004
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 15:25:53 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	7LGyM78FoJm908gx for <xfs@oss.sgi.com>;
-	Mon, 02 Dec 2013 15:25:08 -0800 (PST)
-Date: Tue, 3 Dec 2013 10:25:06 +1100
+	kDEeev3mBHklDILk for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 15:25:52 -0800 (PST)
+Date: Tue, 3 Dec 2013 10:25:49 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fs: fix iversion handling
-Message-ID: <20131202232506.GG10988@dastard>
-References: <20131119151707.GA13412@infradead.org>
+Subject: Re: [PATCH] xfstests: stop special casing nfs and udf
+Message-ID: <20131202232549.GV8803@dastard>
+References: <20131107204635.GA22954@infradead.org>
+	<20131122091553.GA32568@infradead.org>
+	<20131202174045.GA21861@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131119151707.GA13412@infradead.org>
+In-Reply-To: <20131202174045.GA21861@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +32,21 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 19, 2013 at 07:17:07AM -0800, Christoph Hellwig wrote:
-> Currently notify_change directly updates i_version for size updates,
-> which not only is counter to how all other fields are updated through
-> struct iattr, but also breaks XFS, which need inode updates to happen
-> under its own lock, and synchronized to the structure that gets written
-> to the log.
+On Mon, Dec 02, 2013 at 09:40:45AM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 22, 2013 at 01:15:53AM -0800, Christoph Hellwig wrote:
+> > ping?
 > 
-> Remove the update in the common code, and it to btrfs and ext4,
-> XFS already does a proper updaste internally and currently gets a
-> double update with the existing code.
-> 
-> IMHO this is 3.13 and -stable material and should go in through the XFS
-> tree.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ping^2?
 
-Looks good to me.
+I just got write access to the XFS git repos on oss.sgi.com, so I'll
+start hoovering up all the outstanding xfstests patches as a
+shakedown pass before I touch anything else...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
