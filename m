@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.13-rc1-2-13360-gdc1ccc4
-Message-Id: <20131202223712.CD06529DF9@oss.sgi.com>
-Date: Mon,  2 Dec 2013 16:37:12 -0600 (CST)
+Message-Id: <20131202223732.A3FFE29E10@oss.sgi.com>
+Date: Mon,  2 Dec 2013 16:37:31 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   6ea9786 Merge tag 'xfs-for-linus-v3.13-rc1-2' of git://oss.sgi.com/xfs/xfs
   7e1a1e9 Merge tag 'xfs-for-linus-v3.13-rc1' of git://oss.sgi.com/xfs/xfs
   c4a391b writeback: do not sync data dirtied after sync start
