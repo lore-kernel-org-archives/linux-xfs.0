@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB65A29DF9
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 04:43:07 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 22B5B29DF9
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 04:46:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 596ACAC001
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 02:43:04 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AEA9CAC001
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 02:46:32 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id xa4nNuwEZiIPsBUQ (version=TLSv1 cipher=AES256-SHA
+	ESMTP id 8AsRldegyrpFB8bf (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Dec 2013 02:43:03 -0800 (PST)
-Date: Mon, 2 Dec 2013 02:43:02 -0800
+	Mon, 02 Dec 2013 02:46:31 -0800 (PST)
+Date: Mon, 2 Dec 2013 02:46:31 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/15] mkfs: Sanitise the superblock feature macros
-Message-ID: <20131202104302.GC21394@infradead.org>
+Subject: Re: [PATCH 05/15] mkfs: factor boolean option parsing
+Message-ID: <20131202104631.GD21394@infradead.org>
 References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
-	<1385689430-10103-4-git-send-email-david@fromorbit.com>
+	<1385689430-10103-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1385689430-10103-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1385689430-10103-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,27 +33,27 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Nov 29, 2013 at 12:43:38PM +1100, Dave Chinner wrote:
+On Fri, Nov 29, 2013 at 12:43:40PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> They are horrible macros that simply obfuscate the code, so
-> let's factor the code and make them nice functions.
+> Many of the options passed to mkfs have boolean options (0 or 1) and
+> all hand roll the same code and validity checks. Factor these out
+> into a common function.
 > 
-> To do this, add a sb_feat_args structure that carries around the
-> variables rather than a strange assortment of variables. This means
-> all the default can be clearly defined in a structure
-> initialisation, and dependent feature bits are easy to check.
+> Note that the lazy-count option is now changed to match other
+> booleans in that if you don't specify a value, it reverts to the
+> default value (on) rather than throwing an error. Similarly the -m
+> crc and -n ftype options default to off rather than throwing an
+> error.
 
-Nice clean,
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-But one minor nitpick:
+Unrelated question that came up when reading through this patch:
 
-> +	bool	projid16bit;
-
-Given that 32-bit projids are the newer feature I'd make them the
-flag instead of inverting it, which is how all the other flags work.
+should we start deprecating some options that have long been the
+default, like lazy-count or attrv1?
 
 _______________________________________________
 xfs mailing list
