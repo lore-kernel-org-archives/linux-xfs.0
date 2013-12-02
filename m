@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6473F29DF9
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 17:00:11 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9379A29DF9
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 17:13:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 26F5130408E
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 15:00:11 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id FAAKA5X7D31lghNF for <xfs@oss.sgi.com>;
-	Mon, 02 Dec 2013 15:00:09 -0800 (PST)
-Date: Tue, 3 Dec 2013 00:00:07 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 12/18] ocfs2: use generic posix ACL infrastructure
-Message-ID: <20131202230007.GK12253@quack.suse.cz>
-References: <20131201115903.910559036@bombadil.infradead.org>
-	<20131201120655.852590677@bombadil.infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3E2A7AC004
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 15:13:32 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ZBYCbqzEbf5Nfx8i for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 15:13:30 -0800 (PST)
+Date: Tue, 3 Dec 2013 10:13:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/15] mkfs: factor boolean option parsing
+Message-ID: <20131202231303.GB10988@dastard>
+References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
+	<1385689430-10103-6-git-send-email-david@fromorbit.com>
+	<20131202104631.GD21394@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131201120655.852590677@bombadil.infradead.org>
+In-Reply-To: <20131202104631.GD21394@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,68 +32,41 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
+Cc: xfs@oss.sgi.com
 
-On Sun 01-12-13 03:59:15, Christoph Hellwig wrote:
-> This contains some major refactoring for the create path so that
-> inodes are created with the right mode to start with instead of
-> fixing it up later.
+On Mon, Dec 02, 2013 at 02:46:31AM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 29, 2013 at 12:43:40PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Many of the options passed to mkfs have boolean options (0 or 1) and
+> > all hand roll the same code and validity checks. Factor these out
+> > into a common function.
+> > 
+> > Note that the lazy-count option is now changed to match other
+> > booleans in that if you don't specify a value, it reverts to the
+> > default value (on) rather than throwing an error. Similarly the -m
+> > crc and -n ftype options default to off rather than throwing an
+> > error.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-...
-> -int ocfs2_acl_chmod(struct inode *inode)
-> -{
-> -	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
-> -	struct posix_acl *acl;
-> -	int ret;
-> -
-> -	if (S_ISLNK(inode->i_mode))
-> -		return -EOPNOTSUPP;
-> -
-> -	if (!(osb->s_mount_opt & OCFS2_MOUNT_POSIX_ACL))
-> -		return 0;
-> -
-> -	acl = ocfs2_get_acl(inode, ACL_TYPE_ACCESS);
-> -	if (IS_ERR(acl) || !acl)
-> -		return PTR_ERR(acl);
-> -	ret = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
-> -	if (ret)
-> -		return ret;
-> -	ret = ocfs2_set_acl(NULL, inode, NULL, ACL_TYPE_ACCESS,
-> -			    acl, NULL, NULL);
-> -	posix_acl_release(acl);
-> -	return ret;
-> -}
-...
+> Looks good,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Unrelated question that came up when reading through this patch:
+> 
+> should we start deprecating some options that have long been the
+> default, like lazy-count or attrv1?
 
-> diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-> index 6fff128..ac371ad 100644
-> --- a/fs/ocfs2/file.c
-> +++ b/fs/ocfs2/file.c
-> @@ -1236,7 +1236,7 @@ bail:
->  		dqput(transfer_to[qtype]);
->  
->  	if (!status && attr->ia_valid & ATTR_MODE) {
-> -		status = ocfs2_acl_chmod(inode);
-> +		status = posix_acl_chmod(inode);
->  		if (status < 0)
->  			mlog_errno(status);
->  	}
-  Hum, this changes the cluster locking. Previously ocfs2_acl_get() used
-from ocfs2_acl_chmod() grabbed cluster wide inode lock. Now getting of ACL
-isn't protected by the inode lock. That being said the cluster locking
-around setattr looks fishy anyway - if two processes on different
-nodes are changing attributes of the same file, changing ACLs post fact
-after dropping inode lock could cause interesting effects. Also I'm
-wondering how inode_change_ok() can ever be safe without holding inode
-lock... Until we grab that other node is free to change e.g. owner of the
-inode thus leading even to security implications. But maybe I'm missing
-something. Mark, Joel?
+Yes, we probably should. I'll put that at the end of the series when
+it's just a trivial case of adding a flag to the relevant options
+and adding a check and warning....
 
-								Honza
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
