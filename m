@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 33E5629DF9
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 17:22:42 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 676D429E05
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 11:36:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BF74CAC009
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 15:22:41 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	NHd2Ci9Oqzrwl9OC for <xfs@oss.sgi.com>;
-	Mon, 02 Dec 2013 15:22:39 -0800 (PST)
-Date: Tue, 3 Dec 2013 10:21:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 15/15] mkfs: don't treat files as though they are block
-	devices
-Message-ID: <20131202232143.GF10988@dastard>
-References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
-	<1385689430-10103-16-git-send-email-david@fromorbit.com>
-	<20131202172441.GF28630@infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3344AC008
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 09:36:37 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id wdut0KrAckrwqChF (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 09:36:36 -0800 (PST)
+Date: Mon, 2 Dec 2013 09:36:36 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fs: fix iversion handling
+Message-ID: <20131202173636.GA17724@infradead.org>
+References: <20131119151707.GA13412@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131202172441.GF28630@infradead.org>
+In-Reply-To: <20131119151707.GA13412@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +29,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Dec 02, 2013 at 09:24:41AM -0800, Christoph Hellwig wrote:
-> >  void
-> >  platform_flush_device(int fd, dev_t device)
-> >  {
-> > -	if (major(device) != RAMDISK_MAJOR)
-> > +	struct stat64	st;
-> > +	if (major(device) == RAMDISK_MAJOR)
-> > +		return;
-> > +
-> > +	if (fstat64(fd, &st) < 0)
-> > +		return;
-> > +
-> > +	if (S_ISREG(st.st_mode))
-> > +		fsync(fd);
-> > +	else
-> >  		ioctl(fd, BLKFLSBUF, 0);
-> >  }
+ping?
+
+On Tue, Nov 19, 2013 at 07:17:07AM -0800, Christoph Hellwig wrote:
+> Currently notify_change directly updates i_version for size updates,
+> which not only is counter to how all other fields are updated through
+> struct iattr, but also breaks XFS, which need inode updates to happen
+> under its own lock, and synchronized to the structure that gets written
+> to the log.
 > 
-> Given that fsync does the right thing for device on Linux aswell
-> I'd suggest we make this function call it all the time and get rid
-> of all the ramdisk magic.
+> Remove the update in the common code, and it to btrfs and ext4,
+> XFS already does a proper updaste internally and currently gets a
+> double update with the existing code.
 > 
-> Should probabbly be a a separate patch.
-
-Yeah, I just shovelled all the fixes to problems I found into this
-patch, so it needs to be split up a bit more....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> IMHO this is 3.13 and -stable material and should go in through the XFS
+> tree.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs/fs/attr.c
+> ===================================================================
+> --- xfs.orig/fs/attr.c	2013-11-19 16:08:42.275415189 +0100
+> +++ xfs/fs/attr.c	2013-11-19 16:08:51.803414994 +0100
+> @@ -182,11 +182,6 @@ int notify_change(struct dentry * dentry
+>  			return -EPERM;
+>  	}
+>  
+> -	if ((ia_valid & ATTR_SIZE) && IS_I_VERSION(inode)) {
+> -		if (attr->ia_size != inode->i_size)
+> -			inode_inc_iversion(inode);
+> -	}
+> -
+>  	if ((ia_valid & ATTR_MODE)) {
+>  		umode_t amode = attr->ia_mode;
+>  		/* Flag setting protected by i_mutex */
+> Index: xfs/fs/btrfs/inode.c
+> ===================================================================
+> --- xfs.orig/fs/btrfs/inode.c	2013-11-19 16:08:42.275415189 +0100
+> +++ xfs/fs/btrfs/inode.c	2013-11-19 16:08:51.803414994 +0100
+> @@ -4345,8 +4345,12 @@ static int btrfs_setsize(struct inode *i
+>  	 * these flags set.  For all other operations the VFS set these flags
+>  	 * explicitly if it wants a timestamp update.
+>  	 */
+> -	if (newsize != oldsize && (!(mask & (ATTR_CTIME | ATTR_MTIME))))
+> -		inode->i_ctime = inode->i_mtime = current_fs_time(inode->i_sb);
+> +	if (newsize != oldsize) {
+> +		inode_inc_iversion(inode);
+> +		if (!(mask & (ATTR_CTIME | ATTR_MTIME)))
+> +			inode->i_ctime = inode->i_mtime =
+> +				current_fs_time(inode->i_sb);
+> +	}
+>  
+>  	if (newsize > oldsize) {
+>  		truncate_pagecache(inode, newsize);
+> Index: xfs/fs/ext4/inode.c
+> ===================================================================
+> --- xfs.orig/fs/ext4/inode.c	2013-11-19 16:08:42.275415189 +0100
+> +++ xfs/fs/ext4/inode.c	2013-11-19 16:08:51.803414994 +0100
+> @@ -4594,6 +4594,10 @@ int ext4_setattr(struct dentry *dentry,
+>  			if (attr->ia_size > sbi->s_bitmap_maxbytes)
+>  				return -EFBIG;
+>  		}
+> +
+> +		if (IS_I_VERSION(inode) && attr->ia_size != inode->i_size)
+> +			inode_inc_iversion(inode);
+> +
+>  		if (S_ISREG(inode->i_mode) &&
+>  		    (attr->ia_size < inode->i_size)) {
+>  			if (ext4_should_order_data(inode)) {
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
