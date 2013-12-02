@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CFDCE7F52
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 14:57:47 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D2B0829DF9
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 14:59:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52F34AC001
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 12:57:47 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ADFEE30407F
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 12:59:34 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id eUijgGbpGvF9wA9A for <xfs@oss.sgi.com>;
-	Mon, 02 Dec 2013 12:57:46 -0800 (PST)
-Date: Mon, 2 Dec 2013 21:57:44 +0100
+	with ESMTP id nr5593qzbnDvQNUW for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 12:59:33 -0800 (PST)
+Date: Mon, 2 Dec 2013 21:59:32 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 03/18] fs: add a set_acl inode operation
-Message-ID: <20131202205744.GD12253@quack.suse.cz>
+Subject: Re: [PATCH 04/18] fs: add generic xattr_acl handlers
+Message-ID: <20131202205932.GE12253@quack.suse.cz>
 References: <20131201115903.910559036@bombadil.infradead.org>
-	<20131201120654.027611567@bombadil.infradead.org>
+	<20131201120654.211328224@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131201120654.027611567@bombadil.infradead.org>
+In-Reply-To: <20131201120654.211328224@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,31 +32,144 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
 
-On Sun 01-12-13 03:59:06, Christoph Hellwig wrote:
-> This will allow moving all the Posix ACL handling into the VFS and clean
-> up tons of cruft in the filesystems.
-  Looks good. Btw I'd merge this with the following patch... Anyway:
+On Sun 01-12-13 03:59:07, Christoph Hellwig wrote:
+> With the ->set_acl inode operation we can implement the Posix ACL
+> xattr handlers in generic code instead of duplicating them all
+> over the tree.
+  Looks good. You can add:
 Reviewed-by: Jan Kara <jack@suse.cz>
 
-								Honza
+							Honza
+
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  include/linux/fs.h |    1 +
->  1 file changed, 1 insertion(+)
+>  fs/xattr_acl.c                  |   95 +++++++++++++++++++++++++++++++++++++++
+>  include/linux/posix_acl_xattr.h |    3 ++
+>  2 files changed, 98 insertions(+)
 > 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 121f11f..09f553c 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1580,6 +1580,7 @@ struct inode_operations {
->  			   struct file *, unsigned open_flag,
->  			   umode_t create_mode, int *opened);
->  	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
-> +	int (*set_acl)(struct inode *, struct posix_acl *, int);
->  } ____cacheline_aligned;
+> diff --git a/fs/xattr_acl.c b/fs/xattr_acl.c
+> index 9fbea87..932ec76 100644
+> --- a/fs/xattr_acl.c
+> +++ b/fs/xattr_acl.c
+> @@ -10,6 +10,7 @@
+>  #include <linux/posix_acl_xattr.h>
+>  #include <linux/gfp.h>
+>  #include <linux/user_namespace.h>
+> +#include <linux/xattr.h>
 >  
->  ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+>  /*
+>   * Fix up the uids and gids in posix acl extended attributes in place.
+> @@ -178,3 +179,97 @@ posix_acl_to_xattr(struct user_namespace *user_ns, const struct posix_acl *acl,
+>  	return real_size;
+>  }
+>  EXPORT_SYMBOL (posix_acl_to_xattr);
+> +
+> +static int
+> +posix_acl_xattr_get(struct dentry *dentry, const char *name,
+> +		void *value, size_t size, int type)
+> +{
+> +	struct posix_acl *acl;
+> +	int error;
+> +
+> +	if (!IS_POSIXACL(dentry->d_inode))
+> +		return -EOPNOTSUPP;
+> +
+> +	acl = get_acl(dentry->d_inode, type);
+> +	if (IS_ERR(acl))
+> +		return PTR_ERR(acl);
+> +	if (acl == NULL)
+> +		return -ENODATA;
+> +
+> +	error = posix_acl_to_xattr(&init_user_ns, acl, value, size);
+> +	posix_acl_release(acl);
+> +
+> +	return error;
+> +}
+> +
+> +static int
+> +posix_acl_xattr_set(struct dentry *dentry, const char *name,
+> +		const void *value, size_t size, int flags, int type)
+> +{
+> +	struct inode *inode = dentry->d_inode;
+> +	struct posix_acl *acl = NULL;
+> +	int ret;
+> +
+> +	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
+> +		return value ? -EACCES : 0;
+> +	if (!inode_owner_or_capable(inode))
+> +		return -EPERM;
+> +	if (!IS_POSIXACL(inode))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (value) {
+> +		acl = posix_acl_from_xattr(&init_user_ns, value, size);
+> +		if (IS_ERR(acl))
+> +			return PTR_ERR(acl);
+> +
+> +		if (acl) {
+> +			ret = posix_acl_valid(acl);
+> +			if (ret)
+> +				goto out;
+> +		}
+> +	}
+> +
+> +	ret = inode->i_op->set_acl(inode, acl, type);
+> +out:
+> +	posix_acl_release(acl);
+> +	return ret;
+> +}
+> +
+> +static size_t
+> +posix_acl_xattr_list(struct dentry *dentry, char *list, size_t list_size,
+> +		const char *name, size_t name_len, int type)
+> +{
+> +	const char *xname;
+> +	size_t size;
+> +
+> +	if (!IS_POSIXACL(dentry->d_inode))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (type == ACL_TYPE_ACCESS)
+> +		xname = POSIX_ACL_XATTR_ACCESS;
+> +	else
+> +		xname = POSIX_ACL_XATTR_DEFAULT;
+> +
+> +	size = strlen(xname) + 1;
+> +	if (list && size <= list_size)
+> +		memcpy(list, xname, size);
+> +	return size;
+> +}
+> +
+> +const struct xattr_handler posix_acl_access_xattr_handler = {
+> +	.prefix = POSIX_ACL_XATTR_ACCESS,
+> +	.flags = ACL_TYPE_ACCESS,
+> +	.list = posix_acl_xattr_list,
+> +	.get = posix_acl_xattr_get,
+> +	.set = posix_acl_xattr_set,
+> +};
+> +EXPORT_SYMBOL_GPL(posix_acl_access_xattr_handler);
+> +
+> +const struct xattr_handler posix_acl_default_xattr_handler = {
+> +	.prefix = POSIX_ACL_XATTR_DEFAULT,
+> +	.flags = ACL_TYPE_DEFAULT,
+> +	.list = posix_acl_xattr_list,
+> +	.get = posix_acl_xattr_get,
+> +	.set = posix_acl_xattr_set,
+> +};
+> +EXPORT_SYMBOL_GPL(posix_acl_default_xattr_handler);
+> diff --git a/include/linux/posix_acl_xattr.h b/include/linux/posix_acl_xattr.h
+> index ad93ad0..6f14ee2 100644
+> --- a/include/linux/posix_acl_xattr.h
+> +++ b/include/linux/posix_acl_xattr.h
+> @@ -69,4 +69,7 @@ struct posix_acl *posix_acl_from_xattr(struct user_namespace *user_ns,
+>  int posix_acl_to_xattr(struct user_namespace *user_ns,
+>  		       const struct posix_acl *acl, void *buffer, size_t size);
+>  
+> +extern const struct xattr_handler posix_acl_access_xattr_handler;
+> +extern const struct xattr_handler posix_acl_default_xattr_handler;
+> +
+>  #endif	/* _POSIX_ACL_XATTR_H */
 > -- 
 > 1.7.10.4
 > 
