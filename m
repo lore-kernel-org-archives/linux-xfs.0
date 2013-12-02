@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9A0C27F3F
-	for <xfs@oss.sgi.com>; Tue, 31 Dec 2013 04:00:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2222DAC00D
-	for <xfs@oss.sgi.com>; Tue, 31 Dec 2013 02:00:15 -0800 (PST)
-Message-ID: <52C295A8.2040104@oracle.com>
-Date: Tue, 31 Dec 2013 18:00:08 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id D314829DF9
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 16:50:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D006AC001
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 14:50:53 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	tWD2EhWGEu2mz4vY for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 14:50:51 -0800 (PST)
+Date: Tue, 3 Dec 2013 09:50:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 03/15] mkfs: Sanitise the superblock feature macros
+Message-ID: <20131202225047.GZ10988@dastard>
+References: <1385689430-10103-1-git-send-email-david@fromorbit.com>
+	<1385689430-10103-4-git-send-email-david@fromorbit.com>
+	<20131202104302.GC21394@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 9/10] xfs: implement bulkstat per allocation group
-References: <52BEB47B.3090001@oracle.com> <52C1B900.8080002@sgi.com>
-In-Reply-To: <52C1B900.8080002@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20131202104302.GC21394@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,29 +27,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gMjAxM+W5tDEy5pyIMzHml6UgMDI6MTgsIE1hcmsgVGluZ3VlbHkgd3JvdGU6Cj4gT24gMTIv
-MjgvMTMgMDU6MjIsIEplZmYgTGl1IHdyb3RlOgo+PiBGcm9tOiBKaWUgTGl1PGplZmYubGl1QG9y
-YWNsZS5jb20+Cj4+Cj4+IFdpdGggeGZzX3BlcmFnX2J1bGtzdGF0KCksIHdlIGNhbiByZXR1cm4g
-c3RhdCBpbmZvcm1hdGlvbiBpbiBidWxrIGJ5Cj4+IGlub2RlIGFzIHBlciB0aGUgZ2l2ZW4gYWxs
-b2NhdGlvbiBncm91cCBudW1iZXIgYW5kIHN0YXJ0IGlub2RlIG51bWJlcgo+PiBpbiBpdCB2aWEg
-YSBuZXcgaW9jdGwoMikgaW4gdGhlIGZ1dHVyZS4KPj4KPj4gUmVmYWN0b3IgeGZzX2J1bGtzdGF0
-KCkgd2l0aCBpdC4KPj4KPj4gU2lnbmVkLW9mZi1ieTogSmllIExpdTxqZWZmLmxpdUBvcmFjbGUu
-Y29tPgo+PiAtLS0KPiAKPiAKPiBjYXVzZXMgeGZzLzE4MyB0byBhc3NlcnQgZm9yIG1lOgo+IAo+
-IFhGUzogQXNzZXJ0aW9uIGZhaWxlZDogZnNfaXNfb2ssIGZpbGU6IC9yb290L3hmcy9mcy94ZnMv
-eGZzX2l0YWJsZS5jLAo+IGxpbmU6IDQwOQpPb3BzISEgSSBndWVzcyB0aGUgYXNzZXJ0aW9uIGlz
-IGZhaWxlZCBhdDoKCisgICAgICAgICAgICAgICAgICAgICAgIGVycm9yID0geGZzX2lub2J0X2xv
-b2t1cChjdXIsIDAsIFhGU19MT09LVVBfR0UsICZpKTsKKyAgICAgICAgICAgICAgICAgICAgICAg
-aWYgKGVycm9yKQorICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOworICAgICAg
-ICAgICAgICAgICAgICAgICBYRlNfV0FOVF9DT1JSVVBURURfR09UTyhpID09IDEsIGVycm9yMCk7
-CgpXaGljaCBtZWFucyBJIGhhdmUgdG8gdGFrZSBjYXJlIG9mIHRob3NlIG5vbi1wcmltYXJ5IEFH
-cyBvbiBhbiBuZXcgaW5pdGlhbGl6ZWQKZW1wdHktZmlsZXN5c3RlbSBhcyB0aGVyZSBoYXMgbm8g
-aW5vZGUgY2h1bmsgaGFzIGJlZW4gYWxsb2NhdGVkLi4uCgpUaGFua3MsCi1KZWZmCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
-Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Mon, Dec 02, 2013 at 02:43:02AM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 29, 2013 at 12:43:38PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > They are horrible macros that simply obfuscate the code, so
+> > let's factor the code and make them nice functions.
+> > 
+> > To do this, add a sb_feat_args structure that carries around the
+> > variables rather than a strange assortment of variables. This means
+> > all the default can be clearly defined in a structure
+> > initialisation, and dependent feature bits are easy to check.
+> 
+> Nice clean,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> But one minor nitpick:
+> 
+> > +	bool	projid16bit;
+> 
+> Given that 32-bit projids are the newer feature I'd make them the
+> flag instead of inverting it, which is how all the other flags work.
+
+Fair enough - I just converted the existing variables to a
+structure. I'll fix that up.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
