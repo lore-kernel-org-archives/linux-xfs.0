@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 72C3C7F50
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 15:28:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8F54AC002
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 13:28:19 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	r4s9T1MIMWUBzEzG for <xfs@oss.sgi.com>;
-	Tue, 03 Dec 2013 13:28:18 -0800 (PST)
-Date: Wed, 4 Dec 2013 08:28:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] xfs: fix calculation of freed inode cluster blocks
-Message-ID: <20131203212814.GW10988@dastard>
-References: <20131203210054.GN1935@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7F3017F50
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 15:29:52 -0600 (CST)
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0656CAC002
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 13:29:51 -0800 (PST)
+Date: Tue, 3 Dec 2013 15:29:51 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH] xfs: reinstate the iolock in xfs_readdir
+Message-ID: <20131203212951.GP1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131203210054.GN1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +24,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Dec 03, 2013 at 03:00:54PM -0600, Ben Myers wrote:
-> rec.ir_startino is an agino rather than an ino.  Use the correct macro
-> when dealing with it in xfs_difree.
-> 
-> ---
-> 
-> This is very lightly tested so it's RFC.  Looks like using "ino to
-> agbno" is actually harmless when you pass in an agino, so there
-> shouldn't have been any trouble caused by this one.
+Although it was removed in commit 051e7cd44ab8, ilock needs to be taken in
+xfs_readdir because we might have to read the extent list in from disk.  This
+keeps other threads from reading from or writing to the extent list while it is
+being read in and is still in a transitional state.
 
-Right, the XFS_INO_TO_AGBNO() macro will behave correctly when
-passed an agino - it's the same as an inode from AG 0. Changing the
-macro to the correct one is effectively a no-op, so just send a
-patch and get it reviewed and integrated...
+This has been associated with "Access to block zero" messages on directories
+with large numbers of extents resulting from excessive filesytem fragmentation,
+as well as extent list corruption.  Unfortunately no test case at this point.
 
-Cheers,
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+---
+ fs/xfs/xfs_dir2_readdir.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+Index: b/fs/xfs/xfs_dir2_readdir.c
+===================================================================
+--- a/fs/xfs/xfs_dir2_readdir.c	2013-12-02 17:40:38.895185673 -0600
++++ b/fs/xfs/xfs_dir2_readdir.c	2013-12-02 17:40:49.025225554 -0600
+@@ -674,6 +674,7 @@ xfs_readdir(
+ {
+ 	int		rval;		/* return value */
+ 	int		v;		/* type-checking value */
++	uint		lock_mode;
+ 
+ 	trace_xfs_readdir(dp);
+ 
+@@ -683,6 +684,7 @@ xfs_readdir(
+ 	ASSERT(S_ISDIR(dp->i_d.di_mode));
+ 	XFS_STATS_INC(xs_dir_getdents);
+ 
++	lock_mode = xfs_ilock_map_shared(dp);
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_getdents(dp, ctx);
+ 	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
+@@ -691,5 +693,7 @@ xfs_readdir(
+ 		rval = xfs_dir2_block_getdents(dp, ctx);
+ 	else
+ 		rval = xfs_dir2_leaf_getdents(dp, ctx, bufsize);
++	xfs_iunlock_map_shared(dp, lock_mode);
++
+ 	return rval;
+ }
 
 _______________________________________________
 xfs mailing list
