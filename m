@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ADA467F53
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 15:57:36 -0600 (CST)
-Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
-	[128.162.233.19])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 35CE5AC003
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 13:57:36 -0800 (PST)
-Date: Tue, 3 Dec 2013 15:57:35 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH] xfs_repair: fix process_bmbt_reclist_int
-Message-ID: <20131203215735.GQ1935@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EB3167F55
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 16:17:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B33028F8035
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 14:17:21 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	1nN0RB5nsMYoWuDa for <xfs@oss.sgi.com>;
+	Tue, 03 Dec 2013 14:17:19 -0800 (PST)
+Date: Wed, 4 Dec 2013 09:17:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] xfsprogs v3.2.0-alpha2
+Message-ID: <20131203221714.GY10988@dastard>
+References: <5293A699.20908@sgi.com> <20131128104002.GC26927@infradead.org>
+	<20131128211858.GR10988@dastard>
+	<20131129080538.GA31310@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20131129080538.GA31310@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,37 +31,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Rich Johnston <rjohnston@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-There is a set checks for corruption in block map btrees in
-process_bmbt_reclist_int that we identify but currently do not fix.  It
-appears that the author's intent in this function was to set error = 1,
-and then only clear it when all of the checks were completed
-successfully.  Unfortunately error can be cleared when it is used for
-the return value of blkmap_set_ext.  Some kinds of corruption are not
-being fixed, including duplicate extents, claiming free blocks, claiming
-metadata blocks, and multiply used blocks.
+On Fri, Nov 29, 2013 at 12:05:38AM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 29, 2013 at 08:18:58AM +1100, Dave Chinner wrote:
+> > On Thu, Nov 28, 2013 at 02:40:02AM -0800, Christoph Hellwig wrote:
+> > > On Mon, Nov 25, 2013 at 01:35:53PM -0600, Rich Johnston wrote:
+> > > > Alpha version 3.2.0-alpha2 of xfsprogs has been released.
+> > > 
+> > > So what issues keep us issueing alpha release instead of making a proper
+> > > .0 release?
+> > 
+> > There's still things to fix in xfs_repair before we do a full
+> > release. Run xfs/291 recently?
+> 
+> Works fine for me on v4 super blocks, which is what I mostly care about
+> for now as that's what is in the field.  And we haven't sent fixed
+> for our existing installed base out for over 6 month now.
 
-Fix this by shadowing error for blkmap_set_ext.
+[ sorry for taking so long to reply - I missed this email, so
+thatnks to Eric for pointing it out ot me this morning ]
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+I don't think that releasing with known deficiencies is a very good
+idea. Perhaps it would be best to release a 3.1.12 with all the
+relevant bugs fixes backported from the master branch to it?
 
----
- repair/dinode.c |    1 +
- 1 file changed, 1 insertion(+)
+I'm happy to create a 3.1-stable branch in the repository branched
+off at the relevant point in the commit stream so we can host a 3.12
+release, but I don't really have time to do any of the
+identification and backporting of patches for such a release.
 
-Index: b/repair/dinode.c
-===================================================================
---- a/repair/dinode.c	2013-12-03 15:43:59.895287548 -0600
-+++ b/repair/dinode.c	2013-12-03 15:44:09.315225645 -0600
-@@ -663,6 +663,7 @@ _("inode %" PRIu64 " - extent offset too
- 		}
- 
- 		if (blkmapp && *blkmapp) {
-+			int error;
- 			error = blkmap_set_ext(blkmapp, irec.br_startoff,
- 					irec.br_startblock, irec.br_blockcount);
- 			if (error) {
+Hence, if you want to identify the commit to branch from and
+provide a backport series of patches for a 3.12 release, then I
+think we can do a stable release in short turn-around time. Would
+that approach alleviating your concerns?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
