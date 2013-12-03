@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5ADFB29DF9
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 23:08:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 388F730407A
-	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 21:08:17 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	7RcOLGr5M5eCkgKC for <xfs@oss.sgi.com>;
-	Mon, 02 Dec 2013 21:08:11 -0800 (PST)
-Date: Tue, 3 Dec 2013 16:08:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfstests: tree updated to 0a7f216b
-Message-ID: <20131203050807.GZ8803@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0E2597F58
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 01:36:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F10BAC001
+	for <xfs@oss.sgi.com>; Mon,  2 Dec 2013 23:36:45 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 6VcUIC8h9OTzskk5 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Dec 2013 23:36:43 -0800 (PST)
+Message-ID: <529D8A03.1060603@oracle.com>
+Date: Tue, 03 Dec 2013 15:36:35 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH 3/3] xfstests: introduce xfs/324 to verify turn
+	group/project quota off along with fsstress
+References: <52983C4B.1090202@oracle.com> <20131203005308.GK10988@dastard>
+In-Reply-To: <20131203005308.GK10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,98 +29,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi folks,
+On 12/03 2013 08:53 AM, Dave Chinner wrote:
+> On Fri, Nov 29, 2013 at 03:03:39PM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> Introduce xfs/324 to verify that we can turn group/project quotas off
+>> while user quota is on and fsstress is running.
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ....
+>> +
+>> +# Modify as appropriate.
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +
+>> +_require_scratch
+>> +_require_xfs_quota
+>> +_require_xfs_crc_sb
+> 
+> Hmmm, now that I look at the way you are using _require_xfs_crc_sb,
+> it's broken. The scratch device is in an undefined state until a
+> test runs _scratch_mkfs on it.
+> 
+> What you need to do is check whether mkfs supports "-m crc=1", and
+> then mkfs the scratch device with that option set.
+Got it.
+> 
+>> +
+>> +_qmount_option "uquota,gquota,pquota"
+>> +
+>> +STRESS_DIR=$SCRATCH_MNT/testdir
+>> +
+> 
+> Where do you mkfs the scratch device?
+Oops, this problem must be concealed as it has ran against the environment
+from previous test.
+> 
+>> +_exercise()
+>> +{
+>> +	type=$1
+>> +
+>> +	_qmount
+>> +	mkdir -p $STRESS_DIR
+>> +
+>> +	$FSSTRESS_PROG -d $STRESS_DIR -n 100 -p 1000 $FSSTRESS_AVOID >>/dev/null 2>&1 &
+> 
+> There's no real reason for creating a load of 1000 processes here.
+> Half of them won't even get started before this:
+> 
+>> +	xfs_quota -x -c "off -$type" $SCRATCH_DEV
+> 
+> is run.
+> 
+>> +	killall -q $FSSTRESS_PROG
+>> +	wait
+> 
+> and then you kill them straight away.
+> 
+>> +	rm -rf $STRESS_DIR
+>> +	umount $SCRATCH_MNT
+> 
+> You don't need this if you just scratch_mkfs the device between
+> tests. 
+> 
+> So, wouldn't it be better to do:
+> 
+> 	scratch_mkfs -m crc=1
+> 	_qmount
+> 	mkdir -p $STRESS_DIR
+> 	$FSSTRESS_PROG -d $STRESS_DIR -n 1000 -p 100 $FSSTRESS_AVOID >>/dev/null 2>&1 &
+> 	sleep 10
+> 	xfs_quota -x -c "off -$type" $SCRATCH_DEV
+> 	sleep 5
+> 	killall -q $FSSTRESS_PROG
+> 	wait
+Above problems will be fixed in next round of post.
 
-I've just committed some outstanding patches to the xfstests
-repository. The commits are listed below for your information,
-with the current head being:
-
-0a7f216b7962fd15e0fd749110776ca69b718932 generic: add a rename fsync test
-
-Some book-keeping stuff follows.
-
-Firstly, I'm going to look into adding commit hooks into the
-xfstests repository to get it send automated commit message emails
-when the repo is updated like is done for the main xfs kernel
-repository. That will save having to walk through every patch
-replying to say "applied".
-
-I'd like to start by getting those emails sent to the XFS, btrfs and
-ext4 mailing lists, but I'm open to having them sent elsewhere, too.
-I'm open to ideas about whether this is too many lists or
-whether there are other lists we should send such email to.
-
-Secondly, you might note that I rewrote the subject lines of the
-commits below. The main reason for doing this is to make the git log
-readable and to give an idea of what was changed in the commit. So,
-some new conventions I'd like to see people try to use for their
-xfstests patch descriptions.
-
-	1. the first word describes the tests/ subdirectory the
-	   change belongs to. e.g. xfs, btrfs, generic, shared, etc
-
-	2. if it's an infrastructure change or touches multiple
-	   different sets of tests, then use "xfstests" as the keyword
-
-	3. Don't use test numbers in commit messages or subject
-	   lines for new tests. We typically have to renumber tests
-	   as part of the commit process, so if we forget to modify
-	   the commit message then it looks rather strange....
-
-	4. when fixing a specific test, always refer to it as
-	   "<subdir>/<name>", such as generic/273 or btrfs/022.
-	   This is needed because we can have duplicate test names
-	   in different sub directories.
-
-Hence a typical set of subjects might be:
-
-xfs: fix fubaroo in xfs/299
-generic: use correct frobnozzle on generic/230
-xfstests: prevent bozo errors when compiling ltp/iogen.c
-
-This makes life easier when browsing the commit history. I'll be
-modifying subject lines as I process them to follow these
-conventions, so if people adopt them it makes it better for
-everyone.
-
-Lastly, I'm going to try to keep the commit latency of reviewed
-xfstests patches to around 24-48 hours after the patch has been
-reviewed. I don't want reviewed patches to sit around for weeks
-before they are committed, so please ping the patch if it's been
-reviewed and not committed after a couple of days.
-
-Thanks all,
-
-Dave.
-
-----
-
-Anand Jain (1):
-      * [ed14876] btrfs: test if raids are actually created
-
-Brian Foster (1):
-      * [0746f7b] generic: use correct size value in generic/273
-
-Christoph Hellwig (1):
-      * [c041421] xfstests: stop special casing nfs and udf
-
-Jie Liu (1):
-      * [5bcbff9] xfs: verify xfs_quota commands against invalid mount path
-
-Josef Bacik (3):
-      * [cb5dd61] btrfs: add basic qgroup testing
-      * [640d1e1] generic: add new test for fsync() on directories
-      * [0a7f216] generic: add a rename fsync test
-
-Miao Xie (1):
-      * [bd50b75] btrfs: add wrong compression type regression test
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
