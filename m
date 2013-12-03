@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 910147F51
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 17:25:42 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 472067F51
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 17:30:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2283EAC003
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 15:25:42 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E19F6AC002
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 15:30:25 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	QNdNr5t5vLLsvyxf for <xfs@oss.sgi.com>;
-	Tue, 03 Dec 2013 15:25:40 -0800 (PST)
-Date: Wed, 4 Dec 2013 10:24:23 +1100
+	n72NFYrUSc45HKzA for <xfs@oss.sgi.com>;
+	Tue, 03 Dec 2013 15:30:24 -0800 (PST)
+Date: Wed, 4 Dec 2013 10:30:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstest generic/280: wait for setquota to finish before
-	umount
-Message-ID: <20131203232423.GB10988@dastard>
-References: <1382637381-4847-1-git-send-email-guangyu.sun@oracle.com>
-	<529DF220.9060208@sgi.com>
+Subject: Re: [PATCH] xfstests: stop special casing nfs and udf
+Message-ID: <20131203233017.GC10988@dastard>
+References: <20131107204635.GA22954@infradead.org>
+	<20131122091553.GA32568@infradead.org>
+	<20131202174045.GA21861@infradead.org>
+	<20131202232549.GV8803@dastard> <20131202233629.GM1935@sgi.com>
+	<20131203042936.GY8803@dastard> <529DDE2D.3000501@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <529DF220.9060208@sgi.com>
+In-Reply-To: <529DDE2D.3000501@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,29 +34,22 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Rich Johnston <rjohnston@sgi.com>
-Cc: Guangyu Sun <guangyu.sun@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 03, 2013 at 09:00:48AM -0600, Rich Johnston wrote:
-> This has been committed.
-> 
-> Thanks
-> --Rich
-> 
-> commit 527eeb43e5c7cfd642d81bc3c12e746d2a3733ff
-> Author: Guangyu Sun <guangyu.sun@oracle.com>
-> Date:   Thu Oct 24 17:56:21 2013 +0000
-> 
->     xfstest generic/280: wait for setquota to finish before umount
+On Tue, Dec 03, 2013 at 07:35:41AM -0600, Rich Johnston wrote:
+> On 12/02/2013 10:29 PM, Dave Chinner wrote:
+> >On Mon, Dec 02, 2013 at 05:36:30PM -0600, Ben Myers wrote:
+> >Hence if a developer sends a ping to remind the maintainers about a
+> >reviewed patch that has been sitting around, then I'm going to do
+> >something about it straight away...
+> My apologies to Christoph. I missed that I thought he was waiting
+> for a review, not a commit from me.
 
-Rich, I know you read the email I sent about trying to
-introduce some conventions for patch subject lines for xfstests
-commits.  Cleanliness in the commit history is important, and it's
-something that we need to focus on to ensure we all commit patches
-using the same conventions.
-
-Hence if you are going to commit patches independently, can you can
-you please rewrite the commit messages to follow the conventions I
-outlined?
+One of the roles of a maintainer is to review code when nobody
+else steps up to do it. So rather than wait for someone else to
+review the code, you should do it yourself, wait 24-48 for any
+responses once you give it a Reviewed-by tag, and then you can
+commit it.
 
 Cheers,
 
