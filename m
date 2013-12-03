@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A25B27F58
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 03:45:09 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id D8FEF7F58
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 03:54:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B4BE30406B
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 01:45:09 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id A7wGG9fS4TobXNHz (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Dec 2013 01:45:08 -0800 (PST)
-Date: Tue, 3 Dec 2013 01:45:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fs: fix iversion handling
-Message-ID: <20131203094507.GD4906@infradead.org>
-References: <20131119151707.GA13412@infradead.org>
-	<20131202173636.GA17724@infradead.org>
-	<529DA5C6.7040403@panasas.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C2A1C304062
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 01:54:01 -0800 (PST)
+Received: from volubilis.easter-eggs.com (volubilis.easter-eggs.com
+	[37.9.136.135]) by cuda.sgi.com with ESMTP id zZguypvgQxMDbBm3
+	for <xfs@oss.sgi.com>; Tue, 03 Dec 2013 01:53:59 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by volubilis.easter-eggs.com (Postfix) with ESMTP id 8B67F15E18
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 10:53:58 +0100 (CET)
+Received: from datura.easter-eggs.fr (coquelicot-s.easter-eggs.com
+	[109.190.110.196])
+	by volubilis.easter-eggs.com (Postfix) with ESMTPSA id 6543215DD4
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 10:53:58 +0100 (CET)
+Date: Tue, 3 Dec 2013 10:53:58 +0100
+From: Emmanuel Lacour <elacour@easter-eggs.com>
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
+	(mode:0x250)
+Message-ID: <20131203095357.GC5405@easter-eggs.com>
+References: <20131128091322.GC5337@easter-eggs.com>
+	<20131128100521.GO10988@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <529DA5C6.7040403@panasas.com>
+In-Reply-To: <20131128100521.GO10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +37,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, NFS list <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Dec 03, 2013 at 11:35:02AM +0200, Boaz Harrosh wrote:
-> Hi Christoph
+On Thu, Nov 28, 2013 at 09:05:21PM +1100, Dave Chinner wrote:
+> On Thu, Nov 28, 2013 at 10:13:22AM +0100, Emmanuel Lacour wrote:
+> > 
+> > Dear XFS users,
+> > 
+> > 
+> > I run a Ceph cluster using XFS on Debian wheezy servers and Linux 3.10
+> > (debian backports). I see the following line in our logs:
+> > 
+> > XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+> > 
+> > does this reveal a problem in my setup or may I ignore it? If it's a
+> > problem, can someone give me any hint on solving this?
 > 
-> What happens with all other filesystems exported under KNFSD?
+> It might be, but you need to provide more information for us to be
+> able to make any intelligent comment on the message. Start here:
 > 
-> As I understand inode_inc_iversion() is used in NFSv4 and up,
-> what will increment the inode-version on changed attributes
-> for them?
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> 
 
-It's used by the filesystem for the change attribute that NFSDd
-can optionally use.  Most filesystsems don't support it and work
-okay enough when NFS exported.  No other filesystem will need
-to adopt for this patch specificly, given that no other filesystem
-uses this infrastructure.
+
+The problem continue and crashed my ceph cluster again, so here is all
+the informations said in the FAQ:
+
+http://people.easter-eggs.org/~manu/xfs.log
+
+This may be related to a friend problem here:
+
+http://tracker.ceph.com/issues/6386
+
+
+thanks for any help on solving this!
 
 _______________________________________________
 xfs mailing list
