@@ -1,32 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4047C29DF9
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 05:59:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FEDB304075
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 03:59:43 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id OVg1jYsoZgGFvwwK (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 169E429E12
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 06:00:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94337AC004
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 04:00:06 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id MjRq7OIyPpaM7Rwt (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Dec 2013 03:59:42 -0800 (PST)
+	Tue, 03 Dec 2013 04:00:05 -0800 (PST)
 Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rB3Bxe00032240
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rB3C04Gp032658
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 3 Dec 2013 11:59:41 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	for <xfs@oss.sgi.com>; Tue, 3 Dec 2013 12:00:04 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
 	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rB3BxewD002569
+	rB3C03JM004374
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 3 Dec 2013 11:59:40 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rB3BxeJD017891 for <xfs@oss.sgi.com>; Tue, 3 Dec 2013 11:59:40 GMT
-Message-ID: <529DC7A7.1050703@oracle.com>
-Date: Tue, 03 Dec 2013 19:59:35 +0800
+	for <xfs@oss.sgi.com>; Tue, 3 Dec 2013 12:00:04 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rB3C025r019660 for <xfs@oss.sgi.com>; Tue, 3 Dec 2013 12:00:03 GMT
+Message-ID: <529DC7BE.7050304@oracle.com>
+Date: Tue, 03 Dec 2013 19:59:58 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 2/4] xfstests: refactor xfs/299 for crc feature pre-checkup
+Subject: [PATCH v2 3/4] xfstests: xfs/304, verify turn group/project quotas
+	off while user quotas is on
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,73 +44,132 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Refactor xfs/299 to make use of those two crc related pre-checkup
-routines, and remove the super block number from the golden output
-file as it does not make sense IMO.  Also, filter out *EXPERIMENTAL*
-string from mkfs.xfs output as those contents would be removed once
-crc feature becomes stable.
+Introduce xfs/304 to verify that we can turn group/project quotas
+off while user quotas is on.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- tests/xfs/299     | 14 ++++----------
- tests/xfs/299.out |  1 -
- 2 files changed, 4 insertions(+), 11 deletions(-)
+ tests/xfs/304     | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/304.out |  7 +++++
+ tests/xfs/group   |  1 +
+ 3 files changed, 94 insertions(+)
+ create mode 100755 tests/xfs/304
+ create mode 100644 tests/xfs/304.out
 
-diff --git a/tests/xfs/299 b/tests/xfs/299
-index d5e8c5e..e374131 100755
---- a/tests/xfs/299
-+++ b/tests/xfs/299
-@@ -54,6 +54,8 @@ chmod a+rwx $seqres.full	# arbitrary users will write here
- 
- _require_scratch
- _require_xfs_quota
+diff --git a/tests/xfs/304 b/tests/xfs/304
+new file mode 100755
+index 0000000..ef8643a
+--- /dev/null
++++ b/tests/xfs/304
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FS QA Test No. 304
++#
++# Test to verify that turn group/project quotas off while user quotas
++# are left on.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/quota
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++_require_xfs_quota
 +_require_xfs_mkfs_crc
 +_require_xfs_crc
- 
- bsoft=100
- bhard=500
-@@ -193,19 +195,11 @@ _exercise()
- 
- }
- 
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs -m crc=1 2>/dev/null | _filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- # keep the blocksize and data size for dd later
- . $tmp.mkfs
- 
--sb_ver=`$XFS_DB_PROG -r -c version $SCRATCH_DEV | awk -F= '{print $2}' | awk -F, '{print $1}' |cut -c3-`
--echo $sb_ver
--
--if [ $sb_ver -lt 5 ]
--then
--	_notrun "Can't run with older versions of superblock"
--fi
--
- cat >$tmp.projects <<EOF
- 1:$SCRATCH_MNT
- EOF
-@@ -228,7 +222,7 @@ echo "*** unmount"
- umount $SCRATCH_MNT
- 
- 
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs -m crc=1 2>/dev/null | _filter_mkfs 2>$tmp.mkfs
- cat $tmp.mkfs >>$seqres.full
- # keep the blocksize and data size for dd later
- . $tmp.mkfs
-diff --git a/tests/xfs/299.out b/tests/xfs/299.out
-index b2699b4..4185c98 100644
---- a/tests/xfs/299.out
-+++ b/tests/xfs/299.out
-@@ -5,7 +5,6 @@ data     = bsize=XXX blocks=XXX, imaxpct=PCT
- naming   =VERN bsize=XXX
- log      =LDEV bsize=XXX blocks=XXX
- realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
--5
- *** user, group, and project
- 
- *** report no quota settings
++
++_scratch_mkfs_xfs -m crc=1 >/dev/null 2>&1
++
++_qmount_option "uquota,gquota,pquota"
++_qmount
++
++QUOTA_DIR=$SCRATCH_MNT/quota_dir
++
++mkdir -p $QUOTA_DIR
++echo "*** turn off group quotas"
++xfs_quota -x -c 'off -g' $SCRATCH_MNT
++rmdir $QUOTA_DIR
++echo "*** umount"
++umount $SCRATCH_MNT
++
++_qmount
++mkdir -p $QUOTA_DIR
++echo "*** turn off project quotas"
++xfs_quota -x -c 'off -p' $SCRATCH_MNT
++rmdir $QUOTA_DIR
++echo "*** umount"
++umount $SCRATCH_MNT
++
++_qmount
++mkdir -p $QUOTA_DIR
++echo "*** turn off group/project quotas"
++xfs_quota -x -c 'off -gp' $SCRATCH_MNT
++rmdir $QUOTA_DIR
++echo "*** umount"
++umount $SCRATCH_MNT
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/304.out b/tests/xfs/304.out
+new file mode 100644
+index 0000000..09ab851
+--- /dev/null
++++ b/tests/xfs/304.out
+@@ -0,0 +1,7 @@
++QA output created by 304
++*** turn off group quotas
++*** umount
++*** turn off project quotas
++*** umount
++*** turn off group/project quotas
++*** umount
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 7a16c25..7798d62 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -183,3 +183,4 @@
+ 301 auto dump
+ 302 auto dump
+ 303 auto quick quota
++304 auto quick quota
 -- 
 1.8.3.2
 
