@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7CCBD7F59
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 04:41:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 23F15AC001
-	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 02:41:23 -0800 (PST)
-Received: from natasha.panasas.com (natasha.panasas.com [209.166.131.148]) by
-	cuda.sgi.com with ESMTP id 0XalZjWEggC79ABb for
-	<xfs@oss.sgi.com>; Tue, 03 Dec 2013 02:41:21 -0800 (PST)
-Message-ID: <529DB536.7050008@panasas.com>
-Date: Tue, 3 Dec 2013 12:40:54 +0200
-From: Boaz Harrosh <bharrosh@panasas.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0996A7F5D
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 04:49:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D8B4B8F804C
+	for <xfs@oss.sgi.com>; Tue,  3 Dec 2013 02:49:11 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id OEyyFww7oTK966zD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 03 Dec 2013 02:49:11 -0800 (PST)
+Date: Tue, 3 Dec 2013 02:48:54 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 12/18] ocfs2: use generic posix ACL infrastructure
+Message-ID: <20131203104854.GA3223@infradead.org>
+References: <20131201115903.910559036@bombadil.infradead.org>
+	<20131201120655.852590677@bombadil.infradead.org>
+	<20131202230007.GK12253@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fs: fix iversion handling
-References: <20131119151707.GA13412@infradead.org>
-	<20131202173636.GA17724@infradead.org>
-	<529DA5C6.7040403@panasas.com>
-	<20131203094507.GD4906@infradead.org>
-In-Reply-To: <20131203094507.GD4906@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20131202230007.GK12253@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +31,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, NFS list <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: cluster-devel@redhat.com, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Christoph Hellwig <hch@infradead.org>, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
 
-On 12/03/2013 11:45 AM, Christoph Hellwig wrote:
-> On Tue, Dec 03, 2013 at 11:35:02AM +0200, Boaz Harrosh wrote:
->> Hi Christoph
->>
->> What happens with all other filesystems exported under KNFSD?
->>
->> As I understand inode_inc_iversion() is used in NFSv4 and up,
->> what will increment the inode-version on changed attributes
->> for them?
-> 
-> It's used by the filesystem for the change attribute that NFSDd
-> can optionally use.  Most filesystsems don't support it and work
-> okay enough when NFS exported.  No other filesystem will need
-> to adopt for this patch specificly, given that no other filesystem
-> uses this infrastructure.
-> 
+On Tue, Dec 03, 2013 at 12:00:07AM +0100, Jan Kara wrote:
+>   Hum, this changes the cluster locking. Previously ocfs2_acl_get() used
+> from ocfs2_acl_chmod() grabbed cluster wide inode lock. Now getting of ACL
+> isn't protected by the inode lock. That being said the cluster locking
+> around setattr looks fishy anyway - if two processes on different
+> nodes are changing attributes of the same file, changing ACLs post fact
+> after dropping inode lock could cause interesting effects. Also I'm
+> wondering how inode_change_ok() can ever be safe without holding inode
+> lock... Until we grab that other node is free to change e.g. owner of the
+> inode thus leading even to security implications. But maybe I'm missing
+> something. Mark, Joel?
 
-OK Thanks, I did not know that. I assumed change-attribute is
-naturally supported.
+Hmm, indeed.  How does ocfs2_iop_get_acl get away without that lock?
 
-I will look at ext4 example and wire up exofs. Because it is very
-important for me to support the change-attribute properly.
-
-Thanks you
-Boaz
+Btw, ocfs2 changes will need careful testing as I couldn't find any easy
+way to run xfstests on ocfs2 out of the box.
 
 _______________________________________________
 xfs mailing list
