@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.13-rc1-2-13365-gf9fd013
-Message-Id: <20131204215526.2BFBE29E1A@oss.sgi.com>
-Date: Wed,  4 Dec 2013 15:55:25 -0600 (CST)
+Message-Id: <20131204215537.7EACE29E21@oss.sgi.com>
+Date: Wed,  4 Dec 2013 15:55:36 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   f9fd013 xfs: don't perform discard if the given range length is less than block size
   10f73d2 xfs: fix the comment explaining xfs_trans_dqlockedjoin
   071c529 xfs: underflow bug in xfs_attrlist_by_handle()
