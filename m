@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D1C4B7F4E
-	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 06:14:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BD8D13040A4
-	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 04:14:07 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cm0HJhCiABhaOpx4 for
-	<xfs@oss.sgi.com>; Wed, 04 Dec 2013 04:14:04 -0800 (PST)
-Subject: Re: [Cluster-devel] [PATCH 16/18] gfs2: use generic posix ACL
-	infrastructure
-From: Steven Whitehouse <swhiteho@redhat.com>
-In-Reply-To: <20131201120656.539995924@bombadil.infradead.org>
-References: <20131201115903.910559036@bombadil.infradead.org>
-	<20131201120656.539995924@bombadil.infradead.org>
-Date: Wed, 04 Dec 2013 12:12:37 +0000
-Message-ID: <1386159157.2711.11.camel@menhir>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5DE3B7F4E
+	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 07:08:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F2C17AC008
+	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 05:08:50 -0800 (PST)
+Date: Wed, 4 Dec 2013 05:08:48 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: reinstate the iolock in xfs_readdir
+Message-ID: <20131204130848.GA22926@infradead.org>
+References: <20131203212951.GP1935@sgi.com> <20131203225520.GZ10988@dastard>
+	<20131203231415.GS1935@sgi.com> <20131204001030.GD10988@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131204001030.GD10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,113 +26,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: jfs-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-Hi,
+On Wed, Dec 04, 2013 at 11:10:30AM +1100, Dave Chinner wrote:
+> The simple fact is that if we ever want to do concurrent directory
+> read operations, we have to take the ilock in readdir() to ensure we
+> can serialise correctly against modifications because the i_mutex
+> can't be used to do that. So, really, I'm not against the fix you
+> proposed - I'm just trying to understand why it is necessary right
+> now....
 
-On Sun, 2013-12-01 at 03:59 -0800, Christoph Hellwig wrote:
-> plain text document attachment
-> (0016-gfs2-use-generic-posix-ACL-infrastructure.patch)
-> This contains some major refactoring for the create path so that
-> inodes are created with the right mode to start with instead of
-> fixing it up later.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/gfs2/acl.c   |  229 +++++++------------------------------------------------
->  fs/gfs2/acl.h   |    4 +-
->  fs/gfs2/inode.c |   33 ++++++--
->  fs/gfs2/xattr.c |    4 +-
->  4 files changed, 61 insertions(+), 209 deletions(-)
-> 
-Looks very good. I'd really like to be able to do something similar with
-the security xattrs, in terms of the refactoring that at inode creation
-to give the xattrs ahead of the inode allocation itself. That way it
-should be possible to allocate the xattr blocks at the same time as the
-inode, rather than as an after thought.
+Some comments from the person who authered that old comment that removed
+the ilock:
 
-Some more comments below....
-
-> diff --git a/fs/gfs2/acl.c b/fs/gfs2/acl.c
-> index e82e4ac..e6c7a2c 100644
-> --- a/fs/gfs2/acl.c
-> +++ b/fs/gfs2/acl.c
-[snip]
-> -
-> -static int gfs2_xattr_system_set(struct dentry *dentry, const char *name,
-> -				 const void *value, size_t size, int flags,
-> -				 int xtype)
-> -{
-> -	struct inode *inode = dentry->d_inode;
-> -	struct gfs2_sbd *sdp = GFS2_SB(inode);
-> -	struct posix_acl *acl = NULL;
-> -	int error = 0, type;
-> -
-> -	if (!sdp->sd_args.ar_posix_acl)
-> -		return -EOPNOTSUPP;
-> -
-> -	type = gfs2_acl_type(name);
-> -	if (type < 0)
-> -		return type;
-> -	if (flags & XATTR_CREATE)
-> -		return -EINVAL;
-> -	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
-> -		return value ? -EACCES : 0;
-> -	if (!uid_eq(current_fsuid(), inode->i_uid) && !capable(CAP_FOWNER))
-> -		return -EPERM;
-> -	if (S_ISLNK(inode->i_mode))
-> -		return -EOPNOTSUPP;
-> -
-> -	if (!value)
-> -		goto set_acl;
->  
-> -	acl = posix_acl_from_xattr(&init_user_ns, value, size);
-> -	if (!acl) {
-> -		/*
-> -		 * acl_set_file(3) may request that we set default ACLs with
-> -		 * zero length -- defend (gracefully) against that here.
-> -		 */
-> -		goto out;
-> -	}
-> -	if (IS_ERR(acl)) {
-> -		error = PTR_ERR(acl);
-> -		goto out;
-> -	}
-> -
-> -	error = posix_acl_valid(acl);
-> -	if (error)
-> -		goto out_release;
-> -
-> -	error = -EINVAL;
->  	if (acl->a_count > GFS2_ACL_MAX_ENTRIES)
-> -		goto out_release;
-> +		return -EINVAL;
->  
->  	if (type == ACL_TYPE_ACCESS) {
->  		umode_t mode = inode->i_mode;
-> +
->  		error = posix_acl_equiv_mode(acl, &mode);
-> +		if (error < 0)
->  
-Andy Price has pointed out a missing "return error;" here
-
-> -		if (error <= 0) {
-> -			posix_acl_release(acl);
-> +		if (error == 0)
->  			acl = NULL;
->  
-> -			if (error < 0)
-> -				return error;
-> -		}
-> -
-
-Also, there seems to be a white space error in the xfs patch around line
-170 in fs/xfs/xfs_iops.c where there is an added "if (default_acl)" with
-a space before the tab,
-
-Steve.
-
+ - as far as I can tell that was not intentional.  I'm usually pretty
+   good at recording such things in the changelog if I do it
+   intentionally.
+ - relying on the open function to read in the extent list seems
+   potentially dangerous.  We generally try to make sure all the
+   functions using it read it in if needed including the proper
+   locking.  If we want to avoid that for some reason like in the
+   writeback path we at least comment it and put asserts in.
+ - like Dave pointed out I think things should just work for mainline
+   modulo maybe the attr by handle ioctl, but it seems by accident.
+   Figuring out what issues Ben sees would be useful.
+ - instead of putting the ilock back at the highest level we might want
+   to push it down to the dir2 data code and only cover the actual
+   critical region where we need it.
+ - xfs_iread_extents really needs an assert to make sure the ilock
+   is held.
+ - xfs_bmapi_read probably should have an assert as well to make
+   sure the ilock is held in some way
 
 _______________________________________________
 xfs mailing list
