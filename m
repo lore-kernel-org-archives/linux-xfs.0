@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8613929DF9
-	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 15:25:04 -0600 (CST)
-Date: Wed, 4 Dec 2013 15:25:04 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 403DC29E12
+	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 15:52:59 -0600 (CST)
+Date: Wed, 4 Dec 2013 15:52:58 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] fs: fix iversion handling
-Message-ID: <20131204212504.GX1935@sgi.com>
-References: <20131119151707.GA13412@infradead.org>
+Subject: Re: [PATCH V2] xfs: simplify xfs_setsize_buftarg callchain; remove
+	unused arg
+Message-ID: <20131204215258.GY1935@sgi.com>
+References: <5283BC4B.9090204@redhat.com>
+ <5283E6D9.6070306@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131119151707.GA13412@infradead.org>
+In-Reply-To: <5283E6D9.6070306@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,30 +24,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Hey Christoph,
-
-On Tue, Nov 19, 2013 at 07:17:07AM -0800, Christoph Hellwig wrote:
-> Currently notify_change directly updates i_version for size updates,
-> which not only is counter to how all other fields are updated through
-> struct iattr, but also breaks XFS, which need inode updates to happen
-> under its own lock, and synchronized to the structure that gets written
-> to the log.
+On Wed, Nov 13, 2013 at 02:53:45PM -0600, Eric Sandeen wrote:
+> The "verbose" argument to xfs_setsize_buftarg_flags() has been
+> unused since:
 > 
-> Remove the update in the common code, and it to btrfs and ext4,
-> XFS already does a proper updaste internally and currently gets a
-> double update with the existing code.
+> ffe37436 xfs: stop using the page cache to back the buffer cache
 > 
-> IMHO this is 3.13 and -stable material and should go in through the XFS
-> tree.
+> Remove it, and fold the function into xfs_setsize_buftarg()
+> now that there's no need for different types of callers.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Fix inconsistent comment spacing while we're at it.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Does this still need a btrfs ack, or is it ready to go?
-
--Ben
+Applied.
 
 _______________________________________________
 xfs mailing list
