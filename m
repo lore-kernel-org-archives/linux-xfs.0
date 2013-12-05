@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B2C837F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 16:37:26 -0600 (CST)
-Date: Thu, 5 Dec 2013 16:37:25 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3B8607F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 16:47:49 -0600 (CST)
+Date: Thu, 5 Dec 2013 16:47:48 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] fs: fix iversion handling
-Message-ID: <20131205223725.GO1935@sgi.com>
-References: <20131119151707.GA13412@infradead.org>
-	<20131204212504.GX1935@sgi.com> <20131204220144.1501.13481@ret>
+Subject: Re: [PATCH v3] xfs: fix memory leak in xfs_dir2_node_removename
+Message-ID: <20131205224748.GP1935@sgi.com>
+References: <20131006024850.071924201@sgi.com> <20131204210014.GW1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131204220144.1501.13481@ret>
+In-Reply-To: <20131204210014.GW1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,36 +22,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>, Rich Johnston <rjohnston@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 04, 2013 at 05:01:44PM -0500, Chris Mason wrote:
-> Quoting Ben Myers (2013-12-04 16:25:04)
-> > Hey Christoph,
+On Wed, Dec 04, 2013 at 03:00:14PM -0600, Ben Myers wrote:
+> On Sat, Oct 05, 2013 at 09:48:25PM -0500, Mark Tinguely wrote:
+> > Fix the leak of kernel memory in xfs_dir2_node_removename()
+> > when xfs_dir2_leafn_remove() returns an error code.
 > > 
-> > On Tue, Nov 19, 2013 at 07:17:07AM -0800, Christoph Hellwig wrote:
-> > > Currently notify_change directly updates i_version for size updates,
-> > > which not only is counter to how all other fields are updated through
-> > > struct iattr, but also breaks XFS, which need inode updates to happen
-> > > under its own lock, and synchronized to the structure that gets written
-> > > to the log.
-> > > 
-> > > Remove the update in the common code, and it to btrfs and ext4,
-> > > XFS already does a proper updaste internally and currently gets a
-> > > double update with the existing code.
-> > > 
-> > > IMHO this is 3.13 and -stable material and should go in through the XFS
-> > > tree.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Does this still need a btrfs ack, or is it ready to go?
+> > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > 
-> The btrfs parts look good to me.
+> Looks good.
 > 
-> Signed-off-by: Chris Mason <clm@fb.com>
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-Great.  Applied to the xfs tree as per Christoph's suggestion.
+Applied this one.  Rich, I think there are xfsprogs bits to go with.
 
 _______________________________________________
 xfs mailing list
