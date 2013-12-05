@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F38147F60
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 13:57:39 -0600 (CST)
-Date: Thu, 5 Dec 2013 13:57:39 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 26E107F66
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 14:11:59 -0600 (CST)
+Date: Thu, 5 Dec 2013 14:11:55 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 4/5] xfs: use xfs_ilock_map_shared in xfs_attr_get
-Message-ID: <20131205195739.GK1935@sgi.com>
+Subject: Re: [PATCH 5/5] xfs: assert that we hold the ilock for extent map
+	access
+Message-ID: <20131205201155.GL1935@sgi.com>
 References: <20131205155830.620826868@bombadil.infradead.org>
-	<20131205155951.679310054@bombadil.infradead.org>
+	<20131205155951.874279041@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131205155951.679310054@bombadil.infradead.org>
+In-Reply-To: <20131205155951.874279041@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,9 +27,10 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Dec 05, 2013 at 07:58:34AM -0800, Christoph Hellwig wrote:
-> We might not have read in the extent list at this point, so make sure we
-> take the ilock exclusively if we have to do so.
+On Thu, Dec 05, 2013 at 07:58:35AM -0800, Christoph Hellwig wrote:
+> Make sure that xfs_bmapi_read has the ilock held in some way, and that
+> xfs_bmapi_write, xfs_bmapi_delay and xfs_iread_extents are called with
+> the ilock held exclusively.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
