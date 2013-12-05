@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.13-rc1-2-13369-gef70160
-Message-Id: <20131205231033.9D0A57F4E@oss.sgi.com>
-Date: Thu,  5 Dec 2013 17:10:32 -0600 (CST)
+Message-Id: <20131205231049.0BA9E7F55@oss.sgi.com>
+Date: Thu,  5 Dec 2013 17:10:48 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   ef70160 xfs: fix memory leak in xfs_dir2_node_removename
   2a84108 xfs: free the list of recovery items on error
   b7d961b xfs: growfs overruns AGFL buffer on V4 filesystems
