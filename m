@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C163B7F7B
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 14:45:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A4D728F804B
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 12:45:59 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	34HlYr1t0DEdWV5V for <xfs@oss.sgi.com>;
-	Thu, 05 Dec 2013 12:45:58 -0800 (PST)
-Date: Fri, 6 Dec 2013 07:45:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] xfs: use xfs_ilock_map_shared in xfs_qm_dqiterate
-Message-ID: <20131205204538.GC29897@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 664937F57
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 14:53:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 410CF8F8035
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 12:53:47 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id VvnNumTRkBPFr8Ku (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 05 Dec 2013 12:53:46 -0800 (PST)
+Date: Thu, 5 Dec 2013 12:53:45 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: use xfs_ilock_map_shared in xfs_qm_dqtobp
+Message-ID: <20131205205345.GA12393@infradead.org>
 References: <20131205155830.620826868@bombadil.infradead.org>
-	<20131205155951.506063990@bombadil.infradead.org>
+	<20131205155951.330689967@bombadil.infradead.org>
+	<20131205204108.GB29897@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131205155951.506063990@bombadil.infradead.org>
+In-Reply-To: <20131205204108.GB29897@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +31,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Dec 05, 2013 at 07:58:33AM -0800, Christoph Hellwig wrote:
-> We might not have read in the extent list at this point, so make sure we
-> take the ilock exclusively if we have to do so.
+On Fri, Dec 06, 2013 at 07:41:08AM +1100, Dave Chinner wrote:
+> However, it raises a bigger question about dquot allocation sanity
+> to me: what makes the map returned valid after we've unlocked the
+> extent list?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> We then use it to determine whether to allocate a
+> dquot or not, and xfs_qm_dqalloc() then does this after calling
+> xfs_bmapi_write():
 > 
-> Index: xfs/fs/xfs/xfs_qm.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_qm.c	2013-11-18 14:39:01.967589998 +0100
-> +++ xfs/fs/xfs/xfs_qm.c	2013-12-05 12:32:36.623617997 +0100
-> @@ -1193,16 +1193,18 @@ xfs_qm_dqiterate(
->  	lblkno = 0;
->  	maxlblkcnt = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
->  	do {
-> +		uint		lock_mode;
-> +
->  		nmaps = XFS_DQITER_MAP_SIZE;
->  		/*
->  		 * We aren't changing the inode itself. Just changing
->  		 * some of its data. No new blocks are added here, and
->  		 * the inode is never added to the transaction.
->  		 */
-> -		xfs_ilock(qip, XFS_ILOCK_SHARED);
-> +		lock_mode = xfs_ilock_map_shared(qip);
->  		error = xfs_bmapi_read(qip, lblkno, maxlblkcnt - lblkno,
->  				       map, &nmaps, 0);
-> -		xfs_iunlock(qip, XFS_ILOCK_SHARED);
-> +		xfs_iunlock_map_shared(qip, lock_mode);
->  		if (error)
->  			break;
+> 	ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+> 	       (map.br_startblock != HOLESTARTBLOCK));
+> 
+> What's to prevent someone coming in between the xfs_bmapi_read()
+> and *write() calls and allocating a different dquot in the same
+> cluster and therefore beating the first thread to the allocation?
+> 
+> This read/write race exists elsewhere - e.g. xfs_iomap_write_allocate
+> documents it for the data path - and it has to be specifically
+> handled to prevent corruption.....
 
-There's no bug here - this comes from quotacheck, which is
-guaranteed to have exclusive access to the filesystem at this point.
-Hence there's no-one to race with reading the extent list. Still, it
-doesn't hurt.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Yeah, we'll need to read-read the extent map in xfs_qm_dqalloc. I  I
+think this is efficiently paper over by the buffer lock - we take
+it right after the xfs_bmapi_write over the period of initialization
+the on-disk dquots and copying the one we were called for into the
+in-memory one.  So while we might have been corrupting dquots all
+over no one has noticed because we had a non-corrupted version
+in-memory that overwrote the corrupted one again later.  Uhh..
 
 _______________________________________________
 xfs mailing list
