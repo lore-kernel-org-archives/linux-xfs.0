@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E7E17F58
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 16:32:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8CF62304081
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 14:32:50 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	B1kJCBfOcFZIWQjY for <xfs@oss.sgi.com>;
-	Thu, 05 Dec 2013 14:32:48 -0800 (PST)
-Date: Fri, 6 Dec 2013 09:32:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: free the efi AIL entry on log recovery failure
-Message-ID: <20131205223244.GJ29897@dastard>
-References: <20131205214054.330817383@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B2C837F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 16:37:26 -0600 (CST)
+Date: Thu, 5 Dec 2013 16:37:25 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] fs: fix iversion handling
+Message-ID: <20131205223725.GO1935@sgi.com>
+References: <20131119151707.GA13412@infradead.org>
+	<20131204212504.GX1935@sgi.com> <20131204220144.1501.13481@ret>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131205214054.330817383@sgi.com>
+In-Reply-To: <20131204220144.1501.13481@ret>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,75 +23,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Dec 05, 2013 at 03:40:07PM -0600, Mark Tinguely wrote:
-> If freeing an extent fails during recovery, then the filesystem
-> will be forced down with the EFI entry still on the AIL. This
-> will result in hanging the function xfs_ail_push_all_sync().
+On Wed, Dec 04, 2013 at 05:01:44PM -0500, Chris Mason wrote:
+> Quoting Ben Myers (2013-12-04 16:25:04)
+> > Hey Christoph,
+> > 
+> > On Tue, Nov 19, 2013 at 07:17:07AM -0800, Christoph Hellwig wrote:
+> > > Currently notify_change directly updates i_version for size updates,
+> > > which not only is counter to how all other fields are updated through
+> > > struct iattr, but also breaks XFS, which need inode updates to happen
+> > > under its own lock, and synchronized to the structure that gets written
+> > > to the log.
+> > > 
+> > > Remove the update in the common code, and it to btrfs and ext4,
+> > > XFS already does a proper updaste internally and currently gets a
+> > > double update with the existing code.
+> > > 
+> > > IMHO this is 3.13 and -stable material and should go in through the XFS
+> > > tree.
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Does this still need a btrfs ack, or is it ready to go?
 > 
-> This patch is similar to the patches that removed the dquot and
-> inode in commits 32ce90a and dea9609.
+> The btrfs parts look good to me.
 > 
-> Found by mounting an metadata dump that triggers a
-> XFS_WANT_CORRUPTED_RETURN() on log recovery.
-> 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  fs/xfs/xfs_log_recover.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> Index: b/fs/xfs/xfs_log_recover.c
-> ===================================================================
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3668,7 +3668,7 @@ xlog_recover_process_efi(
->  		extp = &(efip->efi_format.efi_extents[i]);
->  		error = xfs_free_extent(tp, extp->ext_start, extp->ext_len);
->  		if (error)
-> -			goto abort_error;
-> +			goto free_abort;
->  		xfs_trans_log_efd_extent(tp, efdp, extp->ext_start,
->  					 extp->ext_len);
->  	}
-> @@ -3677,6 +3677,9 @@ xlog_recover_process_efi(
->  	error = xfs_trans_commit(tp, 0);
->  	return error;
->  
-> +free_abort:
-> +	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
-> +	xfs_efi_release(efip, efip->efi_format.efi_nextents);
->  abort_error:
->  	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
->  	return error;
+> Signed-off-by: Chris Mason <clm@fb.com>
 
-Why does a failure of xfs_trans_reserve() in this function
-not require the XFS_EFI_RECOVERED bit to be set?
-
-If it does require setting the XFS_EFI_RECOVERED bit (I think it
-does), then we unconditionally set that bit in
-xlog_recover_process_efi() so it should be pulled up to be the first
-thing the function does, not something that is handled in the error
-paths. IOWs, we leave this function having guaranteed that we've
-pulled the EFI from the AIL on any failure.
-
-Bigger picture: if we fail to recover this EFI, we abort the AIL
-walk across all the EFIs in the AIL. That means all unrecovered EFIs
-get left in the AIL and this will result in hanging the function
-xfs_ail_push_all_sync().  IOWs, this patch only fixes the case where
-we get an error on the last EFI in the AIL during recovery. 
-
-Hence a larger fix is needed here - if we fail to recover an EFI, we
-need to continue to walk the AIL and set the XFS_EFI_RECOVERED bit
-on all the EFIs still in the AIL and release them.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Great.  Applied to the xfs tree as per Christoph's suggestion.
 
 _______________________________________________
 xfs mailing list
