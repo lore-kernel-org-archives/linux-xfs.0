@@ -1,26 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DD24829E12
-	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 17:32:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C12DD304093
-	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 15:32:51 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	fARBOrwETcuwsL52 for <xfs@oss.sgi.com>;
-	Wed, 04 Dec 2013 15:32:47 -0800 (PST)
-Date: Thu, 5 Dec 2013 10:32:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] xfsprogs v3.2.0-alpha2
-Message-ID: <20131204233239.GF8803@dastard>
-References: <5293A699.20908@sgi.com> <20131128104002.GC26927@infradead.org>
-	<20131128211858.GR10988@dastard>
-	<20131129080538.GA31310@infradead.org>
-	<20131203221714.GY10988@dastard> <20131203224354.GR1935@sgi.com>
-	<20131204110023.GA3263@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 971BF7F53
+	for <xfs@oss.sgi.com>; Wed,  4 Dec 2013 18:12:25 -0600 (CST)
+Date: Wed, 4 Dec 2013 18:12:22 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: reinstate the iolock in xfs_readdir
+Message-ID: <20131205001222.GE1935@sgi.com>
+References: <20131203212951.GP1935@sgi.com> <20131203225520.GZ10988@dastard>
+	<20131203231415.GS1935@sgi.com> <20131204001030.GD10988@dastard>
+	<20131204130848.GA22926@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131204110023.GA3263@infradead.org>
+In-Reply-To: <20131204130848.GA22926@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,55 +24,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Myers <bpm@sgi.com>, Rich Johnston <rjohnston@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 04, 2013 at 03:00:23AM -0800, Christoph Hellwig wrote:
-> On Tue, Dec 03, 2013 at 04:43:54PM -0600, Ben Myers wrote:
-> > IIRC last time we discussed this I expressed a preference for focussing
-> > on the 3.2.0 release, but did not object to a 3.1.12 either.  I think
-> > Eric followed up and asked if Christoph had specific concerns that
-> > should prompt a 3.1.12 release.  Now I think it's probably just best to
-> > focus on the xfs_repair bits for 3.2.0.
+Hey Fellas,
+
+On Wed, Dec 04, 2013 at 05:08:48AM -0800, Christoph Hellwig wrote:
+> On Wed, Dec 04, 2013 at 11:10:30AM +1100, Dave Chinner wrote:
+> > The simple fact is that if we ever want to do concurrent directory
+> > read operations, we have to take the ilock in readdir() to ensure we
+> > can serialise correctly against modifications because the i_mutex
+> > can't be used to do that. So, really, I'm not against the fix you
+> > proposed - I'm just trying to understand why it is necessary right
+> > now....
+
+I understand.  ;)
+
+Dave, you are correct in guessing that this bug was found with CXFS.  No DMF on
+this one though.  Unfortunately it is not reproduceable at will.
+
+> Some comments from the person who authered that old comment that removed
+> the ilock:
 > 
-> My concern is pretty simple: we have a big batch of minor and not so
-> minor fixes that I want to get out to our users.  We've done releases
-> about every 3 month for the last couple years, but we've not done any
-> for 6 month by now.
-> 
-> I have to admit I'm a bit out of the loop on the v5 repair work, but if
-> Dave feels confident that he can get it done soon we should aim for a
-> 3.2.0 release after that.  If not it's more than time to get a 3.1.12
-> out and I'd be happy to do the work for it.
+>  - as far as I can tell that was not intentional.  I'm usually pretty
+>    good at recording such things in the changelog if I do it
+>    intentionally.
 
-There's a bit of mess involved in the repair stuff - basically
-propagating CRC errors and other errors detected by the verifiers
-is a bit nasty and touches a lot of the repair code (think
-everywhere that reads a buffer). I'm trying to work out a sane way
-to handle this, but I haven't managed to do it in a manner I
-consider acceptable and maintainable in the long term yet. Once I
-work out a method of doing that sanely, I'll mangle the code to
-handle it.
+That was my impression too.
 
-However, this really needs changes to the verifier instructure to be
-able to distinguish between CRC errors and structure corruption
-errors, so there's kernel changes that need to be done there as
-well. Eventually we need the same distinction in the kernel code,
-so I need to work it all out in terms of what reapir needs, then do
-the kernel mods, and then port them back to userspace....
+>  - relying on the open function to read in the extent list seems
+>    potentially dangerous.
 
-In short, there's still a significant amount of work needed here.
+...because open doesn't take i_mutex, I think.  So today even though
+xfs_dir_open does take the ilock to read in the extent list (D'oh, I'd missed
+that it reads it in), there is no exclusion with readdir.
 
-Oh, and there's still the dir ftype validation that needs to be
-done - that's a separate piece of work, so maybe someone else
-would like to tackle that so it gets done sooner?
+>    We generally try to make sure all the
+>    functions using it read it in if needed including the proper
+>    locking.  If we want to avoid that for some reason like in the
+>    writeback path we at least comment it and put asserts in.
 
-Cheers,
+>  - like Dave pointed out I think things should just work for mainline
+>    modulo maybe the attr by handle ioctl, but it seems by accident.
+>    Figuring out what issues Ben sees would be useful.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Logs indicating 'Access to block zero' on directories.
+- Forced shutdowns:
+	In xfs_free_ag_extent, XFS_WANT_CORRUPTED_GOTO when freeing an extent
+	we find a section of it already in the freespace trees
+- Log replay failures
+	xlog_recover_finish
+	  xlog_recover_process_efis
+	    xlog_recover_process_efi
+	      xfs_free_extent
+	        xfs_free_ag_extent	that's the same thing
+- A report that removal of files triggers the forced shutdown.
+
+There was a similar bug related to reading in the extent list for regular files
+which is not necessary mainline.  That had XFS_WANT_CORRUPTED_GOTO in
+xfs_bmap_add_extent_delay_real, having found an extent in the bmbt that was
+overlapping the one it was trying to convert.  Maybe that is not related to
+this readdir business.
+
+We found that files with the corruption generally had very large extent lists
+with small extents, and that xfs_repair wasn't cleaning up this type of
+corruption.
+
+>  - instead of putting the ilock back at the highest level we might want
+>    to push it down to the dir2 data code and only cover the actual
+>    critical region where we need it.
+
+I agree it's worth considering but I'm not sure that it can be pushed much
+further down.  
+
+>  - xfs_iread_extents really needs an assert to make sure the ilock
+>    is held.
+>  - xfs_bmapi_read probably should have an assert as well to make
+>    sure the ilock is held in some way
+
+I agree with adding the asserts, and I think the ilock should be reinstated
+mainline in readdir.  We do seem to have some reports on the list of freespace
+btree corruption and XFS_WANT_CORRUPTED_GOTO that are not resolved.
+
+Anyway, the open and 'attr by handle' paths do seem suspect.  Looks like we're
+ok in fallocate because xfs doesn't allow that on directories.  I'll keep
+poking around for extent list readers that don't take the i_mutex...
+
+-Ben
 
 _______________________________________________
 xfs mailing list
