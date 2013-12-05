@@ -1,9 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.13-rc1-2-13369-gef70160
-Message-Id: <20131205231049.0BA9E7F55@oss.sgi.com>
-Date: Thu,  5 Dec 2013 17:10:48 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0AA767F54
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 17:54:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E538AC005
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 15:54:40 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	0o4UOntOEHqxQ4TD for <xfs@oss.sgi.com>;
+	Thu, 05 Dec 2013 15:54:38 -0800 (PST)
+Date: Fri, 6 Dec 2013 10:54:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: free the efi AIL entry on log recovery failure
+Message-ID: <20131205235433.GR10988@dastard>
+References: <20131205214054.330817383@sgi.com> <20131205223244.GJ29897@dastard>
+	<52A1070C.6080006@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52A1070C.6080006@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,100 +26,130 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Thu, Dec 05, 2013 at 05:06:52PM -0600, Mark Tinguely wrote:
+> On 12/05/13 16:32, Dave Chinner wrote:
+> >On Thu, Dec 05, 2013 at 03:40:07PM -0600, Mark Tinguely wrote:
+> >>If freeing an extent fails during recovery, then the filesystem
+> >>will be forced down with the EFI entry still on the AIL. This
+> >>will result in hanging the function xfs_ail_push_all_sync().
+> >>
+> >>This patch is similar to the patches that removed the dquot and
+> >>inode in commits 32ce90a and dea9609.
+> >>
+> >>Found by mounting an metadata dump that triggers a
+> >>XFS_WANT_CORRUPTED_RETURN() on log recovery.
+> >>
+> >>Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+> >>---
+> >>  fs/xfs/xfs_log_recover.c |    5 ++++-
+> >>  1 file changed, 4 insertions(+), 1 deletion(-)
+> >>
+> >>Index: b/fs/xfs/xfs_log_recover.c
+> >>===================================================================
+> >>--- a/fs/xfs/xfs_log_recover.c
+> >>+++ b/fs/xfs/xfs_log_recover.c
+> >>@@ -3668,7 +3668,7 @@ xlog_recover_process_efi(
+> >>  		extp =&(efip->efi_format.efi_extents[i]);
+> >>  		error = xfs_free_extent(tp, extp->ext_start, extp->ext_len);
+> >>  		if (error)
+> >>-			goto abort_error;
+> >>+			goto free_abort;
+> >>  		xfs_trans_log_efd_extent(tp, efdp, extp->ext_start,
+> >>  					 extp->ext_len);
+> >>  	}
+> >>@@ -3677,6 +3677,9 @@ xlog_recover_process_efi(
+> >>  	error = xfs_trans_commit(tp, 0);
+> >>  	return error;
+> >>
+> >>+free_abort:
+> >>+	set_bit(XFS_EFI_RECOVERED,&efip->efi_flags);
+> >>+	xfs_efi_release(efip, efip->efi_format.efi_nextents);
+> >>  abort_error:
+> >>  	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
+> >>  	return error;
+> >
+> >Why does a failure of xfs_trans_reserve() in this function
+> >not require the XFS_EFI_RECOVERED bit to be set?
+> >
+> >If it does require setting the XFS_EFI_RECOVERED bit (I think it
+> >does), then we unconditionally set that bit in
+> >xlog_recover_process_efi() so it should be pulled up to be the first
+> >thing the function does, not something that is handled in the error
+> >paths. IOWs, we leave this function having guaranteed that we've
+> >pulled the EFI from the AIL on any failure.
+> 
+> or not if we move where we remove the entries from the AIL....
 
-The branch, for-next has been updated
-  ef70160 xfs: fix memory leak in xfs_dir2_node_removename
-  2a84108 xfs: free the list of recovery items on error
-  b7d961b xfs: growfs overruns AGFL buffer on V4 filesystems
-      from  f9fd0135610084abef6867d984e9951c3099950d (commit)
+Sorry, I don't understand what this means. Can you explain in more
+detail?
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+> >Bigger picture: if we fail to recover this EFI, we abort the AIL
+> >walk across all the EFIs in the AIL. That means all unrecovered EFIs
+> >get left in the AIL and this will result in hanging the function
+> >xfs_ail_push_all_sync().  IOWs, this patch only fixes the case where
+> >we get an error on the last EFI in the AIL during recovery.
+> >
+> >Hence a larger fix is needed here - if we fail to recover an EFI, we
+> >need to continue to walk the AIL and set the XFS_EFI_RECOVERED bit
+> >on all the EFIs still in the AIL and release them.
+> 
+> ...pretty sure the forced shutdown will happen later and the caller,
+> xlog_recover_process_efis(),
 
-- Log -----------------------------------------------------------------
-commit ef701600fd26cace9d513ee174688a2b83832126
-Author: Mark Tinguely <tinguely@sgi.com>
-Date:   Sat Oct 5 21:48:25 2013 -0500
+The forced shutdown occurs within the context of the
+xlog_recover_process_efis() i.e. immediately on detection of the
+corruption error in xfs_free_extent().
 
-    xfs: fix memory leak in xfs_dir2_node_removename
-    
-    Fix the leak of kernel memory in xfs_dir2_node_removename()
-    when xfs_dir2_leafn_remove() returns an error code.
-    
-    Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+> is already walking the ail with a
+> xfs_ail_cursor. As you mention, there can be more entries, then
+> xlog_recover_process_efis() could continue to use the cursor to the
+> remove the remaining entries from the AIL on error.
 
-commit 2a84108fe275f95fbe838b1c92b7c45258dcae5c
-Author: Mark Tinguely <tinguely@sgi.com>
-Date:   Wed Oct 2 07:51:12 2013 -0500
+I'm not sure that will be sufficient, because the EFIs that are in
+the AIL due to references from the EFD are relying on the EFD to
+take the last reference away from the EFI and hence free it. When
+the shutdown occurs, the EFDs are aborted via ->iop_committed()
+after the XFS_LI_ABORTED flag is set on the EFD log items and this
+happens:
 
-    xfs: free the list of recovery items on error
-    
-    Recovery builds a list of items on the transaction's
-    r_itemq head. Normally these items are committed and freed.
-    But in the event of a recovery error, these allocations
-    are leaked.
-    
-    If the error occurs during item reordering, then reconstruct
-    the r_itemq list before deleting the list to avoid leaking
-    the entries that were on one of the temporary lists.
-    
-    Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+STATIC xfs_lsn_t
+xfs_efd_item_committed(
+        struct xfs_log_item     *lip,
+        xfs_lsn_t               lsn)
+{
+        struct xfs_efd_log_item *efdp = EFD_ITEM(lip);
 
-commit b7d961b35b3ab69609aeea93f870269cb6e7ba4d
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Nov 21 15:41:06 2013 +1100
+        /*
+         * If we got a log I/O error, it's always the case that the LR with the
+         * EFI got unpinned and freed before the EFD got aborted.
+         */
+        if (!(lip->li_flags & XFS_LI_ABORTED))
+                xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
 
-    xfs: growfs overruns AGFL buffer on V4 filesystems
-    
-    This loop in xfs_growfs_data_private() is incorrect for V4
-    superblocks filesystems:
-    
-    		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
-    			agfl->agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
-    
-    For V4 filesystems, we don't have a agfl header structure, and so
-    XFS_AGFL_SIZE() returns an entire sector's worth of entries, which
-    we then index from an offset into the sector. Hence: buffer overrun.
-    
-    This problem was introduced in 3.10 by commit 77c95bba ("xfs: add
-    CRC checks to the AGFL") which changed the AGFL structure but failed
-    to update the growfs code to handle the different structures.
-    
-    Fix it by using the correct offset into the buffer for both V4 and
-    V5 filesystems.
-    
-    Cc: <stable@vger.kernel.org>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+        xfs_efd_item_free(efdp);
+        return (xfs_lsn_t)-1;
+}
 
------------------------------------------------------------------------
+i.e. the EFIs don't get released, and so continue to live in the AIL
+even though they have the XFS_EFI_RECOVERED bit set on them.
 
-Summary of changes:
- fs/xfs/xfs_dir2_node.c   | 26 +++++++++++++-------------
- fs/xfs/xfs_fsops.c       |  6 +++++-
- fs/xfs/xfs_log_recover.c | 17 ++++++++++++++---
- 3 files changed, 32 insertions(+), 17 deletions(-)
+Hence you have to walk the entire AIL again, releasing all EFIs that
+have the XFS_EFI_RECOVERED set, and for those that don't have it set
+it needs to be set and the EFI released....
 
+Cheers,
 
-hooks/post-receive
+Dave.
 -- 
-XFS development tree
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
