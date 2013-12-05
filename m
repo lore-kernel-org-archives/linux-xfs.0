@@ -1,16 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B052D7F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 16:52:04 -0600 (CST)
-Date: Thu, 5 Dec 2013 16:52:04 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/2] xfs free the list of recovery items on error.
-Message-ID: <20131205225204.GQ1935@sgi.com>
-References: <20131002125110.745269864@sgi.com>
-	<20131002125409.930462395@sgi.com> <20131204205105.GV1935@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id A55D17F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 17:06:55 -0600 (CST)
+Message-ID: <52A1070C.6080006@sgi.com>
+Date: Thu, 05 Dec 2013 17:06:52 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131204205105.GV1935@sgi.com>
+Subject: Re: [PATCH] xfs: free the efi AIL entry on log recovery failure
+References: <20131205214054.330817383@sgi.com> <20131205223244.GJ29897@dastard>
+In-Reply-To: <20131205223244.GJ29897@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,30 +17,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 04, 2013 at 02:51:05PM -0600, Ben Myers wrote:
-> On Wed, Oct 02, 2013 at 07:51:12AM -0500, Mark Tinguely wrote:
-> > Recovery builds a list of items on the transaction's
-> > r_itemq head. Normally these items are committed and freed.
-> > But in the event of a recovery error, these allocations
-> > are leaked.
-> > 
-> > If the error occurs during item reordering, then reconstruct
-> > the r_itemq list before deleting the list to avoid leaking
-> > the entries that were on one of the temporary lists.
-> > 
-> > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> 
-> Looks good to me.
-> Reviewed-by: Ben Myers <bpm@sgi.com>
+On 12/05/13 16:32, Dave Chinner wrote:
+> On Thu, Dec 05, 2013 at 03:40:07PM -0600, Mark Tinguely wrote:
+>> If freeing an extent fails during recovery, then the filesystem
+>> will be forced down with the EFI entry still on the AIL. This
+>> will result in hanging the function xfs_ail_push_all_sync().
+>>
+>> This patch is similar to the patches that removed the dquot and
+>> inode in commits 32ce90a and dea9609.
+>>
+>> Found by mounting an metadata dump that triggers a
+>> XFS_WANT_CORRUPTED_RETURN() on log recovery.
+>>
+>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>> ---
+>>   fs/xfs/xfs_log_recover.c |    5 ++++-
+>>   1 file changed, 4 insertions(+), 1 deletion(-)
+>>
+>> Index: b/fs/xfs/xfs_log_recover.c
+>> ===================================================================
+>> --- a/fs/xfs/xfs_log_recover.c
+>> +++ b/fs/xfs/xfs_log_recover.c
+>> @@ -3668,7 +3668,7 @@ xlog_recover_process_efi(
+>>   		extp =&(efip->efi_format.efi_extents[i]);
+>>   		error = xfs_free_extent(tp, extp->ext_start, extp->ext_len);
+>>   		if (error)
+>> -			goto abort_error;
+>> +			goto free_abort;
+>>   		xfs_trans_log_efd_extent(tp, efdp, extp->ext_start,
+>>   					 extp->ext_len);
+>>   	}
+>> @@ -3677,6 +3677,9 @@ xlog_recover_process_efi(
+>>   	error = xfs_trans_commit(tp, 0);
+>>   	return error;
+>>
+>> +free_abort:
+>> +	set_bit(XFS_EFI_RECOVERED,&efip->efi_flags);
+>> +	xfs_efi_release(efip, efip->efi_format.efi_nextents);
+>>   abort_error:
+>>   	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
+>>   	return error;
+>
+> Why does a failure of xfs_trans_reserve() in this function
+> not require the XFS_EFI_RECOVERED bit to be set?
+>
+> If it does require setting the XFS_EFI_RECOVERED bit (I think it
+> does), then we unconditionally set that bit in
+> xlog_recover_process_efi() so it should be pulled up to be the first
+> thing the function does, not something that is handled in the error
+> paths. IOWs, we leave this function having guaranteed that we've
+> pulled the EFI from the AIL on any failure.
 
-Applied.
+or not if we move where we remove the entries from the AIL....
+
+>
+> Bigger picture: if we fail to recover this EFI, we abort the AIL
+> walk across all the EFIs in the AIL. That means all unrecovered EFIs
+> get left in the AIL and this will result in hanging the function
+> xfs_ail_push_all_sync().  IOWs, this patch only fixes the case where
+> we get an error on the last EFI in the AIL during recovery.
+>
+> Hence a larger fix is needed here - if we fail to recover an EFI, we
+> need to continue to walk the AIL and set the XFS_EFI_RECOVERED bit
+> on all the EFIs still in the AIL and release them.
+
+...pretty sure the forced shutdown will happen later and the caller, 
+xlog_recover_process_efis(), is already walking the ail with a 
+xfs_ail_cursor. As you mention, there can be more entries, then 
+xlog_recover_process_efis() could continue to use the cursor to the 
+remove the remaining entries from the AIL on error.
+
+Thanks for the feedback.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
