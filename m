@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B7F2D29E09
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 14:31:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9E4F08F8065
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 12:31:29 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id pVH8ujdjTqSosZ9y (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Dec 2013 12:31:28 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 2FEF729E19
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 14:31:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 186438F8068
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 12:31:30 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id uuBFAxdaF17yuHBp (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Dec 2013 12:31:29 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1Vp23c-0004tE-4x
-	for xfs@oss.sgi.com; Fri, 06 Dec 2013 20:31:28 +0000
-Message-Id: <20131206203006.914776999@bombadil.infradead.org>
-Date: Fri, 06 Dec 2013 12:30:06 -0800
+	Hat Linux)) id 1Vp23d-0004wn-0k
+	for xfs@oss.sgi.com; Fri, 06 Dec 2013 20:31:29 +0000
+Message-Id: <20131206203128.914019342@bombadil.infradead.org>
+Date: Fri, 06 Dec 2013 12:30:12 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 00/11] extent list locking fixes V3
+Subject: [PATCH 06/11] xfs: take the ilock around xfs_bmapi_read in
+	xfs_zero_remaining_bytes
+References: <20131206203006.914776999@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs_zero_remaining_bytes-locking
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,12 +34,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Changes from V2:
-	- take care to lock for data vs attr fork differently
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Changes from V1:
-	- fixed the review feedback
-	- includes Bens original patch for completeness
+Index: xfs/fs/xfs/xfs_bmap_util.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap_util.c	2013-12-06 19:37:36.715162723 +0100
++++ xfs/fs/xfs/xfs_bmap_util.c	2013-12-06 19:38:45.643161309 +0100
+@@ -1175,9 +1175,15 @@ xfs_zero_remaining_bytes(
+ 	xfs_buf_unlock(bp);
+ 
+ 	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
++		uint lock_mode;
++
+ 		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 		nimap = 1;
++
++		lock_mode = xfs_ilock_data_map_shared(ip);
+ 		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
++		xfs_iunlock(ip, lock_mode);
++
+ 		if (error || nimap < 1)
+ 			break;
+ 		ASSERT(imap.br_blockcount >= 1);
 
 _______________________________________________
 xfs mailing list
