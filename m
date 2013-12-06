@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 822487F50
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 13:46:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BAF28F8064
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 11:46:54 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id kpg0z5AB01C0eMVm (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Dec 2013 11:46:53 -0800 (PST)
-Date: Fri, 6 Dec 2013 11:46:37 -0800
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 45BCD29E1B
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 13:47:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FA08304048
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 11:47:23 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id AtXYnlA5SOquyheA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Dec 2013 11:47:22 -0800 (PST)
+Date: Fri, 6 Dec 2013 11:47:20 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/18] Consolidate Posix ACL implementation
-Message-ID: <20131206194637.GA32122@infradead.org>
+Subject: Re: [Cluster-devel] [PATCH 16/18] gfs2: use generic posix ACL
+	infrastructure
+Message-ID: <20131206194720.GB32122@infradead.org>
 References: <20131201115903.910559036@bombadil.infradead.org>
-	<279325185.39210.1386266234086.JavaMail.zimbra@linbit.com>
+	<20131201120656.539995924@bombadil.infradead.org>
+	<1386159157.2711.11.camel@menhir>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <279325185.39210.1386266234086.JavaMail.zimbra@linbit.com>
+In-Reply-To: <1386159157.2711.11.camel@menhir>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +32,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>
-Cc: cluster-devel@redhat.com, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Christoph Hellwig <hch@infradead.org>, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
+To: Steven Whitehouse <swhiteho@redhat.com>
+Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Christoph Hellwig <hch@infradead.org>, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Thu, Dec 05, 2013 at 06:57:14PM +0100, Andreas Gruenbacher wrote:
-> I see that get_acl and set_acl are being defined in some but not all symlink inode operations (for example, btrfs them while ext4 does not), and that posix_acl_xattr_set() doesn't check if set_acl is defined.  Symlinks cannot have ACLs, so set_acl should either never be defined for symlinks (and a NULL check is then needed in posix_acl_xattr_set()), or it is defined in all inode operations, and S_ISNLNK() check is needed in posix_acl_xattr_set().  That latter check should probably be added in any case to be on the safe side.
+On Wed, Dec 04, 2013 at 12:12:37PM +0000, Steven Whitehouse wrote:
+> >  		error = posix_acl_equiv_mode(acl, &mode);
+> > +		if (error < 0)
+> >  
+> Andy Price has pointed out a missing "return error;" here
+> 
+> > -		if (error <= 0) {
+> > -			posix_acl_release(acl);
+> > +		if (error == 0)
+> >  			acl = NULL;
+> >  
+> > -			if (error < 0)
+> > -				return error;
+> > -		}
+> > -
+> 
+> Also, there seems to be a white space error in the xfs patch around line
+> 170 in fs/xfs/xfs_iops.c where there is an added "if (default_acl)" with
+> a space before the tab,
 
-Yes, we should add the check.  We also in general should not have
-set_acl/get_acl on links and I'll look over it.
-
-> Patch 6 also declares posix_acl_prepare() but this function is never introduced; this must be a leftover from a previous version.
-
-Indeed.
-
-Thanks for the review!
+I'll take care of these for the next version.
 
 _______________________________________________
 xfs mailing list
