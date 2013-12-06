@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DFFC129DF9
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 11:59:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C77A68F8052
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 09:59:25 -0800 (PST)
-Date: Fri, 6 Dec 2013 09:59:24 -0800
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0BA3229DF9
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 12:09:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DD134304067
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 10:09:02 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id tMqMmnERTP1URFEa (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Dec 2013 10:08:58 -0800 (PST)
+Date: Fri, 6 Dec 2013 10:08:58 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/7] extent list locking fixes V2
-Message-ID: <20131206175924.GA31131@infradead.org>
-References: <20131206164819.371654241@bombadil.infradead.org>
-	<20131206173729.GR1935@sgi.com>
-	<20131206175444.GA25669@infradead.org>
-	<20131206175726.GT10553@sgi.com>
+Subject: Re: nfs vs xfstests 193
+Message-ID: <20131206180858.GA2803@infradead.org>
+References: <20131106115648.GA24804@infradead.org>
+ <52A1CF22.106@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131206175726.GT10553@sgi.com>
+In-Reply-To: <52A1CF22.106@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +30,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Vasily Isaenko <vasily.isaenko@oracle.com>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Dec 06, 2013 at 11:57:26AM -0600, Ben Myers wrote:
-> > uint
-> > xfs_ilock_map_shared(
-> > 	xfs_inode_t     *ip)
-> > {
-> > 	uint    lock_mode;
-> > 
-> > 	if ((ip->i_d.di_format == XFS_DINODE_FMT_BTREE) &&
-> > 	    ((ip->i_df.if_flags & XFS_IFEXTENTS) == 0)) {
-> > 	    	lock_mode = XFS_ILOCK_EXCL;
-> > 	} else {
-> > 		lock_mode = XFS_ILOCK_SHARED;
-> > 	}
-> > 
-> > 	xfs_ilock(ip, lock_mode);
-> > 	return lock_mode;
-> > }
-> > 
-> > This only looks at the data fork, while we'd need to use it for the
-> > fork we plan to operate on.  Looks like we'll need some bigger surgery
-> > this area.
-> 
-> Ah, that makes sense.  Maybe just add a flags arg?
+On Fri, Dec 06, 2013 at 05:20:34PM +0400, Stanislav Kholmanskikh wrote:
+> Just to make the behaviour more consistent between NFS and other
+> "local" file systems as It was done by
+> commit https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=0953e620de0538cbd081f1b45126f6098112a598
 
-My plan was to replace the helper with two different ones that just
-return the flag value, and the use ilock on the return value.  I'll
-have to see if there's enough places where we could lock for either
-for that adding a variant that takes an "int whichfork" argument would
-make sense.
+Seems like we got others in line with XFS behavior.  I'd prefer to
+have NFS follow this as well.
 
 _______________________________________________
 xfs mailing list
