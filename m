@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 51A5C7F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 07:21:09 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2ACD229DF9
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 09:49:17 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CBB58F8070
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 05:21:09 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Lo8moVhLrSsrS4Cy (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Dec 2013 05:21:05 -0800 (PST)
-Message-ID: <52A1CF22.106@oracle.com>
-Date: Fri, 06 Dec 2013 17:20:34 +0400
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 093F7304075
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 07:49:16 -0800 (PST)
+Date: Fri, 6 Dec 2013 18:49:06 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: xfs: free the list of recovery items on error
+Message-ID: <20131206154906.GA13568@elgon.mountain>
 MIME-Version: 1.0
-Subject: Re: nfs vs xfstests 193
-References: <20131106115648.GA24804@infradead.org>
-In-Reply-To: <20131106115648.GA24804@infradead.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,99 +19,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Vasily Isaenko <vasily.isaenko@oracle.com>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: tinguely@sgi.com
+Cc: xfs@oss.sgi.com
 
+Hello Mark Tinguely,
 
-On 11/06/2013 03:56 PM, Christoph Hellwig wrote:
-> I've noticed that xfstests 193 fails when run over NFS talking to an
-> XFS-based Linux server.  The test checks that we behave correctly
-> vs Posix 1003.1 for the various operations that end up in ->setattr.
->
-> Without the no_root_squash export flag we're not even able to run
-> something resembling the test as we get permission problems all through
-> it, see the first attachment for details.
->
-> With the root_squash export op we fail to clear the setuid/setgid
-> bits in various truncate and chown subtests, see the second attachment
-> for details.
-Hi!
+The patch 2a84108fe275: "xfs: free the list of recovery items on
+error" from Oct 2, 2013, leads to the following
+static checker warning: "fs/xfs/xfs_log_recover.c:3621
+xlog_recover_process_data()
+	 warn: 'trans' was already freed."
 
-I've come across  the same issue. But NFS server is backed by ext4 file 
-system in my environment.
+fs/xfs/xfs_log_recover.c
+  3589                          switch (flags) {
+  3590                          case XLOG_COMMIT_TRANS:
+  3591                                  error = xlog_recover_commit_trans(log,
+  3592                                                                  trans, pass);
 
-The test case quotes POSIX:
+xlog_recover_commit_trans() frees trans on the success path and on some
+failure paths.
 
-"If the specified file is a regular file, one or more of the S_IXUSR, 
-S_IXGRP, or S_IXOTH bits of the
-file mode are set, and the process has appropriate privileges, it is 
-implementation-defined whether the set-user-ID and set-group-ID
-bits are altered."
+  3593                                  break;
+  3594                          case XLOG_UNMOUNT_TRANS:
+  3595                                  error = xlog_recover_unmount_trans(log, trans);
+  3596                                  break;
+  3597                          case XLOG_WAS_CONT_TRANS:
+  3598                                  error = xlog_recover_add_to_cont_trans(log,
+  3599                                                  trans, dp,
+  3600                                                  be32_to_cpu(ohead->oh_len));
+  3601                                  break;
+  3602                          case XLOG_START_TRANS:
+  3603                                  xfs_warn(log->l_mp, "%s: bad transaction",
+  3604                                          __func__);
+  3605                                  ASSERT(0);
+  3606                                  error = XFS_ERROR(EIO);
+  3607                                  break;
+  3608                          case 0:
+  3609                          case XLOG_CONTINUE_TRANS:
+  3610                                  error = xlog_recover_add_to_trans(log, trans,
+  3611                                                  dp, be32_to_cpu(ohead->oh_len));
+  3612                                  break;
+  3613                          default:
+  3614                                  xfs_warn(log->l_mp, "%s: bad flag 0x%x",
+  3615                                          __func__, flags);
+  3616                                  ASSERT(0);
+  3617                                  error = XFS_ERROR(EIO);
+  3618                                  break;
+  3619                          }
+  3620                          if (error) {
+  3621                                  xlog_recover_free_trans(trans);
 
-So the difference that what we have now:
+Double free?
 
-between nfs:
-~# touch file; chmod ug+s file; chmod u+x file; ls -l file; chown root 
-file; ls -l file; rm -f file
--rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
--rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+  3622                                  return error;
+  3623                          }
 
-and ext3, ext4, xfs, btrfs:
-~# touch file; chmod ug+s file; chmod u+x file; ls -l file; chown root 
-file; ls -l file; rm -f file
--rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
--rwxr-Sr-- 1 root root 0 Dec  6 04:49 file
-
-is not a violation of this POSIX statement. But It's just an 
-"implementation-defined" behaviour.
-
-I suppose that the difference raises because of this part of code in 
-fs/nfsd/vfs.c:
-
-         /* Revoke setuid/setgid on chown */
-         if (!S_ISDIR(inode->i_mode) &&
-             (((iap->ia_valid & ATTR_UID) && !uid_eq(iap->ia_uid, 
-inode->i_uid)) ||
-              ((iap->ia_valid & ATTR_GID) && !gid_eq(iap->ia_gid, 
-inode->i_gid)))) {
-                 iap->ia_valid |= ATTR_KILL_PRIV;
-                 if (iap->ia_valid & ATTR_MODE) {
-                         /* we're setting mode too, just clear the s*id 
-bits */
-                         iap->ia_mode &= ~S_ISUID;
-                         if (iap->ia_mode & S_IXGRP)
-                                 iap->ia_mode &= ~S_ISGID;
-                 } else {
-                         /* set ATTR_KILL_* bits and let VFS handle it */
-                         iap->ia_valid |= (ATTR_KILL_SUID | ATTR_KILL_SGID);
-                 }
-         }
-
-uid_eq() and gid_eq() checkings allow removal of s*id bits only if the 
-owner/group of the file is changed during chown().
-
-I.e. on nfs:
-~# touch file; chmod ug+s file; chmod u+x file; ls -l file; chown bin 
-file; ls -l file; rm -f file
--rwsr-Sr-- 1 root root 0 Dec  6 05:02 file
--rwxr-Sr-- 1 bin root 0 Dec  6 05:02 file
-
-Is it acceptable to change NFS kernel server behaviour by removal of 
-!uid_eq(iap->ia_uid, inode->i_uid) and !gid_eq(iap->ia_gid, 
-inode->i_gid) from the condition above?
-
-Just to make the behaviour more consistent between NFS and other "local" 
-file systems as It was done by
-commit 
-https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=0953e620de0538cbd081f1b45126f6098112a598
-
-Thank you!
-
-
+regards,
+dan carpenter
 
 _______________________________________________
 xfs mailing list
