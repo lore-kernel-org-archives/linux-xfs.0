@@ -1,35 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C8C929E12
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 03:40:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 33B99AC005
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 01:40:17 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 51A5C7F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 07:21:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CBB58F8070
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 05:21:09 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id t65hp12WhxtxzxKA (version=TLSv1
+	cuda.sgi.com with ESMTP id Lo8moVhLrSsrS4Cy (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Dec 2013 01:39:46 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rB69djFk005474
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 09:39:45 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rB69diia026313
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 09:39:44 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rB69dhiT002032 for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 09:39:43 GMT
-Message-ID: <52A19B5D.8040802@oracle.com>
-Date: Fri, 06 Dec 2013 13:39:41 +0400
+	Fri, 06 Dec 2013 05:21:05 -0800 (PST)
+Message-ID: <52A1CF22.106@oracle.com>
+Date: Fri, 06 Dec 2013 17:20:34 +0400
 From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] generic: require filesize to be greater than fs block
-	size in generic/240
-References: <1386321845-9221-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-In-Reply-To: <1386321845-9221-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+Subject: Re: nfs vs xfstests 193
+References: <20131106115648.GA24804@infradead.org>
+In-Reply-To: <20131106115648.GA24804@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,25 +28,95 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: vasily.isaenko@oracle.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Vasily Isaenko <vasily.isaenko@oracle.com>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
 
-On 12/06/2013 01:24 PM, Stanislav Kholmanskikh wrote:
-> If we execute generic/240 on a fs which has its fs block size greater
-> than 64k (for example, NFS), this test will fail with:
+On 11/06/2013 03:56 PM, Christoph Hellwig wrote:
+> I've noticed that xfstests 193 fails when run over NFS talking to an
+> XFS-based Linux server.  The test checks that we behave correctly
+> vs Posix 1003.1 for the various operations that end up in ->setattr.
 >
->    io_submit failed: Invalid argument
+> Without the no_root_squash export flag we're not even able to run
+> something resembling the test as we get permission problems all through
+> it, see the first attachment for details.
 >
-> This will happen because in src/aio-dio-regress/aiodio_sparse2.c this
-> expression
->
->    num_aio = filesize / step;
->
-> will set num_aio to 0 and this means that no io_setup() will happen
-> before calling io_submit().
-Actually, I mean "... no io_prep_pwrite() will happen before calling 
-io_submit()". It's a typo.
+> With the root_squash export op we fail to clear the setuid/setgid
+> bits in various truncate and chown subtests, see the second attachment
+> for details.
+Hi!
+
+I've come across  the same issue. But NFS server is backed by ext4 file 
+system in my environment.
+
+The test case quotes POSIX:
+
+"If the specified file is a regular file, one or more of the S_IXUSR, 
+S_IXGRP, or S_IXOTH bits of the
+file mode are set, and the process has appropriate privileges, it is 
+implementation-defined whether the set-user-ID and set-group-ID
+bits are altered."
+
+So the difference that what we have now:
+
+between nfs:
+~# touch file; chmod ug+s file; chmod u+x file; ls -l file; chown root 
+file; ls -l file; rm -f file
+-rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+-rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+
+and ext3, ext4, xfs, btrfs:
+~# touch file; chmod ug+s file; chmod u+x file; ls -l file; chown root 
+file; ls -l file; rm -f file
+-rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+-rwxr-Sr-- 1 root root 0 Dec  6 04:49 file
+
+is not a violation of this POSIX statement. But It's just an 
+"implementation-defined" behaviour.
+
+I suppose that the difference raises because of this part of code in 
+fs/nfsd/vfs.c:
+
+         /* Revoke setuid/setgid on chown */
+         if (!S_ISDIR(inode->i_mode) &&
+             (((iap->ia_valid & ATTR_UID) && !uid_eq(iap->ia_uid, 
+inode->i_uid)) ||
+              ((iap->ia_valid & ATTR_GID) && !gid_eq(iap->ia_gid, 
+inode->i_gid)))) {
+                 iap->ia_valid |= ATTR_KILL_PRIV;
+                 if (iap->ia_valid & ATTR_MODE) {
+                         /* we're setting mode too, just clear the s*id 
+bits */
+                         iap->ia_mode &= ~S_ISUID;
+                         if (iap->ia_mode & S_IXGRP)
+                                 iap->ia_mode &= ~S_ISGID;
+                 } else {
+                         /* set ATTR_KILL_* bits and let VFS handle it */
+                         iap->ia_valid |= (ATTR_KILL_SUID | ATTR_KILL_SGID);
+                 }
+         }
+
+uid_eq() and gid_eq() checkings allow removal of s*id bits only if the 
+owner/group of the file is changed during chown().
+
+I.e. on nfs:
+~# touch file; chmod ug+s file; chmod u+x file; ls -l file; chown bin 
+file; ls -l file; rm -f file
+-rwsr-Sr-- 1 root root 0 Dec  6 05:02 file
+-rwxr-Sr-- 1 bin root 0 Dec  6 05:02 file
+
+Is it acceptable to change NFS kernel server behaviour by removal of 
+!uid_eq(iap->ia_uid, inode->i_uid) and !gid_eq(iap->ia_gid, 
+inode->i_gid) from the condition above?
+
+Just to make the behaviour more consistent between NFS and other "local" 
+file systems as It was done by
+commit 
+https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=0953e620de0538cbd081f1b45126f6098112a598
+
+Thank you!
+
+
 
 _______________________________________________
 xfs mailing list
