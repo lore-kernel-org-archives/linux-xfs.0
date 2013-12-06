@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-v3.13-rc1-2-13374-gc91c46c
-Message-Id: <20131206234411.2013E29E09@oss.sgi.com>
-Date: Fri,  6 Dec 2013 17:44:10 -0600 (CST)
+Message-Id: <20131206234421.A6E9E29E24@oss.sgi.com>
+Date: Fri,  6 Dec 2013 17:44:20 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   c91c46c xfs: add xfs_setattr_time
   0c3d88d xfs: tiny xfs_setattr_mode cleanup
   37eb970 xfs: fix false assertion at xfs_qm_vop_create_dqattach
