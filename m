@@ -1,34 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ADB657F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 00:59:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 351E3AC004
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 22:59:56 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id GfqijVmJZUTjXr5N (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Dec 2013 22:59:51 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rB66xoMM009089
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 06:59:51 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rB66xnLb010953
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 06:59:50 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rB66xnZh023050 for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 06:59:49 GMT
-Message-ID: <52A175DD.5050908@oracle.com>
-Date: Fri, 06 Dec 2013 10:59:41 +0400
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6A0637F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 02:59:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5008B8F809C
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 00:59:01 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id xyDHjAKNhfWqixLV
+	for <xfs@oss.sgi.com>; Fri, 06 Dec 2013 00:58:30 -0800 (PST)
+Message-ID: <52A191BA.20800@hardwarefreak.com>
+Date: Fri, 06 Dec 2013 02:58:34 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: stop special casing nfs and udf
-References: <20131107204635.GA22954@infradead.org>
-In-Reply-To: <20131107204635.GA22954@infradead.org>
+Subject: Re: Fwd: Sudden File System Corruption
+References: <CAPd9ww_qT9J_Rt04g7+OApoBeggNOyWNwD+57DiDTuUvz-O-0g@mail.gmail.com>	<52A03513.6030408@hardwarefreak.com>	<CAPd9ww9hsOFK6pxqRY-YtLLAkkJHCuSi1BaM4n9=2XTjNVAn2Q@mail.gmail.com>
+	<CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
+In-Reply-To: <CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,57 +25,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mike Dacre <mike.dacre@gmail.com>, xfs@oss.sgi.com
 
+On 12/5/2013 9:58 AM, Mike Dacre wrote:
 
-On 11/08/2013 12:46 AM, Christoph Hellwig wrote:
-> For historical reasons beyond my knowledge xfstests tries to abuse the
-> scratch device as test device for nfs and udf.  Because not all test
-> have inherited the right usage of the _setup_testdir and _cleanup_testdir
-> helpers this leads to lots of unessecary test failures.
+> On Thu, Dec 5, 2013 at 12:10 AM, Stan Hoeppner <stan@hardwarefreak.com>wrote:
+>> On 12/4/2013 8:55 PM, Mike Dacre wrote:
+>> ...
 >
-> Remove the special casing, which gets nfs down to a minimal number of
-> failures.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> diff --git a/common/rc b/common/rc
-> index ea3af12..c64933a 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -975,11 +975,7 @@ _require_scratch()
->   {
->       case "$FSTYP" in
->   	nfs*)
-> -		 echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
-> -		 if [ -z "$SCRATCH_DEV" -o "$?" != "0" ]
-> -		 then
-> -		     _notrun "this test requires a valid \$SCRATCH_DEV"
-> -		 fi
-> +                 _notrun "requires a scratch device"
->   		 ;;
->   	*)
->   		 if [ -z "$SCRATCH_DEV" -o "`_is_block_dev $SCRATCH_DEV`" = "" ]
-> @@ -1773,100 +1769,6 @@ _full_platform_details()
->        echo "$os/$platform $host $kernel"
->   }
-Hi!
+> Definitely RAID6
+> 
+> 2.  Strip size?  (eg 512KB)
+>>
+> 64KB
 
-Sorry for my post-commit "review".
+Ok, so 64*14 = 896KB stripe.  This seems pretty sane for a 14 spindle
+parity array and mixed workloads.
 
-But for what purposes did you delete this scratch device handling for nfs?
-Now each test case that uses _require_scratch returns [not run].
+> 4.  BBU module?
+>>
+> Yes. iBBU, state optimal, 97% charged.
+> 
+> 5.  Is write cache enabled?
+>>
+>> Yes: Cahced IO and Write Back with BBU are enabled.
 
-It means most of the generic/ test cases.
+I should have pointed you this this earlier:
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-I think we should revert this part of code. How do you think?
+but we've got most of it already.  We don't have your fstab mount
+options.  Please provide that.
 
-Thanks.
+...
+> This is also attached as xfs_info.txt
 
+You're not aligning XFS to the RAID geometry (unless you're overriding
+in fstab).  No alignment is good though for small (<896KB) file
+allocations but less than optimal for large streaming allocation writes.
+ But it isn't a factor in the problems you reported.
+
+...
+>> Good point.  These happened while trying to ls.  I am not sure why I can't
+> find them in the log, they printed out to the console as 'Input/Output'
+> errors, simply stating that the ls command failed.
+
+We look for SCSI IO errors preceding an XFS error as a causal indicator.
+ I didn't see that here.  You could have run into the bug Ben described
+earlier.  I can't really speak to the console errors.
+
+>> With delaylog enabled, which I believe it is in RHEL/CentOS 6, a single
+>> big rm shouldn't kill the disks.  But with the combination of other
+>> workloads it seems you may have been seeking the disks to death.
+>>
+> That is possible, workloads can get really high sometimes.  I am not sure
+> how to control that without significantly impacting performance - I want a
+> single user to be able to use 98% IO capacity sometimes... but other times
+> I want the load to be split amongst many users.  
+
+You can't control the seeking at the disks.  You can only schedule
+workloads together that don't compete for seeks.  And if you have one
+metadata or random read/write heavy workload, with this SATA RAID6
+array, it will need exclusive access for the duration of execution, or
+the portion that does all the random IO.  Otherwise other workloads
+running concurrently will crawl while competing for seek bandwidth.
+
+> Also, each user can
+> execute jobs simultaneously on 23 different computers, each acessing the
+> same drive via NFS.  This is a great system most of the time, but sometimes
+> the workloads on the drive get really high.
+
+So it's a small compute cluster using NFS over Infiniband for shared
+file access to a low performance RAID6 array.  The IO resource sharing
+is automatic.  But AFAIK there's no easy way to enforce IO quotas on
+users or processes, if at all.  You may simply not have sufficient IO to
+go around.  Let's ponder that.
+
+Looking at the math, you currently have approximately 14*150=2100
+seeks/sec capability with 14x 7.2k RPM data spindles.  That's less than
+100 seeks/sec per compute node, i.e. each node is getting about 2/3rd of
+the performance of a single SATA disk from this array.  This simply
+isn't sufficient for servicing a 23 node cluster, unless all workloads
+are compute bound, and none IO/seek bound.  Given the overload/crash
+that brought you to our attention, I'd say some of your workloads are
+obviously IO/seek bound.  I'd say you probably need more/faster disks.
+Or you need to identify which jobs are IO/seek heavy and schedule them
+so they're not running concurrently.
+
+...
+>> http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
+>>
+>> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
+>> of the parallelization in XFS."
+...
+>> echo deadline > /sys/block/sda/queue/scheduler
+>>
+> Wow, this is huge, I can't believe I missed that.  I have switched it to
+> noop now as we use write caching.  I have been trying to figure out for a
+> while why I would keep getting timeouts when the NFS load was high.  If you
+> have any other suggestions for how I can improve performance, I would
+> greatly appreciate it.
+
+This may not fix NFS timeouts entirely but it should help.  If the NFS
+operations are seeking the disks to death you may still see timeouts.
+
+>> This one simple command line may help pretty dramatically, immediately,
+>> assuming your hardware array parameters aren't horribly wrong for your
+>> workloads, and your XFS alignment correctly matches the hardware geometry.
+>>
+> Great, thanks.  Our workloads vary considerably as we are a biology
+> research lab, sometimes we do lots of seeks, other times we are almost
+> maxing out read or write speed with massively parallel processes all
+> accessing the disk at the same time.
+
+Do you use munin or something similar?  Sample output:
+http://demo.munin-monitoring.org/munin-monitoring.org/demo.munin-monitoring.org/index.html#disk
+
+Project page:
+http://munin-monitoring.org/
+
+It also has an NFS module and many others.  The storage oriented metrics
+may be very helpful to you.  You would install munin-node on the NFS
+server and all compute nodes, and munin on a collector/web server.  This
+will allow you to cross reference client and server NFS loads.  You can
+then cross reference the time in your PBS logs to see which users were
+running which jobs when IO spikes occur on the NFS server.  You'll know
+exactly which workloads, or combination thereof, are causing IO spikes.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
