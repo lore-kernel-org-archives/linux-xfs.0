@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EBF2D29E09
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 10:49:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 89B65AC008
+	by oss.sgi.com (Postfix) with ESMTP id 0584729E10
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 10:49:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 90CA1AC00C
 	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 08:49:07 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id SX8aAzIsRDZXXARB (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Dec 2013 08:49:06 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1VoyaQ-0000BV-A5
-	for xfs@oss.sgi.com; Fri, 06 Dec 2013 16:49:06 +0000
-Message-Id: <20131206164906.206074082@bombadil.infradead.org>
-Date: Fri, 06 Dec 2013 08:48:22 -0800
+Message-Id: <20131206164905.863036624@bombadil.infradead.org>
+Date: Fri, 06 Dec 2013 08:48:20 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/7] xfs: use xfs_ilock_map_shared in xfs_qm_dqtobp
+Subject: [PATCH 1/7] xfs: reinstate the ilock in xfs_readdir
 References: <20131206164819.371654241@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-locking
+Content-Disposition: inline; filename=iolock.diff
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,45 +25,56 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>
 
-We might not have read in the extent list at this point, so make sure we
-take the ilock exclusively if we have to do so.
+Although it was removed in commit 051e7cd44ab8, ilock needs to be taken in
+xfs_readdir because we might have to read the extent list in from disk.  This
+keeps other threads from reading from or writing to the extent list while it is
+being read in and is still in a transitional state.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+This has been associated with "Access to block zero" messages on directories
+with large numbers of extents resulting from excessive filesytem fragmentation,
+as well as extent list corruption.  Unfortunately no test case at this point.
 
-Index: xfs/fs/xfs/xfs_dquot.c
+Signed-off-by: Ben Myers <bpm@sgi.com>
+
+---
+ fs/xfs/xfs_dir2_readdir.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+Index: b/fs/xfs/xfs_dir2_readdir.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2013-11-18 14:39:01.955589999 +0100
-+++ xfs/fs/xfs/xfs_dquot.c	2013-12-05 11:42:34.759679600 +0100
-@@ -469,16 +469,17 @@ xfs_qm_dqtobp(
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	xfs_dqid_t		id = be32_to_cpu(dqp->q_core.d_id);
- 	struct xfs_trans	*tp = (tpp ? *tpp : NULL);
-+	uint			lock_mode;
+--- a/fs/xfs/xfs_dir2_readdir.c	2013-12-02 17:40:38.895185673 -0600
++++ b/fs/xfs/xfs_dir2_readdir.c	2013-12-02 17:40:49.025225554 -0600
+@@ -674,6 +674,7 @@ xfs_readdir(
+ {
+ 	int		rval;		/* return value */
+ 	int		v;		/* type-checking value */
++	uint		lock_mode;
  
- 	dqp->q_fileoffset = (xfs_fileoff_t)id / mp->m_quotainfo->qi_dqperchunk;
+ 	trace_xfs_readdir(dp);
  
--	xfs_ilock(quotip, XFS_ILOCK_SHARED);
-+	lock_mode = xfs_ilock_map_shared(quotip);
- 	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
- 		/*
- 		 * Return if this type of quotas is turned off while we
- 		 * didn't have the quota inode lock.
- 		 */
--		xfs_iunlock(quotip, XFS_ILOCK_SHARED);
-+		xfs_iunlock_map_shared(quotip, lock_mode);
- 		return ESRCH;
- 	}
+@@ -683,6 +684,7 @@ xfs_readdir(
+ 	ASSERT(S_ISDIR(dp->i_d.di_mode));
+ 	XFS_STATS_INC(xs_dir_getdents);
  
-@@ -488,7 +489,7 @@ xfs_qm_dqtobp(
- 	error = xfs_bmapi_read(quotip, dqp->q_fileoffset,
- 			       XFS_DQUOT_CLUSTER_SIZE_FSB, &map, &nmaps, 0);
- 
--	xfs_iunlock(quotip, XFS_ILOCK_SHARED);
-+	xfs_iunlock_map_shared(quotip, lock_mode);
- 	if (error)
- 		return error;
- 
++	lock_mode = xfs_ilock_map_shared(dp);
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_getdents(dp, ctx);
+ 	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
+@@ -691,5 +693,7 @@ xfs_readdir(
+ 		rval = xfs_dir2_block_getdents(dp, ctx);
+ 	else
+ 		rval = xfs_dir2_leaf_getdents(dp, ctx, bufsize);
++	xfs_iunlock_map_shared(dp, lock_mode);
++
+ 	return rval;
+ }
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
