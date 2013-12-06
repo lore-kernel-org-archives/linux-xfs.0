@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6A0637F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 02:59:01 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 7C3C529E05
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 03:24:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5008B8F809C
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 00:59:01 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id xyDHjAKNhfWqixLV
-	for <xfs@oss.sgi.com>; Fri, 06 Dec 2013 00:58:30 -0800 (PST)
-Message-ID: <52A191BA.20800@hardwarefreak.com>
-Date: Fri, 06 Dec 2013 02:58:34 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: Fwd: Sudden File System Corruption
-References: <CAPd9ww_qT9J_Rt04g7+OApoBeggNOyWNwD+57DiDTuUvz-O-0g@mail.gmail.com>	<52A03513.6030408@hardwarefreak.com>	<CAPd9ww9hsOFK6pxqRY-YtLLAkkJHCuSi1BaM4n9=2XTjNVAn2Q@mail.gmail.com>
-	<CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
-In-Reply-To: <CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B1908F80BA
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 01:24:47 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id ousQwD6XxpFHomY1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Dec 2013 01:24:16 -0800 (PST)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rB69OF7Z022307
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 09:24:16 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rB69OD42000391
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 09:24:15 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rB69ODTH015691 for <xfs@oss.sgi.com>; Fri, 6 Dec 2013 09:24:13 GMT
+From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Subject: [PATCH] generic: require filesize to be greater than fs block size in
+	generic/240
+Date: Fri,  6 Dec 2013 13:24:05 +0400
+Message-Id: <1386321845-9221-1-git-send-email-stanislav.kholmanskikh@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,138 +35,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mike Dacre <mike.dacre@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: vasily.isaenko@oracle.com
 
-On 12/5/2013 9:58 AM, Mike Dacre wrote:
+If we execute generic/240 on a fs which has its fs block size greater
+than 64k (for example, NFS), this test will fail with:
 
-> On Thu, Dec 5, 2013 at 12:10 AM, Stan Hoeppner <stan@hardwarefreak.com>wrote:
->> On 12/4/2013 8:55 PM, Mike Dacre wrote:
->> ...
->
-> Definitely RAID6
-> 
-> 2.  Strip size?  (eg 512KB)
->>
-> 64KB
+  io_submit failed: Invalid argument
 
-Ok, so 64*14 = 896KB stripe.  This seems pretty sane for a 14 spindle
-parity array and mixed workloads.
+This will happen because in src/aio-dio-regress/aiodio_sparse2.c this
+expression
 
-> 4.  BBU module?
->>
-> Yes. iBBU, state optimal, 97% charged.
-> 
-> 5.  Is write cache enabled?
->>
->> Yes: Cahced IO and Write Back with BBU are enabled.
+  num_aio = filesize / step;
 
-I should have pointed you this this earlier:
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+will set num_aio to 0 and this means that no io_setup() will happen
+before calling io_submit().
 
-but we've got most of it already.  We don't have your fstab mount
-options.  Please provide that.
+Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+---
+ tests/generic/240 |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-...
-> This is also attached as xfs_info.txt
-
-You're not aligning XFS to the RAID geometry (unless you're overriding
-in fstab).  No alignment is good though for small (<896KB) file
-allocations but less than optimal for large streaming allocation writes.
- But it isn't a factor in the problems you reported.
-
-...
->> Good point.  These happened while trying to ls.  I am not sure why I can't
-> find them in the log, they printed out to the console as 'Input/Output'
-> errors, simply stating that the ls command failed.
-
-We look for SCSI IO errors preceding an XFS error as a causal indicator.
- I didn't see that here.  You could have run into the bug Ben described
-earlier.  I can't really speak to the console errors.
-
->> With delaylog enabled, which I believe it is in RHEL/CentOS 6, a single
->> big rm shouldn't kill the disks.  But with the combination of other
->> workloads it seems you may have been seeking the disks to death.
->>
-> That is possible, workloads can get really high sometimes.  I am not sure
-> how to control that without significantly impacting performance - I want a
-> single user to be able to use 98% IO capacity sometimes... but other times
-> I want the load to be split amongst many users.  
-
-You can't control the seeking at the disks.  You can only schedule
-workloads together that don't compete for seeks.  And if you have one
-metadata or random read/write heavy workload, with this SATA RAID6
-array, it will need exclusive access for the duration of execution, or
-the portion that does all the random IO.  Otherwise other workloads
-running concurrently will crawl while competing for seek bandwidth.
-
-> Also, each user can
-> execute jobs simultaneously on 23 different computers, each acessing the
-> same drive via NFS.  This is a great system most of the time, but sometimes
-> the workloads on the drive get really high.
-
-So it's a small compute cluster using NFS over Infiniband for shared
-file access to a low performance RAID6 array.  The IO resource sharing
-is automatic.  But AFAIK there's no easy way to enforce IO quotas on
-users or processes, if at all.  You may simply not have sufficient IO to
-go around.  Let's ponder that.
-
-Looking at the math, you currently have approximately 14*150=2100
-seeks/sec capability with 14x 7.2k RPM data spindles.  That's less than
-100 seeks/sec per compute node, i.e. each node is getting about 2/3rd of
-the performance of a single SATA disk from this array.  This simply
-isn't sufficient for servicing a 23 node cluster, unless all workloads
-are compute bound, and none IO/seek bound.  Given the overload/crash
-that brought you to our attention, I'd say some of your workloads are
-obviously IO/seek bound.  I'd say you probably need more/faster disks.
-Or you need to identify which jobs are IO/seek heavy and schedule them
-so they're not running concurrently.
-
-...
->> http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
->>
->> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
->> of the parallelization in XFS."
-...
->> echo deadline > /sys/block/sda/queue/scheduler
->>
-> Wow, this is huge, I can't believe I missed that.  I have switched it to
-> noop now as we use write caching.  I have been trying to figure out for a
-> while why I would keep getting timeouts when the NFS load was high.  If you
-> have any other suggestions for how I can improve performance, I would
-> greatly appreciate it.
-
-This may not fix NFS timeouts entirely but it should help.  If the NFS
-operations are seeking the disks to death you may still see timeouts.
-
->> This one simple command line may help pretty dramatically, immediately,
->> assuming your hardware array parameters aren't horribly wrong for your
->> workloads, and your XFS alignment correctly matches the hardware geometry.
->>
-> Great, thanks.  Our workloads vary considerably as we are a biology
-> research lab, sometimes we do lots of seeks, other times we are almost
-> maxing out read or write speed with massively parallel processes all
-> accessing the disk at the same time.
-
-Do you use munin or something similar?  Sample output:
-http://demo.munin-monitoring.org/munin-monitoring.org/demo.munin-monitoring.org/index.html#disk
-
-Project page:
-http://munin-monitoring.org/
-
-It also has an NFS module and many others.  The storage oriented metrics
-may be very helpful to you.  You would install munin-node on the NFS
-server and all compute nodes, and munin on a collector/web server.  This
-will allow you to cross reference client and server NFS loads.  You can
-then cross reference the time in your PBS logs to see which users were
-running which jobs when IO spikes occur on the NFS server.  You'll know
-exactly which workloads, or combination thereof, are causing IO spikes.
-
+diff --git a/tests/generic/240 b/tests/generic/240
+index e26f495..acf0515 100755
+--- a/tests/generic/240
++++ b/tests/generic/240
+@@ -62,14 +62,19 @@ rm -f $TEST_DIR/aiodio_sparse
+ 
+ logical_block_size=`_min_dio_alignment $TEST_DEV`
+ fs_block_size=`stat -f $TEST_DIR | grep "Block size:" | awk '{print $3}'`
++file_size=65536
+ 
+ if [ $fs_block_size -le $logical_block_size ]; then
+ 	_notrun "fs block size must be larger than the device block size.  fs block size: $fs_block_size, device block size: $logical_block_size"
+ fi
+ 
+-# 2 threads, fs block sized writes, 64k filesize, stride through file by
++if [ $file_size -lt $fs_block_size ]; then
++	file_size=$fs_block_size
++fi
++
++# 2 threads, fs block sized writes, filesize, stride through file by
+ # fs block size, start at logical block size offset
+-$AIO_TEST -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
++$AIO_TEST -i 2 -w $fs_block_size -s $file_size -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
+ 
+ status=$?
+ exit
 -- 
-Stan
+1.7.1
 
 _______________________________________________
 xfs mailing list
