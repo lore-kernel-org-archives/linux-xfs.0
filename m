@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0AA767F54
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 17:54:44 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5B8357F54
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 19:38:42 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E538AC005
-	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 15:54:40 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	0o4UOntOEHqxQ4TD for <xfs@oss.sgi.com>;
-	Thu, 05 Dec 2013 15:54:38 -0800 (PST)
-Date: Fri, 6 Dec 2013 10:54:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: free the efi AIL entry on log recovery failure
-Message-ID: <20131205235433.GR10988@dastard>
-References: <20131205214054.330817383@sgi.com> <20131205223244.GJ29897@dastard>
-	<52A1070C.6080006@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52A1070C.6080006@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 37C7230408A
+	for <xfs@oss.sgi.com>; Thu,  5 Dec 2013 17:38:38 -0800 (PST)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id zLZ82RFAFmCt92Of (version=TLSv1
+	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 05 Dec 2013 17:38:37 -0800 (PST)
+Received: from epcpsbgr2.samsung.com
+	(u142.gpu120.samsung.co.kr [203.254.230.142])
+	by mailout4.samsung.com (Oracle Communications Messaging Server
+	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
+	with ESMTP id <0MXD00NXW38B1FD0@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Fri, 06 Dec 2013 10:38:35 +0900 (KST)
+MIME-version: 1.0
+Message-id: <1386293854.2101.8.camel@kjgkr>
+Subject: Re: [PATCH 09/18] f2fs: use generic posix ACL infrastructure
+From: Jaegeuk Kim <jaegeuk.kim@samsung.com>
+Date: Fri, 06 Dec 2013 10:37:34 +0900
+In-reply-to: <20131201120655.205206019@bombadil.infradead.org>
+References: <20131201115903.910559036@bombadil.infradead.org>
+	<20131201120655.205206019@bombadil.infradead.org>
+Reply-To: jaegeuk.kim@samsung.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,132 +32,173 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
 
-On Thu, Dec 05, 2013 at 05:06:52PM -0600, Mark Tinguely wrote:
-> On 12/05/13 16:32, Dave Chinner wrote:
-> >On Thu, Dec 05, 2013 at 03:40:07PM -0600, Mark Tinguely wrote:
-> >>If freeing an extent fails during recovery, then the filesystem
-> >>will be forced down with the EFI entry still on the AIL. This
-> >>will result in hanging the function xfs_ail_push_all_sync().
-> >>
-> >>This patch is similar to the patches that removed the dquot and
-> >>inode in commits 32ce90a and dea9609.
-> >>
-> >>Found by mounting an metadata dump that triggers a
-> >>XFS_WANT_CORRUPTED_RETURN() on log recovery.
-> >>
-> >>Signed-off-by: Mark Tinguely<tinguely@sgi.com>
-> >>---
-> >>  fs/xfs/xfs_log_recover.c |    5 ++++-
-> >>  1 file changed, 4 insertions(+), 1 deletion(-)
-> >>
-> >>Index: b/fs/xfs/xfs_log_recover.c
-> >>===================================================================
-> >>--- a/fs/xfs/xfs_log_recover.c
-> >>+++ b/fs/xfs/xfs_log_recover.c
-> >>@@ -3668,7 +3668,7 @@ xlog_recover_process_efi(
-> >>  		extp =&(efip->efi_format.efi_extents[i]);
-> >>  		error = xfs_free_extent(tp, extp->ext_start, extp->ext_len);
-> >>  		if (error)
-> >>-			goto abort_error;
-> >>+			goto free_abort;
-> >>  		xfs_trans_log_efd_extent(tp, efdp, extp->ext_start,
-> >>  					 extp->ext_len);
-> >>  	}
-> >>@@ -3677,6 +3677,9 @@ xlog_recover_process_efi(
-> >>  	error = xfs_trans_commit(tp, 0);
-> >>  	return error;
-> >>
-> >>+free_abort:
-> >>+	set_bit(XFS_EFI_RECOVERED,&efip->efi_flags);
-> >>+	xfs_efi_release(efip, efip->efi_format.efi_nextents);
-> >>  abort_error:
-> >>  	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
-> >>  	return error;
-> >
-> >Why does a failure of xfs_trans_reserve() in this function
-> >not require the XFS_EFI_RECOVERED bit to be set?
-> >
-> >If it does require setting the XFS_EFI_RECOVERED bit (I think it
-> >does), then we unconditionally set that bit in
-> >xlog_recover_process_efi() so it should be pulled up to be the first
-> >thing the function does, not something that is handled in the error
-> >paths. IOWs, we leave this function having guaranteed that we've
-> >pulled the EFI from the AIL on any failure.
-> 
-> or not if we move where we remove the entries from the AIL....
-
-Sorry, I don't understand what this means. Can you explain in more
-detail?
-
-> >Bigger picture: if we fail to recover this EFI, we abort the AIL
-> >walk across all the EFIs in the AIL. That means all unrecovered EFIs
-> >get left in the AIL and this will result in hanging the function
-> >xfs_ail_push_all_sync().  IOWs, this patch only fixes the case where
-> >we get an error on the last EFI in the AIL during recovery.
-> >
-> >Hence a larger fix is needed here - if we fail to recover an EFI, we
-> >need to continue to walk the AIL and set the XFS_EFI_RECOVERED bit
-> >on all the EFIs still in the AIL and release them.
-> 
-> ...pretty sure the forced shutdown will happen later and the caller,
-> xlog_recover_process_efis(),
-
-The forced shutdown occurs within the context of the
-xlog_recover_process_efis() i.e. immediately on detection of the
-corruption error in xfs_free_extent().
-
-> is already walking the ail with a
-> xfs_ail_cursor. As you mention, there can be more entries, then
-> xlog_recover_process_efis() could continue to use the cursor to the
-> remove the remaining entries from the AIL on error.
-
-I'm not sure that will be sufficient, because the EFIs that are in
-the AIL due to references from the EFD are relying on the EFD to
-take the last reference away from the EFI and hence free it. When
-the shutdown occurs, the EFDs are aborted via ->iop_committed()
-after the XFS_LI_ABORTED flag is set on the EFD log items and this
-happens:
-
-STATIC xfs_lsn_t
-xfs_efd_item_committed(
-        struct xfs_log_item     *lip,
-        xfs_lsn_t               lsn)
-{
-        struct xfs_efd_log_item *efdp = EFD_ITEM(lip);
-
-        /*
-         * If we got a log I/O error, it's always the case that the LR with the
-         * EFI got unpinned and freed before the EFD got aborted.
-         */
-        if (!(lip->li_flags & XFS_LI_ABORTED))
-                xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
-
-        xfs_efd_item_free(efdp);
-        return (xfs_lsn_t)-1;
-}
-
-i.e. the EFIs don't get released, and so continue to live in the AIL
-even though they have the XFS_EFI_RECOVERED bit set on them.
-
-Hence you have to walk the entire AIL again, releasing all EFIs that
-have the XFS_EFI_RECOVERED set, and for those that don't have it set
-it needs to be set and the EFI released....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAxMy0xMi0wMSAo7J28KSwgMDM6NTkgLTA4MDAsIENocmlzdG9waCBIZWxsd2lnOgoKPiBmMmZz
+IGhhcyBzb21lIHdlaXJkIG1vZGUgYml0IGhhbmRsaW5nLCBzbyBzdGlsbCB1c2luZyB0aGUgb2xk
+Cj4gY2htb2QgY29kZSBmb3Igbm93LgoKZjJmcyBjYWNoZXMgYSBuZXcgbW9kZSBiaXQgZm9yIGEg
+d2hpbGUgdG8gbWFrZSB0aGUgY29uc2lzdGVuY3kgYmV0d2Vlbgp4YXR0cidzIGFjbCBtb2RlIGFu
+ZCB0aGUgaW5vZGUgbW9kZS4KQW55d2F5LCBpdCdzIGEgdmVyeSBnb29kIGpvYi4KVGhhbmtzLAoK
+WW91IGNhbiBhZGQ6ClJldmlld2VkLWJ5OiBKYWVnZXVrIEtpbSA8amFlZ2V1ay5raW1Ac2Ftc3Vu
+Zy5jb20+Cgo+IAo+IFNpZ25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRl
+Pgo+IC0tLQo+ICBmcy9mMmZzL2FjbC5jICAgfCAgMTQwICsrKysrKysrKy0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAgZnMvZjJmcy9hY2wuaCAgIHwgICAg
+MSArCj4gIGZzL2YyZnMvZmlsZS5jICB8ICAgIDEgKwo+ICBmcy9mMmZzL25hbWVpLmMgfCAgICAy
+ICsKPiAgZnMvZjJmcy94YXR0ci5jIHwgICAgOSArKy0tCj4gIGZzL2YyZnMveGF0dHIuaCB8ICAg
+IDIgLQo+ICA2IGZpbGVzIGNoYW5nZWQsIDMwIGluc2VydGlvbnMoKyksIDEyNSBkZWxldGlvbnMo
+LSkKPiAKPiBkaWZmIC0tZ2l0IGEvZnMvZjJmcy9hY2wuYyBiL2ZzL2YyZnMvYWNsLmMKPiBpbmRl
+eCA0NWU4NDMwLi40ZjUyZmUwZiAxMDA2NDQKPiAtLS0gYS9mcy9mMmZzL2FjbC5jCj4gKysrIGIv
+ZnMvZjJmcy9hY2wuYwo+IEBAIC0yMDUsNyArMjA1LDcgQEAgc3RydWN0IHBvc2l4X2FjbCAqZjJm
+c19nZXRfYWNsKHN0cnVjdCBpbm9kZSAqaW5vZGUsIGludCB0eXBlKQo+ICAJcmV0dXJuIGFjbDsK
+PiAgfQo+ICAKPiAtc3RhdGljIGludCBmMmZzX3NldF9hY2woc3RydWN0IGlub2RlICppbm9kZSwg
+aW50IHR5cGUsCj4gK3N0YXRpYyBpbnQgX19mMmZzX3NldF9hY2woc3RydWN0IGlub2RlICppbm9k
+ZSwgaW50IHR5cGUsCj4gIAkJCXN0cnVjdCBwb3NpeF9hY2wgKmFjbCwgc3RydWN0IHBhZ2UgKmlw
+YWdlKQo+ICB7Cj4gIAlzdHJ1Y3QgZjJmc19zYl9pbmZvICpzYmkgPSBGMkZTX1NCKGlub2RlLT5p
+X3NiKTsKPiBAQCAtMjYxLDM3ICsyNjEsMzIgQEAgc3RhdGljIGludCBmMmZzX3NldF9hY2woc3Ry
+dWN0IGlub2RlICppbm9kZSwgaW50IHR5cGUsCj4gIAlyZXR1cm4gZXJyb3I7Cj4gIH0KPiAgCj4g
+K2ludCBmMmZzX3NldF9hY2woc3RydWN0IGlub2RlICppbm9kZSwgc3RydWN0IHBvc2l4X2FjbCAq
+YWNsLCBpbnQgdHlwZSkKPiArewo+ICsJcmV0dXJuIF9fZjJmc19zZXRfYWNsKGlub2RlLCB0eXBl
+LCBhY2wsIE5VTEwpOwo+ICt9Cj4gKwo+ICBpbnQgZjJmc19pbml0X2FjbChzdHJ1Y3QgaW5vZGUg
+Kmlub2RlLCBzdHJ1Y3QgaW5vZGUgKmRpciwgc3RydWN0IHBhZ2UgKmlwYWdlKQo+ICB7Cj4gLQlz
+dHJ1Y3QgZjJmc19zYl9pbmZvICpzYmkgPSBGMkZTX1NCKGRpci0+aV9zYik7Cj4gLQlzdHJ1Y3Qg
+cG9zaXhfYWNsICphY2wgPSBOVUxMOwo+ICsJc3RydWN0IHBvc2l4X2FjbCAqZGVmYXVsdF9hY2ws
+ICphY2w7Cj4gIAlpbnQgZXJyb3IgPSAwOwo+ICAKPiAtCWlmICghU19JU0xOSyhpbm9kZS0+aV9t
+b2RlKSkgewo+IC0JCWlmICh0ZXN0X29wdChzYmksIFBPU0lYX0FDTCkpIHsKPiAtCQkJYWNsID0g
+ZjJmc19nZXRfYWNsKGRpciwgQUNMX1RZUEVfREVGQVVMVCk7Cj4gLQkJCWlmIChJU19FUlIoYWNs
+KSkKPiAtCQkJCXJldHVybiBQVFJfRVJSKGFjbCk7Cj4gLQkJfQo+IC0JCWlmICghYWNsKQo+IC0J
+CQlpbm9kZS0+aV9tb2RlICY9IH5jdXJyZW50X3VtYXNrKCk7Cj4gLQl9Cj4gLQo+IC0JaWYgKCF0
+ZXN0X29wdChzYmksIFBPU0lYX0FDTCkgfHwgIWFjbCkKPiAtCQlnb3RvIGNsZWFudXA7Cj4gKwll
+cnJvciA9IHBvc2l4X2FjbF9jcmVhdGUoZGlyLCAmaW5vZGUtPmlfbW9kZSwgJmRlZmF1bHRfYWNs
+LCAmYWNsKTsKPiArCWlmIChlcnJvcikKPiArCQlyZXR1cm4gZXJyb3I7Cj4gIAo+IC0JaWYgKFNf
+SVNESVIoaW5vZGUtPmlfbW9kZSkpIHsKPiAtCQllcnJvciA9IGYyZnNfc2V0X2FjbChpbm9kZSwg
+QUNMX1RZUEVfREVGQVVMVCwgYWNsLCBpcGFnZSk7Cj4gKwlpZiAoZGVmYXVsdF9hY2wpIHsKPiAr
+CQllcnJvciA9IF9fZjJmc19zZXRfYWNsKGlub2RlLCBBQ0xfVFlQRV9ERUZBVUxULCBkZWZhdWx0
+X2FjbCwKPiArCQkJCSAgICAgICBpcGFnZSk7Cj4gKwkJcG9zaXhfYWNsX3JlbGVhc2UoZGVmYXVs
+dF9hY2wpOwo+ICsJfQo+ICsJaWYgKGFjbCkgewo+ICAJCWlmIChlcnJvcikKPiAtCQkJZ290byBj
+bGVhbnVwOwo+ICsJCQllcnJvciA9IF9fZjJmc19zZXRfYWNsKGlub2RlLCBBQ0xfVFlQRV9BQ0NF
+U1MsIGFjbCwKPiArCQkJCQkgICAgICAgaXBhZ2UpOwo+ICsJCXBvc2l4X2FjbF9yZWxlYXNlKGFj
+bCk7Cj4gIAl9Cj4gLQllcnJvciA9IF9fcG9zaXhfYWNsX2NyZWF0ZSgmYWNsLCBHRlBfS0VSTkVM
+LCAmaW5vZGUtPmlfbW9kZSk7Cj4gLQlpZiAoZXJyb3IgPCAwKQo+IC0JCXJldHVybiBlcnJvcjsK
+PiAtCWlmIChlcnJvciA+IDApCj4gLQkJZXJyb3IgPSBmMmZzX3NldF9hY2woaW5vZGUsIEFDTF9U
+WVBFX0FDQ0VTUywgYWNsLCBpcGFnZSk7Cj4gLWNsZWFudXA6Cj4gLQlwb3NpeF9hY2xfcmVsZWFz
+ZShhY2wpOwo+ICsKPiAgCXJldHVybiBlcnJvcjsKPiAgfQo+ICAKPiBAQCAtMzE1LDEwMCArMzEw
+LDcgQEAgaW50IGYyZnNfYWNsX2NobW9kKHN0cnVjdCBpbm9kZSAqaW5vZGUpCj4gIAlpZiAoZXJy
+b3IpCj4gIAkJcmV0dXJuIGVycm9yOwo+ICAKPiAtCWVycm9yID0gZjJmc19zZXRfYWNsKGlub2Rl
+LCBBQ0xfVFlQRV9BQ0NFU1MsIGFjbCwgTlVMTCk7Cj4gLQlwb3NpeF9hY2xfcmVsZWFzZShhY2wp
+Owo+IC0JcmV0dXJuIGVycm9yOwo+IC19Cj4gLQo+IC1zdGF0aWMgc2l6ZV90IGYyZnNfeGF0dHJf
+bGlzdF9hY2woc3RydWN0IGRlbnRyeSAqZGVudHJ5LCBjaGFyICpsaXN0LAo+IC0JCXNpemVfdCBs
+aXN0X3NpemUsIGNvbnN0IGNoYXIgKm5hbWUsIHNpemVfdCBuYW1lX2xlbiwgaW50IHR5cGUpCj4g
+LXsKPiAtCXN0cnVjdCBmMmZzX3NiX2luZm8gKnNiaSA9IEYyRlNfU0IoZGVudHJ5LT5kX3NiKTsK
+PiAtCWNvbnN0IGNoYXIgKnhuYW1lID0gUE9TSVhfQUNMX1hBVFRSX0RFRkFVTFQ7Cj4gLQlzaXpl
+X3Qgc2l6ZTsKPiAtCj4gLQlpZiAoIXRlc3Rfb3B0KHNiaSwgUE9TSVhfQUNMKSkKPiAtCQlyZXR1
+cm4gMDsKPiAtCj4gLQlpZiAodHlwZSA9PSBBQ0xfVFlQRV9BQ0NFU1MpCj4gLQkJeG5hbWUgPSBQ
+T1NJWF9BQ0xfWEFUVFJfQUNDRVNTOwo+IC0KPiAtCXNpemUgPSBzdHJsZW4oeG5hbWUpICsgMTsK
+PiAtCWlmIChsaXN0ICYmIHNpemUgPD0gbGlzdF9zaXplKQo+IC0JCW1lbWNweShsaXN0LCB4bmFt
+ZSwgc2l6ZSk7Cj4gLQlyZXR1cm4gc2l6ZTsKPiAtfQo+IC0KPiAtc3RhdGljIGludCBmMmZzX3hh
+dHRyX2dldF9hY2woc3RydWN0IGRlbnRyeSAqZGVudHJ5LCBjb25zdCBjaGFyICpuYW1lLAo+IC0J
+CXZvaWQgKmJ1ZmZlciwgc2l6ZV90IHNpemUsIGludCB0eXBlKQo+IC17Cj4gLQlzdHJ1Y3QgZjJm
+c19zYl9pbmZvICpzYmkgPSBGMkZTX1NCKGRlbnRyeS0+ZF9zYik7Cj4gLQlzdHJ1Y3QgcG9zaXhf
+YWNsICphY2w7Cj4gLQlpbnQgZXJyb3I7Cj4gLQo+IC0JaWYgKHN0cmNtcChuYW1lLCAiIikgIT0g
+MCkKPiAtCQlyZXR1cm4gLUVJTlZBTDsKPiAtCWlmICghdGVzdF9vcHQoc2JpLCBQT1NJWF9BQ0wp
+KQo+IC0JCXJldHVybiAtRU9QTk9UU1VQUDsKPiAtCj4gLQlhY2wgPSBmMmZzX2dldF9hY2woZGVu
+dHJ5LT5kX2lub2RlLCB0eXBlKTsKPiAtCWlmIChJU19FUlIoYWNsKSkKPiAtCQlyZXR1cm4gUFRS
+X0VSUihhY2wpOwo+IC0JaWYgKCFhY2wpCj4gLQkJcmV0dXJuIC1FTk9EQVRBOwo+IC0JZXJyb3Ig
+PSBwb3NpeF9hY2xfdG9feGF0dHIoJmluaXRfdXNlcl9ucywgYWNsLCBidWZmZXIsIHNpemUpOwo+
+IC0JcG9zaXhfYWNsX3JlbGVhc2UoYWNsKTsKPiAtCj4gLQlyZXR1cm4gZXJyb3I7Cj4gLX0KPiAt
+Cj4gLXN0YXRpYyBpbnQgZjJmc194YXR0cl9zZXRfYWNsKHN0cnVjdCBkZW50cnkgKmRlbnRyeSwg
+Y29uc3QgY2hhciAqbmFtZSwKPiAtCQljb25zdCB2b2lkICp2YWx1ZSwgc2l6ZV90IHNpemUsIGlu
+dCBmbGFncywgaW50IHR5cGUpCj4gLXsKPiAtCXN0cnVjdCBmMmZzX3NiX2luZm8gKnNiaSA9IEYy
+RlNfU0IoZGVudHJ5LT5kX3NiKTsKPiAtCXN0cnVjdCBpbm9kZSAqaW5vZGUgPSBkZW50cnktPmRf
+aW5vZGU7Cj4gLQlzdHJ1Y3QgcG9zaXhfYWNsICphY2wgPSBOVUxMOwo+IC0JaW50IGVycm9yOwo+
+IC0KPiAtCWlmIChzdHJjbXAobmFtZSwgIiIpICE9IDApCj4gLQkJcmV0dXJuIC1FSU5WQUw7Cj4g
+LQlpZiAoIXRlc3Rfb3B0KHNiaSwgUE9TSVhfQUNMKSkKPiAtCQlyZXR1cm4gLUVPUE5PVFNVUFA7
+Cj4gLQlpZiAoIWlub2RlX293bmVyX29yX2NhcGFibGUoaW5vZGUpKQo+IC0JCXJldHVybiAtRVBF
+Uk07Cj4gLQo+IC0JaWYgKHZhbHVlKSB7Cj4gLQkJYWNsID0gcG9zaXhfYWNsX2Zyb21feGF0dHIo
+JmluaXRfdXNlcl9ucywgdmFsdWUsIHNpemUpOwo+IC0JCWlmIChJU19FUlIoYWNsKSkKPiAtCQkJ
+cmV0dXJuIFBUUl9FUlIoYWNsKTsKPiAtCQlpZiAoYWNsKSB7Cj4gLQkJCWVycm9yID0gcG9zaXhf
+YWNsX3ZhbGlkKGFjbCk7Cj4gLQkJCWlmIChlcnJvcikKPiAtCQkJCWdvdG8gcmVsZWFzZV9hbmRf
+b3V0Owo+IC0JCX0KPiAtCX0gZWxzZSB7Cj4gLQkJYWNsID0gTlVMTDsKPiAtCX0KPiAtCj4gLQll
+cnJvciA9IGYyZnNfc2V0X2FjbChpbm9kZSwgdHlwZSwgYWNsLCBOVUxMKTsKPiAtCj4gLXJlbGVh
+c2VfYW5kX291dDoKPiArCWVycm9yID0gX19mMmZzX3NldF9hY2woaW5vZGUsIEFDTF9UWVBFX0FD
+Q0VTUywgYWNsLCBOVUxMKTsKPiAgCXBvc2l4X2FjbF9yZWxlYXNlKGFjbCk7Cj4gIAlyZXR1cm4g
+ZXJyb3I7Cj4gIH0KPiAtCj4gLWNvbnN0IHN0cnVjdCB4YXR0cl9oYW5kbGVyIGYyZnNfeGF0dHJf
+YWNsX2RlZmF1bHRfaGFuZGxlciA9IHsKPiAtCS5wcmVmaXggPSBQT1NJWF9BQ0xfWEFUVFJfREVG
+QVVMVCwKPiAtCS5mbGFncyA9IEFDTF9UWVBFX0RFRkFVTFQsCj4gLQkubGlzdCA9IGYyZnNfeGF0
+dHJfbGlzdF9hY2wsCj4gLQkuZ2V0ID0gZjJmc194YXR0cl9nZXRfYWNsLAo+IC0JLnNldCA9IGYy
+ZnNfeGF0dHJfc2V0X2FjbCwKPiAtfTsKPiAtCj4gLWNvbnN0IHN0cnVjdCB4YXR0cl9oYW5kbGVy
+IGYyZnNfeGF0dHJfYWNsX2FjY2Vzc19oYW5kbGVyID0gewo+IC0JLnByZWZpeCA9IFBPU0lYX0FD
+TF9YQVRUUl9BQ0NFU1MsCj4gLQkuZmxhZ3MgPSBBQ0xfVFlQRV9BQ0NFU1MsCj4gLQkubGlzdCA9
+IGYyZnNfeGF0dHJfbGlzdF9hY2wsCj4gLQkuZ2V0ID0gZjJmc194YXR0cl9nZXRfYWNsLAo+IC0J
+LnNldCA9IGYyZnNfeGF0dHJfc2V0X2FjbCwKPiAtfTsKPiBkaWZmIC0tZ2l0IGEvZnMvZjJmcy9h
+Y2wuaCBiL2ZzL2YyZnMvYWNsLmgKPiBpbmRleCA0OTYzMzEzLi4yYWYzMWZlIDEwMDY0NAo+IC0t
+LSBhL2ZzL2YyZnMvYWNsLmgKPiArKysgYi9mcy9mMmZzL2FjbC5oCj4gQEAgLTM3LDYgKzM3LDcg
+QEAgc3RydWN0IGYyZnNfYWNsX2hlYWRlciB7Cj4gICNpZmRlZiBDT05GSUdfRjJGU19GU19QT1NJ
+WF9BQ0wKPiAgCj4gIGV4dGVybiBzdHJ1Y3QgcG9zaXhfYWNsICpmMmZzX2dldF9hY2woc3RydWN0
+IGlub2RlICosIGludCk7Cj4gK2V4dGVybiBpbnQgZjJmc19zZXRfYWNsKHN0cnVjdCBpbm9kZSAq
+aW5vZGUsIHN0cnVjdCBwb3NpeF9hY2wgKmFjbCwgaW50IHR5cGUpOwo+ICBleHRlcm4gaW50IGYy
+ZnNfYWNsX2NobW9kKHN0cnVjdCBpbm9kZSAqKTsKPiAgZXh0ZXJuIGludCBmMmZzX2luaXRfYWNs
+KHN0cnVjdCBpbm9kZSAqLCBzdHJ1Y3QgaW5vZGUgKiwgc3RydWN0IHBhZ2UgKik7Cj4gICNlbHNl
+Cj4gZGlmZiAtLWdpdCBhL2ZzL2YyZnMvZmlsZS5jIGIvZnMvZjJmcy9maWxlLmMKPiBpbmRleCA3
+ZDcxNGY0Li4xM2VmZjYwIDEwMDY0NAo+IC0tLSBhL2ZzL2YyZnMvZmlsZS5jCj4gKysrIGIvZnMv
+ZjJmcy9maWxlLmMKPiBAQCAtNDA1LDYgKzQwNSw3IEBAIGNvbnN0IHN0cnVjdCBpbm9kZV9vcGVy
+YXRpb25zIGYyZnNfZmlsZV9pbm9kZV9vcGVyYXRpb25zID0gewo+ICAJLmdldGF0dHIJPSBmMmZz
+X2dldGF0dHIsCj4gIAkuc2V0YXR0cgk9IGYyZnNfc2V0YXR0ciwKPiAgCS5nZXRfYWNsCT0gZjJm
+c19nZXRfYWNsLAo+ICsJLnNldF9hY2wJPSBmMmZzX3NldF9hY2wsCj4gICNpZmRlZiBDT05GSUdf
+RjJGU19GU19YQVRUUgo+ICAJLnNldHhhdHRyCT0gZ2VuZXJpY19zZXR4YXR0ciwKPiAgCS5nZXR4
+YXR0cgk9IGdlbmVyaWNfZ2V0eGF0dHIsCj4gZGlmZiAtLWdpdCBhL2ZzL2YyZnMvbmFtZWkuYyBi
+L2ZzL2YyZnMvbmFtZWkuYwo+IGluZGV4IDU3NWFkYWMuLjU4NDZlZWIgMTAwNjQ0Cj4gLS0tIGEv
+ZnMvZjJmcy9uYW1laS5jCj4gKysrIGIvZnMvZjJmcy9uYW1laS5jCj4gQEAgLTQ5Niw2ICs0OTYs
+NyBAQCBjb25zdCBzdHJ1Y3QgaW5vZGVfb3BlcmF0aW9ucyBmMmZzX2Rpcl9pbm9kZV9vcGVyYXRp
+b25zID0gewo+ICAJLmdldGF0dHIJPSBmMmZzX2dldGF0dHIsCj4gIAkuc2V0YXR0cgk9IGYyZnNf
+c2V0YXR0ciwKPiAgCS5nZXRfYWNsCT0gZjJmc19nZXRfYWNsLAo+ICsJLnNldF9hY2wJPSBmMmZz
+X3NldF9hY2wsCj4gICNpZmRlZiBDT05GSUdfRjJGU19GU19YQVRUUgo+ICAJLnNldHhhdHRyCT0g
+Z2VuZXJpY19zZXR4YXR0ciwKPiAgCS5nZXR4YXR0cgk9IGdlbmVyaWNfZ2V0eGF0dHIsCj4gQEAg
+LTUyMiw2ICs1MjMsNyBAQCBjb25zdCBzdHJ1Y3QgaW5vZGVfb3BlcmF0aW9ucyBmMmZzX3NwZWNp
+YWxfaW5vZGVfb3BlcmF0aW9ucyA9IHsKPiAgCS5nZXRhdHRyCT0gZjJmc19nZXRhdHRyLAo+ICAJ
+LnNldGF0dHIgICAgICAgID0gZjJmc19zZXRhdHRyLAo+ICAJLmdldF9hY2wJPSBmMmZzX2dldF9h
+Y2wsCj4gKwkuc2V0X2FjbAk9IGYyZnNfc2V0X2FjbCwKPiAgI2lmZGVmIENPTkZJR19GMkZTX0ZT
+X1hBVFRSCj4gIAkuc2V0eGF0dHIgICAgICAgPSBnZW5lcmljX3NldHhhdHRyLAo+ICAJLmdldHhh
+dHRyICAgICAgID0gZ2VuZXJpY19nZXR4YXR0ciwKPiBkaWZmIC0tZ2l0IGEvZnMvZjJmcy94YXR0
+ci5jIGIvZnMvZjJmcy94YXR0ci5jCj4gaW5kZXggYWE3YTNmMS4uZTJiOTI5OSAxMDA2NDQKPiAt
+LS0gYS9mcy9mMmZzL3hhdHRyLmMKPiArKysgYi9mcy9mMmZzL3hhdHRyLmMKPiBAQCAtMjEsNiAr
+MjEsNyBAQAo+ICAjaW5jbHVkZSA8bGludXgvcndzZW0uaD4KPiAgI2luY2x1ZGUgPGxpbnV4L2Yy
+ZnNfZnMuaD4KPiAgI2luY2x1ZGUgPGxpbnV4L3NlY3VyaXR5Lmg+Cj4gKyNpbmNsdWRlIDxsaW51
+eC9wb3NpeF9hY2xfeGF0dHIuaD4KPiAgI2luY2x1ZGUgImYyZnMuaCIKPiAgI2luY2x1ZGUgInhh
+dHRyLmgiCj4gIAo+IEBAIC0yMTYsOCArMjE3LDggQEAgY29uc3Qgc3RydWN0IHhhdHRyX2hhbmRs
+ZXIgZjJmc194YXR0cl9zZWN1cml0eV9oYW5kbGVyID0gewo+ICBzdGF0aWMgY29uc3Qgc3RydWN0
+IHhhdHRyX2hhbmRsZXIgKmYyZnNfeGF0dHJfaGFuZGxlcl9tYXBbXSA9IHsKPiAgCVtGMkZTX1hB
+VFRSX0lOREVYX1VTRVJdID0gJmYyZnNfeGF0dHJfdXNlcl9oYW5kbGVyLAo+ICAjaWZkZWYgQ09O
+RklHX0YyRlNfRlNfUE9TSVhfQUNMCj4gLQlbRjJGU19YQVRUUl9JTkRFWF9QT1NJWF9BQ0xfQUND
+RVNTXSA9ICZmMmZzX3hhdHRyX2FjbF9hY2Nlc3NfaGFuZGxlciwKPiAtCVtGMkZTX1hBVFRSX0lO
+REVYX1BPU0lYX0FDTF9ERUZBVUxUXSA9ICZmMmZzX3hhdHRyX2FjbF9kZWZhdWx0X2hhbmRsZXIs
+Cj4gKwlbRjJGU19YQVRUUl9JTkRFWF9QT1NJWF9BQ0xfQUNDRVNTXSA9ICZwb3NpeF9hY2xfYWNj
+ZXNzX3hhdHRyX2hhbmRsZXIsCj4gKwlbRjJGU19YQVRUUl9JTkRFWF9QT1NJWF9BQ0xfREVGQVVM
+VF0gPSAmcG9zaXhfYWNsX2RlZmF1bHRfeGF0dHJfaGFuZGxlciwKPiAgI2VuZGlmCj4gIAlbRjJG
+U19YQVRUUl9JTkRFWF9UUlVTVEVEXSA9ICZmMmZzX3hhdHRyX3RydXN0ZWRfaGFuZGxlciwKPiAg
+I2lmZGVmIENPTkZJR19GMkZTX0ZTX1NFQ1VSSVRZCj4gQEAgLTIyOSw4ICsyMzAsOCBAQCBzdGF0
+aWMgY29uc3Qgc3RydWN0IHhhdHRyX2hhbmRsZXIgKmYyZnNfeGF0dHJfaGFuZGxlcl9tYXBbXSA9
+IHsKPiAgY29uc3Qgc3RydWN0IHhhdHRyX2hhbmRsZXIgKmYyZnNfeGF0dHJfaGFuZGxlcnNbXSA9
+IHsKPiAgCSZmMmZzX3hhdHRyX3VzZXJfaGFuZGxlciwKPiAgI2lmZGVmIENPTkZJR19GMkZTX0ZT
+X1BPU0lYX0FDTAo+IC0JJmYyZnNfeGF0dHJfYWNsX2FjY2Vzc19oYW5kbGVyLAo+IC0JJmYyZnNf
+eGF0dHJfYWNsX2RlZmF1bHRfaGFuZGxlciwKPiArCSZwb3NpeF9hY2xfYWNjZXNzX3hhdHRyX2hh
+bmRsZXIsCj4gKwkmcG9zaXhfYWNsX2RlZmF1bHRfeGF0dHJfaGFuZGxlciwKPiAgI2VuZGlmCj4g
+IAkmZjJmc194YXR0cl90cnVzdGVkX2hhbmRsZXIsCj4gICNpZmRlZiBDT05GSUdfRjJGU19GU19T
+RUNVUklUWQo+IGRpZmYgLS1naXQgYS9mcy9mMmZzL3hhdHRyLmggYi9mcy9mMmZzL3hhdHRyLmgK
+PiBpbmRleCAwMmEwOGZiLi5iMjFkOWViIDEwMDY0NAo+IC0tLSBhL2ZzL2YyZnMveGF0dHIuaAo+
+ICsrKyBiL2ZzL2YyZnMveGF0dHIuaAo+IEBAIC0xMDgsOCArMTA4LDYgQEAgc3RydWN0IGYyZnNf
+eGF0dHJfZW50cnkgewo+ICAjaWZkZWYgQ09ORklHX0YyRlNfRlNfWEFUVFIKPiAgZXh0ZXJuIGNv
+bnN0IHN0cnVjdCB4YXR0cl9oYW5kbGVyIGYyZnNfeGF0dHJfdXNlcl9oYW5kbGVyOwo+ICBleHRl
+cm4gY29uc3Qgc3RydWN0IHhhdHRyX2hhbmRsZXIgZjJmc194YXR0cl90cnVzdGVkX2hhbmRsZXI7
+Cj4gLWV4dGVybiBjb25zdCBzdHJ1Y3QgeGF0dHJfaGFuZGxlciBmMmZzX3hhdHRyX2FjbF9hY2Nl
+c3NfaGFuZGxlcjsKPiAtZXh0ZXJuIGNvbnN0IHN0cnVjdCB4YXR0cl9oYW5kbGVyIGYyZnNfeGF0
+dHJfYWNsX2RlZmF1bHRfaGFuZGxlcjsKPiAgZXh0ZXJuIGNvbnN0IHN0cnVjdCB4YXR0cl9oYW5k
+bGVyIGYyZnNfeGF0dHJfYWR2aXNlX2hhbmRsZXI7Cj4gIGV4dGVybiBjb25zdCBzdHJ1Y3QgeGF0
+dHJfaGFuZGxlciBmMmZzX3hhdHRyX3NlY3VyaXR5X2hhbmRsZXI7Cj4gIAoKLS0gCkphZWdldWsg
+S2ltClNhbXN1bmcKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
