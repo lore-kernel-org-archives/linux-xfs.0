@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 101FA29E09
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 23:52:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D41098F8050
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 21:52:02 -0800 (PST)
-Message-ID: <52A2B75C.3040803@oracle.com>
-Date: Sat, 07 Dec 2013 13:51:24 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9B63D7F78
+	for <xfs@oss.sgi.com>; Sat,  7 Dec 2013 05:12:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 34908AC008
+	for <xfs@oss.sgi.com>; Sat,  7 Dec 2013 03:12:55 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id x4h1H2MWnkpdfzHK
+	for <xfs@oss.sgi.com>; Sat, 07 Dec 2013 03:12:44 -0800 (PST)
+Message-ID: <52A302A9.9050509@hardwarefreak.com>
+Date: Sat, 07 Dec 2013 05:12:41 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/3] xfs: fix infinite loop by detaching the
-	group/project hints from user dquot
-References: <5294A469.1060000@oracle.com>	<20131128104336.GE26927@infradead.org>	<52986001.9040101@oracle.com>
-	<20131206210137.GT1935@sgi.com>
-In-Reply-To: <20131206210137.GT1935@sgi.com>
+Subject: Re: Fwd: Sudden File System Corruption
+References: <CAPd9ww_qT9J_Rt04g7+OApoBeggNOyWNwD+57DiDTuUvz-O-0g@mail.gmail.com>
+	<52A03513.6030408@hardwarefreak.com>
+	<CAPd9ww9hsOFK6pxqRY-YtLLAkkJHCuSi1BaM4n9=2XTjNVAn2Q@mail.gmail.com>
+	<CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
+	<52A191BA.20800@hardwarefreak.com>
+	<CAPd9ww8+W2VX2HAfxEkVN5mL1a_+=HDAStf1126WSE33Vb=VsQ@mail.gmail.com>
+In-Reply-To: <CAPd9ww8+W2VX2HAfxEkVN5mL1a_+=HDAStf1126WSE33Vb=VsQ@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,280 +33,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>
+To: Mike Dacre <mike.dacre@gmail.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Ben,
+On 12/6/2013 4:14 PM, Mike Dacre wrote:
+> On Fri, Dec 6, 2013 at 12:58 AM, Stan Hoeppner <stan@hardwarefreak.com>wrote:
+...
+> UUID=a58bf1db-0d64-4a2d-8e03-aad78dbebcbe /science                xfs
+> defaults,inode64          1 0
 
-On 12/07 2013 05:01 AM, Ben Myers wrote:
-> Hey Jeff,
+Your RAID card has persistent write cache (BBWC) and we know it's
+enabled from tool your output.  By default XFS assumes BBWC is not
+present, and uses write barriers to ensure order/consistency.   Using
+barriers on top of BBWC will be detrimental to write performance, for a
+couple of reasons:
+
+1.  Prevents the controller from optimizing writeback patterns
+2.  A portion, or all of, the write cache is frequently flushed
+
+Add 'nobarrier' to your mount options to avoid this problem.  It should
+speed up many, if not all, write operations considerably, which will in
+turn decrease seek contention amongst jobs.  Currently your write cache
+isn't working nearly as well as it should, and in fact could be
+operating horribly.
+
+> On the slave nodes, I managed to reduce the demand on the disks by adding
+> the actimeo=60 mount option.  Prior to doing this I would sometimes see the
+> disk being negatively affected by enormous numbers of getattr requests.
+>  Here is the fstab mount on the nodes:
 > 
-> On Fri, Nov 29, 2013 at 05:36:01PM +0800, Jeff Liu wrote:
->> On 11/28 2013 18:43 PM, Christoph Hellwig wrote:
->>> On Tue, Nov 26, 2013 at 09:38:49PM +0800, Jeff Liu wrote:
->>>> +	if (flags & XFS_QMOPT_UQUOTA)
->>>> +		return xfs_qm_dqpurge(dqp, NULL);
->>>
->>> To me it doesn't make any sense to overload this function for the user
->>> quotas that don't have hints.
->> To me it would like a silly compromise.
->>>
->>> I'd suggest dropping this hunk and keeping a separate walk for
->>> releasing the uquots.
->> I thought this over and yup, that is an overload if neither group nor project
->> are enabled, or we don't want to turn user quota off.
->>
->> But even so, we currently also have overloads by checking group/project hints
->> before releasing any type of quota in xfs_qm_purge().  In this point, this fix
->> can reduce a bit overloads by moving those checkups to xfs_qm_purge_hints() if
->> we want to turn group/project quotas off.
->>
->> If we considering to drop above hunk to release user quota separately, we finally
->> would have to walk through user quota to remove those hints again, i.e,
->>
->> /* Remove group/project hints from user dquot */
->> STATIC int
->> xfs_qm_dqpurge_hints(
->> 	struct xfs_dquot        *dqp,
->> 	void                    *data)
->> {
->> 	uint                    flags = *((uint *)data);
->> 	struct xfs_dquot        *gdqp;
->> 	struct xfs_dquot        *pdqp;
->>
->> 	xfs_dqlock(dqp);
->> 	if (dqp->dq_flags & XFS_DQ_FREEING) {
->> 		xfs_dqunlock(dqp);
->> 		return EAGAIN;
->> 	}
->>
->> 	/* If this quota has a hint attached, prepare for releasing it now */
->>         gdqp = dqp->q_gdquot;
->> 	if (gdqp)
->> 		dqp->q_gdquot = NULL;
->>
->> 	pdqp = dqp->q_pdquot;
->> 	if (pdqp)
->> 		dqp->q_pdquot = NULL;
->>
->> 	xfs_dqunlock(dqp);
->>
->> 	if (gdqp)
->> 		xfs_qm_dqrele(gdqp);
->> 	if (pdqp)
->> 		xfs_qm_dqrele(pdqp);
->>
->> 	return 0;
->> }
->>
->> void
->> xfs_qm_dqpurge_all()
->> {
->> 	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, NULL);
->>
->> 	if (flags & XFS_QMOPT_UQUOTA)
->> 		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
->> 	if (flags & XFS_QMOPT_GQUOTA)
->> 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
->> 	if (flags & XFS_QMOPT_PQUOTA)
->> 		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
->> }
->>
->> Above code is what I can figured out as per your suggestions for now, but it
->> would introduce overheads for walking through user dquots to release hints
->> separately if we want to turn user quota off.
->>
->> Any thoughts?
+> 192.168.2.1:/science                      /science                nfs
+> defaults,vers=3,nofail,actimeo=60,bg,hard,intr,rw  0 0
+
+One minute attribute cache lifetime seems maybe a little high for a
+compute cluster.  But if you've had no ill effects and it squelched the
+getattr flood this is good.
+
+...
+> Correct, I am not consciously aligning the XFS to the RAID geometry, I
+> actually didn't know that was possible.
+
+XFS alignment is not something to worry about in this case.
+
+...
+>> So it's a small compute cluster using NFS over Infiniband for shared
+>> file access to a low performance RAID6 array.  The IO resource sharing
+>> is automatic.  But AFAIK there's no easy way to enforce IO quotas on
+>> users or processes, if at all.  You may simply not have sufficient IO to
+>> go around.  Let's ponder that.
 > 
-> I was gonna pull in the single walk version, but now I realize that it is still
-> under discussion.  I'm happy with either implementation, with maybe a slight
-> preference for a single user quota walk.  Can you and Christoph come to an
-> agreement?
-For now, I can not figure out a more optimized solution.  Well, I just realized
-I don't need to initialize both gdqp and pdqp to NULL at xfs_qm_dqpurge_hints()
-since they will be evaluated by dqp pointers dereference anyway.  As a minor fix,
-the revised version was shown as follows.
+> I have tried a few things to improve IO allocation.  BetterLinux have a
+> cgroup control suite that allow on-the-fly user-level IO adjustments,
+> however I found them to be quite cumbersome.
 
-Christoph, as I mentioned previously, keeping a separate walk to release the user
-dquots would also have overloads in some cases, would you happy to have this fix
-although it is not most optimized?
+This isn't going to work well because a tiny IO stream can seek the
+disks to death, such as a complex find command, ls -R, etc.  A single
+command such as these can generate thousands of seeks.  Shaping/limiting
+user IO won't affect this.
 
-Also, Ben, would you please pull in another fix below? It is independent to the
-current fix and it has already been reviewed by Christoph. :)
-[PATCH v2 1/3] xfs: fix assertion failure at xfs_setattr_nonsize
+...
+>> Looking at the math, you currently have approximately 14*150=2100
+>> seeks/sec capability with 14x 7.2k RPM data spindles.  That's less than
+>> 100 seeks/sec per compute node, i.e. each node is getting about 2/3rd of
+>> the performance of a single SATA disk from this array.  This simply
+>> isn't sufficient for servicing a 23 node cluster, unless all workloads
+>> are compute bound, and none IO/seek bound.  Given the overload/crash
+>> that brought you to our attention, I'd say some of your workloads are
+>> obviously IO/seek bound.  I'd say you probably need more/faster disks.
+>> Or you need to identify which jobs are IO/seek heavy and schedule them
+>> so they're not running concurrently.
+> 
+> Yes, this is a problem.  We sadly lack the resources to do much better than
+> this, we have recently been adding extra storage by just chaining together
+> USB3 drives with RAID and LVM... which is cumbersome and slow, but cheaper.
 
-Thanks,
--Jeff
+USB disk is generally a recipe for disaster.  Plenty of horror stories
+on both this list and linux-raid regarding USB connected drives,
+enclosures, etc.  I pray you don't run into those problems.
 
-From: Jie Liu <jeff.liu@oracle.com>
+> My current solution is to be on the alert for high IO jobs, and to move
+> them to a specific torque queue that limits the number of concurrent jobs.
+>  This works, but I have not found a way to do it automatically.
+>  Thankfully, with a 12 member lab, it is actually not terribly complex to
+> handle, but I would definitely prefer a more comprehensive solution.  I
+> don't doubt that the huge IO and seek demands we put on these disks will
+> cause more problems in the future.
 
-xfs_quota(8) will hang up if trying to turn group/project quota off
-before the user quota is off, this could be 100% reproduced by:
-  # mount -ouquota,gquota /dev/sda7 /xfs
-  # mkdir /xfs/test
-  # xfs_quota -xc 'off -g' /xfs <-- hangs up
-  # echo w > /proc/sysrq-trigger
-  # dmesg
+Your LSI 9260 controller supports using SSDs for read/write flash cache.
+ LSI charges $279 for it.  It's called CacheCade Pro:
 
-  SysRq : Show Blocked State
-  task                        PC stack   pid father
-  xfs_quota       D 0000000000000000     0 27574   2551 0x00000000
-  [snip]
-  Call Trace:
-  [<ffffffff81aaa21d>] schedule+0xad/0xc0
-  [<ffffffff81aa327e>] schedule_timeout+0x35e/0x3c0
-  [<ffffffff8114b506>] ? mark_held_locks+0x176/0x1c0
-  [<ffffffff810ad6c0>] ? call_timer_fn+0x2c0/0x2c0
-  [<ffffffffa0c25380>] ? xfs_qm_shrink_count+0x30/0x30 [xfs]
-  [<ffffffff81aa3306>] schedule_timeout_uninterruptible+0x26/0x30
-  [<ffffffffa0c26155>] xfs_qm_dquot_walk+0x235/0x260 [xfs]
-  [<ffffffffa0c059d8>] ? xfs_perag_get+0x1d8/0x2d0 [xfs]
-  [<ffffffffa0c05805>] ? xfs_perag_get+0x5/0x2d0 [xfs]
-  [<ffffffffa0b7707e>] ? xfs_inode_ag_iterator+0xae/0xf0 [xfs]
-  [<ffffffffa0c22280>] ? xfs_trans_free_dqinfo+0x50/0x50 [xfs]
-  [<ffffffffa0b7709f>] ? xfs_inode_ag_iterator+0xcf/0xf0 [xfs]
-  [<ffffffffa0c261e6>] xfs_qm_dqpurge_all+0x66/0xb0 [xfs]
-  [<ffffffffa0c2497a>] xfs_qm_scall_quotaoff+0x20a/0x5f0 [xfs]
-  [<ffffffffa0c2b8f6>] xfs_fs_set_xstate+0x136/0x180 [xfs]
-  [<ffffffff8136cf7a>] do_quotactl+0x53a/0x6b0
-  [<ffffffff812fba4b>] ? iput+0x5b/0x90
-  [<ffffffff8136d257>] SyS_quotactl+0x167/0x1d0
-  [<ffffffff814cf2ee>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-  [<ffffffff81abcd19>] system_call_fastpath+0x16/0x1b
+http://www.lsi.com/products/raid-controllers/pages/megaraid-cachecade-pro-software.aspx.
 
-It's fine if we turn user quota off at first, then turn off other
-kind of quotas if they are enabled since the group/project dquot
-refcount is decreased to zero once the user quota if off. Otherwise,
-those dquots refcount is non-zero due to the user dquot might refer
-to them as hint(s).  Hence, above operation cause an infinite loop
-at xfs_qm_dquot_walk() while trying to purge dquot cache.
 
-This problem has been around since Linux 3.4, it was introduced by:
-  [ b84a3a9675 xfs: remove the per-filesystem list of dquots ]
+Connect two good quality fast SSDs to the controller, such as:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16820147192
 
-Originally we will release the group dquot pointers because the user
-dquots maybe carrying around as a hint via xfs_qm_detach_gdquots().
-However, with above change, there is no such work to be done before
-purging group/project dquot cache.
+Two SSDs, mirrored, to prevent cached writes from being lost if a single
+SSD fails.  You now have a ~90K IOPS, 128GB, 500MB/s low latency
+read/write cache in front of your RAID6 array.  This should go a long
+way toward eliminating your bottlenecks.  You can accomplish this for
+~$550 assuming you have two backplane drive slots free for the SSDs.  If
+not, you add one of these for $279:
 
-In order to solve this problem, this patch introduces a special routine
-xfs_qm_dqpurge_hints(), and it would release the group/project dquot
-pointers the user dquots maybe carrying around as a hint, and then it
-will proceed to purge the user dquot cache if requested.
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816117207
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_qm.c | 71 ++++++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 50 insertions(+), 21 deletions(-)
+This is an Intel 24 port SAS expander, the same device as in your drive
+backplane.  SAS expanders can be daisy chained many deep.  You can drop
+it into a PCIe x4 or greater slot from which it only draws power--no
+data pins are connected.  Or if no slots are available you can mount it
+to the side wall of your rack server chassis and power it via the 4 pin
+Molex plug.  This requires a drill, brass or plastic standoffs, and DIY
+skills.  I use this option as it provides a solid mount for un/plugging
+the SAS cables, and being side mounted neither it nor the cables
+interfere with airflow.
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 14a4996..424ef73 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -134,8 +134,6 @@ xfs_qm_dqpurge(
- {
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
--	struct xfs_dquot	*gdqp = NULL;
--	struct xfs_dquot	*pdqp = NULL;
- 
- 	xfs_dqlock(dqp);
- 	if ((dqp->dq_flags & XFS_DQ_FREEING) || dqp->q_nrefs != 0) {
-@@ -143,21 +141,6 @@ xfs_qm_dqpurge(
- 		return EAGAIN;
- 	}
- 
--	/*
--	 * If this quota has a hint attached, prepare for releasing it now.
--	 */
--	gdqp = dqp->q_gdquot;
--	if (gdqp) {
--		xfs_dqlock(gdqp);
--		dqp->q_gdquot = NULL;
--	}
--
--	pdqp = dqp->q_pdquot;
--	if (pdqp) {
--		xfs_dqlock(pdqp);
--		dqp->q_pdquot = NULL;
--	}
--
- 	dqp->dq_flags |= XFS_DQ_FREEING;
- 
- 	xfs_dqflock(dqp);
-@@ -206,11 +189,47 @@ xfs_qm_dqpurge(
- 	XFS_STATS_DEC(xs_qm_dquot_unused);
- 
- 	xfs_qm_dqdestroy(dqp);
-+	return 0;
-+}
-+
-+/*
-+ * Release the group or project dquot pointers the user dquots maybe carrying
-+ * around as a hint, and proceed to purge the user dquot cache if requested.
-+*/
-+STATIC int
-+xfs_qm_dqpurge_hints(
-+	struct xfs_dquot	*dqp,
-+	void			*data)
-+{
-+	uint			flags = *((uint *)data);
-+	struct xfs_dquot	*gdqp;
-+	struct xfs_dquot	*pdqp;
- 
-+	xfs_dqlock(dqp);
-+	if (dqp->dq_flags & XFS_DQ_FREEING) {
-+		xfs_dqunlock(dqp);
-+		return EAGAIN;
-+	}
-+
-+	/* If this quota has a hint attached, prepare for releasing it now */
-+	gdqp = dqp->q_gdquot;
- 	if (gdqp)
--		xfs_qm_dqput(gdqp);
-+		dqp->q_gdquot = NULL;
-+
-+	pdqp = dqp->q_pdquot;
- 	if (pdqp)
--		xfs_qm_dqput(pdqp);
-+		dqp->q_pdquot = NULL;
-+
-+	xfs_dqunlock(dqp);
-+
-+	if (gdqp)
-+		xfs_qm_dqrele(gdqp);
-+	if (pdqp)
-+		xfs_qm_dqrele(pdqp);
-+
-+	if (flags & XFS_QMOPT_UQUOTA)
-+		return xfs_qm_dqpurge(dqp, NULL);
-+
- 	return 0;
- }
- 
-@@ -222,8 +241,18 @@ xfs_qm_dqpurge_all(
- 	struct xfs_mount	*mp,
- 	uint			flags)
- {
--	if (flags & XFS_QMOPT_UQUOTA)
--		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
-+	/*
-+	 * We have to release group/project dquot hint(s) from the user dquot
-+	 * at first if they are there, otherwise we would run into an infinite
-+	 * loop while walking through radix tree to purge other type of dquots
-+	 * since their refcount is not zero if the user dquot refers to them
-+	 * as hint.
-+	 *
-+	 * Call the special xfs_qm_dqpurge_hints() will end up go through the
-+	 * general xfs_qm_dqpurge() against user dquot cache if requested.
-+	 */
-+	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, &flags);
-+
- 	if (flags & XFS_QMOPT_GQUOTA)
- 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
- 	if (flags & XFS_QMOPT_PQUOTA)
--- 1.8.3.2
+You'll plug the 9260-4i into one port of the Intel expander.  You'll
+need another SFF-8087 cable for this:
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16812652015
+
+You will plug your drive backplane cable into another of the 6 SFF-8087
+ports on the Intel.  Into a 3rd port you will plug an SFF-8087 breakout
+cable to give you 4 individual drive connections.  You will plug two of
+these into your two SSDs.
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816116097
+
+If you have no internal 2.5/3.5" drive brackets free for the SSDs and
+you'd prefer not to drill (more) holes in the chassis to directly mount
+them or a new cage for them, simply use some heavy duty Velcro squares,
+2" is fine.
+
+Worst case scenario you're looking at less than $1000 to cure your IO
+bottlenecks, or at the very least mitigate them to a minor annoyance
+instead of a show stopper.  And if you free up some money for some
+external JBODs and drives in the future, you can route 2 of the unused
+SFF-8087 connectors of the Intel Expander out the back panel to attach
+expander JBOD enclosures, using one of these and 2 more of the 8087
+cables up above:
+
+http://www.ebay.com/itm/8-Port-SAS-SATA-6G-Dual-SFF-8088-mini-SAS-to-SFF-8087-PCIe-Adapter-w-LP-Bracket-/390508767029
+
+I'm sure someone makes a 3 port model but 10 minutes of searching didn't
+turn one up.  These panel adapters are application specific.  Most are
+made to be mounted in a disk enclosure where the HBA/RAID card is on the
+outside of the chassis, on the other end of the 8088 cable.  This two
+port model is designed to be inside a server chassis, where the HBA
+connects to the internal 8087 ports.  Think Ethernet x-over cable.
+
+The 9260-4i supports up to 128 drives.  This Intel expander and a panel
+connector allow you to get there with external JBODs.  The only caveat
+being that you're limited to "only" 4.8 GB/s to/from all the disks.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
