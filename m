@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3A77329E09
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 21:52:05 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 101FA29E09
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 23:52:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 20147304032
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 19:52:02 -0800 (PST)
-Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
-	[209.85.192.172]) by cuda.sgi.com with ESMTP id
-	U6dymFBtPAYSsCix (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Dec 2013 19:52:00 -0800 (PST)
-Received: by mail-pd0-f172.google.com with SMTP id g10so2051079pdj.17
-	for <xfs@oss.sgi.com>; Fri, 06 Dec 2013 19:51:59 -0800 (PST)
-Date: Sat, 7 Dec 2013 11:54:59 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: [PATCH v2] xfstests: add a new test case to test i_size updated
-	properly under dio
-Message-ID: <20131207035459.GA13892@gmail.com>
-References: <1385625944-21915-1-git-send-email-wenqing.lz@taobao.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D41098F8050
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 21:52:02 -0800 (PST)
+Message-ID: <52A2B75C.3040803@oracle.com>
+Date: Sat, 07 Dec 2013 13:51:24 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1385625944-21915-1-git-send-email-wenqing.lz@taobao.com>
+Subject: Re: [PATCH v2 2/3] xfs: fix infinite loop by detaching the
+	group/project hints from user dquot
+References: <5294A469.1060000@oracle.com>	<20131128104336.GE26927@infradead.org>	<52986001.9040101@oracle.com>
+	<20131206210137.GT1935@sgi.com>
+In-Reply-To: <20131206210137.GT1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,356 +26,280 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Rich Johnston <rjohnston@sgi.com>, Zheng Liu <wenqing.lz@taobao.com>
+To: Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Nov 28, 2013 at 04:05:44PM +0800, Zheng Liu wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
-> 
-> In this commit a new test case is added to test that i_size is updated
-> properly under dio reads/writes.  We add a program in /src dir, which
-> has a writer to issue some append dio writes.  Meanwhile it has a
-> reader in this test do some dio reads.  As we expect, reader should read
-> nothing or data with 'a'.  But it might read some data with '0'.
-> 
-> This program is used to simulate binary log operations of database
-> application.  In these applications it implements an master/slave
-> synchronziation for database.
-> 
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Rich Johnston <rjohnston@sgi.com>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Hi Ben,
 
-Any comment?
+On 12/07 2013 05:01 AM, Ben Myers wrote:
+> Hey Jeff,
+> 
+> On Fri, Nov 29, 2013 at 05:36:01PM +0800, Jeff Liu wrote:
+>> On 11/28 2013 18:43 PM, Christoph Hellwig wrote:
+>>> On Tue, Nov 26, 2013 at 09:38:49PM +0800, Jeff Liu wrote:
+>>>> +	if (flags & XFS_QMOPT_UQUOTA)
+>>>> +		return xfs_qm_dqpurge(dqp, NULL);
+>>>
+>>> To me it doesn't make any sense to overload this function for the user
+>>> quotas that don't have hints.
+>> To me it would like a silly compromise.
+>>>
+>>> I'd suggest dropping this hunk and keeping a separate walk for
+>>> releasing the uquots.
+>> I thought this over and yup, that is an overload if neither group nor project
+>> are enabled, or we don't want to turn user quota off.
+>>
+>> But even so, we currently also have overloads by checking group/project hints
+>> before releasing any type of quota in xfs_qm_purge().  In this point, this fix
+>> can reduce a bit overloads by moving those checkups to xfs_qm_purge_hints() if
+>> we want to turn group/project quotas off.
+>>
+>> If we considering to drop above hunk to release user quota separately, we finally
+>> would have to walk through user quota to remove those hints again, i.e,
+>>
+>> /* Remove group/project hints from user dquot */
+>> STATIC int
+>> xfs_qm_dqpurge_hints(
+>> 	struct xfs_dquot        *dqp,
+>> 	void                    *data)
+>> {
+>> 	uint                    flags = *((uint *)data);
+>> 	struct xfs_dquot        *gdqp;
+>> 	struct xfs_dquot        *pdqp;
+>>
+>> 	xfs_dqlock(dqp);
+>> 	if (dqp->dq_flags & XFS_DQ_FREEING) {
+>> 		xfs_dqunlock(dqp);
+>> 		return EAGAIN;
+>> 	}
+>>
+>> 	/* If this quota has a hint attached, prepare for releasing it now */
+>>         gdqp = dqp->q_gdquot;
+>> 	if (gdqp)
+>> 		dqp->q_gdquot = NULL;
+>>
+>> 	pdqp = dqp->q_pdquot;
+>> 	if (pdqp)
+>> 		dqp->q_pdquot = NULL;
+>>
+>> 	xfs_dqunlock(dqp);
+>>
+>> 	if (gdqp)
+>> 		xfs_qm_dqrele(gdqp);
+>> 	if (pdqp)
+>> 		xfs_qm_dqrele(pdqp);
+>>
+>> 	return 0;
+>> }
+>>
+>> void
+>> xfs_qm_dqpurge_all()
+>> {
+>> 	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, NULL);
+>>
+>> 	if (flags & XFS_QMOPT_UQUOTA)
+>> 		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
+>> 	if (flags & XFS_QMOPT_GQUOTA)
+>> 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
+>> 	if (flags & XFS_QMOPT_PQUOTA)
+>> 		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
+>> }
+>>
+>> Above code is what I can figured out as per your suggestions for now, but it
+>> would introduce overheads for walking through user dquots to release hints
+>> separately if we want to turn user quota off.
+>>
+>> Any thoughts?
+> 
+> I was gonna pull in the single walk version, but now I realize that it is still
+> under discussion.  I'm happy with either implementation, with maybe a slight
+> preference for a single user quota walk.  Can you and Christoph come to an
+> agreement?
+For now, I can not figure out a more optimized solution.  Well, I just realized
+I don't need to initialize both gdqp and pdqp to NULL at xfs_qm_dqpurge_hints()
+since they will be evaluated by dqp pointers dereference anyway.  As a minor fix,
+the revised version was shown as follows.
+
+Christoph, as I mentioned previously, keeping a separate walk to release the user
+dquots would also have overloads in some cases, would you happy to have this fix
+although it is not most optimized?
+
+Also, Ben, would you please pull in another fix below? It is independent to the
+current fix and it has already been reviewed by Christoph. :)
+[PATCH v2 1/3] xfs: fix assertion failure at xfs_setattr_nonsize
 
 Thanks,
-                                                - Zheng
+-Jeff
 
-> ---
-> changelog v2:
->  * add '-lpthread' into LLDLIBS
-> 
->  aclocal.m4            |    1 +
->  configure.ac          |    1 +
->  include/builddefs.in  |    1 +
->  src/Makefile          |    4 +-
->  src/diotest.c         |  166 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/321     |   56 +++++++++++++++++
->  tests/generic/321.out |    1 +
->  tests/generic/group   |    1 +
->  8 files changed, 229 insertions(+), 2 deletions(-)
->  create mode 100644 src/diotest.c
->  create mode 100755 tests/generic/321
->  create mode 100644 tests/generic/321.out
-> 
-> diff --git a/aclocal.m4 b/aclocal.m4
-> index f3412e1..89bb816 100644
-> --- a/aclocal.m4
-> +++ b/aclocal.m4
-> @@ -44,6 +44,7 @@ m4_include([m4/package_attrdev.m4])
->  m4_include([m4/package_dmapidev.m4])
->  m4_include([m4/package_gdbmdev.m4])
->  m4_include([m4/package_globals.m4])
-> +m4_include([m4/package_pthread.m4])
->  m4_include([m4/package_ssldev.m4])
->  m4_include([m4/package_utilies.m4])
->  m4_include([m4/package_uuiddev.m4])
-> diff --git a/configure.ac b/configure.ac
-> index bd48fd9..5eba21a 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -62,6 +62,7 @@ in
->  		AC_PACKAGE_NEED_SYS_ACL_H
->  		AC_PACKAGE_NEED_ACL_LIBACL_H
->  		AC_PACKAGE_NEED_ACLINIT_LIBACL
-> +		AC_PACKAGE_NEED_PTHREADMUTEXINIT
->  
->  		AC_PACKAGE_WANT_GDBM
->  		AC_PACKAGE_WANT_AIO
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index 24f838f..d612ac1 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -23,6 +23,7 @@ LIBGDBM = @libgdbm@
->  LIBUUID = @libuuid@
->  LIBHANDLE = @libhdl@
->  LIBDM = @libdm@
-> +LIBPTHREAD = @libpthread@
->  LIBTEST = $(TOPDIR)/lib/libtest.la
->  
->  PKG_NAME        = @pkg_name@
-> diff --git a/src/Makefile b/src/Makefile
-> index 84c8297..f0fa9b9 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -18,11 +18,11 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
->  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
->  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
-> -	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
-> +	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec diotest
->  
->  SUBDIRS =
->  
-> -LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
-> +LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL) $(LIBPTHREAD)
->  
->  ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
->  LINUX_TARGETS += loggen
-> diff --git a/src/diotest.c b/src/diotest.c
-> new file mode 100644
-> index 0000000..7d2378f
-> --- /dev/null
-> +++ b/src/diotest.c
-> @@ -0,0 +1,166 @@
-> +/*
-> + * Copyright (c) 2013 Alibaba Group.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +/*
-> + * This is a normal case that we do some append dio writes and meanwhile
-> + * we do some dio reads.  Currently in vfs we don't ensure that i_size
-> + * is updated properly.  Hence the reader will read some data with '0'.
-> + * But we expect that the reader should read nothing or data with 'a'.
-> + */
-> +
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +
-> +#include <unistd.h>
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <fcntl.h>
-> +#include <errno.h>
-> +
-> +#include <pthread.h>
-> +
-> +static char *prog;
-> +
-> +struct writer_data {
-> +	int fd;
-> +	size_t blksize;
-> +	char *buf;
-> +};
-> +
-> +static void usage(void)
-> +{
-> +	fprintf(stderr, "usage: %s [FILE]\n", prog);
-> +}
-> +
-> +static void *writer(void *arg)
-> +{
-> +	struct writer_data *data = (struct writer_data *)arg;
-> +	int ret;
-> +
-> +	ret = write(data->fd, data->buf, data->blksize);
-> +	if (ret < 0)
-> +		fprintf(stderr, "write file failed: %s\n", strerror(errno));
-> +
-> +	return NULL;
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	pthread_t tid;
-> +	struct writer_data wdata;
-> +	size_t max_blocks = 128;		/* 128 */
-> +	size_t blksize = 1 * 1024 * 1024;	/* 1M */
-> +	char *rbuf = NULL, *wbuf = NULL;
-> +	int rfd = 0, wfd = 0;
-> +	int i, j;
-> +	int ret = 0;
-> +
-> +	prog = basename(argv[0]);
-> +
-> +	if (argc != 2) {
-> +		usage();
-> +		exit(1);
-> +	}
-> +
-> +	wfd = open(argv[1], O_CREAT|O_DIRECT|O_WRONLY|O_APPEND|O_TRUNC, S_IRWXU);
-> +	if (wfd < 0) {
-> +		fprintf(stderr, "failed to open write file: %s\n",
-> +			strerror(errno));
-> +		exit(1);
-> +	}
-> +
-> +	rfd = open(argv[1], O_DIRECT|O_RDONLY, S_IRWXU);
-> +	if (wfd < 0) {
-> +		fprintf(stderr, "failed to open read file: %s\n",
-> +			strerror(errno));
-> +		ret = 1;
-> +		goto err;
-> +	}
-> +
-> +	/*
-> +	 * We set 1024 as an alignment size for write buf.  Feel free to change
-> +	 * it with 4096.  But the problem is also hitted.
-> +	 */
-> +	if (posix_memalign((void **)&wbuf, 1024, blksize)) {
-> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
-> +		ret = 1;
-> +		goto err;
-> +	}
-> +
-> +	if (posix_memalign((void **)&rbuf, 4096, blksize)) {
-> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
-> +		ret = 1;
-> +		goto err;
-> +	}
-> +
-> +	memset(wbuf, 'a', blksize);
-> +	wdata.fd = wfd;
-> +	wdata.blksize = blksize;
-> +	wdata.buf = wbuf;
-> +
-> +	for (i = 0; i < max_blocks; i++) {
-> +		void *retval;
-> +
-> +		if (pthread_create(&tid, NULL, writer, &wdata)) {
-> +			fprintf(stderr, "create thread failed: %s\n",
-> +				strerror(errno));
-> +			ret = 1;
-> +			goto err;
-> +		}
-> +
-> +		memset(rbuf, 'b', blksize);
-> +		do {
-> +			ret = pread(rfd, rbuf, blksize, i * blksize);
-> +			if (ret < 0)
-> +				fprintf(stderr, "read file failed: %s\n",
-> +					strerror(errno));
-> +		} while (ret <= 0);
-> +
-> +		if (pthread_join(tid, &retval)) {
-> +			fprintf(stderr, " pthread join failed: %s\n",
-> +				strerror(errno));
-> +			ret = 1;
-> +			goto err;
-> +		}
-> +
-> +		if (ret >= 0) {
-> +			for (j = 0; j < ret; j ++) {
-> +				if (rbuf[j] != 'a') {
-> +					fprintf(stderr, "encounter an error: "
-> +						"offset %d content %c\n",
-> +						i, rbuf[j]);
-> +					ret = 1;
-> +					goto err;
-> +				}
-> +			}
-> +		}
-> +	}
-> +
-> +err:
-> +	if (rfd)
-> +		close(rfd);
-> +	if (wfd)
-> +		close(wfd);
-> +	if (rbuf)
-> +		free(rbuf);
-> +	if (wbuf)
-> +		free(wbuf);
-> +
-> +	return ret;
-> +}
-> diff --git a/tests/generic/321 b/tests/generic/321
-> new file mode 100755
-> index 0000000..372d23a
-> --- /dev/null
-> +++ b/tests/generic/321
-> @@ -0,0 +1,56 @@
-> +#! /bin/bash
-> +# FS QA Test No. 321
-> +#
-> +# Test i_size is updated properly under dio read/write
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.* $testfile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +
-> +testfile=$TEST_DIR/$seq.$$
-> +
-> +[ -x $here/src/diotest ] || _notrun "diotest not built"
-> +
-> +$here/src/diotest $testfile > $seqres.full 2>&1 ||
-> +	_fail "i_size isn't update properly!"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/321.out b/tests/generic/321.out
-> new file mode 100644
-> index 0000000..0cda9e4
-> --- /dev/null
-> +++ b/tests/generic/321.out
-> @@ -0,0 +1 @@
-> +QA output created by 321
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 40da6dc..0b86d9f 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -123,3 +123,4 @@
->  318 acl attr auto quick
->  319 acl auto quick
->  320 auto rw
-> +321 auto rw quick
-> -- 
-> 1.7.9.7
-> 
+From: Jie Liu <jeff.liu@oracle.com>
+
+xfs_quota(8) will hang up if trying to turn group/project quota off
+before the user quota is off, this could be 100% reproduced by:
+  # mount -ouquota,gquota /dev/sda7 /xfs
+  # mkdir /xfs/test
+  # xfs_quota -xc 'off -g' /xfs <-- hangs up
+  # echo w > /proc/sysrq-trigger
+  # dmesg
+
+  SysRq : Show Blocked State
+  task                        PC stack   pid father
+  xfs_quota       D 0000000000000000     0 27574   2551 0x00000000
+  [snip]
+  Call Trace:
+  [<ffffffff81aaa21d>] schedule+0xad/0xc0
+  [<ffffffff81aa327e>] schedule_timeout+0x35e/0x3c0
+  [<ffffffff8114b506>] ? mark_held_locks+0x176/0x1c0
+  [<ffffffff810ad6c0>] ? call_timer_fn+0x2c0/0x2c0
+  [<ffffffffa0c25380>] ? xfs_qm_shrink_count+0x30/0x30 [xfs]
+  [<ffffffff81aa3306>] schedule_timeout_uninterruptible+0x26/0x30
+  [<ffffffffa0c26155>] xfs_qm_dquot_walk+0x235/0x260 [xfs]
+  [<ffffffffa0c059d8>] ? xfs_perag_get+0x1d8/0x2d0 [xfs]
+  [<ffffffffa0c05805>] ? xfs_perag_get+0x5/0x2d0 [xfs]
+  [<ffffffffa0b7707e>] ? xfs_inode_ag_iterator+0xae/0xf0 [xfs]
+  [<ffffffffa0c22280>] ? xfs_trans_free_dqinfo+0x50/0x50 [xfs]
+  [<ffffffffa0b7709f>] ? xfs_inode_ag_iterator+0xcf/0xf0 [xfs]
+  [<ffffffffa0c261e6>] xfs_qm_dqpurge_all+0x66/0xb0 [xfs]
+  [<ffffffffa0c2497a>] xfs_qm_scall_quotaoff+0x20a/0x5f0 [xfs]
+  [<ffffffffa0c2b8f6>] xfs_fs_set_xstate+0x136/0x180 [xfs]
+  [<ffffffff8136cf7a>] do_quotactl+0x53a/0x6b0
+  [<ffffffff812fba4b>] ? iput+0x5b/0x90
+  [<ffffffff8136d257>] SyS_quotactl+0x167/0x1d0
+  [<ffffffff814cf2ee>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+  [<ffffffff81abcd19>] system_call_fastpath+0x16/0x1b
+
+It's fine if we turn user quota off at first, then turn off other
+kind of quotas if they are enabled since the group/project dquot
+refcount is decreased to zero once the user quota if off. Otherwise,
+those dquots refcount is non-zero due to the user dquot might refer
+to them as hint(s).  Hence, above operation cause an infinite loop
+at xfs_qm_dquot_walk() while trying to purge dquot cache.
+
+This problem has been around since Linux 3.4, it was introduced by:
+  [ b84a3a9675 xfs: remove the per-filesystem list of dquots ]
+
+Originally we will release the group dquot pointers because the user
+dquots maybe carrying around as a hint via xfs_qm_detach_gdquots().
+However, with above change, there is no such work to be done before
+purging group/project dquot cache.
+
+In order to solve this problem, this patch introduces a special routine
+xfs_qm_dqpurge_hints(), and it would release the group/project dquot
+pointers the user dquots maybe carrying around as a hint, and then it
+will proceed to purge the user dquot cache if requested.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ fs/xfs/xfs_qm.c | 71 ++++++++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 50 insertions(+), 21 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 14a4996..424ef73 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -134,8 +134,6 @@ xfs_qm_dqpurge(
+ {
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
+ 
+ 	xfs_dqlock(dqp);
+ 	if ((dqp->dq_flags & XFS_DQ_FREEING) || dqp->q_nrefs != 0) {
+@@ -143,21 +141,6 @@ xfs_qm_dqpurge(
+ 		return EAGAIN;
+ 	}
+ 
+-	/*
+-	 * If this quota has a hint attached, prepare for releasing it now.
+-	 */
+-	gdqp = dqp->q_gdquot;
+-	if (gdqp) {
+-		xfs_dqlock(gdqp);
+-		dqp->q_gdquot = NULL;
+-	}
+-
+-	pdqp = dqp->q_pdquot;
+-	if (pdqp) {
+-		xfs_dqlock(pdqp);
+-		dqp->q_pdquot = NULL;
+-	}
+-
+ 	dqp->dq_flags |= XFS_DQ_FREEING;
+ 
+ 	xfs_dqflock(dqp);
+@@ -206,11 +189,47 @@ xfs_qm_dqpurge(
+ 	XFS_STATS_DEC(xs_qm_dquot_unused);
+ 
+ 	xfs_qm_dqdestroy(dqp);
++	return 0;
++}
++
++/*
++ * Release the group or project dquot pointers the user dquots maybe carrying
++ * around as a hint, and proceed to purge the user dquot cache if requested.
++*/
++STATIC int
++xfs_qm_dqpurge_hints(
++	struct xfs_dquot	*dqp,
++	void			*data)
++{
++	uint			flags = *((uint *)data);
++	struct xfs_dquot	*gdqp;
++	struct xfs_dquot	*pdqp;
+ 
++	xfs_dqlock(dqp);
++	if (dqp->dq_flags & XFS_DQ_FREEING) {
++		xfs_dqunlock(dqp);
++		return EAGAIN;
++	}
++
++	/* If this quota has a hint attached, prepare for releasing it now */
++	gdqp = dqp->q_gdquot;
+ 	if (gdqp)
+-		xfs_qm_dqput(gdqp);
++		dqp->q_gdquot = NULL;
++
++	pdqp = dqp->q_pdquot;
+ 	if (pdqp)
+-		xfs_qm_dqput(pdqp);
++		dqp->q_pdquot = NULL;
++
++	xfs_dqunlock(dqp);
++
++	if (gdqp)
++		xfs_qm_dqrele(gdqp);
++	if (pdqp)
++		xfs_qm_dqrele(pdqp);
++
++	if (flags & XFS_QMOPT_UQUOTA)
++		return xfs_qm_dqpurge(dqp, NULL);
++
+ 	return 0;
+ }
+ 
+@@ -222,8 +241,18 @@ xfs_qm_dqpurge_all(
+ 	struct xfs_mount	*mp,
+ 	uint			flags)
+ {
+-	if (flags & XFS_QMOPT_UQUOTA)
+-		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
++	/*
++	 * We have to release group/project dquot hint(s) from the user dquot
++	 * at first if they are there, otherwise we would run into an infinite
++	 * loop while walking through radix tree to purge other type of dquots
++	 * since their refcount is not zero if the user dquot refers to them
++	 * as hint.
++	 *
++	 * Call the special xfs_qm_dqpurge_hints() will end up go through the
++	 * general xfs_qm_dqpurge() against user dquot cache if requested.
++	 */
++	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, &flags);
++
+ 	if (flags & XFS_QMOPT_GQUOTA)
+ 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
+ 	if (flags & XFS_QMOPT_PQUOTA)
+-- 1.8.3.2
 
 _______________________________________________
 xfs mailing list
