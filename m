@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 14C9129E09
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 19:13:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 86793AC004
-	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 17:13:15 -0800 (PST)
-Received: from www03.systray.be (www03.systray.be [81.95.114.163]) by
-	cuda.sgi.com with ESMTP id UdfKfL1kOWA3ODUk for
-	<xfs@oss.sgi.com>; Fri, 06 Dec 2013 17:13:09 -0800 (PST)
-Subject: Your itunes account has been frozen because we are unable to validate
-	your account information.
-From: Apple service <no-reply@apple.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3A77329E09
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 21:52:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 20147304032
+	for <xfs@oss.sgi.com>; Fri,  6 Dec 2013 19:52:02 -0800 (PST)
+Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
+	[209.85.192.172]) by cuda.sgi.com with ESMTP id
+	U6dymFBtPAYSsCix (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Dec 2013 19:52:00 -0800 (PST)
+Received: by mail-pd0-f172.google.com with SMTP id g10so2051079pdj.17
+	for <xfs@oss.sgi.com>; Fri, 06 Dec 2013 19:51:59 -0800 (PST)
+Date: Sat, 7 Dec 2013 11:54:59 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [PATCH v2] xfstests: add a new test case to test i_size updated
+	properly under dio
+Message-ID: <20131207035459.GA13892@gmail.com>
+References: <1385625944-21915-1-git-send-email-wenqing.lz@taobao.com>
 MIME-Version: 1.0
-Message-Id: <20131207011129.3DAFC555854@www03.systray.be>
-Date: Sat,  7 Dec 2013 02:11:29 +0100 (CET)
+Content-Disposition: inline
+In-Reply-To: <1385625944-21915-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,301 +29,362 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7691120461604890033=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-
---===============7691120461604890033==
-Content-Type: text/html
-Content-Transfer-Encoding: 8bit
-
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-</head>
-
-
-<body>
-
-
-
-
- 
-<table id="ecxtable6" style="background-color: rgb(241, 241, 241);" align="center" border="0" cellpadding="0" cellspacing="0" width="630">
-
-
-
-
-
-  <tbody>
-
-
-
-
-
-    <tr>
-
-
-
-
-
-      <td>
-      
-      
-      
-      
-      <table id="ecxtable7" style="background-color: rgb(241, 241, 241);" align="center" border="0" cellpadding="0" cellspacing="0" width="490">
-
-
-
-
-
-        <tbody>
-
-
-
-
-
-          <tr>
-
-
-
-
-
-            <td style="padding: 0px 0px 22px;" align="left" width="490">
-            
-            
-            
-            
-            <div style="font-size: 12px; font-family: Lucida Grande,Lucida Sans,Lucida Sans Unicode,Arial,Helvetica,Verdana,sans-serif; color: rgb(51, 51, 51); line-height: 1.25em;"><span style="font-weight: bold;">Dear Valued Customer,</span><br>
-
-
-
-
-            <br>
-
-
-
-
-Confirmation
- of your Apple ID gives you easy access to a variety of Apple services, 
-including the iTunes Store, Apple Online Store, iChat, and more. We will
- not share your information with anyone else unless you authorize us to 
-do so. <br>
-
-
-
-
-            <br>
-
-
-
-
-            <a class="ecxaapl-link" style="color: rgb(0, 136, 204);" href="http://apple2013redirect.lovienmorelos.com" target="_blank" onclick="onClickUnsafeLink(event);">Verify Now ></a><br>
-
-
-
-
-            <br>
-
-
-
-
-            <b style="font-weight: bold;">Wondering why you got this email?</b><br>
-
-
-
-
-It's
- sent when someone adds or changes a contact email address for an Apple 
-ID account. If you didn't do this, don't worry. Your email address 
-cannot be used as a contact address for an Apple ID without your 
-verification.<br>
-
-
-
-
-            <br>
-
-
-
-
-For more information, see our <a class="ecxaapl-link" style="color: rgb(0, 136, 204);" href="http://www.apple.com/support/appleid/" target="_blank" onclick="onClickUnsafeLink(event);">frequently asked questions</a>.<br>
-
-
-
-
-            <br>
-
-
-
-
-Thanks,<br>
-
-
-
-
-Apple Customer Support</div>
-
-
-
-
-            </td>
-
-
-
-
-          </tr>
-
-
-
-
-        
-        
-        
-        
-        </tbody>
-      
-      
-      
-      
-      </table>
-
-
-
-
-      </td>
-
-
-
-
-    </tr>
-
-
-
-
-
-    <tr>
-
-
-
-
-
-      <td style="padding-top: 101px;"> </td>
-
-
-
-
-    </tr>
-
-
-
-
-  
-  
-  
-  
-  </tbody>
-</table>
-
-
-
-
-
-
-
-<table id="ecxtable8" align="center" border="0" cellpadding="0" cellspacing="0" width="490">
-
-
-
-
-  <tbody>
-
-
-
-
-    <tr>
-
-
-
-
-
-      <td style="padding: 10px 20px 10px 0px;">
-      
-      
-      
-      
-      <div style="font-size: 9px; font-family: Geneva,Verdana,Arial,Helvetica,sans-serif; color: rgb(153, 153, 153); line-height: 1.34em;">TM and copyright © 2013 <a style="color: rgb(153, 153, 153); text-decoration: none;" target="_blank" onclick="onClickUnsafeLink(event);">Apple</a> Inc. <a style="color: rgb(153, 153, 153); text-decoration: none;" target="_blank" onclick="onClickUnsafeLink(event);">1 Infinite Loop, MS 96-DM, Cupertino, CA 95014</a>.</div>
-
-
-
-
-
-      
-      
-      
-      
-      <div style="font-size: 9px; font-family: Geneva,Verdana,Arial,Helvetica,sans-serif; color: rgb(153, 153, 153); line-height: 1.34em;"><a style="color: rgb(153, 153, 153); text-decoration: underline;" href="http://www.apple.com/legal/" target="_blank" onclick="onClickUnsafeLink(event);">All Rights Reserved</a> / <a style="font-size: 9px; font-family: Geneva,Verdana,Arial,Helvetica,sans-serif; color: rgb(153, 153, 153); text-decoration: underline; line-height: 1.34em;" href="http://mynews.apple.com/ca/subscribe" target="_blank" onclick="onClickUnsafeLink(event);">Keep Informed</a> / <a style="font-size: 9px; font-family: Geneva,Verdana,Arial,Helvetica,sans-serif; color: rgb(153, 153, 153); text-decoration: underline; line-height: 1.34em;" href="http://www.apple.com/legal/privacy" target="_blank" onclick="onClickUnsafeLink(event);">Privacy Policy</a> / <a style="font-size: 9px; font-family: Geneva,Verdana,Arial,Helvetica,sans-serif; color: rgb(153, 153, 153); text-decoratio
- 
- n: underline; line-height: 1.34em;" href="https://appleid.apple.com/en_CA" target="_blank" onclick="onClickUnsafeLink(event);">My Apple ID</a></div>
-
-
-
-
-      </td>
-
-
-
-
-    </tr>
-
-
-
-
-
-    <tr>
-
-
-
-
-
-      <td> </td>
-
-
-
-
-    </tr>
-
-
-
-
-  
-  
-  
-  
-  </tbody>
-</table>
-
-
-
-
-</body>
-</html>
-
-
-
-
---===============7691120461604890033==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Cc: Christoph Hellwig <hch@infradead.org>, Rich Johnston <rjohnston@sgi.com>, Zheng Liu <wenqing.lz@taobao.com>
+
+On Thu, Nov 28, 2013 at 04:05:44PM +0800, Zheng Liu wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
+> 
+> In this commit a new test case is added to test that i_size is updated
+> properly under dio reads/writes.  We add a program in /src dir, which
+> has a writer to issue some append dio writes.  Meanwhile it has a
+> reader in this test do some dio reads.  As we expect, reader should read
+> nothing or data with 'a'.  But it might read some data with '0'.
+> 
+> This program is used to simulate binary log operations of database
+> application.  In these applications it implements an master/slave
+> synchronziation for database.
+> 
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Rich Johnston <rjohnston@sgi.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+
+Any comment?
+
+Thanks,
+                                                - Zheng
+
+> ---
+> changelog v2:
+>  * add '-lpthread' into LLDLIBS
+> 
+>  aclocal.m4            |    1 +
+>  configure.ac          |    1 +
+>  include/builddefs.in  |    1 +
+>  src/Makefile          |    4 +-
+>  src/diotest.c         |  166 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/321     |   56 +++++++++++++++++
+>  tests/generic/321.out |    1 +
+>  tests/generic/group   |    1 +
+>  8 files changed, 229 insertions(+), 2 deletions(-)
+>  create mode 100644 src/diotest.c
+>  create mode 100755 tests/generic/321
+>  create mode 100644 tests/generic/321.out
+> 
+> diff --git a/aclocal.m4 b/aclocal.m4
+> index f3412e1..89bb816 100644
+> --- a/aclocal.m4
+> +++ b/aclocal.m4
+> @@ -44,6 +44,7 @@ m4_include([m4/package_attrdev.m4])
+>  m4_include([m4/package_dmapidev.m4])
+>  m4_include([m4/package_gdbmdev.m4])
+>  m4_include([m4/package_globals.m4])
+> +m4_include([m4/package_pthread.m4])
+>  m4_include([m4/package_ssldev.m4])
+>  m4_include([m4/package_utilies.m4])
+>  m4_include([m4/package_uuiddev.m4])
+> diff --git a/configure.ac b/configure.ac
+> index bd48fd9..5eba21a 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -62,6 +62,7 @@ in
+>  		AC_PACKAGE_NEED_SYS_ACL_H
+>  		AC_PACKAGE_NEED_ACL_LIBACL_H
+>  		AC_PACKAGE_NEED_ACLINIT_LIBACL
+> +		AC_PACKAGE_NEED_PTHREADMUTEXINIT
+>  
+>  		AC_PACKAGE_WANT_GDBM
+>  		AC_PACKAGE_WANT_AIO
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 24f838f..d612ac1 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -23,6 +23,7 @@ LIBGDBM = @libgdbm@
+>  LIBUUID = @libuuid@
+>  LIBHANDLE = @libhdl@
+>  LIBDM = @libdm@
+> +LIBPTHREAD = @libpthread@
+>  LIBTEST = $(TOPDIR)/lib/libtest.la
+>  
+>  PKG_NAME        = @pkg_name@
+> diff --git a/src/Makefile b/src/Makefile
+> index 84c8297..f0fa9b9 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -18,11 +18,11 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+>  	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+>  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+>  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
+> -	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
+> +	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec diotest
+>  
+>  SUBDIRS =
+>  
+> -LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
+> +LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL) $(LIBPTHREAD)
+>  
+>  ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
+>  LINUX_TARGETS += loggen
+> diff --git a/src/diotest.c b/src/diotest.c
+> new file mode 100644
+> index 0000000..7d2378f
+> --- /dev/null
+> +++ b/src/diotest.c
+> @@ -0,0 +1,166 @@
+> +/*
+> + * Copyright (c) 2013 Alibaba Group.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +/*
+> + * This is a normal case that we do some append dio writes and meanwhile
+> + * we do some dio reads.  Currently in vfs we don't ensure that i_size
+> + * is updated properly.  Hence the reader will read some data with '0'.
+> + * But we expect that the reader should read nothing or data with 'a'.
+> + */
+> +
+> +#include <stdio.h>
+> +#include <stdlib.h>
+> +#include <string.h>
+> +
+> +#include <unistd.h>
+> +#include <sys/types.h>
+> +#include <sys/stat.h>
+> +#include <fcntl.h>
+> +#include <errno.h>
+> +
+> +#include <pthread.h>
+> +
+> +static char *prog;
+> +
+> +struct writer_data {
+> +	int fd;
+> +	size_t blksize;
+> +	char *buf;
+> +};
+> +
+> +static void usage(void)
+> +{
+> +	fprintf(stderr, "usage: %s [FILE]\n", prog);
+> +}
+> +
+> +static void *writer(void *arg)
+> +{
+> +	struct writer_data *data = (struct writer_data *)arg;
+> +	int ret;
+> +
+> +	ret = write(data->fd, data->buf, data->blksize);
+> +	if (ret < 0)
+> +		fprintf(stderr, "write file failed: %s\n", strerror(errno));
+> +
+> +	return NULL;
+> +}
+> +
+> +int main(int argc, char *argv[])
+> +{
+> +	pthread_t tid;
+> +	struct writer_data wdata;
+> +	size_t max_blocks = 128;		/* 128 */
+> +	size_t blksize = 1 * 1024 * 1024;	/* 1M */
+> +	char *rbuf = NULL, *wbuf = NULL;
+> +	int rfd = 0, wfd = 0;
+> +	int i, j;
+> +	int ret = 0;
+> +
+> +	prog = basename(argv[0]);
+> +
+> +	if (argc != 2) {
+> +		usage();
+> +		exit(1);
+> +	}
+> +
+> +	wfd = open(argv[1], O_CREAT|O_DIRECT|O_WRONLY|O_APPEND|O_TRUNC, S_IRWXU);
+> +	if (wfd < 0) {
+> +		fprintf(stderr, "failed to open write file: %s\n",
+> +			strerror(errno));
+> +		exit(1);
+> +	}
+> +
+> +	rfd = open(argv[1], O_DIRECT|O_RDONLY, S_IRWXU);
+> +	if (wfd < 0) {
+> +		fprintf(stderr, "failed to open read file: %s\n",
+> +			strerror(errno));
+> +		ret = 1;
+> +		goto err;
+> +	}
+> +
+> +	/*
+> +	 * We set 1024 as an alignment size for write buf.  Feel free to change
+> +	 * it with 4096.  But the problem is also hitted.
+> +	 */
+> +	if (posix_memalign((void **)&wbuf, 1024, blksize)) {
+> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
+> +		ret = 1;
+> +		goto err;
+> +	}
+> +
+> +	if (posix_memalign((void **)&rbuf, 4096, blksize)) {
+> +		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
+> +		ret = 1;
+> +		goto err;
+> +	}
+> +
+> +	memset(wbuf, 'a', blksize);
+> +	wdata.fd = wfd;
+> +	wdata.blksize = blksize;
+> +	wdata.buf = wbuf;
+> +
+> +	for (i = 0; i < max_blocks; i++) {
+> +		void *retval;
+> +
+> +		if (pthread_create(&tid, NULL, writer, &wdata)) {
+> +			fprintf(stderr, "create thread failed: %s\n",
+> +				strerror(errno));
+> +			ret = 1;
+> +			goto err;
+> +		}
+> +
+> +		memset(rbuf, 'b', blksize);
+> +		do {
+> +			ret = pread(rfd, rbuf, blksize, i * blksize);
+> +			if (ret < 0)
+> +				fprintf(stderr, "read file failed: %s\n",
+> +					strerror(errno));
+> +		} while (ret <= 0);
+> +
+> +		if (pthread_join(tid, &retval)) {
+> +			fprintf(stderr, " pthread join failed: %s\n",
+> +				strerror(errno));
+> +			ret = 1;
+> +			goto err;
+> +		}
+> +
+> +		if (ret >= 0) {
+> +			for (j = 0; j < ret; j ++) {
+> +				if (rbuf[j] != 'a') {
+> +					fprintf(stderr, "encounter an error: "
+> +						"offset %d content %c\n",
+> +						i, rbuf[j]);
+> +					ret = 1;
+> +					goto err;
+> +				}
+> +			}
+> +		}
+> +	}
+> +
+> +err:
+> +	if (rfd)
+> +		close(rfd);
+> +	if (wfd)
+> +		close(wfd);
+> +	if (rbuf)
+> +		free(rbuf);
+> +	if (wbuf)
+> +		free(wbuf);
+> +
+> +	return ret;
+> +}
+> diff --git a/tests/generic/321 b/tests/generic/321
+> new file mode 100755
+> index 0000000..372d23a
+> --- /dev/null
+> +++ b/tests/generic/321
+> @@ -0,0 +1,56 @@
+> +#! /bin/bash
+> +# FS QA Test No. 321
+> +#
+> +# Test i_size is updated properly under dio read/write
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.* $testfile
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +testfile=$TEST_DIR/$seq.$$
+> +
+> +[ -x $here/src/diotest ] || _notrun "diotest not built"
+> +
+> +$here/src/diotest $testfile > $seqres.full 2>&1 ||
+> +	_fail "i_size isn't update properly!"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/321.out b/tests/generic/321.out
+> new file mode 100644
+> index 0000000..0cda9e4
+> --- /dev/null
+> +++ b/tests/generic/321.out
+> @@ -0,0 +1 @@
+> +QA output created by 321
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 40da6dc..0b86d9f 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -123,3 +123,4 @@
+>  318 acl attr auto quick
+>  319 acl auto quick
+>  320 auto rw
+> +321 auto rw quick
+> -- 
+> 1.7.9.7
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7691120461604890033==--
