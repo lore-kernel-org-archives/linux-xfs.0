@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A4677F9F
-	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 16:39:33 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E9BC7FA0
+	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 16:40:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DB9F0AC001
-	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 14:39:32 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7EEBD304032
+	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 14:40:24 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0lxACoIaUqdF5zBE for <xfs@oss.sgi.com>;
-	Sun, 08 Dec 2013 14:39:28 -0800 (PST)
-Date: Mon, 9 Dec 2013 09:39:23 +1100
+	J1aSnYrGBiR9DwQd for <xfs@oss.sgi.com>;
+	Sun, 08 Dec 2013 14:40:15 -0800 (PST)
+Date: Mon, 9 Dec 2013 09:40:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/11] xfs: use xfs_ilock_attr_map_shared in
-	xfs_attr_list_int
-Message-ID: <20131208223923.GK31386@dastard>
+Subject: Re: [PATCH 11/11] xfs: assert that we hold the ilock for extent map
+	access
+Message-ID: <20131208224002.GL31386@dastard>
 References: <20131206203006.914776999@bombadil.infradead.org>
-	<20131206203129.460873551@bombadil.infradead.org>
+	<20131206203129.612520870@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131206203129.460873551@bombadil.infradead.org>
+In-Reply-To: <20131206203129.612520870@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,48 +34,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Dec 06, 2013 at 12:30:16PM -0800, Christoph Hellwig wrote:
-> We might not have read in the extent list at this point, so make sure we
-> take the ilock exclusively if we have to do so.
+On Fri, Dec 06, 2013 at 12:30:17PM -0800, Christoph Hellwig wrote:
+> Make sure that xfs_bmapi_read has the ilock held in some way, and that
+> xfs_bmapi_write, xfs_bmapi_delay, xfs_bunmapi and xfs_iread_extents are
+> called with the ilock held exclusively.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: xfs/fs/xfs/xfs_attr_list.c
+> Index: xfs/fs/xfs/xfs_bmap.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_attr_list.c	2013-12-06 17:20:27.371331603 +0100
-> +++ xfs/fs/xfs/xfs_attr_list.c	2013-12-06 19:41:42.779157674 +0100
-> @@ -507,17 +507,17 @@ xfs_attr_list_int(
->  {
->  	int error;
->  	xfs_inode_t *dp = context->dp;
-> +	uint		lock_mode;
+> --- xfs.orig/fs/xfs/xfs_bmap.c	2013-11-29 14:25:12.172459195 +0100
+> +++ xfs/fs/xfs/xfs_bmap.c	2013-12-05 10:03:28.243801633 +0100
+> @@ -3997,6 +3997,7 @@ xfs_bmapi_read(
+>  	ASSERT(*nmap >= 1);
+>  	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
+>  			   XFS_BMAPI_IGSTATE)));
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
 >  
->  	XFS_STATS_INC(xs_attr_list);
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> @@ -4191,6 +4192,7 @@ xfs_bmapi_delay(
+>  	ASSERT(*nmap >= 1);
+>  	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
+>  	ASSERT(!(flags & ~XFS_BMAPI_ENTIRE));
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
 >  
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return EIO;
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
+> @@ -4484,6 +4486,7 @@ xfs_bmapi_write(
+>  	ASSERT(tp != NULL);
+>  	ASSERT(len > 0);
+>  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
 >  
-> -	xfs_ilock(dp, XFS_ILOCK_SHARED);
-> -
->  	/*
->  	 * Decide on what work routines to call based on the inode size.
->  	 */
-> +	lock_mode = xfs_ilock_attr_map_shared(dp);
->  	if (!xfs_inode_hasattr(dp)) {
->  		error = 0;
->  	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> @@ -527,9 +527,7 @@ xfs_attr_list_int(
->  	} else {
->  		error = xfs_attr_node_list(context);
->  	}
-> -
-> -	xfs_iunlock(dp, XFS_ILOCK_SHARED);
-> -
-> +	xfs_iunlock(dp, lock_mode);
->  	return error;
->  }
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> Index: xfs/fs/xfs/xfs_inode_fork.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_inode_fork.c	2013-12-05 09:57:24.347809100 +0100
+> +++ xfs/fs/xfs/xfs_inode_fork.c	2013-12-05 09:59:04.767807039 +0100
+> @@ -431,6 +431,8 @@ xfs_iread_extents(
+>  	xfs_ifork_t	*ifp;
+>  	xfs_extnum_t	nextents;
+>  
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> +
+>  	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
+>  		XFS_ERROR_REPORT("xfs_iread_extents", XFS_ERRLEVEL_LOW,
+>  				 ip->i_mount);
+> Index: xfs/fs/xfs/xfs_bmap.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_bmap.c	2013-12-05 22:12:32.931838271 +0100
+> +++ xfs/fs/xfs/xfs_bmap.c	2013-12-05 22:35:59.175809412 +0100
+> @@ -5038,6 +5038,7 @@ xfs_bunmapi(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return XFS_ERROR(EIO);
+>  
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  	ASSERT(len > 0);
+>  	ASSERT(nexts >= 0);
 
-Looks good.
+I can't think of anywhere else we need to add asserts for this, so
+it seems fine to me.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
