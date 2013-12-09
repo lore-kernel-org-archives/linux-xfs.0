@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 847457F67
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 10:42:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BE068F8040
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 08:42:22 -0800 (PST)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	GaScTyoZUkmk6FeV for <xfs@oss.sgi.com>;
-	Mon, 09 Dec 2013 08:42:20 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id 2E3161F00120
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 11:42:19 -0500 (EST)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id wSu-IMpr8nkA for <xfs@oss.sgi.com>;
-	Mon,  9 Dec 2013 11:42:14 -0500 (EST)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id AD9751F0011F
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 11:42:14 -0500 (EST)
-Date: Mon, 9 Dec 2013 11:42:14 -0500 (EST)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <31871244.254.1386607334674.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <8D3FA7645C1CFC4E9E783D22B4C708644A595E@P-EXMB2-DC21.corp.sgi.com>
-Subject: Re: XFS...Windows?
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7792E7F6A
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 10:39:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4FE97304032
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 08:39:42 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 5nij3PXjH75KdHZc for <xfs@oss.sgi.com>;
+	Mon, 09 Dec 2013 08:39:40 -0800 (PST)
+Message-ID: <52A5F249.1060505@sandeen.net>
+Date: Mon, 09 Dec 2013 10:39:37 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: XFS...Windows?
+References: <000001cef46c$ab687cc0$02397640$@mail.com>
+In-Reply-To: <000001cef46c$ab687cc0$02397640$@mail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,93 +23,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: Yuji Saeki <yuji1@mail.com>, xfs@oss.sgi.com
 
-SnVzdCB0byBiZSBjbGVhciBhYm91dCB3aGF0J3MgYmVpbmcgZGlzY3Vzc2VkIGhlcmU6IAoKVGhl
-IHByb3Bvc2FsIGlzIHRvIGNyZWF0ZSBhICp3aW5kb3dzKiBmaWxlc3lzdGVtIGRyaXZlciB0byBh
-bGxvdyBXaW5kb3dzCm1hY2hpbmVzIHRvIHJlYWQgYW5kIHdyaXRlIGxvY2FsbHktYXR0YWNoZWQg
-WEZTIGZpbGVzeXN0ZW1zLCBjb3JyZWN0PwoKUHJlc3VtYWJseSwgc3VjaCBmaWxlc3lzdGVtcyB3
-b3VsZCBiZSBkZXZpY2UtcG9ydGFibGUgdG8gTGludXggb3Igb3RoZXIKbWFjaGluZXMgYWxzbyBy
-dW5uaW5nIFhGUz8KCkNoZWVycywKLS0ganIgJ3dpbGwgYXNrIHN0dXBpZCBxdWVzdGlvbnMgZm9y
-IGZvb2QnIGEKCi0tLS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0KPiBGcm9tOiAiU2hhdW4gR29z
-c2UiIDxzZ29zc2VAc2dpLmNvbT4KPiBUbzogIll1amkgU2Fla2kiIDx5dWppMUBtYWlsLmNvbT4s
-IHhmc0Bvc3Muc2dpLmNvbQo+IFNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgOSwgMjAxMyAxMToxNjoz
-OCBBTQo+IFN1YmplY3Q6IFJFOiBYRlMuLi5XaW5kb3dzPwo+IFdlbGzigKZhdCB0aGUgcmlzayBv
-ZiBqdW1waW5nIGludG8gc29tZXRoaW5nIGhlcmU6Cj4gCj4g4oCcd291bGQgU0dJIGJlIG9rYXkg
-d2l0aCB0aGF04oCdOiBrZWVwIGluIG1pbmQgdGhpcyBhIGNvbW11bml0eSBwcm9qZWN0Lgo+IFRo
-ZXJlIGFyZSBjb250cmlidXRvcnMgdG8gWEZTIGhlcmUgYXQgU0dJLiBUaGVyZSBpcyBhbHNvIGEg
-bG90IG9mIHdvcmsKPiBkb25lIGJ5IGVtcGxveWVlcyBvZiBSZWRoYXQgYXMgd2VsbCBhcyBvdGhl
-ciBjb21wYW5pZXMgKGFuZCBhIGZldwo+IGZyZWVsYW5jZSAvIHBlb3BsZSBpbnRlcmVzdGVkIHJl
-Z2FyZGxlc3Mgb2YgY3VycmVudCBwb3NpdGlvbikuIEFueWhvdywKPiBqdXN0IGEgcXVpYmJsZSB0
-byBub3RlIHRoYXQgaXTigJlzIG5vdCBhIHF1ZXN0aW9uIG9mIHdoYXQgU0dJIGRpY3RhdGVzLgo+
-IEFsdGhvdWdoIEkgd2lsbCBub3RlIHRoYXQgSeKAmXZlIGFjdHVhbGx5IHJhaXNlZCB0aGUgaWRl
-YSBvZiBYRlMgb24KPiBXaW5kb3dzIGludGVybmFsbHkgKGhlcmUgYXQgU0dJKSBhbmQgd2hpbGUg
-aXTigJlzIG5vdCBhIHByaW9yaXR5IEkgd291bGQKPiBzYXkgdGhlcmXigJlzIGF0IGxlYXN0IHNv
-bWUgaW50ZXJlc3QuIEF0IHRoZSBsZWFzdCwgaWYgeW91IGJ1aWxkIGl0LAo+IHdl4oCZbGwgY2Vy
-dGFpbmx5IHRha2UgYSBsb29rIGF0IGl0LiDimLoKPiAKPiBJIHNhdyBhbiBlbWFpbCBhIHdoaWxl
-IGJhY2sgb24gdGhpcyBsaXN0IHRoYXQgaW1wbGllZCBzb21lb25lIHdhcwo+IHRyeWluZyB0byB3
-b3JrIG9uIHRoYXQgaWlyYzsgSSBkaWRu4oCZdCBzZWUgYW55IGZvbGxvdy11cCBmcm9tIGl0LiBU
-aGVyZQo+IGFyZSBhbHNvIHNvbWUgcHJvamVjdHMgdGhhdCBsb29rIGFiYW5kb25lZCB3aGljaCB0
-cmllZCB0byBkbyB0aGlzIEkKPiByZWNhbGwgZnJvbSBwcmV2aW91cyBzZWFyY2hlcyBvbiB0aGlz
-Lgo+IAo+IE9uZSBvZiB0aGUgc3VnZ2VzdGlvbnMgSSBoZWFyZCB3aGVuIEkgd2FzIGNvbnNpZGVy
-aW5nIHRoaXMgd2FzIHRvIGxvb2sKPiBhdCBob3cgdGhlIGV4dCBwb3J0IG9uIFdpbmRvd3Mgd29y
-a3MuIFRoYXQgbG9va3MgbWlsZGx5IGluYWN0aXZlCj4gaXRzZWxmIGJ1dCBzaG91bGQgYmUgZ29v
-ZCBmb3IgY29tcGFyaXNvbi4KPiAKPiBJbnRlcm5hbGx5LCBTR0kgaGFzIGEgcHJvcHJpZXRhcnkg
-c3lzdGVtLCBDWEZTLCB3aGljaCBkb2VzIGNsdXN0ZXJlZAo+IFhGUyBpbmNsdWRpbmcgV2luZG93
-cyBhcyBjbGllbnQgbm9kZXMuIFNvIHdl4oCZdmUgZ290IGNvZGUgdGhhdCBhY3R1YWxseQo+IGRv
-ZXMgWEZTIGRhdGEgd3JpdGVzIGZyb20gV2luZG93cyBub2Rlcy4gT2YgY291cnNlLCB0aGUgdHJp
-Y2t5IGJpdCBpcwo+IG1hbmFnaW5nIGFsbCBvZiB0aGUgbWV0YWRhdGEvbG9nZ2luZywgd2hpY2gg
-aXNu4oCZdCB0b3VjaGVkIGZyb20gV2luZG93cwo+IGluIHRoYXQgc3lzdGVtLCBidXQgaXTigJlz
-IGp1c3QgYW5vdGhlciB0aWRiaXQgdG8gbm90ZSDigJx5ZXMsIHRoaXMgdHlwZQo+IG9mIHN5c3Rl
-bSBzaG91bGQgYmUgcG9zc2libGXigJ0uCj4gCj4gQXMgZmFyIGFzIGxpY2Vuc2luZywgSeKAmW0g
-Y2VydGFpbmx5IG5vIGV4cGVydCwgYnV0IEFGQUlLIGl0IHNob3VsZCBiZQo+IHBvc3NpYmxlIHRv
-IHVzZSB0aGUgc2FtZSBHUEwgbGljZW5zZSBhcyB5b3Ugbm90ZSBhbmQgbWFrZSBhbgo+IG9wZW4t
-c291cmNlIFdpbmRvd3MgZHJpdmVyIGZvciB0aGlzIHVzaW5nIGFzIG11Y2ggb2YgdGhlIGN1cnJl
-bnQgWEZTCj4gY29kZSBhcyBpcyBjb252ZW5pZW50LiBUaGVyZSBhcmUgbnVhbmNlcyBpbiB0aGUg
-bGljZW5zZSB0aG91Z2guIEkgY2FuCj4gdHJ5IHRvIGZpbmQgdGhlIGFydGljbGUgaWYgeW914oCZ
-cmUgaW50ZXJlc3RlZDogSSByZWFkIGEgcG9zdCBwcmV2aW91c2x5Cj4gYnkgc29tZW9uZSB3aG8g
-aGFkIGRldmVsb3BlZCBhIEdQTCBkcml2ZXIgb24gV2luZG93cyBhbmQgd2FzIG5vdGluZwo+IGNv
-bmNlcm5zIGFib3V0IGxpbmtpbmcgYWdhaW5zdCBjbG9zZWQgc291cmNlIGxpYnJhcmllcyAoZXNz
-ZW50aWFsbHkKPiBkZWNpZGVkIGl0IHdhcyBva2F5IGJlY2F1c2UgaXQgKGEpIGNvdWxkIGJlIGNv
-bnNpZGVyZWQgYSBzeXN0ZW0KPiBsaWJyYXJ5IGFuZCAoYikgdGhleSB3ZXJlIHN0YXJ0aW5nIGEg
-ZnJlc2ggcHJvamVjdCBzbyB0aGV5IGNvdWxkIGFkZAo+IGV4dHJhIGV4ZW1wdGlvbnMgc3BlY2lm
-aWNhbGx5IGFsbG93aW5nIHRoYXQpLgo+IAo+IEkgYW0gYSBub3ZpY2UgYXQgWEZTIGFuZCwgZnJh
-bmtseSwgYXQgV2luZG93cyBrZXJuZWwgZGV2aWNlCj4gZGV2ZWxvcG1lbnQgYXMgd2VsbC4gQnV0
-IEnigJltIGNlcnRhaW5seSBpbnRlcmVzdGVkIGluIHNlZWluZyBhIEdQTAo+IFhGUy1vbi1XaW5k
-b3dzIGRldmVsb3BlZCBhdCBzb21lIHBvaW50LiBJZiB5b3UgZ28gYWhlYWQgd2l0aCB0aGlzLCBJ
-4oCZZAo+IGRlZmluaXRlbHkgYXBwcmVjaWF0ZSBhbnkgaW5mb3JtYXRpb24gYW5kIHdvdWxkIGJl
-IGdsYWQgdG8gYXNzaXN0IGluCj4gYW55IHdheSBJIGNhbi4gQW5kIG15c2VsZiBwZXJzb25hbGx5
-LCBJ4oCZZCBhYnNvbHV0ZWx5IGFwcHJlY2lhdGUKPiBzb21lb25lIGVsc2UgdGFraW5nIHRoZSBs
-ZWFkIG9uIHRoaXMsIGJlY2F1c2Ugd2l0aCBvdGhlciBpc3N1ZXMgSeKAmW0KPiB3b3JraW5nIG9u
-LCBJIHdvdWxkIGJlIHVubGlrZWx5IHRvIHB1dCBzZXJpb3VzIHNvbG8gZWZmb3J0IGludG8gdGhp
-cwo+IGFueXRpbWUgc29vbi4KPiAKPiBDaGVlcnMsCj4gLVNoYXVuIEdvc3NlCj4gQ1hGUyBXaW5k
-b3dzCj4gU0dJCj4gCj4gRnJvbTogeGZzLWJvdW5jZXNAb3NzLnNnaS5jb20gW21haWx0bzp4ZnMt
-Ym91bmNlc0Bvc3Muc2dpLmNvbV0gT24KPiBCZWhhbGYgT2YgWXVqaSBTYWVraQo+IFNlbnQ6IFN1
-bmRheSwgRGVjZW1iZXIgMDgsIDIwMTMgNToyNSBQTQo+IFRvOiB4ZnNAb3NzLnNnaS5jb20KPiBT
-dWJqZWN0OiBYRlMuLi5XaW5kb3dzPwo+IAo+IENvbmdyYXR1bGF0aW9ucyBvbiB5b3VyIGZpbGUg
-c3lzdGVtLCBpdOKAmXMgcXVpdGUgbmljZS4gSeKAmXZlIGJlbmNobWFya2VkCj4gaXQgbXlzZWxm
-LCBpdOKAmXMgdmVyeSBpbXByZXNzaXZlLiBJ4oCZbSBjdXJpb3VzIHRob3VnaCwgaXMgdGhlcmUg
-YXJlCj4gdGhvdWdodCB0byBhIFdpbmRvd3MgZHJpdmVyPyBJZiBzb21lb25lIHBvcnRlZCB0aGUg
-bW9zdCBjdXJyZW50LXN0YWJsZQo+IHZlcnNpb24gdG8gV2luZG93cyAoZnJlZSkgdW5kZXIgdGhl
-IHNhbWUgbGljZW5zZSDigJhHTlUgTGVzc2VyIEdlbmVyYWwKPiBQdWJsaWMgTGljZW5zZeKAmSB3
-aXRoIGVudGlyZSBjcmVkaXQgdG8gWEZTLCB3b3VsZCBTR0kgYmUgb2theSB3aXRoCj4gdGhhdD8g
-QSDigJhuby13YXJyYW50eSBpbXBsaWVk4oCZIChldGMpIGtpbmQgb2YgcHJvdGVjdGlvbiBvZiBj
-b3Vyc2UuCj4gUXVpdGUgYSBmZXcgZGV2cyB0aGF0IEkgd29yayB3aXRoIGVuam95IHRoZSBYRlMg
-ZmlsZXN5c3RlbSBhbmQgd2UgZGV2Cj4gaW4gYm90aCBMaW51eCBhbmQgV2luZG93cy4gV2XigJly
-ZSB2ZXJ5IGludGVyZXN0ZWQgaW4gbWFraW5nIHRoaXMgaGFwcGVuCj4gd2l0aCByZXNwZWN0IHRv
-IHRoZSBYRlMgcHJvamVjdC4KPiAKPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3NzLnNnaS5jb20KPiBodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCi0tIApNYWtlIEVsZWN0aW9uIERh
-eSBhIGZlZGVyYWwgaG9saWRheTogaHR0cDovL3doLmdvdi9sQm05NCAgMTAwayBzaWdzIGJ5IDEy
-LzE0CgpKYXkgUi4gQXNod29ydGggICAgICAgICAgICAgICAgICBCYXlsaW5rICAgICAgICAgICAg
-ICAgICAgICAgICBqcmFAYmF5bGluay5jb20KRGVzaWduZXIgICAgICAgICAgICAgICAgICAgICBU
-aGUgVGhpbmdzIEkgVGhpbmsgICAgICAgICAgICAgICAgICAgICAgIFJGQyAyMTAwCkFzaHdvcnRo
-ICYgQXNzb2NpYXRlcyAgICAgaHR0cDovL2JheWxpbmsucGl0YXMuY29tICAgICAgICAgMjAwMCBM
-YW5kIFJvdmVyIERJSQpTdCBQZXRlcnNidXJnIEZMIFVTQSAgICAgICAgICAgICAgICNuYXRvZyAg
-ICAgICAgICAgICAgICAgICAgICArMSA3MjcgNjQ3IDEyNzQKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 12/8/13, 5:24 PM, Yuji Saeki wrote:
+> Congratulations on your file system, it=92s quite nice. I=92ve
+> benchmarked it myself, it=92s very impressive. I=92m curious though, is
+> there are thought to a Windows driver? If someone ported the most
+> current-stable version to Windows (free) under the same license =91GNU
+> Lesser General Public License=92 with entire credit to XFS
+
+XFS isn't under the LGPL, it's GPL, as is the rest of the kernel code,
+and the license terms should be quite clear.
+
+> would SGI
+> be okay with that? A =91no-warranty implied=92 (etc) kind of protection
+> of course. Quite a few devs that I work with enjoy the XFS filesystem
+> and we dev in both Linux and Windows. We=92re very interested in making
+> this happen with respect to the XFS project.
+
+I'm not a lawyer, but it's not really an issue of opinion - it's a legal
+matter.  If you can port XFS to Windows while maintaining the terms
+of the license agreements on both ends, you're free to do so.
+
+The technical difficulty of such a task is another matter as well.  :)
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
