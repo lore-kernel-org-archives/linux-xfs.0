@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 572947F50
-	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 20:37:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 02702AC001
-	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 18:37:24 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LPaFFlNUgU5Hh5l2 for <xfs@oss.sgi.com>;
-	Sun, 08 Dec 2013 18:37:01 -0800 (PST)
-Date: Mon, 9 Dec 2013 13:36:55 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B5F597F52
+	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 21:27:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 935CD304039
+	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 19:27:08 -0800 (PST)
+Message-ID: <52A53856.6020004@oracle.com>
+Date: Mon, 09 Dec 2013 11:26:14 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
 Subject: Re: [PATCH v2 2/3] xfs: fix infinite loop by detaching the
 	group/project hints from user dquot
-Message-ID: <20131209023655.GQ31386@dastard>
-References: <5294A469.1060000@oracle.com>
-	<20131128104336.GE26927@infradead.org>
-	<52986001.9040101@oracle.com> <20131206210137.GT1935@sgi.com>
-	<52A2B75C.3040803@oracle.com> <20131209012642.GO31386@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131209012642.GO31386@dastard>
+References: <5294A469.1060000@oracle.com>	<20131128104336.GE26927@infradead.org>	<52986001.9040101@oracle.com>
+	<20131206210137.GT1935@sgi.com>	<52A2B75C.3040803@oracle.com>
+	<20131209012642.GO31386@dastard> <20131209023655.GQ31386@dastard>
+In-Reply-To: <20131209023655.GQ31386@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,130 +27,161 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Dec 09, 2013 at 12:26:42PM +1100, Dave Chinner wrote:
-> On Sat, Dec 07, 2013 at 01:51:24PM +0800, Jeff Liu wrote:
-> > Hi Ben,
-> > 
+On 12/09 2013 10:36 AM, Dave Chinner wrote:
+> On Mon, Dec 09, 2013 at 12:26:42PM +1100, Dave Chinner wrote:
+>> On Sat, Dec 07, 2013 at 01:51:24PM +0800, Jeff Liu wrote:
+>>> Hi Ben,
+>>>
+>> ....
+>>>>> void
+>>>>> xfs_qm_dqpurge_all()
+>>>>> {
+>>>>> 	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, NULL);
+>>>>>
+>>>>> 	if (flags & XFS_QMOPT_UQUOTA)
+>>>>> 		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
+>>>>> 	if (flags & XFS_QMOPT_GQUOTA)
+>>>>> 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
+>>>>> 	if (flags & XFS_QMOPT_PQUOTA)
+>>>>> 		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
+>>>>> }
+>>>>>
+>>>>> Above code is what I can figured out as per your suggestions for now, but it
+>>>>> would introduce overheads for walking through user dquots to release hints
+>>>>> separately if we want to turn user quota off.
+>>>>>
+>>>>> Any thoughts?
+>>>>
+>>>> I was gonna pull in the single walk version, but now I realize that it is still
+>>>> under discussion.  I'm happy with either implementation, with maybe a slight
+>>>> preference for a single user quota walk.  Can you and Christoph come to an
+>>>> agreement?
+>>> For now, I can not figure out a more optimized solution.  Well, I just realized
+>>> I don't need to initialize both gdqp and pdqp to NULL at xfs_qm_dqpurge_hints()
+>>> since they will be evaluated by dqp pointers dereference anyway.  As a minor fix,
+>>> the revised version was shown as follows.
+>>>
+>>> Christoph, as I mentioned previously, keeping a separate walk to release the user
+>>> dquots would also have overloads in some cases, would you happy to have this fix
+>>> although it is not most optimized?
+>>
+>> I'm happy either way it is done - I'd prefer we fix the problem than
+>> bikeshed over an extra radix tree walk or not given for most people
+>> the overhead won't be significant.
+>>
+>>> From: Jie Liu <jeff.liu@oracle.com>
+>>>
+>>> xfs_quota(8) will hang up if trying to turn group/project quota off
+>>> before the user quota is off, this could be 100% reproduced by:
+>> .....
+>>
+>> So from the perspective, I'm happy to consider the updated
+>> patch as:
+>>
+>> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>>
+>> However, I question the need for the hints at all now. The hints
+>> were necessary back when the quota manager had global lists and
+>> hashes, and the lookups were expensive. Hence there was a
+>> significant win to caching the group dquot on the user dquot as it
+>> avoided a significant amount of code, locks and dirty cachelines.
+>>
+>> Now, it's just a radix tree lookup under only a single lock and the
+>> process dirties far fewer cachelines (none in the radix tree at all)
+>> and so should be substantially faster than the old code. And with
+>> the dquots being attached and cached on inodes in the first place, I
+>> don't see much advantage to keeping hints on the user dquot. THis is
+>> especially true for project quotas where a user might be accessing
+>> files in different projects all the time and so thrashing the
+>> project quota hint on the user dquot....
+Ah, that accounts for it!  Yesterday, I even thought to add an udquot
+member to struct xfs_dquot in order to avoid walk though user quota
+while turning off others, i.e,
+
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index d22ed00..0037c7e 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -52,6 +52,13 @@ typedef struct xfs_dquot {
+        int              q_bufoffset;   /* off of dq in buffer (# dquots) */
+        xfs_fileoff_t    q_fileoffset;  /* offset in quotas file */
+ 
++       union {
++               struct xfs_dquot *q_udquot;
++               struct {
++                       struct xfs_dquot *q_pdquot;
++                       struct xfs_dquot *q_gdquot;
++               } gp_hints;
++       } hints;
+        struct xfs_dquot*q_gdquot;      /* group dquot, hint only */
+        struct xfs_dquot*q_pdquot;      /* project dquot, hint only */
+        xfs_disk_dquot_t q_core;        /* actual usage & quotas */
+
+In this way, I can attach the q_udquot to group/project dquots while
+attaching them to the user's.  Thus I don't need to walk through user
+dquots to fetch the hints but to fetch them via:
+gdquot->hints.q_udquot.g_pdquot/g_gdquot and then decrease the reference
+count, but that need more code changes and add complexities.
+
+>>
+>> Hence I wonder if removing the dquot hint caching altogether would
+>> result in smaller, simpler, faster code.  And, in reality, if the
+>> radix tree lock is a contention point on lookup after removing the
+>> hints, then we can fix that quite easily by switching to RCU-based
+>> lockless lookups like we do for the inode cache....
+> 
+> Actually, scalability couldn't get any worse by removing the hints.
+> If I run a concurrent workload with quota enabled, the global dquot
+> locks (be it user, quota or project) completely serialises the
+> workload. This result if from u/g/p all enabled, run by a single
+> user in a single group and a project ID of zero:
+> 
+> ./fs_mark  -D  10000  -S0  -n  100000  -s  0  -L  32  -d  /mnt/scratch/0  -d  /mnt/scratch/1  -d  /mnt/scratch/2  -d  /mnt/scratch/3  -d  /mnt/scratch/4  -d  /mnt/scratch/5  -d  /mnt/scratch/6  -d  /mnt/scratch/7  -d  /mnt/scratch/8  -d  /mnt/scratch/9  -d  /mnt/scratch/10  -d  /mnt/scratch/11  -d  /mnt/scratch/12  -d  /mnt/scratch/13  -d  /mnt/scratch/14  -d  /mnt/scratch/15
+> #       Version 3.3, 16 thread(s) starting at Mon Dec  9 12:53:46 2013
+> #       Sync method: NO SYNC: Test does not issue sync() or fsync() calls.
+> #       Directories:  Time based hash between directories across 10000 subdirectories with 180 seconds per subdirectory.
+> #       File names: 40 bytes long, (16 initial bytes of time stamp with 24 random bytes at end of name)
+> #       Files info: size 0 bytes, written with an IO size of 16384 bytes per write
+> #       App overhead is time in microseconds spent in the test not doing file writing related system calls.
+> 
+> FSUse%        Count         Size    Files/sec     App Overhead
+>      0      1600000            0      17666.5         15377143
+>      0      3200000            0      17018.6         15922906
+>      0      4800000            0      17373.5         16149660
+>      0      6400000            0      16564.9         17234139
 > ....
-> > >> void
-> > >> xfs_qm_dqpurge_all()
-> > >> {
-> > >> 	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, NULL);
-> > >>
-> > >> 	if (flags & XFS_QMOPT_UQUOTA)
-> > >> 		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
-> > >> 	if (flags & XFS_QMOPT_GQUOTA)
-> > >> 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
-> > >> 	if (flags & XFS_QMOPT_PQUOTA)
-> > >> 		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
-> > >> }
-> > >>
-> > >> Above code is what I can figured out as per your suggestions for now, but it
-> > >> would introduce overheads for walking through user dquots to release hints
-> > >> separately if we want to turn user quota off.
-> > >>
-> > >> Any thoughts?
-> > > 
-> > > I was gonna pull in the single walk version, but now I realize that it is still
-> > > under discussion.  I'm happy with either implementation, with maybe a slight
-> > > preference for a single user quota walk.  Can you and Christoph come to an
-> > > agreement?
-> > For now, I can not figure out a more optimized solution.  Well, I just realized
-> > I don't need to initialize both gdqp and pdqp to NULL at xfs_qm_dqpurge_hints()
-> > since they will be evaluated by dqp pointers dereference anyway.  As a minor fix,
-> > the revised version was shown as follows.
-> > 
-> > Christoph, as I mentioned previously, keeping a separate walk to release the user
-> > dquots would also have overloads in some cases, would you happy to have this fix
-> > although it is not most optimized?
 > 
-> I'm happy either way it is done - I'd prefer we fix the problem than
-> bikeshed over an extra radix tree walk or not given for most people
-> the overhead won't be significant.
+> Without quota enabled, that workload runs at >250,000 files/sec.
 > 
-> > From: Jie Liu <jeff.liu@oracle.com>
-> > 
-> > xfs_quota(8) will hang up if trying to turn group/project quota off
-> > before the user quota is off, this could be 100% reproduced by:
-> .....
+> Serialisation is completely on the dquot locks - so I don't see
+> anything right now that hints are going to buy us in terms of
+> improving concurrency or scalability, so I think we probably can
+> just get rid of them.
 > 
-> So from the perspective, I'm happy to consider the updated
-> patch as:
+> FWIW, getting rid of the hints and converting the dquot reference
+> counter to an atomic actually improves performance a bit:
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> FSUse%        Count         Size    Files/sec     App Overhead
+>      0      1600000            0      17559.3         15606077
+>      0      3200000            0      18738.9         14026009
+>      0      4800000            0      18960.0         14381162
+>      0      6400000            0      19026.5         14422024
+>      0      8000000            0      18456.6         15369059
 > 
-> However, I question the need for the hints at all now. The hints
-> were necessary back when the quota manager had global lists and
-> hashes, and the lookups were expensive. Hence there was a
-> significant win to caching the group dquot on the user dquot as it
-> avoided a significant amount of code, locks and dirty cachelines.
-> 
-> Now, it's just a radix tree lookup under only a single lock and the
-> process dirties far fewer cachelines (none in the radix tree at all)
-> and so should be substantially faster than the old code. And with
-> the dquots being attached and cached on inodes in the first place, I
-> don't see much advantage to keeping hints on the user dquot. THis is
-> especially true for project quotas where a user might be accessing
-> files in different projects all the time and so thrashing the
-> project quota hint on the user dquot....
-> 
-> Hence I wonder if removing the dquot hint caching altogether would
-> result in smaller, simpler, faster code.  And, in reality, if the
-> radix tree lock is a contention point on lookup after removing the
-> hints, then we can fix that quite easily by switching to RCU-based
-> lockless lookups like we do for the inode cache....
+> Sure, 10% improvement is 10%, but concurrency still sucks. At least
+> it narrows down the cause - the transactional modifications are the
+> serialisation issue.
+Admire!! I'm still in considering of remove the hints but you have already
+shown the measuring results. :)
+Would you like to fix it in this way directly or make it as a increased
+improvement once my current fix got merged? Both fine to me.
 
-Actually, scalability couldn't get any worse by removing the hints.
-If I run a concurrent workload with quota enabled, the global dquot
-locks (be it user, quota or project) completely serialises the
-workload. This result if from u/g/p all enabled, run by a single
-user in a single group and a project ID of zero:
+Thanks,
+-Jeff
 
-./fs_mark  -D  10000  -S0  -n  100000  -s  0  -L  32  -d  /mnt/scratch/0  -d  /mnt/scratch/1  -d  /mnt/scratch/2  -d  /mnt/scratch/3  -d  /mnt/scratch/4  -d  /mnt/scratch/5  -d  /mnt/scratch/6  -d  /mnt/scratch/7  -d  /mnt/scratch/8  -d  /mnt/scratch/9  -d  /mnt/scratch/10  -d  /mnt/scratch/11  -d  /mnt/scratch/12  -d  /mnt/scratch/13  -d  /mnt/scratch/14  -d  /mnt/scratch/15
-#       Version 3.3, 16 thread(s) starting at Mon Dec  9 12:53:46 2013
-#       Sync method: NO SYNC: Test does not issue sync() or fsync() calls.
-#       Directories:  Time based hash between directories across 10000 subdirectories with 180 seconds per subdirectory.
-#       File names: 40 bytes long, (16 initial bytes of time stamp with 24 random bytes at end of name)
-#       Files info: size 0 bytes, written with an IO size of 16384 bytes per write
-#       App overhead is time in microseconds spent in the test not doing file writing related system calls.
-
-FSUse%        Count         Size    Files/sec     App Overhead
-     0      1600000            0      17666.5         15377143
-     0      3200000            0      17018.6         15922906
-     0      4800000            0      17373.5         16149660
-     0      6400000            0      16564.9         17234139
-....
-
-Without quota enabled, that workload runs at >250,000 files/sec.
-
-Serialisation is completely on the dquot locks - so I don't see
-anything right now that hints are going to buy us in terms of
-improving concurrency or scalability, so I think we probably can
-just get rid of them.
-
-FWIW, getting rid of the hints and converting the dquot reference
-counter to an atomic actually improves performance a bit:
-
-FSUse%        Count         Size    Files/sec     App Overhead
-     0      1600000            0      17559.3         15606077
-     0      3200000            0      18738.9         14026009
-     0      4800000            0      18960.0         14381162
-     0      6400000            0      19026.5         14422024
-     0      8000000            0      18456.6         15369059
-
-Sure, 10% improvement is 10%, but concurrency still sucks. At least
-it narrows down the cause - the transactional modifications are the
-serialisation issue.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
