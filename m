@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 290987F93
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 16:49:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 07CBB8F8033
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 14:49:32 -0800 (PST)
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
-	cuda.sgi.com with ESMTP id TqSYeqGxnnSTCbRB for
-	<xfs@oss.sgi.com>; Mon, 09 Dec 2013 14:49:30 -0800 (PST)
-Date: Mon, 9 Dec 2013 23:30:28 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Sudden File System Corruption
-Message-ID: <20131209233028.27ee7154@galadriel.home>
-In-Reply-To: <20131209222131.GX10988@dastard>
-References: <CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
-	<52A191BA.20800@hardwarefreak.com>
-	<CAPd9ww8+W2VX2HAfxEkVN5mL1a_+=HDAStf1126WSE33Vb=VsQ@mail.gmail.com>
-	<52A302A9.9050509@hardwarefreak.com>
-	<CAPd9ww8ovd1rOCQdjUF=U_ji2SOjyBCG-eFjeWSPXr8L5Zg9-A@mail.gmail.com>
-	<52A401FF.9050506@hardwarefreak.com>
-	<20131208160339.5c45ab91@galadriel.home>
-	<52A5159F.2060309@hardwarefreak.com>
-	<20131209014002.GP31386@dastard>
-	<52A61F3A.7040504@hardwarefreak.com>
-	<20131209222131.GX10988@dastard>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 7BB7E7F8E
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 17:07:47 -0600 (CST)
+Date: Mon, 9 Dec 2013 17:07:44 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v2 2/3] xfs: fix infinite loop by detaching the
+	group/project hints from user dquot
+Message-ID: <20131209230744.GA1935@sgi.com>
+References: <5294A469.1060000@oracle.com>
+	<20131128104336.GE26927@infradead.org>
+	<52986001.9040101@oracle.com> <20131206210137.GT1935@sgi.com>
+	<52A2B75C.3040803@oracle.com> <20131209012642.GO31386@dastard>
+	<20131209023655.GQ31386@dastard>
+	<20131209071003.GA2736@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131209071003.GA2736@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,23 +24,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mike Dacre <mike.dacre@gmail.com>, Stan Hoeppner <stan@hardwarefreak.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Liu <jeff.liu@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-TGUgVHVlLCAxMCBEZWMgMjAxMyAwOToyMTozMSArMTEwMCB2b3VzIMOpY3JpdmllejoKCj4gU28s
-IHdoaWxlIHRoZSB0ZWNoIG1pZ2h0IGJlIGdyZWF0LCB0aGUgYmVuY2htYXJrcyBzdWNrZWQgYXQK
-PiBkZW1vbnN0cmF0aW5nIHRoYXQuCgpBbmQgbm93IHRoYXQgd2UgaGF2ZSBlbmhhbmNlLWlvLCBi
-Y2FjaGUgYW5kIGZyaWVuZHMsIEknbSBhY3R1YWxseSBtb3JlCmNvbmZpZGVudCBvZiB1c2luZyB0
-aGVzZSB0aGFuIHNvbWUgc29ydCBvZiBoaWRkZW4gcHNldWRvLWhhcmR3YXJlIG1hZ2ljLgoKLS0g
-Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5p
-cXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAg
-ICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMg
-MSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Sun, Dec 08, 2013 at 11:10:03PM -0800, Christoph Hellwig wrote:
+> The hint removal gets my vote.  I actually had it written up the last
+> time I touch the quota code, but for some reasons I stopped before
+> sumitting it.
+
+Sounds good to me too.
+
+-Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
