@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BCF4D7F37
-	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 19:01:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A2F7304039
-	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 17:01:19 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 783DA7F37
+	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 19:27:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EC60AAC003
+	for <xfs@oss.sgi.com>; Sun,  8 Dec 2013 17:26:58 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	SvZpI0gxc5SxIGBQ for <xfs@oss.sgi.com>;
-	Sun, 08 Dec 2013 17:01:09 -0800 (PST)
-Date: Mon, 9 Dec 2013 12:00:49 +1100
+	T1s8k8oKmQdADHhl for <xfs@oss.sgi.com>;
+	Sun, 08 Dec 2013 17:26:46 -0800 (PST)
+Date: Mon, 9 Dec 2013 12:26:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3] xfs: free the efi AIL entry on log recovery failure
-Message-ID: <20131209010049.GN31386@dastard>
-References: <20131206212037.560711585@sgi.com>
-	<20131208005224.696001432@sgi.com>
+Subject: Re: [PATCH v2 2/3] xfs: fix infinite loop by detaching the
+	group/project hints from user dquot
+Message-ID: <20131209012642.GO31386@dastard>
+References: <5294A469.1060000@oracle.com>
+	<20131128104336.GE26927@infradead.org>
+	<52986001.9040101@oracle.com> <20131206210137.GT1935@sgi.com>
+	<52A2B75C.3040803@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131208005224.696001432@sgi.com>
+In-Reply-To: <52A2B75C.3040803@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,134 +33,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, Dec 07, 2013 at 06:52:12PM -0600, Mark Tinguely wrote:
-> If an extent free fails during recovery, the filesystem will be
-> forced down. The efi entry is still on the AIL and the log
-> shutdown function xfs_ail_push_all_sync() will hang.
+On Sat, Dec 07, 2013 at 01:51:24PM +0800, Jeff Liu wrote:
+> Hi Ben,
 > 
-> This patch is similar to the patches that removed the dquot and
-> inode in commits 32ce90a and dea9609 but removes all the EFI
-> entries from the AIL.
+....
+> >> void
+> >> xfs_qm_dqpurge_all()
+> >> {
+> >> 	xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge_hints, NULL);
+> >>
+> >> 	if (flags & XFS_QMOPT_UQUOTA)
+> >> 		xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge, NULL);
+> >> 	if (flags & XFS_QMOPT_GQUOTA)
+> >> 		xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge, NULL);
+> >> 	if (flags & XFS_QMOPT_PQUOTA)
+> >> 		xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge, NULL);
+> >> }
+> >>
+> >> Above code is what I can figured out as per your suggestions for now, but it
+> >> would introduce overheads for walking through user dquots to release hints
+> >> separately if we want to turn user quota off.
+> >>
+> >> Any thoughts?
+> > 
+> > I was gonna pull in the single walk version, but now I realize that it is still
+> > under discussion.  I'm happy with either implementation, with maybe a slight
+> > preference for a single user quota walk.  Can you and Christoph come to an
+> > agreement?
+> For now, I can not figure out a more optimized solution.  Well, I just realized
+> I don't need to initialize both gdqp and pdqp to NULL at xfs_qm_dqpurge_hints()
+> since they will be evaluated by dqp pointers dereference anyway.  As a minor fix,
+> the revised version was shown as follows.
 > 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
-> v3 (Augh - where is my head?) only remove efi items on error.
-> v2 remove all the EFIs from the AIL rather than the current entry
->    per Dave's suggestion.
->    move the cleaning routine to caller.
+> Christoph, as I mentioned previously, keeping a separate walk to release the user
+> dquots would also have overloads in some cases, would you happy to have this fix
+> although it is not most optimized?
+
+I'm happy either way it is done - I'd prefer we fix the problem than
+bikeshed over an extra radix tree walk or not given for most people
+the overhead won't be significant.
+
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
->  fs/xfs/xfs_log_recover.c |   36 ++++++++++++++++++++++++------------
->  1 file changed, 24 insertions(+), 12 deletions(-)
-> 
-> Index: b/fs/xfs/xfs_log_recover.c
-> ===================================================================
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3635,11 +3635,11 @@ xlog_recover_process_data(
->   */
->  STATIC int
->  xlog_recover_process_efi(
-> -	xfs_mount_t		*mp,
-> -	xfs_efi_log_item_t	*efip)
-> +	struct xfs_mount	*mp,
-> +	struct xfs_efi_log_item	*efip)
->  {
-> -	xfs_efd_log_item_t	*efdp;
-> -	xfs_trans_t		*tp;
-> +	struct xfs_efd_log_item	*efdp;
-> +	struct xfs_trans	*tp;
->  	int			i;
->  	int			error = 0;
->  	xfs_extent_t		*extp;
-> @@ -3660,12 +3660,7 @@ xlog_recover_process_efi(
->  		    (extp->ext_len == 0) ||
->  		    (startblock_fsb >= mp->m_sb.sb_dblocks) ||
->  		    (extp->ext_len >= mp->m_sb.sb_agblocks)) {
-> -			/*
-> -			 * This will pull the EFI from the AIL and
-> -			 * free the memory associated with it.
-> -			 */
-> -			set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
-> -			xfs_efi_release(efip, efip->efi_format.efi_nextents);
-> +			/* The caller will free all efi entries on error. */
->  			return XFS_ERROR(EIO);
->  		}
->  	}
-> @@ -3691,6 +3686,7 @@ xlog_recover_process_efi(
->  
->  abort_error:
->  	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
-> +	/* The caller will free all efi entries on error. */
->  	return error;
->  }
+> xfs_quota(8) will hang up if trying to turn group/project quota off
+> before the user quota is off, this could be 100% reproduced by:
+.....
 
-That sort of comment belongs in the function header, not there.
+So from the perspective, I'm happy to consider the updated
+patch as:
 
-Also, like I said previously, XFS_EFI_RECOVERED should be set
-unconditionally at the start of the function and the error handling
-should always release it, so that the state of the EFI on leaving
-this function is always consistent. This is especially important if
-we have an EFD pointing at the EFI - right now we can leave the
-function on error with an EFD pointing at the EFI, but the EFI may
-or may not ahve the XFS_EFI_RECOVERED bit set. i.e. consider that
-if xfs_trans_commit() fails, it's the same case as calling
-xfs_trans_cancel(XFS_TRANS_ABORT).
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
+However, I question the need for the hints at all now. The hints
+were necessary back when the quota manager had global lists and
+hashes, and the lookups were expensive. Hence there was a
+significant win to caching the group dquot on the user dquot as it
+avoided a significant amount of code, locks and dirty cachelines.
 
-> @@ -3716,8 +3712,8 @@ STATIC int
->  xlog_recover_process_efis(
->  	struct xlog	*log)
->  {
-> -	xfs_log_item_t		*lip;
-> -	xfs_efi_log_item_t	*efip;
-> +	struct xfs_log_item	*lip;
-> +	struct xfs_efi_log_item	*efip;
->  	int			error = 0;
->  	struct xfs_ail_cursor	cur;
->  	struct xfs_ail		*ailp;
-> @@ -3756,7 +3752,23 @@ xlog_recover_process_efis(
->  	}
->  out:
->  	xfs_trans_ail_cursor_done(ailp, &cur);
-> +	lip = xfs_ail_min(ailp);
->  	spin_unlock(&ailp->xa_lock);
-> +	if (!error)
-> +		return 0;
-> +
-> +	/* Free all the EFI from the AIL upon error */
-> +	while (lip) {
-> +		if (lip->li_type == XFS_LI_EFI) {
-> +			efip = (xfs_efi_log_item_t *)lip;
-> +			if (!test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
-> +				set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
-> +			xfs_efi_release(efip, efip->efi_format.efi_nextents);
-> +		}
-> +		spin_lock(&ailp->xa_lock);
-> +		lip = xfs_ail_min(ailp);
-> +		spin_unlock(&ailp->xa_lock);
-> +	}
->  	return error;
+Now, it's just a radix tree lookup under only a single lock and the
+process dirties far fewer cachelines (none in the radix tree at all)
+and so should be substantially faster than the old code. And with
+the dquots being attached and cached on inodes in the first place, I
+don't see much advantage to keeping hints on the user dquot. THis is
+especially true for project quotas where a user might be accessing
+files in different projects all the time and so thrashing the
+project quota hint on the user dquot....
 
-It's never valid to walk the AIL without a cursor. Especially here,
-where we could be racing with log IO completion doing shutdown
-processing and modifying the AIL.
-
-What's to stop log IO completion from freeing the log item at the
-tail of the log just after we drop the AIL lock here?
-
-What happens if the tail of the log is not an EFI? We just spin on
-it and then, potentially, access it after it's been removed from the
-AIL and freed....
-
-IOWs, the only safe entries for us to touch here are EFIs and we
-have to safely traverse the AIL because there are items other than
-EFIs in the AIL and they may be concurrently removed by the log.
-Only a cursor-based traversal makes that AIL traversal safe as it
-detects list perturbations while the AIL has been dropped and
-prevents us from accessing objects that we shouldn't be touching.
+Hence I wonder if removing the dquot hint caching altogether would
+result in smaller, simpler, faster code.  And, in reality, if the
+radix tree lock is a contention point on lookup after removing the
+hints, then we can fix that quite easily by switching to RCU-based
+lockless lookups like we do for the inode cache....
 
 Cheers,
 
