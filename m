@@ -1,19 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 938537F88
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 16:30:56 -0600 (CST)
-Date: Mon, 9 Dec 2013 16:30:52 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 04/11] xfs: add xfs_ilock_attr_map_shared
-Message-ID: <20131209223052.GZ1935@sgi.com>
-References: <20131206203006.914776999@bombadil.infradead.org>
-	<20131206203128.663030833@bombadil.infradead.org>
-	<20131208223610.GE31386@dastard>
-	<20131209181612.GA22183@infradead.org>
-	<20131209222433.GY10988@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131209222433.GY10988@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5DB137F92
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 16:43:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3960D304043
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 14:43:09 -0800 (PST)
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
+	cuda.sgi.com with ESMTP id HMgEAC1ycLxt85uI for
+	<xfs@oss.sgi.com>; Mon, 09 Dec 2013 14:43:05 -0800 (PST)
+Date: Mon, 9 Dec 2013 23:24:04 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Sudden File System Corruption
+Message-ID: <20131209232404.33492aa2@galadriel.home>
+In-Reply-To: <52A61F3A.7040504@hardwarefreak.com>
+References: <52A03513.6030408@hardwarefreak.com>
+	<CAPd9ww9hsOFK6pxqRY-YtLLAkkJHCuSi1BaM4n9=2XTjNVAn2Q@mail.gmail.com>
+	<CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>
+	<52A191BA.20800@hardwarefreak.com>
+	<CAPd9ww8+W2VX2HAfxEkVN5mL1a_+=HDAStf1126WSE33Vb=VsQ@mail.gmail.com>
+	<52A302A9.9050509@hardwarefreak.com>
+	<CAPd9ww8ovd1rOCQdjUF=U_ji2SOjyBCG-eFjeWSPXr8L5Zg9-A@mail.gmail.com>
+	<52A401FF.9050506@hardwarefreak.com>
+	<20131208160339.5c45ab91@galadriel.home>
+	<52A5159F.2060309@hardwarefreak.com>
+	<20131209014002.GP31386@dastard>
+	<52A61F3A.7040504@hardwarefreak.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,48 +34,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: Mike Dacre <mike.dacre@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Dave,
-
-On Tue, Dec 10, 2013 at 09:24:33AM +1100, Dave Chinner wrote:
-> On Mon, Dec 09, 2013 at 10:16:12AM -0800, Christoph Hellwig wrote:
-> > On Mon, Dec 09, 2013 at 09:36:10AM +1100, Dave Chinner wrote:
-> > > > +			/*
-> > > > +			 * Even after flushing the inode, there can still be
-> > > > +			 * delalloc blocks on the inode beyond EOF due to
-> > > > +			 * speculative reallocation.  These are not removed
-> > > 
-> > > "speculative preallocation"
-> > 
-> > I just re-indented the comment, the wording is the original one.  Maybe
-> > we'll get a commit that cares enought to fix it on the fly..
-> 
-> Actually, I checked that before commenting on it - the original
-> comment is correct:
-> 
->  626                 /*
->  627                  * even after flushing the inode, there can still be delalloc
->  628                  * blocks on the inode beyond EOF due to speculative
->  629                  * preallocation. These are not removed until the release
->  630                  * function is called or the inode is inactivated. Hence we
->  631                  * cannot assert here that ip->i_delayed_blks == 0.
->  632                  */
-> 
-> I wouldn't have pointed at it if the original code had that
-> problem... :/
-
-If you want to extend your Reviewed-by: on this patch I will clean up the
-spelling mistake and pull in this series.
-
--Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgTW9uLCAwOSBEZWMgMjAxMyAxMzo1MToyMiAtMDYwMCB2b3VzIMOpY3JpdmllejoKCj4gSGlz
+IEFkYXB0ZWMgNTE2NDUgaGFzIGEgMS4yR0h6IGR1YWwgY29yZSBQUEMgUkFJRCBBU0lDIGFuZCBp
+cyByYXRlZCBhdAo+IDI1MEsgSU9QUy4gIFRoaXMgZmlndXJlIHByb2JhYmx5IGluY2x1ZGVzIHNv
+bWUgd2lzaGZ1bCB0aGlua2luZyBvbgo+IEFkYXB0ZWMncyBwYXJ0LCBidXQgY2xlYXJseSB0aGUg
+UkFJRCBBU0lDIGlzIG11Y2ggZmFzdGVyIHRoYW4gdGhlCj4gSW50ZWwgWDI1IFNTRCwgd2hpY2gg
+aXMgdW5pdmVyc2FsbHkga25vd24gdG8gYmUgYSB2ZXJ5IHZlcnkgbG93Cj4gcGVyZm9ybWVyLgoK
+RnJvbSBteSBvd24gYmVuY2htYXJrcywgSSBldmFsdWF0ZWQgdGhlIHJlYWwgSU9QUyBwZXJmb3Jt
+YW5jZSBvZiB0aGVzZQpjYXJkcyBhdCBhYm91dCA0NUsgcmFuZG9tIDhLIEtJT1BTLiAKCi0tIAot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1
+ZQogICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAg
+fAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEg
+NzggOTQgODQgMDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
