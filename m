@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7792E7F6A
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 10:39:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4FE97304032
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 08:39:42 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 5nij3PXjH75KdHZc for <xfs@oss.sgi.com>;
-	Mon, 09 Dec 2013 08:39:40 -0800 (PST)
-Message-ID: <52A5F249.1060505@sandeen.net>
-Date: Mon, 09 Dec 2013 10:39:37 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3FF377F6F
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 12:16:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C2068F804B
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 10:16:14 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id LkgyXtEaKPCybNnZ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 09 Dec 2013 10:16:13 -0800 (PST)
+Date: Mon, 9 Dec 2013 10:16:12 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 04/11] xfs: add xfs_ilock_attr_map_shared
+Message-ID: <20131209181612.GA22183@infradead.org>
+References: <20131206203006.914776999@bombadil.infradead.org>
+	<20131206203128.663030833@bombadil.infradead.org>
+	<20131208223610.GE31386@dastard>
 MIME-Version: 1.0
-Subject: Re: XFS...Windows?
-References: <000001cef46c$ab687cc0$02397640$@mail.com>
-In-Reply-To: <000001cef46c$ab687cc0$02397640$@mail.com>
+Content-Disposition: inline
+In-Reply-To: <20131208223610.GE31386@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +27,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Yuji Saeki <yuji1@mail.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 12/8/13, 5:24 PM, Yuji Saeki wrote:
-> Congratulations on your file system, it=92s quite nice. I=92ve
-> benchmarked it myself, it=92s very impressive. I=92m curious though, is
-> there are thought to a Windows driver? If someone ported the most
-> current-stable version to Windows (free) under the same license =91GNU
-> Lesser General Public License=92 with entire credit to XFS
+On Mon, Dec 09, 2013 at 09:36:10AM +1100, Dave Chinner wrote:
+> > +			/*
+> > +			 * Even after flushing the inode, there can still be
+> > +			 * delalloc blocks on the inode beyond EOF due to
+> > +			 * speculative reallocation.  These are not removed
+> 
+> "speculative preallocation"
 
-XFS isn't under the LGPL, it's GPL, as is the rest of the kernel code,
-and the license terms should be quite clear.
-
-> would SGI
-> be okay with that? A =91no-warranty implied=92 (etc) kind of protection
-> of course. Quite a few devs that I work with enjoy the XFS filesystem
-> and we dev in both Linux and Windows. We=92re very interested in making
-> this happen with respect to the XFS project.
-
-I'm not a lawyer, but it's not really an issue of opinion - it's a legal
-matter.  If you can port XFS to Windows while maintaining the terms
-of the license agreements on both ends, you're free to do so.
-
-The technical difficulty of such a task is another matter as well.  :)
-
--Eric
+I just re-indented the comment, the wording is the original one.  Maybe
+we'll get a commit that cares enought to fix it on the fly..
 
 _______________________________________________
 xfs mailing list
