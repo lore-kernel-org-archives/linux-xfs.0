@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EEF997F98
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:59:31 -0600 (CST)
-Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
-	[128.162.233.19])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D5FC98F8033
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:59:31 -0800 (PST)
-Date: Tue, 10 Dec 2013 14:59:31 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A86D7F9C
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 15:02:17 -0600 (CST)
+Date: Tue, 10 Dec 2013 15:02:13 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH v2] xfs: fix calculation of freed inode cluster blocks
-Message-ID: <20131210205931.GD1935@sgi.com>
+Subject: Re: [PATCH] MAINTAINERS: fix incorrect mail address of XFS maintainer
+Message-ID: <20131210210213.GE1935@sgi.com>
+References: <1386513230-4914-1-git-send-email-linkinjeon@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1386513230-4914-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,38 +22,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: Namjae Jeon <namjae.jeon@samsung.com>, xfs@oss.sgi.com
 
-rec.ir_startino is an agino rather than an ino.  Use the correct macro
-when dealing with it in xfs_difree.
+On Sun, Dec 08, 2013 at 11:33:50PM +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+> 
+> When I tried to send the patches to XFS Maintainers,
+> I got returned mail included delivery fail message for Dave's mail.
+> Maybe, Dave Chinner mail address is incorrect.
+> I try to fix it correctly.
+> 
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> ---
+>  MAINTAINERS |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 0f64bd9..3cd17ec 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9558,7 +9558,7 @@ F:	drivers/xen/*swiotlb*
+>  
+>  XFS FILESYSTEM
+>  P:	Silicon Graphics Inc
+> -M:	Dave Chinner <dchinner@fromorbit.com>
+> +M:	Dave Chinner <david@fromorbit.com>
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Looks to be correct.  david@fromorbit.com
 
----
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-v2: remove RFC as per Dave's suggestion.
-
- fs/xfs/xfs_ialloc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: b/fs/xfs/xfs_ialloc.c
-===================================================================
---- a/fs/xfs/xfs_ialloc.c	2013-12-03 12:07:24.485185962 -0600
-+++ b/fs/xfs/xfs_ialloc.c	2013-12-03 12:07:40.994563706 -0600
-@@ -1229,7 +1229,7 @@ xfs_difree(
- 		}
- 
- 		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp,
--				agno, XFS_INO_TO_AGBNO(mp,rec.ir_startino)),
-+				agno, XFS_AGINO_TO_AGBNO(mp, rec.ir_startino)),
- 				XFS_IALLOC_BLOCKS(mp), flist, mp);
- 	} else {
- 		*delete = 0;
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+>  M:	Ben Myers <bpm@sgi.com>
+>  M:	xfs@oss.sgi.com
+>  L:	xfs@oss.sgi.com
+> -- 
+> 1.7.9.5
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
