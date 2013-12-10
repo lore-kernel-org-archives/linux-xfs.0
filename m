@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3FCB17F92
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 08:44:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 086058F804B
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 06:44:29 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id AuLBiSwsGb1PEdV4 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 06:44:28 -0800 (PST)
-Message-ID: <52A728A7.8020905@oracle.com>
-Date: Tue, 10 Dec 2013 18:43:51 +0400
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 192167F93
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 08:46:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EEA4A8F8050
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 06:46:47 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Tszx3AnrdggSRA5k for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 06:46:46 -0800 (PST)
+Message-ID: <52A72930.4020404@sandeen.net>
+Date: Tue, 10 Dec 2013 08:46:08 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: nfs vs xfstests 193
-References: <20131106115648.GA24804@infradead.org> <52A1CF22.106@oracle.com>
-	<20131206180858.GA2803@infradead.org>
-	<20131206204404.GA12613@fieldses.org>
-	<20131206204747.GB12613@fieldses.org>
-In-Reply-To: <20131206204747.GB12613@fieldses.org>
+Subject: Re: [PATCH] xfsdump: don't assume getdents exists
+References: <20131106213635.GC24712@redacted.bos.redhat.com>
+In-Reply-To: <20131106213635.GC24712@redacted.bos.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,53 +23,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Vasily Isaenko <vasily.isaenko@oracle.com>, linux-nfs@vger.kernel.org, "Sachin S. Prabhu" <sprabhu@redhat.com>, xfs@oss.sgi.com
+To: Kyle McMartin <kyle@redhat.com>, sandeen@redhat.com
+Cc: xfs@oss.sgi.com
 
+On 11/6/13, 3:36 PM, Kyle McMartin wrote:
+> New Linux ports are using a standard syscall list that does not include
+> deprecated syscalls where 64-bit clean alternatives exist. As a result,
+> on arm64, __NR_getdents is undefined, resulting in xfsdump failing to
+> build.
+> 
+> To avoid that, in the case where __NR_getdents is unset in unistd.h,
+> avoid building the fallback path entirely, since
+> __ASSUME_GETDENTS64_SYSCALL will be true, the SYS_getdents64 case will
+> be the primary (and only) path used.
+> 
+> Signed-off-by: Kyle McMartin <kyle@redhat.com>
 
+Hey Kyle - were you going to do a V2 of this one?
 
-On 12/07/2013 12:47 AM, J. Bruce Fields wrote:
-> On Fri, Dec 06, 2013 at 03:44:04PM -0500, bfields wrote:
->> On Fri, Dec 06, 2013 at 10:08:58AM -0800, Christoph Hellwig wrote:
->>> On Fri, Dec 06, 2013 at 05:20:34PM +0400, Stanislav Kholmanskikh wrote:
->>>> Just to make the behaviour more consistent between NFS and other
->>>> "local" file systems as It was done by
->>>> commit https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=0953e620de0538cbd081f1b45126f6098112a598
->>>
->>> Seems like we got others in line with XFS behavior.
->>
->> But, not having tested the behavior, it looks like fs/open.c has a
->> simlar !S_ISDIR() check.  Where's that behavior implemented?
->>
->>> I'd prefer to have NFS follow this as well.
->>
->> Huh.  Sachin, do you remember if there was any other motivation behind
->> that patch?
->
-> Never mind, I see, the complaint is about the case where the id's don't
-> change, not about the directory case.  So Sachin's
-> 0953e620de0538cbd081f1b45126f6098112a598 doesn't actually have anything
-> to do with this.
->
-> I'm fine with removing the id comparisons and changing the nfsd behavior
-> to match local filesystems.
+Just checking, thanks - 
+-Eric
 
-Great.
-
-I will try to produce a patch for this.
-
->
-> --b.
->
+> --- a/common/getdents.c
+> +++ b/common/getdents.c
+> @@ -70,6 +70,9 @@ extern int __have_no_getdents64;
+>  # ifndef SYS_getdents64
+>  #  define SYS_getdents64 __NR_getdents64
+>  # endif
+> +# ifndef __NR_getdents
+> +#  define __ONLY_GETDENTS64_SYSCALL     1
+> +# endif
+>  #endif
+>  
+>  
+> @@ -207,6 +210,13 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
+>  # endif
+>      }
+>  #endif
+> +/* Newer Linux ports are not adding deprecated syscalls, so to avoid compile
+> + * failures since SYS_getdents will be undefined, we check for that and only
+> + * build the fall-back case if SYS_getdents is defined. We know that
+> + * __ASSUME_GETDENTS64_SYSCALL is set, since __NR_getdents64 must exist on
+> + * those platforms.
+> + */
+> +#ifndef __ONLY_GETDENTS64_SYSCALL
+>    {
+>      size_t red_nbytes;
+>      struct kernel_dirent *skdp, *kdp;
+> @@ -265,4 +275,5 @@ getdents_wrap (int fd, char *buf, size_t nbytes)
+>      }
+>  
+>    return (char *) dp - buf;
+> +#endif
+>  }
+> 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
->
+> 
 
 _______________________________________________
 xfs mailing list
