@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 356297F7E
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 07:15:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18643304043
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 05:15:34 -0800 (PST)
-Received: from mail-ob0-f176.google.com (mail-ob0-f176.google.com
-	[209.85.214.176]) by cuda.sgi.com with ESMTP id
-	fDsDD6FiNBGADAov (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 05:15:33 -0800 (PST)
-Received: by mail-ob0-f176.google.com with SMTP id va2so5264640obc.35
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 05:15:32 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 49ACF7F81
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 07:20:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BE550AC002
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 05:20:09 -0800 (PST)
+Received: from mail-oa0-f44.google.com (mail-oa0-f44.google.com
+	[209.85.219.44]) by cuda.sgi.com with ESMTP id dBsCdeNgpysnxQxB
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 Dec 2013 05:20:07 -0800 (PST)
+Received: by mail-oa0-f44.google.com with SMTP id m1so5496023oag.3
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 05:20:07 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131210075621.GA30135@kroah.com>
+In-Reply-To: <20131209235523.GW31386@dastard>
 References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
 	<20131209121534.GE4278@hercules>
 	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
-	<20131209235523.GW31386@dastard> <20131210075621.GA30135@kroah.com>
-Date: Tue, 10 Dec 2013 08:15:32 -0500
-Message-ID: <CA+5PVA7L0u9cq0Zvnw3J7Yun3+TfMH3fPC3M8=mvxT3EGKX=fQ@mail.gmail.com>
+	<20131209235523.GW31386@dastard>
+Date: Tue, 10 Dec 2013 08:20:07 -0500
+Message-ID: <CA+5PVA5rUmWYQiPwkN15CnfqckmEjVukXz3mU75CiUBVzfERqA@mail.gmail.com>
 Subject: Re: XFS security fix never sent to -stable?
 From: Josh Boyer <jwboyer@fedoraproject.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,46 +33,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Luis Henriques <luis.henriques@canonical.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Kees Cook <keescook@google.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Kees Cook <keescook@google.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Dec 10, 2013 at 2:56 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Tue, Dec 10, 2013 at 10:55:23AM +1100, Dave Chinner wrote:
->> [cc xfs list, cc stable@vger.kernel.org]
->>
->> On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
->> > On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
->> > <luis.henriques@canonical.com> wrote:
->> > > On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
->> > >> Hi,
->> > >>
->> > >> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
->> > >> capability check to free eofblocks ioctl") is a security fix that was
->> > >> never sent to -stable? From what I can see, it was introduced in 3.8
->> > >> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
->> > >> XFS_IOC_FREE_EOFBLOCKS ioctl").
->> > >>
->> > >> I don't see this in the 3.8.y tree. Should it be added there and newer?
->> > >
->> > > Thanks Kees, I'm queuing it for the 3.11 kernel.
->> >
->> > There's also this one:
->> >
->> > http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
->> >
->> > It fixes CVE-2013-6382
->>
->> First I've heard about it there being a CVE for that bug. Since when
->> has it been considered best practice to publish CVEs without first
->> (or ever) directly contacting the relevant upstream developers?
->>
->> But, regardless of how broken I think the CVE process is, commit
->> 071c529 ("xfs: underflow bug in xfs_attrlist_by_handle()") should be
->> picked up by the stable kernels.
+On Mon, Dec 9, 2013 at 6:55 PM, Dave Chinner <david@fromorbit.com> wrote:
+> [cc xfs list, cc stable@vger.kernel.org]
 >
-> I don't see that commit in Linus's tree, is it not there yet?
+> On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
+>> On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
+>> <luis.henriques@canonical.com> wrote:
+>> > On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
+>> >> Hi,
+>> >>
+>> >> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
+>> >> capability check to free eofblocks ioctl") is a security fix that was
+>> >> never sent to -stable? From what I can see, it was introduced in 3.8
+>> >> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
+>> >> XFS_IOC_FREE_EOFBLOCKS ioctl").
+>> >>
+>> >> I don't see this in the 3.8.y tree. Should it be added there and newer?
+>> >
+>> > Thanks Kees, I'm queuing it for the 3.11 kernel.
+>>
+>> There's also this one:
+>>
+>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
+>>
+>> It fixes CVE-2013-6382
+>
+> First I've heard about it there being a CVE for that bug. Since when
+> has it been considered best practice to publish CVEs without first
+> (or ever) directly contacting the relevant upstream developers?
 
-Not yet.  Ben said it's applied but I'm not sure where that is.
+We got a Fedora bug for it, and there are similar RHEL bugs open.  I
+had assumed you would be informed either via upstream or through
+those.  The CVE request was submitted by Kees here:
+http://seclists.org/oss-sec/2013/q4/330
 
 josh
 
