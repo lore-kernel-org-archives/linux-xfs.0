@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9A6447F76
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:01:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 372B1AC011
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:01:46 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DXzad9vxPX0Hdknt for
-	<xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:01:45 -0800 (PST)
-Date: Tue, 10 Dec 2013 14:50:12 -0500
-From: Kyle McMartin <kmcmarti@redhat.com>
-Subject: Re: [PATCH] xfsdump: don't assume getdents exists
-Message-ID: <20131210195012.GG31356@redacted.bos.redhat.com>
-References: <20131106213635.GC24712@redacted.bos.redhat.com>
-	<52A72930.4020404@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52A72930.4020404@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AC3B77F80
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:12:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7A3ED8F8033
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:19 -0800 (PST)
+Received: from mail-ie0-f201.google.com (mail-ie0-f201.google.com
+	[209.85.223.201]) by cuda.sgi.com with ESMTP id
+	WWC7Yp6Yos5GuCYp (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 12:12:18 -0800 (PST)
+Received: by mail-ie0-f201.google.com with SMTP id at1so1116096iec.4
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:18 -0800 (PST)
+From: Junho Ryu <jayr@google.com>
+Subject: [PATCH 03/10] xfstests: _scratch_mkfs_sized() for tmpfs
+Date: Tue, 10 Dec 2013 12:11:54 -0800
+Message-Id: <1386706321-15795-4-git-send-email-jayr@google.com>
+In-Reply-To: <1386706321-15795-1-git-send-email-jayr@google.com>
+References: <1386706321-15795-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-On Tue, Dec 10, 2013 at 08:46:08AM -0600, Eric Sandeen wrote:
-> On 11/6/13, 3:36 PM, Kyle McMartin wrote:
-> > New Linux ports are using a standard syscall list that does not include
-> > deprecated syscalls where 64-bit clean alternatives exist. As a result,
-> > on arm64, __NR_getdents is undefined, resulting in xfsdump failing to
-> > build.
-> > 
-> > To avoid that, in the case where __NR_getdents is unset in unistd.h,
-> > avoid building the fallback path entirely, since
-> > __ASSUME_GETDENTS64_SYSCALL will be true, the SYS_getdents64 case will
-> > be the primary (and only) path used.
-> > 
-> > Signed-off-by: Kyle McMartin <kyle@redhat.com>
-> 
-> Hey Kyle - were you going to do a V2 of this one?
-> 
-> Just checking, thanks - 
-> -Eric
-> 
+From: Hugh Dickins <hughd@google.com>
 
-Yeah, I can do that today. Thanks Eric.
+_scratch_mkfs_sized() avoid blockdev and update MOUNT_OPTIONS with
+required size on tmpfs, so those tests using it can now run.
 
---Kyle
+Signed-off-by: Hugh Dickins <hughd@google.com>
+Signed-off-by: Junho Ryu <jayr@google.com>
+---
+ common/rc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/common/rc b/common/rc
+index a2005c9..83d56a1 100644
+--- a/common/rc
++++ b/common/rc
+@@ -590,7 +590,7 @@ _scratch_mkfs_sized()
+ 
+     blocks=`expr $fssize / $blocksize`
+ 
+-    if [ "$HOSTOS" == "Linux" ]; then
++    if [ "$HOSTOS" == "Linux" -a "$FSTYP" != "tmpfs" ]; then
+ 	devsize=`blockdev --getsize64 $SCRATCH_DEV`
+ 	[ "$fssize" -gt "$devsize" ] && _notrun "Scratch device too small"
+     fi
+@@ -611,6 +611,9 @@ _scratch_mkfs_sized()
+     btrfs)
+ 	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
+ 	;;
++    tmpfs)
++	export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
++	;;
+     *)
+ 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
+ 	;;
+-- 
+1.8.5.1
 
 _______________________________________________
 xfs mailing list
