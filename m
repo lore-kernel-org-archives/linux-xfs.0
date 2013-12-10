@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 93F937FA7
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 15:03:05 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5C0807F9D
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 15:06:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F1CAAC010
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 13:03:01 -0800 (PST)
-Date: Tue, 10 Dec 2013 13:03:00 -0800
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CED68F8050
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 13:06:54 -0800 (PST)
+Date: Tue, 10 Dec 2013 13:06:52 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: fix calculation of freed inode cluster blocks
-Message-ID: <20131210210300.GA755@infradead.org>
-References: <20131210205931.GD1935@sgi.com>
+Subject: Re: [PATCH v2] xfs_repair: fix process_bmbt_reclist_int
+Message-ID: <20131210210652.GA5996@infradead.org>
+References: <20131210205352.GC1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131210205931.GD1935@sgi.com>
+In-Reply-To: <20131210205352.GC1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,9 +28,17 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 10, 2013 at 02:59:31PM -0600, Ben Myers wrote:
-> rec.ir_startino is an agino rather than an ino.  Use the correct macro
-> when dealing with it in xfs_difree.
+On Tue, Dec 10, 2013 at 02:53:52PM -0600, Ben Myers wrote:
+> There is a set checks for corruption in block map btrees in
+> process_bmbt_reclist_int that we identify but currently do not fix.  It
+> appears that the author's intent in this function was to set error = 1,
+> and then only clear it when all of the checks were completed
+> successfully.  Unfortunately error can be cleared when it is used for
+> the return value of blkmap_set_ext.  Some kinds of corruption are not
+> being fixed, including duplicate extents, claiming free blocks, claiming
+> metadata blocks, and multiply used blocks.
+> 
+> Fix this by using error2 for the return code from blkmap_set_ext.
 > 
 > Signed-off-by: Ben Myers <bpm@sgi.com>
 
