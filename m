@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 11F557FAB
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 18:05:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 89B7BAC001
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 16:05:45 -0800 (PST)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id umWk2yawhNX4z6Mz (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Dec 2013 16:05:44 -0800 (PST)
-Received: from [192.168.4.12] (Athenae [192.168.4.12])
-	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
-	rBA05elY078038 for <xfs@oss.sgi.com>; Mon, 9 Dec 2013 16:05:42 -0800
-Message-ID: <52A65AD5.9070705@tlinx.org>
-Date: Mon, 09 Dec 2013 16:05:41 -0800
-From: Linda Walsh <xfs@tlinx.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48C657FAF
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 21:39:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 38F768F804B
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 19:39:50 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id IYd6RYAyteUdBeZy
+	for <xfs@oss.sgi.com>; Mon, 09 Dec 2013 19:39:49 -0800 (PST)
+Message-ID: <52A68D08.8020505@hardwarefreak.com>
+Date: Mon, 09 Dec 2013 21:39:52 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: where/how is 'xattr' type=security enforced? (security attr stripped?)
+Subject: Re: Sudden File System Corruption
+References: <CAPd9ww9QzFWUnLtzkdktd+fSX9pdft+wL6cvG2MzLpSdLko1dg@mail.gmail.com>	<52A191BA.20800@hardwarefreak.com>	<CAPd9ww8+W2VX2HAfxEkVN5mL1a_+=HDAStf1126WSE33Vb=VsQ@mail.gmail.com>	<52A302A9.9050509@hardwarefreak.com>	<CAPd9ww8ovd1rOCQdjUF=U_ji2SOjyBCG-eFjeWSPXr8L5Zg9-A@mail.gmail.com>	<52A401FF.9050506@hardwarefreak.com>	<20131208160339.5c45ab91@galadriel.home>	<52A5159F.2060309@hardwarefreak.com>	<20131209014002.GP31386@dastard>	<52A61F3A.7040504@hardwarefreak.com>	<20131209222131.GX10988@dastard>
+	<20131209233028.27ee7154@galadriel.home>
+In-Reply-To: <20131209233028.27ee7154@galadriel.home>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,40 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Emmanuel Florac <eflorac@intellique.com>, Dave Chinner <david@fromorbit.com>
+Cc: Mike Dacre <mike.dacre@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-SSBnb3QgYSB3ZWlyZCBtZXNzYWdlIHRoYXQgSSd2ZSBuZXZlciBzZWVuIGJlZm9yZSAtLSBub3Ro
-aW5nCmxpZmUgc2hhdHRlcmluZywganVzdCBhIGN1cmlvc2l0eSB0aGF0IEkgdGhvdWdodCBzaG91
-bGRuJ3QgaGFwcGVuLgoKCkkgc3RvcmVkIGEgZmlsZSBpbiBteSAvaG9tZSBwYXJ0aXRpb24gRlJP
-TSBhIFdpbjcgY2xpZW50CnZpYSBzYW1iYSAzLjYuMTYuCgpXaXRoIHRoYXQgZmlsZSB3ZXJlIGFs
-c28gc3RvcmVkIHhhdHRyczoKCkRPU0FUVFJJQiwgU0FNQkFfUEFJIGFuZCBOVEFDTC4gIFNpbmNl
-IGxpbnV4IGlzIHRoZSAnc2VydmVyJywKVGhlc2UgYXJlIGFsbCBsaWtlbHkgc2V0IHZpYSBzYW1i
-YS4KClRvIHdvcmsgb24gdGhlIGZpbGUgbW9yZSwgSSB3YW50ZWQgdG8gbW92ZSBpdAp0byAvdG1w
-LgoKSSB1c2UgbXY6Cj4gbXYgIC9ob21lL2xhdy90bXAvb1ZhcnMucG0gL3RtcAptdjogc2V0dGlu
-ZyBhdHRyaWJ1dGUg4oCYc2VjdXJpdHkuTlRBQ0zigJkgZm9yIOKAmHNlY3VyaXR5Lk5UQUNM4oCZ
-OiBPcGVyYXRpb24gbm90IHBlcm1pdHRlZAoKIkkiIHdhcyB0aGUgb3duZXIgb2YgdGhlIGZpbGUg
-KHNhbWUgVUlEIGlzIHJlc29sdmVkIGZvciBOVC11c2VyICYgbG9jYWwgdXNlcikgYW5kCmxvY2Fs
-IHVzZXIgaXMgaW4gZ3JvdXAgdGhhdCBmaWxlIHdhcyBzdG9yZWQgdW5kZXIuCgpJIGFtIHRyeWlu
-ZyB0byBmaWd1cmUgb3V0IHdoZXJlIHRoaXMgbWVzc2FnZSBjYW1lIGZyb20sIGFzICdtdicgZG9l
-c24ndApkbyBhbnkgYWNjZXNzIGVuZm9yY2VtZW50IGJhc2VkIG9uIHRoZSAneGF0dHInIG5hbWUg
-ZmllbGQuCgpUaGUgaW1wYWN0IG9mIHRoaXMgaXMgSSBjYW4ndCBtb3ZlIHRoZSBmaWxlIHdpdGhv
-dXQgbG9zaW5nIHNlY3VyaXR5CndoaWNoIGlzIGF1dG9tYXRpY2FsbHkgc3RyaXBwZWQuCgpUcnlp
-bmcgdG8gKmNvcHkqIHRoZSBmaWxlIHdpdGhpbiB0aGUgc2FtZSBkaXJlY3RvcnkgYWxzbyByZXN1
-bHRzCmluIHRoZSBzZWN1cml0eSB4YXR0ciBiZWluZyBzdHJpcHBlZCAtLSBidXQgKioqc2lsZW50
-bHkqKiouCgpTbyB3aGF0IHdhcyByZXNwb25zaWJsZSBmb3IgcHJvaGliaXRpbmcgdGhlIG1vdmlu
-ZyB0aGUgdGhlIHhmcyAneGF0dHInPwoKTXkgdGhvdWdodHMgb24gdGhpcyBhcmUgdGhhdCBpZiBJ
-LCBhcyBhIHVzZXIgY2FuIHdyaXRlIHN1Y2ggYSBmaWxlCih0byBteSBob21lIGRpciBpbiB0aGlz
-IGNhc2UpIGFuZCB0aGUgYXR0cmlidXRlcyBhcmUgY3JlYXRlZCAoaW5kaXJlY3RseSkKYnkgIm1l
-IiB3aGVuIEkgY3JlYXRlIHRoZSBmaWxlLCBJIHNob3VsZCBhbHNvIGJlIGFibGUgdG8gbW92ZSB0
-aGUgZmlsZQoqKmludGFjdCoqIHdpdGggdGhlIE5UQUNMIG1haW50YWluZWQuCgpJbiBib3RoIGNh
-c2VzLCB0aGUgZmlsZSBzeXN0ZW0gdHlwZXMgYXJlIHRoZSBzYW1lICh4ZnMpLiAgVGhlIGNyZWF0
-b3IKYW5kIHRoZSBtb3ZlciBhcmUgdGhlIHNhbWUgVUlELiAgQm90aCBmaWxlIHN5c3RlbXMgY2Fu
-IGJlIGFjY2Vzc2VkCnZpYSBteSBXaW43IENsaWVudC4KClNvIGFueW9uZSBrbm93IHdoeSB0aGlz
-IGZhaWxzIG9yIHdoeSBpdCBpcyBzaWxlbnRseSBzdHJpcHBlZCBvbiBhCiJjcCI/CgpUaGFua3Mu
-Li4obWF5YmUgYSBrZXJuZWwgYnVnPykKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 12/9/2013 4:30 PM, Emmanuel Florac wrote:
+> Le Tue, 10 Dec 2013 09:21:31 +1100 vous =E9criviez:
+> Dave Chinner wrote:
+>>
+>> So, while the tech might be great, the benchmarks sucked at
+>> demonstrating that.
+
+It's pretty difficult to find comprehensive benchmark results,
+especially for niche products such as CacheCade.
+
+> And now that we have enhance-io, bcache and friends, I'm actually more
+> confident of using these than some sort of hidden pseudo-hardware magic.
+
+Enhance-IO is $295 per Linux server per year.  Last I saw, Cleancache
+isn't fully supported by XFS yet in a stable vanilla release.  AFAIK
+bcache isn't fully baked yet.  Coupled with the fact that Mike seems to
+be limited to the CentOS ecosystem, I figured CacheCade was his best
+option at this time.  It's been around a couple of years, works,
+verified decent performance, and no additional kernel software is
+required.  And it's relatively easy to configure.
+
+-- =
+
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
