@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 386317F7B
+	by oss.sgi.com (Postfix) with ESMTP id 5D3ED7F85
 	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:12:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 29D9430406B
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:18 -0800 (PST)
-Received: from mail-pb0-f74.google.com (mail-pb0-f74.google.com
-	[209.85.160.74]) by cuda.sgi.com with ESMTP id jsTSTCHs3LkALSS2
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:16 -0800 (PST)
-Received: by mail-pb0-f74.google.com with SMTP id uo5so882364pbc.5
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:16 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 229C9304067
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:21 -0800 (PST)
+Received: from mail-ie0-f202.google.com (mail-ie0-f202.google.com
+	[209.85.223.202]) by cuda.sgi.com with ESMTP id
+	zt8k6vCF24hLGwpS (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 12:12:19 -0800 (PST)
+Received: by mail-ie0-f202.google.com with SMTP id lx4so1115785iec.1
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:19 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH 00/10] Add tmpfs filesystem support
-Date: Tue, 10 Dec 2013 12:11:51 -0800
-Message-Id: <1386706321-15795-1-git-send-email-jayr@google.com>
+Subject: [PATCH 05/10] xfstests: do not unmount tmpfs during remount.
+Date: Tue, 10 Dec 2013 12:11:56 -0800
+Message-Id: <1386706321-15795-6-git-send-email-jayr@google.com>
+In-Reply-To: <1386706321-15795-1-git-send-email-jayr@google.com>
+References: <1386706321-15795-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,69 +34,229 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-Hi all,
+Several tests unmount then re-mount the scratch filesystem, to check
+that the content is unchanged; but unmounting a tmpfs is designed to
+lose its content, which causes such tests to fail unnecessarily.  Add
+_scratch_remount(), which instead uses remount on a tmpfs to preserve
+its contents.  Also add _test_remount() to do the same for the test
+device.
 
-Boris Ranto has sent a series of 3 patches adding tmpfs support.
-http://oss.sgi.com/archives/xfs/2013-05/msg00069.html
+Signed-off-by: Hugh Dickins <hughd@google.com>
+Signed-off-by: Junho Ryu <jayr@google.com>
+---
+ common/rc             | 34 ++++++++++++++++++++++++++++++++--
+ tests/generic/135     | 17 +++--------------
+ tests/generic/169     | 20 ++++++--------------
+ tests/generic/169.out |  6 ++----
+ tests/generic/192     |  3 +--
+ tests/generic/226     |  3 +--
+ tests/generic/258     |  3 +--
+ tests/generic/306     |  3 +--
+ 8 files changed, 47 insertions(+), 42 deletions(-)
 
-This one only contains the first patch from Boris Ranto's series followed by
-more patches in order to either run or not run all generic tests instead of
-failing.
-
-This one does not contains other 2 patches in Boris Ranto's series just because
-rest these patehes do not depend on those, but it will be nice if those are
-also reviewed as well.
-
-Boris Ranto (1):
-  xfstests: Add tmpfs support
-
-Hugh Dickins (3):
-  xfstests: use mount point instead of device name
-  xfstests: _scratch_mkfs_sized() for tmpfs
-  xfstests: add executable permission to tests
-
-Junho Ryu (6):
-  xfstests: increase tmpfs memory size
-  xfstests: do not unmount tmpfs during remount.
-  xfstests: fix generic/225 to check fiemap support
-  xfstests: fix generic/127 to call _cleanup() only once
-  xfstests: check O_DIRECT support before testing direct I/O
-  xfstests: skip parts of tests which cannot work on tmpfs
-
- check                 |  2 ++
- common/rc             | 78 +++++++++++++++++++++++++++++++++++++++++++++++++--
- tests/generic/053     |  6 ++--
- tests/generic/076     |  2 ++
- tests/generic/091     |  1 +
- tests/generic/127     |  1 -
- tests/generic/130     |  1 +
- tests/generic/133     |  1 +
- tests/generic/135     | 18 +++---------
- tests/generic/169     | 20 ++++---------
- tests/generic/169.out |  6 ++--
- tests/generic/192     |  3 +-
- tests/generic/225     |  1 +
- tests/generic/226     |  4 +--
- tests/generic/256     |  2 +-
- tests/generic/258     |  3 +-
- tests/generic/263     |  1 +
- tests/generic/273     |  2 +-
- tests/generic/277     |  2 ++
- tests/generic/299     |  1 +
- tests/generic/300     |  1 +
- tests/generic/306     |  3 +-
- tests/generic/311     |  0
- tests/generic/314     |  0
- tests/generic/315     |  0
- tests/generic/321     |  0
- tests/generic/322     |  0
- 27 files changed, 110 insertions(+), 49 deletions(-)
- mode change 100644 => 100755 tests/generic/311
- mode change 100644 => 100755 tests/generic/314
- mode change 100644 => 100755 tests/generic/315
- mode change 100644 => 100755 tests/generic/321
- mode change 100644 => 100755 tests/generic/322
-
+diff --git a/common/rc b/common/rc
+index 57f7ccd..4d46008 100644
+--- a/common/rc
++++ b/common/rc
+@@ -302,8 +302,20 @@ _scratch_unmount()
+ 
+ _scratch_remount()
+ {
+-    _scratch_unmount
+-    _scratch_mount
++    CWD=`pwd`
++    cd /
++
++    case $FSTYP in
++    tmpfs)
++        mount -o remount "$@" $SCRATCH_MNT
++        ;;
++    *)
++        _scratch_unmount
++        _scratch_mount "$@"
++        ;;
++    esac
++
++    cd $CWD
+ }
+ 
+ _test_mount()
+@@ -312,6 +324,24 @@ _test_mount()
+     _mount -t $FSTYP $TEST_OPTIONS $TEST_FS_MOUNT_OPTS $SELINUX_MOUNT_OPTIONS $* $TEST_DEV $TEST_DIR
+ }
+ 
++_test_remount()
++{
++    CWD=`pwd`
++    cd /
++
++    case $FSTYP in
++    tmpfs)
++        mount -o remount "$@" $TEST_DIR
++        ;;
++    *)
++        umount $TEST_DIR
++        _test_mount "$@"
++        ;;
++    esac
++
++    cd $CWD
++}
++
+ _scratch_mkfs_options()
+ {
+     _scratch_options mkfs
+diff --git a/tests/generic/135 b/tests/generic/135
+index e3b827a..4a8b690 100755
+--- a/tests/generic/135
++++ b/tests/generic/135
+@@ -40,19 +40,8 @@ _supported_fs generic
+ _supported_os Linux IRIX
+ 
+ _require_scratch
+-_scratch_mkfs >/dev/null 2>&1
+-
+-_umount_mount()
+-{
+-    CWD=`pwd`
+-    cd /
+-    # pipe error into /dev/null, in case not mounted (after _require_scratch)
+-    umount $SCRATCH_MNT 2>/dev/null
+-    _scratch_mount
+-    cd "$CWD"
+-}
+-
+-_umount_mount
++_scratch_mkfs >/dev/null 2>&1 || _fail "mkfs failed"
++_scratch_mount > /dev/null 2>&1 || _fail "mount failed"
+ 
+ cd $SCRATCH_MNT
+ 
+@@ -70,7 +59,7 @@ $XFS_IO_PROG -f -c 'pwrite -b 4k -S 0x78 0 4k' trunc_file > /dev/null
+ $XFS_IO_PROG -f -c 'truncate 2k' trunc_file > /dev/null
+ $XFS_IO_PROG -c 'pwrite 1k 0 1k' trunc_file > /dev/null
+ 
+-_umount_mount
++_scratch_remount
+ 
+ # check file size and contents
+ od -Ad -x async_file
+diff --git a/tests/generic/169 b/tests/generic/169
+index ebeffa7..ebfb106 100755
+--- a/tests/generic/169
++++ b/tests/generic/169
+@@ -73,13 +73,9 @@ $XFS_IO_PROG -a -c "pwrite 0 5k" -c "fsync" \
+ 	$SCRATCH_MNT/testfile \
+ 	| _show_wrote_and_stat_only
+ 
+-echo "# unmounting scratch"
+-umount $SCRATCH_MNT>>$seqres.full 2>&1 \
+-    || _fail "unmount failed"
+-
+-echo "# mounting scratch"
+-_scratch_mount >>$seqres.full 2>&1 \
+-    || _fail "mount failed: $MOUNT_OPTIONS"
++echo "# remounting scratch"
++_scratch_remount >>$seqres.full 2>&1 \
++    || _fail "remount failed: $MOUNT_OPTIONS"
+ 
+ echo "# stating file to confirm correct size"
+ $XFS_IO_PROG -r -c "stat" $SCRATCH_MNT/testfile \
+@@ -90,13 +86,9 @@ $XFS_IO_PROG -f -c "pwrite 0 5" -c s -c "pwrite 5 5" \
+ 	-c "stat" $SCRATCH_MNT/nextfile \
+ 	| _show_wrote_and_stat_only
+ 
+-echo "# unmounting scratch"
+-umount $SCRATCH_MNT>>$seqres.full 2>&1 \
+-    || _fail "unmount failed"
+-
+-echo "# mounting scratch"
+-_scratch_mount >>$seqres.full 2>&1 \
+-    || _fail "mount failed: $MOUNT_OPTIONS"
++echo "# remounting scratch"
++_scratch_remount >>$seqres.full 2>&1 \
++    || _fail "remount failed: $MOUNT_OPTIONS"
+ 
+ echo "# stating file to confirm correct size"
+ $XFS_IO_PROG -r -c "stat" $SCRATCH_MNT/nextfile \
+diff --git a/tests/generic/169.out b/tests/generic/169.out
+index 22a5b77..5f7df39 100644
+--- a/tests/generic/169.out
++++ b/tests/generic/169.out
+@@ -5,15 +5,13 @@ wrote 5120/5120 bytes at offset 0
+ wrote 5120/5120 bytes at offset 5120
+ wrote 5120/5120 bytes at offset 10240
+ stat.size = 15360
+-# unmounting scratch
+-# mounting scratch
++# remounting scratch
+ # stating file to confirm correct size
+ stat.size = 15360
+ # appending 10 bytes to new file, sync at 5 bytes
+ wrote 5/5 bytes at offset 0
+ wrote 5/5 bytes at offset 5
+ stat.size = 10
+-# unmounting scratch
+-# mounting scratch
++# remounting scratch
+ # stating file to confirm correct size
+ stat.size = 10
+diff --git a/tests/generic/192 b/tests/generic/192
+index 2b4e41c..ec069b0 100755
+--- a/tests/generic/192
++++ b/tests/generic/192
+@@ -76,8 +76,7 @@ cat $testfile
+ time2=`_access_time $testfile | tee -a $seqres.full`
+ 
+ cd /
+-umount $TEST_DIR
+-_test_mount
++_test_remount
+ time3=`_access_time $testfile | tee -a $seqres.full`
+ 
+ delta1=`expr $time2 - $time1`
+diff --git a/tests/generic/226 b/tests/generic/226
+index b98e889..3514965 100755
+--- a/tests/generic/226
++++ b/tests/generic/226
+@@ -60,8 +60,7 @@ for I in `seq 1 $loops`; do
+ done
+ 
+ echo
+-umount $SCRATCH_DEV
+-_scratch_mount
++_scratch_remount
+ 
+ echo "--> $loops direct 64m writes in a loop"
+ for I in `seq 1 $loops`; do
+diff --git a/tests/generic/258 b/tests/generic/258
+index 3aeb5ce..567a39a 100755
+--- a/tests/generic/258
++++ b/tests/generic/258
+@@ -61,8 +61,7 @@ fi
+ 
+ # unmount, remount, and check the timestamp
+ echo "Remounting to flush cache"
+-umount $TEST_DEV
+-_test_mount
++_test_remount
+ 
+ # Should yield -315593940 (prior to epoch)
+ echo "Testing for negative seconds since epoch"
+diff --git a/tests/generic/306 b/tests/generic/306
+index 04d28df..56313f2 100755
+--- a/tests/generic/306
++++ b/tests/generic/306
+@@ -66,8 +66,7 @@ touch $BINDFILE || _fail "Could not create bind mount file"
+ touch $TARGET || _fail "Could not create symlink target"
+ ln -s $TARGET $SYMLINK
+ 
+-_scratch_unmount || _fail "Could not unmount scratch device"
+-_scratch_mount -o ro || _fail "Could not mount scratch readonly"
++_scratch_remount -o ro || _fail "Could not remount scratch readonly"
+ 
+ # We should be able to read & write to/from these devices even on an RO fs
+ echo "== try to create new file"
 -- 
 1.8.5.1
 
