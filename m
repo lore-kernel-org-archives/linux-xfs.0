@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE7A87F82
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:12:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B534304067
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:19 -0800 (PST)
-Received: from mail-ie0-f202.google.com (mail-ie0-f202.google.com
-	[209.85.223.202]) by cuda.sgi.com with ESMTP id
-	TbGMSFJGMgMUSfLe (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 12:12:18 -0800 (PST)
-Received: by mail-ie0-f202.google.com with SMTP id lx4so1115766iec.5
+	by oss.sgi.com (Postfix) with ESMTP id 386317F7B
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:12:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 29D9430406B
 	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:18 -0800 (PST)
+Received: from mail-pb0-f74.google.com (mail-pb0-f74.google.com
+	[209.85.160.74]) by cuda.sgi.com with ESMTP id jsTSTCHs3LkALSS2
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:16 -0800 (PST)
+Received: by mail-pb0-f74.google.com with SMTP id uo5so882364pbc.5
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:16 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH 04/10] xfstests: increase tmpfs memory size
-Date: Tue, 10 Dec 2013 12:11:55 -0800
-Message-Id: <1386706321-15795-5-git-send-email-jayr@google.com>
-In-Reply-To: <1386706321-15795-1-git-send-email-jayr@google.com>
-References: <1386706321-15795-1-git-send-email-jayr@google.com>
+Subject: [PATCH 00/10] Add tmpfs filesystem support
+Date: Tue, 10 Dec 2013 12:11:51 -0800
+Message-Id: <1386706321-15795-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,39 +31,69 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-512M is not enough for generic/129, generic/213 and generic/247.  Raise
-default tmpfs size to 1G.
+Hi all,
 
-Signed-off-by: Hugh Dickins <hughd@google.com>
-Signed-off-by: Junho Ryu <jayr@google.com>
----
- common/rc | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Boris Ranto has sent a series of 3 patches adding tmpfs support.
+http://oss.sgi.com/archives/xfs/2013-05/msg00069.html
 
-diff --git a/common/rc b/common/rc
-index 83d56a1..57f7ccd 100644
---- a/common/rc
-+++ b/common/rc
-@@ -113,8 +113,8 @@ _mount_opts()
- 	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
- 	;;
-     tmpfs)
--	# We need to specify the size at mount, use 512 MB by default
--	export MOUNT_OPTIONS="-o size=512M $TMPFS_MOUNT_OPTIONS"
-+	# We need to specify the size at mount
-+	export MOUNT_OPTIONS="-o size=${DEFAULT_TMPFS_SIZE_MB}M $TMPFS_MOUNT_OPTIONS"
- 	;;
-     *)
- 	;;
-@@ -168,6 +168,8 @@ _fsck_opts()
- }
- 
- [ -z "$FSTYP" ] && FSTYP=xfs
-+# Default tmpfs size in megabytes.
-+[ -z "$DEFAULT_TMPFS_SIZE_MB" ] && DEFAULT_TMPFS_SIZE_MB=1024
- [ -z "$MOUNT_OPTIONS" ] && _mount_opts
- [ -z "$MKFS_OPTIONS" ] && _mkfs_opts
- [ -z "$FSCK_OPTIONS" ] && _fsck_opts
+This one only contains the first patch from Boris Ranto's series followed by
+more patches in order to either run or not run all generic tests instead of
+failing.
+
+This one does not contains other 2 patches in Boris Ranto's series just because
+rest these patehes do not depend on those, but it will be nice if those are
+also reviewed as well.
+
+Boris Ranto (1):
+  xfstests: Add tmpfs support
+
+Hugh Dickins (3):
+  xfstests: use mount point instead of device name
+  xfstests: _scratch_mkfs_sized() for tmpfs
+  xfstests: add executable permission to tests
+
+Junho Ryu (6):
+  xfstests: increase tmpfs memory size
+  xfstests: do not unmount tmpfs during remount.
+  xfstests: fix generic/225 to check fiemap support
+  xfstests: fix generic/127 to call _cleanup() only once
+  xfstests: check O_DIRECT support before testing direct I/O
+  xfstests: skip parts of tests which cannot work on tmpfs
+
+ check                 |  2 ++
+ common/rc             | 78 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ tests/generic/053     |  6 ++--
+ tests/generic/076     |  2 ++
+ tests/generic/091     |  1 +
+ tests/generic/127     |  1 -
+ tests/generic/130     |  1 +
+ tests/generic/133     |  1 +
+ tests/generic/135     | 18 +++---------
+ tests/generic/169     | 20 ++++---------
+ tests/generic/169.out |  6 ++--
+ tests/generic/192     |  3 +-
+ tests/generic/225     |  1 +
+ tests/generic/226     |  4 +--
+ tests/generic/256     |  2 +-
+ tests/generic/258     |  3 +-
+ tests/generic/263     |  1 +
+ tests/generic/273     |  2 +-
+ tests/generic/277     |  2 ++
+ tests/generic/299     |  1 +
+ tests/generic/300     |  1 +
+ tests/generic/306     |  3 +-
+ tests/generic/311     |  0
+ tests/generic/314     |  0
+ tests/generic/315     |  0
+ tests/generic/321     |  0
+ tests/generic/322     |  0
+ 27 files changed, 110 insertions(+), 49 deletions(-)
+ mode change 100644 => 100755 tests/generic/311
+ mode change 100644 => 100755 tests/generic/314
+ mode change 100644 => 100755 tests/generic/315
+ mode change 100644 => 100755 tests/generic/321
+ mode change 100644 => 100755 tests/generic/322
+
 -- 
 1.8.5.1
 
