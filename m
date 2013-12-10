@@ -1,9 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.13-rc1-2-13376-gdf8052e
-Message-Id: <20131210154021.CFC297FA7@oss.sgi.com>
-Date: Tue, 10 Dec 2013 09:40:21 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 43F637F53
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 09:57:51 -0600 (CST)
+Date: Tue, 10 Dec 2013 09:57:46 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: XFS security fix never sent to -stable?
+Message-ID: <20131210155746.GB1935@sgi.com>
+References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
+	<20131209121534.GE4278@hercules>
+	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+	<20131209235523.GW31386@dastard> <20131210075621.GA30135@kroah.com>
+	<CA+5PVA7L0u9cq0Zvnw3J7Yun3+TfMH3fPC3M8=mvxT3EGKX=fQ@mail.gmail.com>
+	<52A725BB.8080602@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52A725BB.8080602@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,132 +23,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Josh Boyer <jwboyer@fedoraproject.org>, Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Gao feng <gaofeng@cn.fujitsu.com>, Kees Cook <keescook@google.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+Hi,
 
-The branch, for-next has been updated
-  df8052e xfs: fix infinite loop by detaching the group/project hints from user dquot
-  5a01dd5 xfs: fix assertion failure at xfs_setattr_nonsize
-      from  c91c46c12768daac8486dff0f74bc52c2ec974cd (commit)
+On Tue, Dec 10, 2013 at 08:31:23AM -0600, Eric Sandeen wrote:
+> On 12/10/13, 7:15 AM, Josh Boyer wrote:
+> > On Tue, Dec 10, 2013 at 2:56 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> >> On Tue, Dec 10, 2013 at 10:55:23AM +1100, Dave Chinner wrote:
+> >>> [cc xfs list, cc stable@vger.kernel.org]
+> >>>
+> >>> On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
+> >>>> On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
+> >>>> <luis.henriques@canonical.com> wrote:
+> >>>>> On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
+> >>>>>> Hi,
+> >>>>>>
+> >>>>>> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
+> >>>>>> capability check to free eofblocks ioctl") is a security fix that was
+> >>>>>> never sent to -stable? From what I can see, it was introduced in 3.8
+> >>>>>> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
+> >>>>>> XFS_IOC_FREE_EOFBLOCKS ioctl").
+> >>>>>>
+> >>>>>> I don't see this in the 3.8.y tree. Should it be added there and newer?
+> >>>>>
+> >>>>> Thanks Kees, I'm queuing it for the 3.11 kernel.
+> >>>>
+> >>>> There's also this one:
+> >>>>
+> >>>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
+> >>>>
+> >>>> It fixes CVE-2013-6382
+> >>>
+> >>> First I've heard about it there being a CVE for that bug. Since when
+> >>> has it been considered best practice to publish CVEs without first
+> >>> (or ever) directly contacting the relevant upstream developers?
+> >>>
+> >>> But, regardless of how broken I think the CVE process is, commit
+> >>> 071c529 ("xfs: underflow bug in xfs_attrlist_by_handle()") should be
+> >>> picked up by the stable kernels.
+> >>
+> >> I don't see that commit in Linus's tree, is it not there yet?
+> > 
+> > Not yet.  Ben said it's applied but I'm not sure where that is.
+> 
+> xfs git tree:
+> 
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=071c529eb672648ee8ca3f90944bcbcc730b4c06
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+I'll send a pull request containing this commit this afternoon.
 
-- Log -----------------------------------------------------------------
-commit df8052e7dae00bde6f21b40b6e3e1099770f3afc
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Tue Nov 26 21:38:49 2013 +0800
-
-    xfs: fix infinite loop by detaching the group/project hints from user dquot
-    
-    xfs_quota(8) will hang up if trying to turn group/project quota off
-    before the user quota is off, this could be 100% reproduced by:
-      # mount -ouquota,gquota /dev/sda7 /xfs
-      # mkdir /xfs/test
-      # xfs_quota -xc 'off -g' /xfs <-- hangs up
-      # echo w > /proc/sysrq-trigger
-      # dmesg
-    
-      SysRq : Show Blocked State
-      task                        PC stack   pid father
-      xfs_quota       D 0000000000000000     0 27574   2551 0x00000000
-      [snip]
-      Call Trace:
-      [<ffffffff81aaa21d>] schedule+0xad/0xc0
-      [<ffffffff81aa327e>] schedule_timeout+0x35e/0x3c0
-      [<ffffffff8114b506>] ? mark_held_locks+0x176/0x1c0
-      [<ffffffff810ad6c0>] ? call_timer_fn+0x2c0/0x2c0
-      [<ffffffffa0c25380>] ? xfs_qm_shrink_count+0x30/0x30 [xfs]
-      [<ffffffff81aa3306>] schedule_timeout_uninterruptible+0x26/0x30
-      [<ffffffffa0c26155>] xfs_qm_dquot_walk+0x235/0x260 [xfs]
-      [<ffffffffa0c059d8>] ? xfs_perag_get+0x1d8/0x2d0 [xfs]
-      [<ffffffffa0c05805>] ? xfs_perag_get+0x5/0x2d0 [xfs]
-      [<ffffffffa0b7707e>] ? xfs_inode_ag_iterator+0xae/0xf0 [xfs]
-      [<ffffffffa0c22280>] ? xfs_trans_free_dqinfo+0x50/0x50 [xfs]
-      [<ffffffffa0b7709f>] ? xfs_inode_ag_iterator+0xcf/0xf0 [xfs]
-      [<ffffffffa0c261e6>] xfs_qm_dqpurge_all+0x66/0xb0 [xfs]
-      [<ffffffffa0c2497a>] xfs_qm_scall_quotaoff+0x20a/0x5f0 [xfs]
-      [<ffffffffa0c2b8f6>] xfs_fs_set_xstate+0x136/0x180 [xfs]
-      [<ffffffff8136cf7a>] do_quotactl+0x53a/0x6b0
-      [<ffffffff812fba4b>] ? iput+0x5b/0x90
-      [<ffffffff8136d257>] SyS_quotactl+0x167/0x1d0
-      [<ffffffff814cf2ee>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-      [<ffffffff81abcd19>] system_call_fastpath+0x16/0x1b
-    
-    It's fine if we turn user quota off at first, then turn off other
-    kind of quotas if they are enabled since the group/project dquot
-    refcount is decreased to zero once the user quota if off. Otherwise,
-    those dquots refcount is non-zero due to the user dquot might refer
-    to them as hint(s).  Hence, above operation cause an infinite loop
-    at xfs_qm_dquot_walk() while trying to purge dquot cache.
-    
-    This problem has been around since Linux 3.4, it was introduced by:
-      [ b84a3a9675 xfs: remove the per-filesystem list of dquots ]
-    
-    Originally we will release the group dquot pointers because the user
-    dquots maybe carrying around as a hint via xfs_qm_detach_gdquots().
-    However, with above change, there is no such work to be done before
-    purging group/project dquot cache.
-    
-    In order to solve this problem, this patch introduces a special routine
-    xfs_qm_dqpurge_hints(), and it would release the group/project dquot
-    pointers the user dquots maybe carrying around as a hint, and then it
-    will proceed to purge the user dquot cache if requested.
-    
-    Cc: stable@vger.kernel.org
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 5a01dd54f4a7fb513062070c5acef20d13cad980
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Tue Nov 26 21:38:34 2013 +0800
-
-    xfs: fix assertion failure at xfs_setattr_nonsize
-    
-    For CRC enabled v5 super block, change a file's ownership can simply
-    trigger an ASSERT failure at xfs_setattr_nonsize() if both group and
-    project quota are enabled, i.e,
-    
-    [  305.337609] XFS: Assertion failed: !XFS_IS_PQUOTA_ON(mp), file: fs/xfs/xfs_iops.c, line: 621
-    [  305.339250] Kernel BUG at ffffffffa0a7fa32 [verbose debug info unavailable]
-    [  305.383939] Call Trace:
-    [  305.385536]  [<ffffffffa0a7d95a>] xfs_setattr_nonsize+0x69a/0x720 [xfs]
-    [  305.387142]  [<ffffffffa0a7dea9>] xfs_vn_setattr+0x29/0x70 [xfs]
-    [  305.388727]  [<ffffffff811ca388>] notify_change+0x1a8/0x350
-    [  305.390298]  [<ffffffff811ac39d>] chown_common+0xfd/0x110
-    [  305.391868]  [<ffffffff811ad6bf>] SyS_fchownat+0xaf/0x110
-    [  305.393440]  [<ffffffff811ad760>] SyS_lchown+0x20/0x30
-    [  305.394995]  [<ffffffff8170f7dd>] system_call_fastpath+0x1a/0x1f
-    [  305.399870] RIP  [<ffffffffa0a7fa32>] assfail+0x22/0x30 [xfs]
-    
-    This fix adjust the assertion to check if the super block support both
-    quota inodes or not.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_iops.c |  3 ++-
- fs/xfs/xfs_qm.c   | 71 +++++++++++++++++++++++++++++++++++++++----------------
- 2 files changed, 52 insertions(+), 22 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
