@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E66B7FA7
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 17:55:29 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 11F557FAB
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 18:05:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3830C8F8033
-	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 15:55:29 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	bTPbFOvqDH6QoHDZ for <xfs@oss.sgi.com>;
-	Mon, 09 Dec 2013 15:55:27 -0800 (PST)
-Date: Tue, 10 Dec 2013 10:55:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS security fix never sent to -stable?
-Message-ID: <20131209235523.GW31386@dastard>
-References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
-	<20131209121534.GE4278@hercules>
-	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 89B7BAC001
+	for <xfs@oss.sgi.com>; Mon,  9 Dec 2013 16:05:45 -0800 (PST)
+Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id umWk2yawhNX4z6Mz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 09 Dec 2013 16:05:44 -0800 (PST)
+Received: from [192.168.4.12] (Athenae [192.168.4.12])
+	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
+	rBA05elY078038 for <xfs@oss.sgi.com>; Mon, 9 Dec 2013 16:05:42 -0800
+Message-ID: <52A65AD5.9070705@tlinx.org>
+Date: Mon, 09 Dec 2013 16:05:41 -0800
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+Subject: where/how is 'xattr' type=security enforced? (security attr stripped?)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,53 +25,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josh Boyer <jwboyer@fedoraproject.org>
-Cc: Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Kees Cook <keescook@google.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Dave Chinner <dchinner@redhat.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-[cc xfs list, cc stable@vger.kernel.org]
-
-On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
-> On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
-> <luis.henriques@canonical.com> wrote:
-> > On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
-> >> Hi,
-> >>
-> >> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
-> >> capability check to free eofblocks ioctl") is a security fix that was
-> >> never sent to -stable? From what I can see, it was introduced in 3.8
-> >> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
-> >> XFS_IOC_FREE_EOFBLOCKS ioctl").
-> >>
-> >> I don't see this in the 3.8.y tree. Should it be added there and newer?
-> >
-> > Thanks Kees, I'm queuing it for the 3.11 kernel.
-> 
-> There's also this one:
-> 
-> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
-> 
-> It fixes CVE-2013-6382
-
-First I've heard about it there being a CVE for that bug. Since when
-has it been considered best practice to publish CVEs without first
-(or ever) directly contacting the relevant upstream developers?
-
-But, regardless of how broken I think the CVE process is, commit
-071c529 ("xfs: underflow bug in xfs_attrlist_by_handle()") should be
-picked up by the stable kernels.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SSBnb3QgYSB3ZWlyZCBtZXNzYWdlIHRoYXQgSSd2ZSBuZXZlciBzZWVuIGJlZm9yZSAtLSBub3Ro
+aW5nCmxpZmUgc2hhdHRlcmluZywganVzdCBhIGN1cmlvc2l0eSB0aGF0IEkgdGhvdWdodCBzaG91
+bGRuJ3QgaGFwcGVuLgoKCkkgc3RvcmVkIGEgZmlsZSBpbiBteSAvaG9tZSBwYXJ0aXRpb24gRlJP
+TSBhIFdpbjcgY2xpZW50CnZpYSBzYW1iYSAzLjYuMTYuCgpXaXRoIHRoYXQgZmlsZSB3ZXJlIGFs
+c28gc3RvcmVkIHhhdHRyczoKCkRPU0FUVFJJQiwgU0FNQkFfUEFJIGFuZCBOVEFDTC4gIFNpbmNl
+IGxpbnV4IGlzIHRoZSAnc2VydmVyJywKVGhlc2UgYXJlIGFsbCBsaWtlbHkgc2V0IHZpYSBzYW1i
+YS4KClRvIHdvcmsgb24gdGhlIGZpbGUgbW9yZSwgSSB3YW50ZWQgdG8gbW92ZSBpdAp0byAvdG1w
+LgoKSSB1c2UgbXY6Cj4gbXYgIC9ob21lL2xhdy90bXAvb1ZhcnMucG0gL3RtcAptdjogc2V0dGlu
+ZyBhdHRyaWJ1dGUg4oCYc2VjdXJpdHkuTlRBQ0zigJkgZm9yIOKAmHNlY3VyaXR5Lk5UQUNM4oCZ
+OiBPcGVyYXRpb24gbm90IHBlcm1pdHRlZAoKIkkiIHdhcyB0aGUgb3duZXIgb2YgdGhlIGZpbGUg
+KHNhbWUgVUlEIGlzIHJlc29sdmVkIGZvciBOVC11c2VyICYgbG9jYWwgdXNlcikgYW5kCmxvY2Fs
+IHVzZXIgaXMgaW4gZ3JvdXAgdGhhdCBmaWxlIHdhcyBzdG9yZWQgdW5kZXIuCgpJIGFtIHRyeWlu
+ZyB0byBmaWd1cmUgb3V0IHdoZXJlIHRoaXMgbWVzc2FnZSBjYW1lIGZyb20sIGFzICdtdicgZG9l
+c24ndApkbyBhbnkgYWNjZXNzIGVuZm9yY2VtZW50IGJhc2VkIG9uIHRoZSAneGF0dHInIG5hbWUg
+ZmllbGQuCgpUaGUgaW1wYWN0IG9mIHRoaXMgaXMgSSBjYW4ndCBtb3ZlIHRoZSBmaWxlIHdpdGhv
+dXQgbG9zaW5nIHNlY3VyaXR5CndoaWNoIGlzIGF1dG9tYXRpY2FsbHkgc3RyaXBwZWQuCgpUcnlp
+bmcgdG8gKmNvcHkqIHRoZSBmaWxlIHdpdGhpbiB0aGUgc2FtZSBkaXJlY3RvcnkgYWxzbyByZXN1
+bHRzCmluIHRoZSBzZWN1cml0eSB4YXR0ciBiZWluZyBzdHJpcHBlZCAtLSBidXQgKioqc2lsZW50
+bHkqKiouCgpTbyB3aGF0IHdhcyByZXNwb25zaWJsZSBmb3IgcHJvaGliaXRpbmcgdGhlIG1vdmlu
+ZyB0aGUgdGhlIHhmcyAneGF0dHInPwoKTXkgdGhvdWdodHMgb24gdGhpcyBhcmUgdGhhdCBpZiBJ
+LCBhcyBhIHVzZXIgY2FuIHdyaXRlIHN1Y2ggYSBmaWxlCih0byBteSBob21lIGRpciBpbiB0aGlz
+IGNhc2UpIGFuZCB0aGUgYXR0cmlidXRlcyBhcmUgY3JlYXRlZCAoaW5kaXJlY3RseSkKYnkgIm1l
+IiB3aGVuIEkgY3JlYXRlIHRoZSBmaWxlLCBJIHNob3VsZCBhbHNvIGJlIGFibGUgdG8gbW92ZSB0
+aGUgZmlsZQoqKmludGFjdCoqIHdpdGggdGhlIE5UQUNMIG1haW50YWluZWQuCgpJbiBib3RoIGNh
+c2VzLCB0aGUgZmlsZSBzeXN0ZW0gdHlwZXMgYXJlIHRoZSBzYW1lICh4ZnMpLiAgVGhlIGNyZWF0
+b3IKYW5kIHRoZSBtb3ZlciBhcmUgdGhlIHNhbWUgVUlELiAgQm90aCBmaWxlIHN5c3RlbXMgY2Fu
+IGJlIGFjY2Vzc2VkCnZpYSBteSBXaW43IENsaWVudC4KClNvIGFueW9uZSBrbm93IHdoeSB0aGlz
+IGZhaWxzIG9yIHdoeSBpdCBpcyBzaWxlbnRseSBzdHJpcHBlZCBvbiBhCiJjcCI/CgpUaGFua3Mu
+Li4obWF5YmUgYSBrZXJuZWwgYnVnPykKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
