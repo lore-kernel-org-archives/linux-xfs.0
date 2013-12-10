@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9B3187F8B
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 08:32:06 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3FCB17F92
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 08:44:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7C576304032
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 06:32:03 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id NEBHeJyN4GJMuuMR for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 06:32:02 -0800 (PST)
-Message-ID: <52A725BB.8080602@sandeen.net>
-Date: Tue, 10 Dec 2013 08:31:23 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 086058F804B
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 06:44:29 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id AuLBiSwsGb1PEdV4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 06:44:28 -0800 (PST)
+Message-ID: <52A728A7.8020905@oracle.com>
+Date: Tue, 10 Dec 2013 18:43:51 +0400
+From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
 MIME-Version: 1.0
-Subject: Re: XFS security fix never sent to -stable?
-References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>	<20131209121534.GE4278@hercules>	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>	<20131209235523.GW31386@dastard>
-	<20131210075621.GA30135@kroah.com>
-	<CA+5PVA7L0u9cq0Zvnw3J7Yun3+TfMH3fPC3M8=mvxT3EGKX=fQ@mail.gmail.com>
-In-Reply-To: <CA+5PVA7L0u9cq0Zvnw3J7Yun3+TfMH3fPC3M8=mvxT3EGKX=fQ@mail.gmail.com>
+Subject: Re: nfs vs xfstests 193
+References: <20131106115648.GA24804@infradead.org> <52A1CF22.106@oracle.com>
+	<20131206180858.GA2803@infradead.org>
+	<20131206204404.GA12613@fieldses.org>
+	<20131206204747.GB12613@fieldses.org>
+In-Reply-To: <20131206204747.GB12613@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +27,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josh Boyer <jwboyer@fedoraproject.org>, Greg KH <gregkh@linuxfoundation.org>
-Cc: Luis Henriques <luis.henriques@canonical.com>, Brian Foster <bfoster@redhat.com>, Kees Cook <keescook@google.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Dave Chinner <dchinner@redhat.com>
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Vasily Isaenko <vasily.isaenko@oracle.com>, linux-nfs@vger.kernel.org, "Sachin S. Prabhu" <sprabhu@redhat.com>, xfs@oss.sgi.com
 
-On 12/10/13, 7:15 AM, Josh Boyer wrote:
-> On Tue, Dec 10, 2013 at 2:56 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> On Tue, Dec 10, 2013 at 10:55:23AM +1100, Dave Chinner wrote:
->>> [cc xfs list, cc stable@vger.kernel.org]
+
+
+On 12/07/2013 12:47 AM, J. Bruce Fields wrote:
+> On Fri, Dec 06, 2013 at 03:44:04PM -0500, bfields wrote:
+>> On Fri, Dec 06, 2013 at 10:08:58AM -0800, Christoph Hellwig wrote:
+>>> On Fri, Dec 06, 2013 at 05:20:34PM +0400, Stanislav Kholmanskikh wrote:
+>>>> Just to make the behaviour more consistent between NFS and other
+>>>> "local" file systems as It was done by
+>>>> commit https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=0953e620de0538cbd081f1b45126f6098112a598
 >>>
->>> On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
->>>> On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
->>>> <luis.henriques@canonical.com> wrote:
->>>>> On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
->>>>>> Hi,
->>>>>>
->>>>>> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
->>>>>> capability check to free eofblocks ioctl") is a security fix that was
->>>>>> never sent to -stable? From what I can see, it was introduced in 3.8
->>>>>> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
->>>>>> XFS_IOC_FREE_EOFBLOCKS ioctl").
->>>>>>
->>>>>> I don't see this in the 3.8.y tree. Should it be added there and newer?
->>>>>
->>>>> Thanks Kees, I'm queuing it for the 3.11 kernel.
->>>>
->>>> There's also this one:
->>>>
->>>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
->>>>
->>>> It fixes CVE-2013-6382
->>>
->>> First I've heard about it there being a CVE for that bug. Since when
->>> has it been considered best practice to publish CVEs without first
->>> (or ever) directly contacting the relevant upstream developers?
->>>
->>> But, regardless of how broken I think the CVE process is, commit
->>> 071c529 ("xfs: underflow bug in xfs_attrlist_by_handle()") should be
->>> picked up by the stable kernels.
+>>> Seems like we got others in line with XFS behavior.
 >>
->> I don't see that commit in Linus's tree, is it not there yet?
-> 
-> Not yet.  Ben said it's applied but I'm not sure where that is.
+>> But, not having tested the behavior, it looks like fs/open.c has a
+>> simlar !S_ISDIR() check.  Where's that behavior implemented?
+>>
+>>> I'd prefer to have NFS follow this as well.
+>>
+>> Huh.  Sachin, do you remember if there was any other motivation behind
+>> that patch?
+>
+> Never mind, I see, the complaint is about the case where the id's don't
+> change, not about the directory case.  So Sachin's
+> 0953e620de0538cbd081f1b45126f6098112a598 doesn't actually have anything
+> to do with this.
+>
+> I'm fine with removing the id comparisons and changing the nfsd behavior
+> to match local filesystems.
 
-xfs git tree:
+Great.
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=071c529eb672648ee8ca3f90944bcbcc730b4c06
+I will try to produce a patch for this.
 
--Eric
-
-> josh
+>
+> --b.
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
