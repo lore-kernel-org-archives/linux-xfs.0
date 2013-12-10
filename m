@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 02B787FC0
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:12:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CAD21304067
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:23 -0800 (PST)
-Received: from mail-pb0-f74.google.com (mail-pb0-f74.google.com
-	[209.85.160.74]) by cuda.sgi.com with ESMTP id UG0GojN2VAUAE5CF
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:22 -0800 (PST)
-Received: by mail-pb0-f74.google.com with SMTP id uo5so882390pbc.5
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:12:22 -0800 (PST)
-From: Junho Ryu <jayr@google.com>
-Subject: [PATCH 10/10] xfstests: skip parts of tests which cannot work on tmpfs
-Date: Tue, 10 Dec 2013 12:12:01 -0800
-Message-Id: <1386706321-15795-11-git-send-email-jayr@google.com>
-In-Reply-To: <1386706321-15795-1-git-send-email-jayr@google.com>
-References: <1386706321-15795-1-git-send-email-jayr@google.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 70FFB7F98
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 14:53:53 -0600 (CST)
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EAA46AC014
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 12:53:52 -0800 (PST)
+Date: Tue, 10 Dec 2013 14:53:52 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH v2] xfs_repair: fix process_bmbt_reclist_int
+Message-ID: <20131210205352.GC1935@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,78 +20,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-Skip generic/076 which tests concurrent access while testing tmpfs
-because there are other tests cover the case using fsstress.
+There is a set checks for corruption in block map btrees in
+process_bmbt_reclist_int that we identify but currently do not fix.  It
+appears that the author's intent in this function was to set error = 1,
+and then only clear it when all of the checks were completed
+successfully.  Unfortunately error can be cleared when it is used for
+the return value of blkmap_set_ext.  Some kinds of corruption are not
+being fixed, including duplicate extents, claiming free blocks, claiming
+metadata blocks, and multiply used blocks.
 
-Skip generic/277 which requires chattr.
+Fix this by using error2 for the return code from blkmap_set_ext.
 
-Even if generic/053 will not be able to test exactly what the test has
-been intended to test, it will be still useful to have this test to try
-out some functionality on tmpfs rather than always failing or being
-skipped.
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Signed-off-by: Hugh Dickins <hughd@google.com>
-Signed-off-by: Theodore Ts'o <tytso@mit.edu>
-Signed-off-by: Junho Ryu <jayr@google.com>
 ---
- tests/generic/053 | 6 +++---
- tests/generic/076 | 2 ++
- tests/generic/277 | 2 ++
- 3 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/tests/generic/053 b/tests/generic/053
-index b8bd9e6..885b87c 100755
---- a/tests/generic/053
-+++ b/tests/generic/053
-@@ -81,9 +81,9 @@ list_acls()
+v2: Use error2 instead of shadowing error, as per Dave's suggestion.
+
+ repair/dinode.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Index: b/repair/dinode.c
+===================================================================
+--- a/repair/dinode.c	2013-12-10 14:42:57.905267321 -0600
++++ b/repair/dinode.c	2013-12-10 14:45:43.435246026 -0600
+@@ -663,9 +663,10 @@ _("inode %" PRIu64 " - extent offset too
+ 		}
  
- echo "acls before repair:"
- list_acls
--_do 'unmount $SCRATCH_DEV' 'umount $SCRATCH_DEV'
--_do 'repair filesystem' '_check_scratch_fs'
--_do 'mount filesytem' '_scratch_mount'
-+_do 'unmount $SCRATCH_DEV' '[ $FSTYP = tmpfs ] || umount $SCRATCH_DEV'
-+_do 'repair filesystem' '[ $FSTYP = tmpfs ] || _check_scratch_fs'
-+_do 'mount filesytem' '[ $FSTYP = tmpfs ] || _scratch_mount'
- echo "acls after repair: "
- list_acls
- 
-diff --git a/tests/generic/076 b/tests/generic/076
-index a53840f..faeed2f 100755
---- a/tests/generic/076
-+++ b/tests/generic/076
-@@ -57,6 +57,8 @@ _supported_os IRIX Linux
- 
- _require_scratch
- 
-+[ "$FSTYP" = "tmpfs" ] && _notrun "not applicable for the tmpfs file system"
-+
- echo "*** init fs"
- 
- rm -f $seqres.full
-diff --git a/tests/generic/277 b/tests/generic/277
-index 8461ad9..4672343 100755
---- a/tests/generic/277
-+++ b/tests/generic/277
-@@ -44,6 +44,8 @@ _supported_fs generic
- _supported_os Linux
- _require_scratch
- 
-+[ "$FSTYP" = "tmpfs" ] && _notrun "not applicable for the tmpfs file system"
-+
- _scratch_mkfs > /dev/null 2>&1
- _scratch_mount
- 
--- 
-1.8.5.1
+ 		if (blkmapp && *blkmapp) {
+-			error = blkmap_set_ext(blkmapp, irec.br_startoff,
++			int	error2;
++			error2 = blkmap_set_ext(blkmapp, irec.br_startoff,
+ 					irec.br_startblock, irec.br_blockcount);
+-			if (error) {
++			if (error2) {
+ 				/*
+ 				 * we don't want to clear the inode due to an
+ 				 * internal bmap tracking error, but if we've
+@@ -677,7 +678,7 @@ _("inode %" PRIu64 " - extent offset too
+ 				do_abort(
+ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
+   "\t%s fork, off - %" PRIu64 ", start - %" PRIu64 ", cnt %" PRIu64 "\n"),
+-					ino, strerror(error), forkname,
++					ino, strerror(error2), forkname,
+ 					irec.br_startoff, irec.br_startblock,
+ 					irec.br_blockcount);
+ 			}
 
 _______________________________________________
 xfs mailing list
