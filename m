@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE3197F4E
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:09:49 -0600 (CST)
-Date: Wed, 11 Dec 2013 13:09:45 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EDCC27F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:36:26 -0600 (CST)
+Date: Wed, 11 Dec 2013 13:36:22 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: Filesystem writes on RAID5 too slow
-Message-ID: <20131211190945.GF1935@sgi.com>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
-	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
-	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
-	<20131121092606.GU11434@dastard>
-	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
-	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
-	<20131121234116.GD6502@dastard>
-	<20131210191803.GA31162@infradead.org>
-	<20131211002753.GD10988@dastard>
+Subject: Re: [PATCH] xfs: return ENOSPC when trying to set more ACLs than
+	XFS_ACL_MAX_ENTRIES
+Message-ID: <20131211193622.GG1935@sgi.com>
+References: <52921D12.7040104@oracle.com> <5292C557.9020008@sandeen.net>
+	<5292D8AB.5080003@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131211002753.GD10988@dastard>
+In-Reply-To: <5292D8AB.5080003@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +24,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi,
+Hey Jeff,
 
-On Wed, Dec 11, 2013 at 11:27:53AM +1100, Dave Chinner wrote:
-> On Tue, Dec 10, 2013 at 11:18:03AM -0800, Christoph Hellwig wrote:
-> > > xfs: align initial file allocations correctly.
-> > > 
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > The function xfs_bmap_isaeof() is used to indicate that an
-> > > allocation is occurring at or past the end of file, and as such
-> > > should be aligned to the underlying storage geometry if possible.
-> > > 
-> > > Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-> > > behaviour of this function for empty files - it turned off
-> > > allocation alignment for this case accidentally. Hence large initial
-> > > allocations from direct IO are not getting correctly aligned to the
-> > > underlying geometry, and that is cause write performance to drop in
-> > > alignment sensitive configurations.
-> > > 
-> > > Fix it by considering allocation into empty files as requiring
-> > > aligned allocation again.
-> > 
-> > Seems like this one didn't get picked up yet?
+On Mon, Nov 25, 2013 at 12:57:15PM +0800, Jeff Liu wrote:
 > 
-> I'm about to resend all my outstanding patches...
+> On 11/25 2013 11:34 AM, Eric Sandeen wrote:
+> > On 11/24/13, 9:36 AM, Jeff Liu wrote:
+> >> From: Jie Liu <jeff.liu@oracle.com>
+> >>
+> >> We currently return EINVAL when trying to set more ACL entries than
+> >> XFS_ACL_MAX_ENTRIES(), but it would be a bit more meaningful to return
+> >> ENOSPC in this situation, because the later is used to indicate there
+> >> is no more space to store new ACLs IMHO.
+> > 
+> > I'm not quite convinced that it's better; the user will get an
+> > error string of "no space left on device" which is misleading too,
+> I admit that both looks misleading...
+> > and I'd argue that it's no better than "invalid argument."
+> > 
+> > To me, I think it's not worth changing, but others may disagree.
+> > 
+> > (I guess looking at ext4, it uses ENOSPC for some similar constraints,
+> > so maybe three is precedent for this)
+> Btrfs also uses ENOSPC, but JFS would return something like "Argument list too long"
+> in this case.
 
-Sorry I didn't see that one.  If you stick the keyword 'patch' in the subject I
-tend to do a bit better.
+I tend to agree with Eric on this one, but if Dave or Christoph want to weigh
+in that's cool.
 
-Regards,
+Thanks,
 	Ben
 
 _______________________________________________
