@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1ACE68006
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 01:51:28 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 615D5800B
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:28:19 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02A63304043
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 23:51:28 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id yFEJP0mkEU4Ut3YH (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 23:51:26 -0800 (PST)
-Date: Tue, 10 Dec 2013 23:51:25 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 10/10] xfstests: skip parts of tests which cannot work on
-	tmpfs
-Message-ID: <20131211075125.GJ19248@infradead.org>
-References: <1386706321-15795-1-git-send-email-jayr@google.com>
-	<1386706321-15795-11-git-send-email-jayr@google.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E658304051
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 00:28:16 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id v6qHhkdQA3IZHfba (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 00:28:15 -0800 (PST)
+Date: Wed, 11 Dec 2013 11:27:40 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: XFS security fix never sent to -stable?
+Message-ID: <20131211082740.GP5443@mwanda>
+References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
+	<20131209121534.GE4278@hercules>
+	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+	<20131209235523.GW31386@dastard>
+	<CA+5PVA5rUmWYQiPwkN15CnfqckmEjVukXz3mU75CiUBVzfERqA@mail.gmail.com>
+	<20131211010326.GF10988@dastard>
+	<CA+5PVA7wso5fo11xX9kCUdbrqBQMzUnYwTOB_Qe3K7LDY4z_Cw@mail.gmail.com>
+	<20131211020007.GH10988@dastard>
+	<CAGXu5jKUShtztTK-PtY7w0WSg=F3KUGL-iCM3=6H61qy3u6aZg@mail.gmail.com>
+	<20131211041758.GI10988@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1386706321-15795-11-git-send-email-jayr@google.com>
+In-Reply-To: <20131211041758.GI10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,28 +38,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Junho Ryu <jayr@google.com>
-Cc: hughd@google.com, tytso@mit.edu, branto@redhat.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Josh Boyer <jwboyer@fedoraproject.org>, Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Kees Cook <keescook@google.com>
 
-On Tue, Dec 10, 2013 at 12:12:01PM -0800, Junho Ryu wrote:
-> Skip generic/076 which tests concurrent access while testing tmpfs
-> because there are other tests cover the case using fsstress.
+I wasn't really expecting it to get a CVE since it requires
+CAP_SYS_ADMIN but I should have added the CC to stable.  Sorry about
+that.
 
-Should check if SCRATCH_DEV is a block device.
-
-> Skip generic/277 which requires chattr.
-
-Add a feature test to see if the filesystem supports chattr.  Might
-be worth to have a common _require_chattr helper chared with generic/079
-
-> 
-> Even if generic/053 will not be able to test exactly what the test has
-> been intended to test, it will be still useful to have this test to try
-> out some functionality on tmpfs rather than always failing or being
-> skipped.
-
-I'd rather add a simple ACL tests that covers this without the unmount
-an repair and maybe more.
+regards,
+dan carpenter
 
 _______________________________________________
 xfs mailing list
