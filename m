@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 615D5800B
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:28:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E658304051
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 00:28:16 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3586D8006
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:17:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A821CAC003
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:17:19 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id v6qHhkdQA3IZHfba (version=TLSv1
+	cuda.sgi.com with ESMTP id Qo0Fd1GG5atzLJ0Q (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 00:28:15 -0800 (PST)
-Date: Wed, 11 Dec 2013 11:27:40 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: XFS security fix never sent to -stable?
-Message-ID: <20131211082740.GP5443@mwanda>
-References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
-	<20131209121534.GE4278@hercules>
-	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
-	<20131209235523.GW31386@dastard>
-	<CA+5PVA5rUmWYQiPwkN15CnfqckmEjVukXz3mU75CiUBVzfERqA@mail.gmail.com>
-	<20131211010326.GF10988@dastard>
-	<CA+5PVA7wso5fo11xX9kCUdbrqBQMzUnYwTOB_Qe3K7LDY4z_Cw@mail.gmail.com>
-	<20131211020007.GH10988@dastard>
-	<CAGXu5jKUShtztTK-PtY7w0WSg=F3KUGL-iCM3=6H61qy3u6aZg@mail.gmail.com>
-	<20131211041758.GI10988@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131211041758.GI10988@dastard>
+	Wed, 11 Dec 2013 02:17:18 -0800 (PST)
+From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Subject: [PATCH] nfsd: revoking of suid/sgid bits after chown() in a
+	consistent way
+Date: Wed, 11 Dec 2013 14:16:36 +0400
+Message-Id: <1386756996-28083-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+In-Reply-To: <20131206204747.GB12613@fieldses.org>
+References: <20131206204747.GB12613@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,19 +24,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Josh Boyer <jwboyer@fedoraproject.org>, Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Kees Cook <keescook@google.com>
+To: linux-nfs@vger.kernel.org
+Cc: vasily.isaenko@oracle.com, hch@infradead.org, sprabhu@redhat.com, bfields@fieldses.org, xfs@oss.sgi.com
 
-I wasn't really expecting it to get a CVE since it requires
-CAP_SYS_ADMIN but I should have added the CC to stable.  Sorry about
-that.
+There is an inconsistency in the handling of SUID/SGID file
+bits after chown() between NFS and other local file systems.
 
-regards,
-dan carpenter
+Local file systems (for example, ext3, ext4, xfs, btrfs) revoke
+SUID/SGID bits after chown() on a regular file even if
+the owner/group of the file has not been changed:
+
+~# touch file; chmod ug+s file; chmod u+x file
+~# ls -l file
+-rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+~# chown root file; ls -l file
+-rwxr-Sr-- 1 root root 0 Dec  6 04:49 file
+
+but NFS doesn't do that:
+
+~# touch file; chmod ug+s file; chmod u+x file
+~# ls -l file
+-rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+~# chown root file; ls -l file
+-rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+
+NFS does that only if the owner/group has been changed:
+
+~# touch file; chmod ug+s file; chmod u+x file
+~# ls -l file
+-rwsr-Sr-- 1 root root 0 Dec  6 05:02 file
+~# chown bin file; ls -l file
+-rwxr-Sr-- 1 bin root 0 Dec  6 05:02 file
+
+See: http://pubs.opengroup.org/onlinepubs/9699919799/functions/chown.html
+
+ "If the specified file is a regular file, one or more of
+ the S_IXUSR, S_IXGRP, or S_IXOTH bits of the file mode are set,
+ and the process has appropriate privileges, it is
+ implementation-defined whether the set-user-ID and set-group-ID
+ bits are altered."
+
+So both variants are acceptable by POSIX.
+
+This patch makes NFS to behave like local file systems.
+
+Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+---
+ fs/nfsd/vfs.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
+index 72cb28e..8226991 100644
+--- a/fs/nfsd/vfs.c
++++ b/fs/nfsd/vfs.c
+@@ -348,8 +348,7 @@ nfsd_sanitize_attrs(struct inode *inode, struct iattr *iap)
+ 
+ 	/* Revoke setuid/setgid on chown */
+ 	if (!S_ISDIR(inode->i_mode) &&
+-	    (((iap->ia_valid & ATTR_UID) && !uid_eq(iap->ia_uid, inode->i_uid)) ||
+-	     ((iap->ia_valid & ATTR_GID) && !gid_eq(iap->ia_gid, inode->i_gid)))) {
++	    ((iap->ia_valid & ATTR_UID) || (iap->ia_valid & ATTR_GID))) {
+ 		iap->ia_valid |= ATTR_KILL_PRIV;
+ 		if (iap->ia_valid & ATTR_MODE) {
+ 			/* we're setting mode too, just clear the s*id bits */
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
