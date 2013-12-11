@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5C0807F9D
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 15:06:57 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AEA797FAB
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:15:15 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CED68F8050
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 13:06:54 -0800 (PST)
-Date: Tue, 10 Dec 2013 13:06:52 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs_repair: fix process_bmbt_reclist_int
-Message-ID: <20131210210652.GA5996@infradead.org>
-References: <20131210205352.GC1935@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 49F50AC011
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 16:15:12 -0800 (PST)
+Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id y1M9ZMUqaoKbnehh (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 16:15:10 -0800 (PST)
+Message-ID: <52A7AE8A.1080408@tlinx.org>
+Date: Tue, 10 Dec 2013 16:15:06 -0800
+From: LA Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131210205352.GC1935@sgi.com>
+Subject: Re: where/how is 'xattr' type=security enforced? (security attr
+	stripped?)
+References: <52A65AD5.9070705@tlinx.org> <20131210055213.GD31386@dastard>
+In-Reply-To: <20131210055213.GD31386@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,30 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Dec 10, 2013 at 02:53:52PM -0600, Ben Myers wrote:
-> There is a set checks for corruption in block map btrees in
-> process_bmbt_reclist_int that we identify but currently do not fix.  It
-> appears that the author's intent in this function was to set error = 1,
-> and then only clear it when all of the checks were completed
-> successfully.  Unfortunately error can be cleared when it is used for
-> the return value of blkmap_set_ext.  Some kinds of corruption are not
-> being fixed, including duplicate extents, claiming free blocks, claiming
-> metadata blocks, and multiply used blocks.
-> 
-> Fix this by using error2 for the return code from blkmap_set_ext.
-> 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
+On 12/9/2013 9:52 PM, Dave Chinner wrote:
+> You need root permissions to set security namespace attributes.
+----
+I knew that about the root namespace, but the security namespace
+isn't as well documented.
 
-Looks good,
+I'd *hoped* for something that made 'sense' -- like the owner
+being able to set/change, at least some of them, like mode bits.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I know this isn't a problem, actually "in XFS", but more
+in how it is used.  Thinking out loud...if you'll bare
+w/me:
+
+Since it's an NTACL, on a file created and owned me, in
+a directory that I 'own' the ACL for (as I'm the owner
+of the file and the dir it is in), it seems Samba is trying
+to follow NT rules in placing the ACL w/the file.
+
+But then the linux utils come along and change the rules
+and   strip off the NT-ACL,  when the file is copied or
+when it is moved to a different partition (also XFS).
+
+What about the posix ACL's?  Aren't they in the security
+section as well?  Do they get stripped off whenever
+a copy is made or the file is moved to another XFS
+file system?
+
+The NTACL was set on the file because it inherited permissions
+under 'NT' rules.  Shouldn't I be able to copy or move the
+file (presuming I am the owner and directory owner, etc..).
+What about posix ACL's?
+
+It seems to me, that the security section of an ACL should be
+(assuming you have the normal, discretionary access system
+on linux), should be movable and settable by the file owner.
+
+Under a different security setup (say with mandatory access
+rules -- like under SMACK or Flask) it would be a different
+matter, but it seems a bit odd to be stripping ACL's from
+a file just because it is copied/moved...
+
+
+> [ On a side note, there's some sooper seekrit voodoo ....
+yeah, vaguely remember that...
+
+FWIW -- I've never seen a message like I'm getting now...
+so don't know if it is a change in Samba/coreutils or the
+kernel (all of which have changed recently in installing
+a new suse release for most things)...
+
 
 _______________________________________________
 xfs mailing list
