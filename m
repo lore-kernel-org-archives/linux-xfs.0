@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2D1407F73
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 07:47:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 13D748F8066
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 05:47:49 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A4BC529E1C
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 07:48:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3BDE5AC01B
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 05:48:14 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id psLLMKTzwGibOUha (version=TLSv1
+	cuda.sgi.com with ESMTP id DXjQWSvHed4pmpPi (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 05:47:47 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	Wed, 11 Dec 2013 05:48:11 -0800 (PST)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
 	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBBDlkc9030569
+	ESMTP id rBBDmAwY031189
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:47:47 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBBDljag026188
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:48:11 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBBDm9iK022565
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:47:45 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBBDli5U025657 for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:47:45 GMT
-Message-ID: <52A86CF9.1030003@oracle.com>
-Date: Wed, 11 Dec 2013 21:47:37 +0800
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:48:10 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBBDm9NY022557 for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 13:48:09 GMT
+Message-ID: <52A86D11.1040504@oracle.com>
+Date: Wed, 11 Dec 2013 21:48:01 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 0/5] xfs: introduce a common helper to calculate the number
-	of blocks per cluster
+Subject: [PATCH 1/5] xfs: introduce xfs_ialloc_blks_per_cluster
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,18 +41,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Folks,
+From: Jie Liu <jeff.liu@oracle.com>
 
-As per Christoph's comments for parallel quota check patches, we'd better
-to introduce a common helper to calculate the number of blocks per cluster.
-This small patch series is used to make it.
+Introduce a common routine xfs_ialloc_blks_per_cluster() to calculate
+and return the number of blocks per inode cluster.
 
-I'd like to submit it separately because it is independent to my current
-parallel quota check implementation.
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ fs/xfs/xfs_ialloc.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-
-Thanks,
--Jeff
+diff --git a/fs/xfs/xfs_ialloc.h b/fs/xfs/xfs_ialloc.h
+index a8f76a5..f4bfd32 100644
+--- a/fs/xfs/xfs_ialloc.h
++++ b/fs/xfs/xfs_ialloc.h
+@@ -37,6 +37,16 @@ struct xfs_btree_cur;
+ #define	XFS_INODE_BIG_CLUSTER_SIZE	8192
+ #define	XFS_INODE_CLUSTER_SIZE(mp)	(mp)->m_inode_cluster_size
+ 
++/* Calculate and return the number of blocks per inode cluster */
++static inline int
++xfs_ialloc_blks_per_cluster(
++	struct xfs_mount	*mp)
++{
++	if (mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp))
++		return 1;
++	return XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
++}
++
+ /*
+  * Make an inode pointer out of the buffer/offset.
+  */
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
