@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 95E4E7FBF
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:40:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64C5A8F8054
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 16:40:49 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 8AB4D7FC1
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 19:03:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 68E108F8054
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 17:03:33 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	V0M7WFaZHy2FvwqP for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 16:40:47 -0800 (PST)
-Date: Wed, 11 Dec 2013 11:40:39 +1100
+	Gmon78B5ictrs9uA for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 17:03:31 -0800 (PST)
+Date: Wed, 11 Dec 2013 12:03:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS umount with IO errors seems to lead to memory corruption
-Message-ID: <20131211004039.GE10988@dastard>
-References: <CAOcd+r3i0mDK2vAnZ-0s6VGnSsJwWxnEB2uMrcz+WSJAxx2bmA@mail.gmail.com>
-	<20131121220713.GB6502@dastard>
-	<CAOcd+r24UpR6F709SSJ-StWk8QYXC-w68diKvvKaRUkvdC1Vfg@mail.gmail.com>
-	<1E31497CEB304DB68E5EFCF4814F9A27@alyakaslap>
+Subject: Re: XFS security fix never sent to -stable?
+Message-ID: <20131211010326.GF10988@dastard>
+References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
+	<20131209121534.GE4278@hercules>
+	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+	<20131209235523.GW31386@dastard>
+	<CA+5PVA5rUmWYQiPwkN15CnfqckmEjVukXz3mU75CiUBVzfERqA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1E31497CEB304DB68E5EFCF4814F9A27@alyakaslap>
+In-Reply-To: <CA+5PVA5rUmWYQiPwkN15CnfqckmEjVukXz3mU75CiUBVzfERqA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,128 +33,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Josh Boyer <jwboyer@fedoraproject.org>
+Cc: Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Kees Cook <keescook@google.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Dave Chinner <dchinner@redhat.com>
 
-[ Sorry, Alex, I missed your last email. Thanks for pinging me to
-remind me to look at it. ]
-
-On Tue, Dec 10, 2013 at 09:36:11AM +0200, Alex Lyakas wrote:
-> Hi Dave,
-> any insight on this issue? At least on the simpler reproduction with
-> "error" DeviceMapper?
-
-Yes, it does point to the problem.
-
-
-> -----Original Message----- From: Alex Lyakas
-> Sent: 24 November, 2013 12:27 PM
-> To: Dave Chinner ; xfs@oss.sgi.com
-> Cc: linux-xfs@vger.kernel.org
-> Subject: Re: XFS umount with IO errors seems to lead to memory corruption
+On Tue, Dec 10, 2013 at 08:20:07AM -0500, Josh Boyer wrote:
+> On Mon, Dec 9, 2013 at 6:55 PM, Dave Chinner <david@fromorbit.com>
+> wrote:
+> > [cc xfs list, cc stable@vger.kernel.org]
+> >
+> > On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
+> >> On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
+> >> <luis.henriques@canonical.com> wrote:
+> >> > On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
+> >> >> Hi,
+> >> >>
+> >> >> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c
+> >> >> ("xfs: add capability check to free eofblocks ioctl") is a
+> >> >> security fix that was never sent to -stable? From what I can
+> >> >> see, it was introduced in 3.8 by
+> >> >> 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
+> >> >> XFS_IOC_FREE_EOFBLOCKS ioctl").
+> >> >>
+> >> >> I don't see this in the 3.8.y tree. Should it be added there
+> >> >> and newer?
+> >> >
+> >> > Thanks Kees, I'm queuing it for the 3.11 kernel.
+> >>
+> >> There's also this one:
+> >>
+> >> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
+> >>
+> >> It fixes CVE-2013-6382
+> >
+> > First I've heard about it there being a CVE for that bug. Since
+> > when has it been considered best practice to publish CVEs
+> > without first (or ever) directly contacting the relevant
+> > upstream developers?
 > 
-> Hi Dave,
-> thank you for your comments.
-> 
-> The test that I am doing is unmounting the XFS, while its underlying
-> block device returns intermittent IO errors. The block device in
-> question is a custom DeviceMapper target. It returns -ECANCELED in
-> this case. Should I return some other errno instead?
-> The same exact test works alright with ext4. It's unmount finishes,
-> system seems to continue functioning normally and kmemleak is also
-> happy.
-> 
-> When doing a simpler reproductoin with "error" Device-Mapper, umount
-> gets stuck and never returns, while kernel keeps printing:
-> XFS (dm-0): metadata I/O error: block 0x0 ("xfs_buf_iodone_callbacks") error 5 numblks 1
+> We got a Fedora bug for it, and there are similar RHEL bugs open.
+> I had assumed you would be informed either via upstream or
+> through those.
 
-It's trying to write the superblock - it's and async, background
-metadata write, and it's failing.
+I've not been cc'd on any of those bugs internally at RH, so I don't
+have visibility of the problems unless someone specifically adds me
+to those bugs.  As it is, raising fedora/RHEL bugs is not informing
+upstream - it is a distro process for tracking the distro issue
+through to closure.
 
-        /*
-         * If the write was asynchronous then no one will be looking for the
-         * error.  Clear the error state and write the buffer out again.
-         *
-         * XXX: This helps against transient write errors, but we need to find
-         * a way to shut the filesystem down if the writes keep failing.
-         *
-         * In practice we'll shut the filesystem down soon as non-transient
-         * erorrs tend to affect the whole device and a failing log write
-         * will make us give up.  But we really ought to do better here.
-         */
-        if (XFS_BUF_ISASYNC(bp)) {
-                ASSERT(bp->b_iodone != NULL);
+> The CVE request was submitted by Kees here:
+> http://seclists.org/oss-sec/2013/q4/330
 
-                trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+Ugh, no, I'm not going to subscribe to a high noise list where the
+only way I might be informed of a CVE being raised is by following
+links to git commit IDs....
 
-                xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+Upstream is not magically informed about CVEs, and relying on
+upstream developers to scan or poll *anything* just to find if a
+CVE on their subsystem has been released is not reliable and
+does not scale. If anyone raises a CVE against a kernel subsystem,
+then the relevant list in the MAINTAINERS file for that subsystem
+should be on the cc list of any discussion about the CVE, and on the
+announcement of the CVE.
 
-                if (!XFS_BUF_ISSTALE(bp)) {
-                        bp->b_flags |= XBF_WRITE | XBF_ASYNC | XBF_DONE;
-                        xfs_buf_iorequest(bp);
-                } else {
-                        xfs_buf_relse(bp);
-                }
-
-                return;
-        }
-
-There's the problem code - it just keeps resubmitting the failed IO
-and so never unlocks it and it never completes.
-
-
-> this never returns and /proc shows:
-> root@vc-00-00-1075-dev:~# cat /proc/2684/stack
-> [<ffffffffa033ac6a>] xfs_ail_push_all_sync+0x9a/0xd0 [xfs]
-> [<ffffffffa0330123>] xfs_unmountfs+0x63/0x160 [xfs]
-> [<ffffffffa02ee265>] xfs_fs_put_super+0x25/0x60 [xfs]
-> [<ffffffff8118fd12>] generic_shutdown_super+0x62/0xf0
-> [<ffffffff8118fdd0>] kill_block_super+0x30/0x80
-> [<ffffffff811903dc>] deactivate_locked_super+0x3c/0x90
-> [<ffffffff81190d7e>] deactivate_super+0x4e/0x70
-> [<ffffffff811ad086>] mntput_no_expire+0x106/0x160
-> [<ffffffff811ae760>] sys_umount+0xa0/0xe0
-> [<ffffffff816ab919>] system_call_fastpath+0x16/0x1b
-> [<FFFfffffffffffff>] 0xffffffffffffffff
-
-That's waiting for the superblock to be marked clean.
-
-> And after some time, hung task warning shows:
-> INFO: task kworker/2:1:39 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> kworker/2:1     D ffffffff8180cf00     0    39      2 0x00000000
-> ffff88007c54db38 0000000000000046 000000027d003700 ffff88007fd03fc0
-> ffff88007c54dfd8 ffff88007c54dfd8 ffff88007c54dfd8 0000000000013e40
-> ffff88007c9e9710 ffff88007c4bdc40 00000000000000b8 7fffffffffffffff
-> Call Trace:
-> [<ffffffff816a1b99>] schedule+0x29/0x70
-> [<ffffffff816a02d5>] schedule_timeout+0x1e5/0x250
-> [<ffffffffa02f3987>] ? kmem_zone_alloc+0x67/0xe0 [xfs]
-> [<ffffffff816798e6>] ? kmemleak_alloc+0x26/0x50
-> [<ffffffff816a0f1b>] __down_common+0xa0/0xf0
-> [<ffffffffa032f37c>] ? xfs_getsb+0x3c/0x70 [xfs]
-> [<ffffffff816a0fde>] __down+0x1d/0x1f
-> [<ffffffff81084591>] down+0x41/0x50
-> [<ffffffffa02dcd44>] xfs_buf_lock+0x44/0x110 [xfs]
-> [<ffffffffa032f37c>] xfs_getsb+0x3c/0x70 [xfs]
-> [<ffffffffa033b4bc>] xfs_trans_getsb+0x4c/0x140 [xfs]
-> [<ffffffffa032f06e>] xfs_mod_sb+0x4e/0xc0 [xfs]
-> [<ffffffffa02e3b24>] xfs_fs_log_dummy+0x54/0x90 [xfs]
-> [<ffffffffa0335bf8>] xfs_log_worker+0x48/0x50 [xfs]
-> [<ffffffff81077a11>] process_one_work+0x141/0x4a0
-> [<ffffffff810789e8>] worker_thread+0x168/0x410
-> [<ffffffff81078880>] ? manage_workers+0x120/0x120
-> [<ffffffff8107df10>] kthread+0xc0/0xd0
-> [<ffffffff813a3ea4>] ? acpi_get_child+0x47/0x4d
-> [<ffffffff813a3fb7>] ? acpi_platform_notify.part.0+0xbb/0xda
-> [<ffffffff8107de50>] ? flush_kthread_worker+0xb0/0xb0
-> [<ffffffff816ab86c>] ret_from_fork+0x7c/0xb0
-> [<ffffffff8107de50>] ? flush_kthread_worker+0xb0/0xb0
-
-And that's blocked on the superblock buffer because it hasn't been
-unlocked due to the failing write not completing.
-
-I'll have a think about how to fix it.
+Security processes are not something that should be hidden away in
+it's own private corner - if there's a problem upstream needs to
+take action on, then direct contact with upstream is necessary. We
+need to know about security issues - even ones that are classified
+post-commit as security issues - so we are operating with full
+knowledge of the issues in our code and the impact of our fixes....
 
 Cheers,
 
