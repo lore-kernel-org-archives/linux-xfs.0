@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4B54C7FEC
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 872C77FEE
 	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 01:36:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2ABFC304066
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 22088AC00B
 	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 23:36:28 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id PirqAQpROnEckSUC (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id RHtYNPmzBQn3ow1o (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 10 Dec 2013 23:36:27 -0800 (PST)
-Message-Id: <20131211073626.804868050@bombadil.infradead.org>
-Date: Tue, 10 Dec 2013 23:34:50 -0800
+Message-Id: <20131211073627.081037580@bombadil.infradead.org>
+Date: Tue, 10 Dec 2013 23:34:52 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 05/12] 105: use TEST_DIR instead of a SCRATCH_DEV
+Subject: [PATCH 07/12] 124: use TEST_DIR instead of a SCRATCH_DEV
 References: <20131211073445.353655850@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0005-105-use-TEST_DIR-instead-of-a-SCRATCH_DEV.patch
+	filename=0007-124-use-TEST_DIR-instead-of-a-SCRATCH_DEV.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,73 +36,38 @@ The test does not require a fresh file system.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/generic/105 |   31 +++++++++++--------------------
- 1 file changed, 11 insertions(+), 20 deletions(-)
+ tests/generic/124 |   11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/tests/generic/105 b/tests/generic/105
-index 2f99401..341d0b8 100755
---- a/tests/generic/105
-+++ b/tests/generic/105
-@@ -52,48 +52,39 @@ _supported_os IRIX Linux
- 
- rm -f $seqres.full
+diff --git a/tests/generic/124 b/tests/generic/124
+index 93ec4a1..132f2bf 100755
+--- a/tests/generic/124
++++ b/tests/generic/124
+@@ -48,12 +48,10 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
  
 -_require_scratch
- _require_acls
+-_scratch_mkfs >/dev/null 2>&1
+-_scratch_mount
++rm -f $TEST_DIR/rw_pattern.$seq $TEST_DIR/rw_pattern.$seq
  
- _acl_setup_ids
- 
--umount $SCRATCH_DEV >/dev/null 2>&1
--echo "*** MKFS ***"                         >>$seqres.full
--echo ""                                     >>$seqres.full
--_scratch_mkfs                               >>$seqres.full 2>&1 \
--	|| _fail "mkfs failed"
--_scratch_mount                              >>$seqres.full 2>&1 \
--	|| _fail "mount failed"
--
--cd $SCRATCH_MNT
-+cd $TESTDIR
- 
- # create a dir with out execute perms
--mkdir -m 600 subdir
-+mkdir -m 600 subdir105
- 
- # make it owned by $acl1
--chown $acl1 subdir
-+chown $acl1 subdir105
- 
- # put a file in the directory
--echo data > subdir/file
--_ls_l subdir/file | awk '{ print $1, $3 }'
-+echo data > subdir105/file
-+_ls_l subdir105/file | awk '{ print $1, $3 }'
- 
- # add an ACL with a user ACE which has no exec permission 
- if [ "$HOSTOS" == "Linux" ]; then
--    setfacl -m u:$acl1:r subdir
-+    setfacl -m u:$acl1:r subdir105
- elif [ "$HOSTOS" == "IRIX" ]; then
--    chacl u:$acl:r--,g::---,o::--- subdir
-+    chacl u:$acl:r--,g::---,o::--- subdir105
- else
-     echo "Unknown OS!"
-     exit 1
+ # Run preallo_rw_pattern on both test and scratch partitions
+-for TESTFILE in $TEST_DIR/rw_pattern.tmp $SCRATCH_MNT/rw_pattern.tmp
++for TESTFILE in $TEST_DIR/rw_pattern.$seq $TEST_DIR/rw_pattern.$seq
+   do
+   count=1
+   while (( count < 101 ))
+@@ -74,9 +72,4 @@ if (test $? -eq 0 ) then
+     status=0
  fi
  
--# With the bug this gives: `ls: subdir/file: Permission denied'
-+# With the bug this gives: `ls: subdir105/file: Permission denied'
- # because one needs at least an exec perm somewhere in acl
- # However, this should not hold true for directories.
--_ls_l subdir/file | awk '{ print $1, $3 }'
-+_ls_l subdir105/file | awk '{ print $1, $3 }'
- 
--# With the bug this gives: `subdir/file2: Permission denied'.
--echo data2 > subdir/file2
-+# With the bug this gives: `subdir105/file2: Permission denied'.
-+echo data2 > subdir105/file2
- 
- # success, all done
- status=0
+-umount $SCRATCH_DEV
+-
+-_check_test_fs
+-_check_scratch_fs
+-
+ exit 
 -- 
 1.7.10.4
 
