@@ -1,16 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7B9D37F3F
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 11:25:40 -0600 (CST)
-Message-ID: <52A8A010.8070909@sgi.com>
-Date: Wed, 11 Dec 2013 11:25:36 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CC4507F3F
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 11:27:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56DB5AC006
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 09:27:36 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QFzn1Vq4ClmGCdXr for
+	<xfs@oss.sgi.com>; Wed, 11 Dec 2013 09:27:35 -0800 (PST)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rBBHRXju031250
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 12:27:34 -0500
+Received: from gelk.kernelslacker.org (ovpn-113-210.phx2.redhat.com
+	[10.3.113.210])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id rBBHRSDd007524
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 12:27:33 -0500
+Received: from gelk.kernelslacker.org (localhost [127.0.0.1])
+	by gelk.kernelslacker.org (8.14.7/8.14.7) with ESMTP id rBBHRRbn005181
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 12:27:27 -0500
+Received: (from davej@localhost)
+	by gelk.kernelslacker.org (8.14.7/8.14.7/Submit) id rBBHRPK7005180
+	for xfs@oss.sgi.com; Wed, 11 Dec 2013 12:27:25 -0500
+Date: Wed, 11 Dec 2013 12:27:25 -0500
+From: Dave Jones <davej@redhat.com>
+Subject: XFS: Internal error XFS_WANT_CORRUPTED_RETURN
+Message-ID: <20131211172725.GA4606@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfs: free the efi AIL entry on log recovery failure
-References: <20131206212037.560711585@sgi.com>
-	<20131208005224.696001432@sgi.com>
-	<20131211113126.GA6248@infradead.org>
-In-Reply-To: <20131211113126.GA6248@infradead.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,43 +39,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 12/11/13 05:31, Christoph Hellwig wrote:
-> Btw, I really think we need to get rid of abusing the AIL for
-> tracking EFIs during log recovery before looking at the various
-> leaks in this area.  I've actually got a lightly tested patch for
-> that, but didn't make much progress on that series.  If you have
-> and interest in that area and some spare QA cycles I'd recommend
-> to base this on the patch below:
->
-> ---
->> From b90935eaba9eb13c67101e5d723513bc6ca6e722 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig<hch@lst.de>
-> Date: Sat, 23 Nov 2013 20:11:09 +0100
-> Subject: [PATCH] xfs: simplify EFI/EFD recovery
->
-> Use a cancellation table, similar to how we handle buffers instead of
-> abusing the AIL during recovery.
->
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
-> ---
->   fs/xfs/xfs_extfree_item.c |    8 +-
->   fs/xfs/xfs_extfree_item.h |    6 --
->   fs/xfs/xfs_log_priv.h     |    1 +
->   fs/xfs/xfs_log_recover.c  |  183 +++++++++++++--------------------------------
->   4 files changed, 56 insertions(+), 142 deletions(-)
+Powered up my desktop this morning and noticed I couldn't cd into ~/Mail
+dmesg didn't look good.  "XFS: Internal error XFS_WANT_CORRUPTED_RETURN"
+http://codemonkey.org.uk/junk/xfs-1.txt
 
+I rebooted into single user mode, and ran xfs_repair on /dev/sda3 (/home).
+It fixed up a bunch of stuff, but ended up eating ~/.procmailrc entirely
+(no sign of it in lost & found), and a bunch of filenames got garbled
+'december' became 'decemcer' for eg.  Looks like a couple kernel trees ended
+up in lost & found.
 
-Good idea to remove EFI item recovery from the AIL. It may take some 
-time before I get to it.
+After rebooting back into multi-user mode, I looked in dmesg again to be sure
+and this time sda2 was complaining..
 
---Mark.
+http://codemonkey.org.uk/junk/xfs-2.txt
+
+Same drill, reboot, xfs_repair. Looks like a bunch of man pages ended up in lost & found.
+
+Thoughts ? Could sda be dying ? (It is a fairly old crappy ssd)
+
+	Dave
 
 _______________________________________________
 xfs mailing list
