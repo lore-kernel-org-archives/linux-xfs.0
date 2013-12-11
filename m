@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F53C7F4E
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 17:01:38 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B3D827F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 17:14:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3FD6D304067
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 15:01:35 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 821C98F8035
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 15:14:48 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	f9FxXGvTr5Jek5gD for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 15:01:33 -0800 (PST)
-Date: Thu, 12 Dec 2013 10:01:28 +1100
+	yPeDOG9DecEUsFAM for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 15:14:46 -0800 (PST)
+Date: Thu, 12 Dec 2013 10:14:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: Internal error XFS_WANT_CORRUPTED_RETURN
-Message-ID: <20131211230128.GM10988@dastard>
-References: <20131211172725.GA4606@redhat.com>
+Subject: Re: [PATCH 1/5] xfs: introduce xfs_ialloc_blks_per_cluster
+Message-ID: <20131211231409.GN10988@dastard>
+References: <52A86D11.1040504@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131211172725.GA4606@redhat.com>
+In-Reply-To: <52A86D11.1040504@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +29,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Dec 11, 2013 at 12:27:25PM -0500, Dave Jones wrote:
-> Powered up my desktop this morning and noticed I couldn't cd into ~/Mail
-> dmesg didn't look good.  "XFS: Internal error XFS_WANT_CORRUPTED_RETURN"
-> http://codemonkey.org.uk/junk/xfs-1.txt
-
-They came from xfs_dir3_block_verify() on read IO completion, which
-indicates that the corruption was on disk and in the directory
-structure. Yeah, definitely a verifier error:
-
-XFS (sda3): metadata I/O error: block 0x2e790 ("xfs_trans_read_buf_map") error 117 numblks 8
-
-Are you running a CRC enabled filesystem? (i.e. mkfs.xfs -m crc=1)
-
-Is there any evidence that this verifier has fired in the past on
-write? If not, then it's a good chance that it's a media error
-causing this, because the same verifier runs when the metadata is
-written to ensure we are not writing bas stuff to disk.
-
-> I rebooted into single user mode, and ran xfs_repair on /dev/sda3 (/home).
-> It fixed up a bunch of stuff, but ended up eating ~/.procmailrc entirely
-> (no sign of it in lost & found), and a bunch of filenames got garbled
-> 'december' became 'decemcer' for eg.  Looks like a couple kernel trees ended
-> up in lost & found.
-
-Single bit errors in directory names? That really does point towards
-media errors, not a filesystem error being the cause.
-
-> After rebooting back into multi-user mode, I looked in dmesg again to be sure
-> and this time sda2 was complaining..
+On Wed, Dec 11, 2013 at 09:48:01PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> http://codemonkey.org.uk/junk/xfs-2.txt
-
-Exaclty the same - directory blocks failing read verification.
-
-> Same drill, reboot, xfs_repair. Looks like a bunch of man pages ended up in lost & found.
+> Introduce a common routine xfs_ialloc_blks_per_cluster() to calculate
+> and return the number of blocks per inode cluster.
 > 
-> Thoughts ? Could sda be dying ? (It is a fairly old crappy ssd)
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ---
+>  fs/xfs/xfs_ialloc.h | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_ialloc.h b/fs/xfs/xfs_ialloc.h
+> index a8f76a5..f4bfd32 100644
+> --- a/fs/xfs/xfs_ialloc.h
+> +++ b/fs/xfs/xfs_ialloc.h
+> @@ -37,6 +37,16 @@ struct xfs_btree_cur;
+>  #define	XFS_INODE_BIG_CLUSTER_SIZE	8192
+>  #define	XFS_INODE_CLUSTER_SIZE(mp)	(mp)->m_inode_cluster_size
+>  
+> +/* Calculate and return the number of blocks per inode cluster */
+> +static inline int
+> +xfs_ialloc_blks_per_cluster(
+> +	struct xfs_mount	*mp)
+> +{
+> +	if (mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp))
+> +		return 1;
+> +	return XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
+> +}
 
-I'd seriously be considering replacing the SSD as the first step.
-If you then see failures on a known good drive, we'll need to dig
-further.
+I'd avoid using the XFS_INODE_CLUSTER_SIZE() macro - it's just a
+useless wrapper around mp->m_inode_cluster_size. Hence if you are
+cleaning this code up, the first thing I'd do is remove the macro.
+
+/* Calculate and return the number of blocks per inode cluster */
+static inline int
+xfs_ialloc_blks_per_cluster(
+	struct xfs_mount	*mp)
+{
+	if (mp->m_sb.sb_blocksize >= mp->m_inode_cluster_size)
+		return 1;
+	return mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog;
+}
+
+Is much less shouty, and just as easy to read ;)
 
 Cheers,
 
