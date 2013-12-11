@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2F12E7FC4
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 06:05:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D1578F8065
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:05:36 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HJyV0Ga56aHrEdCp for
-	<xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:05:36 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rBBC5Yr1009826
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 07:05:35 -0500
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH] xfs: prevent range.len underflow in xfs_ioc_trim()
-Date: Wed, 11 Dec 2013 13:05:25 +0100
-Message-Id: <1386763525-18584-1-git-send-email-lczerner@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 494DA801F
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 07:11:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DB01FAC01F
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 05:11:00 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id bljGablGWQ87GbIU (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 05:10:56 -0800 (PST)
+Message-ID: <52A86458.9030001@oracle.com>
+Date: Wed, 11 Dec 2013 21:10:48 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: prevent range.len underflow in xfs_ioc_trim()
+References: <1386763525-18584-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1386763525-18584-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,42 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>
+To: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-Currently when range.len is set to 0 it will underflow. Fix it by
-checking for this scenario and return EINVAL in case range.len is
-smaller than block size.
+Hi Lukas,
 
-This was discovered by the xfstests generic/288 and with this patch
-the problem goes away.
+Thanks for the fix.  We have corrected this problem with the blow patch
+which got merged intwo weeks ago. :)
+[ commit f9fd013561 ]
+xfs: don't perform discard if the given range length is less than block size
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
- fs/xfs/xfs_discard.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+That is also discovered by generic/288 you contributed.
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 8367d6d..9029082 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -180,7 +180,8 @@ xfs_ioc_trim(
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
- 	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
--	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)))
-+	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)) ||
-+	    range.len < XFS_FSB_TO_B(mp, 1))
- 		return -XFS_ERROR(EINVAL);
- 
- 	start = BTOBB(range.start);
--- 
-1.8.3.1
+Thanks,
+-Jeff
+
+On 12/11 2013 20:05 PM, Lukas Czerner wrote:
+> Currently when range.len is set to 0 it will underflow. Fix it by
+> checking for this scenario and return EINVAL in case range.len is
+> smaller than block size.
+> 
+> This was discovered by the xfstests generic/288 and with this patch
+> the problem goes away.
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> ---
+>  fs/xfs/xfs_discard.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index 8367d6d..9029082 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -180,7 +180,8 @@ xfs_ioc_trim(
+>  	 * matter as trimming blocks is an advisory interface.
+>  	 */
+>  	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
+> -	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)))
+> +	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)) ||
+> +	    range.len < XFS_FSB_TO_B(mp, 1))
+>  		return -XFS_ERROR(EINVAL);
+>  
+>  	start = BTOBB(range.start);
+> 
 
 _______________________________________________
 xfs mailing list
