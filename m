@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.12-11685-gf9b395a
-Message-Id: <20131211212918.D9F4D7F50@oss.sgi.com>
-Date: Wed, 11 Dec 2013 15:29:17 -0600 (CST)
+Message-Id: <20131211212929.CB59D7F55@oss.sgi.com>
+Date: Wed, 11 Dec 2013 15:29:29 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   f9b395a xfs: align initial file allocations correctly
   8e825e3 xfs: fix calculation of freed inode cluster blocks
   b3f03ba xfs: xfs_dir2_block_to_sf temp buffer allocation fails
