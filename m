@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5284F802A
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 05:31:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B1DD8AC018
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 03:31:28 -0800 (PST)
-Date: Wed, 11 Dec 2013 03:31:26 -0800
+	by oss.sgi.com (Postfix) with ESMTP id BCD147FC4
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 06:03:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6608FAC012
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:03:47 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 7rJSUdwxYQQ0hCNB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 04:03:42 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
+	Hat Linux)) id 1VqiVx-0001bU-3s
+	for xfs@oss.sgi.com; Wed, 11 Dec 2013 12:03:41 +0000
+Date: Wed, 11 Dec 2013 04:03:41 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3] xfs: free the efi AIL entry on log recovery failure
-Message-ID: <20131211113126.GA6248@infradead.org>
-References: <20131206212037.560711585@sgi.com>
-	<20131208005224.696001432@sgi.com>
+Subject: [PATCH 06/10 v2] xfs: format log items write directly into the
+	linear CIL buffer
+Message-ID: <20131211120341.GA6116@infradead.org>
+References: <20131129083919.207915844@bombadil.infradead.org>
+	<20131129084001.028583376@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131208005224.696001432@sgi.com>
+In-Reply-To: <20131129084001.028583376@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,364 +34,628 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Btw, I really think we need to get rid of abusing the AIL for
-tracking EFIs during log recovery before looking at the various
-leaks in this area.  I've actually got a lightly tested patch for
-that, but didn't make much progress on that series.  If you have
-and interest in that area and some spare QA cycles I'd recommend
-to base this on the patch below:
+Instead of setting up pointers to memory locations in iop_format which then
+get copied into the CIL linear buffer after return move the copy into
+the individual inode items.  This avoids the need to always have a memory
+block in the exact same layout that gets written into the log around, and
+allow the log items to be much more flexible in their in-memory layouts.
 
----
->From b90935eaba9eb13c67101e5d723513bc6ca6e722 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Sat, 23 Nov 2013 20:11:09 +0100
-Subject: [PATCH] xfs: simplify EFI/EFD recovery
+The only caveat is that we need to properly align the data for each
+iovec so that don't have structures misaligned in subsequent iovecs.
 
-Use a cancellation table, similar to how we handle buffers instead of
-abusing the AIL during recovery.
+Note that all log item format routines now need to be careful to modify
+the copy of the item that was placed into the CIL after calls to
+xlog_copy_iovec instead of the in-memory copy.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_extfree_item.c |    8 +-
- fs/xfs/xfs_extfree_item.h |    6 --
- fs/xfs/xfs_log_priv.h     |    1 +
- fs/xfs/xfs_log_recover.c  |  183 +++++++++++++--------------------------------
- 4 files changed, 56 insertions(+), 142 deletions(-)
+ fs/xfs/xfs_buf_item.c     |   29 +++++++-------
+ fs/xfs/xfs_dquot_item.c   |   19 +++++-----
+ fs/xfs/xfs_extfree_item.c |   10 +++--
+ fs/xfs/xfs_icreate_item.c |    5 ++-
+ fs/xfs/xfs_inode_item.c   |   92 ++++++++++++++++++++++-----------------------
+ fs/xfs/xfs_log.h          |   39 +++++++++++++++++--
+ fs/xfs/xfs_log_cil.c      |   41 +++++---------------
+ fs/xfs/xfs_trans.h        |    2 +-
+ 8 files changed, 123 insertions(+), 114 deletions(-)
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index fb7a4c1..cc5e9fd 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -312,14 +312,8 @@ xfs_efi_release(xfs_efi_log_item_t	*efip,
- 		uint			nextents)
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index d49419d..7641173 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -184,6 +184,7 @@ xfs_buf_item_size(
+ 
+ static inline void
+ xfs_buf_item_copy_iovec(
++	struct xfs_log_vec	*lv,
+ 	struct xfs_log_iovec	**vecp,
+ 	struct xfs_buf		*bp,
+ 	uint			offset,
+@@ -191,7 +192,7 @@ xfs_buf_item_copy_iovec(
+ 	uint			nbits)
  {
- 	ASSERT(atomic_read(&efip->efi_next_extent) >= nextents);
--	if (atomic_sub_and_test(nextents, &efip->efi_next_extent)) {
--		/* recovery needs us to drop the EFI reference, too */
--		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
--			__xfs_efi_release(efip);
--
-+	if (atomic_sub_and_test(nextents, &efip->efi_next_extent))
- 		__xfs_efi_release(efip);
--		/* efip may now have been freed, do not reference it again. */
--	}
+ 	offset += first_bit * XFS_BLF_CHUNK;
+-	xlog_copy_iovec(vecp, XLOG_REG_TYPE_BCHUNK,
++	xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK,
+ 			xfs_buf_offset(bp, offset),
+ 			nbits * XFS_BLF_CHUNK);
  }
- 
- static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
-diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-index 0ffbce3..6a70bde 100644
---- a/fs/xfs/xfs_extfree_item.h
-+++ b/fs/xfs/xfs_extfree_item.h
-@@ -29,11 +29,6 @@ struct kmem_zone;
- #define	XFS_EFI_MAX_FAST_EXTENTS	16
- 
- /*
-- * Define EFI flag bits. Manipulated by set/clear/test_bit operators.
-- */
--#define	XFS_EFI_RECOVERED	1
--
--/*
-  * This is the "extent free intention" log item.  It is used to log the fact
-  * that some extents need to be free.  It is used in conjunction with the
-  * "extent free done" log item described below.
-@@ -47,7 +42,6 @@ typedef struct xfs_efi_log_item {
- 	xfs_log_item_t		efi_item;
- 	atomic_t		efi_refcount;
- 	atomic_t		efi_next_extent;
--	unsigned long		efi_flags;	/* misc flags */
- 	xfs_efi_log_format_t	efi_format;
- } xfs_efi_log_item_t;
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 9bc403a..0df5ec3 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -368,6 +368,7 @@ struct xlog {
- 	uint			l_flags;
- 	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
- 	struct list_head	*l_buf_cancel_table;
-+	struct list_head	l_efi_cancel;
- 	int			l_iclog_hsize;  /* size of iclog header */
- 	int			l_iclog_heads;  /* # of iclog header sectors */
- 	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b6b669d..1a83739 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -75,6 +75,12 @@ struct xfs_buf_cancel {
- 	struct list_head	bc_list;
- };
- 
-+struct xfs_efi_cancel {
-+	struct xfs_efi_log_item *ec_efip;
-+	xfs_lsn_t		ec_lsn;
-+	struct list_head	ec_list;
-+};
-+
- /*
-  * Sector aligned buffer routines for buffer create/read/write/access
-  */
-@@ -3059,82 +3065,50 @@ xlog_recover_efi_pass2(
- 	struct xlog_recover_item	*item,
- 	xfs_lsn_t			lsn)
+@@ -211,13 +212,13 @@ xfs_buf_item_straddle(
+ static void
+ xfs_buf_item_format_segment(
+ 	struct xfs_buf_log_item	*bip,
++	struct xfs_log_vec	*lv,
+ 	struct xfs_log_iovec	**vecp,
+ 	uint			offset,
+ 	struct xfs_buf_log_format *blfp)
  {
--	int			error;
--	xfs_mount_t		*mp = log->l_mp;
--	xfs_efi_log_item_t	*efip;
--	xfs_efi_log_format_t	*efi_formatp;
-+	struct xfs_efi_cancel		*ecp;
-+	int				error;
-+	xfs_mount_t			*mp = log->l_mp;
-+	xfs_efi_log_format_t		*efi_formatp;
- 
- 	efi_formatp = item->ri_buf[0].i_addr;
- 
--	efip = xfs_efi_init(mp, efi_formatp->efi_nextents);
--	if ((error = xfs_efi_copy_format(&(item->ri_buf[0]),
--					 &(efip->efi_format)))) {
--		xfs_efi_item_free(efip);
-+	ecp = kmem_alloc(sizeof(struct xfs_efi_cancel), KM_SLEEP);
-+	ecp->ec_lsn = lsn;
-+	ecp->ec_efip = xfs_efi_init(mp, efi_formatp->efi_nextents);
-+
-+	error = xfs_efi_copy_format(&item->ri_buf[0],
-+				    &ecp->ec_efip->efi_format);
-+	if (error) {
-+		xfs_efi_item_free(ecp->ec_efip);
- 		return error;
- 	}
--	atomic_set(&efip->efi_next_extent, efi_formatp->efi_nextents);
--
--	spin_lock(&log->l_ailp->xa_lock);
--	/*
--	 * xfs_trans_ail_update() drops the AIL lock.
--	 */
--	xfs_trans_ail_update(log->l_ailp, &efip->efi_item, lsn);
-+	atomic_set(&ecp->ec_efip->efi_next_extent, efi_formatp->efi_nextents);
-+	list_add(&ecp->ec_list, &log->l_efi_cancel);
- 	return 0;
- }
- 
--
--/*
-- * This routine is called when an efd format structure is found in
-- * a committed transaction in the log.  It's purpose is to cancel
-- * the corresponding efi if it was still in the log.  To do this
-- * it searches the AIL for the efi with an id equal to that in the
-- * efd format structure.  If we find it, we remove the efi from the
-- * AIL and free it.
-- */
- STATIC int
- xlog_recover_efd_pass2(
- 	struct xlog			*log,
- 	struct xlog_recover_item	*item)
- {
--	xfs_efd_log_format_t	*efd_formatp;
--	xfs_efi_log_item_t	*efip = NULL;
--	xfs_log_item_t		*lip;
--	__uint64_t		efi_id;
--	struct xfs_ail_cursor	cur;
--	struct xfs_ail		*ailp = log->l_ailp;
--
--	efd_formatp = item->ri_buf[0].i_addr;
-+	struct xfs_efd_log_format	*efd_formatp = item->ri_buf[0].i_addr;
-+	__uint64_t			efi_id = efd_formatp->efd_efi_id;
-+	struct xfs_efi_cancel		*ecp;
-+
- 	ASSERT((item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_32_t) +
- 		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_32_t)))) ||
- 	       (item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_64_t) +
- 		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_64_t)))));
--	efi_id = efd_formatp->efd_efi_id;
- 
--	/*
--	 * Search for the efi with the id in the efd format structure
--	 * in the AIL.
--	 */
--	spin_lock(&ailp->xa_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		if (lip->li_type == XFS_LI_EFI) {
--			efip = (xfs_efi_log_item_t *)lip;
--			if (efip->efi_format.efi_id == efi_id) {
--				/*
--				 * xfs_trans_ail_delete() drops the
--				 * AIL lock.
--				 */
--				xfs_trans_ail_delete(ailp, lip,
--						     SHUTDOWN_CORRUPT_INCORE);
--				xfs_efi_item_free(efip);
--				spin_lock(&ailp->xa_lock);
--				break;
--			}
-+	list_for_each_entry(ecp, &log->l_efi_cancel, ec_list) {
-+		if (ecp->ec_efip->efi_format.efi_id == efi_id) {
-+			list_del(&ecp->ec_list);
-+			xfs_efi_item_free(ecp->ec_efip);
-+			kmem_free(ecp);
-+			break;
- 		}
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
- 	}
--	xfs_trans_ail_cursor_done(ailp, &cur);
--	spin_unlock(&ailp->xa_lock);
- 
- 	return 0;
- }
-@@ -3618,27 +3592,26 @@ xlog_recover_process_data(
- }
- 
- /*
-- * Process an extent free intent item that was recovered from
-- * the log.  We need to free the extents that it describes.
-+ * Process an extent free intent item that was recovered from the log.
-+ * We need to free the extents that it describes.
-  */
- STATIC int
- xlog_recover_process_efi(
--	xfs_mount_t		*mp,
--	xfs_efi_log_item_t	*efip)
-+	struct xlog		*log,
-+	struct xfs_efi_cancel	*ecp)
- {
--	xfs_efd_log_item_t	*efdp;
--	xfs_trans_t		*tp;
--	int			i;
--	int			error = 0;
--	xfs_extent_t		*extp;
-+	struct xfs_mount	*mp = log->l_mp;
-+	struct xfs_efi_log_item	*efip = ecp->ec_efip;
-+	struct xfs_efd_log_item	*efdp;
-+	struct xfs_trans	*tp;
-+	struct xfs_extent	*extp;
- 	xfs_fsblock_t		startblock_fsb;
--
--	ASSERT(!test_bit(XFS_EFI_RECOVERED, &efip->efi_flags));
-+	int			error = 0;
-+	int			i;
- 
- 	/*
--	 * First check the validity of the extents described by the
--	 * EFI.  If any are bad, then assume that all are bad and
--	 * just toss the EFI.
-+	 * First check the validity of the extents described by the EFI.
-+	 * If any are bad, then assume that all are bad and just toss the EFI.
+ 	struct xfs_buf	*bp = bip->bli_buf;
+ 	uint		base_size;
+-	uint		nvecs;
+ 	int		first_bit;
+ 	int		last_bit;
+ 	int		next_bit;
+@@ -233,18 +234,17 @@ xfs_buf_item_format_segment(
  	 */
- 	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
- 		extp = &(efip->efi_format.efi_extents[i]);
-@@ -3652,12 +3625,14 @@ xlog_recover_process_efi(
- 			 * This will pull the EFI from the AIL and
- 			 * free the memory associated with it.
- 			 */
--			set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
- 			xfs_efi_release(efip, efip->efi_format.efi_nextents);
- 			return XFS_ERROR(EIO);
+ 	base_size = xfs_buf_log_format_size(blfp);
+ 
+-	nvecs = 0;
+ 	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+ 	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
+ 		/*
+ 		 * If the map is not be dirty in the transaction, mark
+ 		 * the size as zero and do not advance the vector pointer.
+ 		 */
+-		goto out;
++		return;
+ 	}
+ 
+-	xlog_copy_iovec(vecp, XLOG_REG_TYPE_BFORMAT, blfp, base_size);
+-	nvecs = 1;
++	blfp = xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BFORMAT, blfp, base_size);
++	blfp->blf_size = 1;
+ 
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+ 		/*
+@@ -254,7 +254,7 @@ xfs_buf_item_format_segment(
+ 		 */
+ 		trace_xfs_buf_item_format_stale(bip);
+ 		ASSERT(blfp->blf_flags & XFS_BLF_CANCEL);
+-		goto out;
++		return;
+ 	}
+ 
+ 
+@@ -280,15 +280,15 @@ xfs_buf_item_format_segment(
+ 		 * same set of bits so just keep counting and scanning.
+ 		 */
+ 		if (next_bit == -1) {
+-			xfs_buf_item_copy_iovec(vecp, bp, offset,
++			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
+ 						first_bit, nbits);
+-			nvecs++;
++			blfp->blf_size++;
+ 			break;
+ 		} else if (next_bit != last_bit + 1 ||
+ 		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
+-			xfs_buf_item_copy_iovec(vecp, bp, offset,
++			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
+ 						first_bit, nbits);
+-			nvecs++;
++			blfp->blf_size++;
+ 			first_bit = next_bit;
+ 			last_bit = next_bit;
+ 			nbits = 1;
+@@ -297,8 +297,6 @@ xfs_buf_item_format_segment(
+ 			nbits++;
  		}
- 	}
- 
-+	spin_lock(&log->l_ailp->xa_lock);
-+	xfs_trans_ail_update(log->l_ailp, &efip->efi_item, ecp->ec_lsn);
-+
- 	tp = xfs_trans_alloc(mp, 0);
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
- 	if (error)
-@@ -3673,78 +3648,27 @@ xlog_recover_process_efi(
- 					 extp->ext_len);
- 	}
- 
--	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
--	error = xfs_trans_commit(tp, 0);
--	return error;
-+	return xfs_trans_commit(tp, 0);
- 
- abort_error:
- 	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
- 	return error;
- }
- 
--/*
-- * When this is called, all of the EFIs which did not have
-- * corresponding EFDs should be in the AIL.  What we do now
-- * is free the extents associated with each one.
-- *
-- * Since we process the EFIs in normal transactions, they
-- * will be removed at some point after the commit.  This prevents
-- * us from just walking down the list processing each one.
-- * We'll use a flag in the EFI to skip those that we've already
-- * processed and use the AIL iteration mechanism's generation
-- * count to try to speed this up at least a bit.
-- *
-- * When we start, we know that the EFIs are the only things in
-- * the AIL.  As we process them, however, other items are added
-- * to the AIL.  Since everything added to the AIL must come after
-- * everything already in the AIL, we stop processing as soon as
-- * we see something other than an EFI in the AIL.
-- */
- STATIC int
- xlog_recover_process_efis(
- 	struct xlog	*log)
- {
--	xfs_log_item_t		*lip;
--	xfs_efi_log_item_t	*efip;
-+	struct xfs_efi_cancel	*ecp, *next;
- 	int			error = 0;
--	struct xfs_ail_cursor	cur;
--	struct xfs_ail		*ailp;
--
--	ailp = log->l_ailp;
--	spin_lock(&ailp->xa_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		/*
--		 * We're done when we see something other than an EFI.
--		 * There should be no EFIs left in the AIL now.
--		 */
--		if (lip->li_type != XFS_LI_EFI) {
--#ifdef DEBUG
--			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
--				ASSERT(lip->li_type != XFS_LI_EFI);
--#endif
--			break;
--		}
- 
--		/*
--		 * Skip EFIs that we've already processed.
--		 */
--		efip = (xfs_efi_log_item_t *)lip;
--		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags)) {
--			lip = xfs_trans_ail_cursor_next(ailp, &cur);
--			continue;
--		}
--
--		spin_unlock(&ailp->xa_lock);
--		error = xlog_recover_process_efi(log->l_mp, efip);
--		spin_lock(&ailp->xa_lock);
-+	list_for_each_entry_safe(ecp, next, &log->l_efi_cancel, ec_list) {
-+		list_del(&ecp->ec_list);
-+		error = xlog_recover_process_efi(log, ecp);
- 		if (error)
--			goto out;
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-+			break; /* XXX: will leak remaining EFIs.. */
  	}
 -out:
--	xfs_trans_ail_cursor_done(ailp, &cur);
--	spin_unlock(&ailp->xa_lock);
-+
- 	return error;
+-	blfp->blf_size = nvecs;
  }
  
-@@ -4320,6 +4244,7 @@ xlog_do_log_recovery(
- 						 KM_SLEEP);
- 	for (i = 0; i < XLOG_BC_TABLE_SIZE; i++)
- 		INIT_LIST_HEAD(&log->l_buf_cancel_table[i]);
-+	INIT_LIST_HEAD(&log->l_efi_cancel);
+ /*
+@@ -310,10 +308,11 @@ out:
+ STATIC void
+ xfs_buf_item_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
++	struct xfs_log_iovec	*vecp = NULL;
+ 	uint			offset = 0;
+ 	int			i;
  
- 	error = xlog_do_recovery_pass(log, head_blk, tail_blk,
- 				      XLOG_RECOVER_PASS1);
+@@ -354,7 +353,7 @@ xfs_buf_item_format(
+ 	}
+ 
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+-		xfs_buf_item_format_segment(bip, &vecp, offset,
++		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+ 					    &bip->bli_formats[i]);
+ 		offset += bp->b_maps[i].bm_len;
+ 	}
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index ca354a8..946d588 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -57,18 +57,19 @@ xfs_qm_dquot_logitem_size(
+ STATIC void
+ xfs_qm_dquot_logitem_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_dq_logitem	*qlip = DQUOT_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
+ 
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_QFORMAT,
++	qlip->qli_format.qlf_size = 2;
++
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_QFORMAT,
+ 			&qlip->qli_format,
+ 			sizeof(struct xfs_dq_logformat));
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_DQUOT,
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_DQUOT,
+ 			&qlip->qli_dquot->q_core,
+ 			sizeof(struct xfs_disk_dquot));
+-
+-	qlip->qli_format.qlf_size = 2;
+ }
+ 
+ /*
+@@ -302,17 +303,17 @@ xfs_qm_qoff_logitem_size(
+ STATIC void
+ xfs_qm_qoff_logitem_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_qoff_logitem	*qflip = QOFF_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
+ 
+ 	ASSERT(qflip->qql_format.qf_type == XFS_LI_QUOTAOFF);
++	qflip->qql_format.qf_size = 1;
+ 
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_QUOTAOFF,
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_QUOTAOFF,
+ 			&qflip->qql_format,
+ 			sizeof(struct xfs_qoff_logitem));
+-
+-	qflip->qql_format.qf_size = 1;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 08823ec..fb7a4c1 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -102,9 +102,10 @@ xfs_efi_item_size(
+ STATIC void
+ xfs_efi_item_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
+ 
+ 	ASSERT(atomic_read(&efip->efi_next_extent) ==
+ 				efip->efi_format.efi_nextents);
+@@ -112,7 +113,7 @@ xfs_efi_item_format(
+ 	efip->efi_format.efi_type = XFS_LI_EFI;
+ 	efip->efi_format.efi_size = 1;
+ 
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_EFI_FORMAT,
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_EFI_FORMAT,
+ 			&efip->efi_format,
+ 			xfs_efi_item_sizeof(efip));
+ }
+@@ -368,16 +369,17 @@ xfs_efd_item_size(
+ STATIC void
+ xfs_efd_item_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
+ 
+ 	ASSERT(efdp->efd_next_extent == efdp->efd_format.efd_nextents);
+ 
+ 	efdp->efd_format.efd_type = XFS_LI_EFD;
+ 	efdp->efd_format.efd_size = 1;
+ 
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_EFD_FORMAT,
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_EFD_FORMAT,
+ 			&efdp->efd_format,
+ 			xfs_efd_item_sizeof(efdp));
+ }
+diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
+index 5751fa8..7e45492 100644
+--- a/fs/xfs/xfs_icreate_item.c
++++ b/fs/xfs/xfs_icreate_item.c
+@@ -59,11 +59,12 @@ xfs_icreate_item_size(
+ STATIC void
+ xfs_icreate_item_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_icreate_item	*icp = ICR_ITEM(lip);
++	struct xfs_log_iovec	*vecp = NULL;
+ 
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_ICREATE,
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ICREATE,
+ 			&icp->ic_format,
+ 			sizeof(struct xfs_icreate_log));
+ }
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 73002db..35dd24a 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -163,6 +163,7 @@ xfs_inode_item_size(
+ STATIC int
+ xfs_inode_item_format_extents(
+ 	struct xfs_inode	*ip,
++	struct xfs_log_vec	*lv,
+ 	struct xfs_log_iovec	**vecp,
+ 	int			whichfork,
+ 	int			type)
+@@ -177,7 +178,7 @@ xfs_inode_item_format_extents(
+ 		ip->i_itemp->ili_aextents_buf = ext_buffer;
+ 
+ 	len = xfs_iextents_copy(ip, ext_buffer, whichfork);
+-	xlog_copy_iovec(vecp, type, ext_buffer, len);
++	xlog_copy_iovec(lv, vecp, type, ext_buffer, len);
+ 	return len;
+ }
+ 
+@@ -212,8 +213,9 @@ xfs_inode_item_format_v1_inode(
+ STATIC void
+ xfs_inode_item_format_data_fork(
+ 	struct xfs_inode_log_item *iip,
+-	struct xfs_log_iovec	**vecp,
+-	int			*nvecs)
++	struct xfs_inode_log_format *ilf,
++	struct xfs_log_vec	*lv,
++	struct xfs_log_iovec	**vecp)
+ {
+ 	struct xfs_inode	*ip = iip->ili_inode;
+ 	size_t			data_bytes;
+@@ -239,19 +241,19 @@ xfs_inode_item_format_data_fork(
+ 				 * extents, so just point to the
+ 				 * real extents array.
+ 				 */
+-				xlog_copy_iovec(vecp, XLOG_REG_TYPE_IEXT,
++				xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IEXT,
+ 						ip->i_df.if_u1.if_extents,
+ 						ip->i_df.if_bytes);
+-				iip->ili_format.ilf_dsize = ip->i_df.if_bytes;
++				ilf->ilf_dsize = ip->i_df.if_bytes;
+ 			} else
+ #endif
+ 			{
+-				iip->ili_format.ilf_dsize =
+-					xfs_inode_item_format_extents(ip, vecp,
++				ilf->ilf_dsize =
++					xfs_inode_item_format_extents(ip, lv, vecp,
+ 						XFS_DATA_FORK, XLOG_REG_TYPE_IEXT);
+ 				ASSERT(iip->ili_format.ilf_dsize <= ip->i_df.if_bytes);
+ 			}
+-			(*nvecs)++;
++			ilf->ilf_size++;
+ 		} else {
+ 			iip->ili_fields &= ~XFS_ILOG_DEXT;
+ 		}
+@@ -264,11 +266,11 @@ xfs_inode_item_format_data_fork(
+ 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
+ 		    ip->i_df.if_broot_bytes > 0) {
+ 			ASSERT(ip->i_df.if_broot != NULL);
+-			xlog_copy_iovec(vecp, XLOG_REG_TYPE_IBROOT,
++			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IBROOT,
+ 					ip->i_df.if_broot,
+ 					ip->i_df.if_broot_bytes);
+-			(*nvecs)++;
+-			iip->ili_format.ilf_dsize = ip->i_df.if_broot_bytes;
++			ilf->ilf_dsize = ip->i_df.if_broot_bytes;
++			ilf->ilf_size++;
+ 		} else {
+ 			ASSERT(!(iip->ili_fields &
+ 				 XFS_ILOG_DBROOT));
+@@ -291,10 +293,10 @@ xfs_inode_item_format_data_fork(
+ 			       ip->i_df.if_real_bytes == data_bytes);
+ 			ASSERT(ip->i_df.if_u1.if_data != NULL);
+ 			ASSERT(ip->i_d.di_size > 0);
+-			xlog_copy_iovec(vecp, XLOG_REG_TYPE_ILOCAL,
++			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
+ 					ip->i_df.if_u1.if_data, data_bytes);
+-			(*nvecs)++;
+-			iip->ili_format.ilf_dsize = (unsigned)data_bytes;
++			ilf->ilf_dsize = (unsigned)data_bytes;
++			ilf->ilf_size++;
+ 		} else {
+ 			iip->ili_fields &= ~XFS_ILOG_DDATA;
+ 		}
+@@ -303,19 +305,15 @@ xfs_inode_item_format_data_fork(
+ 		iip->ili_fields &=
+ 			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+ 			  XFS_ILOG_DEXT | XFS_ILOG_UUID);
+-		if (iip->ili_fields & XFS_ILOG_DEV) {
+-			iip->ili_format.ilf_u.ilfu_rdev =
+-				ip->i_df.if_u2.if_rdev;
+-		}
++		if (iip->ili_fields & XFS_ILOG_DEV)
++			ilf->ilf_u.ilfu_rdev = ip->i_df.if_u2.if_rdev;
+ 		break;
+ 	case XFS_DINODE_FMT_UUID:
+ 		iip->ili_fields &=
+ 			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+ 			  XFS_ILOG_DEXT | XFS_ILOG_DEV);
+-		if (iip->ili_fields & XFS_ILOG_UUID) {
+-			iip->ili_format.ilf_u.ilfu_uuid =
+-				ip->i_df.if_u2.if_uuid;
+-		}
++		if (iip->ili_fields & XFS_ILOG_UUID)
++			ilf->ilf_u.ilfu_uuid = ip->i_df.if_u2.if_uuid;
+ 		break;
+ 	default:
+ 		ASSERT(0);
+@@ -326,8 +324,9 @@ xfs_inode_item_format_data_fork(
+ STATIC void
+ xfs_inode_item_format_attr_fork(
+ 	struct xfs_inode_log_item *iip,
+-	struct xfs_log_iovec	**vecp,
+-	int			*nvecs)
++	struct xfs_inode_log_format *ilf,
++	struct xfs_log_vec	*lv,
++	struct xfs_log_iovec	**vecp)
+ {
+ 	struct xfs_inode	*ip = iip->ili_inode;
+ 	size_t			data_bytes;
+@@ -348,17 +347,17 @@ xfs_inode_item_format_attr_fork(
+ 			 * There are not delayed allocation extents
+ 			 * for attributes, so just point at the array.
+ 			 */
+-			xlog_copy_iovec(vecp, XLOG_REG_TYPE_IATTR_EXT,
++			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_EXT,
+ 					ip->i_afp->if_u1.if_extents,
+ 					ip->i_afp->if_bytes);
+-			iip->ili_format.ilf_asize = ip->i_afp->if_bytes;
++			ilf->ilf_asize = ip->i_afp->if_bytes;
+ #else
+ 			ASSERT(iip->ili_aextents_buf == NULL);
+-			iip->ili_format.ilf_asize =
+-				xfs_inode_item_format_extents(ip, vecp,
++			ilf->ilf_asize =
++				xfs_inode_item_format_extents(ip, lv, vecp,
+ 					XFS_ATTR_FORK, XLOG_REG_TYPE_IATTR_EXT);
+ #endif
+-			(*nvecs)++;
++			ilf->ilf_size++;
+ 		} else {
+ 			iip->ili_fields &= ~XFS_ILOG_AEXT;
+ 		}
+@@ -371,11 +370,11 @@ xfs_inode_item_format_attr_fork(
+ 		    ip->i_afp->if_broot_bytes > 0) {
+ 			ASSERT(ip->i_afp->if_broot != NULL);
+ 
+-			xlog_copy_iovec(vecp, XLOG_REG_TYPE_IATTR_BROOT,
++			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_BROOT,
+ 					ip->i_afp->if_broot,
+ 					ip->i_afp->if_broot_bytes);
+-			(*nvecs)++;
+-			iip->ili_format.ilf_asize = ip->i_afp->if_broot_bytes;
++			ilf->ilf_asize = ip->i_afp->if_broot_bytes;
++			ilf->ilf_size++;
+ 		} else {
+ 			iip->ili_fields &= ~XFS_ILOG_ABROOT;
+ 		}
+@@ -395,11 +394,11 @@ xfs_inode_item_format_attr_fork(
+ 			ASSERT(ip->i_afp->if_real_bytes == 0 ||
+ 			       ip->i_afp->if_real_bytes == data_bytes);
+ 			ASSERT(ip->i_afp->if_u1.if_data != NULL);
+-			xlog_copy_iovec(vecp, XLOG_REG_TYPE_IATTR_LOCAL,
++			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
+ 					ip->i_afp->if_u1.if_data,
+ 					data_bytes);
+-			(*nvecs)++;
+-			iip->ili_format.ilf_asize = (unsigned)data_bytes;
++			ilf->ilf_asize = (unsigned)data_bytes;
++			ilf->ilf_size++;
+ 		} else {
+ 			iip->ili_fields &= ~XFS_ILOG_ADATA;
+ 		}
+@@ -420,28 +419,28 @@ xfs_inode_item_format_attr_fork(
+ STATIC void
+ xfs_inode_item_format(
+ 	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++	struct xfs_log_vec	*lv)
+ {
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+-	uint			nvecs;
++	struct xfs_inode_log_format *ilf;
++	struct xfs_log_iovec	*vecp = NULL;
+ 
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_IFORMAT,
++	ilf = xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_IFORMAT,
+ 			&iip->ili_format,
+ 			sizeof(struct xfs_inode_log_format));
+-	nvecs = 1;
+-
+-	xlog_copy_iovec(&vecp, XLOG_REG_TYPE_ICORE,
+-			&ip->i_d,
+-			xfs_icdinode_size(ip->i_d.di_version));
+-	nvecs++;
++	ilf->ilf_size = 1;
+ 
+ 	if (ip->i_d.di_version == 1)
+ 		xfs_inode_item_format_v1_inode(ip);
++	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ICORE,
++			&ip->i_d,
++			xfs_icdinode_size(ip->i_d.di_version));
++	ilf->ilf_size++;
+ 
+-	xfs_inode_item_format_data_fork(iip, &vecp, &nvecs);
++	xfs_inode_item_format_data_fork(iip, ilf, lv, &vecp);
+ 	if (XFS_IFORK_Q(ip)) {
+-		xfs_inode_item_format_attr_fork(iip, &vecp, &nvecs);
++		xfs_inode_item_format_attr_fork(iip, ilf, lv, &vecp);
+ 	} else {
+ 		iip->ili_fields &=
+ 			~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AEXT);
+@@ -455,7 +454,6 @@ xfs_inode_item_format(
+ 	 */
+ 	iip->ili_format.ilf_fields = XFS_ILOG_CORE |
+ 		(iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
+-	iip->ili_format.ilf_size = nvecs;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 384c6c4..65e054a 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -31,18 +31,49 @@ struct xfs_log_vec {
+ #define XFS_LOG_VEC_ORDERED	(-1)
+ 
+ static inline void *
+-xlog_copy_iovec(struct xfs_log_iovec **vecp, uint type, void *data, int len)
++xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
++		uint type)
+ {
+ 	struct xfs_log_iovec *vec = *vecp;
+ 
++	if (vec) {
++		ASSERT(vec - lv->lv_iovecp < lv->lv_niovecs);
++		vec++;
++	} else {
++		vec = &lv->lv_iovecp[0];
++	}
++
+ 	vec->i_type = type;
+-	vec->i_addr = data;
+-	vec->i_len = len;
++	vec->i_addr = lv->lv_buf + lv->lv_buf_len;
+ 
+-	*vecp = vec + 1;
++	*vecp = vec;
+ 	return vec->i_addr;
+ }
+ 
++static inline void
++xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
++{
++	/*
++	 * We need to make sure the next buffer is naturally aligned for the
++	 * biggest basic data type we put into it.  We already accounted for
++	 * this when sizing the buffer.
++	 */
++	lv->lv_buf_len += round_up(len, sizeof(uint64_t));
++	vec->i_len = len;
++}
++
++static inline void *
++xlog_copy_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
++		uint type, void *data, int len)
++{
++	void *buf;
++
++	buf = xlog_prepare_iovec(lv, vecp, type);
++	memcpy(buf, data, len);
++	xlog_finish_iovec(lv, *vecp, len);
++	return buf;
++}
++
+ /*
+  * Structure used to pass callback function and the function's argument
+  * to the log manager.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 0a7a8ce..cdebd83 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -82,36 +82,6 @@ xlog_cil_init_post_recovery(
+ 								log->l_curr_block);
+ }
+ 
+-STATIC int
+-xlog_cil_lv_item_format(
+-	struct xfs_log_item	*lip,
+-	struct xfs_log_vec	*lv)
+-{
+-	int	index;
+-	char	*ptr;
+-
+-	/* format new vectors into array */
+-	lip->li_ops->iop_format(lip, lv->lv_iovecp);
+-
+-	/* copy data into existing array */
+-	ptr = lv->lv_buf;
+-	for (index = 0; index < lv->lv_niovecs; index++) {
+-		struct xfs_log_iovec *vec = &lv->lv_iovecp[index];
+-
+-		memcpy(ptr, vec->i_addr, vec->i_len);
+-		vec->i_addr = ptr;
+-		ptr += vec->i_len;
+-	}
+-
+-	/*
+-	 * some size calculations for log vectors over-estimate, so the caller
+-	 * doesn't know the amount of space actually used by the item. Return
+-	 * the byte count to the caller so they can check and store it
+-	 * appropriately.
+-	 */
+-	return ptr - lv->lv_buf;
+-}
+-
+ /*
+  * Prepare the log item for insertion into the CIL. Calculate the difference in
+  * log space and vectors it will consume, and if it is a new item pin it as
+@@ -232,6 +202,13 @@ xlog_cil_insert_format_items(
+ 			nbytes = 0;
+ 		}
+ 
++		/*
++		 * We 64-bit align the length of each iovec so that the start
++		 * of the next one is naturally aligned.  We'll need to
++		 * account for that slack space here.
++		 */
++		nbytes += niovecs * sizeof(uint64_t);
++
+ 		/* grab the old item if it exists for reservation accounting */
+ 		old_lv = lip->li_lv;
+ 
+@@ -272,9 +249,9 @@ xlog_cil_insert_format_items(
+ 		lv->lv_niovecs = niovecs;
+ 
+ 		/* The allocated data region lies beyond the iovec region */
++		lv->lv_buf_len = 0;
+ 		lv->lv_buf = (char *)lv + buf_size - nbytes;
+-
+-		lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
++		lip->li_ops->iop_format(lip, lv);
+ insert:
+ 		ASSERT(lv->lv_buf_len <= nbytes);
+ 		xfs_cil_prepare_item(log, lv, old_lv, diff_len, diff_iovecs);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 9b96d35..b5bc1ab 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -64,7 +64,7 @@ typedef struct xfs_log_item {
+ 
+ struct xfs_item_ops {
+ 	void (*iop_size)(xfs_log_item_t *, int *, int *);
+-	void (*iop_format)(xfs_log_item_t *, struct xfs_log_iovec *);
++	void (*iop_format)(xfs_log_item_t *, struct xfs_log_vec *);
+ 	void (*iop_pin)(xfs_log_item_t *);
+ 	void (*iop_unpin)(xfs_log_item_t *, int remove);
+ 	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
 -- 
 1.7.10.4
 
