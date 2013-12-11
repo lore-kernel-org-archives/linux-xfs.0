@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AEA797FAB
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:15:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 49F50AC011
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 16:15:12 -0800 (PST)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id y1M9ZMUqaoKbnehh (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 16:15:10 -0800 (PST)
-Message-ID: <52A7AE8A.1080408@tlinx.org>
-Date: Tue, 10 Dec 2013 16:15:06 -0800
-From: LA Walsh <xfs@tlinx.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C005A7FB8
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:28:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ADA12304032
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 16:27:59 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	xnKCqiptgqGzCIxW for <xfs@oss.sgi.com>;
+	Tue, 10 Dec 2013 16:27:57 -0800 (PST)
+Date: Wed, 11 Dec 2013 11:27:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Filesystem writes on RAID5 too slow
+Message-ID: <20131211002753.GD10988@dastard>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
+	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
+	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
+	<20131121092606.GU11434@dastard>
+	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
+	<20131121234116.GD6502@dastard>
+	<20131210191803.GA31162@infradead.org>
 MIME-Version: 1.0
-Subject: Re: where/how is 'xattr' type=security enforced? (security attr
-	stripped?)
-References: <52A65AD5.9070705@tlinx.org> <20131210055213.GD31386@dastard>
-In-Reply-To: <20131210055213.GD31386@dastard>
+Content-Disposition: inline
+In-Reply-To: <20131210191803.GA31162@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +32,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-On 12/9/2013 9:52 PM, Dave Chinner wrote:
-> You need root permissions to set security namespace attributes.
-----
-I knew that about the root namespace, but the security namespace
-isn't as well documented.
+On Tue, Dec 10, 2013 at 11:18:03AM -0800, Christoph Hellwig wrote:
+> > xfs: align initial file allocations correctly.
+> > 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The function xfs_bmap_isaeof() is used to indicate that an
+> > allocation is occurring at or past the end of file, and as such
+> > should be aligned to the underlying storage geometry if possible.
+> > 
+> > Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
+> > behaviour of this function for empty files - it turned off
+> > allocation alignment for this case accidentally. Hence large initial
+> > allocations from direct IO are not getting correctly aligned to the
+> > underlying geometry, and that is cause write performance to drop in
+> > alignment sensitive configurations.
+> > 
+> > Fix it by considering allocation into empty files as requiring
+> > aligned allocation again.
+> 
+> Seems like this one didn't get picked up yet?
 
-I'd *hoped* for something that made 'sense' -- like the owner
-being able to set/change, at least some of them, like mode bits.
+I'm about to resend all my outstanding patches...
 
-I know this isn't a problem, actually "in XFS", but more
-in how it is used.  Thinking out loud...if you'll bare
-w/me:
+Cheers,
 
-Since it's an NTACL, on a file created and owned me, in
-a directory that I 'own' the ACL for (as I'm the owner
-of the file and the dir it is in), it seems Samba is trying
-to follow NT rules in placing the ACL w/the file.
-
-But then the linux utils come along and change the rules
-and   strip off the NT-ACL,  when the file is copied or
-when it is moved to a different partition (also XFS).
-
-What about the posix ACL's?  Aren't they in the security
-section as well?  Do they get stripped off whenever
-a copy is made or the file is moved to another XFS
-file system?
-
-The NTACL was set on the file because it inherited permissions
-under 'NT' rules.  Shouldn't I be able to copy or move the
-file (presuming I am the owner and directory owner, etc..).
-What about posix ACL's?
-
-It seems to me, that the security section of an ACL should be
-(assuming you have the normal, discretionary access system
-on linux), should be movable and settable by the file owner.
-
-Under a different security setup (say with mandatory access
-rules -- like under SMACK or Flask) it would be a different
-matter, but it seems a bit odd to be stripping ACL's from
-a file just because it is copied/moved...
-
-
-> [ On a side note, there's some sooper seekrit voodoo ....
-yeah, vaguely remember that...
-
-FWIW -- I've never seen a message like I'm getting now...
-so don't know if it is a change in Samba/coreutils or the
-kernel (all of which have changed recently in installing
-a new suse release for most things)...
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
