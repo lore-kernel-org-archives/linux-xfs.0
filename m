@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 55E707F4E
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 17:39:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D1152AC00B
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 15:39:55 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6BE0F7F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 17:53:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C3E28F804B
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 15:53:43 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	POVoAzhKFV3TFaIm for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 15:39:53 -0800 (PST)
-Date: Thu, 12 Dec 2013 10:39:38 +1100
+	mzppdS9j17gttcHZ for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 15:53:40 -0800 (PST)
+Date: Thu, 12 Dec 2013 10:53:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: use xfs_ialloc_blks_per_cluster in xfs_imap
-Message-ID: <20131211233938.GR10988@dastard>
-References: <52A86D33.2020102@oracle.com>
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
+	(mode:0x250)
+Message-ID: <20131211235335.GS10988@dastard>
+References: <20131128091322.GC5337@easter-eggs.com>
+	<20131128100521.GO10988@dastard>
+	<20131203095357.GC5405@easter-eggs.com>
+	<20131203125057.GU10988@dastard> <20131211202226.GH1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52A86D33.2020102@oracle.com>
+In-Reply-To: <20131211202226.GH1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +33,176 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Emmanuel Lacour <elacour@easter-eggs.com>, xfs@oss.sgi.com
 
-On Wed, Dec 11, 2013 at 09:48:35PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
+On Wed, Dec 11, 2013 at 02:22:26PM -0600, Ben Myers wrote:
+> On Tue, Dec 03, 2013 at 11:50:57PM +1100, Dave Chinner wrote:
+> > On Tue, Dec 03, 2013 at 10:53:58AM +0100, Emmanuel Lacour wrote:
+> > > On Thu, Nov 28, 2013 at 09:05:21PM +1100, Dave Chinner wrote:
+> > > > On Thu, Nov 28, 2013 at 10:13:22AM +0100, Emmanuel Lacour wrote:
+> > > > > 
+> > > > > Dear XFS users,
+> > > > > 
+> > > > > 
+> > > > > I run a Ceph cluster using XFS on Debian wheezy servers and Linux 3.10
+> > > > > (debian backports). I see the following line in our logs:
+> > > > > 
+> > > > > XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+> > > > > 
+> > > > > does this reveal a problem in my setup or may I ignore it? If it's a
+> > > > > problem, can someone give me any hint on solving this?
+> > > > 
+> > > > It might be, but you need to provide more information for us to be
+> > > > able to make any intelligent comment on the message. Start here:
+> > > > 
+> > > > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> > > > 
+> > > 
+> > > 
+> > > The problem continue and crashed my ceph cluster again, so here is all
+> > > the informations said in the FAQ:
+> > > 
+> > > http://people.easter-eggs.org/~manu/xfs.log
+> > 
+> > OK, 32GB RAM, no obvious shortage, no dirty or writeback data.
+> > 2TB SATA drives, 32AGs, only unusual setting is 64k directory block
+> > size.
+> > 
+> > Yup, there's your problem:
+> > 
+> > [4583991.478469] ceph-osd        D ffff88047fc93f40     0 22951
+> > 1 0x00000004
+> > [4583991.478471]  ffff88046d241140 0000000000000082 ffffffff81047e75
+> > ffff88046f949800
+> > [4583991.478475]  0000000000013f40 ffff88039eb0bfd8 ffff88039eb0bfd8
+> > ffff88046d241140
+> > [4583991.478479]  0000000000000000 00000001444d68bd ffff88046d241140
+> > 0000000000000005
+> > [4583991.478483] Call Trace:
+> > [4583991.478487]  [<ffffffff81047e75>] ? internal_add_timer+0xd/0x28
+> > [4583991.478491]  [<ffffffff8138e34a>] ? schedule_timeout+0xeb/0x123
+> > [4583991.478494]  [<ffffffff81047e63>] ? ftrace_raw_event_timer_class+0x9d/0x9d
+> > [4583991.478498]  [<ffffffff8138edb6>] ? io_schedule_timeout+0x60/0x86
+> > [4583991.478502]  [<ffffffff810d85ad>] ? congestion_wait+0x70/0xdb
+> > [4583991.478505]  [<ffffffff8105858f>] ? abort_exclusive_wait+0x79/0x79
+> > [4583991.478518]  [<ffffffffa056e3f9>] ? kmem_alloc+0x65/0x6f [xfs]
+> > [4583991.478535]  [<ffffffffa0592c4a>] ? xfs_dir2_block_to_sf+0x5b/0x1fb [xfs]
+> > [4583991.478550]  [<ffffffffa0592be0>] ? xfs_dir2_block_sfsize+0x15b/0x16a [xfs]
+> > [4583991.478566]  [<ffffffffa058bf9a>] ? xfs_dir2_block_removename+0x1c7/0x208 [xfs]
+> > [4583991.478581]  [<ffffffffa058ab4a>] ? xfs_dir_removename+0xda/0x114 [xfs]
+> > [4583991.478594]  [<ffffffffa056a55c>] ? xfs_rename+0x428/0x554 [xfs]
+> > [4583991.478606]  [<ffffffffa0567321>] ? xfs_vn_rename+0x5e/0x65 [xfs]
+> > [4583991.478610]  [<ffffffff8111677b>] ? vfs_rename+0x224/0x35f
+> > [4583991.478614]  [<ffffffff81113d0b>] ? lookup_dcache+0x22/0x95
+> > [4583991.478618]  [<ffffffff81116a7e>] ? SYSC_renameat+0x1c8/0x257
+> > [4583991.478622]  [<ffffffff810fb0fd>] ? __cache_free.isra.45+0x178/0x187
+> > [4583991.478625]  [<ffffffff81117eb1>] ? SyS_mkdirat+0x2e/0xce
+> > [4583991.478629]  [<ffffffff8100d56a>] ? do_notify_resume+0x53/0x68
+> > [4583991.478633]  [<ffffffff81395429>] ?  system_call_fastpath+0x16/0x1b
+> > 
+> > It'll be stuck on this:
+> > 
+> > 	hdr = kmem_alloc(mp->m_dirblksize, KM_SLEEP);
+> > 
+> > which is trying to allocate a contiguous 64k buffer to copy the
+> > direct contents into before freeing the block and then formatting
+> > them into the inode. The failure will be caused by memory
+> > fragmentation, and the only way around it is to avoid the contiguous
+> > allocation of that size.
+> > 
+> > Which, I think, is pretty easy to do. Yup, barely smoke tested patch
+> > below that demonstrates the fix. Beware - patch may eat babies and
+> > ask for more. Use it at your own risk!
+> > 
+> > I'll post it for review once it's had some testing and I know it
+> > doesn't corrupt directories all over the place.
+> > 
+> > > This may be related to a friend problem here:
+> > > 
+> > > http://tracker.ceph.com/issues/6386
+> > 
+> > Doesn't look related, unless the OOM killer is being triggered
+> > somehow...
+> > 
+> > Hmmmm - there's also a good chance the the transaction commit code
+> > has this same problem contiguous allocation problem given that it
+> > has to allocate enough space to log an entire directory buffer. Good
+> > guess - there's another thread stuck on exactly that:
+> > 
+> > [4583991.476833] ceph-osd        D ffff88047fc33f40     0 11072 1 0x00000004
+> > [4583991.476836]  ffff88038b32a040 0000000000000082 ffffffff81047e75 ffff88046f946040
+> > [4583991.476840]  0000000000013f40 ffff88048ea11fd8 ffff88048ea11fd8 ffff88038b32a040
+> > [4583991.476844]  0000000000000000 00000001444d68be ffff88038b32a040 0000000000000005
+> > [4583991.476848] Call Trace:
+> > [4583991.476852]  [<ffffffff81047e75>] ? internal_add_timer+0xd/0x28
+> > [4583991.476855]  [<ffffffff8138e34a>] ? schedule_timeout+0xeb/0x123
+> > [4583991.476859]  [<ffffffff81047e63>] ? ftrace_raw_event_timer_class+0x9d/0x9d
+> > [4583991.476862]  [<ffffffff8138edb6>] ? io_schedule_timeout+0x60/0x86
+> > [4583991.476867]  [<ffffffff810d85ad>] ? congestion_wait+0x70/0xdb
+> > [4583991.476870]  [<ffffffff8105858f>] ? abort_exclusive_wait+0x79/0x79
+> > [4583991.476883]  [<ffffffffa056e3f9>] ? kmem_alloc+0x65/0x6f [xfs]
+> > [4583991.476899]  [<ffffffffa05a77a6>] ? xfs_log_commit_cil+0xe8/0x3d1 [xfs]
+> > [4583991.476904]  [<ffffffff810748ab>] ? current_kernel_time+0x9/0x30
+> > [4583991.476909]  [<ffffffff81041942>] ? current_fs_time+0x27/0x2d
+> > [4583991.476925]  [<ffffffffa05a3b7b>] ? xfs_trans_commit+0x62/0x1cf [xfs]
+> > [4583991.476939]  [<ffffffffa056d3ad>] ? xfs_create+0x41e/0x54f [xfs]
+> > [4583991.476943]  [<ffffffff81114574>] ? lookup_fast+0x3d/0x215
+> > [4583991.476954]  [<ffffffffa056cf29>] ? xfs_lookup+0x88/0xee [xfs]
+> > [4583991.476966]  [<ffffffffa0567428>] ? xfs_vn_mknod+0xb7/0x162 [xfs]
+> > [4583991.476970]  [<ffffffff81115fda>] ? vfs_create+0x62/0x8b
+> > [4583991.476974]  [<ffffffff81113d0b>] ? lookup_dcache+0x22/0x95
+> > [4583991.476978]  [<ffffffff81117179>] ? do_last+0x595/0xa16
+> > [4583991.476982]  [<ffffffff811176be>] ? path_openat+0xc4/0x335
+> > [4583991.476985]  [<ffffffff81117bda>] ? do_filp_open+0x2a/0x6e
+> > [4583991.476989]  [<ffffffff81120b62>] ? __alloc_fd+0xd0/0xe1
+> > [4583991.476993]  [<ffffffff8110b684>] ? do_sys_open+0x5c/0xe0
+> > [4583991.476996]  [<ffffffff81395429>] ? system_call_fastpath+0x16/0x1b
+> > 
+> > That one isn't so easy to fix, unfortunately.
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
+> > xfs: xfs_dir2_block_to_sf temp buffer allocation fails 
+> > 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > If we are using a large directory block size, and memory becomes
+> > fragmented, we can get memory allocation failures trying to
+> > kmem_alloc(64k) for a temporary buffer. However, there is not need
+> > for a directory buffer sized allocation, as the end result ends up
+> > in the inode literal area. This is, at most, slightly less than 2k
+> > of space, and hence we don't need an allocation larger than that
+> > fora temporary buffer.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Use xfs_ialloc_blks_per_cluster() in xfs_imap().  Please note that we
-> previously calculate the number of blocks per cluster without taking
-> the situation of that the inode cluster size might be equal to or less
-> than the SB blocksize into account.  Maybe there is a chance to cause
-> potential issues after handling an untrusted inode number lookup and
-> proceed to check if the inode number maps to a block is outsides the
-> file system bounds or not.
+> D'oh, I missed this one too.  If you stick 'patch' in the subject they'll have
+> additional visibility.
+> 
+> Looks good to me.
+> 
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-I don't think there's any issues here - after all the inode lookups
-and mapping is done, the code in xfs_imap checks that the cluster
-that the inode is mapped to lies wholly within the filesystem
-boundaries. Hence I think you can remove that from the patch
-descritpion.
+When I reply in line like this it's more of a case of "please test
+this patch to see if it fixes your problem" question, not really an
+official posting of a patch because it's very likely I have just
+written the patch and have only done a 5 minute smoke test of the
+patch. So in this context, it's not really a "please review and
+commit" request.
 
-Otherwise, looks good.
+The issue is that I haven't reposted the patch in a separate series
+asking for reviews and commit as I normally do after I've tested it
+properly and are happy with it.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
