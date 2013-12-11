@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BA7A87FF3
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 01:36:29 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F31497FE2
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 01:36:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 31FB3AC003
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 23:36:29 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E09C7304066
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 23:36:28 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id bsbkqJMpwqNzbfNU (version=TLSv1 cipher=AES256-SHA
+	ESMTP id y4HaZuCEyHljAPhQ (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 23:36:28 -0800 (PST)
-Message-Id: <20131211073627.430108854@bombadil.infradead.org>
-Date: Tue, 10 Dec 2013 23:34:54 -0800
+	Tue, 10 Dec 2013 23:36:27 -0800 (PST)
+Message-Id: <20131211073627.256859075@bombadil.infradead.org>
+Date: Tue, 10 Dec 2013 23:34:53 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/12] 132: use TEST_DIR instead of a SCRATCH_DEV
+Subject: [PATCH 08/12] 130: use TEST_DIR instead of a SCRATCH_DEV
 References: <20131211073445.353655850@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0009-132-use-TEST_DIR-instead-of-a-SCRATCH_DEV.patch
+	filename=0008-130-use-TEST_DIR-instead-of-a-SCRATCH_DEV.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,139 +36,143 @@ The test does not require a fresh file system.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/generic/132 |   33 ++++++++++++++++-----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
+ tests/generic/130 |   47 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 23 deletions(-)
 
-diff --git a/tests/generic/132 b/tests/generic/132
-index aa52c7d..3053e67 100755
---- a/tests/generic/132
-+++ b/tests/generic/132
-@@ -40,10 +40,9 @@ trap "exit \$status" 0 1 2 3 15
+diff --git a/tests/generic/130 b/tests/generic/130
+index 8367dc7..833474d 100755
+--- a/tests/generic/130
++++ b/tests/generic/130
+@@ -48,37 +48,38 @@ trap "exit \$status" 0 1 2 3 15
  _supported_fs generic
  _supported_os Linux IRIX
  
 -_require_scratch
--
+ _require_sparse_files
+ 
 -_scratch_mkfs >/dev/null 2>&1
 -_scratch_mount
-+testdir="$TEST_DIR/dir.$seq"
++testdir=$TEST_DIR/dir.$seq
++
 +rm -rf $testdir
 +mkdir $testdir
  
- $XFS_IO_PROG -f -t -c "pwrite -S 0x63 0 512" \
-     -c "pwrite -S 0x64 512 512" \
-@@ -61,7 +60,7 @@ $XFS_IO_PROG -f -t -c "pwrite -S 0x63 0 512" \
-     -c "pread -v 2560 512" \
-     -c "pread -v 3072 512" \
-     -c "pread -v 3584 512" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo "End-of-file zeroing with direct I/O"
+ $XFS_IO_PROG -f -d -t -c "pwrite -S 0x63 0 65536" \
+     -c "truncate 1" \
+     -c "pwrite -S 0x41 65536 65536" \
+     -c "pread -v 0 131072" \
+-    $SCRATCH_MNT/eof-zeroing_direct | _filter_xfs_io_unique
++    $testdir/eof-zeroing_direct | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x63 4096 1024" \
-     -c "pwrite -S 0x6B 5120 1024" \
-@@ -75,7 +74,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x63 4096 1024" \
-     -c "pread -v 5120 1024" \
-     -c "pread -v 6144 1024" \
-     -c "pread -v 7168 1024" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo
+ echo "Basic Block Hole test"
+ $XFS_IO_PROG -f -t -c "truncate 8192" \
+     -c "pread -v 5000 3000" \
+-    $SCRATCH_MNT/blackhole | _filter_xfs_io_unique
++    $testdir/blackhole | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x6E 8192 2048" \
-     -c "pwrite -S 0x6F 10240 2048" \
-@@ -85,14 +84,14 @@ $XFS_IO_PROG -f -c "pwrite -S 0x6E 8192 2048" \
-     -c "pread -v 6144 2048" \
-     -c "pread -v 8192 2048" \
-     -c "pread -v 10240 2048" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo
+ echo "Test buffered and direct IO coherency"
+ $XFS_IO_PROG -f -t -c "pwrite -S 0x41 8000 1000" \
+     -c "pwrite -S 0x57 4000 1000" \
+-    $SCRATCH_MNT/buff_direct_coherency | _filter_xfs_io_unique
++    $testdir/buff_direct_coherency | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x70 12288 4096" \
-     -c "pread -v 0 4096" \
-     -c "pread -v 4096 4096" \
-     -c "pread -v 8192 4096" \
-     -c "pread -v 12288 4096" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ $XFS_IO_PROG -d -c "pwrite -S 0x78 20480 4096"\
+     -c "pwrite -S 0x79 4096 4096"\
+-    $SCRATCH_MNT/buff_direct_coherency | _filter_xfs_io_unique
++    $testdir/buff_direct_coherency | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x71 16384 8192" \
-     -c "pwrite -S 0x72 24576 8192" \
-@@ -100,7 +99,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x71 16384 8192" \
-     -c "pread -v 8192 8192" \
-     -c "pread -v 8192 8192" \
-     -c "pread -v 16384 8192" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ $XFS_IO_PROG -c "pread -v 0 9000"\
+-    $SCRATCH_MNT/buff_direct_coherency | _filter_xfs_io_unique
++    $testdir/buff_direct_coherency | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x73 32768 16384" \
-     -c "pwrite -S 0x74 49152 16384" \
-@@ -108,7 +107,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x73 32768 16384" \
-     -c "pread -v 16384 16384" \
-     -c "pread -v 32768 16384" \
-     -c "pread -v 49152 16384" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo
+ echo "Test direct read and write"
+@@ -86,19 +87,19 @@ $XFS_IO_PROG -f -d -t -c "pwrite -S 0x78 0 65536"\
+     -c "pread -v 0 65536"\
+     -c "pwrite -S 0x46 65536 6553600"\
+     -c "pread -v 0 6619136"\
+-    $SCRATCH_MNT/direct_io | _filter_xfs_io_unique
++    $testdir/direct_io | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x75 65536 32768" \
-     -c "pwrite -S 0x76 98304 32768" \
-@@ -116,7 +115,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x75 65536 32768" \
-     -c "pread -v 32768 32768" \
-     -c "pread -v 65536 32768" \
-     -c "pread -v 98304 32768" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ $XFS_IO_PROG -d -c "pread -v 0 6619136"\
+-    $SCRATCH_MNT/direct_io | _filter_xfs_io_unique
++    $testdir/direct_io | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x76 131072 65536" \
-     -c "pwrite -S 0x77 196608 65536" \
-@@ -124,7 +123,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x76 131072 65536" \
-     -c "pread -v 65536 65536" \
-     -c "pread -v 131072 65536" \
-     -c "pread -v 196608 65536" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ $XFS_IO_PROG -f -d -t -c "pwrite -S 0x61 0 65536"\
+     -c "pread -v 0 65536"\
+     -c "pwrite -S 0x62 65536 131072"\
+     -c "pread -v 0 131072"\
+-    $SCRATCH_MNT/async_direct_io | _filter_xfs_io_unique
++    $testdir/async_direct_io | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x76 262144 131072" \
-     -c "pwrite -S 0x77 393216 131072" \
-@@ -132,14 +131,14 @@ $XFS_IO_PROG -f -c "pwrite -S 0x76 262144 131072" \
-     -c "pread -v 131072 131072" \
-     -c "pread -v 262144 131072" \
-     -c "pread -v 393216 131072" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ $XFS_IO_PROG -d -c "pread -v 0 131072"\
+-    $SCRATCH_MNT/async_direct_io | _filter_xfs_io_unique
++    $testdir/async_direct_io | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x76 524288 524288" \
-     -c "pwrite -S 0x77 1048576 524288" \
-     -c "pread -v 0 524288" \
-     -c "pread -v 524288 524288" \
-     -c "pread -v 1048576 524288" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo
+ echo "FSB Edge test"
+@@ -108,30 +109,30 @@ $XFS_IO_PROG -f -t -c "truncate 131072"\
+     -c "truncate 131072"\
+     -c "pwrite -S 0x61 65535 2"\
+     -c "pread -v 0 131072"\
+-    $SCRATCH_MNT/fsb_edge_test | _filter_xfs_io_unique
++    $testdir/fsb_edge_test | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x32 1048576 1048576" \
-     -c "pwrite -S 0x33 2097152 1048576" \
-@@ -158,7 +157,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x32 1048576 1048576" \
-     -c "pread -v 6291456 1048576" \
-     -c "pread -v 7340032 1048576" \
-     -c "pread -v 8388608 1048576" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo
+ echo "Open Trunk test (O_TRUNC)"
+ for n in 0 1 2 3 4
+ do
+-    $XFS_IO_PROG -f -t -c "pread -v 0 100" $SCRATCH_MNT/$n | _filter_xfs_io_unique
++    $XFS_IO_PROG -f -t -c "pread -v 0 100" $testdir/$n | _filter_xfs_io_unique
  
- $XFS_IO_PROG -f -c "pwrite -S 0x32 1048576 1048576" \
-     -c "pwrite -S 0x33 2097152 1048576" \
-@@ -179,7 +178,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x32 1048576 1048576" \
-     -c "pread -v 7340032 1048576" \
-     -c "pread -v 8388608 1048576" \
-     -c "pread -v 9437184 1048576" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+-    echo "Test" > $SCRATCH_MNT/$n
+-    $XFS_IO_PROG -f -t -c "pread -v 0 100" $SCRATCH_MNT/$n | _filter_xfs_io_unique
+-    cat $SCRATCH_MNT/$n
++    echo "Test" > $testdir/$n
++    $XFS_IO_PROG -f -t -c "pread -v 0 100" $testdir/$n | _filter_xfs_io_unique
++    cat $testdir/$n
+ done
+ echo "DONE"
  
- $XFS_IO_PROG -f -c "pwrite -S 0x92 10485760 10485760" \
-     -c "pwrite -S 0x93 20971520 10485760" \
-@@ -200,7 +199,7 @@ $XFS_IO_PROG -f -c "pwrite -S 0x92 10485760 10485760" \
-     -c "pread -v 73400320 10485760" \
-     -c "pread -v 83886080 10485760" \
-     -c "pread -v 94371840 10485760" \
--    $SCRATCH_MNT/aligned_vector_rw | _filter_xfs_io_unique
-+    $testdir/aligned_vector_rw | _filter_xfs_io_unique
+ echo
+ echo "Append test"
+-echo "append to me" > $SCRATCH_MNT/append
++echo "append to me" > $testdir/append
+ $XFS_IO_PROG -a -c "pwrite -S 0x61 0 10" \
+     -c "pread -v 0 24"\
+-    $SCRATCH_MNT/append | _filter_xfs_io_unique
++    $testdir/append | _filter_xfs_io_unique
+ 
+ echo
+ echo "Small Vector Async"
+-echo "abcdefghijklmnopqrstuvwxyz" > $SCRATCH_MNT/small_vector_async
++echo "abcdefghijklmnopqrstuvwxyz" > $testdir/small_vector_async
+ $XFS_IO_PROG -f -c "pread -v 0 1"\
+     -c "pread -v 1 1"\
+     -c "pread -v 2 1"\
+@@ -186,11 +187,11 @@ $XFS_IO_PROG -f -c "pread -v 0 1"\
+     -c "pread -v 10000000004 4"\
+     -c "pread -v 10000000008 4"\
+     -c "pread -v 10000000012 4"\
+-    $SCRATCH_MNT/small_vector_async | _filter_xfs_io_unique
++    $testdir/small_vector_async | _filter_xfs_io_unique
+ 
+ echo
+ echo "Small Vector Sync"
+-echo "abcdefghijklmnopqrstuvwxyz" > $SCRATCH_MNT/small_vector_async
++echo "abcdefghijklmnopqrstuvwxyz" > $testdir/small_vector_async
+ $XFS_IO_PROG -f -s -c "pread -v 0 1"\
+     -c "pread -v 1 1"\
+     -c "pread -v 2 1"\
+@@ -245,7 +246,7 @@ $XFS_IO_PROG -f -s -c "pread -v 0 1"\
+     -c "pread -v 10000000004 4"\
+     -c "pread -v 10000000008 4"\
+     -c "pread -v 10000000012 4"\
+-    $SCRATCH_MNT/small_vector_async | _filter_xfs_io_unique
++    $testdir/small_vector_async | _filter_xfs_io_unique
  
  status=0
  exit
