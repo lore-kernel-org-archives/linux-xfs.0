@@ -1,9 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. v3.12-11685-gf9b395a
-Message-Id: <20131211212929.CB59D7F55@oss.sgi.com>
-Date: Wed, 11 Dec 2013 15:29:29 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 80D4F7F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 16:40:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F531AC019
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 14:40:18 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ObFpmbv5v7xqR9k5 for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 14:40:16 -0800 (PST)
+Date: Thu, 12 Dec 2013 09:40:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/10] xfstests: do not unmount tmpfs during remount.
+Message-ID: <20131211224012.GJ10988@dastard>
+References: <1386706321-15795-1-git-send-email-jayr@google.com>
+	<1386706321-15795-6-git-send-email-jayr@google.com>
+	<20131211074615.GE19248@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131211074615.GE19248@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,94 +27,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Junho Ryu <jayr@google.com>, hughd@google.com, tytso@mit.edu, branto@redhat.com, xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Tue, Dec 10, 2013 at 11:46:15PM -0800, Christoph Hellwig wrote:
+> On Tue, Dec 10, 2013 at 12:11:56PM -0800, Junho Ryu wrote:
+> > Several tests unmount then re-mount the scratch filesystem, to check
+> > that the content is unchanged; but unmounting a tmpfs is designed to
+> > lose its content, which causes such tests to fail unnecessarily.  Add
+> > _scratch_remount(), which instead uses remount on a tmpfs to preserve
+> > its contents.  Also add _test_remount() to do the same for the test
+> > device.
+> 
+> All these tests don't make sense if you never unmount the filesystem.
+> Istead they should exit with _notrun for tmpfs.
 
-The branch, for-next has been updated
-  f9b395a xfs: align initial file allocations correctly
-  8e825e3 xfs: fix calculation of freed inode cluster blocks
-  b3f03ba xfs: xfs_dir2_block_to_sf temp buffer allocation fails
-      from  df8052e7dae00bde6f21b40b6e3e1099770f3afc (commit)
+IOWs, adding tmpfs changes the definition of a "generic" test.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+i.e. instead of:
 
-- Log -----------------------------------------------------------------
-commit f9b395a8ef8f34d19cae2cde361e19c96e097fad
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Nov 22 10:41:16 2013 +1100
+_supported_fs generic
 
-    xfs: align initial file allocations correctly
-    
-    The function xfs_bmap_isaeof() is used to indicate that an
-    allocation is occurring at or past the end of file, and as such
-    should be aligned to the underlying storage geometry if possible.
-    
-    Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-    behaviour of this function for empty files - it turned off
-    allocation alignment for this case accidentally. Hence large initial
-    allocations from direct IO are not getting correctly aligned to the
-    underlying geometry, and that is cause write performance to drop in
-    alignment sensitive configurations.
-    
-    Fix it by considering allocation into empty files as requiring
-    aligned allocation again.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+these tests are now:
 
-commit 8e825e3a02ff20973154559c33e662cacedc4458
-Author: Ben Myers <bpm@sgi.com>
-Date:   Tue Dec 10 14:59:31 2013 -0600
+_supported_fs xfs ext2 ext3 ext4 ext4dev btrfs gfs2 nfs udf reiserfs
 
-    xfs: fix calculation of freed inode cluster blocks
-    
-    rec.ir_startino is an agino rather than an ino.  Use the correct macro
-    when dealing with it in xfs_difree.
-    
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
+and by that definition should be in the tests/shared directory....
 
-commit b3f03bac8132207a20286d5602eda64500c19724
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Dec 3 23:50:57 2013 +1100
+That's a bit of a pain, but I really don't like the idea of having
+"generic" tests that aren't actually generic by having to define
+exceptions for them...
 
-    xfs: xfs_dir2_block_to_sf temp buffer allocation fails
-    
-    If we are using a large directory block size, and memory becomes
-    fragmented, we can get memory allocation failures trying to
-    kmem_alloc(64k) for a temporary buffer. However, there is not need
-    for a directory buffer sized allocation, as the end result ends up
-    in the inode literal area. This is, at most, slightly less than 2k
-    of space, and hence we don't need an allocation larger than that
-    fora temporary buffer.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+Cheers,
 
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_bmap.c    |  9 ++++++--
- fs/xfs/xfs_dir2_sf.c | 58 ++++++++++++++++++++++++++++++----------------------
- fs/xfs/xfs_ialloc.c  |  2 +-
- 3 files changed, 42 insertions(+), 27 deletions(-)
-
-
-hooks/post-receive
+Dave.
 -- 
-XFS development tree
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
