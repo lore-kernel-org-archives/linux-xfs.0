@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CA4ED29E05
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:45:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 88EEC30406A
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:45:44 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id ZhVsofKTJS0FuZpO (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 02:45:43 -0800 (PST)
-Message-Id: <20131211104529.305937197@bombadil.infradead.org>
-Date: Wed, 11 Dec 2013 02:43:00 -0800
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1FEAA29E06
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:45:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94535AC00B
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:45:45 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id owYn1DCPaHKHkxWh (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 02:45:44 -0800 (PST)
+Message-Id: <20131211104528.300317604@bombadil.infradead.org>
+Date: Wed, 11 Dec 2013 02:42:54 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 17/18] nfs: use generic posix ACL infrastructure for v3 Posix
-	ACLs
+Subject: [PATCH 11/18] jffs2: use generic posix ACL infrastructure
 References: <20131211104243.148113893@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0017-nfs-use-generic-posix-ACL-infrastructure-for-v3-Posi.patch
+	filename=0011-jffs2-use-generic-posix-ACL-infrastructure.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,485 +32,318 @@ Sender: xfs-bounces@oss.sgi.com
 To: viro@zeniv.linux.org.uk
 Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, Joel Becker <jlbec@evilplan.org>, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
 
+Also don't bother to set up a .get_acl method for symlinks as we do not
+support access control (ACLs or even mode bits) for symlinks in Linux.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/nfs/inode.c         |    4 -
- fs/nfs/nfs3acl.c       |  287 +++++++++---------------------------------------
- fs/nfs/nfs3proc.c      |   26 +++--
- fs/nfs/nfs3super.c     |    3 +
- include/linux/nfs_fs.h |   10 +-
- 5 files changed, 76 insertions(+), 254 deletions(-)
+ fs/jffs2/acl.c     |  141 ++++------------------------------------------------
+ fs/jffs2/acl.h     |    7 +--
+ fs/jffs2/dir.c     |    1 +
+ fs/jffs2/file.c    |    1 +
+ fs/jffs2/fs.c      |    7 +--
+ fs/jffs2/symlink.c |    1 -
+ fs/jffs2/xattr.c   |    9 ++--
+ 7 files changed, 24 insertions(+), 143 deletions(-)
 
-diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
-index 00ad1c2..ecd11ba 100644
---- a/fs/nfs/inode.c
-+++ b/fs/nfs/inode.c
-@@ -1641,10 +1641,6 @@ struct inode *nfs_alloc_inode(struct super_block *sb)
- 		return NULL;
- 	nfsi->flags = 0UL;
- 	nfsi->cache_validity = 0UL;
--#ifdef CONFIG_NFS_V3_ACL
--	nfsi->acl_access = ERR_PTR(-EAGAIN);
--	nfsi->acl_default = ERR_PTR(-EAGAIN);
--#endif
- #if IS_ENABLED(CONFIG_NFS_V4)
- 	nfsi->nfs4_acl = NULL;
- #endif /* CONFIG_NFS_V4 */
-diff --git a/fs/nfs/nfs3acl.c b/fs/nfs/nfs3acl.c
-index e859675..80bfb5b 100644
---- a/fs/nfs/nfs3acl.c
-+++ b/fs/nfs/nfs3acl.c
-@@ -10,179 +10,7 @@
+diff --git a/fs/jffs2/acl.c b/fs/jffs2/acl.c
+index 4d6e31b..009ec0b 100644
+--- a/fs/jffs2/acl.c
++++ b/fs/jffs2/acl.c
+@@ -178,10 +178,6 @@ struct posix_acl *jffs2_get_acl(struct inode *inode, int type)
+ 	char *value = NULL;
+ 	int rc, xprefix;
  
- #define NFSDBG_FACILITY	NFSDBG_PROC
+-	acl = get_cached_acl(inode, type);
+-	if (acl != ACL_NOT_CACHED)
+-		return acl;
+-
+ 	switch (type) {
+ 	case ACL_TYPE_ACCESS:
+ 		xprefix = JFFS2_XPREFIX_ACL_ACCESS;
+@@ -232,13 +228,10 @@ static int __jffs2_set_acl(struct inode *inode, int xprefix, struct posix_acl *a
+ 	return rc;
+ }
  
--ssize_t nfs3_listxattr(struct dentry *dentry, char *buffer, size_t size)
--{
--	struct inode *inode = dentry->d_inode;
+-static int jffs2_set_acl(struct inode *inode, int type, struct posix_acl *acl)
++int jffs2_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ {
+ 	int rc, xprefix;
+ 
+-	if (S_ISLNK(inode->i_mode))
+-		return -EOPNOTSUPP;
+-
+ 	switch (type) {
+ 	case ACL_TYPE_ACCESS:
+ 		xprefix = JFFS2_XPREFIX_ACL_ACCESS;
+@@ -277,30 +270,21 @@ static int jffs2_set_acl(struct inode *inode, int type, struct posix_acl *acl)
+ 
+ int jffs2_init_acl_pre(struct inode *dir_i, struct inode *inode, umode_t *i_mode)
+ {
 -	struct posix_acl *acl;
--	int pos=0, len=0;
++	struct posix_acl *default_acl, *acl;
+ 	int rc;
+ 
+ 	cache_no_acl(inode);
+ 
+-	if (S_ISLNK(*i_mode))
+-		return 0;	/* Symlink always has no-ACL */
 -
--#	define output(s) do {						\
--			if (pos + sizeof(s) <= size) {			\
--				memcpy(buffer + pos, s, sizeof(s));	\
--				pos += sizeof(s);			\
--			}						\
--			len += sizeof(s);				\
--		} while(0)
--
--	acl = nfs3_proc_getacl(inode, ACL_TYPE_ACCESS);
+-	acl = jffs2_get_acl(dir_i, ACL_TYPE_DEFAULT);
 -	if (IS_ERR(acl))
 -		return PTR_ERR(acl);
--	if (acl) {
--		output("system.posix_acl_access");
--		posix_acl_release(acl);
--	}
 -
--	if (S_ISDIR(inode->i_mode)) {
--		acl = nfs3_proc_getacl(inode, ACL_TYPE_DEFAULT);
+-	if (!acl) {
+-		*i_mode &= ~current_umask();
+-	} else {
+-		if (S_ISDIR(*i_mode))
+-			set_cached_acl(inode, ACL_TYPE_DEFAULT, acl);
+-
+-		rc = __posix_acl_create(&acl, GFP_KERNEL, i_mode);
+-		if (rc < 0)
+-			return rc;
+-		if (rc > 0)
+-			set_cached_acl(inode, ACL_TYPE_ACCESS, acl);
++	rc = posix_acl_create(dir_i, i_mode, &default_acl, &acl);
++	if (rc)
++		return rc;
+ 
++	if (default_acl) {
++		set_cached_acl(inode, ACL_TYPE_DEFAULT, default_acl);
++		posix_acl_release(default_acl);
++	}
++	if (acl) {
++		set_cached_acl(inode, ACL_TYPE_ACCESS, acl);
+ 		posix_acl_release(acl);
+ 	}
+ 	return 0;
+@@ -324,106 +308,3 @@ int jffs2_init_acl_post(struct inode *inode)
+ 
+ 	return 0;
+ }
+-
+-int jffs2_acl_chmod(struct inode *inode)
+-{
+-	struct posix_acl *acl;
+-	int rc;
+-
+-	if (S_ISLNK(inode->i_mode))
+-		return -EOPNOTSUPP;
+-	acl = jffs2_get_acl(inode, ACL_TYPE_ACCESS);
+-	if (IS_ERR(acl) || !acl)
+-		return PTR_ERR(acl);
+-	rc = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
+-	if (rc)
+-		return rc;
+-	rc = jffs2_set_acl(inode, ACL_TYPE_ACCESS, acl);
+-	posix_acl_release(acl);
+-	return rc;
+-}
+-
+-static size_t jffs2_acl_access_listxattr(struct dentry *dentry, char *list,
+-		size_t list_size, const char *name, size_t name_len, int type)
+-{
+-	const int retlen = sizeof(POSIX_ACL_XATTR_ACCESS);
+-
+-	if (list && retlen <= list_size)
+-		strcpy(list, POSIX_ACL_XATTR_ACCESS);
+-	return retlen;
+-}
+-
+-static size_t jffs2_acl_default_listxattr(struct dentry *dentry, char *list,
+-		size_t list_size, const char *name, size_t name_len, int type)
+-{
+-	const int retlen = sizeof(POSIX_ACL_XATTR_DEFAULT);
+-
+-	if (list && retlen <= list_size)
+-		strcpy(list, POSIX_ACL_XATTR_DEFAULT);
+-	return retlen;
+-}
+-
+-static int jffs2_acl_getxattr(struct dentry *dentry, const char *name,
+-		void *buffer, size_t size, int type)
+-{
+-	struct posix_acl *acl;
+-	int rc;
+-
+-	if (name[0] != '\0')
+-		return -EINVAL;
+-
+-	acl = jffs2_get_acl(dentry->d_inode, type);
+-	if (IS_ERR(acl))
+-		return PTR_ERR(acl);
+-	if (!acl)
+-		return -ENODATA;
+-	rc = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
+-	posix_acl_release(acl);
+-
+-	return rc;
+-}
+-
+-static int jffs2_acl_setxattr(struct dentry *dentry, const char *name,
+-		const void *value, size_t size, int flags, int type)
+-{
+-	struct posix_acl *acl;
+-	int rc;
+-
+-	if (name[0] != '\0')
+-		return -EINVAL;
+-	if (!inode_owner_or_capable(dentry->d_inode))
+-		return -EPERM;
+-
+-	if (value) {
+-		acl = posix_acl_from_xattr(&init_user_ns, value, size);
 -		if (IS_ERR(acl))
 -			return PTR_ERR(acl);
 -		if (acl) {
--			output("system.posix_acl_default");
--			posix_acl_release(acl);
+-			rc = posix_acl_valid(acl);
+-			if (rc)
+-				goto out;
 -		}
+-	} else {
+-		acl = NULL;
 -	}
--
--#	undef output
--
--	if (!buffer || len <= size)
--		return len;
--	return -ERANGE;
--}
--
--ssize_t nfs3_getxattr(struct dentry *dentry, const char *name,
--		void *buffer, size_t size)
--{
--	struct inode *inode = dentry->d_inode;
--	struct posix_acl *acl;
--	int type, error = 0;
--
--	if (strcmp(name, POSIX_ACL_XATTR_ACCESS) == 0)
--		type = ACL_TYPE_ACCESS;
--	else if (strcmp(name, POSIX_ACL_XATTR_DEFAULT) == 0)
--		type = ACL_TYPE_DEFAULT;
--	else
--		return -EOPNOTSUPP;
--
--	acl = nfs3_proc_getacl(inode, type);
--	if (IS_ERR(acl))
--		return PTR_ERR(acl);
--	else if (acl) {
--		if (type == ACL_TYPE_ACCESS && acl->a_count == 0)
--			error = -ENODATA;
--		else
--			error = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
--		posix_acl_release(acl);
--	} else
--		error = -ENODATA;
--
--	return error;
--}
--
--int nfs3_setxattr(struct dentry *dentry, const char *name,
--	     const void *value, size_t size, int flags)
--{
--	struct inode *inode = dentry->d_inode;
--	struct posix_acl *acl;
--	int type, error;
--
--	if (strcmp(name, POSIX_ACL_XATTR_ACCESS) == 0)
--		type = ACL_TYPE_ACCESS;
--	else if (strcmp(name, POSIX_ACL_XATTR_DEFAULT) == 0)
--		type = ACL_TYPE_DEFAULT;
--	else
--		return -EOPNOTSUPP;
--
--	acl = posix_acl_from_xattr(&init_user_ns, value, size);
--	if (IS_ERR(acl))
--		return PTR_ERR(acl);
--	error = nfs3_proc_setacl(inode, type, acl);
+-	rc = jffs2_set_acl(dentry->d_inode, type, acl);
+- out:
 -	posix_acl_release(acl);
--
--	return error;
+-	return rc;
 -}
 -
--int nfs3_removexattr(struct dentry *dentry, const char *name)
--{
--	struct inode *inode = dentry->d_inode;
--	int type;
+-const struct xattr_handler jffs2_acl_access_xattr_handler = {
+-	.prefix	= POSIX_ACL_XATTR_ACCESS,
+-	.flags	= ACL_TYPE_DEFAULT,
+-	.list	= jffs2_acl_access_listxattr,
+-	.get	= jffs2_acl_getxattr,
+-	.set	= jffs2_acl_setxattr,
+-};
 -
--	if (strcmp(name, POSIX_ACL_XATTR_ACCESS) == 0)
--		type = ACL_TYPE_ACCESS;
--	else if (strcmp(name, POSIX_ACL_XATTR_DEFAULT) == 0)
--		type = ACL_TYPE_DEFAULT;
--	else
--		return -EOPNOTSUPP;
+-const struct xattr_handler jffs2_acl_default_xattr_handler = {
+-	.prefix	= POSIX_ACL_XATTR_DEFAULT,
+-	.flags	= ACL_TYPE_DEFAULT,
+-	.list	= jffs2_acl_default_listxattr,
+-	.get	= jffs2_acl_getxattr,
+-	.set	= jffs2_acl_setxattr,
+-};
+diff --git a/fs/jffs2/acl.h b/fs/jffs2/acl.h
+index 9b47724..2e2b574 100644
+--- a/fs/jffs2/acl.h
++++ b/fs/jffs2/acl.h
+@@ -27,17 +27,14 @@ struct jffs2_acl_header {
+ #ifdef CONFIG_JFFS2_FS_POSIX_ACL
+ 
+ struct posix_acl *jffs2_get_acl(struct inode *inode, int type);
+-extern int jffs2_acl_chmod(struct inode *);
++int jffs2_set_acl(struct inode *inode, struct posix_acl *acl, int type);
+ extern int jffs2_init_acl_pre(struct inode *, struct inode *, umode_t *);
+ extern int jffs2_init_acl_post(struct inode *);
+ 
+-extern const struct xattr_handler jffs2_acl_access_xattr_handler;
+-extern const struct xattr_handler jffs2_acl_default_xattr_handler;
 -
--	return nfs3_proc_setacl(inode, type, NULL);
--}
--
--static void __nfs3_forget_cached_acls(struct nfs_inode *nfsi)
--{
--	if (!IS_ERR(nfsi->acl_access)) {
--		posix_acl_release(nfsi->acl_access);
--		nfsi->acl_access = ERR_PTR(-EAGAIN);
--	}
--	if (!IS_ERR(nfsi->acl_default)) {
--		posix_acl_release(nfsi->acl_default);
--		nfsi->acl_default = ERR_PTR(-EAGAIN);
--	}
--}
--
--void nfs3_forget_cached_acls(struct inode *inode)
--{
--	dprintk("NFS: nfs3_forget_cached_acls(%s/%ld)\n", inode->i_sb->s_id,
--		inode->i_ino);
--	spin_lock(&inode->i_lock);
--	__nfs3_forget_cached_acls(NFS_I(inode));
--	spin_unlock(&inode->i_lock);
--}
--
--static struct posix_acl *nfs3_get_cached_acl(struct inode *inode, int type)
--{
--	struct nfs_inode *nfsi = NFS_I(inode);
--	struct posix_acl *acl = ERR_PTR(-EINVAL);
--
--	spin_lock(&inode->i_lock);
--	switch(type) {
--		case ACL_TYPE_ACCESS:
--			acl = nfsi->acl_access;
--			break;
--
--		case ACL_TYPE_DEFAULT:
--			acl = nfsi->acl_default;
--			break;
--
--		default:
--			goto out;
--	}
--	if (IS_ERR(acl))
--		acl = ERR_PTR(-EAGAIN);
--	else
--		acl = posix_acl_dup(acl);
--out:
--	spin_unlock(&inode->i_lock);
--	dprintk("NFS: nfs3_get_cached_acl(%s/%ld, %d) = %p\n", inode->i_sb->s_id,
--		inode->i_ino, type, acl);
--	return acl;
--}
--
--static void nfs3_cache_acls(struct inode *inode, struct posix_acl *acl,
--		    struct posix_acl *dfacl)
--{
--	struct nfs_inode *nfsi = NFS_I(inode);
--
--	dprintk("nfs3_cache_acls(%s/%ld, %p, %p)\n", inode->i_sb->s_id,
--		inode->i_ino, acl, dfacl);
--	spin_lock(&inode->i_lock);
--	__nfs3_forget_cached_acls(NFS_I(inode));
--	if (!IS_ERR(acl))
--		nfsi->acl_access = posix_acl_dup(acl);
--	if (!IS_ERR(dfacl))
--		nfsi->acl_default = posix_acl_dup(dfacl);
--	spin_unlock(&inode->i_lock);
--}
--
--struct posix_acl *nfs3_proc_getacl(struct inode *inode, int type)
-+struct posix_acl *nfs3_get_acl(struct inode *inode, int type)
+ #else
+ 
+ #define jffs2_get_acl				(NULL)
+-#define jffs2_acl_chmod(inode)			(0)
++#define jffs2_set_acl				(NULL)
+ #define jffs2_init_acl_pre(dir_i,inode,mode)	(0)
+ #define jffs2_init_acl_post(inode)		(0)
+ 
+diff --git a/fs/jffs2/dir.c b/fs/jffs2/dir.c
+index e3aac22..9385560 100644
+--- a/fs/jffs2/dir.c
++++ b/fs/jffs2/dir.c
+@@ -59,6 +59,7 @@ const struct inode_operations jffs2_dir_inode_operations =
+ 	.mknod =	jffs2_mknod,
+ 	.rename =	jffs2_rename,
+ 	.get_acl =	jffs2_get_acl,
++	.set_acl =	jffs2_set_acl,
+ 	.setattr =	jffs2_setattr,
+ 	.setxattr =	jffs2_setxattr,
+ 	.getxattr =	jffs2_getxattr,
+diff --git a/fs/jffs2/file.c b/fs/jffs2/file.c
+index 1506673..256cd19 100644
+--- a/fs/jffs2/file.c
++++ b/fs/jffs2/file.c
+@@ -66,6 +66,7 @@ const struct file_operations jffs2_file_operations =
+ const struct inode_operations jffs2_file_inode_operations =
  {
- 	struct nfs_server *server = NFS_SERVER(inode);
- 	struct page *pages[NFSACL_MAXPAGES] = { };
-@@ -198,7 +26,6 @@ struct posix_acl *nfs3_proc_getacl(struct inode *inode, int type)
- 		.rpc_argp	= &args,
- 		.rpc_resp	= &res,
- 	};
--	struct posix_acl *acl;
- 	int status, count;
+ 	.get_acl =	jffs2_get_acl,
++	.set_acl =	jffs2_set_acl,
+ 	.setattr =	jffs2_setattr,
+ 	.setxattr =	jffs2_setxattr,
+ 	.getxattr =	jffs2_getxattr,
+diff --git a/fs/jffs2/fs.c b/fs/jffs2/fs.c
+index 09b3ed4..a69e426 100644
+--- a/fs/jffs2/fs.c
++++ b/fs/jffs2/fs.c
+@@ -190,15 +190,16 @@ int jffs2_do_setattr (struct inode *inode, struct iattr *iattr)
  
- 	if (!nfs_server_capable(inode, NFS_CAP_ACLS))
-@@ -207,10 +34,6 @@ struct posix_acl *nfs3_proc_getacl(struct inode *inode, int type)
- 	status = nfs_revalidate_inode(server, inode);
- 	if (status < 0)
- 		return ERR_PTR(status);
--	acl = nfs3_get_cached_acl(inode, type);
--	if (acl != ERR_PTR(-EAGAIN))
--		return acl;
--	acl = NULL;
- 
- 	/*
- 	 * Only get the access acl when explicitly requested: We don't
-@@ -257,36 +80,37 @@ struct posix_acl *nfs3_proc_getacl(struct inode *inode, int type)
- 	}
- 
- 	if (res.acl_access != NULL) {
--		if (posix_acl_equiv_mode(res.acl_access, NULL) == 0) {
-+		if (posix_acl_equiv_mode(res.acl_access, NULL) ||
-+		    res.acl_access->a_count == 0) {
- 			posix_acl_release(res.acl_access);
- 			res.acl_access = NULL;
- 		}
- 	}
--	nfs3_cache_acls(inode,
--		(res.mask & NFS_ACL)   ? res.acl_access  : ERR_PTR(-EINVAL),
--		(res.mask & NFS_DFACL) ? res.acl_default : ERR_PTR(-EINVAL));
- 
--	switch(type) {
--		case ACL_TYPE_ACCESS:
--			acl = res.acl_access;
--			res.acl_access = NULL;
--			break;
-+	if (res.mask & NFS_ACL)
-+		set_cached_acl(inode, ACL_TYPE_ACCESS, res.acl_access);
-+	else
-+		forget_cached_acl(inode, ACL_TYPE_ACCESS);
- 
--		case ACL_TYPE_DEFAULT:
--			acl = res.acl_default;
--			res.acl_default = NULL;
-+	if (res.mask & NFS_DFACL)
-+		set_cached_acl(inode, ACL_TYPE_DEFAULT, res.acl_default);
-+	else
-+		forget_cached_acl(inode, ACL_TYPE_DEFAULT);
-+
-+	nfs_free_fattr(res.fattr);
-+	if (type == ACL_TYPE_ACCESS) {
-+		posix_acl_release(res.acl_default);
-+		return res.acl_access;
-+	} else {
-+		posix_acl_release(res.acl_access);
-+		return res.acl_default;
- 	}
- 
- getout:
- 	posix_acl_release(res.acl_access);
- 	posix_acl_release(res.acl_default);
- 	nfs_free_fattr(res.fattr);
--
--	if (status != 0) {
--		posix_acl_release(acl);
--		acl = ERR_PTR(status);
--	}
--	return acl;
-+	return ERR_PTR(status);
- }
- 
- static int nfs3_proc_setacls(struct inode *inode, struct posix_acl *acl,
-@@ -353,7 +177,8 @@ static int nfs3_proc_setacls(struct inode *inode, struct posix_acl *acl,
- 	switch (status) {
- 		case 0:
- 			status = nfs_refresh_inode(inode, fattr);
--			nfs3_cache_acls(inode, acl, dfacl);
-+			set_cached_acl(inode, ACL_TYPE_ACCESS, acl);
-+			set_cached_acl(inode, ACL_TYPE_DEFAULT, dfacl);
- 			break;
- 		case -EPFNOSUPPORT:
- 		case -EPROTONOSUPPORT:
-@@ -373,33 +198,27 @@ out:
- 	return status;
- }
- 
--int nfs3_proc_setacl(struct inode *inode, int type, struct posix_acl *acl)
-+int nfs3_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ int jffs2_setattr(struct dentry *dentry, struct iattr *iattr)
  {
- 	struct posix_acl *alloc = NULL, *dfacl = NULL;
- 	int status;
++	struct inode *inode = dentry->d_inode;
+ 	int rc;
  
- 	if (S_ISDIR(inode->i_mode)) {
- 		switch(type) {
--			case ACL_TYPE_ACCESS:
--				alloc = dfacl = nfs3_proc_getacl(inode,
--						ACL_TYPE_DEFAULT);
--				if (IS_ERR(alloc))
--					goto fail;
--				break;
--
--			case ACL_TYPE_DEFAULT:
--				dfacl = acl;
--				alloc = acl = nfs3_proc_getacl(inode,
--						ACL_TYPE_ACCESS);
--				if (IS_ERR(alloc))
--					goto fail;
--				break;
--
--			default:
--				return -EINVAL;
-+		case ACL_TYPE_ACCESS:
-+			alloc = dfacl = nfs3_get_acl(inode, ACL_TYPE_DEFAULT);
-+			if (IS_ERR(alloc))
-+				goto fail;
-+			break;
-+
-+		case ACL_TYPE_DEFAULT:
-+			dfacl = acl;
-+			alloc = acl = nfs3_get_acl(inode, ACL_TYPE_ACCESS);
-+			if (IS_ERR(alloc))
-+				goto fail;
-+			break;
- 		}
--	} else if (type != ACL_TYPE_ACCESS)
--			return -EINVAL;
-+	}
+-	rc = inode_change_ok(dentry->d_inode, iattr);
++	rc = inode_change_ok(inode, iattr);
+ 	if (rc)
+ 		return rc;
  
- 	if (acl == NULL) {
- 		alloc = acl = posix_acl_from_mode(inode->i_mode, GFP_KERNEL);
-@@ -417,24 +236,24 @@ fail:
- int nfs3_proc_set_default_acl(struct inode *dir, struct inode *inode,
- 		umode_t mode)
- {
--	struct posix_acl *dfacl, *acl;
--	int error = 0;
-+	struct posix_acl *default_acl, *acl;
-+	int error;
+-	rc = jffs2_do_setattr(dentry->d_inode, iattr);
++	rc = jffs2_do_setattr(inode, iattr);
+ 	if (!rc && (iattr->ia_valid & ATTR_MODE))
+-		rc = jffs2_acl_chmod(dentry->d_inode);
++		rc = posix_acl_chmod(inode, inode->i_mode);
  
--	dfacl = nfs3_proc_getacl(dir, ACL_TYPE_DEFAULT);
--	if (IS_ERR(dfacl)) {
--		error = PTR_ERR(dfacl);
-+	error = posix_acl_create(dir, &mode, &default_acl, &acl);
-+	if (error)
- 		return (error == -EOPNOTSUPP) ? 0 : error;
--	}
--	if (!dfacl)
--		return 0;
--	acl = posix_acl_dup(dfacl);
--	error = __posix_acl_create(&acl, GFP_KERNEL, &mode);
--	if (error < 0)
--		goto out_release_dfacl;
--	error = nfs3_proc_setacls(inode, acl, S_ISDIR(inode->i_mode) ?
--						      dfacl : NULL);
--	posix_acl_release(acl);
--out_release_dfacl:
--	posix_acl_release(dfacl);
-+
-+	error = nfs3_proc_setacls(inode, acl, default_acl);
-+
-+	if (acl)
-+		posix_acl_release(acl);
-+	if (default_acl)
-+		posix_acl_release(default_acl);
- 	return error;
+ 	return rc;
  }
-+
-+const struct xattr_handler *nfs3_xattr_handlers[] = {
+diff --git a/fs/jffs2/symlink.c b/fs/jffs2/symlink.c
+index 6e56333..c7c77b0 100644
+--- a/fs/jffs2/symlink.c
++++ b/fs/jffs2/symlink.c
+@@ -22,7 +22,6 @@ const struct inode_operations jffs2_symlink_inode_operations =
+ {
+ 	.readlink =	generic_readlink,
+ 	.follow_link =	jffs2_follow_link,
+-	.get_acl =	jffs2_get_acl,
+ 	.setattr =	jffs2_setattr,
+ 	.setxattr =	jffs2_setxattr,
+ 	.getxattr =	jffs2_getxattr,
+diff --git a/fs/jffs2/xattr.c b/fs/jffs2/xattr.c
+index 3034e97..ad0f2e2 100644
+--- a/fs/jffs2/xattr.c
++++ b/fs/jffs2/xattr.c
+@@ -22,6 +22,7 @@
+ #include <linux/crc32.h>
+ #include <linux/jffs2.h>
+ #include <linux/xattr.h>
++#include <linux/posix_acl_xattr.h>
+ #include <linux/mtd/mtd.h>
+ #include "nodelist.h"
+ /* -------- xdatum related functions ----------------
+@@ -921,8 +922,8 @@ const struct xattr_handler *jffs2_xattr_handlers[] = {
+ 	&jffs2_security_xattr_handler,
+ #endif
+ #ifdef CONFIG_JFFS2_FS_POSIX_ACL
+-	&jffs2_acl_access_xattr_handler,
+-	&jffs2_acl_default_xattr_handler,
 +	&posix_acl_access_xattr_handler,
 +	&posix_acl_default_xattr_handler,
-+	NULL,
-+};
-diff --git a/fs/nfs/nfs3proc.c b/fs/nfs/nfs3proc.c
-index 01b6f6a..ab27a7d1 100644
---- a/fs/nfs/nfs3proc.c
-+++ b/fs/nfs/nfs3proc.c
-@@ -904,20 +904,28 @@ static const struct inode_operations nfs3_dir_inode_operations = {
- 	.permission	= nfs_permission,
- 	.getattr	= nfs_getattr,
- 	.setattr	= nfs_setattr,
--	.listxattr	= nfs3_listxattr,
--	.getxattr	= nfs3_getxattr,
--	.setxattr	= nfs3_setxattr,
--	.removexattr	= nfs3_removexattr,
-+	.listxattr	= generic_listxattr,
-+	.getxattr	= generic_getxattr,
-+	.setxattr	= generic_setxattr,
-+	.removexattr	= generic_removexattr,
-+#ifdef CONFIG_NFS_V3_ACL
-+	.get_acl	= nfs3_get_acl,
-+	.set_acl	= nfs3_set_acl,
-+#endif
- };
- 
- static const struct inode_operations nfs3_file_inode_operations = {
- 	.permission	= nfs_permission,
- 	.getattr	= nfs_getattr,
- 	.setattr	= nfs_setattr,
--	.listxattr	= nfs3_listxattr,
--	.getxattr	= nfs3_getxattr,
--	.setxattr	= nfs3_setxattr,
--	.removexattr	= nfs3_removexattr,
-+	.listxattr	= generic_listxattr,
-+	.getxattr	= generic_getxattr,
-+	.setxattr	= generic_setxattr,
-+	.removexattr	= generic_removexattr,
-+#ifdef CONFIG_NFS_V3_ACL
-+	.get_acl	= nfs3_get_acl,
-+	.set_acl	= nfs3_set_acl,
-+#endif
- };
- 
- const struct nfs_rpc_ops nfs_v3_clientops = {
-@@ -965,7 +973,7 @@ const struct nfs_rpc_ops nfs_v3_clientops = {
- 	.commit_rpc_prepare = nfs3_proc_commit_rpc_prepare,
- 	.commit_done	= nfs3_commit_done,
- 	.lock		= nfs3_proc_lock,
--	.clear_acl_cache = nfs3_forget_cached_acls,
-+	.clear_acl_cache = forget_all_cached_acls,
- 	.close_context	= nfs_close_context,
- 	.have_delegation = nfs3_have_delegation,
- 	.return_delegation = nfs3_return_delegation,
-diff --git a/fs/nfs/nfs3super.c b/fs/nfs/nfs3super.c
-index cc471c7..d6a9894 100644
---- a/fs/nfs/nfs3super.c
-+++ b/fs/nfs/nfs3super.c
-@@ -12,6 +12,9 @@ static struct nfs_subversion nfs_v3 = {
- 	.rpc_vers = &nfs_version3,
- 	.rpc_ops  = &nfs_v3_clientops,
- 	.sops     = &nfs_sops,
-+#ifdef CONFIG_NFS_V3_ACL
-+	.xattr    = nfs3_xattr_handlers,
-+#endif
- };
- 
- static int __init init_nfs_v3(void)
-diff --git a/include/linux/nfs_fs.h b/include/linux/nfs_fs.h
-index 4899737..176f1d2 100644
---- a/include/linux/nfs_fs.h
-+++ b/include/linux/nfs_fs.h
-@@ -154,10 +154,6 @@ struct nfs_inode {
- 	struct rb_root		access_cache;
- 	struct list_head	access_cache_entry_lru;
- 	struct list_head	access_cache_inode_lru;
--#ifdef CONFIG_NFS_V3_ACL
--	struct posix_acl	*acl_access;
--	struct posix_acl	*acl_default;
--#endif
- 
- 	/*
- 	 * This is the cookie verifier used for NFSv3 readdir
-@@ -564,12 +560,12 @@ extern int  nfs_readpage_async(struct nfs_open_context *, struct inode *,
-  * linux/fs/nfs3proc.c
-  */
- #ifdef CONFIG_NFS_V3_ACL
--extern struct posix_acl *nfs3_proc_getacl(struct inode *inode, int type);
--extern int nfs3_proc_setacl(struct inode *inode, int type,
--			    struct posix_acl *acl);
-+extern struct posix_acl *nfs3_get_acl(struct inode *inode, int type);
-+extern int nfs3_set_acl(struct inode *inode, struct posix_acl *acl, int type);
- extern int nfs3_proc_set_default_acl(struct inode *dir, struct inode *inode,
- 		umode_t mode);
- extern void nfs3_forget_cached_acls(struct inode *inode);
-+extern const struct xattr_handler *nfs3_xattr_handlers[];
- #else
- static inline int nfs3_proc_set_default_acl(struct inode *dir,
- 					    struct inode *inode,
+ #endif
+ 	&jffs2_trusted_xattr_handler,
+ 	NULL
+@@ -942,10 +943,10 @@ static const struct xattr_handler *xprefix_to_handler(int xprefix) {
+ #endif
+ #ifdef CONFIG_JFFS2_FS_POSIX_ACL
+ 	case JFFS2_XPREFIX_ACL_ACCESS:
+-		ret = &jffs2_acl_access_xattr_handler;
++		ret = &posix_acl_access_xattr_handler;
+ 		break;
+ 	case JFFS2_XPREFIX_ACL_DEFAULT:
+-		ret = &jffs2_acl_default_xattr_handler;
++		ret = &posix_acl_default_xattr_handler;
+ 		break;
+ #endif
+ 	case JFFS2_XPREFIX_TRUSTED:
 -- 
 1.7.10.4
 
