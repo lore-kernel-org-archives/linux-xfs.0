@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3E5B2801C
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 09:00:21 -0600 (CST)
-Message-ID: <52A87DFF.1090400@sgi.com>
-Date: Wed, 11 Dec 2013 09:00:15 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 67DEF801C
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 09:01:35 -0600 (CST)
+Message-ID: <52A87E49.1040402@sgi.com>
+Date: Wed, 11 Dec 2013 09:01:29 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: suggest reboot after dangerous repair
-References: <52826206.3080106@redhat.com>
-In-Reply-To: <52826206.3080106@redhat.com>
+Subject: Re: [PATCH v2] xfs_repair: fix process_bmbt_reclist_int
+References: <20131210205352.GC1935@sgi.com>
+In-Reply-To: <20131210205352.GC1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,18 +21,18 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
 This has been committed.
 
 Thanks
 --Rich
 
-commit 3ae81520e91945454f35fa75833a45b5b000fe33
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Tue Nov 12 17:14:46 2013 +0000
+commit ea4a8de1e135905e240a54f192daf23275a7e8a8
+Author: Ben Myers <bpm@sgi.com>
+Date:   Tue Dec 10 20:53:52 2013 +0000
 
-     xfs_repair: suggest reboot after dangerous repair
+     xfs_repair: fix process_bmbt_reclist_int
 
 _______________________________________________
 xfs mailing list
