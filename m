@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8E4EC7FD1
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 20:36:13 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 344037FD4
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 20:46:00 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 584A98F8039
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:36:13 -0800 (PST)
-Received: from mail-ob0-f170.google.com (mail-ob0-f170.google.com
-	[209.85.214.170]) by cuda.sgi.com with ESMTP id
-	Auu0KNFGGqhcIord (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Dec 2013 18:36:12 -0800 (PST)
-Received: by mail-ob0-f170.google.com with SMTP id wp18so6298192obc.15
-	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:36:11 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D4A4AAC00B
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:45:56 -0800 (PST)
+Received: from mail-oa0-f44.google.com (mail-oa0-f44.google.com
+	[209.85.219.44]) by cuda.sgi.com with ESMTP id zlQGhDcyykeokmWW
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:45:55 -0800 (PST)
+Received: by mail-oa0-f44.google.com with SMTP id m1so6634646oag.31
+	for <xfs@oss.sgi.com>; Tue, 10 Dec 2013 18:45:55 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131209233002.GV31386@dastard>
+In-Reply-To: <20131211020007.GH10988@dastard>
 References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
-	<20131209233002.GV31386@dastard>
-Date: Tue, 10 Dec 2013 18:36:11 -0800
-Message-ID: <CAGXu5j+u0xSN7jQk8udLefMAa5xNSNHU98as33QYHWOyv-JuJw@mail.gmail.com>
+	<20131209121534.GE4278@hercules>
+	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+	<20131209235523.GW31386@dastard>
+	<CA+5PVA5rUmWYQiPwkN15CnfqckmEjVukXz3mU75CiUBVzfERqA@mail.gmail.com>
+	<20131211010326.GF10988@dastard>
+	<CA+5PVA7wso5fo11xX9kCUdbrqBQMzUnYwTOB_Qe3K7LDY4z_Cw@mail.gmail.com>
+	<20131211020007.GH10988@dastard>
+Date: Tue, 10 Dec 2013 18:45:54 -0800
+Message-ID: <CAGXu5jKUShtztTK-PtY7w0WSg=F3KUGL-iCM3=6H61qy3u6aZg@mail.gmail.com>
 Subject: Re: XFS security fix never sent to -stable?
 From: Kees Cook <keescook@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,44 +38,40 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Dave Chinner <dchinner@redhat.com>
+Cc: Josh Boyer <jwboyer@fedoraproject.org>, Luis Henriques <luis.henriques@canonical.com>, Greg KH <gregkh@linuxfoundation.org>, Brian Foster <bfoster@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Dave Chinner <dchinner@redhat.com>, Dan Carpenter <dan.carpenter@oracle.com>
 
-On Mon, Dec 9, 2013 at 3:30 PM, Dave Chinner <david@fromorbit.com> wrote:
-> [CC the xfs list. Kees - I shouldn't have to remind you to do this. ]
->
-> On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
->> Hi,
+On Tue, Dec 10, 2013 at 6:00 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Dec 10, 2013 at 08:10:51PM -0500, Josh Boyer wrote:
+>> On Tue, Dec 10, 2013 at 8:03 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > Security processes are not something that should be hidden away in
+>> > it's own private corner - if there's a problem upstream needs to
+>> > take action on, then direct contact with upstream is necessary. We
+>> > need to know about security issues - even ones that are classified
+>> > post-commit as security issues - so we are operating with full
+>> > knowledge of the issues in our code and the impact of our fixes....
 >>
->> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
->> capability check to free eofblocks ioctl") is a security fix that was
->> never sent to -stable? From what I can see, it was introduced in 3.8
->> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
->> XFS_IOC_FREE_EOFBLOCKS ioctl").
->>
->> I don't see this in the 3.8.y tree. Should it be added there and newer?
+>> Agreed.  I'm going to interpret your comments at being directed to the
+>> general audience because otherwise you're just shooting the messenger
+>> :).
 >
-> Well, it's not really a security problem at all, given that it only
-> affects speculative preallocation beyond EOF. i.e. it affects
-> filesystem metadata that does not yet index any user data.
->
-> Indeed, the kernel already does exactly what this ioctl does every 5
-> minutes without user intervention. i.e. it's simply a maintenance
-> task we need to execute periodically or on demand as a result of
-> other events (e.g. from a userspace daemon that is listen to quota
-> exhaustion messages).
->
-> So apart from allowing a user to burn some CPU with the ioctl doing
-> nothing but scanning, there's little in way of a security problem
-> being exposed on kernels prior to 3.12 here.
->
-> The reason for the cap check? Turning off this ioctl in containers
-> restricted by user name spaces. i.e. new functionality added to XFS
-> in 3.12 introduced curiously vague and difficult to explain new
-> inode access restrictions, so we took the "be safe by default" route
-> and only allowed the init namespace access to the ioctl....
+> Right, they are not aimed at you - they are aimed at those on the
+> security side of the fence. I'm tired of learning about CVEs in XFS
+> code through chinese whispers and/or luck.
 
-Right, it wasn't clear from the commit, and it looked troublesome, but
-it's function wasn't obvious, so that's why I asked.
+Mostly I try to shield anyone not interested in CVEs from the boring
+process, and try to focus on just getting things marked as needing to
+go into stable. I don't think anyone needs to read the oss-security
+list if they don't want to.
+
+In this case, the fix Dan sent was part of a larger collection of
+security issues reported by Nico. I think the communication error here
+was Dan accidentally forgetting to add the Cc: stable tag. But beyond
+that, it was sent to the xfs list and Cc: to security, so I'm not sure
+it's fair to say it was hidden away. :)
+
+Besides the missing Cc: stable tag, what should future patch senders
+do to call attention to an issue being a security problem at the time
+it is being reported?
 
 -Kees
 
