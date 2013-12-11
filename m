@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3586D8006
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:17:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A821CAC003
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:17:19 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Qo0Fd1GG5atzLJ0Q (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 02:17:18 -0800 (PST)
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Subject: [PATCH] nfsd: revoking of suid/sgid bits after chown() in a
-	consistent way
-Date: Wed, 11 Dec 2013 14:16:36 +0400
-Message-Id: <1386756996-28083-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-In-Reply-To: <20131206204747.GB12613@fieldses.org>
-References: <20131206204747.GB12613@fieldses.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AA87A8012
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 04:45:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 78FB230406A
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 02:45:39 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id JGiIawBAjzDPNqeL (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 02:45:38 -0800 (PST)
+Message-Id: <20131211104526.648135334@bombadil.infradead.org>
+Date: Wed, 11 Dec 2013 02:42:45 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 02/18] fs: add get_acl helper
+References: <20131211104243.148113893@bombadil.infradead.org>
+Content-Disposition: inline; filename=0002-fs-add-get_acl-helper.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +28,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nfs@vger.kernel.org
-Cc: vasily.isaenko@oracle.com, hch@infradead.org, sprabhu@redhat.com, bfields@fieldses.org, xfs@oss.sgi.com
+To: viro@zeniv.linux.org.uk
+Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, Joel Becker <jlbec@evilplan.org>, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-There is an inconsistency in the handling of SUID/SGID file
-bits after chown() between NFS and other local file systems.
+Factor out the code to get an ACL either from the inode or disk from
+check_acl, so that it can be used elsewhere later on.
 
-Local file systems (for example, ext3, ext4, xfs, btrfs) revoke
-SUID/SGID bits after chown() on a regular file even if
-the owner/group of the file has not been changed:
-
-~# touch file; chmod ug+s file; chmod u+x file
-~# ls -l file
--rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
-~# chown root file; ls -l file
--rwxr-Sr-- 1 root root 0 Dec  6 04:49 file
-
-but NFS doesn't do that:
-
-~# touch file; chmod ug+s file; chmod u+x file
-~# ls -l file
--rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
-~# chown root file; ls -l file
--rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
-
-NFS does that only if the owner/group has been changed:
-
-~# touch file; chmod ug+s file; chmod u+x file
-~# ls -l file
--rwsr-Sr-- 1 root root 0 Dec  6 05:02 file
-~# chown bin file; ls -l file
--rwxr-Sr-- 1 bin root 0 Dec  6 05:02 file
-
-See: http://pubs.opengroup.org/onlinepubs/9699919799/functions/chown.html
-
- "If the specified file is a regular file, one or more of
- the S_IXUSR, S_IXGRP, or S_IXOTH bits of the file mode are set,
- and the process has appropriate privileges, it is
- implementation-defined whether the set-user-ID and set-group-ID
- bits are altered."
-
-So both variants are acceptable by POSIX.
-
-This patch makes NFS to behave like local file systems.
-
-Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/nfsd/vfs.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ fs/namei.c                |   24 +++---------------------
+ fs/posix_acl.c            |   26 ++++++++++++++++++++++++++
+ include/linux/posix_acl.h |    2 ++
+ 3 files changed, 31 insertions(+), 21 deletions(-)
 
-diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-index 72cb28e..8226991 100644
---- a/fs/nfsd/vfs.c
-+++ b/fs/nfsd/vfs.c
-@@ -348,8 +348,7 @@ nfsd_sanitize_attrs(struct inode *inode, struct iattr *iap)
+diff --git a/fs/namei.c b/fs/namei.c
+index c53d3a9..8acd1e8 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -235,27 +235,9 @@ static int check_acl(struct inode *inode, int mask)
+ 	        return posix_acl_permission(inode, acl, mask & ~MAY_NOT_BLOCK);
+ 	}
  
- 	/* Revoke setuid/setgid on chown */
- 	if (!S_ISDIR(inode->i_mode) &&
--	    (((iap->ia_valid & ATTR_UID) && !uid_eq(iap->ia_uid, inode->i_uid)) ||
--	     ((iap->ia_valid & ATTR_GID) && !gid_eq(iap->ia_gid, inode->i_gid)))) {
-+	    ((iap->ia_valid & ATTR_UID) || (iap->ia_valid & ATTR_GID))) {
- 		iap->ia_valid |= ATTR_KILL_PRIV;
- 		if (iap->ia_valid & ATTR_MODE) {
- 			/* we're setting mode too, just clear the s*id bits */
+-	acl = get_cached_acl(inode, ACL_TYPE_ACCESS);
+-
+-	/*
+-	 * A filesystem can force a ACL callback by just never filling the
+-	 * ACL cache. But normally you'd fill the cache either at inode
+-	 * instantiation time, or on the first ->get_acl call.
+-	 *
+-	 * If the filesystem doesn't have a get_acl() function at all, we'll
+-	 * just create the negative cache entry.
+-	 */
+-	if (acl == ACL_NOT_CACHED) {
+-	        if (inode->i_op->get_acl) {
+-			acl = inode->i_op->get_acl(inode, ACL_TYPE_ACCESS);
+-			if (IS_ERR(acl))
+-				return PTR_ERR(acl);
+-		} else {
+-		        set_cached_acl(inode, ACL_TYPE_ACCESS, NULL);
+-		        return -EAGAIN;
+-		}
+-	}
+-
++	acl = get_acl(inode, ACL_TYPE_ACCESS);
++	if (IS_ERR(acl))
++		return PTR_ERR(acl);
+ 	if (acl) {
+ 	        int error = posix_acl_permission(inode, acl, mask);
+ 	        posix_acl_release(acl);
+diff --git a/fs/posix_acl.c b/fs/posix_acl.c
+index 8bd2135..f2c48f8 100644
+--- a/fs/posix_acl.c
++++ b/fs/posix_acl.c
+@@ -418,3 +418,29 @@ posix_acl_chmod(struct posix_acl **acl, gfp_t gfp, umode_t mode)
+ 	return err;
+ }
+ EXPORT_SYMBOL(posix_acl_chmod);
++
++struct posix_acl *get_acl(struct inode *inode, int type)
++{
++	struct posix_acl *acl;
++
++	acl = get_cached_acl(inode, type);
++	if (acl != ACL_NOT_CACHED)
++		return acl;
++
++	if (!IS_POSIXACL(inode))
++		return NULL;
++
++	/*
++	 * A filesystem can force a ACL callback by just never filling the
++	 * ACL cache. But normally you'd fill the cache either at inode
++	 * instantiation time, or on the first ->get_acl call.
++	 *
++	 * If the filesystem doesn't have a get_acl() function at all, we'll
++	 * just create the negative cache entry.
++	 */
++	if (!inode->i_op->get_acl) {
++		set_cached_acl(inode, type, NULL);
++		return ERR_PTR(-EAGAIN);
++	}
++	return inode->i_op->get_acl(inode, type);
++}
+diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
+index 7931efe..a8d9918 100644
+--- a/include/linux/posix_acl.h
++++ b/include/linux/posix_acl.h
+@@ -175,4 +175,6 @@ static inline void cache_no_acl(struct inode *inode)
+ #endif
+ }
+ 
++struct posix_acl *get_acl(struct inode *inode, int type);
++
+ #endif  /* __LINUX_POSIX_ACL_H */
 -- 
-1.7.1
+1.7.10.4
+
 
 _______________________________________________
 xfs mailing list
