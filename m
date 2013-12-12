@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB94129DF8
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 14:46:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 798378F8065
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:46:29 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2333D7F3F
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 14:53:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F2BF4304039
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:53:19 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	hUBkzjjMXnHcJvPP for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 12:46:27 -0800 (PST)
-Date: Fri, 13 Dec 2013 07:46:23 +1100
+	j4K44CCJcFTUCILp for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 12:53:15 -0800 (PST)
+Date: Fri, 13 Dec 2013 07:53:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] repair: per AG locks contend for cachelines
-Message-ID: <20131212204623.GY10988@dastard>
+Subject: Re: [PATCH 3/5] repair: phase 6 is trivially parallelisable
+Message-ID: <20131212205311.GZ10988@dastard>
 References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
-	<1386832945-19763-3-git-send-email-david@fromorbit.com>
-	<52AA0773.1000506@redhat.com>
+	<1386832945-19763-4-git-send-email-david@fromorbit.com>
+	<20131212184346.GA23479@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52AA0773.1000506@redhat.com>
+In-Reply-To: <20131212184346.GA23479@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +31,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Dec 12, 2013 at 01:58:59PM -0500, Brian Foster wrote:
-> On 12/12/2013 02:22 AM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The per-ag locks used to protect per-ag block lists are located in a tightly
-> > packed array. That means that they share cachelines, so separate them out inot
-> > separate 64 byte regions in the array.
-> > 
-> > pahole confirms the padding is correctly applied:
-> > 
-> > struct aglock {
-> >         pthread_mutex_t            lock;                 /*     0    40 */
-> > 
-> >         /* size: 64, cachelines: 1, members: 1 */
-> >         /* padding: 24 */
-> > };
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
+On Thu, Dec 12, 2013 at 10:43:46AM -0800, Christoph Hellwig wrote:
+> >  static void
+> >  add_dotdot_update(
+> > @@ -64,12 +65,14 @@ add_dotdot_update(
+> >  		do_error(_("malloc failed add_dotdot_update (%zu bytes)\n"),
+> >  			sizeof(dotdot_update_t));
+> >  
+> > +	pthread_mutex_lock(&dotdot_lock);
+> >  	dir->next = dotdot_update_list;
+> >  	dir->irec = irec;
+> >  	dir->agno = agno;
+> >  	dir->ino_offset = ino_offset;
+> >  
+> >  	dotdot_update_list = dir;
+> > +	pthread_mutex_unlock(&dotdot_lock);
 > 
-> Out of curiosity, any data on this one?
+> Would be nice to make this use a list_head if you touch it anyway.
+> (As a separate patch)
+> 
+> >  static void
+> >  traverse_ags(
+> > -	xfs_mount_t 		*mp)
+> > +	xfs_mount_t		*mp)
+> 
+> Not quite sure what actually changed here, but if you touch it anyway
+> you might as well use the struct version..
 
-There's a small improvement but it's within the margins of error. At
-higher levels of concurrency it will make a bigger difference, but
-right now we can't get to a thread per AG (where the contention
-would really show) because of other scalability limitations
+Whitespace after xfs_mount_t, judging by the highlighting I see in
+the editor right now.
 
-e.g. mmap_sem contention becomes a limiting factor at 20-25 threads
-because of page faults occurring on hash cache lookups (read lock)
-occurring in parallel with memory allocation (libc mprotect calls
-take a write lock). So more scalability will come from a CPU cache
-friendlier cache index - I'm tempted to drop in per-AG rb trees and
-see where that leads (now where would I have got that idea?)....
+> > +	if (!ag_stride) {
+> > +		work_queue_t	queue;
+> > +
+> > +		queue.mp = mp;
+> > +		pf_args[0] = start_inode_prefetch(0, 1, NULL);
+> > +		for (i = 0; i < glob_agcount; i++) {
+> > +			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+> > +					pf_args[i & 1]);
+> > +			traverse_function(&queue, i, pf_args[i & 1]);
+> > +		}
+> > +		return;
+> >  	}
+> > +
+> > +	/*
+> > +	 * create one worker thread for each segment of the volume
+> > +	 */
+> > +	queues = malloc(thread_count * sizeof(work_queue_t));
+> > +	for (i = 0, agno = 0; i < thread_count; i++) {
+> > +		create_work_queue(&queues[i], mp, 1);
+> > +		pf_args[0] = NULL;
+> > +		for (j = 0; j < ag_stride && agno < glob_agcount; j++, agno++) {
+> > +			pf_args[0] = start_inode_prefetch(agno, 1, pf_args[0]);
+> > +			queue_work(&queues[i], traverse_function, agno,
+> > +				   pf_args[0]);
+> > +		}
+> > +	}
+> > +
+> > +	/*
+> > +	 * wait for workers to complete
+> > +	 */
+> > +	for (i = 0; i < thread_count; i++)
+> > +		destroy_work_queue(&queues[i]);
+> > +	free(queues);
+> 
+> 
+> This is the third copy of this code block, might make sense to
+> consolidate it.
+
+Agreed, just haven't got to it.
+
+> Btw, does anyone remember why we have the libxfs_bcache_overflowed()
+> special case in phase4, but not anywhere else?
+
+I recall something about memory consumption, but I doubt that code
+can even trigger given that if we get to overflow conditions we
+immediately double the cache size and so libxfs_bcache_overflowed()
+will never see an overflow condition....
 
 Cheers,
 
