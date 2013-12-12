@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 86AB27F54
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 05:45:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 40A40304066
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 03:45:28 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 93BBIRI6OHduXzXA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 03:45:23 -0800 (PST)
-Message-ID: <52A9A1AD.5090103@oracle.com>
-Date: Thu, 12 Dec 2013 15:44:45 +0400
-From: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] nfsd: revoking of suid/sgid bits after chown() in a
-	consistent way
-References: <20131206204747.GB12613@fieldses.org>
-	<1386756996-28083-1-git-send-email-stanislav.kholmanskikh@oracle.com>
-	<52A845C6.2080109@oracle.com> <20131212033859.GA5978@fieldses.org>
-In-Reply-To: <20131212033859.GA5978@fieldses.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D749A7F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 09:26:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5985BAC004
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:26:05 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id hxCtIh3LzgDy7eNg (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 07:26:04 -0800 (PST)
+From: David Sterba <dsterba@suse.cz>
+Subject: [PATCH 0/4 v3] fiemap: introduce EXTENT_DATA_COMPRESSED flag
+Date: Thu, 12 Dec 2013 16:25:57 +0100
+Message-Id: <cover.1386778302.git.dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,135 +21,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: vasily.isaenko@oracle.com, hch@infradead.org, linux-nfs@vger.kernel.org, sprabhu@redhat.com, xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: adilger@dilger.ca, linux-nilfs@vger.kernel.org, mfasheh@suse.com, David Sterba <dsterba@suse.cz>, xfs@oss.sgi.com, hch@infradead.org, linux-btrfs@vger.kernel.org, viro@zeniv.linux.org.uk, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
+The original FIEMAP patch did not define this bit, btrfs will make use of
+it.  The defined constant maintains the same value as originally proposed.
 
+Currently, the 'filefrag' utility has no way to recognize and denote a
+compressed extent. As implemented in btrfs right now, the compression step
+splits a big extent into smaller chunks and this is reported as a heavily
+fragmented file. Adding the flag to filefrag will at least give some
+explanation why, this has been confusing users for some time already.
 
-On 12/12/2013 07:38 AM, J. Bruce Fields wrote:
-> On Wed, Dec 11, 2013 at 03:00:22PM +0400, Stanislav Kholmanskikh wrote:
->>
->>
->> On 12/11/2013 02:16 PM, Stanislav Kholmanskikh wrote:
->> [cut off]
->>>
->>> This patch makes NFS to behave like local file systems.
->>>
->> [cut off]
->>
->> This patch allows to run generic/193 without any issues with NFSv3.
->>
->> With NFSv4 generic/193 fails (but with the other issues, which
->> existed even before the patch).
->>
->> generic/193 expects that suid/sgid bits are cleared after the file
->> truncation:
->>
->> touch file
->> chown fsgqa:fsgqa file
->> chmod u+s file
->> echo 'xyz' > file
->> ls -l file
->> su fsgqa -c 'echo > file'
->> ls -l file
->>
->> With ext4 (for example), we have expectable results:
->> -rwSr--r-- 1 fsgqa fsgqa 4 Dec 11 05:21 file
->> -rw-r--r-- 1 fsgqa fsgqa 1 Dec 11 05:22 file
->>
->> With NFSv3 as well:
->> -rwSr--r-- 1 fsgqa fsgqa 4 Dec 11 05:24 file
->> -rw-r--r-- 1 fsgqa fsgqa 1 Dec 11 05:25 file
->>
->> But with NFSv4 the bits are not cleared:
->> -rwSr--r-- 1 fsgqa fsgqa 1 Dec 11 05:19 file
->> -rwSr--r-- 1 fsgqa fsgqa 1 Dec 11 05:21 file
->>
->> 'echo > file' issues:
->>
->> open("file", O_WRONLY|O_CREAT|O_TRUNC, 0666)
->>
->> Can it be because of design differences between NFSv3 and NFSv4?
->
-> In the v3 case I'd expect the open O_TRUNC to result in a SETATTR rpc,
-> in the v4 case an OPEN rpc.  Both result in a call to nfsd_setattr,
-> though I only see nfsd_setattr turning off the SUID/SGID bits in the
-> chown case.  Are you sure it isn't the subsequent write that clears
-> those bits?
+V3:
+Based on feedback from Andreas, implement #1 from V2, current users of
+fiemap_fill_next_extent (fs/, ext4, gfs2, ocfs2, nilfs2, xfs) updated
+accordingly, no functional change.
 
-Actually, in the above test script I occasionally swapped positions of 
-"echo 'xyz' > file" and "chmod u+s file". Of course, chmod should be 
-after the writing. Sorry.
+V2:
+Based on feedback from Andreas, the fiemap_extent is now able to hold the
+physical extent length, to be filled by the filesystem callback.
 
-But here we are:
+The filesystems do not have access to the structure that is passed back to
+userspace and are supposed to call fiemap_fill_next_extent, there's no direct
+way to fill fe_phys_length. There are two ways to pass it:
 
-rm -f file; touch file
-chown fsgqa:fsgqa file
-echo 'xyz' > file
-chmod u+s file
-ls -l file
-su fsgqa -c 'echo -n > file'  # open(O_TRUNC), close()
-ls -l file
-su fsgqa -c 'echo > file'     # open(O_TRUNC), write("\n"), close()
-ls -l file
+1) extend fiemap_fill_next_extent to take phys_length and update all
+   users (ext4, gfs2, ocfs2, nilfs2, xfs)
 
-With NFSv3 suid is cleared after write:
--rwSr--r-- 1 fsgqa fsgqa 4 Dec 12 05:24 file
--rwSr--r-- 1 fsgqa fsgqa 0 Dec 12 05:24 file
--rw-r--r-- 1 fsgqa fsgqa 1 Dec 12 05:25 file
+2) add new function that takes arguments for all the fiemap_extent items,
+   newly added phys_length compared to fiemap_fill_next_extent
 
-With NFSv4 suid is not cleared after write("\n"):
--rwSr--r-- 1 fsgqa fsgqa 4 Dec 12 05:26 file
--rwSr--r-- 1 fsgqa fsgqa 0 Dec 12 05:26 file
--rwSr--r-- 1 fsgqa fsgqa 1 Dec 12 05:27 file
+David Sterba (4):
+  fiemap: fix comment at EXTENT_DATA_ENCRYPTED
+  fiemap: add EXTENT_DATA_COMPRESSED flag
+  btrfs: set FIEMAP_EXTENT_DATA_COMPRESSED for compressed extents
+  Documentation/fiemap: Document the DATA_COMPRESSED flag
 
-but if we issue "su fsgqa -c 'echo -n b > file'", we will clear it:
--rw-r--r-- 1 fsgqa fsgqa 1 Dec 12 05:28 file
+ Documentation/filesystems/fiemap.txt |   17 +++++++++++++----
+ fs/btrfs/extent_io.c                 |    9 +++++++--
+ fs/ext4/extents.c                    |    3 ++-
+ fs/ext4/inline.c                     |    2 +-
+ fs/gfs2/inode.c                      |    2 +-
+ fs/ioctl.c                           |   18 ++++++++++++------
+ fs/nilfs2/inode.c                    |    8 +++++---
+ fs/ocfs2/extent_map.c                |    4 ++--
+ fs/xfs/xfs_iops.c                    |    2 +-
+ include/linux/fs.h                   |    2 +-
+ include/uapi/linux/fiemap.h          |    8 ++++++--
+ 11 files changed, 51 insertions(+), 24 deletions(-)
 
-So if "file" is a file on NFSv4:
--rwSr--r-- 1 fsgqa fsgqa 4 Dec 12 05:26 file
-and we do:
-
-fd = open(file, O_WRONLY);
-
-then write(fd, "\n", 1) will not clear suid bit, but write(fd, "b", 1) 
-will do.
-
-With ext4 suid is cleared after open(O_TRUNC):
--rwSr--r-- 1 fsgqa fsgqa 4 Dec 12 05:29 file
--rw-r--r-- 1 fsgqa fsgqa 0 Dec 12 05:29 file
--rw-r--r-- 1 fsgqa fsgqa 1 Dec 12 05:30 file
-
-Execution of (via 'su fsgqa -c ...'):
-fd = open("file", O_WRONLY);
-close(fd);
-if "file" is on ext4 file system and has suid bit on will not clear suid 
-bit.
-
-Execution of (via 'su fsgqa -c ...'):
-fd = open("file", O_WRONLY);
-write(fd, "a", 1);
-close(fd);
-if "file" is on ext4 file system and has suid bit on will clear suid bit.
-
-To conclude:
-1. With NFS suid is not cleared after open(O_TRUNC)
-This may be solved by addition of ATTR_SIZE handling in nfsd_setattr 
-(i.e nfsd_sanitize_attrs). Right?
-
-2. NFSv4 treats "\n" on write() specially.
-No ideas by the moment.
-
->
-> But looks to me like nfsd_vfs_write (used in both v3 & v4 cases) clears
-> suid & guid, so I still don't see it.
->
-> --b.
->
+-- 
+1.7.9
 
 _______________________________________________
 xfs mailing list
