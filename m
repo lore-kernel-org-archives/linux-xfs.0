@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 829297F4E
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:31:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1B333AC008
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:31:05 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 055747F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:34:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D78F0304067
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:44 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	5ToKXNVYEmkruA3I for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 21:31:02 -0800 (PST)
-Date: Thu, 12 Dec 2013 16:30:47 +1100
+	HBVZdLbv04M3KjGX for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 21:34:43 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bo-BP
+	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003cZ-AF
+	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: FAST paper on ffsck
-Message-ID: <20131212053047.GI31386@dastard>
-References: <20131209180149.GA6096@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131209180149.GA6096@thunk.org>
+Subject: [PATCH 4/6] xfs: swalloc doesn't align allocations properly
+Date: Thu, 12 Dec 2013 16:34:36 +1100
+Message-Id: <1386826478-13846-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1386826478-13846-1-git-send-email-david@fromorbit.com>
+References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +30,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Dec 09, 2013 at 01:01:49PM -0500, Theodore Ts'o wrote:
-> Andreas brought up on today's conference call Kirk McKusick's recent
-> changes[1] to try to improve fsck times for FFS, in response to the
-> recent FAST paper covering fsck speed ups for ext3, "ffsck: The Fast
-> Filesystem Checker"[2]
-> 
-> [1] http://www.mckusick.com/publications/faster_fsck.pdf
-> [2] https://www.usenix.org/system/files/conference/fast13/fast13-final52_0.pdf
+From: Dave Chinner <dchinner@redhat.com>
 
-Interesting - it's all about trying to lay out data to get
-sequential disk access patterns during scanning (i.e. minimise disk
-seeks) to reduce fsck runtime. Fine in principle, but I think that
-it's a dead end you don't want to go down.
+When swalloc is specified as a mount option, allocations are
+supposed to be aligned to the stripe width rather than the stripe
+unit of the underlying filesystem. However, it does not do this.
 
-Why? Because it's the exact opposite of what you need for SSD based
-filesystems.  What fsck really needs is to be able to saturate the
-IOPS capability of the underlying device rather than optimising for
-bandwidth, and that means driving deep IO queue depths.
+What the implementation does is round up the allocation size to a
+stripe width, hence ensuring that all allocations span a full stripe
+width. It does not, however, ensure that that allocation is aligned
+to a stripe width, and hence the allocations can span multiple
+underlying stripes and so still see RMW cycles for things like
+direct IO on MD RAID.
 
-e.g I've dropped xfs_repair times on a 100TB test filesystem with 50
-million inodes from 25 minutes to 5 minutes simply by adding gobs of
-additional concurrency and ignoring sequential IO optimisations.
-It's driving bandwidth rates of 200-250MB/s simply due to the IOPS
-rate it is acheiving, not because I'm optimising IO patterns for
-sequential IO.
+So, if the swalloc mount option is set, change the allocation
+alignment in xfs_bmap_btalloc() to use the stripe width rather than
+the stripe unit.
 
-In fact, it dispatches so much IO now that the limitation is not the
-60,000 IOPS that it is pulling from the underlying SSDs, but
-mmap_sem contention caused by 30-odd threads doing concurrent memory
-allocation to cache and store all the information that is being read
-from disk...
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 8401f11..3b2c14b 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -3648,10 +3648,19 @@ xfs_bmap_btalloc(
+ 	int		isaligned;
+ 	int		tryagain;
+ 	int		error;
++	int		stripe_align;
+ 
+ 	ASSERT(ap->length);
+ 
+ 	mp = ap->ip->i_mount;
++
++	/* stripe alignment for allocation is determined by mount parameters */
++	stripe_align = 0;
++	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
++		stripe_align = mp->m_swidth;
++	else if (mp->m_dalign)
++		stripe_align = mp->m_dalign;
++
+ 	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
+ 	if (unlikely(align)) {
+ 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+@@ -3660,6 +3669,8 @@ xfs_bmap_btalloc(
+ 		ASSERT(!error);
+ 		ASSERT(ap->length);
+ 	}
++
++
+ 	nullfb = *ap->firstblock == NULLFSBLOCK;
+ 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, *ap->firstblock);
+ 	if (nullfb) {
+@@ -3735,7 +3746,7 @@ xfs_bmap_btalloc(
+ 	 */
+ 	if (!ap->flist->xbf_low && ap->aeof) {
+ 		if (!ap->offset) {
+-			args.alignment = mp->m_dalign;
++			args.alignment = stripe_align;
+ 			atype = args.type;
+ 			isaligned = 1;
+ 			/*
+@@ -3760,13 +3771,13 @@ xfs_bmap_btalloc(
+ 			 * of minlen+alignment+slop doesn't go up
+ 			 * between the calls.
+ 			 */
+-			if (blen > mp->m_dalign && blen <= args.maxlen)
+-				nextminlen = blen - mp->m_dalign;
++			if (blen > stripe_align && blen <= args.maxlen)
++				nextminlen = blen - stripe_align;
+ 			else
+ 				nextminlen = args.minlen;
+-			if (nextminlen + mp->m_dalign > args.minlen + 1)
++			if (nextminlen + stripe_align > args.minlen + 1)
+ 				args.minalignslop =
+-					nextminlen + mp->m_dalign -
++					nextminlen + stripe_align -
+ 					args.minlen - 1;
+ 			else
+ 				args.minalignslop = 0;
+@@ -3788,7 +3799,7 @@ xfs_bmap_btalloc(
+ 		 */
+ 		args.type = atype;
+ 		args.fsbno = ap->blkno;
+-		args.alignment = mp->m_dalign;
++		args.alignment = stripe_align;
+ 		args.minlen = nextminlen;
+ 		args.minalignslop = 0;
+ 		isaligned = 1;
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
