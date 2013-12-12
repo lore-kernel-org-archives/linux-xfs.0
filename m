@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A58B67F4E
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 18:20:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 34A7DAC00B
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 16:20:00 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id eYy64dxzumhlNc9K
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Dec 2013 16:19:54 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: XFS: Internal error XFS_WANT_CORRUPTED_RETURN
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <20131211185746.GA11861@redhat.com>
-Date: Wed, 11 Dec 2013 17:19:52 -0700
-Message-Id: <2A0A637F-7ED6-4743-8791-E57E22306139@colorremedies.com>
-References: <20131211172725.GA4606@redhat.com>
-	<68DD7157-6ACE-4548-A466-C1EBD31B6DEB@colorremedies.com>
-	<20131211185746.GA11861@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8F6C37F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 18:53:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 79D1730406A
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 16:53:50 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	pUbCV1c62KmzH46N for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 16:53:48 -0800 (PST)
+Date: Thu, 12 Dec 2013 11:53:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/10] xfstests: do not unmount tmpfs during remount.
+Message-ID: <20131212005343.GV10988@dastard>
+References: <1386706321-15795-1-git-send-email-jayr@google.com>
+	<1386706321-15795-6-git-send-email-jayr@google.com>
+	<20131211074615.GE19248@infradead.org>
+	<20131211224012.GJ10988@dastard> <20131212001655.GA31768@thunk.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131212001655.GA31768@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +32,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, Junho Ryu <jayr@google.com>, hughd@google.com, branto@redhat.com, xfs@oss.sgi.com
 
-
-On Dec 11, 2013, at 11:57 AM, Dave Jones <davej@redhat.com> wrote:
-
-> On Wed, Dec 11, 2013 at 11:52:51AM -0700, Chris Murphy wrote:
->> 
->> On Dec 11, 2013, at 10:27 AM, Dave Jones <davej@redhat.com> wrote:
->>> 
->>> Thoughts ? Could sda be dying ? (It is a fairly old crappy ssd)
->> 
->> It may reveal nothing useful, but please report the results from 'smartctl -x /dev/sda' and if not found install smartmontools package.
+On Wed, Dec 11, 2013 at 07:16:55PM -0500, Theodore Ts'o wrote:
+> On Thu, Dec 12, 2013 at 09:40:12AM +1100, Dave Chinner wrote:
+> > > 
+> > > All these tests don't make sense if you never unmount the filesystem.
+> > > Istead they should exit with _notrun for tmpfs.
+> > 
+> > IOWs, adding tmpfs changes the definition of a "generic" test.
+> > 
+> > i.e. instead of:
+> > 
+> > _supported_fs generic
+> > 
+> > these tests are now:
+> > 
+> > _supported_fs xfs ext2 ext3 ext4 ext4dev btrfs gfs2 nfs udf reiserfs
+> > 
+> > and by that definition should be in the tests/shared directory....
 > 
+> At a higher level, I wonder how useful having the distinction between
+> "generic" and "shared" really is.  Suppose in the future we add some
+> tests for networked file systems or cluster file systems --- do we end
+> up migrating even more tests from "generic" to "shared" when we find
+> tests that don't work for some new file system?
+
+That's not the problem I'm pointing out. The physical location ofthe
+test at this point is irrelevant.
+
+The fundamental problem is that "generic" is a wildcard that we use
+to match all filesystems, and so adding a new filesystem changes
+the definition and suddenly tests that were generic now no longer
+run on all filesystems.
+
+> And to the extent that we have things like 
 > 
-> I meant it when I said 'old' and 'crappy'.
-> It doesn't even support the interesting SMART commands.
+> _require_<feature>
+> 
+> which skips certain tests, it's not even true that all generic tests
+> are run for all file systems.
 
+_supported_fs is just a _requires_<foo> statement on steriods.
+"generic" simply documents tests that are expected to run on every
+single filesystem we can throw at it.
 
-Oh well, was worth a shot. The Available_Reservd_Space and Media_Wearout_Indicator could be useful, but I don't know how trustworthy they are when both say they're at 100 which is normally where these values start. Yet they have high, and without reference, meaningless, raw values. The Available_Reservd_Space value is currently 100 but its worst value was 48 which is sorta interesting that it dipped down at one point. That seems to imply it gave up some reserved sectors. I'd expect that once replaced that'd be it, and this value should only go down.
+The thing is, tmpfs is a very special snowflake - it's a volatile
+filesystem. xfstests was never designed to handle filesystems that
+destroy their contents on unmount, and so adding a filesystem that
+*doesn't support unmount/remount* breaks fundamental assumptions the
+test harness makes about how filesystems behave.
 
-I suspect we've only just begun to see the myriad ways in which SSDs could fail. I ran across this article earlier today:
-http://techreport.com/review/25681/the-ssd-endurance-experiment-testing-data-retention-at-300tb
+Hence adding tmpfs support means that a generic test can no longer
+unmount and mount filesystems. That's a major change in test
+architecture right there, and I'm not sure we start turning stuff
+upside down to support wacky quirks like volatile filesystems we
+can't unmount...
 
-What I thought was eye opening was a hashed file failing multiple times in a row with *different* hash values, being allowed to rest unpowered for five days and then passing. Eeek. Talk about a great setup for a lot of weird transient problems with that kind of reversal. What I can't tell is if there were read errors report to the SATA driver, or if (different) bad data from a particular page was sent to the driver.
+That's the bigger issue here - tmpfs fundamentally violates the
+assumption that xfstests is based on - that filesystems are
+non-volatile and persist across unmount and hence can be rigorously
+validated after an unmount...
 
-Chris Murphy
+The result of this is it changes cwthe definition of what a
+"generic" filesystem is, and then everything flows downhill from
+there.
+
+> Perhaps it would make more sense to move all of the generic test to
+> shared, and eliminating the distinction?  That way it also becomes
+> easier becase we don't need to remember whether a test is generic/NNN
+> vs shared/NNN.  :-)
+
+Again, that does not solve the problem of tmpfs changing the
+definition of a "generic" filesystem....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
