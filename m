@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 290177F52
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D74697F5D
 	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:34:47 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A01E2AC008
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:46 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C410B8F8035
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:47 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	9vzJXBvfqbdZMYyS for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 21:34:44 -0800 (PST)
+	lcFirjKvl8yji8dO for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 21:34:46 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bn-Ac
+	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bq-Cd
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003cU-9c
+	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003cj-Bf
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs: prevent spurious "space > BBTOB(tail_blocks)"
-	warnings
-Date: Thu, 12 Dec 2013 16:34:35 +1100
-Message-Id: <1386826478-13846-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/6] xfs: abort metadata writeback on permanent errors
+Date: Thu, 12 Dec 2013 16:34:38 +1100
+Message-Id: <1386826478-13846-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,146 +37,164 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When xlog_verify_grant_tail() cracks the grant head and the log
-tail, it does so without locking to synchronise the sampling of the
-variables. A delay between samples can give the wrong results,
-sometimes leading to false warnings being emitted.
+From: Dave Chinner <dchinner@redhat.com>
 
-To avoid spurious output in this situation, disable preemption to
-minimise the potential delays between them being sampled. This means
-that the log tail may still move, but it won't trigger warnings
-unless it moves beyond the current head cycle. If we see delays like
-that we probably should be throwing a warning, anyway.
+If we are doing aysnc writeback of metadata, we can get write errors
+but have nobody to report them to. At the moment, we simply attempt
+to reissue the write from io completion in the hope that it's a
+transient error.
 
-Further, the write head can validly pass the tail in certain
-circumstances. Document those circumstances in the commentsx, and
-remove the xlog_verify_grant_tail() call in xfs_log_reserve() that
-is guaranteed to emit false positive warnings due it being the
-source of temporary overcommit conditions.
+When it's not a transient error, the buffer is stuck forever in
+this loop, and we cannot break out of it. Eventually, unmount will
+hang because the AIL cannot be emptied and everything goes downhill
+from them.
+
+To solve this problem, only retry the write IO once before aborting
+it. We don't throw the buffer away because some transient errors can
+last minutes (e.g.  FC path failover) or even hours (thin
+provisioned devices that have run out of backing space) before they
+go away. Hence we really want to keep trying until we can't try any
+more.
+
+Because the buffer was not cleaned, however, it does not get removed
+from the AIL and hence the next pass across the AIL will start IO on
+it again. As such, we still get the "retry forever" semantics that
+we currently have, but we allow other access to the buffer in the
+mean time. Meanwhile the filesystem can continue to modify the
+buffer and relog it, so the IO errors won't hang the log or the
+filesystem.
+
+Now when we are pushing the AIL, we can see all these "permanent IO
+error" buffers and we can issue a warning about failures before we
+retry the IO. We can also catch these buffers when unmounting an
+issue a corruption warning, too.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 94 +++++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 69 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_buf.c      | 10 ++++++++--
+ fs/xfs/xfs_buf.h      |  6 +++++-
+ fs/xfs/xfs_buf_item.c | 21 +++++++++++++++++++--
+ 3 files changed, 32 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 97b2705..f4ccc10 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -472,7 +472,6 @@ xfs_log_reserve(
- 	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
- 	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
- 	trace_xfs_log_reserve_exit(log, tic);
--	xlog_verify_grant_tail(log);
- 	return 0;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 27dc152..402e050 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1153,7 +1153,7 @@ xfs_bwrite(
+ 	ASSERT(xfs_buf_islocked(bp));
  
- out_error:
-@@ -3651,36 +3650,81 @@ xlog_verify_dest_ptr(
-  * the cycles are the same, we can't be overlapping.  Otherwise, make sure that
-  * the cycles differ by exactly one and check the byte count.
-  *
-- * This check is run unlocked, so can give false positives. Rather than assert
-- * on failures, use a warn-once flag and a panic tag to allow the admin to
-- * determine if they want to panic the machine when such an error occurs. For
-- * debug kernels this will have the same effect as using an assert but, unlinke
-- * an assert, it can be turned off at runtime.
-+ * We only do this check when regranting write space because xfs_log_reserve can
-+ * race with a regrant and a reserve space overcommit can result in a write
-+ * space overcommit from xfs_log_reserve() once log space becomes available
-+ * again. This is only a temporary situation, but it means that checking the
-+ * write grant head and log tail from xfs_log_reserve gives false positives.
-+ *
-+ * If we only call from xfs_log_regrant(), we are only called after overcommit
-+ * situations have been resolved by sleeping. If the head and tail overlap at
-+ * this point, then we have a problem.
-+ *
-+ * Because we always want to know about this issue if there is a filesystem hang
-+ * due to log space availability, use a warn-once flag and a panic tag to allow
-+ * the admin to determine if they want to panic the machine when such an error
-+ * occurs. For debug kernels this will have the same effect as using an assert
-+ * but, unlike an assert, it can be turned off at runtime.
+ 	bp->b_flags |= XBF_WRITE;
+-	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q);
++	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q | XBF_WRITE_FAIL);
+ 
+ 	xfs_bdstrat_cb(bp);
+ 
+@@ -1525,6 +1525,12 @@ xfs_wait_buftarg(
+ 			struct xfs_buf *bp;
+ 			bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+ 			list_del_init(&bp->b_lru);
++			if (bp->b_flags & XBF_WRITE_FAIL) {
++				xfs_alert(btp->bt_mount,
++"Corruption Alert: Buffer at block 0x%llx had permanent write failures!\n"
++"Please run xfs_repair to determine the extent of the problem.",
++					(long long)bp->b_bn);
++			}
+ 			xfs_buf_rele(bp);
+ 		}
+ 		if (loop++ != 0)
+@@ -1798,7 +1804,7 @@ __xfs_buf_delwri_submit(
+ 
+ 	blk_start_plug(&plug);
+ 	list_for_each_entry_safe(bp, n, io_list, b_list) {
+-		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC);
++		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC | XBF_WRITE_FAIL);
+ 		bp->b_flags |= XBF_WRITE;
+ 
+ 		if (!wait) {
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index e656833..614097e 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -45,6 +45,7 @@ typedef enum {
+ #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
+ #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
+ #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
++#define XBF_WRITE_FAIL	 (1 << 24)/* async writes have failed on this buffer */
+ 
+ /* I/O hints for the BIO layer */
+ #define XBF_SYNCIO	 (1 << 10)/* treat this buffer as synchronous I/O */
+@@ -70,6 +71,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_ASYNC,		"ASYNC" }, \
+ 	{ XBF_DONE,		"DONE" }, \
+ 	{ XBF_STALE,		"STALE" }, \
++	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+ 	{ XBF_SYNCIO,		"SYNCIO" }, \
+ 	{ XBF_FUA,		"FUA" }, \
+ 	{ XBF_FLUSH,		"FLUSH" }, \
+@@ -80,6 +82,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+ 	{ _XBF_COMPOUND,	"COMPOUND" }
+ 
++
+ /*
+  * Internal state flags.
   */
- STATIC void
- xlog_verify_grant_tail(
- 	struct xlog	*log)
- {
--	int		tail_cycle, tail_blocks;
--	int		cycle, space;
--
--	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &space);
--	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
--	if (tail_cycle != cycle) {
--		if (cycle - 1 != tail_cycle &&
--		    !(log->l_flags & XLOG_TAIL_WARN)) {
--			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
--				"%s: cycle - 1 != tail_cycle", __func__);
--			log->l_flags |= XLOG_TAIL_WARN;
--		}
-+	int		tail_cycle;
-+	int		tail_blocks;
-+	int		head_cycle;
-+	int		head_bytes;
+@@ -301,7 +304,8 @@ extern void xfs_buf_terminate(void);
  
--		if (space > BBTOB(tail_blocks) &&
--		    !(log->l_flags & XLOG_TAIL_WARN)) {
--			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
--				"%s: space > BBTOB(tail_blocks)", __func__);
--			log->l_flags |= XLOG_TAIL_WARN;
--		}
--	}
-+	/*
-+	 * If we've already detected an problem here, don't bother checking
-+	 * again.
-+	 */
-+	if (log->l_flags & XLOG_TAIL_WARN)
-+		return;
-+
-+	/*
-+	 * Sample the tail before head to avoid spurious warnings due to racing
-+	 * tail updates. We disable preemption and dump a memory barrier here to
-+	 * make sure we pick up the latest values with as little latency between
-+	 * the samples as possible.
-+	 */
-+	preempt_disable();
-+	smp_mb();
-+	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle,
-+			      &tail_blocks);
-+	xlog_crack_grant_head(&log->l_write_head.grant, &head_cycle,
-+			      &head_bytes);
-+	preempt_enable();
-+
-+	/*
-+	 * if the cycles are the same, the head and tail can't be
-+	 * overlapping, so everything is ok and we are done.
-+	 */
-+	if (tail_cycle == head_cycle)
-+		return;
-+
-+	/*
-+	 * if the tail is on the previous cycle to the head and the head
-+	 * is before the tail, then all is good.
-+	 */
-+	if (tail_cycle == head_cycle - 1 &&
-+	    BBTOB(tail_blocks) >= head_bytes)
-+		return;
-+
-+	/*
-+	 * OK, we're in trouble now - the head and tail are out of sync. Time to
-+	 * issue a warning about it
-+	 */
-+	xfs_alert(log->l_mp,
-+		  "%s: Write head overlaps the tail, caller %pF\n"
-+		  "  tail_cycle = %d, tail_bytes = %d\n"
-+		  "  GH   cycle = %d, GH   bytes = %d",
-+		  __func__, (void *)_RET_IP_,
-+		  tail_cycle, BBTOB(tail_blocks), head_cycle, head_bytes);
-+#ifdef DEBUG
-+	dump_stack();
-+#endif
-+	log->l_flags |= XLOG_TAIL_WARN;
+ #define XFS_BUF_ZEROFLAGS(bp) \
+ 	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC| \
+-			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
++			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH| \
++			    XBF_WRITE_FAIL))
+ 
+ void xfs_buf_stale(struct xfs_buf *bp);
+ #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index a64f67b..2227b9b 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -496,6 +496,14 @@ xfs_buf_item_unpin(
+ 	}
  }
  
- /* check if it will fit */
++/*
++ * Buffer IO error rate limiting. Limit it to no more than 10 messages per 30
++ * seconds so as to not spam logs too much on repeated detection of the same
++ * buffer being bad..
++ */
++
++DEFINE_RATELIMIT_STATE(xfs_buf_write_fail_rl_state, 30 * HZ, 10);
++
+ STATIC uint
+ xfs_buf_item_push(
+ 	struct xfs_log_item	*lip,
+@@ -524,6 +532,14 @@ xfs_buf_item_push(
+ 
+ 	trace_xfs_buf_item_push(bip);
+ 
++	/* has a previous flush failed due to IO errors? */
++	if ((bp->b_flags & XBF_WRITE_FAIL) &&
++	    ___ratelimit(&xfs_buf_write_fail_rl_state, "XFS:")) {
++		xfs_warn(bp->b_target->bt_mount,
++"Detected failing async write on buffer block 0x%llx. Retrying async write.\n",
++			 (long long)bp->b_bn);
++	}
++
+ 	if (!xfs_buf_delwri_queue(bp, buffer_list))
+ 		rval = XFS_ITEM_FLUSHING;
+ 	xfs_buf_unlock(bp);
+@@ -1096,8 +1112,9 @@ xfs_buf_iodone_callbacks(
+ 
+ 		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+ 
+-		if (!XFS_BUF_ISSTALE(bp)) {
+-			bp->b_flags |= XBF_WRITE | XBF_ASYNC | XBF_DONE;
++		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
++			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
++				       XBF_DONE | XBF_WRITE_FAIL;
+ 			xfs_buf_iorequest(bp);
+ 		} else {
+ 			xfs_buf_relse(bp);
 -- 
 1.8.4.rc3
 
