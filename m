@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E212C29E05
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:01:54 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F3B967F62
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:18:54 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6FA9BAC020
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:01:51 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DC9718F8065
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:18:54 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id dUxR4ldNfCLBjRG8 (version=TLSv1 cipher=AES256-SHA
+	ESMTP id 80wYPN7QtTBqM5vu (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 10:01:50 -0800 (PST)
-Date: Thu, 12 Dec 2013 10:01:44 -0800
+	Thu, 12 Dec 2013 10:18:53 -0800 (PST)
+Message-Id: <20131212181844.501136902@bombadil.infradead.org>
+Date: Thu, 12 Dec 2013 10:15:00 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/10] xfstests: fix generic/225 to check fiemap support
-Message-ID: <20131212180144.GB19422@infradead.org>
-References: <1386706321-15795-1-git-send-email-jayr@google.com>
-	<1386706321-15795-7-git-send-email-jayr@google.com>
-	<20131211074657.GF19248@infradead.org>
-	<20131211224229.GK10988@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131211224229.GK10988@dastard>
+Subject: [PATCH 1/5] splice: move balance_dirty_pages_ratelimited into
+	pipe_to_file
+References: <20131212181459.994196463@bombadil.infradead.org>
+Content-Disposition: inline;
+	filename=0001-splice-move-balance_dirty_pages_ratelimited-into-pip.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: tytso@mit.edu, Junho Ryu <jayr@google.com>, hughd@google.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, branto@redhat.com
+To: Al Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, Mark Fasheh <mfasheh@suse.com>, Joel Becker <jlbec@evilplan.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Dec 12, 2013 at 09:42:29AM +1100, Dave Chinner wrote:
-> I'd just rename if _require_fiemap, because we need both xfs_io and
-> kernel support for it, and we need xfs_io support to check for
-> kernel support....
+Try to balance the dirty pages for every written pages instead of once
+per system call, mirroring the regular write path.
 
-Fine with me.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/ocfs2/file.c |    2 --
+ fs/splice.c     |    5 ++++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+index 6fff128..a77ef6e 100644
+--- a/fs/ocfs2/file.c
++++ b/fs/ocfs2/file.c
+@@ -2494,8 +2494,6 @@ static ssize_t ocfs2_file_splice_write(struct pipe_inode_info *pipe,
+ 			ret = err;
+ 		else
+ 			*ppos += ret;
+-
+-		balance_dirty_pages_ratelimited(mapping);
+ 	}
+ 
+ 	return ret;
+diff --git a/fs/splice.c b/fs/splice.c
+index 46a08f7..fcb459d 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -759,6 +759,10 @@ int pipe_to_file(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
+ 	}
+ 	ret = pagecache_write_end(file, mapping, sd->pos, this_len, this_len,
+ 				page, fsdata);
++	if (ret)
++		goto out;
++
++	balance_dirty_pages_ratelimited(mapping);
+ out:
+ 	return ret;
+ }
+@@ -1034,7 +1038,6 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+ 			ret = err;
+ 		else
+ 			*ppos += ret;
+-		balance_dirty_pages_ratelimited(mapping);
+ 	}
+ 
+ 	return ret;
+-- 
+1.7.10.4
+
 
 _______________________________________________
 xfs mailing list
