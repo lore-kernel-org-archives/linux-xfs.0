@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DC8BE7F51
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 01:22:36 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 3C0437F53
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 01:22:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D85530406B
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 08A4430406B
 	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:22:36 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	rzqsZi2cfxlAY2qX for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 23:22:34 -0800 (PST)
+	cQmEXnmumSGx9Ejl for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 23:22:35 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vr0bM-0000oL-O7
+	(envelope-from <dave@fromorbit.com>) id 1Vr0bM-0000oG-M8
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 18:22:28 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vr0bM-0005C8-NE
+	(envelope-from <dave@disappointment.disaster>) id 1Vr0bM-0005Bt-KV
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 18:22:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] repair: limit auto-striding concurrency apprpriately
-Date: Thu, 12 Dec 2013 18:22:25 +1100
-Message-Id: <1386832945-19763-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/5] repair: per AG locks contend for cachelines
+Date: Thu, 12 Dec 2013 18:22:22 +1100
+Message-Id: <1386832945-19763-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1386832945-19763-1-git-send-email-david@fromorbit.com>
 References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,94 +39,222 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It's possible to have filesystems with hundreds of AGs on systems
-with little concurrency and resources. In this case, we can easily
-exhaust memory and fail to create threads and have all sorts of
-interesting problems.
+The per-ag locks used to protect per-ag block lists are located in a tightly
+packed array. That means that they share cachelines, so separate them out inot
+separate 64 byte regions in the array.
 
-xfs/250 can cause this to occur, with failures like:
+pahole confirms the padding is correctly applied:
 
-        - agno = 707
-        - agno = 692
-fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
+struct aglock {
+        pthread_mutex_t            lock;                 /*     0    40 */
 
-And this:
-
-        - agno = 484
-        - agno = 782
-failed to create prefetch thread: Resource temporarily unavailable
-
-Because it's trying to create more threads than a poor little 512MB
-single CPU ia32 box can handle.
-
-So, limit concurrency to a maximum of numcpus * 8 to prevent this.
+        /* size: 64, cachelines: 1, members: 1 */
+        /* padding: 24 */
+};
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxfs.h    |  1 +
- libxfs/init.h       |  1 -
- repair/xfs_repair.c | 18 +++++++++++++++++-
- 3 files changed, 18 insertions(+), 2 deletions(-)
+ repair/dino_chunks.c | 24 ++++++++++++------------
+ repair/dinode.c      |  6 +++---
+ repair/globals.h     |  5 ++++-
+ repair/incore.c      |  4 ++--
+ repair/scan.c        |  4 ++--
+ 5 files changed, 23 insertions(+), 20 deletions(-)
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 4bf331c..39e3d85 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
- extern int	libxfs_device_alignment (void);
- extern void	libxfs_report(FILE *);
- extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
-+extern int	platform_nproc(void);
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index d3c2236..02d32d8 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -141,7 +141,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 		if (check_aginode_block(mp, agno, agino) == 0)
+ 			return 0;
  
- /* check or write log footer: specify device, log size in blocks & uuid */
- typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
-diff --git a/libxfs/init.h b/libxfs/init.h
-index f0b8cb6..112febb 100644
---- a/libxfs/init.h
-+++ b/libxfs/init.h
-@@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
- extern char *platform_findblockpath (char *path);
- extern int platform_direct_blockdev (void);
- extern int platform_align_blockdev (void);
--extern int platform_nproc(void);
- extern unsigned long platform_physmem(void);	/* in kilobytes */
- extern int platform_has_uuid;
+-		pthread_mutex_lock(&ag_locks[agno]);
++		pthread_mutex_lock(&ag_locks[agno].lock);
  
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 7beffcb..0d006ae 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -627,13 +627,29 @@ main(int argc, char **argv)
- 	 * to target these for an increase in thread count. Hence a stride value
- 	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
- 	 * on such filesystems.
-+	 *
-+	 * Limit the maximum thread count based on the available CPU power that
-+	 * is available. If we use too many threads, we might run out of memory
-+	 * and CPU power before we run out of IO concurrency.
+ 		state = get_bmap(agno, agbno);
+ 		switch (state) {
+@@ -166,7 +166,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 		_("inode block %d/%d multiply claimed, (state %d)\n"),
+ 				agno, agbno, state);
+ 			set_bmap(agno, agbno, XR_E_MULT);
+-			pthread_mutex_unlock(&ag_locks[agno]);
++			pthread_mutex_unlock(&ag_locks[agno].lock);
+ 			return(0);
+ 		default:
+ 			do_warn(
+@@ -176,7 +176,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 			break;
+ 		}
+ 
+-		pthread_mutex_unlock(&ag_locks[agno]);
++		pthread_mutex_unlock(&ag_locks[agno].lock);
+ 
+ 		start_agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
+ 		*start_ino = XFS_AGINO_TO_INO(mp, agno, start_agino);
+@@ -424,7 +424,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	 * user data -- we're probably here as a result of a directory
+ 	 * entry or an iunlinked pointer
  	 */
- 	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
- 		ag_stride = 15;
+-	pthread_mutex_lock(&ag_locks[agno]);
++	pthread_mutex_lock(&ag_locks[agno].lock);
+ 	for (cur_agbno = chunk_start_agbno;
+ 	     cur_agbno < chunk_stop_agbno;
+ 	     cur_agbno += blen)  {
+@@ -438,7 +438,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	_("inode block %d/%d multiply claimed, (state %d)\n"),
+ 				agno, cur_agbno, state);
+ 			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
+-			pthread_mutex_unlock(&ag_locks[agno]);
++			pthread_mutex_unlock(&ag_locks[agno].lock);
+ 			return 0;
+ 		case XR_E_INO:
+ 			do_error(
+@@ -449,7 +449,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 			break;
+ 		}
+ 	}
+-	pthread_mutex_unlock(&ag_locks[agno]);
++	pthread_mutex_unlock(&ag_locks[agno].lock);
  
- 	if (ag_stride) {
-+		int max_threads = platform_nproc() * 8;
-+
- 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
--		thread_init();
-+		while (thread_count > max_threads) {
-+			ag_stride *= 2;
-+			thread_count = (glob_agcount + ag_stride - 1) /
-+								ag_stride;
-+		}
-+		if (thread_count > 0)
-+			thread_init();
-+		else {
-+			thread_count = 1;
-+			ag_stride = 0;
-+		}
+ 	/*
+ 	 * ok, chunk is good.  put the record into the tree if required,
+@@ -472,7 +472,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 
+ 	set_inode_used(irec_p, agino - start_agino);
+ 
+-	pthread_mutex_lock(&ag_locks[agno]);
++	pthread_mutex_lock(&ag_locks[agno].lock);
+ 
+ 	for (cur_agbno = chunk_start_agbno;
+ 	     cur_agbno < chunk_stop_agbno;
+@@ -505,7 +505,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 			break;
+ 		}
+ 	}
+-	pthread_mutex_unlock(&ag_locks[agno]);
++	pthread_mutex_unlock(&ag_locks[agno].lock);
+ 
+ 	return(ino_cnt);
+ }
+@@ -736,7 +736,7 @@ process_inode_chunk(
+ 	/*
+ 	 * mark block as an inode block in the incore bitmap
+ 	 */
+-	pthread_mutex_lock(&ag_locks[agno]);
++	pthread_mutex_lock(&ag_locks[agno].lock);
+ 	state = get_bmap(agno, agbno);
+ 	switch (state) {
+ 	case XR_E_INO:	/* already marked */
+@@ -755,7 +755,7 @@ process_inode_chunk(
+ 			XFS_AGB_TO_FSB(mp, agno, agbno), state);
+ 		break;
+ 	}
+-	pthread_mutex_unlock(&ag_locks[agno]);
++	pthread_mutex_unlock(&ag_locks[agno].lock);
+ 
+ 	for (;;) {
+ 		/*
+@@ -914,7 +914,7 @@ process_inode_chunk(
+ 			ibuf_offset = 0;
+ 			agbno++;
+ 
+-			pthread_mutex_lock(&ag_locks[agno]);
++			pthread_mutex_lock(&ag_locks[agno].lock);
+ 			state = get_bmap(agno, agbno);
+ 			switch (state) {
+ 			case XR_E_INO:	/* already marked */
+@@ -935,7 +935,7 @@ process_inode_chunk(
+ 					XFS_AGB_TO_FSB(mp, agno, agbno), state);
+ 				break;
+ 			}
+-			pthread_mutex_unlock(&ag_locks[agno]);
++			pthread_mutex_unlock(&ag_locks[agno].lock);
+ 
+ 		} else if (irec_offset == XFS_INODES_PER_CHUNK)  {
+ 			/*
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 8f14a9e..77bbe40 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -700,8 +700,8 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
+ 		ebno = agbno + irec.br_blockcount;
+ 		if (agno != locked_agno) {
+ 			if (locked_agno != -1)
+-				pthread_mutex_unlock(&ag_locks[locked_agno]);
+-			pthread_mutex_lock(&ag_locks[agno]);
++				pthread_mutex_unlock(&ag_locks[locked_agno].lock);
++			pthread_mutex_lock(&ag_locks[agno].lock);
+ 			locked_agno = agno;
+ 		}
+ 
+@@ -770,7 +770,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
+ 	error = 0;
+ done:
+ 	if (locked_agno != -1)
+-		pthread_mutex_unlock(&ag_locks[locked_agno]);
++		pthread_mutex_unlock(&ag_locks[locked_agno].lock);
+ 
+ 	if (i != *numrecs) {
+ 		ASSERT(i < *numrecs);
+diff --git a/repair/globals.h b/repair/globals.h
+index aef8b79..cbb2ce7 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -186,7 +186,10 @@ EXTERN xfs_extlen_t	sb_inoalignmt;
+ EXTERN __uint32_t	sb_unit;
+ EXTERN __uint32_t	sb_width;
+ 
+-EXTERN pthread_mutex_t	*ag_locks;
++struct aglock {
++	pthread_mutex_t	lock __attribute__((__aligned__(64)));
++};
++EXTERN struct aglock	*ag_locks;
+ 
+ EXTERN int 		report_interval;
+ EXTERN __uint64_t 	*prog_rpt_done;
+diff --git a/repair/incore.c b/repair/incore.c
+index 3590464..a8d497e 100644
+--- a/repair/incore.c
++++ b/repair/incore.c
+@@ -294,13 +294,13 @@ init_bmaps(xfs_mount_t *mp)
+ 	if (!ag_bmap)
+ 		do_error(_("couldn't allocate block map btree roots\n"));
+ 
+-	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(pthread_mutex_t));
++	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(struct aglock));
+ 	if (!ag_locks)
+ 		do_error(_("couldn't allocate block map locks\n"));
+ 
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+ 		btree_init(&ag_bmap[i]);
+-		pthread_mutex_init(&ag_locks[i], NULL);
++		pthread_mutex_init(&ag_locks[i].lock, NULL);
  	}
  
- 	if (ag_stride && report_interval) {
+ 	init_rt_bmap(mp);
+diff --git a/repair/scan.c b/repair/scan.c
+index 49ed194..f9afdb1 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -273,7 +273,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
+ 		agno = XFS_FSB_TO_AGNO(mp, bno);
+ 		agbno = XFS_FSB_TO_AGBNO(mp, bno);
+ 
+-		pthread_mutex_lock(&ag_locks[agno]);
++		pthread_mutex_lock(&ag_locks[agno].lock);
+ 		state = get_bmap(agno, agbno);
+ 		switch (state) {
+ 		case XR_E_UNKNOWN:
+@@ -319,7 +319,7 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
+ 				state, ino, bno);
+ 			break;
+ 		}
+-		pthread_mutex_unlock(&ag_locks[agno]);
++		pthread_mutex_unlock(&ag_locks[agno].lock);
+ 	} else  {
+ 		/*
+ 		 * attribute fork for realtime files is in the regular
 -- 
 1.8.4.rc3
 
