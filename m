@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C0C367F5A
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 290177F52
 	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:34:47 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AD2728F8035
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:47 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A01E2AC008
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:46 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	uwmGBGbQab0gN4oB for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 21:34:45 -0800 (PST)
+	9vzJXBvfqbdZMYyS for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 21:34:44 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bp-C4
+	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bn-Ac
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003ce-B2
+	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003cU-9c
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: xlog_recover_process_data leaks like a sieve
-Date: Thu, 12 Dec 2013 16:34:37 +1100
-Message-Id: <1386826478-13846-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] xfs: prevent spurious "space > BBTOB(tail_blocks)"
+	warnings
+Date: Thu, 12 Dec 2013 16:34:35 +1100
+Message-Id: <1386826478-13846-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,345 +38,146 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+When xlog_verify_grant_tail() cracks the grant head and the log
+tail, it does so without locking to synchronise the sampling of the
+variables. A delay between samples can give the wrong results,
+sometimes leading to false warnings being emitted.
 
-Fix the double free of the transaction structure introduced by
-commit 2a84108 ("xfs: free the list of recovery items on error").
-In the process, make the freeing of the trans structure on error or
-completion of processing consistent - i.e. the responsibility of the
-the function that detected the error or completes processing. Add
-comments to document this behaviour so it can be maintained more
-easily in future.
+To avoid spurious output in this situation, disable preemption to
+minimise the potential delays between them being sampled. This means
+that the log tail may still move, but it won't trigger warnings
+unless it moves beyond the current head cycle. If we see delays like
+that we probably should be throwing a warning, anyway.
 
-Fix the rest of the memory leaks of the transaction structure used
-by xlog_recover_process_data() that commit 2a84108 didn't address.
-
-Fix potential use-after-free of the trans structure by ensuring
-they are removed from the transaction recoovery-in-progress hash
-table before they are freed.
-
-Remove all the shouty XFS_ERROR() macros that are used directly
-after ASSERT(0) calls as they are entirely redundant and make the
-code harder to read.
+Further, the write head can validly pass the tail in certain
+circumstances. Document those circumstances in the commentsx, and
+remove the xlog_verify_grant_tail() call in xfs_log_reserve() that
+is guaranteed to emit false positive warnings due it being the
+source of temporary overcommit conditions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 155 +++++++++++++++++++++++++++--------------------
- 1 file changed, 88 insertions(+), 67 deletions(-)
+ fs/xfs/xfs_log.c | 94 +++++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 69 insertions(+), 25 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 07ab52c..517f7ee 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1483,6 +1483,32 @@ xlog_recover_add_item(
- 	list_add_tail(&item->ri_list, head);
- }
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 97b2705..f4ccc10 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -472,7 +472,6 @@ xfs_log_reserve(
+ 	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
+ 	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
+ 	trace_xfs_log_reserve_exit(log, tic);
+-	xlog_verify_grant_tail(log);
+ 	return 0;
  
-+/*
-+ * Free up any resources allocated by the transaction
+ out_error:
+@@ -3651,36 +3650,81 @@ xlog_verify_dest_ptr(
+  * the cycles are the same, we can't be overlapping.  Otherwise, make sure that
+  * the cycles differ by exactly one and check the byte count.
+  *
+- * This check is run unlocked, so can give false positives. Rather than assert
+- * on failures, use a warn-once flag and a panic tag to allow the admin to
+- * determine if they want to panic the machine when such an error occurs. For
+- * debug kernels this will have the same effect as using an assert but, unlinke
+- * an assert, it can be turned off at runtime.
++ * We only do this check when regranting write space because xfs_log_reserve can
++ * race with a regrant and a reserve space overcommit can result in a write
++ * space overcommit from xfs_log_reserve() once log space becomes available
++ * again. This is only a temporary situation, but it means that checking the
++ * write grant head and log tail from xfs_log_reserve gives false positives.
 + *
-+ * Remember that EFIs, EFDs, and IUNLINKs are handled later.
-+ */
-+STATIC void
-+xlog_recover_free_trans(
-+	struct xlog_recover	*trans)
-+{
-+	xlog_recover_item_t	*item, *n;
-+	int			i;
-+
-+	hlist_del_init(&trans->r_list);
-+	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
-+		/* Free the regions in the item. */
-+		list_del(&item->ri_list);
-+		for (i = 0; i < item->ri_cnt; i++)
-+			kmem_free(item->ri_buf[i].i_addr);
-+		/* Free the item itself */
-+		kmem_free(item->ri_buf);
-+		kmem_free(item);
-+	}
-+	/* Free the transaction recover structure */
-+	kmem_free(trans);
-+}
-+
- STATIC int
- xlog_recover_add_to_cont_trans(
- 	struct xlog		*log,
-@@ -1548,7 +1574,7 @@ xlog_recover_add_to_trans(
- 			xfs_warn(log->l_mp, "%s: bad header magic number",
- 				__func__);
- 			ASSERT(0);
--			return XFS_ERROR(EIO);
-+			goto out_eio;
- 		}
- 		if (len == sizeof(xfs_trans_header_t))
- 			xlog_recover_add_item(&trans->r_itemq);
-@@ -1577,8 +1603,8 @@ xlog_recover_add_to_trans(
- 		"bad number of regions (%d) in inode log format",
- 				  in_f->ilf_size);
- 			ASSERT(0);
--			kmem_free(ptr);
--			return XFS_ERROR(EIO);
-+			goto out_free_eio;
-+
- 		}
- 
- 		item->ri_total = in_f->ilf_size;
-@@ -1593,6 +1619,17 @@ xlog_recover_add_to_trans(
- 	item->ri_cnt++;
- 	trace_xfs_log_recover_item_add(log, trans, item, 0);
- 	return 0;
-+
-+out_free_eio:
-+	kmem_free(ptr);
-+out_eio:
-+	/*
-+	 * This transaction is now unrecoverable, so we need to remove it from
-+	 * the transaction hash so nobody else can find it and free it.  The
-+	 * error we return will abort further recovery processing.
-+	 */
-+	xlog_recover_free_trans(trans);
-+	return EIO;
- }
- 
- /*
-@@ -1699,7 +1736,7 @@ xlog_recover_reorder_trans(
- 			 */
- 			if (!list_empty(&sort_list))
- 				list_splice_init(&sort_list, &trans->r_itemq);
--			error = XFS_ERROR(EIO);
-+			error = EIO;
- 			goto out;
- 		}
- 	}
-@@ -1713,6 +1750,15 @@ out:
- 		list_splice_tail(&inode_buffer_list, &trans->r_itemq);
- 	if (!list_empty(&cancel_list))
- 		list_splice_tail(&cancel_list, &trans->r_itemq);
-+
-+	/*
-+	 * If we failed to reorder the transaction, it is now unrecoverable so
-+	 * we need to remove it from the transaction hash so nobody else can
-+	 * find it and free it.  The error we return will abort further recovery
-+	 * processing.
-+	 */
-+	if (error)
-+		xlog_recover_free_trans(trans);
- 	return error;
- }
- 
-@@ -3235,31 +3281,6 @@ xlog_recover_do_icreate_pass2(
- 	return 0;
- }
- 
--/*
-- * Free up any resources allocated by the transaction
-- *
-- * Remember that EFIs, EFDs, and IUNLINKs are handled later.
-- */
--STATIC void
--xlog_recover_free_trans(
--	struct xlog_recover	*trans)
--{
--	xlog_recover_item_t	*item, *n;
--	int			i;
--
--	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
--		/* Free the regions in the item. */
--		list_del(&item->ri_list);
--		for (i = 0; i < item->ri_cnt; i++)
--			kmem_free(item->ri_buf[i].i_addr);
--		/* Free the item itself */
--		kmem_free(item->ri_buf);
--		kmem_free(item);
--	}
--	/* Free the transaction recover structure */
--	kmem_free(trans);
--}
--
++ * If we only call from xfs_log_regrant(), we are only called after overcommit
++ * situations have been resolved by sleeping. If the head and tail overlap at
++ * this point, then we have a problem.
++ *
++ * Because we always want to know about this issue if there is a filesystem hang
++ * due to log space availability, use a warn-once flag and a panic tag to allow
++ * the admin to determine if they want to panic the machine when such an error
++ * occurs. For debug kernels this will have the same effect as using an assert
++ * but, unlike an assert, it can be turned off at runtime.
+  */
  STATIC void
- xlog_recover_buffer_ra_pass2(
- 	struct xlog                     *log,
-@@ -3384,7 +3405,7 @@ xlog_recover_commit_pass1(
- 		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
- 			__func__, ITEM_TYPE(item));
- 		ASSERT(0);
--		return XFS_ERROR(EIO);
-+		return EIO;
- 	}
- }
- 
-@@ -3420,7 +3441,7 @@ xlog_recover_commit_pass2(
- 		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
- 			__func__, ITEM_TYPE(item));
- 		ASSERT(0);
--		return XFS_ERROR(EIO);
-+		return EIO;
- 	}
- }
- 
-@@ -3467,7 +3488,7 @@ xlog_recover_commit_trans(
- 
- 	#define XLOG_RECOVER_COMMIT_QUEUE_MAX 100
- 
--	hlist_del(&trans->r_list);
-+	hlist_del_init(&trans->r_list);
- 
- 	error = xlog_recover_reorder_trans(log, trans, pass);
- 	if (error)
-@@ -3488,17 +3509,17 @@ xlog_recover_commit_trans(
- 				list_splice_tail_init(&ra_list, &done_list);
- 				items_queued = 0;
- 			}
+ xlog_verify_grant_tail(
+ 	struct xlog	*log)
+ {
+-	int		tail_cycle, tail_blocks;
+-	int		cycle, space;
 -
- 			break;
- 		default:
- 			ASSERT(0);
-+			error = ERANGE;
-+			break;
- 		}
+-	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &space);
+-	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
+-	if (tail_cycle != cycle) {
+-		if (cycle - 1 != tail_cycle &&
+-		    !(log->l_flags & XLOG_TAIL_WARN)) {
+-			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+-				"%s: cycle - 1 != tail_cycle", __func__);
+-			log->l_flags |= XLOG_TAIL_WARN;
+-		}
++	int		tail_cycle;
++	int		tail_blocks;
++	int		head_cycle;
++	int		head_bytes;
  
- 		if (error)
--			goto out;
-+			break;
- 	}
- 
--out:
- 	if (!list_empty(&ra_list)) {
- 		if (!error)
- 			error = xlog_recover_items_pass2(log, trans,
-@@ -3509,22 +3530,17 @@ out:
- 	if (!list_empty(&done_list))
- 		list_splice_init(&done_list, &trans->r_itemq);
- 
+-		if (space > BBTOB(tail_blocks) &&
+-		    !(log->l_flags & XLOG_TAIL_WARN)) {
+-			xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+-				"%s: space > BBTOB(tail_blocks)", __func__);
+-			log->l_flags |= XLOG_TAIL_WARN;
+-		}
+-	}
 +	/*
-+	 * We've already removed the trans structure from the hash, so nobody
-+	 * else will ever find this structure again. Hence we must free it here
-+	 * regardless of whether we processed it successfully or not.
++	 * If we've already detected an problem here, don't bother checking
++	 * again.
 +	 */
- 	xlog_recover_free_trans(trans);
- 
- 	error2 = xfs_buf_delwri_submit(&buffer_list);
- 	return error ? error : error2;
++	if (log->l_flags & XLOG_TAIL_WARN)
++		return;
++
++	/*
++	 * Sample the tail before head to avoid spurious warnings due to racing
++	 * tail updates. We disable preemption and dump a memory barrier here to
++	 * make sure we pick up the latest values with as little latency between
++	 * the samples as possible.
++	 */
++	preempt_disable();
++	smp_mb();
++	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle,
++			      &tail_blocks);
++	xlog_crack_grant_head(&log->l_write_head.grant, &head_cycle,
++			      &head_bytes);
++	preempt_enable();
++
++	/*
++	 * if the cycles are the same, the head and tail can't be
++	 * overlapping, so everything is ok and we are done.
++	 */
++	if (tail_cycle == head_cycle)
++		return;
++
++	/*
++	 * if the tail is on the previous cycle to the head and the head
++	 * is before the tail, then all is good.
++	 */
++	if (tail_cycle == head_cycle - 1 &&
++	    BBTOB(tail_blocks) >= head_bytes)
++		return;
++
++	/*
++	 * OK, we're in trouble now - the head and tail are out of sync. Time to
++	 * issue a warning about it
++	 */
++	xfs_alert(log->l_mp,
++		  "%s: Write head overlaps the tail, caller %pF\n"
++		  "  tail_cycle = %d, tail_bytes = %d\n"
++		  "  GH   cycle = %d, GH   bytes = %d",
++		  __func__, (void *)_RET_IP_,
++		  tail_cycle, BBTOB(tail_blocks), head_cycle, head_bytes);
++#ifdef DEBUG
++	dump_stack();
++#endif
++	log->l_flags |= XLOG_TAIL_WARN;
  }
  
--STATIC int
--xlog_recover_unmount_trans(
--	struct xlog		*log,
--	struct xlog_recover	*trans)
--{
--	/* Do nothing now */
--	xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
--	return 0;
--}
--
- /*
-  * There are two valid states of the r_state field.  0 indicates that the
-  * transaction structure is in a normal state.  We have either seen the
-@@ -3545,9 +3561,9 @@ xlog_recover_process_data(
- 	xfs_caddr_t		lp;
- 	int			num_logops;
- 	xlog_op_header_t	*ohead;
--	xlog_recover_t		*trans;
-+	xlog_recover_t		*trans = NULL;
- 	xlog_tid_t		tid;
--	int			error;
-+	int			error = 0;
- 	unsigned long		hash;
- 	uint			flags;
- 
-@@ -3556,7 +3572,7 @@ xlog_recover_process_data(
- 
- 	/* check the log format matches our own - else we can't recover */
- 	if (xlog_header_check_recover(log->l_mp, rhead))
--		return (XFS_ERROR(EIO));
-+		return XFS_ERROR(EIO);
- 
- 	while ((dp < lp) && num_logops) {
- 		ASSERT(dp + sizeof(xlog_op_header_t) <= lp);
-@@ -3564,10 +3580,13 @@ xlog_recover_process_data(
- 		dp += sizeof(xlog_op_header_t);
- 		if (ohead->oh_clientid != XFS_TRANSACTION &&
- 		    ohead->oh_clientid != XFS_LOG) {
--			xfs_warn(log->l_mp, "%s: bad clientid 0x%x",
-+			xfs_warn(log->l_mp,
-+				"%s: bad transaction opheader clientid 0x%x",
- 					__func__, ohead->oh_clientid);
- 			ASSERT(0);
--			return (XFS_ERROR(EIO));
-+			if (trans)
-+				xlog_recover_free_trans(trans);
-+			return EIO;
- 		}
- 		tid = be32_to_cpu(ohead->oh_tid);
- 		hash = XLOG_RHASH(tid);
-@@ -3578,11 +3597,14 @@ xlog_recover_process_data(
- 					be64_to_cpu(rhead->h_lsn));
- 		} else {
- 			if (dp + be32_to_cpu(ohead->oh_len) > lp) {
--				xfs_warn(log->l_mp, "%s: bad length 0x%x",
-+				xfs_warn(log->l_mp,
-+				"%s: bad transaction opheader length 0x%x",
- 					__func__, be32_to_cpu(ohead->oh_len));
- 				WARN_ON(1);
--				return (XFS_ERROR(EIO));
-+				xlog_recover_free_trans(trans);
-+				return EIO;
- 			}
-+
- 			flags = ohead->oh_flags & ~XLOG_END_TRANS;
- 			if (flags & XLOG_WAS_CONT_TRANS)
- 				flags &= ~XLOG_CONTINUE_TRANS;
-@@ -3591,36 +3613,35 @@ xlog_recover_process_data(
- 				error = xlog_recover_commit_trans(log,
- 								trans, pass);
- 				break;
--			case XLOG_UNMOUNT_TRANS:
--				error = xlog_recover_unmount_trans(log, trans);
--				break;
- 			case XLOG_WAS_CONT_TRANS:
- 				error = xlog_recover_add_to_cont_trans(log,
- 						trans, dp,
- 						be32_to_cpu(ohead->oh_len));
- 				break;
--			case XLOG_START_TRANS:
--				xfs_warn(log->l_mp, "%s: bad transaction",
--					__func__);
--				ASSERT(0);
--				error = XFS_ERROR(EIO);
--				break;
- 			case 0:
- 			case XLOG_CONTINUE_TRANS:
- 				error = xlog_recover_add_to_trans(log, trans,
- 						dp, be32_to_cpu(ohead->oh_len));
- 				break;
-+			case XLOG_UNMOUNT_TRANS:
-+				xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
-+				break;
-+			case XLOG_START_TRANS:
- 			default:
--				xfs_warn(log->l_mp, "%s: bad flag 0x%x",
-+				xfs_warn(log->l_mp,
-+				"%s: bad transaction opheader flag 0x%x",
- 					__func__, flags);
- 				ASSERT(0);
--				error = XFS_ERROR(EIO);
--				break;
--			}
--			if (error) {
- 				xlog_recover_free_trans(trans);
--				return error;
-+				return EIO;
- 			}
-+			/*
-+			 * If there's been an error, the trans structure has
-+			 * already been freed. So there's nothing for us to do
-+			 * but abort the recovery process.
-+			 */
-+			if (error)
-+				return error;
- 		}
- 		dp += be32_to_cpu(ohead->oh_len);
- 		num_logops--;
+ /* check if it will fit */
 -- 
 1.8.4.rc3
 
