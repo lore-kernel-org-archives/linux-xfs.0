@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9B787F53
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 04:09:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6374FAC001
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 02:09:52 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 420527F50
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 04:25:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 211908F8040
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 02:25:14 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	fguNxUKNFHpAnE3p for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 02:09:50 -0800 (PST)
-Date: Thu, 12 Dec 2013 21:09:47 +1100
+	IbS20vEh2g8wOsCI for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 02:25:11 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1Vr3S7-0001Bn-UU
+	for xfs@oss.sgi.com; Thu, 12 Dec 2013 21:25:07 +1100
+Date: Thu, 12 Dec 2013 21:25:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: don't try to mark uncached buffers stale on
-	error.
-Message-ID: <20131212100947.GW10988@dastard>
-References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
-	<1386826478-13846-2-git-send-email-david@fromorbit.com>
-	<52A98226.4020705@oracle.com>
+Subject: [PATCH 4/3] xfs: xfs_qm_dqrele mostly doesn't need locking
+Message-ID: <20131212102507.GX10988@dastard>
+References: <1386841258-22183-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52A98226.4020705@oracle.com>
+In-Reply-To: <1386841258-22183-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,93 +32,297 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
-
-On Thu, Dec 12, 2013 at 05:30:14PM +0800, Jeff Liu wrote:
-> On 12/12 2013 13:34, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > fsstress failed during a shutdown with the following assert:
-> Looks fsstress is always a good aid to make file system cry... :-P
-
-Heh. That it is. :)
+To: xfs@oss.sgi.com
 
 
-> I wonder if here the shutdown is simulated via xfstests/src/godown or not,
-> but I can trigger another hang up issue with this patch via a test case
-> below(80% reproducible, I also ran the test against the left patches in
-> this series, this problem still exists):
+From: Dave Chinner <dchinner@redhat.com>
 
-I occassionally get that hang, too. It's a "once a month" type hang,
-and I've never beenable to reproduce it reliably enough to debug.
+Now that we have an atomic variable for the reference count, we
+don't need to take the dquot lock if we are not removing the last
+reference count. The dquot lock is a mutex, so we can't use
+atomic_dec_and_lock(), but we can open code it in xfs_qm_dqrele and
+hence avoid the dquot lock for most of the cases where we drop a
+reference count.
 
-> #!/bin/bash
-> 
-> mkfs.xfs -f /dev/sda7
-> 
-> for ((i=0;i<10;i++))
-> do
->     mount /dev/sda7 /xfs
->     fsstress -d /xfs -n 1000 -p 100 >/dev/null 2>&1 &
->     sleep 10
->     godown /xfs
->     wait
->     killall -q fsstress
->     umount /xfs
-> done
-> 
-> It seems there is no such kind of test cases in xfstestes for now, I'd
-> write one if required.
+The result is that concurrent file creates jump from 24,000/s to
+28,000/s, and the entire workload is now serialised on the dquot
+being locked during transaction commit. Another significant win,
+even though it's not the big one...
 
-nothing quite that generic - xfs/087 does a loop like that over
-different log configurations, but that's testing log recovery more
-than shutdown sanity. Adding that test would be a good idea - it's a
-shame no other filesystem supports a shutdown like XFS does....
+While there, rename xfs_qm_dqrele to xfs_dqrele - the "qm" part of
+the name means nothing and just makes the code harder to read.
 
-> The backtraces were shown as following:
-> 
-> [  365.987493] INFO: task fsstress:3215 blocked for more than 120 seconds.
-> [  365.987499]       Tainted: PF          O 3.13.0-rc2+ #13
-> [  365.987500] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  365.987502] fsstress        D ffff88026f254440     0  3215   3142 0x00000000
-> [  365.987507]  ffff880253f19de0 0000000000000086 ffff880242071800 ffff880253f19fd8
-> [  365.987512]  0000000000014440 0000000000014440 ffff880242071800 ffff880073694c00
-> [  365.987515]  ffff880073694c80 ffff880073694c90 ffffffffffffffff 0000000000000292
-> [  365.987519] Call Trace:
-> [  365.987528]  [<ffffffff81718779>] schedule+0x29/0x70
-> [  365.987560]  [<ffffffffa0c2a49d>] xlog_cil_force_lsn+0x18d/0x1e0 [xfs]
-> [  365.987565]  [<ffffffff81097210>] ? wake_up_state+0x20/0x20
-> [  365.987570]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
-> [  365.987594]  [<ffffffffa0c28921>] _xfs_log_force+0x61/0x270 [xfs]
-> [  365.987599]  [<ffffffff812b0610>] ? jbd2_log_wait_commit+0x110/0x180
-> [  365.987603]  [<ffffffff810a83f0>] ? prepare_to_wait_event+0x100/0x100
-> [  365.987607]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
-> [  365.987629]  [<ffffffffa0c28b56>] xfs_log_force+0x26/0x80 [xfs]
-> [  365.987648]  [<ffffffffa0bcf35d>] xfs_fs_sync_fs+0x2d/0x50 [xfs]
-> [  365.987652]  [<ffffffff811e8790>] sync_fs_one_sb+0x20/0x30
-> [  365.987656]  [<ffffffff811bcc32>] iterate_supers+0xb2/0x110
-> [  365.987660]  [<ffffffff811e88c2>] sys_sync+0x62/0xa0
-> [  365.987665]  [<ffffffff81724ced>] system_call_fastpath+0x1a/0x1f
-> [  372.225302] XFS (sda7): xfs_log_force: error 5 returned.
-> [  402.275608] XFS (sda7): xfs_log_force: error 5 returned.
-> [  432.325929] XFS (sda7): xfs_log_force: error 5 returned.
-> [  462.376239] XFS (sda7): xfs_log_force: error 5 returned.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_dquot.c       | 17 +++++++++--------
+ fs/xfs/xfs_inode.c       | 12 ++++++------
+ fs/xfs/xfs_ioctl.c       | 10 +++++-----
+ fs/xfs/xfs_iops.c        | 12 ++++++------
+ fs/xfs/xfs_qm.c          | 16 ++++++++--------
+ fs/xfs/xfs_qm_syscalls.c |  8 ++++----
+ fs/xfs/xfs_quota.h       |  4 ++--
+ fs/xfs/xfs_symlink.c     | 12 ++++++------
+ 8 files changed, 46 insertions(+), 45 deletions(-)
 
-So what we see here is that there is a race condition somewhere in
-the shutdown code. The shutdown is supposed to wake everyone waiting
-of the ic_force_wait wait queue on each iclog, but for some reason
-that hasn't happened. The sleepers check for XLOG_STATE_IOERROR
-(which is set during the force shutdown before we wake ic_force_wait
-sleepers) before they go to sleep, so whatever the race is it isn't
-immediately obvious to me.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 975a46c..f17350d 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -861,11 +861,10 @@ xfs_qm_dqput(
+ }
+ 
+ /*
+- * Release a dquot. Flush it if dirty, then dqput() it.
+- * dquot must not be locked.
++ * Release a dquot. The dquot must not be locked.
+  */
+ void
+-xfs_qm_dqrele(
++xfs_dqrele(
+ 	xfs_dquot_t	*dqp)
+ {
+ 	if (!dqp)
+@@ -873,13 +872,15 @@ xfs_qm_dqrele(
+ 
+ 	trace_xfs_dqrele(dqp);
+ 
+-	xfs_dqlock(dqp);
+ 	/*
+-	 * We don't care to flush it if the dquot is dirty here.
+-	 * That will create stutters that we want to avoid.
+-	 * Instead we do a delayed write when we try to reclaim
+-	 * a dirty dquot. Also xfs_sync will take part of the burden...
++	 * If this is not the final reference, we don't need to take the dquot
++	 * lock at all. This is effectively a mutex based atomic_dec_and_lock()
++	 * operation.
+ 	 */
++	if (atomic_add_unless(&dqp->q_nrefs, -1, 1))
++		return;
++
++	xfs_dqlock(dqp);
+ 	xfs_qm_dqput(dqp);
+ }
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 001aa89..2442c57 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1305,9 +1305,9 @@ xfs_create(
+ 	if (error)
+ 		goto out_release_inode;
+ 
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	xfs_qm_dqrele(pdqp);
++	xfs_dqrele(udqp);
++	xfs_dqrele(gdqp);
++	xfs_dqrele(pdqp);
+ 
+ 	*ipp = ip;
+ 	return 0;
+@@ -1327,9 +1327,9 @@ xfs_create(
+ 	if (ip)
+ 		IRELE(ip);
+ 
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	xfs_qm_dqrele(pdqp);
++	xfs_dqrele(udqp);
++	xfs_dqrele(gdqp);
++	xfs_dqrele(pdqp);
+ 
+ 	if (unlock_dp_on_error)
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 33ad9a7..13d60b9 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1300,15 +1300,15 @@ xfs_ioctl_setattr(
+ 	/*
+ 	 * Release any dquot(s) the inode had kept before chown.
+ 	 */
+-	xfs_qm_dqrele(olddquot);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(pdqp);
++	xfs_dqrele(olddquot);
++	xfs_dqrele(udqp);
++	xfs_dqrele(pdqp);
+ 
+ 	return code;
+ 
+  error_return:
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(pdqp);
++	xfs_dqrele(udqp);
++	xfs_dqrele(pdqp);
+ 	xfs_trans_cancel(tp, 0);
+ 	if (lock_flags)
+ 		xfs_iunlock(ip, lock_flags);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 0ce1d75..c5ad890 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -672,10 +672,10 @@ xfs_setattr_nonsize(
+ 	/*
+ 	 * Release any dquot(s) the inode had kept before chown.
+ 	 */
+-	xfs_qm_dqrele(olddquot1);
+-	xfs_qm_dqrele(olddquot2);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
++	xfs_dqrele(olddquot1);
++	xfs_dqrele(olddquot2);
++	xfs_dqrele(udqp);
++	xfs_dqrele(gdqp);
+ 
+ 	if (error)
+ 		return XFS_ERROR(error);
+@@ -699,8 +699,8 @@ out_trans_cancel:
+ 	xfs_trans_cancel(tp, 0);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out_dqrele:
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
++	xfs_dqrele(udqp);
++	xfs_dqrele(gdqp);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 31c0f85..843ab07 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -505,15 +505,15 @@ xfs_qm_dqdetach(
+ 
+ 	ASSERT(!xfs_is_quota_inode(&ip->i_mount->m_sb, ip->i_ino));
+ 	if (ip->i_udquot) {
+-		xfs_qm_dqrele(ip->i_udquot);
++		xfs_dqrele(ip->i_udquot);
+ 		ip->i_udquot = NULL;
+ 	}
+ 	if (ip->i_gdquot) {
+-		xfs_qm_dqrele(ip->i_gdquot);
++		xfs_dqrele(ip->i_gdquot);
+ 		ip->i_gdquot = NULL;
+ 	}
+ 	if (ip->i_pdquot) {
+-		xfs_qm_dqrele(ip->i_pdquot);
++		xfs_dqrele(ip->i_pdquot);
+ 		ip->i_pdquot = NULL;
+ 	}
+ }
+@@ -1741,22 +1741,22 @@ xfs_qm_vop_dqalloc(
+ 	if (O_udqpp)
+ 		*O_udqpp = uq;
+ 	else if (uq)
+-		xfs_qm_dqrele(uq);
++		xfs_dqrele(uq);
+ 	if (O_gdqpp)
+ 		*O_gdqpp = gq;
+ 	else if (gq)
+-		xfs_qm_dqrele(gq);
++		xfs_dqrele(gq);
+ 	if (O_pdqpp)
+ 		*O_pdqpp = pq;
+ 	else if (pq)
+-		xfs_qm_dqrele(pq);
++		xfs_dqrele(pq);
+ 	return 0;
+ 
+ error_rele:
+ 	if (gq)
+-		xfs_qm_dqrele(gq);
++		xfs_dqrele(gq);
+ 	if (uq)
+-		xfs_qm_dqrele(uq);
++		xfs_dqrele(uq);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 3daf5ea..1e61cd4 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -736,7 +736,7 @@ xfs_qm_scall_setqlim(
+ 	error = xfs_trans_commit(tp, 0);
+ 
+ out_rele:
+-	xfs_qm_dqrele(dqp);
++	xfs_dqrele(dqp);
+ out_unlock:
+ 	mutex_unlock(&q->qi_quotaofflock);
+ 	return error;
+@@ -975,15 +975,15 @@ xfs_dqrele_inode(
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+-		xfs_qm_dqrele(ip->i_udquot);
++		xfs_dqrele(ip->i_udquot);
+ 		ip->i_udquot = NULL;
+ 	}
+ 	if ((flags & XFS_GQUOTA_ACCT) && ip->i_gdquot) {
+-		xfs_qm_dqrele(ip->i_gdquot);
++		xfs_dqrele(ip->i_gdquot);
+ 		ip->i_gdquot = NULL;
+ 	}
+ 	if ((flags & XFS_PQUOTA_ACCT) && ip->i_pdquot) {
+-		xfs_qm_dqrele(ip->i_pdquot);
++		xfs_dqrele(ip->i_pdquot);
+ 		ip->i_pdquot = NULL;
+ 	}
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 5376dd4..ae4f41a 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -94,7 +94,7 @@ extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
+ extern int xfs_qm_dqattach(struct xfs_inode *, uint);
+ extern int xfs_qm_dqattach_locked(struct xfs_inode *, uint);
+ extern void xfs_qm_dqdetach(struct xfs_inode *);
+-extern void xfs_qm_dqrele(struct xfs_dquot *);
++extern void xfs_dqrele(struct xfs_dquot *);
+ extern void xfs_qm_statvfs(struct xfs_inode *, struct kstatfs *);
+ extern int xfs_qm_newmount(struct xfs_mount *, uint *, uint *);
+ extern void xfs_qm_mount_quotas(struct xfs_mount *);
+@@ -136,7 +136,7 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
+ #define xfs_qm_dqattach(ip, fl)						(0)
+ #define xfs_qm_dqattach_locked(ip, fl)					(0)
+ #define xfs_qm_dqdetach(ip)
+-#define xfs_qm_dqrele(d)
++#define xfs_dqrele(d)
+ #define xfs_qm_statvfs(ip, s)
+ #define xfs_qm_newmount(mp, a, b)					(0)
+ #define xfs_qm_mount_quotas(mp)
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 14e58f2..14e38fe 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -395,9 +395,9 @@ xfs_symlink(
+ 		goto error2;
+ 	}
+ 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	xfs_qm_dqrele(pdqp);
++	xfs_dqrele(udqp);
++	xfs_dqrele(gdqp);
++	xfs_dqrele(pdqp);
+ 
+ 	*ipp = ip;
+ 	return 0;
+@@ -409,9 +409,9 @@ xfs_symlink(
+ 	cancel_flags |= XFS_TRANS_ABORT;
+  error_return:
+ 	xfs_trans_cancel(tp, cancel_flags);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	xfs_qm_dqrele(pdqp);
++	xfs_dqrele(udqp);
++	xfs_dqrele(gdqp);
++	xfs_dqrele(pdqp);
+ 
+ 	if (unlock_dp_on_error)
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
 
 _______________________________________________
 xfs mailing list
