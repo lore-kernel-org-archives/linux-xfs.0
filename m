@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6D79D29E24
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E06F6AC002
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:30 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0502329E25
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B3ABD8F8052
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:38 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id k98TuLBNC1zqFc9h for
-	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:29 -0800 (PST)
-Message-ID: <52AA078E.90800@redhat.com>
-Date: Thu, 12 Dec 2013 13:59:26 -0500
+	cuda.sgi.com with ESMTP id ns81b1qJ3GXpMaH1 for
+	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:32 -0800 (PST)
+Message-ID: <52AA0792.6090606@redhat.com>
+Date: Thu, 12 Dec 2013 13:59:30 -0500
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/5] libxfs: buffer cache hashing is suboptimal
+Subject: Re: [PATCH 5/5] repair: limit auto-striding concurrency apprpriately
 References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
-	<1386832945-19763-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1386832945-19763-5-git-send-email-david@fromorbit.com>
+	<1386832945-19763-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1386832945-19763-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,119 +33,97 @@ To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 On 12/12/2013 02:22 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The hashkey calculation is very simplistic,and throws away an amount
-> of entropy that should be folded into the hash. The result is
-> sub-optimal distribution across the hash tables. For example, with a
-> default 512 entry table, phase 2 results in this:
+> It's possible to have filesystems with hundreds of AGs on systems
+> with little concurrency and resources. In this case, we can easily
+> exhaust memory and fail to create threads and have all sorts of
+> interesting problems.
 > 
-...
-> Modify the hash to be something more workable - steal the linux
-> kernel inode hash calculation and try that:
+> xfs/250 can cause this to occur, with failures like:
 > 
-...
+>         - agno = 707
+>         - agno = 692
+> fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
 > 
-> Kinda says it all, really...
+> And this:
+> 
+>         - agno = 484
+>         - agno = 782
+> failed to create prefetch thread: Resource temporarily unavailable
+> 
+> Because it's trying to create more threads than a poor little 512MB
+> single CPU ia32 box can handle.
+> 
+> So, limit concurrency to a maximum of numcpus * 8 to prevent this.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-Results look nice and the algorithm seems to match the kernel variant,
-but what about the 32-bit alternate prime/cache line values? Safe to
-leave out..?
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Brian
-
->  include/cache.h |  4 +++-
->  libxfs/cache.c  |  7 +++++--
->  libxfs/rdwr.c   | 12 ++++++++++--
->  3 files changed, 18 insertions(+), 5 deletions(-)
+>  include/libxfs.h    |  1 +
+>  libxfs/init.h       |  1 -
+>  repair/xfs_repair.c | 18 +++++++++++++++++-
+>  3 files changed, 18 insertions(+), 2 deletions(-)
 > 
-> diff --git a/include/cache.h b/include/cache.h
-> index 76cb234..0a84c69 100644
-> --- a/include/cache.h
-> +++ b/include/cache.h
-> @@ -66,7 +66,8 @@ typedef void (*cache_walk_t)(struct cache_node *);
->  typedef struct cache_node * (*cache_node_alloc_t)(cache_key_t);
->  typedef void (*cache_node_flush_t)(struct cache_node *);
->  typedef void (*cache_node_relse_t)(struct cache_node *);
-> -typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int);
-> +typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int,
-> +					  unsigned int);
->  typedef int (*cache_node_compare_t)(struct cache_node *, cache_key_t);
->  typedef unsigned int (*cache_bulk_relse_t)(struct cache *, struct list_head *);
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index 4bf331c..39e3d85 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
+>  extern int	libxfs_device_alignment (void);
+>  extern void	libxfs_report(FILE *);
+>  extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
+> +extern int	platform_nproc(void);
 >  
-> @@ -112,6 +113,7 @@ struct cache {
->  	cache_node_compare_t	compare;	/* comparison routine */
->  	cache_bulk_relse_t	bulkrelse;	/* bulk release routine */
->  	unsigned int		c_hashsize;	/* hash bucket count */
-> +	unsigned int		c_hashshift;	/* hash key shift */
->  	struct cache_hash	*c_hash;	/* hash table buckets */
->  	struct cache_mru	c_mrus[CACHE_MAX_PRIORITY + 1];
->  	unsigned long long	c_misses;	/* cache misses */
-> diff --git a/libxfs/cache.c b/libxfs/cache.c
-> index 84d2860..dc69689 100644
-> --- a/libxfs/cache.c
-> +++ b/libxfs/cache.c
-> @@ -25,6 +25,7 @@
->  #include <xfs/platform_defs.h>
->  #include <xfs/list.h>
->  #include <xfs/cache.h>
-> +#include <xfs/libxfs.h>
+>  /* check or write log footer: specify device, log size in blocks & uuid */
+>  typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
+> diff --git a/libxfs/init.h b/libxfs/init.h
+> index f0b8cb6..112febb 100644
+> --- a/libxfs/init.h
+> +++ b/libxfs/init.h
+> @@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
+>  extern char *platform_findblockpath (char *path);
+>  extern int platform_direct_blockdev (void);
+>  extern int platform_align_blockdev (void);
+> -extern int platform_nproc(void);
+>  extern unsigned long platform_physmem(void);	/* in kilobytes */
+>  extern int platform_has_uuid;
 >  
->  #define CACHE_DEBUG 1
->  #undef CACHE_DEBUG
-> @@ -61,6 +62,7 @@ cache_init(
->  	cache->c_misses = 0;
->  	cache->c_maxcount = maxcount;
->  	cache->c_hashsize = hashsize;
-> +	cache->c_hashshift = libxfs_highbit32(hashsize);
->  	cache->hash = cache_operations->hash;
->  	cache->alloc = cache_operations->alloc;
->  	cache->flush = cache_operations->flush;
-> @@ -343,7 +345,7 @@ cache_node_get(
->  	int			priority = 0;
->  	int			purged = 0;
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 7beffcb..0d006ae 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -627,13 +627,29 @@ main(int argc, char **argv)
+>  	 * to target these for an increase in thread count. Hence a stride value
+>  	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
+>  	 * on such filesystems.
+> +	 *
+> +	 * Limit the maximum thread count based on the available CPU power that
+> +	 * is available. If we use too many threads, we might run out of memory
+> +	 * and CPU power before we run out of IO concurrency.
+>  	 */
+>  	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
+>  		ag_stride = 15;
 >  
-> -	hashidx = cache->hash(key, cache->c_hashsize);
-> +	hashidx = cache->hash(key, cache->c_hashsize, cache->c_hashshift);
->  	hash = cache->c_hash + hashidx;
->  	head = &hash->ch_list;
->  
-> @@ -515,7 +517,8 @@ cache_node_purge(
->  	struct cache_hash *	hash;
->  	int			count = -1;
->  
-> -	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
-> +	hash = cache->c_hash + cache->hash(key, cache->c_hashsize,
-> +					   cache->c_hashshift);
->  	head = &hash->ch_list;
->  	pthread_mutex_lock(&hash->ch_mutex);
->  	for (pos = head->next, n = pos->next; pos != head;
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 0219a08..0effb9a 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -311,10 +311,18 @@ struct xfs_bufkey {
->  	int			nmaps;
->  };
->  
-> +/*  2^63 + 2^61 - 2^57 + 2^54 - 2^51 - 2^18 + 1 */
-> +#define GOLDEN_RATIO_PRIME	0x9e37fffffffc0001UL
-> +#define CACHE_LINE_SIZE		64
->  static unsigned int
-> -libxfs_bhash(cache_key_t key, unsigned int hashsize)
-> +libxfs_bhash(cache_key_t key, unsigned int hashsize, unsigned int hashshift)
->  {
-> -	return (((unsigned int)((struct xfs_bufkey *)key)->blkno) >> 5) % hashsize;
-> +	uint64_t	hashval = ((struct xfs_bufkey *)key)->blkno;
-> +	uint64_t	tmp;
+>  	if (ag_stride) {
+> +		int max_threads = platform_nproc() * 8;
 > +
-> +	tmp = hashval ^ (GOLDEN_RATIO_PRIME + hashval) / CACHE_LINE_SIZE;
-> +	tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> hashshift);
-> +	return tmp % hashsize;
->  }
+>  		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
+> -		thread_init();
+> +		while (thread_count > max_threads) {
+> +			ag_stride *= 2;
+> +			thread_count = (glob_agcount + ag_stride - 1) /
+> +								ag_stride;
+> +		}
+> +		if (thread_count > 0)
+> +			thread_init();
+> +		else {
+> +			thread_count = 1;
+> +			ag_stride = 0;
+> +		}
+>  	}
 >  
->  static int
+>  	if (ag_stride && report_interval) {
 > 
 
 _______________________________________________
