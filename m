@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1070D29E1B
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E448F8F8040
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:02 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 95A1F29E1F
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 75A48304062
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:17 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UFBkNgwgcWyGFOXJ for
-	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:01 -0800 (PST)
-Message-ID: <52AA0773.1000506@redhat.com>
-Date: Thu, 12 Dec 2013 13:58:59 -0500
+	cuda.sgi.com with ESMTP id LKHYle3WAOt3Bgm7 for
+	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:16 -0800 (PST)
+Message-ID: <52AA0782.8050902@redhat.com>
+Date: Thu, 12 Dec 2013 13:59:14 -0500
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/5] repair: per AG locks contend for cachelines
+Subject: Re: [PATCH 3/5] repair: phase 6 is trivially parallelisable
 References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
-	<1386832945-19763-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1386832945-19763-3-git-send-email-david@fromorbit.com>
+	<1386832945-19763-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1386832945-19763-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,227 +33,142 @@ To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 On 12/12/2013 02:22 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The per-ag locks used to protect per-ag block lists are located in a tightly
-> packed array. That means that they share cachelines, so separate them out inot
-> separate 64 byte regions in the array.
+> Phase 6 is currently single threaded, but it iterates AGs one at a
+> time. When there are hundreds of AGs that need scanning, this takes
+> a long time. Given that all the objects that the AG traversal works
+> on are per-ag, we can simply parallelise this into a strided AG
+> processing like phase 3 and 4.
 > 
-> pahole confirms the padding is correctly applied:
+> Unpatched:	8m40s
+> patched:	1m10s (7 threads)
 > 
-> struct aglock {
->         pthread_mutex_t            lock;                 /*     0    40 */
-> 
->         /* size: 64, cachelines: 1, members: 1 */
->         /* padding: 24 */
-> };
+> Big win!
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
+>  repair/phase6.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 47 insertions(+), 9 deletions(-)
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index d2d4a44..d82f900 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -51,6 +51,7 @@ typedef struct dotdot_update {
+>  
+>  static dotdot_update_t		*dotdot_update_list;
+>  static int			dotdot_update;
+> +static pthread_mutex_t		dotdot_lock;
+>  
+>  static void
+>  add_dotdot_update(
+> @@ -64,12 +65,14 @@ add_dotdot_update(
+>  		do_error(_("malloc failed add_dotdot_update (%zu bytes)\n"),
+>  			sizeof(dotdot_update_t));
+>  
+> +	pthread_mutex_lock(&dotdot_lock);
+>  	dir->next = dotdot_update_list;
+>  	dir->irec = irec;
+>  	dir->agno = agno;
+>  	dir->ino_offset = ino_offset;
+>  
+>  	dotdot_update_list = dir;
+> +	pthread_mutex_unlock(&dotdot_lock);
+>  }
+>  
+>  /*
+> @@ -2918,34 +2921,68 @@ update_missing_dotdot_entries(
+>  	 * these entries parents were updated, rebuild them again
+>  	 * set dotdot_update flag so processing routines do not count links
+>  	 */
+> +	pthread_mutex_lock(&dotdot_lock);
+>  	dotdot_update = 1;
+>  	while (dotdot_update_list) {
+>  		dir = dotdot_update_list;
+>  		dotdot_update_list = dir->next;
+> +		dir->next = NULL;
+> +		pthread_mutex_unlock(&dotdot_lock);
+> +
+>  		process_dir_inode(mp, dir->agno, dir->irec, dir->ino_offset);
+>  		free(dir);
+> +
+> +		pthread_mutex_lock(&dotdot_lock);
+>  	}
+> +	pthread_mutex_unlock(&dotdot_lock);
+>  }
 
-Out of curiosity, any data on this one?
+Technically the locking here is unnecessary, as this appears to remain
+single threaded, yes? It doesn't hurt and probably eliminates a
+potential landmine, so:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  repair/dino_chunks.c | 24 ++++++++++++------------
->  repair/dinode.c      |  6 +++---
->  repair/globals.h     |  5 ++++-
->  repair/incore.c      |  4 ++--
->  repair/scan.c        |  4 ++--
->  5 files changed, 23 insertions(+), 20 deletions(-)
-> 
-> diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-> index d3c2236..02d32d8 100644
-> --- a/repair/dino_chunks.c
-> +++ b/repair/dino_chunks.c
-> @@ -141,7 +141,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  		if (check_aginode_block(mp, agno, agino) == 0)
->  			return 0;
 >  
-> -		pthread_mutex_lock(&ag_locks[agno]);
-> +		pthread_mutex_lock(&ag_locks[agno].lock);
->  
->  		state = get_bmap(agno, agbno);
->  		switch (state) {
-> @@ -166,7 +166,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  		_("inode block %d/%d multiply claimed, (state %d)\n"),
->  				agno, agbno, state);
->  			set_bmap(agno, agbno, XR_E_MULT);
-> -			pthread_mutex_unlock(&ag_locks[agno]);
-> +			pthread_mutex_unlock(&ag_locks[agno].lock);
->  			return(0);
->  		default:
->  			do_warn(
-> @@ -176,7 +176,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  			break;
->  		}
->  
-> -		pthread_mutex_unlock(&ag_locks[agno]);
-> +		pthread_mutex_unlock(&ag_locks[agno].lock);
->  
->  		start_agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
->  		*start_ino = XFS_AGINO_TO_INO(mp, agno, start_agino);
-> @@ -424,7 +424,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  	 * user data -- we're probably here as a result of a directory
->  	 * entry or an iunlinked pointer
->  	 */
-> -	pthread_mutex_lock(&ag_locks[agno]);
-> +	pthread_mutex_lock(&ag_locks[agno].lock);
->  	for (cur_agbno = chunk_start_agbno;
->  	     cur_agbno < chunk_stop_agbno;
->  	     cur_agbno += blen)  {
-> @@ -438,7 +438,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  	_("inode block %d/%d multiply claimed, (state %d)\n"),
->  				agno, cur_agbno, state);
->  			set_bmap_ext(agno, cur_agbno, blen, XR_E_MULT);
-> -			pthread_mutex_unlock(&ag_locks[agno]);
-> +			pthread_mutex_unlock(&ag_locks[agno].lock);
->  			return 0;
->  		case XR_E_INO:
->  			do_error(
-> @@ -449,7 +449,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  			break;
->  		}
->  	}
-> -	pthread_mutex_unlock(&ag_locks[agno]);
-> +	pthread_mutex_unlock(&ag_locks[agno].lock);
+>  static void
+>  traverse_ags(
+> -	xfs_mount_t 		*mp)
+> +	xfs_mount_t		*mp)
+>  {
+> -	int			i;
+> -	work_queue_t		queue;
+> +	int			i, j;
+> +	xfs_agnumber_t		agno;
+> +	work_queue_t		*queues;
+>  	prefetch_args_t		*pf_args[2];
 >  
 >  	/*
->  	 * ok, chunk is good.  put the record into the tree if required,
-> @@ -472,7 +472,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  
->  	set_inode_used(irec_p, agino - start_agino);
->  
-> -	pthread_mutex_lock(&ag_locks[agno]);
-> +	pthread_mutex_lock(&ag_locks[agno].lock);
->  
->  	for (cur_agbno = chunk_start_agbno;
->  	     cur_agbno < chunk_stop_agbno;
-> @@ -505,7 +505,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
->  			break;
->  		}
+>  	 * we always do prefetch for phase 6 as it will fill in the gaps
+>  	 * not read during phase 3 prefetch.
+>  	 */
+> -	queue.mp = mp;
+> -	pf_args[0] = start_inode_prefetch(0, 1, NULL);
+> -	for (i = 0; i < glob_agcount; i++) {
+> -		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+> -				pf_args[i & 1]);
+> -		traverse_function(&queue, i, pf_args[i & 1]);
+> +	if (!ag_stride) {
+> +		work_queue_t	queue;
+> +
+> +		queue.mp = mp;
+> +		pf_args[0] = start_inode_prefetch(0, 1, NULL);
+> +		for (i = 0; i < glob_agcount; i++) {
+> +			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+> +					pf_args[i & 1]);
+> +			traverse_function(&queue, i, pf_args[i & 1]);
+> +		}
+> +		return;
 >  	}
-> -	pthread_mutex_unlock(&ag_locks[agno]);
-> +	pthread_mutex_unlock(&ag_locks[agno].lock);
->  
->  	return(ino_cnt);
+> +
+> +	/*
+> +	 * create one worker thread for each segment of the volume
+> +	 */
+> +	queues = malloc(thread_count * sizeof(work_queue_t));
+> +	for (i = 0, agno = 0; i < thread_count; i++) {
+> +		create_work_queue(&queues[i], mp, 1);
+> +		pf_args[0] = NULL;
+> +		for (j = 0; j < ag_stride && agno < glob_agcount; j++, agno++) {
+> +			pf_args[0] = start_inode_prefetch(agno, 1, pf_args[0]);
+> +			queue_work(&queues[i], traverse_function, agno,
+> +				   pf_args[0]);
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * wait for workers to complete
+> +	 */
+> +	for (i = 0; i < thread_count; i++)
+> +		destroy_work_queue(&queues[i]);
+> +	free(queues);
 >  }
-> @@ -736,7 +736,7 @@ process_inode_chunk(
->  	/*
->  	 * mark block as an inode block in the incore bitmap
->  	 */
-> -	pthread_mutex_lock(&ag_locks[agno]);
-> +	pthread_mutex_lock(&ag_locks[agno].lock);
->  	state = get_bmap(agno, agbno);
->  	switch (state) {
->  	case XR_E_INO:	/* already marked */
-> @@ -755,7 +755,7 @@ process_inode_chunk(
->  			XFS_AGB_TO_FSB(mp, agno, agbno), state);
->  		break;
->  	}
-> -	pthread_mutex_unlock(&ag_locks[agno]);
-> +	pthread_mutex_unlock(&ag_locks[agno].lock);
 >  
->  	for (;;) {
->  		/*
-> @@ -914,7 +914,7 @@ process_inode_chunk(
->  			ibuf_offset = 0;
->  			agbno++;
+>  void
+> @@ -2957,6 +2994,7 @@ phase6(xfs_mount_t *mp)
+>  	memset(&zerocr, 0, sizeof(struct cred));
+>  	memset(&zerofsx, 0, sizeof(struct fsxattr));
+>  	orphanage_ino = 0;
+> +	pthread_mutex_init(&dotdot_lock, NULL);
 >  
-> -			pthread_mutex_lock(&ag_locks[agno]);
-> +			pthread_mutex_lock(&ag_locks[agno].lock);
->  			state = get_bmap(agno, agbno);
->  			switch (state) {
->  			case XR_E_INO:	/* already marked */
-> @@ -935,7 +935,7 @@ process_inode_chunk(
->  					XFS_AGB_TO_FSB(mp, agno, agbno), state);
->  				break;
->  			}
-> -			pthread_mutex_unlock(&ag_locks[agno]);
-> +			pthread_mutex_unlock(&ag_locks[agno].lock);
+>  	do_log(_("Phase 6 - check inode connectivity...\n"));
 >  
->  		} else if (irec_offset == XFS_INODES_PER_CHUNK)  {
->  			/*
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 8f14a9e..77bbe40 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -700,8 +700,8 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
->  		ebno = agbno + irec.br_blockcount;
->  		if (agno != locked_agno) {
->  			if (locked_agno != -1)
-> -				pthread_mutex_unlock(&ag_locks[locked_agno]);
-> -			pthread_mutex_lock(&ag_locks[agno]);
-> +				pthread_mutex_unlock(&ag_locks[locked_agno].lock);
-> +			pthread_mutex_lock(&ag_locks[agno].lock);
->  			locked_agno = agno;
->  		}
->  
-> @@ -770,7 +770,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
->  	error = 0;
->  done:
->  	if (locked_agno != -1)
-> -		pthread_mutex_unlock(&ag_locks[locked_agno]);
-> +		pthread_mutex_unlock(&ag_locks[locked_agno].lock);
->  
->  	if (i != *numrecs) {
->  		ASSERT(i < *numrecs);
-> diff --git a/repair/globals.h b/repair/globals.h
-> index aef8b79..cbb2ce7 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -186,7 +186,10 @@ EXTERN xfs_extlen_t	sb_inoalignmt;
->  EXTERN __uint32_t	sb_unit;
->  EXTERN __uint32_t	sb_width;
->  
-> -EXTERN pthread_mutex_t	*ag_locks;
-> +struct aglock {
-> +	pthread_mutex_t	lock __attribute__((__aligned__(64)));
-> +};
-> +EXTERN struct aglock	*ag_locks;
->  
->  EXTERN int 		report_interval;
->  EXTERN __uint64_t 	*prog_rpt_done;
-> diff --git a/repair/incore.c b/repair/incore.c
-> index 3590464..a8d497e 100644
-> --- a/repair/incore.c
-> +++ b/repair/incore.c
-> @@ -294,13 +294,13 @@ init_bmaps(xfs_mount_t *mp)
->  	if (!ag_bmap)
->  		do_error(_("couldn't allocate block map btree roots\n"));
->  
-> -	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(pthread_mutex_t));
-> +	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(struct aglock));
->  	if (!ag_locks)
->  		do_error(_("couldn't allocate block map locks\n"));
->  
->  	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
->  		btree_init(&ag_bmap[i]);
-> -		pthread_mutex_init(&ag_locks[i], NULL);
-> +		pthread_mutex_init(&ag_locks[i].lock, NULL);
->  	}
->  
->  	init_rt_bmap(mp);
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 49ed194..f9afdb1 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -273,7 +273,7 @@ _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
->  		agno = XFS_FSB_TO_AGNO(mp, bno);
->  		agbno = XFS_FSB_TO_AGBNO(mp, bno);
->  
-> -		pthread_mutex_lock(&ag_locks[agno]);
-> +		pthread_mutex_lock(&ag_locks[agno].lock);
->  		state = get_bmap(agno, agbno);
->  		switch (state) {
->  		case XR_E_UNKNOWN:
-> @@ -319,7 +319,7 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
->  				state, ino, bno);
->  			break;
->  		}
-> -		pthread_mutex_unlock(&ag_locks[agno]);
-> +		pthread_mutex_unlock(&ag_locks[agno].lock);
->  	} else  {
->  		/*
->  		 * attribute fork for realtime files is in the regular
 > 
 
 _______________________________________________
