@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0AA997F37
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 16:10:00 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 61C697F37
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 16:10:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ED72F304048
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 14:09:56 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E0752AC004
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 14:10:45 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dGFkYNyEqxeJjlUn for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 14:09:55 -0800 (PST)
-Date: Fri, 13 Dec 2013 09:09:53 +1100
+	GmWDXYCYgbjhu8KV for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 14:10:43 -0800 (PST)
+Date: Fri, 13 Dec 2013 09:10:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 3/8] xfs: get rid of XFS_IALLOC_BLOCKS macros
-Message-ID: <20131212220953.GF10988@dastard>
-References: <52A967E9.7070508@oracle.com>
+Subject: Re: [PATCH v2 4/8] xfs: introduce a common helper
+	xfs_icluster_size_fsb
+Message-ID: <20131212221042.GG10988@dastard>
+References: <52A967F5.6030005@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52A967E9.7070508@oracle.com>
+In-Reply-To: <52A967F5.6030005@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,31 +33,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Dec 12, 2013 at 03:38:17PM +0800, Jeff Liu wrote:
+On Thu, Dec 12, 2013 at 03:38:29PM +0800, Jeff Liu wrote:
 > From: Jie Liu <jeff.liu@oracle.com>
 > 
-> Get rid of XFS_IALLOC_BLOCKS() marcos, use mp->m_ialloc_blks directly.
+> Introduce a common routine xfs_icluster_size_fsb() to calculate
+> and return the number of file system blocks per inode cluster.
 > 
 > Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-....
-> @@ -1228,9 +1228,9 @@ xfs_difree(
->  			goto error0;
->  		}
->  
-> -		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp,
-> -				agno, XFS_INO_TO_AGBNO(mp,rec.ir_startino)),
-> -				XFS_IALLOC_BLOCKS(mp), flist, mp);
-> +		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
-> +				  XFS_INO_TO_AGBNO(mp, rec.ir_startino)),
-> +				  mp->m_ialloc_blks, flist, mp);
->  	} else {
->  		*delete = 0;
->  
 
-git-am fails to apply this hunk, but I'm not sure why. I updated it
-manually, the resulting patch looks identical.
-
-Other than that, it looks good.
+Easy one. ;)
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
