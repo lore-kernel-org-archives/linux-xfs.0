@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 917EA7F51
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:01:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FE318F804C
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 08:01:43 -0800 (PST)
-Received: from fieldses.org (fieldses.org [174.143.236.118]) by cuda.sgi.com
-	with ESMTP id IBCTLoZMlyYn2u65 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 08:01:42 -0800 (PST)
-Date: Thu, 12 Dec 2013 11:01:28 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH] nfsd: revoking of suid/sgid bits after chown() in a
-	consistent way
-Message-ID: <20131212160128.GC11521@fieldses.org>
-References: <20131206204747.GB12613@fieldses.org>
-	<1386756996-28083-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 710DB7F54
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:14:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D3CFAC002
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 08:14:45 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 5ilXeGnlYhUeZ98U for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 08:14:44 -0800 (PST)
+Message-ID: <52A9E0EF.1000206@sandeen.net>
+Date: Thu, 12 Dec 2013 10:14:39 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1386756996-28083-1-git-send-email-stanislav.kholmanskikh@oracle.com>
+Subject: Re: XFS: Internal error XFS_WANT_CORRUPTED_RETURN
+References: <20131211172725.GA4606@redhat.com> <20131211230128.GM10988@dastard>
+In-Reply-To: <20131211230128.GM10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,74 +27,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-Cc: vasily.isaenko@oracle.com, hch@infradead.org, linux-nfs@vger.kernel.org, sprabhu@redhat.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Dave Jones <davej@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Thanks, applying for 3.14.--b.
+On 12/11/13, 5:01 PM, Dave Chinner wrote:
+> On Wed, Dec 11, 2013 at 12:27:25PM -0500, Dave Jones wrote:
+>> Powered up my desktop this morning and noticed I couldn't cd into ~/Mail
+>> dmesg didn't look good.  "XFS: Internal error XFS_WANT_CORRUPTED_RETURN"
+>> http://codemonkey.org.uk/junk/xfs-1.txt
+> 
+> They came from xfs_dir3_block_verify() on read IO completion, which
+> indicates that the corruption was on disk and in the directory
+> structure. Yeah, definitely a verifier error:
+> 
+> XFS (sda3): metadata I/O error: block 0x2e790 ("xfs_trans_read_buf_map") error 117 numblks 8
+> 
+> Are you running a CRC enabled filesystem? (i.e. mkfs.xfs -m crc=1)
+> 
+> Is there any evidence that this verifier has fired in the past on
+> write? If not, then it's a good chance that it's a media error
+> causing this, because the same verifier runs when the metadata is
+> written to ensure we are not writing bas stuff to disk.
 
-On Wed, Dec 11, 2013 at 02:16:36PM +0400, Stanislav Kholmanskikh wrote:
-> There is an inconsistency in the handling of SUID/SGID file
-> bits after chown() between NFS and other local file systems.
+Dave C, have you given any thought to how to make the verifier errors more
+actionable?  If davej throws up his hands, the rest of the world is obviously
+in trouble.  ;)
+
+To the inexperienced this looks like a "crash" thanks to the backtrace.
+I do understand that it's necessary for bug reports, but I wonder if we
+could preface it with something informative or instructive.
+
+We also don't get a block number or inode number, although you or I can
+dig the inode number out of the hexdump, in this case.
+
+We also don't get any details of what the values in the failed check were;
+not from the check macro itself or from the hexdump, necessarily, since
+it only prints the first handful of bytes.
+
+Any ideas here?
+
+-Eric
+
+>> I rebooted into single user mode, and ran xfs_repair on /dev/sda3 (/home).
+>> It fixed up a bunch of stuff, but ended up eating ~/.procmailrc entirely
+>> (no sign of it in lost & found), and a bunch of filenames got garbled
+>> 'december' became 'decemcer' for eg.  Looks like a couple kernel trees ended
+>> up in lost & found.
 > 
-> Local file systems (for example, ext3, ext4, xfs, btrfs) revoke
-> SUID/SGID bits after chown() on a regular file even if
-> the owner/group of the file has not been changed:
+> Single bit errors in directory names? That really does point towards
+> media errors, not a filesystem error being the cause.
 > 
-> ~# touch file; chmod ug+s file; chmod u+x file
-> ~# ls -l file
-> -rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
-> ~# chown root file; ls -l file
-> -rwxr-Sr-- 1 root root 0 Dec  6 04:49 file
+>> After rebooting back into multi-user mode, I looked in dmesg again to be sure
+>> and this time sda2 was complaining..
+>>
+>> http://codemonkey.org.uk/junk/xfs-2.txt
 > 
-> but NFS doesn't do that:
+> Exaclty the same - directory blocks failing read verification.
 > 
-> ~# touch file; chmod ug+s file; chmod u+x file
-> ~# ls -l file
-> -rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
-> ~# chown root file; ls -l file
-> -rwsr-Sr-- 1 root root 0 Dec  6 04:49 file
+>> Same drill, reboot, xfs_repair. Looks like a bunch of man pages ended up in lost & found.
+>>
+>> Thoughts ? Could sda be dying ? (It is a fairly old crappy ssd)
 > 
-> NFS does that only if the owner/group has been changed:
+> I'd seriously be considering replacing the SSD as the first step.
+> If you then see failures on a known good drive, we'll need to dig
+> further.
 > 
-> ~# touch file; chmod ug+s file; chmod u+x file
-> ~# ls -l file
-> -rwsr-Sr-- 1 root root 0 Dec  6 05:02 file
-> ~# chown bin file; ls -l file
-> -rwxr-Sr-- 1 bin root 0 Dec  6 05:02 file
+> Cheers,
 > 
-> See: http://pubs.opengroup.org/onlinepubs/9699919799/functions/chown.html
-> 
->  "If the specified file is a regular file, one or more of
->  the S_IXUSR, S_IXGRP, or S_IXOTH bits of the file mode are set,
->  and the process has appropriate privileges, it is
->  implementation-defined whether the set-user-ID and set-group-ID
->  bits are altered."
-> 
-> So both variants are acceptable by POSIX.
-> 
-> This patch makes NFS to behave like local file systems.
-> 
-> Signed-off-by: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>
-> ---
->  fs/nfsd/vfs.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-> index 72cb28e..8226991 100644
-> --- a/fs/nfsd/vfs.c
-> +++ b/fs/nfsd/vfs.c
-> @@ -348,8 +348,7 @@ nfsd_sanitize_attrs(struct inode *inode, struct iattr *iap)
->  
->  	/* Revoke setuid/setgid on chown */
->  	if (!S_ISDIR(inode->i_mode) &&
-> -	    (((iap->ia_valid & ATTR_UID) && !uid_eq(iap->ia_uid, inode->i_uid)) ||
-> -	     ((iap->ia_valid & ATTR_GID) && !gid_eq(iap->ia_gid, inode->i_gid)))) {
-> +	    ((iap->ia_valid & ATTR_UID) || (iap->ia_valid & ATTR_GID))) {
->  		iap->ia_valid |= ATTR_KILL_PRIV;
->  		if (iap->ia_valid & ATTR_MODE) {
->  			/* we're setting mode too, just clear the s*id bits */
-> -- 
-> 1.7.1
+> Dave.
 > 
 
 _______________________________________________
