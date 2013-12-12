@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ADD387F4E
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:00:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 97ED830406B
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 19:00:48 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 824597F4E
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:06:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6EF228F8035
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 19:06:21 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id F89WxDx9of8rsB0O (version=TLSv1
+	cuda.sgi.com with ESMTP id jpdpK8ZWvrpAfOSo (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 19:00:46 -0800 (PST)
-Message-ID: <52A926D8.50107@oracle.com>
-Date: Thu, 12 Dec 2013 11:00:40 +0800
+	Wed, 11 Dec 2013 19:06:20 -0800 (PST)
+Message-ID: <52A92825.6020406@oracle.com>
+Date: Thu, 12 Dec 2013 11:06:13 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/5] xfs: use xfs_ialloc_blks_per_cluster in xfs_bulkstat
-References: <52A86D1E.6090507@oracle.com> <20131211232741.GO10988@dastard>
-In-Reply-To: <20131211232741.GO10988@dastard>
+Subject: Re: [PATCH 4/5] xfs: use xfs_ialloc_blks_per_cluster in
+	xfs_ifree_cluster
+References: <52A86D2B.50409@oracle.com> <20131211233101.GQ10988@dastard>
+In-Reply-To: <20131211233101.GQ10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +32,44 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-
-On 12/12 2013 07:27 AM, Dave Chinner wrote:
-> On Wed, Dec 11, 2013 at 09:48:14PM +0800, Jeff Liu wrote:
+On 12/12 2013 07:31 AM, Dave Chinner wrote:
+> On Wed, Dec 11, 2013 at 09:48:27PM +0800, Jeff Liu wrote:
 >> From: Jie Liu <jeff.liu@oracle.com>
 >>
->> Use xfs_ialloc_blks_per_cluster() in xfs_bulkstat(), make the
->> related variables more meaningful and remove an unused variable
->> nimask from it.
+>> Use xfs_ialloc_blks_per_cluster() in xfs_ifree_cluster()
 >>
 >> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 >> ---
->>  fs/xfs/xfs_itable.c | 20 ++++++++------------
->>  1 file changed, 8 insertions(+), 12 deletions(-)
+>>  fs/xfs/xfs_inode.c | 13 +++----------
+>>  1 file changed, 3 insertions(+), 10 deletions(-)
 >>
->> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
->> index c237ad1..6671f5b 100644
->> --- a/fs/xfs/xfs_itable.c
->> +++ b/fs/xfs/xfs_itable.c
->> @@ -209,9 +209,8 @@ xfs_bulkstat(
->>  	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
->>  	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
->>  	xfs_ino_t		lastino; /* last inode number returned */
->> -	int			nbcluster; /* # of blocks in a cluster */
->> -	int			nicluster; /* # of inodes in a cluster */
->> -	int			nimask;	/* mask for inode clusters */
->> +	int			blks_per_cluster; /* # of blocks in a cluster */
->> +	int			ninodes; /* # of inodes in a cluster */
-> 
-> inodes_per_cluster?
-Ok.
-> 
->>  	int			nirbuf;	/* size of irbuf */
->>  	int			rval;	/* return value error code */
->>  	int			tmp;	/* result value from btree calls */
->> @@ -243,11 +242,8 @@ xfs_bulkstat(
->>  	*done = 0;
->>  	fmterror = 0;
->>  	ubufp = ubuffer;
->> -	nicluster = mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp) ?
->> -		mp->m_sb.sb_inopblock :
->> -		(XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
->> -	nimask = ~(nicluster - 1);
->> -	nbcluster = nicluster >> mp->m_sb.sb_inopblog;
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 001aa89..7e75b8e 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -2152,16 +2152,9 @@ xfs_ifree_cluster(
+>>  	struct xfs_perag	*pag;
+>>  
+>>  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
+>> -	if (mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp)) {
+>> -		blks_per_cluster = 1;
+>> -		ninodes = mp->m_sb.sb_inopblock;
+>> -		nbufs = XFS_IALLOC_BLOCKS(mp);
+>> -	} else {
+>> -		blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) /
+>> -					mp->m_sb.sb_blocksize;
+>> -		ninodes = blks_per_cluster * mp->m_sb.sb_inopblock;
+>> -		nbufs = XFS_IALLOC_BLOCKS(mp) / blks_per_cluster;
+>> -	}
 >> +	blks_per_cluster = xfs_ialloc_blks_per_cluster(mp);
+>> +	ninodes = blks_per_cluster << mp->m_sb.sb_inopblog;
+>> +	nbufs = XFS_IALLOC_BLOCKS(mp) / blks_per_cluster;
 > 
-> Ok, now I see the helper name, perhaps it shoul dbe more like all
-> the other conversion functions. "ialloc" means nothing in the
-> context, and "blks" doesn't tell us the unit we are converting to
-> - if could be basic blocks, it could be filesystem blocks. So,
-> perhaps something like xfs_icluster_size_fsb()?
-Sounds make sense to me, I'd like to adopt this name.
+> I'd get rid of the XFS_IALLOC_BLOCKS() macros there and just use
+> mp->m_ialloc_blks directly. Otherwise looks good.
+Agree, for the same reason as XFS_INODE_CLUSTER_SIZE() macros, I will
+kill it.  Oh, it looks we can get rid of XFS_IALLOC_INODES() marcos as
+well...
 
 Thanks,
 -Jeff
