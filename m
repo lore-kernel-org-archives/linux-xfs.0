@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 72A5B7F53
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 01:38:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C3D9AC008
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:38:55 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id z9H75jhwwrhCG5VT (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 41AD87F59
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 01:39:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B3E2FAC008
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:39:02 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id iQFaZZNWs5veWcUW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 23:38:54 -0800 (PST)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBC7cquB021028
+	Wed, 11 Dec 2013 23:39:01 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rBC7d0np026969
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:38:53 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBC7cq6o021055
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:39:01 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBC7d0bp020927
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:38:52 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBC7cqje021047 for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:38:52 GMT
-Message-ID: <52A96809.9020702@oracle.com>
-Date: Thu, 12 Dec 2013 15:38:49 +0800
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:39:00 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBC7cxjB026182 for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 07:38:59 GMT
+Message-ID: <52A96810.9090400@oracle.com>
+Date: Thu, 12 Dec 2013 15:38:56 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 6/8] xfs: use xfs_icluster_size_fsb in xfs_ialloc_inode_init
+Subject: [PATCH v2 7/8] xfs: use xfs_icluster_size_fsb in xfs_ifree_cluster
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,63 +43,61 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Use xfs_icluster_size_fsb() in xfs_ialloc_inode_init(), rename variable
+Use xfs_icluster_size_fsb() in xfs_ifree_cluster(), rename variable
 ninodes to inodes_per_cluster, the later is more meaningful.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_ialloc.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_inode.c | 19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 5acba64..492ac88 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -170,27 +170,20 @@ xfs_ialloc_inode_init(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0c8c334..833028c 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2141,8 +2141,8 @@ xfs_ifree_cluster(
  {
- 	struct xfs_buf		*fbuf;
- 	struct xfs_dinode	*free;
--	int			blks_per_cluster, nbufs, ninodes;
-+	int			nbufs, blks_per_cluster, inodes_per_cluster;
- 	int			version;
+ 	xfs_mount_t		*mp = free_ip->i_mount;
+ 	int			blks_per_cluster;
++	int			inodes_per_cluster;
+ 	int			nbufs;
+-	int			ninodes;
  	int			i, j;
- 	xfs_daddr_t		d;
- 	xfs_ino_t		ino = 0;
+ 	xfs_daddr_t		blkno;
+ 	xfs_buf_t		*bp;
+@@ -2152,18 +2152,11 @@ xfs_ifree_cluster(
+ 	struct xfs_perag	*pag;
  
- 	/*
--	 * Loop over the new block(s), filling in the inodes.
--	 * For small block sizes, manipulate the inodes in buffers
--	 * which are multiples of the blocks size.
-+	 * Loop over the new block(s), filling in the inodes.  For small block
-+	 * sizes, manipulate the inodes in buffers  which are multiples of the
-+	 * blocks size.
- 	 */
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
 -	if (mp->m_sb.sb_blocksize >= mp->m_inode_cluster_size) {
 -		blks_per_cluster = 1;
--		nbufs = length;
 -		ninodes = mp->m_sb.sb_inopblock;
+-		nbufs = mp->m_ialloc_blks;
 -	} else {
 -		blks_per_cluster = mp->m_inode_cluster_size /
 -				   mp->m_sb.sb_blocksize;
--		nbufs = length / blks_per_cluster;
 -		ninodes = blks_per_cluster * mp->m_sb.sb_inopblock;
+-		nbufs = mp->m_ialloc_blks / blks_per_cluster;
 -	}
 +	blks_per_cluster = xfs_icluster_size_fsb(mp);
 +	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
-+	nbufs = length / blks_per_cluster;
++	nbufs = mp->m_ialloc_blks / blks_per_cluster;
  
- 	/*
- 	 * Figure out what version number to use in the inodes we create.  If
-@@ -246,7 +239,7 @@ xfs_ialloc_inode_init(
- 		/* Initialize the inode buffers and log them appropriately. */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
- 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
+-	for (j = 0; j < nbufs; j++, inum += ninodes) {
++	for (j = 0; j < nbufs; j++, inum += inodes_per_cluster) {
+ 		blkno = XFS_AGB_TO_DADDR(mp, XFS_INO_TO_AGNO(mp, inum),
+ 					 XFS_INO_TO_AGBNO(mp, inum));
+ 
+@@ -2225,7 +2218,7 @@ xfs_ifree_cluster(
+ 		 * transaction stale above, which means there is no point in
+ 		 * even trying to lock them.
+ 		 */
 -		for (i = 0; i < ninodes; i++) {
 +		for (i = 0; i < inodes_per_cluster; i++) {
- 			int	ioffset = i << mp->m_sb.sb_inodelog;
- 			uint	isize = xfs_dinode_size(version);
- 
+ retry:
+ 			rcu_read_lock();
+ 			ip = radix_tree_lookup(&pag->pag_ici_root,
 -- 
 1.8.3.2
 
