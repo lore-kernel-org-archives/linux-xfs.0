@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 95A1F29E1F
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:17 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6D79D29E24
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:31 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 75A48304062
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:17 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E06F6AC002
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:30 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LKHYle3WAOt3Bgm7 for
-	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:16 -0800 (PST)
-Message-ID: <52AA0782.8050902@redhat.com>
-Date: Thu, 12 Dec 2013 13:59:14 -0500
+	cuda.sgi.com with ESMTP id k98TuLBNC1zqFc9h for
+	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:29 -0800 (PST)
+Message-ID: <52AA078E.90800@redhat.com>
+Date: Thu, 12 Dec 2013 13:59:26 -0500
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/5] repair: phase 6 is trivially parallelisable
+Subject: Re: [PATCH 4/5] libxfs: buffer cache hashing is suboptimal
 References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
-	<1386832945-19763-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1386832945-19763-4-git-send-email-david@fromorbit.com>
+	<1386832945-19763-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1386832945-19763-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,142 +33,119 @@ To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 On 12/12/2013 02:22 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Phase 6 is currently single threaded, but it iterates AGs one at a
-> time. When there are hundreds of AGs that need scanning, this takes
-> a long time. Given that all the objects that the AG traversal works
-> on are per-ag, we can simply parallelise this into a strided AG
-> processing like phase 3 and 4.
+> The hashkey calculation is very simplistic,and throws away an amount
+> of entropy that should be folded into the hash. The result is
+> sub-optimal distribution across the hash tables. For example, with a
+> default 512 entry table, phase 2 results in this:
 > 
-> Unpatched:	8m40s
-> patched:	1m10s (7 threads)
+...
+> Modify the hash to be something more workable - steal the linux
+> kernel inode hash calculation and try that:
 > 
-> Big win!
+...
+> 
+> Kinda says it all, really...
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  repair/phase6.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++---------
->  1 file changed, 47 insertions(+), 9 deletions(-)
+
+Results look nice and the algorithm seems to match the kernel variant,
+but what about the 32-bit alternate prime/cache line values? Safe to
+leave out..?
+
+Brian
+
+>  include/cache.h |  4 +++-
+>  libxfs/cache.c  |  7 +++++--
+>  libxfs/rdwr.c   | 12 ++++++++++--
+>  3 files changed, 18 insertions(+), 5 deletions(-)
 > 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index d2d4a44..d82f900 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -51,6 +51,7 @@ typedef struct dotdot_update {
+> diff --git a/include/cache.h b/include/cache.h
+> index 76cb234..0a84c69 100644
+> --- a/include/cache.h
+> +++ b/include/cache.h
+> @@ -66,7 +66,8 @@ typedef void (*cache_walk_t)(struct cache_node *);
+>  typedef struct cache_node * (*cache_node_alloc_t)(cache_key_t);
+>  typedef void (*cache_node_flush_t)(struct cache_node *);
+>  typedef void (*cache_node_relse_t)(struct cache_node *);
+> -typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int);
+> +typedef unsigned int (*cache_node_hash_t)(cache_key_t, unsigned int,
+> +					  unsigned int);
+>  typedef int (*cache_node_compare_t)(struct cache_node *, cache_key_t);
+>  typedef unsigned int (*cache_bulk_relse_t)(struct cache *, struct list_head *);
 >  
->  static dotdot_update_t		*dotdot_update_list;
->  static int			dotdot_update;
-> +static pthread_mutex_t		dotdot_lock;
+> @@ -112,6 +113,7 @@ struct cache {
+>  	cache_node_compare_t	compare;	/* comparison routine */
+>  	cache_bulk_relse_t	bulkrelse;	/* bulk release routine */
+>  	unsigned int		c_hashsize;	/* hash bucket count */
+> +	unsigned int		c_hashshift;	/* hash key shift */
+>  	struct cache_hash	*c_hash;	/* hash table buckets */
+>  	struct cache_mru	c_mrus[CACHE_MAX_PRIORITY + 1];
+>  	unsigned long long	c_misses;	/* cache misses */
+> diff --git a/libxfs/cache.c b/libxfs/cache.c
+> index 84d2860..dc69689 100644
+> --- a/libxfs/cache.c
+> +++ b/libxfs/cache.c
+> @@ -25,6 +25,7 @@
+>  #include <xfs/platform_defs.h>
+>  #include <xfs/list.h>
+>  #include <xfs/cache.h>
+> +#include <xfs/libxfs.h>
 >  
->  static void
->  add_dotdot_update(
-> @@ -64,12 +65,14 @@ add_dotdot_update(
->  		do_error(_("malloc failed add_dotdot_update (%zu bytes)\n"),
->  			sizeof(dotdot_update_t));
+>  #define CACHE_DEBUG 1
+>  #undef CACHE_DEBUG
+> @@ -61,6 +62,7 @@ cache_init(
+>  	cache->c_misses = 0;
+>  	cache->c_maxcount = maxcount;
+>  	cache->c_hashsize = hashsize;
+> +	cache->c_hashshift = libxfs_highbit32(hashsize);
+>  	cache->hash = cache_operations->hash;
+>  	cache->alloc = cache_operations->alloc;
+>  	cache->flush = cache_operations->flush;
+> @@ -343,7 +345,7 @@ cache_node_get(
+>  	int			priority = 0;
+>  	int			purged = 0;
 >  
-> +	pthread_mutex_lock(&dotdot_lock);
->  	dir->next = dotdot_update_list;
->  	dir->irec = irec;
->  	dir->agno = agno;
->  	dir->ino_offset = ino_offset;
+> -	hashidx = cache->hash(key, cache->c_hashsize);
+> +	hashidx = cache->hash(key, cache->c_hashsize, cache->c_hashshift);
+>  	hash = cache->c_hash + hashidx;
+>  	head = &hash->ch_list;
 >  
->  	dotdot_update_list = dir;
-> +	pthread_mutex_unlock(&dotdot_lock);
->  }
+> @@ -515,7 +517,8 @@ cache_node_purge(
+>  	struct cache_hash *	hash;
+>  	int			count = -1;
 >  
->  /*
-> @@ -2918,34 +2921,68 @@ update_missing_dotdot_entries(
->  	 * these entries parents were updated, rebuild them again
->  	 * set dotdot_update flag so processing routines do not count links
->  	 */
-> +	pthread_mutex_lock(&dotdot_lock);
->  	dotdot_update = 1;
->  	while (dotdot_update_list) {
->  		dir = dotdot_update_list;
->  		dotdot_update_list = dir->next;
-> +		dir->next = NULL;
-> +		pthread_mutex_unlock(&dotdot_lock);
-> +
->  		process_dir_inode(mp, dir->agno, dir->irec, dir->ino_offset);
->  		free(dir);
-> +
-> +		pthread_mutex_lock(&dotdot_lock);
->  	}
-> +	pthread_mutex_unlock(&dotdot_lock);
->  }
-
-Technically the locking here is unnecessary, as this appears to remain
-single threaded, yes? It doesn't hurt and probably eliminates a
-potential landmine, so:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
+> -	hash = cache->c_hash + cache->hash(key, cache->c_hashsize);
+> +	hash = cache->c_hash + cache->hash(key, cache->c_hashsize,
+> +					   cache->c_hashshift);
+>  	head = &hash->ch_list;
+>  	pthread_mutex_lock(&hash->ch_mutex);
+>  	for (pos = head->next, n = pos->next; pos != head;
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 0219a08..0effb9a 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -311,10 +311,18 @@ struct xfs_bufkey {
+>  	int			nmaps;
+>  };
 >  
->  static void
->  traverse_ags(
-> -	xfs_mount_t 		*mp)
-> +	xfs_mount_t		*mp)
+> +/*  2^63 + 2^61 - 2^57 + 2^54 - 2^51 - 2^18 + 1 */
+> +#define GOLDEN_RATIO_PRIME	0x9e37fffffffc0001UL
+> +#define CACHE_LINE_SIZE		64
+>  static unsigned int
+> -libxfs_bhash(cache_key_t key, unsigned int hashsize)
+> +libxfs_bhash(cache_key_t key, unsigned int hashsize, unsigned int hashshift)
 >  {
-> -	int			i;
-> -	work_queue_t		queue;
-> +	int			i, j;
-> +	xfs_agnumber_t		agno;
-> +	work_queue_t		*queues;
->  	prefetch_args_t		*pf_args[2];
->  
->  	/*
->  	 * we always do prefetch for phase 6 as it will fill in the gaps
->  	 * not read during phase 3 prefetch.
->  	 */
-> -	queue.mp = mp;
-> -	pf_args[0] = start_inode_prefetch(0, 1, NULL);
-> -	for (i = 0; i < glob_agcount; i++) {
-> -		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
-> -				pf_args[i & 1]);
-> -		traverse_function(&queue, i, pf_args[i & 1]);
-> +	if (!ag_stride) {
-> +		work_queue_t	queue;
+> -	return (((unsigned int)((struct xfs_bufkey *)key)->blkno) >> 5) % hashsize;
+> +	uint64_t	hashval = ((struct xfs_bufkey *)key)->blkno;
+> +	uint64_t	tmp;
 > +
-> +		queue.mp = mp;
-> +		pf_args[0] = start_inode_prefetch(0, 1, NULL);
-> +		for (i = 0; i < glob_agcount; i++) {
-> +			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
-> +					pf_args[i & 1]);
-> +			traverse_function(&queue, i, pf_args[i & 1]);
-> +		}
-> +		return;
->  	}
-> +
-> +	/*
-> +	 * create one worker thread for each segment of the volume
-> +	 */
-> +	queues = malloc(thread_count * sizeof(work_queue_t));
-> +	for (i = 0, agno = 0; i < thread_count; i++) {
-> +		create_work_queue(&queues[i], mp, 1);
-> +		pf_args[0] = NULL;
-> +		for (j = 0; j < ag_stride && agno < glob_agcount; j++, agno++) {
-> +			pf_args[0] = start_inode_prefetch(agno, 1, pf_args[0]);
-> +			queue_work(&queues[i], traverse_function, agno,
-> +				   pf_args[0]);
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * wait for workers to complete
-> +	 */
-> +	for (i = 0; i < thread_count; i++)
-> +		destroy_work_queue(&queues[i]);
-> +	free(queues);
+> +	tmp = hashval ^ (GOLDEN_RATIO_PRIME + hashval) / CACHE_LINE_SIZE;
+> +	tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> hashshift);
+> +	return tmp % hashsize;
 >  }
 >  
->  void
-> @@ -2957,6 +2994,7 @@ phase6(xfs_mount_t *mp)
->  	memset(&zerocr, 0, sizeof(struct cred));
->  	memset(&zerofsx, 0, sizeof(struct fsxattr));
->  	orphanage_ino = 0;
-> +	pthread_mutex_init(&dotdot_lock, NULL);
->  
->  	do_log(_("Phase 6 - check inode connectivity...\n"));
->  
+>  static int
 > 
 
 _______________________________________________
