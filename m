@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3CEFA29DF8
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 03:41:13 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C9B787F53
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 04:09:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D7747AC001
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 01:41:09 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6374FAC001
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 02:09:52 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	iq9CnrqvIP1OTlrS for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 01:41:08 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vr2lR-00015p-7d
-	for xfs@oss.sgi.com; Thu, 12 Dec 2013 20:41:01 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vr2lR-0005t6-6X
-	for xfs@oss.sgi.com; Thu, 12 Dec 2013 20:41:01 +1100
+	fguNxUKNFHpAnE3p for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 02:09:50 -0800 (PST)
+Date: Thu, 12 Dec 2013 21:09:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] xfs: dquot modification scalability
-Date: Thu, 12 Dec 2013 20:40:55 +1100
-Message-Id: <1386841258-22183-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/6] xfs: don't try to mark uncached buffers stale on
+	error.
+Message-ID: <20131212100947.GW10988@dastard>
+References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
+	<1386826478-13846-2-git-send-email-david@fromorbit.com>
+	<52A98226.4020705@oracle.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52A98226.4020705@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +28,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Hi folks,
+On Thu, Dec 12, 2013 at 05:30:14PM +0800, Jeff Liu wrote:
+> On 12/12 2013 13:34, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > fsstress failed during a shutdown with the following assert:
+> Looks fsstress is always a good aid to make file system cry... :-P
 
-I recently made the mistake of enabling quotas on one of my regular
-scalability tests - concurrent file creates - and discovered that
-the quota modification serialised the entire workload. Not good.
+Heh. That it is. :)
 
-Only two of these patches are really scalability patches - the first
-patch in the series is a cleanup that gets rid of dquot hints.
 
-The first scalability change is to not require the dquot lock when
-taking references to the dquot. This is done simply by converting
-the reference count to an atomic and replacing all all operations
-with equivalent atomic variable operations. This means that we can
-remove the dquot lock from xfs_qm_dqhold(). Further optimisations
-can be done on the release of references, but that is not done in
-this patch or in this patch set.
+> I wonder if here the shutdown is simulated via xfstests/src/godown or not,
+> but I can trigger another hang up issue with this patch via a test case
+> below(80% reproducible, I also ran the test against the left patches in
+> this series, this problem still exists):
 
-Getting rid of the dquot lock from the hold code moves the
-contention point to the transaction subsystem - xfs_trans_dqresv and
-the transaction commit code. The second scalability change it to
-make xfs_trans_dqresv() lockless by using cmpxchg rather than the
-dquot lock for updating the reservations. We don't really need to
-hold the dquot lock to check the quota limits as the limits almost
-never change - it's really only the reservation that we care about
-here, and if that changes between the check and the cmpxchg, then
-we'll go around the loop and check the limits again with the newly
-sampled reservation...
+I occassionally get that hang, too. It's a "once a month" type hang,
+and I've never beenable to reproduce it reliably enough to debug.
 
-Overall, these patches improve workload performance from around
-16,500 creates/s to about 24,000 creates/s. While 25% improvement is
-nothing to complain about, performance without quotas is about
-250,000 creates/s. So there's still a lot of ground to make up here.
+> #!/bin/bash
+> 
+> mkfs.xfs -f /dev/sda7
+> 
+> for ((i=0;i<10;i++))
+> do
+>     mount /dev/sda7 /xfs
+>     fsstress -d /xfs -n 1000 -p 100 >/dev/null 2>&1 &
+>     sleep 10
+>     godown /xfs
+>     wait
+>     killall -q fsstress
+>     umount /xfs
+> done
+> 
+> It seems there is no such kind of test cases in xfstestes for now, I'd
+> write one if required.
 
-The patchset moves the contention almost entirely to the transaction
-commit code, along with the xfs_qm_dqrele calls in xfs_create (about
-15% of the overall locks contention). Fixing the transaction commit
-code is a major piece of work and where the order of magnitude
-improvement will come from, but I haven't quite figured it all
-out yet. The dqrele code is simpler, so I'll probably have a patch
-soon for that - it'll give another 10% improvement on what we have
-now...
+nothing quite that generic - xfs/087 does a loop like that over
+different log configurations, but that's testing log recovery more
+than shutdown sanity. Adding that test would be a good idea - it's a
+shame no other filesystem supports a shutdown like XFS does....
+
+> The backtraces were shown as following:
+> 
+> [  365.987493] INFO: task fsstress:3215 blocked for more than 120 seconds.
+> [  365.987499]       Tainted: PF          O 3.13.0-rc2+ #13
+> [  365.987500] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  365.987502] fsstress        D ffff88026f254440     0  3215   3142 0x00000000
+> [  365.987507]  ffff880253f19de0 0000000000000086 ffff880242071800 ffff880253f19fd8
+> [  365.987512]  0000000000014440 0000000000014440 ffff880242071800 ffff880073694c00
+> [  365.987515]  ffff880073694c80 ffff880073694c90 ffffffffffffffff 0000000000000292
+> [  365.987519] Call Trace:
+> [  365.987528]  [<ffffffff81718779>] schedule+0x29/0x70
+> [  365.987560]  [<ffffffffa0c2a49d>] xlog_cil_force_lsn+0x18d/0x1e0 [xfs]
+> [  365.987565]  [<ffffffff81097210>] ? wake_up_state+0x20/0x20
+> [  365.987570]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
+> [  365.987594]  [<ffffffffa0c28921>] _xfs_log_force+0x61/0x270 [xfs]
+> [  365.987599]  [<ffffffff812b0610>] ? jbd2_log_wait_commit+0x110/0x180
+> [  365.987603]  [<ffffffff810a83f0>] ? prepare_to_wait_event+0x100/0x100
+> [  365.987607]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
+> [  365.987629]  [<ffffffffa0c28b56>] xfs_log_force+0x26/0x80 [xfs]
+> [  365.987648]  [<ffffffffa0bcf35d>] xfs_fs_sync_fs+0x2d/0x50 [xfs]
+> [  365.987652]  [<ffffffff811e8790>] sync_fs_one_sb+0x20/0x30
+> [  365.987656]  [<ffffffff811bcc32>] iterate_supers+0xb2/0x110
+> [  365.987660]  [<ffffffff811e88c2>] sys_sync+0x62/0xa0
+> [  365.987665]  [<ffffffff81724ced>] system_call_fastpath+0x1a/0x1f
+> [  372.225302] XFS (sda7): xfs_log_force: error 5 returned.
+> [  402.275608] XFS (sda7): xfs_log_force: error 5 returned.
+> [  432.325929] XFS (sda7): xfs_log_force: error 5 returned.
+> [  462.376239] XFS (sda7): xfs_log_force: error 5 returned.
+
+So what we see here is that there is a race condition somewhere in
+the shutdown code. The shutdown is supposed to wake everyone waiting
+of the ic_force_wait wait queue on each iclog, but for some reason
+that hasn't happened. The sleepers check for XLOG_STATE_IOERROR
+(which is set during the force shutdown before we wake ic_force_wait
+sleepers) before they go to sleep, so whatever the race is it isn't
+immediately obvious to me.
 
 Cheers,
 
 Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
