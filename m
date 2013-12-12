@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D74697F5D
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:34:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C410B8F8035
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:47 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DC8BE7F51
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 01:22:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D85530406B
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:22:36 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lcFirjKvl8yji8dO for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 21:34:46 -0800 (PST)
+	rzqsZi2cfxlAY2qX for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 23:22:34 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bq-Cd
-	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
+	(envelope-from <dave@fromorbit.com>) id 1Vr0bM-0000oL-O7
+	for xfs@oss.sgi.com; Thu, 12 Dec 2013 18:22:28 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003cj-Bf
-	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1Vr0bM-0005C8-NE
+	for xfs@oss.sgi.com; Thu, 12 Dec 2013 18:22:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] xfs: abort metadata writeback on permanent errors
-Date: Thu, 12 Dec 2013 16:34:38 +1100
-Message-Id: <1386826478-13846-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1386826478-13846-1-git-send-email-david@fromorbit.com>
-References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/5] repair: limit auto-striding concurrency apprpriately
+Date: Thu, 12 Dec 2013 18:22:25 +1100
+Message-Id: <1386832945-19763-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1386832945-19763-1-git-send-email-david@fromorbit.com>
+References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,162 +39,94 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If we are doing aysnc writeback of metadata, we can get write errors
-but have nobody to report them to. At the moment, we simply attempt
-to reissue the write from io completion in the hope that it's a
-transient error.
+It's possible to have filesystems with hundreds of AGs on systems
+with little concurrency and resources. In this case, we can easily
+exhaust memory and fail to create threads and have all sorts of
+interesting problems.
 
-When it's not a transient error, the buffer is stuck forever in
-this loop, and we cannot break out of it. Eventually, unmount will
-hang because the AIL cannot be emptied and everything goes downhill
-from them.
+xfs/250 can cause this to occur, with failures like:
 
-To solve this problem, only retry the write IO once before aborting
-it. We don't throw the buffer away because some transient errors can
-last minutes (e.g.  FC path failover) or even hours (thin
-provisioned devices that have run out of backing space) before they
-go away. Hence we really want to keep trying until we can't try any
-more.
+        - agno = 707
+        - agno = 692
+fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
 
-Because the buffer was not cleaned, however, it does not get removed
-from the AIL and hence the next pass across the AIL will start IO on
-it again. As such, we still get the "retry forever" semantics that
-we currently have, but we allow other access to the buffer in the
-mean time. Meanwhile the filesystem can continue to modify the
-buffer and relog it, so the IO errors won't hang the log or the
-filesystem.
+And this:
 
-Now when we are pushing the AIL, we can see all these "permanent IO
-error" buffers and we can issue a warning about failures before we
-retry the IO. We can also catch these buffers when unmounting an
-issue a corruption warning, too.
+        - agno = 484
+        - agno = 782
+failed to create prefetch thread: Resource temporarily unavailable
+
+Because it's trying to create more threads than a poor little 512MB
+single CPU ia32 box can handle.
+
+So, limit concurrency to a maximum of numcpus * 8 to prevent this.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c      | 10 ++++++++--
- fs/xfs/xfs_buf.h      |  6 +++++-
- fs/xfs/xfs_buf_item.c | 21 +++++++++++++++++++--
- 3 files changed, 32 insertions(+), 5 deletions(-)
+ include/libxfs.h    |  1 +
+ libxfs/init.h       |  1 -
+ repair/xfs_repair.c | 18 +++++++++++++++++-
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 27dc152..402e050 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1153,7 +1153,7 @@ xfs_bwrite(
- 	ASSERT(xfs_buf_islocked(bp));
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 4bf331c..39e3d85 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
+ extern int	libxfs_device_alignment (void);
+ extern void	libxfs_report(FILE *);
+ extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
++extern int	platform_nproc(void);
  
- 	bp->b_flags |= XBF_WRITE;
--	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q);
-+	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q | XBF_WRITE_FAIL);
+ /* check or write log footer: specify device, log size in blocks & uuid */
+ typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
+diff --git a/libxfs/init.h b/libxfs/init.h
+index f0b8cb6..112febb 100644
+--- a/libxfs/init.h
++++ b/libxfs/init.h
+@@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
+ extern char *platform_findblockpath (char *path);
+ extern int platform_direct_blockdev (void);
+ extern int platform_align_blockdev (void);
+-extern int platform_nproc(void);
+ extern unsigned long platform_physmem(void);	/* in kilobytes */
+ extern int platform_has_uuid;
  
- 	xfs_bdstrat_cb(bp);
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 7beffcb..0d006ae 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -627,13 +627,29 @@ main(int argc, char **argv)
+ 	 * to target these for an increase in thread count. Hence a stride value
+ 	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
+ 	 * on such filesystems.
++	 *
++	 * Limit the maximum thread count based on the available CPU power that
++	 * is available. If we use too many threads, we might run out of memory
++	 * and CPU power before we run out of IO concurrency.
+ 	 */
+ 	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
+ 		ag_stride = 15;
  
-@@ -1525,6 +1525,12 @@ xfs_wait_buftarg(
- 			struct xfs_buf *bp;
- 			bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
- 			list_del_init(&bp->b_lru);
-+			if (bp->b_flags & XBF_WRITE_FAIL) {
-+				xfs_alert(btp->bt_mount,
-+"Corruption Alert: Buffer at block 0x%llx had permanent write failures!\n"
-+"Please run xfs_repair to determine the extent of the problem.",
-+					(long long)bp->b_bn);
-+			}
- 			xfs_buf_rele(bp);
- 		}
- 		if (loop++ != 0)
-@@ -1798,7 +1804,7 @@ __xfs_buf_delwri_submit(
- 
- 	blk_start_plug(&plug);
- 	list_for_each_entry_safe(bp, n, io_list, b_list) {
--		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC);
-+		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC | XBF_WRITE_FAIL);
- 		bp->b_flags |= XBF_WRITE;
- 
- 		if (!wait) {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index e656833..614097e 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -45,6 +45,7 @@ typedef enum {
- #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
- #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
- #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
-+#define XBF_WRITE_FAIL	 (1 << 24)/* async writes have failed on this buffer */
- 
- /* I/O hints for the BIO layer */
- #define XBF_SYNCIO	 (1 << 10)/* treat this buffer as synchronous I/O */
-@@ -70,6 +71,7 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_ASYNC,		"ASYNC" }, \
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_STALE,		"STALE" }, \
-+	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
- 	{ XBF_SYNCIO,		"SYNCIO" }, \
- 	{ XBF_FUA,		"FUA" }, \
- 	{ XBF_FLUSH,		"FLUSH" }, \
-@@ -80,6 +82,7 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
- 	{ _XBF_COMPOUND,	"COMPOUND" }
- 
+ 	if (ag_stride) {
++		int max_threads = platform_nproc() * 8;
 +
- /*
-  * Internal state flags.
-  */
-@@ -301,7 +304,8 @@ extern void xfs_buf_terminate(void);
- 
- #define XFS_BUF_ZEROFLAGS(bp) \
- 	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC| \
--			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
-+			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH| \
-+			    XBF_WRITE_FAIL))
- 
- void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index a64f67b..2227b9b 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -496,6 +496,14 @@ xfs_buf_item_unpin(
+ 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
+-		thread_init();
++		while (thread_count > max_threads) {
++			ag_stride *= 2;
++			thread_count = (glob_agcount + ag_stride - 1) /
++								ag_stride;
++		}
++		if (thread_count > 0)
++			thread_init();
++		else {
++			thread_count = 1;
++			ag_stride = 0;
++		}
  	}
- }
  
-+/*
-+ * Buffer IO error rate limiting. Limit it to no more than 10 messages per 30
-+ * seconds so as to not spam logs too much on repeated detection of the same
-+ * buffer being bad..
-+ */
-+
-+DEFINE_RATELIMIT_STATE(xfs_buf_write_fail_rl_state, 30 * HZ, 10);
-+
- STATIC uint
- xfs_buf_item_push(
- 	struct xfs_log_item	*lip,
-@@ -524,6 +532,14 @@ xfs_buf_item_push(
- 
- 	trace_xfs_buf_item_push(bip);
- 
-+	/* has a previous flush failed due to IO errors? */
-+	if ((bp->b_flags & XBF_WRITE_FAIL) &&
-+	    ___ratelimit(&xfs_buf_write_fail_rl_state, "XFS:")) {
-+		xfs_warn(bp->b_target->bt_mount,
-+"Detected failing async write on buffer block 0x%llx. Retrying async write.\n",
-+			 (long long)bp->b_bn);
-+	}
-+
- 	if (!xfs_buf_delwri_queue(bp, buffer_list))
- 		rval = XFS_ITEM_FLUSHING;
- 	xfs_buf_unlock(bp);
-@@ -1096,8 +1112,9 @@ xfs_buf_iodone_callbacks(
- 
- 		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
- 
--		if (!XFS_BUF_ISSTALE(bp)) {
--			bp->b_flags |= XBF_WRITE | XBF_ASYNC | XBF_DONE;
-+		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
-+			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
-+				       XBF_DONE | XBF_WRITE_FAIL;
- 			xfs_buf_iorequest(bp);
- 		} else {
- 			xfs_buf_relse(bp);
+ 	if (ag_stride && report_interval) {
 -- 
 1.8.4.rc3
 
