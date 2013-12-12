@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0502329E25
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 12:59:39 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C18EC7F6A
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 13:06:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B3ABD8F8052
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:38 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ns81b1qJ3GXpMaH1 for
-	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 10:59:32 -0800 (PST)
-Message-ID: <52AA0792.6090606@redhat.com>
-Date: Thu, 12 Dec 2013 13:59:30 -0500
-From: Brian Foster <bfoster@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A1758304053
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 11:06:13 -0800 (PST)
+Received: from zimbra13.linbit.com (zimbra13.linbit.com [212.69.166.240]) by
+	cuda.sgi.com with ESMTP id Jdd4lYwafV7lvchL for
+	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 11:06:11 -0800 (PST)
+Date: Thu, 12 Dec 2013 20:06:09 +0100 (CET)
+From: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>
+Message-ID: <1724169901.69108.1386875169382.JavaMail.zimbra@linbit.com>
+In-Reply-To: <20131211104526.648135334@bombadil.infradead.org>
+References: <20131211104243.148113893@bombadil.infradead.org>
+	<20131211104526.648135334@bombadil.infradead.org>
+Subject: Re: [PATCH 02/18] fs: add get_acl helper
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/5] repair: limit auto-striding concurrency apprpriately
-References: <1386832945-19763-1-git-send-email-david@fromorbit.com>
-	<1386832945-19763-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1386832945-19763-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,103 +28,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
 
-On 12/12/2013 02:22 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> It's possible to have filesystems with hundreds of AGs on systems
-> with little concurrency and resources. In this case, we can easily
-> exhaust memory and fail to create threads and have all sorts of
-> interesting problems.
-> 
-> xfs/250 can cause this to occur, with failures like:
-> 
->         - agno = 707
->         - agno = 692
-> fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
-> 
-> And this:
-> 
->         - agno = 484
->         - agno = 782
-> failed to create prefetch thread: Resource temporarily unavailable
-> 
-> Because it's trying to create more threads than a poor little 512MB
-> single CPU ia32 box can handle.
-> 
-> So, limit concurrency to a maximum of numcpus * 8 to prevent this.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+Christoph,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  include/libxfs.h    |  1 +
->  libxfs/init.h       |  1 -
->  repair/xfs_repair.c | 18 +++++++++++++++++-
->  3 files changed, 18 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index 4bf331c..39e3d85 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
->  extern int	libxfs_device_alignment (void);
->  extern void	libxfs_report(FILE *);
->  extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
-> +extern int	platform_nproc(void);
->  
->  /* check or write log footer: specify device, log size in blocks & uuid */
->  typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
-> diff --git a/libxfs/init.h b/libxfs/init.h
-> index f0b8cb6..112febb 100644
-> --- a/libxfs/init.h
-> +++ b/libxfs/init.h
-> @@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
->  extern char *platform_findblockpath (char *path);
->  extern int platform_direct_blockdev (void);
->  extern int platform_align_blockdev (void);
-> -extern int platform_nproc(void);
->  extern unsigned long platform_physmem(void);	/* in kilobytes */
->  extern int platform_has_uuid;
->  
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 7beffcb..0d006ae 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -627,13 +627,29 @@ main(int argc, char **argv)
->  	 * to target these for an increase in thread count. Hence a stride value
->  	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
->  	 * on such filesystems.
-> +	 *
-> +	 * Limit the maximum thread count based on the available CPU power that
-> +	 * is available. If we use too many threads, we might run out of memory
-> +	 * and CPU power before we run out of IO concurrency.
->  	 */
->  	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
->  		ag_stride = 15;
->  
->  	if (ag_stride) {
-> +		int max_threads = platform_nproc() * 8;
+> +struct posix_acl *get_acl(struct inode *inode, int type)
+> +{
+> +	struct posix_acl *acl;
 > +
->  		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
-> -		thread_init();
-> +		while (thread_count > max_threads) {
-> +			ag_stride *= 2;
-> +			thread_count = (glob_agcount + ag_stride - 1) /
-> +								ag_stride;
-> +		}
-> +		if (thread_count > 0)
-> +			thread_init();
-> +		else {
-> +			thread_count = 1;
-> +			ag_stride = 0;
-> +		}
->  	}
->  
->  	if (ag_stride && report_interval) {
-> 
+> +	acl = get_cached_acl(inode, type);
+> +	if (acl != ACL_NOT_CACHED)
+> +		return acl;
+> +
+> +	if (!IS_POSIXACL(inode))
+> +		return NULL;
+> +
+> +	/*
+> +	 * A filesystem can force a ACL callback by just never filling the
+> +	 * ACL cache. But normally you'd fill the cache either at inode
+> +	 * instantiation time, or on the first ->get_acl call.
+> +	 *
+> +	 * If the filesystem doesn't have a get_acl() function at all, we'll
+> +	 * just create the negative cache entry.
+> +	 */
+> +	if (!inode->i_op->get_acl) {
+> +		set_cached_acl(inode, type, NULL);
+> +		return ERR_PTR(-EAGAIN);
+
+The function should return NULL here.
+
+Andreas
 
 _______________________________________________
 xfs mailing list
