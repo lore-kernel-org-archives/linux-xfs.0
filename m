@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C18EC7F6A
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 13:06:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A1758304053
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 11:06:13 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 18B7B7F6A
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 13:07:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 02E5F8F8065
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 11:07:22 -0800 (PST)
 Received: from zimbra13.linbit.com (zimbra13.linbit.com [212.69.166.240]) by
-	cuda.sgi.com with ESMTP id Jdd4lYwafV7lvchL for
-	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 11:06:11 -0800 (PST)
-Date: Thu, 12 Dec 2013 20:06:09 +0100 (CET)
+	cuda.sgi.com with ESMTP id GaNeeWvQvHrgsaFR for
+	<xfs@oss.sgi.com>; Thu, 12 Dec 2013 11:07:21 -0800 (PST)
+Date: Thu, 12 Dec 2013 20:07:20 +0100 (CET)
 From: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>
-Message-ID: <1724169901.69108.1386875169382.JavaMail.zimbra@linbit.com>
-In-Reply-To: <20131211104526.648135334@bombadil.infradead.org>
+Message-ID: <389888733.69110.1386875240679.JavaMail.zimbra@linbit.com>
+In-Reply-To: <20131211104527.223923019@bombadil.infradead.org>
 References: <20131211104243.148113893@bombadil.infradead.org>
-	<20131211104526.648135334@bombadil.infradead.org>
-Subject: Re: [PATCH 02/18] fs: add get_acl helper
+	<20131211104527.223923019@bombadil.infradead.org>
+Subject: Re: [PATCH 05/18] fs: make posix_acl_chmod more useful
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,30 +33,16 @@ Cc: xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, Mark Fasheh <mfasheh@suse.com>, re
 
 Christoph,
 
-> +struct posix_acl *get_acl(struct inode *inode, int type)
+> +int
+> +posix_acl_chmod(struct inode *inode)
 > +{
 > +	struct posix_acl *acl;
+> +	int ret = 0;
 > +
-> +	acl = get_cached_acl(inode, type);
-> +	if (acl != ACL_NOT_CACHED)
-> +		return acl;
-> +
-> +	if (!IS_POSIXACL(inode))
-> +		return NULL;
-> +
-> +	/*
-> +	 * A filesystem can force a ACL callback by just never filling the
-> +	 * ACL cache. But normally you'd fill the cache either at inode
-> +	 * instantiation time, or on the first ->get_acl call.
-> +	 *
-> +	 * If the filesystem doesn't have a get_acl() function at all, we'll
-> +	 * just create the negative cache entry.
-> +	 */
-> +	if (!inode->i_op->get_acl) {
-> +		set_cached_acl(inode, type, NULL);
-> +		return ERR_PTR(-EAGAIN);
+> +	if (S_ISLNK(inode->i_mode) || !inode->i_op->set_acl)
+> +		return -EOPNOTSUPP;
 
-The function should return NULL here.
+Symlinks never have get_acl callbacks, so I would remove the S_ISLNK() check here.
 
 Andreas
 
