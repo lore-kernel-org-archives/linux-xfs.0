@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C031E7F50
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:34:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9BE948F8039
-	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:46 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id C0C367F5A
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 23:34:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AD2728F8035
+	for <xfs@oss.sgi.com>; Wed, 11 Dec 2013 21:34:47 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GHZzCWziiV9dMPBT for <xfs@oss.sgi.com>;
-	Wed, 11 Dec 2013 21:34:44 -0800 (PST)
+	uwmGBGbQab0gN4oB for <xfs@oss.sgi.com>;
+	Wed, 11 Dec 2013 21:34:45 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bl-9Q
+	(envelope-from <dave@fromorbit.com>) id 1Vqyv2-0000bp-C4
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003cK-8W
+	(envelope-from <dave@disappointment.disaster>) id 1Vqyv2-0003ce-B2
 	for xfs@oss.sgi.com; Thu, 12 Dec 2013 16:34:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: don't try to mark uncached buffers stale on error.
-Date: Thu, 12 Dec 2013 16:34:33 +1100
-Message-Id: <1386826478-13846-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: xlog_recover_process_data leaks like a sieve
+Date: Thu, 12 Dec 2013 16:34:37 +1100
+Message-Id: <1386826478-13846-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,165 +39,343 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-fsstress failed during a shutdown with the following assert:
+Fix the double free of the transaction structure introduced by
+commit 2a84108 ("xfs: free the list of recovery items on error").
+In the process, make the freeing of the trans structure on error or
+completion of processing consistent - i.e. the responsibility of the
+the function that detected the error or completes processing. Add
+comments to document this behaviour so it can be maintained more
+easily in future.
 
-XFS: Assertion failed: xfs_buf_islocked(bp), file: fs/xfs/xfs_buf.c, line: 143
-.....
- xfs_buf_stale+0x3f/0xf0
- xfs_bioerror_relse+0x2d/0x90
- xfsbdstrat+0x51/0xa0
- xfs_zero_remaining_bytes+0x1d1/0x2d0
- xfs_free_file_space+0x5d0/0x600
- xfs_change_file_space+0x251/0x3a0
- xfs_ioc_space+0xcc/0x130
-.....
+Fix the rest of the memory leaks of the transaction structure used
+by xlog_recover_process_data() that commit 2a84108 didn't address.
 
-xfs_zero_remaining_bytes() works with uncached buffers, and hence if
-we are preventing IO due to a shutdown, we should not be marking it
-stale as that is only for cached buffers. Instead, just mark it with
-an error and make sure it gets to the caller.
+Fix potential use-after-free of the trans structure by ensuring
+they are removed from the transaction recoovery-in-progress hash
+table before they are freed.
 
-[ 7732.193441] XFS: Assertion failed: xfs_buf_islocked(bp), file: fs/xfs/xfs_buf.c, line: 96
-[ 7732.195036] ------------[ cut here ]------------
-[ 7732.195890] kernel BUG at fs/xfs/xfs_message.c:107!
-[ 7732.196018] invalid opcode: 0000 [#1] SMP
-[ 7732.196018] Modules linked in:
-[ 7732.196018] CPU: 0 PID: 2899 Comm: fsstress Not tainted 3.12.0-rc7-dgc+ #47
-[ 7732.196018] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[ 7732.196018] task: ffff88003a83ada0 ti: ffff88002c0ae000 task.ti: ffff88002c0ae000
-[ 7732.196018] RIP: 0010:[<ffffffff81488462>]  [<ffffffff81488462>] assfail+0x22/0x30
-[ 7732.196018] RSP: 0000:ffff88002c0afae8  EFLAGS: 00010292
-[ 7732.196018] RAX: 000000000000004d RBX: ffff880002e59600 RCX: 0000000000000000
-[ 7732.196018] RDX: ffff88003fc0ed68 RSI: ffff88003fc0d3f8 RDI: 0000000000000246
-[ 7732.196018] RBP: ffff88002c0afae8 R08: 0000000000000096 R09: 00000000000012ec
-[ 7732.196018] R10: 0000000000000000 R11: 00000000000012eb R12: 0000000000100002
-[ 7732.196018] R13: ffffffff81473523 R14: 0000000000009fff R15: 0000000000009fff
-[ 7732.196018] FS:  00007f8017e4a700(0000) GS:ffff88003fc00000(0000) knlGS:0000000000000000
-[ 7732.196018] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[ 7732.196018] CR2: 00007ff8d020a000 CR3: 0000000009b43000 CR4: 00000000000006f0
-[ 7732.196018] Stack:
-[ 7732.196018]  ffff88002c0afb08 ffffffff8147476e ffff880002e59600 0000000000100002
-[ 7732.196018]  ffff88002c0afb28 ffffffff814762cd ffff880002e59600 ffff880002e59600
-[ 7732.196018]  ffff88002c0afb58 ffffffff81476841 0000000000009f89 ffff880002e59600
-[ 7732.196018] Call Trace:
-[ 7732.196018]  [<ffffffff8147476e>] xfs_buf_stale+0x2e/0xb0
-[ 7732.196018]  [<ffffffff814762cd>] xfs_bioerror_relse+0x2d/0x90
-[ 7732.196018]  [<ffffffff81476841>] xfsbdstrat+0x51/0x90
-[ 7732.196018]  [<ffffffff81473523>] xfs_zero_remaining_bytes+0x1d3/0x2d0
-[ 7732.196018]  [<ffffffff81473ba6>] xfs_free_file_space+0x586/0x5b0
-[ 7732.196018]  [<ffffffff81190002>] ? slabs_cpu_partial_show+0xd2/0x120
-[ 7732.196018]  [<ffffffff811b9399>] ? mntput_no_expire+0x49/0x160
-[ 7732.196018]  [<ffffffff811b8812>] ? mnt_clone_write+0x12/0x30
-[ 7732.196018]  [<ffffffff81aba3f6>] ? down_write+0x16/0x40
-[ 7732.196018]  [<ffffffff81481c14>] xfs_ioc_space+0x2d4/0x450
-[ 7732.196018]  [<ffffffff811a700b>] ? path_lookupat+0x6b/0x760
-[ 7732.196018]  [<ffffffff8148f57e>] ? xfs_trans_free+0x6e/0x80
-[ 7732.196018]  [<ffffffff81192a81>] ? kmem_cache_alloc+0x31/0x150
-[ 7732.196018]  [<ffffffff8148326b>] xfs_file_ioctl+0x48b/0xae0
-[ 7732.196018]  [<ffffffff811a60d6>] ? final_putname+0x26/0x50
-[ 7732.196018]  [<ffffffff8110b6a2>] ? from_kgid+0x12/0x20
-[ 7732.196018]  [<ffffffff8110b6be>] ? from_kgid_munged+0xe/0x20
-[ 7732.196018]  [<ffffffff8119f856>] ? cp_new_stat+0x146/0x160
-[ 7732.196018]  [<ffffffff811ace02>] do_vfs_ioctl+0x452/0x530
-[ 7732.196018]  [<ffffffff8119fd35>] ? SYSC_newfstat+0x25/0x30
-[ 7732.196018]  [<ffffffff811acf71>] SyS_ioctl+0x91/0xb0
-[ 7732.196018]  [<ffffffff81ac6029>] system_call_fastpath+0x16/0x1b
-
+Remove all the shouty XFS_ERROR() macros that are used directly
+after ASSERT(0) calls as they are entirely redundant and make the
+code harder to read.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c | 47 ++++++++++++++++++++++++++++-------------------
- 1 file changed, 28 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_log_recover.c | 155 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 88 insertions(+), 67 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ce01c1a..27dc152 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1076,7 +1076,14 @@ xfs_bioerror(
- 	 */
- 	XFS_BUF_UNREAD(bp);
- 	XFS_BUF_UNDONE(bp);
--	xfs_buf_stale(bp);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 07ab52c..517f7ee 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1483,6 +1483,32 @@ xlog_recover_add_item(
+ 	list_add_tail(&item->ri_list, head);
+ }
+ 
++/*
++ * Free up any resources allocated by the transaction
++ *
++ * Remember that EFIs, EFDs, and IUNLINKs are handled later.
++ */
++STATIC void
++xlog_recover_free_trans(
++	struct xlog_recover	*trans)
++{
++	xlog_recover_item_t	*item, *n;
++	int			i;
++
++	hlist_del_init(&trans->r_list);
++	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
++		/* Free the regions in the item. */
++		list_del(&item->ri_list);
++		for (i = 0; i < item->ri_cnt; i++)
++			kmem_free(item->ri_buf[i].i_addr);
++		/* Free the item itself */
++		kmem_free(item->ri_buf);
++		kmem_free(item);
++	}
++	/* Free the transaction recover structure */
++	kmem_free(trans);
++}
++
+ STATIC int
+ xlog_recover_add_to_cont_trans(
+ 	struct xlog		*log,
+@@ -1548,7 +1574,7 @@ xlog_recover_add_to_trans(
+ 			xfs_warn(log->l_mp, "%s: bad header magic number",
+ 				__func__);
+ 			ASSERT(0);
+-			return XFS_ERROR(EIO);
++			goto out_eio;
+ 		}
+ 		if (len == sizeof(xfs_trans_header_t))
+ 			xlog_recover_add_item(&trans->r_itemq);
+@@ -1577,8 +1603,8 @@ xlog_recover_add_to_trans(
+ 		"bad number of regions (%d) in inode log format",
+ 				  in_f->ilf_size);
+ 			ASSERT(0);
+-			kmem_free(ptr);
+-			return XFS_ERROR(EIO);
++			goto out_free_eio;
++
+ 		}
+ 
+ 		item->ri_total = in_f->ilf_size;
+@@ -1593,6 +1619,17 @@ xlog_recover_add_to_trans(
+ 	item->ri_cnt++;
+ 	trace_xfs_log_recover_item_add(log, trans, item, 0);
+ 	return 0;
++
++out_free_eio:
++	kmem_free(ptr);
++out_eio:
++	/*
++	 * This transaction is now unrecoverable, so we need to remove it from
++	 * the transaction hash so nobody else can find it and free it.  The
++	 * error we return will abort further recovery processing.
++	 */
++	xlog_recover_free_trans(trans);
++	return EIO;
+ }
+ 
+ /*
+@@ -1699,7 +1736,7 @@ xlog_recover_reorder_trans(
+ 			 */
+ 			if (!list_empty(&sort_list))
+ 				list_splice_init(&sort_list, &trans->r_itemq);
+-			error = XFS_ERROR(EIO);
++			error = EIO;
+ 			goto out;
+ 		}
+ 	}
+@@ -1713,6 +1750,15 @@ out:
+ 		list_splice_tail(&inode_buffer_list, &trans->r_itemq);
+ 	if (!list_empty(&cancel_list))
+ 		list_splice_tail(&cancel_list, &trans->r_itemq);
 +
 +	/*
-+	 * we might be handling an uncached buffer here, in which case the
-+	 * stale buffer handling is irrelevant as is doing IO with the buffer
-+	 * locked. Hence we don't mark them stale.
++	 * If we failed to reorder the transaction, it is now unrecoverable so
++	 * we need to remove it from the transaction hash so nobody else can
++	 * find it and free it.  The error we return will abort further recovery
++	 * processing.
 +	 */
-+	if (bp->b_pag)
-+		xfs_buf_stale(bp);
++	if (error)
++		xlog_recover_free_trans(trans);
+ 	return error;
+ }
  
- 	xfs_buf_ioend(bp, 0);
+@@ -3235,31 +3281,6 @@ xlog_recover_do_icreate_pass2(
+ 	return 0;
+ }
  
-@@ -1094,25 +1101,20 @@ xfs_bioerror_relse(
- 	struct xfs_buf	*bp)
- {
- 	int64_t		fl = bp->b_flags;
-+
- 	/*
--	 * No need to wait until the buffer is unpinned.
--	 * We aren't flushing it.
--	 *
--	 * chunkhold expects B_DONE to be set, whether
--	 * we actually finish the I/O or not. We don't want to
--	 * change that interface.
-+	 * No need to wait until the buffer is unpinned. We aren't flushing it.
- 	 */
- 	XFS_BUF_UNREAD(bp);
- 	XFS_BUF_DONE(bp);
- 	xfs_buf_stale(bp);
- 	bp->b_iodone = NULL;
-+
+-/*
+- * Free up any resources allocated by the transaction
+- *
+- * Remember that EFIs, EFDs, and IUNLINKs are handled later.
+- */
+-STATIC void
+-xlog_recover_free_trans(
+-	struct xlog_recover	*trans)
+-{
+-	xlog_recover_item_t	*item, *n;
+-	int			i;
+-
+-	list_for_each_entry_safe(item, n, &trans->r_itemq, ri_list) {
+-		/* Free the regions in the item. */
+-		list_del(&item->ri_list);
+-		for (i = 0; i < item->ri_cnt; i++)
+-			kmem_free(item->ri_buf[i].i_addr);
+-		/* Free the item itself */
+-		kmem_free(item->ri_buf);
+-		kmem_free(item);
+-	}
+-	/* Free the transaction recover structure */
+-	kmem_free(trans);
+-}
+-
+ STATIC void
+ xlog_recover_buffer_ra_pass2(
+ 	struct xlog                     *log,
+@@ -3384,7 +3405,7 @@ xlog_recover_commit_pass1(
+ 		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
+ 			__func__, ITEM_TYPE(item));
+ 		ASSERT(0);
+-		return XFS_ERROR(EIO);
++		return EIO;
+ 	}
+ }
+ 
+@@ -3420,7 +3441,7 @@ xlog_recover_commit_pass2(
+ 		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
+ 			__func__, ITEM_TYPE(item));
+ 		ASSERT(0);
+-		return XFS_ERROR(EIO);
++		return EIO;
+ 	}
+ }
+ 
+@@ -3467,7 +3488,7 @@ xlog_recover_commit_trans(
+ 
+ 	#define XLOG_RECOVER_COMMIT_QUEUE_MAX 100
+ 
+-	hlist_del(&trans->r_list);
++	hlist_del_init(&trans->r_list);
+ 
+ 	error = xlog_recover_reorder_trans(log, trans, pass);
+ 	if (error)
+@@ -3488,17 +3509,17 @@ xlog_recover_commit_trans(
+ 				list_splice_tail_init(&ra_list, &done_list);
+ 				items_queued = 0;
+ 			}
+-
+ 			break;
+ 		default:
+ 			ASSERT(0);
++			error = ERANGE;
++			break;
+ 		}
+ 
+ 		if (error)
+-			goto out;
++			break;
+ 	}
+ 
+-out:
+ 	if (!list_empty(&ra_list)) {
+ 		if (!error)
+ 			error = xlog_recover_items_pass2(log, trans,
+@@ -3509,22 +3530,17 @@ out:
+ 	if (!list_empty(&done_list))
+ 		list_splice_init(&done_list, &trans->r_itemq);
+ 
 +	/*
-+	 * There's no reason to mark error for ASYNC buffers as there is no-one
-+	 * waiting to collect the error.
++	 * We've already removed the trans structure from the hash, so nobody
++	 * else will ever find this structure again. Hence we must free it here
++	 * regardless of whether we processed it successfully or not.
 +	 */
- 	if (!(fl & XBF_ASYNC)) {
--		/*
--		 * Mark b_error and B_ERROR _both_.
--		 * Lot's of chunkcache code assumes that.
--		 * There's no reason to mark error for
--		 * ASYNC buffers.
--		 */
- 		xfs_buf_ioerror(bp, EIO);
- 		complete(&bp->b_iowait);
- 	} else {
-@@ -1129,14 +1131,13 @@ xfs_bdstrat_cb(
- 	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
- 		trace_xfs_bdstrat_shut(bp, _RET_IP_);
- 		/*
--		 * Metadata write that didn't get logged but
--		 * written delayed anyway. These aren't associated
--		 * with a transaction, and can be ignored.
-+		 * If this is a cached write, then it is likely to be a delayed
-+		 * write metadata buffer that can be ignored because the
-+		 * contents are logged.
- 		 */
- 		if (!bp->b_iodone && !XFS_BUF_ISREAD(bp))
- 			return xfs_bioerror_relse(bp);
--		else
--			return xfs_bioerror(bp);
-+		return xfs_bioerror(bp);
- 	}
+ 	xlog_recover_free_trans(trans);
  
- 	xfs_buf_iorequest(bp);
-@@ -1176,7 +1177,15 @@ xfsbdstrat(
- {
- 	if (XFS_FORCED_SHUTDOWN(mp)) {
- 		trace_xfs_bdstrat_shut(bp, _RET_IP_);
--		xfs_bioerror_relse(bp);
-+		/*
-+		 * we could be handling uncached IO here, in which case there is
-+		 * always a caller waiting to collect the error and releas the
-+		 * buffer.
-+		 */
-+		if (bp->b_pag)
-+			xfs_bioerror_relse(bp);
-+		else
-+			xfs_bioerror(bp);
- 		return;
- 	}
+ 	error2 = xfs_buf_delwri_submit(&buffer_list);
+ 	return error ? error : error2;
+ }
  
+-STATIC int
+-xlog_recover_unmount_trans(
+-	struct xlog		*log,
+-	struct xlog_recover	*trans)
+-{
+-	/* Do nothing now */
+-	xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
+-	return 0;
+-}
+-
+ /*
+  * There are two valid states of the r_state field.  0 indicates that the
+  * transaction structure is in a normal state.  We have either seen the
+@@ -3545,9 +3561,9 @@ xlog_recover_process_data(
+ 	xfs_caddr_t		lp;
+ 	int			num_logops;
+ 	xlog_op_header_t	*ohead;
+-	xlog_recover_t		*trans;
++	xlog_recover_t		*trans = NULL;
+ 	xlog_tid_t		tid;
+-	int			error;
++	int			error = 0;
+ 	unsigned long		hash;
+ 	uint			flags;
+ 
+@@ -3556,7 +3572,7 @@ xlog_recover_process_data(
+ 
+ 	/* check the log format matches our own - else we can't recover */
+ 	if (xlog_header_check_recover(log->l_mp, rhead))
+-		return (XFS_ERROR(EIO));
++		return XFS_ERROR(EIO);
+ 
+ 	while ((dp < lp) && num_logops) {
+ 		ASSERT(dp + sizeof(xlog_op_header_t) <= lp);
+@@ -3564,10 +3580,13 @@ xlog_recover_process_data(
+ 		dp += sizeof(xlog_op_header_t);
+ 		if (ohead->oh_clientid != XFS_TRANSACTION &&
+ 		    ohead->oh_clientid != XFS_LOG) {
+-			xfs_warn(log->l_mp, "%s: bad clientid 0x%x",
++			xfs_warn(log->l_mp,
++				"%s: bad transaction opheader clientid 0x%x",
+ 					__func__, ohead->oh_clientid);
+ 			ASSERT(0);
+-			return (XFS_ERROR(EIO));
++			if (trans)
++				xlog_recover_free_trans(trans);
++			return EIO;
+ 		}
+ 		tid = be32_to_cpu(ohead->oh_tid);
+ 		hash = XLOG_RHASH(tid);
+@@ -3578,11 +3597,14 @@ xlog_recover_process_data(
+ 					be64_to_cpu(rhead->h_lsn));
+ 		} else {
+ 			if (dp + be32_to_cpu(ohead->oh_len) > lp) {
+-				xfs_warn(log->l_mp, "%s: bad length 0x%x",
++				xfs_warn(log->l_mp,
++				"%s: bad transaction opheader length 0x%x",
+ 					__func__, be32_to_cpu(ohead->oh_len));
+ 				WARN_ON(1);
+-				return (XFS_ERROR(EIO));
++				xlog_recover_free_trans(trans);
++				return EIO;
+ 			}
++
+ 			flags = ohead->oh_flags & ~XLOG_END_TRANS;
+ 			if (flags & XLOG_WAS_CONT_TRANS)
+ 				flags &= ~XLOG_CONTINUE_TRANS;
+@@ -3591,36 +3613,35 @@ xlog_recover_process_data(
+ 				error = xlog_recover_commit_trans(log,
+ 								trans, pass);
+ 				break;
+-			case XLOG_UNMOUNT_TRANS:
+-				error = xlog_recover_unmount_trans(log, trans);
+-				break;
+ 			case XLOG_WAS_CONT_TRANS:
+ 				error = xlog_recover_add_to_cont_trans(log,
+ 						trans, dp,
+ 						be32_to_cpu(ohead->oh_len));
+ 				break;
+-			case XLOG_START_TRANS:
+-				xfs_warn(log->l_mp, "%s: bad transaction",
+-					__func__);
+-				ASSERT(0);
+-				error = XFS_ERROR(EIO);
+-				break;
+ 			case 0:
+ 			case XLOG_CONTINUE_TRANS:
+ 				error = xlog_recover_add_to_trans(log, trans,
+ 						dp, be32_to_cpu(ohead->oh_len));
+ 				break;
++			case XLOG_UNMOUNT_TRANS:
++				xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
++				break;
++			case XLOG_START_TRANS:
+ 			default:
+-				xfs_warn(log->l_mp, "%s: bad flag 0x%x",
++				xfs_warn(log->l_mp,
++				"%s: bad transaction opheader flag 0x%x",
+ 					__func__, flags);
+ 				ASSERT(0);
+-				error = XFS_ERROR(EIO);
+-				break;
+-			}
+-			if (error) {
+ 				xlog_recover_free_trans(trans);
+-				return error;
++				return EIO;
+ 			}
++			/*
++			 * If there's been an error, the trans structure has
++			 * already been freed. So there's nothing for us to do
++			 * but abort the recovery process.
++			 */
++			if (error)
++				return error;
+ 		}
+ 		dp += be32_to_cpu(ohead->oh_len);
+ 		num_logops--;
 -- 
 1.8.4.rc3
 
