@@ -1,35 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AF5097F81
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 08:28:35 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 53F6E7F88
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 08:29:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A3BC3304077
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 06:28:23 -0800 (PST)
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
-	cuda.sgi.com with ESMTP id yvnZFhFYGVFEF8by (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E3CB8F8040
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 06:29:24 -0800 (PST)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id 8kBk4eHTj15piA4O (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 06:28:04 -0800 (PST)
+	Fri, 13 Dec 2013 06:28:52 -0800 (PST)
 Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Fri, 13 Dec 2013 07:28:04 -0700
-Received: from b03cxnp08025.gho.boulder.ibm.com
-	(b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id E07B73E40044
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:28:01 -0700 (MST)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp08025.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with
-	ESMTP id rBDES1PX8323440
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:28:01 +0100
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP
-	id rBDES15V032565
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:28:01 -0700
+	Fri, 13 Dec 2013 09:28:22 -0500
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com
+	[9.57.198.27])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 3300AC9003E
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:28:17 -0500 (EST)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp23032.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	rBDESIeU9830752 for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 14:28:18 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	rBDESIPX004887 for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:28:18 -0500
 From: Zhi Yong Wu <zwu.kernel@gmail.com>
-Subject: [PATCH 0/5] xfs: add O_TMPFILE support
-Date: Fri, 13 Dec 2013 22:27:48 +0800
-Message-Id: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
+Subject: [PATCH 4/5] xfs: add a new method xfs_vn_tmpfile()
+Date: Fri, 13 Dec 2013 22:27:52 +0800
+Message-Id: <1386944873-16796-5-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
+References: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -48,80 +48,69 @@ Cc: linux-fsdevel@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux
 
 From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-HI, folks
+Add a new O_TMPFILE method to VFS inteface.
+For more info, please refer to:
+  http://oss.sgi.com/archives/xfs/2013-08/msg00336.html
 
-  It's time to post out the first formal version, welcome to any constructive comment, thanks.
+Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+---
+ fs/xfs/xfs_iops.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-  If anyone is interested in playing with it, you can get this patchset from my dev git on github:
-  git://github.com/wuzhy/kernel.git xfs_tmpfile
-
-  The patchset was tests agaist the code snippet from Andy Lutomirski and other test cases:
-  http://lwn.net/Articles/562296/
-  If you have any other better test cases, please let me know, thanks.
-
-#include <stdio.h>
-#include <err.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-
-#define __O_TMPFILE 020000000
-#define O_DIRECTORY 0200000
-#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
-#define AT_EMPTY_PATH 0x1000
-
-int main(int argc, char **argv)
-{
-   char buf[128];
-
-   if (argc != 3)
-     errx(1, "Usage: flinktest PATH linkat|proc");
-
-   int fd = open(".", O_TMPFILE | O_RDWR, 0600);
-   if (fd == -1)
-     err(1, "O_TMPFILE");
-   else
-     printf("fd #: %d\n", fd);
-
-   write(fd, "test", 4);
-
-   if (!strcmp(argv[2], "linkat")) {
-     if (linkat(fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) != 0)
-       err(1, "linkat");
-   } else if (!strcmp(argv[2], "proc")) {
-     sprintf(buf, "/proc/self/fd/%d", fd);
-     if (linkat(AT_FDCWD, buf, AT_FDCWD, argv[1], AT_SYMLINK_FOLLOW) != 0)
-       err(1, "linkat");
-   } else {
-     errx(1, "invalid mode");
-   }
-
-   return 0;
-}
-
-
-Changelog from rfc:
- - Addressed the comments from Dave Chinner and Christoph Hellwig.
-
-Zhi Yong Wu (5):
-  xfs: factor prid related codes into xfs_get_initial_prid()
-  xfs: adjust the interface of xfs_qm_vop_dqalloc()
-  xfs: add xfs_create_tmpfile() for O_TMPFILE support
-  xfs: add a new method xfs_vn_tmpfile()
-  xfs: allow linkat() on O_TMPFILE files
-
- fs/xfs/xfs_inode.c      |  142 ++++++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_inode.h      |    2 +
- fs/xfs/xfs_ioctl.c      |    2 +-
- fs/xfs/xfs_iops.c       |   25 ++++++++-
- fs/xfs/xfs_qm.c         |   50 ++++++++++------
- fs/xfs/xfs_quota.h      |    6 +-
- fs/xfs/xfs_shared.h     |    4 +-
- fs/xfs/xfs_symlink.c    |    2 +-
- fs/xfs/xfs_trans_resv.c |   51 +++++++++++++++++
- fs/xfs/xfs_trans_resv.h |    4 +
- 10 files changed, 255 insertions(+), 33 deletions(-)
-
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index eb55be5..b57cd89 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -39,6 +39,7 @@
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_dinode.h"
++#include "xfs_trans_space.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/xattr.h>
+@@ -1051,6 +1052,25 @@ xfs_vn_fiemap(
+ 	return 0;
+ }
+ 
++STATIC int
++xfs_vn_tmpfile(
++	struct inode	*dir,
++	struct dentry	*dentry,
++	umode_t		mode)
++{
++	struct xfs_inode *ip = NULL;
++	int		error;
++
++	error = xfs_create_tmpfile(XFS_I(dir), XFS_I(dir)->i_mount,
++				mode, 0, &ip);
++	if (error)
++		return -error;
++
++	d_instantiate(dentry, VFS_I(ip));
++
++	return -error;
++}
++
+ static const struct inode_operations xfs_inode_operations = {
+ 	.get_acl		= xfs_get_acl,
+ 	.getattr		= xfs_vn_getattr,
+@@ -1087,6 +1107,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
+ 	.removexattr		= generic_removexattr,
+ 	.listxattr		= xfs_vn_listxattr,
+ 	.update_time		= xfs_vn_update_time,
++	.tmpfile		= xfs_vn_tmpfile,
+ };
+ 
+ static const struct inode_operations xfs_dir_ci_inode_operations = {
+@@ -1113,6 +1134,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
+ 	.removexattr		= generic_removexattr,
+ 	.listxattr		= xfs_vn_listxattr,
+ 	.update_time		= xfs_vn_update_time,
++	.tmpfile		= xfs_vn_tmpfile,
+ };
+ 
+ static const struct inode_operations xfs_symlink_inode_operations = {
 -- 
 1.7.6.5
 
