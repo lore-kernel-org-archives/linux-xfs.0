@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D861929DF8
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:33:17 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7BD8529E04
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:38:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C53C5304059
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:33:11 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id p2zrGFIremQhRQMi (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 636CE8F8040
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:38:10 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id lPDEAQbk5YAiKUOr (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 05:32:43 -0800 (PST)
-Message-ID: <52AB0C59.4070904@oracle.com>
-Date: Fri, 13 Dec 2013 21:32:09 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Fri, 13 Dec 2013 05:37:48 -0800 (PST)
+Date: Fri, 13 Dec 2013 05:37:45 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] xfs: xfs_trans_dqresv() can be made lockless
+Message-ID: <20131213133745.GC13689@infradead.org>
+References: <1386841258-22183-1-git-send-email-david@fromorbit.com>
+	<1386841258-22183-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: return ENOSPC when trying to set more ACLs than
-	XFS_ACL_MAX_ENTRIES
-References: <52921D12.7040104@oracle.com>
-	<5292C557.9020008@sandeen.net>	<5292D8AB.5080003@oracle.com>
-	<20131211193622.GG1935@sgi.com>
-	<20131213130432.GB22594@infradead.org>
-In-Reply-To: <20131213130432.GB22594@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1386841258-22183-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,27 +30,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 12/13 2013 21:04 PM, Christoph Hellwig wrote:
-> On Wed, Dec 11, 2013 at 01:36:22PM -0600, Ben Myers wrote:
->>>> (I guess looking at ext4, it uses ENOSPC for some similar constraints,
->>>> so maybe three is precedent for this)
->>> Btrfs also uses ENOSPC, but JFS would return something like "Argument list too long"
->>> in this case.
+On Thu, Dec 12, 2013 at 08:40:58PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I think ENOSPC is a really bad idea in this case, but I also think we
-> should make sure Linux filesystems behave unfiformly.
-> 
-> Jeff, can you write a summary of the errors returned by all common
-> filesystems and post it to -fsdevel for comment?  We should have a
-> common error for this, and I'd be a happier man if it weren't ENOSPC,
-> but that's secondary.
-Yep, let me gather up those info...
+> xfs_trans_dqresv() serialises dquot modifications by taking the
+> dquot lock while it is doing reservations. The thing is, nothing it
+> does really requires exclusive access to the dquot except for the
+> reservation accounting. We can do that locklessly with cmpxchg.
 
-Thanks,
--Jeff
+Can you split the various refactorings into separate patches to make
+this more readable?
+
+> +do_ninos:
+> +	if (ninos == 0)
+> +		goto do_trans;
+> +
+> +	smp_mb();
+> +	timer = be32_to_cpu(dqp->q_core.d_itimer);
+> +	warns = be16_to_cpu(dqp->q_core.d_iwarns);
+> +	warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
+> +	hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+> +	if (!hardlimit)
+> +		hardlimit = q->qi_ihardlimit;
+> +	softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
+> +	if (!softlimit)
+> +		softlimit = q->qi_isoftlimit;
+> +	resbcountp = &dqp->q_res_icount;
+> +
+> +	oldcnt = xfs_dqresv_cmpxchg(mp, dqp, resbcountp, ninos, false, enforce,
+> +				    hardlimit, softlimit, timer, warns,
+> +				    warnlimit);
+> +	if (oldcnt == (xfs_qcnt_t)-1ULL)
+> +		goto error_undo_nblks;
+> +
+> +do_trans:
+
+Instead of having all these goto labels maye this should be factored
+into helpers for each of the stages?
+
+>  	if (udqp) {
+> +		enforce = !(flags & XFS_QMOPT_FORCE_RES) &&
+> +			  udqp->q_core.d_id && XFS_IS_UQUOTA_ENFORCED(mp);
+>  		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
+> -					(flags & ~XFS_QMOPT_ENOSPC));
+> +					(flags & ~XFS_QMOPT_ENOSPC), enforce);
+
+I have to say I'd much prefer having the enforcement decision hidden
+inside xfs_trans_dqresv.
+
+>  		if (error)
+>  			return error;
+>  	}
+>  
+>  	if (gdqp) {
+> -		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
+> +		enforce = !(flags & XFS_QMOPT_FORCE_RES) &&
+> +			  gdqp->q_core.d_id && XFS_IS_GQUOTA_ENFORCED(mp);
+> +		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags,
+> +					 enforce);
+>  		if (error)
+
+Unrelated to the patch: why do we clear XFS_QMOPT_ENOSPC for user
+quotas, but not for project quotas here?
 
 _______________________________________________
 xfs mailing list
