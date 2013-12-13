@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, tip-log-format,
-	created. v3.12-11695-gffda4e8
-Message-Id: <20131213054619.498727F51@oss.sgi.com>
-Date: Thu, 12 Dec 2013 23:46:17 -0600 (CST)
+Subject: [XFS updates] XFS development tree branch, tip-icluster-factor,
+	created. v3.12-11693-gf9e5abc
+Message-Id: <20131213054649.6846B7F56@oss.sgi.com>
+Date: Thu, 12 Dec 2013 23:46:48 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,152 +23,109 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, tip-log-format has been created
-        at  ffda4e83aa107ff55345dc583efdb24fca486fb5 (commit)
+The branch, tip-icluster-factor has been created
+        at  f9e5abcfc5b299a988cf8f9d0ad11e03da14806b (commit)
 
 - Log -----------------------------------------------------------------
-commit ffda4e83aa107ff55345dc583efdb24fca486fb5
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:34:08 2013 +1100
+commit f9e5abcfc5b299a988cf8f9d0ad11e03da14806b
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:49 2013 +1100
 
-    xfs: remove the quotaoff log format from the quotaoff log item
+    xfs: use xfs_icluster_size_fsb in xfs_imap
     
-    This one doesn't save a whole lot of memory, but still makes the
-    code simpler.
+    Use xfs_icluster_size_fsb() in xfs_imap().
     
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit ce8e962939ca12218092f8eb3c8cfb196cd8cc51
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:34:07 2013 +1100
+commit 982e939e4ddc8c00cb478fb4d725d0e3d18971cc
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:49 2013 +1100
 
-    xfs: remove the dquot log format from the dquot log item
+    xfs: use xfs_icluster_size_fsb in xfs_ifree_cluster
     
-    No need to keep the dquot log format around all the time, we can
-    easily generate it at iop_format time.
+    Use xfs_icluster_size_fsb() in xfs_ifree_cluster(), rename variable
+    ninodes to inodes_per_cluster, the latter is more meaningful.
     
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit 2f251293b09065118d78ae4e883e5639cc22f94e
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:34:05 2013 +1100
+commit 6e0c7b8c3ea62d684af267d34fc015253e7cd6e5
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:49 2013 +1100
 
-    xfs: remove the inode log format from the inode log item
+    xfs: use xfs_icluster_size_fsb in xfs_ialloc_inode_init
     
-    No need to keep the inode log format around all the time, we can
-    easily generate it at iop_format time.
+    Use xfs_icluster_size_fsb() in xfs_ialloc_inode_init(), rename variable
+    ninodes to inodes_per_cluster, the latter is more meaningful.
     
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit da7765031de15273d370d18a5354e1d8001ce2a9
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:34:04 2013 +1100
+commit a2ba07b2d2215bed560aa67c84275304314d9691
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:48 2013 +1100
 
-    xfs: format logged extents directly into the CIL
+    xfs: use xfs_icluster_size_fsb in xfs_bulkstat
     
-    With the new iop_format scheme there is no need to have a temporary buffer
-    to format logged extents into, we can do so directly into the CIL.  This
-    also allows to remove the shortcut for big endian systems that probably
-    hasn't gotten a lot of test coverage for a long time.
+    Use xfs_icluster_size_fsb() in xfs_bulkstat(), make the related
+    variables more meaningful and remove an unused variable nimask
+    from it.
     
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit bde7cff67c39227c6ad503394e19e58debdbc5e3
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:34:02 2013 +1100
+commit 904957b75033149509dc0fecc0af34348f87c78c
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:48 2013 +1100
 
-    xfs: format log items write directly into the linear CIL buffer
+    xfs: introduce a common helper xfs_icluster_size_fsb
     
-    Instead of setting up pointers to memory locations in iop_format which then
-    get copied into the CIL linear buffer after return move the copy into
-    the individual inode items.  This avoids the need to always have a memory
-    block in the exact same layout that gets written into the log around, and
-    allow the log items to be much more flexible in their in-memory layouts.
+    Introduce a common routine xfs_icluster_size_fsb() to calculate
+    and return the number of file system blocks per inode cluster.
     
-    The only caveat is that we need to properly align the data for each
-    iovec so that don't have structures misaligned in subsequent iovecs.
-    
-    Note that all log item format routines now need to be careful to modify
-    the copy of the item that was placed into the CIL after calls to
-    xlog_copy_iovec instead of the in-memory copy.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit 1234351cba958cd5d4338172ccfc869a687cd736
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:00:43 2013 +1100
+commit 126cd105d4408ff52437a72d681aecdb29cc80e8
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:48 2013 +1100
 
-    xfs: introduce xlog_copy_iovec
+    xfs: get rid of XFS_IALLOC_BLOCKS macros
     
-    Add a helper to abstract out filling the log iovecs in the log item
-    format handlers.  This will allow us to change the way we do the log
-    item formatting more easily.
+    Get rid of XFS_IALLOC_BLOCKS() marcos, use mp->m_ialloc_blks directly.
     
-    The copy in the name is a bit confusing for now as it just assigns a
-    pointer and lets the CIL code perform the copy, but that will change
-    soon.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit 3de559fbd04d67473b9be2bd183823c40c4b7557
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:00:43 2013 +1100
+commit 0f49efd805229fc747761213ec820c1ba3ab64db
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:48 2013 +1100
 
-    xfs: refactor xfs_inode_item_format
+    xfs: get rid of XFS_INODE_CLUSTER_SIZE macros
     
-    Split out a function to handle the data and attr fork, as well as a
-    helper for the really old v1 inodes.
+    Get rid of XFS_INODE_CLUSTER_SIZE() macros, use mp->m_inode_cluster_size
+    directly.
     
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit ce9641d6c981aad0463b2d1455f0b60e5c8671c5
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:00:43 2013 +1100
+commit 717834383c6ad2173323b823b97c521c9fb8fbbb
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Fri Dec 13 15:51:46 2013 +1100
 
-    xfs: refactor xfs_inode_item_size
+    xfs: get rid of XFS_IALLOC_INODES macros
     
-    Split out two helpers to size the data and attribute to make the
-    function more readable.
+    Get rid of XFS_IALLOC_INODES() marcos, use mp->m_ialloc_inos directly.
     
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 7aeb72224120e0c49ba4c93d75f8f0d6a87f6afd
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:00:43 2013 +1100
-
-    xfs: refactor xfs_buf_item_format_segment
-    
-    Add two helpers to make the code more readable.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 9597df6b26a1988a5a04762711149f98ec6ab388
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 13 11:00:42 2013 +1100
-
-    xfs: remove duplicate code in xlog_cil_insert_format_items
-    
-    Share code that was previously duplicated in two branches.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
