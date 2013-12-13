@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 201667F4E
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 22:47:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C93F304048
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 20:47:27 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id GqWYVWJL3evoNt2l (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 20:47:25 -0800 (PST)
-Message-ID: <52AA9154.9060308@oracle.com>
-Date: Fri, 13 Dec 2013 12:47:16 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A3AA37F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 22:56:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9333A8F8052
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 20:56:37 -0800 (PST)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id wZx1tuQj2V16aYtq (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 20:56:11 -0800 (PST)
+Date: Thu, 12 Dec 2013 23:56:03 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 05/10] xfstests: do not unmount tmpfs during remount.
+Message-ID: <20131213045603.GG23888@thunk.org>
+References: <1386706321-15795-1-git-send-email-jayr@google.com>
+	<1386706321-15795-6-git-send-email-jayr@google.com>
+	<20131211074615.GE19248@infradead.org>
+	<20131211224012.GJ10988@dastard>
+	<20131212180130.GA19422@infradead.org>
+	<20131212225657.GK10988@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/6] xfs: don't try to mark uncached buffers stale on
-	error.
-References: <1386826478-13846-1-git-send-email-david@fromorbit.com>	<1386826478-13846-2-git-send-email-david@fromorbit.com>	<52A98226.4020705@oracle.com>
-	<20131212100947.GW10988@dastard>
-In-Reply-To: <20131212100947.GW10988@dastard>
+Content-Disposition: inline
+In-Reply-To: <20131212225657.GK10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,65 +35,47 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Junho Ryu <jayr@google.com>, hughd@google.com, branto@redhat.com, xfs@oss.sgi.com
 
-
-On 12/12 2013 18:09 PM, Dave Chinner wrote:
-> On Thu, Dec 12, 2013 at 05:30:14PM +0800, Jeff Liu wrote:
->> On 12/12 2013 13:34, Dave Chinner wrote:
->>> From: Dave Chinner <dchinner@redhat.com>
-<snip>
->>
->> It seems there is no such kind of test cases in xfstestes for now, I'd
->> write one if required.
+On Fri, Dec 13, 2013 at 09:56:57AM +1100, Dave Chinner wrote:
+> This case with tmpfs is different - it doesn't support *being
+> unmounted* during a test because it is volatile. That's a
+> fundamental change to the assumptions xfstests makes about
+> filesystems being tested....
 > 
-> nothing quite that generic - xfs/087 does a loop like that over
-> different log configurations, but that's testing log recovery more
-> than shutdown sanity. Adding that test would be a good idea - it's a
-> shame no other filesystem supports a shutdown like XFS does....
-This is really an unique feature of us :), I'll write a case so.
->
->> The backtraces were shown as following:
->>
->> [  365.987493] INFO: task fsstress:3215 blocked for more than 120 seconds.
->> [  365.987499]       Tainted: PF          O 3.13.0-rc2+ #13
->> [  365.987500] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->> [  365.987502] fsstress        D ffff88026f254440     0  3215   3142 0x00000000
->> [  365.987507]  ffff880253f19de0 0000000000000086 ffff880242071800 ffff880253f19fd8
->> [  365.987512]  0000000000014440 0000000000014440 ffff880242071800 ffff880073694c00
->> [  365.987515]  ffff880073694c80 ffff880073694c90 ffffffffffffffff 0000000000000292
->> [  365.987519] Call Trace:
->> [  365.987528]  [<ffffffff81718779>] schedule+0x29/0x70
->> [  365.987560]  [<ffffffffa0c2a49d>] xlog_cil_force_lsn+0x18d/0x1e0 [xfs]
->> [  365.987565]  [<ffffffff81097210>] ? wake_up_state+0x20/0x20
->> [  365.987570]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
->> [  365.987594]  [<ffffffffa0c28921>] _xfs_log_force+0x61/0x270 [xfs]
->> [  365.987599]  [<ffffffff812b0610>] ? jbd2_log_wait_commit+0x110/0x180
->> [  365.987603]  [<ffffffff810a83f0>] ? prepare_to_wait_event+0x100/0x100
->> [  365.987607]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
->> [  365.987629]  [<ffffffffa0c28b56>] xfs_log_force+0x26/0x80 [xfs]
->> [  365.987648]  [<ffffffffa0bcf35d>] xfs_fs_sync_fs+0x2d/0x50 [xfs]
->> [  365.987652]  [<ffffffff811e8790>] sync_fs_one_sb+0x20/0x30
->> [  365.987656]  [<ffffffff811bcc32>] iterate_supers+0xb2/0x110
->> [  365.987660]  [<ffffffff811e88c2>] sys_sync+0x62/0xa0
->> [  365.987665]  [<ffffffff81724ced>] system_call_fastpath+0x1a/0x1f
->> [  372.225302] XFS (sda7): xfs_log_force: error 5 returned.
->> [  402.275608] XFS (sda7): xfs_log_force: error 5 returned.
->> [  432.325929] XFS (sda7): xfs_log_force: error 5 returned.
->> [  462.376239] XFS (sda7): xfs_log_force: error 5 returned.
-> 
-> So what we see here is that there is a race condition somewhere in
-> the shutdown code. The shutdown is supposed to wake everyone waiting
-> of the ic_force_wait wait queue on each iclog, but for some reason
-> that hasn't happened. The sleepers check for XLOG_STATE_IOERROR
-> (which is set during the force shutdown before we wake ic_force_wait
-> sleepers) before they go to sleep, so whatever the race is it isn't
-> immediately obvious to me.
-Now I basically can always reproducing this problem on SSD, so I'm
-going to get involved in tracing down it.
+> I don't know what the solution here is - everything I think of is
+> either messy, ugly or unmaintainable. All I'm trying to do is find a
+> way to handle tmpfs filesystems in a way that is maintainable and
+> doesn't require every developer to be aware of the quirks of tmpfs
+> when writing and reviewing new generic tests....
 
-Thanks,
--Jeff
+There should be a relatively small number of reasons why a generic
+test would need to umount and remount a file system; the most common
+case is so it can run fsck on the file system.
+
+What's actually strange is that is that generic/053 is explicitly
+umounting and remounting the file system:
+
+_do 'unmount $SCRATCH_DEV' 'umount $SCRATCH_DEV'
+_do 'repair filesystem' '_check_scratch_fs'
+_do 'mount filesytem' '_scratch_mount'
+
+In fact, that's not necessary, because _check_test_fs and
+_check_scratch_fs will take care of umounting and remounting the file
+system.  So if this is the only problem case which Junho has found,
+why not just patch generic/053 so it doesn't explicitly umount and
+remount the file system, since we've already taught _check_*_fs to be
+a no-op for tmpfs.
+
+As for dm_flakey, tests, we can just have _require_dm_flaky be false
+for tmpfs file system.
+
+So we're still playing whack-a-mole, yes, but on classes of test
+requirements instead of individual tests.  If we address the
+umount/remount for fsck and dm_flakey, are there other significant
+classes of tests that would still be problematic for tmpfs?
+
+						- Ted
 
 _______________________________________________
 xfs mailing list
