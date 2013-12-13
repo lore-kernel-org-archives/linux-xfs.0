@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 59B167F55
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 10:42:16 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4B2C47F3F
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 11:30:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4D80C8F8065
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 08:42:10 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id o4wlmXTeWqRlT0yY (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 08:41:54 -0800 (PST)
-Date: Fri, 13 Dec 2013 08:41:54 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/5] xfs: allow linkat() on O_TMPFILE files
-Message-ID: <20131213164154.GH20803@infradead.org>
-References: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
-	<1386944873-16796-6-git-send-email-zwu.kernel@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A7CD304053
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:30:06 -0800 (PST)
+Received: from mail-ob0-f180.google.com (mail-ob0-f180.google.com
+	[209.85.214.180]) by cuda.sgi.com with ESMTP id
+	a2RCoFv4AEh3RQLE (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 09:29:58 -0800 (PST)
+Received: by mail-ob0-f180.google.com with SMTP id wo20so2275060obc.11
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:29:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1386944873-16796-6-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <20131213163733.GF20803@infradead.org>
+References: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
+	<1386944873-16796-4-git-send-email-zwu.kernel@gmail.com>
+	<20131213163733.GF20803@infradead.org>
+Date: Sat, 14 Dec 2013 01:29:58 +0800
+Message-ID: <CAEH94LhEvFff8rcfrbM1_xM4e=2H1083Jb194zYA6ERZcqDe+Q@mail.gmail.com>
+Subject: Re: [PATCH 3/5] xfs: add xfs_create_tmpfile() for O_TMPFILE support
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +33,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-On Fri, Dec 13, 2013 at 10:27:53PM +0800, Zhi Yong Wu wrote:
-> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> 
-> Enable O_TMPFILE support in linkat().
-> For more info, please refer to:
->   http://oss.sgi.com/archives/xfs/2013-08/msg00341.html
+Fixed them, thanks.
 
-Generall you should provide all reasonable information in the changelog
-instead of linking to it.
+On Sat, Dec 14, 2013 at 12:37 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>> +     error = xfs_dir_ialloc(&tp, NULL, mode, 0, rdev,
+>
+> please pass the parent inode pointer here.
+>
+>> +                             XFS_PROJID_DEFAULT, resblks > 0,
+>
+> and pass the project id that you inherited from the parent here.
+>
 
-> +	if (sip->i_d.di_nlink == 0)
-> +		tres = &M_RES(mp)->tr_link_tmpfile;
-> +	else
-> +		tres = &M_RES(mp)->tr_link;
 
-As mentioned before I think Dave wanted you to always use the same
-reservation, but I'll leave that discussion to him.
 
-> +/* For creating a link to an O_TMPFILE inode, except modifying
-> + * those metadata for regular inode, we still need to remove an inode
-> + * from unlinked list at first. That is,  we can modify:
-> + *    the agi hash list and counters: sector size
-> + *    the on disk inode before ours in the agi hash list: inode cluster size
-> + */
+-- 
+Regards,
 
-We always have an emptry content
-
-/*
-
-line at the beginning of comments in XFS and the Linux kernel in
-general.
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
