@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F1ADE7F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:33:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E1081304043
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 13:32:51 -0800 (PST)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id S8HIsjbahER8GUok (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 13:32:47 -0800 (PST)
-Message-ID: <52AB7CDC.5040801@tlinx.org>
-Date: Fri, 13 Dec 2013 13:32:12 -0800
-From: "L.A. Walsh" <samba@tlinx.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 295B37F52
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:37:11 -0600 (CST)
+Date: Fri, 13 Dec 2013 15:37:01 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: require 64-bit sector_t
+Message-ID: <20131213213701.GM1935@sgi.com>
+References: <20131114164603.GA13628@infradead.org>
 MIME-Version: 1.0
-Subject: Re: Security issue - storing NTACL's in non-NT-security-namespace
-References: <52A96211.3050602@tlinx.org> <20131212181315.GB20500@samba2>
-	<52AAC7CC.8000802@tlinx.org> <20131213105314.GA2117@infradead.org>
-In-Reply-To: <20131213105314.GA2117@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20131114164603.GA13628@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,63 +18,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Samba Technical <samba-technical@lists.samba.org>, Jeremy Allison <jra@samba.org>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-T24gMTIvMTMvMjAxMyAyOjUzIEFNLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToKPiBPbiBGcmks
-IERlYyAxMywgMjAxMyBhdCAxMjozOTo0MEFNIC0wODAwLCBMLkEuIFdhbHNoIHdyb3RlOgo+ICAg
-Cj4+ICAgIERvZXMgaXQgaGF2ZSB0byBiZSB1bmRlciBhICJuYW1lc3BhY2UiIHRoYXQgZ2V0cyAq
-c3RyaXBwZWQqCj4+IGFzIHNvb24gYXMgdGhlIGZpbGUgaXMgY29waWVkIG9yICJtdidkIHRvIGFu
-b3RoZXIKPj4gc2FtYmEgc2hhcmUgKGkuZS4gdGhlIHBhcnRpdGlvbiBpdCB3YXMgbW92ZWQgdG8g
-aXMgc2hhcmVkIHdpdGggdGhlCj4+IHNhbWUgcGVybWlzc2lvbnMgYXMgdGhlIGZpcnN0IG9uZS4K
-Pj4gICAgIAo+Cj4gQXR0cmlidXRlcyBuZXZlciBnZXQgInN0cmlwcGVkIiwgdGhleSBzaW1wbGUg
-ZG9uJ3QgZ2V0IGNvcGllZCB1bmxlc3MKPiBleHBsaWNpdCBhY3Rpb24gaXMgdGFrZW4gdG8gZG8g
-c28uICBTZXR0aW5nIHRydXN0ZWQgYXR0cmlidXRlcyB1cCBvbiBhCj4gbmV3IGZpbGUgd2lsbCBv
-ZiBjb3Vyc2UgcmVseSBwcml2aWxlZ3VlcywgZXhhY3RseSBmb3IgdGhlIHJlYXNvbnMKPiBKZXJl
-bXkgcG9pbnRlZCBvdXQuCj4gICAKLS0tLQoKU3RyaXBwaW5nIGlzIHRoZSBkZWZhdWx0IGFjdGlv
-biB3aGVuIGNvcHlpbmcgb3IgbW92aW5nIHVubGVzcyB5b3UKdGFrZSBzb21lICpub24tZGVmYXVs
-dCogKGFuZCB1bnNwZWNpZmllZCkgYWN0aW9uLCBBTkQgcHJvdmlkaW5nIHlvdQpldmVuIGtub3cg
-dGhleSBhcmUgdGhlcmUuLgoKVGhlIHNhbWUgaXMgTk9UIHRydWUgZm9yIHRoZSAqcmVhbCogeGZz
-LUFDTFMgLS0gd2hpY2ggYXJlCmNvcGllZCB3L28gaXNzdWUuCgoKRXhhbXBsZSwKCnRlc3RmaWxl
-LnR4dCAoc2F2ZWQgdmlhIHdpbjcgYXMgYSBub3JtYWwgdXNlciBpbiBteSBEb2MgZGlyOgoobGV0
-dGVyIG9uIGxlZnQgaXMgbXkgYWJicmlldmlhdGlvbgoKICBJc2h0YXI6bGF3L0RvY3VtZW50cz4g
-YXR0ciAtbCB0ZXN0ZmlsZS50eHQKVSAgQXR0cmlidXRlICJET1NBVFRSSUIiIGhhcyBhIDU2IGJ5
-dGUgdmFsdWUgZm9yIHRlc3RmaWxlLnR4dApSICBBdHRyaWJ1dGUgIlNHSV9BQ0xfRklMRSIgaGFz
-IGEgNjQgYnl0ZSB2YWx1ZSBmb3IgdGVzdGZpbGUudHh0ClUgIEF0dHJpYnV0ZSAiU0FNQkFfUEFJ
-IiBoYXMgYSAzMSBieXRlIHZhbHVlIGZvciB0ZXN0ZmlsZS50eHQKUyAgQXR0cmlidXRlICJOVEFD
-TCIgaGFzIGEgMzI4IGJ5dGUgdmFsdWUgZm9yIHRlc3RmaWxlLnR4dCAgICAgIAoKVGhlbiBjb3B5
-IHVzaW5nICJleHBsaWNpdCBhY3Rpb24iICgtYSkgdG8gc2F2ZSBleHRlbmRlZCBhdHRyaWJ1dGVz
-OgoKIElzaHRhcjpsYXcvRG9jdW1lbnRzPiBjcCAtYSB0ZXN0ZmlsZS50eHQgdGVzdGNvcHkudHh0
-CiBJc2h0YXI6bGF3L0RvY3VtZW50cz4gYXR0ciAtbCB0ZXN0Y29weS50eHQKICAgQXR0cmlidXRl
-ICJET1NBVFRSSUIiIGhhcyBhIDU2IGJ5dGUgdmFsdWUgZm9yIHRlc3Rjb3B5LnR4dAogICBBdHRy
-aWJ1dGUgIlNHSV9BQ0xfRklMRSIgaGFzIGEgNjQgYnl0ZSB2YWx1ZSBmb3IgdGVzdGNvcHkudHh0
-CiAgIEF0dHJpYnV0ZSAiU0FNQkFfUEFJIiBoYXMgYSAzMSBieXRlIHZhbHVlIGZvciB0ZXN0Y29w
-eS50eHQKCk5vdyBOT1RFOiBpZiBJIGRvbid0IHVzZSAiZXhwbGljaXQgYWN0aW9uIiAoLWEpIGlu
-IG15IGNvcHk6CgogSXNodGFyOmxhdy9Eb2N1bWVudHM+IC91c3IvYmluL2NwIHRlc3RmaWxlLnR4
-dCB0ZXN0Y29weS50eHQKIElzaHRhcjpsYXcvRG9jdW1lbnRzPiBhdHRyIC1sIHRlc3Rjb3B5LnR4
-dCAgICAgICAgICAgICAgICAKICAgQXR0cmlidXRlICJTR0lfQUNMX0ZJTEUiIGhhcyBhIDc2IGJ5
-dGUgdmFsdWUgZm9yIHRlc3Rjb3B5LnR4dAoKT05MWSB0aGUgcm9vdC1uYW1lc3BhY2UgQUNMIGlz
-IHNhdmUgIC0tIHRoZSB1c2VyIGFuZCBzZWN1cml0eQphdHRyaWJ1dGVzIGFyZSBzdHJpcGVkLgoK
-SWYgSSB0cnkgIm12ImluZyB0aGUgLS0gb24gdGhlIHNhbWUgdm9sdW1lLCBJIGFtICJmaW5lIiAo
-YXR0cmlidXRlcwpkb24ndCBnZXQgZHJvcHBlZCkuCgpCdXQgaWYgSSBjcm9zcyBhIGZpbGUgYm91
-bmRhcnkgKHRvIGFub3RoZXIgWEZTIHBhcnRpdGlvbik6CgogSXNodGFyOmxhdy9Eb2N1bWVudHM+
-IG12IHRlc3RmaWxlLnR4dCAvU2hhcmUvQ1BBTi8KICAgbXY6IHNldHRpbmcgYXR0cmlidXRlIOKA
-mHNlY3VyaXR5Lk5UQUNM4oCZIGZvciDigJhzZWN1cml0eS5OVEFDTOKAmToKICAgICAgIE9wZXJh
-dGlvbiBub3QgcGVybWl0dGVkCiBJc2h0YXI6bGF3L0RvY3VtZW50cz4gYXR0ciAtbCAvU2hhcmUv
-Q1BBTi90ZXN0ZmlsZS50eHQKICAgQXR0cmlidXRlICJET1NBVFRSSUIiIGhhcyBhIDU2IGJ5dGUg
-dmFsdWUgZm9yIC9TaGFyZS9DUEFOL3Rlc3RmaWxlLnR4dAogICBBdHRyaWJ1dGUgIlNHSV9BQ0xf
-RklMRSIgaGFzIGEgNjQgYnl0ZSB2YWx1ZSBmb3IKICAgIC9TaGFyZS9DUEFOL3Rlc3RmaWxlLnR4
-dAogICBBdHRyaWJ1dGUgIlNBTUJBX1BBSSIgaGFzIGEgMzEgYnl0ZSB2YWx1ZSBmb3IgL1NoYXJl
-L0NQQU4vdGVzdGZpbGUudHh0CgoKT25seSB0aGUgU2VjdXJpdHkgYXR0cmlidXRlIGlzIHN0cmlw
-cGVkLiAgdGhlIHJvb3QgbmFtZXNwYWNlIGlzIGNvcHlhYmxlCmJ5IGEgdXNlcgoKCk5vdGUuICBJ
-IHNhdyB0aGlzIG1lc3NhZ2UgZm9yIHRoZSAxc3QgdGltZSwgbGFzdCB3ZWVrICh0aGUgcGVybWlz
-c2lvbgptZXNzYWdlIG9uIHRoZSBtb3ZlKS4gIERvIHlvdSBoYXZlIGFueSBpZGVhIHdoYXQgbWln
-aHQgaGF2ZSBjYXVzZWQKc3VjaCBhIGNoYW5nZT8KCkRpZCBTYW1iYSBjaGFuZ2VkIG5hbWVzcGFj
-ZXMsIG9yIGlzIHNvbWUgbGlicmFyeSByZWZ1c2luZyB0byBjb3B5IHRoaXMKb3IgbWF5YmUgYSBr
-ZXJuZWwgY2hhbmdlPwoKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
-b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi Christoph,
+
+On Thu, Nov 14, 2013 at 08:46:03AM -0800, Christoph Hellwig wrote:
+> Trying to support tiny disks only and saving a bit memory might have
+> made sense on an SGI O2 15 years ago, but is pretty pointless today.
+> 
+> Remove the rarely tested codepath that uses various smaller in-memory
+> types to reduce our test matrix and make the codebase a little bit
+> smaller and less complicated.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index 399e8ce..5d47b4d 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -1,6 +1,7 @@
+>  config XFS_FS
+>  	tristate "XFS filesystem support"
+>  	depends on BLOCK
+> +	depends on (64BIT || LBDAF)
+
+There are quite a few 32 bit arches in use today.  We need to continue to
+support them in XFS as long as they are supported by the kernel.  Unless I have
+misunderstood what you are suggesting, I believe the answer to this patch must
+be a firm 'no'.
+
+Regards,
+	Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
