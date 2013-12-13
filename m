@@ -1,35 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CC5AF29E09
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 08:29:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BCE3C8F8066
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 06:29:19 -0800 (PST)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
-	cuda.sgi.com with ESMTP id BxtTx10SEbDj2Bh7 (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 536E729E1F
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 08:29:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 481BD304077
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 06:29:27 -0800 (PST)
+Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
+	cuda.sgi.com with ESMTP id sDgnuZ8SQ5SUereM (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 06:28:51 -0800 (PST)
+	Fri, 13 Dec 2013 06:28:57 -0800 (PST)
 Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Fri, 13 Dec 2013 07:28:17 -0700
-Received: from b03cxnp08027.gho.boulder.ibm.com
-	(b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 1CA221FF001E
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:27:52 -0700 (MST)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by b03cxnp08027.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with
-	ESMTP id rBDESEUv6357418
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:28:14 +0100
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP
-	id rBDESE8D015798
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:28:14 -0700
+	Fri, 13 Dec 2013 09:28:25 -0500
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com
+	[9.57.198.27])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id C21EA38C8045
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:28:20 -0500 (EST)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23032.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	rBDESMNY42467424 for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 14:28:22 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	rBDESMkN006623 for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:28:22 -0500
 From: Zhi Yong Wu <zwu.kernel@gmail.com>
-Subject: [PATCH 3/5] xfs: add xfs_create_tmpfile() for O_TMPFILE support
-Date: Fri, 13 Dec 2013 22:27:51 +0800
-Message-Id: <1386944873-16796-4-git-send-email-zwu.kernel@gmail.com>
+Subject: [PATCH 5/5] xfs: allow linkat() on O_TMPFILE files
+Date: Fri, 13 Dec 2013 22:27:53 +0800
+Message-Id: <1386944873-16796-6-git-send-email-zwu.kernel@gmail.com>
 In-Reply-To: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
 References: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -50,240 +48,137 @@ Cc: linux-fsdevel@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux
 
 From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-The function is used to create one O_TMPFILE file.
+Enable O_TMPFILE support in linkat().
 For more info, please refer to:
-  http://oss.sgi.com/archives/xfs/2013-08/msg00339.html
+  http://oss.sgi.com/archives/xfs/2013-08/msg00341.html
 
 Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 ---
- fs/xfs/xfs_inode.c      |  106 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h      |    2 +
- fs/xfs/xfs_shared.h     |    4 +-
- fs/xfs/xfs_trans_resv.c |   31 ++++++++++++++
- fs/xfs/xfs_trans_resv.h |    2 +
- 5 files changed, 144 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_inode.c      |   21 ++++++++++++++++++---
+ fs/xfs/xfs_trans_resv.c |   20 ++++++++++++++++++++
+ fs/xfs/xfs_trans_resv.h |    2 ++
+ 3 files changed, 40 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 71a8186..48e09c5 100644
+index 48e09c5..2e1fd96 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1342,6 +1342,112 @@ xfs_create(
- }
+@@ -62,6 +62,8 @@ kmem_zone_t *xfs_inode_zone;
  
- int
-+xfs_create_tmpfile(
-+	struct xfs_inode	*dp,
-+	struct xfs_mount	*mp,
-+	umode_t			mode,
-+	dev_t			rdev,
-+	struct xfs_inode	**ipp)
-+{
-+	struct xfs_inode	*ip = NULL;
-+	struct xfs_trans	*tp = NULL;
-+	int			error;
-+	uint			cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
-+	struct xfs_dquot	*udqp = NULL;
-+	struct xfs_dquot	*gdqp = NULL;
-+	struct xfs_dquot	*pdqp = NULL;
+ STATIC int xfs_iflush_int(xfs_inode_t *, xfs_buf_t *);
+ 
++STATIC int xfs_iunlink_remove(xfs_trans_t *, xfs_inode_t *);
++
+ /*
+  * helper function to extract extent size hint from inode
+  */
+@@ -1119,7 +1121,7 @@ xfs_bumplink(
+ {
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+-	ASSERT(ip->i_d.di_nlink > 0);
++	ASSERT(ip->i_d.di_nlink > 0 || (VFS_I(ip)->i_state & I_LINKABLE));
+ 	ip->i_d.di_nlink++;
+ 	inc_nlink(VFS_I(ip));
+ 	if ((ip->i_d.di_version == 1) &&
+@@ -1455,6 +1457,7 @@ xfs_link(
+ {
+ 	xfs_mount_t		*mp = tdp->i_mount;
+ 	xfs_trans_t		*tp;
 +	struct xfs_trans_res	*tres;
-+	uint			resblks;
+ 	int			error;
+ 	xfs_bmap_free_t         free_list;
+ 	xfs_fsblock_t           first_block;
+@@ -1480,10 +1483,16 @@ xfs_link(
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
+ 	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+ 	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+-	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, resblks, 0);
 +
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return XFS_ERROR(EIO);
++	if (sip->i_d.di_nlink == 0)
++		tres = &M_RES(mp)->tr_link_tmpfile;
++	else
++		tres = &M_RES(mp)->tr_link;
 +
-+	/*
-+	 * Make sure that we have allocated dquot(s) on disk.
-+	 */
-+	error = xfs_qm_vop_dqalloc(dp, mp, xfs_kuid_to_uid(current_fsuid()),
-+					xfs_kgid_to_gid(current_fsgid()),
-+					xfs_get_initial_prid(dp),
-+					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
-+					&udqp, &gdqp, &pdqp);
-+	if (error)
-+		return error;
-+
-+	resblks = XFS_IALLOC_SPACE_RES(mp);
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE_TMPFILE);
-+
-+	tres = &M_RES(mp)->tr_create_tmpfile;
 +	error = xfs_trans_reserve(tp, tres, resblks, 0);
-+	if (error == ENOSPC) {
-+		/* No space at all so try a "no-allocation" reservation */
-+		resblks = 0;
+ 	if (error == ENOSPC) {
+ 		resblks = 0;
+-		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, 0, 0);
 +		error = xfs_trans_reserve(tp, tres, 0, 0);
-+	}
-+	if (error) {
-+		cancel_flags = 0;
-+		goto out_trans_cancel;
-+	}
-+
-+	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
-+						pdqp, resblks, 1, 0);
-+	if (error)
-+		goto out_trans_cancel;
-+
-+	error = xfs_dir_ialloc(&tp, NULL, mode, 0, rdev,
-+				XFS_PROJID_DEFAULT, resblks > 0,
-+				&ip, NULL);
-+	if (error) {
-+		if (error == ENOSPC)
-+			goto out_trans_cancel;
-+		goto out_trans_abort;
-+	}
-+
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(tp);
-+
-+	/*
-+	 * Attach the dquot(s) to the inodes and modify them incore.
-+	 * These ids of the inode couldn't have changed since the new
-+	 * inode has been locked ever since it was created.
-+	 */
-+	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
-+
-+	error = xfs_iunlink(tp, ip);
-+	if (error)
-+		goto out_trans_abort;
-+
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+	if (error)
-+		goto out_release_inode;
-+
-+	xfs_qm_dqrele(udqp);
-+	xfs_qm_dqrele(gdqp);
-+	xfs_qm_dqrele(pdqp);
-+
-+	*ipp = ip;
-+	return 0;
-+
-+ out_trans_abort:
-+	cancel_flags |= XFS_TRANS_ABORT;
-+ out_trans_cancel:
-+	xfs_trans_cancel(tp, cancel_flags);
-+ out_release_inode:
-+	/*
-+	 * Wait until after the current transaction is aborted to
-+	 * release the inode.  This prevents recursive transactions
-+	 * and deadlocks from xfs_inactive.
-+	 */
-+	if (ip)
-+		IRELE(ip);
-+
-+	xfs_qm_dqrele(udqp);
-+	xfs_qm_dqrele(gdqp);
-+	xfs_qm_dqrele(pdqp);
-+
-+	return error;
-+}
-+
-+int
- xfs_link(
- 	xfs_inode_t		*tdp,
- 	xfs_inode_t		*sip,
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 9e6efccb..5699cc6 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -323,6 +323,8 @@ int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
- int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
- 			   umode_t mode, xfs_dev_t rdev, struct xfs_inode **ipp);
-+int		xfs_create_tmpfile(struct xfs_inode *dp, struct xfs_mount *mp,
-+			   umode_t mode, xfs_dev_t rdev, struct xfs_inode **ipp);
- int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode *ip);
- int		xfs_link(struct xfs_inode *tdp, struct xfs_inode *sip,
-diff --git a/fs/xfs/xfs_shared.h b/fs/xfs/xfs_shared.h
-index 8c5035a1..4484e51 100644
---- a/fs/xfs/xfs_shared.h
-+++ b/fs/xfs/xfs_shared.h
-@@ -104,7 +104,8 @@ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
- #define	XFS_TRANS_SB_COUNT		41
- #define	XFS_TRANS_CHECKPOINT		42
- #define	XFS_TRANS_ICREATE		43
--#define	XFS_TRANS_TYPE_MAX		43
-+#define	XFS_TRANS_CREATE_TMPFILE	44
-+#define	XFS_TRANS_TYPE_MAX		44
- /* new transaction types need to be reflected in xfs_logprint(8) */
+ 	}
+ 	if (error) {
+ 		cancel_flags = 0;
+@@ -1512,6 +1521,12 @@ xfs_link(
  
- #define XFS_TRANS_TYPES \
-@@ -112,6 +113,7 @@ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
- 	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
- 	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
- 	{ XFS_TRANS_CREATE,		"CREATE" }, \
-+	{ XFS_TRANS_CREATE_TMPFILE,	"CREATE_TMPFILE" }, \
- 	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
- 	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
- 	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
+ 	xfs_bmap_init(&free_list, &first_block);
+ 
++	if (sip->i_d.di_nlink == 0) {
++		error = xfs_iunlink_remove(tp, sip);
++		if (error)
++			goto abort_return;
++	}
++
+ 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+ 					&first_block, &free_list, resblks);
+ 	if (error)
 diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-index 2fd59c0..04519a9 100644
+index 04519a9..f2da7f4 100644
 --- a/fs/xfs/xfs_trans_resv.c
 +++ b/fs/xfs/xfs_trans_resv.c
-@@ -344,6 +344,32 @@ xfs_calc_create_reservation(
+@@ -228,6 +228,22 @@ xfs_calc_link_reservation(
+ 				      XFS_FSB_TO_B(mp, 1))));
  }
  
- /*
-+ * For adding an inode to unlinked list we can modify:
-+ *    the agi hash list: sector size
-+ *    the unlinked inode: inode size
++/* For creating a link to an O_TMPFILE inode, except modifying
++ * those metadata for regular inode, we still need to remove an inode
++ * from unlinked list at first. That is,  we can modify:
++ *    the agi hash list and counters: sector size
++ *    the on disk inode before ours in the agi hash list: inode cluster size
 + */
 +STATIC uint
-+xfs_calc_iunlink_add_reservation(xfs_mount_t *mp)
-+{
-+	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_inode_res(mp, 1);
-+}
-+
-+STATIC uint
-+xfs_calc_create_tmpfile_reservation(
++xfs_calc_link_tmpfile_reservation(
 +	struct xfs_mount        *mp)
 +{
-+	uint	res = XFS_DQUOT_LOGRES(mp);
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		res += xfs_calc_icreate_resv_alloc(mp);
-+	else
-+		res += xfs_calc_create_resv_alloc(mp);
-+
-+	return res + xfs_calc_iunlink_add_reservation(mp);
++	return xfs_calc_link_reservation(mp) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
++		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
++		    (__uint16_t)XFS_INODE_CLUSTER_SIZE(mp));
 +}
 +
-+/*
-  * Making a new directory is the same as creating a new file.
-  */
- STATIC uint
-@@ -729,6 +755,11 @@ xfs_trans_resv_calc(
- 	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
- 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ /*
+  * For removing a directory entry we can modify:
+  *    the parent directory inode: inode size
+@@ -743,6 +759,10 @@ xfs_trans_resv_calc(
+ 	resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
+ 	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
  
-+	resp->tr_create_tmpfile.tr_logres =
-+			xfs_calc_create_tmpfile_reservation(mp);
-+	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
-+	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++	resp->tr_link_tmpfile.tr_logres = xfs_calc_link_tmpfile_reservation(mp);
++	resp->tr_link_tmpfile.tr_logcount = XFS_LINK_TMPFILE_LOG_COUNT;
++	resp->tr_link_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 +
- 	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
- 	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
- 	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
+ 	resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
+ 	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
-index de7de9a..285621d 100644
+index 285621d..86a0daf 100644
 --- a/fs/xfs/xfs_trans_resv.h
 +++ b/fs/xfs/xfs_trans_resv.h
-@@ -38,6 +38,7 @@ struct xfs_trans_resv {
+@@ -35,6 +35,7 @@ struct xfs_trans_resv {
+ 	struct xfs_trans_res	tr_itruncate;	/* truncate trans */
+ 	struct xfs_trans_res	tr_rename;	/* rename trans */
+ 	struct xfs_trans_res	tr_link;	/* link trans */
++	struct xfs_trans_res	tr_link_tmpfile; /* link O_TMPFILE trans */
  	struct xfs_trans_res	tr_remove;	/* unlink trans */
  	struct xfs_trans_res	tr_symlink;	/* symlink trans */
  	struct xfs_trans_res	tr_create;	/* create trans */
-+	struct xfs_trans_res	tr_create_tmpfile; /* create O_TMPFILE trans */
- 	struct xfs_trans_res	tr_mkdir;	/* mkdir trans */
- 	struct xfs_trans_res	tr_ifree;	/* inode free trans */
- 	struct xfs_trans_res	tr_ichange;	/* inode update trans */
-@@ -100,6 +101,7 @@ struct xfs_trans_resv {
- #define	XFS_ITRUNCATE_LOG_COUNT		2
- #define XFS_INACTIVE_LOG_COUNT		2
- #define	XFS_CREATE_LOG_COUNT		2
-+#define	XFS_CREATE_TMPFILE_LOG_COUNT	2
- #define	XFS_MKDIR_LOG_COUNT		3
+@@ -106,6 +107,7 @@ struct xfs_trans_resv {
  #define	XFS_SYMLINK_LOG_COUNT		3
  #define	XFS_REMOVE_LOG_COUNT		2
+ #define	XFS_LINK_LOG_COUNT		2
++#define	XFS_LINK_TMPFILE_LOG_COUNT	2
+ #define	XFS_RENAME_LOG_COUNT		2
+ #define	XFS_WRITE_LOG_COUNT		2
+ #define	XFS_ADDAFORK_LOG_COUNT		2
 -- 
 1.7.6.5
 
