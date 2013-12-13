@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F3CFB7F85
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:30:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E132F30406B
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:30:24 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id WwQkGzVWK5RG41zR (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id D861929DF8
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 07:33:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C53C5304059
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:33:11 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id p2zrGFIremQhRQMi (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 05:30:15 -0800 (PST)
-Date: Fri, 13 Dec 2013 05:28:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/3] xfs: xfs_qm_dqrele mostly doesn't need locking
-Message-ID: <20131213132807.GB13689@infradead.org>
-References: <1386841258-22183-1-git-send-email-david@fromorbit.com>
-	<20131212102507.GX10988@dastard>
+	Fri, 13 Dec 2013 05:32:43 -0800 (PST)
+Message-ID: <52AB0C59.4070904@oracle.com>
+Date: Fri, 13 Dec 2013 21:32:09 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131212102507.GX10988@dastard>
+Subject: Re: [PATCH] xfs: return ENOSPC when trying to set more ACLs than
+	XFS_ACL_MAX_ENTRIES
+References: <52921D12.7040104@oracle.com>
+	<5292C557.9020008@sandeen.net>	<5292D8AB.5080003@oracle.com>
+	<20131211193622.GG1935@sgi.com>
+	<20131213130432.GB22594@infradead.org>
+In-Reply-To: <20131213130432.GB22594@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +32,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Dec 12, 2013 at 09:25:07PM +1100, Dave Chinner wrote:
+On 12/13 2013 21:04 PM, Christoph Hellwig wrote:
+> On Wed, Dec 11, 2013 at 01:36:22PM -0600, Ben Myers wrote:
+>>>> (I guess looking at ext4, it uses ENOSPC for some similar constraints,
+>>>> so maybe three is precedent for this)
+>>> Btrfs also uses ENOSPC, but JFS would return something like "Argument list too long"
+>>> in this case.
 > 
-> From: Dave Chinner <dchinner@redhat.com>
+> I think ENOSPC is a really bad idea in this case, but I also think we
+> should make sure Linux filesystems behave unfiformly.
 > 
-> Now that we have an atomic variable for the reference count, we
-> don't need to take the dquot lock if we are not removing the last
-> reference count. The dquot lock is a mutex, so we can't use
-> atomic_dec_and_lock(), but we can open code it in xfs_qm_dqrele and
-> hence avoid the dquot lock for most of the cases where we drop a
-> reference count.
-> 
-> The result is that concurrent file creates jump from 24,000/s to
-> 28,000/s, and the entire workload is now serialised on the dquot
-> being locked during transaction commit. Another significant win,
-> even though it's not the big one...
+> Jeff, can you write a summary of the errors returned by all common
+> filesystems and post it to -fsdevel for comment?  We should have a
+> common error for this, and I'd be a happier man if it weren't ENOSPC,
+> but that's secondary.
+Yep, let me gather up those info...
 
-Maybe I'm missing something, but shou;dn't the following be enough to
-be a valid dqput (plus asserts & tracing):
-
-
-	if (atomic_dec_and_test(&dqp->q_nrefs)) {
-		if (list_lru_add(&mp->m_quotainfo->qi_lru, &dqp->q_lru))
-			XFS_STATS_INC(xs_qm_dquot_unused);
-	}
-
-given that the only locking we need is the internal lru lock?
-> 
-> While there, rename xfs_qm_dqrele to xfs_dqrele - the "qm" part of
-> the name means nothing and just makes the code harder to read.
-
-Please keep that out of the patch.  I don't mind dropping the
-qm_ part, but there's a lot of functions that have it, and it should
-be done for all of them at the same time.
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
