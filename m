@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E61227F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 17:01:51 -0600 (CST)
-Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
-	[128.162.233.19])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D0181304039
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:01:39 -0800 (PST)
-Date: Fri, 13 Dec 2013 17:01:06 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: require 64-bit sector_t
-Message-ID: <20131213230106.GN1935@sgi.com>
-References: <20131114164603.GA13628@infradead.org>
-	<20131213213701.GM1935@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7CD387F52
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 17:14:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 68DF38F8033
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:14:38 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	YVQLfSQ9zs91KvGn for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 15:14:11 -0800 (PST)
+Date: Sat, 14 Dec 2013 10:14:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] Handling of reviewed patch series
+Message-ID: <20131213231401.GZ10988@dastard>
+References: <20131213053611.GQ10988@dastard>
+ <20131213185618.GJ1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131213213701.GM1935@sgi.com>
+In-Reply-To: <20131213185618.GJ1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +30,219 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Hey, 
-On Fri, Dec 13, 2013 at 03:37:01PM -0600, Ben Myers wrote:
-> On Thu, Nov 14, 2013 at 08:46:03AM -0800, Christoph Hellwig wrote:
-> > Trying to support tiny disks only and saving a bit memory might have
-> > made sense on an SGI O2 15 years ago, but is pretty pointless today.
-> > 
-> > Remove the rarely tested codepath that uses various smaller in-memory
-> > types to reduce our test matrix and make the codebase a little bit
-> > smaller and less complicated.
-> > 
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> > index 399e8ce..5d47b4d 100644
-> > --- a/fs/xfs/Kconfig
-> > +++ b/fs/xfs/Kconfig
-> > @@ -1,6 +1,7 @@
-> >  config XFS_FS
-> >  	tristate "XFS filesystem support"
-> >  	depends on BLOCK
-> > +	depends on (64BIT || LBDAF)
+On Fri, Dec 13, 2013 at 12:56:18PM -0600, Ben Myers wrote:
+> Hey Dave,
 > 
-> There are quite a few 32 bit arches in use today.  We need to continue to
-> support them in XFS as long as they are supported by the kernel.  Unless I have
-> misunderstood what you are suggesting, I believe the answer to this patch must
-> be a firm 'no'.
+> On Fri, Dec 13, 2013 at 04:36:11PM +1100, Dave Chinner wrote:
+> > I'd like to make a proposal and see what people think abou tit for
+> > managing patch series that I have been reviewed.
+> > 
+> > What I'd like to do is publish the reviewed and signed-off topic
+> > branches that I built as in my local git tree as part of the review
+> > and test process. For example, I currently have two such branches
+> > right now - one for Christoph's log format changes, and another for
+> > Jeff's icluster cleanups.
+....
+> > These branches are all based on the master branch as it currently
+> > stands. They have had each patch individually compile tested, they
+> > have been individually tested, and they've been merged into a test
+> > tree and tested along with every other branch I'm currently working
+> > on.
+> > 
+> > What I'd like to do is publish each of the reviewed branch in the
+> > XFS git repos on oss.sgi.com as completed and ready-to-go code. This
+> > is a bit different to what we do now - normally Ben would come along
+> > and merge the series straight into the master branch, then update
+> > the for-next branch to point at it.
+> 
+> Yes, normally I'd merge those series right about now.  ;)
+> 
+> > The issue with this is that it then makes our lives more difficult
+> > when we get a bug fix that has to go into the master branch and be
+> > sent to linus for an -rc kernel before all the development code that
+> > is already checked into the master branch.
+> 
+> Yeah, that's the same issue we have during the merge window.  You can't pull
+> stuff into the master branch until after Linus has pulled and you've pulled
+> back if you want a fast-forward merge the next time around.  If you do pull
+> stuff in during the window you get a merge commit that screws up the history
+> graph.  The workaround in later -rc requests is to cherry-pick (AKA rebase) the
+> bugfixes back onto the latest commit that Linus has pulled, and then there are
+> duplicate commits that we pull back from mainline after the next merge window
+> closes.  It's not the prettiest thing, but better than screwing up the graph.
 
-I stepped away for a few minutes and realized my mistake.   ;/ 
+Agreed, and even better is avoiding the problem of having to
+cherry-pick altogether :)
 
-Apologies!  I'll take another look at the rest of the patch.
+> > What I propose is that the xfs-oss/master branch tracks the
+> > Linus -rc1 releases, and we never check code directly into the
+> > master branch except in exceptional circumstances. i.e.  we try
+> > to only ever pull back down from Linus into it. Exceptional
+> > circumstances would be work that causes widespread rebasing,
+> > like all of the structural rework that we've done recently. The
+> > structural work would go into the master branch immediately
+> > after a -rc1 update, and the next cycle's work and topic
+> > branches then based on top of that.
+> > 
+> > What this means is that the "for-next" branch is no longer based
+> > on the master branch - it becomes the development branch we work
+> > on, and is effectively a merge of all the topic branches. i.e
+> > like the -next tree, it is a branch that can be rebased without
+> > impacting the history of the code in the topic branches because
+> > it's just a merge target.
+> > 
+> > What this means is that development can be done against the
+> > master branch without fear of conflicting with other changes
+> > that are being done. Testing, however, can target the for-next
+> > branch, and local integration testing can be done simply by
+> > merging a local topic branch into a local for-next branch....
+> 
+> I'm not too keen on rebasing a published branch, mostly because I
+> tend to log test results by commit id.  If there is a way to keep
+> the initial commit id stable and in the repo so it can be
+> referenced later it would be better.  e.g.  In the [unlikely]
+> event that the for-next branch does need to be rebased, tag it
+> first.
 
-Thanks,
-	Ben
+Well, I'd be surprised if we have to rebase the for-next branch very
+often. If we plan things correctly (e.g. delay disruptive topic
+branchs to the next release, and merge them immediately after an
+-rc1 update) I think we can effectively avoid rebases. The
+difference is that if we ever need to do a rebase, we can.
+
+It also means that we can commit the disruptive series to a topic
+branch once it is complete, but we don't have to merge it into
+for-next immediately - it can sit there and wait for the next -rc1
+update to roll around. That way we can rebase the topic branch with
+bug fixes, merge conflict fixes, etc right up to the point that we
+"stabilise" it by merging it into for-next....
+
+> > Lines of development that overlap will generate conflicts at the
+> > for-next branch merge, and at that point we can decide how to
+> > deal with the problem. e.g. turn the conflicting topic branches
+> > into a single, larger topic branch, live with it, etc.
+> > 
+> > When it comes to sending code upstream to Linus, we can either
+> > send a pull request per topic branch - Linus often likes to do
+> > merges himself - or we can merge them all into a single branch
+> > and ask Linus to pull that. The deciding factor may well be
+> > Linus himself...
+> 
+> If you take a look at merges into mainline using gitweb they look
+> like this:
+> 
+> Merge branch 'for-linus' of git://git./linux/kernel... 
+> 
+> I suggest that the topic branches start with xfs.
+> 
+> e.g. 'xfs-refactor-icluster-macros' would be better than
+> 'tip-icluster-factor'.
+
+I used the "tip" prefix simply because that is what is used in other
+trees for branches of this purpose. It's good to be able to just
+look at the branch and know from the prefix that it is a feature
+branch pending for the next merge window, as opposed to some
+development branch we are using to stage other work....
+
+I'm open to other suggestions - having an "xfs-" prefix of
+some kind is definitely a good idea. Perhaps something like
+"xfs-14-..." where the 14 is an indicator of the merge window we are
+queuing it for (i.e. 3.14)? That way we end up with "xfs-13-rc6-*"
+as the branch prefix for bug fixes that need to be sent to linus in
+the 3.13-rc6 cycle....
+
+Any other ideas?
+
+> > However, what this structure means is that urgent bugs fixes
+> > canbe placed into their own topic branches - an "urgent-*"
+> > prefix is often used for these by other maintainers - and Linus
+> > can pull directly from the topic branch without us having to
+> > worry about cherry-picking out of the middle of the master
+> > branch and all the pain that entails.
+> 
+> Cherry-picking is not all that painful, but a a 'misc' branch, or
+> 'urgent' seems fine to me too.  I do prefer an xfs- prefix and to
+> send signed tags in pull requests...
+
+It's more that cherry picking screws up the history once we merge
+back down from Linus' tree. Remember all the duplicate commits that
+resulted from sending all those bug fixes in the 3.10-rc cycle? :/
+
+> > It also allows us much more flexibility in managing the code and
+> > how it is send upstream. It also makes it possible to push code
+> > earlier for wider testing without being stuck with that code
+> > forever - it's trivial to drop a topic branch if it causes
+> > unexpected regressions or problems without leaving nasty reverts
+> > all over the history.
+> > 
+> > Yes, this is a bit of a change in the way we do things, but it
+> > aligns much more closely to the distributed nature of how we
+> > develop the code. I'm going to push the two topic branches I
+> > mentioned above into the oss repository so people can have a
+> > look at them and get a feel for how such a process might work
+> > and so we can reference them during the discussion.
+> 
+> Lets see if I understand correctly (and I'll take some of my own
+> advice from above).  I'll pull 'tip-icluster-factor' into a local
+> branch named 'xfs-refactor-icluster-macros', and merge it into our
+> for-next branch along with the other series.  This will get them
+> into -next, and we can still toss it later if it's not what you
+> had in mind.
+
+Well, ideally when one of us pushes out or appends to a topic
+branch, we merge it into for-next at the same time. If we need to
+rebase the for-next branch, then we need to discuss it first and
+take appropriate actions...
+
+> > Essentially, I want to speed up the rate at which we get code
+> > integrated without the risk of making a big mess by committing
+> > to code too quickly. Keeping code in topic branches like this
+> > solves that problem, and the fact that it closely aligns to my
+> > normal workflow makes it very appealing to me as a
+> > Maintainer....
+> > 
+> > Keep in mind that I want to do the same thing for major pieces
+> > of work with xfstests and xfsprogs - keep work in topic branches
+> > until they are tested and ready to go, then merge everything
+> > into the master branch and cut a release. This would enable a
+> > much faster xfsprogs release schedule because we make a release
+> > at any point in time without having to worry about whether we
+> > have work in progress in the master branch that needs completing
+> > before a release is done...
+> 
+> Yeah, that's interesting in light of Christoph's suggestion for a
+> 3.1.12 release.  Probably we should try this on the kernel repo
+> for awhile to see how it goes.
+
+Yup, sounds like a plan...
+
+> > Anyway, have a think and discuss - I'm going to push the
+> > branches I mentioned above....
+> 
+> I've been tracking message id and patchwork id in git notes along
+> with commits for awhile.  I'm hoping this will become useful later
+> for cross referencing the list, patchworks, and test results.  If
+> you wouldn't mind also doing so I'd appreciate it.  Maybe it could
+> be done with a post-commit script or something.
+
+There's no notes in the repo of oss.sgi.com, so I'm not sure what
+you are doing here.
+
+As it is, patchworks is not something I use or want to use. I
+capture and track patches with procmail and mutt - I really don't
+want to have to use patchworks just to find some arbitrary ID number
+that some 3rd party tool generates and add it to notes attached to a
+commit.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
