@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B85FF7F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 17:20:14 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 95EBB7F52
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 18:00:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8AFC304043
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:20:11 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 867B78F8064
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 16:00:12 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FbuoXKbHgv19xY1m for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 15:20:04 -0800 (PST)
-Date: Sat, 14 Dec 2013 10:20:00 +1100
+	XO3SHoCaS97jlokZ for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 15:59:54 -0800 (PST)
+Date: Sat, 14 Dec 2013 10:59:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Security issue - storing NTACL's in non-NT-security-namespace
-Message-ID: <20131213232000.GA10988@dastard>
-References: <52A96211.3050602@tlinx.org> <20131212181315.GB20500@samba2>
-	<52AAC7CC.8000802@tlinx.org> <20131213105314.GA2117@infradead.org>
-	<52AB7CDC.5040801@tlinx.org> <20131213220848.GG1005@samba2>
+Subject: Re: [RFC] Handling of reviewed patch series
+Message-ID: <20131213235952.GO31386@dastard>
+References: <20131213053611.GQ10988@dastard> <20131213185618.GJ1935@sgi.com>
+	<20131213231401.GZ10988@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131213220848.GG1005@samba2>
+In-Reply-To: <20131213231401.GZ10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeremy Allison <jra@samba.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Samba Technical <samba-technical@lists.samba.org>, "L.A. Walsh" <samba@tlinx.org>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Dec 13, 2013 at 02:08:48PM -0800, Jeremy Allison wrote:
-> On Fri, Dec 13, 2013 at 01:32:12PM -0800, L.A. Walsh wrote:
-> > Now NOTE: if I don't use "explicit action" (-a) in my copy:
+On Sat, Dec 14, 2013 at 10:14:01AM +1100, Dave Chinner wrote:
+> On Fri, Dec 13, 2013 at 12:56:18PM -0600, Ben Myers wrote:
+> > On Fri, Dec 13, 2013 at 04:36:11PM +1100, Dave Chinner wrote:
+> > > like the -next tree, it is a branch that can be rebased without
+> > > impacting the history of the code in the topic branches because
+> > > it's just a merge target.
+> > > 
+> > > What this means is that development can be done against the
+> > > master branch without fear of conflicting with other changes
+> > > that are being done. Testing, however, can target the for-next
+> > > branch, and local integration testing can be done simply by
+> > > merging a local topic branch into a local for-next branch....
 > > 
-> > Ishtar:law/Documents> /usr/bin/cp testfile.txt testcopy.txt
-> > Ishtar:law/Documents> attr -l testcopy.txt
-> > Attribute "SGI_ACL_FILE" has a 76 byte value for testcopy.txt
-> > 
-> > ONLY the root-namespace ACL is save  -- the user and security
-> > attributes are striped.
+> > I'm not too keen on rebasing a published branch, mostly because I
+> > tend to log test results by commit id.  If there is a way to keep
+> > the initial commit id stable and in the repo so it can be
+> > referenced later it would be better.  e.g.  In the [unlikely]
+> > event that the for-next branch does need to be rebased, tag it
+> > first.
 > 
-> What is the namespace for SGI_ACL_FILE ?
+> Well, I'd be surprised if we have to rebase the for-next branch very
+> often. If we plan things correctly (e.g. delay disruptive topic
+> branchs to the next release, and merge them immediately after an
+> -rc1 update) I think we can effectively avoid rebases. The
+> difference is that if we ever need to do a rebase, we can.
 
-That's XFS's on-disk name for a posix ACL, which are kept the root
-namespace.  It's a file ACL, not a default ACL (which are named
-SGI_ACL_DEFAULT), so it was placed there by the user after VFS
-allowed it to be created.
+FWIW, I just realised that this isn't a huge problem. Rebasing the
+for-next branch by remerging topic branches is not going to change
+the commit IDs of the commits in the topic branches - it only
+changes the commit ID of the merge commits. Hence if you are
+tracking commit IDs of the patches rather than the merges, a
+for-next rebase won't affect your tracking at all.
 
 Cheers,
 
