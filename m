@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA3B37F4E
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 11:32:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A07588F8065
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:32:54 -0800 (PST)
-Received: from mail-ob0-f177.google.com (mail-ob0-f177.google.com
-	[209.85.214.177]) by cuda.sgi.com with ESMTP id
-	bwl5GfVoT4k3WTKE (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 09:32:11 -0800 (PST)
-Received: by mail-ob0-f177.google.com with SMTP id vb8so2267782obc.22
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:32:09 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 187C77F4E
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 11:36:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F1FFC8F8049
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:36:54 -0800 (PST)
+Received: from mail-oa0-f48.google.com (mail-oa0-f48.google.com
+	[209.85.219.48]) by cuda.sgi.com with ESMTP id yHBWFKyivLxIX4xC
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:36:48 -0800 (PST)
+Received: by mail-oa0-f48.google.com with SMTP id l6so2398160oag.21
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 09:36:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131213163916.GG20803@infradead.org>
+In-Reply-To: <20131213164154.GH20803@infradead.org>
 References: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
-	<1386944873-16796-5-git-send-email-zwu.kernel@gmail.com>
-	<20131213163916.GG20803@infradead.org>
-Date: Sat, 14 Dec 2013 01:32:08 +0800
-Message-ID: <CAEH94LiFgi8kjFAtBe=2OsVr=4NEXijJN5w-d1H8+ifzcfoTOw@mail.gmail.com>
-Subject: Re: [PATCH 4/5] xfs: add a new method xfs_vn_tmpfile()
+	<1386944873-16796-6-git-send-email-zwu.kernel@gmail.com>
+	<20131213164154.GH20803@infradead.org>
+Date: Sat, 14 Dec 2013 01:36:47 +0800
+Message-ID: <CAEH94LimS8mUCFwmnVi876mG9GB7DWsqG9p1O=R41XJ3-u1NQg@mail.gmail.com>
+Subject: Re: [PATCH 5/5] xfs: allow linkat() on O_TMPFILE files
 From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -36,66 +35,45 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-On Sat, Dec 14, 2013 at 12:39 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Dec 13, 2013 at 10:27:52PM +0800, Zhi Yong Wu wrote:
+On Sat, Dec 14, 2013 at 12:41 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Dec 13, 2013 at 10:27:53PM +0800, Zhi Yong Wu wrote:
 >> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 >>
->> Add a new O_TMPFILE method to VFS inteface.
+>> Enable O_TMPFILE support in linkat().
 >> For more info, please refer to:
->>   http://oss.sgi.com/archives/xfs/2013-08/msg00336.html
->>
->> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
->> ---
->>  fs/xfs/xfs_iops.c |   22 ++++++++++++++++++++++
->>  1 files changed, 22 insertions(+), 0 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->> index eb55be5..b57cd89 100644
->> --- a/fs/xfs/xfs_iops.c
->> +++ b/fs/xfs/xfs_iops.c
->> @@ -39,6 +39,7 @@
->>  #include "xfs_da_btree.h"
->>  #include "xfs_dir2_priv.h"
->>  #include "xfs_dinode.h"
->> +#include "xfs_trans_space.h"
->>
->>  #include <linux/capability.h>
->>  #include <linux/xattr.h>
->> @@ -1051,6 +1052,25 @@ xfs_vn_fiemap(
->>       return 0;
->>  }
->>
->> +STATIC int
->> +xfs_vn_tmpfile(
->> +     struct inode    *dir,
->> +     struct dentry   *dentry,
->> +     umode_t         mode)
->> +{
->> +     struct xfs_inode *ip = NULL;
->> +     int             error;
->> +
->> +     error = xfs_create_tmpfile(XFS_I(dir), XFS_I(dir)->i_mount,
+>>   http://oss.sgi.com/archives/xfs/2013-08/msg00341.html
 >
-> No need to pass in the mount point here, the client can get it easily.
+> Generall you should provide all reasonable information in the changelog
+> instead of linking to it.
+will apply this, thanks.
 >
->> +                             mode, 0, &ip);
+>> +     if (sip->i_d.di_nlink == 0)
+>> +             tres = &M_RES(mp)->tr_link_tmpfile;
+>> +     else
+>> +             tres = &M_RES(mp)->tr_link;
 >
-> Also no need for an always-zero argument.
-Fixed, thanks.
+> As mentioned before I think Dave wanted you to always use the same
+> reservation, but I'll leave that discussion to him.
+If as you said, when some tons of regular files are created, it won't
+waste some disk space? e.g. some files want to reserve some space, but
+get NOSPACE due to other files reserving additional space?
+
 >
->> +     if (error)
->> +             return -error;
->> +
->> +     d_instantiate(dentry, VFS_I(ip));
+>> +/* For creating a link to an O_TMPFILE inode, except modifying
+>> + * those metadata for regular inode, we still need to remove an inode
+>> + * from unlinked list at first. That is,  we can modify:
+>> + *    the agi hash list and counters: sector size
+>> + *    the on disk inode before ours in the agi hash list: inode cluster size
+>> + */
 >
-> Shouldn't this be a call to d_tmpfile() instead?
-Yes, then it need to be called in xfs_create_tmpfile() just before
-xfs_iunlink() is called.
+> We always have an emptry content
+Done, thanks.
 >
-> Also I'd suggest mergin this into the previous patch, so that we have
-> one that actually adds O_TMPFILE support, and once place to write a nice
-Merged them, thanks.
-> good changelog.
+> /*
+>
+> line at the beginning of comments in XFS and the Linux kernel in
+> general.
+>
 
 
 
