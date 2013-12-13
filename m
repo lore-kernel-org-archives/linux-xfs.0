@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F0FB47F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 16:15:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E022B304064
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 14:15:01 -0800 (PST)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id 8UbXD8Q00Xd9FanV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 14:14:38 -0800 (PST)
-Message-ID: <52AB86B1.2070904@tlinx.org>
-Date: Fri, 13 Dec 2013 14:14:09 -0800
-From: "L.A. Walsh" <samba@tlinx.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A70957F52
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 16:17:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 948658F8049
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 14:17:39 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	CpmjzNTdZMjDCKO6 for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 14:01:18 -0800 (PST)
+Date: Sat, 14 Dec 2013 09:01:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: remove the incorrect entry in the MAINTAINER file
+Message-ID: <20131213220110.GW10988@dastard>
+References: <1386935393-23559-1-git-send-email-zwu.kernel@gmail.com>
+	<20131213163131.GC20803@infradead.org>
+	<20131213202747.GL1935@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Security issue - storing NTACL's in non-NT-security-namespace
-References: <52A96211.3050602@tlinx.org> <20131212181315.GB20500@samba2>
-	<52AAC7CC.8000802@tlinx.org> <20131213105314.GA2117@infradead.org>
-	<52AB7CDC.5040801@tlinx.org> <20131213220848.GG1005@samba2>
-In-Reply-To: <20131213220848.GG1005@samba2>
+Content-Disposition: inline
+In-Reply-To: <20131213202747.GL1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,30 +27,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeremy Allison <jra@samba.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Samba Technical <samba-technical@lists.samba.org>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Zhi Yong Wu <zwu.kernel@gmail.com>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On 12/13/2013 2:08 PM, Jeremy Allison wrote:
-> On Fri, Dec 13, 2013 at 01:32:12PM -0800, L.A. Walsh wrote:
->   
->> Now NOTE: if I don't use "explicit action" (-a) in my copy:
->>
->> Ishtar:law/Documents> /usr/bin/cp testfile.txt testcopy.txt
->> Ishtar:law/Documents> attr -l testcopy.txt
->> Attribute "SGI_ACL_FILE" has a 76 byte value for testcopy.txt
->>
->> ONLY the root-namespace ACL is save  -- the user and security
->> attributes are striped.
->>     
->
-> What is the namespace for SGI_ACL_FILE ?
->   
-root
+On Fri, Dec 13, 2013 at 02:27:47PM -0600, Ben Myers wrote:
+> On Fri, Dec 13, 2013 at 08:31:31AM -0800, Christoph Hellwig wrote:
+> > Looks good,
+> > 
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Also discussed here:
+> http://oss.sgi.com/archives/xfs/2013-07/msg00024.html
+> 
+> Before pulling this in we should probably let Dave give another 2c.
 
+Well, I stand by what I wrote in that thread. There is absolutely
+nothing wrong with having xfs@oss.sgi.com listed as a maintainer;
+different and unusual doesn't mean it is wrong.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
