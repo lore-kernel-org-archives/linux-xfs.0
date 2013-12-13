@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A7557F6B
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:35:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A4498F8040
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:35:13 -0800 (PST)
-Received: from mail-oa0-f47.google.com (mail-oa0-f47.google.com
-	[209.85.219.47]) by cuda.sgi.com with ESMTP id uQQku2EHh6wHUm47
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:34:47 -0800 (PST)
-Received: by mail-oa0-f47.google.com with SMTP id k1so1908983oag.6
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:34:43 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id E07777F52
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:47:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CCD7E8F8052
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:47:38 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	7cg6JBH5yCwG6F8o for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 03:47:28 -0800 (PST)
+Date: Fri, 13 Dec 2013 22:47:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] Handling of reviewed patch series
+Message-ID: <20131213114723.GM31386@dastard>
+References: <20131213053611.GQ10988@dastard>
+	<20131213111959.GF23546@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20131125214611.GI8803@dastard>
-References: <1385379154-3802-1-git-send-email-zwu.kernel@gmail.com>
-	<1385379154-3802-5-git-send-email-zwu.kernel@gmail.com>
-	<20131125214611.GI8803@dastard>
-Date: Fri, 13 Dec 2013 19:34:43 +0800
-Message-ID: <CAEH94Lixcey+PYGsLf3waeK1sv9QYriacMNe+pen-3jor3fG4g@mail.gmail.com>
-Subject: Re: [RFC PATCH 4/4] xfs: allow linkat() on O_TMPFILE files
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20131213111959.GF23546@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,107 +30,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 26, 2013 at 5:46 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Nov 25, 2013 at 07:32:34PM +0800, Zhi Yong Wu wrote:
->> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
->>
->> Enable O_TMPFILE support in linkat().
->>
->> http://oss.sgi.com/archives/xfs/2013-08/msg00341.html
->>
->> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
->> ---
->>  fs/xfs/xfs_inode.c      |   23 +++++++++++++++++++++--
->>  fs/xfs/xfs_trans_resv.c |   13 +++++++++++++
->>  fs/xfs/xfs_trans_resv.h |    2 ++
->>  3 files changed, 36 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->> index e1832de..7ab029b 100644
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -62,6 +62,8 @@ kmem_zone_t *xfs_inode_zone;
->>
->>  STATIC int xfs_iflush_int(xfs_inode_t *, xfs_buf_t *);
->>
->> +STATIC int xfs_iunlink_remove(xfs_trans_t *, xfs_inode_t *);
->> +
->>  /*
->>   * helper function to extract extent size hint from inode
->>   */
->> @@ -1119,7 +1121,9 @@ xfs_bumplink(
->>  {
->>       xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
->>
->> -     ASSERT(ip->i_d.di_nlink > 0);
->> +     if ((VFS_I(ip)->i_nlink == 0) &&
->> +         !(VFS_I(ip)->i_state & I_LINKABLE))
->> +             ASSERT(ip->i_d.di_nlink > 0);
->>       ip->i_d.di_nlink++;
->>       inc_nlink(VFS_I(ip));
->>       if ((ip->i_d.di_version == 1) &&
->> @@ -1473,6 +1477,7 @@ xfs_link(
->>  {
->>       xfs_mount_t             *mp = tdp->i_mount;
->>       xfs_trans_t             *tp;
->> +     struct xfs_trans_res    *tres;
->>       int                     error;
->>       xfs_bmap_free_t         free_list;
->>       xfs_fsblock_t           first_block;
->> @@ -1498,7 +1503,14 @@ xfs_link(
->>       tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
->>       cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
->>       resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
->> -     error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, resblks, 0);
->> +
->> +     if ((VFS_I(sip)->i_nlink == 0) &&
->> +         (VFS_I(sip)->i_state & I_LINKABLE))
->> +             tres = &M_RES(mp)->tr_link_tmpfile;
->> +     else
->> +             tres = &M_RES(mp)->tr_link;
->> +
->> +     error = xfs_trans_reserve(tp, tres, resblks, 0);
->
-> Uggh. For the small amount of extra space needed for the unlinked
-> list reservation, I would simply add it to the tr_link reservation
-> and be done with it. That gets rid of the need for the noise here.
->
->
-> As per above, fold this into xfs_calc_link_reservation() by adding a:
->
->
->                 + xfs_calc_iunlink_remove_resv(mp);
-This way seems to not work...
-In xfs_calc_link_reservation(), How to determine if it is for one
-regular file or O_TMPFILE file? since this functions is only passed in
-mp?
+On Fri, Dec 13, 2013 at 03:19:59AM -0800, Christoph Hellwig wrote:
+> 
+> I'm a big fan of the for-next vs for-linux split for next release work
+> vs bugfixes which we've not applied yet.  The whole topic branches
+> scheme makes sense for large changes like the crc work, but seems
+> utterly confusing if applied to every little change, as now the amount
+> of branches you can conflict againt multiplies.  I'm defintively in
+> favour of a model that has less active branches.
 
->
-> to the end of it.  Then you can also modify
-> xfs_calc_ifree_reservation() to use the same
-> xfs_calc_iunlink_remove_resv() function as well.
->
-> [ And similarly, looking back on the previous patch
-> xfs_calc_iunlink_add_resv can be used in xfs_calc_remove_reservation
-> so all the unlinked list manipulations are covered by the same
-> reservation calculations. ]
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+I certainly wouldn't want to create topic branches for every
+standalone patch - that doesn't make any sense from a management
+overhead point of view. I'd keep a "miscellaneous" topic branch
+specifically for aggregating standalone and small fixes, and that
+keeps the number of topic branches under control.
 
+The way I see it from a developer POV is that after the topic branch
+is created you can check that it matches your local changes, then
+just ignore it. You continue to work from the for-next branch (which
+now includes your work from the topic branch), or continue to target
+the unchanging master branch or the for-next merge target branch,
+which would be the same as what you work from now.
 
+In the case that you have work that is dependent on a specific topic
+branch, we can add the work to the end of that topic branch rather
+than create a new one. Or if you have dependencies across
+everything, then you develop against for-next and we simply make
+that the last topic branch to be merged into for-next.
 
+i.e. as a developer, you really don't need to care that much about
+individual topic branches and how they are managed....
+
+Cheers,
+
+Dave.
 -- 
-Regards,
-
-Zhi Yong Wu
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
