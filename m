@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6E5F57F4E
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 04:49:42 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BA69C7F50
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:01:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5F3728F8052
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 02:49:27 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HHNGMv5W7nATCBin for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 02:49:16 -0800 (PST)
-Date: Fri, 13 Dec 2013 21:48:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS / writeback invoking soft lockup.
-Message-ID: <20131213104853.GS10988@dastard>
-References: <20131213071407.GA6527@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9739304059
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:01:43 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id Xa3LGe2AnjFMT9L4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 03:01:32 -0800 (PST)
+Date: Fri, 13 Dec 2013 03:01:28 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/6] xfs: don't try to mark uncached buffers stale on
+	error.
+Message-ID: <20131213110128.GA14884@infradead.org>
+References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
+	<1386826478-13846-2-git-send-email-david@fromorbit.com>
+	<20131212163629.GA2894@infradead.org>
+	<20131212222438.GJ10988@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131213071407.GA6527@redhat.com>
+In-Reply-To: <20131212222438.GJ10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,72 +33,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Dec 13, 2013 at 02:14:07AM -0500, Dave Jones wrote:
-> I can hit this pretty reliably on one of my slower test machines.
-> (8gb ram, 1 slow sata disk)
-> 
-> the machine is pretty responsive, and recovers after a while.
-> anything we can do to shut it up ?
+On Fri, Dec 13, 2013 at 09:24:38AM +1100, Dave Chinner wrote:
+> Ok, I agree it is a bit messy, but that code is already pretty ugly.
+> I'd like to get this fix in first, because it's causing oopses in
+> roughly 30% of my local xfstests runs on a couple of VMs, so I'd
+> prefer to get the fix out there now and do the cleanup as a separate
+> patch series. Would that be an acceptible approach to take here from
+> your perspective?
 
-Actually, I think this indicates a problem.
-
-> BUG: soft lockup - CPU#2 stuck for 22s! [kworker/u8:2:8479]
-...
-> Call Trace:
->  [<c112f8f8>] lru_add_drain+0x1c/0x39
->  [<c112f934>] __pagevec_release+0x10/0x26
->  [<c112baba>] write_cache_pages+0x2f9/0x486
-
-That code in write_cache_pages():
-
-1907         while (!done && (index <= end)) {
-1908                 int i;
-1909
-1910                 nr_pages = pagevec_lookup_tag(&pvec, mapping, &index, tag,
-1911                               min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1)
-1912                 if (nr_pages == 0)
-1913                         break;
-1914
-1915                 for (i = 0; i < nr_pages; i++) {
-1916                         struct page *page = pvec.pages[i];
-....
-....
-2001                 }
-2002                 pagevec_release(&pvec);
-2003                 cond_resched();
-2004         }
-
-So after all the pages in a pagevec are processed, we release the
-CPU before we grab the next pagevec. This softlockup implies we
-have been processing this pagevec for 22s. That tells me the code
-is actually stuck spinning on something, not that this is a false
-positive. i.e. it should not take 22s to process 14 pages. 
-
-[ Yes, I know XFS can process more than that ->writepage, but it's
-still only a millisecond of work if it doesn't block on anything.
-And it can't be blocking, otherwise we wouldn't be firing the
-softlockup warning. ]
-
-The page cache LRU code is a maze of twisty per-cpu passages that go
-deep into the mm subsystem and memcg code - I'm not really sure what
-all that code is doing, so you'll probably have to ask someone who
-knows about that code.
-
-All I can say is that there doesn't look to be any obvious signs
-that this is a XFS or writeback problem fom the stack trace, and
-without more information or a reproducable test case I'm not going
-to be able to understand the cause.
-
-Is the problem reproducable, or is it just a one-off?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ok, let's put the minimal fix in for now and then sort it out.  I'll
+re-review it carefully.
 
 _______________________________________________
 xfs mailing list
