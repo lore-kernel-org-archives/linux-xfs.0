@@ -1,23 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E07777F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:47:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CCD7E8F8052
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:47:38 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	7cg6JBH5yCwG6F8o for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 03:47:28 -0800 (PST)
-Date: Fri, 13 Dec 2013 22:47:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] Handling of reviewed patch series
-Message-ID: <20131213114723.GM31386@dastard>
-References: <20131213053611.GQ10988@dastard>
-	<20131213111959.GF23546@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131213111959.GF23546@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C11947F6D
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 05:50:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B2261304059
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 03:50:16 -0800 (PST)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id 03C4MYpboiMxFYmH (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 03:50:05 -0800 (PST)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
+	Fri, 13 Dec 2013 06:50:03 -0500
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com
+	[9.57.198.29])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 6BF1938C8027
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 06:50:00 -0500 (EST)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp23034.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	rBDBo2Q84784536 for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 11:50:02 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	rBDBo1Dh008584 for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 06:50:01 -0500
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: [PATCH] xfs: remove the incorrect entry in the MAINTAINER file
+Date: Fri, 13 Dec 2013 19:49:53 +0800
+Message-Id: <1386935393-23559-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,50 +36,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-On Fri, Dec 13, 2013 at 03:19:59AM -0800, Christoph Hellwig wrote:
-> 
-> I'm a big fan of the for-next vs for-linux split for next release work
-> vs bugfixes which we've not applied yet.  The whole topic branches
-> scheme makes sense for large changes like the crc work, but seems
-> utterly confusing if applied to every little change, as now the amount
-> of branches you can conflict againt multiplies.  I'm defintively in
-> favour of a model that has less active branches.
+From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-I certainly wouldn't want to create topic branches for every
-standalone patch - that doesn't make any sense from a management
-overhead point of view. I'd keep a "miscellaneous" topic branch
-specifically for aggregating standalone and small fixes, and that
-keeps the number of topic branches under control.
+Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+---
+ MAINTAINERS |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-The way I see it from a developer POV is that after the topic branch
-is created you can check that it matches your local changes, then
-just ignore it. You continue to work from the for-next branch (which
-now includes your work from the topic branch), or continue to target
-the unchanging master branch or the for-next merge target branch,
-which would be the same as what you work from now.
-
-In the case that you have work that is dependent on a specific topic
-branch, we can add the work to the end of that topic branch rather
-than create a new one. Or if you have dependencies across
-everything, then you develop against for-next and we simply make
-that the last topic branch to be merged into for-next.
-
-i.e. as a developer, you really don't need to care that much about
-individual topic branches and how they are managed....
-
-Cheers,
-
-Dave.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 00b655f..50b8a85 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9542,7 +9542,6 @@ XFS FILESYSTEM
+ P:	Silicon Graphics Inc
+ M:	Dave Chinner <dchinner@fromorbit.com>
+ M:	Ben Myers <bpm@sgi.com>
+-M:	xfs@oss.sgi.com
+ L:	xfs@oss.sgi.com
+ W:	http://oss.sgi.com/projects/xfs
+ T:	git git://oss.sgi.com/xfs/xfs.git
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.6.5
 
 _______________________________________________
 xfs mailing list
