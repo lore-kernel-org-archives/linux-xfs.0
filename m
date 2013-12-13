@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 281D07F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:49:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 15DE68F8033
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 13:48:57 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 6E4B67F52
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 15:51:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 553728F8033
+	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 13:51:44 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	5Q3BNJnKPSJTs6ga for <xfs@oss.sgi.com>;
-	Fri, 13 Dec 2013 13:30:16 -0800 (PST)
-Date: Sat, 14 Dec 2013 08:30:06 +1100
+	NKITxbpxwNDyoiCX for <xfs@oss.sgi.com>;
+	Fri, 13 Dec 2013 13:51:21 -0800 (PST)
+Date: Sat, 14 Dec 2013 08:51:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/3] xfs: xfs_qm_dqrele mostly doesn't need locking
-Message-ID: <20131213213006.GU10988@dastard>
-References: <1386841258-22183-1-git-send-email-david@fromorbit.com>
-	<20131212102507.GX10988@dastard>
-	<20131213132807.GB13689@infradead.org>
+Subject: Re: xattr atomicy
+Message-ID: <20131213215117.GV10988@dastard>
+References: <20131213115644.GA28551@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131213132807.GB13689@infradead.org>
+In-Reply-To: <20131213115644.GA28551@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,51 +32,53 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Dec 13, 2013 at 05:28:07AM -0800, Christoph Hellwig wrote:
-> On Thu, Dec 12, 2013 at 09:25:07PM +1100, Dave Chinner wrote:
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Now that we have an atomic variable for the reference count, we
-> > don't need to take the dquot lock if we are not removing the last
-> > reference count. The dquot lock is a mutex, so we can't use
-> > atomic_dec_and_lock(), but we can open code it in xfs_qm_dqrele and
-> > hence avoid the dquot lock for most of the cases where we drop a
-> > reference count.
-> > 
-> > The result is that concurrent file creates jump from 24,000/s to
-> > 28,000/s, and the entire workload is now serialised on the dquot
-> > being locked during transaction commit. Another significant win,
-> > even though it's not the big one...
-> 
-> Maybe I'm missing something, but shou;dn't the following be enough to
-> be a valid dqput (plus asserts & tracing):
-> 
-> 
-> 	if (atomic_dec_and_test(&dqp->q_nrefs)) {
-> 		if (list_lru_add(&mp->m_quotainfo->qi_lru, &dqp->q_lru))
-> 			XFS_STATS_INC(xs_qm_dquot_unused);
-> 	}
-> 
-> given that the only locking we need is the internal lru lock?
+On Fri, Dec 13, 2013 at 03:56:44AM -0800, Christoph Hellwig wrote:
+> On the nfsv4 list it was recently discussed how atomic / transaction
+> xattr updates are.  It turns out none of that seems documented on the
+> syscall level, but for XFS we have an odd inconsistancy in that attr
+> updates generally are atomic and logged, except when we go out to
+> remote attributes in xfs_attr_rmtval_set, in which case attr updates
+> are no logged, and we do synchronous writes instead.
 
-Yes, I think it is.
+Yes, but they are still atomic from a user and crash recovery
+point of view....
 
-However, that involves changing all the callers of dqput to not hold
-the dqlock when they call, which is a bigger change than was
-necessary to avoid the lock contention problem. i.e. it doesn't seem
-to be in a fast path that needed immediate fixing, so I didn't touch
-it.
+I'd been wondering a while back if we could make remote xattrs use
+an ordered buffer so we don't need to log it back can leave it for
+async write but still have it pin the log tail. However, I don't
+think we can do that as we can't recover the attr data that is lost
+if we crash. Hence I think our only option is to log it if we want
+ot make it an async write.
 
-> > 
-> > While there, rename xfs_qm_dqrele to xfs_dqrele - the "qm" part of
-> > the name means nothing and just makes the code harder to read.
-> 
-> Please keep that out of the patch.  I don't mind dropping the
-> qm_ part, but there's a lot of functions that have it, and it should
-> be done for all of them at the same time.
+> Besides the weird semantic difference that is impossible to explain to
+> users performance will also generally be bad with a synchronous buffer
+> write.  Is there any good reason to not log the buffer for the remote
+> attributes? Given that attribute are limited to 64kB it's not like
+> the value is larger than large directory blocks that we already
+> support.
 
-OK.
+Well, I think it's a bit different to the directory block case - the
+directory blocks are filesystem metadata, while xattrs contain user
+data. Hence if we log user xattrs a user can consume all of the log
+bandwidth writing xattrs and degrade the metadata modification
+performance of the rest of the filesystem.
+
+One issue that we'll need to deal with is that it may change the
+minimum log size calculations if we add 64k of data to the attribute
+transaction reservations. We currently calculate the remote attr
+reservation in xfs_log_calc_max_attrsetm_res() and that will need to
+change. If it pushes the remote attr reservation to be the largest
+transaction reservation, we could have log size issues on existing
+filesystems and that would lead to only enabling logging of remote
+xattrs if the log is physically big enough.
+
+The thing is, it's really only user data that ever ends up in a
+remote attr block - system xattrs like ACLs and selinux contexts,
+application xattrs from DMF, gluster, swift, Samba, etc rarely
+consume enough bytes to push the xattr out of line.
+
+So, IMO, the first question we need to answer is whether the current
+behaviour is actually a problem for anyone....
 
 Cheers,
 
