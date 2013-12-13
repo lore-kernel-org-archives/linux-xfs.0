@@ -1,9 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, tip-icluster-factor,
-	created. v3.12-11693-gf9e5abc
-Message-Id: <20131213054649.6846B7F56@oss.sgi.com>
-Date: Thu, 12 Dec 2013 23:46:48 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A5C527F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 23:48:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A43C8F8039
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 21:48:38 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	hsiruKWxOvFoC6oe for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 21:36:43 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1VrLQ3-0003fH-EL
+	for xfs@oss.sgi.com; Fri, 13 Dec 2013 16:36:11 +1100
+Date: Fri, 13 Dec 2013 16:36:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [RFC] Handling of reviewed patch series
+Message-ID: <20131213053611.GQ10988@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,129 +26,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+Hi folks,
 
-The branch, tip-icluster-factor has been created
-        at  f9e5abcfc5b299a988cf8f9d0ad11e03da14806b (commit)
+I'd like to make a proposal and see what people think abou tit for
+managing patch series that I have been reviewed.
 
-- Log -----------------------------------------------------------------
-commit f9e5abcfc5b299a988cf8f9d0ad11e03da14806b
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:49 2013 +1100
+What I'd like to do is publish the reviewed and signed-off topic
+branches that I built as in my local git tree as part of the review
+and test process. For example, I currently have two such branches
+right now - one for Christoph's log format changes, and another for
+Jeff's icluster cleanups.
 
-    xfs: use xfs_icluster_size_fsb in xfs_imap
-    
-    Use xfs_icluster_size_fsb() in xfs_imap().
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+That is:
 
-commit 982e939e4ddc8c00cb478fb4d725d0e3d18971cc
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:49 2013 +1100
+$ git shortlog xfs-oss/master..guilt/tip-log-format
+Christoph Hellwig (10):
+      xfs: remove duplicate code in xlog_cil_insert_format_items
+      xfs: refactor xfs_buf_item_format_segment
+      xfs: refactor xfs_inode_item_size
+      xfs: refactor xfs_inode_item_format
+      xfs: introduce xlog_copy_iovec
+      xfs: format log items write directly into the linear CIL buffer
+      xfs: format logged extents directly into the CIL
+      xfs: remove the inode log format from the inode log item
+      xfs: remove the dquot log format from the dquot log item
+      xfs: remove the quotaoff log format from the quotaoff log item
 
-    xfs: use xfs_icluster_size_fsb in xfs_ifree_cluster
-    
-    Use xfs_icluster_size_fsb() in xfs_ifree_cluster(), rename variable
-    ninodes to inodes_per_cluster, the latter is more meaningful.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+$ git shortlog xfs-oss/master..guilt/tip-icluster-factor 
+Jie Liu (8):
+      xfs: get rid of XFS_IALLOC_INODES macros
+      xfs: get rid of XFS_INODE_CLUSTER_SIZE macros
+      xfs: get rid of XFS_IALLOC_BLOCKS macros
+      xfs: introduce a common helper xfs_icluster_size_fsb
+      xfs: use xfs_icluster_size_fsb in xfs_bulkstat
+      xfs: use xfs_icluster_size_fsb in xfs_ialloc_inode_init
+      xfs: use xfs_icluster_size_fsb in xfs_ifree_cluster
+      xfs: use xfs_icluster_size_fsb in xfs_imap
 
-commit 6e0c7b8c3ea62d684af267d34fc015253e7cd6e5
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:49 2013 +1100
+These branches are all based on the master branch as it currently
+stands. They have had each patch individually compile tested, they
+have been individually tested, and they've been merged into a test
+tree and tested along with every other branch I'm currently working
+on.
 
-    xfs: use xfs_icluster_size_fsb in xfs_ialloc_inode_init
-    
-    Use xfs_icluster_size_fsb() in xfs_ialloc_inode_init(), rename variable
-    ninodes to inodes_per_cluster, the latter is more meaningful.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+What I'd like to do is publish each of the reviewed branch in the
+XFS git repos on oss.sgi.com as completed and ready-to-go code. This
+is a bit different to what we do now - normally Ben would come along
+and merge the series straight into the master branch, then update
+the for-next branch to point at it.
 
-commit a2ba07b2d2215bed560aa67c84275304314d9691
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:48 2013 +1100
+The issue with this is that it then makes our lives more difficult
+when we get a bug fix that has to go into the master branch and be
+sent to linus for an -rc kernel before all the development code that
+is already checked into the master branch.
 
-    xfs: use xfs_icluster_size_fsb in xfs_bulkstat
-    
-    Use xfs_icluster_size_fsb() in xfs_bulkstat(), make the related
-    variables more meaningful and remove an unused variable nimask
-    from it.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+What I propose is that the xfs-oss/master branch tracks the Linus
+-rc1 releases, and we never check code directly into the master
+branch except in exceptional circumstances. i.e.  we try to only
+ever pull back down from Linus into it. Exceptional circumstances
+would be work that causes widespread rebasing, like all of the
+structural rework that we've done recently. The structural work
+would go into the master branch immediately after a -rc1 update, and
+the next cycle's work and topic branches then based on top of that.
 
-commit 904957b75033149509dc0fecc0af34348f87c78c
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:48 2013 +1100
+What this means is that the "for-next" branch is no longer based
+on the master branch - it becomes the development branch we work on,
+and is effectively a merge of all the topic branches. i.e like the
+-next tree, it is a branch that can be rebased without impacting the
+history of the code in the topic branches because it's just a merge
+target.
 
-    xfs: introduce a common helper xfs_icluster_size_fsb
-    
-    Introduce a common routine xfs_icluster_size_fsb() to calculate
-    and return the number of file system blocks per inode cluster.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+What this means is that development can be done against the master
+branch without fear of conflicting with other changes that are being
+done. Testing, however, can target the for-next branch, and local
+integration testing can be done simply by merging a local topic
+branch into a local for-next branch....
 
-commit 126cd105d4408ff52437a72d681aecdb29cc80e8
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:48 2013 +1100
+Lines of development that overlap will generate conflicts at
+the for-next branch merge, and at that point we can decide how to
+deal with the problem. e.g. turn the conflicting topic branches into
+a single, larger topic branch, live with it, etc.
 
-    xfs: get rid of XFS_IALLOC_BLOCKS macros
-    
-    Get rid of XFS_IALLOC_BLOCKS() marcos, use mp->m_ialloc_blks directly.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+When it comes to sending code upstream to Linus, we can either send
+a pull request per topic branch - Linus often likes to do merges
+himself - or we can merge them all into a single branch and ask
+Linus to pull that. The deciding factor may well be Linus himself...
 
-commit 0f49efd805229fc747761213ec820c1ba3ab64db
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:48 2013 +1100
+However, what this structure means is that urgent bugs fixes canbe
+placed into their own topic branches - an "urgent-*" prefix is often
+used for these by other maintainers - and Linus can pull directly
+from the topic branch without us having to worry about
+cherry-picking out of the middle of the master branch and all the
+pain that entails.
 
-    xfs: get rid of XFS_INODE_CLUSTER_SIZE macros
-    
-    Get rid of XFS_INODE_CLUSTER_SIZE() macros, use mp->m_inode_cluster_size
-    directly.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+It also allows us much more flexibility in managing the
+code and how it is send upstream. It also makes it possible to push
+code earlier for wider testing without being stuck with that code
+forever - it's trivial to drop a topic branch if it causes
+unexpected regressions or problems without leaving nasty reverts all
+over the history.
 
-commit 717834383c6ad2173323b823b97c521c9fb8fbbb
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Fri Dec 13 15:51:46 2013 +1100
+Yes, this is a bit of a change in the way we do things, but it
+aligns much more closely to the distributed nature of how we develop
+the code. I'm going to push the two topic branches I mentioned above
+into the oss repository so people can have a look at them and get a
+feel for how such a process might work and so we can reference them
+during the discussion.
 
-    xfs: get rid of XFS_IALLOC_INODES macros
-    
-    Get rid of XFS_IALLOC_INODES() marcos, use mp->m_ialloc_inos directly.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+Essentially, I want to speed up the rate at which we get code
+integrated without the risk of making a big mess by committing to
+code too quickly. Keeping code in topic branches like this solves
+that problem, and the fact that it closely aligns to my normal
+workflow makes it very appealing to me as a Maintainer....
 
------------------------------------------------------------------------
+Keep in mind that I want to do the same thing for major pieces of
+work with xfstests and xfsprogs - keep work in topic branches until
+they are tested and ready to go, then merge everything into the master
+branch and cut a release. This would enable a much faster xfsprogs
+release schedule because we make a release at any point in time
+without having to worry about whether we have work in progress in
+the master branch that needs completing before a release is done...
 
+Anyway, have a think and discuss - I'm going to push the branches I
+mentioned above....
 
-hooks/post-receive
+Cheers,
+
+Dave.
 -- 
-XFS development tree
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
