@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 052287F4E
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 22:07:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E79A78F8052
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 20:07:06 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 201667F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 22:47:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C93F304048
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 20:47:27 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 9U72XBBQBiGqOZj6 (version=TLSv1
+	cuda.sgi.com with ESMTP id GqWYVWJL3evoNt2l (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 20:06:58 -0800 (PST)
-Message-ID: <52AA87B6.6010607@oracle.com>
-Date: Fri, 13 Dec 2013 12:06:14 +0800
+	Thu, 12 Dec 2013 20:47:25 -0800 (PST)
+Message-ID: <52AA9154.9060308@oracle.com>
+Date: Fri, 13 Dec 2013 12:47:16 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: set umask to avoid spurious generic/314 test
-	failures
-References: <20130921211735.GC7855@wallace>
-In-Reply-To: <20130921211735.GC7855@wallace>
+Subject: Re: [PATCH 1/6] xfs: don't try to mark uncached buffers stale on
+	error.
+References: <1386826478-13846-1-git-send-email-david@fromorbit.com>	<1386826478-13846-2-git-send-email-david@fromorbit.com>	<52A98226.4020705@oracle.com>
+	<20131212100947.GW10988@dastard>
+In-Reply-To: <20131212100947.GW10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +30,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Eric Whitney <enwlinux@gmail.com>
-Cc: linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Folks,
 
-We missed this patch from Eric for a few months, I observed the same
-false alarm while analyzing xfstests logs against our next tree...
-
-Eric's fix works fine to me.
+On 12/12 2013 18:09 PM, Dave Chinner wrote:
+> On Thu, Dec 12, 2013 at 05:30:14PM +0800, Jeff Liu wrote:
+>> On 12/12 2013 13:34, Dave Chinner wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+<snip>
+>>
+>> It seems there is no such kind of test cases in xfstestes for now, I'd
+>> write one if required.
+> 
+> nothing quite that generic - xfs/087 does a loop like that over
+> different log configurations, but that's testing log recovery more
+> than shutdown sanity. Adding that test would be a good idea - it's a
+> shame no other filesystem supports a shutdown like XFS does....
+This is really an unique feature of us :), I'll write a case so.
+>
+>> The backtraces were shown as following:
+>>
+>> [  365.987493] INFO: task fsstress:3215 blocked for more than 120 seconds.
+>> [  365.987499]       Tainted: PF          O 3.13.0-rc2+ #13
+>> [  365.987500] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>> [  365.987502] fsstress        D ffff88026f254440     0  3215   3142 0x00000000
+>> [  365.987507]  ffff880253f19de0 0000000000000086 ffff880242071800 ffff880253f19fd8
+>> [  365.987512]  0000000000014440 0000000000014440 ffff880242071800 ffff880073694c00
+>> [  365.987515]  ffff880073694c80 ffff880073694c90 ffffffffffffffff 0000000000000292
+>> [  365.987519] Call Trace:
+>> [  365.987528]  [<ffffffff81718779>] schedule+0x29/0x70
+>> [  365.987560]  [<ffffffffa0c2a49d>] xlog_cil_force_lsn+0x18d/0x1e0 [xfs]
+>> [  365.987565]  [<ffffffff81097210>] ? wake_up_state+0x20/0x20
+>> [  365.987570]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
+>> [  365.987594]  [<ffffffffa0c28921>] _xfs_log_force+0x61/0x270 [xfs]
+>> [  365.987599]  [<ffffffff812b0610>] ? jbd2_log_wait_commit+0x110/0x180
+>> [  365.987603]  [<ffffffff810a83f0>] ? prepare_to_wait_event+0x100/0x100
+>> [  365.987607]  [<ffffffff811e8770>] ? do_fsync+0x80/0x80
+>> [  365.987629]  [<ffffffffa0c28b56>] xfs_log_force+0x26/0x80 [xfs]
+>> [  365.987648]  [<ffffffffa0bcf35d>] xfs_fs_sync_fs+0x2d/0x50 [xfs]
+>> [  365.987652]  [<ffffffff811e8790>] sync_fs_one_sb+0x20/0x30
+>> [  365.987656]  [<ffffffff811bcc32>] iterate_supers+0xb2/0x110
+>> [  365.987660]  [<ffffffff811e88c2>] sys_sync+0x62/0xa0
+>> [  365.987665]  [<ffffffff81724ced>] system_call_fastpath+0x1a/0x1f
+>> [  372.225302] XFS (sda7): xfs_log_force: error 5 returned.
+>> [  402.275608] XFS (sda7): xfs_log_force: error 5 returned.
+>> [  432.325929] XFS (sda7): xfs_log_force: error 5 returned.
+>> [  462.376239] XFS (sda7): xfs_log_force: error 5 returned.
+> 
+> So what we see here is that there is a race condition somewhere in
+> the shutdown code. The shutdown is supposed to wake everyone waiting
+> of the ic_force_wait wait queue on each iclog, but for some reason
+> that hasn't happened. The sleepers check for XLOG_STATE_IOERROR
+> (which is set during the force shutdown before we wake ic_force_wait
+> sleepers) before they go to sleep, so whatever the race is it isn't
+> immediately obvious to me.
+Now I basically can always reproducing this problem on SSD, so I'm
+going to get involved in tracing down it.
 
 Thanks,
 -Jeff
-
-On 09/22 2013 05:17 AM, Eric Whitney wrote:
-> Generic/314 can fail when the group write file mode bit for "subdir" does not
-> match that found in the golden output, as has been seen in ext4 regression
-> testing.  It appears that the golden output for generic/314 was taken on a
-> system where the $qa_user's umask cleared that mode bit - most likely, where
-> the umask was 022.  Depending upon the distro, it's not uncommon for a user's
-> default umask to have a different value, such as 002.  When that's the case,
-> we get a false negative failure when the group write mode bit for "subdir" is
-> not cleared.  This failure is unrelated to the value of the SGID mode bit
-> that is the object of this test.
-> 
-> We could either require that $qa_user's account be configured in advance with
-> a umask of 022, or explicitly set a umask value compatible with the golden
-> output when creating "subdir".  The latter option is more robust.
-> 
-> Signed-off-by: Eric Whitney <enwlinux@gmail.com>
-> ---
->  tests/generic/314 | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->  mode change 100644 => 100755 tests/generic/314
-> 
-> diff --git a/tests/generic/314 b/tests/generic/314
-> old mode 100644
-> new mode 100755
-> index 0dd98a3..f430b82
-> --- a/tests/generic/314
-> +++ b/tests/generic/314
-> @@ -57,7 +57,7 @@ chown $qa_user:12345 $TEST_DIR/$seq-dir
->  chmod 2775 $TEST_DIR/$seq-dir
->  
->  # Make subdirs before & after acl set
-> -su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir"
-> +su $qa_user -c "umask 022; mkdir $TEST_DIR/$seq-dir/subdir"
->  su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
->  su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
->  
-> 
 
 _______________________________________________
 xfs mailing list
