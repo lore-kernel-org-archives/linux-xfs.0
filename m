@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 42FBE7F54
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 19:27:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 30E48304048
-	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 17:27:43 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C9C907F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 19:42:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BE9BA8F8052
+	for <xfs@oss.sgi.com>; Thu, 12 Dec 2013 17:41:54 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	wgD9XP4tjfZnbEed for <xfs@oss.sgi.com>;
-	Thu, 12 Dec 2013 17:09:43 -0800 (PST)
-Date: Fri, 13 Dec 2013 12:09:34 +1100
+	X62WNmcXDTXpMQdt for <xfs@oss.sgi.com>;
+	Thu, 12 Dec 2013 17:41:36 -0800 (PST)
+Date: Fri, 13 Dec 2013 12:41:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/12] run more generic tests on TEST_DIR
-Message-ID: <20131213010934.GN10988@dastard>
-References: <20131211073445.353655850@bombadil.infradead.org>
-	<20131211225012.GL10988@dastard>
-	<20131212180312.GC19422@infradead.org>
+Subject: Re: [PATCH 05/10] xfstests: do not unmount tmpfs during remount.
+Message-ID: <20131213014131.GP10988@dastard>
+References: <1386706321-15795-1-git-send-email-jayr@google.com>
+	<1386706321-15795-6-git-send-email-jayr@google.com>
+	<20131211074615.GE19248@infradead.org>
+	<20131211224012.GJ10988@dastard>
+	<20131212180130.GA19422@infradead.org>
+	<20131212225657.GK10988@dastard>
+	<CAFA30n9ea3A+V7JgCgqO5xOQchgB55oLP4AgtQ3KQpCMr9iEzQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131212180312.GC19422@infradead.org>
+In-Reply-To: <CAFA30n9ea3A+V7JgCgqO5xOQchgB55oLP4AgtQ3KQpCMr9iEzQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,56 +35,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>, xfs@oss.sgi.com
+To: Junho Ryu <jayr@google.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Hugh Dickins <hughd@google.com>, Boris Ranto <branto@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Dec 12, 2013 at 10:03:12AM -0800, Christoph Hellwig wrote:
-> On Thu, Dec 12, 2013 at 09:50:12AM +1100, Dave Chinner wrote:
-> > I'm not sure this is such a good idea. The test_dir is a fixed
-> > filesystem designed to persiste between test harness runs to allow
-> > testing on an aged filesystem.
+On Thu, Dec 12, 2013 at 04:00:44PM -0800, Junho Ryu wrote:
+> > I don't know what the solution here is - everything I think of is
+> > either messy, ugly or unmaintainable. All I'm trying to do is find a
+> > way to handle tmpfs filesystems in a way that is maintainable and
+> > doesn't require every developer to be aware of the quirks of tmpfs
+> > when writing and reviewing new generic tests....
 > 
-> Yes, and that's exactly what we want for the tests converted.
+> If it is acceptable that tmpfs running tests which does not make much
+> sense without actually re-mounting devices, all other developers need
+> to care is using _scratch_remount() and _test_remount().
 
-Well, that assertion is exactly what I'm disagreeing with. It
-doesn't help me at all.
+And how are they to know whether it makes sense ot run on tmpfs or
+not? That's the point I'm trying to make - tmpfs adds new
+restrictions on how tests are written or constructed, and we still
+need a method of saying no to tmpfs....
 
-> > run the tests on a differently configured scratch device. I use this
-> > all the time to change the filesystem config I'm testing against. By
-> > moving all these tests to the TEST_DEV, these tests are no longer
-> > run on the device that is configured specifically the way I want it
-> > configured for the given test run.
-> > 
-> > So, I think this is a step backwards in terms of being able to
-> > quickly iterate and cover different filesystem configurations, and
-> > as such I don't really like it as a solution. What other options do
-> > we have?
-> 
-> You can have different test devices, or simply not bother with aging
-> it for every run.  You're missing the coverage of all the test dir
-> using tests, which are a lot with the above version anyway.
+> Even if someone does not use the functions, tests will only fail on
+> tmpfs, and people like me who cares about it will be happy to fix it.
 
-IOWs, you're saying that you don't consider MKFS_OPTIONS as a first
-class citizen. I've been using it for 7 or 8 years for exactly this
-purpose - iterating testing of a change quickly across multiple
-configurations without perturbing the long term aging of the test
-device.
+Yes, that's the game of whack-a-mole I was talking about.
 
-IOWs, taking 12 tests away from the scratch device significantly
-reduces the coverage of my testing during development. It will
-force me to have to change a fairly important part of my workflow -
-a part that I haven't needed to change for several years.
+> So far, generic/053 is the only test which does something else between
+> umount and mount.
 
-I'll now need more VM image storage for the extra test devices I
-need, I'll need multiple config files to handle the different test
-filesystems, I'll need to write new scripts to mkfs the test devices
-as well as setting the MKFS_OPTIONS for the scratch devices and
-switch config files, etc.
-
-I'm not opposed to making the change, just pointing out that
-reducing the usage of the scratch device has a fairly significant
-impact on test coverage for anyone who uses MKFS_OPTIONS in their
-workflow...
+All the generic tests that use dm_flakey are likely to be busted.
+Anything assumes SCRATCH_DEV or TEST_DEV are block devices are
+busted. Do loop devices work properly when hosted on tmpfs
+filesystems? And so on...
 
 Cheers,
 
