@@ -1,19 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B02767F52
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 13:53:26 -0600 (CST)
-Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
-	[128.162.233.19])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6E3AD304043
-	for <xfs@oss.sgi.com>; Fri, 13 Dec 2013 11:53:17 -0800 (PST)
-Date: Fri, 13 Dec 2013 13:52:46 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xattr atomicy
-Message-ID: <20131213195246.GK1935@sgi.com>
-References: <20131213115644.GA28551@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131213115644.GA28551@infradead.org>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. v3.12-11704-g46f23ad
+Message-Id: <20131213202213.3A4057F53@oss.sgi.com>
+Date: Fri, 13 Dec 2013 14:22:11 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,51 +12,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hey Christoph,
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-On Fri, Dec 13, 2013 at 03:56:44AM -0800, Christoph Hellwig wrote:
-> On the nfsv4 list it was recently discussed how atomic / transaction
-> xattr updates are.  It turns out none of that seems documented on the
-> syscall level, but for XFS we have an odd inconsistancy in that attr
-> updates generally are atomic and logged, except when we go out to
-> remote attributes in xfs_attr_rmtval_set, in which case attr updates
-> are no logged, and we do synchronous writes instead.
-> 
-> Besides the weird semantic difference that is impossible to explain to
-> users performance will also generally be bad with a synchronous buffer
-> write.  Is there any good reason to not log the buffer for the remote
-> attributes? Given that attribute are limited to 64kB it's not like
-> the value is larger than large directory blocks that we already
-> support.
+The branch, for-next has been updated
+  46f23ad Merge branch 'xfs-factor-icluster-macros' into for-next
+  f9e5abc xfs: use xfs_icluster_size_fsb in xfs_imap
+  982e939 xfs: use xfs_icluster_size_fsb in xfs_ifree_cluster
+  6e0c7b8 xfs: use xfs_icluster_size_fsb in xfs_ialloc_inode_init
+  a2ba07b xfs: use xfs_icluster_size_fsb in xfs_bulkstat
+  904957b xfs: introduce a common helper xfs_icluster_size_fsb
+  126cd10 xfs: get rid of XFS_IALLOC_BLOCKS macros
+  0f49efd xfs: get rid of XFS_INODE_CLUSTER_SIZE macros
+  7178343 xfs: get rid of XFS_IALLOC_INODES macros
+  ffda4e8 xfs: remove the quotaoff log format from the quotaoff log item
+  ce8e962 xfs: remove the dquot log format from the dquot log item
+  2f25129 xfs: remove the inode log format from the inode log item
+  da77650 xfs: format logged extents directly into the CIL
+  bde7cff xfs: format log items write directly into the linear CIL buffer
+  1234351 xfs: introduce xlog_copy_iovec
+  3de559f xfs: refactor xfs_inode_item_format
+  ce9641d xfs: refactor xfs_inode_item_size
+  7aeb722 xfs: refactor xfs_buf_item_format_segment
+  9597df6 xfs: remove duplicate code in xlog_cil_insert_format_items
+      from  f9b395a8ef8f34d19cae2cde361e19c96e097fad (commit)
 
-Looks like it's just because we're concerned about the size of the transaction:
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-1221 STATIC int
-1222 xfs_attr_node_addname(xfs_da_args_t *args)
-1223 {
-...
-1359         /*
-1360          * If there was an out-of-line value, allocate the blocks we
-1361          * identified for its storage and copy the value.  This is done
-1362          * after we create the attribute so that we don't overflow the
-1363          * maximum size of a transaction and/or hit a deadlock.
-1364          */
-1365         if (args->rmtblkno > 0) {
-1366                 error = xfs_attr_rmtval_set(args);
-1367                 if (error)
-1368                         return(error);
-1369         }
+- Log -----------------------------------------------------------------
+commit 46f23adf78545c49591619a615edeec41ed5a549
+Merge: ffda4e8 f9e5abc
+Author: Ben Myers <bpm@sgi.com>
+Date:   Fri Dec 13 14:15:33 2013 -0600
 
-I'm not clear on what the deadlock might have been.
+    Merge branch 'xfs-factor-icluster-macros' into for-next
 
--Ben
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_buf_item.c     | 103 ++++++------
+ fs/xfs/xfs_dquot_item.c   |  67 +++-----
+ fs/xfs/xfs_dquot_item.h   |   3 +-
+ fs/xfs/xfs_extfree_item.c |  21 +--
+ fs/xfs/xfs_ialloc.c       |  53 +++---
+ fs/xfs/xfs_ialloc.h       |  21 +--
+ fs/xfs/xfs_icreate_item.c |  10 +-
+ fs/xfs/xfs_inode.c        |  23 +--
+ fs/xfs/xfs_inode_fork.c   |  15 +-
+ fs/xfs/xfs_inode_item.c   | 400 +++++++++++++++++++---------------------------
+ fs/xfs/xfs_inode_item.h   |   5 -
+ fs/xfs/xfs_itable.c       |  22 ++-
+ fs/xfs/xfs_log.h          |  46 ++++++
+ fs/xfs/xfs_log_cil.c      |  74 +++------
+ fs/xfs/xfs_log_recover.c  |  16 +-
+ fs/xfs/xfs_trans.h        |   2 +-
+ fs/xfs/xfs_trans_resv.c   |  10 +-
+ fs/xfs/xfs_trans_space.h  |   2 +-
+ 18 files changed, 399 insertions(+), 494 deletions(-)
+
+
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
