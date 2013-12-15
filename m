@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AABF67F52
-	for <xfs@oss.sgi.com>; Sat, 14 Dec 2013 05:44:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 86DB18F8050
-	for <xfs@oss.sgi.com>; Sat, 14 Dec 2013 03:44:01 -0800 (PST)
-Received: from mail-ob0-f174.google.com (mail-ob0-f174.google.com
-	[209.85.214.174]) by cuda.sgi.com with ESMTP id
-	nmruq4BsVAVjg6bo (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 14 Dec 2013 03:44:00 -0800 (PST)
-Received: by mail-ob0-f174.google.com with SMTP id wn1so3038688obc.5
-	for <xfs@oss.sgi.com>; Sat, 14 Dec 2013 03:43:59 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id B0B207F52
+	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 08:22:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9F40F8F804B
+	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 06:21:59 -0800 (PST)
+Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id ldZGJ7gEx4TDbZfX (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 15 Dec 2013 06:21:57 -0800 (PST)
+Received: from [192.168.4.12] (Athenae [192.168.4.12])
+	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
+	rBFELrdA005031 for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 06:21:55 -0800
+Message-ID: <52ADBB00.8050707@tlinx.org>
+Date: Sun, 15 Dec 2013 06:21:52 -0800
+From: "L.A. Walsh" <samba@tlinx.org>
 MIME-Version: 1.0
-In-Reply-To: <52AC3EF1.6090106@oracle.com>
-References: <1386944873-16796-1-git-send-email-zwu.kernel@gmail.com>
-	<1386944873-16796-2-git-send-email-zwu.kernel@gmail.com>
-	<20131213163211.GD20803@infradead.org>
-	<52AC3EF1.6090106@oracle.com>
-Date: Sat, 14 Dec 2013 19:43:59 +0800
-Message-ID: <CAEH94LiiFjDM9GT6ncGYuQmC+T-6w-r1_svuqGZ43Bsd9Zt64w@mail.gmail.com>
-Subject: Re: [PATCH 1/5] xfs: factor prid related codes into
-	xfs_get_initial_prid()
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: Re: BTW - to xfs folk,
+	'security attr' doesn't seem very useful w/current copy policies
+References: <52A96211.3050602@tlinx.org>
+	<20131212181315.GB20500@samba2>	<52AAC7CC.8000802@tlinx.org>
+	<20131213105314.GA2117@infradead.org> <52AB7CDC.5040801@tlinx.org>
+In-Reply-To: <52AB7CDC.5040801@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +30,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
-
-On Sat, Dec 14, 2013 at 7:20 PM, Jeff Liu <jeff.liu@oracle.com> wrote:
-> On 12/14 2013 00:32 AM, Christoph Hellwig wrote:
->>> +static inline prid_t xfs_get_initial_prid(struct xfs_inode *dp)
->>> +{
->>> +    if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
->>> +            return xfs_get_projid(dp);
->>> +    else
->>> +            return XFS_PROJID_DEFAULT;
->>> +}
->>
->> You could skip the else here.
-> Except that, I'd suggest we move this helper to proper header file with
-> further refactoring in xfs_symlink(), and it could be a separate patch.
-Good point, will apply it, thanks.
-
->
-> Thanks,
-> -Jeff
+To: xfs-oss <xfs@oss.sgi.com>
 
 
 
--- 
-Regards,
+On 12/13/2013 1:32 PM, L.A. Walsh wrote:
+> On 12/13/2013 2:53 AM, Christoph Hellwig wrote:
+> > On Fri, Dec 13, 2013 at 12:39:40AM -0800, L.A. Walsh wrote:
+> >  
+> >>    Does it have to be under a "namespace" that gets *stripped*
+> >> as soon as the file is copied or "mv'd to another
+> >> samba share (i.e. the partition it was moved to is shared with the
+> >> same permissions as the first one.
+> >
+> > Attributes never get "stripped", they simple don't get copied unless
+> > explicit action is taken to do so.  Setting trusted attributes up on a
+> > new file will of course rely privilegues, exactly for the reasons
+> > Jeremy pointed out.
+-----
+For what purpose?  As it stands the security namespace doesn't seem
+very useful -- i.e. the 'root' attrs get copied and/or moved on a file
+copy/rename which carries the access along with the file contents.
 
-Zhi Yong Wu
+But I fail to see the usefulness in having a security namespace that
+is dropped by default on copies or inter-partition moves.
+
+Shouldn't it follow along and be copied much as are the root namespace
+entries?
+
+It gets really confusing if a "proxy service" (ex. file server)
+for the user, stores attributes in that namespace thinking they will
+somehow be useful when the user accesses the file w/o the proxy service --
+i.e. as a normal file.
+
+Was there a specific use-case for being able to tag files with security
+attrs that can't be copied, moved or renamed except by root that wouldn't
+better be served by signed or 'sealed' (encrypted) content?  For most
+cases, it would seem that signing to detect tampering would be enough,
+though I can think of cases where sealing to prevent knowledge of
+who has what access would also be useful.
+
+Something to think about before others try to use the security field to
+store attrs they want kept with the content and not the inode.
+
+
+
 
 _______________________________________________
 xfs mailing list
