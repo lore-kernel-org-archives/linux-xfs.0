@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1318F7F3F
-	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 16:47:35 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 662DE7F3F
+	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 17:55:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 01789304048
-	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 14:47:31 -0800 (PST)
-Received: from mail-ve0-f172.google.com (mail-ve0-f172.google.com
-	[209.85.128.172]) by cuda.sgi.com with ESMTP id
-	RaX3hW3yajagG3Sr (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 15 Dec 2013 14:47:31 -0800 (PST)
-Received: by mail-ve0-f172.google.com with SMTP id jw12so2839563veb.3
-	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 14:47:30 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ECB0CAC002
+	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 15:55:05 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	vOsPb5SlZEEXazsY for <xfs@oss.sgi.com>;
+	Sun, 15 Dec 2013 15:55:03 -0800 (PST)
+Date: Mon, 16 Dec 2013 10:54:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: BTW - to xfs folk, 'security attr' doesn't seem very useful
+	w/current copy policies
+Message-ID: <20131215235443.GT31386@dastard>
+References: <52A96211.3050602@tlinx.org> <20131212181315.GB20500@samba2>
+	<52AAC7CC.8000802@tlinx.org> <20131213105314.GA2117@infradead.org>
+	<52AB7CDC.5040801@tlinx.org> <52ADBB00.8050707@tlinx.org>
 MIME-Version: 1.0
-Date: Sun, 15 Dec 2013 20:47:30 -0200
-Message-ID: <CAG97raf61XGnTakrYjcfv9cjM6CTVdEEB3wQK+wOBvpowWO3Cw@mail.gmail.com>
-Subject: XFS_REPAIR on LVM partition
-From: Rafael Weingartner <rafaelweingartner@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <52ADBB00.8050707@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,125 +28,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4873002377962920341=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "L.A. Walsh" <samba@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---===============4873002377962920341==
-Content-Type: multipart/alternative; boundary=089e0141a440f2905204ed9a7a62
+On Sun, Dec 15, 2013 at 06:21:52AM -0800, L.A. Walsh wrote:
+> 
+> 
+> On 12/13/2013 1:32 PM, L.A. Walsh wrote:
+> >On 12/13/2013 2:53 AM, Christoph Hellwig wrote:
+> >> On Fri, Dec 13, 2013 at 12:39:40AM -0800, L.A. Walsh wrote:
+> >>  >>    Does it have to be under a "namespace" that gets
+> >*stripped*
+> >>> as soon as the file is copied or "mv'd to another
+> >>> samba share (i.e. the partition it was moved to is shared with the
+> >>> same permissions as the first one.
+> >>
+> >> Attributes never get "stripped", they simple don't get copied unless
+> >> explicit action is taken to do so.  Setting trusted attributes up on a
+> >> new file will of course rely privilegues, exactly for the reasons
+> >> Jeremy pointed out.
+> -----
+> For what purpose?  As it stands the security namespace doesn't seem
+> very useful -- i.e. the 'root' attrs get copied and/or moved on a file
+> copy/rename which carries the access along with the file contents.
+> 
+> But I fail to see the usefulness in having a security namespace that
+> is dropped by default on copies or inter-partition moves.
 
---089e0141a440f2905204ed9a7a62
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+So you want users with no privileges to be able to create and
+modify security context imformation, such as selinux labels,
+integrity hashes, etc? Really?
 
-Hi folks,
-I am having some troubles with a XFS over one LVM partition. After an
-unexpected reboot, I am getting the following message when I try to mount
-it:
-*mount: Structure needs cleaning*
+> Shouldn't it follow along and be copied much as are the root namespace
+> entries?
 
+There is no "root" attribute namespace that users can manipulate -
+there is a "trusted" namespace for root users, but that's not what
+you are talking about.  The VFS defined name spaces are:
 
-I tried "sudo xfs_check /dev/mapper/volume". Sadly, I got the message:
-xfs_check: cannot init perag data (117)
-*ERROR: The filesystem has valuable metadata changes in a log which needs
-to*
-*be replayed.  Mount the filesystem to replay the log, and unmount it
-before*
-*re-running xfs_check.  If you are unable to mount the filesystem, then use=
-*
-*the xfs_repair -L option to destroy the log and attempt a repair.*
-*Note that destroying the log may cause corruption -- please attempt a
-mount*
-*of the filesystem before doing this*
+	- user
+	- security
+	- trusted (requires CAP_SYS_ADMIN)
+	- system
 
-So, I tried:
-xfs_repair -L
+All of the other xattrs fall into these groups. e.g. posix acls:
 
-The command is running for over 3 hours and still just dots on my screen, I
-have no idea of what is happening. Any ideas how I can get it to work
-again? Or at least some work around that would enable me to extract the
-data that it contains.
+	- system.posix_acl_access
+	- system.posix_acl_default
 
-The server is a Ubuntu server 12.04.
-The XFS version is: xfs_info version 3.1.7
-If you need I can provide you with more info.
-
-Thanks,
-
---=20
-Rafael Weing=E4rtner
-
---089e0141a440f2905204ed9a7a62
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi folks,=A0<div><span style=3D"color:rgb(0,0,0);font-fami=
-ly:Verdana,Arial,Helvetica,sans-serif;font-size:14px;line-height:20.15625px=
-">I am having some troubles with a XFS over one LVM partition. After an une=
-xpected reboot, I am getting the following message when I try to mount it:<=
-/span><br>
-</div><div><i>mount: Structure needs cleaning</i><br></div><div><br></div><=
-div><br></div><div><span style=3D"background-color:rgb(255,255,255)"><font =
-color=3D"#000000"><span style=3D"font-family:Verdana,Arial,Helvetica,sans-s=
-erif;font-size:14px;line-height:20.15625px">I tried &quot;</span><span clas=
-s=3D"" title=3D"sudd, judo, ludo, suds, sumo" style=3D"padding:1px;margin:2=
-px;font-style:italic;border-bottom-width:thin;border-bottom-style:dashed;bo=
-rder-bottom-color:red;font-family:Verdana,Arial,Helvetica,sans-serif;font-s=
-ize:14px;line-height:20.15625px">sudo</span><span style=3D"font-family:Verd=
-ana,Arial,Helvetica,sans-serif;font-size:14px;line-height:20.15625px">=A0</=
-span><span class=3D"" title=3D"" style=3D"padding:1px;margin:2px;font-style=
-:italic;border-bottom-width:thin;border-bottom-style:dashed;border-bottom-c=
-olor:red;font-family:Verdana,Arial,Helvetica,sans-serif;font-size:14px;line=
--height:20.15625px">xfs_check</span><span style=3D"font-family:Verdana,Aria=
-l,Helvetica,sans-serif;font-size:14px;line-height:20.15625px">=A0/</span><s=
-pan class=3D"" title=3D"def, deva, dv, derv, des, den, del, dec, deb, rev, =
-nev" style=3D"padding:1px;margin:2px;font-style:italic;border-bottom-width:=
-thin;border-bottom-style:dashed;border-bottom-color:red;font-family:Verdana=
-,Arial,Helvetica,sans-serif;font-size:14px;line-height:20.15625px">dev/</sp=
-an><span style=3D"font-family:Verdana,Arial,Helvetica,sans-serif;font-size:=
-14px;line-height:20.15625px">mapper/volume&quot;. Sadly, I got the message:=
-</span></font></span><br>
-</div><div>xfs_check: cannot init perag data (117)<br></div><div><i>ERROR: =
-The filesystem has valuable metadata changes in a log which needs to</i><br=
-></div><div><div><i>be replayed. =A0Mount the filesystem to replay the log,=
- and unmount it before</i></div>
-<div><i>re-running xfs_check. =A0If you are unable to mount the filesystem,=
- then use</i></div><div><i>the xfs_repair -L option to destroy the log and =
-attempt a repair.</i></div><div><i>Note that destroying the log may cause c=
-orruption -- please attempt a mount</i></div>
-<div><i>of the filesystem before doing this</i></div></div><div><br></div><=
-div><span style=3D"color:rgb(0,0,0);font-family:Verdana,Arial,Helvetica,san=
-s-serif;font-size:14px;line-height:20.15625px">So, I tried:</span><br></div=
->
-<div><div>xfs_repair -L=A0<br></div><div><br></div><div><span style=3D"colo=
-r:rgb(0,0,0);font-family:Verdana,Arial,Helvetica,sans-serif;font-size:14px;=
-line-height:20.15625px">The command is running for over 3 hours=A0</span><s=
-pan style=3D"color:rgb(0,0,0);font-family:Verdana,Arial,Helvetica,sans-seri=
-f;font-size:14px;line-height:20.15625px">and still just dots on my screen, =
-I have no idea of what is happening. Any ideas how I can get it to work aga=
-in? Or at least some work</span><span style=3D"color:rgb(0,0,0);font-family=
-:Verdana,Arial,Helvetica,sans-serif;font-size:14px;line-height:20.15625px">=
-=A0around that would enable me to extract the data that it contains.</span>=
-<br>
-</div><div><br></div><div>The server is a Ubuntu server 12.04.</div><div>Th=
-e XFS version is: xfs_info version 3.1.7</div><div>If you need I can provid=
-e you with more info.</div><div><br></div><div>Thanks,</div><div><br></div>
--- <br><div dir=3D"ltr">Rafael Weing=E4rtner</div>
-</div></div>
-
---089e0141a440f2905204ed9a7a62--
+What you are doing is conflating how XFS stores xattrs on disk with
+user visible xattr namespaces. The two are not the same thing. The
+VFS enforces access to the "trusted" namespace and posix ACLs,
+security modules enforce access to their own attributes and
+potentially restrict access to the entire security namespace.
+Whatever remains is left up to the filesystem to decide access
+rules.
 
 
---===============4873002377962920341==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Hence, cp as a user cannot copy trusted xattrs and certain security
+attributes as a matter of principle, and some security modules only
+allow security xattr write permission to CAP_SYS_ADMIN (e.g.
+selinux), and hence cp as a user cannot read and/or write these
+xattrs to put them on the newly copied file.
+
+IOWs, how XFS stores them on disk is irrelevant to access
+permissions that are enforced by layers above it...
+
+> It gets really confusing if a "proxy service" (ex. file server)
+> for the user, stores attributes in that namespace thinking they will
+> somehow be useful when the user accesses the file w/o the proxy service --
+> i.e. as a normal file.
+
+That's never worked. xattrs are only meaningful to the application
+that created them. Trying to manipulate those xattrs as a user
+outside the context of the application is almost always going to
+fail when special permissions are required by the application to
+manipulate those xattrs.
+
+> Was there a specific use-case for being able to tag files with security
+> attrs that can't be copied, moved or renamed except by root that wouldn't
+> better be served by signed or 'sealed' (encrypted) content?  For most
+> cases, it would seem that signing to detect tampering would be enough,
+> though I can think of cases where sealing to prevent knowledge of
+> who has what access would also be useful.
+> 
+> Something to think about before others try to use the security field to
+> store attrs they want kept with the content and not the inode.
+
+Access to the security xattr namespace is entirely controlled by the
+kernel security modules. If you want to use that namespace, you have
+to follow whatever rules your currently loaded security module
+enforces. That, in general, means that the only thing you can
+guarantee is that the security xattr namespace requires
+CAP_SYS_ADMIN for write access.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4873002377962920341==--
