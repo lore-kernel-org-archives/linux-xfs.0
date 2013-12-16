@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CC4767F3F
-	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 21:06:02 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id BC7277F3F
+	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 01:41:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E603AC002
-	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 19:05:59 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	EGaWwc40zTsBvADb for <xfs@oss.sgi.com>;
-	Sun, 15 Dec 2013 19:05:54 -0800 (PST)
-Date: Mon, 16 Dec 2013 14:05:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS_REPAIR on LVM partition
-Message-ID: <20131216030537.GX31386@dastard>
-References: <CAG97raf61XGnTakrYjcfv9cjM6CTVdEEB3wQK+wOBvpowWO3Cw@mail.gmail.com>
-	<20131216000141.GU31386@dastard>
-	<CAG97radg3xd8-G2qChh2BOfH8R6N4kWH3qn3ivukxrkFVrt=rA@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5AA32AC005
+	for <xfs@oss.sgi.com>; Sun, 15 Dec 2013 23:41:20 -0800 (PST)
+Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id Zv1Ks7QzHYQDq4eA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 15 Dec 2013 23:41:18 -0800 (PST)
+Message-ID: <52AEAE99.7060001@tlinx.org>
+Date: Sun, 15 Dec 2013 23:41:13 -0800
+From: LA Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAG97radg3xd8-G2qChh2BOfH8R6N4kWH3qn3ivukxrkFVrt=rA@mail.gmail.com>
+Subject: Re: usefulness of 'security attr' being non-copiable on discretionary
+	access linux.
+References: <52A96211.3050602@tlinx.org> <20131212181315.GB20500@samba2>
+	<52AAC7CC.8000802@tlinx.org> <20131213105314.GA2117@infradead.org>
+	<52AB7CDC.5040801@tlinx.org> <52ADBB00.8050707@tlinx.org>
+	<20131215235443.GT31386@dastard> <52AE6364.7010106@tlinx.org>
+	<20131216030215.GW31386@dastard>
+In-Reply-To: <20131216030215.GW31386@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,79 +29,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rafael Weingartner <rafaelweingartner@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Dec 15, 2013 at 10:34:43PM -0200, Rafael Weingartner wrote:
-> So, sadly I went for the big hammer option, I thought that there were no
-> other options ;).
+
+
+On 12/15/2013 7:02 PM, Dave Chinner wrote:
+> It writes it into the "trusted" VFS xattr namespace which means it
+> knows *nothing* about how XFS stores it's xattrs on disk.
+----
+
+I never said it was correct, Dave.  At best, I thought it might have
+represented some state in the past.
+
+
+>> -----
+>>    I'm running with the "default" security (Discretionary -
+>> mode bits + access lists + cap bits slowly supplanting need for root.
 > 
-> I'm guessing it can't find or validate the primary superblock, so
-> > it's looking for a secondary superblock. Please post the output of
-> > the running repair so we can see exactly what it is doing.
+> So, did you turn the distro default selinux config off?
+----
+Suse ships AppArmor enabled by default, not selinux.
+
+I run my own kernel from kernel.org sources.  (Suse doesn't
+support booting directly  from disk, and /usr is expected
+to be mounted when the OS starts coming up (they put mount in
+/usr/bin now and a symlink in /bin pointing to /usr/bin.
+
+
+> You missed what I said completely. You didn't create the NT attr,
+> Samba did it on your behalf. Samba - the aplication that owns the
+> xattr - has higher privileges than you do, and so it can do things
+> you can't. Like manage attributes in the security namespace.
+---
+
+I didn't miss it -- I was talking about user-proxies.  The point of
+my running a linux server as a Domain Controller is that I have 1 point
+of security on my net -- the server, and whether I log in to a client
+or the server, I "should" (conceptually) have access to the same files.
+
+If I ssh from the client to the server, I see a message in messages:
+
+    sshd accepted public key for Domain\\linda from [station]...
+
+Samba provides user and group name resolution and security for the
+server.
+
+
+>> ====
+>> As I tried to make clear -- this is a new behavior I'm seeing.  I've never
+>> had attrs on my files that I, as the file 'owner' couldn't move around
+>> to permitted locations.  As it is an ACL, my feeling is it should be
+>> stored in the same way the posix acls are -- which are copyable.
 > 
-> That is exactly what it seems that it is happening.
+> Then something above the filesystem has changed. We haven't changed
+> anything to do with who or how xattrs are stored or used in XFS for
+> a long time.
+----
+	Neither the kernel nor xfs were high on my list of
+candidates.
 > 
-> *dmesg erros:*
-> 
-> >  81.927888] Pid: 878, comm: mount Not tainted 3.5.0-44-generic
-> > #67~precise1-Ubuntu
-> > [   81.927891] Call Trace:
-> > [   81.927941]  [<ffffffffa01d460f>] xfs_error_report+0x3f/0x50 [xfs]
-> > [   81.927972]  [<ffffffffa01ecd66>] ? xfs_free_extent+0xe6/0x130 [xfs]
-> > [   81.927990]  [<ffffffffa01ea318>] xfs_free_ag_extent+0x528/0x730 [xfs]
-> > [   81.928007]  [<ffffffffa01e8e07>] ? kmem_zone_alloc+0x67/0xe0 [xfs]
-> > [   81.928033]  [<ffffffffa01ecd66>] xfs_free_extent+0xe6/0x130 [xfs]
-> > [   81.928055]  [<ffffffffa021bb10>] xlog_recover_process_efi+0x170/0x1b0
-> > [xfs]
-> > [   81.928075]  [<ffffffffa021cd56>]
-> > xlog_recover_process_efis.isra.8+0x76/0xd0 [xfs]
-> > [   81.928097]  [<ffffffffa0220a17>] xlog_recover_finish+0x27/0xd0 [xfs]
-> > [   81.928119]  [<ffffffffa022812c>] xfs_log_mount_finish+0x2c/0x30 [xfs]
-> > [   81.928140]  [<ffffffffa0223620>] xfs_mountfs+0x420/0x6b0 [xfs]
-> > [   81.928156]  [<ffffffffa01e2ffd>] xfs_fs_fill_super+0x21d/0x2b0 [xfs]
-> > [   81.928163]  [<ffffffff8118b716>] mount_bdev+0x1c6/0x210
-> > [   81.928179]  [<ffffffffa01e2de0>] ? xfs_parseargs+0xb80/0xb80 [xfs]
-> > [   81.928194]  [<ffffffffa01e10a5>] xfs_fs_mount+0x15/0x20 [xfs]
-> > [   81.928198]  [<ffffffff8118c563>] mount_fs+0x43/0x1b0
-> > [   81.928202]  [<ffffffff811a5ee3>] ? find_filesystem+0x63/0x80
-> > [   81.928206]  [<ffffffff811a7246>] vfs_kern_mount+0x76/0x120
-> > [   81.928209]  [<ffffffff811a7c34>] do_kern_mount+0x54/0x110
-> > [   81.928212]  [<ffffffff811a9934>] do_mount+0x1a4/0x260
-> > [   81.928215]  [<ffffffff811a9e10>] sys_mount+0x90/0xe0
-> > [   81.928220]  [<ffffffff816a7729>] system_call_fastpath+0x16/0x1b
-> > [   81.928229] XFS (dm-0): Failed to recover EFIs
-> > [   81.928232] XFS (dm-0): log mount finish failed
-> > [   81.972741] XFS (dm-1): Mounting Filesystem
-> > [   82.195661] XFS (dm-1): Ending clean mount
-> > [   82.203627] XFS (dm-2): Mounting Filesystem
-> > [   82.479044] XFS (dm-2): Ending clean mount
-> 
-> Actually, the problem was a little bit more complicated. This LVM2
-> partition, was using a physical device (PV) that is exported by a RAID NAS
-> controller.
+> Cheers,
+---
+and felicitations!...
 
-What's a "RAID NAS controller"? Details, please, or we can't help
-you.
-
-> This volume exported by the controller was created using a RAID
-> 5, there was a hardware failure in one of the HDs of the array and the
-> volume got unavailable, till we replaced the bad driver with a new one and
-> the array rebuild finished.
-
-So, hardware RAID5, lost a drive, rebuild on replace, filesystem in
-a bad way after rebuild?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+linda
 
 _______________________________________________
 xfs mailing list
