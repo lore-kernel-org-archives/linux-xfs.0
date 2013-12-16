@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 330877F3F
-	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 06:54:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C5A45AC01C
-	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 04:54:08 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	27tymbjqSxoZ307p for <xfs@oss.sgi.com>;
-	Mon, 16 Dec 2013 04:54:06 -0800 (PST)
-Date: Mon, 16 Dec 2013 23:54:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS_REPAIR on LVM partition
-Message-ID: <20131216125402.GB10988@dastard>
-References: <CAG97raf61XGnTakrYjcfv9cjM6CTVdEEB3wQK+wOBvpowWO3Cw@mail.gmail.com>
-	<20131216000141.GU31386@dastard>
-	<CAG97radg3xd8-G2qChh2BOfH8R6N4kWH3qn3ivukxrkFVrt=rA@mail.gmail.com>
-	<20131216030537.GX31386@dastard>
-	<CAG97racd-UhUqhVLcsbjqZt51iTEaHKaQNMkvQFnznH8X8wOUQ@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8BB277F3F
+	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 09:19:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 79C708F8052
+	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 07:19:05 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 29h5syess4GexYWK (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 16 Dec 2013 07:19:01 -0800 (PST)
+Date: Mon, 16 Dec 2013 07:19:00 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xattr atomicy
+Message-ID: <20131216151900.GA12360@infradead.org>
+References: <20131213115644.GA28551@infradead.org>
+	<20131213215117.GV10988@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAG97racd-UhUqhVLcsbjqZt51iTEaHKaQNMkvQFnznH8X8wOUQ@mail.gmail.com>
+In-Reply-To: <20131213215117.GV10988@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,48 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rafael Weingartner <rafaelweingartner@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Dec 16, 2013 at 06:52:23AM -0200, Rafael Weingartner wrote:
-> What's a "RAID NAS controller"? Details, please, or we can't help
-> > you.
-> 
-> 
-> Maybe I am not expressing my self clearly. That is what I meant:
-> http://www.starline.de/produkte/raid-systeme/infortrend-raid-systeme/eonstor/es-a08u-g2421/
-> 
-> It is a piece of hardware that we use to apply RAIDx (normally 1 or 5) over
-> physical disks instead of plugging them on the storage server and applying
-> RAID via software or something else. It exports the volumes using an SCSI
-> channel.  The devices are seen on the server as normal sd*, as if they were
-> normal physical devices.
-> 
-> So, hardware RAID5, lost a drive, rebuild on replace, filesystem in
-> > a bad way after rebuild?
-> 
-> 
-> That is exactly what happened, the RAID5 array lost a drive, and after we
-> replaced and rebuild it, the filesystem was not mounting anymore.
-> Teorically, this should not affect the filesystem since the RAID5 would
-> have recovered any lost information.
+On Sat, Dec 14, 2013 at 08:51:17AM +1100, Dave Chinner wrote:
+> Yes, but they are still atomic from a user and crash recovery
+> point of view....
 
-In theory, yes. But we hear about "successful" hardware raid
-rebuilds ifrom situations like yours that result in corrupt
-filesystems. i.e. the hardware RAID rebuild didn't actually recover
-properly...
+I can't see how we can guarantee an atomic update for them, both
+in the case of an I/O error and an actual system crash.
 
-So, what's the contents of the primary XFS superblock on that
-device? What does this give:
+> Well, I think it's a bit different to the directory block case - the
+> directory blocks are filesystem metadata, while xattrs contain user
+> data. Hence if we log user xattrs a user can consume all of the log
+> bandwidth writing xattrs and degrade the metadata modification
+> performance of the rest of the filesystem.
 
-# dd if=<dev> bs=512 count=1 | hexdump -C
+We're getting close to do that with namespace modifications with
+all your scalability work :)
 
-Cheers,
+I think that's a point to consider, but not really black and white.  It
+just makes it a bit easier to consume log bandwith, and increases the
+need to have some form of per-user quotas for this sort of operations.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> So, IMO, the first question we need to answer is whether the current
+> behaviour is actually a problem for anyone....
+
+I've not heard of real life problems, but an interfaces that has very
+nice behavior for the common case, but a much less optimal for a corner
+cases is bound to cause trouble.
 
 _______________________________________________
 xfs mailing list
