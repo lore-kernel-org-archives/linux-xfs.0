@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 47E8F7F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 07:59:02 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 053F67F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 08:02:39 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 296628F8078
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 05:58:58 -0800 (PST)
-Date: Tue, 17 Dec 2013 13:58:44 +0000
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: Re: XFS security fix never sent to -stable?
-Message-ID: <20131217135844.GD5044@hercules>
-References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
-	<20131209121534.GE4278@hercules>
-	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
-	<20131209235523.GW31386@dastard> <20131210075621.GA30135@kroah.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131210075621.GA30135@kroah.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E98CE8F8049
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:38 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QbF7vwHZF4IpZ08q for
+	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:38 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rBHE2bMw012749
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 09:02:37 -0500
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 3/3] xfstests 321, 322: do not remove lost+found
+Date: Tue, 17 Dec 2013 15:02:27 +0100
+Message-Id: <1387288947-12650-3-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
+References: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,56 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Josh Boyer <jwboyer@fedoraproject.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Kees Cook <keescook@google.com>
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>
 
-On Mon, Dec 09, 2013 at 11:56:21PM -0800, Greg Kroah-Hartman wrote:
-> On Tue, Dec 10, 2013 at 10:55:23AM +1100, Dave Chinner wrote:
-> > [cc xfs list, cc stable@vger.kernel.org]
-> > 
-> > On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
-> > > On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
-> > > <luis.henriques@canonical.com> wrote:
-> > > > On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
-> > > >> Hi,
-> > > >>
-> > > >> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
-> > > >> capability check to free eofblocks ioctl") is a security fix that was
-> > > >> never sent to -stable? From what I can see, it was introduced in 3.8
-> > > >> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
-> > > >> XFS_IOC_FREE_EOFBLOCKS ioctl").
-> > > >>
-> > > >> I don't see this in the 3.8.y tree. Should it be added there and newer?
-> > > >
-> > > > Thanks Kees, I'm queuing it for the 3.11 kernel.
-> > > 
-> > > There's also this one:
-> > > 
-> > > http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
-> > > 
-> > > It fixes CVE-2013-6382
-> > 
-> > First I've heard about it there being a CVE for that bug. Since when
-> > has it been considered best practice to publish CVEs without first
-> > (or ever) directly contacting the relevant upstream developers?
-> > 
-> > But, regardless of how broken I think the CVE process is, commit
-> > 071c529 ("xfs: underflow bug in xfs_attrlist_by_handle()") should be
-> > picked up by the stable kernels.
-> 
-> I don't see that commit in Linus's tree, is it not there yet?
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ tests/generic/321 | 2 +-
+ tests/generic/322 | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-This commit is now in Linus's:
-
-31978b5 xfs: underflow bug in xfs_attrlist_by_handle()
-
-Cheers,
---
-Luis
+diff --git a/tests/generic/321 b/tests/generic/321
+index 1d17147..345416c 100644
+--- a/tests/generic/321
++++ b/tests/generic/321
+@@ -51,7 +51,7 @@ rm -f $seqres.full
+ _clean_working_dir()
+ {
+ 	_mount_flakey
+-	rm -rf $SCRATCH_MNT/*
++	rm -rf $SCRATCH_MNT/foo $SCRATCH_MNT/bar
+ 	_unmount_flakey
+ }
+ 
+diff --git a/tests/generic/322 b/tests/generic/322
+index 94f8f68..c43fcb1 100644
+--- a/tests/generic/322
++++ b/tests/generic/322
+@@ -51,7 +51,7 @@ rm -f $seqres.full
+ _clean_working_dir()
+ {
+ 	_mount_flakey
+-	rm -rf $SCRATCH_MNT/*
++	rm -rf $SCRATCH_MNT/foo $SCRATCH_MNT/bar
+ 	_unmount_flakey
+ }
+ 
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
