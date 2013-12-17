@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 61B9F29E22
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9F79929E23
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:19:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 33797304064
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:19:01 -0800 (PST)
-Received: from mail-pa0-f74.google.com (mail-pa0-f74.google.com
-	[209.85.220.74]) by cuda.sgi.com with ESMTP id TVhOlk3kI2Bn8C21
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 37001AC001
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:58 -0800 (PST)
+Received: from mail-pa0-f73.google.com (mail-pa0-f73.google.com
+	[209.85.220.73]) by cuda.sgi.com with ESMTP id 8pIJgMZCR259s16W
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:19:00 -0800 (PST)
-Received: by mail-pa0-f74.google.com with SMTP id fa1so594455pad.5
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:59 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:57 -0800 (PST)
+Received: by mail-pa0-f73.google.com with SMTP id kl14so594608pab.2
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:57 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v2 12/12] xfstests: check if filesystem supports chattr
-Date: Tue, 17 Dec 2013 14:18:42 -0800
-Message-Id: <1387318722-3050-12-git-send-email-jayr@google.com>
+Subject: [PATCH v2 08/12] xfstests: add executable permission to tests
+Date: Tue, 17 Dec 2013 14:18:38 -0800
+Message-Id: <1387318722-3050-8-git-send-email-jayr@google.com>
 In-Reply-To: <1387318722-3050-1-git-send-email-jayr@google.com>
 References: <1387318722-3050-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,59 +33,39 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-Add _require_chattr which verifies exit code of chattr command and call
-it before running generic/277.
+From: Hugh Dickins <hughd@google.com>
 
+add executable permission to generic/311, generic/314 and generic/315.
+Just like other tests in the same directory.
+
+Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
-v2: extracted from patch 9
+v2: same as v1
 
- common/attr       | 13 +++++++++++++
- tests/generic/277 |  2 ++
- 2 files changed, 15 insertions(+)
+ tests/generic/311 | 0
+ tests/generic/315 | 0
+ tests/generic/321 | 0
+ tests/generic/322 | 0
+ 4 files changed, 0 insertions(+), 0 deletions(-)
+ mode change 100644 => 100755 tests/generic/311
+ mode change 100644 => 100755 tests/generic/315
+ mode change 100644 => 100755 tests/generic/321
+ mode change 100644 => 100755 tests/generic/322
 
-diff --git a/common/attr b/common/attr
-index 4a3ac9e..278633f 100644
---- a/common/attr
-+++ b/common/attr
-@@ -218,5 +218,18 @@ else # Assume max ~1 block of attrs
- fi
- 
- export MAX_ATTRVAL_SIZE
-+
-+_require_chattr()
-+{
-+    touch $TEST_DIR/syscalltest
-+    chattr +A $TEST_DIR/syscalltest > $TEST_DIR/syscalltest.out 2>&1
-+    if [ $? -ne 0 ]; then
-+      _notrun "chattr has failed to change attribute of a file in TEST_DIR"
-+    fi
-+    cat $TEST_DIR/syscalltest.out >> $seqres.full
-+
-+    rm -f $TEST_DIR/syscalltest.out
-+}
-+
- # make sure this script returns success
- /bin/true
-diff --git a/tests/generic/277 b/tests/generic/277
-index 8461ad9..c31f7c4 100755
---- a/tests/generic/277
-+++ b/tests/generic/277
-@@ -38,11 +38,13 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/attr
- 
- # real QA test starts here
- _supported_fs generic
- _supported_os Linux
- _require_scratch
-+_require_chattr
- 
- _scratch_mkfs > /dev/null 2>&1
- _scratch_mount
+diff --git a/tests/generic/311 b/tests/generic/311
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/315 b/tests/generic/315
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/321 b/tests/generic/321
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/322 b/tests/generic/322
+old mode 100644
+new mode 100755
 -- 
 1.8.5.1
 
