@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 081BE7F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 11:59:01 -0600 (CST)
-Message-ID: <52B090E1.2020805@sgi.com>
-Date: Tue, 17 Dec 2013 11:58:57 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5C5F27F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 15:02:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 349BD8F8087
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 13:01:57 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	PDX0FWrSc0NvDwOi for <xfs@oss.sgi.com>;
+	Tue, 17 Dec 2013 13:01:55 -0800 (PST)
+Date: Wed, 18 Dec 2013 08:01:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 4/10] xfsprog: xfsio: Add support
+	FALLOC_FL_COLLAPSE_RANGE for fallocate
+Message-ID: <20131217210137.GF31386@dastard>
+References: <1386511890-3794-1-git-send-email-linkinjeon@gmail.com>
+	<52B08446.3080102@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] xfs: xlog_recover_process_data leaks like a sieve
-References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
-	<1386826478-13846-6-git-send-email-david@fromorbit.com>
-	<20131213123205.GA17935@infradead.org>
-	<20131213221102.GX10988@dastard>
-	<20131216152339.GC12360@infradead.org>
-In-Reply-To: <20131216152339.GC12360@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <52B08446.3080102@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,31 +27,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Namjae Jeon <linkinjeon@gmail.com>, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
 
-On 12/16/13 09:23, Christoph Hellwig wrote:
-> On Sat, Dec 14, 2013 at 09:11:02AM +1100, Dave Chinner wrote:
->> >  I'll rework it, but hte main issue is that it has to be freed
->> >  regardless of the error value in commit record processing, so it's
->> >  not as simple as just freeing it on error....
-> Indeed, but think that's another reason to move the freeing to
-> xlog_recover_process_data.  Right now or with the proposed patch
-> xlog_recover_commit_trans frees trans, but there's nothing that
-> breaks out of the loop in xlog_recover_process_data after that case.
->
-> By moving the freeing there for all cases we can add a corruption
-> check for that case, and we have a single function that controls
-> the lifetime of the xlog_recover structure.
+On Tue, Dec 17, 2013 at 11:05:10AM -0600, Rich Johnston wrote:
+> This patch stands alone and has been committed.
+> 
+> Thanks
+> --Rich
+> 
+> commit ca692f162d36c871c9c1b6169136b2c70503f2d8
+> Author: Namjae Jeon <namjae.jeon@samsung.com>
+> Date:   Sun Dec 8 14:11:30 2013 +0000
+> 
+>     xfsprog: xfsio: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
 
-I like that idea of doing the frees in xlog_recover_process_data().
-Each loop allocates a new trans, so each loop is self contained.
+<sigh>
 
---Mark.
+Rich, we've been here before:
+
+19e73c9 Revert "[RESEND, 4/7] xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE"
+
+Please go back and read the discussion that lead to that revert.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
