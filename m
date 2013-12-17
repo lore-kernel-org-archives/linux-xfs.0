@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CE1FD7F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 00:47:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BFF63304048
-	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 22:47:11 -0800 (PST)
-Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56]) by
-	cuda.sgi.com with SMTP id vCvDOycb2g7vU4oG for
-	<xfs@oss.sgi.com>; Mon, 16 Dec 2013 22:47:08 -0800 (PST)
-From: "=?gb18030?B?U3Rvcj8/?=" <289471341@qq.com>
-Subject: =?gb18030?B?ob54ZnNfbWV0YWR1bXAgICB4ZnNfbWRyZXN0b3Jl?=
-	=?gb18030?B?ICB4ZnNkdW1wICB4ZnNyZXN0b3Jlob8=?=
-Mime-Version: 1.0
-Date: Tue, 17 Dec 2013 14:46:09 +0800
-Message-ID: <tencent_316F3CDD1B9D21DF326147BD@qq.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7F4017F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 01:25:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 663BC304053
+	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 23:25:38 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id QqwJr9AvnsmNSPor (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 16 Dec 2013 23:25:37 -0800 (PST)
+Message-ID: <52AFFC69.7010007@oracle.com>
+Date: Tue, 17 Dec 2013 15:25:29 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: =?UTF-8?B?44CQeGZzX21ldGFkdW1wICAgeGZzX21kcmVzdG9yZSAgeGZzZHU=?=
+	=?UTF-8?B?bXAgIHhmc3Jlc3RvcmXjgJE=?=
+References: <tencent_316F3CDD1B9D21DF326147BD@qq.com>
+In-Reply-To: <tencent_316F3CDD1B9D21DF326147BD@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,60 +25,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7140340665597669908=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?gb18030?B?eGZz?= <xfs@oss.sgi.com>
+To: Stor?? <289471341@qq.com>, xfs <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
+On 12/17 2013 14:46 PM, Stor?? wrote:
+> hi:
+>   xfsdump and xfs_metadump difference
+> xfs_mdrestore and xfsrestore difference
+Please ask man page for details.
 
---===============7140340665597669908==
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_52AFF331_08A05160_55303815"
-Content-Transfer-Encoding: 8Bit
+In short, xfsdump is used to perform an incremental dump of an XFS file
+system.  corresponding, xfsrestore is used to restore the file system back
+from the dumps.
 
-This is a multi-part message in MIME format.
+xfs_metadump/xfs_mdrestore are used to dump/restore filesystems metadatas,
+but they are used for debug purpose only.
 
-------=_NextPart_52AFF331_08A05160_55303815
-Content-Type: text/plain;
-	charset="gb18030"
-Content-Transfer-Encoding: base64
-
-aGk6DQogICB4ZnNkdW1wIGFuZCB4ZnNfbWV0YWR1bXAgZGlmZmVyZW5jZQ0KIHhmc19tZHJl
-c3RvcmUgYW5kICB4ZnNyZXN0b3JlIGRpZmZlcmVuY2UNCiAgDQogIA0KICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgVGhhbmt5
-b3U=
-
-------=_NextPart_52AFF331_08A05160_55303815
-Content-Type: text/html;
-	charset="gb18030"
-Content-Transfer-Encoding: base64
-
-PERJVj5oaTo8L0RJVj4NCjxESVY+Jm5ic3A7IHhmc2R1bXAmbmJzcDthbmQgeGZzX21ldGFk
-dW1wIGRpZmZlcmVuY2U8L0RJVj4NCjxESVY+eGZzX21kcmVzdG9yZSBhbmQgIHhmc3Jlc3Rv
-cmUgZGlmZmVyZW5jZTwvRElWPg0KPERJVj4mbmJzcDs8L0RJVj4NCjxESVY+Jm5ic3A7PC9E
-SVY+DQo8RElWPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyBUaGFua3lvdTwvRElWPg==
-
-------=_NextPart_52AFF331_08A05160_55303815--
-
-
-
-
---===============7140340665597669908==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7140340665597669908==--
