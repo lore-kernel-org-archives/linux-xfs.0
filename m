@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 502C029E1A
+	by oss.sgi.com (Postfix) with ESMTP id 61B9F29E22
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:19:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 13660304053
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 33797304064
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:19:01 -0800 (PST)
-Received: from mail-vb0-f74.google.com (mail-vb0-f74.google.com
-	[209.85.212.74]) by cuda.sgi.com with ESMTP id rPIWj1Bosj9NZHRM
+Received: from mail-pa0-f74.google.com (mail-pa0-f74.google.com
+	[209.85.220.74]) by cuda.sgi.com with ESMTP id TVhOlk3kI2Bn8C21
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:59 -0800 (PST)
-Received: by mail-vb0-f74.google.com with SMTP id w5so697432vbf.1
+	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:19:00 -0800 (PST)
+Received: by mail-pa0-f74.google.com with SMTP id fa1so594455pad.5
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:59 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v2 11/12] xfstests: do not unmount before calling
-	_check_scratch_fs()
-Date: Tue, 17 Dec 2013 14:18:41 -0800
-Message-Id: <1387318722-3050-11-git-send-email-jayr@google.com>
+Subject: [PATCH v2 12/12] xfstests: check if filesystem supports chattr
+Date: Tue, 17 Dec 2013 14:18:42 -0800
+Message-Id: <1387318722-3050-12-git-send-email-jayr@google.com>
 In-Reply-To: <1387318722-3050-1-git-send-email-jayr@google.com>
 References: <1387318722-3050-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,32 +33,59 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-Many tests do not unmount SCRATCH_DEV before calling
-_check_scratch_fs().  Change generic/053 to call check a filesystem
-without unmounting the device.
+Add _require_chattr which verifies exit code of chattr command and call
+it before running generic/277.
 
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
 v2: extracted from patch 9
 
- tests/generic/053 | 2 --
- 1 file changed, 2 deletions(-)
+ common/attr       | 13 +++++++++++++
+ tests/generic/277 |  2 ++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/tests/generic/053 b/tests/generic/053
-index b8bd9e6..cf46a93 100755
---- a/tests/generic/053
-+++ b/tests/generic/053
-@@ -81,9 +81,7 @@ list_acls()
+diff --git a/common/attr b/common/attr
+index 4a3ac9e..278633f 100644
+--- a/common/attr
++++ b/common/attr
+@@ -218,5 +218,18 @@ else # Assume max ~1 block of attrs
+ fi
  
- echo "acls before repair:"
- list_acls
--_do 'unmount $SCRATCH_DEV' 'umount $SCRATCH_DEV'
- _do 'repair filesystem' '_check_scratch_fs'
--_do 'mount filesytem' '_scratch_mount'
- echo "acls after repair: "
- list_acls
+ export MAX_ATTRVAL_SIZE
++
++_require_chattr()
++{
++    touch $TEST_DIR/syscalltest
++    chattr +A $TEST_DIR/syscalltest > $TEST_DIR/syscalltest.out 2>&1
++    if [ $? -ne 0 ]; then
++      _notrun "chattr has failed to change attribute of a file in TEST_DIR"
++    fi
++    cat $TEST_DIR/syscalltest.out >> $seqres.full
++
++    rm -f $TEST_DIR/syscalltest.out
++}
++
+ # make sure this script returns success
+ /bin/true
+diff --git a/tests/generic/277 b/tests/generic/277
+index 8461ad9..c31f7c4 100755
+--- a/tests/generic/277
++++ b/tests/generic/277
+@@ -38,11 +38,13 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
++. ./common/attr
  
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
+ _require_scratch
++_require_chattr
+ 
+ _scratch_mkfs > /dev/null 2>&1
+ _scratch_mount
 -- 
 1.8.5.1
 
