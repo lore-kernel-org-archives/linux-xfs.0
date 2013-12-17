@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1BCD87F3F
+	by oss.sgi.com (Postfix) with ESMTP id 3304E29DF8
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:18:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E15308F8078
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D722D8F8071
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:55 -0800 (PST)
-Received: from mail-qa0-f74.google.com (mail-qa0-f74.google.com
-	[209.85.216.74]) by cuda.sgi.com with ESMTP id N23IshCtTYUxEZmg
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:55 -0800 (PST)
-Received: by mail-qa0-f74.google.com with SMTP id i13so417317qae.3
+Received: from mail-gg0-f201.google.com (mail-gg0-f201.google.com
+	[209.85.161.201]) by cuda.sgi.com with ESMTP id
+	ek72iiSZTRkxKEaS (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Dec 2013 14:18:54 -0800 (PST)
+Received: by mail-gg0-f201.google.com with SMTP id k5so76760ggd.0
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:54 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v2 04/12] xfstests: rename _require_xfs_io_fiemap to
-	_require_fiemap
-Date: Tue, 17 Dec 2013 14:18:34 -0800
-Message-Id: <1387318722-3050-4-git-send-email-jayr@google.com>
+Subject: [PATCH v2 03/12] xfstests: increase tmpfs memory size
+Date: Tue, 17 Dec 2013 14:18:33 -0800
+Message-Id: <1387318722-3050-3-git-send-email-jayr@google.com>
 In-Reply-To: <1387318722-3050-1-git-send-email-jayr@google.com>
 References: <1387318722-3050-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,100 +34,42 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-Rename the function because we need both xfs_io and kernel support for
-the check, and we need xfs_io support to check for kernel support.
+512M is not enough for generic/129, generic/213 and generic/247.  Raise
+default tmpfs size to 1G.
 
+Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
-v2: new patch
+v2: same as v1
 
- common/defrag     | 2 +-
- common/rc         | 2 +-
- tests/generic/255 | 2 +-
- tests/generic/316 | 2 +-
- tests/shared/298  | 2 +-
- tests/xfs/252     | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+ common/rc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/common/defrag b/common/defrag
-index a4bc976..81b58e7 100644
---- a/common/defrag
-+++ b/common/defrag
-@@ -38,7 +38,7 @@ _require_defrag()
-     esac
- 
-     _require_command $DEFRAG_PROG
--    _require_xfs_io_fiemap
-+    _require_fiemap
- }
- 
- _extent_count()
 diff --git a/common/rc b/common/rc
-index 45a45b0..1db313b 100644
+index c78356e..45a45b0 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -1281,7 +1281,7 @@ _require_xfs_io_falloc_punch()
+@@ -113,8 +113,8 @@ _mount_opts()
+ 	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
+ 	;;
+     tmpfs)
+-	# We need to specify the size at mount, use 512 MB by default
+-	export MOUNT_OPTIONS="-o size=512M $TMPFS_MOUNT_OPTIONS"
++	# We need to specify the size at mount
++	export MOUNT_OPTIONS="-o size=${DEFAULT_TMPFS_SIZE_MB}M $TMPFS_MOUNT_OPTIONS"
+ 	;;
+     *)
+ 	;;
+@@ -168,6 +168,8 @@ _fsck_opts()
  }
  
- # check that xfs_io, kernel and filesystem support fiemap
--_require_xfs_io_fiemap()
-+_require_fiemap()
- {
- 	testfile=$TEST_DIR/$$.fiemap
- 	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-diff --git a/tests/generic/255 b/tests/generic/255
-index dd329b4..739629c 100755
---- a/tests/generic/255
-+++ b/tests/generic/255
-@@ -48,7 +48,7 @@ _supported_os Linux
- 
- _require_xfs_io_falloc_punch
- _require_xfs_io_falloc
--_require_xfs_io_fiemap
-+_require_fiemap
- 
- testfile=$TEST_DIR/255.$$
- 
-diff --git a/tests/generic/316 b/tests/generic/316
-index 8cb2975..4bb6c4a 100755
---- a/tests/generic/316
-+++ b/tests/generic/316
-@@ -46,7 +46,7 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_xfs_io_falloc_punch
--_require_xfs_io_fiemap
-+_require_fiemap
- 
- testfile=$TEST_DIR/$seq.$$
- 
-diff --git a/tests/shared/298 b/tests/shared/298
-index 4541798..e8c3d48 100755
---- a/tests/shared/298
-+++ b/tests/shared/298
-@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _supported_fs ext4 xfs
- _supported_os Linux
- _require_fstrim
--_require_xfs_io_fiemap
-+_require_fiemap
- _require_fs_space $TEST_DIR 307200
- [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
- 
-diff --git a/tests/xfs/252 b/tests/xfs/252
-index 00be41a..1a5133e 100755
---- a/tests/xfs/252
-+++ b/tests/xfs/252
-@@ -47,7 +47,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_xfs_io_falloc_punch
--_require_xfs_io_fiemap
-+_require_fiemap
- 
- testfile=$TEST_DIR/252.$$
- 
+ [ -z "$FSTYP" ] && FSTYP=xfs
++# Default tmpfs size in megabytes.
++[ -z "$DEFAULT_TMPFS_SIZE_MB" ] && DEFAULT_TMPFS_SIZE_MB=1024
+ [ -z "$MOUNT_OPTIONS" ] && _mount_opts
+ [ -z "$MKFS_OPTIONS" ] && _mkfs_opts
+ [ -z "$FSCK_OPTIONS" ] && _fsck_opts
 -- 
 1.8.5.1
 
