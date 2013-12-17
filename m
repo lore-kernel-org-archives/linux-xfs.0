@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 053F67F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 08:02:39 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C9A3E29E09
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 08:02:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E98CE8F8049
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AB2DC8F8049
 	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:38 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QbF7vwHZF4IpZ08q for
-	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:38 -0800 (PST)
+	cuda.sgi.com with ESMTP id wnvk1DkON0hJn6Yu for
+	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:36 -0800 (PST)
 Received: from int-mx01.intmail.prod.int.phx2.redhat.com
 	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rBHE2bMw012749
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rBHE2Zwr000954
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 09:02:37 -0500
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 09:02:35 -0500
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 3/3] xfstests 321, 322: do not remove lost+found
-Date: Tue, 17 Dec 2013 15:02:27 +0100
-Message-Id: <1387288947-12650-3-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
-References: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 1/3] common: Filter out lost+found directory from _ls_l()
+	output
+Date: Tue, 17 Dec 2013 15:02:25 +0100
+Message-Id: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +36,26 @@ Cc: Lukas Czerner <lczerner@redhat.com>
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- tests/generic/321 | 2 +-
- tests/generic/322 | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ common/rc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/tests/generic/321 b/tests/generic/321
-index 1d17147..345416c 100644
---- a/tests/generic/321
-+++ b/tests/generic/321
-@@ -51,7 +51,7 @@ rm -f $seqres.full
- _clean_working_dir()
+diff --git a/common/rc b/common/rc
+index 5f61d57..7a168e9 100644
+--- a/common/rc
++++ b/common/rc
+@@ -74,10 +74,11 @@ _md5_checksum()
+ 
+ # ls -l w/ selinux sometimes puts a dot at the end:
+ # -rwxrw-r--. id1 id2 file1
++# Also filter out lost+found directory on extN file system if present
+ 
+ _ls_l()
  {
- 	_mount_flakey
--	rm -rf $SCRATCH_MNT/*
-+	rm -rf $SCRATCH_MNT/foo $SCRATCH_MNT/bar
- 	_unmount_flakey
+-	ls -l $* | sed "s/\(^[-rwxdlbcpsStT]*\)\. /\1 /"
++	ls -l $* | sed "s/\(^[-rwxdlbcpsStT]*\)\. /\1 /" | grep -v 'lost+found'
  }
  
-diff --git a/tests/generic/322 b/tests/generic/322
-index 94f8f68..c43fcb1 100644
---- a/tests/generic/322
-+++ b/tests/generic/322
-@@ -51,7 +51,7 @@ rm -f $seqres.full
- _clean_working_dir()
- {
- 	_mount_flakey
--	rm -rf $SCRATCH_MNT/*
-+	rm -rf $SCRATCH_MNT/foo $SCRATCH_MNT/bar
- 	_unmount_flakey
- }
- 
+ _mount_opts()
 -- 
 1.8.3.1
 
