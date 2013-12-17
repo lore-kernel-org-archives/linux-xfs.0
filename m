@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F23187F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:18:54 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1BCD87F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:18:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C98C0304053
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:54 -0800 (PST)
-Received: from mail-yh0-f74.google.com (mail-yh0-f74.google.com
-	[209.85.213.74]) by cuda.sgi.com with ESMTP id L2tswDfP8ipffoRD
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E15308F8078
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:55 -0800 (PST)
+Received: from mail-qa0-f74.google.com (mail-qa0-f74.google.com
+	[209.85.216.74]) by cuda.sgi.com with ESMTP id N23IshCtTYUxEZmg
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:53 -0800 (PST)
-Received: by mail-yh0-f74.google.com with SMTP id a41so667378yho.3
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:53 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:55 -0800 (PST)
+Received: by mail-qa0-f74.google.com with SMTP id i13so417317qae.3
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:18:54 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v2 02/12] xfstests: _scratch_mkfs_sized() for tmpfs
-Date: Tue, 17 Dec 2013 14:18:32 -0800
-Message-Id: <1387318722-3050-2-git-send-email-jayr@google.com>
+Subject: [PATCH v2 04/12] xfstests: rename _require_xfs_io_fiemap to
+	_require_fiemap
+Date: Tue, 17 Dec 2013 14:18:34 -0800
+Message-Id: <1387318722-3050-4-git-send-email-jayr@google.com>
 In-Reply-To: <1387318722-3050-1-git-send-email-jayr@google.com>
 References: <1387318722-3050-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,43 +34,100 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-From: Hugh Dickins <hughd@google.com>
+Rename the function because we need both xfs_io and kernel support for
+the check, and we need xfs_io support to check for kernel support.
 
-_scratch_mkfs_sized() avoid blockdev and update MOUNT_OPTIONS with
-required size on tmpfs, so those tests using it can now run.
-
-Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
-v2: same as v1
+v2: new patch
 
- common/rc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ common/defrag     | 2 +-
+ common/rc         | 2 +-
+ tests/generic/255 | 2 +-
+ tests/generic/316 | 2 +-
+ tests/shared/298  | 2 +-
+ tests/xfs/252     | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/common/defrag b/common/defrag
+index a4bc976..81b58e7 100644
+--- a/common/defrag
++++ b/common/defrag
+@@ -38,7 +38,7 @@ _require_defrag()
+     esac
+ 
+     _require_command $DEFRAG_PROG
+-    _require_xfs_io_fiemap
++    _require_fiemap
+ }
+ 
+ _extent_count()
 diff --git a/common/rc b/common/rc
-index a2005c9..c78356e 100644
+index 45a45b0..1db313b 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -590,7 +590,7 @@ _scratch_mkfs_sized()
+@@ -1281,7 +1281,7 @@ _require_xfs_io_falloc_punch()
+ }
  
-     blocks=`expr $fssize / $blocksize`
+ # check that xfs_io, kernel and filesystem support fiemap
+-_require_xfs_io_fiemap()
++_require_fiemap()
+ {
+ 	testfile=$TEST_DIR/$$.fiemap
+ 	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+diff --git a/tests/generic/255 b/tests/generic/255
+index dd329b4..739629c 100755
+--- a/tests/generic/255
++++ b/tests/generic/255
+@@ -48,7 +48,7 @@ _supported_os Linux
  
--    if [ "$HOSTOS" == "Linux" ]; then
-+    if [ "$HOSTOS" == "Linux" -a -d "$SCRATCH_DEV" ]; then
- 	devsize=`blockdev --getsize64 $SCRATCH_DEV`
- 	[ "$fssize" -gt "$devsize" ] && _notrun "Scratch device too small"
-     fi
-@@ -611,6 +611,9 @@ _scratch_mkfs_sized()
-     btrfs)
- 	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
- 	;;
-+    tmpfs)
-+	export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
-+	;;
-     *)
- 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
- 	;;
+ _require_xfs_io_falloc_punch
+ _require_xfs_io_falloc
+-_require_xfs_io_fiemap
++_require_fiemap
+ 
+ testfile=$TEST_DIR/255.$$
+ 
+diff --git a/tests/generic/316 b/tests/generic/316
+index 8cb2975..4bb6c4a 100755
+--- a/tests/generic/316
++++ b/tests/generic/316
+@@ -46,7 +46,7 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ _require_xfs_io_falloc_punch
+-_require_xfs_io_fiemap
++_require_fiemap
+ 
+ testfile=$TEST_DIR/$seq.$$
+ 
+diff --git a/tests/shared/298 b/tests/shared/298
+index 4541798..e8c3d48 100755
+--- a/tests/shared/298
++++ b/tests/shared/298
+@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs ext4 xfs
+ _supported_os Linux
+ _require_fstrim
+-_require_xfs_io_fiemap
++_require_fiemap
+ _require_fs_space $TEST_DIR 307200
+ [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
+ 
+diff --git a/tests/xfs/252 b/tests/xfs/252
+index 00be41a..1a5133e 100755
+--- a/tests/xfs/252
++++ b/tests/xfs/252
+@@ -47,7 +47,7 @@ _supported_fs xfs
+ _supported_os Linux
+ 
+ _require_xfs_io_falloc_punch
+-_require_xfs_io_fiemap
++_require_fiemap
+ 
+ testfile=$TEST_DIR/252.$$
+ 
 -- 
 1.8.5.1
 
