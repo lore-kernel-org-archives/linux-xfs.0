@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5C5F27F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 15:02:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 349BD8F8087
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 13:01:57 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 194BD7F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 15:20:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A97FAAC002
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 13:19:56 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	PDX0FWrSc0NvDwOi for <xfs@oss.sgi.com>;
-	Tue, 17 Dec 2013 13:01:55 -0800 (PST)
-Date: Wed, 18 Dec 2013 08:01:37 +1100
+	EcUWTFaQSC2zEfR7 for <xfs@oss.sgi.com>;
+	Tue, 17 Dec 2013 13:19:54 -0800 (PST)
+Date: Wed, 18 Dec 2013 08:19:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 4/10] xfsprog: xfsio: Add support
-	FALLOC_FL_COLLAPSE_RANGE for fallocate
-Message-ID: <20131217210137.GF31386@dastard>
-References: <1386511890-3794-1-git-send-email-linkinjeon@gmail.com>
-	<52B08446.3080102@sgi.com>
+Subject: Re: [PATCH 00/12] run more generic tests on TEST_DIR
+Message-ID: <20131217211951.GG31386@dastard>
+References: <20131211073445.353655850@bombadil.infradead.org>
+	<20131211225012.GL10988@dastard>
+	<20131212180312.GC19422@infradead.org>
+	<20131213010934.GN10988@dastard>
+	<20131213111039.GD14884@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52B08446.3080102@sgi.com>
+In-Reply-To: <20131213111039.GD14884@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,28 +33,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Namjae Jeon <linkinjeon@gmail.com>, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Stanislav Kholmanskikh <stanislav.kholmanskikh@oracle.com>, xfs@oss.sgi.com
 
-On Tue, Dec 17, 2013 at 11:05:10AM -0600, Rich Johnston wrote:
-> This patch stands alone and has been committed.
+On Fri, Dec 13, 2013 at 03:10:39AM -0800, Christoph Hellwig wrote:
+> On Fri, Dec 13, 2013 at 12:09:34PM +1100, Dave Chinner wrote:
+> > > You can have different test devices, or simply not bother with aging
+> > > it for every run.  You're missing the coverage of all the test dir
+> > > using tests, which are a lot with the above version anyway.
+> > 
+> > IOWs, you're saying that you don't consider MKFS_OPTIONS as a first
+> > class citizen. I've been using it for 7 or 8 years for exactly this
+> > purpose - iterating testing of a change quickly across multiple
+> > configurations without perturbing the long term aging of the test
+> > device.
 > 
-> Thanks
-> --Rich
+> But you're limiting yourself to the tests only using the scratch
+> device for that testing, leaving out all the ones using the TEST
+> directory.
 > 
-> commit ca692f162d36c871c9c1b6169136b2c70503f2d8
-> Author: Namjae Jeon <namjae.jeon@samsung.com>
-> Date:   Sun Dec 8 14:11:30 2013 +0000
+> > I'm not opposed to making the change, just pointing out that
+> > reducing the usage of the scratch device has a fairly significant
+> > impact on test coverage for anyone who uses MKFS_OPTIONS in their
+> > workflow...
 > 
->     xfsprog: xfsio: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+> It does have an impact for that particular workload, but I think that
+> workload is broken as you only test your specific config for those
+> tests using the scratch device, and do not get the coverage for the
+> tests using the test device.
+> 
+> git-grep -l TEST_DIR tests/generic/ | grep -v out | wc -l
+> 65
+> git-grep -l TEST_DIR tests/xfs/ | grep -v out | wc -l 
+> 23
+> 
+> 
+> hch@brick:~/work/xfstests$ git-grep -l _require_scratch tests/generic/ | wc -l
+> 58
+> hch@brick:~/work/xfstests$ git-grep -l _require_scratch tests/xfs/ | wc -l
+> 128
+> 
+> So you're missing close to 2/3s of the tests already.
 
-<sigh>
+I think you got that the wrong way around: that's 2/3rds of the
+tests (186) use the scratch device rather than the test device.
+There's also roughly 100 tests (of ~160) in the quick group that use
+the scratch device.
 
-Rich, we've been here before:
-
-19e73c9 Revert "[RESEND, 4/7] xfsprogs: xfsio: add support FALLOC_FL_COLLAPSE_RANGE"
-
-Please go back and read the discussion that lead to that revert.
+Hence doing smoke tests by simply changing the MKFS_OPTIONS gets a
+significant amount of coverage *quickly*, and that's usually more
+than sufficient to flush out bugs during development.
 
 Cheers,
 
