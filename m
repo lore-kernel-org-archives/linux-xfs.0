@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A256D7F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 10:55:59 -0600 (CST)
-Message-ID: <52B0821E.9010008@sgi.com>
-Date: Tue, 17 Dec 2013 10:55:58 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1E9F27F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 11:05:17 -0600 (CST)
+Message-ID: <52B08446.3080102@sgi.com>
+Date: Tue, 17 Dec 2013 11:05:10 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_metadump: Make -F (force) optional
-References: <52A9F6CF.1070300@redhat.com>	<20131212183115.GA16378@infradead.org>
-	<52AA160C.7070109@sandeen.net>
-In-Reply-To: <52AA160C.7070109@sandeen.net>
+Subject: Re: [PATCH v4 4/10] xfsprog: xfsio: Add support
+	FALLOC_FL_COLLAPSE_RANGE for fallocate
+References: <1386511890-3794-1-git-send-email-linkinjeon@gmail.com>
+In-Reply-To: <1386511890-3794-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,19 +22,19 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Namjae Jeon <linkinjeon@gmail.com>, viro@zeniv.linux.org.uk, david@fromorbit.com, bpm@sgi.com, tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.cz
+Cc: Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-This has been committed.
+This patch stands alone and has been committed.
 
 Thanks
 --Rich
 
-commit 4e83ac7b7416edb52815c6e5f4ca64dadfa5f974
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Thu Dec 12 17:47:59 2013 +0000
+commit ca692f162d36c871c9c1b6169136b2c70503f2d8
+Author: Namjae Jeon <namjae.jeon@samsung.com>
+Date:   Sun Dec 8 14:11:30 2013 +0000
 
-     xfs_metadump: Make -F (force) optional
+     xfsprog: xfsio: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
 
 _______________________________________________
 xfs mailing list
