@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E1B5829E0A
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 08:02:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D22B4304066
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:38 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GZXyZC1HFUjKWUdB for
-	<xfs@oss.sgi.com>; Tue, 17 Dec 2013 06:02:37 -0800 (PST)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id rBHE2aur018431
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 09:02:36 -0500
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 2/3] xfstests 322: use _filter_scratch()
-Date: Tue, 17 Dec 2013 15:02:26 +0100
-Message-Id: <1387288947-12650-2-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
-References: <1387288947-12650-1-git-send-email-lczerner@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id AF2EA7F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 08:59:22 -0600 (CST)
+Date: Tue, 17 Dec 2013 08:59:22 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 4/6] xfs: swalloc doesn't align allocations properly
+Message-ID: <20131217145922.GS1935@sgi.com>
+References: <1386826478-13846-1-git-send-email-david@fromorbit.com>
+	<1386826478-13846-5-git-send-email-david@fromorbit.com>
+	<20131213120123.GA32749@infradead.org>
+	<20131216231414.GQ1935@sgi.com> <20131217033941.GC31386@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20131217033941.GC31386@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,72 +21,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
- tests/generic/322     | 8 ++++----
- tests/generic/322.out | 8 ++++----
- 2 files changed, 8 insertions(+), 8 deletions(-)
+On Tue, Dec 17, 2013 at 02:39:41PM +1100, Dave Chinner wrote:
+> On Mon, Dec 16, 2013 at 05:14:14PM -0600, Ben Myers wrote:
+> > On Fri, Dec 13, 2013 at 04:01:23AM -0800, Christoph Hellwig wrote:
+> > > Looks good.
+> > > 
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > 
+> > > Two very minor nitpicks below:
+> > > 
+> > > > +	int		stripe_align;
+> > > >  
+> > > >  	ASSERT(ap->length);
+> > > >  
+> > > >  	mp = ap->ip->i_mount;
+> > > > +
+> > > > +	/* stripe alignment for allocation is determined by mount parameters */
+> > > > +	stripe_align = 0;
+> > > > +	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+> > > > +		stripe_align = mp->m_swidth;
+> > > > +	else if (mp->m_dalign)
+> > > > +		stripe_align = mp->m_dalign;
+> > > 
+> > > nipick: I'd either initialize the variable to zero at the point of the
+> > > declaration or do if .. else if .. else here.
+> > > 
+> > > >  	}
+> > > > +
+> > > > +
+> > > >  	nullfb = *ap->firstblock == NULLFSBLOCK;
+> > > 
+> > > Two newlines seem odd here.  I'd support one even if that's an unrelated
+> > > change :)
+> > 
+> > This is probably not the right thing to do for small files.  They will all end
+> > up in the first stripe unit.
+> 
+> You're right, it's not the right thing to do for small files. And we
+> don't, because the ap->aeof that triggers aligned allocation only
+> when:
+> 
+> 	/*
+> 	 * Only want to do the alignment at the eof if it is userdata and
+> 	 * allocation length is larger than a stripe unit.
+> 	 */
+> 	if (mp->m_dalign && bma->length >= mp->m_dalign &&
+> 	    !(bma->flags & XFS_BMAPI_METADATA) && whichfork == XFS_DATA_FORK) {
+> 		error = xfs_bmap_isaeof(bma, whichfork);
+> 		if (error)
+> 			return error;
+> 	}
+> 
+> The requested allocation length is greater than the stripe unit that
+> is configured.
+> 
+> So, we never align small files, regardless of the mount option....
 
-diff --git a/tests/generic/322 b/tests/generic/322
-index 1cea133..94f8f68 100644
---- a/tests/generic/322
-+++ b/tests/generic/322
-@@ -65,12 +65,12 @@ _rename_test()
- 	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar
- 	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
- 	_load_flakey_table $FLAKEY_DROP_WRITES
--	md5sum $SCRATCH_MNT/bar
-+	md5sum $SCRATCH_MNT/bar | _filter_scratch
- 	_unmount_flakey
- 
- 	_load_flakey_table $FLAKEY_ALLOW_WRITES
- 	_mount_flakey
--	md5sum $SCRATCH_MNT/bar
-+	md5sum $SCRATCH_MNT/bar | _filter_scratch
- 	_unmount_flakey
- 	_check_scratch_fs $FLAKEY_DEV
- 	[ $? -ne 0 ] && _fatal "fsck failed"
-@@ -87,12 +87,12 @@ _write_after_fsync_rename_test()
- 	mv $SCRATCH_MNT/foo $SCRATCH_MNT/bar
- 	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/bar
- 	_load_flakey_table $FLAKEY_DROP_WRITES
--	md5sum $SCRATCH_MNT/bar
-+	md5sum $SCRATCH_MNT/bar | _filter_scratch
- 	_unmount_flakey
- 
- 	_load_flakey_table $FLAKEY_ALLOW_WRITES
- 	_mount_flakey
--	md5sum $SCRATCH_MNT/bar
-+	md5sum $SCRATCH_MNT/bar | _filter_scratch
- 	_unmount_flakey
- 	_check_scratch_fs $FLAKEY_DEV
- 	[ $? -ne 0 ] && _fatal "fsck failed"
-diff --git a/tests/generic/322.out b/tests/generic/322.out
-index 0d9f274..a23f890 100644
---- a/tests/generic/322.out
-+++ b/tests/generic/322.out
-@@ -1,7 +1,7 @@
- QA output created by 322
- fsync rename test
--ca539970d4b1fa1f34213ba675007381  /mnt/scratch/bar
--ca539970d4b1fa1f34213ba675007381  /mnt/scratch/bar
-+ca539970d4b1fa1f34213ba675007381  SCRATCH_MNT/bar
-+ca539970d4b1fa1f34213ba675007381  SCRATCH_MNT/bar
- fsync rename test
--d34ff04c17ef7068d78d0c4be49cfe57  /mnt/scratch/bar
--d34ff04c17ef7068d78d0c4be49cfe57  /mnt/scratch/bar
-+d34ff04c17ef7068d78d0c4be49cfe57  SCRATCH_MNT/bar
-+d34ff04c17ef7068d78d0c4be49cfe57  SCRATCH_MNT/bar
--- 
-1.8.3.1
+That addresses my concerns, thanks.  ;)
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
