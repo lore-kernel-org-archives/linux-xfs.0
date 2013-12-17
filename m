@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6913C7F4E
-	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 21:54:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 487B7304051
-	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 19:54:09 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	p1pI1SgFCkdyY9hY for <xfs@oss.sgi.com>;
-	Mon, 16 Dec 2013 19:54:07 -0800 (PST)
-Date: Tue, 17 Dec 2013 14:54:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] Handling of reviewed patch series
-Message-ID: <20131217035404.GD31386@dastard>
-References: <20131213053611.GQ10988@dastard> <20131213185618.GJ1935@sgi.com>
-	<20131213231401.GZ10988@dastard> <20131216233940.GR1935@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131216233940.GR1935@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id CE1FD7F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 00:47:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BFF63304048
+	for <xfs@oss.sgi.com>; Mon, 16 Dec 2013 22:47:11 -0800 (PST)
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56]) by
+	cuda.sgi.com with SMTP id vCvDOycb2g7vU4oG for
+	<xfs@oss.sgi.com>; Mon, 16 Dec 2013 22:47:08 -0800 (PST)
+From: "=?gb18030?B?U3Rvcj8/?=" <289471341@qq.com>
+Subject: =?gb18030?B?ob54ZnNfbWV0YWR1bXAgICB4ZnNfbWRyZXN0b3Jl?=
+	=?gb18030?B?ICB4ZnNkdW1wICB4ZnNyZXN0b3Jlob8=?=
+Mime-Version: 1.0
+Date: Tue, 17 Dec 2013 14:46:09 +0800
+Message-ID: <tencent_316F3CDD1B9D21DF326147BD@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,88 +22,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7140340665597669908=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: =?gb18030?B?eGZz?= <xfs@oss.sgi.com>
 
-On Mon, Dec 16, 2013 at 05:39:40PM -0600, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Sat, Dec 14, 2013 at 10:14:01AM +1100, Dave Chinner wrote:
-> > On Fri, Dec 13, 2013 at 12:56:18PM -0600, Ben Myers wrote:
-> > > > Anyway, have a think and discuss - I'm going to push the
-> > > > branches I mentioned above....
-> > > 
-> > > I've been tracking message id and patchwork id in git notes along
-> > > with commits for awhile.  I'm hoping this will become useful later
-> > > for cross referencing the list, patchworks, and test results.  If
-> > > you wouldn't mind also doing so I'd appreciate it.  Maybe it could
-> > > be done with a post-commit script or something.
-> > 
-> > There's no notes in the repo of oss.sgi.com, so I'm not sure what
-> > you are doing here.
-> 
-> I'm just trying to track the message id along with patchwork id.  Maybe later I
-> can script it up so that test results are cross referenced with the list archives.
-> 
-> commit c91c46c12768daac8486dff0f74bc52c2ec974cd
-> Author: Christoph Hellwig <hch@infradead.org>
-> Date:   Mon Nov 18 05:10:52 2013 -0800
-> 
->     xfs: add xfs_setattr_time
->     
->     Split out a xfs_setattr_time helper to share code between truncate and
->     regular setattr similar to xfs_setattr_mode.  I might also have another
->     caller growing for this in the near future.
->     
->     Signed-off-by: Christoph Hellwig <hch@lst.de>
->     Reviewed-by: Brian Foster <bfoster@redhat.com>
->     Signed-off-by: Ben Myers <bpm@sgi.com>
-> 
-> Notes:
->     X-Patchwork-ID: 6941
->     
->     Message-Id: <20131118131052.GB21649@infradead.org>
+This is a multi-part message in MIME format.
 
-There are no notes in the oss repository that I can find. AFAIK,
-notes stay in the local repo and don't get pushed. Basically, if you
-want notes to be pushed/pulled, everyone has to use a non-standard
-repository config to tell git to push/pull refs/notes.
+--===============7140340665597669908==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_52AFF331_08A05160_55303815"
+Content-Transfer-Encoding: 8Bit
 
-Really, if it's necessary information, it should be in the commit
-message. I've never used message IDs or patchworks IDs in my life,
-so you can guess how necessary I consider that information to be....
+This is a multi-part message in MIME format.
 
-> > As it is, patchworks is not something I use or want to use. I
-> > capture and track patches with procmail and mutt - I really don't
-> > want to have to use patchworks just to find some arbitrary ID number
-> > that some 3rd party tool generates and add it to notes attached to a
-> > commit.
-> 
-> I'm a mutt user as well.  I'm not necessarily the biggest fan of patchwork
-> either, but it does turn out to be helpful sometimes.  I don't know what your
-> workflow is like.  Is there any chance you can get the message id in there?
-> 
-> messageid=$(formail -X Message-Id: < $patch | awk '{print $2}')
-> git notes append -m "Message-Id: $messageid"
+------=_NextPart_52AFF331_08A05160_55303815
+Content-Type: text/plain;
+	charset="gb18030"
+Content-Transfer-Encoding: base64
 
-Doesn't work for my workflow, because I don't keep individual
-patches around - I pushed everything to mbox format files and then
-bulk git-am the file. And that still doesn't solve the patchwork id
-problem, or the fact non standard repo configs are needed to manage
-it.
+aGk6DQogICB4ZnNkdW1wIGFuZCB4ZnNfbWV0YWR1bXAgZGlmZmVyZW5jZQ0KIHhmc19tZHJl
+c3RvcmUgYW5kICB4ZnNyZXN0b3JlIGRpZmZlcmVuY2UNCiAgDQogIA0KICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgVGhhbmt5
+b3U=
 
-Cheers,
+------=_NextPart_52AFF331_08A05160_55303815
+Content-Type: text/html;
+	charset="gb18030"
+Content-Transfer-Encoding: base64
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+PERJVj5oaTo8L0RJVj4NCjxESVY+Jm5ic3A7IHhmc2R1bXAmbmJzcDthbmQgeGZzX21ldGFk
+dW1wIGRpZmZlcmVuY2U8L0RJVj4NCjxESVY+eGZzX21kcmVzdG9yZSBhbmQgIHhmc3Jlc3Rv
+cmUgZGlmZmVyZW5jZTwvRElWPg0KPERJVj4mbmJzcDs8L0RJVj4NCjxESVY+Jm5ic3A7PC9E
+SVY+DQo8RElWPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyBUaGFua3lvdTwvRElWPg==
+
+------=_NextPart_52AFF331_08A05160_55303815--
+
+
+
+
+--===============7140340665597669908==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7140340665597669908==--
