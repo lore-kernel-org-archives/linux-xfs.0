@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A137A29E05
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 10:40:06 -0600 (CST)
-Message-ID: <52B07E64.9090200@sgi.com>
-Date: Tue, 17 Dec 2013 10:40:04 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A256D7F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 10:55:59 -0600 (CST)
+Message-ID: <52B0821E.9010008@sgi.com>
+Date: Tue, 17 Dec 2013 10:55:58 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/10] xfstests: Add tmpfs support
-References: <1386706321-15795-1-git-send-email-jayr@google.com>
-	<1386706321-15795-2-git-send-email-jayr@google.com>
-In-Reply-To: <1386706321-15795-2-git-send-email-jayr@google.com>
+Subject: Re: [PATCH] xfs_metadump: Make -F (force) optional
+References: <52A9F6CF.1070300@redhat.com>	<20131212183115.GA16378@infradead.org>
+	<52AA160C.7070109@sandeen.net>
+In-Reply-To: <52AA160C.7070109@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,19 +22,19 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Junho Ryu <jayr@google.com>, xfs@oss.sgi.com
-Cc: hughd@google.com, tytso@mit.edu, branto@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-This patch stands alone and has been committed.
+This has been committed.
 
 Thanks
 --Rich
 
-commit bc95a5351f824e8cf18d13667b9c2e439045259f
-Author: Boris Ranto <branto@redhat.com>
-Date:   Tue Dec 10 20:11:52 2013 +0000
+commit 4e83ac7b7416edb52815c6e5f4ca64dadfa5f974
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Thu Dec 12 17:47:59 2013 +0000
 
-     xfstests: Add tmpfs support
+     xfs_metadump: Make -F (force) optional
 
 _______________________________________________
 xfs mailing list
