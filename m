@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1A1AD7F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 02:05:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 989F1AC003
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 00:05:01 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id vLI6ybdYC52TzQMC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Dec 2013 00:05:00 -0800 (PST)
-Message-ID: <52B005A6.9050704@oracle.com>
-Date: Tue, 17 Dec 2013 16:04:54 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 47E8F7F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 07:59:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 296628F8078
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 05:58:58 -0800 (PST)
+Date: Tue, 17 Dec 2013 13:58:44 +0000
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: XFS security fix never sent to -stable?
+Message-ID: <20131217135844.GD5044@hercules>
+References: <CAGXu5jLKkgYg5UWJc8xBGN5NgDh68Q3YRxO--zmDL86BWPH78A@mail.gmail.com>
+	<20131209121534.GE4278@hercules>
+	<CA+5PVA4ychvLEi1ZZ6rYy2=5-wZAbQ_a-aoy8=1w3+tr-pt3Fg@mail.gmail.com>
+	<20131209235523.GW31386@dastard> <20131210075621.GA30135@kroah.com>
 MIME-Version: 1.0
-Subject: Re: =?UTF-8?B?5Zue5aSN77yaIOOAkHhmc19tZXRhZHVtcCAgIHhmc19tZHJlc3Q=?=
-	=?UTF-8?B?b3JlICB4ZnNkdW1wICB4ZnNyZXN0b3Jl44CR?=
-References: <tencent_316F3CDD1B9D21DF326147BD@qq.com>	<52AFFC69.7010007@oracle.com>
-	<tencent_6B75C6A662E0CF4579F66B91@qq.com>
-In-Reply-To: <tencent_6B75C6A662E0CF4579F66B91@qq.com>
+Content-Disposition: inline
+In-Reply-To: <20131210075621.GA30135@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +28,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stor?? <289471341@qq.com>, xfs <xfs@oss.sgi.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Josh Boyer <jwboyer@fedoraproject.org>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Gao feng <gaofeng@cn.fujitsu.com>, Kees Cook <keescook@google.com>
 
-On 12/17 2013 15:45 PM, Stor?? wrote:
->  
->  thank you.
-> 1.  XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1676 of file
-> fs/xfs/xfs_alloc.c.  Caller 0xffffffffa023496d
-> Pid: 7579, comm: smbd Tainted: G          2.6.27.19-5-default #7
-> Call Trace:
->  [<ffffffff8020d899>] show_trace_log_lvl+0x41/0x58
->  [<ffffffff8020deff>] dump_stack+0x69/0x6f
->  [<ffffffffa023308f>] xfs_free_ag_extent+0x45a/0x6bb [xfs]
->  [<ffffffffa023496d>] xfs_free_extent+0xa9/0xc9 [xfs]
->  [<ffffffffa023d446>] xfs_bmap_finish+0xee/0x15f [xfs]
->  [<ffffffffa025d647>] xfs_itruncate_finish+0x190/0x2ba [xfs]
->  [<ffffffffa027626d>] xfs_inactive+0x216/0x450 [xfs]
->  [<ffffffffa0280e01>] xfs_fs_clear_inode+0xb0/0xf4 [xfs]
->  [<ffffffff802bca41>] clear_inode+0x75/0xcc
->  [<ffffffff802bcbb5>] generic_delete_inode+0xd6/0x14e
->  [<ffffffff802b476f>] do_unlinkat+0xda/0x14d
->  [<ffffffff8020befb>] system_call_fastpath+0x16/0x1b
->  [<00007f6af6256b77>] 0x7f6af6256b77
-> xfs_force_shutdown(dm-1,0x8) called from line 4269 of file
-> fs/xfs/xfs_bmap.c.  Return address = 0xffffffffa023d47b
-> Filesystem "dm-1": Corruption of in-memory data detected.  Shutting down
-> filesystem: dm-1
-> Please umount the filesystem, and rectify the problem(s)
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
-> Filesystem "dm-1": xfs_log_force: error 5 returned.
->  
-> Why is this so,
-> In order to protect the data.Which command with the backup file system.
-> xfs_dump or xfs_metadump.
-xfsdump.  This looks like an internal corruptions, maybe run xfs_repair
--n can give more hints.
+On Mon, Dec 09, 2013 at 11:56:21PM -0800, Greg Kroah-Hartman wrote:
+> On Tue, Dec 10, 2013 at 10:55:23AM +1100, Dave Chinner wrote:
+> > [cc xfs list, cc stable@vger.kernel.org]
+> > 
+> > On Mon, Dec 09, 2013 at 08:17:09AM -0500, Josh Boyer wrote:
+> > > On Mon, Dec 9, 2013 at 7:15 AM, Luis Henriques
+> > > <luis.henriques@canonical.com> wrote:
+> > > > On Thu, Dec 05, 2013 at 04:35:50PM -0800, Kees Cook wrote:
+> > > >> Hi,
+> > > >>
+> > > >> It looks like 8c567a7fab6e086a0284eee2db82348521e7120c ("xfs: add
+> > > >> capability check to free eofblocks ioctl") is a security fix that was
+> > > >> never sent to -stable? From what I can see, it was introduced in 3.8
+> > > >> by 8ca149de80478441352a8622ea15fae7de703ced ("xfs: add
+> > > >> XFS_IOC_FREE_EOFBLOCKS ioctl").
+> > > >>
+> > > >> I don't see this in the 3.8.y tree. Should it be added there and newer?
+> > > >
+> > > > Thanks Kees, I'm queuing it for the 3.11 kernel.
+> > > 
+> > > There's also this one:
+> > > 
+> > > http://thread.gmane.org/gmane.comp.file-systems.xfs.general/57654
+> > > 
+> > > It fixes CVE-2013-6382
+> > 
+> > First I've heard about it there being a CVE for that bug. Since when
+> > has it been considered best practice to publish CVEs without first
+> > (or ever) directly contacting the relevant upstream developers?
+> > 
+> > But, regardless of how broken I think the CVE process is, commit
+> > 071c529 ("xfs: underflow bug in xfs_attrlist_by_handle()") should be
+> > picked up by the stable kernels.
+> 
+> I don't see that commit in Linus's tree, is it not there yet?
 
-Thanks,
--Jeff
+This commit is now in Linus's:
 
+31978b5 xfs: underflow bug in xfs_attrlist_by_handle()
+
+Cheers,
+--
+Luis
 
 _______________________________________________
 xfs mailing list
