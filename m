@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 717E429DF8
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:23:31 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3E3C229DF8
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 18:16:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DA186AC002
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:23:30 -0800 (PST)
-Received: from mail-ie0-f171.google.com (mail-ie0-f171.google.com
-	[209.85.223.171]) by cuda.sgi.com with ESMTP id
-	dCvFcA0BTt01rjHB (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Dec 2013 14:23:29 -0800 (PST)
-Received: by mail-ie0-f171.google.com with SMTP id ar20so9331365iec.30
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 14:23:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1387318722-3050-12-git-send-email-jayr@google.com>
-References: <1387318722-3050-1-git-send-email-jayr@google.com>
-	<1387318722-3050-12-git-send-email-jayr@google.com>
-Date: Tue, 17 Dec 2013 14:23:29 -0800
-Message-ID: <CAFA30n_xMjUpENFjcbKJQky_rMS_KG=jLLOV1_Dr9ByJ9JSfnA@mail.gmail.com>
-Subject: Re: [PATCH v2 12/12] xfstests: check if filesystem supports chattr
-From: Junho Ryu <jayr@google.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 286A68F8040
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:15:59 -0800 (PST)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id TgF6IvZgsVEFGLYR (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Dec 2013 16:15:57 -0800 (PST)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
+	Tue, 17 Dec 2013 19:15:57 -0500
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com
+	[9.57.198.25])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 4844A6E8041
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 19:15:52 -0500 (EST)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp22035.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	rBI0FtOJ7012858 for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 00:15:55 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	rBI0Fs9c008692 for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 19:15:55 -0500
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: [PATCH v2 0/3] xfs: add O_TMPFILE support
+Date: Wed, 18 Dec 2013 08:15:42 +0800
+Message-Id: <1387325745-22003-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,79 +36,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, Hugh Dickins <hughd@google.com>, Boris Ranto <branto@redhat.com>, Junho Ryu <jayr@google.com>
+To: xfs@oss.sgi.com
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-Hi Christoph,
+From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-I'm not sure what you meant by "it might be worth to have a common
-_require_chattr helper chared with generic/079". I cannot find
-"chattr" in "generic/079".
+HI, folks
 
-Regards,
-Junho
+  It's time to post the latest revision out, welcome to any constructive comment, thanks.
 
-On Tue, Dec 17, 2013 at 2:18 PM, Junho Ryu <jayr@google.com> wrote:
-> Add _require_chattr which verifies exit code of chattr command and call
-> it before running generic/277.
->
-> Signed-off-by: Junho Ryu <jayr@google.com>
-> ---
->
-> v2: extracted from patch 9
->
->  common/attr       | 13 +++++++++++++
->  tests/generic/277 |  2 ++
->  2 files changed, 15 insertions(+)
->
-> diff --git a/common/attr b/common/attr
-> index 4a3ac9e..278633f 100644
-> --- a/common/attr
-> +++ b/common/attr
-> @@ -218,5 +218,18 @@ else # Assume max ~1 block of attrs
->  fi
->
->  export MAX_ATTRVAL_SIZE
-> +
-> +_require_chattr()
-> +{
-> +    touch $TEST_DIR/syscalltest
-> +    chattr +A $TEST_DIR/syscalltest > $TEST_DIR/syscalltest.out 2>&1
-> +    if [ $? -ne 0 ]; then
-> +      _notrun "chattr has failed to change attribute of a file in TEST_DIR"
-> +    fi
-> +    cat $TEST_DIR/syscalltest.out >> $seqres.full
-> +
-> +    rm -f $TEST_DIR/syscalltest.out
-> +}
-> +
->  # make sure this script returns success
->  /bin/true
-> diff --git a/tests/generic/277 b/tests/generic/277
-> index 8461ad9..c31f7c4 100755
-> --- a/tests/generic/277
-> +++ b/tests/generic/277
-> @@ -38,11 +38,13 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
->  # get standard environment, filters and checks
->  . ./common/rc
->  . ./common/filter
-> +. ./common/attr
->
->  # real QA test starts here
->  _supported_fs generic
->  _supported_os Linux
->  _require_scratch
-> +_require_chattr
->
->  _scratch_mkfs > /dev/null 2>&1
->  _scratch_mount
-> --
-> 1.8.5.1
->
+  If anyone is interested in playing with it, you can get this patchset from my dev git on github:
+  git://github.com/wuzhy/kernel.git xfs_tmpfile
+
+  The patchset was tested against the code snippet from Andy Lutomirski and other test cases:
+  http://lwn.net/Articles/562296/
+  If you have any other better test cases, please let me know, thanks.
+
+#include <stdio.h>
+#include <err.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+
+#define __O_TMPFILE 020000000
+#define O_DIRECTORY 0200000
+#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
+#define AT_EMPTY_PATH 0x1000
+
+int main(int argc, char **argv)
+{
+   char buf[128];
+
+   if (argc != 3)
+     errx(1, "Usage: flinktest PATH linkat|proc");
+
+   int fd = open(".", O_TMPFILE | O_RDWR, 0600);
+   if (fd == -1)
+     err(1, "O_TMPFILE");
+   else
+     printf("fd #: %d\n", fd);
+
+   write(fd, "test", 4);
+
+   if (!strcmp(argv[2], "linkat")) {
+     if (linkat(fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) != 0)
+       err(1, "linkat");
+   } else if (!strcmp(argv[2], "proc")) {
+     sprintf(buf, "/proc/self/fd/%d", fd);
+     if (linkat(AT_FDCWD, buf, AT_FDCWD, argv[1], AT_SYMLINK_FOLLOW) != 0)
+       err(1, "linkat");
+   } else {
+     errx(1, "invalid mode");
+   }
+
+   return 0;
+}
+
+Changelog from v1:
+ - Fixed one chunk of the comments from Christoph Hellwig and Jeff Liu.
+
+v1:
+ - Addressed the comments from Dave Chinner and Christoph Hellwig.
+
+Zhi Yong Wu (3):
+  xfs: factor prid related codes into xfs_get_initial_prid()
+  xfs: add O_TMPFILE support
+  xfs: allow linkat() on O_TMPFILE files
+
+ fs/xfs/xfs_inode.c      |  123 ++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_inode.h      |   12 +++++
+ fs/xfs/xfs_iops.c       |   16 ++++++
+ fs/xfs/xfs_shared.h     |    4 +-
+ fs/xfs/xfs_symlink.c    |    5 +--
+ fs/xfs/xfs_trans_resv.c |   55 +++++++++++++++++++--
+ fs/xfs/xfs_trans_resv.h |    3 +
+ 7 files changed, 203 insertions(+), 15 deletions(-)
+
+-- 
+1.7.6.5
 
 _______________________________________________
 xfs mailing list
