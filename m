@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 024E07F3F
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 15:34:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBE448F804C
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 13:34:43 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qVJMrUv87EmKbrcF for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 13:34:38 -0800 (PST)
-Date: Thu, 19 Dec 2013 08:34:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS_REPAIR on LVM partition
-Message-ID: <20131218213434.GK31386@dastard>
-References: <CAG97raf61XGnTakrYjcfv9cjM6CTVdEEB3wQK+wOBvpowWO3Cw@mail.gmail.com>
-	<20131216000141.GU31386@dastard>
-	<CAG97radg3xd8-G2qChh2BOfH8R6N4kWH3qn3ivukxrkFVrt=rA@mail.gmail.com>
-	<20131216030537.GX31386@dastard>
-	<CAG97racd-UhUqhVLcsbjqZt51iTEaHKaQNMkvQFnznH8X8wOUQ@mail.gmail.com>
-	<20131216125402.GB10988@dastard>
-	<CAG97raeP-0QEhhYjDX_DDxzS3TN_brRSU6G+j-+V3KEuJ7Ym6Q@mail.gmail.com>
-	<CAG97raf7Na5UwzREJ_C9nYJ64r7PPwkhp_qcPiGVnKqu+ujAgw@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 358F07F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 15:48:00 -0600 (CST)
+Date: Wed, 18 Dec 2013 15:47:59 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 04/11 v2] xfs: add xfs_ilock_attr_map_shared
+Message-ID: <20131218214759.GW1935@sgi.com>
+References: <20131206203006.914776999@bombadil.infradead.org>
+	<20131206203128.663030833@bombadil.infradead.org>
+	<20131208223610.GE31386@dastard>
+	<20131209181612.GA22183@infradead.org>
+	<20131209222433.GY10988@dastard>
+	<20131210161349.GD19510@infradead.org>
+	<20131217173334.GV1935@sgi.com>
+	<20131218101439.GA5060@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAG97raf7Na5UwzREJ_C9nYJ64r7PPwkhp_qcPiGVnKqu+ujAgw@mail.gmail.com>
+In-Reply-To: <20131218101439.GA5060@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,61 +29,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rafael Weingartner <rafaelweingartner@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-[ cc'd the XFS list again - please keep problem triage on the public
-lists so that more than one person can help you. ]
-
-On Mon, Dec 16, 2013 at 02:53:03PM -0200, Rafael Weingartner wrote:
-> Today, I let the command xfs_repair /dev/... ran till it finished, I got
-> the following messages:
+On Wed, Dec 18, 2013 at 02:14:39AM -0800, Christoph Hellwig wrote:
+> Equivalent to xfs_ilock_data_map_shared, except for the attribute fork.
 > 
-> Phase 1 - Find and verify superblock ....
-> > Could not verify primary superblock - not enough secondary superblocks
-> > with matching geometry!!
-
-The primary superblock dump looked valid, but it it couldn't find
-matching secondary superblocks from the contents of the primary that
-it found.
-
-> > attempting to find a secondary superblock.....
-> > ...
-> > ..
-> > ...
-> > ...
-> > found candidate secondary superblock....
-> > unable to verify superblock, continuing....
-
-And it found blocks with the correct superbloc magic numbers, but
-they don't match the primary superblock that was found.
-
-> > found candidate secondary superblock....
-> > unable to verify superblock, continuing...
-> > ...
-> > ...
-> > ..............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................Sorry,
-> > could not find valid secondary superblock
-> > Exiting now.
+> Make xfs_getbmap use it if called for the attribute fork instead of
+> xfs_ilock_data_map_shared.
 > 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Should I upgrade the xfsprogs and try to run the xfs_repair again?
-> Or does that message mean that there is no way of recovering the filesystem?
+> Index: xfs/fs/xfs/xfs_bmap_util.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_bmap_util.c	2013-12-18 11:14:52.587953376 +0100
+> +++ xfs/fs/xfs/xfs_bmap_util.c	2013-12-18 11:15:29.367952621 +0100
+> @@ -617,22 +617,27 @@ xfs_getbmap(
+>  		return XFS_ERROR(ENOMEM);
+>  
+>  	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> -	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+> -		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
+> +	if (whichfork == XFS_DATA_FORK) {
+> +		if (!(iflags & BMV_IF_DELALLOC) &&
+> +		    (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size)) {
+>  			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+>  			if (error)
+>  				goto out_unlock_iolock;
+> +
+> +			/*
+> +			 * Even after flushing the inode, there can still be
+> +			 * delalloc blocks on the inode beyond EOF due to
+> +			 * speculative preallocation.  These are not removed
 
-It's still possible to recover, but more info is needed first.
-Can you get xfs_db to dump the primary and a couple of secondary
-superblocks?
+This one has a 'p'.
 
-# xfs_db -c "sb 0" -c p -c "sb 2" -c p -c "sb 7" -c p <dev>
-
-And post the output?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
