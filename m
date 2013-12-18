@@ -1,9 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.13-rc4-49-g324bb26
-Message-Id: <20131218164133.CF8647F4E@oss.sgi.com>
-Date: Wed, 18 Dec 2013 10:41:33 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C15487F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ABBF7304066
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:08 -0800 (PST)
+Received: from mail-ob0-f202.google.com (mail-ob0-f202.google.com
+	[209.85.214.202]) by cuda.sgi.com with ESMTP id
+	WsR6v7Ut4g9vWjL4 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Dec 2013 10:16:07 -0800 (PST)
+Received: by mail-ob0-f202.google.com with SMTP id gq1so1769obb.5
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:07 -0800 (PST)
+From: Junho Ryu <jayr@google.com>
+Subject: [PATCH v3 04/12] xfstests: rename _require_xfs_io_fiemap to
+	_require_fiemap
+Date: Wed, 18 Dec 2013 10:15:55 -0800
+Message-Id: <1387390563-27064-4-git-send-email-jayr@google.com>
+In-Reply-To: <1387390563-27064-1-git-send-email-jayr@google.com>
+References: <1387390563-27064-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,54 +33,106 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+Rename the function because we need both xfs_io and kernel support for
+the check, and we need xfs_io support to check for kernel support.
 
-The branch, for-next has been updated
-  324bb26 Merge branch 'xfs-for-linus-v3.13-rc5' into for-next
-  ac8809f xfs: abort metadata writeback on permanent errors
-  33177f0 xfs: swalloc doesn't align allocations properly
-  83a0adc xfs: remove xfsbdstrat error
-  6e708bc xfs: align initial file allocations correctly
-  718cc6f xfs: fix infinite loop by detaching the group/project hints from user dquot
-  5c22727 xfs: fix assertion failure at xfs_setattr_nonsize
-  30d161c xfs: fix false assertion at xfs_qm_vop_create_dqattach
-  3a8c920 xfs: fix memory leak in xfs_dir2_node_removename
-  f94c445 xfs: growfs overruns AGFL buffer on V4 filesystems
-  2f42d61 xfs: don't perform discard if the given range length is less than block size
-  31978b5 xfs: underflow bug in xfs_attrlist_by_handle()
-      from  46f23adf78545c49591619a615edeec41ed5a549 (commit)
+Signed-off-by: Junho Ryu <jayr@google.com>
+---
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+v3: same as v2
 
-- Log -----------------------------------------------------------------
-commit 324bb26144e9be037227ff75fae1042d048a15b4
-Merge: 46f23ad ac8809f
-Author: Ben Myers <bpm@sgi.com>
-Date:   Wed Dec 18 10:36:58 2013 -0600
+v2: new patch
 
-    Merge branch 'xfs-for-linus-v3.13-rc5' into for-next
+ common/defrag     | 2 +-
+ common/rc         | 2 +-
+ tests/generic/255 | 2 +-
+ tests/generic/316 | 2 +-
+ tests/shared/298  | 2 +-
+ tests/xfs/252     | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_bmap.c        | 23 +++++++++++++++++------
- fs/xfs/xfs_bmap_util.c   | 14 ++++++++++++--
- fs/xfs/xfs_buf.c         | 37 ++++++++++++++-----------------------
- fs/xfs/xfs_buf.h         | 11 +++++++----
- fs/xfs/xfs_buf_item.c    | 21 +++++++++++++++++++--
- fs/xfs/xfs_log_recover.c | 13 +++++++++++--
- fs/xfs/xfs_trans_buf.c   | 13 ++++++++++++-
- 7 files changed, 92 insertions(+), 40 deletions(-)
-
-
-hooks/post-receive
+diff --git a/common/defrag b/common/defrag
+index a4bc976..81b58e7 100644
+--- a/common/defrag
++++ b/common/defrag
+@@ -38,7 +38,7 @@ _require_defrag()
+     esac
+ 
+     _require_command $DEFRAG_PROG
+-    _require_xfs_io_fiemap
++    _require_fiemap
+ }
+ 
+ _extent_count()
+diff --git a/common/rc b/common/rc
+index 73e9f34..81baa1d 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1281,7 +1281,7 @@ _require_xfs_io_falloc_punch()
+ }
+ 
+ # check that xfs_io, kernel and filesystem support fiemap
+-_require_xfs_io_fiemap()
++_require_fiemap()
+ {
+ 	testfile=$TEST_DIR/$$.fiemap
+ 	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+diff --git a/tests/generic/255 b/tests/generic/255
+index dd329b4..739629c 100755
+--- a/tests/generic/255
++++ b/tests/generic/255
+@@ -48,7 +48,7 @@ _supported_os Linux
+ 
+ _require_xfs_io_falloc_punch
+ _require_xfs_io_falloc
+-_require_xfs_io_fiemap
++_require_fiemap
+ 
+ testfile=$TEST_DIR/255.$$
+ 
+diff --git a/tests/generic/316 b/tests/generic/316
+index 8cb2975..4bb6c4a 100755
+--- a/tests/generic/316
++++ b/tests/generic/316
+@@ -46,7 +46,7 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ _require_xfs_io_falloc_punch
+-_require_xfs_io_fiemap
++_require_fiemap
+ 
+ testfile=$TEST_DIR/$seq.$$
+ 
+diff --git a/tests/shared/298 b/tests/shared/298
+index 4541798..e8c3d48 100755
+--- a/tests/shared/298
++++ b/tests/shared/298
+@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs ext4 xfs
+ _supported_os Linux
+ _require_fstrim
+-_require_xfs_io_fiemap
++_require_fiemap
+ _require_fs_space $TEST_DIR 307200
+ [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
+ 
+diff --git a/tests/xfs/252 b/tests/xfs/252
+index 00be41a..1a5133e 100755
+--- a/tests/xfs/252
++++ b/tests/xfs/252
+@@ -47,7 +47,7 @@ _supported_fs xfs
+ _supported_os Linux
+ 
+ _require_xfs_io_falloc_punch
+-_require_xfs_io_fiemap
++_require_fiemap
+ 
+ testfile=$TEST_DIR/252.$$
+ 
 -- 
-XFS development tree
+1.8.5.1
 
 _______________________________________________
 xfs mailing list
