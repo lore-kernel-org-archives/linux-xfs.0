@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C15487F3F
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:08 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C0F8A7F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ABBF7304066
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:08 -0800 (PST)
-Received: from mail-ob0-f202.google.com (mail-ob0-f202.google.com
-	[209.85.214.202]) by cuda.sgi.com with ESMTP id
-	WsR6v7Ut4g9vWjL4 (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 93F4D304066
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:09 -0800 (PST)
+Received: from mail-gg0-f201.google.com (mail-gg0-f201.google.com
+	[209.85.161.201]) by cuda.sgi.com with ESMTP id
+	LaoJRVtHUF47RF8A (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 10:16:07 -0800 (PST)
-Received: by mail-ob0-f202.google.com with SMTP id gq1so1769obb.5
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:07 -0800 (PST)
+	Wed, 18 Dec 2013 10:16:08 -0800 (PST)
+Received: by mail-gg0-f201.google.com with SMTP id k5so1285ggd.0
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:08 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v3 04/12] xfstests: rename _require_xfs_io_fiemap to
-	_require_fiemap
-Date: Wed, 18 Dec 2013 10:15:55 -0800
-Message-Id: <1387390563-27064-4-git-send-email-jayr@google.com>
+Subject: [PATCH v3 06/12] xfstests: fix generic/127 to call _cleanup() only
+	once
+Date: Wed, 18 Dec 2013 10:15:57 -0800
+Message-Id: <1387390563-27064-6-git-send-email-jayr@google.com>
 In-Reply-To: <1387390563-27064-1-git-send-email-jayr@google.com>
 References: <1387390563-27064-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,102 +35,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-Rename the function because we need both xfs_io and kernel support for
-the check, and we need xfs_io support to check for kernel support.
+The test is already trap-ing signal 0 (EXIT). umount prints error
+message when target tmpfs is already unmounted.
 
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
-v3: same as v2
+v3: same as v1
 
-v2: new patch
+v2: same as v1
 
- common/defrag     | 2 +-
- common/rc         | 2 +-
- tests/generic/255 | 2 +-
- tests/generic/316 | 2 +-
- tests/shared/298  | 2 +-
- tests/xfs/252     | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+ tests/generic/127 | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/common/defrag b/common/defrag
-index a4bc976..81b58e7 100644
---- a/common/defrag
-+++ b/common/defrag
-@@ -38,7 +38,7 @@ _require_defrag()
-     esac
+diff --git a/tests/generic/127 b/tests/generic/127
+index 58ca91e..47bd1ca 100755
+--- a/tests/generic/127
++++ b/tests/generic/127
+@@ -117,5 +117,4 @@ _fsx_std_nommap
+ _fsx_std_mmap
  
-     _require_command $DEFRAG_PROG
--    _require_xfs_io_fiemap
-+    _require_fiemap
- }
- 
- _extent_count()
-diff --git a/common/rc b/common/rc
-index 73e9f34..81baa1d 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1281,7 +1281,7 @@ _require_xfs_io_falloc_punch()
- }
- 
- # check that xfs_io, kernel and filesystem support fiemap
--_require_xfs_io_fiemap()
-+_require_fiemap()
- {
- 	testfile=$TEST_DIR/$$.fiemap
- 	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-diff --git a/tests/generic/255 b/tests/generic/255
-index dd329b4..739629c 100755
---- a/tests/generic/255
-+++ b/tests/generic/255
-@@ -48,7 +48,7 @@ _supported_os Linux
- 
- _require_xfs_io_falloc_punch
- _require_xfs_io_falloc
--_require_xfs_io_fiemap
-+_require_fiemap
- 
- testfile=$TEST_DIR/255.$$
- 
-diff --git a/tests/generic/316 b/tests/generic/316
-index 8cb2975..4bb6c4a 100755
---- a/tests/generic/316
-+++ b/tests/generic/316
-@@ -46,7 +46,7 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_xfs_io_falloc_punch
--_require_xfs_io_fiemap
-+_require_fiemap
- 
- testfile=$TEST_DIR/$seq.$$
- 
-diff --git a/tests/shared/298 b/tests/shared/298
-index 4541798..e8c3d48 100755
---- a/tests/shared/298
-+++ b/tests/shared/298
-@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _supported_fs ext4 xfs
- _supported_os Linux
- _require_fstrim
--_require_xfs_io_fiemap
-+_require_fiemap
- _require_fs_space $TEST_DIR 307200
- [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
- 
-diff --git a/tests/xfs/252 b/tests/xfs/252
-index 00be41a..1a5133e 100755
---- a/tests/xfs/252
-+++ b/tests/xfs/252
-@@ -47,7 +47,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_xfs_io_falloc_punch
--_require_xfs_io_fiemap
-+_require_fiemap
- 
- testfile=$TEST_DIR/252.$$
- 
+ status=0
+-_cleanup
+ exit
 -- 
 1.8.5.1
 
