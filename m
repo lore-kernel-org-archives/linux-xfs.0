@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CBCA47F4E
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B02C230406A
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:07 -0800 (PST)
-Received: from mail-ob0-f201.google.com (mail-ob0-f201.google.com
-	[209.85.214.201]) by cuda.sgi.com with ESMTP id
-	CgI5YKCF5USiCTo8 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 10:16:06 -0800 (PST)
-Received: by mail-ob0-f201.google.com with SMTP id wp4so1990obc.2
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:06 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A56DE29DFE
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 39E90AC002
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:11 -0800 (PST)
+Received: from mail-oa0-f74.google.com (mail-oa0-f74.google.com
+	[209.85.219.74]) by cuda.sgi.com with ESMTP id Paksgo8CjQR79YXD
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:10 -0800 (PST)
+Received: by mail-oa0-f74.google.com with SMTP id o6so2122oag.3
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:09 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v3 02/12] xfstests: _scratch_mkfs_sized() for tmpfs
-Date: Wed, 18 Dec 2013 10:15:53 -0800
-Message-Id: <1387390563-27064-2-git-send-email-jayr@google.com>
+Subject: [PATCH v3 08/12] xfstests: add executable permission to tests
+Date: Wed, 18 Dec 2013 10:15:59 -0800
+Message-Id: <1387390563-27064-8-git-send-email-jayr@google.com>
 In-Reply-To: <1387390563-27064-1-git-send-email-jayr@google.com>
 References: <1387390563-27064-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,43 +35,39 @@ Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.c
 
 From: Hugh Dickins <hughd@google.com>
 
-_scratch_mkfs_sized() avoid blockdev and update MOUNT_OPTIONS with
-required size on tmpfs, so those tests using it can now run.
+add executable permission to generic/311, generic/314 and generic/315.
+Just like other tests in the same directory.
 
 Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
-v3: use -b to check whether SCRATCH_DEV is a block device
+v3: same as v1
 
-v2: check whether SCRATCH_DEV is a block device instead of checking FSTYP
+v2: same as v1
 
- common/rc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ tests/generic/311 | 0
+ tests/generic/315 | 0
+ tests/generic/321 | 0
+ tests/generic/322 | 0
+ 4 files changed, 0 insertions(+), 0 deletions(-)
+ mode change 100644 => 100755 tests/generic/311
+ mode change 100644 => 100755 tests/generic/315
+ mode change 100644 => 100755 tests/generic/321
+ mode change 100644 => 100755 tests/generic/322
 
-diff --git a/common/rc b/common/rc
-index a2005c9..bfd29c7 100644
---- a/common/rc
-+++ b/common/rc
-@@ -590,7 +590,7 @@ _scratch_mkfs_sized()
- 
-     blocks=`expr $fssize / $blocksize`
- 
--    if [ "$HOSTOS" == "Linux" ]; then
-+    if [ "$HOSTOS" == "Linux" -a -b "$SCRATCH_DEV" ]; then
- 	devsize=`blockdev --getsize64 $SCRATCH_DEV`
- 	[ "$fssize" -gt "$devsize" ] && _notrun "Scratch device too small"
-     fi
-@@ -611,6 +611,9 @@ _scratch_mkfs_sized()
-     btrfs)
- 	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
- 	;;
-+    tmpfs)
-+	export MOUNT_OPTIONS="-o size=$fssize $TMPFS_MOUNT_OPTIONS"
-+	;;
-     *)
- 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
- 	;;
+diff --git a/tests/generic/311 b/tests/generic/311
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/315 b/tests/generic/315
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/321 b/tests/generic/321
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/322 b/tests/generic/322
+old mode 100644
+new mode 100755
 -- 
 1.8.5.1
 
