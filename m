@@ -1,35 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2532829DF8
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 18:22:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AE83304053
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:22:57 -0800 (PST)
-Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159]) by
-	cuda.sgi.com with ESMTP id ri8ZAJP9UJtwjFau (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D98B029E05
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 18:23:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5B6D4AC002
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 16:23:05 -0800 (PST)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id itz1ohgR0ZsjU4rf (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Dec 2013 16:22:57 -0800 (PST)
+	Tue, 17 Dec 2013 16:23:04 -0800 (PST)
 Received: from /spool/local
-	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Tue, 17 Dec 2013 17:22:56 -0700
-Received: from b03cxnp07028.gho.boulder.ibm.com
-	(b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id E86D43E4003F
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 17:22:52 -0700 (MST)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp07028.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with
-	ESMTP id rBI0MoP87405982
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 01:22:50 +0100
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP
-	id rBI0MqK4023116
-	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 17:22:52 -0700
+	Tue, 17 Dec 2013 17:23:03 -0700
+Received: from b03cxnp07027.gho.boulder.ibm.com
+	(b03cxnp07027.gho.boulder.ibm.com [9.17.130.14])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 2CF443E40045
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 17:23:00 -0700 (MST)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by b03cxnp07027.gho.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with
+	ESMTP id rBI0MwHH10027392
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 01:22:58 +0100
+Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP
+	id rBI0Mxal015293
+	for <xfs@oss.sgi.com>; Tue, 17 Dec 2013 17:22:59 -0700
 From: Zhi Yong Wu <zwu.kernel@gmail.com>
-Subject: [PATCH v2 0/3] xfs: add O_TMPFILE support
-Date: Wed, 18 Dec 2013 08:22:38 +0800
-Message-Id: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
+Subject: [PATCH v2 1/3] xfs: factor prid related codes into
+	xfs_get_initial_prid()
+Date: Wed, 18 Dec 2013 08:22:39 +0800
+Message-Id: <1387326161-24530-2-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
+References: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -48,77 +51,84 @@ Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
 From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-HI, folks
+It will be reused by the O_TMPFILE creation function.
 
-  It's time to post the latest revision out, welcome to any constructive comment, thanks.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+---
+ fs/xfs/xfs_inode.c   |    6 +-----
+ fs/xfs/xfs_inode.h   |   10 ++++++++++
+ fs/xfs/xfs_symlink.c |    5 +----
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
-  If anyone is interested in playing with it, you can get this patchset from my dev git on github:
-  git://github.com/wuzhy/kernel.git xfs_tmpfile
-
-  The patchset was tested against the code snippet from Andy Lutomirski and other test cases:
-  http://lwn.net/Articles/562296/
-  If you have any other better test cases, please let me know, thanks.
-
-#include <stdio.h>
-#include <err.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-
-#define __O_TMPFILE 020000000
-#define O_DIRECTORY 0200000
-#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
-#define AT_EMPTY_PATH 0x1000
-
-int main(int argc, char **argv)
-{
-   char buf[128];
-
-   if (argc != 3)
-     errx(1, "Usage: flinktest PATH linkat|proc");
-
-   int fd = open(".", O_TMPFILE | O_RDWR, 0600);
-   if (fd == -1)
-     err(1, "O_TMPFILE");
-   else
-     printf("fd #: %d\n", fd);
-
-   write(fd, "test", 4);
-
-   if (!strcmp(argv[2], "linkat")) {
-     if (linkat(fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) != 0)
-       err(1, "linkat");
-   } else if (!strcmp(argv[2], "proc")) {
-     sprintf(buf, "/proc/self/fd/%d", fd);
-     if (linkat(AT_FDCWD, buf, AT_FDCWD, argv[1], AT_SYMLINK_FOLLOW) != 0)
-       err(1, "linkat");
-   } else {
-     errx(1, "invalid mode");
-   }
-
-   return 0;
-}
-
-Changelog from v1:
- - Fixed one chunk of the comments from Christoph Hellwig and Jeff Liu.
-
-v1:
- - Addressed the comments from Dave Chinner and Christoph Hellwig.
-
-Zhi Yong Wu (3):
-  xfs: factor prid related codes into xfs_get_initial_prid()
-  xfs: add O_TMPFILE support
-  xfs: allow linkat() on O_TMPFILE files
-
- fs/xfs/xfs_inode.c      |  123 ++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_inode.h      |   12 +++++
- fs/xfs/xfs_iops.c       |   16 ++++++
- fs/xfs/xfs_shared.h     |    4 +-
- fs/xfs/xfs_symlink.c    |    5 +--
- fs/xfs/xfs_trans_resv.c |   55 +++++++++++++++++++--
- fs/xfs/xfs_trans_resv.h |    2 +
- 7 files changed, 202 insertions(+), 15 deletions(-)
-
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 001aa89..c79b875 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -42,7 +42,6 @@
+ #include "xfs_bmap_util.h"
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
+-#include "xfs_dinode.h"
+ #include "xfs_filestream.h"
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+@@ -1169,10 +1168,7 @@ xfs_create(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+-	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-		prid = xfs_get_projid(dp);
+-	else
+-		prid = XFS_PROJID_DEFAULT;
++	prid = xfs_get_initial_prid(dp);
+ 
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 9e6efccb..6c58349 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -20,6 +20,7 @@
+ 
+ #include "xfs_inode_buf.h"
+ #include "xfs_inode_fork.h"
++#include "xfs_dinode.h"
+ 
+ /*
+  * Kernel only inode definitions
+@@ -192,6 +193,15 @@ xfs_set_projid(struct xfs_inode *ip,
+ 	ip->i_d.di_projid_lo = (__uint16_t) (projid & 0xffff);
+ }
+ 
++static inline prid_t
++xfs_get_initial_prid(struct xfs_inode *dp)
++{
++	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
++		return xfs_get_projid(dp);
++
++	return XFS_PROJID_DEFAULT;
++}
++
+ /*
+  * In-core inode flags.
+  */
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 14e58f2..13140c7 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -208,10 +208,7 @@ xfs_symlink(
+ 		return XFS_ERROR(ENAMETOOLONG);
+ 
+ 	udqp = gdqp = NULL;
+-	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-		prid = xfs_get_projid(dp);
+-	else
+-		prid = XFS_PROJID_DEFAULT;
++	prid = xfs_get_initial_prid(dp);
+ 
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
 -- 
 1.7.6.5
 
