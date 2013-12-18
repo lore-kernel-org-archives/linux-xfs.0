@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 692FE7F51
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:37:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED4E0AC005
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:37:28 -0800 (PST)
-Received: from mail-ea0-f175.google.com (mail-ea0-f175.google.com
-	[209.85.215.175]) by cuda.sgi.com with ESMTP id
-	0zHBog8H0BkyCB5H (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 10:37:27 -0800 (PST)
-Received: by mail-ea0-f175.google.com with SMTP id z10so15688ead.6
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:37:26 -0800 (PST)
-Received: from alyakaslap ([212.143.144.103])
-	by mx.google.com with ESMTPSA id m1sm2400227eeg.0.2013.12.18.10.37.25
-	for <xfs@oss.sgi.com>
-	(version=TLSv1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-	Wed, 18 Dec 2013 10:37:25 -0800 (PST)
-Message-ID: <AD612A564BB84E75B010AE37687DFC8E@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-Subject: Questions about XFS discard and xfs_free_extent() code (newbie)
-Date: Wed, 18 Dec 2013 20:37:29 +0200
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 024E07F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 15:34:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CBE448F804C
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 13:34:43 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	qVJMrUv87EmKbrcF for <xfs@oss.sgi.com>;
+	Wed, 18 Dec 2013 13:34:38 -0800 (PST)
+Date: Thu, 19 Dec 2013 08:34:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS_REPAIR on LVM partition
+Message-ID: <20131218213434.GK31386@dastard>
+References: <CAG97raf61XGnTakrYjcfv9cjM6CTVdEEB3wQK+wOBvpowWO3Cw@mail.gmail.com>
+	<20131216000141.GU31386@dastard>
+	<CAG97radg3xd8-G2qChh2BOfH8R6N4kWH3qn3ivukxrkFVrt=rA@mail.gmail.com>
+	<20131216030537.GX31386@dastard>
+	<CAG97racd-UhUqhVLcsbjqZt51iTEaHKaQNMkvQFnznH8X8wOUQ@mail.gmail.com>
+	<20131216125402.GB10988@dastard>
+	<CAG97raeP-0QEhhYjDX_DDxzS3TN_brRSU6G+j-+V3KEuJ7Ym6Q@mail.gmail.com>
+	<CAG97raf7Na5UwzREJ_C9nYJ64r7PPwkhp_qcPiGVnKqu+ujAgw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAG97raf7Na5UwzREJ_C9nYJ64r7PPwkhp_qcPiGVnKqu+ujAgw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +32,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Rafael Weingartner <rafaelweingartner@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Greetings XFS developers & community,
+[ cc'd the XFS list again - please keep problem triage on the public
+lists so that more than one person can help you. ]
 
-I am studying the XFS code, primarily focusing now at the free-space
-allocation and deallocation parts.
+On Mon, Dec 16, 2013 at 02:53:03PM -0200, Rafael Weingartner wrote:
+> Today, I let the command xfs_repair /dev/... ran till it finished, I got
+> the following messages:
+> 
+> Phase 1 - Find and verify superblock ....
+> > Could not verify primary superblock - not enough secondary superblocks
+> > with matching geometry!!
 
-I learned that freeing an extent happens like this:
-- xfs_free_extent() calls xfs_free_ag_extent(), which attempts to merge the
-freed extents from left and from right in the by-bno btree. Then the by-size
-btree is updated accordingly.
-- xfs_free_extent marks the original (un-merged) extent as "busy" by
-xfs_extent_busy_insert(). This prevents this original extent from being
-allocated. (Except that for metadata allocations such extent or part of it
-can be "unbusied", while it is still not marked for discard with
-XFS_EXTENT_BUSY_DISCARDED).
-- Once the appropriate part of the log is committed, xlog_cil_committed
-calls xfs_discard_extents. This discards the extents using the synchronous
-blkdev_issue_discard() API, and only them "unbusies" the extents. This makes
-sense, because we cannot allow allocating these extents until discarding
-completed.
+The primary superblock dump looked valid, but it it couldn't find
+matching secondary superblocks from the contents of the primary that
+it found.
 
-WRT to this flow, I have some questions:
+> > attempting to find a secondary superblock.....
+> > ...
+> > ..
+> > ...
+> > ...
+> > found candidate secondary superblock....
+> > unable to verify superblock, continuing....
 
-- xfs_free_extent first inserts the extent into the free-space btrees, and
-only then marks it as busy. How come there is no race window here? Can
-somebody allocate the freed extent before it is marked as busy? Or the
-free-space btrees somehow are locked at this point? The code says "validate
-the extent size is legal now we have the agf locked". I more or less see
-that xfs_alloc_fix_freelist() locks *something*, but I don't see
-xfs_free_extent() unlocking anything.
+And it found blocks with the correct superbloc magic numbers, but
+they don't match the primary superblock that was found.
 
-- If xfs_extent_busy_insert() fails to alloc a xfs_extent_busy structure,
-such extent cannot be discarded, correct?
+> > found candidate secondary superblock....
+> > unable to verify superblock, continuing...
+> > ...
+> > ...
+> > ..............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................Sorry,
+> > could not find valid secondary superblock
+> > Exiting now.
+> 
+> 
+> Should I upgrade the xfsprogs and try to run the xfs_repair again?
+> Or does that message mean that there is no way of recovering the filesystem?
 
-- xfs_discard_extents() doesn't check the discard granularity of the
-underlying block device, like xfs_ioc_trim() does. So it may send a small
-discard request, which cannot be handled. If it would have checked the
-granularity, it could have avoided sending small requests. But the thing is
-that the busy extent might have been merged in the free-space btree into a
-larger extent, which is now suitable for discard.
+It's still possible to recover, but more info is needed first.
+Can you get xfs_db to dump the primary and a couple of secondary
+superblocks?
 
-I want to attempt the following logic in xfs_discard_extents():
-# search the "by-bno" free-space btree for a larger extent that fully
-encapsulates the busy extent (which we want to discard)
-# if found, check whether some other part of the larger extent is still busy
-(except for the current busy extent we want to discard)
-# if no, send discard for the larger extent
-Does this make send? And I think that we need to hold the larger extent 
-locked somehow until the
-discard completes, to prevent allocation from the discarded range.
+# xfs_db -c "sb 0" -c p -c "sb 2" -c p -c "sb 7" -c p <dev>
 
-Can anybody please comment on these questions?
+And post the output?
 
-Thanks!
-Alex. 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
