@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 464AD7F3F
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 02:33:25 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C1A7A7F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 04:14:42 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12C86304077
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 00:33:24 -0800 (PST)
-Received: from mail-wi0-f171.google.com (mail-wi0-f171.google.com
-	[209.85.212.171]) by cuda.sgi.com with ESMTP id
-	pP74y3hlzHyvwtf3 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 00:33:23 -0800 (PST)
-Received: by mail-wi0-f171.google.com with SMTP id bz8so4893873wib.10
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 00:33:22 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45EACAC002
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 02:14:42 -0800 (PST)
+Date: Wed, 18 Dec 2013 02:14:39 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 04/11 v2] xfs: add xfs_ilock_attr_map_shared
+Message-ID: <20131218101439.GA5060@infradead.org>
+References: <20131206203006.914776999@bombadil.infradead.org>
+	<20131206203128.663030833@bombadil.infradead.org>
+	<20131208223610.GE31386@dastard>
+	<20131209181612.GA22183@infradead.org>
+	<20131209222433.GY10988@dastard>
+	<20131210161349.GD19510@infradead.org>
+	<20131217173334.GV1935@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <52B102FF.8040404@pzystorm.de>
-References: <52B102FF.8040404@pzystorm.de>
-Date: Wed, 18 Dec 2013 09:33:22 +0100
-Message-ID: <CAAxjCEw+-B7cYdL0SZ903n0ZpKoqmS7sZZQiPQK8-qut6=ia3g@mail.gmail.com>
-Subject: Re: XFS blocked task in xlog_cil_force_lsn
-From: Stefan Ring <stefanrin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20131217173334.GV1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,13 +31,124 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@pzystorm.de
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-> Even a reboot is now not possible anymore, because the whole system
-> hangs while executing the "sync" command in one of the shutdown scripts.
+Equivalent to xfs_ilock_data_map_shared, except for the attribute fork.
 
-This is unusual. How long have you waited?
+Make xfs_getbmap use it if called for the attribute fork instead of
+xfs_ilock_data_map_shared.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/xfs_bmap_util.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap_util.c	2013-12-18 11:14:52.587953376 +0100
++++ xfs/fs/xfs/xfs_bmap_util.c	2013-12-18 11:15:29.367952621 +0100
+@@ -617,22 +617,27 @@ xfs_getbmap(
+ 		return XFS_ERROR(ENOMEM);
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+-		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
++	if (whichfork == XFS_DATA_FORK) {
++		if (!(iflags & BMV_IF_DELALLOC) &&
++		    (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size)) {
+ 			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 			if (error)
+ 				goto out_unlock_iolock;
++
++			/*
++			 * Even after flushing the inode, there can still be
++			 * delalloc blocks on the inode beyond EOF due to
++			 * speculative preallocation.  These are not removed
++			 * until the release function is called or the inode
++			 * is inactivated.  Hence we cannot assert here that
++			 * ip->i_delayed_blks == 0.
++			 */
+ 		}
+-		/*
+-		 * even after flushing the inode, there can still be delalloc
+-		 * blocks on the inode beyond EOF due to speculative
+-		 * preallocation. These are not removed until the release
+-		 * function is called or the inode is inactivated. Hence we
+-		 * cannot assert here that ip->i_delayed_blks == 0.
+-		 */
+-	}
+ 
+-	lock = xfs_ilock_data_map_shared(ip);
++		lock = xfs_ilock_data_map_shared(ip);
++	} else {
++		lock = xfs_ilock_attr_map_shared(ip);
++	}
+ 
+ 	/*
+ 	 * Don't let nex be bigger than the number of extents
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2013-12-18 11:14:52.587953376 +0100
++++ xfs/fs/xfs/xfs_inode.c	2013-12-18 11:14:53.599953355 +0100
+@@ -77,17 +77,18 @@ xfs_get_extsz_hint(
+ }
+ 
+ /*
+- * This is a wrapper routine around the xfs_ilock() routine used to centralize
+- * some grungy code.  It is used in places that wish to lock the inode solely
+- * for reading the extents.  The reason these places can't just call
+- * xfs_ilock(SHARED) is that the inode lock also guards to bringing in of the
+- * extents from disk for a file in b-tree format.  If the inode is in b-tree
+- * format, then we need to lock the inode exclusively until the extents are read
+- * in.  Locking it exclusively all the time would limit our parallelism
+- * unnecessarily, though.  What we do instead is check to see if the extents
+- * have been read in yet, and only lock the inode exclusively if they have not.
++ * These two are wrapper routines around the xfs_ilock() routine used to
++ * centralize some grungy code.  They are used in places that wish to lock the
++ * inode solely for reading the extents.  The reason these places can't just
++ * call xfs_ilock(ip, XFS_ILOCK_SHARED) is that the inode lock also guards to
++ * bringing in of the extents from disk for a file in b-tree format.  If the
++ * inode is in b-tree format, then we need to lock the inode exclusively until
++ * the extents are read in.  Locking it exclusively all the time would limit
++ * our parallelism unnecessarily, though.  What we do instead is check to see
++ * if the extents have been read in yet, and only lock the inode exclusively
++ * if they have not.
+  *
+- * The function returns a value which should be given to the corresponding
++ * The functions return a value which should be given to the corresponding
+  * xfs_iunlock() call.
+  */
+ uint
+@@ -101,6 +102,19 @@ xfs_ilock_data_map_shared(
+ 		lock_mode = XFS_ILOCK_EXCL;
+ 	xfs_ilock(ip, lock_mode);
+ 	return lock_mode;
++}
++
++uint
++xfs_ilock_attr_map_shared(
++	struct xfs_inode	*ip)
++{
++	uint			lock_mode = XFS_ILOCK_SHARED;
++
++	if (ip->i_d.di_aformat == XFS_DINODE_FMT_BTREE &&
++	    (ip->i_afp->if_flags & XFS_IFEXTENTS) == 0)
++		lock_mode = XFS_ILOCK_EXCL;
++	xfs_ilock(ip, lock_mode);
++	return lock_mode;
+ }
+ 
+ /*
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2013-12-18 11:14:52.587953376 +0100
++++ xfs/fs/xfs/xfs_inode.h	2013-12-18 11:14:53.599953355 +0100
+@@ -338,6 +338,7 @@ void		xfs_iunlock(xfs_inode_t *, uint);
+ void		xfs_ilock_demote(xfs_inode_t *, uint);
+ int		xfs_isilocked(xfs_inode_t *, uint);
+ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
++uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+ int		xfs_ialloc(struct xfs_trans *, xfs_inode_t *, umode_t,
+ 			   xfs_nlink_t, xfs_dev_t, prid_t, int,
+ 			   struct xfs_buf **, xfs_inode_t **);
 
 _______________________________________________
 xfs mailing list
