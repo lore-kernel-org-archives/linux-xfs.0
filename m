@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BB6647F3F
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D25E77F51
 	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A5EA8304066
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 446EAAC002
 	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:07 -0800 (PST)
-Received: from mail-ie0-f202.google.com (mail-ie0-f202.google.com
-	[209.85.223.202]) by cuda.sgi.com with ESMTP id
-	VVNaObFud96zH1hr (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from mail-qc0-f201.google.com (mail-qc0-f201.google.com
+	[209.85.216.201]) by cuda.sgi.com with ESMTP id
+	TvoGgOO8eXv6Ye8z (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 10:16:07 -0800 (PST)
-Received: by mail-ie0-f202.google.com with SMTP id lx4so2007iec.1
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:06 -0800 (PST)
+	Wed, 18 Dec 2013 10:16:06 -0800 (PST)
+Received: by mail-qc0-f201.google.com with SMTP id r5so994qcx.2
+	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:05 -0800 (PST)
 From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v3 03/12] xfstests: increase tmpfs memory size
-Date: Wed, 18 Dec 2013 10:15:54 -0800
-Message-Id: <1387390563-27064-3-git-send-email-jayr@google.com>
-In-Reply-To: <1387390563-27064-1-git-send-email-jayr@google.com>
-References: <1387390563-27064-1-git-send-email-jayr@google.com>
+Subject: [PATCH v3 01/12] xfstests: use mount point instead of device name
+Date: Wed, 18 Dec 2013 10:15:52 -0800
+Message-Id: <1387390563-27064-1-git-send-email-jayr@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,42 +32,66 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
 
-512M is not enough for generic/129, generic/213 and generic/247.  Raise
-default tmpfs size to 1G.
+From: Hugh Dickins <hughd@google.com>
+
+A tmpfs mount does not involve any block device, its $SCRATCH_DEV is
+nothing but a place-holder, so apply 'df' or 'stat' to its mount point
+$SCRATCH_MNT instead of to $SCRATCH_DEV.
+
+It also fixes a bug in generic/256: "stat -f $SCRATCH_DEV" returning the
+block size of the root file system, but not the test file system.
+
+$ df | grep sda
+/dev/sda1    233191    62959    157791    29%    /boot
+
+$ sudo dumpe2fs -h /dev/sda1 | grep "Block size"
+Block size:               1024
+
+$ stat -f /dev/sda1 | grep "Block size"
+Block size: 4096       Fundamental block size: 4096
+
+$ stat -f /boot | grep "Block size"
+Block size: 1024       Fundamental block size: 1024
 
 Signed-off-by: Hugh Dickins <hughd@google.com>
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
 Signed-off-by: Junho Ryu <jayr@google.com>
 ---
 
+v3: same as v1
+
 v2: same as v1
 
- common/rc | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ tests/generic/256 | 2 +-
+ tests/generic/273 | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/common/rc b/common/rc
-index bfd29c7..73e9f34 100644
---- a/common/rc
-+++ b/common/rc
-@@ -113,8 +113,8 @@ _mount_opts()
- 	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
- 	;;
-     tmpfs)
--	# We need to specify the size at mount, use 512 MB by default
--	export MOUNT_OPTIONS="-o size=512M $TMPFS_MOUNT_OPTIONS"
-+	# We need to specify the size at mount
-+	export MOUNT_OPTIONS="-o size=${DEFAULT_TMPFS_SIZE_MB}M $TMPFS_MOUNT_OPTIONS"
- 	;;
-     *)
- 	;;
-@@ -168,6 +168,8 @@ _fsck_opts()
- }
+diff --git a/tests/generic/256 b/tests/generic/256
+index cfe7237..c6c8f2f 100755
+--- a/tests/generic/256
++++ b/tests/generic/256
+@@ -170,7 +170,7 @@ _scratch_mount
+ # Test must be able to write files with non-root permissions
+ chmod 777 $SCRATCH_MNT
  
- [ -z "$FSTYP" ] && FSTYP=xfs
-+# Default tmpfs size in megabytes.
-+[ -z "$DEFAULT_TMPFS_SIZE_MB" ] && DEFAULT_TMPFS_SIZE_MB=1024
- [ -z "$MOUNT_OPTIONS" ] && _mount_opts
- [ -z "$MKFS_OPTIONS" ] && _mkfs_opts
- [ -z "$FSCK_OPTIONS" ] && _fsck_opts
+-block_size=`stat -f $SCRATCH_DEV | grep "Block size" | cut -d " " -f3`
++block_size=`stat -f $SCRATCH_MNT | grep "Block size" | cut -d " " -f3`
+ _test_full_fs_punch $(( $block_size * 2 )) $block_size 500 $SCRATCH_MNT/252.$$ $block_size
+ 
+ status=0 ; exit
+diff --git a/tests/generic/273 b/tests/generic/273
+index 8e121a2..dc87a92 100755
+--- a/tests/generic/273
++++ b/tests/generic/273
+@@ -68,7 +68,7 @@ _file_create()
+ 
+ 	cd $SCRATCH_MNT/origin
+ 
+-	_disksize=`$DF_PROG --block-size=1 $SCRATCH_DEV | tail -1 | awk '{ print $5 }'`
++	_disksize=`$DF_PROG --block-size=1 $SCRATCH_MNT | tail -1 | awk '{ print $5 }'`
+ 	_disksize=$(($_disksize / 3))
+ 	_num=$(($_disksize / $count / $threads / 4096))
+ 	_count=$count
 -- 
 1.8.5.1
 
