@@ -1,16 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 47EF429DF8
-	for <xfs@oss.sgi.com>; Thu, 19 Dec 2013 13:33:15 -0600 (CST)
-Date: Thu, 19 Dec 2013 13:33:14 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC] Userspace and xfstests releases
-Message-ID: <20131219193314.GX1935@sgi.com>
-References: <52B06E51.1020504@sgi.com>
- <52B32CE0.5070701@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52B32CE0.5070701@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8B82729DF8
+	for <xfs@oss.sgi.com>; Thu, 19 Dec 2013 15:26:01 -0600 (CST)
+Subject: [GIT PULL] XFS bugfixes for 3.13-rc5
+Message-Id: <20131219212557.EDAB14266AC@whiskey.americas.sgi.com>
+Date: Thu, 19 Dec 2013 15:25:57 -0600 (CST)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,44 +14,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hey Rich,
+Hi Linus,
 
-On Thu, Dec 19, 2013 at 11:29:04AM -0600, Rich Johnston wrote:
-> On 12/17/2013 09:31 AM, Rich Johnston wrote:
-> >I was planning on a xfsdump and xfstests release this week before I go
-> >on vacation. Any objections?
-> Currently xfstests is not released, should this be changed?
-> 
-> I will wait until I return on Jan 2 to release xfsprogs.
-> 
-> >
-> >Release versions for xfsprogs are still being discussed. Are there any
-> >more comments on this subject?
-> Here is one of the threads discussing this.
-> 
-> http://oss.sgi.com/archives/xfs/2013-10/msg00421.html
-> Christoph were you saying you create xfsprogs branches?
-> 
-> Is there a consensus on version names/branches for xfsprogs?
+   Please pull these fixes for XFS.  This contains fixes for some asserts
+   related to project quotas, a memory leak, a hang when disabling group or
+   project quotas before disabling user quotas, Dave's email address, several
+   fixes for the alignment of file allocation to stripe unit/width geometry, a
+   fix for an assertion with xfs_zero_remaining_bytes, and the behavior of
+   metadata writeback in the face of IO errors.
 
-I suggest a branch directly off of 3.1.11 release, and then we can troll the
-log between refs/tags/3.1.11 and master for bugfixes.
-
-e.g. git checkout -b for-3.1.12 refs/tags/3.1.11
-
-And then push it up to oss.
-
-Just my 2c.
-
-Regards,
+Thanks,
 	Ben
+
+The following changes since commit f94c44573e7c22860e2c3dfe349c45f72ba35ad3:
+
+  xfs: growfs overruns AGFL buffer on V4 filesystems (2013-12-10 10:04:27 -0600)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-v3.13-rc5
+
+for you to fetch changes up to ac8809f9ab01a73de1a47b5a37bd8dcca8712fb3:
+
+  xfs: abort metadata writeback on permanent errors (2013-12-17 09:40:23 -0600)
+
+----------------------------------------------------------------
+xfs: bugfixes for 3.13-rc5
+
+- fix memory leak in xfs_dir2_node_removename
+- fix quota assertion in xfs_setattr_size
+- fix quota assertions in xfs_qm_vop_create_dqattach
+- fix for hang when disabling group and project quotas before
+  disabling user quotas
+- fix Dave Chinner's email address in MAINTAINERS
+- fix for file allocation alignment
+- fix for assertion in xfs_buf_stale by removing xfsbdstrat
+- fix for alignment with swalloc mount option
+- fix for "retry forever" semantics on IO errors
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: remove xfsbdstrat error
+
+Dave Chinner (3):
+      xfs: align initial file allocations correctly
+      xfs: swalloc doesn't align allocations properly
+      xfs: abort metadata writeback on permanent errors
+
+Jie Liu (3):
+      xfs: fix false assertion at xfs_qm_vop_create_dqattach
+      xfs: fix assertion failure at xfs_setattr_nonsize
+      xfs: fix infinite loop by detaching the group/project hints from user dquot
+
+Mark Tinguely (1):
+      xfs: fix memory leak in xfs_dir2_node_removename
+
+Namjae Jeon (1):
+      MAINTAINERS: fix incorrect mail address of XFS maintainer
+
+ MAINTAINERS              |  2 +-
+ fs/xfs/xfs_bmap.c        | 32 ++++++++++++++-----
+ fs/xfs/xfs_bmap_util.c   | 14 +++++++--
+ fs/xfs/xfs_buf.c         | 37 +++++++++-------------
+ fs/xfs/xfs_buf.h         | 11 ++++---
+ fs/xfs/xfs_buf_item.c    | 21 +++++++++++--
+ fs/xfs/xfs_dir2_node.c   | 26 ++++++++--------
+ fs/xfs/xfs_iops.c        |  3 +-
+ fs/xfs/xfs_log_recover.c | 13 ++++++--
+ fs/xfs/xfs_qm.c          | 80 ++++++++++++++++++++++++++++++++----------------
+ fs/xfs/xfs_trans_buf.c   | 13 +++++++-
+ 11 files changed, 168 insertions(+), 84 deletions(-)
 
 _______________________________________________
 xfs mailing list
