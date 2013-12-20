@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 17AF029DF8
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8447D29E0F
 	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 07:25:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E781D8F807A
-	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 05:25:34 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 66D1E30407B
+	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 05:25:35 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id P5xdRGu8hDDfGzOZ (version=TLSv1 cipher=AES256-SHA
+	ESMTP id X1sH33v8S0CfjdQv (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Dec 2013 05:25:33 -0800 (PST)
-Message-Id: <20131220132522.591342758@bombadil.infradead.org>
-Date: Fri, 20 Dec 2013 05:16:44 -0800
+	Fri, 20 Dec 2013 05:25:34 -0800 (PST)
+Message-Id: <20131220132523.791656625@bombadil.infradead.org>
+Date: Fri, 20 Dec 2013 05:16:50 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/21] ext2/3/4: use generic posix ACL infrastructure
+Subject: [PATCH 15/21] xfs: use generic posix ACL infrastructure
 References: <20131220131635.650823732@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0009-ext2-3-4-use-generic-posix-ACL-infrastructure.patch
+	filename=0015-xfs-use-generic-posix-ACL-infrastructure.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,1120 +30,400 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: viro@zeniv.linux.org.uk
-Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, Joel Becker <jlbec@evilplan.org>, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, Joel Becker <jlbec@evilplan.org>, jfs-discussion@lists.sourceforge.net, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+
+Also don't bother to set up a .get_acl method for symlinks as we do not
+support access control (ACLs or even mode bits) for symlinks in Linux,
+and create inodes with the proper mode instead of fixing it up later.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/ext2/acl.c   |  188 ++++------------------------------------------
- fs/ext2/acl.h   |    8 +-
- fs/ext2/file.c  |    1 +
- fs/ext2/inode.c |    2 +-
- fs/ext2/namei.c |    2 +
- fs/ext2/xattr.c |    8 +-
- fs/ext2/xattr.h |    2 -
- fs/ext3/acl.c   |  223 ++++++++-----------------------------------------------
- fs/ext3/acl.h   |    9 +--
- fs/ext3/file.c  |    1 +
- fs/ext3/inode.c |    2 +-
- fs/ext3/namei.c |    2 +
- fs/ext3/xattr.c |    8 +-
- fs/ext3/xattr.h |    2 -
- fs/ext4/acl.c   |  223 +++++++------------------------------------------------
- fs/ext4/acl.h   |    9 +--
- fs/ext4/file.c  |    1 +
- fs/ext4/inode.c |    2 +-
- fs/ext4/namei.c |    2 +
- fs/ext4/xattr.c |    8 +-
- fs/ext4/xattr.h |    2 -
- 21 files changed, 100 insertions(+), 605 deletions(-)
+ fs/xfs/xfs_acl.c   |  151 +++-------------------------------------------------
+ fs/xfs/xfs_acl.h   |    9 +---
+ fs/xfs/xfs_iops.c  |   39 +++++++-------
+ fs/xfs/xfs_iops.h  |    2 +-
+ fs/xfs/xfs_xattr.c |    4 +-
+ 5 files changed, 34 insertions(+), 171 deletions(-)
 
-diff --git a/fs/ext2/acl.c b/fs/ext2/acl.c
-index 6e842a7..1b8001b 100644
---- a/fs/ext2/acl.c
-+++ b/fs/ext2/acl.c
-@@ -148,13 +148,6 @@ ext2_get_acl(struct inode *inode, int type)
- 	struct posix_acl *acl;
- 	int retval;
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 057ae2d..0ecec18 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -124,16 +124,12 @@ struct posix_acl *
+ xfs_get_acl(struct inode *inode, int type)
+ {
+ 	struct xfs_inode *ip = XFS_I(inode);
+-	struct posix_acl *acl;
++	struct posix_acl *acl = NULL;
+ 	struct xfs_acl *xfs_acl;
+ 	unsigned char *ea_name;
+ 	int error;
+ 	int len;
  
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return NULL;
--
 -	acl = get_cached_acl(inode, type);
 -	if (acl != ACL_NOT_CACHED)
 -		return acl;
 -
+ 	trace_xfs_get_acl(ip);
+ 
  	switch (type) {
- 	case ACL_TYPE_ACCESS:
- 		name_index = EXT2_XATTR_INDEX_POSIX_ACL_ACCESS;
-@@ -189,19 +182,14 @@ ext2_get_acl(struct inode *inode, int type)
- /*
-  * inode->i_mutex: down
-  */
--static int
--ext2_set_acl(struct inode *inode, int type, struct posix_acl *acl)
-+int
-+ext2_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+@@ -164,10 +160,8 @@ xfs_get_acl(struct inode *inode, int type)
+ 		 * cache entry, for any other error assume it is transient and
+ 		 * leave the cache entry as ACL_NOT_CACHED.
+ 		 */
+-		if (error == -ENOATTR) {
+-			acl = NULL;
++		if (error == -ENOATTR)
+ 			goto out_update_cache;
+-		}
+ 		goto out;
+ 	}
+ 
+@@ -183,15 +177,12 @@ out:
+ }
+ 
+ STATIC int
+-xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
++__xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
  {
- 	int name_index;
- 	void *value = NULL;
- 	size_t size = 0;
+ 	struct xfs_inode *ip = XFS_I(inode);
+ 	unsigned char *ea_name;
  	int error;
  
 -	if (S_ISLNK(inode->i_mode))
 -		return -EOPNOTSUPP;
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return 0;
 -
- 	switch(type) {
- 		case ACL_TYPE_ACCESS:
- 			name_index = EXT2_XATTR_INDEX_POSIX_ACL_ACCESS;
-@@ -250,169 +238,21 @@ ext2_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- int
- ext2_init_acl(struct inode *inode, struct inode *dir)
- {
--	struct posix_acl *acl = NULL;
--	int error = 0;
--
--	if (!S_ISLNK(inode->i_mode)) {
--		if (test_opt(dir->i_sb, POSIX_ACL)) {
--			acl = ext2_get_acl(dir, ACL_TYPE_DEFAULT);
--			if (IS_ERR(acl))
--				return PTR_ERR(acl);
--		}
--		if (!acl)
--			inode->i_mode &= ~current_umask();
--	}
--	if (test_opt(inode->i_sb, POSIX_ACL) && acl) {
--		if (S_ISDIR(inode->i_mode)) {
--			error = ext2_set_acl(inode, ACL_TYPE_DEFAULT, acl);
--			if (error)
--				goto cleanup;
--		}
--		error = __posix_acl_create(&acl, GFP_KERNEL, &inode->i_mode);
--		if (error < 0)
--			return error;
--		if (error > 0) {
--			/* This is an extended ACL */
--			error = ext2_set_acl(inode, ACL_TYPE_ACCESS, acl);
--		}
--	}
--cleanup:
--       posix_acl_release(acl);
--       return error;
--}
--
--/*
-- * Does chmod for an inode that may have an Access Control List. The
-- * inode->i_mode field must be updated to the desired value by the caller
-- * before calling this function.
-- * Returns 0 on success, or a negative error number.
-- *
-- * We change the ACL rather than storing some ACL entries in the file
-- * mode permission bits (which would be more efficient), because that
-- * would break once additional permissions (like  ACL_APPEND, ACL_DELETE
-- * for directories) are added. There are no more bits available in the
-- * file mode.
-- *
-- * inode->i_mutex: down
-- */
--int
--ext2_acl_chmod(struct inode *inode)
--{
--	struct posix_acl *acl;
--        int error;
-+	struct posix_acl *default_acl, *acl;
-+	int error;
+ 	switch (type) {
+ 	case ACL_TYPE_ACCESS:
+ 		ea_name = SGI_ACL_FILE;
+@@ -282,131 +273,23 @@ posix_acl_default_exists(struct inode *inode)
+ 	return xfs_acl_exists(inode, SGI_ACL_DEFAULT);
+ }
  
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return 0;
--	if (S_ISLNK(inode->i_mode))
--		return -EOPNOTSUPP;
--	acl = ext2_get_acl(inode, ACL_TYPE_ACCESS);
--	if (IS_ERR(acl) || !acl)
--		return PTR_ERR(acl);
--	error = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
-+	error = posix_acl_create(dir, &inode->i_mode, &default_acl, &acl);
- 	if (error)
- 		return error;
--	error = ext2_set_acl(inode, ACL_TYPE_ACCESS, acl);
+-/*
+- * No need for i_mutex because the inode is not yet exposed to the VFS.
+- */
+ int
+-xfs_inherit_acl(struct inode *inode, struct posix_acl *acl)
++xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ {
+-	umode_t mode = inode->i_mode;
+-	int error = 0, inherit = 0;
+-
+-	if (S_ISDIR(inode->i_mode)) {
+-		error = xfs_set_acl(inode, ACL_TYPE_DEFAULT, acl);
+-		if (error)
+-			goto out;
+-	}
+-
+-	error = __posix_acl_create(&acl, GFP_KERNEL, &mode);
+-	if (error < 0)
+-		return error;
+-
+-	/*
+-	 * If __posix_acl_create returns a positive value we need to
+-	 * inherit a permission that can't be represented using the Unix
+-	 * mode bits and we actually need to set an ACL.
+-	 */
+-	if (error > 0)
+-		inherit = 1;
+-
+-	error = xfs_set_mode(inode, mode);
+-	if (error)
+-		goto out;
+-
+-	if (inherit)
+-		error = xfs_set_acl(inode, ACL_TYPE_ACCESS, acl);
+-
+-out:
 -	posix_acl_release(acl);
 -	return error;
 -}
- 
--/*
-- * Extended attribut handlers
-- */
--static size_t
--ext2_xattr_list_acl_access(struct dentry *dentry, char *list, size_t list_size,
--			   const char *name, size_t name_len, int type)
--{
--	const size_t size = sizeof(POSIX_ACL_XATTR_ACCESS);
 -
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return 0;
--	if (list && size <= list_size)
--		memcpy(list, POSIX_ACL_XATTR_ACCESS, size);
--	return size;
--}
--
--static size_t
--ext2_xattr_list_acl_default(struct dentry *dentry, char *list, size_t list_size,
--			    const char *name, size_t name_len, int type)
--{
--	const size_t size = sizeof(POSIX_ACL_XATTR_DEFAULT);
--
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return 0;
--	if (list && size <= list_size)
--		memcpy(list, POSIX_ACL_XATTR_DEFAULT, size);
--	return size;
--}
--
--static int
--ext2_xattr_get_acl(struct dentry *dentry, const char *name, void *buffer,
--		   size_t size, int type)
+-int
+-xfs_acl_chmod(struct inode *inode)
 -{
 -	struct posix_acl *acl;
 -	int error;
 -
--	if (strcmp(name, "") != 0)
--		return -EINVAL;
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
+-	if (S_ISLNK(inode->i_mode))
 -		return -EOPNOTSUPP;
 -
--	acl = ext2_get_acl(dentry->d_inode, type);
+-	acl = xfs_get_acl(inode, ACL_TYPE_ACCESS);
+-	if (IS_ERR(acl) || !acl)
+-		return PTR_ERR(acl);
+-
+-	error = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
+-	if (error)
+-		return error;
+-
+-	error = xfs_set_acl(inode, ACL_TYPE_ACCESS, acl);
+-	posix_acl_release(acl);
+-	return error;
+-}
+-
+-static int
+-xfs_xattr_acl_get(struct dentry *dentry, const char *name,
+-		void *value, size_t size, int type)
+-{
+-	struct posix_acl *acl;
+-	int error;
+-
+-	acl = xfs_get_acl(dentry->d_inode, type);
 -	if (IS_ERR(acl))
 -		return PTR_ERR(acl);
 -	if (acl == NULL)
 -		return -ENODATA;
--	error = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
+-
+-	error = posix_acl_to_xattr(&init_user_ns, acl, value, size);
 -	posix_acl_release(acl);
 -
 -	return error;
 -}
 -
 -static int
--ext2_xattr_set_acl(struct dentry *dentry, const char *name, const void *value,
--		   size_t size, int flags, int type)
+-xfs_xattr_acl_set(struct dentry *dentry, const char *name,
+-		const void *value, size_t size, int flags, int type)
 -{
--	struct posix_acl *acl;
--	int error;
--
--	if (strcmp(name, "") != 0)
+-	struct inode *inode = dentry->d_inode;
+-	struct posix_acl *acl = NULL;
+ 	int error = 0;
+ 
+-	if (flags & XATTR_CREATE)
 -		return -EINVAL;
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return -EOPNOTSUPP;
--	if (!inode_owner_or_capable(dentry->d_inode))
+-	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
+-		return value ? -EACCES : 0;
+-	if (!inode_owner_or_capable(inode))
 -		return -EPERM;
 -
--	if (value) {
--		acl = posix_acl_from_xattr(&init_user_ns, value, size);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		else if (acl) {
--			error = posix_acl_valid(acl);
--			if (error)
--				goto release_and_out;
--		}
--	} else
--		acl = NULL;
+-	if (!value)
++	if (!acl)
+ 		goto set_acl;
+ 
+-	acl = posix_acl_from_xattr(&init_user_ns, value, size);
+-	if (!acl) {
+-		/*
+-		 * acl_set_file(3) may request that we set default ACLs with
+-		 * zero length -- defend (gracefully) against that here.
+-		 */
+-		goto out;
+-	}
+-	if (IS_ERR(acl)) {
+-		error = PTR_ERR(acl);
+-		goto out;
+-	}
 -
--	error = ext2_set_acl(dentry->d_inode, type, acl);
+-	error = posix_acl_valid(acl);
+-	if (error)
+-		goto out_release;
 -
--release_and_out:
+ 	error = -EINVAL;
+ 	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
+-		goto out_release;
++		return error;
+ 
+ 	if (type == ACL_TYPE_ACCESS) {
+ 		umode_t mode = inode->i_mode;
+ 		error = posix_acl_equiv_mode(acl, &mode);
+ 
+ 		if (error <= 0) {
+-			posix_acl_release(acl);
+ 			acl = NULL;
+ 
+ 			if (error < 0)
+@@ -415,27 +298,9 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
+ 
+ 		error = xfs_set_mode(inode, mode);
+ 		if (error)
+-			goto out_release;
++			return error;
+ 	}
+ 
+  set_acl:
+-	error = xfs_set_acl(inode, type, acl);
+- out_release:
 -	posix_acl_release(acl);
-+	if (default_acl) {
-+		error = ext2_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
-+		posix_acl_release(default_acl);
-+	}
-+	if (acl) {
-+		if (!error)
-+			error = ext2_set_acl(inode, acl, ACL_TYPE_ACCESS);
-+		posix_acl_release(acl);
-+	}
- 	return error;
+- out:
+-	return error;
++	return __xfs_set_acl(inode, type, acl);
  }
 -
--const struct xattr_handler ext2_xattr_acl_access_handler = {
+-const struct xattr_handler xfs_xattr_acl_access_handler = {
 -	.prefix	= POSIX_ACL_XATTR_ACCESS,
 -	.flags	= ACL_TYPE_ACCESS,
--	.list	= ext2_xattr_list_acl_access,
--	.get	= ext2_xattr_get_acl,
--	.set	= ext2_xattr_set_acl,
+-	.get	= xfs_xattr_acl_get,
+-	.set	= xfs_xattr_acl_set,
 -};
 -
--const struct xattr_handler ext2_xattr_acl_default_handler = {
+-const struct xattr_handler xfs_xattr_acl_default_handler = {
 -	.prefix	= POSIX_ACL_XATTR_DEFAULT,
 -	.flags	= ACL_TYPE_DEFAULT,
--	.list	= ext2_xattr_list_acl_default,
--	.get	= ext2_xattr_get_acl,
--	.set	= ext2_xattr_set_acl,
+-	.get	= xfs_xattr_acl_get,
+-	.set	= xfs_xattr_acl_set,
 -};
-diff --git a/fs/ext2/acl.h b/fs/ext2/acl.h
-index 503bfb0..44937f9 100644
---- a/fs/ext2/acl.h
-+++ b/fs/ext2/acl.h
-@@ -55,7 +55,7 @@ static inline int ext2_acl_count(size_t size)
+diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+index 4016a56..5dc1637 100644
+--- a/fs/xfs/xfs_acl.h
++++ b/fs/xfs/xfs_acl.h
+@@ -60,20 +60,15 @@ struct xfs_acl {
  
- /* acl.c */
- extern struct posix_acl *ext2_get_acl(struct inode *inode, int type);
--extern int ext2_acl_chmod (struct inode *);
-+extern int ext2_set_acl(struct inode *inode, struct posix_acl *acl, int type);
- extern int ext2_init_acl (struct inode *, struct inode *);
- 
+ #ifdef CONFIG_XFS_POSIX_ACL
+ extern struct posix_acl *xfs_get_acl(struct inode *inode, int type);
+-extern int xfs_inherit_acl(struct inode *inode, struct posix_acl *default_acl);
+-extern int xfs_acl_chmod(struct inode *inode);
++extern int xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type);
+ extern int posix_acl_access_exists(struct inode *inode);
+ extern int posix_acl_default_exists(struct inode *inode);
+-
+-extern const struct xattr_handler xfs_xattr_acl_access_handler;
+-extern const struct xattr_handler xfs_xattr_acl_default_handler;
  #else
-@@ -63,12 +63,6 @@ extern int ext2_init_acl (struct inode *, struct inode *);
- #define ext2_get_acl	NULL
- #define ext2_set_acl	NULL
- 
--static inline int
--ext2_acl_chmod (struct inode *inode)
--{
--	return 0;
--}
--
- static inline int ext2_init_acl (struct inode *inode, struct inode *dir)
+ static inline struct posix_acl *xfs_get_acl(struct inode *inode, int type)
  {
- 	return 0;
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index a5b3a5d..44c36e5 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -103,5 +103,6 @@ const struct inode_operations ext2_file_inode_operations = {
- #endif
- 	.setattr	= ext2_setattr,
- 	.get_acl	= ext2_get_acl,
-+	.set_acl	= ext2_set_acl,
- 	.fiemap		= ext2_fiemap,
- };
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 8a33764..94ed3684 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1566,7 +1566,7 @@ int ext2_setattr(struct dentry *dentry, struct iattr *iattr)
- 	}
- 	setattr_copy(inode, iattr);
- 	if (iattr->ia_valid & ATTR_MODE)
--		error = ext2_acl_chmod(inode);
-+		error = posix_acl_chmod(inode, inode->i_mode);
- 	mark_inode_dirty(inode);
- 
- 	return error;
-diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
-index 256dd5f..c268d0a 100644
---- a/fs/ext2/namei.c
-+++ b/fs/ext2/namei.c
-@@ -421,6 +421,7 @@ const struct inode_operations ext2_dir_inode_operations = {
- #endif
- 	.setattr	= ext2_setattr,
- 	.get_acl	= ext2_get_acl,
-+	.set_acl	= ext2_set_acl,
- 	.tmpfile	= ext2_tmpfile,
- };
- 
-@@ -433,4 +434,5 @@ const struct inode_operations ext2_special_inode_operations = {
- #endif
- 	.setattr	= ext2_setattr,
- 	.get_acl	= ext2_get_acl,
-+	.set_acl	= ext2_set_acl,
- };
-diff --git a/fs/ext2/xattr.c b/fs/ext2/xattr.c
-index 2d7557d..9142614 100644
---- a/fs/ext2/xattr.c
-+++ b/fs/ext2/xattr.c
-@@ -103,8 +103,8 @@ static struct mb_cache *ext2_xattr_cache;
- static const struct xattr_handler *ext2_xattr_handler_map[] = {
- 	[EXT2_XATTR_INDEX_USER]		     = &ext2_xattr_user_handler,
- #ifdef CONFIG_EXT2_FS_POSIX_ACL
--	[EXT2_XATTR_INDEX_POSIX_ACL_ACCESS]  = &ext2_xattr_acl_access_handler,
--	[EXT2_XATTR_INDEX_POSIX_ACL_DEFAULT] = &ext2_xattr_acl_default_handler,
-+	[EXT2_XATTR_INDEX_POSIX_ACL_ACCESS]  = &posix_acl_access_xattr_handler,
-+	[EXT2_XATTR_INDEX_POSIX_ACL_DEFAULT] = &posix_acl_default_xattr_handler,
- #endif
- 	[EXT2_XATTR_INDEX_TRUSTED]	     = &ext2_xattr_trusted_handler,
- #ifdef CONFIG_EXT2_FS_SECURITY
-@@ -116,8 +116,8 @@ const struct xattr_handler *ext2_xattr_handlers[] = {
- 	&ext2_xattr_user_handler,
- 	&ext2_xattr_trusted_handler,
- #ifdef CONFIG_EXT2_FS_POSIX_ACL
--	&ext2_xattr_acl_access_handler,
--	&ext2_xattr_acl_default_handler,
-+	&posix_acl_access_xattr_handler,
-+	&posix_acl_default_xattr_handler,
- #endif
- #ifdef CONFIG_EXT2_FS_SECURITY
- 	&ext2_xattr_security_handler,
-diff --git a/fs/ext2/xattr.h b/fs/ext2/xattr.h
-index 5e41ccc..60edf29 100644
---- a/fs/ext2/xattr.h
-+++ b/fs/ext2/xattr.h
-@@ -57,8 +57,6 @@ struct ext2_xattr_entry {
- 
- extern const struct xattr_handler ext2_xattr_user_handler;
- extern const struct xattr_handler ext2_xattr_trusted_handler;
--extern const struct xattr_handler ext2_xattr_acl_access_handler;
--extern const struct xattr_handler ext2_xattr_acl_default_handler;
- extern const struct xattr_handler ext2_xattr_security_handler;
- 
- extern ssize_t ext2_listxattr(struct dentry *, char *, size_t);
-diff --git a/fs/ext3/acl.c b/fs/ext3/acl.c
-index 4f3d8fa..8bbaf5b 100644
---- a/fs/ext3/acl.c
-+++ b/fs/ext3/acl.c
-@@ -145,13 +145,6 @@ ext3_get_acl(struct inode *inode, int type)
- 	struct posix_acl *acl;
- 	int retval;
- 
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return NULL;
--
--	acl = get_cached_acl(inode, type);
--	if (acl != ACL_NOT_CACHED)
--		return acl;
--
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
- 		name_index = EXT3_XATTR_INDEX_POSIX_ACL_ACCESS;
-@@ -190,7 +183,7 @@ ext3_get_acl(struct inode *inode, int type)
-  * inode->i_mutex: down unless called from ext3_new_inode
-  */
- static int
--ext3_set_acl(handle_t *handle, struct inode *inode, int type,
-+__ext3_set_acl(handle_t *handle, struct inode *inode, int type,
- 	     struct posix_acl *acl)
- {
- 	int name_index;
-@@ -198,9 +191,6 @@ ext3_set_acl(handle_t *handle, struct inode *inode, int type,
- 	size_t size = 0;
- 	int error;
- 
--	if (S_ISLNK(inode->i_mode))
--		return -EOPNOTSUPP;
--
- 	switch(type) {
- 		case ACL_TYPE_ACCESS:
- 			name_index = EXT3_XATTR_INDEX_POSIX_ACL_ACCESS;
-@@ -243,204 +233,49 @@ ext3_set_acl(handle_t *handle, struct inode *inode, int type,
- 	return error;
+ 	return NULL;
  }
- 
--/*
-- * Initialize the ACLs of a new inode. Called from ext3_new_inode.
-- *
-- * dir->i_mutex: down
-- * inode->i_mutex: up (access to inode is still exclusive)
-- */
- int
--ext3_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
-+ext3_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+-# define xfs_inherit_acl(inode, default_acl)		0
+-# define xfs_acl_chmod(inode)				0
++# define xfs_set_acl					NULL
+ # define posix_acl_access_exists(inode)			0
+ # define posix_acl_default_exists(inode)		0
+ #endif /* CONFIG_XFS_POSIX_ACL */
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 27e0e54..f1f0d46 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -123,7 +123,7 @@ xfs_vn_mknod(
  {
--	struct posix_acl *acl = NULL;
--	int error = 0;
--
--	if (!S_ISLNK(inode->i_mode)) {
--		if (test_opt(dir->i_sb, POSIX_ACL)) {
--			acl = ext3_get_acl(dir, ACL_TYPE_DEFAULT);
--			if (IS_ERR(acl))
--				return PTR_ERR(acl);
--		}
--		if (!acl)
--			inode->i_mode &= ~current_umask();
--	}
--	if (test_opt(inode->i_sb, POSIX_ACL) && acl) {
--		if (S_ISDIR(inode->i_mode)) {
--			error = ext3_set_acl(handle, inode,
--					     ACL_TYPE_DEFAULT, acl);
--			if (error)
--				goto cleanup;
--		}
--		error = __posix_acl_create(&acl, GFP_NOFS, &inode->i_mode);
--		if (error < 0)
--			return error;
--
--		if (error > 0) {
--			/* This is an extended ACL */
--			error = ext3_set_acl(handle, inode, ACL_TYPE_ACCESS, acl);
--		}
--	}
--cleanup:
--	posix_acl_release(acl);
--	return error;
--}
--
--/*
-- * Does chmod for an inode that may have an Access Control List. The
-- * inode->i_mode field must be updated to the desired value by the caller
-- * before calling this function.
-- * Returns 0 on success, or a negative error number.
-- *
-- * We change the ACL rather than storing some ACL entries in the file
-- * mode permission bits (which would be more efficient), because that
-- * would break once additional permissions (like  ACL_APPEND, ACL_DELETE
-- * for directories) are added. There are no more bits available in the
-- * file mode.
-- *
-- * inode->i_mutex: down
-- */
--int
--ext3_acl_chmod(struct inode *inode)
--{
--	struct posix_acl *acl;
- 	handle_t *handle;
--	int retries = 0;
--        int error;
-+	int error, retries = 0;
- 
--	if (S_ISLNK(inode->i_mode))
--		return -EOPNOTSUPP;
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return 0;
--	acl = ext3_get_acl(inode, ACL_TYPE_ACCESS);
--	if (IS_ERR(acl) || !acl)
--		return PTR_ERR(acl);
--	error = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
--	if (error)
--		return error;
- retry:
--	handle = ext3_journal_start(inode,
--			EXT3_DATA_TRANS_BLOCKS(inode->i_sb));
--	if (IS_ERR(handle)) {
--		error = PTR_ERR(handle);
--		ext3_std_error(inode->i_sb, error);
--		goto out;
--	}
--	error = ext3_set_acl(handle, inode, ACL_TYPE_ACCESS, acl);
-+	handle = ext3_journal_start(inode, EXT3_DATA_TRANS_BLOCKS(inode->i_sb));
-+	if (IS_ERR(handle))
-+		return PTR_ERR(handle);
-+	error = __ext3_set_acl(handle, inode, type, acl);
- 	ext3_journal_stop(handle);
--	if (error == -ENOSPC &&
--	    ext3_should_retry_alloc(inode->i_sb, &retries))
-+	if (error == -ENOSPC && ext3_should_retry_alloc(inode->i_sb, &retries))
- 		goto retry;
--out:
--	posix_acl_release(acl);
- 	return error;
- }
- 
- /*
-- * Extended attribute handlers
-+ * Initialize the ACLs of a new inode. Called from ext3_new_inode.
-+ *
-+ * dir->i_mutex: down
-+ * inode->i_mutex: up (access to inode is still exclusive)
-  */
--static size_t
--ext3_xattr_list_acl_access(struct dentry *dentry, char *list, size_t list_len,
--			   const char *name, size_t name_len, int type)
--{
--	const size_t size = sizeof(POSIX_ACL_XATTR_ACCESS);
--
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return 0;
--	if (list && size <= list_len)
--		memcpy(list, POSIX_ACL_XATTR_ACCESS, size);
--	return size;
--}
--
--static size_t
--ext3_xattr_list_acl_default(struct dentry *dentry, char *list, size_t list_len,
--			    const char *name, size_t name_len, int type)
--{
--	const size_t size = sizeof(POSIX_ACL_XATTR_DEFAULT);
--
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return 0;
--	if (list && size <= list_len)
--		memcpy(list, POSIX_ACL_XATTR_DEFAULT, size);
--	return size;
--}
--
--static int
--ext3_xattr_get_acl(struct dentry *dentry, const char *name, void *buffer,
--		   size_t size, int type)
-+int
-+ext3_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
- {
--	struct posix_acl *acl;
+ 	struct inode	*inode;
+ 	struct xfs_inode *ip = NULL;
+-	struct posix_acl *default_acl = NULL;
 +	struct posix_acl *default_acl, *acl;
- 	int error;
+ 	struct xfs_name	name;
+ 	int		error;
  
--	if (strcmp(name, "") != 0)
--		return -EINVAL;
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return -EOPNOTSUPP;
+@@ -139,14 +139,9 @@ xfs_vn_mknod(
+ 		rdev = 0;
+ 	}
+ 
+-	if (IS_POSIXACL(dir)) {
+-		default_acl = xfs_get_acl(dir, ACL_TYPE_DEFAULT);
+-		if (IS_ERR(default_acl))
+-			return PTR_ERR(default_acl);
 -
--	acl = ext3_get_acl(dentry->d_inode, type);
--	if (IS_ERR(acl))
--		return PTR_ERR(acl);
--	if (acl == NULL)
--		return -ENODATA;
--	error = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
--	posix_acl_release(acl);
--
--	return error;
--}
--
--static int
--ext3_xattr_set_acl(struct dentry *dentry, const char *name, const void *value,
--		   size_t size, int flags, int type)
--{
--	struct inode *inode = dentry->d_inode;
--	handle_t *handle;
--	struct posix_acl *acl;
--	int error, retries = 0;
--
--	if (strcmp(name, "") != 0)
--		return -EINVAL;
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return -EOPNOTSUPP;
--	if (!inode_owner_or_capable(inode))
--		return -EPERM;
--
--	if (value) {
--		acl = posix_acl_from_xattr(&init_user_ns, value, size);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		else if (acl) {
--			error = posix_acl_valid(acl);
--			if (error)
--				goto release_and_out;
--		}
--	} else
--		acl = NULL;
--
--retry:
--	handle = ext3_journal_start(inode, EXT3_DATA_TRANS_BLOCKS(inode->i_sb));
--	if (IS_ERR(handle))
--		return PTR_ERR(handle);
--	error = ext3_set_acl(handle, inode, type, acl);
--	ext3_journal_stop(handle);
--	if (error == -ENOSPC && ext3_should_retry_alloc(inode->i_sb, &retries))
--		goto retry;
-+	error = posix_acl_create(dir, &inode->i_mode, &default_acl, &acl);
+-		if (!default_acl)
+-			mode &= ~current_umask();
+-	}
++	error = posix_acl_create(dir, &mode, &default_acl, &acl);
 +	if (error)
 +		return error;
  
--release_and_out:
--	posix_acl_release(acl);
-+	if (default_acl) {
-+		error = __ext3_set_acl(handle, inode, ACL_TYPE_DEFAULT,
-+				       default_acl);
-+		posix_acl_release(default_acl);
+ 	xfs_dentry_to_name(&name, dentry, mode);
+ 	error = xfs_create(XFS_I(dir), &name, mode, rdev, &ip);
+@@ -160,21 +155,27 @@ xfs_vn_mknod(
+ 		goto out_cleanup_inode;
+ 
+ 	if (default_acl) {
+-		error = -xfs_inherit_acl(inode, default_acl);
+-		default_acl = NULL;
+-		if (unlikely(error))
++		error = xfs_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
++		if (error)
++			goto out_cleanup_inode;
 +	}
 +	if (acl) {
-+		if (!error)
-+			error = __ext3_set_acl(handle, inode, ACL_TYPE_ACCESS,
-+					       acl);
-+		posix_acl_release(acl);
-+	}
- 	return error;
- }
--
--const struct xattr_handler ext3_xattr_acl_access_handler = {
--	.prefix	= POSIX_ACL_XATTR_ACCESS,
--	.flags	= ACL_TYPE_ACCESS,
--	.list	= ext3_xattr_list_acl_access,
--	.get	= ext3_xattr_get_acl,
--	.set	= ext3_xattr_set_acl,
--};
--
--const struct xattr_handler ext3_xattr_acl_default_handler = {
--	.prefix	= POSIX_ACL_XATTR_DEFAULT,
--	.flags	= ACL_TYPE_DEFAULT,
--	.list	= ext3_xattr_list_acl_default,
--	.get	= ext3_xattr_get_acl,
--	.set	= ext3_xattr_set_acl,
--};
-diff --git a/fs/ext3/acl.h b/fs/ext3/acl.h
-index dbc921e..ea1c69e 100644
---- a/fs/ext3/acl.h
-+++ b/fs/ext3/acl.h
-@@ -55,18 +55,13 @@ static inline int ext3_acl_count(size_t size)
- 
- /* acl.c */
- extern struct posix_acl *ext3_get_acl(struct inode *inode, int type);
--extern int ext3_acl_chmod (struct inode *);
-+extern int ext3_set_acl(struct inode *inode, struct posix_acl *acl, int type);
- extern int ext3_init_acl (handle_t *, struct inode *, struct inode *);
- 
- #else  /* CONFIG_EXT3_FS_POSIX_ACL */
- #include <linux/sched.h>
- #define ext3_get_acl NULL
--
--static inline int
--ext3_acl_chmod(struct inode *inode)
--{
--	return 0;
--}
-+#define ext3_set_acl NULL
- 
- static inline int
- ext3_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
-diff --git a/fs/ext3/file.c b/fs/ext3/file.c
-index 25cb413..aad0531 100644
---- a/fs/ext3/file.c
-+++ b/fs/ext3/file.c
-@@ -75,6 +75,7 @@ const struct inode_operations ext3_file_inode_operations = {
- 	.removexattr	= generic_removexattr,
- #endif
- 	.get_acl	= ext3_get_acl,
-+	.set_acl	= ext3_set_acl,
- 	.fiemap		= ext3_fiemap,
- };
- 
-diff --git a/fs/ext3/inode.c b/fs/ext3/inode.c
-index 2bd8548..384b6eb 100644
---- a/fs/ext3/inode.c
-+++ b/fs/ext3/inode.c
-@@ -3365,7 +3365,7 @@ int ext3_setattr(struct dentry *dentry, struct iattr *attr)
- 	mark_inode_dirty(inode);
- 
- 	if (ia_valid & ATTR_MODE)
--		rc = ext3_acl_chmod(inode);
-+		rc = posix_acl_chmod(inode, inode->i_mode);
- 
- err_out:
- 	ext3_std_error(inode->i_sb, error);
-diff --git a/fs/ext3/namei.c b/fs/ext3/namei.c
-index f8cde46..f197736 100644
---- a/fs/ext3/namei.c
-+++ b/fs/ext3/namei.c
-@@ -2569,6 +2569,7 @@ const struct inode_operations ext3_dir_inode_operations = {
- 	.removexattr	= generic_removexattr,
- #endif
- 	.get_acl	= ext3_get_acl,
-+	.set_acl	= ext3_set_acl,
- };
- 
- const struct inode_operations ext3_special_inode_operations = {
-@@ -2580,4 +2581,5 @@ const struct inode_operations ext3_special_inode_operations = {
- 	.removexattr	= generic_removexattr,
- #endif
- 	.get_acl	= ext3_get_acl,
-+	.set_acl	= ext3_set_acl,
- };
-diff --git a/fs/ext3/xattr.c b/fs/ext3/xattr.c
-index b1fc963..c6874be 100644
---- a/fs/ext3/xattr.c
-+++ b/fs/ext3/xattr.c
-@@ -102,8 +102,8 @@ static struct mb_cache *ext3_xattr_cache;
- static const struct xattr_handler *ext3_xattr_handler_map[] = {
- 	[EXT3_XATTR_INDEX_USER]		     = &ext3_xattr_user_handler,
- #ifdef CONFIG_EXT3_FS_POSIX_ACL
--	[EXT3_XATTR_INDEX_POSIX_ACL_ACCESS]  = &ext3_xattr_acl_access_handler,
--	[EXT3_XATTR_INDEX_POSIX_ACL_DEFAULT] = &ext3_xattr_acl_default_handler,
-+	[EXT3_XATTR_INDEX_POSIX_ACL_ACCESS]  = &posix_acl_access_xattr_handler,
-+	[EXT3_XATTR_INDEX_POSIX_ACL_DEFAULT] = &posix_acl_default_xattr_handler,
- #endif
- 	[EXT3_XATTR_INDEX_TRUSTED]	     = &ext3_xattr_trusted_handler,
- #ifdef CONFIG_EXT3_FS_SECURITY
-@@ -115,8 +115,8 @@ const struct xattr_handler *ext3_xattr_handlers[] = {
- 	&ext3_xattr_user_handler,
- 	&ext3_xattr_trusted_handler,
- #ifdef CONFIG_EXT3_FS_POSIX_ACL
--	&ext3_xattr_acl_access_handler,
--	&ext3_xattr_acl_default_handler,
-+	&posix_acl_access_xattr_handler,
-+	&posix_acl_default_xattr_handler,
- #endif
- #ifdef CONFIG_EXT3_FS_SECURITY
- 	&ext3_xattr_security_handler,
-diff --git a/fs/ext3/xattr.h b/fs/ext3/xattr.h
-index 2be4f69..32e93eb 100644
---- a/fs/ext3/xattr.h
-+++ b/fs/ext3/xattr.h
-@@ -60,8 +60,6 @@ struct ext3_xattr_entry {
- 
- extern const struct xattr_handler ext3_xattr_user_handler;
- extern const struct xattr_handler ext3_xattr_trusted_handler;
--extern const struct xattr_handler ext3_xattr_acl_access_handler;
--extern const struct xattr_handler ext3_xattr_acl_default_handler;
- extern const struct xattr_handler ext3_xattr_security_handler;
- 
- extern ssize_t ext3_listxattr(struct dentry *, char *, size_t);
-diff --git a/fs/ext4/acl.c b/fs/ext4/acl.c
-index f827f3b..d40c8db 100644
---- a/fs/ext4/acl.c
-+++ b/fs/ext4/acl.c
-@@ -152,13 +152,6 @@ ext4_get_acl(struct inode *inode, int type)
- 	struct posix_acl *acl;
- 	int retval;
- 
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return NULL;
--
--	acl = get_cached_acl(inode, type);
--	if (acl != ACL_NOT_CACHED)
--		return acl;
--
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
- 		name_index = EXT4_XATTR_INDEX_POSIX_ACL_ACCESS;
-@@ -196,7 +189,7 @@ ext4_get_acl(struct inode *inode, int type)
-  * inode->i_mutex: down unless called from ext4_new_inode
-  */
- static int
--ext4_set_acl(handle_t *handle, struct inode *inode, int type,
-+__ext4_set_acl(handle_t *handle, struct inode *inode, int type,
- 	     struct posix_acl *acl)
- {
- 	int name_index;
-@@ -204,9 +197,6 @@ ext4_set_acl(handle_t *handle, struct inode *inode, int type,
- 	size_t size = 0;
- 	int error;
- 
--	if (S_ISLNK(inode->i_mode))
--		return -EOPNOTSUPP;
--
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
- 		name_index = EXT4_XATTR_INDEX_POSIX_ACL_ACCESS;
-@@ -248,208 +238,51 @@ ext4_set_acl(handle_t *handle, struct inode *inode, int type,
- 	return error;
- }
- 
--/*
-- * Initialize the ACLs of a new inode. Called from ext4_new_inode.
-- *
-- * dir->i_mutex: down
-- * inode->i_mutex: up (access to inode is still exclusive)
-- */
- int
--ext4_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
-+ext4_set_acl(struct inode *inode, struct posix_acl *acl, int type)
- {
--	struct posix_acl *acl = NULL;
--	int error = 0;
--
--	if (!S_ISLNK(inode->i_mode)) {
--		if (test_opt(dir->i_sb, POSIX_ACL)) {
--			acl = ext4_get_acl(dir, ACL_TYPE_DEFAULT);
--			if (IS_ERR(acl))
--				return PTR_ERR(acl);
--		}
--		if (!acl)
--			inode->i_mode &= ~current_umask();
--	}
--	if (test_opt(inode->i_sb, POSIX_ACL) && acl) {
--		if (S_ISDIR(inode->i_mode)) {
--			error = ext4_set_acl(handle, inode,
--					     ACL_TYPE_DEFAULT, acl);
--			if (error)
--				goto cleanup;
--		}
--		error = __posix_acl_create(&acl, GFP_NOFS, &inode->i_mode);
--		if (error < 0)
--			return error;
--
--		if (error > 0) {
--			/* This is an extended ACL */
--			error = ext4_set_acl(handle, inode, ACL_TYPE_ACCESS, acl);
--		}
--	}
--cleanup:
--	posix_acl_release(acl);
--	return error;
--}
--
--/*
-- * Does chmod for an inode that may have an Access Control List. The
-- * inode->i_mode field must be updated to the desired value by the caller
-- * before calling this function.
-- * Returns 0 on success, or a negative error number.
-- *
-- * We change the ACL rather than storing some ACL entries in the file
-- * mode permission bits (which would be more efficient), because that
-- * would break once additional permissions (like  ACL_APPEND, ACL_DELETE
-- * for directories) are added. There are no more bits available in the
-- * file mode.
-- *
-- * inode->i_mutex: down
-- */
--int
--ext4_acl_chmod(struct inode *inode)
--{
--	struct posix_acl *acl;
- 	handle_t *handle;
--	int retries = 0;
--	int error;
--
-+	int error, retries = 0;
- 
--	if (S_ISLNK(inode->i_mode))
--		return -EOPNOTSUPP;
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return 0;
--	acl = ext4_get_acl(inode, ACL_TYPE_ACCESS);
--	if (IS_ERR(acl) || !acl)
--		return PTR_ERR(acl);
--	error = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
--	if (error)
--		return error;
- retry:
- 	handle = ext4_journal_start(inode, EXT4_HT_XATTR,
- 				    ext4_jbd2_credits_xattr(inode));
--	if (IS_ERR(handle)) {
--		error = PTR_ERR(handle);
--		ext4_std_error(inode->i_sb, error);
--		goto out;
--	}
--	error = ext4_set_acl(handle, inode, ACL_TYPE_ACCESS, acl);
-+	if (IS_ERR(handle))
-+		return PTR_ERR(handle);
-+
-+	error = __ext4_set_acl(handle, inode, type, acl);
- 	ext4_journal_stop(handle);
--	if (error == -ENOSPC &&
--	    ext4_should_retry_alloc(inode->i_sb, &retries))
-+	if (error == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
- 		goto retry;
--out:
--	posix_acl_release(acl);
- 	return error;
- }
- 
- /*
-- * Extended attribute handlers
-+ * Initialize the ACLs of a new inode. Called from ext4_new_inode.
-+ *
-+ * dir->i_mutex: down
-+ * inode->i_mutex: up (access to inode is still exclusive)
-  */
--static size_t
--ext4_xattr_list_acl_access(struct dentry *dentry, char *list, size_t list_len,
--			   const char *name, size_t name_len, int type)
--{
--	const size_t size = sizeof(POSIX_ACL_XATTR_ACCESS);
--
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return 0;
--	if (list && size <= list_len)
--		memcpy(list, POSIX_ACL_XATTR_ACCESS, size);
--	return size;
--}
--
--static size_t
--ext4_xattr_list_acl_default(struct dentry *dentry, char *list, size_t list_len,
--			    const char *name, size_t name_len, int type)
--{
--	const size_t size = sizeof(POSIX_ACL_XATTR_DEFAULT);
--
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return 0;
--	if (list && size <= list_len)
--		memcpy(list, POSIX_ACL_XATTR_DEFAULT, size);
--	return size;
--}
--
--static int
--ext4_xattr_get_acl(struct dentry *dentry, const char *name, void *buffer,
--		   size_t size, int type)
-+int
-+ext4_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
- {
--	struct posix_acl *acl;
-+	struct posix_acl *default_acl, *acl;
- 	int error;
- 
--	if (strcmp(name, "") != 0)
--		return -EINVAL;
--	if (!test_opt(dentry->d_sb, POSIX_ACL))
--		return -EOPNOTSUPP;
--
--	acl = ext4_get_acl(dentry->d_inode, type);
--	if (IS_ERR(acl))
--		return PTR_ERR(acl);
--	if (acl == NULL)
--		return -ENODATA;
--	error = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
--	posix_acl_release(acl);
--
--	return error;
--}
--
--static int
--ext4_xattr_set_acl(struct dentry *dentry, const char *name, const void *value,
--		   size_t size, int flags, int type)
--{
--	struct inode *inode = dentry->d_inode;
--	handle_t *handle;
--	struct posix_acl *acl;
--	int error, retries = 0;
--
--	if (strcmp(name, "") != 0)
--		return -EINVAL;
--	if (!test_opt(inode->i_sb, POSIX_ACL))
--		return -EOPNOTSUPP;
--	if (!inode_owner_or_capable(inode))
--		return -EPERM;
--
--	if (value) {
--		acl = posix_acl_from_xattr(&init_user_ns, value, size);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		else if (acl) {
--			error = posix_acl_valid(acl);
--			if (error)
--				goto release_and_out;
--		}
--	} else
--		acl = NULL;
-+	error = posix_acl_create(dir, &inode->i_mode, &default_acl, &acl);
-+	if (error)
-+		return error;
- 
--retry:
--	handle = ext4_journal_start(inode, EXT4_HT_XATTR,
--				    ext4_jbd2_credits_xattr(inode));
--	if (IS_ERR(handle)) {
--		error = PTR_ERR(handle);
--		goto release_and_out;
-+	if (default_acl) {
-+		error = __ext4_set_acl(handle, inode, ACL_TYPE_DEFAULT,
-+				       default_acl);
-+		posix_acl_release(default_acl);
-+	}
-+	if (acl) {
-+		if (!error)
-+			error = __ext4_set_acl(handle, inode, ACL_TYPE_ACCESS,
-+					       acl);
-+		posix_acl_release(acl);
++		error = xfs_set_acl(inode, acl, ACL_TYPE_ACCESS);
++		if (error)
+ 			goto out_cleanup_inode;
  	}
--	error = ext4_set_acl(handle, inode, type, acl);
--	ext4_journal_stop(handle);
--	if (error == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
--		goto retry;
 -
--release_and_out:
--	posix_acl_release(acl);
- 	return error;
+ 
+ 	d_instantiate(dentry, inode);
++ out_free_acl:
++	if (default_acl)
++		posix_acl_release(default_acl);
++	if (acl)
++		posix_acl_release(acl);
+ 	return -error;
+ 
+  out_cleanup_inode:
+ 	xfs_cleanup_inode(dir, inode, dentry);
+- out_free_acl:
+-	posix_acl_release(default_acl);
+-	return -error;
++	goto out_free_acl;
  }
--
--const struct xattr_handler ext4_xattr_acl_access_handler = {
--	.prefix	= POSIX_ACL_XATTR_ACCESS,
--	.flags	= ACL_TYPE_ACCESS,
--	.list	= ext4_xattr_list_acl_access,
--	.get	= ext4_xattr_get_acl,
--	.set	= ext4_xattr_set_acl,
--};
--
--const struct xattr_handler ext4_xattr_acl_default_handler = {
--	.prefix	= POSIX_ACL_XATTR_DEFAULT,
--	.flags	= ACL_TYPE_DEFAULT,
--	.list	= ext4_xattr_list_acl_default,
--	.get	= ext4_xattr_get_acl,
--	.set	= ext4_xattr_set_acl,
--};
-diff --git a/fs/ext4/acl.h b/fs/ext4/acl.h
-index 18cb39e..da2c795 100644
---- a/fs/ext4/acl.h
-+++ b/fs/ext4/acl.h
-@@ -55,18 +55,13 @@ static inline int ext4_acl_count(size_t size)
  
- /* acl.c */
- struct posix_acl *ext4_get_acl(struct inode *inode, int type);
--extern int ext4_acl_chmod(struct inode *);
-+int ext4_set_acl(struct inode *inode, struct posix_acl *acl, int type);
- extern int ext4_init_acl(handle_t *, struct inode *, struct inode *);
+ STATIC int
+@@ -683,7 +684,7 @@ xfs_setattr_nonsize(
+ 	 * 	     Posix ACL code seems to care about this issue either.
+ 	 */
+ 	if ((mask & ATTR_MODE) && !(flags & XFS_ATTR_NOACL)) {
+-		error = -xfs_acl_chmod(inode);
++		error = -posix_acl_chmod(inode, inode->i_mode);
+ 		if (error)
+ 			return XFS_ERROR(error);
+ 	}
+@@ -1052,6 +1053,7 @@ xfs_vn_fiemap(
  
- #else  /* CONFIG_EXT4_FS_POSIX_ACL */
- #include <linux/sched.h>
- #define ext4_get_acl NULL
--
--static inline int
--ext4_acl_chmod(struct inode *inode)
--{
--	return 0;
--}
-+#define ext4_set_acl NULL
+ static const struct inode_operations xfs_inode_operations = {
+ 	.get_acl		= xfs_get_acl,
++	.set_acl		= xfs_set_acl,
+ 	.getattr		= xfs_vn_getattr,
+ 	.setattr		= xfs_vn_setattr,
+ 	.setxattr		= generic_setxattr,
+@@ -1079,6 +1081,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
+ 	.mknod			= xfs_vn_mknod,
+ 	.rename			= xfs_vn_rename,
+ 	.get_acl		= xfs_get_acl,
++	.set_acl		= xfs_set_acl,
+ 	.getattr		= xfs_vn_getattr,
+ 	.setattr		= xfs_vn_setattr,
+ 	.setxattr		= generic_setxattr,
+@@ -1105,6 +1108,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
+ 	.mknod			= xfs_vn_mknod,
+ 	.rename			= xfs_vn_rename,
+ 	.get_acl		= xfs_get_acl,
++	.set_acl		= xfs_set_acl,
+ 	.getattr		= xfs_vn_getattr,
+ 	.setattr		= xfs_vn_setattr,
+ 	.setxattr		= generic_setxattr,
+@@ -1118,7 +1122,6 @@ static const struct inode_operations xfs_symlink_inode_operations = {
+ 	.readlink		= generic_readlink,
+ 	.follow_link		= xfs_vn_follow_link,
+ 	.put_link		= xfs_vn_put_link,
+-	.get_acl		= xfs_get_acl,
+ 	.getattr		= xfs_vn_getattr,
+ 	.setattr		= xfs_vn_setattr,
+ 	.setxattr		= generic_setxattr,
+diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
+index d2c5057..1c34e43 100644
+--- a/fs/xfs/xfs_iops.h
++++ b/fs/xfs/xfs_iops.h
+@@ -30,7 +30,7 @@ extern void xfs_setup_inode(struct xfs_inode *);
+ /*
+  * Internal setattr interfaces.
+  */
+-#define XFS_ATTR_NOACL		0x01	/* Don't call xfs_acl_chmod */
++#define XFS_ATTR_NOACL		0x01	/* Don't call posix_acl_chmod */
  
- static inline int
- ext4_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 3da2194..43e64f6 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -617,6 +617,7 @@ const struct inode_operations ext4_file_inode_operations = {
- 	.listxattr	= ext4_listxattr,
- 	.removexattr	= generic_removexattr,
- 	.get_acl	= ext4_get_acl,
-+	.set_acl	= ext4_set_acl,
- 	.fiemap		= ext4_fiemap,
- };
- 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 0757634..8277556 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -4675,7 +4675,7 @@ int ext4_setattr(struct dentry *dentry, struct iattr *attr)
- 		ext4_orphan_del(NULL, inode);
- 
- 	if (!rc && (ia_valid & ATTR_MODE))
--		rc = ext4_acl_chmod(inode);
-+		rc = posix_acl_chmod(inode, inode->i_mode);
- 
- err_out:
- 	ext4_std_error(inode->i_sb, error);
-diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index 5a0408d..e77c1ba 100644
---- a/fs/ext4/namei.c
-+++ b/fs/ext4/namei.c
-@@ -3225,6 +3225,7 @@ const struct inode_operations ext4_dir_inode_operations = {
- 	.listxattr	= ext4_listxattr,
- 	.removexattr	= generic_removexattr,
- 	.get_acl	= ext4_get_acl,
-+	.set_acl	= ext4_set_acl,
- 	.fiemap         = ext4_fiemap,
- };
- 
-@@ -3235,4 +3236,5 @@ const struct inode_operations ext4_special_inode_operations = {
- 	.listxattr	= ext4_listxattr,
- 	.removexattr	= generic_removexattr,
- 	.get_acl	= ext4_get_acl,
-+	.set_acl	= ext4_set_acl,
- };
-diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
-index 1423c48..e175e94 100644
---- a/fs/ext4/xattr.c
-+++ b/fs/ext4/xattr.c
-@@ -95,8 +95,8 @@ static struct mb_cache *ext4_xattr_cache;
- static const struct xattr_handler *ext4_xattr_handler_map[] = {
- 	[EXT4_XATTR_INDEX_USER]		     = &ext4_xattr_user_handler,
- #ifdef CONFIG_EXT4_FS_POSIX_ACL
--	[EXT4_XATTR_INDEX_POSIX_ACL_ACCESS]  = &ext4_xattr_acl_access_handler,
--	[EXT4_XATTR_INDEX_POSIX_ACL_DEFAULT] = &ext4_xattr_acl_default_handler,
-+	[EXT4_XATTR_INDEX_POSIX_ACL_ACCESS]  = &posix_acl_access_xattr_handler,
-+	[EXT4_XATTR_INDEX_POSIX_ACL_DEFAULT] = &posix_acl_default_xattr_handler,
- #endif
- 	[EXT4_XATTR_INDEX_TRUSTED]	     = &ext4_xattr_trusted_handler,
- #ifdef CONFIG_EXT4_FS_SECURITY
-@@ -108,8 +108,8 @@ const struct xattr_handler *ext4_xattr_handlers[] = {
- 	&ext4_xattr_user_handler,
- 	&ext4_xattr_trusted_handler,
- #ifdef CONFIG_EXT4_FS_POSIX_ACL
--	&ext4_xattr_acl_access_handler,
--	&ext4_xattr_acl_default_handler,
+ extern int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap,
+ 			       int flags);
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 9d47907..78ed92a 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -102,8 +102,8 @@ const struct xattr_handler *xfs_xattr_handlers[] = {
+ 	&xfs_xattr_trusted_handler,
+ 	&xfs_xattr_security_handler,
+ #ifdef CONFIG_XFS_POSIX_ACL
+-	&xfs_xattr_acl_access_handler,
+-	&xfs_xattr_acl_default_handler,
 +	&posix_acl_access_xattr_handler,
 +	&posix_acl_default_xattr_handler,
  #endif
- #ifdef CONFIG_EXT4_FS_SECURITY
- 	&ext4_xattr_security_handler,
-diff --git a/fs/ext4/xattr.h b/fs/ext4/xattr.h
-index c767dbd..819d639 100644
---- a/fs/ext4/xattr.h
-+++ b/fs/ext4/xattr.h
-@@ -96,8 +96,6 @@ struct ext4_xattr_ibody_find {
- 
- extern const struct xattr_handler ext4_xattr_user_handler;
- extern const struct xattr_handler ext4_xattr_trusted_handler;
--extern const struct xattr_handler ext4_xattr_acl_access_handler;
--extern const struct xattr_handler ext4_xattr_acl_default_handler;
- extern const struct xattr_handler ext4_xattr_security_handler;
- 
- extern ssize_t ext4_listxattr(struct dentry *, char *, size_t);
+ 	NULL
+ };
 -- 
 1.7.10.4
 
