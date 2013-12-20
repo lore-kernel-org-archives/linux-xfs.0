@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DB00129E19
-	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 07:25:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A7E508F807A
-	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 05:25:36 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id CPlyFhPP92aq7C25 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Dec 2013 05:25:35 -0800 (PST)
-Message-Id: <20131220132523.049253715@bombadil.infradead.org>
-Date: Fri, 20 Dec 2013 05:16:46 -0800
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BD90C29E2F
+	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 07:25:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A2C1304090
+	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 05:25:38 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id vDxGP9Z29yJGK2ky (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Dec 2013 05:25:37 -0800 (PST)
+Message-Id: <20131220132524.182933314@bombadil.infradead.org>
+Date: Fri, 20 Dec 2013 05:16:52 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 11/21] hfsplus: use generic posix ACL infrastructure
+Subject: [PATCH 17/21] gfs2: use generic posix ACL infrastructure
 References: <20131220131635.650823732@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0011-hfsplus-use-generic-posix-ACL-infrastructure.patch
+	filename=0017-gfs2-use-generic-posix-ACL-infrastructure.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,321 +30,426 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: viro@zeniv.linux.org.uk
-Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, Joel Becker <jlbec@evilplan.org>, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, Vyacheslav Dubeyko <slava@dubeyko.com>, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, Joel Becker <jlbec@evilplan.org>, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+
+This contains some major refactoring for the create path so that
+inodes are created with the right mode to start with instead of
+fixing it up later.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Vyacheslav Dubeyko <slava@dubeyko.com>
 ---
- fs/hfsplus/acl.h       |    9 +--
- fs/hfsplus/dir.c       |    1 +
- fs/hfsplus/inode.c     |    3 +-
- fs/hfsplus/posix_acl.c |  168 +++++-------------------------------------------
- fs/hfsplus/xattr.c     |    5 +-
- fs/hfsplus/xattr.h     |    2 -
- 6 files changed, 26 insertions(+), 162 deletions(-)
+ fs/gfs2/acl.c   |  234 +++++++------------------------------------------------
+ fs/gfs2/acl.h   |    4 +-
+ fs/gfs2/inode.c |   34 ++++++--
+ fs/gfs2/xattr.c |    4 +-
+ 4 files changed, 62 insertions(+), 214 deletions(-)
 
-diff --git a/fs/hfsplus/acl.h b/fs/hfsplus/acl.h
-index 07c0d49..95c8ed9 100644
---- a/fs/hfsplus/acl.h
-+++ b/fs/hfsplus/acl.h
-@@ -12,16 +12,13 @@
+diff --git a/fs/gfs2/acl.c b/fs/gfs2/acl.c
+index e82e4ac..ba94566 100644
+--- a/fs/gfs2/acl.c
++++ b/fs/gfs2/acl.c
+@@ -49,10 +49,6 @@ struct posix_acl *gfs2_get_acl(struct inode *inode, int type)
+ 	if (!ip->i_eattr)
+ 		return NULL;
  
- /* posix_acl.c */
- struct posix_acl *hfsplus_get_posix_acl(struct inode *inode, int type);
--extern int hfsplus_posix_acl_chmod(struct inode *);
-+int hfsplus_set_posix_acl(struct inode *inode, struct posix_acl *acl,
-+		int type);
- extern int hfsplus_init_posix_acl(struct inode *, struct inode *);
- 
- #else  /* CONFIG_HFSPLUS_FS_POSIX_ACL */
- #define hfsplus_get_posix_acl NULL
--
--static inline int hfsplus_posix_acl_chmod(struct inode *inode)
--{
--	return 0;
--}
-+#define hfsplus_set_posix_acl NULL
- 
- static inline int hfsplus_init_posix_acl(struct inode *inode, struct inode *dir)
- {
-diff --git a/fs/hfsplus/dir.c b/fs/hfsplus/dir.c
-index 4a4fea0..9ee6298 100644
---- a/fs/hfsplus/dir.c
-+++ b/fs/hfsplus/dir.c
-@@ -532,6 +532,7 @@ const struct inode_operations hfsplus_dir_inode_operations = {
- 	.removexattr		= hfsplus_removexattr,
- #ifdef CONFIG_HFSPLUS_FS_POSIX_ACL
- 	.get_acl		= hfsplus_get_posix_acl,
-+	.set_acl		= hfsplus_set_posix_acl,
- #endif
- };
- 
-diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
-index 37213d0..2e10993 100644
---- a/fs/hfsplus/inode.c
-+++ b/fs/hfsplus/inode.c
-@@ -319,7 +319,7 @@ static int hfsplus_setattr(struct dentry *dentry, struct iattr *attr)
- 	mark_inode_dirty(inode);
- 
- 	if (attr->ia_valid & ATTR_MODE) {
--		error = hfsplus_posix_acl_chmod(inode);
-+		error = posix_acl_chmod(inode, inode->i_mode);
- 		if (unlikely(error))
- 			return error;
- 	}
-@@ -393,6 +393,7 @@ static const struct inode_operations hfsplus_file_inode_operations = {
- 	.removexattr	= hfsplus_removexattr,
- #ifdef CONFIG_HFSPLUS_FS_POSIX_ACL
- 	.get_acl	= hfsplus_get_posix_acl,
-+	.set_acl	= hfsplus_set_posix_acl,
- #endif
- };
- 
-diff --git a/fs/hfsplus/posix_acl.c b/fs/hfsplus/posix_acl.c
-index 277942f..df0c9af 100644
---- a/fs/hfsplus/posix_acl.c
-+++ b/fs/hfsplus/posix_acl.c
-@@ -17,9 +17,7 @@ struct posix_acl *hfsplus_get_posix_acl(struct inode *inode, int type)
- 	char *value = NULL;
- 	ssize_t size;
- 
--	acl = get_cached_acl(inode, type);
+-	acl = get_cached_acl(&ip->i_inode, type);
 -	if (acl != ACL_NOT_CACHED)
 -		return acl;
-+	hfs_dbg(ACL_MOD, "[%s]: ino %lu\n", __func__, inode->i_ino);
- 
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
-@@ -56,17 +54,15 @@ struct posix_acl *hfsplus_get_posix_acl(struct inode *inode, int type)
- 	return acl;
+-
+ 	name = gfs2_acl_name(type);
+ 	if (name == NULL)
+ 		return ERR_PTR(-EINVAL);
+@@ -80,7 +76,7 @@ static int gfs2_set_mode(struct inode *inode, umode_t mode)
+ 	return error;
  }
  
--static int hfsplus_set_posix_acl(struct inode *inode,
--					int type,
--					struct posix_acl *acl)
-+int hfsplus_set_posix_acl(struct inode *inode, struct posix_acl *acl,
-+		int type)
+-static int gfs2_acl_set(struct inode *inode, int type, struct posix_acl *acl)
++int gfs2_set_acl(struct inode *inode, struct posix_acl *acl, int type)
  {
- 	int err;
- 	char *xattr_name;
- 	size_t size = 0;
- 	char *value = NULL;
+ 	int error;
+ 	int len;
+@@ -88,219 +84,49 @@ static int gfs2_acl_set(struct inode *inode, int type, struct posix_acl *acl)
+ 	const char *name = gfs2_acl_name(type);
  
+ 	BUG_ON(name == NULL);
+-	len = posix_acl_to_xattr(&init_user_ns, acl, NULL, 0);
+-	if (len == 0)
+-		return 0;
+-	data = kmalloc(len, GFP_NOFS);
+-	if (data == NULL)
+-		return -ENOMEM;
+-	error = posix_acl_to_xattr(&init_user_ns, acl, data, len);
+-	if (error < 0)
+-		goto out;
+-	error = __gfs2_xattr_set(inode, name, data, len, 0, GFS2_EATYPE_SYS);
+-	if (!error)
+-		set_cached_acl(inode, type, acl);
+-out:
+-	kfree(data);
+-	return error;
+-}
+-
+-int gfs2_acl_create(struct gfs2_inode *dip, struct inode *inode)
+-{
+-	struct gfs2_sbd *sdp = GFS2_SB(&dip->i_inode);
+-	struct posix_acl *acl;
+-	umode_t mode = inode->i_mode;
+-	int error = 0;
+-
+-	if (!sdp->sd_args.ar_posix_acl)
+-		return 0;
 -	if (S_ISLNK(inode->i_mode))
--		return -EOPNOTSUPP;
-+	hfs_dbg(ACL_MOD, "[%s]: ino %lu\n", __func__, inode->i_ino);
- 
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
-@@ -115,7 +111,7 @@ end_set_acl:
- int hfsplus_init_posix_acl(struct inode *inode, struct inode *dir)
- {
- 	int err = 0;
--	struct posix_acl *acl = NULL;
-+	struct posix_acl *default_acl, *acl;
- 
- 	hfs_dbg(ACL_MOD,
- 		"[%s]: ino %lu, dir->ino %lu\n",
-@@ -124,151 +120,21 @@ int hfsplus_init_posix_acl(struct inode *inode, struct inode *dir)
- 	if (S_ISLNK(inode->i_mode))
- 		return 0;
- 
--	acl = hfsplus_get_posix_acl(dir, ACL_TYPE_DEFAULT);
+-		return 0;
+-
+-	acl = gfs2_get_acl(&dip->i_inode, ACL_TYPE_DEFAULT);
 -	if (IS_ERR(acl))
 -		return PTR_ERR(acl);
+-	if (!acl) {
+-		mode &= ~current_umask();
+-		return gfs2_set_mode(inode, mode);
+-	}
 -
--	if (acl) {
--		if (S_ISDIR(inode->i_mode)) {
--			err = hfsplus_set_posix_acl(inode,
--							ACL_TYPE_DEFAULT,
--							acl);
--			if (unlikely(err))
--				goto init_acl_cleanup;
--		}
+-	if (S_ISDIR(inode->i_mode)) {
+-		error = gfs2_acl_set(inode, ACL_TYPE_DEFAULT, acl);
+-		if (error)
+-			goto out;
+-	}
 -
--		err = __posix_acl_create(&acl, GFP_NOFS, &inode->i_mode);
--		if (unlikely(err < 0))
--			return err;
+-	error = __posix_acl_create(&acl, GFP_NOFS, &mode);
+-	if (error < 0)
+-		return error;
+ 
+-	if (error == 0)
+-		goto munge;
 -
--		if (err > 0)
--			err = hfsplus_set_posix_acl(inode,
--							ACL_TYPE_ACCESS,
--							acl);
--	} else
--		inode->i_mode &= ~current_umask();
--
--init_acl_cleanup:
+-	error = gfs2_acl_set(inode, ACL_TYPE_ACCESS, acl);
+-	if (error)
+-		goto out;
+-munge:
+-	error = gfs2_set_mode(inode, mode);
+-out:
 -	posix_acl_release(acl);
--	return err;
+-	return error;
 -}
 -
--int hfsplus_posix_acl_chmod(struct inode *inode)
+-int gfs2_acl_chmod(struct gfs2_inode *ip, struct iattr *attr)
 -{
--	int err;
+-	struct inode *inode = &ip->i_inode;
 -	struct posix_acl *acl;
+-	char *data;
+-	unsigned int len;
+-	int error;
 -
--	hfs_dbg(ACL_MOD, "[%s]: ino %lu\n", __func__, inode->i_ino);
+-	acl = gfs2_get_acl(&ip->i_inode, ACL_TYPE_ACCESS);
+-	if (IS_ERR(acl))
+-		return PTR_ERR(acl);
+-	if (!acl)
+-		return gfs2_setattr_simple(inode, attr);
 -
--	if (S_ISLNK(inode->i_mode))
+-	error = __posix_acl_chmod(&acl, GFP_NOFS, attr->ia_mode);
+-	if (error)
+-		return error;
+-
+-	len = posix_acl_to_xattr(&init_user_ns, acl, NULL, 0);
+-	data = kmalloc(len, GFP_NOFS);
+-	error = -ENOMEM;
+-	if (data == NULL)
+-		goto out;
+-	posix_acl_to_xattr(&init_user_ns, acl, data, len);
+-	error = gfs2_xattr_acl_chmod(ip, attr, data);
+-	kfree(data);
+-	set_cached_acl(&ip->i_inode, ACL_TYPE_ACCESS, acl);
+-
+-out:
+-	posix_acl_release(acl);
+-	return error;
+-}
+-
+-static int gfs2_acl_type(const char *name)
+-{
+-	if (strcmp(name, GFS2_POSIX_ACL_ACCESS) == 0)
+-		return ACL_TYPE_ACCESS;
+-	if (strcmp(name, GFS2_POSIX_ACL_DEFAULT) == 0)
+-		return ACL_TYPE_DEFAULT;
+-	return -EINVAL;
+-}
+-
+-static int gfs2_xattr_system_get(struct dentry *dentry, const char *name,
+-				 void *buffer, size_t size, int xtype)
+-{
+-	struct inode *inode = dentry->d_inode;
+-	struct gfs2_sbd *sdp = GFS2_SB(inode);
+-	struct posix_acl *acl;
+-	int type;
+-	int error;
+-
+-	if (!sdp->sd_args.ar_posix_acl)
 -		return -EOPNOTSUPP;
 -
--	acl = hfsplus_get_posix_acl(inode, ACL_TYPE_ACCESS);
--	if (IS_ERR(acl) || !acl)
--		return PTR_ERR(acl);
+-	type = gfs2_acl_type(name);
+-	if (type < 0)
+-		return type;
 -
--	err = __posix_acl_chmod(&acl, GFP_KERNEL, inode->i_mode);
--	if (unlikely(err))
-+	err = posix_acl_create(dir, &inode->i_mode, &default_acl, &acl);
-+	if (err)
- 		return err;
- 
--	err = hfsplus_set_posix_acl(inode, ACL_TYPE_ACCESS, acl);
--	posix_acl_release(acl);
--	return err;
--}
--
--static int hfsplus_xattr_get_posix_acl(struct dentry *dentry,
--					const char *name,
--					void *buffer,
--					size_t size,
--					int type)
--{
--	int err = 0;
--	struct posix_acl *acl;
--
--	hfs_dbg(ACL_MOD,
--		"[%s]: ino %lu, buffer %p, size %zu, type %#x\n",
--		__func__, dentry->d_inode->i_ino, buffer, size, type);
--
--	if (strcmp(name, "") != 0)
--		return -EINVAL;
--
--	acl = hfsplus_get_posix_acl(dentry->d_inode, type);
+-	acl = gfs2_get_acl(inode, type);
 -	if (IS_ERR(acl))
 -		return PTR_ERR(acl);
 -	if (acl == NULL)
 -		return -ENODATA;
 -
--	err = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
+-	error = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
 -	posix_acl_release(acl);
 -
--	return err;
+-	return error;
 -}
 -
--static int hfsplus_xattr_set_posix_acl(struct dentry *dentry,
--					const char *name,
--					const void *value,
--					size_t size,
--					int flags,
--					int type)
+-static int gfs2_xattr_system_set(struct dentry *dentry, const char *name,
+-				 const void *value, size_t size, int flags,
+-				 int xtype)
 -{
--	int err = 0;
 -	struct inode *inode = dentry->d_inode;
+-	struct gfs2_sbd *sdp = GFS2_SB(inode);
 -	struct posix_acl *acl = NULL;
+-	int error = 0, type;
 -
--	hfs_dbg(ACL_MOD,
--		"[%s]: ino %lu, value %p, size %zu, flags %#x, type %#x\n",
--		__func__, inode->i_ino, value, size, flags, type);
+-	if (!sdp->sd_args.ar_posix_acl)
+-		return -EOPNOTSUPP;
 -
--	if (strcmp(name, "") != 0)
+-	type = gfs2_acl_type(name);
+-	if (type < 0)
+-		return type;
+-	if (flags & XATTR_CREATE)
 -		return -EINVAL;
--
--	if (!inode_owner_or_capable(inode))
+-	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
+-		return value ? -EACCES : 0;
+-	if (!uid_eq(current_fsuid(), inode->i_uid) && !capable(CAP_FOWNER))
 -		return -EPERM;
+-	if (S_ISLNK(inode->i_mode))
+-		return -EOPNOTSUPP;
 -
--	if (value) {
--		acl = posix_acl_from_xattr(&init_user_ns, value, size);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		else if (acl) {
--			err = posix_acl_valid(acl);
--			if (err)
--				goto end_xattr_set_acl;
+-	if (!value)
+-		goto set_acl;
+-
+-	acl = posix_acl_from_xattr(&init_user_ns, value, size);
+-	if (!acl) {
+-		/*
+-		 * acl_set_file(3) may request that we set default ACLs with
+-		 * zero length -- defend (gracefully) against that here.
+-		 */
+-		goto out;
+-	}
+-	if (IS_ERR(acl)) {
+-		error = PTR_ERR(acl);
+-		goto out;
+-	}
+-
+-	error = posix_acl_valid(acl);
+-	if (error)
+-		goto out_release;
+-
+-	error = -EINVAL;
+ 	if (acl->a_count > GFS2_ACL_MAX_ENTRIES)
+-		goto out_release;
++		return -EINVAL;
+ 
+ 	if (type == ACL_TYPE_ACCESS) {
+ 		umode_t mode = inode->i_mode;
++
+ 		error = posix_acl_equiv_mode(acl, &mode);
++		if (error < 0)
++			return error;
+ 
+-		if (error <= 0) {
+-			posix_acl_release(acl);
++		if (error == 0)
+ 			acl = NULL;
+ 
+-			if (error < 0)
+-				return error;
 -		}
-+	if (default_acl) {
-+		err = hfsplus_set_posix_acl(inode, default_acl,
-+					    ACL_TYPE_DEFAULT);
-+		posix_acl_release(default_acl);
+-
+ 		error = gfs2_set_mode(inode, mode);
+ 		if (error)
+-			goto out_release;
++			return error;
  	}
  
--	err = hfsplus_set_posix_acl(inode, type, acl);
--
--end_xattr_set_acl:
--	posix_acl_release(acl);
+-set_acl:
+-	error = __gfs2_xattr_set(inode, name, value, size, 0, GFS2_EATYPE_SYS);
+-	if (!error) {
+-		if (acl)
+-			set_cached_acl(inode, type, acl);
+-		else
+-			forget_cached_acl(inode, type);
 +	if (acl) {
-+		if (!err)
-+			err = hfsplus_set_posix_acl(inode, acl,
-+						    ACL_TYPE_ACCESS);
-+		posix_acl_release(acl);
-+	}
- 	return err;
++		len = posix_acl_to_xattr(&init_user_ns, acl, NULL, 0);
++		if (len == 0)
++			return 0;
++		data = kmalloc(len, GFP_NOFS);
++		if (data == NULL)
++			return -ENOMEM;
++		error = posix_acl_to_xattr(&init_user_ns, acl, data, len);
++		if (error < 0)
++			goto out;
++	} else {
++		data = NULL;
++		len = 0;
+ 	}
+-out_release:
+-	posix_acl_release(acl);
++
++	error = __gfs2_xattr_set(inode, name, data, len, 0, GFS2_EATYPE_SYS);
++	if (error)
++		goto out;
++
++	if (acl)
++		set_cached_acl(inode, type, acl);
++	else
++		forget_cached_acl(inode, type);
+ out:
++	kfree(data);
+ 	return error;
  }
 -
--static size_t hfsplus_xattr_list_posix_acl(struct dentry *dentry,
--						char *list,
--						size_t list_size,
--						const char *name,
--						size_t name_len,
--						int type)
--{
--	/*
--	 * This method is not used.
--	 * It is used hfsplus_listxattr() instead of generic_listxattr().
--	 */
--	return -EOPNOTSUPP;
--}
--
--const struct xattr_handler hfsplus_xattr_acl_access_handler = {
--	.prefix	= POSIX_ACL_XATTR_ACCESS,
--	.flags	= ACL_TYPE_ACCESS,
--	.list	= hfsplus_xattr_list_posix_acl,
--	.get	= hfsplus_xattr_get_posix_acl,
--	.set	= hfsplus_xattr_set_posix_acl,
+-const struct xattr_handler gfs2_xattr_system_handler = {
+-	.prefix = XATTR_SYSTEM_PREFIX,
+-	.flags  = GFS2_EATYPE_SYS,
+-	.get    = gfs2_xattr_system_get,
+-	.set    = gfs2_xattr_system_set,
 -};
 -
--const struct xattr_handler hfsplus_xattr_acl_default_handler = {
--	.prefix	= POSIX_ACL_XATTR_DEFAULT,
--	.flags	= ACL_TYPE_DEFAULT,
--	.list	= hfsplus_xattr_list_posix_acl,
--	.get	= hfsplus_xattr_get_posix_acl,
--	.set	= hfsplus_xattr_set_posix_acl,
--};
-diff --git a/fs/hfsplus/xattr.c b/fs/hfsplus/xattr.c
-index 3c6136f..bf88baa 100644
---- a/fs/hfsplus/xattr.c
-+++ b/fs/hfsplus/xattr.c
-@@ -7,6 +7,7 @@
-  */
+diff --git a/fs/gfs2/acl.h b/fs/gfs2/acl.h
+index 0da38dc..301260c 100644
+--- a/fs/gfs2/acl.h
++++ b/fs/gfs2/acl.h
+@@ -17,8 +17,6 @@
+ #define GFS2_ACL_MAX_ENTRIES		25
  
- #include "hfsplus_fs.h"
+ extern struct posix_acl *gfs2_get_acl(struct inode *inode, int type);
+-extern int gfs2_acl_create(struct gfs2_inode *dip, struct inode *inode);
+-extern int gfs2_acl_chmod(struct gfs2_inode *ip, struct iattr *attr);
+-extern const struct xattr_handler gfs2_xattr_system_handler;
++extern int gfs2_set_acl(struct inode *inode, struct posix_acl *acl, int type);
+ 
+ #endif /* __ACL_DOT_H__ */
+diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+index 7119504..d573125 100644
+--- a/fs/gfs2/inode.c
++++ b/fs/gfs2/inode.c
+@@ -552,6 +552,7 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
+ 			     unsigned int size, int excl, int *opened)
+ {
+ 	const struct qstr *name = &dentry->d_name;
++	struct posix_acl *default_acl, *acl;
+ 	struct gfs2_holder ghs[2];
+ 	struct inode *inode = NULL;
+ 	struct gfs2_inode *dip = GFS2_I(dir), *ip;
+@@ -611,10 +612,14 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
+ 	if (!inode)
+ 		goto fail_gunlock;
+ 
++	error = posix_acl_create(dir, &mode, &default_acl, &acl);
++	if (error)
++		goto fail_free_vfs_inode;
++
+ 	ip = GFS2_I(inode);
+ 	error = gfs2_rs_alloc(ip);
+ 	if (error)
+-		goto fail_free_inode;
++		goto fail_free_acls;
+ 
+ 	inode->i_mode = mode;
+ 	set_nlink(inode, S_ISDIR(mode) ? 2 : 1);
+@@ -682,7 +687,16 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
+ 	gfs2_set_iop(inode);
+ 	insert_inode_hash(inode);
+ 
+-	error = gfs2_acl_create(dip, inode);
++	if (default_acl) {
++		error = gfs2_set_acl(inode, default_acl, ACL_TYPE_DEFAULT);
++		posix_acl_release(default_acl);
++	}
++	if (acl) {
++		if (!error)
++			error = gfs2_set_acl(inode, acl, ACL_TYPE_ACCESS);
++		posix_acl_release(acl);
++	}
++
+ 	if (error)
+ 		goto fail_gunlock3;
+ 
+@@ -716,6 +730,12 @@ fail_free_inode:
+ 	if (ip->i_gl)
+ 		gfs2_glock_put(ip->i_gl);
+ 	gfs2_rs_delete(ip, NULL);
++fail_free_acls:
++	if (default_acl)
++		posix_acl_release(default_acl);
++	if (acl)
++		posix_acl_release(acl);
++fail_free_vfs_inode:
+ 	free_inode_nonrcu(inode);
+ 	inode = NULL;
+ fail_gunlock:
+@@ -1678,10 +1698,11 @@ static int gfs2_setattr(struct dentry *dentry, struct iattr *attr)
+ 		error = gfs2_setattr_size(inode, attr->ia_size);
+ 	else if (attr->ia_valid & (ATTR_UID | ATTR_GID))
+ 		error = setattr_chown(inode, attr);
+-	else if ((attr->ia_valid & ATTR_MODE) && IS_POSIXACL(inode))
+-		error = gfs2_acl_chmod(ip, attr);
+-	else
++	else {
+ 		error = gfs2_setattr_simple(inode, attr);
++		if (!error && attr->ia_valid & ATTR_MODE)
++			error = posix_acl_chmod(inode, inode->i_mode);
++	}
+ 
+ out:
+ 	if (!error)
+@@ -1841,6 +1862,7 @@ const struct inode_operations gfs2_file_iops = {
+ 	.removexattr = gfs2_removexattr,
+ 	.fiemap = gfs2_fiemap,
+ 	.get_acl = gfs2_get_acl,
++	.set_acl = gfs2_set_acl,
+ };
+ 
+ const struct inode_operations gfs2_dir_iops = {
+@@ -1862,6 +1884,7 @@ const struct inode_operations gfs2_dir_iops = {
+ 	.removexattr = gfs2_removexattr,
+ 	.fiemap = gfs2_fiemap,
+ 	.get_acl = gfs2_get_acl,
++	.set_acl = gfs2_set_acl,
+ 	.atomic_open = gfs2_atomic_open,
+ };
+ 
+@@ -1877,6 +1900,5 @@ const struct inode_operations gfs2_symlink_iops = {
+ 	.listxattr = gfs2_listxattr,
+ 	.removexattr = gfs2_removexattr,
+ 	.fiemap = gfs2_fiemap,
+-	.get_acl = gfs2_get_acl,
+ };
+ 
+diff --git a/fs/gfs2/xattr.c b/fs/gfs2/xattr.c
+index 8c6a6f6..0b81f78 100644
+--- a/fs/gfs2/xattr.c
++++ b/fs/gfs2/xattr.c
+@@ -13,6 +13,7 @@
+ #include <linux/buffer_head.h>
+ #include <linux/xattr.h>
+ #include <linux/gfs2_ondisk.h>
 +#include <linux/posix_acl_xattr.h>
- #include "xattr.h"
- #include "acl.h"
+ #include <asm/uaccess.h>
  
-@@ -15,8 +16,8 @@ const struct xattr_handler *hfsplus_xattr_handlers[] = {
- 	&hfsplus_xattr_user_handler,
- 	&hfsplus_xattr_trusted_handler,
- #ifdef CONFIG_HFSPLUS_FS_POSIX_ACL
--	&hfsplus_xattr_acl_access_handler,
--	&hfsplus_xattr_acl_default_handler,
+ #include "gfs2.h"
+@@ -1500,7 +1501,8 @@ static const struct xattr_handler gfs2_xattr_security_handler = {
+ const struct xattr_handler *gfs2_xattr_handlers[] = {
+ 	&gfs2_xattr_user_handler,
+ 	&gfs2_xattr_security_handler,
+-	&gfs2_xattr_system_handler,
 +	&posix_acl_access_xattr_handler,
 +	&posix_acl_default_xattr_handler,
- #endif
- 	&hfsplus_xattr_security_handler,
- 	NULL
-diff --git a/fs/hfsplus/xattr.h b/fs/hfsplus/xattr.h
-index 841b569..9e21449 100644
---- a/fs/hfsplus/xattr.h
-+++ b/fs/hfsplus/xattr.h
-@@ -14,8 +14,6 @@
- extern const struct xattr_handler hfsplus_xattr_osx_handler;
- extern const struct xattr_handler hfsplus_xattr_user_handler;
- extern const struct xattr_handler hfsplus_xattr_trusted_handler;
--extern const struct xattr_handler hfsplus_xattr_acl_access_handler;
--extern const struct xattr_handler hfsplus_xattr_acl_default_handler;
- extern const struct xattr_handler hfsplus_xattr_security_handler;
+ 	NULL,
+ };
  
- extern const struct xattr_handler *hfsplus_xattr_handlers[];
 -- 
 1.7.10.4
 
