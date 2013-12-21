@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9AE9729DF8
-	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 23:30:46 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C625F7F3F
+	for <xfs@oss.sgi.com>; Sat, 21 Dec 2013 05:18:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 34627AC001
-	for <xfs@oss.sgi.com>; Fri, 20 Dec 2013 21:30:43 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	CC3vGbQWNbUQCXMf for <xfs@oss.sgi.com>;
-	Fri, 20 Dec 2013 21:30:41 -0800 (PST)
-Date: Sat, 21 Dec 2013 16:30:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS blocked task in xlog_cil_force_lsn
-Message-ID: <20131221053032.GA3220@dastard>
-References: <52B102FF.8040404@pzystorm.de> <52B118A9.8080905@hardwarefreak.com>
-	<52B178AA.6040302@pzystorm.de> <52B2FE9E.50307@hardwarefreak.com>
-	<52B41B67.9030308@pzystorm.de> <52B439D1.3020205@hardwarefreak.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D2B3AC00C
+	for <xfs@oss.sgi.com>; Sat, 21 Dec 2013 03:18:51 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id oak5PMOgzRWVnqrR
+	for <xfs@oss.sgi.com>; Sat, 21 Dec 2013 03:18:47 -0800 (PST)
+Message-ID: <52B57912.5080000@hardwarefreak.com>
+Date: Sat, 21 Dec 2013 05:18:42 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52B439D1.3020205@hardwarefreak.com>
+Subject: md-RAID5/6 stripe_cache_size default value vs performance vs memory
+	footprint
+References: <52B102FF.8040404@pzystorm.de>
+	<52B2FE9E.50307@hardwarefreak.com>	<52B41B67.9030308@pzystorm.de>
+	<201312202343.47895.arekm@maven.pl>
+In-Reply-To: <201312202343.47895.arekm@maven.pl>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,68 +27,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com, xfs@pzystorm.de
+To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>
+Cc: linux-raid@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Dec 20, 2013 at 06:36:33AM -0600, Stan Hoeppner wrote:
-> On 12/20/2013 4:26 AM, Kevin Richter wrote:
-> > 'top' while copying with stripe size of 2048 (the source disk is ntfs):
-> >> top - 10:48:24 up 1 day,  1:41,  2 users,  load average: 5.66, 3.53, 2.17
-> >> Tasks: 210 total,   2 running, 208 sleeping,   0 stopped,   0 zombie
-> >> Cpu(s):  0.1%us, 35.8%sy,  0.0%ni, 46.0%id, 17.9%wa,  0.0%hi,  0.2%si,  0.0%st
-> >> Mem:  32913992k total, 32709208k used,   204784k free, 10770344k buffers
-> >> Swap:  7812496k total,        0k used,  7812496k free, 20866844k cached
-> >>
-> >>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
-> >> 19524 root      20   0     0    0    0 R   93  0.0   4:00.12 kworker/3:1
-> >> 23744 root      20   0     0    0    0 S   55  0.0   0:50.84 kworker/0:1
-> >> 23738 root      20   0     0    0    0 S   29  0.0   0:56.94 kworker/4:0
-> >>  3893 root      20   0     0    0    0 S   28  0.0  36:47.50 md2_raid6
-> >>  4551 root      20   0 22060 3328  720 D   25  0.0  20:21.61 mount.ntfs
-> >> 23273 root      20   0     0    0    0 S   22  0.0   1:54.86 kworker/7:2
-> >> 23734 root      20   0 21752 1280 1040 D   21  0.0   0:49.84 cp
-> >>    84 root      20   0     0    0    0 S    7  0.0   8:19.34 kswapd1
-> >>    83 root      20   0     0    0    0 S    6  0.0  11:55.81 kswapd0
-> >> 23745 root      20   0     0    0    0 S    2  0.0   0:33.60 kworker/1:2
-> >> 21598 root      20   0     0    0    0 D    1  0.0   0:11.33 kworker/u17:1
-> 
-> Hmm, what's kworker/3:1?  That's not a crypto thread eating 93% of a
-> SandyBridge core at only ~180 MB/s throughput is it?
-
-Kworkers are an anonymous kernel worker threads that do work that
-has been pushed to a workqueue. kworker/3:1 is the 2nd worker thread
-on CPU 3 (3:0 is the first). The kworker is a thread pool that grows
-and shrinks according to demand.
-
-As the naming suggests, kworker threads are per-CPU, and there can
-be hundreds of them per CPU is there is enough workqueue work blocks
-during execution of the work (e.g. on locks, waiting for IO, etc).
-If there is little blocking occurring, there might on ly be a couple
-of kworker threads that do all the work, and hence you see them
-consuming huge amounts of CPU on behalf of other systems...
-
-XFS uses workqueues for lots of things, so it's not unusual to see
-an IO or metadata heavy workload end up with this huge numbers of
-kworker threads doing work:
-
-<run parallel fsmark test>
-....
-$ ps -ef |grep kworker |wc -l
-91
-$
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SSByZW5hbWVkIHRoZSBzdWJqZWN0IGFzIHlvdXIgcXVlc3Rpb24gZG9lc24ndCByZWFsbHkgYXBw
+bHkgdG8gWEZTLCBvcgp0aGUgT1AsIGJ1dCB0byBtZC1SQUlELgoKT24gMTIvMjAvMjAxMyA0OjQz
+IFBNLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3JvdGU6Cgo+IEkgd29uZGVyIHdoeSBrZXJuZWwg
+aXMgZ2l2aW5nIGRlZmF1bHRzIHRoYXQgZXZlcnlvbmUgcmVwZWF0bHkgcmVjb21tZW5kcyB0byAK
+PiBjaGFuZ2UvaW5jcmVhc2U/IEhhcyBhbnlvbmUgdHJpZWQgdG8gYnVncmVwb3J0IHRoYXQgZm9y
+IHN0cmlwZV9jYWNoZV9zaXplIAo+IGNhc2U/CgpUaGUgYW5zd2VyIGlzIGJhbGFuY2luZyBkZWZh
+dWx0IG1kLVJBSUQ1LzYgd3JpdGUgcGVyZm9ybWFuY2UgYWdhaW5zdAprZXJuZWwgUkFNIGNvbnN1
+bXB0aW9uLCB3aXRoIG1vcmUgd2VpZ2h0IGdpdmVuIHRvIHRoZSBsYXR0ZXIuICBUaGUgZm9ybXVs
+YToKCigoNDA5NipzdHJpcGVfY2FjaGVfc2l6ZSkqbnVtX2RyaXZlcyk9IFJBTSBjb25zdW1lZCBm
+b3Igc3RyaXBlIGNhY2hlCgpIaWdoIHN0cmlwZV9jYWNoZV9zaXplIHZhbHVlcyB3aWxsIGNhdXNl
+IHRoZSBrZXJuZWwgdG8gZWF0IG5vbiB0cml2aWFsCmFtb3VudHMgb2YgUkFNIGZvciB0aGUgc3Ry
+aXBlIGNhY2hlIGJ1ZmZlci4gIFRoaXMgdGFibGUgZGVtb25zdHJhdGVzIHRoZQplZmZlY3QgdG9k
+YXkgZm9yIHR5cGljYWwgUkFJRDUvNiBkaXNrIGNvdW50cy4KCnN0cmlwZV9jYWNoZV9zaXplCWRy
+aXZlcwlSQU0gY29uc3VtZWQKMjU2CQkJIDQJICA0IE1CCgkJCSA4CSAgOCBNQgoJCQkxNgkgMTYg
+TUIKNTEyCQkJIDQJICA4IE1CCgkJCSA4CSAxNiBNQgoJCQkxNgkgMzIgTUIKMTAyNAkJCSA0CSAx
+NiBNQgoJCQkgOAkgMzIgTUIKCQkJMTYJIDY0IE1CCjIwNDgJCQkgNAkgMzIgTUIKCQkJIDgJIDY0
+IE1CCgkJCTE2CTEyOCBNQgo0MDk2CQkJIDQJIDY0IE1CCgkJCSA4CTEyOCBNQgoJCQkxNgkyNTYg
+TUIKClRoZSBwb3dlcnMgdGhhdCBiZSwgTGludXMgaW4gcGFydGljdWxhciwgYXJlIG5vdCBmb25k
+IG9mIGRlZmF1bHQKc2V0dGluZ3MgdGhhdCBjcmVhdGUgYSBsb3Qgb2Yga2VybmVsIG1lbW9yeSBz
+dHJ1Y3R1cmVzLiAgVGhlIGRlZmF1bHQKbWQtUkFJRDUvNiBzdHJpcGVfY2FjaGUtc2l6ZSB5aWVs
+ZHMgMU1CIGNvbnN1bWVkIHBlciBtZW1iZXIgZGV2aWNlLgoKV2l0aCBTU0RzIGJlY29taW5nIG1h
+aW5zdHJlYW0sIGFuZCBiZWNvbWluZyBldmVyIGZhc3RlciwgYXQgc29tZSBwb2ludAp0aGUgbWQt
+UkFJRDUvNiBhcmNoaXRlY3R1cmUgd2lsbCBoYXZlIHRvIGJlIHJlZGVzaWduZWQgYmVjYXVzZSBv
+ZiB0aGUKbWVtb3J5IGZvb3RwcmludCByZXF1aXJlZCBmb3IgcGVyZm9ybWFuY2UuICBDdXJyZW50
+bHkgdGhlIHJlcXVpcmVkIHNpemUKb2YgdGhlIHN0cmlwZSBjYWNoZSBhcHBlYXJzIGRpcmVjdGx5
+IHByb3BvcnRpb25hbCB0byB0aGUgYWdncmVnYXRlIHdyaXRlCnRocm91Z2hwdXQgb2YgdGhlIFJB
+SUQgZGV2aWNlcy4gIFRodXMgdGhlIG9wdGltYWwgdmFsdWUgd2lsbCB2YXJ5CmdyZWF0bHkgZnJv
+bSBvbmUgc3lzdGVtIHRvIGFub3RoZXIgZGVwZW5kaW5nIG9uIHRoZSB0aHJvdWdocHV0IG9mIHRo
+ZQpkcml2ZXMuCgpGb3IgZXhhbXBsZSwgSSBhc3Npc3RlZCBhIHVzZXIgd2l0aCA1eCBJbnRlbCBT
+U0RzIGJhY2sgaW4gSmFudWFyeSBhbmQKaGlzIHN5c3RlbSByZXF1aXJlZCA0MDk2LCBvciA4ME1C
+IG9mIFJBTSBmb3Igc3RyaXBlIGNhY2hlLCB0byByZWFjaAptYXhpbXVtIHdyaXRlIHRocm91Z2hw
+dXQgb2YgdGhlIGRldmljZXMuICBUaGlzIHlpZWxkZWQgNjAwTUIvcyBvciA2MCUKZ3JlYXRlciB0
+aHJvdWdocHV0IHRoYW4gMjA0OCwgb3IgNDBNQiBSQU0gZm9yIGNhY2hlLiAgSW4gaGlzIGNhc2Ug
+NjBNQgptb3JlIFJBTSB0aGFuIHRoZSBkZWZhdWx0IHdhcyB3ZWxsIHdvcnRoIHRoZSBpbmNyZWFz
+ZSBhcyB0aGUgbWFjaGluZSB3YXMKYW4gaVNDU0kgdGFyZ2V0IHNlcnZlciB3aXRoIDhHQiBSQU0u
+CgpJbiB0aGUgcHJldmlvdXMgY2FzZSB3aXRoIDV4IHJ1c3QgUkFJRDYgdGhlIDIwNDggdmFsdWUg
+c2VlbWVkIG9wdGltYWwKKHRob3VnaCBub3QgeWV0IHZlcmlmaWVkKSwgcmVxdWlyaW5nIDQwTUIg
+bGVzcyBSQU0gdGhhbiB0aGUgNXggSW50ZWwKU1NEcy4gIEZvciBhIDMgbW9kZXJuIHJ1c3QgUkFJ
+RDUgdGhlIGRlZmF1bHQgb2YgMjU2LCBvciAzTUIsIGlzIGNsb3NlIHRvCm9wdGltYWwgYnV0IG1h
+eWJlIGEgbGl0dGxlIGxvdy4gIENvbnNpZGVyIHRoYXQgMjU2IGhhcyBiZWVuIHRoZSBkZWZhdWx0
+CmZvciBhIHZlcnkgbG9uZyB0aW1lLCBhbmQgd2FzIHNlbGVjdGVkIGJhY2sgd2hlbiBhdmVyYWdl
+IGRyaXZlCnRocm91Z2hwdXQgd2FzIG11Y2ggbXVjaCBsb3dlciwgYXMgaW4gNTBNQi9zIG9yIGxl
+c3MsIFNTRHMgaGFkbid0IHlldApiZWVuIGludmVudGVkLCBhbmQgc3lzdGVtIG1lbW9yaWVzIHdl
+cmUgbXVjaCBzbWFsbGVyLgoKRHVlIHRvIHRoZSBtYXNzaXZlIGRpZmZlcmVuY2UgaW4gdGhyb3Vn
+aHB1dCBiZXR3ZWVuIHJ1c3QgYW5kIFNTRCwgYW55Cm1lYW5pbmdmdWwgY2hhbmdlIGluIHRoZSBk
+ZWZhdWx0IHJlYWxseSByZXF1aXJlcyBuZXcgY29kZSB0byBzbmlmZiBvdXQKd2hhdCB0eXBlIG9m
+IGRldmljZXMgY29uc3RpdHV0ZSB0aGUgYXJyYXksIGlmIHRoYXQncyBwb3NzaWJsZSwgYW5kIGl0
+CnByb2JhYmx5IGlzbid0LCBhbmQgc2V0IGEgbG93aXNoIGRlZmF1bHQgYWNjb3JkaW5nbHkuICBB
+Z2FpbiwgU1NEcwpkaWRuJ3QgZXhpc3Qgd2hlbiBtZC1SQUlEIHdhcyBjb2RlZCwgbm9yIHdoZW4g
+dGhpcyBkZWZhdWx0IHdhcyBzZXQsIGFuZAp0aGlzIHRocm93cyBhIGJpZyBtb25rZXkgd3JlbmNo
+IGludG8gdGhlc2Ugc3Bva2VzLgoKLS0gClN0YW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
+dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
