@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A680829E16
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 12:16:13 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 645177F57
+	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 03:56:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E52E304066
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:13 -0800 (PST)
-Received: from mail-ve0-f202.google.com (mail-ve0-f202.google.com
-	[209.85.128.202]) by cuda.sgi.com with ESMTP id
-	gImg3An068pxtCdx (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E13A8AC004
+	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 01:56:10 -0800 (PST)
+Received: from mail-pd0-f171.google.com (mail-pd0-f171.google.com
+	[209.85.192.171]) by cuda.sgi.com with ESMTP id
+	8MGImGCOVCRDhWyL (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Dec 2013 10:16:12 -0800 (PST)
-Received: by mail-ve0-f202.google.com with SMTP id oz11so896veb.3
-	for <xfs@oss.sgi.com>; Wed, 18 Dec 2013 10:16:12 -0800 (PST)
-From: Junho Ryu <jayr@google.com>
-Subject: [PATCH v3 12/12] xfstests: check if filesystem supports chattr
-Date: Wed, 18 Dec 2013 10:16:03 -0800
-Message-Id: <1387390563-27064-12-git-send-email-jayr@google.com>
-In-Reply-To: <1387390563-27064-1-git-send-email-jayr@google.com>
-References: <1387390563-27064-1-git-send-email-jayr@google.com>
+	Sun, 22 Dec 2013 01:56:09 -0800 (PST)
+Received: by mail-pd0-f171.google.com with SMTP id z10so4172982pdj.30
+	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 01:56:09 -0800 (PST)
+Date: Sun, 22 Dec 2013 17:59:29 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: [RFC] directory quota survey on xfs
+Message-ID: <20131222095929.GA11444@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,71 +26,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: tytso@mit.edu, hughd@google.com, branto@redhat.com, Junho Ryu <jayr@google.com>
+To: linux-ext4@vger.kernel.org
+Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Andreas Dilger <adilger.kernel@dilger.ca>
 
-Add _require_chattr which verifies exit code of chattr command and call
-it before running generic/277.
+Hi all,
 
-Signed-off-by: Junho Ryu <jayr@google.com>
----
+As discussed with ext4 folks, I will try to make ext4 file system support
+directory quota (a.k.a., project id in xfs).  For keeping consistency
+with xfs's implementation, I did some tests on xfs, and I summarized the
+result as following.  This will help us understand what we can do and
+what we can't do.  Please correct me if I miss doing some tests or mis-
+understand something.
 
-v3: same as v2
+I just do some tests about rename/hardlink because they are the key
+issue from our discussion.
 
-v2: extracted from patch 9
++ unaccounted dir
+x accounted dir
 
- common/attr       | 13 +++++++++++++
- tests/generic/277 |  2 ++
- 2 files changed, 15 insertions(+)
+rename(mv)
+==========
 
-diff --git a/common/attr b/common/attr
-index 4a3ac9e..278633f 100644
---- a/common/attr
-+++ b/common/attr
-@@ -218,5 +218,18 @@ else # Assume max ~1 block of attrs
- fi
- 
- export MAX_ATTRVAL_SIZE
-+
-+_require_chattr()
-+{
-+    touch $TEST_DIR/syscalltest
-+    chattr +A $TEST_DIR/syscalltest > $TEST_DIR/syscalltest.out 2>&1
-+    if [ $? -ne 0 ]; then
-+      _notrun "chattr has failed to change attribute of a file in TEST_DIR"
-+    fi
-+    cat $TEST_DIR/syscalltest.out >> $seqres.full
-+
-+    rm -f $TEST_DIR/syscalltest.out
-+}
-+
- # make sure this script returns success
- /bin/true
-diff --git a/tests/generic/277 b/tests/generic/277
-index 8461ad9..c31f7c4 100755
---- a/tests/generic/277
-+++ b/tests/generic/277
-@@ -38,11 +38,13 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/attr
- 
- # real QA test starts here
- _supported_fs generic
- _supported_os Linux
- _require_scratch
-+_require_chattr
- 
- _scratch_mkfs > /dev/null 2>&1
- _scratch_mount
--- 
-1.8.5.1
++ -> +: ok
+
++ -> x: ok
+
+I use strace(1) to lookup which syscall is used, and I found that xfs
+will return EXDEV when mv(1) tries to use rename(2) to move a dir from
+a unaccounted dir to a accounted dir.  Then mv uses creat(2)/read(2)/
+write(2) syscalls to move this dir.
+
+x -> +: wrong (design by feature?) 
+
+If we move a dir from a accounted dir to a unaccounted dir, the quota is
+still accounted.  It seems that xfs don't remove project id from this
+dir and its subdirs/files on this case.
+
+x -> x: ok
+
+Xfs returns EXDEV error when mv(1) uses rename(2) to move a dir from a
+accounted dir to another accounted dir (These dirs have different
+project ids).  Then mv(1) uses creat(1)/read(1)/write(1) syscalls to
+move this dir.
+
+summary:
+rename        +        x
++             ok       ok (EXDEV)
+x             wrong    ok (EXDEV)
+
+hardlink(ln)
+========
+
++ -> +: ok
+
++ -> x: error
+
+Xfs also returns EXDEV error to forbid this operation.  So that means
+that we don't allow users to do a hardlink for a file from a unaccount
+dir to a accounted dir.
+
+x -> +: ok
+
+This operation can be executed and no any error is reported.  After that
+the quota doesn't be changed.  When both of two hardlinks are removed,
+the quota will be discharged.
+
+x -> x: error
+
+Xfs returns EXDEV error to forbid this operation.
+
+summary:
+hardlink        +        x
++               ok       error (EXDEV)
+x               ok       error (EXDEV)
+
+As always, any comment or idea are welcome.
+
+Thanks,
+						- Zheng
 
 _______________________________________________
 xfs mailing list
