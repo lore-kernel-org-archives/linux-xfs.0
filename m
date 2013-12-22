@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 04F567F66
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 13:28:51 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 654417F50
+	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 14:15:07 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CEA86304053
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 11:28:47 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id trePpjBXH2bg7F2i (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Dec 2013 11:28:42 -0800 (PST)
-Date: Sun, 22 Dec 2013 11:28:18 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 21/21] hfsplus: remove can_set_xattr
-Message-ID: <20131222192818.GA32565@infradead.org>
-References: <20131220131635.650823732@bombadil.infradead.org>
-	<20131220132524.900291394@bombadil.infradead.org>
-	<636E01BC-12FD-452B-8B1C-320B6EADAEFD@dubeyko.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AEAA8F8035
+	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 12:15:04 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	1EGQGc2v6FyEmT5r for <xfs@oss.sgi.com>;
+	Sun, 22 Dec 2013 12:15:02 -0800 (PST)
+Date: Mon, 23 Dec 2013 07:14:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS blocked task in xlog_cil_force_lsn
+Message-ID: <20131222201450.GB3220@dastard>
+References: <52B102FF.8040404@pzystorm.de> <52B118A9.8080905@hardwarefreak.com>
+	<52B178AA.6040302@pzystorm.de> <52B2FE9E.50307@hardwarefreak.com>
+	<52B41B67.9030308@pzystorm.de> <52B439D1.3020205@hardwarefreak.com>
+	<20131221053032.GA3220@dastard>
+	<52B6AE4D.5020104@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <636E01BC-12FD-452B-8B1C-320B6EADAEFD@dubeyko.com>
+In-Reply-To: <52B6AE4D.5020104@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,71 +33,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vyacheslav Dubeyko <slava@dubeyko.com>
-Cc: cluster-devel@redhat.com, xfs@oss.sgi.com, Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Christoph Hellwig <hch@infradead.org>, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@pzystorm.de, xfs@oss.sgi.com
 
-On Sat, Dec 21, 2013 at 08:07:51PM +0300, Vyacheslav Dubeyko wrote:
-> > -static int can_set_xattr(struct inode *inode, const char *name,
-> > -				const void *value, size_t value_len)
-> 
-> This function works for all handlers. So, I don't think that it makes sense
-> to delete it.
-
-It "works" in a minimal sense that it won't crash or actively cause
-harm.  But it also is useless except for the check that we can abuse
-the osx namespace to set an attribute in another namespace, which we
-still do in the proper way after my patch.
-
-> > -	if (!strncmp(name, XATTR_MAC_OSX_PREFIX, XATTR_MAC_OSX_PREFIX_LEN)) {
-> > -		/*
-> > -		 * This makes sure that we aren't trying to set an
-> > -		 * attribute in a different namespace by prefixing it
-> > -		 * with "osx."
-> > -		 */
-> > -		if (is_known_namespace(name + XATTR_MAC_OSX_PREFIX_LEN))
-> > -			return -EOPNOTSUPP;
-> 
-> I think that this check is important. It forbids such combinations as "osx.system.*" or
-> "osx.trusted.*", for example. Because "osx.*" is virtual namespace for xattrs that
-> it can be under Mac OS X. If you want to set xattr from "system.*" namespace, for example,
-> then you need to use another handler. And such namespace should be without
-> addition of "osx." prefix.
-
-Right, and we keep exactly the check, just in a different place.
-
-> The __hfsplus_setxattr() is common method for all handlers. So, removing
-> this call means that we don't check validity of namespace. I don't think
-> that such modification is a right way.
-
-The generic code already checks for the validity of the namespace for
-you. xattr_resolve_name in fs/xattr.c makes sure only attributes for a
-namespace that the filesystem registered can be set or modified.
-
-> > @@ -841,10 +761,6 @@ int hfsplus_removexattr(struct dentry *dentry, const char *name)
-> > 	if (!HFSPLUS_SB(inode->i_sb)->attr_tree)
-> > 		return -EOPNOTSUPP;
+On Sun, Dec 22, 2013 at 03:18:05AM -0600, Stan Hoeppner wrote:
+> On 12/20/2013 11:30 PM, Dave Chinner wrote:
+> > On Fri, Dec 20, 2013 at 06:36:33AM -0600, Stan Hoeppner wrote:
+> >> On 12/20/2013 4:26 AM, Kevin Richter wrote:
+> >>> 'top' while copying with stripe size of 2048 (the source disk is ntfs):
+> >>>> top - 10:48:24 up 1 day,  1:41,  2 users,  load average: 5.66, 3.53, 2.17
+> >>>> Tasks: 210 total,   2 running, 208 sleeping,   0 stopped,   0 zombie
+> >>>> Cpu(s):  0.1%us, 35.8%sy,  0.0%ni, 46.0%id, 17.9%wa,  0.0%hi,  0.2%si,  0.0%st
+> >>>> Mem:  32913992k total, 32709208k used,   204784k free, 10770344k buffers
+> >>>> Swap:  7812496k total,        0k used,  7812496k free, 20866844k cached
+> >>>>
+> >>>>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+> >>>> 19524 root      20   0     0    0    0 R   93  0.0   4:00.12 kworker/3:1
+> >>>> 23744 root      20   0     0    0    0 S   55  0.0   0:50.84 kworker/0:1
+> >>>> 23738 root      20   0     0    0    0 S   29  0.0   0:56.94 kworker/4:0
+> >>>>  3893 root      20   0     0    0    0 S   28  0.0  36:47.50 md2_raid6
+> >>>>  4551 root      20   0 22060 3328  720 D   25  0.0  20:21.61 mount.ntfs
+> >>>> 23273 root      20   0     0    0    0 S   22  0.0   1:54.86 kworker/7:2
+> >>>> 23734 root      20   0 21752 1280 1040 D   21  0.0   0:49.84 cp
+> >>>>    84 root      20   0     0    0    0 S    7  0.0   8:19.34 kswapd1
+> >>>>    83 root      20   0     0    0    0 S    6  0.0  11:55.81 kswapd0
+> >>>> 23745 root      20   0     0    0    0 S    2  0.0   0:33.60 kworker/1:2
+> >>>> 21598 root      20   0     0    0    0 D    1  0.0   0:11.33 kworker/u17:1
+> >>
+> >> Hmm, what's kworker/3:1?  That's not a crypto thread eating 93% of a
+> >> SandyBridge core at only ~180 MB/s throughput is it?
 > > 
-> > -	err = can_set_xattr(inode, name, NULL, 0);
-> 
-> Ditto. Moreover, it is used namely hfsplus_removexattr() and not
-> __hfsplus_setxattr() for removing xattrs in hfsplus driver. So, removing
-> this check is not good way.
-
-Oh, I just noticed that hfsplus does not use the xattr handlers for
-removing, while it does for getting and setting xattrs.  That's a really
-bad a confusing design, and we'll indeed need to fix that as well.
-
-> > 	if (len > HFSPLUS_ATTR_MAX_STRLEN)
-> > 		return -EOPNOTSUPP;
+> > Kworkers are an anonymous kernel worker threads that do work that
+> > has been pushed to a workqueue. kworker/3:1 is the 2nd worker thread
+> > on CPU 3 (3:0 is the first). The kworker is a thread pool that grows
+> > and shrinks according to demand.
 > > 
-> > +	if (is_known_namespace(name))
-> > +		return -EOPNOTSUPP;
+> > As the naming suggests, kworker threads are per-CPU, and there can
+> > be hundreds of them per CPU is there is enough workqueue work blocks
+> > during execution of the work (e.g. on locks, waiting for IO, etc).
+> > If there is little blocking occurring, there might on ly be a couple
+> > of kworker threads that do all the work, and hence you see them
+> > consuming huge amounts of CPU on behalf of other systems...
+> > 
+> > XFS uses workqueues for lots of things, so it's not unusual to see
+> > an IO or metadata heavy workload end up with this huge numbers of
+> > kworker threads doing work:
+> > 
+> > <run parallel fsmark test>
+> > ....
+> > $ ps -ef |grep kworker |wc -l
+> > 91
 > 
-> If common check in __hfsplus_setxattr() will be on the same place then
-> this addition doesn't make sense.
+> For the record, again, I've never used dm-crypt.  I'm just trying to
+> work through the layers to identify the source of Kevin's problems.  So
+> please don't clobber me too hard for going OT, or trying to speak
+> (somewhat) intelligently about something I'm just learning about...
+> 
+> So, how does one identify who is doing work inside a worker thread?  In
+> this case we're trying to figure out if dm-crypt might be eating a CPU
+> core thus limiting its throughput.  However...
 
-Having both does indeed not make sense, but this is the better place to
-have it.
+perf top is your friend for finding out where the kernel is spending
+it's CPU time. It will tell you functions (and call chains) that are
+consuming CPU time rather than what individual threads are doing.
+
+If you really want to know what worker threads are doing,
+/proc/sysrq-trigger dumps the kworker threads with the name of the
+workqueue they are doing work on behalf of as well as the stack
+trace.
+
+> 
+> I just read a thread on dm-devel about dm-crypt performance dated late
+> March 2013.  It wasn't clear to me if dm-crypt yet uses unbound
+> workqueues, if it dispatches work to multiple queues, or if it still
+> uses the hand built dispatcher, as of kernel 3.11, which Kevin just
+> updated to.
+
+dm-crypt uses workqueues with a concurrency depth of 1, and kcryptd
+is defined as CPU intensive and so is scheduled like a long running
+kernel thread rather than a workqueue. Reads decrypting is done on
+IO completion, so if you've only got one CPU processing IO
+completions, then read decryption will effectively be single
+threaded due to the nature of per-cpu work queues and a concurrency
+depth of 1.
+
+> What was clear is that as of March dm-crypt was not preserving IO
+> ordering.  If this is still the case, that would imply RMW with md
+> parity arrays, which would tend to explain Kevin's write throughput
+> being ~1/3rd of his read, and less than a single disk.
+
+encryption adds IO latency, so unless you have lots of concurrency
+to hide the latency, dm-crypt will almost always be slower than the
+same IO an equivalent unencrypted disk.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
