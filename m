@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 443CE7F7D
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7B8FA7F81
 	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 16:54:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 292108F8050
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 122B4AC010
 	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 14:54:00 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id fkfhjKb4HNGPhByH (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id CMsl8IDLYUXEhIa1 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 23 Dec 2013 14:53:58 -0800 (PST)
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id 42F38ABB4
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 4B3E2AC19
 	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 22:53:57 +0000 (UTC)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/2] Fix output parsing in _check_udf_filesystem()
-Date: Mon, 23 Dec 2013 23:53:50 +0100
-Message-Id: <1387839231-8558-2-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/2] Add udf support into _scratch_mkfs_sized
+Date: Mon, 23 Dec 2013 23:53:51 +0100
+Message-Id: <1387839231-8558-3-git-send-email-jack@suse.cz>
 In-Reply-To: <1387839231-8558-1-git-send-email-jack@suse.cz>
 References: <1387839231-8558-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,31 +34,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Kara <jack@suse.cz>
 
-Move of tests into separate subdirectories broke sed(1) expression in
-_check_udf_filesystem(). Actually use of sed in that place was rather
-stupid so just replace it with plain echo.
-
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- common/rc | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ common/rc | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/common/rc b/common/rc
-index fe6bbfcbfc55..12f0196655a8 100644
+index 12f0196655a8..22cd975b3fe8 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -1582,9 +1582,8 @@ _check_udf_filesystem()
-     sleep 1 # Due to a problem with time stamps in udf_test
-     $here/src/udf_test $OPT_ARG $device | tee $seqres.checkfs | egrep "Error|Warning" | \
- 	_udf_test_known_error_filter | \
--	egrep -iv "Error count:.*[0-9]+.*total occurrences:.*[0-9]+|Warning count:.*[0-9]+.*total occurrences:.*[0-9]+" | \
--	sed "s/^.*$/Warning UDF Verifier reported errors see $seqres.checkfs./g"
--
-+	egrep -iv "Error count:.*[0-9]+.*total occurrences:.*[0-9]+|Warning count:.*[0-9]+.*total occurrences:.*[0-9]+" && \
-+        echo "Warning UDF Verifier reported errors see $seqres.checkfs."
- }
- 
- _check_xfs_test_fs()
+@@ -563,6 +563,9 @@ _scratch_mkfs_sized()
+     ext2|ext3|ext4|ext4dev)
+ 	yes | ${MKFS_PROG}.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+ 	;;
++    udf)
++	$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
++	;;
+     btrfs)
+ 	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
+ 	;;
 -- 
 1.8.1.4
 
