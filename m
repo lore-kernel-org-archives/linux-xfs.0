@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6F85F7F56
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 19:45:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C6A7AC002
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 17:45:58 -0800 (PST)
-Received: from mail-ob0-f173.google.com (mail-ob0-f173.google.com
-	[209.85.214.173]) by cuda.sgi.com with ESMTP id
-	IBX5Zkqly71UDukw (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Dec 2013 17:45:57 -0800 (PST)
-Received: by mail-ob0-f173.google.com with SMTP id gq1so4880330obb.4
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 17:45:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
-References: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
-Date: Mon, 23 Dec 2013 09:45:56 +0800
-Message-ID: <CAEH94LiBoATQpGmwbUXOdte=pN=gcT8R5LyvHMVB=5Ra4G2QDQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] xfs: add O_TMPFILE support
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9D32F7F5D
+	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 00:40:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8DAC18F804B
+	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 22:40:22 -0800 (PST)
+Received: from oproxy9-pub.mail.unifiedlayer.com
+	(oproxy9-pub.mail.unifiedlayer.com [69.89.24.6]) by
+	cuda.sgi.com with SMTP id 5gUtCtUPJxA1vQI2 for
+	<xfs@oss.sgi.com>; Sun, 22 Dec 2013 22:40:21 -0800 (PST)
+Message-ID: <1387780809.3991.21.camel@slavad-ubuntu>
+Subject: Re: [PATCH 21/21] hfsplus: remove can_set_xattr
+From: Vyacheslav Dubeyko <slava@dubeyko.com>
+Date: Mon, 23 Dec 2013 10:40:09 +0400
+In-Reply-To: <20131222192818.GA32565@infradead.org>
+References: <20131220131635.650823732@bombadil.infradead.org>
+	<20131220132524.900291394@bombadil.infradead.org>
+	<636E01BC-12FD-452B-8B1C-320B6EADAEFD@dubeyko.com>
+	<20131222192818.GA32565@infradead.org>
+Mime-Version: 1.0
+Reply-To: slava@dubeyko.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,100 +32,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfstests <xfs@oss.sgi.com>
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, xfs@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
 
-ping?
+On Sun, 2013-12-22 at 11:28 -0800, Christoph Hellwig wrote:
 
+> 
+> > > -	if (!strncmp(name, XATTR_MAC_OSX_PREFIX, XATTR_MAC_OSX_PREFIX_LEN)) {
+> > > -		/*
+> > > -		 * This makes sure that we aren't trying to set an
+> > > -		 * attribute in a different namespace by prefixing it
+> > > -		 * with "osx."
+> > > -		 */
+> > > -		if (is_known_namespace(name + XATTR_MAC_OSX_PREFIX_LEN))
+> > > -			return -EOPNOTSUPP;
+> > 
+> > I think that this check is important. It forbids such combinations as "osx.system.*" or
+> > "osx.trusted.*", for example. Because "osx.*" is virtual namespace for xattrs that
+> > it can be under Mac OS X. If you want to set xattr from "system.*" namespace, for example,
+> > then you need to use another handler. And such namespace should be without
+> > addition of "osx." prefix.
+> 
+> Right, and we keep exactly the check, just in a different place.
+> 
 
-On Wed, Dec 18, 2013 at 8:22 AM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
-> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
->
-> HI, folks
->
->   It's time to post the latest revision out, welcome to any constructive comment, thanks.
->
->   If anyone is interested in playing with it, you can get this patchset from my dev git on github:
->   git://github.com/wuzhy/kernel.git xfs_tmpfile
->
->   The patchset was tested against the code snippet from Andy Lutomirski and other test cases:
->   http://lwn.net/Articles/562296/
->   If you have any other better test cases, please let me know, thanks.
->
-> #include <stdio.h>
-> #include <err.h>
-> #include <fcntl.h>
-> #include <unistd.h>
-> #include <string.h>
->
-> #define __O_TMPFILE 020000000
-> #define O_DIRECTORY 0200000
-> #define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
-> #define AT_EMPTY_PATH 0x1000
->
-> int main(int argc, char **argv)
-> {
->    char buf[128];
->
->    if (argc != 3)
->      errx(1, "Usage: flinktest PATH linkat|proc");
->
->    int fd = open(".", O_TMPFILE | O_RDWR, 0600);
->    if (fd == -1)
->      err(1, "O_TMPFILE");
->    else
->      printf("fd #: %d\n", fd);
->
->    write(fd, "test", 4);
->
->    if (!strcmp(argv[2], "linkat")) {
->      if (linkat(fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) != 0)
->        err(1, "linkat");
->    } else if (!strcmp(argv[2], "proc")) {
->      sprintf(buf, "/proc/self/fd/%d", fd);
->      if (linkat(AT_FDCWD, buf, AT_FDCWD, argv[1], AT_SYMLINK_FOLLOW) != 0)
->        err(1, "linkat");
->    } else {
->      errx(1, "invalid mode");
->    }
->
->    return 0;
-> }
->
-> Changelog from v1:
->  - Fixed one chunk of the comments from Christoph Hellwig and Jeff Liu.
->
-> v1:
->  - Addressed the comments from Dave Chinner and Christoph Hellwig.
->
-> Zhi Yong Wu (3):
->   xfs: factor prid related codes into xfs_get_initial_prid()
->   xfs: add O_TMPFILE support
->   xfs: allow linkat() on O_TMPFILE files
->
->  fs/xfs/xfs_inode.c      |  123 ++++++++++++++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_inode.h      |   12 +++++
->  fs/xfs/xfs_iops.c       |   16 ++++++
->  fs/xfs/xfs_shared.h     |    4 +-
->  fs/xfs/xfs_symlink.c    |    5 +--
->  fs/xfs/xfs_trans_resv.c |   55 +++++++++++++++++++--
->  fs/xfs/xfs_trans_resv.h |    2 +
->  7 files changed, 202 insertions(+), 15 deletions(-)
->
-> --
-> 1.7.6.5
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Maybe I missed something, but I can see that this check is removed only.
+Could you point out the code in your patch that it checks and forbids
+such combination as "osx.security.*", "osx.trusted.*" and so on?
 
+I can see that is_known_namespace() is called for
+hfsplus_xattr_osx_handler only. But this method doesn't contain
+above-mentioned check. Moreover, hfsplus_xattr_user_handler,
+hfsplus_xattr_trusted_handler, hfsplus_xattr_security_handler will be
+without is_know_namespace() check. What about it?
 
+> > The __hfsplus_setxattr() is common method for all handlers. So, removing
+> > this call means that we don't check validity of namespace. I don't think
+> > that such modification is a right way.
+> 
+> The generic code already checks for the validity of the namespace for
+> you. xattr_resolve_name in fs/xattr.c makes sure only attributes for a
+> namespace that the filesystem registered can be set or modified.
+> 
 
--- 
-Regards,
+But generic code doesn't check such names combination that it is treated
+as wrong for concrete file systems. For example, "osx.security.*" is
+wrong for the case of HFS+. Because it will works
+hfsplus_xattr_osx_handler instead of hfsplus_xattr_security_handler.
 
-Zhi Yong Wu
+> > > @@ -841,10 +761,6 @@ int hfsplus_removexattr(struct dentry *dentry, const char *name)
+> > > 	if (!HFSPLUS_SB(inode->i_sb)->attr_tree)
+> > > 		return -EOPNOTSUPP;
+> > > 
+> > > -	err = can_set_xattr(inode, name, NULL, 0);
+> > 
+> > Ditto. Moreover, it is used namely hfsplus_removexattr() and not
+> > __hfsplus_setxattr() for removing xattrs in hfsplus driver. So, removing
+> > this check is not good way.
+> 
+> Oh, I just noticed that hfsplus does not use the xattr handlers for
+> removing, while it does for getting and setting xattrs.  That's a really
+> bad a confusing design, and we'll indeed need to fix that as well.
+> 
+
+Why bad design? Do you mean that using .removexattr callback is bad
+idea?
+
+So, if it needs to use xattr handler only for removing then it needs to
+make some refactoring of using __hfsplus_setxattr() and
+hfsplus_removexattr() or merging these two functions into one. And I
+think that merging is better idea.
+
+Thanks,
+Vyacheslav Dubeyko.
+
 
 _______________________________________________
 xfs mailing list
