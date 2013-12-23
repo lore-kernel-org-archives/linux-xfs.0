@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 69FA47F4E
-	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 08:37:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 54579304075
-	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 06:37:33 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id YwiJdgpP4kUtEATL (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Dec 2013 06:37:31 -0800 (PST)
-Date: Mon, 23 Dec 2013 06:37:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 21/21] hfsplus: remove can_set_xattr
-Message-ID: <20131223143706.GA8235@infradead.org>
-References: <20131220131635.650823732@bombadil.infradead.org>
-	<20131220132524.900291394@bombadil.infradead.org>
-	<636E01BC-12FD-452B-8B1C-320B6EADAEFD@dubeyko.com>
-	<20131222192818.GA32565@infradead.org>
-	<1387780809.3991.21.camel@slavad-ubuntu>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 020CF7F57
+	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 10:42:28 -0600 (CST)
+Message-ID: <52B867F1.2030804@sgi.com>
+Date: Mon, 23 Dec 2013 10:42:25 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1387780809.3991.21.camel@slavad-ubuntu>
+Subject: Re: [PATCH v3] xfs: free the efi AIL entry on log recovery failure
+References: <20131206212037.560711585@sgi.com>
+	<20131208005224.696001432@sgi.com>
+	<20131211113126.GA6248@infradead.org>
+In-Reply-To: <20131211113126.GA6248@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,298 +19,151 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vyacheslav Dubeyko <slava@dubeyko.com>
-Cc: cluster-devel@redhat.com, xfs@oss.sgi.com, Andreas Gruenbacher <andreas.gruenbacher@linbit.com>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Christoph Hellwig <hch@infradead.org>, linux-mtd@lists.infradead.org, viro@zeniv.linux.org.uk, jfs-discussion@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Dec 23, 2013 at 10:40:09AM +0400, Vyacheslav Dubeyko wrote:
-> Maybe I missed something, but I can see that this check is removed only.
-> Could you point out the code in your patch that it checks and forbids
-> such combination as "osx.security.*", "osx.trusted.*" and so on?
+Sorry it took me so long to get to this.
 
-@@ -941,6 +857,9 @@ static int hfsplus_osx_setxattr(struct dentry
-*dentry, const char *name,
-        if (len > HFSPLUS_ATTR_MAX_STRLEN)
-		return -EOPNOTSUPP;
+I like the idea to keep the majority of EFI items off the AIL, but it 
+does not simply the EFI recovery processing. xfs_recover_process_efi() 
+will place the EFI entry on the AIL and recreate the hanging on unmount 
+problem when there is an error in the extent free or transaction commit.
 
-+       if (is_known_namespace(name))
-+               return -EOPNOTSUPP;
-+
+Since the patch removes the XFS_EFI_RECOVERED flag/code, it is harder to 
+remove this entry. If you leave the XFS_EFI_RECOVERED flag/code in XFS, 
+the patch to avoid a hang in xfs_ail_push_all_sync() will be the same as 
+before.
+
+As you commented, it does leak some memory, which can be easily fixed...
+
+On 12/11/13 05:31, Christoph Hellwig wrote
+
+> Use a cancellation table, similar to how we handle buffers instead of
+> abusing the AIL during recovery.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
+> ---
+
+...
+
+> @@ -3059,82 +3065,50 @@ xlog_recover_efi_pass2(
+>   	struct xlog_recover_item	*item,
+>   	xfs_lsn_t			lsn)
+>   {
+> -	int			error;
+> -	xfs_mount_t		*mp = log->l_mp;
+> -	xfs_efi_log_item_t	*efip;
+> -	xfs_efi_log_format_t	*efi_formatp;
+> +	struct xfs_efi_cancel		*ecp;
+> +	int				error;
+> +	xfs_mount_t			*mp = log->l_mp;
+> +	xfs_efi_log_format_t		*efi_formatp;
+
+typedef got leaked back in.
+
+...
+
+> @@ -3618,27 +3592,26 @@ xlog_recover_process_data(
+>   }
+>
+>   /*
+> - * Process an extent free intent item that was recovered from
+> - * the log.  We need to free the extents that it describes.
+> + * Process an extent free intent item that was recovered from the log.
+> + * We need to free the extents that it describes.
+>    */
+>   STATIC int
+>   xlog_recover_process_efi(
+> -	xfs_mount_t		*mp,
+> -	xfs_efi_log_item_t	*efip)
+> +	struct xlog		*log,
+> +	struct xfs_efi_cancel	*ecp)
+>   {
+> -	xfs_efd_log_item_t	*efdp;
+> -	xfs_trans_t		*tp;
+> -	int			i;
+> -	int			error = 0;
+> -	xfs_extent_t		*extp;
+> +	struct xfs_mount	*mp = log->l_mp;
+> +	struct xfs_efi_log_item	*efip = ecp->ec_efip;
+> +	struct xfs_efd_log_item	*efdp;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_extent	*extp;
+>   	xfs_fsblock_t		startblock_fsb;
+> -
+> -	ASSERT(!test_bit(XFS_EFI_RECOVERED,&efip->efi_flags));
+> +	int			error = 0;
+> +	int			i;
+>
+>   	/*
+> -	 * First check the validity of the extents described by the
+> -	 * EFI.  If any are bad, then assume that all are bad and
+> -	 * just toss the EFI.
+> +	 * First check the validity of the extents described by the EFI.
+> +	 * If any are bad, then assume that all are bad and just toss the EFI.
+>   	 */
+>   	for (i = 0; i<  efip->efi_format.efi_nextents; i++) {
+>   		extp =&(efip->efi_format.efi_extents[i]);
+> @@ -3652,12 +3625,14 @@ xlog_recover_process_efi(
+>   			 * This will pull the EFI from the AIL and
+>   			 * free the memory associated with it.
+>   			 */
+> -			set_bit(XFS_EFI_RECOVERED,&efip->efi_flags);
+>   			xfs_efi_release(efip, efip->efi_format.efi_nextents);
+>   			return XFS_ERROR(EIO);
+>   		}
+>   	}
+
+Soo at this point we are dealing with the EFIs that do not have matching 
+EFD. The EFI are in the new l_efi_cancel and not on the AIL. I am 
+correct in thinking that there is no reason to do a xfs_efi_release() above?
+>
+> +	spin_lock(&log->l_ailp->xa_lock);
+> +	xfs_trans_ail_update(log->l_ailp,&efip->efi_item, ecp->ec_lsn);
+
+we now added the EFI to the AIL. If anything fails in the 
+xfs_free_extent()/xfs_trans_commit then EFI has to be removed which is 
+now trickier without the XFS_EFI_RECOVERED flag.
+
+I suppose we could:
+
+  1) leave the XFS_EFI_RECOVERED counter/code.
+  2) manually decrease the counter. *
+  3) manually remove the entry from the AIL. *
+* terrible hack that everyone will NACK.
+
+> - */
+>   STATIC int
+>   xlog_recover_process_efis(
+>   	struct xlog	*log)
+>   {
+...
+
+> -		spin_lock(&ailp->xa_lock);
+> +	list_for_each_entry_safe(ecp, next,&log->l_efi_cancel, ec_list) {
+> +		list_del(&ecp->ec_list);
+> +		error = xlog_recover_process_efi(log, ecp);
+>   		if (error)
+> -			goto out;
+> -		lip = xfs_trans_ail_cursor_next(ailp,&cur);
+> +			break; /* XXX: will leak remaining EFIs.. */
+
+...rather than leaking the rest of the efi cancel entries:
+
+		/* comment here about removing entries on error */
+		if (!error)
+			error = xlog_recover_process_efi(log, ecp);
+
+Again, sorry for the delay. I will wait to see what you want to do with 
+this patch before resubmitting the patch to free EFI from the AIL.
+
+--Mark.
 
 
-> I can see that is_known_namespace() is called for
-> hfsplus_xattr_osx_handler only. But this method doesn't contain
-> above-mentioned check. Moreover, hfsplus_xattr_user_handler,
-> hfsplus_xattr_trusted_handler, hfsplus_xattr_security_handler will be
-> without is_know_namespace() check. What about it?
-
-They only allow you to set user.*, trusted.* and security.* attributs,
-because the only get called for it.  For osx.* attributes the osx
-handler gets called, and passed the name minus the osx prefix, which
-is why the above check will catch it.
-
-> Why bad design? Do you mean that using .removexattr callback is bad
-> idea?
-
-Using the handlers for set and get and not using them for remove is a
-bad design, because it uses different levels of abstraction for
-related operations.  I'm also increasingly of the opnion that we
-should not allow the non-handler version, and that we should not permit
-filesystems to create their own namespaces, but that's an unrelated
-discussion.
-
-> So, if it needs to use xattr handler only for removing then it needs to
-> make some refactoring of using __hfsplus_setxattr() and
-> hfsplus_removexattr() or merging these two functions into one. And I
-> think that merging is better idea.
-
-I've not done the full merge, but below is an updated patch to make
-sure hfsplus uses the handlers for the remove case, and making sure
-the adding/striping of the prefix for the osv handlers is more
-transparent:
-
-diff --git a/fs/hfsplus/dir.c b/fs/hfsplus/dir.c
-index 9ee6298..bdec665 100644
---- a/fs/hfsplus/dir.c
-+++ b/fs/hfsplus/dir.c
-@@ -529,7 +529,7 @@ const struct inode_operations hfsplus_dir_inode_operations = {
- 	.setxattr		= generic_setxattr,
- 	.getxattr		= generic_getxattr,
- 	.listxattr		= hfsplus_listxattr,
--	.removexattr		= hfsplus_removexattr,
-+	.removexattr		= generic_removexattr,
- #ifdef CONFIG_HFSPLUS_FS_POSIX_ACL
- 	.get_acl		= hfsplus_get_posix_acl,
- 	.set_acl		= hfsplus_set_posix_acl,
-diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
-index 2e10993..83c9166 100644
---- a/fs/hfsplus/inode.c
-+++ b/fs/hfsplus/inode.c
-@@ -390,7 +390,7 @@ static const struct inode_operations hfsplus_file_inode_operations = {
- 	.setxattr	= generic_setxattr,
- 	.getxattr	= generic_getxattr,
- 	.listxattr	= hfsplus_listxattr,
--	.removexattr	= hfsplus_removexattr,
-+	.removexattr	= generic_removexattr,
- #ifdef CONFIG_HFSPLUS_FS_POSIX_ACL
- 	.get_acl	= hfsplus_get_posix_acl,
- 	.set_acl	= hfsplus_set_posix_acl,
-diff --git a/fs/hfsplus/xattr.c b/fs/hfsplus/xattr.c
-index bf88baa..c838b84 100644
---- a/fs/hfsplus/xattr.c
-+++ b/fs/hfsplus/xattr.c
-@@ -11,6 +11,8 @@
- #include "xattr.h"
- #include "acl.h"
- 
-+static int hfsplus_removexattr(struct inode *inode, const char *name);
-+
- const struct xattr_handler *hfsplus_xattr_handlers[] = {
- 	&hfsplus_xattr_osx_handler,
- 	&hfsplus_xattr_user_handler,
-@@ -52,82 +54,6 @@ static inline int is_known_namespace(const char *name)
- 	return true;
- }
- 
--static int can_set_system_xattr(struct inode *inode, const char *name,
--				const void *value, size_t size)
--{
--#ifdef CONFIG_HFSPLUS_FS_POSIX_ACL
--	struct posix_acl *acl;
--	int err;
--
--	if (!inode_owner_or_capable(inode))
--		return -EPERM;
--
--	/*
--	 * POSIX_ACL_XATTR_ACCESS is tied to i_mode
--	 */
--	if (strcmp(name, POSIX_ACL_XATTR_ACCESS) == 0) {
--		acl = posix_acl_from_xattr(&init_user_ns, value, size);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		if (acl) {
--			err = posix_acl_equiv_mode(acl, &inode->i_mode);
--			posix_acl_release(acl);
--			if (err < 0)
--				return err;
--			mark_inode_dirty(inode);
--		}
--		/*
--		 * We're changing the ACL.  Get rid of the cached one
--		 */
--		forget_cached_acl(inode, ACL_TYPE_ACCESS);
--
--		return 0;
--	} else if (strcmp(name, POSIX_ACL_XATTR_DEFAULT) == 0) {
--		acl = posix_acl_from_xattr(&init_user_ns, value, size);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		posix_acl_release(acl);
--
--		/*
--		 * We're changing the default ACL.  Get rid of the cached one
--		 */
--		forget_cached_acl(inode, ACL_TYPE_DEFAULT);
--
--		return 0;
--	}
--#endif /* CONFIG_HFSPLUS_FS_POSIX_ACL */
--	return -EOPNOTSUPP;
--}
--
--static int can_set_xattr(struct inode *inode, const char *name,
--				const void *value, size_t value_len)
--{
--	if (!strncmp(name, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
--		return can_set_system_xattr(inode, name, value, value_len);
--
--	if (!strncmp(name, XATTR_MAC_OSX_PREFIX, XATTR_MAC_OSX_PREFIX_LEN)) {
--		/*
--		 * This makes sure that we aren't trying to set an
--		 * attribute in a different namespace by prefixing it
--		 * with "osx."
--		 */
--		if (is_known_namespace(name + XATTR_MAC_OSX_PREFIX_LEN))
--			return -EOPNOTSUPP;
--
--		return 0;
--	}
--
--	/*
--	 * Don't allow setting an attribute in an unknown namespace.
--	 */
--	if (strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN) &&
--	    strncmp(name, XATTR_SECURITY_PREFIX, XATTR_SECURITY_PREFIX_LEN) &&
--	    strncmp(name, XATTR_USER_PREFIX, XATTR_USER_PREFIX_LEN))
--		return -EOPNOTSUPP;
--
--	return 0;
--}
--
- static void hfsplus_init_header_node(struct inode *attr_file,
- 					u32 clump_size,
- 					char *buf, u16 node_size)
-@@ -350,18 +276,8 @@ int __hfsplus_setxattr(struct inode *inode, const char *name,
- 				HFSPLUS_IS_RSRC(inode))
- 		return -EOPNOTSUPP;
- 
--	err = can_set_xattr(inode, name, value, size);
--	if (err)
--		return err;
--
--	if (strncmp(name, XATTR_MAC_OSX_PREFIX,
--				XATTR_MAC_OSX_PREFIX_LEN) == 0)
--		name += XATTR_MAC_OSX_PREFIX_LEN;
--
--	if (value == NULL) {
--		value = "";
--		size = 0;
--	}
-+	if (value == NULL)
-+		return hfsplus_removexattr(inode, name);
- 
- 	err = hfs_find_init(HFSPLUS_SB(inode->i_sb)->cat_tree, &cat_fd);
- 	if (err) {
-@@ -577,18 +493,6 @@ ssize_t __hfsplus_getxattr(struct inode *inode, const char *name,
- 				HFSPLUS_IS_RSRC(inode))
- 		return -EOPNOTSUPP;
- 
--	if (strncmp(name, XATTR_MAC_OSX_PREFIX,
--				XATTR_MAC_OSX_PREFIX_LEN) == 0) {
--		/* skip "osx." prefix */
--		name += XATTR_MAC_OSX_PREFIX_LEN;
--		/*
--		 * Don't allow retrieving properly prefixed attributes
--		 * by prepending them with "osx."
--		 */
--		if (is_known_namespace(name))
--			return -EOPNOTSUPP;
--	}
--
- 	if (!strcmp_xattr_finder_info(name))
- 		return hfsplus_getxattr_finder_info(inode, value, size);
- 
-@@ -823,32 +727,18 @@ end_listxattr:
- 	return res;
- }
- 
--int hfsplus_removexattr(struct dentry *dentry, const char *name)
-+static int hfsplus_removexattr(struct inode *inode, const char *name)
- {
- 	int err = 0;
--	struct inode *inode = dentry->d_inode;
- 	struct hfs_find_data cat_fd;
- 	u16 flags;
- 	u16 cat_entry_type;
- 	int is_xattr_acl_deleted = 0;
- 	int is_all_xattrs_deleted = 0;
- 
--	if ((!S_ISREG(inode->i_mode) &&
--			!S_ISDIR(inode->i_mode)) ||
--				HFSPLUS_IS_RSRC(inode))
--		return -EOPNOTSUPP;
--
- 	if (!HFSPLUS_SB(inode->i_sb)->attr_tree)
- 		return -EOPNOTSUPP;
- 
--	err = can_set_xattr(inode, name, NULL, 0);
--	if (err)
--		return err;
--
--	if (strncmp(name, XATTR_MAC_OSX_PREFIX,
--				XATTR_MAC_OSX_PREFIX_LEN) == 0)
--		name += XATTR_MAC_OSX_PREFIX_LEN;
--
- 	if (!strcmp_xattr_finder_info(name))
- 		return -EOPNOTSUPP;
- 
-@@ -922,8 +812,12 @@ static int hfsplus_osx_getxattr(struct dentry *dentry, const char *name,
- 	if (len > HFSPLUS_ATTR_MAX_STRLEN)
- 		return -EOPNOTSUPP;
- 
--	strcpy(xattr_name, XATTR_MAC_OSX_PREFIX);
--	strcpy(xattr_name + XATTR_MAC_OSX_PREFIX_LEN, name);
-+	/*
-+	 * Don't allow retrieving properly prefixed attributes
-+	 * by prepending them with "osx."
-+	 */
-+	if (is_known_namespace(name))
-+		return -EOPNOTSUPP;
- 
- 	return hfsplus_getxattr(dentry, xattr_name, buffer, size);
- }
-@@ -941,8 +835,12 @@ static int hfsplus_osx_setxattr(struct dentry *dentry, const char *name,
- 	if (len > HFSPLUS_ATTR_MAX_STRLEN)
- 		return -EOPNOTSUPP;
- 
--	strcpy(xattr_name, XATTR_MAC_OSX_PREFIX);
--	strcpy(xattr_name + XATTR_MAC_OSX_PREFIX_LEN, name);
-+	/*
-+	 * Don't allow setting properly prefixed attributes
-+	 * by prepending them with "osx."
-+	 */
-+	if (is_known_namespace(name))
-+		return -EOPNOTSUPP;
- 
- 	return hfsplus_setxattr(dentry, xattr_name, buffer, size, flags);
- }
-diff --git a/fs/hfsplus/xattr.h b/fs/hfsplus/xattr.h
-index 9e21449..288530c 100644
---- a/fs/hfsplus/xattr.h
-+++ b/fs/hfsplus/xattr.h
-@@ -40,8 +40,6 @@ static inline ssize_t hfsplus_getxattr(struct dentry *dentry,
- 
- ssize_t hfsplus_listxattr(struct dentry *dentry, char *buffer, size_t size);
- 
--int hfsplus_removexattr(struct dentry *dentry, const char *name);
--
- int hfsplus_init_security(struct inode *inode, struct inode *dir,
- 				const struct qstr *qstr);
- 
 
 _______________________________________________
 xfs mailing list
