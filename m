@@ -1,32 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E24737F92
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 06:48:53 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DA0687F9B
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:21:54 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B5BAE8F8040
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 04:48:53 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id SZWel2eChryLk91E (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Dec 2013 04:48:52 -0800 (PST)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBOCmpMD021613
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:51 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBOCmojA029572
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:50 GMT
-Received: from ubhmt108.oracle.com (ubhmt108.oracle.com [156.151.24.13])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBOCmoVL029564 for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:50 GMT
-Message-ID: <52B982AF.2060607@oracle.com>
-Date: Tue, 24 Dec 2013 20:48:47 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E9C8304043
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 10:21:54 -0800 (PST)
+Received: from mail-ea0-f179.google.com (mail-ea0-f179.google.com
+	[209.85.215.179]) by cuda.sgi.com with ESMTP id
+	pwHdTkfSZsob1uS7 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Dec 2013 10:21:52 -0800 (PST)
+Received: by mail-ea0-f179.google.com with SMTP id r15so3006802ead.24
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 10:21:51 -0800 (PST)
+Message-ID: <8155F3F9D6094F40B4DA71BD561D2DE8@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+References: <AD612A564BB84E75B010AE37687DFC8E@alyakaslap>
+	<20131218230615.GQ31386@dastard>
+	<78FC295EC7FF48C987266DC48B183930@alyakaslap>
+	<20131219105513.GZ31386@dastard>
+In-Reply-To: <20131219105513.GZ31386@dastard>
+Subject: Re: Questions about XFS discard and xfs_free_extent() code (newbie)
+Date: Tue, 24 Dec 2013 20:21:50 +0200
 MIME-Version: 1.0
-Subject: [PATCH 4/4] xfs: rename mem_to_page to xfs_bufmem_to_page
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,47 +30,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+Hi Dave,
+Reading through the code some more, I see that the extent that is freed 
+through xfs_free_extent() can be an XFS metadata extent as well.
+For example, xfs_inobt_free_block() frees a block of the AG's free-inode 
+btree. Also, xfs_bmbt_free_block() frees a generic btree block by putting it 
+onto the cursor's "to-be-freed" list, which will be dropped into the 
+free-space btree (by xfs_free_extent) in xfs_bmap_finish(). If we discard 
+such metadata block before the transaction is committed to the log and we 
+crash, we might not be able to properly mount after reboot, is that right? I 
+mean it's not that some file's data block will show 0s to the user instead 
+of before-delete data, but some XFS btree node (for example) will be wiped 
+in such case. Can this happen?
 
-Rename mem_to_page() to xfs_bufmem_to_page() for XFS convention.
+Thanks,
+Alex.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_buf.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 544315e..286ddbe 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -732,8 +732,8 @@ xfs_buf_set_empty(
- }
- 
- static inline struct page *
--mem_to_page(
--	void			*addr)
-+xfs_bufmem_to_page(
-+	void		*addr)
- {
- 	if ((!is_vmalloc_addr(addr))) {
- 		return virt_to_page(addr);
-@@ -774,7 +774,7 @@ xfs_buf_associate_memory(
- 	bp->b_offset = offset;
- 
- 	for (i = 0; i < bp->b_page_count; i++) {
--		bp->b_pages[i] = mem_to_page((void *)pageaddr);
-+		bp->b_pages[i] = xfs_bufmem_to_page((void *)pageaddr);
- 		pageaddr += PAGE_SIZE;
- 	}
- 
+-----Original Message----- 
+From: Dave Chinner
+Sent: 19 December, 2013 12:55 PM
+To: Alex Lyakas
+Cc: xfs@oss.sgi.com
+Subject: Re: Questions about XFS discard and xfs_free_extent() code (newbie)
+
+On Thu, Dec 19, 2013 at 11:24:15AM +0200, Alex Lyakas wrote:
+> Hi Dave,
+> Thank you for your comments.
+> I realize now that what I proposed cannot be done; I need to
+> understand deeper how XFS transactions work (unfortunately, the
+> awesome "XFS Filesystem Structure" doc has a TODO in the "Journaling
+> Log" section).
+>
+> Can you please comment on one more question:
+> Let's say we had such fully asynchronous "fire-and-forget" discard
+> operation (I can implement one myself for my block-device via a
+> custom IOCTL). What is wrong if we trigger such operation in
+> xfs_free_ag_extent(), right after we have merged the freed extent
+> into a bigger one? I understand that the extent-free-intent is not
+> yet committed to the log at this point. But from the user's point of
+> view, the extent has been deleted, no? So if the underlying block
+> device discards the merged extent right away, before committing to
+> the log, what issues this can cause?
+
+Think of what happens when a crash occurs immediately after the
+discard completes. The freeing of the extent never made it to th
+elog, so after recovery, the file still exists and the user can
+access it. Except that it's contents are now all different to
+before the crash occurred.
+
+IOWs, issuing the discard before the transaction that frees the
+extent is on stable storage means we are discarding user data or
+metadata before we've guaranteed that the extent free transaction
+is permanent and that means we violate certain guarantees with
+respect to crash recovery...
+
+Cheers,
+
+Dave.
 -- 
-1.8.3.2
+Dave Chinner
+david@fromorbit.com 
 
 _______________________________________________
 xfs mailing list
