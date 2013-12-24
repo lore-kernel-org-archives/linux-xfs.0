@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7246F7F83
-	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 18:55:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 595108F8050
-	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 16:55:11 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 728B47F8A
+	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 18:55:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 649728F804C
+	for <xfs@oss.sgi.com>; Mon, 23 Dec 2013 16:55:40 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6AsMC415mEwOXZBO for <xfs@oss.sgi.com>;
-	Mon, 23 Dec 2013 16:55:09 -0800 (PST)
-Date: Tue, 24 Dec 2013 11:55:06 +1100
+	WM9FcITVdJMc1Cd2 for <xfs@oss.sgi.com>;
+	Mon, 23 Dec 2013 16:55:38 -0800 (PST)
+Date: Tue, 24 Dec 2013 11:55:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/3] xfs: add O_TMPFILE support
-Message-ID: <20131224005506.GL3220@dastard>
+Subject: Re: [PATCH v2 3/3] xfs: allow linkat() on O_TMPFILE files
+Message-ID: <20131224005536.GM3220@dastard>
 References: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
-	<1387326161-24530-3-git-send-email-zwu.kernel@gmail.com>
+	<1387326161-24530-4-git-send-email-zwu.kernel@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1387326161-24530-3-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <1387326161-24530-4-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,23 +33,23 @@ Sender: xfs-bounces@oss.sgi.com
 To: Zhi Yong Wu <zwu.kernel@gmail.com>
 Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On Wed, Dec 18, 2013 at 08:22:40AM +0800, Zhi Yong Wu wrote:
+On Wed, Dec 18, 2013 at 08:22:41AM +0800, Zhi Yong Wu wrote:
 > From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 > 
-> Add two functions xfs_create_tmpfile() and xfs_vn_tmpfile()
-> to support O_TMPFILE file creation.
+> The VFS allows an anonymous temporary file to be named at a later
+> time via a linkat() syscall. The inodes for O_TMPFILE files are
+> are marked with a special flag I_LINKABLE and have a zero link count.
 > 
-> In contrast to xfs_create(), xfs_create_tmpfile() has a different
-> log reservation to the regular file creation because there is no
-> directory modification, and doesn't check if an entry can be added
-> to the directory, but the reservation quotas is required appropriately,
-> and finally its inode is added to the unlinked list.
+> To support this in XFS, xfs_link() detects if this flag I_LINKABLE
+> is set and behaves appropriately when detected. So in this case,
+> its transaciton reservation takes into account the additional
+> overhead of removing the inode from the unlinked list. Then the
+> inode is removed from the unlinked list and the directory entry
+> is added. Finally its link count is bumped accordingly.
 > 
-> xfs_vn_tmpfile() add one O_TMPFILE method to VFS interface and directly
-> invoke xfs_create_tmpfile().
+> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-There's minor stuff I could ask you to change, but I think this is
-good enough for initial support of O_TMPFILE.
+Looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
