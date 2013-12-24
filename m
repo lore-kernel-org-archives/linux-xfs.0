@@ -1,32 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 10DC67F92
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 06:48:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E12E3304053
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 04:48:18 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ZsAyhDHKaMI10dDI (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AFCBF7F98
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 06:48:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A0B408F8040
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 04:48:27 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id PqmF7lte5cQGlqYC (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Dec 2013 04:48:17 -0800 (PST)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBOCmGil011655
+	Tue, 24 Dec 2013 04:48:26 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rBOCmPQC021354
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:17 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBOCmFSt010873
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:26 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBOCmOha025880
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:15 GMT
-Received: from ubhmt105.oracle.com (ubhmt105.oracle.com [156.151.24.10])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBOCmFar010862 for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:15 GMT
-Message-ID: <52B9828C.7030202@oracle.com>
-Date: Tue, 24 Dec 2013 20:48:12 +0800
+	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:25 GMT
+Received: from ubhmt102.oracle.com (ubhmt102.oracle.com [156.151.24.7])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBOCmOdA029002 for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:48:24 GMT
+Message-ID: <52B98295.8050704@oracle.com>
+Date: Tue, 24 Dec 2013 20:48:21 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 0/4] xfs: fsstress/godown bug fixes
+Subject: [PATCH 2/4] xfs: always releasing EFD's reference to EFI in
+	xfs_efd_item_committed
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,21 +42,79 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Folks,
+From: Jie Liu <jeff.liu@oracle.com>
 
-I have observed another hang up when doing fsstress and shutting the file system.
-The first two patches are manage to fix those issues, and the left are for code
-clean ups.
+With fsstress+godown test I observed an XFS hang up during umount which
+yielding a backtrace like below:
 
-Please note that, those patches are based on Christoph's previous fix:
-[PATCH v2] xfs: remove xfsbdstrat error
+[20876.193635] INFO: task umount:9853 blocked for more than 120 seconds.
+[20876.193641]       Tainted: PF   O 3.13.0-rc2+ #8
+[20876.193643] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[20876.193645] umount          D ffff88026f294440     0  9853   9372
+<snip>
+[20876.193663] Call Trace:
+[20876.193672]  [<ffffffff816f3829>] schedule+0x29/0x70
+[20876.193701]  [<ffffffffa0c4a3e9>] xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+[20876.193707]  [<ffffffff810a83f0>] ? prepare_to_wait_event+0x100/0x100
+[20876.193726]  [<ffffffffa0be9df1>] xfs_unmountfs+0x61/0x150 [xfs]
+[20876.193746]  [<ffffffffa0becd41>] xfs_fs_put_super+0x21/0x60 [xfs]
+[20876.193751]  [<ffffffff811bbf62>] generic_shutdown_super+0x72/0xf0
+[20876.193754]  [<ffffffff811bc217>] kill_block_super+0x27/0x70
+[20876.193757]  [<ffffffff811bc4fd>] deactivate_locked_super+0x3d/0x60
+[20876.193761]  [<ffffffff811bcab6>] deactivate_super+0x46/0x60
+[20876.193765]  [<ffffffff811d9146>] mntput_no_expire+0xd6/0x170
+[20876.193769]  [<ffffffff811da64e>] SyS_umount+0x8e/0x100
+[20876.193774]  [<ffffffff816ffd6d>] system_call_fastpath+0x1a/0x1f
 
-I know that most of our folks are on vacation for the coming holidays, enjoy the
-happy time, I just posted patches here. 
+As per above backtraces, the umount process is already scheduled out
+in xfs_ail_push_all_sync() because it should push out all of pending
+changes in AIL and wait until the AIL is empty.  Then it will wake up
+xfsaild thread to do the actual flushing business.  However, I found
+that the AIL does not became empty in some situations because of some
+EFI are still being on it, but in EFI's iop_push operation, we always
+returning XFS_ITEM_PINNED which leads to the xfsaild thread suffering
+into an infinite loop.
 
+Since EFI items have no locking or pushing, they are pulled from the
+AIL when their corresponding EFDs are committed to disk, and we have
+guaranteed that the EFI should not be freed until it has been unppined
+and the EFD has been committed in commit 666d644cd7, this is done via
+an EFI reference count by initializing it to 2 in xfs_efi_init() -- one
+is it's own count which is not released until it is unpinned, the other
+one is taken by its corresponding EFD which will be released during EFD
+commit operation.
 
-Thanks,
--Jeff
+IMHO we should always releasing it's reference to the corresponding EFI
+item once the EFD item is committed to disk regardless of the log item
+is marked with XFS_LI_ABORTED flag or not.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ fs/xfs/xfs_extfree_item.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 3680d04..16c0396 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -437,13 +437,7 @@ xfs_efd_item_committed(
+ {
+ 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
+ 
+-	/*
+-	 * If we got a log I/O error, it's always the case that the LR with the
+-	 * EFI got unpinned and freed before the EFD got aborted.
+-	 */
+-	if (!(lip->li_flags & XFS_LI_ABORTED))
+-		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
+-
++	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
+ 	xfs_efd_item_free(efdp);
+ 	return (xfs_lsn_t)-1;
+ }
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
