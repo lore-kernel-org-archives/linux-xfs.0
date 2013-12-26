@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA0687F9B
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 12:21:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E9C8304043
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 10:21:54 -0800 (PST)
-Received: from mail-ea0-f179.google.com (mail-ea0-f179.google.com
-	[209.85.215.179]) by cuda.sgi.com with ESMTP id
-	pwHdTkfSZsob1uS7 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Dec 2013 10:21:52 -0800 (PST)
-Received: by mail-ea0-f179.google.com with SMTP id r15so3006802ead.24
-	for <xfs@oss.sgi.com>; Tue, 24 Dec 2013 10:21:51 -0800 (PST)
-Message-ID: <8155F3F9D6094F40B4DA71BD561D2DE8@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <AD612A564BB84E75B010AE37687DFC8E@alyakaslap>
-	<20131218230615.GQ31386@dastard>
-	<78FC295EC7FF48C987266DC48B183930@alyakaslap>
-	<20131219105513.GZ31386@dastard>
-In-Reply-To: <20131219105513.GZ31386@dastard>
-Subject: Re: Questions about XFS discard and xfs_free_extent() code (newbie)
-Date: Tue, 24 Dec 2013 20:21:50 +0200
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5CD2C7F3F
+	for <xfs@oss.sgi.com>; Thu, 26 Dec 2013 02:51:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D54D7AC004
+	for <xfs@oss.sgi.com>; Thu, 26 Dec 2013 00:51:37 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id O0jUIQLaQUZ0yXRG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Dec 2013 00:51:36 -0800 (PST)
+Date: Thu, 26 Dec 2013 00:51:34 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 0/3] xfs: add O_TMPFILE support
+Message-ID: <20131226085134.GA32660@infradead.org>
+References: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,74 +25,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+Cc: linux-api@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-Hi Dave,
-Reading through the code some more, I see that the extent that is freed 
-through xfs_free_extent() can be an XFS metadata extent as well.
-For example, xfs_inobt_free_block() frees a block of the AG's free-inode 
-btree. Also, xfs_bmbt_free_block() frees a generic btree block by putting it 
-onto the cursor's "to-be-freed" list, which will be dropped into the 
-free-space btree (by xfs_free_extent) in xfs_bmap_finish(). If we discard 
-such metadata block before the transaction is committed to the log and we 
-crash, we might not be able to properly mount after reboot, is that right? I 
-mean it's not that some file's data block will show 0s to the user instead 
-of before-delete data, but some XFS btree node (for example) will be wiped 
-in such case. Can this happen?
+Both patches looks good to me,
 
-Thanks,
-Alex.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
+But now we need to make sure we can exercise it, which will need
+support for tmpfile and flink commands in xfs_io.
 
------Original Message----- 
-From: Dave Chinner
-Sent: 19 December, 2013 12:55 PM
-To: Alex Lyakas
-Cc: xfs@oss.sgi.com
-Subject: Re: Questions about XFS discard and xfs_free_extent() code (newbie)
+And tests that use those commands in xfstests.  At a minimum I'd
+suggest:
 
-On Thu, Dec 19, 2013 at 11:24:15AM +0200, Alex Lyakas wrote:
-> Hi Dave,
-> Thank you for your comments.
-> I realize now that what I proposed cannot be done; I need to
-> understand deeper how XFS transactions work (unfortunately, the
-> awesome "XFS Filesystem Structure" doc has a TODO in the "Journaling
-> Log" section).
->
-> Can you please comment on one more question:
-> Let's say we had such fully asynchronous "fire-and-forget" discard
-> operation (I can implement one myself for my block-device via a
-> custom IOCTL). What is wrong if we trigger such operation in
-> xfs_free_ag_extent(), right after we have merged the freed extent
-> into a bigger one? I understand that the extent-free-intent is not
-> yet committed to the log at this point. But from the user's point of
-> view, the extent has been deleted, no? So if the underlying block
-> device discards the merged extent right away, before committing to
-> the log, what issues this can cause?
+ - test creating read-only/read-write/executable files
+ - check how permission bits actually work for O_TMPFILE and
+   enforce that (unfortunately I can't find any documentation for that)
+ - check that creating non-regular files is properly rejected
+ - check that flink works on O_TMPFILE files, but doesn't work on
+   on other files
 
-Think of what happens when a crash occurs immediately after the
-discard completes. The freeing of the extent never made it to th
-elog, so after recovery, the file still exists and the user can
-access it. Except that it's contents are now all different to
-before the crash occurred.
+For an additional XFS-specific test I'd recommend:
 
-IOWs, issuing the discard before the transaction that frees the
-extent is on stable storage means we are discarding user data or
-metadata before we've guaranteed that the extent free transaction
-is permanent and that means we violate certain guarantees with
-respect to crash recovery...
+ - creating a tmpfile, use src/godown to force the filesystem down and
+   check that repair recoveres the unlinked inode list
+ - creating a tmpfile, flinking it, use src/godown to force the
+   filesystem down and check that repair does not have to recover
+   the unlink inode list.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com 
+On Wed, Dec 18, 2013 at 08:22:38AM +0800, Zhi Yong Wu wrote:
+> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> 
+> HI, folks
+> 
+>   It's time to post the latest revision out, welcome to any constructive comment, thanks.
+> 
+>   If anyone is interested in playing with it, you can get this patchset from my dev git on github:
+>   git://github.com/wuzhy/kernel.git xfs_tmpfile
+> 
+>   The patchset was tested against the code snippet from Andy Lutomirski and other test cases:
+>   http://lwn.net/Articles/562296/
+>   If you have any other better test cases, please let me know, thanks.
+> 
+> #include <stdio.h>
+> #include <err.h>
+> #include <fcntl.h>
+> #include <unistd.h>
+> #include <string.h>
+> 
+> #define __O_TMPFILE 020000000
+> #define O_DIRECTORY 0200000
+> #define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
+> #define AT_EMPTY_PATH 0x1000
+> 
+> int main(int argc, char **argv)
+> {
+>    char buf[128];
+> 
+>    if (argc != 3)
+>      errx(1, "Usage: flinktest PATH linkat|proc");
+> 
+>    int fd = open(".", O_TMPFILE | O_RDWR, 0600);
+>    if (fd == -1)
+>      err(1, "O_TMPFILE");
+>    else
+>      printf("fd #: %d\n", fd);
+> 
+>    write(fd, "test", 4);
+> 
+>    if (!strcmp(argv[2], "linkat")) {
+>      if (linkat(fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) != 0)
+>        err(1, "linkat");
+>    } else if (!strcmp(argv[2], "proc")) {
+>      sprintf(buf, "/proc/self/fd/%d", fd);
+>      if (linkat(AT_FDCWD, buf, AT_FDCWD, argv[1], AT_SYMLINK_FOLLOW) != 0)
+>        err(1, "linkat");
+>    } else {
+>      errx(1, "invalid mode");
+>    }
+> 
+>    return 0;
+> }
+> 
+> Changelog from v1:
+>  - Fixed one chunk of the comments from Christoph Hellwig and Jeff Liu.
+> 
+> v1:
+>  - Addressed the comments from Dave Chinner and Christoph Hellwig.
+> 
+> Zhi Yong Wu (3):
+>   xfs: factor prid related codes into xfs_get_initial_prid()
+>   xfs: add O_TMPFILE support
+>   xfs: allow linkat() on O_TMPFILE files
+> 
+>  fs/xfs/xfs_inode.c      |  123 ++++++++++++++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_inode.h      |   12 +++++
+>  fs/xfs/xfs_iops.c       |   16 ++++++
+>  fs/xfs/xfs_shared.h     |    4 +-
+>  fs/xfs/xfs_symlink.c    |    5 +--
+>  fs/xfs/xfs_trans_resv.c |   55 +++++++++++++++++++--
+>  fs/xfs/xfs_trans_resv.h |    2 +
+>  7 files changed, 202 insertions(+), 15 deletions(-)
+> 
+> -- 
+> 1.7.6.5
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
