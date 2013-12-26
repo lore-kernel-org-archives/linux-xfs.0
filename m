@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA55C7F4E
-	for <xfs@oss.sgi.com>; Thu, 26 Dec 2013 02:55:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 951458F804B
-	for <xfs@oss.sgi.com>; Thu, 26 Dec 2013 00:55:23 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id LMyOz5tNtdawmhej (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Dec 2013 00:55:19 -0800 (PST)
-Date: Thu, 26 Dec 2013 00:55:10 -0800
+	by oss.sgi.com (Postfix) with ESMTP id 4B2677F4E
+	for <xfs@oss.sgi.com>; Thu, 26 Dec 2013 02:56:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 33C058F804B
+	for <xfs@oss.sgi.com>; Thu, 26 Dec 2013 00:56:30 -0800 (PST)
+Date: Thu, 26 Dec 2013 00:56:28 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: md-RAID5/6 stripe_cache_size default value vs performance vs
-	memory footprint
-Message-ID: <20131226085510.GB32660@infradead.org>
-References: <52B102FF.8040404@pzystorm.de> <52B2FE9E.50307@hardwarefreak.com>
-	<52B41B67.9030308@pzystorm.de> <201312202343.47895.arekm@maven.pl>
-	<52B57912.5080000@hardwarefreak.com>
+Subject: Re: [RFC] Userspace and xfstests releases
+Message-ID: <20131226085628.GC32660@infradead.org>
+References: <52B06E51.1020504@sgi.com>
+ <52B32CE0.5070701@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52B57912.5080000@hardwarefreak.com>
+In-Reply-To: <52B32CE0.5070701@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,19 +26,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Dec 21, 2013 at 05:18:42AM -0600, Stan Hoeppner wrote:
-> The powers that be, Linus in particular, are not fond of default
-> settings that create a lot of kernel memory structures.  The default
-> md-RAID5/6 stripe_cache-size yields 1MB consumed per member device.
+On Thu, Dec 19, 2013 at 11:29:04AM -0600, Rich Johnston wrote:
+> On 12/17/2013 09:31 AM, Rich Johnston wrote:
+> >I was planning on a xfsdump and xfstests release this week before I go
+> >on vacation. Any objections?
+> Currently xfstests is not released, should this be changed?
+> 
+> I will wait until I return on Jan 2 to release xfsprogs.
+> 
+> >
+> >Release versions for xfsprogs are still being discussed. Are there any
+> >more comments on this subject?
+> Here is one of the threads discussing this.
+> 
+> http://oss.sgi.com/archives/xfs/2013-10/msg00421.html
+> Christoph were you saying you create xfsprogs branches?
 
-The default sizing is stupid as it basically makes RAID unusable out
-of the box, I always have to fix that up, as well as a somewhat
-reasonable chunk size for parity RAID to make it usable.  I'm also
-pretty sure I complained about it at least once a while ago, but never
-got a reply.
+Next time Cc me if you want a quick personal answer :)
+
+I offered playing release manager for another 3.1.x release off a
+branch, but it seems like no one supported that idea.  The offer
+still stands if we get a consensus to do the branch release.
 
 _______________________________________________
 xfs mailing list
