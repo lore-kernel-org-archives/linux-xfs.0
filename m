@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CDD1D7F3F
-	for <linux-xfs@oss.sgi.com>; Fri, 27 Dec 2013 12:07:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 56182AC008
-	for <linux-xfs@oss.sgi.com>; Fri, 27 Dec 2013 10:07:14 -0800 (PST)
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id NGikAr9mFupc0vE7 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 27 Dec 2013 10:07:12 -0800 (PST)
-Received: from tom.nabble.com ([192.168.236.105])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lublinkermi@interia.pl>) id 1VwbeC-0001XT-Li
-	for linux-xfs@oss.sgi.com; Fri, 27 Dec 2013 09:56:33 -0800
-Date: Fri, 27 Dec 2013 09:56:32 -0800 (PST)
-From: lublinkermi <lublinkermi@interia.pl>
-Message-ID: <1388166992503-35010.post@n7.nabble.com>
-Subject: Please help to recover filesystem XFS on RAID 5
+	by oss.sgi.com (Postfix) with ESMTP id D4A9C7F3F
+	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 16:42:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F94FAC002
+	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 14:42:21 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	9YLhibZAoEhHuJTh for <xfs@oss.sgi.com>;
+	Fri, 27 Dec 2013 14:42:16 -0800 (PST)
+Date: Sat, 28 Dec 2013 09:42:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [xfs_check Out of memory: ]
+Message-ID: <20131227224212.GK20579@dastard>
+References: <tencent_3F12563342ED1D4E049D1123@qq.com>
+	<52BD2F0F.3020907@oracle.com> <201312270907.22638.arekm@maven.pl>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201312270907.22638.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,97 +26,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
 
-Hi!
-
-I had a XFS filesystem on RAID 5, but line of the power supply 230 V had
-crash . UPS failed, 2 hard disk drive on RAID (4 hard disk) failed (medium
-error) - then before turn of computer I resynchronize this RAID.  Fdisk
-recognized filesystem as XFS. Using dd with conv=noerror, sync I clone XFS
-filesystem on external hard disk. After restart machine I never can
-resynchronize RAID to see XFS filesystem. Then I connect hard disk to
-computer I can mount , but I see numbers as filename with extensions.
-
-xfs_db -c "sb 0" -c "p" /dev/sde5 said:
-magicnum = 0x58465342
-blocksize = 4096
-dblocks = 183103920
-rblocks = 0
-rextents = 0
-uuid = e2716dab-5b52-085e-eae2-3d8442c32a1a
-logstart = 134217735
-rootino = 256
-rbmino = 257
-rsumino = 258
-rextsize = 1
-agblocks = 5722000
-agcount = 32
-rbmblocks = 0
-logblocks = 89406
-versionnum = 0xbdb4
-sectsize = 4096
-inodesize = 256
-inopblock = 16
-fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog = 12
-sectlog = 12
-inodelog = 8
-inopblog = 4
-agblklog = 23
-rextslog = 0
-inprogress = 0
-imax_pct = 25
-icount = 37056
-ifree = 7341
-fdblocks = 181668411
-frextents = 0
-uquotino = 0
-gquotino = 0
-qflags = 0
-flags = 0
-shared_vn = 0
-inoalignmt = 2
-unit = 16
-width = 48
-dirblklog = 0
-logsectlog = 12
-logsectsize = 4096
-logsunit = 4096
-features2 = 0xa
-bad_features2 = 0xa
-
-xfs_repair :
-couldn't verify primary superblock not enough secondary superblocks with
-matching geometry
-attempting to find secondary superblock......................
-
-xfs_check said
-cannot init perag data (117).
-
-I use xfs_explorer, UFS Explorer Professional Recovery, photorec, testdisk
-to recover files, but any of this nothing do.
-
-It's very important because on filesystem XFS there was a virtual machine
-file with many MS SQL databases. I can't have backup because packed backup
-file has a 17 GB,  external hard disk destroyed after the supertension of
-the energy network.
-
-Please help me...
-
- 
-
-
-
---
-View this message in context: http://xfs.9218.n7.nabble.com/Please-help-to-recover-filesystem-XFS-on-RAID-5-tp35010.html
-Sent from the linux-xfs mailing list archive at Nabble.com.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBEZWMgMjcsIDIwMTMgYXQgMDk6MDc6MjJBTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIEZyaWRheSAyNyBvZiBEZWNlbWJlciAyMDEzLCBKZWZmIExpdSB3
+cm90ZToKPiA+IE9uIDEyLzI3IDIwMTMgMTQ6NDggUE0sIFN0b3I/PyB3cm90ZToKPiA+ID4gSGV5
+Ogo+ID4gPiAKPiA+ID4gMjBUIHhmcyBmaWxlIHN5c3RlbQo+ID4gPiAKPiA+ID4gCj4gPiA+IAo+
+ID4gPiAvdXNyL3NiaW4veGZzX2NoZWNrOiBsaW5lIDI4OiAxNDQ0NyBLaWxsZWQKPiA+ID4geGZz
+X2RiJERCT1BUUyAtaSAtcCB4ZnNfY2hlY2sgLWMgImNoZWNrJE9QVFMiICQxCj4gPiAKPiA+IHhm
+c19jaGVjayBpcyBkZXByZWNhdGVkIGFuZCBwbGVhc2UgdXNlIHhmc19yZXBhaXIgLW4gaW5zdGVh
+ZC4KPiA+IAo+ID4gVGhlIGZvbGxvd2luZyBiYWNrIHRyYWNlcyBzaG93IHVzIHRoYXQgaXQgc2Vl
+bXMgeW91ciBzeXN0ZW0gaXMgcnVuIG91dAo+ID4gbWVtb3J5IHdoZW4gZXhlY3V0aW5nIHhmc19j
+aGVjaywgdGh1cywgc25tcCBkYWVtb24veGZzX2RiIHdlcmUga2lsbGVkLgo+IAo+IFRoaXMgcmVt
+aW5kcyBtZSBhIHF1ZXN0aW9uLi4uCj4gCj4gQ291bGQgeGZzX3JlcGFpciBzdG9yZSBpdHMgdGVt
+cG9yYXJ5IGRhdGEgKHNvbWUgb2YgdGhhdCBkYXRhLCB0aGUgYmlnZ2VzdCAKPiBwYXJ0ZSkgb24g
+ZGlzayBpbnN0ZWFkIG9mIGluIG1lbW9yeT8KCldoZXJlIG9uIGRpc2s/IFdlIGNhbid0IHdyaXRl
+IHRvIHRoZSBkaXNrIHVudGlsIHdlJ3ZlIHZlcmlmaWVkIGFsbAp0aGUgZnJlZSBzcGFjZSBpcyBy
+ZWFsbHkgZnJlZSBzcGFjZSwgYW5kIGd1ZXNzIHdoYXQgdXNlcyBhbGwgdGhlCm1lbW9yeT8gQmVz
+aWRlcywgaWYgdGhlIGluZm9ybWF0aW9uIGlzIG5vdCBiZWluZyByZWZlcmVuY2VkCnJlZ3VsYXJs
+eSAoYW5kIGl0IHVzdWFsbHkgaXNuJ3QpLCB0aGVuIHN3YXAgc3BhY2UgaXMgYWJvdXQgYXMKZWZm
+aWNpZW50IGFzIGFueSBkYXRhYmFzZSB3ZSBtaWdodCBjb21lIHVwIHdpdGguLi4KCj4gSSBkb24n
+dCBrbm93IGl0IHRoYXQgd291bGQgbWFrZSBzZW5zZSwgc28gYXNraW5nLiBOb3Qgc3VyZSBpZiB4
+ZnNfcmVwYWlyIG5lZWRzIAo+IHRvIGFjY2VzcyB0aGF0IGRhdGEgZnJlcXVlbnRseSAoc28gb24g
+ZGlzayBtYWtlcyBubyBzZW5zZSkgb3IgbWF5YmUgaXQgbmVlZHMgCj4gb25seSBmb3IgaXRlcmF0
+aW9uIHB1cnBvc2VzIGluIHNvbWUgbGF0ZXIgcGhhc2UgKHNvIG9uIGRpc2sgc2hvdWxkIHdvcmsp
+Lgo+IAo+IEFueXdheSBtZW1vcnkgdXNhZ2Ugb2YgeGZzX3JlcGFpciB3YXMgYWx3YXlzIGEgcHJv
+YmxlbSBmb3IgbWUgKGxpa2UgMTZHQiBub3QgCj4gZW5vdWdoIGZvciA3VEIgZnMgZHVlIHRvIGh1
+Z2UgYW1vdW50IG9mIGZpZXMgYmVpbmcgc3RvcmVkKS4gV2l0aCBwYXJhbGxlbCBzY2FuIAo+IGl0
+J3MgZXZlbiB3b3JzZSBvYnZpb3VzbHkuCgpZZXMsIHlvdXIgcHJvYmxlbSBpcyB0aGF0IHRoZSBm
+aWxlc3lzdGVtIHlvdSBhcmUgY2hlY2tpbmcgY29udGFpbnMKNDArR0Igb2YgbWV0YWRhdGEgYW5k
+IGEgbGFyZ2UgYW1vdW50IG9mIHRoYXQgbmVlZHMgdG8gYmUga2VwdCBpbgptZW1vcnkgZnJvbSBw
+aGFzZSAzIHRocm91Z2ggdG8gcGhhc2UgNi4gSWYgeW91IHJlYWxseSB3YW50IHRvIGFkZApzb21l
+IGtpbmQgb2YgZGF0YWJhc2UgaW50ZXJmYWNlIHRvIHN0b3JlIHRoaXMgaW5mb3JtYXRpb24gc29t
+ZXdoZXJlCmVsc2UsIHRoZW4gSSdsbCByZXZpZXcgdGhlIHBhdGNoZXMuIDspCgpDaGVlcnMsCgpE
+YXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
