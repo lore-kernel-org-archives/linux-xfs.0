@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4902129DF8
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 10:56:02 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6FF2329DF8
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:35:47 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CC2A9AC008
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 08:56:01 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id vK60pZU5rn1eV6wG
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 08:55:57 -0800 (PST)
-Message-ID: <52BF0295.9040301@hardwarefreak.com>
-Date: Sat, 28 Dec 2013 10:55:49 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4A6408F8035
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 09:35:47 -0800 (PST)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	RGPxg8VMFEs76CBz for <xfs@oss.sgi.com>;
+	Sat, 28 Dec 2013 09:35:45 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id 2B94C1F00124
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 12:35:45 -0500 (EST)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id rtpMCkfIvGSt for <xfs@oss.sgi.com>;
+	Sat, 28 Dec 2013 12:35:40 -0500 (EST)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id CE54B1F00120
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 12:35:40 -0500 (EST)
+Date: Sat, 28 Dec 2013 12:35:40 -0500 (EST)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <23931797.1848.1388252140769.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <52BF0295.9040301@hardwarefreak.com>
 Subject: Re: [xfs_check Out of memory: ]
-References: <tencent_3F12563342ED1D4E049D1123@qq.com>	<201312270907.22638.arekm@maven.pl>	<20131227224212.GK20579@dastard>
-	<201312280020.39244.arekm@maven.pl>
-In-Reply-To: <201312280020.39244.arekm@maven.pl>
-Reply-To: stan@hardwarefreak.com
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,63 +33,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>, Dave Chinner <david@fromorbit.com>
-Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
-T24gMTIvMjcvMjAxMyA1OjIwIFBNLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3JvdGU6Ci4uLgo+
-IC0gY2FuJ3QgYWRkIG1vcmUgUkFNIGVhc2lseSwgbWFjaGluZSBpcyBhdCByZW1vdGUgbG9jYXRp
-b24sIHVzZXMgb2Jzb2xldGUgCj4gRERSMiwgaGF2ZSBubyBtb3JlIHJhbSBzbG90cyBhbmQgc28g
-b24KLi4uCj4gU28gbG9va3MgbGlrZSBteSBmdXR1cmUgYmFja3VwIHNlcnZlcnMgd2lsbCBuZWVk
-IHRvIGhhdmUgNjRHQiwgMTI4R0Igb3IgbWF5YmUgCj4gZXZlbiBtb3JlIHJhbSB0aGF0IHdpbGwg
-YmUgdGhlcmUgb25seSBmb3IgeGZzX3JlcGFpciB1c2FnZS4gVGhhdCdzIGdpZ2FudGljIAo+IHdh
-c3RlIG9mIHJlc291cmNlcy4gQW5kIHRoZXJlIGFyZSBtb2Rlcm4gcHJvY2Vzc29ycyB0aGF0IGRv
-bid0IHdvcmsgd2l0aCBtb3JlIAo+IHRoYW4gMzJHQiBvZiByYW0gLSBsaWtlICJJbnRlbCBYZW9u
-IEUzLTEyMjB2MiIgKCBodHRwOi8vdG5pai5vcmcvdGtxYXM5ZSApLiBTbyAKPiBhZGRpbmcgcmFt
-IG1lYW5zIHJlcGxhY2luZyBDUFUsIGxpa2VseSByZXBsYWNpbmcgbWFpbmJvYXJkLiBGdW4gOikK
-Li4KPiBJTU8gcmFtIHVzYWdlIGlzIGEgcmVhbCBwcm9ibGVtIGZvciB4ZnNfcmVwYWlyIGFuZCB0
-aGVyZSBoYXMgdG8gYmUgc29tZSAKPiB1cHN0cmVhbSBzb2x1dGlvbiBvdGhlciB0aGFuICJidXkg
-bW9yZSIgKGFuZCB3YXN0ZSBtb3JlKSBhcHByb2FjaC4KClRoZSBwcm9ibGVtIGlzbid0IHhmc19y
-ZXBhaXIuICBUaGUgcHJvYmxlbSBpcyB0aGF0IHlvdSBleHBlY3QgdGhpcyB0b29sCnRvIGhhbmRs
-ZSBhbiBpbmZpbml0ZSBudW1iZXIgb2YgaW5vZGVzIHdoaWxlIHVzaW5nIGEgZmluaXRlIGFtb3Vu
-dCBvZgptZW1vcnksIG9yIGF0IGxlYXN0IHNvbWV3aGF0IGxlc3MgbWVtb3J5IHRoYW4geW91IGhh
-dmUgaW5zdGFsbGVkLiAgV2UKZG9uJ3Qgc2VlIHlvdXIgcHJvYmxlbSByZXBvcnRlZCB2ZXJ5IG9m
-dGVuIHdoaWNoIHNlZW1zIHRvIGluZGljYXRlIHlvdXIKc2l0dWF0aW9uIGlzIGEgY29ybmVyIGNh
-c2UsIG9yIHRoYXQgb3RoZXJzIHNpbXBseSBzaXplIHRoZWlyIHN5c3RlbXMKcHJvcGVybHkgd2l0
-aG91dCBjb21wbGFpbnQuCgpJZiB5b3UnZCBhY3R1YWxseSBsaWtlIGFkdmljZSBvbiBob3cgdG8g
-c29sdmUgdGhpcywgdG9kYXksIHdpdGgKcmVhbGlzdGljIHNvbHV0aW9ucywgaW4gbGlldSBvZiB0
-aGUgZGV2cyByZWNvZGluZyB4ZnNfcmVwYWlyIGZvciB0aGUKc2luZ2xlIGdvYWwgb2YgdXNpbmcg
-bGVzcyBtZW1vcnksIHRoZW4gaGVyZSBhcmUgeW91ciBvcHRpb25zOgoKMS4gIFJld3JpdGUgb3Ig
-cmVkbyB5b3VyIHdvcmtsb2FkIHRvIG5vdCBjcmVhdGUgc28gbWFueSBzbWFsbCBmaWxlcywKICAg
-IHNvIG1hbnkgaW5vZGVzLCBpLmUuIHVzZSBhIGRhdGFiYXNlCjIuICBBZGQgbW9yZSBSQU0gdG8g
-dGhlIHN5c3RlbQozLiAgQWRkIGFuIFNTRCBvZiBzdWZmaWNpZW50IHNpemUvc3BlZWQgZm9yIHN3
-YXAgZHV0eSB0byBoYW5kbGUKICAgIHhmc19yZXBhaXIgcmVxdWlyZW1lbnRzIGZvciBmaWxlc3lz
-dGVtcyB3aXRoIGFyYml0cmFyaWx5IGhpZ2gKICAgIGlub2RlIGNvdW50cwoKWW91ciBxdWlja2Vz
-dCwgY2hlYXBlc3QsIGFuZCBhbGwgZW5jb21wYXNzaW5nIHNvbHV0aW9uIHRvIHRoaXMgcHJvYmxl
-bQp0b2RheSBpcyAjMy4gIFRoaXMgcHJldmVudHMgdGhlIG5lZWQgdG8gc2l6ZSB0aGUgUkFNIG9u
-IGVhY2ggbWFjaGluZSB0bwptZWV0IHRoZSBuZWVkcyBvZiB4ZnNfcmVwYWlyIGdpdmVuIGFuIGFy
-Yml0cmFyeSBudW1iZXIgb2YgaW5vZGVzLCBhcwp5b3UnbGwgYWx3YXlzIGhhdmUgbW9yZSB0aGFu
-IGVub3VnaCBzd2FwLiAgQW5kIGl0IGlzIGxpa2VseSBsZXNzCmV4cGVuc2l2ZSB0aGFuIGFkZGlu
-Zy9yZXBsYWNpbmcgRElNTXMuICBUaGUgZmFzdGVzdCByYW5kb20gcmVhZC93cml0ZQpJT1BTIFNT
-RCBvbiB0aGUgbWFya2V0IGlzIHRoZSBTYW1zdW5nIDg0MCBQcm8gd2hpY2ggaXMgfiQxL0dCIGlu
-IHRoZQpTdGF0ZXMsIGEgMTI4R0IgdW5pdCBmb3IgJDEzMC4gIFRoaXMgdW5pdCBoYXMgYSA1IHll
-YXIgd2FycmFudHkgYW5kCnN1c3RhaW5lZCB+OTBLIHJlYWQvd3JpdGUgNEtCIElPUFMuCgpDcmVh
-dGUgYSAxMDBHQiBzd2FwIHBhcnRpdGlvbiBhbmQgbGVhdmUgdGhlIHJlbWFpbmRlciB1bmFsbG9j
-YXRlZC4gIFRoZQp1bmFsbG9jYXRlZCBzcGFjZSB3aWxsIGF1dG9tYXRpY2FsbHkgYmUgdXNlZCBm
-b3IgR0MgYW5kIHdlYXIgbGV2ZWxpbmcsCmluY3JlYXNpbmcgdGhlIGxpZmUgb2YgYWxsIGNlbGxz
-IGluIHRoZSBkcml2ZS4KClRoZSBmYWN0IHRoYXQgdGhlIHN5c3RlbXMgYXJlIHJlbW90ZSwgdGhh
-dCB5b3UgaGF2ZSBubyBtb3JlIERJTU0gc2xvdHMsCmFyZSBub3QgZ29vZCBhcmd1bWVudHMgZm9y
-IHlvdSB0byBtYWtlIGluIHRoaXMgY29udGV4dC4gIEV2ZXJ5IHN5c3RlbQp3aWxsIHJlcXVpcmUg
-c29tZSB0eXBlIG9mIGhhcmR3YXJlIGFkZGl0aW9uL3JlcGxhY2VtZW50L21haW50ZW5hbmNlLgpB
-bmQgdGhpcyBpcyBub3QgdGhlIGZpcnN0IHNvZnR3YXJlICJwcm9ibGVtIiB0aGF0IHJlcXVpcmVz
-IG1vcmUgaGFyZHdhcmUKdG8gc29sdmUuICBJZiB5b3VyIGFwcGxpY2F0aW9uIHRoYXQgY3JlYXRl
-cyB0aGVzZSBtaWxsaW9ucyBvZiBmaWxlcwpuZWVkZWQgdHdpY2UgYXMgbXVjaCBSQU0sIGZvcmNp
-bmcgYW4gdXBncmFkZSwgd291bGQgeW91IGJlIGNvbXBsYWluaW5nCnRoaXMgd2F5IG9uIHRoZWly
-IG1haWxpbmcgbGlzdD8gIElmIHNvIEknZCBzdWdnZXN0IHRoZSBwcm9ibGVtIGxheQpzb21ld2hl
-cmUgb3RoZXIgdGhhbiB4ZnNfcmVwYWlyIGFuZCB0aGF0IGFwcGxpY2F0aW9uLgoKLS0gClN0YW4K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+----- Original Message -----
+> From: "Stan Hoeppner" <stan@hardwarefreak.com>
+
+> Create a 100GB swap partition and leave the remainder unallocated. The
+> unallocated space will automatically be used for GC and wear leveling,
+> increasing the life of all cells in the drive.
+
+*Great* tip.  :-)
+
+Cheers, 
+-- jra
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
