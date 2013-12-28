@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1D64E7F54
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 05:22:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E77FB8F8035
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 03:22:06 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 92F507F3F
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 05:22:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 52EF8304051
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 03:22:15 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id QII9CbeCqhu6SSBX (version=TLSv1
+	cuda.sgi.com with ESMTP id YtdZjmoLXMLoLSqr (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Dec 2013 03:22:05 -0800 (PST)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	Sat, 28 Dec 2013 03:22:14 -0800 (PST)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBSBM4ij029827
+	ESMTP id rBSBMDAb029897
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:05 GMT
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:13 GMT
 Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBSBM4WR003797
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBSBMCOd027172
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:04 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:12 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
 	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBSBM3UT003792 for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:03 GMT
-Message-ID: <52BEB459.7020202@oracle.com>
-Date: Sat, 28 Dec 2013 19:22:01 +0800
+	rBSBMBNu003854 for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:11 GMT
+Message-ID: <52BEB461.8040802@oracle.com>
+Date: Sat, 28 Dec 2013 19:22:09 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 6/10] xfs: introduce xfs_bulkstat_ichunk_ra
+Subject: [PATCH 7/10] xfs: introduce xfs_bulkstat_grab_ichunk
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,112 +43,164 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Introduce xfs_bulkstat_ichunk_ra() to loop over all clusters in
-the next inode chunk, then performs readahead if there are any
-allocated inodes in that cluster.
+Introduce xfs_bulkstat_grab_ichunk() to look up an inode chunk in where
+the given inode resides, then grab the record.  Update the data for the
+pointed-to record if the inode was not the last in the chunk and there
+are some left allocated, return the grabbed inode count on success.
 
 Refactor xfs_bulkstat() with it.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_itable.c | 56 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 32 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_itable.c | 118 +++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 67 insertions(+), 51 deletions(-)
 
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 4c6b0ab..144e403 100644
+index 144e403..c179e0e 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -172,6 +172,37 @@ xfs_bulkstat_one(
- 				    xfs_bulkstat_one_fmt, ubused, stat);
+@@ -203,6 +203,60 @@ xfs_bulkstat_ichunk_ra(
+ 	blk_finish_plug(&plug);
  }
  
 +/*
-+ * Loop over all clusters in a chunk for a given incore inode allocation btree
-+ * record.  Do a readahead if there are any allocated inodes in that cluster.
++ * Lookup the inode chunk that the given inode lives in and then get the record
++ * if we found the chunk.  If the inode was not the last in the chunk and there
++ * are some left allocated, update the data for the pointed-to record as well as
++ * return the count of grabbed inodes.
 + */
-+STATIC void
-+xfs_bulkstat_ichunk_ra(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t			agno,
-+	struct xfs_inobt_rec_incore	*irec)
++STATIC int
++xfs_bulkstat_grab_ichunk(
++	struct xfs_btree_cur		*cur,	/* btree cursor */
++	xfs_agino_t			agino,	/* starting inode of chunk */
++	int				*icount,/* return # of inodes grabbed */
++	struct xfs_inobt_rec_incore	*irec)	/* btree record */
 +{
-+	xfs_agblock_t			agbno;
-+	struct blk_plug			plug;
-+	int				blks_per_cluster;
-+	int				inodes_per_cluster;
-+	int				i;	/* inode chunk index */
++	int				idx;	/* index into inode chunk */
++	int				stat;
++	int				error;
 +
-+	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
-+	blks_per_cluster = xfs_icluster_size_fsb(mp);
-+	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
++	/* Lookup the inode chunk that this inode lives in */
++	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
++	if (error)
++		return error;
++	XFS_WANT_CORRUPTED_RETURN(stat == 1);
 +
-+	blk_start_plug(&plug);
-+	for (i = 0; i < XFS_INODES_PER_CHUNK;
-+	     i += inodes_per_cluster, agbno += blks_per_cluster) {
-+		if (xfs_inobt_maskn(i, inodes_per_cluster) & ~irec->ir_free) {
-+			xfs_btree_reada_bufs(mp, agno, agbno, blks_per_cluster,
-+					     &xfs_inode_buf_ops);
++	/* Get the record, should always work */
++	error = xfs_inobt_get_rec(cur, irec, &stat);
++	if (error)
++		return error;
++	XFS_WANT_CORRUPTED_RETURN(stat == 1);
++
++	/* Check if the record contains the inode in request */
++	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino)
++		return XFS_ERROR(EINVAL);
++
++	idx = agino - irec->ir_startino + 1;
++	if (idx < XFS_INODES_PER_CHUNK &&
++	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
++		int	i;
++
++		/* We got a right chunk with some left inodes allocated at it.
++		 * Grab the chunk record.  Mark all the uninteresting inodes
++		 * free -- because they're before our start point.
++		 */
++		for (i = 0; i < idx; i++) {
++			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
++				irec->ir_freecount++;
 +		}
++
++		irec->ir_free |= xfs_inobt_maskn(0, idx);
++		*icount = XFS_INODES_PER_CHUNK - irec->ir_freecount;
 +	}
-+	blk_finish_plug(&plug);
++
++	return 0;
 +}
 +
  #define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
  
  /*
-@@ -187,7 +218,6 @@ xfs_bulkstat(
- 	char			__user *ubuffer, /* buffer with inode stats */
- 	int			*done)	/* 1 if there are more stats to get */
- {
--	xfs_agblock_t		agbno=0;/* allocation group block number */
- 	xfs_buf_t		*agbp;	/* agi header buffer */
- 	xfs_agi_t		*agi;	/* agi header data */
- 	xfs_agino_t		agino;	/* inode # in allocation group */
-@@ -206,8 +236,6 @@ xfs_bulkstat(
- 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
- 	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
- 	xfs_ino_t		lastino; /* last inode number returned */
--	int			blks_per_cluster; /* # of blocks per cluster */
--	int			inodes_per_cluster;/* # of inodes per cluster */
- 	int			nirbuf;	/* size of irbuf */
- 	int			rval;	/* return value error code */
- 	int			tmp;	/* result value from btree calls */
-@@ -236,8 +264,6 @@ xfs_bulkstat(
- 	*done = 0;
- 	fmterror = 0;
- 	ubufp = ubuffer;
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
- 	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
- 	if (!irbuf)
- 		return ENOMEM;
-@@ -345,25 +371,7 @@ xfs_bulkstat(
- 			 * Also start read-ahead now for this chunk.
+@@ -288,67 +342,29 @@ xfs_bulkstat(
+ 		irbp = irbuf;
+ 		irbufend = irbuf + nirbuf;
+ 		end_of_ag = 0;
+-		/*
+-		 * If we're returning in the middle of an allocation group,
+-		 * we need to get the remainder of the chunk we're in.
+-		 */
++		icount = 0;
+ 		if (agino > 0) {
+-			xfs_inobt_rec_incore_t r;
+-
+ 			/*
+-			 * Lookup the inode chunk that this inode lives in.
++			 * In the middle of an allocation group, we need to get
++			 * the remainder of the chunk we're in.
  			 */
- 			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
--				struct blk_plug	plug;
+-			error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE,
+-						 &tmp);
+-			if (!error &&	/* no I/O error */
+-			    tmp &&	/* lookup succeeded */
+-					/* got the record, should always work */
+-			    !(error = xfs_inobt_get_rec(cur, &r, &i)) &&
+-			    i == 1 &&
+-					/* this is the right chunk */
+-			    agino < r.ir_startino + XFS_INODES_PER_CHUNK &&
+-					/* lastino was not last in chunk */
+-			    (chunkidx = agino - r.ir_startino + 1) <
+-				    XFS_INODES_PER_CHUNK &&
+-					/* there are some left allocated */
+-			    xfs_inobt_maskn(chunkidx,
+-				    XFS_INODES_PER_CHUNK - chunkidx) &
+-				    ~r.ir_free) {
 -				/*
--				 * Loop over all clusters in the next chunk.
--				 * Do a readahead if there are any allocated
--				 * inodes in that cluster.
+-				 * Grab the chunk record.  Mark all the
+-				 * uninteresting inodes (because they're
+-				 * before our start point) free.
 -				 */
--				blk_start_plug(&plug);
--				agbno = XFS_AGINO_TO_AGBNO(mp, r.ir_startino);
--				for (chunkidx = 0;
--				     chunkidx < XFS_INODES_PER_CHUNK;
--				     chunkidx += inodes_per_cluster,
--				     agbno += blks_per_cluster) {
--					if (xfs_inobt_maskn(chunkidx,
--					    inodes_per_cluster) & ~r.ir_free)
--						xfs_btree_reada_bufs(mp, agno,
--							agbno, blks_per_cluster,
--							&xfs_inode_buf_ops);
+-				for (i = 0; i < chunkidx; i++) {
+-					if (XFS_INOBT_MASK(i) & ~r.ir_free)
+-						r.ir_freecount++;
 -				}
--				blk_finish_plug(&plug);
-+				xfs_bulkstat_ichunk_ra(mp, agno, &r);
+-				r.ir_free |= xfs_inobt_maskn(0, chunkidx);
++			struct xfs_inobt_rec_incore	r;
++
++			error = xfs_bulkstat_grab_ichunk(cur, agino, &icount, &r);
++			if (error)
++				break;
++			if (icount) {
  				irbp->ir_startino = r.ir_startino;
  				irbp->ir_freecount = r.ir_freecount;
  				irbp->ir_free = r.ir_free;
+ 				irbp++;
+-				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
+-				icount = XFS_INODES_PER_CHUNK - r.ir_freecount;
+-			} else {
+-				/*
+-				 * If any of those tests failed, bump the
+-				 * inode number (just in case).
+-				 */
+-				agino++;
+-				icount = 0;
++				agino += r.ir_startino + XFS_INODES_PER_CHUNK;
+ 			}
+-			/*
+-			 * In any case, increment to the next record.
+-			 */
+-			if (!error)
+-				error = xfs_btree_increment(cur, 0, &tmp);
++			/* Increment to the next record */
++			error = xfs_btree_increment(cur, 0, &tmp);
+ 		} else {
+-			/*
+-			 * Start of ag.  Lookup the first inode chunk.
+-			 */
++			/* Start of ag.  Lookup the first inode chunk */
+ 			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
+-			icount = 0;
+ 		}
+ 		if (error)
+ 			break;
 -- 
 1.8.3.2
 
