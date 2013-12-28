@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4E58C7F3F
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 05:22:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2243D304051
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 03:22:01 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1D64E7F54
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 05:22:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E77FB8F8035
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 03:22:06 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id IW7iXTZLWOEM5Pbp (version=TLSv1
+	cuda.sgi.com with ESMTP id QII9CbeCqhu6SSBX (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Dec 2013 03:22:00 -0800 (PST)
+	Sat, 28 Dec 2013 03:22:05 -0800 (PST)
 Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBSBLwlh029569
+	ESMTP id rBSBM4ij029827
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:21:59 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:05 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
 	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBSBLvLt003522
+	rBSBM4WR003797
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:21:58 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBSBLvSk021564 for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:21:57 GMT
-Message-ID: <52BEB453.9060002@oracle.com>
-Date: Sat, 28 Dec 2013 19:21:55 +0800
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:04 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBSBM3UT003792 for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:03 GMT
+Message-ID: <52BEB459.7020202@oracle.com>
+Date: Sat, 28 Dec 2013 19:22:01 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 5/10] xfs: fix error handling in xfs_bulkstat
+Subject: [PATCH 6/10] xfs: introduce xfs_bulkstat_ichunk_ra
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,88 +43,112 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-We should not ignore the btree operation errors in xfs_bulkstat() but
-to propagate them if any.  This patch fix two places in this function
-and the remains things can be fixed with code refactoring thereafter.
+Introduce xfs_bulkstat_ichunk_ra() to loop over all clusters in
+the next inode chunk, then performs readahead if there are any
+allocated inodes in that cluster.
 
-Moreover, this fix also get rid of the redundant user buffer count
-pre-checkups as it has already been validated in upper callers.
+Refactor xfs_bulkstat() with it.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_itable.c | 40 ++++++----------------------------------
- 1 file changed, 6 insertions(+), 34 deletions(-)
+ fs/xfs/xfs_itable.c | 56 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 32 insertions(+), 24 deletions(-)
 
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index b890d1f..4c6b0ab 100644
+index 4c6b0ab..144e403 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -230,9 +230,6 @@ xfs_bulkstat(
- 		*ubcountp = 0;
- 		return 0;
- 	}
--	if (!ubcountp || *ubcountp <= 0) {
--		return EINVAL;
--	}
- 	ubcount = *ubcountp; /* statstruct's */
- 	ubleft = ubcount * statstruct_size; /* bytes */
- 	*ubcountp = ubelem = 0;
-@@ -255,14 +252,8 @@ xfs_bulkstat(
- 	while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
- 		cond_resched();
- 		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
--		if (error) {
--			/*
--			 * Skip this allocation group and go to the next one.
--			 */
--			agno++;
--			agino = 0;
--			continue;
--		}
-+		if (error)
-+			break;
- 		agi = XFS_BUF_TO_AGI(agbp);
- 		/*
- 		 * Allocate and initialize a btree cursor for ialloc btree.
-@@ -333,34 +324,15 @@ xfs_bulkstat(
- 			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
- 			icount = 0;
- 		}
-+		if (error)
-+			break;
-+
- 		/*
- 		 * Loop through inode btree records in this ag,
- 		 * until we run out of inodes or space in the buffer.
- 		 */
- 		while (irbp < irbufend && icount < ubcount) {
--			xfs_inobt_rec_incore_t r;
--
--			/*
--			 * Loop as long as we're unable to read the
--			 * inode btree.
--			 */
--			while (error) {
--				agino += XFS_INODES_PER_CHUNK;
--				if (XFS_AGINO_TO_AGBNO(mp, agino) >=
--						be32_to_cpu(agi->agi_length))
--					break;
--				error = xfs_inobt_lookup(cur, agino,
--							 XFS_LOOKUP_GE, &tmp);
--				cond_resched();
--			}
--			/*
--			 * If ran off the end of the ag either with an error,
--			 * or the normal way, set end and stop collecting.
--			 */
--			if (error) {
--				end_of_ag = 1;
--				break;
--			}
-+			struct xfs_inobt_rec_incore	r;
+@@ -172,6 +172,37 @@ xfs_bulkstat_one(
+ 				    xfs_bulkstat_one_fmt, ubused, stat);
+ }
  
- 			error = xfs_inobt_get_rec(cur, &r, &i);
- 			if (error || i == 0) {
++/*
++ * Loop over all clusters in a chunk for a given incore inode allocation btree
++ * record.  Do a readahead if there are any allocated inodes in that cluster.
++ */
++STATIC void
++xfs_bulkstat_ichunk_ra(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	struct xfs_inobt_rec_incore	*irec)
++{
++	xfs_agblock_t			agbno;
++	struct blk_plug			plug;
++	int				blks_per_cluster;
++	int				inodes_per_cluster;
++	int				i;	/* inode chunk index */
++
++	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
++	blks_per_cluster = xfs_icluster_size_fsb(mp);
++	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
++
++	blk_start_plug(&plug);
++	for (i = 0; i < XFS_INODES_PER_CHUNK;
++	     i += inodes_per_cluster, agbno += blks_per_cluster) {
++		if (xfs_inobt_maskn(i, inodes_per_cluster) & ~irec->ir_free) {
++			xfs_btree_reada_bufs(mp, agno, agbno, blks_per_cluster,
++					     &xfs_inode_buf_ops);
++		}
++	}
++	blk_finish_plug(&plug);
++}
++
+ #define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
+ 
+ /*
+@@ -187,7 +218,6 @@ xfs_bulkstat(
+ 	char			__user *ubuffer, /* buffer with inode stats */
+ 	int			*done)	/* 1 if there are more stats to get */
+ {
+-	xfs_agblock_t		agbno=0;/* allocation group block number */
+ 	xfs_buf_t		*agbp;	/* agi header buffer */
+ 	xfs_agi_t		*agi;	/* agi header data */
+ 	xfs_agino_t		agino;	/* inode # in allocation group */
+@@ -206,8 +236,6 @@ xfs_bulkstat(
+ 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
+ 	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
+ 	xfs_ino_t		lastino; /* last inode number returned */
+-	int			blks_per_cluster; /* # of blocks per cluster */
+-	int			inodes_per_cluster;/* # of inodes per cluster */
+ 	int			nirbuf;	/* size of irbuf */
+ 	int			rval;	/* return value error code */
+ 	int			tmp;	/* result value from btree calls */
+@@ -236,8 +264,6 @@ xfs_bulkstat(
+ 	*done = 0;
+ 	fmterror = 0;
+ 	ubufp = ubuffer;
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
+ 	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
+ 	if (!irbuf)
+ 		return ENOMEM;
+@@ -345,25 +371,7 @@ xfs_bulkstat(
+ 			 * Also start read-ahead now for this chunk.
+ 			 */
+ 			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
+-				struct blk_plug	plug;
+-				/*
+-				 * Loop over all clusters in the next chunk.
+-				 * Do a readahead if there are any allocated
+-				 * inodes in that cluster.
+-				 */
+-				blk_start_plug(&plug);
+-				agbno = XFS_AGINO_TO_AGBNO(mp, r.ir_startino);
+-				for (chunkidx = 0;
+-				     chunkidx < XFS_INODES_PER_CHUNK;
+-				     chunkidx += inodes_per_cluster,
+-				     agbno += blks_per_cluster) {
+-					if (xfs_inobt_maskn(chunkidx,
+-					    inodes_per_cluster) & ~r.ir_free)
+-						xfs_btree_reada_bufs(mp, agno,
+-							agbno, blks_per_cluster,
+-							&xfs_inode_buf_ops);
+-				}
+-				blk_finish_plug(&plug);
++				xfs_bulkstat_ichunk_ra(mp, agno, &r);
+ 				irbp->ir_startino = r.ir_startino;
+ 				irbp->ir_freecount = r.ir_freecount;
+ 				irbp->ir_free = r.ir_free;
 -- 
 1.8.3.2
 
