@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 99F797F3F
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 16:01:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2B0C1AC002
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 14:01:51 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 7AhmYIAoXeLzmVbX
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 14:01:50 -0800 (PST)
-Message-ID: <52BF4A47.3010604@hardwarefreak.com>
-Date: Sat, 28 Dec 2013 16:01:43 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4B6457F3F
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 17:39:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42263304043
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 15:39:38 -0800 (PST)
+Received: from mail-ea0-f171.google.com (mail-ea0-f171.google.com
+	[209.85.215.171]) by cuda.sgi.com with ESMTP id
+	xowfEl49yLnjHCzF (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 28 Dec 2013 15:39:35 -0800 (PST)
+Received: by mail-ea0-f171.google.com with SMTP id h10so4518931eak.2
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 15:39:34 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Subject: Re: [xfs_check Out of memory: ]
-References: <23931797.1848.1388252140769.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <23931797.1848.1388252140769.JavaMail.root@benjamin.baylink.com>
-Reply-To: stan@hardwarefreak.com
+Date: Sun, 29 Dec 2013 00:39:16 +0100
+References: <tencent_3F12563342ED1D4E049D1123@qq.com>
+	<201312280020.39244.arekm@maven.pl>
+	<52BF0295.9040301@hardwarefreak.com>
+In-Reply-To: <52BF0295.9040301@hardwarefreak.com>
+MIME-Version: 1.0
+Message-Id: <201312290039.17125.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +29,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jay Ashworth <jra@baylink.com>, xfs <xfs@oss.sgi.com>
+To: stan@hardwarefreak.com
+Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
 
-On 12/28/2013 11:35 AM, Jay Ashworth wrote:
-> ----- Original Message -----
->> From: "Stan Hoeppner" <stan@hardwarefreak.com>
-> 
->> Create a 100GB swap partition and leave the remainder unallocated. The
->> unallocated space will automatically be used for GC and wear leveling,
->> increasing the life of all cells in the drive.
-> 
-> *Great* tip.  :-)
-
-It's not so much of a tip but simply re-stating common knowledge, or
-what should be by now.  Over provisioning of SSDs has been written about
-pretty extensively.
-
-One benefit of over provisioning I failed to mention above is that it
-also typically decreases the latency and increases the throughput of
-random writes significantly.  Linux swap writes tend to be sequential,
-so this aspect of over provisioning won't pay dividends for the OP's use
-case.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0dXJkYXkgMjggb2YgRGVjZW1iZXIgMjAxMywgU3RhbiBIb2VwcG5lciB3cm90ZToKPiBP
+biAxMi8yNy8yMDEzIDU6MjAgUE0sIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiAuLi4K
+PiAKPiA+IC0gY2FuJ3QgYWRkIG1vcmUgUkFNIGVhc2lseSwgbWFjaGluZSBpcyBhdCByZW1vdGUg
+bG9jYXRpb24sIHVzZXMgb2Jzb2xldGUKPiA+IEREUjIsIGhhdmUgbm8gbW9yZSByYW0gc2xvdHMg
+YW5kIHNvIG9uCj4gCj4gLi4uCj4gCj4gPiBTbyBsb29rcyBsaWtlIG15IGZ1dHVyZSBiYWNrdXAg
+c2VydmVycyB3aWxsIG5lZWQgdG8gaGF2ZSA2NEdCLCAxMjhHQiBvcgo+ID4gbWF5YmUgZXZlbiBt
+b3JlIHJhbSB0aGF0IHdpbGwgYmUgdGhlcmUgb25seSBmb3IgeGZzX3JlcGFpciB1c2FnZS4gVGhh
+dCdzCj4gPiBnaWdhbnRpYyB3YXN0ZSBvZiByZXNvdXJjZXMuIEFuZCB0aGVyZSBhcmUgbW9kZXJu
+IHByb2Nlc3NvcnMgdGhhdCBkb24ndAo+ID4gd29yayB3aXRoIG1vcmUgdGhhbiAzMkdCIG9mIHJh
+bSAtIGxpa2UgIkludGVsIFhlb24gRTMtMTIyMHYyIiAoCj4gPiBodHRwOi8vdG5pai5vcmcvdGtx
+YXM5ZSApLiBTbyBhZGRpbmcgcmFtIG1lYW5zIHJlcGxhY2luZyBDUFUsIGxpa2VseQo+ID4gcmVw
+bGFjaW5nIG1haW5ib2FyZC4gRnVuIDopCj4gCj4gLi4KPiAKPiA+IElNTyByYW0gdXNhZ2UgaXMg
+YSByZWFsIHByb2JsZW0gZm9yIHhmc19yZXBhaXIgYW5kIHRoZXJlIGhhcyB0byBiZSBzb21lCj4g
+PiB1cHN0cmVhbSBzb2x1dGlvbiBvdGhlciB0aGFuICJidXkgbW9yZSIgKGFuZCB3YXN0ZSBtb3Jl
+KSBhcHByb2FjaC4KPiAKPiBUaGUgcHJvYmxlbSBpc24ndCB4ZnNfcmVwYWlyLiAgCgpUaGlzIHBy
+b2JsZW0gaXMgZnVsbHkgc29sdmFibGUgb24geGZzX3JlcGFpciBzaWRlIChpZiBkaXNrIHNwYWNl
+IG91dHNpZGUgb2YgCmJyb2tlbiB4ZnMgZnMgaXMgYXZhaWxhYmxlKS4KCj4gVGhlIHByb2JsZW0g
+aXMgdGhhdCB5b3UgZXhwZWN0IHRoaXMgdG9vbAo+IHRvIGhhbmRsZSBhbiBpbmZpbml0ZSBudW1i
+ZXIgb2YgaW5vZGVzIHdoaWxlIHVzaW5nIGEgZmluaXRlIGFtb3VudCBvZgo+IG1lbW9yeSwgb3Ig
+YXQgbGVhc3Qgc29tZXdoYXQgbGVzcyBtZW1vcnkgdGhhbiB5b3UgaGF2ZSBpbnN0YWxsZWQuICBX
+ZQo+IGRvbid0IHNlZSB5b3VyIHByb2JsZW0gcmVwb3J0ZWQgdmVyeSBvZnRlbiB3aGljaCBzZWVt
+cyB0byBpbmRpY2F0ZSB5b3VyCj4gc2l0dWF0aW9uIGlzIGEgY29ybmVyIGNhc2UsIG9yIHRoYXQg
+b3RoZXJzIHNpbXBseQoKSXQncyBub3Qgc29tZXRoaW5nIGNvbW1vbi4gSGFwcGVucyBmcm9tIHRp
+bWUgdG8gdGltZSBqdWRnaW5nIGJhc2VkIG9uICN4ZnMgCnF1ZXN0aW9ucy4KCj4gc2l6ZSB0aGVp
+ciBzeXN0ZW1zCj4gcHJvcGVybHkgd2l0aG91dCBjb21wbGFpbnQuCgpJIGd1ZXNzIGhhdmluZyBt
+aWxpb25zIG9mIHRpbnkgZmlsZXMgKGZldyBrYiBlYWNoIGZpbGUpIGluIHNpbXBseSBub3QgCnNv
+bWV0aGluZyBjb21tb24gcmF0aGVyIHRoYW4gInByb3Blcmx5IHNpemluZyBzeXN0ZW1zIi4KCj4g
+SWYgeW91J2QgYWN0dWFsbHkgbGlrZSBhZHZpY2Ugb24gaG93IHRvIHNvbHZlIHRoaXMsIHRvZGF5
+LCB3aXRoCj4gcmVhbGlzdGljIHNvbHV0aW9ucywgaW4gbGlldSBvZiB0aGUgZGV2cyByZWNvZGlu
+ZyB4ZnNfcmVwYWlyIGZvciB0aGUKPiBzaW5nbGUgZ29hbCBvZiB1c2luZyBsZXNzIG1lbW9yeSwg
+dGhlbiBoZXJlIGFyZSB5b3VyIG9wdGlvbnM6Cj4gCj4gMS4gIFJld3JpdGUgb3IgcmVkbyB5b3Vy
+IHdvcmtsb2FkIHRvIG5vdCBjcmVhdGUgc28gbWFueSBzbWFsbCBmaWxlcywKPiAgICAgc28gbWFu
+eSBpbm9kZXMsIGkuZS4gdXNlIGEgZGF0YWJhc2UKCkl0J3MgYSBiYWNrdXAgY29weSB0aGF0IG5l
+ZWRzIHRvIGJlIGRpcmVjdGx5IGFjY2Vzc2libGUgKHNvIHlvdSBjb3VsZCBydW4gCnByb2R1Y3Rp
+b24gZGlyZWN0bHkgZnJvbSBiYWNrdXAgc2VydmVyIGZvciBleGFtcGxlKS4gIFRoYXQgc29sdXRp
+b24gd29uJ3QgCndvcmsuCgo+IDIuICBBZGQgbW9yZSBSQU0gdG8gdGhlIHN5c3RlbQoKPiAzLiAg
+QWRkIGFuIFNTRCBvZiBzdWZmaWNpZW50IHNpemUvc3BlZWQgZm9yIHN3YXAgZHV0eSB0byBoYW5k
+bGUKPiAgICAgeGZzX3JlcGFpciByZXF1aXJlbWVudHMgZm9yIGZpbGVzeXN0ZW1zIHdpdGggYXJi
+aXRyYXJpbHkgaGlnaAo+ICAgICBpbm9kZSBjb3VudHMKClRoYXQgd291bGQgd29yay4uLiBpZiB0
+aGUgc2VydmVyIHdhcyBsb2NhbGx5IGF2YWlsYWJsZS4KClJpZ2h0IG5vdyBteSB3b3JraW5nICJz
+b2x1dGlvbiIgaXM6Ci0gYWRkIDQwR0Igb2Ygc3dhcCBzcGFjZQotIHN0b3AgYWxsIG90aGVyIHNl
+cnZpY2VzCi0gcnVuIHhmc19yZXBhaXIsIGxlYXZlIGl0IGZvciAxLTIgZGF5cwoKQWRkaW5nIFNT
+RCBpcyBteSBvbmx5IGxvbmcgdGVybSBvcHRpb24gaXQgc2VlbXMuCgo+IFRoZSBmYWN0IHRoYXQg
+dGhlIHN5c3RlbXMgYXJlIHJlbW90ZSwgdGhhdCB5b3UgaGF2ZSBubyBtb3JlIERJTU0gc2xvdHMs
+Cj4gYXJlIG5vdCBnb29kIGFyZ3VtZW50cyBmb3IgeW91IHRvIG1ha2UgaW4gdGhpcyBjb250ZXh0
+LiAgRXZlcnkgc3lzdGVtCj4gd2lsbCByZXF1aXJlIHNvbWUgdHlwZSBvZiBoYXJkd2FyZSBhZGRp
+dGlvbi9yZXBsYWNlbWVudC9tYWludGVuYW5jZS4KPiBBbmQgdGhpcyBpcyBub3QgdGhlIGZpcnN0
+IHNvZnR3YXJlICJwcm9ibGVtIiB0aGF0IHJlcXVpcmVzIG1vcmUgaGFyZHdhcmUKPiB0byBzb2x2
+ZS4gIElmIHlvdXIgYXBwbGljYXRpb24gdGhhdCBjcmVhdGVzIHRoZXNlIG1pbGxpb25zIG9mIGZp
+bGVzCj4gbmVlZGVkIHR3aWNlIGFzIG11Y2ggUkFNLCBmb3JjaW5nIGFuIHVwZ3JhZGUsIHdvdWxk
+IHlvdSBiZSBjb21wbGFpbmluZwo+IHRoaXMgd2F5IG9uIHRoZWlyIG1haWxpbmcgbGlzdD8KCklm
+IHRoYXQgYXBwbGljYXRpb24gY291bGQgZG8gaXRzIGpvYiB3aXRob3V0IHJlcXVpcmluZyAyeFJB
+TSB0aGVuIHN1cmVseSBJIAp3b3VsZCB3cml0ZSBhYm91dCB0aGlzIHRvIG1sLgoKPiBJZiBzbyBJ
+J2Qgc3VnZ2VzdCB0aGUgcHJvYmxlbSBsYXkKPiBzb21ld2hlcmUgb3RoZXIgdGhhbiB4ZnNfcmVw
+YWlyIGFuZCB0aGF0IGFwcGxpY2F0aW9uLgoKSU1PIHRoaXMgcHJvYmxlbSBjb3VsZCBiZSBzb2x2
+ZWQgb24geGZzX3JlcGFpciBzaWRlIGJ1dCB3ZWxsLi4uIHNvbWVvbmUgd291bGQgCmhhdmUgdG8g
+d3JpdGUgcGF0Y2hlcyBhbmQgdGhhdCdzIHVubGlrZWx5IHRvIGhhcHBlbi4KClNvIG5vdyBtb3Jl
+IGltcG9ydGFudCBxdWVzdGlvbi4gSG93IHRvIGFjdHVhbGx5IGVzdGltYXRlIHRoZXNlIHRoaW5n
+cz8gCkV4YW1wbGU6IDEwVEIgeGZzIGZpbGVzeXN0ZW0gZnVsbHkgd3JpdHRlbiB3aXRoIGZpbGVz
+IC0gMTBrYiBlYWNoIGZpbGUgKGh0bWwgCnBhZ2VzLCBpbWFnZXMgZXRjKSAtIHdlYiBzZXJ2ZXIu
+IEhvdyBtdWNoIHJhbSBteSBzZXJ2ZXIgd291bGQgbmVlZCBmb3IgcmVwYWlyIAp0byBzdWNjZWVk
+PwoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20gLyBtYXZlbi5wbAoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
+ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
