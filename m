@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D173629DF8
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 10:19:59 -0600 (CST)
-Message-ID: <52BEFA2E.5070006@sgi.com>
-Date: Sat, 28 Dec 2013 10:19:58 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4902129DF8
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 10:56:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CC2A9AC008
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 08:56:01 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id vK60pZU5rn1eV6wG
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 08:55:57 -0800 (PST)
+Message-ID: <52BF0295.9040301@hardwarefreak.com>
+Date: Sat, 28 Dec 2013 10:55:49 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] xfs: always releasing EFD's reference to EFI in
-	xfs_efd_item_committed
-References: <52B98295.8050704@oracle.com>
-In-Reply-To: <52B98295.8050704@oracle.com>
+Subject: Re: [xfs_check Out of memory: ]
+References: <tencent_3F12563342ED1D4E049D1123@qq.com>	<201312270907.22638.arekm@maven.pl>	<20131227224212.GK20579@dastard>
+	<201312280020.39244.arekm@maven.pl>
+In-Reply-To: <201312280020.39244.arekm@maven.pl>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,102 +25,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>, Dave Chinner <david@fromorbit.com>
+Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
 
-On 12/24/13 06:48, Jeff Liu wrote:
-> From: Jie Liu<jeff.liu@oracle.com>
->
-> With fsstress+godown test I observed an XFS hang up during umount which
-> yielding a backtrace like below:
->
-> [20876.193635] INFO: task umount:9853 blocked for more than 120 seconds.
-> [20876.193641]       Tainted: PF   O 3.13.0-rc2+ #8
-> [20876.193643] "echo 0>  /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [20876.193645] umount          D ffff88026f294440     0  9853   9372
-> <snip>
-> [20876.193663] Call Trace:
-> [20876.193672]  [<ffffffff816f3829>] schedule+0x29/0x70
-> [20876.193701]  [<ffffffffa0c4a3e9>] xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
-> [20876.193707]  [<ffffffff810a83f0>] ? prepare_to_wait_event+0x100/0x100
-> [20876.193726]  [<ffffffffa0be9df1>] xfs_unmountfs+0x61/0x150 [xfs]
-> [20876.193746]  [<ffffffffa0becd41>] xfs_fs_put_super+0x21/0x60 [xfs]
-> [20876.193751]  [<ffffffff811bbf62>] generic_shutdown_super+0x72/0xf0
-> [20876.193754]  [<ffffffff811bc217>] kill_block_super+0x27/0x70
-> [20876.193757]  [<ffffffff811bc4fd>] deactivate_locked_super+0x3d/0x60
-> [20876.193761]  [<ffffffff811bcab6>] deactivate_super+0x46/0x60
-> [20876.193765]  [<ffffffff811d9146>] mntput_no_expire+0xd6/0x170
-> [20876.193769]  [<ffffffff811da64e>] SyS_umount+0x8e/0x100
-> [20876.193774]  [<ffffffff816ffd6d>] system_call_fastpath+0x1a/0x1f
->
-> As per above backtraces, the umount process is already scheduled out
-> in xfs_ail_push_all_sync() because it should push out all of pending
-> changes in AIL and wait until the AIL is empty.  Then it will wake up
-> xfsaild thread to do the actual flushing business.  However, I found
-> that the AIL does not became empty in some situations because of some
-> EFI are still being on it, but in EFI's iop_push operation, we always
-> returning XFS_ITEM_PINNED which leads to the xfsaild thread suffering
-> into an infinite loop.
->
-> Since EFI items have no locking or pushing, they are pulled from the
-> AIL when their corresponding EFDs are committed to disk, and we have
-> guaranteed that the EFI should not be freed until it has been unppined
-> and the EFD has been committed in commit 666d644cd7, this is done via
-> an EFI reference count by initializing it to 2 in xfs_efi_init() -- one
-> is it's own count which is not released until it is unpinned, the other
-> one is taken by its corresponding EFD which will be released during EFD
-> commit operation.
->
-> IMHO we should always releasing it's reference to the corresponding EFI
-> item once the EFD item is committed to disk regardless of the log item
-> is marked with XFS_LI_ABORTED flag or not.
->
-> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
-> ---
->   fs/xfs/xfs_extfree_item.c | 8 +-------
->   1 file changed, 1 insertion(+), 7 deletions(-)
->
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 3680d04..16c0396 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -437,13 +437,7 @@ xfs_efd_item_committed(
->   {
->   	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
->
-> -	/*
-> -	 * If we got a log I/O error, it's always the case that the LR with the
-> -	 * EFI got unpinned and freed before the EFD got aborted.
-> -	 */
-> -	if (!(lip->li_flags&  XFS_LI_ABORTED))
-> -		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
-> -
-> +	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
->   	xfs_efd_item_free(efdp);
->   	return (xfs_lsn_t)-1;
->   }
-
-Hi Jeff.
-
-This would work if the forced shutdown happened after both the EFI and 
-EFD transaction were committed and successfully placed on the CIL.
-
-If the sequence went EFI commit, CIL push (EFI is now in the AIL), 
-forced shutdown, and then EFD commit. In this sequence, the EFD item 
-would not be placed on the CIL and therefore the iop.committed would not 
-be called. In this patch only iop_committing and iop_unlock would be run 
-on the EFD item.
-
-Thanks,
-
---Mark.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMTIvMjcvMjAxMyA1OjIwIFBNLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3JvdGU6Ci4uLgo+
+IC0gY2FuJ3QgYWRkIG1vcmUgUkFNIGVhc2lseSwgbWFjaGluZSBpcyBhdCByZW1vdGUgbG9jYXRp
+b24sIHVzZXMgb2Jzb2xldGUgCj4gRERSMiwgaGF2ZSBubyBtb3JlIHJhbSBzbG90cyBhbmQgc28g
+b24KLi4uCj4gU28gbG9va3MgbGlrZSBteSBmdXR1cmUgYmFja3VwIHNlcnZlcnMgd2lsbCBuZWVk
+IHRvIGhhdmUgNjRHQiwgMTI4R0Igb3IgbWF5YmUgCj4gZXZlbiBtb3JlIHJhbSB0aGF0IHdpbGwg
+YmUgdGhlcmUgb25seSBmb3IgeGZzX3JlcGFpciB1c2FnZS4gVGhhdCdzIGdpZ2FudGljIAo+IHdh
+c3RlIG9mIHJlc291cmNlcy4gQW5kIHRoZXJlIGFyZSBtb2Rlcm4gcHJvY2Vzc29ycyB0aGF0IGRv
+bid0IHdvcmsgd2l0aCBtb3JlIAo+IHRoYW4gMzJHQiBvZiByYW0gLSBsaWtlICJJbnRlbCBYZW9u
+IEUzLTEyMjB2MiIgKCBodHRwOi8vdG5pai5vcmcvdGtxYXM5ZSApLiBTbyAKPiBhZGRpbmcgcmFt
+IG1lYW5zIHJlcGxhY2luZyBDUFUsIGxpa2VseSByZXBsYWNpbmcgbWFpbmJvYXJkLiBGdW4gOikK
+Li4KPiBJTU8gcmFtIHVzYWdlIGlzIGEgcmVhbCBwcm9ibGVtIGZvciB4ZnNfcmVwYWlyIGFuZCB0
+aGVyZSBoYXMgdG8gYmUgc29tZSAKPiB1cHN0cmVhbSBzb2x1dGlvbiBvdGhlciB0aGFuICJidXkg
+bW9yZSIgKGFuZCB3YXN0ZSBtb3JlKSBhcHByb2FjaC4KClRoZSBwcm9ibGVtIGlzbid0IHhmc19y
+ZXBhaXIuICBUaGUgcHJvYmxlbSBpcyB0aGF0IHlvdSBleHBlY3QgdGhpcyB0b29sCnRvIGhhbmRs
+ZSBhbiBpbmZpbml0ZSBudW1iZXIgb2YgaW5vZGVzIHdoaWxlIHVzaW5nIGEgZmluaXRlIGFtb3Vu
+dCBvZgptZW1vcnksIG9yIGF0IGxlYXN0IHNvbWV3aGF0IGxlc3MgbWVtb3J5IHRoYW4geW91IGhh
+dmUgaW5zdGFsbGVkLiAgV2UKZG9uJ3Qgc2VlIHlvdXIgcHJvYmxlbSByZXBvcnRlZCB2ZXJ5IG9m
+dGVuIHdoaWNoIHNlZW1zIHRvIGluZGljYXRlIHlvdXIKc2l0dWF0aW9uIGlzIGEgY29ybmVyIGNh
+c2UsIG9yIHRoYXQgb3RoZXJzIHNpbXBseSBzaXplIHRoZWlyIHN5c3RlbXMKcHJvcGVybHkgd2l0
+aG91dCBjb21wbGFpbnQuCgpJZiB5b3UnZCBhY3R1YWxseSBsaWtlIGFkdmljZSBvbiBob3cgdG8g
+c29sdmUgdGhpcywgdG9kYXksIHdpdGgKcmVhbGlzdGljIHNvbHV0aW9ucywgaW4gbGlldSBvZiB0
+aGUgZGV2cyByZWNvZGluZyB4ZnNfcmVwYWlyIGZvciB0aGUKc2luZ2xlIGdvYWwgb2YgdXNpbmcg
+bGVzcyBtZW1vcnksIHRoZW4gaGVyZSBhcmUgeW91ciBvcHRpb25zOgoKMS4gIFJld3JpdGUgb3Ig
+cmVkbyB5b3VyIHdvcmtsb2FkIHRvIG5vdCBjcmVhdGUgc28gbWFueSBzbWFsbCBmaWxlcywKICAg
+IHNvIG1hbnkgaW5vZGVzLCBpLmUuIHVzZSBhIGRhdGFiYXNlCjIuICBBZGQgbW9yZSBSQU0gdG8g
+dGhlIHN5c3RlbQozLiAgQWRkIGFuIFNTRCBvZiBzdWZmaWNpZW50IHNpemUvc3BlZWQgZm9yIHN3
+YXAgZHV0eSB0byBoYW5kbGUKICAgIHhmc19yZXBhaXIgcmVxdWlyZW1lbnRzIGZvciBmaWxlc3lz
+dGVtcyB3aXRoIGFyYml0cmFyaWx5IGhpZ2gKICAgIGlub2RlIGNvdW50cwoKWW91ciBxdWlja2Vz
+dCwgY2hlYXBlc3QsIGFuZCBhbGwgZW5jb21wYXNzaW5nIHNvbHV0aW9uIHRvIHRoaXMgcHJvYmxl
+bQp0b2RheSBpcyAjMy4gIFRoaXMgcHJldmVudHMgdGhlIG5lZWQgdG8gc2l6ZSB0aGUgUkFNIG9u
+IGVhY2ggbWFjaGluZSB0bwptZWV0IHRoZSBuZWVkcyBvZiB4ZnNfcmVwYWlyIGdpdmVuIGFuIGFy
+Yml0cmFyeSBudW1iZXIgb2YgaW5vZGVzLCBhcwp5b3UnbGwgYWx3YXlzIGhhdmUgbW9yZSB0aGFu
+IGVub3VnaCBzd2FwLiAgQW5kIGl0IGlzIGxpa2VseSBsZXNzCmV4cGVuc2l2ZSB0aGFuIGFkZGlu
+Zy9yZXBsYWNpbmcgRElNTXMuICBUaGUgZmFzdGVzdCByYW5kb20gcmVhZC93cml0ZQpJT1BTIFNT
+RCBvbiB0aGUgbWFya2V0IGlzIHRoZSBTYW1zdW5nIDg0MCBQcm8gd2hpY2ggaXMgfiQxL0dCIGlu
+IHRoZQpTdGF0ZXMsIGEgMTI4R0IgdW5pdCBmb3IgJDEzMC4gIFRoaXMgdW5pdCBoYXMgYSA1IHll
+YXIgd2FycmFudHkgYW5kCnN1c3RhaW5lZCB+OTBLIHJlYWQvd3JpdGUgNEtCIElPUFMuCgpDcmVh
+dGUgYSAxMDBHQiBzd2FwIHBhcnRpdGlvbiBhbmQgbGVhdmUgdGhlIHJlbWFpbmRlciB1bmFsbG9j
+YXRlZC4gIFRoZQp1bmFsbG9jYXRlZCBzcGFjZSB3aWxsIGF1dG9tYXRpY2FsbHkgYmUgdXNlZCBm
+b3IgR0MgYW5kIHdlYXIgbGV2ZWxpbmcsCmluY3JlYXNpbmcgdGhlIGxpZmUgb2YgYWxsIGNlbGxz
+IGluIHRoZSBkcml2ZS4KClRoZSBmYWN0IHRoYXQgdGhlIHN5c3RlbXMgYXJlIHJlbW90ZSwgdGhh
+dCB5b3UgaGF2ZSBubyBtb3JlIERJTU0gc2xvdHMsCmFyZSBub3QgZ29vZCBhcmd1bWVudHMgZm9y
+IHlvdSB0byBtYWtlIGluIHRoaXMgY29udGV4dC4gIEV2ZXJ5IHN5c3RlbQp3aWxsIHJlcXVpcmUg
+c29tZSB0eXBlIG9mIGhhcmR3YXJlIGFkZGl0aW9uL3JlcGxhY2VtZW50L21haW50ZW5hbmNlLgpB
+bmQgdGhpcyBpcyBub3QgdGhlIGZpcnN0IHNvZnR3YXJlICJwcm9ibGVtIiB0aGF0IHJlcXVpcmVz
+IG1vcmUgaGFyZHdhcmUKdG8gc29sdmUuICBJZiB5b3VyIGFwcGxpY2F0aW9uIHRoYXQgY3JlYXRl
+cyB0aGVzZSBtaWxsaW9ucyBvZiBmaWxlcwpuZWVkZWQgdHdpY2UgYXMgbXVjaCBSQU0sIGZvcmNp
+bmcgYW4gdXBncmFkZSwgd291bGQgeW91IGJlIGNvbXBsYWluaW5nCnRoaXMgd2F5IG9uIHRoZWly
+IG1haWxpbmcgbGlzdD8gIElmIHNvIEknZCBzdWdnZXN0IHRoZSBwcm9ibGVtIGxheQpzb21ld2hl
+cmUgb3RoZXIgdGhhbiB4ZnNfcmVwYWlyIGFuZCB0aGF0IGFwcGxpY2F0aW9uLgoKLS0gClN0YW4K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
