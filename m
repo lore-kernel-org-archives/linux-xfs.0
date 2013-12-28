@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 92F507F3F
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 05:22:15 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 36BC97F54
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 05:22:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 52EF8304051
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 03:22:15 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id YtdZjmoLXMLoLSqr (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 05B68304032
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 03:22:23 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id jVNQmxB0vngBdstW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Dec 2013 03:22:14 -0800 (PST)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id rBSBMDAb029897
+	Sat, 28 Dec 2013 03:22:22 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id rBSBMLSP031556
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:13 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBSBMCOd027172
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:22 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBSBMK5s022065
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:12 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	rBSBMBNu003854 for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:11 GMT
-Message-ID: <52BEB461.8040802@oracle.com>
-Date: Sat, 28 Dec 2013 19:22:09 +0800
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:21 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	rBSBMK1n022061 for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 11:22:20 GMT
+Message-ID: <52BEB469.2000306@oracle.com>
+Date: Sat, 28 Dec 2013 19:22:17 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 7/10] xfs: introduce xfs_bulkstat_grab_ichunk
+Subject: [PATCH 8/10] xfs: introduce xfs_bulkstat_ag_ichunk
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,164 +43,220 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Introduce xfs_bulkstat_grab_ichunk() to look up an inode chunk in where
-the given inode resides, then grab the record.  Update the data for the
-pointed-to record if the inode was not the last in the chunk and there
-are some left allocated, return the grabbed inode count on success.
+Introduce xfs_bulkstat_ag_ichunk() to process inodes in chunk with
+a pointer to a formatter function that will iget the inode and fill
+in the appropriate structure.
 
 Refactor xfs_bulkstat() with it.
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_itable.c | 118 +++++++++++++++++++++++++++++-----------------------
- 1 file changed, 67 insertions(+), 51 deletions(-)
+ fs/xfs/xfs_itable.c | 142 ++++++++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_itable.h |  16 ++++++
+ 2 files changed, 104 insertions(+), 54 deletions(-)
 
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 144e403..c179e0e 100644
+index c179e0e..249b516 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -203,6 +203,60 @@ xfs_bulkstat_ichunk_ra(
- 	blk_finish_plug(&plug);
- }
- 
-+/*
-+ * Lookup the inode chunk that the given inode lives in and then get the record
-+ * if we found the chunk.  If the inode was not the last in the chunk and there
-+ * are some left allocated, update the data for the pointed-to record as well as
-+ * return the count of grabbed inodes.
-+ */
-+STATIC int
-+xfs_bulkstat_grab_ichunk(
-+	struct xfs_btree_cur		*cur,	/* btree cursor */
-+	xfs_agino_t			agino,	/* starting inode of chunk */
-+	int				*icount,/* return # of inodes grabbed */
-+	struct xfs_inobt_rec_incore	*irec)	/* btree record */
-+{
-+	int				idx;	/* index into inode chunk */
-+	int				stat;
-+	int				error;
-+
-+	/* Lookup the inode chunk that this inode lives in */
-+	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
-+	if (error)
-+		return error;
-+	XFS_WANT_CORRUPTED_RETURN(stat == 1);
-+
-+	/* Get the record, should always work */
-+	error = xfs_inobt_get_rec(cur, irec, &stat);
-+	if (error)
-+		return error;
-+	XFS_WANT_CORRUPTED_RETURN(stat == 1);
-+
-+	/* Check if the record contains the inode in request */
-+	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino)
-+		return XFS_ERROR(EINVAL);
-+
-+	idx = agino - irec->ir_startino + 1;
-+	if (idx < XFS_INODES_PER_CHUNK &&
-+	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
-+		int	i;
-+
-+		/* We got a right chunk with some left inodes allocated at it.
-+		 * Grab the chunk record.  Mark all the uninteresting inodes
-+		 * free -- because they're before our start point.
-+		 */
-+		for (i = 0; i < idx; i++) {
-+			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
-+				irec->ir_freecount++;
-+		}
-+
-+		irec->ir_free |= xfs_inobt_maskn(0, idx);
-+		*icount = XFS_INODES_PER_CHUNK - irec->ir_freecount;
-+	}
-+
-+	return 0;
-+}
-+
+@@ -260,6 +260,80 @@ xfs_bulkstat_grab_ichunk(
  #define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
  
  /*
-@@ -288,67 +342,29 @@ xfs_bulkstat(
- 		irbp = irbuf;
- 		irbufend = irbuf + nirbuf;
- 		end_of_ag = 0;
--		/*
--		 * If we're returning in the middle of an allocation group,
--		 * we need to get the remainder of the chunk we're in.
--		 */
-+		icount = 0;
- 		if (agino > 0) {
--			xfs_inobt_rec_incore_t r;
--
- 			/*
--			 * Lookup the inode chunk that this inode lives in.
-+			 * In the middle of an allocation group, we need to get
-+			 * the remainder of the chunk we're in.
- 			 */
--			error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE,
--						 &tmp);
--			if (!error &&	/* no I/O error */
--			    tmp &&	/* lookup succeeded */
--					/* got the record, should always work */
--			    !(error = xfs_inobt_get_rec(cur, &r, &i)) &&
--			    i == 1 &&
--					/* this is the right chunk */
--			    agino < r.ir_startino + XFS_INODES_PER_CHUNK &&
--					/* lastino was not last in chunk */
--			    (chunkidx = agino - r.ir_startino + 1) <
--				    XFS_INODES_PER_CHUNK &&
--					/* there are some left allocated */
--			    xfs_inobt_maskn(chunkidx,
--				    XFS_INODES_PER_CHUNK - chunkidx) &
--				    ~r.ir_free) {
--				/*
--				 * Grab the chunk record.  Mark all the
--				 * uninteresting inodes (because they're
--				 * before our start point) free.
--				 */
--				for (i = 0; i < chunkidx; i++) {
--					if (XFS_INOBT_MASK(i) & ~r.ir_free)
--						r.ir_freecount++;
--				}
--				r.ir_free |= xfs_inobt_maskn(0, chunkidx);
-+			struct xfs_inobt_rec_incore	r;
++ * Process inodes in chunk with a pointer to a formatter function that will
++ * iget the inode and fill in the appropriate structure.
++ */
++STATIC int
++xfs_bulkstat_ag_ichunk(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	struct xfs_inobt_rec_incore	*irbp,
++	bulkstat_one_pf			formatter,
++	size_t				statstruct_size,
++	struct xfs_bulkstat_agichunk	*acp)
++{
++	xfs_ino_t			lastino = acp->ac_lastino;
++	char				__user *ubufp = acp->ac_ubuffer;
++	int				ubleft = acp->ac_ubleft;
++	int				ubelem = acp->ac_ubelem;
++	int				chunkidx, clustidx;
++	int				error = 0;
++	xfs_agino_t			agino;
 +
-+			error = xfs_bulkstat_grab_ichunk(cur, agino, &icount, &r);
-+			if (error)
++	for (agino = irbp->ir_startino, chunkidx = clustidx = 0;
++	     XFS_BULKSTAT_UBLEFT(ubleft) &&
++	     irbp->ir_freecount < XFS_INODES_PER_CHUNK;
++	     chunkidx++, clustidx++, agino++) {
++		int		fmterror;	/* bulkstat formatter result */
++		int		ubused;
++		xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, agno, agino);
++
++		ASSERT(chunkidx < XFS_INODES_PER_CHUNK);
++		/* Skip if this inode is free */
++		if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free) {
++			lastino = ino;
++			continue;
++		}
++
++		/*
++		 * Count used inodes as free so we can tell when the chunk is
++		 * used up.
++		 */
++		irbp->ir_freecount++;
++
++		/* Get the inode and fill in a single buffer */
++		ubused = statstruct_size;
++		error = formatter(mp, ino, ubufp, ubleft, &ubused, &fmterror);
++		if (fmterror == BULKSTAT_RV_NOTHING) {
++			if (error && error != ENOENT && error != EINVAL) {
++				ubleft = 0;
 +				break;
-+			if (icount) {
- 				irbp->ir_startino = r.ir_startino;
- 				irbp->ir_freecount = r.ir_freecount;
- 				irbp->ir_free = r.ir_free;
- 				irbp++;
--				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
--				icount = XFS_INODES_PER_CHUNK - r.ir_freecount;
--			} else {
++			}
++			error = 0;
++			lastino = ino;
++			continue;
++		}
++		if (fmterror == BULKSTAT_RV_GIVEUP) {
++			ubleft = 0;
++			ASSERT(error);
++			break;
++		}
++		if (ubufp)
++			ubufp += ubused;
++		ubleft -= ubused;
++		ubelem++;
++		lastino = ino;
++	}
++
++	if (!error) {
++		acp->ac_lastino = lastino;
++		acp->ac_ubleft = ubleft;
++		acp->ac_ubelem = ubelem;
++	}
++	return error;
++}
++
++/*
+  * Return stat information in bulk (by-inode) for the filesystem.
+  */
+ int					/* error status */
+@@ -276,8 +350,6 @@ xfs_bulkstat(
+ 	xfs_agi_t		*agi;	/* agi header data */
+ 	xfs_agino_t		agino;	/* inode # in allocation group */
+ 	xfs_agnumber_t		agno;	/* allocation group number */
+-	int			chunkidx; /* current index into inode chunk */
+-	int			clustidx; /* current index into inode cluster */
+ 	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
+ 	int			end_of_ag; /* set if we've seen the ag end */
+ 	int			error;	/* error code */
+@@ -297,7 +369,6 @@ xfs_bulkstat(
+ 	int			ubleft;	/* bytes left in user's buffer */
+ 	char			__user *ubufp;	/* pointer into user's buffer */
+ 	int			ubelem;	/* spaces used in user's buffer */
+-	int			ubused;	/* bytes used by formatter */
+ 
+ 	/*
+ 	 * Get the last inode value, see if there's nothing to do.
+@@ -414,57 +485,20 @@ xfs_bulkstat(
+ 		irbufend = irbp;
+ 		for (irbp = irbuf;
+ 		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ubleft); irbp++) {
+-			/*
+-			 * Now process this chunk of inodes.
+-			 */
+-			for (agino = irbp->ir_startino, chunkidx = clustidx = 0;
+-			     XFS_BULKSTAT_UBLEFT(ubleft) &&
+-				irbp->ir_freecount < XFS_INODES_PER_CHUNK;
+-			     chunkidx++, clustidx++, agino++) {
+-				ASSERT(chunkidx < XFS_INODES_PER_CHUNK);
+-
+-				ino = XFS_AGINO_TO_INO(mp, agno, agino);
 -				/*
--				 * If any of those tests failed, bump the
--				 * inode number (just in case).
+-				 * Skip if this inode is free.
 -				 */
--				agino++;
--				icount = 0;
-+				agino += r.ir_startino + XFS_INODES_PER_CHUNK;
- 			}
--			/*
--			 * In any case, increment to the next record.
--			 */
--			if (!error)
--				error = xfs_btree_increment(cur, 0, &tmp);
-+			/* Increment to the next record */
-+			error = xfs_btree_increment(cur, 0, &tmp);
- 		} else {
--			/*
--			 * Start of ag.  Lookup the first inode chunk.
--			 */
-+			/* Start of ag.  Lookup the first inode chunk */
- 			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
--			icount = 0;
+-				if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free) {
+-					lastino = ino;
+-					continue;
+-				}
+-				/*
+-				 * Count used inodes as free so we can tell
+-				 * when the chunk is used up.
+-				 */
+-				irbp->ir_freecount++;
+-
+-				/*
+-				 * Get the inode and fill in a single buffer.
+-				 */
+-				ubused = statstruct_size;
+-				error = formatter(mp, ino, ubufp, ubleft,
+-						  &ubused, &fmterror);
+-				if (fmterror == BULKSTAT_RV_NOTHING) {
+-					if (error && error != ENOENT &&
+-						error != EINVAL) {
+-						ubleft = 0;
+-						rval = error;
+-						break;
+-					}
+-					lastino = ino;
+-					continue;
+-				}
+-				if (fmterror == BULKSTAT_RV_GIVEUP) {
+-					ubleft = 0;
+-					ASSERT(error);
+-					rval = error;
+-					break;
+-				}
+-				if (ubufp)
+-					ubufp += ubused;
+-				ubleft -= ubused;
+-				ubelem++;
+-				lastino = ino;
+-			}
++			struct xfs_bulkstat_agichunk ac;
++
++			ac.ac_lastino = lastino;
++			ac.ac_ubuffer = ubuffer;
++			ac.ac_ubleft = ubleft;
++			ac.ac_ubelem = ubelem;
++			error = xfs_bulkstat_ag_ichunk(mp, agno, irbp,
++					formatter, statstruct_size, &ac);
++			if (error)
++				rval = error;
++
++			lastino = ac.ac_lastino;
++			ubleft = ac.ac_ubleft;
++			ubelem = ac.ac_ubelem;
+ 
+ 			cond_resched();
  		}
- 		if (error)
- 			break;
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index f78bbcf..e33ec46 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -30,6 +30,22 @@ typedef int (*bulkstat_one_pf)(struct xfs_mount	*mp,
+ 			       int		*ubused,
+ 			       int		*stat);
+ 
++struct xfs_bulkstat_agichunk {
++	xfs_ino_t	ac_lastino;	/* last inode returned */
++	char		__user *ac_ubuffer;/* pointer into user's buffer */
++	int		ac_ubleft;	/* bytes left in user's buffer */
++	int		ac_ubelem;	/* spaces used in user's buffer */
++};
++
++int
++xfs_bulkstat_ag_ichunk(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	struct xfs_inobt_rec_incore	*irbp,
++	bulkstat_one_pf			formatter,
++	size_t				statstruct_size,
++	struct xfs_bulkstat_agichunk	*acp);
++
+ /*
+  * Values for stat return value.
+  */
 -- 
 1.8.3.2
 
