@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0E8227F3F
-	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 17:20:49 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 30C327F3F
+	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 22:01:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D1A888F8033
-	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 15:20:48 -0800 (PST)
-Received: from mail-ea0-f177.google.com (mail-ea0-f177.google.com
-	[209.85.215.177]) by cuda.sgi.com with ESMTP id
-	C92JImfXfjvzRZ0w (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Dec 2013 15:20:41 -0800 (PST)
-Received: by mail-ea0-f177.google.com with SMTP id n15so4225408ead.8
-	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 15:20:40 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [xfs_check Out of memory: ]
-Date: Sat, 28 Dec 2013 00:20:39 +0100
-References: <tencent_3F12563342ED1D4E049D1123@qq.com>
-	<201312270907.22638.arekm@maven.pl>
-	<20131227224212.GK20579@dastard>
-In-Reply-To: <20131227224212.GK20579@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AF158AC004
+	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 20:01:02 -0800 (PST)
+Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
+	with ESMTP id OB5FHXCkRvznorSS for <xfs@oss.sgi.com>;
+	Fri, 27 Dec 2013 20:01:00 -0800 (PST)
+Date: Fri, 27 Dec 2013 20:00:57 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: 3.13-rc3: BUG: soft lockup - CPU#0 stuck for 23s!
+Message-ID: <alpine.DEB.2.11.1312271942300.5808@trent.utfs.org>
 MIME-Version: 1.0
-Message-Id: <201312280020.39244.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,97 +21,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linuxppc-dev@lists.ozlabs.org, xfs@oss.sgi.com
 
-T24gRnJpZGF5IDI3IG9mIERlY2VtYmVyIDIwMTMsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBG
-cmksIERlYyAyNywgMjAxMyBhdCAwOTowNzoyMkFNICswMTAwLCBBcmthZGl1c3ogTWnFm2tpZXdp
-Y3ogd3JvdGU6Cj4gPiBPbiBGcmlkYXkgMjcgb2YgRGVjZW1iZXIgMjAxMywgSmVmZiBMaXUgd3Jv
-dGU6Cj4gPiA+IE9uIDEyLzI3IDIwMTMgMTQ6NDggUE0sIFN0b3I/PyB3cm90ZToKPiA+ID4gPiBI
-ZXk6Cj4gPiA+ID4gCj4gPiA+ID4gMjBUIHhmcyBmaWxlIHN5c3RlbQo+ID4gPiA+IAo+ID4gPiA+
-IAo+ID4gPiA+IAo+ID4gPiA+IC91c3Ivc2Jpbi94ZnNfY2hlY2s6IGxpbmUgMjg6IDE0NDQ3IEtp
-bGxlZAo+ID4gPiA+IHhmc19kYiREQk9QVFMgLWkgLXAgeGZzX2NoZWNrIC1jICJjaGVjayRPUFRT
-IiAkMQo+ID4gPiAKPiA+ID4geGZzX2NoZWNrIGlzIGRlcHJlY2F0ZWQgYW5kIHBsZWFzZSB1c2Ug
-eGZzX3JlcGFpciAtbiBpbnN0ZWFkLgo+ID4gPiAKPiA+ID4gVGhlIGZvbGxvd2luZyBiYWNrIHRy
-YWNlcyBzaG93IHVzIHRoYXQgaXQgc2VlbXMgeW91ciBzeXN0ZW0gaXMgcnVuIG91dAo+ID4gPiBt
-ZW1vcnkgd2hlbiBleGVjdXRpbmcgeGZzX2NoZWNrLCB0aHVzLCBzbm1wIGRhZW1vbi94ZnNfZGIg
-d2VyZSBraWxsZWQuCj4gPiAKPiA+IFRoaXMgcmVtaW5kcyBtZSBhIHF1ZXN0aW9uLi4uCj4gPiAK
-PiA+IENvdWxkIHhmc19yZXBhaXIgc3RvcmUgaXRzIHRlbXBvcmFyeSBkYXRhIChzb21lIG9mIHRo
-YXQgZGF0YSwgdGhlIGJpZ2dlc3QKPiA+IHBhcnRlKSBvbiBkaXNrIGluc3RlYWQgb2YgaW4gbWVt
-b3J5Pwo+IAo+IFdoZXJlIG9uIGRpc2s/IAoKSW4gZGlyZWN0b3J5L2ZpbGUgdGhhdCBJJ2xsIHRl
-bGwgaXQgdG8gdXNlIChzaW5jZSBJIHVzdWFseSBoYXZlIGZldyB4ZnMgCmZpbGVzeXN0ZW1zIG9u
-IHNpbmdsZSBzZXJ2ZXIgYW5kIHNvIGZhciBvbmx5IG9uZSBhdCBhIHRpbWUgYnJlYWtzKS4KCj4g
-V2UgY2FuJ3Qgd3JpdGUgdG8gdGhlIGRpc2sgdW50aWwgd2UndmUgdmVyaWZpZWQgYWxsCj4gdGhl
-IGZyZWUgc3BhY2UgaXMgcmVhbGx5IGZyZWUgc3BhY2UsIGFuZCBndWVzcyB3aGF0IHVzZXMgYWxs
-IHRoZQo+IG1lbW9yeT8gQmVzaWRlcywgaWYgdGhlIGluZm9ybWF0aW9uIGlzIG5vdCBiZWluZyBy
-ZWZlcmVuY2VkCj4gcmVndWxhcmx5IChhbmQgaXQgdXN1YWxseSBpc24ndCksIHRoZW4gc3dhcCBz
-cGFjZSBpcyBhYm91dCBhcwo+IGVmZmljaWVudCBhcyBhbnkgZGF0YWJhc2Ugd2UgbWlnaHQgY29t
-ZSB1cCB3aXRoLi4uCgpJdCdzIG5vdCBhYm91dCBlZmZpY2llbmN5LiBJdCdzIGFib3V0IG5vdCBr
-aWxsaW5nIHRoZSBzeXN0ZW0gKGJ5IG5vdCBlYXRpbmcgCmFsbCBtZW1vcnksIE9PTSkuIElmIEkg
-Y2FuIChvcHRpb25hbGx5KSB0cmFkZSByZXBhaXIgc3BlZWQgZm9yIG5vdCBlYXRpbmcgcmFtIAp0
-aGVuIGl0J3MgZGVzaXJlZCBzb21ldGltZXMuIEJldHRlciB0byBoYXZlIHNsb3cgcmVwYWlyIHRo
-YW4gbm8gcmVwYWlyIDgpCgpDb3VsZCB4ZnNfcmVwYWlyIHRlbGwga2VybmVsIHRoYXQgdGhpcyBk
-YXRhIHNob3VsZCBhbHdheXMgZW5kIHVwIG9uIHN3YXAgZmlyc3QgCihhbGxvd2luZyBvdGhlciBw
-cm9ncmFtcy9kYWVtb25zIHRvIHVzZSByZWd1bGFyIG1lbW9yeSkgcHJlaGFwcz8gKERvbid0IGtu
-b3cgCmludGVyZmFjZSB0aGF0IHdvdWxkIGFsbG93IHRvIGRvIHRoYXQgaW4ga2VybmVsIHRob3Vn
-aCkuIFRoYXQgd291bGQgYmUgc29tZSAKaGFsZiBiYWtlZCBzb2x1dGlvbi4KCj4gPiBJIGRvbid0
-IGtub3cgaXQgdGhhdCB3b3VsZCBtYWtlIHNlbnNlLCBzbyBhc2tpbmcuIE5vdCBzdXJlIGlmIHhm
-c19yZXBhaXIKPiA+IG5lZWRzIHRvIGFjY2VzcyB0aGF0IGRhdGEgZnJlcXVlbnRseSAoc28gb24g
-ZGlzayBtYWtlcyBubyBzZW5zZSkgb3IKPiA+IG1heWJlIGl0IG5lZWRzIG9ubHkgZm9yIGl0ZXJh
-dGlvbiBwdXJwb3NlcyBpbiBzb21lIGxhdGVyIHBoYXNlIChzbyBvbgo+ID4gZGlzayBzaG91bGQg
-d29yaykuCj4gPiAKPiA+IEFueXdheSBtZW1vcnkgdXNhZ2Ugb2YgeGZzX3JlcGFpciB3YXMgYWx3
-YXlzIGEgcHJvYmxlbSBmb3IgbWUgKGxpa2UgMTZHQgo+ID4gbm90IGVub3VnaCBmb3IgN1RCIGZz
-IGR1ZSB0byBodWdlIGFtb3VudCBvZiBmaWVzIGJlaW5nIHN0b3JlZCkuIFdpdGgKPiA+IHBhcmFs
-bGVsIHNjYW4gaXQncyBldmVuIHdvcnNlIG9idmlvdXNseS4KPiAKPiBZZXMsIHlvdXIgcHJvYmxl
-bSBpcyB0aGF0IHRoZSBmaWxlc3lzdGVtIHlvdSBhcmUgY2hlY2tpbmcgY29udGFpbnMKPiA0MCtH
-QiBvZiBtZXRhZGF0YSBhbmQgYSBsYXJnZSBhbW91bnQgb2YgdGhhdCBuZWVkcyB0byBiZSBrZXB0
-IGluCj4gbWVtb3J5IGZyb20gcGhhc2UgMyB0aHJvdWdoIHRvIHBoYXNlIDYuCgpJcyB0aGF0IGRh
-dGEgKG9yIG1vc3Qgb2YgdGhhdCBkYXRhKSBmcmVxdWVubHkgYWNjZXNzZWQ/IE9yIHNvbWV0aGlu
-ZyB0aGF0J3MgCml0ZXJhdGVkIG92ZXIgbGV0IHNheSBvbmNlIGluIGVhY2ggcGhhc2U/IAoKCkFu
-eXdheSBjdXJyZW50ICJmdW4iIHdpdGggcmVwYWlyIGFuZCBodWdlIGZpbGVzeXN0ZW1zIGxvb2tz
-IGxpa2UgdGhpczoKLSAxNkdCIG9mIG1lbW9yeSwgcnVuIHhmc19yZXBhaXIsIHN5c3RlbSBnb2Vz
-IGludG8gdW51c2FibGUgc3RhdGUgYmVjYXVzZSAKd2hvbGUgcmFtIGlzIGVhdGVuIChlbmRzIHVw
-IHdpdGggT09NKTsgd2FpdCBzZXZlcmFsIGhvdXJzCi0gcmVib290LCBhZGQgMjBHQiBvZiBzd2Fw
-LCBydW4geGZzX3JlcGFpciwgdGhlIHNhbWUgaGFwcGVucyBhZ2Fpbjsgd2FpdCBoYWxmIAphIGRh
-eQotIHJlYm9vdCwgYWRkIGFub3RoZXIgMjBHQiBvZiBzd2FwIHNwYWNlLCBydW4geGZzIHJlcGFp
-ciAtIHN1Y2Nlc3MhOyB3YWl0IAphbm90aGVyIGRheQotIGluIGFsbCBzdGVwcyBzeXN0ZW0gaXMg
-c2ltcGx5IHVudXNhYmxlIGZvciBvdGhlciBzZXJ2aWNlcy4gTm90aGluZyBlbHNlIHdpbGwgCndv
-cmsgc2luY2UgZW50aXJlIHJhbSBnZXRzIGVhdGVuIGJ5IHJlcGFpci4gU28gZG9lc24ndCBoZWxw
-IG1lIHRvIGhhdmUgNCB4ZnMgCmZpbGVzeXN0ZW1zIGFuZCBvbmx5IG9uZSBicm9rZW4gLSBoYXZl
-IHRvIHNodXQgZG93biBhbGwgc2VydmljZXMgb25seSBmb3IgdGhhdCAKcmVwYWlyIHRvIHdvcmsK
-LSB3aXRoIHBhcmFsbGVsIGdpdCByZXBhaXIgaXQgaXMgZXZlbiB3b3JzZSBvYnZpb3VzbHkgKE9P
-TSBoYXBwZW5zIHNvb25lciB0aGFuIApsYXRlcikKLSBjYW4ndCBhZGQgbW9yZSBSQU0gZWFzaWx5
-LCBtYWNoaW5lIGlzIGF0IHJlbW90ZSBsb2NhdGlvbiwgdXNlcyBvYnNvbGV0ZSAKRERSMiwgaGF2
-ZSBubyBtb3JlIHJhbSBzbG90cyBhbmQgc28gb24KLSB0b3RhbCByZXBhaXIgdGltZSBmb3IgYWxs
-IHRoYXQgc3RlcHMgaXMgZmV3IHRpbWVzIGxvbmdlciB0aGFuIG5lY2Nlc3NhcnkgCihzdWNjZXNz
-ZnVsIHJlcGFpciB0b29rIDcuNWggd2hpbGUgYWxsIHRoZXNlIHN0ZXBzIHRvb2sgMiBkYXlzKQot
-IHdoYXQncyB3b3JzZSB0b29scyBnaXZlIG5vIGVzdGltYXRpb25zIG9mIHJhbSBuZWVkZWQgZXRj
-IGJ1dCB0aGF0J3MgYWZhaWsgCnVuZml4YWJsZS4gVGhpcyBtZWFucyB0aGF0IGl0IGlzIG5vdCBr
-bm93biBob3cgbXVjaCBtZW1vcnkgd2lsbCBiZSBuZWVkZWQuIFlvdSAKbmVlZCB0byBydW4gcmVw
-YWlyIGFuZCBzZWUuIEFsc28gaWYgbW9yZSBmaWxlcyBnZXRzIHN0b3JlZCB0aGVuIG5leHQgcmVw
-YWlyIGluIApmZXcgbW9udHMgY291bGQgcmVxdWlyZSB0d2ljZSBtb3JlIHJhbS4gWW91IG5ldmVy
-IGtub3cgd2hhdCB0byBleHBlY3QuCgpOb3cgaG93IHRvIHByZXZlbnQgdGhlc2UgcHJvYmxlbXM/
-IEN1cnJlbnRseSBJIHNlZSBvbmx5IG9uZSAic29sdXRpb24iIC0gYWRkIAptb3JlIFJBTS4KClVu
-Zm9ydHVuYXRlbHkgdGhhdCdzIG5vdCBhIHNsb3V0aW9uIC0gd29uJ3Qgd29yayBpbiBtYW55IGNh
-c2VzIGRlc2NyaWJlZCAKYWJvdmUuCgpTbyBsb29rcyBsaWtlIG15IGZ1dHVyZSBiYWNrdXAgc2Vy
-dmVycyB3aWxsIG5lZWQgdG8gaGF2ZSA2NEdCLCAxMjhHQiBvciBtYXliZSAKZXZlbiBtb3JlIHJh
-bSB0aGF0IHdpbGwgYmUgdGhlcmUgb25seSBmb3IgeGZzX3JlcGFpciB1c2FnZS4gVGhhdCdzIGdp
-Z2FudGljIAp3YXN0ZSBvZiByZXNvdXJjZXMuIEFuZCB0aGVyZSBhcmUgbW9kZXJuIHByb2Nlc3Nv
-cnMgdGhhdCBkb24ndCB3b3JrIHdpdGggbW9yZSAKdGhhbiAzMkdCIG9mIHJhbSAtIGxpa2UgIklu
-dGVsIFhlb24gRTMtMTIyMHYyIiAoIGh0dHA6Ly90bmlqLm9yZy90a3FhczllICkuIFNvIAphZGRp
-bmcgcmFtIG1lYW5zIHJlcGxhY2luZyBDUFUsIGxpa2VseSByZXBsYWNpbmcgbWFpbmJvYXJkLiBG
-dW4gOikKCj4gSWYgeW91IHJlYWxseSB3YW50IHRvIGFkZAo+IHNvbWUga2luZCBvZiBkYXRhYmFz
-ZSBpbnRlcmZhY2UgdG8gc3RvcmUgdGhpcyBpbmZvcm1hdGlvbiBzb21ld2hlcmUKPiBlbHNlLCB0
-aGVuIEknbGwgcmV2aWV3IHRoZSBwYXRjaGVzLiA7KQoKUmlnaHQuIFNvIG9ubHkgImVhc3kiIHRh
-c2sgZmluZGluZyB0aGUgb25lIHdobyB1bmRlcnN0YW5kcyB0aGUgY29kZSBhbmQgY2FuIAp3cml0
-ZSBzdWNoIGludGVyZmFjZSBsZWZ0LiBBbnlvbmU/CgpJTU8gcmFtIHVzYWdlIGlzIGEgcmVhbCBw
-cm9ibGVtIGZvciB4ZnNfcmVwYWlyIGFuZCB0aGVyZSBoYXMgdG8gYmUgc29tZSAKdXBzdHJlYW0g
-c29sdXRpb24gb3RoZXIgdGhhbiAiYnV5IG1vcmUiIChhbmQgd2FzdGUgbW9yZSkgYXBwcm9hY2gu
-Cgo+IENoZWVycywKPiAKPiBEYXZlLgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20g
-LyBtYXZlbi5wbAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+I noticed that my machine locks up quite often with 3.13.-rc3.
+
+PowerPC G4 again, but this machine was pretty much rock solid until now:
+when there's lots of disk I/O going on, the system locks up, but not 
+entirely: the calltrace is still written to netconsole (but not to its 
+local disk) and answers ping requests - but SSH login is impossible and a 
+reset is needed. The workload of the machine has not changed, when there's 
+disk I/O it means that either rsync is running or some crazy remote Java 
+application is scanning over this machine's NFS shares.
+
+There's sometimes "xfs" mentioned in the call trace and the disk I/O is 
+all happening on the xfs mounts, that's why I Cc'ed the xfs mailing list.
+
+More details on: http://nerdbynature.de/bits/3.13-rc3/
+
+Any ideas?
+
+The most recent lockup is from today below, this time it wasn't rsync or 
+NFS but I was experimenting with xfs on a loop device, backed by a 1GB 
+file, like this:
+
+  $ dd if=/dev/zero of=/usr/local/test.img bs=1M count=1k
+  $ losetup -f /usr/local/test.img && mkfs.xfs /dev/loop0
+  $ mount -t xfs /dev/loop0 /mnt/disk
+  $ cd /mnt/disk
+  $ cp -ax / /mnt/disk       - which filled the disk
+  $ rm -rf lib/              - make some room
+  $ i=1; while true; do printf "$i "; dd if=/dev/zero of=f$i \
+        count=100 bs=100k; i=$(($i+1)); done      - filling the disk again
+
+  => and then the machine locked up.
+
+ [308783.613600] BUG: soft lockup - CPU#0 stuck for 23s! [kworker/u2:1:14542]
+ [308783.613703] Modules linked in: md5 ecb nfs i2c_powermac therm_adt746x ecryptfs arc4 b43 firewire_sbp2 usb_storage mac80211 cfg80211
+ [308783.613944] irq event stamp: 37770086
+ [308783.613980] hardirqs last  enabled at (37770085): [<c0546ff0>] _raw_spin_unlock_irq+0x30/0x60
+ [308783.614075] hardirqs last disabled at (37770086): [<c0010700>] reenable_mmu+0x30/0x88
+ [308783.614156] softirqs last  enabled at (37764418): [<c00354d4>] __do_softirq+0x168/0x1e8
+ [308783.614236] softirqs last disabled at (37764411): [<c0035990>] irq_exit+0xa4/0xc8
+ [308783.614312] CPU: 0 PID: 14542 Comm: kworker/u2:1 Not tainted 3.13.0-rc3-00365-gc48b660 #1
+ [308783.614384] Workqueue: writeback bdi_writeback_workfn  (flush-7:0)
+  
+ [308783.614454] task: e8d20bb0 ti: e0c5a000 task.ti: e0c5a000
+ [308783.614499] NIP: c0546ffc LR: c0546ff0 CTR: 00000000
+ [308783.614543] REGS: e0c5ba80 TRAP: 0901   Not tainted  (3.13.0-rc3-00365-gc48b660)
+ [308783.614596] MSR: 00009032 ,ME ,IR ,DR ,RI > CR: 444c2224  XER: 20000000
+ [308783.614739] #012GPR00: #012GPR08: 
+  
+ [308783.614998] NIP [c0546ffc] _raw_spin_unlock_irq+0x3c/0x60
+ [308783.615047] LR [c0546ff0] _raw_spin_unlock_irq+0x30/0x60
+ [308783.615089] Call Trace:
+ [308783.615121] [e0c5bb30] [c0546ff0] _raw_spin_unlock_irq+0x30/0x60  (unreliable)
+ [308783.615202] [e0c5bb40] [c009f0e4] __set_page_dirty_nobuffers+0xc8/0x144
+ [308783.615264] [e0c5bb60] [c01bec28] xfs_vm_writepage+0x90/0x57c
+ [308783.615322] [e0c5bbf0] [c009e618] __writepage+0x24/0x7c
+ [308783.615376] [e0c5bc00] [c009ec38] write_cache_pages+0x1d0/0x380
+ [308783.615433] [e0c5bca0] [c009ee34] generic_writepages+0x4c/0x70
+ [308783.615493] [e0c5bce0] [c00f9af8] __writeback_single_inode+0x34/0x12c
+ [308783.615968] [e0c5bd00] [c00f9e74] writeback_sb_inodes+0x1f4/0x344
+ [308783.616418] [e0c5bd70] [c00fa050] __writeback_inodes_wb+0x8c/0xd0
+ [308783.616864] [e0c5bda0] [c00fa258] wb_writeback+0x1c4/0x1cc
+ [308783.617306] [e0c5bdd0] [c00fae14] bdi_writeback_workfn+0x158/0x33c
+ [308783.617751] [e0c5be50] [c004906c] process_one_work+0x19c/0x3f0
+ [308783.618193] [e0c5be80] [c0049a0c] worker_thread+0x128/0x3c0
+ [308783.618630] [e0c5beb0] [c004fa8c] kthread+0xbc/0xd0
+ [308783.619071] [e0c5bf40] [c001099c] ret_from_kernel_thread+0x5c/0x64
+ [308783.619501] Instruction dump:
+ [308783.619915] 7ca802a6 
+ [308783.620437] 4bb1c681 
+
+-- 
+BOFH excuse #446:
+
+Mailer-daemon is busy burning your message in hell.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
