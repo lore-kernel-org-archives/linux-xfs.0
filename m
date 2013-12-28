@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 30C327F3F
-	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 22:01:06 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id DB7507F3F
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 04:04:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AF158AC004
-	for <xfs@oss.sgi.com>; Fri, 27 Dec 2013 20:01:02 -0800 (PST)
-Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
-	with ESMTP id OB5FHXCkRvznorSS for <xfs@oss.sgi.com>;
-	Fri, 27 Dec 2013 20:01:00 -0800 (PST)
-Date: Fri, 27 Dec 2013 20:00:57 -0800 (PST)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: 3.13-rc3: BUG: soft lockup - CPU#0 stuck for 23s!
-Message-ID: <alpine.DEB.2.11.1312271942300.5808@trent.utfs.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 788A2AC004
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 02:04:55 -0800 (PST)
+Received: from mail-ob0-f171.google.com (mail-ob0-f171.google.com
+	[209.85.214.171]) by cuda.sgi.com with ESMTP id
+	JL0DdXE1R0MWEq4g (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 28 Dec 2013 02:04:54 -0800 (PST)
+Received: by mail-ob0-f171.google.com with SMTP id wp18so10238327obc.30
+	for <xfs@oss.sgi.com>; Sat, 28 Dec 2013 02:04:53 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20131226085134.GA32660@infradead.org>
+References: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
+	<20131226085134.GA32660@infradead.org>
+Date: Sat, 28 Dec 2013 18:04:53 +0800
+Message-ID: <CAEH94LhHC9t-9KGkUr5ppF1dcebRmtkXaHLn7BFR5dZGgwSAuQ@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] xfs: add O_TMPFILE support
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,83 +32,126 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: linuxppc-dev@lists.ozlabs.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-api@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
 
-I noticed that my machine locks up quite often with 3.13.-rc3.
+On Thu, Dec 26, 2013 at 4:51 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> Both patches looks good to me,
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Indeed thanks for your review. ok, i will place them to my TODO list.
 
-PowerPC G4 again, but this machine was pretty much rock solid until now:
-when there's lots of disk I/O going on, the system locks up, but not 
-entirely: the calltrace is still written to netconsole (but not to its 
-local disk) and answers ping requests - but SSH login is impossible and a 
-reset is needed. The workload of the machine has not changed, when there's 
-disk I/O it means that either rsync is running or some crazy remote Java 
-application is scanning over this machine's NFS shares.
+>
+> But now we need to make sure we can exercise it, which will need
+> support for tmpfile and flink commands in xfs_io.
+>
+> And tests that use those commands in xfstests.  At a minimum I'd
+> suggest:
+>
+>  - test creating read-only/read-write/executable files
+>  - check how permission bits actually work for O_TMPFILE and
+>    enforce that (unfortunately I can't find any documentation for that)
+>  - check that creating non-regular files is properly rejected
+>  - check that flink works on O_TMPFILE files, but doesn't work on
+>    on other files
+>
+> For an additional XFS-specific test I'd recommend:
+>
+>  - creating a tmpfile, use src/godown to force the filesystem down and
+>    check that repair recoveres the unlinked inode list
+>  - creating a tmpfile, flinking it, use src/godown to force the
+>    filesystem down and check that repair does not have to recover
+>    the unlink inode list.
+>
+> On Wed, Dec 18, 2013 at 08:22:38AM +0800, Zhi Yong Wu wrote:
+>> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+>>
+>> HI, folks
+>>
+>>   It's time to post the latest revision out, welcome to any constructive comment, thanks.
+>>
+>>   If anyone is interested in playing with it, you can get this patchset from my dev git on github:
+>>   git://github.com/wuzhy/kernel.git xfs_tmpfile
+>>
+>>   The patchset was tested against the code snippet from Andy Lutomirski and other test cases:
+>>   http://lwn.net/Articles/562296/
+>>   If you have any other better test cases, please let me know, thanks.
+>>
+>> #include <stdio.h>
+>> #include <err.h>
+>> #include <fcntl.h>
+>> #include <unistd.h>
+>> #include <string.h>
+>>
+>> #define __O_TMPFILE 020000000
+>> #define O_DIRECTORY 0200000
+>> #define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
+>> #define AT_EMPTY_PATH 0x1000
+>>
+>> int main(int argc, char **argv)
+>> {
+>>    char buf[128];
+>>
+>>    if (argc != 3)
+>>      errx(1, "Usage: flinktest PATH linkat|proc");
+>>
+>>    int fd = open(".", O_TMPFILE | O_RDWR, 0600);
+>>    if (fd == -1)
+>>      err(1, "O_TMPFILE");
+>>    else
+>>      printf("fd #: %d\n", fd);
+>>
+>>    write(fd, "test", 4);
+>>
+>>    if (!strcmp(argv[2], "linkat")) {
+>>      if (linkat(fd, "", AT_FDCWD, argv[1], AT_EMPTY_PATH) != 0)
+>>        err(1, "linkat");
+>>    } else if (!strcmp(argv[2], "proc")) {
+>>      sprintf(buf, "/proc/self/fd/%d", fd);
+>>      if (linkat(AT_FDCWD, buf, AT_FDCWD, argv[1], AT_SYMLINK_FOLLOW) != 0)
+>>        err(1, "linkat");
+>>    } else {
+>>      errx(1, "invalid mode");
+>>    }
+>>
+>>    return 0;
+>> }
+>>
+>> Changelog from v1:
+>>  - Fixed one chunk of the comments from Christoph Hellwig and Jeff Liu.
+>>
+>> v1:
+>>  - Addressed the comments from Dave Chinner and Christoph Hellwig.
+>>
+>> Zhi Yong Wu (3):
+>>   xfs: factor prid related codes into xfs_get_initial_prid()
+>>   xfs: add O_TMPFILE support
+>>   xfs: allow linkat() on O_TMPFILE files
+>>
+>>  fs/xfs/xfs_inode.c      |  123 ++++++++++++++++++++++++++++++++++++++++++++--
+>>  fs/xfs/xfs_inode.h      |   12 +++++
+>>  fs/xfs/xfs_iops.c       |   16 ++++++
+>>  fs/xfs/xfs_shared.h     |    4 +-
+>>  fs/xfs/xfs_symlink.c    |    5 +--
+>>  fs/xfs/xfs_trans_resv.c |   55 +++++++++++++++++++--
+>>  fs/xfs/xfs_trans_resv.h |    2 +
+>>  7 files changed, 202 insertions(+), 15 deletions(-)
+>>
+>> --
+>> 1.7.6.5
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> ---end quoted text---
 
-There's sometimes "xfs" mentioned in the call trace and the disk I/O is 
-all happening on the xfs mounts, that's why I Cc'ed the xfs mailing list.
 
-More details on: http://nerdbynature.de/bits/3.13-rc3/
-
-Any ideas?
-
-The most recent lockup is from today below, this time it wasn't rsync or 
-NFS but I was experimenting with xfs on a loop device, backed by a 1GB 
-file, like this:
-
-  $ dd if=/dev/zero of=/usr/local/test.img bs=1M count=1k
-  $ losetup -f /usr/local/test.img && mkfs.xfs /dev/loop0
-  $ mount -t xfs /dev/loop0 /mnt/disk
-  $ cd /mnt/disk
-  $ cp -ax / /mnt/disk       - which filled the disk
-  $ rm -rf lib/              - make some room
-  $ i=1; while true; do printf "$i "; dd if=/dev/zero of=f$i \
-        count=100 bs=100k; i=$(($i+1)); done      - filling the disk again
-
-  => and then the machine locked up.
-
- [308783.613600] BUG: soft lockup - CPU#0 stuck for 23s! [kworker/u2:1:14542]
- [308783.613703] Modules linked in: md5 ecb nfs i2c_powermac therm_adt746x ecryptfs arc4 b43 firewire_sbp2 usb_storage mac80211 cfg80211
- [308783.613944] irq event stamp: 37770086
- [308783.613980] hardirqs last  enabled at (37770085): [<c0546ff0>] _raw_spin_unlock_irq+0x30/0x60
- [308783.614075] hardirqs last disabled at (37770086): [<c0010700>] reenable_mmu+0x30/0x88
- [308783.614156] softirqs last  enabled at (37764418): [<c00354d4>] __do_softirq+0x168/0x1e8
- [308783.614236] softirqs last disabled at (37764411): [<c0035990>] irq_exit+0xa4/0xc8
- [308783.614312] CPU: 0 PID: 14542 Comm: kworker/u2:1 Not tainted 3.13.0-rc3-00365-gc48b660 #1
- [308783.614384] Workqueue: writeback bdi_writeback_workfn  (flush-7:0)
-  
- [308783.614454] task: e8d20bb0 ti: e0c5a000 task.ti: e0c5a000
- [308783.614499] NIP: c0546ffc LR: c0546ff0 CTR: 00000000
- [308783.614543] REGS: e0c5ba80 TRAP: 0901   Not tainted  (3.13.0-rc3-00365-gc48b660)
- [308783.614596] MSR: 00009032 ,ME ,IR ,DR ,RI > CR: 444c2224  XER: 20000000
- [308783.614739] #012GPR00: #012GPR08: 
-  
- [308783.614998] NIP [c0546ffc] _raw_spin_unlock_irq+0x3c/0x60
- [308783.615047] LR [c0546ff0] _raw_spin_unlock_irq+0x30/0x60
- [308783.615089] Call Trace:
- [308783.615121] [e0c5bb30] [c0546ff0] _raw_spin_unlock_irq+0x30/0x60  (unreliable)
- [308783.615202] [e0c5bb40] [c009f0e4] __set_page_dirty_nobuffers+0xc8/0x144
- [308783.615264] [e0c5bb60] [c01bec28] xfs_vm_writepage+0x90/0x57c
- [308783.615322] [e0c5bbf0] [c009e618] __writepage+0x24/0x7c
- [308783.615376] [e0c5bc00] [c009ec38] write_cache_pages+0x1d0/0x380
- [308783.615433] [e0c5bca0] [c009ee34] generic_writepages+0x4c/0x70
- [308783.615493] [e0c5bce0] [c00f9af8] __writeback_single_inode+0x34/0x12c
- [308783.615968] [e0c5bd00] [c00f9e74] writeback_sb_inodes+0x1f4/0x344
- [308783.616418] [e0c5bd70] [c00fa050] __writeback_inodes_wb+0x8c/0xd0
- [308783.616864] [e0c5bda0] [c00fa258] wb_writeback+0x1c4/0x1cc
- [308783.617306] [e0c5bdd0] [c00fae14] bdi_writeback_workfn+0x158/0x33c
- [308783.617751] [e0c5be50] [c004906c] process_one_work+0x19c/0x3f0
- [308783.618193] [e0c5be80] [c0049a0c] worker_thread+0x128/0x3c0
- [308783.618630] [e0c5beb0] [c004fa8c] kthread+0xbc/0xd0
- [308783.619071] [e0c5bf40] [c001099c] ret_from_kernel_thread+0x5c/0x64
- [308783.619501] Instruction dump:
- [308783.619915] 7ca802a6 
- [308783.620437] 4bb1c681 
 
 -- 
-BOFH excuse #446:
+Regards,
 
-Mailer-daemon is busy burning your message in hell.
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
