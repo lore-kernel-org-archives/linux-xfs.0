@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 63EBE7F3F
-	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 19:55:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 417FC304048
-	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 17:55:20 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id oVUlBfBtfasvxTdr
-	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 17:55:19 -0800 (PST)
-Message-ID: <52C0D281.7040704@hardwarefreak.com>
-Date: Sun, 29 Dec 2013 19:55:13 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: [xfs_check Out of memory: ]
-References: <tencent_3F12563342ED1D4E049D1123@qq.com>	<201312270907.22638.arekm@maven.pl>	<20131227224212.GK20579@dastard>	<201312280020.39244.arekm@maven.pl>
-	<20131229095033.GL20579@dastard>
-In-Reply-To: <20131229095033.GL20579@dastard>
-Reply-To: stan@hardwarefreak.com
+	by oss.sgi.com (Postfix) with ESMTP id 6D7797F3F
+	for <linux-xfs@oss.sgi.com>; Mon, 30 Dec 2013 02:32:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 59FED304053
+	for <linux-xfs@oss.sgi.com>; Mon, 30 Dec 2013 00:32:49 -0800 (PST)
+Received: from smtp1-g21.free.fr (smtp1-g21.free.fr [212.27.42.1]) by
+	cuda.sgi.com with ESMTP id QbdWGJ29bhlYbB3J for
+	<linux-xfs@oss.sgi.com>; Mon, 30 Dec 2013 00:32:43 -0800 (PST)
+Date: Mon, 30 Dec 2013 09:32:30 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Please help to recover filesystem XFS on RAID 5
+Message-ID: <20131230093230.7dfb9237@galadriel.home>
+In-Reply-To: <1388166992503-35010.post@n7.nabble.com>
+References: <1388166992503-35010.post@n7.nabble.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,31 +23,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3?= =?UTF-8?B?aWN6?= <arekm@maven.pl>
-Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: lublinkermi <lublinkermi@interia.pl>
+Cc: linux-xfs@oss.sgi.com
 
-On 12/29/2013 3:50 AM, Dave Chinner wrote:
-...
-> I think you are forgetting that developer time is *expensive* and
-> *scarce*. This is essentially a solved problem: An SSD in a USB3
-> enclosure as a temporary swap device is by far the most cost
-> effective way to make repair scale to arbitrary amounts of metadata.
-> It certainly scales far better than developer time and testing
-> resources...
-
-Now this is an interesting idea Dave.  I hadn't considered temporary
-swap.  Would USB be reliable enough for this?  I've seen lots problem
-reports with folks using USB storage with Linux, random disconnections
-and what not.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgRnJpLCAyNyBEZWMgMjAxMyAwOTo1NjozMiAtMDgwMCAoUFNUKSB2b3VzIMOpY3JpdmllejoK
+Cj4gSSBoYWQgYSBYRlMgZmlsZXN5c3RlbSBvbiBSQUlEIDUsIGJ1dCBsaW5lIG9mIHRoZSBwb3dl
+ciBzdXBwbHkgMjMwIFYKPiBoYWQgY3Jhc2ggLiBVUFMgZmFpbGVkLCAyIGhhcmQgZGlzayBkcml2
+ZSBvbiBSQUlEICg0IGhhcmQgZGlzaykKPiBmYWlsZWQgKG1lZGl1bSBlcnJvcikgLSB0aGVuIGJl
+Zm9yZSB0dXJuIG9mIGNvbXB1dGVyIEkgcmVzeW5jaHJvbml6ZQo+IHRoaXMgUkFJRC4gIEZkaXNr
+IHJlY29nbml6ZWQgZmlsZXN5c3RlbSBhcyBYRlMuIFVzaW5nIGRkIHdpdGgKPiBjb252PW5vZXJy
+b3IsIHN5bmMgSSBjbG9uZSBYRlMgZmlsZXN5c3RlbSBvbiBleHRlcm5hbCBoYXJkIGRpc2suIAoK
+WW91IHNob3VsZCB0cnkgdG8gcmVwYWlyIHlvdXIgZmFpbGVkIGhhcmQgZGlza3MuIEkndmUgc2F2
+ZWQgYSBSQUlELTUKYXJyYXkgcmVjZW50bHkgd2l0aCAzIGRlZmVjdGl2ZSBkcml2ZXMgYnkgdXNp
+bmcgR1JDIFNwaW5yaXRlOiBpdApyZW1hcHBlZCBlbm91Z2ggYmFkIGJsb2NrcyB0byBnZXQgdGhl
+IGFycmF5IHVwIGFnYWluLCB0aG91Z2ggU2VhdG9vbHMKY291bGRuJ3QgZG8gaXQuCgpBZnRlciB0
+aGF0IHlvdSdyZSBnb29kIGZvciBLcm9sbCBPbnRyYWNrIGFuZCBmcmllbmRzLi4uIFVuZm9ydHVu
+YXRlbHkKdGhhdCdzIGhvdyBwZW9wbGUgbGVhcm4gaG93IGJhY2t1cHMgYXJlIG5lY2Vzc2FyeSwg
+YnkgbG9zaW5nIGRhdGEuCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAg
+fCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1
+ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAg
+ICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
