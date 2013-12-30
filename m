@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2CB4A7F3F
-	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 17:27:30 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 63EBE7F3F
+	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 19:55:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 13D96304051
-	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 15:27:26 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	XTAlq90LlHRtu9De for <xfs@oss.sgi.com>;
-	Sun, 29 Dec 2013 15:27:24 -0800 (PST)
-Date: Mon, 30 Dec 2013 10:27:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [xfs_check Out of memory: ]
-Message-ID: <20131229232719.GM20579@dastard>
-References: <tencent_3F12563342ED1D4E049D1123@qq.com>
-	<201312280020.39244.arekm@maven.pl>
-	<20131229095033.GL20579@dastard>
-	<201312291257.13771.arekm@maven.pl>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 417FC304048
+	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 17:55:20 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id oVUlBfBtfasvxTdr
+	for <xfs@oss.sgi.com>; Sun, 29 Dec 2013 17:55:19 -0800 (PST)
+Message-ID: <52C0D281.7040704@hardwarefreak.com>
+Date: Sun, 29 Dec 2013 19:55:13 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201312291257.13771.arekm@maven.pl>
+Subject: Re: [xfs_check Out of memory: ]
+References: <tencent_3F12563342ED1D4E049D1123@qq.com>	<201312270907.22638.arekm@maven.pl>	<20131227224212.GK20579@dastard>	<201312280020.39244.arekm@maven.pl>
+	<20131229095033.GL20579@dastard>
+In-Reply-To: <20131229095033.GL20579@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,99 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+To: Dave Chinner <david@fromorbit.com>, =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3?= =?UTF-8?B?aWN6?= <arekm@maven.pl>
 Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
 
-T24gU3VuLCBEZWMgMjksIDIwMTMgYXQgMTI6NTc6MTNQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIFN1bmRheSAyOSBvZiBEZWNlbWJlciAyMDEzLCBEYXZlIENoaW5u
-ZXIgd3JvdGU6Cj4gPiBPbiBTYXQsIERlYyAyOCwgMjAxMyBhdCAxMjoyMDozOUFNICswMTAwLCBB
-cmthZGl1c3ogTWnFm2tpZXdpY3ogd3JvdGU6Cj4gPiA+IE9uIEZyaWRheSAyNyBvZiBEZWNlbWJl
-ciAyMDEzLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPiA+ID4gT24gRnJpLCBEZWMgMjcsIDIwMTMg
-YXQgMDk6MDc6MjJBTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtraWV3aWN6IHdyb3RlOgo+ID4gPiA+
-ID4gT24gRnJpZGF5IDI3IG9mIERlY2VtYmVyIDIwMTMsIEplZmYgTGl1IHdyb3RlOgo+ID4gPiA+
-ID4gPiBPbiAxMi8yNyAyMDEzIDE0OjQ4IFBNLCBTdG9yPz8gd3JvdGU6Cj4gWy4uLl0KPiA+ID4g
-PiA+IFRoaXMgcmVtaW5kcyBtZSBhIHF1ZXN0aW9uLi4uCj4gPiA+ID4gPiAKPiA+ID4gPiA+IENv
-dWxkIHhmc19yZXBhaXIgc3RvcmUgaXRzIHRlbXBvcmFyeSBkYXRhIChzb21lIG9mIHRoYXQgZGF0
-YSwgdGhlCj4gPiA+ID4gPiBiaWdnZXN0IHBhcnRlKSBvbiBkaXNrIGluc3RlYWQgb2YgaW4gbWVt
-b3J5Pwo+ID4gPiA+IAo+ID4gPiA+IFdoZXJlIG9uIGRpc2s/Cj4gPiA+IAo+ID4gPiBJbiBkaXJl
-Y3RvcnkvZmlsZSB0aGF0IEknbGwgdGVsbCBpdCB0byB1c2UgKHNpbmNlIEkgdXN1YWx5IGhhdmUg
-ZmV3IHhmcwo+ID4gPiBmaWxlc3lzdGVtcyBvbiBzaW5nbGUgc2VydmVyIGFuZCBzbyBmYXIgb25s
-eSBvbmUgYXQgYSB0aW1lIGJyZWFrcykuCj4gPiAKPiA+IEhvdyBpcyB0aGF0IGFueSBkaWZmZXJl
-bnQgZnJvbSBqdXN0IGFkZGluZyBzd2FwIHNwYWNlIHRvIHRoZSBzZXJ2ZXI/Cj4gCj4gSXQncyBk
-aWZmZXJlbnQgYnkgYWxsb3dpbmcgb3RoZXIgc2VydmljZXMgdG8gd29yayB3aGlsZSByZXBhaXIg
-aXMgaW4gcHJvZ3Jlc3MuIAo+IElmIHN3YXAgZ2V0cyBlYXRlbiB0aGVuIGVudGlyZSBzZXJ2ZXIg
-Z29lcyBkb3duIG9uIGtuZWVzLiBLZWVwaW5nIHRoaW5zIG9uIAo+IGRpc2sgd291bGQgbWVhbiB0
-aGF0IG90aGVyIHNlcnZpY2VzIHdvcmsgdW5pbnRlcnJ1cHRlZCBhbmQgcmVwYWlyIGdldHMgc2xv
-dyAKPiAoYnV0IHdvcmtzKS4KCldlbGwsIHRoYXQgZGVwZW5kcyBvbiB3aGF0IGRpc2sgeW91IHB1
-dCB0aGUgZXh0ZXJuYWwgZGIgb24uIElmIHRoYXQKaXMgc2hhcmVkLCB0aGVuIHlvdSdyZSBnb2lu
-ZyB0byBoYXZlIHByb2JsZW1zIHdpdGggSU8gbGF0ZW5jeQpjYXVzaW5nIHNlcnZpY2UgZGVncmFk
-YXRpb24uLi4uCgo+ID4gPiBSaWdodC4gU28gb25seSAiZWFzeSIgdGFzayBmaW5kaW5nIHRoZSBv
-bmUgd2hvIHVuZGVyc3RhbmRzIHRoZSBjb2RlIGFuZAo+ID4gPiBjYW4gd3JpdGUgc3VjaCBpbnRl
-cmZhY2UgbGVmdC4gQW55b25lPwo+ID4gPiAKPiA+ID4gSU1PIHJhbSB1c2FnZSBpcyBhIHJlYWwg
-cHJvYmxlbSBmb3IgeGZzX3JlcGFpciBhbmQgdGhlcmUgaGFzIHRvIGJlIHNvbWUKPiA+ID4gdXBz
-dHJlYW0gc29sdXRpb24gb3RoZXIgdGhhbiAiYnV5IG1vcmUiIChhbmQgd2FzdGUgbW9yZSkgYXBw
-cm9hY2guCj4gPiAKPiA+IEkgdGhpbmsgeW91IGFyZSBmb3JnZXR0aW5nIHRoYXQgZGV2ZWxvcGVy
-IHRpbWUgaXMgKmV4cGVuc2l2ZSogYW5kCj4gPiAqc2NhcmNlKi4KPiAKPiBJJ20gYXdhcmUgb2Yg
-dGhhdCBhbmQgbm90IGV4cGVjdGluZyBhbnkgZGV2ZWxvcGVyIHRvIGltcGxlbWVudCB0aGlzICh1
-bmxlc3MgCj4gc29tZSBkZXZlbG9wZXIgaGl0cyB0aGUgc2FtZSBwcm9ibGVtcyBhbmQgd2lsbCBo
-YXZlIGh3IGNvbnN0cmFpbnMgOykKClRoZSBtYWluIGlzc3VlIGhlcmUgaXMgdGhhdCB5b3VyIGZp
-bGVzeXN0ZW0gdXNhZ2UgaXMgd2VsbCBvdXRzaWRlCnRoZSA5NXRoIHBlcmNlbnRpbGUsIGFuZCBz
-byB5b3UgYXJlIGluIHRoZSByZWFsbSBvZiBjdXN0b20gc29sdXRpb25zCnRoYXQgcmVxdWlyZSBz
-aWduaWZpY2FudCBlbmdpbmVlcmluZyBlZmZvcnQgdG8gcmVzb2x2ZS4gVGhhdCdzIG5vdAp0byBz
-YXkgdGhleSBjYW4ndCBiZSBzb2x2ZWQsIGp1c3QgdGhhdCBzb2x2aW5nIHRoZW0gaXMgYW4gZXhw
-ZW5zaXZlCnVuZGVydGFraW5nLi4uCgo+ID4gVGhpcyBpcyBlc3NlbnRpYWxseSBhIHNvbHZlZCBw
-cm9ibGVtOiBBbiBTU0QgaW4gYSBVU0IzIGVuY2xvc3VyZQo+ID4gYXMgYSB0ZW1wb3Jhcnkgc3dh
-cCBkZXZpY2UgaXMgYnkgZmFyIHRoZSBtb3N0IGNvc3QgZWZmZWN0aXZlIHdheQo+ID4gdG8gbWFr
-ZSByZXBhaXIgc2NhbGUgdG8gYXJiaXRyYXJ5IGFtb3VudHMgb2YgbWV0YWRhdGEuICBJdAo+ID4g
-Y2VydGFpbmx5IHNjYWxlcyBmYXIgYmV0dGVyIHRoYW4gZGV2ZWxvcGVyIHRpbWUgYW5kIHRlc3Rp
-bmcKPiA+IHJlc291cmNlcy4uLgo+IAo+IE9rLgo+IAo+IEknbSBub3Qgc2F5aW5nIHRoYXQgZXZl
-cnlvbmUgc2hvdWxkIG5vdyBzdGFydCBhZGRpbmcgIm9uIGRpc2siIGRiCj4gZm9yIHhmc19yZXBh
-aXIuIEkganVzdCB0aGluayB0aGF0IHRoYXQgc291bHV0aW9uIHdvdWxkIHdvcmssCj4gcmVnYXJk
-bGVzcyBvZiBoYXJkd2FyZSBhbmQgd291bGQgbWFrZSBpdCBwb3NzaWJsZSB0byByZXBhaXIgaHVn
-ZQo+IGZpbGVzeXN0ZW1zICh3aXRoIHRvbnMgb2YgbWV0YWRhdGEpIGV2ZW4gb24gbG93IG1lbW9y
-eSBtYWNoaW5lcwo+ICh3aXRob3V0IGhhdmluZyB0byBjaGFuZ2UgaGFyZHdhcmUpLgoKSXQncyBh
-bHdheXMgYmVlbiB0aGUgY2FzZSB0aGF0IHlvdSBjYW4gY3JlYXRlIGEgZmlsZXN5c3RlbSB0aGF0
-IGEKc3BlY2lmaWMgbWFjaGluZSBkb2VzIG5vdCBoYXZlIHRoZSByZXNvdWNlcyB0byBiZSBhYmxl
-IHRvIHJlcGFpci4gV2UKY2FuJ3QgcHJldmVudCB0aGF0IGZyb20gb2NjdXJyaW5nLiBlLmcuIG5v
-IGFtb3VudCBvZiBvbi1kaXNrCmRhdGFiYXNlIHdvcmsgd2lsbCBtYWtlIHJlcGFpciBjb21wbGV0
-ZSBvbiBhbiBlbWJlZGRlZCBOQVMgYm94IHdpdGgKNTEyTUIgb2YgUkFNLCBhIDJHQiBzeXN0ZW0g
-ZGlzayB3aXRoIGEgZmlsZXN5c3RlbSB0aGF0IHNwYW5zIDJ4NFRCCmRyaXZlcy4uLi4KCj4gSWYg
-dGhlcmUgaXMgaW50ZXJlc3QgYW1vbmcgZGV2ZWxvcGVycyB0byBpbXBsZW1lbnQgdGhpcyAob2Jp
-b3VzbHkKPiBub3QpIGlzIGFub3RoZXIgbWF0dGVyIGFuZCBzaG91bGRuJ3QgbWF0dGVyIG9uIGRp
-c2N1c3NpbmcKPiBhcHByb2FjaC4KPiAKPiBXaGF0IGlzIG1vcmUgaW50ZXJlc3RpbmcgZm9yIG1l
-IGlzIHRhbGtpbmcgYWJvdXQgcG9zc2libGUgcHJvYmxlbXMKPiB3aXRoIG9uIGRpc2sgYXBwcm9h
-Y2ggYW5kIG5vdCBsb29raW5nIGZvciBhIHNvbHV0aW9uIHRvIG15Cj4gcGFydGljdWxhciBjYXNl
-LgoKVGhlIHByb2JsZW0gd2l0aCBhZGRpbmcgYSBkYXRhYmFzZSBpbnRlcmZhY2UgaXMgdGhhdCB3
-ZSBoYXZlIHRvCnJlLWVuZ2luZWVyIGFsbCB0aGUgaW50ZXJuYWwgc3RydWN0dXJlcyB0aGF0IHhm
-c19yZXBhaXIgdXNlcyBhbmQgdGhlCmluZGV4ZXMgd2UgdXNlIHRvIHRyYWNrIHRoZW0uIFRoZXkg
-bmVlZCB0byBiZSBhYnN0cmFjdGVkIGluIGEgZGF0YQpiYXNlIGZyaWVuZGx5IG1hbm5lciwgYW5k
-IHRoZW4gbmV3IGNvZGUgaGFzIHRvIGJlIHdyaXRlbiB0byBtYW5hZ2UKdGhlIGRhdGFiYXNlIGFu
-ZCBpbnNlcnQvbW9kaWZ5L3JlbW92ZSB0aGUgaW5mb3JtYXRpb24gaW4gdGhlCmRhdGFiYXNlLiAg
-VGhlbiB0aGVyZSBpcyB3b3JrIHRvIGZpbmQgdGhlIG1vc3Qgc3VpdGFibGUgZGF0YWJhc2UsIGFz
-CnNpbXBsZSBrZXkvdmFsdWUgcGFpciBkYXRhYmFzZXMgd29uJ3Qgc2NhbGUgdG8gdHJhY2tpbmcg
-aHVuZHJlZHMgb2YKbWlsbGlvbnMgb2YgcmVjb3Jkcy4gVGhhdCBpcyBsaWtlbHkgdG8gY3JlYXRl
-IHNpZ25pZmljYW50CmRlcGVuZGVuY2llcyBmb3IgeGZzcHJvZ3MsIG9mIHdoaWNoIHdlIGNhbid0
-IHB1bGwgaW50byB0aGluZ3MgbGlrZQp0aGUgZGViaWFuIHVkZWIgYnVpbGRzIHdoaWNoIGFyZSB1
-c2VkIGZvciBidWlsZGluZyB0aGUgcmVjb3ZlcnkgZGlzawppbWFnZXMgdGhhdCBjb250YWluIHhm
-c19yZXBhaXIuIFNvIHdlIGhhdmUgdG8gbWFrZSBpdCBhbGwgYnVpbGQgdGltZQpjb25kaXRpb25h
-bCwgYW5kIHRoZW4gd2UnbGwgaGF2ZSBkaWZmZXJlbnQgY2FwYWJpbGl0aWVzIGZyb20KeGZzLXJl
-cGFpciBkZXBlbmRpbmcgb24gd2hlcmUgeW91IHJ1biBpdCBmcm9tLiBUaGVuIHdlJ3ZlIGdvdCB0
-bwp0ZXN0IGl0IGFsbCwgZG9jdW1lbnQgaXQsIGV0Yy4gCgpBbmQgdGhlcmUncyBzdGlsbCBubyBn
-dWFyYW50ZWUgdGhhdCBpcyBzb2x2ZXMgeW91ciBwcm9ibGVtLiBOb3QKZW5vdWdoIGRpc2sgc3Bh
-Y2UgZm9yIHRoZSBkYXRhYmFzZT8gRU5PU1BDIGNhdXNlcyBmYWlsdXJlIGluc3RlYWQgb2YKRU5P
-TUVNLiBIb3cgZG8gd2Uga25vdyBob3cgbXVjaCBkaXNrIHNwYWNlIGlzIG5lZWRlZD8gV2UgY2Fu
-J3QKcHJlZGljdCB0aGF0IGV4YWN0bHkgd2l0aG91dCBydW5uaW5nIHJlcGFpciwgc2FtZSBhcyBm
-b3IgbWVtb3J5CnVzYWdlIHByZWRpY3Rpb24uIEFuZCBldmVuIGlmIHdlIGFyZSB1c2luZyBhIERC
-IHJhdGhlciB0aGFuIFJBTSwKdGhlcmUncyBzdGlsbCB0aGUgcG9zc2liaWxpdHkgb2YgRU5PTUVN
-LgoKVGhlc2UgYXJlIGFsbCBzb2x2YWJsZSBpc3N1ZXMsIGJ1dCB0aGV5IHRha2UgdGltZSBhbmQg
-cmVzb3VyY2VzIGFuZApleHBlcnRpc2Ugd2UgZG9uJ3QgY3VycmVudGx5IGhhdmUgdG8gc29sdmUu
-IFdoZW4gY29tcGFyZWQgdG8gdGhlCnNpbXBsaWNpdHkgb2YgImFkZCBhIHVzYiBTU0QgZm9yIHN3
-YXAiLCBpdCBqdXN0IGRvZXNuJ3QgbWFrZSBzZW5zZQp0byBzcGVuZCB0aW1lIHRyeWluZyB0byBz
-b2x2ZSB0aGlzIHByb2JsZW0uLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRh
-dmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 12/29/2013 3:50 AM, Dave Chinner wrote:
+...
+> I think you are forgetting that developer time is *expensive* and
+> *scarce*. This is essentially a solved problem: An SSD in a USB3
+> enclosure as a temporary swap device is by far the most cost
+> effective way to make repair scale to arbitrary amounts of metadata.
+> It certainly scales far better than developer time and testing
+> resources...
+
+Now this is an interesting idea Dave.  I hadn't considered temporary
+swap.  Would USB be reliable enough for this?  I've seen lots problem
+reports with folks using USB storage with Linux, random disconnections
+and what not.
+
+-- 
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
