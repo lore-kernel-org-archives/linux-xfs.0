@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A87F7F3F
-	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 07:19:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 08C15AC005
-	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 05:19:08 -0800 (PST)
-Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
-	by cuda.sgi.com with SMTP id HHLnvjObeg8bHDoj for
-	<xfs@oss.sgi.com>; Mon, 30 Dec 2013 05:19:04 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: [xfs_check Out of memory: ]
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-In-Reply-To: <52C0D281.7040704@hardwarefreak.com>
-Date: Mon, 30 Dec 2013 13:19:02 +0000
-Message-Id: <1F5B96C2-84EB-43B2-ACE5-7C14E7803C9F@filmlight.ltd.uk>
-References: <tencent_3F12563342ED1D4E049D1123@qq.com>	<201312270907.22638.arekm@maven.pl>	<20131227224212.GK20579@dastard>	<201312280020.39244.arekm@maven.pl>
-	<20131229095033.GL20579@dastard>
-	<52C0D281.7040704@hardwarefreak.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0D40E7F3F
+	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 09:07:25 -0600 (CST)
+Message-ID: <52C18C2C.6090108@sgi.com>
+Date: Mon, 30 Dec 2013 09:07:24 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 3/4] xfs: simplify xfs_ail_max
+References: <52B9829A.10804@oracle.com>
+In-Reply-To: <52B9829A.10804@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,38 +17,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Stor?? <289471341@qq.com>, xfs@oss.sgi.com, Jeff Liu <jeff.liu@oracle.com>, Roger Willcocks <roger@filmlight.ltd.uk>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+On 12/24/13 06:48, Jeff Liu wrote:
+> From: Jie Liu<jeff.liu@oracle.com>
+>
+> We have already simplified xfs_ail_min() with a new list helper, i.e,
+> list_first_entry_or_null(), but xfs_ail_max() still remains as same
+> as there is no corresponding list helper we can use for now.  It's
+> fairly easy to simulate the list behavior of getting the last item
+> in the AIL, therefore we can simplify xfs_ail_max() and move it to
+> the header file to make this pair of AIL routines looks symmetrical.
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+> ---
 
-On 30 Dec 2013, at 01:55, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> +/*
+> + * Return a pointer to the last item in the AIL.  If the AIL is empty, then
+> + * return NULL.
+> + */
+> +static inline struct xfs_log_item *
+> +xfs_ail_max(
+> +	struct xfs_ail  *ailp)
+> +{
+> +	return list_empty(&ailp->xa_ail) ? NULL :
+> +		list_last_entry(&ailp->xa_ail, struct xfs_log_item, li_ail);
+> +}
+> +
+> +
+>   static inline void
+>   xfs_trans_ail_update(
+>   	struct xfs_ail		*ailp,
 
-> On 12/29/2013 3:50 AM, Dave Chinner wrote:
-> ...
->> I think you are forgetting that developer time is *expensive* and
->> *scarce*. This is essentially a solved problem: An SSD in a USB3
->> enclosure as a temporary swap device is by far the most cost
->> effective way to make repair scale to arbitrary amounts of metadata.
->> It certainly scales far better than developer time and testing
->> resources...
-> 
-> Now this is an interesting idea Dave.  I hadn't considered temporary
-> swap.  Would USB be reliable enough for this?  I've seen lots problem
-> reports with folks using USB storage with Linux, random disconnections
-> and what not.
-> 
+Looks good.
 
-I'll just chip in here and mention that we get around this problem by
-exporting the broken xfs volume over iscsi and run xfs-repair on another
-machine with more memory / swap space.
-
---
-Roger
-
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
