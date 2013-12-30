@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 87CC27F3F
-	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 10:25:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 59514304059
-	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 08:25:41 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 8dYpurUJgESbwsIg
-	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 08:25:40 -0800 (PST)
-Message-ID: <52C19E7D.3080706@hardwarefreak.com>
-Date: Mon, 30 Dec 2013 10:25:33 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B39A929DF8
+	for <xfs@oss.sgi.com>; Mon, 30 Dec 2013 10:57:27 -0600 (CST)
+Message-ID: <52C1A5F7.2040604@sgi.com>
+Date: Mon, 30 Dec 2013 10:57:27 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [xfs_check Out of memory: ]
-References: <tencent_3F12563342ED1D4E049D1123@qq.com>	<201312270907.22638.arekm@maven.pl>	<20131227224212.GK20579@dastard>	<201312280020.39244.arekm@maven.pl>	<20131229095033.GL20579@dastard>	<52C0D281.7040704@hardwarefreak.com>
-	<1F5B96C2-84EB-43B2-ACE5-7C14E7803C9F@filmlight.ltd.uk>
-In-Reply-To: <1F5B96C2-84EB-43B2-ACE5-7C14E7803C9F@filmlight.ltd.uk>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [PATCH 6/10] xfs: introduce xfs_bulkstat_ichunk_ra
+References: <52BEB459.7020202@oracle.com>
+In-Reply-To: <52BEB459.7020202@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,43 +17,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: Stor?? <289471341@qq.com>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 12/30/2013 7:19 AM, Roger Willcocks wrote:
-> 
-> On 30 Dec 2013, at 01:55, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> 
->> On 12/29/2013 3:50 AM, Dave Chinner wrote:
->> ...
->>> I think you are forgetting that developer time is *expensive* and
->>> *scarce*. This is essentially a solved problem: An SSD in a USB3
->>> enclosure as a temporary swap device is by far the most cost
->>> effective way to make repair scale to arbitrary amounts of metadata.
->>> It certainly scales far better than developer time and testing
->>> resources...
->>
->> Now this is an interesting idea Dave.  I hadn't considered temporary
->> swap.  Would USB be reliable enough for this?  I've seen lots problem
->> reports with folks using USB storage with Linux, random disconnections
->> and what not.
->>
-> 
-> I'll just chip in here and mention that we get around this problem by
-> exporting the broken xfs volume over iscsi and run xfs-repair on another
-> machine with more memory / swap space.
+On 12/28/13 05:22, Jeff Liu wrote:
+> From: Jie Liu<jeff.liu@oracle.com>
+>
+> Introduce xfs_bulkstat_ichunk_ra() to loop over all clusters in
+> the next inode chunk, then performs readahead if there are any
+> allocated inodes in that cluster.
+>
+> Refactor xfs_bulkstat() with it.
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+> ---
 
-Another interesting, actually excellent idea Roger.  So Arkadiusz could
-get by with just one set of SSDs.  Pulling ~40 GB of metadata over GbE
-iSCSI should take only about 7 minutes of wire time, assuming his
-hosts/net can sustain 100 MB/s.
+Had some problems applying this patch.
+...
 
--- 
-Stan
+> +STATIC void
+> +xfs_bulkstat_ichunk_ra(
+> +	struct xfs_mount		*mp,
+> +	xfs_agnumber_t			agno,
+> +	struct xfs_inobt_rec_incore	*irec)
+> +{
+> +	xfs_agblock_t			agbno;
+> +	struct blk_plug			plug;
+> +	int				blks_per_cluster;
+> +	int				inodes_per_cluster;
+> +	int				i;	/* inode chunk index */
+> +
+> +	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+> +	blks_per_cluster = xfs_icluster_size_fsb(mp);
+                            ^^^^^
+does not exist.
+
+
+> @@ -187,7 +218,6 @@ xfs_bulkstat(
+>   	char			__user *ubuffer, /* buffer with inode stats */
+>   	int			*done)	/* 1 if there are more stats to get */
+>   {
+> -	xfs_agblock_t		agbno=0;/* allocation group block number */
+>   	xfs_buf_t		*agbp;	/* agi header buffer */
+>   	xfs_agi_t		*agi;	/* agi header data */
+>   	xfs_agino_t		agino;	/* inode # in allocation group */
+> @@ -206,8 +236,6 @@ xfs_bulkstat(
+>   	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
+>   	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
+>   	xfs_ino_t		lastino; /* last inode number returned */
+> -	int			blks_per_cluster; /* # of blocks per cluster */
+> -	int			inodes_per_cluster;/* # of inodes per cluster */
+>   	int			nirbuf;	/* size of irbuf */
+>   	int			rval;	/* return value error code */
+>   	int			tmp;	/* result value from btree calls */
+> @@ -236,8 +264,6 @@ xfs_bulkstat(
+>   	*done = 0;
+>   	fmterror = 0;
+>   	ubufp = ubuffer;
+> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
+> -	inodes_per_cluster = blks_per_cluster<<  mp->m_sb.sb_inopblog;
+>   	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
+>   	if (!irbuf)
+>   		return ENOMEM;
+> @@ -345,25 +371,7 @@ xfs_bulkstat(
+>   			 * Also start read-ahead now for this chunk.
+>   			 */
+>   			if (r.ir_freecount<  XFS_INODES_PER_CHUNK) {
+> -				struct blk_plug	plug;
+> -				/*
+> -				 * Loop over all clusters in the next chunk.
+> -				 * Do a readahead if there are any allocated
+> -				 * inodes in that cluster.
+> -				 */
+> -				blk_start_plug(&plug);
+> -				agbno = XFS_AGINO_TO_AGBNO(mp, r.ir_startino);
+> -				for (chunkidx = 0;
+> -				     chunkidx<  XFS_INODES_PER_CHUNK;
+> -				     chunkidx += inodes_per_cluster,
+> -				     agbno += blks_per_cluster) {
+> -					if (xfs_inobt_maskn(chunkidx,
+> -					    inodes_per_cluster)&  ~r.ir_free)
+> -						xfs_btree_reada_bufs(mp, agno,
+> -							agbno, blks_per_cluster,
+> -							&xfs_inode_buf_ops);
+> -				}
+> -				blk_finish_plug(&plug);
+> +				xfs_bulkstat_ichunk_ra(mp, agno,&r);
+>   				irbp->ir_startino = r.ir_startino;
+>   				irbp->ir_freecount = r.ir_freecount;
+>   				irbp->ir_free = r.ir_free;
+
+last 3 chunks failed to apply because the sources have 
+nbcluster/nicluster (and nimask) instead of 
+blks_per_cluster/inodes_per_cluster.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
