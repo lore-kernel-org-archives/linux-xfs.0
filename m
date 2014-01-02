@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 47A3929DF8
-	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 07:28:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8336AC004
-	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 05:28:05 -0800 (PST)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id x45RxPryvOEgSoCZ for
-	<xfs@oss.sgi.com>; Thu, 02 Jan 2014 05:27:56 -0800 (PST)
-Date: Thu, 2 Jan 2014 14:27:55 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9969C29DF8
+	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 09:07:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 71FAF304051
+	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 07:07:10 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id dtdovFqVdezNqnZx
+	for <xfs@oss.sgi.com>; Thu, 02 Jan 2014 07:07:06 -0800 (PST)
+Message-ID: <52C58095.70408@hardwarefreak.com>
+Date: Thu, 02 Jan 2014 09:07:01 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
 Subject: Re: XFS File System Monitor
-Message-ID: <20140102142755.3659bd42@harpe.intellique.com>
-In-Reply-To: <CA+apj_j6OMM7he1eP_fkZ5jGT6ag5mPVE8Lk-G6S--0kUmzcgg@mail.gmail.com>
-References: <201401021304.s02D4Agc028655@m2c-new.corp.sgi.com>
-	<CA+apj_j6OMM7he1eP_fkZ5jGT6ag5mPVE8Lk-G6S--0kUmzcgg@mail.gmail.com>
-Mime-Version: 1.0
+References: <CA+apj_hV4HvZxfASF7JJ1k6mmvio3cRWAHj-S1V=Vm8X_RWA=Q@mail.gmail.com>
+In-Reply-To: <CA+apj_hV4HvZxfASF7JJ1k6mmvio3cRWAHj-S1V=Vm8X_RWA=Q@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +24,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rotem Ben Arye <rotem.benarye@gmail.com>, xfs@oss.sgi.com
+To: Rotem Ben Arye <rotem.benarye@gmail.com>, support@sgi.com
+Cc: xfs@oss.sgi.com
 
-Le Thu, 2 Jan 2014 15:20:58 +0200
-Rotem Ben Arye <rotem.benarye@gmail.com> =E9crivait:
+On 1/2/2014 6:16 AM, Rotem Ben Arye wrote:
+> Hi, SGI Support Team.
+> My Name is Rotem , I am a Linux/Unix System Administrator in web company at
+> Israel.
+> I have a question I want to appeal to you to get some advice.
+> 
+> In the last weekend we had crisis in one of the Production server in
+> the comany ,the problem was defined by the Integrators as  "xfs file system
+> corrupted"
+> My question is , what are the open source tools , that we can use on
+> runtime at production environment , to monitor and sample to get indication
+> on mount XFS ,
+> That something is not living well, and can lead to problem.
+> 
+> We are working in a Linux environment on CentOS distributions server.
 
-> HI , I'm not sure it will help here,  we  are working central storage
-> with Netapp , EMC and others ,
-> The Using of XFS File system on volume , is expressed with an
-> creation of XFS, as e.g :  mkfs.xfs.
->  My question about what are the tools that could assist us to monitor
-> XFS file system was in general.
+So in a nutshell you're looking for a monitor application that will in
+essence give you a green, yellow, or red light informing you of the
+filesystem's health.  Or some kind of SNMP logging that suggests a
+corruption is imminent.
 
-Rotem, if you have no SGI supported hardware, SGI support won't help
-you.
+There is no such tool, and never will be.  Nearly all XFS corruption
+events are caused by either software bugs in the XFS code or elsewhere
+in the Linux kernel, transient or permanent hardware failures, or power
+failures, at some layer in the storage stack.  It is not feasible to
+predict such events.
 
-Furthermore, it's impossible to help you without more details: what is
-the hardware setup, the exact OS version and linux kernel in use.
+When an XFS corruption occurs, one should report all related log
+information and errors to this list so that the problem may be analyzed
+and the root cause identified.  Then the proper corrective action can be
+identified and implemented to fix the problem and hopefully prevent it
+from reoccurring.
 
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
