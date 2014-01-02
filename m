@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A63A729DF8
-	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 01:23:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 93F6C8F8035
-	for <xfs@oss.sgi.com>; Wed,  1 Jan 2014 23:23:56 -0800 (PST)
-Message-ID: <52C51402.7040609@oracle.com>
-Date: Thu, 02 Jan 2014 15:23:46 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4EDBC29DF8
+	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 06:16:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3BDBB8F8037
+	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 04:16:22 -0800 (PST)
+Received: from mail-ig0-f170.google.com (mail-ig0-f170.google.com
+	[209.85.213.170]) by cuda.sgi.com with ESMTP id
+	r46AQDUDW70ALIdH (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 02 Jan 2014 04:16:18 -0800 (PST)
+Received: by mail-ig0-f170.google.com with SMTP id k19so41215933igc.1
+	for <xfs@oss.sgi.com>; Thu, 02 Jan 2014 04:16:18 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/10] xfs: xfs_bulkstat_single consolidation
-References: <52BEB3E7.2080706@oracle.com>
-	<52C1BCE5.1070707@sgi.com>	<52C293A5.1000606@oracle.com>
-	<20140102011243.GO20579@dastard>
-In-Reply-To: <20140102011243.GO20579@dastard>
+Date: Thu, 2 Jan 2014 14:16:18 +0200
+Message-ID: <CA+apj_hV4HvZxfASF7JJ1k6mmvio3cRWAHj-S1V=Vm8X_RWA=Q@mail.gmail.com>
+Subject: XFS File System Monitor
+From: Rotem Ben Arye <rotem.benarye@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,75 +25,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============6024207109600773459=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: support@sgi.com
+Cc: xfs@oss.sgi.com
 
-T24gMDEvMDIgMjAxNCAwOToxMiBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFR1ZSwgRGVj
-IDMxLCAyMDEzIGF0IDA1OjUxOjMzUE0gKzA4MDAsIEplZmYgTGl1IHdyb3RlOgo+PiBPbiAyMDEz
-5bm0MTLmnIgzMeaXpSAwMjozNSwgTWFyayBUaW5ndWVseSB3cm90ZToKPj4+IE9uIDEyLzI4LzEz
-IDA1OjIwLCBKZWZmIExpdSB3cm90ZToKPj4+PiBGcm9tOiBKaWUgTGl1PGplZmYubGl1QG9yYWNs
-ZS5jb20+Cj4+Pj4KPj4+PiBJbiB4ZnNfYnVsa3N0YXRfc2luZ2xlKCksIHhmc19idWxrc3RhdF9v
-bmUoKSBhbmQgeGZzX2J1bGtzdGF0KCkgbWlnaHQKPj4+PiByZXR1cm4gZGlmZmVyZW50IGVycm9y
-IGlmIGVpdGhlciBjYWxsIGZhaWxlZCwgd2UnZCBiZXR0ZXIgcmV0dXJuIHRoZQo+Pj4+IHByb3Bl
-ciBlcnJvciBpbiB0aGlzIGNhc2UuICBNb3Jlb3ZlciwgdGhlIGZ1bmN0aW9uIGFyZ3VtZW50IGRv
-bmUgaXMKPj4+PiB1c2VsZXNzIGluIHRlcm1zIG9mIHhmc19pb2NfYnVsa3N0YXQoKSwgaGVuY2Ug
-d2UgY2FuIGdldCByaWQgb2YgaXQuCj4+Pj4KPj4+PiBTaWduZWQtb2ZmLWJ5OiBKaWUgTGl1PGpl
-ZmYubGl1QG9yYWNsZS5jb20+Cj4+Pj4gLS0tCj4+Pgo+Pj4gWWVzLCBJIGtub3cgZG1hcGkgaXMg
-bm90IGxvdmVkIGhlcmUgYnV0IFNHSSBzdGlsbCB1c2VzIGl0IGFuZCBpdCB3YW50cwo+Pj4gdGhl
-IGRvbmUgZmxhZyBzdGlsbC4uCj4+IE15IG1pc3Rha2UuICBBdCB0aGF0IHRpbWUsIEkgbm90aWNl
-ZCB0aGF0IHRoZXJlIGhhcyBjb21tZW50cyBhYm91dCB0aGlzCj4+IGluIHhmc19pb2NfYnVsa3N0
-YXQoKSwgaS5lLAo+Pgo+PiAgLyogZG9uZSA9IDEgaWYgdGhlcmUgYXJlIG1vcmUgc3RhdHMgdG8g
-Z2V0IGFuZCBpZiBidWxrc3RhdCAqLwo+PiAgLyogc2hvdWxkIGJlIGNhbGxlZCBhZ2FpbiAodW51
-c2VkIGhlcmUsIGJ1dCB1c2VkIGluIGRtYXBpKSAqLwo+Pgo+PiBIb3dldmVyLCBJIGZhaWxlZCB0
-byBmaW5kIG91dCB3aHkgaXQgd291bGQgYmUgY2FsbGVkIGJ5IGdvaW5nIHRocm91Z2gKPj4gdGhl
-IGRtYXBpIHNvdXJjZSBjb2RlLi4uCj4+Cj4+IEknbGwga2VlcCB0aGlzIGFyZ3VtZW50IGluIG5l
-eHQgcm91bmQgb2YgcG9zdC4KPiAKPiBXZWxsLCBsZXQncyBjb25zaWRlciBob3cgRE1BUEkgdXNl
-cyBpdCBmaXJzdC4KPiAKPiBkbWFwaV9pb2N0bCgpCj4gICB1c2VfcnZwID0gMDsKPiAgIGNhc2Ug
-RE1fR0VUX0JVTEtBTEw6Cj4gICAgIHVzZV9ydnAgPSAxOwo+ICAgICBkbV9nZXRfYnVsa2F0dHJf
-cnZwKCpydnApCj4gICAgICAgZnN5c192ZWN0b3ItPmdldF9idWxrYXR0cl9ydnAocnZwKQo+ICAg
-ICAgICAgeGZzX2RtX2dldF9idWxrYWxsX3J2cCgqcnZhbHApCj4gICAgICAgICAgIHhmc19idWxr
-c3RhdCgmZG9uZSkKPiAgICAgICAgICAgKnJ2YWxwID0gIWRvbmUgPyAxIDogMDsKVGhhbmtzIGZv
-ciB0aGUgY2xhcmlmaWNhdGlvbi4gIE5vdyBJIGNhbiB1bmRlcnN0YW5kIHRoZSB1c2Ugc2NlbmFy
-aW9zCnZpYSBETUFQSS4KPiAKPiAgIGlmICh1c2VfcnZwICYmICFlcnJvcikKPiAgICAgcmV0dXJu
-IHJ2cDsKPiAKPiAKPiBPaywgc28gaXQgcmV0dXJucyB0aGUgImRvbmUiIHN0YXR1cyB0byB1c2Vy
-c3BhY2UuIEhvdyBpcyAiZG9uZSIKPiBjYWxjdWxhdGVkPwo+IAo+ICAgICAgICAgaWYgKGFnbm8g
-Pj0gbXAtPm1fc2Iuc2JfYWdjb3VudCkgewo+ICAgICAgICAgICAgICAgICAvKgo+ICAgICAgICAg
-ICAgICAgICAgKiBJZiB3ZSByYW4gb3V0IG9mIGZpbGVzeXN0ZW0sIG1hcmsgbGFzdGlubyBhcyBv
-ZmYKPiAgICAgICAgICAgICAgICAgICogdGhlIGVuZCBvZiB0aGUgZmlsZXN5c3RlbSwgc28gdGhl
-IG5leHQgY2FsbAo+ICAgICAgICAgICAgICAgICAgKiB3aWxsIHJldHVybiBpbW1lZGlhdGVseS4K
-PiAgICAgICAgICAgICAgICAgICovCj4gICAgICAgICAgICAgICAgICpsYXN0aW5vcCA9ICh4ZnNf
-aW5vX3QpWEZTX0FHSU5PX1RPX0lOTyhtcCwgYWdubywgMCk7Cj4gICAgICAgICAgICAgICAgICpk
-b25lID0gMTsKPiAgICAgICAgIH0gZWxzZQo+ICAgICAgICAgICAgICAgICAqbGFzdGlub3AgPSAo
-eGZzX2lub190KWxhc3Rpbm87Cj4gCj4gT2gsIHNvIGl0J3Mgbm90aGluZyBzcGVjaWFsIC0gdGhl
-IGxhc3Rpbm9wIGlzIHBvaW50ZWQgb3V0c2lkZSB0aGUKPiBjdXJyZW50IGZpbGVzeXN0ZW0gYm91
-bmRzIGFuZCBkb25lIGlzIHNldCB0byAxLiBJT1dzLCB0aGUgZG1hcGkgY29kZQo+IGNvdWxkIGVh
-c2lseSBnZW5lcmF0ZSB0aGUgImRvbmUiIHZhbHVlIGJhc2VkIG9uIHRoZSByZXR1cm5lZAo+IGxh
-c3Rpbm9wIHZhbHVlLiBpLmUuIHhmc19kbV9nZXRfYnVsa2FsbF9ydnAoKSBjYW4gZG8gdGhpcyBh
-ZnRlciB0aGUKPiB4ZnNfYnVsa3N0YXQoKSBjYWxsOgo+IAo+IAlpZiAoWEZTX0lOT19UT19BR05P
-KG1wLCBsYXN0aW5vcCkgPj0gbXAtPm1fc2Iuc2JfYWdjb3VudCkKPiAJCSpydmFscCA9IDA7Cj4g
-CWVsc2UKPiAJCSpydmFscCA9IDE7Cj4gCj4gQW5kIHRoYXQgbWVhbnMgd2UgY2FuIHJlbW92ZSB0
-aGUgZG9uZSBwYXJhbWV0ZXIgZnJvbSB4ZnNfYnVsa3N0YXQoKQo+IGFuZCBubyBsb25nZXIgaGF2
-ZSB0byBjYXJlIGFib3V0IHdoYXQgRE1BUEkgcmVxdWlyZXMuIEhlbmNlIEkgdGhpbmsKPiB0aGUg
-cGF0Y2ggYXMgaXQgc3RhbmRzIGRvZXMgbm90IGltcGFjdCBvbiBETUFQSSBmdW5jdGlvbmFsaXR5
-IGFuZCBzbwo+IGl0IGp1c3QgZmluZSB0byBjbGVhbiB1cC4uLgpZZXAuICBFeGNlcHQgRE1BUEks
-IHRoZSBvbmx5IHVzZXIgb2YgdGhlIGRvbmUgcGFyYW1ldGVyIGlzIHF1b3RhIGNoZWNrLCBpLmUs
-Cnhmc19xbV9xdW90YWNoZWNrKCk6CgogICAgICAgIGRvIHsKICAgICAgICAgICAgICAgIC8qCiAg
-ICAgICAgICAgICAgICAgKiBJdGVyYXRlIHRocnUgYWxsIHRoZSBpbm9kZXMgaW4gdGhlIGZpbGUg
-c3lzdGVtLAogICAgICAgICAgICAgICAgICogYWRqdXN0aW5nIHRoZSBjb3JyZXNwb25kaW5nIGRx
-dW90IGNvdW50ZXJzIGluIGNvcmUuCiAgICAgICAgICAgICAgICAgKi8KICAgICAgICAgICAgICAg
-IGVycm9yID0geGZzX2J1bGtzdGF0KG1wLCAmbGFzdGlubywgJmNvdW50LAogICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgeGZzX3FtX2RxdXNhZ2VfYWRqdXN0LAogICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0c3osIE5VTEwsICZkb25lKTsKICAgICAg
-ICAgICAgICAgIGlmIChlcnJvcikKICAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7CgogICAg
-ICAgIH0gd2hpbGUgKCFkb25lKTsKCkJ1dCBpZiB3ZSBmaW5hbGx5IGNvdWxkIHBlcmZvcm0gcXVv
-dGEgY2hlY2sgaW4gcGFyYWxsZWwsIHRoZSBkb25lIHBhcmFtZXRlcgpjYW4gdG90YWxseSBiZSBy
-ZW1vdmVkIGFzIGZsdXNoX3dvcmtxdWV1ZSgpIGNhbiBlbnN1cmUgdGhhdCBpcyBjb21wbGV0ZWQu
-CkFjdHVhbGx5LCBJIGp1c3QgZGlkIGl0IGFzIHRoZSBsYXN0IHBhdGNoIGluIHBhcmFsbGVsIHF1
-b3RhIGNoZWNrIHdoaWNoIGlzCm5vdCB5ZXQgcG9zdGVkLgoKVGhhbmtzLAotSmVmZiAKCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+--===============6024207109600773459==
+Content-Type: multipart/alternative; boundary=001a11c2f8babd3b9004eefbc26f
+
+--001a11c2f8babd3b9004eefbc26f
+Content-Type: text/plain; charset=ISO-8859-1
+
+Hi, SGI Support Team.
+My Name is Rotem , I am a Linux/Unix System Administrator in web company at
+Israel.
+I have a question I want to appeal to you to get some advice.
+
+In the last weekend we had crisis in one of the Production server in
+the comany ,the problem was defined by the Integrators as  "xfs file system
+corrupted"
+My question is , what are the open source tools , that we can use on
+runtime at production environment , to monitor and sample to get indication
+on mount XFS ,
+That something is not living well, and can lead to problem.
+
+We are working in a Linux environment on CentOS distributions server.
+
+Thank you,
+
+Rotem Ben Arye
+
+--001a11c2f8babd3b9004eefbc26f
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div>Hi, SGI Support=A0Team.</div><div><span>My Name is</s=
+pan> Rotem <span>, I am=A0a=A0Linux/Unix=A0</span><span>System Administrato=
+r</span>=A0<span>in</span> web company at Israel.<br>I have a question I wa=
+nt to appeal to you to get some advice. </div>
+
+<div>=A0</div><div>In the last weekend we=A0had crisis in one of=A0the Prod=
+uction server in the=A0comany=A0,the problem was defined by the Integrators=
+ as=A0 &quot;xfs file system corrupted&quot; <br>My question is , what are =
+the open source tools , that we can use on runtime at production environmen=
+t , to monitor and sample to get indication on mount XFS , <br>
+
+That something is not living well, and can lead to problem.</div><div>=A0</=
+div><div><span>We=A0are=A0working</span> <span>in a Linux environment on Ce=
+ntOS</span>=A0<span>distributions</span> server.</div><div>=A0<br>Thank you=
+, =A0</div>
+
+<div>=A0</div><div>Rotem Ben Arye </div><div><font size=3D"1"><p dir=3D"LTR=
+">=A0</p></font></div>
+</div>
+
+--001a11c2f8babd3b9004eefbc26f--
+
+
+--===============6024207109600773459==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6024207109600773459==--
