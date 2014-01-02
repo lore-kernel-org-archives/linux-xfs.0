@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9969C29DF8
-	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 09:07:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 71FAF304051
-	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 07:07:10 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id dtdovFqVdezNqnZx
-	for <xfs@oss.sgi.com>; Thu, 02 Jan 2014 07:07:06 -0800 (PST)
-Message-ID: <52C58095.70408@hardwarefreak.com>
-Date: Thu, 02 Jan 2014 09:07:01 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7972329DF8
+	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 16:38:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6AD7B8F8050
+	for <xfs@oss.sgi.com>; Thu,  2 Jan 2014 14:38:20 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	TLxCH2MrSUsArxcw for <xfs@oss.sgi.com>;
+	Thu, 02 Jan 2014 14:38:18 -0800 (PST)
+Date: Fri, 3 Jan 2014 09:38:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/10] xfs: xfs_bulkstat_single consolidation
+Message-ID: <20140102223814.GP20579@dastard>
+References: <52BEB3E7.2080706@oracle.com> <52C1BCE5.1070707@sgi.com>
+	<52C293A5.1000606@oracle.com> <20140102011243.GO20579@dastard>
+	<52C51402.7040609@oracle.com>
 MIME-Version: 1.0
-Subject: Re: XFS File System Monitor
-References: <CA+apj_hV4HvZxfASF7JJ1k6mmvio3cRWAHj-S1V=Vm8X_RWA=Q@mail.gmail.com>
-In-Reply-To: <CA+apj_hV4HvZxfASF7JJ1k6mmvio3cRWAHj-S1V=Vm8X_RWA=Q@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <52C51402.7040609@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,50 +27,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rotem Ben Arye <rotem.benarye@gmail.com>, support@sgi.com
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 1/2/2014 6:16 AM, Rotem Ben Arye wrote:
-> Hi, SGI Support Team.
-> My Name is Rotem , I am a Linux/Unix System Administrator in web company at
-> Israel.
-> I have a question I want to appeal to you to get some advice.
-> 
-> In the last weekend we had crisis in one of the Production server in
-> the comany ,the problem was defined by the Integrators as  "xfs file system
-> corrupted"
-> My question is , what are the open source tools , that we can use on
-> runtime at production environment , to monitor and sample to get indication
-> on mount XFS ,
-> That something is not living well, and can lead to problem.
-> 
-> We are working in a Linux environment on CentOS distributions server.
-
-So in a nutshell you're looking for a monitor application that will in
-essence give you a green, yellow, or red light informing you of the
-filesystem's health.  Or some kind of SNMP logging that suggests a
-corruption is imminent.
-
-There is no such tool, and never will be.  Nearly all XFS corruption
-events are caused by either software bugs in the XFS code or elsewhere
-in the Linux kernel, transient or permanent hardware failures, or power
-failures, at some layer in the storage stack.  It is not feasible to
-predict such events.
-
-When an XFS corruption occurs, one should report all related log
-information and errors to this list so that the problem may be analyzed
-and the root cause identified.  Then the proper corrective action can be
-identified and implemented to fix the problem and hopefully prevent it
-from reoccurring.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKYW4gMDIsIDIwMTQgYXQgMDM6MjM6NDZQTSArMDgwMCwgSmVmZiBMaXUgd3JvdGU6
+Cj4gT24gMDEvMDIgMjAxNCAwOToxMiBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gT24gVHVl
+LCBEZWMgMzEsIDIwMTMgYXQgMDU6NTE6MzNQTSArMDgwMCwgSmVmZiBMaXUgd3JvdGU6Cj4gPj4g
+T24gMjAxM+W5tDEy5pyIMzHml6UgMDI6MzUsIE1hcmsgVGluZ3VlbHkgd3JvdGU6Cj4gPj4+IE9u
+IDEyLzI4LzEzIDA1OjIwLCBKZWZmIExpdSB3cm90ZToKPiA+Pj4+IEZyb206IEppZSBMaXU8amVm
+Zi5saXVAb3JhY2xlLmNvbT4KPiA+Pj4+Cj4gPj4+PiBJbiB4ZnNfYnVsa3N0YXRfc2luZ2xlKCks
+IHhmc19idWxrc3RhdF9vbmUoKSBhbmQgeGZzX2J1bGtzdGF0KCkgbWlnaHQKPiA+Pj4+IHJldHVy
+biBkaWZmZXJlbnQgZXJyb3IgaWYgZWl0aGVyIGNhbGwgZmFpbGVkLCB3ZSdkIGJldHRlciByZXR1
+cm4gdGhlCj4gPj4+PiBwcm9wZXIgZXJyb3IgaW4gdGhpcyBjYXNlLiAgTW9yZW92ZXIsIHRoZSBm
+dW5jdGlvbiBhcmd1bWVudCBkb25lIGlzCj4gPj4+PiB1c2VsZXNzIGluIHRlcm1zIG9mIHhmc19p
+b2NfYnVsa3N0YXQoKSwgaGVuY2Ugd2UgY2FuIGdldCByaWQgb2YgaXQuCj4gPj4+Pgo+ID4+Pj4g
+U2lnbmVkLW9mZi1ieTogSmllIExpdTxqZWZmLmxpdUBvcmFjbGUuY29tPgo+ID4+Pj4gLS0tCj4g
+Pj4+Cj4gPj4+IFllcywgSSBrbm93IGRtYXBpIGlzIG5vdCBsb3ZlZCBoZXJlIGJ1dCBTR0kgc3Rp
+bGwgdXNlcyBpdCBhbmQgaXQgd2FudHMKPiA+Pj4gdGhlIGRvbmUgZmxhZyBzdGlsbC4uCj4gPj4g
+TXkgbWlzdGFrZS4gIEF0IHRoYXQgdGltZSwgSSBub3RpY2VkIHRoYXQgdGhlcmUgaGFzIGNvbW1l
+bnRzIGFib3V0IHRoaXMKPiA+PiBpbiB4ZnNfaW9jX2J1bGtzdGF0KCksIGkuZSwKPiA+Pgo+ID4+
+ICAvKiBkb25lID0gMSBpZiB0aGVyZSBhcmUgbW9yZSBzdGF0cyB0byBnZXQgYW5kIGlmIGJ1bGtz
+dGF0ICovCj4gPj4gIC8qIHNob3VsZCBiZSBjYWxsZWQgYWdhaW4gKHVudXNlZCBoZXJlLCBidXQg
+dXNlZCBpbiBkbWFwaSkgKi8KPiA+Pgo+ID4+IEhvd2V2ZXIsIEkgZmFpbGVkIHRvIGZpbmQgb3V0
+IHdoeSBpdCB3b3VsZCBiZSBjYWxsZWQgYnkgZ29pbmcgdGhyb3VnaAo+ID4+IHRoZSBkbWFwaSBz
+b3VyY2UgY29kZS4uLgo+ID4+Cj4gPj4gSSdsbCBrZWVwIHRoaXMgYXJndW1lbnQgaW4gbmV4dCBy
+b3VuZCBvZiBwb3N0Lgo+ID4gCj4gPiBXZWxsLCBsZXQncyBjb25zaWRlciBob3cgRE1BUEkgdXNl
+cyBpdCBmaXJzdC4KPiA+IAo+ID4gZG1hcGlfaW9jdGwoKQo+ID4gICB1c2VfcnZwID0gMDsKPiA+
+ICAgY2FzZSBETV9HRVRfQlVMS0FMTDoKPiA+ICAgICB1c2VfcnZwID0gMTsKPiA+ICAgICBkbV9n
+ZXRfYnVsa2F0dHJfcnZwKCpydnApCj4gPiAgICAgICBmc3lzX3ZlY3Rvci0+Z2V0X2J1bGthdHRy
+X3J2cChydnApCj4gPiAgICAgICAgIHhmc19kbV9nZXRfYnVsa2FsbF9ydnAoKnJ2YWxwKQo+ID4g
+ICAgICAgICAgIHhmc19idWxrc3RhdCgmZG9uZSkKPiA+ICAgICAgICAgICAqcnZhbHAgPSAhZG9u
+ZSA/IDEgOiAwOwo+IFRoYW5rcyBmb3IgdGhlIGNsYXJpZmljYXRpb24uICBOb3cgSSBjYW4gdW5k
+ZXJzdGFuZCB0aGUgdXNlIHNjZW5hcmlvcwo+IHZpYSBETUFQSS4KPiA+IAo+ID4gICBpZiAodXNl
+X3J2cCAmJiAhZXJyb3IpCj4gPiAgICAgcmV0dXJuIHJ2cDsKPiA+IAo+ID4gCj4gPiBPaywgc28g
+aXQgcmV0dXJucyB0aGUgImRvbmUiIHN0YXR1cyB0byB1c2Vyc3BhY2UuIEhvdyBpcyAiZG9uZSIK
+PiA+IGNhbGN1bGF0ZWQ/Cj4gPiAKPiA+ICAgICAgICAgaWYgKGFnbm8gPj0gbXAtPm1fc2Iuc2Jf
+YWdjb3VudCkgewo+ID4gICAgICAgICAgICAgICAgIC8qCj4gPiAgICAgICAgICAgICAgICAgICog
+SWYgd2UgcmFuIG91dCBvZiBmaWxlc3lzdGVtLCBtYXJrIGxhc3Rpbm8gYXMgb2ZmCj4gPiAgICAg
+ICAgICAgICAgICAgICogdGhlIGVuZCBvZiB0aGUgZmlsZXN5c3RlbSwgc28gdGhlIG5leHQgY2Fs
+bAo+ID4gICAgICAgICAgICAgICAgICAqIHdpbGwgcmV0dXJuIGltbWVkaWF0ZWx5Lgo+ID4gICAg
+ICAgICAgICAgICAgICAqLwo+ID4gICAgICAgICAgICAgICAgICpsYXN0aW5vcCA9ICh4ZnNfaW5v
+X3QpWEZTX0FHSU5PX1RPX0lOTyhtcCwgYWdubywgMCk7Cj4gPiAgICAgICAgICAgICAgICAgKmRv
+bmUgPSAxOwo+ID4gICAgICAgICB9IGVsc2UKPiA+ICAgICAgICAgICAgICAgICAqbGFzdGlub3Ag
+PSAoeGZzX2lub190KWxhc3Rpbm87Cj4gPiAKPiA+IE9oLCBzbyBpdCdzIG5vdGhpbmcgc3BlY2lh
+bCAtIHRoZSBsYXN0aW5vcCBpcyBwb2ludGVkIG91dHNpZGUgdGhlCj4gPiBjdXJyZW50IGZpbGVz
+eXN0ZW0gYm91bmRzIGFuZCBkb25lIGlzIHNldCB0byAxLiBJT1dzLCB0aGUgZG1hcGkgY29kZQo+
+ID4gY291bGQgZWFzaWx5IGdlbmVyYXRlIHRoZSAiZG9uZSIgdmFsdWUgYmFzZWQgb24gdGhlIHJl
+dHVybmVkCj4gPiBsYXN0aW5vcCB2YWx1ZS4gaS5lLiB4ZnNfZG1fZ2V0X2J1bGthbGxfcnZwKCkg
+Y2FuIGRvIHRoaXMgYWZ0ZXIgdGhlCj4gPiB4ZnNfYnVsa3N0YXQoKSBjYWxsOgo+ID4gCj4gPiAJ
+aWYgKFhGU19JTk9fVE9fQUdOTyhtcCwgbGFzdGlub3ApID49IG1wLT5tX3NiLnNiX2FnY291bnQp
+Cj4gPiAJCSpydmFscCA9IDA7Cj4gPiAJZWxzZQo+ID4gCQkqcnZhbHAgPSAxOwo+ID4gCj4gPiBB
+bmQgdGhhdCBtZWFucyB3ZSBjYW4gcmVtb3ZlIHRoZSBkb25lIHBhcmFtZXRlciBmcm9tIHhmc19i
+dWxrc3RhdCgpCj4gPiBhbmQgbm8gbG9uZ2VyIGhhdmUgdG8gY2FyZSBhYm91dCB3aGF0IERNQVBJ
+IHJlcXVpcmVzLiBIZW5jZSBJIHRoaW5rCj4gPiB0aGUgcGF0Y2ggYXMgaXQgc3RhbmRzIGRvZXMg
+bm90IGltcGFjdCBvbiBETUFQSSBmdW5jdGlvbmFsaXR5IGFuZCBzbwo+ID4gaXQganVzdCBmaW5l
+IHRvIGNsZWFuIHVwLi4uCj4gWWVwLiAgRXhjZXB0IERNQVBJLCB0aGUgb25seSB1c2VyIG9mIHRo
+ZSBkb25lIHBhcmFtZXRlciBpcyBxdW90YSBjaGVjaywgaS5lLAo+IHhmc19xbV9xdW90YWNoZWNr
+KCk6Cj4gCj4gICAgICAgICBkbyB7Cj4gICAgICAgICAgICAgICAgIC8qCj4gICAgICAgICAgICAg
+ICAgICAqIEl0ZXJhdGUgdGhydSBhbGwgdGhlIGlub2RlcyBpbiB0aGUgZmlsZSBzeXN0ZW0sCj4g
+ICAgICAgICAgICAgICAgICAqIGFkanVzdGluZyB0aGUgY29ycmVzcG9uZGluZyBkcXVvdCBjb3Vu
+dGVycyBpbiBjb3JlLgo+ICAgICAgICAgICAgICAgICAgKi8KPiAgICAgICAgICAgICAgICAgZXJy
+b3IgPSB4ZnNfYnVsa3N0YXQobXAsICZsYXN0aW5vLCAmY291bnQsCj4gICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIHhmc19xbV9kcXVzYWdlX2FkanVzdCwKPiAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0c3osIE5VTEwsICZkb25lKTsKPiAgICAg
+ICAgICAgICAgICAgaWYgKGVycm9yKQo+ICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOwo+
+IAo+ICAgICAgICAgfSB3aGlsZSAoIWRvbmUpOwoKCX0gd2hpbGUgKFhGU19JTk9fVE9fQUdOTyht
+cCwgbGFzdGlubykgPCBtcC0+bV9zYi5zYl9hZ2NvdW50KTsKCj4gQnV0IGlmIHdlIGZpbmFsbHkg
+Y291bGQgcGVyZm9ybSBxdW90YSBjaGVjayBpbiBwYXJhbGxlbCwgdGhlIGRvbmUgcGFyYW1ldGVy
+Cj4gY2FuIHRvdGFsbHkgYmUgcmVtb3ZlZCBhcyBmbHVzaF93b3JrcXVldWUoKSBjYW4gZW5zdXJl
+IHRoYXQgaXMgY29tcGxldGVkLgo+IEFjdHVhbGx5LCBJIGp1c3QgZGlkIGl0IGFzIHRoZSBsYXN0
+IHBhdGNoIGluIHBhcmFsbGVsIHF1b3RhIGNoZWNrIHdoaWNoIGlzCj4gbm90IHlldCBwb3N0ZWQu
+CgpSaWdodCAtIHdoZW4geW91IHBhcmFsbGVsaXNlIHRoZSBxdW90YWNoZWNrLCB0aGVuIGJ1bGtz
+dGF0CnRlcm1pbmF0aW9uIGNvbmRpdGlvbnMgYXJlIGRldGVybWluZWQgYnkgdGhlIGNhbGxlciBu
+b3QKeGZzX2J1bGtzdGF0KCkuIEhlbmNlIHJlbW92aW5nIHRoZSAiZG9uZSIgZmxhZyBhbmQgbGV0
+dGluZyB0aGUKY2FsbGVycyBkZXRlcm1pbmUgdGVtaW5hdGlvbiBjb25kaXRpb25zIHZpYSB0aGUg
+bGFzdGlubyBiZWluZwpyZXR1cm5lZCBzZWVtcyBsaWtlIHRoZSByaWdodCB0aGluZyB0byBkbyBh
+cyBhIHByZXBhcmF0aW9uIHN0ZXAuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRh
+dmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
