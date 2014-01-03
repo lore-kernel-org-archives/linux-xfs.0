@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7F37D7F3F
-	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 12:25:02 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 64F8C7F3F
+	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 12:29:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0B6ABAC003
-	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 10:24:58 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C67C8F8033
+	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 10:29:46 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id URMxHNgMF8V1ZVpN for <xfs@oss.sgi.com>;
-	Fri, 03 Jan 2014 10:24:55 -0800 (PST)
-Message-ID: <52C70076.3090004@sandeen.net>
-Date: Fri, 03 Jan 2014 12:24:54 -0600
+	ESMTP id h6Ghgozub2hHdI9B for <xfs@oss.sgi.com>;
+	Fri, 03 Jan 2014 10:29:44 -0800 (PST)
+Message-ID: <52C70198.6090106@sandeen.net>
+Date: Fri, 03 Jan 2014 12:29:44 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS File System Monitor
-References: <201401021304.s02D4Agc028655@m2c-new.corp.sgi.com>	<CA+apj_j6OMM7he1eP_fkZ5jGT6ag5mPVE8Lk-G6S--0kUmzcgg@mail.gmail.com>
-	<20140102142755.3659bd42@harpe.intellique.com>
-In-Reply-To: <20140102142755.3659bd42@harpe.intellique.com>
+Subject: Re: Bug - xfs_repair asks me to report it
+References: <7ED0247242FEFB40BCA665733E613DCA0640C14C985D@V4SERVER.v4.local>
+In-Reply-To: <7ED0247242FEFB40BCA665733E613DCA0640C14C985D@V4SERVER.v4.local>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +27,30 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>, Rotem Ben Arye <rotem.benarye@gmail.com>, xfs@oss.sgi.com
+To: =?ISO-8859-1?Q?Bj=F6rn_Rafreider?= <bjoern_rafreider@visual4.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 1/2/14, 7:27 AM, Emmanuel Florac wrote:
-> Le Thu, 2 Jan 2014 15:20:58 +0200
-> Rotem Ben Arye <rotem.benarye@gmail.com> =E9crivait:
+On 12/27/13, 6:42 AM, Bj=F6rn Rafreider wrote:
+> Hi,
+> over christmas our backup system with XFS on LVM2 on iSCSI on Ubuntu 12.0=
+4.03 gave me several errors. Turned out, that the XFS was halted because of=
+ an error. XFS_repair fixed several errors but finally quit with the follow=
+ing error message:
 > =
 
->> HI , I'm not sure it will help here,  we  are working central storage
->> with Netapp , EMC and others ,
->> The Using of XFS File system on volume , is expressed with an
->> creation of XFS, as e.g :  mkfs.xfs.
->>  My question about what are the tools that could assist us to monitor
->> XFS file system was in general.
+> corrupt dinode 3328159430, extent total =3D 1, nblocks =3D 0.  This is a =
+bug.
+> Please capture the filesystem metadata with xfs_metadump and
+> report it to xfs@oss.sgi.com.
+> cache_node_purge: refcount was 1, not zero (node=3D0x1b928ab0)
 > =
 
-> Rotem, if you have no SGI supported hardware, SGI support won't help
-> you.
+> fatal error -- couldn't map inode 3328159430, err =3D 117
 > =
 
-> Furthermore, it's impossible to help you without more details: what is
-> the hardware setup, the exact OS version and linux kernel in use.
-> =
+> the dump is running at the moment - but it already has 5G - little too bi=
+g for sending it by mail so I add a little more information
 
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
-reporting_a_problem.3F
+the metadump should compress quite well, for what it's worth.  Can you try?
 
 -Eric
 
