@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 311B37F3F
-	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 14:53:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 125E9304043
-	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 12:53:58 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id piQ5GGCwdt4F50ek for
-	<xfs@oss.sgi.com>; Fri, 03 Jan 2014 12:53:57 -0800 (PST)
-Message-ID: <52C72362.2000005@redhat.com>
-Date: Fri, 03 Jan 2014 15:53:54 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5028E7F3F
+	for <xfs@oss.sgi.com>; Sat,  4 Jan 2014 01:27:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1224D8F8040
+	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 23:27:07 -0800 (PST)
+Received: from mail-ig0-f171.google.com (mail-ig0-f171.google.com
+	[209.85.213.171]) by cuda.sgi.com with ESMTP id
+	R9awjiyI9x75ePzZ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 03 Jan 2014 23:27:05 -0800 (PST)
+Received: by mail-ig0-f171.google.com with SMTP id c10so2915616igq.4
+	for <xfs@oss.sgi.com>; Fri, 03 Jan 2014 23:27:04 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/10] xfs: consolidate xfs_inumbers
-References: <52BEB3FA.5080402@oracle.com>
-In-Reply-To: <52BEB3FA.5080402@oracle.com>
+In-Reply-To: <52C70076.3090004@sandeen.net>
+References: <201401021304.s02D4Agc028655@m2c-new.corp.sgi.com>
+	<CA+apj_j6OMM7he1eP_fkZ5jGT6ag5mPVE8Lk-G6S--0kUmzcgg@mail.gmail.com>
+	<20140102142755.3659bd42@harpe.intellique.com>
+	<52C70076.3090004@sandeen.net>
+Date: Sat, 4 Jan 2014 09:27:04 +0200
+Message-ID: <CA+apj_gXouiS9w-oV+2JmOvA2xtZdcK2750FYt-Nf+TD2o1-TA@mail.gmail.com>
+Subject: Re: XFS File System Monitor
+From: Rotem Ben Arye <rotem.benarye@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,267 +30,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0051133889631864674=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On 12/28/2013 06:20 AM, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> To fetch the file system number tables, we currently just ignore the
-> errors and proceed to loop over the next AG or bump agino to the next
-> chunk in case of btree operations failed, that is not properly because
-> those errors might hint us potential file system problems.
-> 
-> This patch rework xfs_inumbers() to handle the btree operation errors
-> as well as the loop conditions.  Also, add pre-checkups for the given
-> inode, we can save alloc/free the format buffer once against an invalid
-> inode number.
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  fs/xfs/xfs_itable.c | 163 +++++++++++++++++++++++-----------------------------
->  1 file changed, 72 insertions(+), 91 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 692671c..4d262f6 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -558,12 +558,12 @@ xfs_bulkstat_single(
->  int
->  xfs_inumbers_fmt(
->  	void			__user *ubuffer, /* buffer to write to */
-> -	const xfs_inogrp_t	*buffer,	/* buffer to read from */
-> +	const struct xfs_inogrp	*buffer,	/* buffer to read from */
->  	long			count,		/* # of elements to read */
->  	long			*written)	/* # of bytes written */
->  {
->  	if (copy_to_user(ubuffer, buffer, count * sizeof(*buffer)))
-> -		return -EFAULT;
-> +		return XFS_ERROR(EFAULT);
->  	*written = count * sizeof(*buffer);
->  	return 0;
->  }
-> @@ -573,121 +573,102 @@ xfs_inumbers_fmt(
->   */
->  int					/* error status */
->  xfs_inumbers(
-> -	xfs_mount_t	*mp,		/* mount point for filesystem */
-> -	xfs_ino_t	*lastino,	/* last inode returned */
-> -	int		*count,		/* size of buffer/count returned */
-> -	void		__user *ubuffer,/* buffer with inode descriptions */
-> -	inumbers_fmt_pf	formatter)
-> +	struct xfs_mount	*mp,/* mount point for filesystem */
-> +	xfs_ino_t		*lastino,/* last inode returned */
-> +	int			*count,/* size of buffer/count returned */
-> +	void			__user *ubuffer,/* buffer with inode desc */
-> +	inumbers_fmt_pf		formatter)
->  {
-> -	xfs_buf_t	*agbp;
-> -	xfs_agino_t	agino;
-> -	xfs_agnumber_t	agno;
-> -	int		bcount;
-> -	xfs_inogrp_t	*buffer;
-> -	int		bufidx;
-> -	xfs_btree_cur_t	*cur;
-> -	int		error;
-> -	xfs_inobt_rec_incore_t r;
-> -	int		i;
-> -	xfs_ino_t	ino;
-> -	int		left;
-> -	int		tmp;
-> -
-> -	ino = (xfs_ino_t)*lastino;
-> -	agno = XFS_INO_TO_AGNO(mp, ino);
-> -	agino = XFS_INO_TO_AGINO(mp, ino);
-> -	left = *count;
-> +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, *lastino);
-> +	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, *lastino);
-> +	int			left = *count;
-> +	struct xfs_btree_cur	*cur = NULL;
-> +	struct xfs_buf		*agbp = NULL;
-> +	struct xfs_inogrp	*buffer;
-> +	int			bcount;
-> +	int			bufidx;
-> +	int			error;
-> +
->  	*count = 0;
-> +	if (agno >= mp->m_sb.sb_agcount ||
-> +	    *lastino != XFS_AGINO_TO_INO(mp, agno, agino))
-> +		return 0;
-> +
->  	bcount = MIN(left, (int)(PAGE_SIZE / sizeof(*buffer)));
->  	buffer = kmem_alloc(bcount * sizeof(*buffer), KM_SLEEP);
-> -	error = bufidx = 0;
-> -	cur = NULL;
-> -	agbp = NULL;
-> -	while (left > 0 && agno < mp->m_sb.sb_agcount) {
-> -		if (agbp == NULL) {
-> +	bufidx = error = 0;
-> +	do {
-> +		struct xfs_inobt_rec_incore	r;
-> +		int				stat;
-> +
-> +		if (!agbp) {
->  			error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
-> -			if (error) {
-> -				/*
-> -				 * If we can't read the AGI of this ag,
-> -				 * then just skip to the next one.
-> -				 */
-> -				ASSERT(cur == NULL);
-> -				agbp = NULL;
-> -				agno++;
-> -				agino = 0;
-> -				continue;
-> -			}
-> +			if (error)
-> +				break;
->  			cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno);
-> -			error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE,
-> -						 &tmp);
-> -			if (error) {
-> -				xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> -				cur = NULL;
-> -				xfs_buf_relse(agbp);
-> -				agbp = NULL;
-> -				/*
-> -				 * Move up the last inode in the current
-> -				 * chunk.  The lookup_ge will always get
-> -				 * us the first inode in the next chunk.
-> -				 */
-> -				agino += XFS_INODES_PER_CHUNK - 1;
-> -				continue;
-> -			}
->  		}
-> -		error = xfs_inobt_get_rec(cur, &r, &i);
-> -		if (error || i == 0) {
-> -			xfs_buf_relse(agbp);
-> -			agbp = NULL;
-> -			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> -			cur = NULL;
-> -			agno++;
-> -			agino = 0;
-> -			continue;
-> +		error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE, &stat);
-> +		if (error)
-> +			break;
+--===============0051133889631864674==
+Content-Type: multipart/alternative; boundary=bcaec50e5f2912b89c04ef1ff493
 
-Isn't this lookup only needed after cursor initialization? i.e., we
-lookup once and increment through the records via xfs_btree_increment()
-below.
+--bcaec50e5f2912b89c04ef1ff493
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> +		if (!stat) {
-> +			/* Done, proceed to look up the next AG */
-> +			goto next_ag;
->  		}
-> +
-> +		error = xfs_inobt_get_rec(cur, &r, &stat);
-> +		if (error)
-> +			break;
-> +		XFS_WANT_CORRUPTED_GOTO(stat == 1, error0);
-> +
->  		agino = r.ir_startino + XFS_INODES_PER_CHUNK - 1;
->  		buffer[bufidx].xi_startino =
->  			XFS_AGINO_TO_INO(mp, agno, r.ir_startino);
->  		buffer[bufidx].xi_alloccount =
->  			XFS_INODES_PER_CHUNK - r.ir_freecount;
->  		buffer[bufidx].xi_allocmask = ~r.ir_free;
-> -		bufidx++;
-> -		left--;
-> -		if (bufidx == bcount) {
-> -			long written;
-> -			if (formatter(ubuffer, buffer, bufidx, &written)) {
-> -				error = XFS_ERROR(EFAULT);
-> +		if (++bufidx == bcount) {
-> +			long	written;
-> +			error = formatter(ubuffer, buffer, bufidx, &written);
-> +			if (error)
->  				break;
-> -			}
->  			ubuffer += written;
->  			*count += bufidx;
->  			bufidx = 0;
->  		}
-> -		if (left) {
-> -			error = xfs_btree_increment(cur, 0, &tmp);
-> -			if (error) {
-> -				xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> -				cur = NULL;
-> -				xfs_buf_relse(agbp);
-> -				agbp = NULL;
-> -				/*
-> -				 * The agino value has already been bumped.
-> -				 * Just try to skip up to it.
-> -				 */
-> -				agino += XFS_INODES_PER_CHUNK;
-> -				continue;
-> -			}
-> +		if (!--left)
-> +			break;
-> +
-> +		error = xfs_btree_increment(cur, 0, &stat);
-> +		if (error)
-> +			break;
-> +		if (stat) {
-> +			/*
-> +			 * The agino value has already been bumped, just try
-> +			 * to skip up to it.
-> +			 */
-> +			agino += XFS_INODES_PER_CHUNK;
-> +			continue;
->  		}
+Thank you Eric .
+An properly Document..
 
-Maybe it's just me, but this reads a little funny to me. In particular
-because we only get here if stat == 1. I wonder if this would look a bit
-cleaner if we pulled the next_ag labeled block below up into the goto,
-since that appears to be the only reference. Then just let the loop fall
-through.
 
-Also, I think the agino addition here becomes unnecessary when the
-lookup issue above is addressed.
 
-> -	}
-> +
-> +next_ag:
-> +		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> +		cur = NULL;
-> +		xfs_buf_relse(agbp);
-> +		agbp = NULL;
-> +		agino = 0;
-> +	} while (++agno < mp->m_sb.sb_agcount);
-> +
 
-... and just thinking about the logic that way highlights the bug here,
-where we bump agno due to the continue above (where IIUC, we intend to
-only move forward within the ag). Perhaps the ++agno should be part of
-the broken off 'next_ag' logic as well.
+On Fri, Jan 3, 2014 at 8:24 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 
-Brian
+> On 1/2/14, 7:27 AM, Emmanuel Florac wrote:
+> > Le Thu, 2 Jan 2014 15:20:58 +0200
+> > Rotem Ben Arye <rotem.benarye@gmail.com> =E9crivait:
+> >
+> >> HI , I'm not sure it will help here,  we  are working central storage
+> >> with Netapp , EMC and others ,
+> >> The Using of XFS File system on volume , is expressed with an
+> >> creation of XFS, as e.g :  mkfs.xfs.
+> >>  My question about what are the tools that could assist us to monitor
+> >> XFS file system was in general.
+> >
+> > Rotem, if you have no SGI supported hardware, SGI support won't help
+> > you.
+> >
+> > Furthermore, it's impossible to help you without more details: what is
+> > the hardware setup, the exact OS version and linux kernel in use.
+> >
+>
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_whe=
+n_reporting_a_problem.3F
+>
+> -Eric
+>
 
->  	if (!error) {
->  		if (bufidx) {
-> -			long written;
-> -			if (formatter(ubuffer, buffer, bufidx, &written))
-> -				error = XFS_ERROR(EFAULT);
-> -			else
-> +			long	written;
-> +			error = formatter(ubuffer, buffer, bufidx, &written);
-> +			if (!error)
->  				*count += bufidx;
->  		}
->  		*lastino = XFS_AGINO_TO_INO(mp, agno, agino);
->  	}
-> +
-> +error0:
->  	kmem_free(buffer);
->  	if (cur)
->  		xfs_btree_del_cursor(cur, (error ? XFS_BTREE_ERROR :
-> 
+--bcaec50e5f2912b89c04ef1ff493
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><span>Thank you Eric=A0.</span></div><div><span>An pr=
+operly Document..</span></div><div><span><br></span></div><div><span><br></=
+span></div></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quo=
+te">On Fri, Jan 3, 2014 at 8:24 PM, Eric Sandeen <span dir=3D"ltr">&lt;<a h=
+ref=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</a=
+>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"im">On 1/2/14, 7:27 AM, Emmanu=
+el Florac wrote:<br>
+&gt; Le Thu, 2 Jan 2014 15:20:58 +0200<br>
+&gt; Rotem Ben Arye &lt;<a href=3D"mailto:rotem.benarye@gmail.com">rotem.be=
+narye@gmail.com</a>&gt; =E9crivait:<br>
+&gt;<br>
+&gt;&gt; HI , I&#39;m not sure it will help here, =A0we =A0are working cent=
+ral storage<br>
+&gt;&gt; with Netapp , EMC and others ,<br>
+&gt;&gt; The Using of XFS File system on volume , is expressed with an<br>
+&gt;&gt; creation of XFS, as e.g : =A0mkfs.xfs.<br>
+&gt;&gt; =A0My question about what are the tools that could assist us to mo=
+nitor<br>
+&gt;&gt; XFS file system was in general.<br>
+&gt;<br>
+&gt; Rotem, if you have no SGI supported hardware, SGI support won&#39;t he=
+lp<br>
+&gt; you.<br>
+&gt;<br>
+&gt; Furthermore, it&#39;s impossible to help you without more details: wha=
+t is<br>
+&gt; the hardware setup, the exact OS version and linux kernel in use.<br>
+&gt;<br>
+<br>
+</div><a href=3D"http://xfs.org/index.php/XFS_FAQ#Q:_What_information_shoul=
+d_I_include_when_reporting_a_problem.3F" target=3D"_blank">http://xfs.org/i=
+ndex.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_prob=
+lem.3F</a><br>
+
+<span class=3D"HOEnZb"><font color=3D"#888888"><br>
+-Eric<br>
+</font></span></blockquote></div><br></div>
+
+--bcaec50e5f2912b89c04ef1ff493--
+
+
+--===============0051133889631864674==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0051133889631864674==--
