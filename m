@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5028E7F3F
-	for <xfs@oss.sgi.com>; Sat,  4 Jan 2014 01:27:10 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D8DE7F4E
+	for <xfs@oss.sgi.com>; Sat,  4 Jan 2014 07:46:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1224D8F8040
-	for <xfs@oss.sgi.com>; Fri,  3 Jan 2014 23:27:07 -0800 (PST)
-Received: from mail-ig0-f171.google.com (mail-ig0-f171.google.com
-	[209.85.213.171]) by cuda.sgi.com with ESMTP id
-	R9awjiyI9x75ePzZ (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 03 Jan 2014 23:27:05 -0800 (PST)
-Received: by mail-ig0-f171.google.com with SMTP id c10so2915616igq.4
-	for <xfs@oss.sgi.com>; Fri, 03 Jan 2014 23:27:04 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BE114AC007
+	for <xfs@oss.sgi.com>; Sat,  4 Jan 2014 05:46:11 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 4qMuPjSLJGQTDfH2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 04 Jan 2014 05:46:07 -0800 (PST)
+Message-ID: <52C81098.1030406@oracle.com>
+Date: Sat, 04 Jan 2014 21:46:00 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <52C70076.3090004@sandeen.net>
-References: <201401021304.s02D4Agc028655@m2c-new.corp.sgi.com>
-	<CA+apj_j6OMM7he1eP_fkZ5jGT6ag5mPVE8Lk-G6S--0kUmzcgg@mail.gmail.com>
-	<20140102142755.3659bd42@harpe.intellique.com>
-	<52C70076.3090004@sandeen.net>
-Date: Sat, 4 Jan 2014 09:27:04 +0200
-Message-ID: <CA+apj_gXouiS9w-oV+2JmOvA2xtZdcK2750FYt-Nf+TD2o1-TA@mail.gmail.com>
-Subject: Re: XFS File System Monitor
-From: Rotem Ben Arye <rotem.benarye@gmail.com>
+Subject: Re: [PATCH 2/10] xfs: xfs_bulkstat_single consolidation
+References: <52BEB3E7.2080706@oracle.com> <52C7232B.3050807@redhat.com>
+In-Reply-To: <52C7232B.3050807@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,108 +24,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0051133889631864674=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============0051133889631864674==
-Content-Type: multipart/alternative; boundary=bcaec50e5f2912b89c04ef1ff493
+On 01/04 2014 04:52 AM, Brian Foster wrote:
+> On 12/28/2013 06:20 AM, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> In xfs_bulkstat_single(), xfs_bulkstat_one() and xfs_bulkstat() might
+>> return different error if either call failed, we'd better return the
+>> proper error in this case.  Moreover, the function argument done is
+>> useless in terms of xfs_ioc_bulkstat(), hence we can get rid of it.
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> ---
+>>  fs/xfs/xfs_ioctl.c  |  3 +--
+>>  fs/xfs/xfs_itable.c | 59 ++++++++++++++++++++++++++---------------------------
+>>  fs/xfs/xfs_itable.h |  3 +--
+>>  3 files changed, 31 insertions(+), 34 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 33ad9a7..2fdd750 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -828,8 +828,7 @@ xfs_ioc_bulkstat(
+>>  		error = xfs_inumbers(mp, &inlast, &count,
+>>  					bulkreq.ubuffer, xfs_inumbers_fmt);
+>>  	else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE)
+>> -		error = xfs_bulkstat_single(mp, &inlast,
+>> -						bulkreq.ubuffer, &done);
+>> +		error = xfs_bulkstat_single(mp, &inlast, bulkreq.ubuffer);
+>>  	else	/* XFS_IOC_FSBULKSTAT */
+>>  		error = xfs_bulkstat(mp, &inlast, &count, xfs_bulkstat_one,
+>>  				     sizeof(xfs_bstat_t), bulkreq.ubuffer,
+>> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+>> index b5bb7b6..692671c 100644
+>> --- a/fs/xfs/xfs_itable.c
+>> +++ b/fs/xfs/xfs_itable.c
+>> @@ -509,51 +509,50 @@ xfs_bulkstat(
+>>  }
+>>  
+>>  /*
+>> - * Return stat information in bulk (by-inode) for the filesystem.
+>> - * Special case for non-sequential one inode bulkstat.
+>> + * Return stat information in bulk (by-inode) for the filesystem.  Special case
+>> + * for non-sequential one inode bulkstat.
+>>   */
+>> -int					/* error status */
+>> +int
+>>  xfs_bulkstat_single(
+>> -	xfs_mount_t		*mp,	/* mount point for filesystem */
+>> +	struct xfs_mount	*mp,	/* mount point for filesystem */
+>>  	xfs_ino_t		*lastinop, /* inode to return */
+>> -	char			__user *buffer, /* buffer with inode stats */
+>> -	int			*done)	/* 1 if there are more stats to get */
+>> +	char			__user *buffer) /* buffer with inode stats */
+>>  {
+>> -	int			count;	/* count value for bulkstat call */
+>> -	int			error;	/* return value */
+>> -	xfs_ino_t		ino;	/* filesystem inode number */
+>> +	xfs_ino_t		ino = *lastinop;
+>>  	int			res;	/* result from bs1 */
+>> +	int			error;
+>>  
+>>  	/*
+>> -	 * note that requesting valid inode numbers which are not allocated
+>> +	 * Note that requesting valid inode numbers which are not allocated
+>>  	 * to inodes will most likely cause xfs_imap_to_bp to generate warning
+>> -	 * messages about bad magic numbers. This is ok. The fact that
+>> -	 * the inode isn't actually an inode is handled by the
+>> -	 * error check below. Done this way to make the usual case faster
+>> -	 * at the expense of the error case.
+>> +	 * messages about bad magic numbers. This is ok. The fact that the
+>> +	 * inode isn't actually an inode is handled by the error check below.
+>> +	 * Done this way to make the usual case faster at the expense of the
+>> +	 * error case.
+>>  	 */
+>> -
+>> -	ino = *lastinop;
+>> -	error = xfs_bulkstat_one(mp, ino, buffer, sizeof(xfs_bstat_t),
+>> +	error = xfs_bulkstat_one(mp, ino, buffer, sizeof(struct xfs_bstat),
+>>  				 NULL, &res);
+>>  	if (error) {
+>> +		int		count = 1;
+>> +		int		done, error2;
+>> +
+>>  		/*
+>> -		 * Special case way failed, do it the "long" way
+>> -		 * to see if that works.
+>> +		 * Special case way failed, do it the "long" way to see if
+>> +		 * that works.
+>>  		 */
+>>  		(*lastinop)--;
+>> -		count = 1;
+>> -		if (xfs_bulkstat(mp, lastinop, &count, xfs_bulkstat_one,
+>> -				sizeof(xfs_bstat_t), buffer, done))
+>> -			return error;
+>> -		if (count == 0 || (xfs_ino_t)*lastinop != ino)
+>> -			return error == EFSCORRUPTED ?
+>> -				XFS_ERROR(EINVAL) : error;
+>> -		else
+>> -			return 0;
+>> +		error2 = xfs_bulkstat(mp, lastinop, &count, xfs_bulkstat_one,
+>> +				      sizeof(struct xfs_bstat), buffer, &done);
+>> +		if (error2)
+>> +			return error2;
+>> +
+>> +		if (count == 0 || *lastinop != ino) {
+>> +			if (error == EFSCORRUPTED)
+>> +				error = XFS_ERROR(EINVAL);
+>> +		}
+>>  	}
+>> -	*done = 0;
+>> -	return 0;
+>> +
+>> +	return error;
+> 
+> Here it looks like you return an error value if the initial
+> xfs_bulkstat_one() fails and the fallback xfs_bulkstat() succeeds.
+Good catch, thanks for for your review.
 
---bcaec50e5f2912b89c04ef1ff493
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Thank you Eric .
-An properly Document..
-
-
-
-
-On Fri, Jan 3, 2014 at 8:24 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-
-> On 1/2/14, 7:27 AM, Emmanuel Florac wrote:
-> > Le Thu, 2 Jan 2014 15:20:58 +0200
-> > Rotem Ben Arye <rotem.benarye@gmail.com> =E9crivait:
-> >
-> >> HI , I'm not sure it will help here,  we  are working central storage
-> >> with Netapp , EMC and others ,
-> >> The Using of XFS File system on volume , is expressed with an
-> >> creation of XFS, as e.g :  mkfs.xfs.
-> >>  My question about what are the tools that could assist us to monitor
-> >> XFS file system was in general.
-> >
-> > Rotem, if you have no SGI supported hardware, SGI support won't help
-> > you.
-> >
-> > Furthermore, it's impossible to help you without more details: what is
-> > the hardware setup, the exact OS version and linux kernel in use.
-> >
->
->
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_whe=
-n_reporting_a_problem.3F
->
-> -Eric
->
-
---bcaec50e5f2912b89c04ef1ff493
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div><span>Thank you Eric=A0.</span></div><div><span>An pr=
-operly Document..</span></div><div><span><br></span></div><div><span><br></=
-span></div></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quo=
-te">On Fri, Jan 3, 2014 at 8:24 PM, Eric Sandeen <span dir=3D"ltr">&lt;<a h=
-ref=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</a=
->&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On 1/2/14, 7:27 AM, Emmanu=
-el Florac wrote:<br>
-&gt; Le Thu, 2 Jan 2014 15:20:58 +0200<br>
-&gt; Rotem Ben Arye &lt;<a href=3D"mailto:rotem.benarye@gmail.com">rotem.be=
-narye@gmail.com</a>&gt; =E9crivait:<br>
-&gt;<br>
-&gt;&gt; HI , I&#39;m not sure it will help here, =A0we =A0are working cent=
-ral storage<br>
-&gt;&gt; with Netapp , EMC and others ,<br>
-&gt;&gt; The Using of XFS File system on volume , is expressed with an<br>
-&gt;&gt; creation of XFS, as e.g : =A0mkfs.xfs.<br>
-&gt;&gt; =A0My question about what are the tools that could assist us to mo=
-nitor<br>
-&gt;&gt; XFS file system was in general.<br>
-&gt;<br>
-&gt; Rotem, if you have no SGI supported hardware, SGI support won&#39;t he=
-lp<br>
-&gt; you.<br>
-&gt;<br>
-&gt; Furthermore, it&#39;s impossible to help you without more details: wha=
-t is<br>
-&gt; the hardware setup, the exact OS version and linux kernel in use.<br>
-&gt;<br>
-<br>
-</div><a href=3D"http://xfs.org/index.php/XFS_FAQ#Q:_What_information_shoul=
-d_I_include_when_reporting_a_problem.3F" target=3D"_blank">http://xfs.org/i=
-ndex.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_prob=
-lem.3F</a><br>
-
-<span class=3D"HOEnZb"><font color=3D"#888888"><br>
--Eric<br>
-</font></span></blockquote></div><br></div>
-
---bcaec50e5f2912b89c04ef1ff493--
-
-
---===============0051133889631864674==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0051133889631864674==--
