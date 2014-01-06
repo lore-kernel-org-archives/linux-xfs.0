@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D02A7F37
-	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 03:12:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B6E8AC007
-	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 01:12:34 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 320347F37
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 03:16:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5A8DAC004
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 01:16:46 -0800 (PST)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id WMq4zSA3GnNnfffy for
-	<xfs@oss.sgi.com>; Mon, 06 Jan 2014 01:12:29 -0800 (PST)
+	cuda.sgi.com with ESMTP id Rwi4mnvpEoEH5sSt for
+	<xfs@oss.sgi.com>; Mon, 06 Jan 2014 01:16:44 -0800 (PST)
+Message-ID: <52CA74AD.5040304@cn.fujitsu.com>
+Date: Mon, 06 Jan 2014 17:17:33 +0800
 From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-Subject: [PATCH] xfstests: Enhance the scratch dev pool and deletable device
-	check
-Date: Mon, 6 Jan 2014 17:13:18 +0800
-Message-Id: <1388999598-17058-1-git-send-email-quwenruo@cn.fujitsu.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstests: Enhance the scratch dev pool and deletable
+	device check
+References: <1388999598-17058-1-git-send-email-quwenruo@cn.fujitsu.com>
+In-Reply-To: <1388999598-17058-1-git-send-email-quwenruo@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,123 +24,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
-Cc: Miao Xie <miaox@cn.fujitsu.com>
 
-From: Miao Xie <miaox@cn.fujitsu.com>
-
-From: Miao Xie <miaox@cn.fujitsu.com>
-
-_require_scratch_dev_pool() checks the devices number in
-SCRATCH_DEV_POOL, but it's not enough since some btrfs RAID10 tests
-needs 4 devices, but when 3 or less devices are provided, the check is
-useless and related test case will fail(btrfs/003 btrfs/011 btrfs/023).
-
-Also _require_deletable_scratch_dev_pool only checks whether it is
-virtul, like virtio(not including virtio-scsi) disk will pass the check
-but is unable to delete.
-
-This patch enhance _require_scratch_dev_pool by add optional $1 as
-needed device number to do extra check.
-And enhance _require_deletable_scratch_dev_pool by directly check
-/sys/class/block/$DEV/device/delete file.
-
-Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
-Signed-off-by: Qu Wenruo <quwenruo@cn.fujitsu.com>
----
- common/rc       | 22 ++++++++++++++--------
- tests/btrfs/003 |  2 +-
- tests/btrfs/011 |  2 +-
- 3 files changed, 16 insertions(+), 10 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index a2005c9..09644af 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1927,16 +1927,24 @@ _test_inode_extsz()
- _require_scratch_dev_pool()
- {
- 	local i
-+	local ndevs
-+
- 	if [ -z "$SCRATCH_DEV_POOL" ]; then
- 		_notrun "this test requires a valid \$SCRATCH_DEV_POOL"
- 	fi
- 
--	# btrfs test case needs 2 or more scratch_dev_pool; other FS not sure
-+	if [ -z "$1" ]; then
-+		ndevs=2
-+	else
-+		ndevs=$1
-+	fi
-+
-+	# btrfs test case needs ndevs or more scratch_dev_pool; other FS not sure
- 	# so fail it
- 	case $FSTYP in
- 	btrfs)
--		if [ "`echo $SCRATCH_DEV_POOL|wc -w`" -lt 2 ]; then
--			_notrun "btrfs and this test needs 2 or more disks in SCRATCH_DEV_POOL"
-+		if [ "`echo $SCRATCH_DEV_POOL|wc -w`" -lt $ndevs ]; then
-+			_notrun "btrfs and this test needs $ndevs or more disks in SCRATCH_DEV_POOL"
- 		fi
- 	;;
- 	*)
-@@ -1963,17 +1971,15 @@ _require_scratch_dev_pool()
- 	done
- }
- 
--# We will check if the device is virtual (eg: loop device) since it does not
--# have the delete entry-point. Otherwise SCSI and USB devices are fine. 
-+# We will check if the device is deletable
- _require_deletable_scratch_dev_pool()
- {
- 	local i
- 	local x
- 	for i in $SCRATCH_DEV_POOL; do
- 		x=`echo $i | cut -d"/" -f 3`
--		ls -l /sys/class/block/${x} | grep -q "virtual" 
--		if [ $? == "0" ]; then
--			_notrun "$i is a virtual device which is not deletable"
-+		if [ ! -f /sys/class/block/${x}/device/delete ]; then
-+			_notrun "$i is a device which is not deletable"
- 		fi
- 	done
- }
-diff --git a/tests/btrfs/003 b/tests/btrfs/003
-index 9105d06..29f947b 100755
---- a/tests/btrfs/003
-+++ b/tests/btrfs/003
-@@ -49,7 +49,7 @@ _need_to_be_root
- _supported_fs btrfs
- _supported_os Linux
- _require_scratch
--_require_scratch_dev_pool
-+_require_scratch_dev_pool 4
- _require_deletable_scratch_dev_pool
- _require_command $WIPEFS_PROG
- 
-diff --git a/tests/btrfs/011 b/tests/btrfs/011
-index 71ff3de..faa0402 100755
---- a/tests/btrfs/011
-+++ b/tests/btrfs/011
-@@ -62,7 +62,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _need_to_be_root
- _supported_fs btrfs
- _require_scratch
--_require_scratch_dev_pool
-+_require_scratch_dev_pool 4
- _require_command $BTRFS_SHOW_SUPER_PROG btrfs-show-super
- 
- rm -f $seqres.full
--- 
-1.8.5.2
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+UXUgV2VucnVvIOWGmemBkzoKPiBGcm9tOiBNaWFvIFhpZSA8bWlhb3hAY24uZnVqaXRzdS5jb20+
+ClNvcnJ5IGZvciB0aGUgZG91YmxlIGZyb20gbGluZS4KSSdsbCByZXNlbmQgdGhlIHBhdGNoLgoK
+UXUKPgo+IEZyb206IE1pYW8gWGllIDxtaWFveEBjbi5mdWppdHN1LmNvbT4KPgo+IF9yZXF1aXJl
+X3NjcmF0Y2hfZGV2X3Bvb2woKSBjaGVja3MgdGhlIGRldmljZXMgbnVtYmVyIGluCj4gU0NSQVRD
+SF9ERVZfUE9PTCwgYnV0IGl0J3Mgbm90IGVub3VnaCBzaW5jZSBzb21lIGJ0cmZzIFJBSUQxMCB0
+ZXN0cwo+IG5lZWRzIDQgZGV2aWNlcywgYnV0IHdoZW4gMyBvciBsZXNzIGRldmljZXMgYXJlIHBy
+b3ZpZGVkLCB0aGUgY2hlY2sgaXMKPiB1c2VsZXNzIGFuZCByZWxhdGVkIHRlc3QgY2FzZSB3aWxs
+IGZhaWwoYnRyZnMvMDAzIGJ0cmZzLzAxMSBidHJmcy8wMjMpLgo+Cj4gQWxzbyBfcmVxdWlyZV9k
+ZWxldGFibGVfc2NyYXRjaF9kZXZfcG9vbCBvbmx5IGNoZWNrcyB3aGV0aGVyIGl0IGlzCj4gdmly
+dHVsLCBsaWtlIHZpcnRpbyhub3QgaW5jbHVkaW5nIHZpcnRpby1zY3NpKSBkaXNrIHdpbGwgcGFz
+cyB0aGUgY2hlY2sKPiBidXQgaXMgdW5hYmxlIHRvIGRlbGV0ZS4KPgo+IFRoaXMgcGF0Y2ggZW5o
+YW5jZSBfcmVxdWlyZV9zY3JhdGNoX2Rldl9wb29sIGJ5IGFkZCBvcHRpb25hbCAkMSBhcwo+IG5l
+ZWRlZCBkZXZpY2UgbnVtYmVyIHRvIGRvIGV4dHJhIGNoZWNrLgo+IEFuZCBlbmhhbmNlIF9yZXF1
+aXJlX2RlbGV0YWJsZV9zY3JhdGNoX2Rldl9wb29sIGJ5IGRpcmVjdGx5IGNoZWNrCj4gL3N5cy9j
+bGFzcy9ibG9jay8kREVWL2RldmljZS9kZWxldGUgZmlsZS4KPgo+IFNpZ25lZC1vZmYtYnk6IE1p
+YW8gWGllIDxtaWFveEBjbi5mdWppdHN1LmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBRdSBXZW5ydW8g
+PHF1d2VucnVvQGNuLmZ1aml0c3UuY29tPgo+IC0tLQo+ICAgY29tbW9uL3JjICAgICAgIHwgMjIg
+KysrKysrKysrKysrKystLS0tLS0tLQo+ICAgdGVzdHMvYnRyZnMvMDAzIHwgIDIgKy0KPiAgIHRl
+c3RzL2J0cmZzLzAxMSB8ICAyICstCj4gICAzIGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMo
+KyksIDEwIGRlbGV0aW9ucygtKQo+Cj4gZGlmZiAtLWdpdCBhL2NvbW1vbi9yYyBiL2NvbW1vbi9y
+Ywo+IGluZGV4IGEyMDA1YzkuLjA5NjQ0YWYgMTAwNjQ0Cj4gLS0tIGEvY29tbW9uL3JjCj4gKysr
+IGIvY29tbW9uL3JjCj4gQEAgLTE5MjcsMTYgKzE5MjcsMjQgQEAgX3Rlc3RfaW5vZGVfZXh0c3oo
+KQo+ICAgX3JlcXVpcmVfc2NyYXRjaF9kZXZfcG9vbCgpCj4gICB7Cj4gICAJbG9jYWwgaQo+ICsJ
+bG9jYWwgbmRldnMKPiArCj4gICAJaWYgWyAteiAiJFNDUkFUQ0hfREVWX1BPT0wiIF07IHRoZW4K
+PiAgIAkJX25vdHJ1biAidGhpcyB0ZXN0IHJlcXVpcmVzIGEgdmFsaWQgXCRTQ1JBVENIX0RFVl9Q
+T09MIgo+ICAgCWZpCj4gICAKPiAtCSMgYnRyZnMgdGVzdCBjYXNlIG5lZWRzIDIgb3IgbW9yZSBz
+Y3JhdGNoX2Rldl9wb29sOyBvdGhlciBGUyBub3Qgc3VyZQo+ICsJaWYgWyAteiAiJDEiIF07IHRo
+ZW4KPiArCQluZGV2cz0yCj4gKwllbHNlCj4gKwkJbmRldnM9JDEKPiArCWZpCj4gKwo+ICsJIyBi
+dHJmcyB0ZXN0IGNhc2UgbmVlZHMgbmRldnMgb3IgbW9yZSBzY3JhdGNoX2Rldl9wb29sOyBvdGhl
+ciBGUyBub3Qgc3VyZQo+ICAgCSMgc28gZmFpbCBpdAo+ICAgCWNhc2UgJEZTVFlQIGluCj4gICAJ
+YnRyZnMpCj4gLQkJaWYgWyAiYGVjaG8gJFNDUkFUQ0hfREVWX1BPT0x8d2MgLXdgIiAtbHQgMiBd
+OyB0aGVuCj4gLQkJCV9ub3RydW4gImJ0cmZzIGFuZCB0aGlzIHRlc3QgbmVlZHMgMiBvciBtb3Jl
+IGRpc2tzIGluIFNDUkFUQ0hfREVWX1BPT0wiCj4gKwkJaWYgWyAiYGVjaG8gJFNDUkFUQ0hfREVW
+X1BPT0x8d2MgLXdgIiAtbHQgJG5kZXZzIF07IHRoZW4KPiArCQkJX25vdHJ1biAiYnRyZnMgYW5k
+IHRoaXMgdGVzdCBuZWVkcyAkbmRldnMgb3IgbW9yZSBkaXNrcyBpbiBTQ1JBVENIX0RFVl9QT09M
+Igo+ICAgCQlmaQo+ICAgCTs7Cj4gICAJKikKPiBAQCAtMTk2MywxNyArMTk3MSwxNSBAQCBfcmVx
+dWlyZV9zY3JhdGNoX2Rldl9wb29sKCkKPiAgIAlkb25lCj4gICB9Cj4gICAKPiAtIyBXZSB3aWxs
+IGNoZWNrIGlmIHRoZSBkZXZpY2UgaXMgdmlydHVhbCAoZWc6IGxvb3AgZGV2aWNlKSBzaW5jZSBp
+dCBkb2VzIG5vdAo+IC0jIGhhdmUgdGhlIGRlbGV0ZSBlbnRyeS1wb2ludC4gT3RoZXJ3aXNlIFND
+U0kgYW5kIFVTQiBkZXZpY2VzIGFyZSBmaW5lLgo+ICsjIFdlIHdpbGwgY2hlY2sgaWYgdGhlIGRl
+dmljZSBpcyBkZWxldGFibGUKPiAgIF9yZXF1aXJlX2RlbGV0YWJsZV9zY3JhdGNoX2Rldl9wb29s
+KCkKPiAgIHsKPiAgIAlsb2NhbCBpCj4gICAJbG9jYWwgeAo+ICAgCWZvciBpIGluICRTQ1JBVENI
+X0RFVl9QT09MOyBkbwo+ICAgCQl4PWBlY2hvICRpIHwgY3V0IC1kIi8iIC1mIDNgCj4gLQkJbHMg
+LWwgL3N5cy9jbGFzcy9ibG9jay8ke3h9IHwgZ3JlcCAtcSAidmlydHVhbCIKPiAtCQlpZiBbICQ/
+ID09ICIwIiBdOyB0aGVuCj4gLQkJCV9ub3RydW4gIiRpIGlzIGEgdmlydHVhbCBkZXZpY2Ugd2hp
+Y2ggaXMgbm90IGRlbGV0YWJsZSIKPiArCQlpZiBbICEgLWYgL3N5cy9jbGFzcy9ibG9jay8ke3h9
+L2RldmljZS9kZWxldGUgXTsgdGhlbgo+ICsJCQlfbm90cnVuICIkaSBpcyBhIGRldmljZSB3aGlj
+aCBpcyBub3QgZGVsZXRhYmxlIgo+ICAgCQlmaQo+ICAgCWRvbmUKPiAgIH0KPiBkaWZmIC0tZ2l0
+IGEvdGVzdHMvYnRyZnMvMDAzIGIvdGVzdHMvYnRyZnMvMDAzCj4gaW5kZXggOTEwNWQwNi4uMjlm
+OTQ3YiAxMDA3NTUKPiAtLS0gYS90ZXN0cy9idHJmcy8wMDMKPiArKysgYi90ZXN0cy9idHJmcy8w
+MDMKPiBAQCAtNDksNyArNDksNyBAQCBfbmVlZF90b19iZV9yb290Cj4gICBfc3VwcG9ydGVkX2Zz
+IGJ0cmZzCj4gICBfc3VwcG9ydGVkX29zIExpbnV4Cj4gICBfcmVxdWlyZV9zY3JhdGNoCj4gLV9y
+ZXF1aXJlX3NjcmF0Y2hfZGV2X3Bvb2wKPiArX3JlcXVpcmVfc2NyYXRjaF9kZXZfcG9vbCA0Cj4g
+ICBfcmVxdWlyZV9kZWxldGFibGVfc2NyYXRjaF9kZXZfcG9vbAo+ICAgX3JlcXVpcmVfY29tbWFu
+ZCAkV0lQRUZTX1BST0cKPiAgIAo+IGRpZmYgLS1naXQgYS90ZXN0cy9idHJmcy8wMTEgYi90ZXN0
+cy9idHJmcy8wMTEKPiBpbmRleCA3MWZmM2RlLi5mYWEwNDAyIDEwMDc1NQo+IC0tLSBhL3Rlc3Rz
+L2J0cmZzLzAxMQo+ICsrKyBiL3Rlc3RzL2J0cmZzLzAxMQo+IEBAIC02Miw3ICs2Miw3IEBAIHRy
+YXAgIl9jbGVhbnVwOyBleGl0IFwkc3RhdHVzIiAwIDEgMiAzIDE1Cj4gICBfbmVlZF90b19iZV9y
+b290Cj4gICBfc3VwcG9ydGVkX2ZzIGJ0cmZzCj4gICBfcmVxdWlyZV9zY3JhdGNoCj4gLV9yZXF1
+aXJlX3NjcmF0Y2hfZGV2X3Bvb2wKPiArX3JlcXVpcmVfc2NyYXRjaF9kZXZfcG9vbCA0Cj4gICBf
+cmVxdWlyZV9jb21tYW5kICRCVFJGU19TSE9XX1NVUEVSX1BST0cgYnRyZnMtc2hvdy1zdXBlcgo+
+ICAgCj4gICBybSAtZiAkc2VxcmVzLmZ1bGwKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
