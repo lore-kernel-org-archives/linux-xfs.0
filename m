@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 320347F37
-	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 03:16:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A5A8DAC004
-	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 01:16:46 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 2CD5A7F37
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 03:18:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B8A27AC004
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 01:18:51 -0800 (PST)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id Rwi4mnvpEoEH5sSt for
-	<xfs@oss.sgi.com>; Mon, 06 Jan 2014 01:16:44 -0800 (PST)
-Message-ID: <52CA74AD.5040304@cn.fujitsu.com>
-Date: Mon, 06 Jan 2014 17:17:33 +0800
-From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Enhance the scratch dev pool and deletable
-	device check
-References: <1388999598-17058-1-git-send-email-quwenruo@cn.fujitsu.com>
-In-Reply-To: <1388999598-17058-1-git-send-email-quwenruo@cn.fujitsu.com>
+	cuda.sgi.com with ESMTP id Yv9pc00FZ8Cy3FvW for
+	<xfs@oss.sgi.com>; Mon, 06 Jan 2014 01:18:50 -0800 (PST)
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH v2] xfstests: fix failed 022 case with qgroup limit test
+Date: Mon, 6 Jan 2014 17:17:50 +0800
+Message-Id: <1388999870-14842-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,73 +20,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: jbacik@fb.com, t-itoh@jp.fujitsu.com, linux-btrfs@vger.kernel.org
 
-UXUgV2VucnVvIOWGmemBkzoKPiBGcm9tOiBNaWFvIFhpZSA8bWlhb3hAY24uZnVqaXRzdS5jb20+
-ClNvcnJ5IGZvciB0aGUgZG91YmxlIGZyb20gbGluZS4KSSdsbCByZXNlbmQgdGhlIHBhdGNoLgoK
-UXUKPgo+IEZyb206IE1pYW8gWGllIDxtaWFveEBjbi5mdWppdHN1LmNvbT4KPgo+IF9yZXF1aXJl
-X3NjcmF0Y2hfZGV2X3Bvb2woKSBjaGVja3MgdGhlIGRldmljZXMgbnVtYmVyIGluCj4gU0NSQVRD
-SF9ERVZfUE9PTCwgYnV0IGl0J3Mgbm90IGVub3VnaCBzaW5jZSBzb21lIGJ0cmZzIFJBSUQxMCB0
-ZXN0cwo+IG5lZWRzIDQgZGV2aWNlcywgYnV0IHdoZW4gMyBvciBsZXNzIGRldmljZXMgYXJlIHBy
-b3ZpZGVkLCB0aGUgY2hlY2sgaXMKPiB1c2VsZXNzIGFuZCByZWxhdGVkIHRlc3QgY2FzZSB3aWxs
-IGZhaWwoYnRyZnMvMDAzIGJ0cmZzLzAxMSBidHJmcy8wMjMpLgo+Cj4gQWxzbyBfcmVxdWlyZV9k
-ZWxldGFibGVfc2NyYXRjaF9kZXZfcG9vbCBvbmx5IGNoZWNrcyB3aGV0aGVyIGl0IGlzCj4gdmly
-dHVsLCBsaWtlIHZpcnRpbyhub3QgaW5jbHVkaW5nIHZpcnRpby1zY3NpKSBkaXNrIHdpbGwgcGFz
-cyB0aGUgY2hlY2sKPiBidXQgaXMgdW5hYmxlIHRvIGRlbGV0ZS4KPgo+IFRoaXMgcGF0Y2ggZW5o
-YW5jZSBfcmVxdWlyZV9zY3JhdGNoX2Rldl9wb29sIGJ5IGFkZCBvcHRpb25hbCAkMSBhcwo+IG5l
-ZWRlZCBkZXZpY2UgbnVtYmVyIHRvIGRvIGV4dHJhIGNoZWNrLgo+IEFuZCBlbmhhbmNlIF9yZXF1
-aXJlX2RlbGV0YWJsZV9zY3JhdGNoX2Rldl9wb29sIGJ5IGRpcmVjdGx5IGNoZWNrCj4gL3N5cy9j
-bGFzcy9ibG9jay8kREVWL2RldmljZS9kZWxldGUgZmlsZS4KPgo+IFNpZ25lZC1vZmYtYnk6IE1p
-YW8gWGllIDxtaWFveEBjbi5mdWppdHN1LmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBRdSBXZW5ydW8g
-PHF1d2VucnVvQGNuLmZ1aml0c3UuY29tPgo+IC0tLQo+ICAgY29tbW9uL3JjICAgICAgIHwgMjIg
-KysrKysrKysrKysrKystLS0tLS0tLQo+ICAgdGVzdHMvYnRyZnMvMDAzIHwgIDIgKy0KPiAgIHRl
-c3RzL2J0cmZzLzAxMSB8ICAyICstCj4gICAzIGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMo
-KyksIDEwIGRlbGV0aW9ucygtKQo+Cj4gZGlmZiAtLWdpdCBhL2NvbW1vbi9yYyBiL2NvbW1vbi9y
-Ywo+IGluZGV4IGEyMDA1YzkuLjA5NjQ0YWYgMTAwNjQ0Cj4gLS0tIGEvY29tbW9uL3JjCj4gKysr
-IGIvY29tbW9uL3JjCj4gQEAgLTE5MjcsMTYgKzE5MjcsMjQgQEAgX3Rlc3RfaW5vZGVfZXh0c3oo
-KQo+ICAgX3JlcXVpcmVfc2NyYXRjaF9kZXZfcG9vbCgpCj4gICB7Cj4gICAJbG9jYWwgaQo+ICsJ
-bG9jYWwgbmRldnMKPiArCj4gICAJaWYgWyAteiAiJFNDUkFUQ0hfREVWX1BPT0wiIF07IHRoZW4K
-PiAgIAkJX25vdHJ1biAidGhpcyB0ZXN0IHJlcXVpcmVzIGEgdmFsaWQgXCRTQ1JBVENIX0RFVl9Q
-T09MIgo+ICAgCWZpCj4gICAKPiAtCSMgYnRyZnMgdGVzdCBjYXNlIG5lZWRzIDIgb3IgbW9yZSBz
-Y3JhdGNoX2Rldl9wb29sOyBvdGhlciBGUyBub3Qgc3VyZQo+ICsJaWYgWyAteiAiJDEiIF07IHRo
-ZW4KPiArCQluZGV2cz0yCj4gKwllbHNlCj4gKwkJbmRldnM9JDEKPiArCWZpCj4gKwo+ICsJIyBi
-dHJmcyB0ZXN0IGNhc2UgbmVlZHMgbmRldnMgb3IgbW9yZSBzY3JhdGNoX2Rldl9wb29sOyBvdGhl
-ciBGUyBub3Qgc3VyZQo+ICAgCSMgc28gZmFpbCBpdAo+ICAgCWNhc2UgJEZTVFlQIGluCj4gICAJ
-YnRyZnMpCj4gLQkJaWYgWyAiYGVjaG8gJFNDUkFUQ0hfREVWX1BPT0x8d2MgLXdgIiAtbHQgMiBd
-OyB0aGVuCj4gLQkJCV9ub3RydW4gImJ0cmZzIGFuZCB0aGlzIHRlc3QgbmVlZHMgMiBvciBtb3Jl
-IGRpc2tzIGluIFNDUkFUQ0hfREVWX1BPT0wiCj4gKwkJaWYgWyAiYGVjaG8gJFNDUkFUQ0hfREVW
-X1BPT0x8d2MgLXdgIiAtbHQgJG5kZXZzIF07IHRoZW4KPiArCQkJX25vdHJ1biAiYnRyZnMgYW5k
-IHRoaXMgdGVzdCBuZWVkcyAkbmRldnMgb3IgbW9yZSBkaXNrcyBpbiBTQ1JBVENIX0RFVl9QT09M
-Igo+ICAgCQlmaQo+ICAgCTs7Cj4gICAJKikKPiBAQCAtMTk2MywxNyArMTk3MSwxNSBAQCBfcmVx
-dWlyZV9zY3JhdGNoX2Rldl9wb29sKCkKPiAgIAlkb25lCj4gICB9Cj4gICAKPiAtIyBXZSB3aWxs
-IGNoZWNrIGlmIHRoZSBkZXZpY2UgaXMgdmlydHVhbCAoZWc6IGxvb3AgZGV2aWNlKSBzaW5jZSBp
-dCBkb2VzIG5vdAo+IC0jIGhhdmUgdGhlIGRlbGV0ZSBlbnRyeS1wb2ludC4gT3RoZXJ3aXNlIFND
-U0kgYW5kIFVTQiBkZXZpY2VzIGFyZSBmaW5lLgo+ICsjIFdlIHdpbGwgY2hlY2sgaWYgdGhlIGRl
-dmljZSBpcyBkZWxldGFibGUKPiAgIF9yZXF1aXJlX2RlbGV0YWJsZV9zY3JhdGNoX2Rldl9wb29s
-KCkKPiAgIHsKPiAgIAlsb2NhbCBpCj4gICAJbG9jYWwgeAo+ICAgCWZvciBpIGluICRTQ1JBVENI
-X0RFVl9QT09MOyBkbwo+ICAgCQl4PWBlY2hvICRpIHwgY3V0IC1kIi8iIC1mIDNgCj4gLQkJbHMg
-LWwgL3N5cy9jbGFzcy9ibG9jay8ke3h9IHwgZ3JlcCAtcSAidmlydHVhbCIKPiAtCQlpZiBbICQ/
-ID09ICIwIiBdOyB0aGVuCj4gLQkJCV9ub3RydW4gIiRpIGlzIGEgdmlydHVhbCBkZXZpY2Ugd2hp
-Y2ggaXMgbm90IGRlbGV0YWJsZSIKPiArCQlpZiBbICEgLWYgL3N5cy9jbGFzcy9ibG9jay8ke3h9
-L2RldmljZS9kZWxldGUgXTsgdGhlbgo+ICsJCQlfbm90cnVuICIkaSBpcyBhIGRldmljZSB3aGlj
-aCBpcyBub3QgZGVsZXRhYmxlIgo+ICAgCQlmaQo+ICAgCWRvbmUKPiAgIH0KPiBkaWZmIC0tZ2l0
-IGEvdGVzdHMvYnRyZnMvMDAzIGIvdGVzdHMvYnRyZnMvMDAzCj4gaW5kZXggOTEwNWQwNi4uMjlm
-OTQ3YiAxMDA3NTUKPiAtLS0gYS90ZXN0cy9idHJmcy8wMDMKPiArKysgYi90ZXN0cy9idHJmcy8w
-MDMKPiBAQCAtNDksNyArNDksNyBAQCBfbmVlZF90b19iZV9yb290Cj4gICBfc3VwcG9ydGVkX2Zz
-IGJ0cmZzCj4gICBfc3VwcG9ydGVkX29zIExpbnV4Cj4gICBfcmVxdWlyZV9zY3JhdGNoCj4gLV9y
-ZXF1aXJlX3NjcmF0Y2hfZGV2X3Bvb2wKPiArX3JlcXVpcmVfc2NyYXRjaF9kZXZfcG9vbCA0Cj4g
-ICBfcmVxdWlyZV9kZWxldGFibGVfc2NyYXRjaF9kZXZfcG9vbAo+ICAgX3JlcXVpcmVfY29tbWFu
-ZCAkV0lQRUZTX1BST0cKPiAgIAo+IGRpZmYgLS1naXQgYS90ZXN0cy9idHJmcy8wMTEgYi90ZXN0
-cy9idHJmcy8wMTEKPiBpbmRleCA3MWZmM2RlLi5mYWEwNDAyIDEwMDc1NQo+IC0tLSBhL3Rlc3Rz
-L2J0cmZzLzAxMQo+ICsrKyBiL3Rlc3RzL2J0cmZzLzAxMQo+IEBAIC02Miw3ICs2Miw3IEBAIHRy
-YXAgIl9jbGVhbnVwOyBleGl0IFwkc3RhdHVzIiAwIDEgMiAzIDE1Cj4gICBfbmVlZF90b19iZV9y
-b290Cj4gICBfc3VwcG9ydGVkX2ZzIGJ0cmZzCj4gICBfcmVxdWlyZV9zY3JhdGNoCj4gLV9yZXF1
-aXJlX3NjcmF0Y2hfZGV2X3Bvb2wKPiArX3JlcXVpcmVfc2NyYXRjaF9kZXZfcG9vbCA0Cj4gICBf
-cmVxdWlyZV9jb21tYW5kICRCVFJGU19TSE9XX1NVUEVSX1BST0cgYnRyZnMtc2hvdy1zdXBlcgo+
-ICAgCj4gICBybSAtZiAkc2VxcmVzLmZ1bGwKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+To have noexceed test, we should clear data before and then retry.
+However, when we are near to quota limit, we may fail to truncate/remove
+data before, so we restart everthing here.
+
+Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+---
+changelog v1->v2:
+	on the right way to fix failed case(Thanks to Tsutomu Itoh)
+---
+ tests/btrfs/022 | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/tests/btrfs/022 b/tests/btrfs/022
+index 5b18643..41d8588 100644
+--- a/tests/btrfs/022
++++ b/tests/btrfs/022
+@@ -94,8 +94,8 @@ _rescan_test()
+ 		_fail "exclusive values don't match after rescan"
+ }
+ 
+-#basic limit testing
+-_limit_test()
++#basic exceed limit testing
++_limit_test_exceed()
+ {
+ 	run_check $BTRFS_UTIL_PROG subvol create $SCRATCH_MNT/a
+ 	run_check $BTRFS_UTIL_PROG quota enable $SCRATCH_MNT
+@@ -104,6 +104,15 @@ _limit_test()
+ 	dd if=/dev/urandom of=$SCRATCH_MNT/a/file bs=10M count=1 >> \
+ 		$seqres.full 2>&1
+ 	[ $? -ne 0 ] || _fail "quota should have limited us"
++}
++
++#basic noexceed limit testing
++_limit_test_noexceed()
++{
++	run_check $BTRFS_UTIL_PROG subvol create $SCRATCH_MNT/a
++	run_check $BTRFS_UTIL_PROG quota enable $SCRATCH_MNT
++	subvolid=$(_btrfs_get_subvolid $SCRATCH_MNT a)
++	run_check $BTRFS_UTIL_PROG qgroup limit 5M 0/$subvolid $SCRATCH_MNT
+ 	dd if=/dev/urandom of=$SCRATCH_MNT/a/file bs=4M count=1 >> \
+ 		$seqres.full 2>&1
+ 	[ $? -eq 0 ] || _fail "should have been allowed to write"
+@@ -121,7 +130,12 @@ _scratch_unmount
+ 
+ _scratch_mkfs > /dev/null 2>&1
+ _scratch_mount
+-_limit_test
++_limit_test_exceed
++_scratch_unmount
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++_limit_test_noexceed
+ 
+ # success, all done
+ echo "Silence is golden"
+-- 
+1.8.3.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
