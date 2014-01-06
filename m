@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EA86A7F37
-	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 14:16:38 -0600 (CST)
-Date: Mon, 6 Jan 2014 14:16:35 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: remove the incorrect entry in the MAINTAINER file
-Message-ID: <20140106201635.GB1935@sgi.com>
-References: <1386935393-23559-1-git-send-email-zwu.kernel@gmail.com>
-	<20131213163131.GC20803@infradead.org>
-	<20131213202747.GL1935@sgi.com> <20131213220110.GW10988@dastard>
-	<20131216152053.GB12360@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id AC2207F37
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 14:52:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 97F0F30407A
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 12:52:55 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id ILXQDni6Br04WUsP (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Jan 2014 12:52:54 -0800 (PST)
+Message-ID: <52CB1727.3050109@suse.com>
+Date: Mon, 06 Jan 2014 15:50:47 -0500
+From: Jeff Mahoney <jeffm@suse.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20131216152053.GB12360@infradead.org>
+Subject: [PATCH] xfstests: aio-stress, use calloc for thread_info array
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,24 +26,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: dchinner@redhat.com
 
-On Mon, Dec 16, 2013 at 07:20:53AM -0800, Christoph Hellwig wrote:
-> On Sat, Dec 14, 2013 at 09:01:10AM +1100, Dave Chinner wrote:
-> > Well, I stand by what I wrote in that thread. There is absolutely
-> > nothing wrong with having xfs@oss.sgi.com listed as a maintainer;
-> > different and unusual doesn't mean it is wrong.
-> 
-> I think life is much better if XFS follows the usual convention.  We
-> already drill into submitters heads that they should send patches and
-> questions to the list for the whole kernel, and the angry behaviour of
-> many maintainers when they get personal mail helps with that, too.
-> 
-> Given that we already have maintainers names listed, and the list in the
-> proper field I also can't see what this should buy us.
+The thread_info array is assumed to be initialized to 0s, but
+that causes a segfault when MALLOC_PERTURB_ is set.
 
-Either way is fine with me.
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+
+ ltp/aio-stress.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/ltp/aio-stress.c
++++ b/ltp/aio-stress.c
+@@ -1413,9 +1413,9 @@ int main(int ac, char **av)
+ 	        num_threads);
+     }
+
+-    t = malloc(num_threads * sizeof(*t));
++    t = calloc(num_threads, sizeof(*t));
+     if (!t) {
+-        perror("malloc");
++        perror("calloc");
+ 	exit(1);
+     }
+     global_thread_info = t;
+
+
+-- 
+Jeff Mahoney
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
