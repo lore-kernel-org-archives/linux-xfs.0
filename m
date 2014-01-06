@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-O_TMPFILE-support,
-	created. v3.12-11688-gab29743
-Message-Id: <20140106195618.483757F4E@oss.sgi.com>
-Date: Mon,  6 Jan 2014 13:56:17 -0600 (CST)
+Subject: [XFS updates] XFS development tree branch, xfs-misc,
+	created. v3.12-11686-g85dd070
+Message-Id: <20140106195716.B93857F52@oss.sgi.com>
+Date: Mon,  6 Jan 2014 13:57:16 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,65 +23,67 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-O_TMPFILE-support has been created
-        at  ab29743117f9f4c22ac44c13c1647fb24fb2bafe (commit)
+The branch, xfs-misc has been created
+        at  85dd0707f0cad26d60f2dc574d17a5ab948d10f7 (commit)
 
 - Log -----------------------------------------------------------------
-commit ab29743117f9f4c22ac44c13c1647fb24fb2bafe
-Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-Date:   Wed Dec 18 08:22:41 2013 +0800
+commit 85dd0707f0cad26d60f2dc574d17a5ab948d10f7
+Author: Jie Liu <jeff.liu@oracle.com>
+Date:   Wed Jan 1 19:28:03 2014 +0800
 
-    xfs: allow linkat() on O_TMPFILE files
+    xfs: fix off-by-one error in xfs_attr3_rmt_verify
     
-    The VFS allows an anonymous temporary file to be named at a later
-    time via a linkat() syscall. The inodes for O_TMPFILE files are
-    are marked with a special flag I_LINKABLE and have a zero link count.
+    With CRC check is enabled, if trying to set an attributes value just
+    equal to the maximum size of XATTR_SIZE_MAX would cause the v3 remote
+    attr write verification procedure failure, which would yield the back
+    trace like below:
     
-    To support this in XFS, xfs_link() detects if this flag I_LINKABLE
-    is set and behaves appropriately when detected. So in this case,
-    its transaciton reservation takes into account the additional
-    overhead of removing the inode from the unlinked list. Then the
-    inode is removed from the unlinked list and the directory entry
-    is added. Finally its link count is bumped accordingly.
+    <snip>
+    XFS (sda7): Internal error xfs_attr3_rmt_write_verify at line 191 of file fs/xfs/xfs_attr_remote.c
+    <snip>
+    Call Trace:
+    [<ffffffff816f0042>] dump_stack+0x45/0x56
+    [<ffffffffa0d99c8b>] xfs_error_report+0x3b/0x40 [xfs]
+    [<ffffffffa0d96edd>] ? _xfs_buf_ioapply+0x6d/0x390 [xfs]
+    [<ffffffffa0d99ce5>] xfs_corruption_error+0x55/0x80 [xfs]
+    [<ffffffffa0dbef6b>] xfs_attr3_rmt_write_verify+0x14b/0x1a0 [xfs]
+    [<ffffffffa0d96edd>] ? _xfs_buf_ioapply+0x6d/0x390 [xfs]
+    [<ffffffffa0d97315>] ? xfs_bdstrat_cb+0x55/0xb0 [xfs]
+    [<ffffffffa0d96edd>] _xfs_buf_ioapply+0x6d/0x390 [xfs]
+    [<ffffffff81184cda>] ? vm_map_ram+0x31a/0x460
+    [<ffffffff81097230>] ? wake_up_state+0x20/0x20
+    [<ffffffffa0d97315>] ? xfs_bdstrat_cb+0x55/0xb0 [xfs]
+    [<ffffffffa0d9726b>] xfs_buf_iorequest+0x6b/0xc0 [xfs]
+    [<ffffffffa0d97315>] xfs_bdstrat_cb+0x55/0xb0 [xfs]
+    [<ffffffffa0d97906>] xfs_bwrite+0x46/0x80 [xfs]
+    [<ffffffffa0dbfa94>] xfs_attr_rmtval_set+0x334/0x490 [xfs]
+    [<ffffffffa0db84aa>] xfs_attr_leaf_addname+0x24a/0x410 [xfs]
+    [<ffffffffa0db8893>] xfs_attr_set_int+0x223/0x470 [xfs]
+    [<ffffffffa0db8b76>] xfs_attr_set+0x96/0xb0 [xfs]
+    [<ffffffffa0db13b2>] xfs_xattr_set+0x42/0x70 [xfs]
+    [<ffffffff811df9b2>] generic_setxattr+0x62/0x80
+    [<ffffffff811e0213>] __vfs_setxattr_noperm+0x63/0x1b0
+    [<ffffffff81307afe>] ? evm_inode_setxattr+0xe/0x10
+    [<ffffffff811e0415>] vfs_setxattr+0xb5/0xc0
+    [<ffffffff811e054e>] setxattr+0x12e/0x1c0
+    [<ffffffff811c6e82>] ? final_putname+0x22/0x50
+    [<ffffffff811c708b>] ? putname+0x2b/0x40
+    [<ffffffff811cc4bf>] ? user_path_at_empty+0x5f/0x90
+    [<ffffffff811bdfd9>] ? __sb_start_write+0x49/0xe0
+    [<ffffffff81168589>] ? vm_mmap_pgoff+0x99/0xc0
+    [<ffffffff811e07df>] SyS_setxattr+0x8f/0xe0
+    [<ffffffff81700c2d>] system_call_fastpath+0x1a/0x1f
     
-    Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 99b6436bc29e4f10e4388c27a3e4810191cc4788
-Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-Date:   Wed Dec 18 08:22:40 2013 +0800
-
-    xfs: add O_TMPFILE support
+    Tests:
+        setfattr -n user.longxattr -v `perl -e 'print "A"x65536'` testfile
     
-    Add two functions xfs_create_tmpfile() and xfs_vn_tmpfile()
-    to support O_TMPFILE file creation.
+    This patch fix it to check the remote EA size is greater than the
+    XATTR_SIZE_MAX rather than more than or equal to it, because it's
+    valid if the specified EA value size is equal to the limitation as
+    per VFS setxattr interface.
     
-    In contrast to xfs_create(), xfs_create_tmpfile() has a different
-    log reservation to the regular file creation because there is no
-    directory modification, and doesn't check if an entry can be added
-    to the directory, but the reservation quotas is required appropriately,
-    and finally its inode is added to the unlinked list.
-    
-    xfs_vn_tmpfile() add one O_TMPFILE method to VFS interface and directly
-    invoke xfs_create_tmpfile().
-    
-    Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 163467d3753e77e1d77da75727975cc3803a1dbc
-Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-Date:   Wed Dec 18 08:22:39 2013 +0800
-
-    xfs: factor prid related codes into xfs_get_initial_prid()
-    
-    It will be reused by the O_TMPFILE creation function.
-    
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
     Signed-off-by: Ben Myers <bpm@sgi.com>
 
 -----------------------------------------------------------------------
