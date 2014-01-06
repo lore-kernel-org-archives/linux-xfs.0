@@ -1,14 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A80307F37
-	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 08:38:12 -0600 (CST)
-Message-ID: <52CABFD1.70100@sgi.com>
-Date: Mon, 06 Jan 2014 08:38:09 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D27AD7F4E
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 08:58:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 69811AC005
+	for <xfs@oss.sgi.com>; Mon,  6 Jan 2014 06:58:18 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0ByTXG65xqqT7gCf for
+	<xfs@oss.sgi.com>; Mon, 06 Jan 2014 06:58:17 -0800 (PST)
+Message-ID: <52CAC622.2020805@redhat.com>
+Date: Mon, 06 Jan 2014 10:05:06 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix off-by-one error in xfs_attr3_rmt_verify
-References: <52C3FBC3.3050304@oracle.com>
-In-Reply-To: <52C3FBC3.3050304@oracle.com>
+Subject: Re: [PATCH 3/10] xfs: consolidate xfs_inumbers
+References: <52BEB3FA.5080402@oracle.com> <52C72362.2000005@redhat.com>
+	<52CA4BDB.7010804@oracle.com>
+In-Reply-To: <52CA4BDB.7010804@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,71 +24,202 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 01/01/14 05:28, Jeff Liu wrote:
-> From: Jie Liu<jeff.liu@oracle.com>
->
-> With CRC check is enabled, if trying to set an attributes value just
-> equal to the maximum size of XATTR_SIZE_MAX would cause the v3 remote
-> attr write verification procedure failure, which would yield the back
-> trace like below:
->
-> <snip>
-> XFS (sda7): Internal error xfs_attr3_rmt_write_verify at line 191 of file fs/xfs/xfs_attr_remote.c
-> <snip>
-> Call Trace:
-> [<ffffffff816f0042>] dump_stack+0x45/0x56
-> [<ffffffffa0d99c8b>] xfs_error_report+0x3b/0x40 [xfs]
-> [<ffffffffa0d96edd>] ? _xfs_buf_ioapply+0x6d/0x390 [xfs]
-> [<ffffffffa0d99ce5>] xfs_corruption_error+0x55/0x80 [xfs]
-> [<ffffffffa0dbef6b>] xfs_attr3_rmt_write_verify+0x14b/0x1a0 [xfs]
-> [<ffffffffa0d96edd>] ? _xfs_buf_ioapply+0x6d/0x390 [xfs]
-> [<ffffffffa0d97315>] ? xfs_bdstrat_cb+0x55/0xb0 [xfs]
-> [<ffffffffa0d96edd>] _xfs_buf_ioapply+0x6d/0x390 [xfs]
-> [<ffffffff81184cda>] ? vm_map_ram+0x31a/0x460
-> [<ffffffff81097230>] ? wake_up_state+0x20/0x20
-> [<ffffffffa0d97315>] ? xfs_bdstrat_cb+0x55/0xb0 [xfs]
-> [<ffffffffa0d9726b>] xfs_buf_iorequest+0x6b/0xc0 [xfs]
-> [<ffffffffa0d97315>] xfs_bdstrat_cb+0x55/0xb0 [xfs]
-> [<ffffffffa0d97906>] xfs_bwrite+0x46/0x80 [xfs]
-> [<ffffffffa0dbfa94>] xfs_attr_rmtval_set+0x334/0x490 [xfs]
-> [<ffffffffa0db84aa>] xfs_attr_leaf_addname+0x24a/0x410 [xfs]
-> [<ffffffffa0db8893>] xfs_attr_set_int+0x223/0x470 [xfs]
-> [<ffffffffa0db8b76>] xfs_attr_set+0x96/0xb0 [xfs]
-> [<ffffffffa0db13b2>] xfs_xattr_set+0x42/0x70 [xfs]
-> [<ffffffff811df9b2>] generic_setxattr+0x62/0x80
-> [<ffffffff811e0213>] __vfs_setxattr_noperm+0x63/0x1b0
-> [<ffffffff81307afe>] ? evm_inode_setxattr+0xe/0x10
-> [<ffffffff811e0415>] vfs_setxattr+0xb5/0xc0
-> [<ffffffff811e054e>] setxattr+0x12e/0x1c0
-> [<ffffffff811c6e82>] ? final_putname+0x22/0x50
-> [<ffffffff811c708b>] ? putname+0x2b/0x40
-> [<ffffffff811cc4bf>] ? user_path_at_empty+0x5f/0x90
-> [<ffffffff811bdfd9>] ? __sb_start_write+0x49/0xe0
-> [<ffffffff81168589>] ? vm_mmap_pgoff+0x99/0xc0
-> [<ffffffff811e07df>] SyS_setxattr+0x8f/0xe0
-> [<ffffffff81700c2d>] system_call_fastpath+0x1a/0x1f
->
-> Tests:
->      setfattr -n user.longxattr -v `perl -e 'print "A"x65536'` testfile
->
-> This patch fix it to check the remote EA size is greater than the
-> XATTR_SIZE_MAX rather than more than or equal to it, because it's
-> valid if the specified EA value size is equal to the limitation as
-> per VFS setxattr interface.
->
-> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
-> ---
+On 01/06/2014 01:23 AM, Jeff Liu wrote:
+> On 01/04 2014 04:53 AM, Brian Foster wrote:
+>> On 12/28/2013 06:20 AM, Jeff Liu wrote:
+>>> From: Jie Liu <jeff.liu@oracle.com>
+>>>
+>>> To fetch the file system number tables, we currently just ignore the
+>>> errors and proceed to loop over the next AG or bump agino to the next
+>>> chunk in case of btree operations failed, that is not properly because
+>>> those errors might hint us potential file system problems.
+>>>
+>>> This patch rework xfs_inumbers() to handle the btree operation errors
+>>> as well as the loop conditions.  Also, add pre-checkups for the given
+>>> inode, we can save alloc/free the format buffer once against an invalid
+>>> inode number.
+>>>
+>>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>>> ---
+>>>  fs/xfs/xfs_itable.c | 163 +++++++++++++++++++++++-----------------------------
+>>>  1 file changed, 72 insertions(+), 91 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+>>> index 692671c..4d262f6 100644
+>>> --- a/fs/xfs/xfs_itable.c
+>>> +++ b/fs/xfs/xfs_itable.c
+...
+>>> -		error = xfs_inobt_get_rec(cur, &r, &i);
+>>> -		if (error || i == 0) {
+>>> -			xfs_buf_relse(agbp);
+>>> -			agbp = NULL;
+>>> -			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+>>> -			cur = NULL;
+>>> -			agno++;
+>>> -			agino = 0;
+>>> -			continue;
+>>> +		error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE, &stat);
+>>> +		if (error)
+>>> +			break;
+>>
+>> Isn't this lookup only needed after cursor initialization? i.e., we
+>> lookup once and increment through the records via xfs_btree_increment()
+>> below.
+> 
+> Yes, but please see my comments below.
+>>
+...
+>>> +		if (!--left)
+>>> +			break;
+>>> +
+>>> +		error = xfs_btree_increment(cur, 0, &stat);
+>>> +		if (error)
+>>> +			break;
+>>> +		if (stat) {
+>>> +			/*
+>>> +			 * The agino value has already been bumped, just try
+>>> +			 * to skip up to it.
+>>> +			 */
+>>> +			agino += XFS_INODES_PER_CHUNK;
+>>> +			continue;
+>>>  		}
+>>
+>> Maybe it's just me, but this reads a little funny to me. In particular
+>> because we only get here if stat == 1. I wonder if this would look a bit
+>> cleaner if we pulled the next_ag labeled block below up into the goto,
+>> since that appears to be the only reference. Then just let the loop fall
+>> through.
+> 
+> Actually, we would never hint xfs_btree_increment() at all no matter the default
+> or with my current change, because the left variable value is 1 as per the user
+> space imap implementation, thus, it should be decreased to 0 in this point.
+> 
+> The problem is, how we define the user call interface originally, why it does not
+> support a 2nd argument which can be used to specified a desired icount to return a
+> limited number of inode mapping tables? i.e,
+> 
+> imap_f() {
+> 
+>         if (argc != 2)
+>                 nent = 1;
+>         else
+>                 nent = atoi(argv[1]);
+> 
+> 	....
+> }
+> 
+> The imap command does not support another options but initialize bulkreq.icount = nent = 1;
+> In kernel, the bcount is evaluated to 1 and if (bufidx == bcount) should be true anyway as
+> below code logic:
+>  
+> bcount = MIN(left, (int)(PAGE_SIZE / sizeof(*buffer)));
+> 
+> if (bufidx == bcount) {
+> 	....
+> 	formatter();
+> 	....
+> }
 
-Good catch. Are you making an edge case xfstest?
+Hi Jeff,
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+I see, but this is just a characteristic of the imap command in xfs_io.
+I can use an argument just by changing argmax from 0 to 1. Perhaps this
+is just a bug, since 'help imap' provides syntax that allows a parameter:
+
+xfs_io> help imap
+imap [nentries] -- inode map for filesystem of current file
+
+> 
+> But, if the left value could be specified from the user progs, maybe we cannot simply
+> assuming "stat == 1" is always be true, in particular, in next path for implementing
+> per AG inumber mechanism, xfs_btree_increment() would probably succeed but "stat == 0"
+> if there is no right neighbors, and if the user could specified the 2nd imap option.
+> 
+
+Hmm, that looked odd to me as well once you pointed that out. A quick
+printk check shows that xfs_btree_increment() does not fail in this
+scenario, but the subsequent xfs_inobt_get_rec() in the following
+iteration sets i == 0 and skips to the next ag appropriately. I agree
+that a tmp == 0 check in this scenario would be slightly more intuitive
+though.
+
+But either way, we should probably maintain the general algorithm of
+walking the btree explicitly rather than incrementing agino and issuing
+the lookup each iteration of the loop.
+
+> Hence, in this patch, I only intended to fix the btree error handling mechanism as a
+> preparation step to implement per AG inumber.
+> 
+
+Right... I see that the following patches clean this up further (though
+I haven't looked in detail yet).
+
+>>  
+>> Also, I think the agino addition here becomes unnecessary when the
+>> lookup issue above is addressed.
+>>
+>>> -	}
+>>> +
+>>> +next_ag:
+>>> +		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+>>> +		cur = NULL;
+>>> +		xfs_buf_relse(agbp);
+>>> +		agbp = NULL;
+>>> +		agino = 0;
+>>> +	} while (++agno < mp->m_sb.sb_agcount);
+>>> +
+>>
+>> ... and just thinking about the logic that way highlights the bug here,
+>> where we bump agno due to the continue above (where IIUC, we intend to
+>> only move forward within the ag). Perhaps the ++agno should be part of
+>> the broken off 'next_ag' logic as well.
+> 
+> Can you please point out a bit more about the bug?  We bump agno due to
+> current run out of the current AG but the user want to show more imaps.
+> 
+
+agno is bumped in the while condition at the end of the loop. This will
+also be executed in the following block if xfs_btree_increment()
+succeeds and finds a record to the right:
+
+                error = xfs_btree_increment(cur, 0, &stat);
+                if (error)
+                        break;
+                if (stat) {
+                        ...
+                        agino += XFS_INODES_PER_CHUNK;
+------>                 continue;
+                }
+
+The continue statement will execute the loop condition to determine
+whether it should iterate the loop again or break. In this case, you're
+still moving along the original AG, but agno has been bumped
+erroneously. This error looks to be hidden by the non-looping scenario
+where nentries is 1, but make the xfsprogs fix I described above and
+you'll probably see what I'm describing. I only see a subset of the
+original imap output using a record count of 10 on an fs with a couple
+thousand inodes spread across a couple AGs.
+
+FWIW, it does look like the following patch fixes this particular
+problem via the introduction of xfs_perag_inumbers(), but we shouldn't
+introduce transient errors into the patch stream if we can help it. It
+looks like the comments about the repeated inobt lookups still apply
+though (and the implementation as of patch 4 is still skipping inodes
+with nentries > 1, perhaps due to advancing agino multiple times per
+iteration..?).
+
+Brian
+
+> 
+> Thanks,
+> -Jeff
+> 
 
 _______________________________________________
 xfs mailing list
