@@ -1,19 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B6907F3F
-	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 05:21:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EDD36AC003
-	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 03:21:16 -0800 (PST)
-Message-ID: <52CBE321.4050906@oracle.com>
-Date: Tue, 07 Jan 2014 19:21:05 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 40D2D7F3F
+	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 09:22:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31B208F8035
+	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 07:22:53 -0800 (PST)
+Received: from mail.nvrinc.com (mail.nvrinc.com [204.96.165.75]) by
+	cuda.sgi.com with ESMTP id cssTyIktF8GdOoa4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 07 Jan 2014 07:22:52 -0800 (PST)
+Received: from pps.filterd (vmdcdmzgw03prd.dmz.net [127.0.0.1])
+	by vmdcdmzgw03prd.dmz.net (8.14.5/8.14.5) with SMTP id s07FIgkm016096
+	for <xfs@oss.sgi.com>; Tue, 7 Jan 2014 10:22:51 -0500
+Received: from dcex02prd.nvrinc.com (dcex02prd.nvrinc.com [10.6.1.11])
+	by vmdcdmzgw03prd.dmz.net with ESMTP id 1h82st9yef-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <xfs@oss.sgi.com>; Tue, 07 Jan 2014 10:22:51 -0500
+From: "Fitzgerald, Dan" <dfitzger@nvrinc.com>
+Subject: RE: noob question
+Date: Tue, 7 Jan 2014 15:22:50 +0000
+Message-ID: <15F45A6CEAEFE340A264C3346D71EF04C4CA30@DCEX01PRD.nvrinc.com>
+References: <15F45A6CEAEFE340A264C3346D71EF04C4C339@DCEX01PRD.nvrinc.com>
+	<52CB5F63.3040204@hardwarefreak.com>
+In-Reply-To: <52CB5F63.3040204@hardwarefreak.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfs: Calling destroy_work_on_stack() to pair with
-	INIT_WORK_ONSTACK()
-References: <1389084605.3650.66.camel@cliu38-desktop-build>
-	<1389084814.3650.70.camel@cliu38-desktop-build>
-In-Reply-To: <1389084814.3650.70.camel@cliu38-desktop-build>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,42 +37,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chuansheng Liu <chuansheng.liu@intel.com>, dchinner@fromorbit.com, bpm@sgi.com
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Chuansheng,
+Yeah, I walked into this one.  Today's my 7th day at a new job, came into this with it already built, and now the business wants to expand the size of the file system that will house pictures served up on the web. I'm pretty sure I wouldn't have chosen xfs for this app; overkill.
 
-On 01/07 2014 16:53 PM, Chuansheng Liu wrote:
-> 
-> In case CONFIG_DEBUG_OBJECTS_WORK is defined, it is needed to
-> call destroy_work_on_stack() which frees the debug object to pair
-> with INIT_WORK_ONSTACK().
-> 
-> Signed-off-by: Liu, Chuansheng <chuansheng.liu@intel.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 1394106..82e0dab 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -287,6 +287,7 @@ xfs_bmapi_allocate(
->  	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
->  	queue_work(xfs_alloc_wq, &args->work);
->  	wait_for_completion(&done);
-> +	destroy_work_on_stack(&args->work);
->  	return args->result;
->  }
+It is a VMWare VM, so we do have snapshots. First thing I did when I inherited this was to test those.
 
-Thanks for your patch and it work fine for my testing.  I missed this in an
-old commit: [ 3b876c8f2a xfs: fix debug_object WARN at xfs_alloc_vextent() ] 
+Everyone here is calling this thing an "appliance", and the version of Debian doesn't have parted or gdisk.
 
-Just out of curious, do you notice memory leaks or other hints which help you
-finding out this problem?   
+I'm thinking I'll go into the meeting I have on this in 40 minutes and ask for a vendor contact, and work with them to rebuild the whole thing with better planning.
 
-Thanks,
--Jeff
+-----Original Message-----
+From: Stan Hoeppner [mailto:stan@hardwarefreak.com]
+Sent: Monday, January 06, 2014 8:59 PM
+To: Fitzgerald, Dan; xfs@oss.sgi.com
+Subject: Re: noob question
+
+On 1/6/2014 4:11 PM, Fitzgerald, Dan wrote:
+> I had our VMWare admin extend the file system on which /space is
+> mounted (/dev/sda8).
+
+Repeat at least three times:  Storage requires planning.
+
+xfs_growfs only works on contiguous LBA sectors.  The free space to be grown into must begin one LBA sector after the last LBA sector of the current XFS filesystem.  If XFS resides on a partition, then the partition itself must be expanded into the free space before XFS can be grown into the newly expanded partition.  This seems to be your situation.  Resizing partitions is not a fun exercise, and if not done properly you can lose everything, literally.
+
+If a block device is directly formatted with XFS things are easy.
+Simply expand the block device capacity, then run xfs_growfs.
+
+Because of the limitations up above, those wishing to add capacity using partitions, in an ad hoc manner, such as you seem to desire here, put their block device space in LVM volumes.  LVM can create a linear LBA address space from little pieces of capacity strewn all over the place on many different storage devices, regardless of their native LBA addressing.  I don't really care for this method either.
+
+I've worked with ESX and bare metal hosts on FC SANs fairly extensively.
+ For each of my guests/hosts I assign a 10GB LUN for the guest's boot/root filesystems, and a separate LUN(s), sized appropriately, for its data volume(s).  I directly format each LUN, no partitions.  In the event I need to expand a LUN to increase capacity, xfs_growfs simply works, the way it should, with no hoop jumping.
+
+If you need PIT snapshot capability you must use LVM, unless your storage has a PIT snapshot facility, or you use VMware's snapshot utility.
+
+--
+Stan
+
+
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ This email is confidential and intended solely for the use of the individual to whom it is addressed. If you have received this email in error please contact the sender and be advised that any use, dissemination, forwarding, printing, or copying of this email is strictly prohibited. The terms for the purchase and sale of any property referenced in this email shall be solely determined by a ratified Purchase Agreement. Any information provided in this email, including but not limited to, pricing, financing, features of a property and/or community, is not to be construed as the basis of the bargain for the purchase and sale of any such property.
 
 _______________________________________________
 xfs mailing list
