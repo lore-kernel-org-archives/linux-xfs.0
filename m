@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F0E897F3F
-	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 14:49:38 -0600 (CST)
-Date: Tue, 7 Jan 2014 14:49:38 -0600
-From: Ben Myers <bpm@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C71277F3F
+	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 14:51:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E86E304092
+	for <xfs@oss.sgi.com>; Tue,  7 Jan 2014 12:51:34 -0800 (PST)
+Date: Tue, 7 Jan 2014 12:51:30 -0800
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v2 0/3] xfs: add O_TMPFILE support
-Message-ID: <20140107204938.GE1935@sgi.com>
+Message-ID: <20140107205130.GA5751@infradead.org>
 References: <1387326161-24530-1-git-send-email-zwu.kernel@gmail.com>
 	<20131226085134.GA32660@infradead.org>
+	<20140107204938.GE1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20131226085134.GA32660@infradead.org>
+In-Reply-To: <20140107204938.GE1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,24 +27,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, linux-api@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Zhi Yong Wu <zwu.kernel@gmail.com>, xfs@oss.sgi.com, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-api@vger.kernel.org
 
-Hey Christoph,
+On Tue, Jan 07, 2014 at 02:49:38PM -0600, Ben Myers wrote:
+> Are you suggesting that we hold off on this until such time as the tests are
+> completed?
 
-On Thu, Dec 26, 2013 at 12:51:34AM -0800, Christoph Hellwig wrote:
-> Both patches looks good to me,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> But now we need to make sure we can exercise it, which will need
-> support for tmpfile and flink commands in xfs_io.
-
-Are you suggesting that we hold off on this until such time as the tests are
-completed?
- 
-Thanks,
-	Ben
+Yes.  Code that doesn't come with proper test coverage usually tends to
+be buggy.
 
 _______________________________________________
 xfs mailing list
