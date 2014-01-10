@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 663F87F3F
-	for <xfs@oss.sgi.com>; Fri, 10 Jan 2014 08:01:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B1D38F8033
-	for <xfs@oss.sgi.com>; Fri, 10 Jan 2014 06:01:36 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JL51fV8a9NpRypIL (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Jan 2014 06:01:34 -0800 (PST)
-Message-ID: <52CFFD1C.7050005@oracle.com>
-Date: Fri, 10 Jan 2014 22:01:00 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id DA91A7F3F
+	for <xfs@oss.sgi.com>; Fri, 10 Jan 2014 08:45:56 -0600 (CST)
+Message-ID: <52D007A6.2060607@sgi.com>
+Date: Fri, 10 Jan 2014 08:45:58 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [xfs] c91c46c12: xfstests generic/313 regression
-References: <20140110122700.GA12624@localhost> <52CFF402.5080409@oracle.com>
-	<20140110133306.GA22918@infradead.org>
-In-Reply-To: <20140110133306.GA22918@infradead.org>
+Subject: Re: projid32bit=1 default in xfsprogs-3.2.0
+References: <525C1C15.7020204@sandeen.net>
+	<20131014211659.GI5663@dastard>	<20131014212347.GB1935@sgi.com>
+	<525C6108.6010108@sandeen.net>	<20131015194609.GC32095@infradead.org>
+	<20131015204342.GA24997@infradead.org>
+In-Reply-To: <20131015204342.GA24997@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,96 +20,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fengguang.wu@intel.com, LKML <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>
+Cc: Ben Myers <bpm@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 01/10 2014 21:33 PM, Christoph Hellwig wrote:
-> On Fri, Jan 10, 2014 at 09:22:10PM +0800, Jeff Liu wrote:
->> Hi Fengguang,
+On 10/15/2013 03:43 PM, Christoph Hellwig wrote:
+> On Tue, Oct 15, 2013 at 12:46:09PM -0700, Christoph Hellwig wrote:
+>> On Mon, Oct 14, 2013 at 04:24:24PM -0500, Eric Sandeen wrote:
+>>> Ok.  Default it is!   Thanks guys, just wanted to make sure we were
+>>> all in agreement there.
 >>
->> Thanks for help catching up this.  I think the below patch can fix it
->> up, but maybe there would have a neater solution once Christoph is back.
-> 
-> I'd just remove the mask variable that caused the problem.  Untested
-> patch below:
-I also thought to fix this problem in this way, however I'm not sure
-if those flags can be set back to iattr->ia_valid internally...
-
-Otherwise, this fix looks good to me.
-
-Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-
-Thanks,
--Jeff
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 0ce1d75..ce966c5 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -714,7 +714,6 @@ xfs_setattr_size(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct inode		*inode = VFS_I(ip);
-> -	int			mask = iattr->ia_valid;
->  	xfs_off_t		oldsize, newsize;
->  	struct xfs_trans	*tp;
->  	int			error;
-> @@ -735,8 +734,8 @@ xfs_setattr_size(
->  
->  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
->  	ASSERT(S_ISREG(ip->i_d.di_mode));
-> -	ASSERT((mask & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
-> -			ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
-> +	ASSERT((iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
-> +		ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
->  
->  	oldsize = inode->i_size;
->  	newsize = iattr->ia_size;
-> @@ -745,7 +744,7 @@ xfs_setattr_size(
->  	 * Short circuit the truncate case for zero length files.
->  	 */
->  	if (newsize == 0 && oldsize == 0 && ip->i_d.di_nextents == 0) {
-> -		if (!(mask & (ATTR_CTIME|ATTR_MTIME)))
-> +		if (!(iattr->ia_valid & (ATTR_CTIME|ATTR_MTIME)))
->  			return 0;
->  
->  		/*
-> @@ -833,10 +832,11 @@ xfs_setattr_size(
->  	 * these flags set.  For all other operations the VFS set these flags
->  	 * explicitly if it wants a timestamp update.
->  	 */
-> -	if (newsize != oldsize && (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
-> +	if (newsize != oldsize &&
-> +	    !(iattr->ia_valid & (ATTR_CTIME | ATTR_MTIME))) {
->  		iattr->ia_ctime = iattr->ia_mtime =
->  			current_fs_time(inode->i_sb);
-> -		mask |= ATTR_CTIME | ATTR_MTIME;
-> +		iattr->ia_valid |= ATTR_CTIME | ATTR_MTIME;
->  	}
->  
->  	/*
-> @@ -872,9 +872,9 @@ xfs_setattr_size(
->  		xfs_inode_clear_eofblocks_tag(ip);
->  	}
->  
-> -	if (mask & ATTR_MODE)
-> +	if (iattr->ia_valid & ATTR_MODE)
->  		xfs_setattr_mode(ip, iattr);
-> -	if (mask & (ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
-> +	if (iattr->ia_valid & (ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
->  		xfs_setattr_time(ip, iattr);
->  
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> 
+>> Can we make sure this gets documented in doc/CHANGES?
+>>
+>> I'm also pretty sure the entry for 3.2.0-alpha1 is severly lacking,
+>> can we make sure the one for the real release is as detailed as the ones
+>> for the previous releases?
+>
+> Btw, I also noticed releases after 3.1.9 aren't tagged in git, any
+> chance we could fix that?  The release.sh script was supposed to take
+> care of this automatically.
+>
+> Also we have tons of fixes in the xfsprogs repo that really should go
+> out into a new 3.1.12 release:
+>
+>      xfs_io: v8 add the lseek() SEEK_DATA/SEEK_HOLE support
+>      xfs_db: add header to freesp -d output
+>      xfs_repair: zero out unused parts of superblocks
+>      xfs_repair: add prototype for alloc_ex_data()
+>      xfsprogs: fix Out-of-bounds access in repair/dinode.c
+>      xfsprogs: fix inode crash in xfs_repair
+>      xfsprogs: fix unint var in repair phase6
+>      xfsprogs: fix agcnts leak in xfs_repair's scan_ags
+>      xfsprogs:free bp in xlog_find_tail() error path
+>      xfsprogs: free bp in xlog_find_zeroed() error path
+>      xfsprogs: fix buffer leak in xlog_print_find_oldest
+>      xfsprogs: avoid double-free in xfs_attr_node_addname
+>      xfsprogs/io: add readdir command
+>      mkfs.xfs: fix protofile name create block reservation
+>      logprint: fix wrapped log dump issue
+>      xfs_metadump: manpage fix regarding frozen fs
+>      mkfs: add missing noalign suboption information
+>      xfsprogs: fix make deb
+>      xfsprogs: define umode_t for build if not defined already
+>      xfs_logprint: fix continuation transactions
+>      xfs_fsr: file reads should be O_DIRECT
+>      xfs_logprint: print all AGI unlinked buckets
+>
+> + a few more pending on the list.  I'd volunteer to prepare and test
+> thos backports once we get the remaining patches from the list in.
+>
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-> 
+>
+Hey Christoph,
+
+If your still interested in a 3.1.12 release, a 'for-3.1.12' branch has 
+been created.
+http://oss.sgi.com/archives/xfs/2014-01/msg00056.html
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
