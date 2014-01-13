@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F41F029DF8
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 22:44:15 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id B1BB87F3F
+	for <xfs@oss.sgi.com>; Mon, 13 Jan 2014 07:07:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CFAFC8F8050
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 20:44:12 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 1G9VGYr8uR8CcQVh for <xfs@oss.sgi.com>;
-	Sun, 12 Jan 2014 20:44:11 -0800 (PST)
-Message-ID: <52D36F19.3070207@sandeen.net>
-Date: Sun, 12 Jan 2014 22:44:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Add pairing mount options test
-References: <1389162648-19309-1-git-send-email-quwenruo@cn.fujitsu.com>
-	<52D01CA9.4040107@sandeen.net> <52D33F92.2000609@cn.fujitsu.com>
-	<52D342F0.5020402@sandeen.net> <20140113015239.GD3469@dastard>
-	<52D34EBD.4020508@cn.fujitsu.com> <20140113032650.GH3469@dastard>
-	<52D364DA.4000708@cn.fujitsu.com>
-In-Reply-To: <52D364DA.4000708@cn.fujitsu.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 964758F8054
+	for <xfs@oss.sgi.com>; Mon, 13 Jan 2014 05:07:20 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id yVM1SGdqzeOhOeYf (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Jan 2014 05:07:19 -0800 (PST)
+From: Anand Jain <anand.jain@oracle.com>
+Subject: [PATCH 2/2] xfstest: tests btrfs/006 fails with mixed-mode/small disks
+Date: Mon, 13 Jan 2014 21:16:30 +0800
+Message-Id: <1389618990-24544-2-git-send-email-anand.jain@oracle.com>
+In-Reply-To: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
+References: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +23,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Qu Wenruo <quwenruo@cn.fujitsu.com>, Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-On 1/12/14, 10:00 PM, Qu Wenruo wrote:
-> Now I'm interested in how other filesystems like xfs makes sure that every pairing
-> mount options are tested.
+From: Anand Jain <Anand.Jain@oracle.com>
 
-For starters, xfs actually doesn't handle very many options during remount.
+as of now the script does not filter 0.00 size  in the
+filesystem show output, which is the case in multi-disk
+mixed-mode (that is default group type for small disks)
 
-Many of them are quite tricky to do, which made me wonder if they all
-actually worked properly for btrfs.  :)
+Signed-off-by: Anand Jain <Anand.Jain@oracle.com>
+---
+ common/filter       | 6 ++++++
+ common/filter.btrfs | 1 +
+ 2 files changed, 7 insertions(+)
 
--Eric
+diff --git a/common/filter b/common/filter
+index c872a27..04d12c4 100644
+--- a/common/filter
++++ b/common/filter
+@@ -277,6 +277,12 @@ _filter_uuid()
+ 	fi
+ }
+ 
++# In mixed group the added disks may have zero used size
++_filter_zero_size()
++{
++	sed -e "s/0\.00/<SIZE>/g"
++}
++
+ # Filter out sizes like 6.14MB etc
+ _filter_size()
+ {
+diff --git a/common/filter.btrfs b/common/filter.btrfs
+index 29512cd..75853f2 100644
+--- a/common/filter.btrfs
++++ b/common/filter.btrfs
+@@ -33,6 +33,7 @@ _filter_btrfs_filesystem_show()
+ 	# the uniq collapses all device lines into 1
+ 	_filter_uuid $UUID | _filter_scratch | _filter_scratch_pool | \
+ 	_filter_size | _filter_btrfs_version | _filter_devid | \
++	_filter_zero_size | \
+ 	sed -e "s/\(Total devices\) $NUMDEVS/\1 $NUM_SUBST/g" | \
+ 	uniq
+ }
+-- 
+1.8.4.2
 
 _______________________________________________
 xfs mailing list
