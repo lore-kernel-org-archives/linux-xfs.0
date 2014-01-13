@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9E46C29DF8
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 21:19:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2143DAC001
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 19:19:54 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 12ABD29DF8
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 21:26:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9468AAC001
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 19:26:56 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	eBEKds5uJ860yJEq for <xfs@oss.sgi.com>;
-	Sun, 12 Jan 2014 19:19:52 -0800 (PST)
-Date: Mon, 13 Jan 2014 14:19:47 +1100
+	ucosnXGJ6rVWBHb3 for <xfs@oss.sgi.com>;
+	Sun, 12 Jan 2014 19:26:54 -0800 (PST)
+Date: Mon, 13 Jan 2014 14:26:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Files with non-ASCII names inaccessible after xfs_repair
-Message-ID: <20140113031947.GG3469@dastard>
-References: <A40DF90D-5F6B-4595-AA30-B91D8F7972D0@kotlarek.com>
-	<52D2E358.6070106@hardwarefreak.com>
-	<CF41F386-E86A-4745-B28D-0DAA8D3CA1DD@kotlarek.com>
-	<20140113015007.GC3469@dastard>
-	<EDB09149-717F-4089-9C21-1D342CF77A7D@kotlarek.com>
+Subject: Re: [PATCH] xfstests: Add pairing mount options test
+Message-ID: <20140113032650.GH3469@dastard>
+References: <1389162648-19309-1-git-send-email-quwenruo@cn.fujitsu.com>
+	<52D01CA9.4040107@sandeen.net> <52D33F92.2000609@cn.fujitsu.com>
+	<52D342F0.5020402@sandeen.net> <20140113015239.GD3469@dastard>
+	<52D34EBD.4020508@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <EDB09149-717F-4089-9C21-1D342CF77A7D@kotlarek.com>
+In-Reply-To: <52D34EBD.4020508@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,74 +28,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zachary Kotlarek <zach@kotlarek.com>
-Cc: xfs@oss.sgi.com
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-T24gU3VuLCBKYW4gMTIsIDIwMTQgYXQgMDY6MzY6MDNQTSAtMDgwMCwgWmFjaGFyeSBLb3RsYXJl
-ayB3cm90ZToKPiAKPiBPbiBKYW4gMTIsIDIwMTQsIGF0IDU6NTAgUE0sIERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiB3cm90ZToKPiAKPiA+PiBBdHRlbXB0cyB0byBhY2Nlc3Mg
-dGhlIG5vdy1idXN0ZWQgZmlsZXMvZGlyZWN0b3JpZXMgd2l0aAo+ID4+IGFjY2VudHMgaW4gdGhl
-aXIgcGF0aHMgcmVzdWx0IGluIGEga2VybmVsIGxvZyBsaWtlOiBKYW4gMTEKPiA+PiAwMjowNToz
-OSB2ZXJhIFhGUyAoZG0tMzEpOiBJL08gZXJyb3Igb2NjdXJyZWQ6IG1ldGEtZGF0YSBkZXYKPiA+
-PiBkbS0zMSBibG9jayAweDNjOGZmNzNlMCAgICAgICAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVy
-cm9yIDExCj4gPj4gYnVmIGNvdW50IDQwOTYKPiA+IAo+ID4gZXJyb3IgMTEgPSBFQUdBSU4vRVdP
-VUxEQkxPQ0sKPiA+IAo+ID4gVGhhdCB0ZW5kcyB0byBpbXBseSB0aGF0IHRoZXJlJ3Mgc29tZSBp
-bnRlcmVzdGluZyBlcnJvcgo+ID4gb2NjdXJyaW5nIGluIHRoZSBsYXllcnMgYmVsb3cgWEZTIGhl
-cmUuCj4gCj4gCj4gVGhlIGVycm9yIHlvdSBub3RlIG9ubHkgc3RhcnRlZCBzaG93aW5nIHVwICph
-ZnRlciogdGhlIHhmc19yZXBhaXIsCj4gYW5kIG9ubHkgd2hlbiBhdHRlbXB0aW5nIHRvIGFjY2Vz
-cyB0aGUgbm9uLWFzY2lpIGZpbGUgcGF0aHMuIEl0CgpTdXJlLCBidXQgaXQncyBhbiBlcnJvciBj
-b21pbmcgZnJvbSB0aGUgYmxvY2sgbGF5ZXIsIG5vdCBmcm9tCmRlY29kaW5nIHRoZSBjb250ZW50
-cyBvZiB0aGUgYmxvY2sgYXQgdGhlIGRpcmVjdG9yeSBsYXllci4gSU9XcywKeGZzLXJlcGFpciB3
-cm90ZSBuZXcgY29udGVudHMgdG8gdGhvc2UgYmxvY2tzLCBhbmQgbm93IHRoZSBrZXJuZWwKY2Fu
-bm90IHJlYWQgdGhlbSBmcm9tIGRpc2suCgo+IGRvZXNu4oCZdCB0YWtlIHRoZSBmaWxlc3lzdGVt
-IG9mZmxpbmU7IG90aGVyIHRoYW4gdGhvc2UKPiBwYXJ0aWN1bGFyIHBhdGhzIGJlaW5nIGluYWNj
-ZXNzaWJsZSB0aGUgZmlsZXN5c3RlbSBzZWVtcyB0byBiZQo+IHdvcmtpbmcgY29ycmVjdGx5ICh0
-aG91Z2ggSeKAmXZlIHN1c3BlbmRlZCB1c2VyIHdyaXRlcyB1bnRpbAo+IHRoaXMgaXMgd29ya2Vk
-IG91dCkuCgpSaWdodCAtIGl0J3MgYSByZWFkIGVycm9yLCBub3QgYSB3cml0ZSBlcnJvciwgc28g
-aXQgc2ltcGx5IHJldHVybnMKdGhlIGVycm9yIHRvIHRoZSByZWFkZXIuIEhvd2V2ZXIsIGlmIHRo
-YXQgcmVhZCBlcnJvciBvY2N1cnMgaW4gdGhlCmNvbnRleHQgb2YgYSB0cmFuc2FjdGlvbiB0aGF0
-IGhhcyBhbHJlYWR5IG1hZGUgbW9kaWZpY2F0aW9ucyAoZS5nLgphZGRpbmcgYSBuZXcgZmlsZSB0
-byB0aGUgZGlyZWN0b3J5KSBpdCB3aWxsIHJlc3VsdCBpbiBhIHNodXRkb3duIG9mCnRoZSBmaWxl
-c3lzdGVtLgoKPiBUaGUgYWZmZWN0ZWQgcGF0aHMgYXJlIGFsbCBhcm91bmQgdGhlIGRpc2ssCj4g
-YWxsIGNvbnRhaW4gbm9uLWFzY2lpIGNoYXJhY3RlcnMgaW4gZmluYWwgcG9ydGlvbiBvZiB0aGUg
-cGF0aAo+IG5hbWUsIGFuZCBkbyBub3QgYWZmZWN0IG90aGVyIHBhdGhzIGluIHRoZSBzYW1lIGRp
-cmVjdG9yeS4KPiAKPiBJIGNhbiBmaW5kIGEgbmV3ZXIga2VybmVsIHRvIGJvb3Qgb2ZmIGFuZCBz
-ZWUgaG93IGl0IGJlaGF2ZXMgaWYKPiB5b3UgdGhpbmsgaXQgd291bGQgbWFrZSBhbnkgZGlmZmVy
-ZW5jZSwgYnV0IEnigJltIHByZXR0eSBzdXJlCj4geGZzX3JlcGFpciByZS13cm90ZSB0aGUgYWZm
-ZWN0ZWQgZGlyZWN0b3J5IGVudHJpZXMgYW5kIGJyb2tlIHRoZW0KPiBhcyBvcHBvc2VkIHRvIHNv
-bWUgc29ydCBvZiBibG9jay1sYXllciBjb3JydXB0aW9uIGJlaW5nCj4gcmVzcG9uc2libGUgZm9y
-IGJyZWFraW5nIG9ubHkgdGhlc2UgZmlsZXMuCgpUcnkgdXNpbmcgeGZzX2RiIHRvIHJlYWQgYW5k
-IHBhcnNlIHRoZSBibG9ja3MgdGhhdCB0aGUgZmllbHN5c3RlbSBpcwpjaG9raW5nIG9uLiBJZiBp
-dCBjYW4ndCByZWFkIHRoZW0gZnJvbSB4ZnNfZGIsIHRoZW4gdGhlcmUncwpzb21ldGhpbmcgZ29u
-ZSB3cm9uZyBiZWxvdyBYRlMuIElmIHlvdSBjYW4gcmVhZCB0aGVtLCB1c2UgeGZzX2RiIHRvCnBh
-cnNlIHRoZSBibG9jayBhcyBhIGRpcmVjdG9yeSBibG9jayBhbmQgc2VlIHdoYXQgdGhlIHJhdyBk
-aXJlY3RvcnkKZW50cmllcyBhcmUgdGhlIGJsb2NrIGNvbnRhaW5zLi4uLgoKZS5nLgojIHhmc19k
-YiA8ZGV2Pgp4ZnNfZGI+IGNvbnZlcnQgZGFkZHIgMHgzYzhmZjczZTAgZnNiCjxmc2Jubz4KeGZz
-X2RiPiBmc2IgPGZzYm5vPgp4ZnNfZGI+IHAKPGhleCBvdXRwdXQ+Cnhmc19kYj4gdHlwZSBkaXIy
-Cnhmc19kYj4gcAo8ZGVjb2RlZCBvdXRwdXQ+CgpUaGUgZGVjb2RlZCBvdXRwdXQgc2hvdWxkIGxv
-b2sgc29tZXRoaW5nIGxpa2U6Cgp4ZnNfZGI+IHAKZGhkci5oZHIubWFnaWMgPSAweDU4NDQ0NDMz
-CmRoZHIuaGRyLmNyYyA9IDB4Yzc3ZGRhOGUgKGNvcnJlY3QpCmRoZHIuaGRyLmJubyA9IDEzMDgK
-ZGhkci5oZHIubHNuID0gMHhlNjAwMDBhYTM1CmRoZHIuaGRyLnV1aWQgPSBkMmQwYmVjNS1jOGI4
-LTQyMGUtOGEzNC1kOTgxYmU3ZWVjZTYKZGhkci5oZHIub3duZXIgPSAzMgpkaGRyLmJlc3RmcmVl
-WzBdLm9mZnNldCA9IDB4YTAKZGhkci5iZXN0ZnJlZVswXS5sZW5ndGggPSAweDEwCmRoZHIuYmVz
-dGZyZWVbMV0ub2Zmc2V0ID0gMHg0ZjgKZGhkci5iZXN0ZnJlZVsxXS5sZW5ndGggPSAweDEwCmRo
-ZHIuYmVzdGZyZWVbMl0ub2Zmc2V0ID0gMHg4NTAKZGhkci5iZXN0ZnJlZVsyXS5sZW5ndGggPSAw
-eDEwCmR1WzBdLmludW1iZXIgPSAzMgpkdVswXS5uYW1lbGVuID0gMQpkdVswXS5uYW1lID0gIi4i
-CmR1WzBdLmZpbGV0eXBlID0gMgpkdVswXS50YWcgPSAweDQwCmR1WzFdLmludW1iZXIgPSAzMgpk
-dVsxXS5uYW1lbGVuID0gMgpkdVsxXS5uYW1lID0gIi4uIgpkdVsxXS5maWxldHlwZSA9IDIKZHVb
-MV0udGFnID0gMHg1MApkdVsyXS5pbnVtYmVyID0gMzkzNTUyCmR1WzJdLm5hbWVsZW4gPSAzCmR1
-WzJdLm5hbWUgPSAidG1wIgpkdVsyXS5maWxldHlwZSA9IDIKZHVbMl0udGFnID0gMHg2MApkdVsz
-XS5pbnVtYmVyID0gMzYKZHVbM10ubmFtZWxlbiA9IDExCmR1WzNdLm5hbWUgPSAic3lzY2FsbHRl
-c3QiCmR1WzNdLmZpbGV0eXBlID0gMQpkdVszXS50YWcgPSAweDcwCmR1WzRdLmludW1iZXIgPSAz
-NwpkdVs0XS5uYW1lbGVuID0gOApkdVs0XS5uYW1lID0gImZzc3RyZXNzIgpkdVs0XS5maWxldHlw
-ZSA9IDIKZHVbNF0udGFnID0gMHg4OAoKaWYgeW91IGRvIGdldCB0aGUgb3V0cHV0IGxpa2UgdGhp
-cywgY2FuIHlvdSBwb3N0IGJvdGggdGhlIGhleGR1bXAKYW5kIHRoZSBkZWNvZGVkIG91dHB1dCBm
-cm9tIHhmc19kYj8KCkhtbW1tIC0geW91J3JlIG5vdCB1c2luZyBMVk0gc25hcHNob3RzIG9yIGFu
-eXRoaW5nIGxpa2UgdGhhdCBhcmUKeW91PwoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5l
-cgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
-LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Mon, Jan 13, 2014 at 10:26:05AM +0800, Qu Wenruo wrote:
+> On mon, 13 Jan 2014 12:52:39 +1100, Dave Chinner wrote:
+> >On Sun, Jan 12, 2014 at 07:35:44PM -0600, Eric Sandeen wrote:
+> >>I won't say no to this, but it seems to be of somewhat limited use.
+> >What happens to the test when mount options are deprecated/removed?
+> >How are we going to handle the matrix of testable/untestable mount
+> >options across kernels with different mount option support?
+> In my opinion,there may be two ways to deal it:
+> 1) Introduce up_limit_kver and down_limit_kver to *every* mount option.
+> If needed also add deprecated flags.
+
+Both of which are messy, and kernel version number checks don't work
+with vendor kernels that have stuff back ported to them.
+
+> This method will introduce more effort tomaintain the test case, but
+> due to the small codes and
+> relativly less changes in mount options, I consider it as an
+> acceptable method.
+
+What you are saying is that such a test will require constant
+maintenance from upstream developers to keep working across all the
+kernels that btrfs supports.
+
+When combined with Eric's comments that it doesn't test the
+functionality and so has relatively little benefit in terms of
+improving code coverage, it doesn't paint a pretty picture. So from
+that point of view, I'd say no to such a test.
+
+> It would be quite nice if any one can provide any better idea.
+
+Write a test for each individual feature that exercises and
+validates that feature in some way. Part of a functional test would
+be to test that the mount options for that function do what they are
+intended to do. Eric suggested the same thing (though in a different
+way).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
