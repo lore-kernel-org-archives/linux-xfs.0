@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0AAC329DF8
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 19:35:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D6FB5304051
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 17:35:55 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id U2GrZSqEhgrff32w for <xfs@oss.sgi.com>;
-	Sun, 12 Jan 2014 17:35:54 -0800 (PST)
-Message-ID: <52D342F0.5020402@sandeen.net>
-Date: Sun, 12 Jan 2014 19:35:44 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F0A3F29DF8
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 19:50:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DB4D38F804B
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 17:50:13 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	axBMnD61Glv3yEmj for <xfs@oss.sgi.com>;
+	Sun, 12 Jan 2014 17:50:11 -0800 (PST)
+Date: Mon, 13 Jan 2014 12:50:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Files with non-ASCII names inaccessible after xfs_repair
+Message-ID: <20140113015007.GC3469@dastard>
+References: <A40DF90D-5F6B-4595-AA30-B91D8F7972D0@kotlarek.com>
+	<52D2E358.6070106@hardwarefreak.com>
+	<CF41F386-E86A-4745-B28D-0DAA8D3CA1DD@kotlarek.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Add pairing mount options test
-References: <1389162648-19309-1-git-send-email-quwenruo@cn.fujitsu.com>
-	<52D01CA9.4040107@sandeen.net> <52D33F92.2000609@cn.fujitsu.com>
-In-Reply-To: <52D33F92.2000609@cn.fujitsu.com>
+Content-Disposition: inline
+In-Reply-To: <CF41F386-E86A-4745-B28D-0DAA8D3CA1DD@kotlarek.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,229 +31,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Qu Wenruo <quwenruo@cn.fujitsu.com>, xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Zachary Kotlarek <zach@kotlarek.com>
+Cc: xfs@oss.sgi.com
 
-On 1/12/14, 7:21 PM, Qu Wenruo wrote:
-> On fri, 10 Jan 2014 10:15:37 -0600, Eric Sandeen wrote:
->> On 1/8/14, 12:30 AM, Qu Wenruo wrote:
->>> Test remount btrfs with different pairing options like barrier and no barrier.
->> It seems that while this tests that the remount succeeds, and that
->> the option string is present in /proc/mounts, it does not test that
->> the mount option is actually in effect.
+On Sun, Jan 12, 2014 at 11:53:59AM -0800, Zachary Kotlarek wrote:
 > 
-> Yes, this is what the new test case is intended to do.
-> This case was just a test case tests the mount options themselves
-> to ensure all the pairing mount options works during remounting,
-> since most pairing options are missing before.
->>
->> I suppose for many of these options that would be hard to test; for
->> i.e. acl though it should be trivial.
->>
->> What do you think, is this enough to ensure that remount handling
->> is working as expected for all of these options?
-> In my opinion, this test should just focuses on the remount handling and
-> the pairing options.
-> For the detailed function should be examineed in other test cases.
-
-Except those won't test that a remount with those options actually *worked*;
-in fact they don't do remount at all.
-
-In other words, all this does is test that an option flag was set or unset in
-the superblock, but it doesn't really test whether the option has been
-properly set up (or torn down) as a result.
-
-I won't say no to this, but it seems to be of somewhat limited use.
-
--Eric
-
-> Also, most of the pairing options are instructive,
-> and some may not be in effect before next transaction (for the incomming noinode_cache options),
-> so I think is OK for just examining the options and remount handling for now.
+> On Jan 12, 2014, at 10:47 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
 > 
-> Thanks
-> Qu
->>
->> Thanks,
->> -Eric
->>
->>> Mainly used to test the following comming btrfs kernel commit:(Not in
->>> mainline yet)
->>> 8dd6d2c btrfs: Add treelog mount option.
->>> f1eccd3 btrfs: Add datasum mount option.
->>> aad3269 btrfs: Add datacow mount option.
->>> 22bab74 btrfs: Add acl mount option.
->>> 170e45e btrfs: Add noflushoncommit mount option.
->>> ce41bc9 btrfs: Add noenospc_debug mount option.
->>> f3c639b btrfs: Add nodiscard mount option.
->>> 962cbee btrfs: Add noautodefrag mount option.
->>> 0b4fa2a btrfs: Add "barrier" option to support "-o remount,barrier"
->>>
->>> Signed-off-by: Qu Wenruo <quwenruo@cn.fujitsu.com>
->>> Cc: Eric Sandeen <sandeen@redhat.com>
->>> ---
->>>   tests/btrfs/025     | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>   tests/btrfs/025.out |   2 +
->>>   tests/btrfs/group   |   1 +
->>>   3 files changed, 128 insertions(+)
->>>   create mode 100755 tests/btrfs/025
->>>   create mode 100644 tests/btrfs/025.out
->>>
->>> diff --git a/tests/btrfs/025 b/tests/btrfs/025
->>> new file mode 100755
->>> index 0000000..014da19
->>> --- /dev/null
->>> +++ b/tests/btrfs/025
->>> @@ -0,0 +1,125 @@
->>> +#!/bin/bash
->>> +# Btrfs QA test No. 025
->>> +#
->>> +# Check for paired btrfs mount options
->>> +#
->>> +# Regression test for the following btrfs commits
->>> +# 8dd6d2c btrfs: Add treelog mount option.
->>> +# f1eccd3 btrfs: Add datasum mount option.
->>> +# aad3269 btrfs: Add datacow mount option.
->>> +# 22bab74 btrfs: Add acl mount option.
->>> +# 170e45e btrfs: Add noflushoncommit mount option.
->>> +# ce41bc9 btrfs: Add noenospc_debug mount option.
->>> +# f3c639b btrfs: Add nodiscard mount option.
->>> +# 962cbee btrfs: Add noautodefrag mount option.
->>> +# 0b4fa2a btrfs: Add "barrier" option to support "-o remount,barrier"
->>> +#
->>> +#-----------------------------------------------------------------------
->>> +# Copyright (c) 2014 Fujitsu, Inc.  All Rights Reserved.
->>> +#
->>> +# This program is free software; you can redistribute it and/or
->>> +# modify it under the terms of the GNU General Public License as
->>> +# published by the Free Software Foundation.
->>> +#
->>> +# This program is distributed in the hope that it would be useful,
->>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>> +# GNU General Public License for more details.
->>> +#
->>> +# You should have received a copy of the GNU General Public License
->>> +# along with this program; if not, write the Free Software Foundation,
->>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->>> +#-----------------------------------------------------------------------
->>> +#
->>> +
->>> +seq=`basename $0`
->>> +seqres=$RESULT_DIR/$seq
->>> +echo "QA output created by $seq"
->>> +
->>> +status=0    # success is the default!
->>> +trap "_cleanup; exit \$status" 0 1 2 3 15
->>> +
->>> +PAIRING_OPTIONS="autodefrag noautodefrag discard nodiscard enospc_debug noenospc_debug flushoncommit noflushoncommit noacl acl nobarrier barrier nodatacow datacow nodatasum datasum notreelog treelog space_cache nospace_cache ssd nossd"
->>> +
->>> +# options that does not show in mount options
->>> +HIDDEN_OPTIONS="noautodefrag nodiscard noenospc_debug noflushoncommit acl barrier datacow datasum treelog nossd"
->>> +_cleanup()
->>> +{
->>> +    rm $tmp.running &> /dev/null
->>> +    wait
->>> +    cd /
->>> +    _scratch_unmount &> /dev/null
->>> +}
->>> +
->>> +# check the mount option
->>> +check_mount_opt()
->>> +{
->>> +    mount_point=$1
->>> +    expected_opt=$2
->>> +
->>> +    mount_opt=`cat /proc/mounts | grep $mount_point | cut -d\  -f4`
->>> +    if grep $2 $mount_opt; then
->>> +        _fail "test failed: expected $expected_opt option not shown in mount options"
->>> +    fi
->>> +}
->>> +
->>> +# background noise
->>> +start_bgnoise()
->>> +{
->>> +    touch $tmp.running
->>> +    while [ -f "$tmp.running" ]; do
->>> +        run_check $FSSTRESS_PROG -d $SCRATCH_MNT -n 500 -p 4
->>> +        if [ $? != 0 ]; then
->>> +            _fail "Some error happened executing fsstress when remounting"
->>> +        fi
->>> +    done &
->>> +    noise_pid=`jobs -p %1`
->>> +    echo $noise_pid > $tmp.running
->>> +}
->>> +
->>> +stop_bgnoise()
->>> +{
->>> +    pid=`cat $tmp.running`
->>> +    rm $tmp.running
->>> +    wait $pid
->>> +}
->>> +
->>> +# get standard environment, filters
->>> +. ./common/rc
->>> +. ./common/filter
->>> +
->>> +# real QA test starts here
->>> +_supported_fs btrfs
->>> +_supported_os Linux
->>> +
->>> +_need_to_be_root
->>> +_require_scratch
->>> +
->>> +# no need to use the original mount options
->>> +unset MOUNT_OPTIONS
->>> +
->>> +_scratch_mkfs > /dev/null 2>&1
->>> +_scratch_mount
->>> +
->>> +start_bgnoise
->>> +for remount_opt in $PAIRING_OPTIONS; do
->>> +    # Sleep for a while ensuring fsstress to do enough stress
->>> +    sleep 1
->>> +    _remount $SCRATCH_MNT $remount_opt
->>> +    if [ $? != 0 ]; then
->>> +        stop_bgnoise
->>> +        _fail "test failed: $remount_opt not supported"
->>> +    fi
->>> +    if [[ ! $HIDDEN_OPTIONS =~ $remount ]]; then
->>> +        check_mount_opt $SCRATCH_MNT $remount_opt
->>> +           
->>> +        # Special check for nodatacow
->>> +        if [ $remount_opt == "nodatacow" ]; then
->>> +            check_mount_opt $SCRATCH_MNT nodatasum
->>> +        fi
->>> +    fi
->>> +done
->>> +stop_bgnoise
->>> +_scratch_unmount || _fail "umount failed"
->>> +echo "Silence is golden"
->>> +status=0; exit
->>> diff --git a/tests/btrfs/025.out b/tests/btrfs/025.out
->>> new file mode 100644
->>> index 0000000..3d70951
->>> --- /dev/null
->>> +++ b/tests/btrfs/025.out
->>> @@ -0,0 +1,2 @@
->>> +QA output created by 025
->>> +Silence is golden
->>> diff --git a/tests/btrfs/group b/tests/btrfs/group
->>> index 87e7bca..1a4dad8 100644
->>> --- a/tests/btrfs/group
->>> +++ b/tests/btrfs/group
->>> @@ -27,3 +27,4 @@
->>>   022 auto
->>>   023 auto
->>>   024 auto quick
->>> +025 auto quick
->>>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+> > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> > 
+> > If this is due to a bug it may have already been fixed.  Note the first
+> > two things asked for.
 > 
+> 
+> Thanks for the pointer.
+> 
+> My kernels a bit old, but xfsprogs is shiny and new:
+> Linux vera 2.6.39.2 #1 SMP Fri Sep 30 23:55:41 PDT 2011 x86_64 x86_64 x86_64 GNU/Linux
+> xfs_repair version 3.1.11
+> 
+> 2x4 core CPUs
+> 8 GB RAM, mostly free (more than 6 GB cached)
+> 
+> Related mount:
+> /dev/lvmsas/tv /mnt/media/TV xfs rw,nosuid,nodev,noexec,relatime,attr2,delaylog,inode64,sunit=1024,swidth=4096,noquota 0 0
+> 
+> Underlying partition:
+>  254       31 16252928000 dm-31
+> 
+> Which is a no-frills LVM2 volume allocation over mdadm raid-6.
+> 
+> meta-data=/dev/lvmsas/tv         isize=256    agcount=33, agsize=126975872 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=4063232000, imaxpct=5
+>          =                       sunit=128    swidth=512 blks
+> naming   =version 2              bsize=4096   ascii-ci=1
+> log      =internal               bsize=4096   blocks=521728, version=2
+>          =                       sectsz=512   sunit=8 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> Attempts to access the now-busted files/directories with accents in their paths result in a kernel log like:
+> Jan 11 02:05:39 vera XFS (dm-31): I/O error occurred: meta-data dev dm-31 block 0x3c8ff73e0       ("xfs_trans_read_buf") error 11 buf count 4096
+
+error 11 = EAGAIN/EWOULDBLOCK
+
+That tends to imply that there's some interesting error occurring in
+the layers below XFS here. XFS on a kernel that old is not expecting
+an EAGAIN error from storage, so it is likely not being captured
+properly. There have been bugs in the raid/dm code in the past that
+would cause issues like this, and bugs in the XFS error handling
+that allowed them to slip throw and shut down the filesystem.
+
+For example, this fix made in March 2013:
+
+$ gl -n1 -p c163f9a
+commit c163f9a1760229a95d04e37b332de7d5c1c225cd
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Mar 12 23:30:34 2013 +1100
+
+    xfs: ensure we capture IO errors correctly
+    
+    Failed buffer readahead can leave the buffer in the cache marked
+    with an error. Most callers that then issue a subsequent read on the
+    buffer do not zero the b_error field out, and so we may incorectly
+    detect an error during IO completion due to the stale error value
+    left on the buffer.
+    
+    Avoid this problem by zeroing the error before IO submission. This
+    ensures that the only IO errors that are detected those captured
+    from are those captured from bio submission or completion.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+Is probably relevant, but there are many more changes up and down
+the stack that may be the cause of your problem. Indeed, the above
+fix may simply turn EAGAIN into EIO because there really is
+something wrong with that block on disk....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
