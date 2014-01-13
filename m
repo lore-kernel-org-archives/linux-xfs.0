@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1AA7F7F3F
-	for <xfs@oss.sgi.com>; Mon, 13 Jan 2014 14:56:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 87F39AC003
-	for <xfs@oss.sgi.com>; Mon, 13 Jan 2014 12:56:40 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 575867F3F
+	for <xfs@oss.sgi.com>; Mon, 13 Jan 2014 15:23:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C705304064
+	for <xfs@oss.sgi.com>; Mon, 13 Jan 2014 13:23:10 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	5xaYc3E7HGnDYnrf for <xfs@oss.sgi.com>;
-	Mon, 13 Jan 2014 12:56:38 -0800 (PST)
-Date: Tue, 14 Jan 2014 07:56:10 +1100
+	Gcz9RTUBnntocecl for <xfs@oss.sgi.com>;
+	Mon, 13 Jan 2014 13:23:08 -0800 (PST)
+Date: Tue, 14 Jan 2014 08:23:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel 2.6.22 pdflush consumes ~90% cpu
-Message-ID: <20140113205610.GK3469@dastard>
-References: <52D3FF2E.3010901@pace.com>
+Subject: Re: [PATCH] xfstests: Add pairing mount options test
+Message-ID: <20140113212303.GL3469@dastard>
+References: <1389162648-19309-1-git-send-email-quwenruo@cn.fujitsu.com>
+	<52D01CA9.4040107@sandeen.net> <52D33F92.2000609@cn.fujitsu.com>
+	<52D342F0.5020402@sandeen.net> <20140113015239.GD3469@dastard>
+	<52D34EBD.4020508@cn.fujitsu.com> <20140113032650.GH3469@dastard>
+	<52D364DA.4000708@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52D3FF2E.3010901@pace.com>
+In-Reply-To: <52D364DA.4000708@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +33,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Muralitharan Perumal <muralitharan.perumal@pace.com>
-Cc: xfs@oss.sgi.com
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Jan 13, 2014 at 02:58:54PM +0000, Muralitharan Perumal wrote:
-> Hi,
+On Mon, Jan 13, 2014 at 12:00:26PM +0800, Qu Wenruo wrote:
+> On Mon, 13 Jan 2014 14:26:50 +1100, Dave Chinner wrote:
+> >On Mon, Jan 13, 2014 at 10:26:05AM +0800, Qu Wenruo wrote:
+> >>On mon, 13 Jan 2014 12:52:39 +1100, Dave Chinner wrote:
+> >>>On Sun, Jan 12, 2014 at 07:35:44PM -0600, Eric Sandeen wrote:
+> >>>>I won't say no to this, but it seems to be of somewhat limited use.
+> >>>What happens to the test when mount options are deprecated/removed?
+> >>>How are we going to handle the matrix of testable/untestable mount
+> >>>options across kernels with different mount option support?
+> >>In my opinion,there may be two ways to deal it:
+> >>1) Introduce up_limit_kver and down_limit_kver to *every* mount option.
+> >>If needed also add deprecated flags.
+> >Both of which are messy, and kernel version number checks don't work
+> >with vendor kernels that have stuff back ported to them.
+> >
+> >>This method will introduce more effort tomaintain the test case, but
+> >>due to the small codes and
+> >>relativly less changes in mount options, I consider it as an
+> >>acceptable method.
+> >What you are saying is that such a test will require constant
+> >maintenance from upstream developers to keep working across all the
+> >kernels that btrfs supports.
+> >
+> >When combined with Eric's comments that it doesn't test the
+> >functionality and so has relatively little benefit in terms of
+> >improving code coverage, it doesn't paint a pretty picture. So from
+> >that point of view, I'd say no to such a test.
+> >
+> >>It would be quite nice if any one can provide any better idea.
+> >Write a test for each individual feature that exercises and
+> >validates that feature in some way. Part of a functional test would
+> >be to test that the mount options for that function do what they are
+> >intended to do. Eric suggested the same thing (though in a different
+> >way).
+> >
+> >Cheers,
+> >
+> >Dave.
+> That's right, individual test case is the best way.
 > 
-> I am currently working on an embedded platform involving XFS as the
-> preferred fs. Earlier, ext3 was used but now replaced with XFS. The unit
-> is working fine with ext3 but after replacing with XFS, I am seeing a
-> few issues:
-> 
-> a) Occassionally I am getting the following error when we write files to
-> the fs:
-> 
-> attempt to access beyond end of device
-> sda1: rw=0, want=10487141907480064, limit=9766912
-> I/O error in filesystem ("sda1") meta-data dev sda1 block 0x254200001abdf8       ("xfs_trans_read_buf") error 5 buf count 4096
-> attempt to access beyond end of device
-> sda1: rw=0, want=10487141907480064, limit=9766912
-> I/O error in filesystem ("sda1") meta-data dev sda1 block 0x254200001abdf8       ("xfs_trans_read_buf") error 5 buf count 4096
+> But most of the options are just instructive options,
+> and only affects performance, it's very hard to test. (like
+> space_cace and nospace_cache)
 
-It's trying to write way beyond the end of the device, hence the
-error. I'd suggest updating to xfsprogs 3.11 and running
-xfs_repair -n /dev/sda1 on the device and seeing if it finds a
-corrupt block map on an inode somewhere.
+Bad example. nospace_cache/space_cache change what is stored on
+disk, and affect *mount* processing depending on whether there is
+a cache or not. It also affects how tools like fsck.btrfs check the
+filesystem and so on. There is far more to test than just remount
+behaviour when testing the functionality of such a mount option, and
+that's the reason why they should be done in targeted feature
+tests.
 
-> b) After running for about 20 to 25 minutes, the pdflush consumes about 90% cpu and stuck there in D state:
+> Now I'm interested in how other filesystems like xfs makes sure that
+> every pairing
+> mount options are tested.
 
-It can't be stuck in an uninterruptible sleep (D state) and
-consuming CPU at the same time....
-
-> Is there any similar issue seen with kernel 2.6.22? Am I missing any XFS patches that could fix this?
-
-That's a 6 year old kernel. I'd suggest that an upgrade to something
-more recent might be in order...
+XFS has extremely limited remount option support, and we already
+have xfs/189 for that. And it does all sorts of interesting things
+to support the different configurations and behaviours of /etc/mtab
+that different distros use because that changes mount behaviour....
 
 Cheers,
 
