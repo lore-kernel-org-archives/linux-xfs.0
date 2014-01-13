@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F27DB29DF8
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 20:25:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 78D92AC002
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 18:25:22 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id tB9dgTeGiSPGPFLk for
-	<xfs@oss.sgi.com>; Sun, 12 Jan 2014 18:25:20 -0800 (PST)
-Message-ID: <52D34EBD.4020508@cn.fujitsu.com>
-Date: Mon, 13 Jan 2014 10:26:05 +0800
-From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Add pairing mount options test
-References: <1389162648-19309-1-git-send-email-quwenruo@cn.fujitsu.com>
-	<52D01CA9.4040107@sandeen.net> <52D33F92.2000609@cn.fujitsu.com>
-	<52D342F0.5020402@sandeen.net> <20140113015239.GD3469@dastard>
-In-Reply-To: <20140113015239.GD3469@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8D9A929DF8
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 20:36:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68E27304053
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 18:36:08 -0800 (PST)
+Received: from mail.uberzach.com (rondo.uberzach.com [64.22.125.169]) by
+	cuda.sgi.com with ESMTP id vjDZHly6d5KlduAQ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 12 Jan 2014 18:36:07 -0800 (PST)
+Received: from archer.uberzach.com (unknown
+	[IPv6:2602:3f:e50d:7605:60c:ceff:fed3:ff7e])
+	(Authenticated sender: profplump)
+	by mail.uberzach.com (Postfix) with ESMTPSA id 8D0A258064
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 18:36:05 -0800 (PST)
+From: Zachary Kotlarek <zach@kotlarek.com>
+Message-Id: <EDB09149-717F-4089-9C21-1D342CF77A7D@kotlarek.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Subject: Re: Files with non-ASCII names inaccessible after xfs_repair
+Date: Sun, 12 Jan 2014 18:36:03 -0800
+References: <A40DF90D-5F6B-4595-AA30-B91D8F7972D0@kotlarek.com>
+	<52D2E358.6070106@hardwarefreak.com>
+	<CF41F386-E86A-4745-B28D-0DAA8D3CA1DD@kotlarek.com>
+	<20140113015007.GC3469@dastard>
+In-Reply-To: <20140113015007.GC3469@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,86 +32,122 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============3502089654571298352=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On mon, 13 Jan 2014 12:52:39 +1100, Dave Chinner wrote:
-> On Sun, Jan 12, 2014 at 07:35:44PM -0600, Eric Sandeen wrote:
->> On 1/12/14, 7:21 PM, Qu Wenruo wrote:
->>> On fri, 10 Jan 2014 10:15:37 -0600, Eric Sandeen wrote:
->>>> On 1/8/14, 12:30 AM, Qu Wenruo wrote:
->>>>> Test remount btrfs with different pairing options like barrier and no barrier.
->>>> It seems that while this tests that the remount succeeds, and that
->>>> the option string is present in /proc/mounts, it does not test that
->>>> the mount option is actually in effect.
->>> Yes, this is what the new test case is intended to do.
->>> This case was just a test case tests the mount options themselves
->>> to ensure all the pairing mount options works during remounting,
->>> since most pairing options are missing before.
->>>> I suppose for many of these options that would be hard to test; for
->>>> i.e. acl though it should be trivial.
->>>>
->>>> What do you think, is this enough to ensure that remount handling
->>>> is working as expected for all of these options?
->>> In my opinion, this test should just focuses on the remount handling and
->>> the pairing options.
->>> For the detailed function should be examineed in other test cases.
->> Except those won't test that a remount with those options actually *worked*;
->> in fact they don't do remount at all.
->>
->> In other words, all this does is test that an option flag was set or unset in
->> the superblock, but it doesn't really test whether the option has been
->> properly set up (or torn down) as a result.
->>
->> I won't say no to this, but it seems to be of somewhat limited use.
-> What happens to the test when mount options are deprecated/removed?
-> How are we going to handle the matrix of testable/untestable mount
-> options across kernels with different mount option support?
->
-> Cheers,
->
-> Dave.
-In my opinion,there may be two ways to deal it:
-1) Introduce up_limit_kver and down_limit_kver to *every* mount option.
-If needed also add deprecated flags.
 
-Ithink this can handle the version related things quite well.
-But for the test case, it may be overkilled.
-Most codes will be focused on theversion handling even though the case only
-tests the flags.
+--===============3502089654571298352==
+Content-Type: multipart/signed; boundary="Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9"; protocol="application/pkcs7-signature"; micalg=sha1
 
-On the other hand, it would be quitenice if xfstests framework can 
-introduce such
-version handling systems.
 
-2) Manual editing after mount options change.
-If any options become deprecated/removed, just remove them from 
-PAIRING_OPTIONS and HIDDEN_OPTIONS.
+--Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
-For the old kernels with does not support these new options, NG is what 
-it should be.
-Since missing pairing options meaning that users can't trigger a funtion 
-without unmount,
-NG inform users the fact.
-(Recently, one user asked why there is no "barrier" mountoption in 
-btrfs. From the respect of users,
-missing pairing mount options is a defeat)
 
-This method will introduce more effort tomaintain the test case, but due 
-to the small codes and
-relativly less changes in mount options, I consider it as an acceptable 
-method.
+On Jan 12, 2014, at 5:50 PM, Dave Chinner <david@fromorbit.com> wrote:
 
-It would be quite nice if any one can provide any better idea.
+>> Attempts to access the now-busted files/directories with accents in =
+their paths result in a kernel log like:
+>> Jan 11 02:05:39 vera XFS (dm-31): I/O error occurred: meta-data dev =
+dm-31 block 0x3c8ff73e0       ("xfs_trans_read_buf") error 11 buf count =
+4096
+>=20
+> error 11 =3D EAGAIN/EWOULDBLOCK
+>=20
+> That tends to imply that there's some interesting error occurring in
+> the layers below XFS here.
 
-Thanks
-Qu
+
+The error you note only started showing up *after* the xfs_repair, and =
+only when attempting to access the non-ascii file paths. It doesn=92t =
+take the filesystem offline; other than those particular paths being =
+inaccessible the filesystem seems to be working correctly (though I=92ve =
+suspended user writes until this is worked out). The affected paths are =
+all around the disk, all contain non-ascii characters in final portion =
+of the path name, and do not affect other paths in the same directory.
+
+I can find a newer kernel to boot off and see how it behaves if you =
+think it would make any difference, but I=92m pretty sure xfs_repair =
+re-wrote the affected directory entries and broke them as opposed to =
+some sort of block-layer corruption being responsible for breaking only =
+these files.
+
+	Zach
+
+
+--Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9
+Content-Disposition: attachment;
+	filename=smime.p7s
+Content-Type: application/pkcs7-signature;
+	name=smime.p7s
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGGTCCBhUw
+ggP9oAMCAQICAQEwDQYJKoZIhvcNAQEFBQAwgYsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApXYXNo
+aW5ndG9uMRAwDgYDVQQHDAdTZWF0dGxlMRwwGgYDVQQKDBNaYWNoYXJ5IFAuIEtvdGxhcmVrMRUw
+EwYDVQQDDAx1YmVyemFjaC5jb20xIDAeBgkqhkiG9w0BCQEWEXphY2hAa290bGFyZWsuY29tMB4X
+DTEzMDgxMzAwMjMzM1oXDTE4MDgxMjAwMjMzM1owgZIxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApX
+YXNoaW5ndG9uMRAwDgYDVQQHDAdTZWF0dGxlMRwwGgYDVQQKDBNaYWNoYXJ5IFAuIEtvdGxhcmVr
+MRwwGgYDVQQDDBNaYWNoYXJ5IFAuIEtvdGxhcmVrMSAwHgYJKoZIhvcNAQkBFhF6YWNoQGtvdGxh
+cmVrLmNvbTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANL424NB+EzPp7/CqB/kxV+u
+7MSpl9A8NlMqLldoPPJjpEwH9+4wfYrx+yUOBddih4WIgCD9NiF41+9tHu9gUqm+PZT8kdGXUIRP
+fuQuwKyzAv0rSyydXBQD/Q/gRrFaEJvJ5wVUxgE51K/ugGATmyWTSeMwATOJR4qTs1u2dfxBliyR
+xc2LCJCAgvuonwhfP1JprFYz+ycmlb/od3cAC5+8ggof5YJiitsUM6FPQtDykGPNWxhFnBwrVlQ+
+vAxA1aT2v33C4MMK3hY3Ik8BUCZrAr4r/eWDSCBmcQydoawrUllAzEsVuozYqOW+EwbFp9RFDAZZ
+UZH/pMSEK5v2yQcf2m3zx4+9S5fLbvX660DFY90C1GSt9MyDjfpgx+Mtx7RtJI2abcei2PEXt38p
+U2aLypsHWsdloWhouzM4JpTkDXqCyUOm5hkUPgMdOXKHY5jCj0e7ok/Rknty7fJjolo4uyOKfJHQ
+cjoU1xuzA8ob0i8zufIL03FUK72dWL7xyAGjRs4Hsa6xd/SbPYGvYHJ2afxLeTDPZwzrLErxn9no
+E0wkAPnV0MfYbB+0Y/+Xaa2KIUflawzh3iQVkohrzmE9PU3gjiQJ9UqYtvx8HrUK2eEjCRinnSd5
+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
+2UTLEen9yAAAAAAAAA==
+
+--Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9--
+
+
+--===============3502089654571298352==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3502089654571298352==--
