@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8D9A929DF8
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 20:36:11 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1934929DF8
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 21:02:40 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 68E27304053
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 18:36:08 -0800 (PST)
-Received: from mail.uberzach.com (rondo.uberzach.com [64.22.125.169]) by
-	cuda.sgi.com with ESMTP id vjDZHly6d5KlduAQ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 12 Jan 2014 18:36:07 -0800 (PST)
-Received: from archer.uberzach.com (unknown
-	[IPv6:2602:3f:e50d:7605:60c:ceff:fed3:ff7e])
-	(Authenticated sender: profplump)
-	by mail.uberzach.com (Postfix) with ESMTPSA id 8D0A258064
-	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 18:36:05 -0800 (PST)
-From: Zachary Kotlarek <zach@kotlarek.com>
-Message-Id: <EDB09149-717F-4089-9C21-1D342CF77A7D@kotlarek.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Subject: Re: Files with non-ASCII names inaccessible after xfs_repair
-Date: Sun, 12 Jan 2014 18:36:03 -0800
-References: <A40DF90D-5F6B-4595-AA30-B91D8F7972D0@kotlarek.com>
-	<52D2E358.6070106@hardwarefreak.com>
-	<CF41F386-E86A-4745-B28D-0DAA8D3CA1DD@kotlarek.com>
-	<20140113015007.GC3469@dastard>
-In-Reply-To: <20140113015007.GC3469@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D85D38F804B
+	for <xfs@oss.sgi.com>; Sun, 12 Jan 2014 19:02:36 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	Fa0mTGXXdwvzjwrg for <xfs@oss.sgi.com>;
+	Sun, 12 Jan 2014 19:02:34 -0800 (PST)
+Date: Mon, 13 Jan 2014 14:02:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Questions about XFS discard and xfs_free_extent() code (newbie)
+Message-ID: <20140113030230.GF3469@dastard>
+References: <AD612A564BB84E75B010AE37687DFC8E@alyakaslap>
+	<20131218230615.GQ31386@dastard>
+	<78FC295EC7FF48C987266DC48B183930@alyakaslap>
+	<20131219105513.GZ31386@dastard>
+	<8155F3F9D6094F40B4DA71BD561D2DE8@alyakaslap>
+	<20131226230018.GJ20579@dastard>
+	<A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,122 +31,193 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3502089654571298352=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: xfs@oss.sgi.com
 
+On Wed, Jan 08, 2014 at 08:13:38PM +0200, Alex Lyakas wrote:
+> Hello Dave,
+> 
+> Currently I am working on the following approach:
+> 
+> Basic idea: make each xfs_extent_busy struct carry potential
+> information about a larger extent-for-discard, i.e., one that is a
+> multiple of discard_granularity.
 
---===============3502089654571298352==
-Content-Type: multipart/signed; boundary="Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9"; protocol="application/pkcs7-signature"; micalg=sha1
+You're making a big assumption here that discard_granularity is
+useful for aggregating large extents. Discard granularity on modern
+SSDs is a single sector:
 
+$ cat /sys/block/sda/queue/discard_granularity 
+512
+$
 
---Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+I've just checked 4 different types of SSDs I have here (from 3
+years old no-name sandforce SSDs to a brand new samsung 840 EVO),
+and htey all give the same result.
 
+IOWs, in most cases other than thin provisioning it will not be
+useful for optimising discards into larger, aligned extents.
 
-On Jan 12, 2014, at 5:50 PM, Dave Chinner <david@fromorbit.com> wrote:
+> In detail this looks like this:
+> # xfs_free_ag_extent attempts to merge the freed extent into a
+> larger free-extent in the by-bno btree.  When this function
+> completes its work, we have [nbno, nlen], which is potentially a
+> larger free-extent. At this point we also know that AGF is locked.
+> # We trim [nbno, nlen] to be a multiple-of and aligned-by
+> discard_granularity (if possible), and we receive [dbno, dlen],
+> which is a very nice extent to discard.
+> # When calling xfs_extent_busy_insert(), we add these two values to
+> the xfs_extent_busy struct.
+> # When the extent-free operation is committed for this busy extent,
+> we know that we can discard this [dbno, dlen] area, unless somebody
+> have allocated an extent, which overlaps this area.
 
->> Attempts to access the now-busted files/directories with accents in =
-their paths result in a kernel log like:
->> Jan 11 02:05:39 vera XFS (dm-31): I/O error occurred: meta-data dev =
-dm-31 block 0x3c8ff73e0       ("xfs_trans_read_buf") error 11 buf count =
-4096
->=20
-> error 11 =3D EAGAIN/EWOULDBLOCK
->=20
-> That tends to imply that there's some interesting error occurring in
-> the layers below XFS here.
+This strikes me as optimisation at the wrong time i.e. optimising
+discard ranges at extent free time ignores the fact that the extent
+can be immediately reallocated, and so all the optimisation work is
+wasted.
 
+> To address that, at the end of  xfs_alloc_fixup_trees() we do the following:
+> # We know that we are going to allocate [rbno, rlen] from
+> appropriate AG. So at this point, we search the busy extents tree to
+> check if there is a busy extent that holds [dbno, dlen] (this is a
+> multiple-of and aligned-by discard granularity), which overlaps
 
-The error you note only started showing up *after* the xfs_repair, and =
-only when attempting to access the non-ascii file paths. It doesn=92t =
-take the filesystem offline; other than those particular paths being =
-inaccessible the filesystem seems to be working correctly (though I=92ve =
-suspended user writes until this is worked out). The affected paths are =
-all around the disk, all contain non-ascii characters in final portion =
-of the path name, and do not affect other paths in the same directory.
+How do you find that? The busy extent tree is indexed on individual
+extents that have been freed, not the discard granularity ranges
+they track.
 
-I can find a newer kernel to boot off and see how it behaves if you =
-think it would make any difference, but I=92m pretty sure xfs_repair =
-re-wrote the affected directory entries and broke them as opposed to =
-some sort of block-layer corruption being responsible for breaking only =
-these files.
+> [rbno, rlen] fully or partially. If found, we shrink the [dbno,
+> dlen] area to be still a multiple-of and aligned by
+> discard-granularity, if possible. So we have a new smaller [dbno,
+> dlen] that we still can discard, attached to the same busy extent.
+> Or we discover that the new area is too small to discard, so we
+> forget about it.
 
-	Zach
+Forget about the discard range, right? We can't ignore the busy
+extent that covers the range being freed - it must be tracked all
+the way through to transaction commit completion.
 
+> # The allocation flow anyways searches the busy extents tree, so we
+> should be ok WRT to locking order, but adding some extra work.
 
---Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9
-Content-Disposition: attachment;
-	filename=smime.p7s
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Transfer-Encoding: base64
+There are other locking issues to be concerned about than order....
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGGTCCBhUw
-ggP9oAMCAQICAQEwDQYJKoZIhvcNAQEFBQAwgYsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApXYXNo
-aW5ndG9uMRAwDgYDVQQHDAdTZWF0dGxlMRwwGgYDVQQKDBNaYWNoYXJ5IFAuIEtvdGxhcmVrMRUw
-EwYDVQQDDAx1YmVyemFjaC5jb20xIDAeBgkqhkiG9w0BCQEWEXphY2hAa290bGFyZWsuY29tMB4X
-DTEzMDgxMzAwMjMzM1oXDTE4MDgxMjAwMjMzM1owgZIxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApX
-YXNoaW5ndG9uMRAwDgYDVQQHDAdTZWF0dGxlMRwwGgYDVQQKDBNaYWNoYXJ5IFAuIEtvdGxhcmVr
-MRwwGgYDVQQDDBNaYWNoYXJ5IFAuIEtvdGxhcmVrMSAwHgYJKoZIhvcNAQkBFhF6YWNoQGtvdGxh
-cmVrLmNvbTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANL424NB+EzPp7/CqB/kxV+u
-7MSpl9A8NlMqLldoPPJjpEwH9+4wfYrx+yUOBddih4WIgCD9NiF41+9tHu9gUqm+PZT8kdGXUIRP
-fuQuwKyzAv0rSyydXBQD/Q/gRrFaEJvJ5wVUxgE51K/ugGATmyWTSeMwATOJR4qTs1u2dfxBliyR
-xc2LCJCAgvuonwhfP1JprFYz+ycmlb/od3cAC5+8ggof5YJiitsUM6FPQtDykGPNWxhFnBwrVlQ+
-vAxA1aT2v33C4MMK3hY3Ik8BUCZrAr4r/eWDSCBmcQydoawrUllAzEsVuozYqOW+EwbFp9RFDAZZ
-UZH/pMSEK5v2yQcf2m3zx4+9S5fLbvX660DFY90C1GSt9MyDjfpgx+Mtx7RtJI2abcei2PEXt38p
-U2aLypsHWsdloWhouzM4JpTkDXqCyUOm5hkUPgMdOXKHY5jCj0e7ok/Rknty7fJjolo4uyOKfJHQ
-cjoU1xuzA8ob0i8zufIL03FUK72dWL7xyAGjRs4Hsa6xd/SbPYGvYHJ2afxLeTDPZwzrLErxn9no
-E0wkAPnV0MfYbB+0Y/+Xaa2KIUflawzh3iQVkohrzmE9PU3gjiQJ9UqYtvx8HrUK2eEjCRinnSd5
-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
-2UTLEen9yAAAAAAAAA==
+> I am aware that I need to handle additional issues like:
+> # A busy extent can be "unbusyied" or shrunk by
+> xfs_extent_busy_update_extent(). We need to update [dbno, dlen]
+> accordingly or delete it fully
+> # To be able to search for [dbno, dlen], we probably need another
+> rbtree (under the same pag->pagb_lock), which tracks large extents
+> for discard. xfs_extent_busy needs additional rbnode.
+> # If during xfs_alloc_fixup_trees() we discover that extent is
+> already being discarded, we need to wait. Assuming we have
+> asynchronous discard, this wait will be short - we only need the
+> block device to queue the discard request, and then we are good to
+> allocate from that area again.
 
---Apple-Mail=_66F37279-2053-4319-AC27-5F705B2599B9--
+* multiple busy extents can be found in the one "discard range".
+Hence there is a n:1 relationship between the busy extents and the
+related "discard extent" that might be related to it. Hence if we
+end up with:
 
+	busy1	busy2	busy3
+	+-------+-------+------+
+	+----------------------+
+	     discard1
 
---===============3502089654571298352==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+and then we reuse busy2, then we have to delete discard1 and update
+busy1 and busy3 not to point at discard1. Indeed, depending on
+the discard granularity, it might ned up:
+
+	busy1		busy3
+	+-------+       +------+
+	+-------+       +------+
+	discard1	discard2
+
+And so the act of having to track optimal "discard ranges" becomes
+very, very complex.
+
+I really don't see any advantage in tracking discard ranges like
+this, because we can do these optimisations of merging and trimming
+just before issuing the discards. And realistically, merging and
+trimming is something the block layer should be doing for us
+already.
+
+> 
+> One thing I am unsure about, is a scenario like this:
+> # assume discard-granularity=1MB
+> # we have a 1MB almost free, except two 4K blocks, somewhere in the
+> free space
+> # Transaction t1 comes and frees 4K block A, but the 1MB extent is
+> not fully free yet, so nothing to discard
+> # Transaction t2 frees the second 4K block B, now 1MB is free and we
+> attach a [dbno, dlen] to the second busy extent
+> 
+> However, I think there is no guarantee that t1 will commit before
+> t2; is that right?
+
+Correct.
+
+> But we cannot discard the 1MB extent, before both
+> transactions commit. (One approach to solve this, is to give a
+> sequence number for each xfs_extent_busy extent, and have a
+> background thread that does delayed discards, once all needed busy
+> extents are committed. The delayed discards are also considered in
+> the check that xfs_alloc_fixup_trees()  does).
+
+We used to have a log sequence number in the busy extent to prevent
+reuse of a busy extent - it would trigger a log force up to the
+given LSN before allowing the extent to be reused. It caused
+significant scalability problems for the busy extent tracking code,
+and so it was removed and replaced with the non-blocking searches we
+do now. See:
+
+ed3b4d6 xfs: Improve scalability of busy extent tracking
+e26f050 xfs: do not immediately reuse busy extent ranges
+97d3ac7 xfs: exact busy extent tracking
+
+i.e. blocking waiting for discard or log IO completion while holding
+the AGF locked is a major problem for allocation latency
+determinism. With discards potentially taking seconds, waiting for
+them to complete while holding the AGF locked will effectively stall
+parts of the filesystem for long periods of time. That blocking is
+what the above commits prevent, and by doing this allow us to use
+the busy extent tree for issuing discard on ranges that have been
+freed....
+
+> What do you think overall about this approach? Is there something
+> fundamental that prevents it from working?
+
+I'm not convinced that re-introducing busy extent commit
+sequence tracking and blocking to optimise discard operations is a
+particularly good idea given the above.
+
+> Also (if you are still reading:),  can you kindly comment this
+> question that I have:
+> # xfs_free_ag_extent() has a "isfl" parameter. If it is "true", then
+> this extent is added as usual to the free-space btrees, but the
+> caller doesn't add it as a busy extent. This means that such extent
+> is suitable for allocation right away, without waiting for the log
+> commit?
+
+It means the extent is being moved from the AGFL to the free space
+btree. blocks on the AGFL have already gone through free space
+accounting and busy extent tracking to get to the AGFL, and so there
+is no need to repeat it when moving it to the free space btrees.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3502089654571298352==--
