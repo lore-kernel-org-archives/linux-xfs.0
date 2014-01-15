@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B89FC29DF8
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:51 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1C54329E34
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:55 -0600 (CST)
 Received: from eagdhcp-232-151.americas.sgi.com
 	(eagdhcp-232-151.americas.sgi.com [128.162.232.151])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A5FC7304032
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 932B6AC004
 	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 16:30:51 -0800 (PST)
 Received: from eagdhcp-232-151.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-151.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s0G0UrCZ003604
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:53 -0600 (CST)
+	s0G0UquH003596
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:52 -0600 (CST)
 	(envelope-from tinguely@eagdhcp-232-151.americas.sgi.com)
-Message-Id: <20140116000851.294714180@sgi.com>
-Date: Wed, 15 Jan 2014 16:00:14 -0600
+Message-Id: <20140115220012.624438534@sgi.com>
+Date: Wed, 15 Jan 2014 16:00:12 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [RFC 02/17] xfs: (parent ptr) get offset when removing directory name
-References: <20140115220012.624438534@sgi.com>
-Content-Disposition: inline; filename=02-pptr-add-to_xfs_dir_removename.patch
+Subject: [RFC 00/17] RFC parent inode pointers.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,130 +30,160 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Return the directory offset information when removing an entry to the
-directory.
+Yeah, yeah, this has gotten buried several times and better get out on
+the list for discussion before it gets buried yet again.
 
-This offset will be used as the parent pointer offset in xfs_remove.
+Parent inode support allow XFS to quickly derive a file name and
+path from the mount point. This can aid in directory/path policies
+and can help relocate items during filesystem shrink.
 
----
- fs/xfs/xfs_dir2.c       |    5 ++++-
- fs/xfs/xfs_dir2.h       |    3 ++-
- fs/xfs/xfs_dir2_block.c |    1 +
- fs/xfs/xfs_dir2_leaf.c  |    1 +
- fs/xfs/xfs_dir2_node.c  |    1 +
- fs/xfs/xfs_dir2_sf.c    |    2 ++
- fs/xfs/xfs_inode.c      |    4 ++--
- 7 files changed, 13 insertions(+), 4 deletions(-)
+ 1) Representation of a parent inode entry:
 
-Index: b/fs/xfs/xfs_dir2.c
-===================================================================
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -340,7 +340,8 @@ xfs_dir_removename(
- 	xfs_ino_t	ino,
- 	xfs_fsblock_t	*first,		/* bmap's firstblock */
- 	xfs_bmap_free_t	*flist,		/* bmap's freeblock list */
--	xfs_extlen_t	total)		/* bmap's total block count */
-+	xfs_extlen_t	total,		/* bmap's total block count */
-+	__uint32_t	*offset)	/* out: return entry's dir offset */
- {
- 	xfs_da_args_t	args;
- 	int		rval;
-@@ -374,6 +375,8 @@ xfs_dir_removename(
- 		rval = xfs_dir2_leaf_removename(&args);
- 	else
- 		rval = xfs_dir2_node_removename(&args);
-+	if (offset)
-+		*offset = args.offset;
- 	return rval;
- }
- 
-Index: b/fs/xfs/xfs_dir2.h
-===================================================================
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -127,7 +127,8 @@ extern int xfs_dir_lookup(struct xfs_tra
- extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t ino,
- 				xfs_fsblock_t *first,
--				struct xfs_bmap_free *flist, xfs_extlen_t tot);
-+				struct xfs_bmap_free *flist, xfs_extlen_t tot,
-+				__uint32_t *offset);
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
-Index: b/fs/xfs/xfs_dir2_block.c
-===================================================================
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -796,6 +796,7 @@ xfs_dir2_block_removename(
- 	/*
- 	 * Point to the data entry using the leaf entry.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)hdr + xfs_dir2_dataptr_to_off(mp, be32_to_cpu(blp[ent].address)));
- 	/*
-Index: b/fs/xfs/xfs_dir2_leaf.c
-===================================================================
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -1381,6 +1381,7 @@ xfs_dir2_leaf_removename(
- 	 * Point to the leaf entry, use that to point to the data entry.
- 	 */
- 	lep = &ents[index];
-+	args->offset = be32_to_cpu(lep->address);
- 	db = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)hdr + xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
-Index: b/fs/xfs/xfs_dir2_node.c
-===================================================================
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1192,6 +1192,7 @@ xfs_dir2_leafn_remove(
- 	/*
- 	 * Extract the data block and offset from the entry.
- 	 */
-+	args->offset = be32_to_cpu(lep->address);
- 	db = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
- 	ASSERT(dblk->blkno == db);
- 	off = xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address));
-Index: b/fs/xfs/xfs_dir2_sf.c
-===================================================================
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -847,6 +847,8 @@ xfs_dir2_sf_removename(
- 								XFS_CMP_EXACT) {
- 			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
- 			       args->inumber);
-+			args->offset = xfs_dir2_byte_to_dataptr(dp->i_mount,
-+						xfs_dir2_sf_get_offset(sfep));
- 			break;
- 		}
- 	}
-Index: b/fs/xfs/xfs_inode.c
-===================================================================
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2542,7 +2542,7 @@ xfs_remove(
- 
- 	xfs_bmap_init(&free_list, &first_block);
- 	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
--					&first_block, &free_list, resblks);
-+				     &first_block, &free_list, resblks, NULL);
- 	if (error) {
- 		ASSERT(error != ENOENT);
- 		goto out_bmap_cancel;
-@@ -2847,7 +2847,7 @@ xfs_rename(
- 	}
- 
- 	error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
--					&first_block, &free_list, spaceres);
-+				     &first_block, &free_list, spaceres, NULL);
- 	if (error)
- 		goto abort_return;
- 
+ There are several ways to represent the parent inode entry.
+ A 2005 XFS meeting came up with the following ideas:
 
+  1) Storing the parent inode# list inside the inode with a separate field
+     separate fork
+  2) Storing the parent inode# list in EA names with null values
+     EA: <name=inode#, value=NULL>
+  3) As in (2) but store the 1st parent inode# in a field in the inode
+     first-parent-ptr + <name=inode#, value=NULL>
+  4) As in (2) but store the hardlink names as EA values
+     EA: <name=inode#, value=fname>
+  5) As in (2) but store the EAs on directories as well as leaf files
+     EAs on directories.
+  6) Storing the parent inode# + directory offset in EA names with null values
+     EA: <name=inode#diroffset, value=NULL>
+  7) (kind of (4) + (6))
+     EA: <name=inode#diroffset, value=filename>
+
+ The preferred method was #6. Using directory and the entry offset into the
+ directory has turned out to be a very good idea. Directory growth and
+ contractions and xfs_repair does not compromise the encoding. The offset
+ can be gotten while doing the directory code. It is compact and easy the
+ parent inode / offset allows quick access to the filename information.
+
+2) In the inode core or not?
+
+ Since we have new inode, adding the first link into the inode core
+ makes things very convenient. I implemented and tested both ways,
+ and prefer adding the first link in the inode core. One less fork
+ to worry about on single linked entries, like directories. xfs_create
+ and xfs_symlink do not need extended attribute calls, and simplifies the
+ parent path creation.
+ 
+ This implementation of the code uses 12 bytes of the inode padding for
+ parent pointers and places the first link in the inode core..
+ 
+3) To lock between directory and attribute changes.
+ 
+ On one hand, the vfs mutex will keep the directory and attribute changes
+ in sync.  
+
+ On the other hand keeping the directory and extended attribute in one
+ transaction should keeping the changes atomic when the filesystem
+ is forced down between the directory and attribute changes. Despite
+ all the gore (see below) of doing the directory and attribute changes
+ in one transaction, I think it is the correct thing to do.
+
+ The gore of keeping the directory and attribute operations in one transaction:
+  1) The attribute code was not written to be embedded in other functions.
+     The attribute code can commit and trans_dup another transaction
+     (xfs_trans_roll and xfs_bmapi_finish). The attribute operations have
+     to be done last in the transactions and even then a terrible hack has
+     to be done to figure out if the transaction was commited in an earlier
+     attribute operation so we could add the inode back into the transaction.
+
+  2) xfs_rename is log space reservation expensive.
+     The log_count:
+      xfs_rename   2
+      xfs_attr_set 3 and that does not add any extra for the embedded
+                     xfs_bmap_add_attrfork()
+      xfs_attr_remove 3 and we can have 2 of these in a rename.
+
+  3) xfs_rename() with no allocated space reserve blocks can cause
+     hanging. I disabled the code in xfs_rename that:
+
+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_rename, spaceres, 0);
+#ifdef HERE
+	if (error == ENOSPC) {
+		spaceres = 0;
+		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_rename, 0, 0);
+	}
+#endif 
+	... 
+
+   ----
+The enclosed RFC sample code does NOT keep the directory and attribute in
+the same transaction and this code is simpler than the embedded version. 
+
+It comes with the following patches:
+
+
+       ----- kernel space bits -----
+
+ get the offset patches:
+01-pptr-retrieve-info-from-directory.patch
+02-pptr-add-to_xfs_dir_removename.patch
+03-pptr-add-to_xfs_dir_replace.patch
+
+ add the incompatability bit and the parent test:
+04-pptr-add-xfs_sb_version_hasparent.patch
+
+ add the parent flags to the attribute files:
+05-pptr-add-xfs_parent-files.patch
+
+ add the inode parent / offset to the inode:
+06-pptr-add-inode-incore.patch
+
+ add the support to the differ routines:
+07-pptr-add-to-xfs_create.patch
+08-pptr-add-to-xfs_symlink.patch
+09-pptr-add-to_xfs_link.patch
+10-pptr-add-to_xfs_remove.patch
+11-pptr-add-incore-to-rename.patch
+
+xfs_rename is the most complex. I tried to add to the inode entries first
+and then keep the number of extended attribute operations down. The single
+transaction xfs_rename is even more complicated than this code.
+
+
+add the ioctl to get the paths. SGI may want to add the inode generation
+field to the output and offset information can be dropped. Minor stuff:
+
+12-pptr-add-incore-to-getparentpaths_by_handle.patch
+
+       ----- user space bits -----
+
+The user space stuff is include for anyone who want to
+kick the tires. Parent pointer requires a v5 super block
+(-m crc=1") and "-i parent=1". xfstests 114 indicated that
+the parent option belongs on the "-i" option.
+
+01-xfsprogs-add-parent-pointers.patch
+
+The xfs_repair change is there to prevent the attribute to be
+thrown away because the name as corrupt. Much more xfs_repair
+(and xfs_db) work is needed:
+
+02-xfsprogs-pptr-fix-namecheck.patch
+
+Tiny xfs_db code to list the parent/offset information:
+
+03-xfsprogs-pptr-add-to-xfs_db.patch
+
+Added the ioctl support. Fixed xfs_io parent -p and -c commands
+With xfs_io a person can dump the parent pointer information by
+path and do a consistency check. xfstest xfs/114 will run correctly.
+The output will fail since I export the parent's offset instead of
+the inode's generation. As mentioned above, that will probably changed:
+
+04-xfsprogs-pptr-xfs_io-getparentpaths_by_handle.c
+
+Add the XFS_GEOM for xfs_repair/xfs_info:
+05-xfsprogs-pptr-add-to-xfs_info.patch
+
+--Mark
 
 _______________________________________________
 xfs mailing list
