@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7435B7F3F
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 00:37:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F4AD304032
-	for <xfs@oss.sgi.com>; Tue, 14 Jan 2014 22:37:31 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	8IFV7ZhSvjlbctiP for <xfs@oss.sgi.com>;
-	Tue, 14 Jan 2014 22:37:29 -0800 (PST)
-Date: Wed, 15 Jan 2014 17:37:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Files with non-ASCII names inaccessible after xfs_repair
-Message-ID: <20140115063722.GW3469@dastard>
-References: <20140113031947.GG3469@dastard>
-	<E2EE0AEA-ED22-4D3B-8550-88F2ED1F8314@kotlarek.com>
-	<20140113192732.GI3469@dastard>
-	<0E45339E-04C4-4775-B6B0-FC55245B0AED@kotlarek.com>
-	<20140114022414.GM3469@dastard>
-	<BE0C947E-37DE-4CA1-B120-59B95E1E8EB8@kotlarek.com>
-	<20140115015350.GR3469@dastard>
-	<61E74CEF-8244-4E90-BA7D-91D54DADC3C1@kotlarek.com>
-	<20140115034803.GT3469@dastard>
-	<1E5E569C-2E11-42A1-A771-89D4800BC412@kotlarek.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BDCAD7F3F
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 02:08:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 941DE8F8040
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 00:08:06 -0800 (PST)
+Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
+	[209.85.220.48]) by cuda.sgi.com with ESMTP id WspCk3NUV4e4tCMF
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 15 Jan 2014 00:08:05 -0800 (PST)
+Received: by mail-pa0-f48.google.com with SMTP id lf10so818473pab.7
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 00:08:05 -0800 (PST)
+Date: Wed, 15 Jan 2014 16:12:01 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [RFC] directory quota survey on xfs
+Message-ID: <20140115081201.GA3820@gmail.com>
+References: <20131222095929.GA11444@gmail.com> <20131223014222.GC3220@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1E5E569C-2E11-42A1-A771-89D4800BC412@kotlarek.com>
+In-Reply-To: <20131223014222.GC3220@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,92 +27,201 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zachary Kotlarek <zach@kotlarek.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org
 
-T24gVHVlLCBKYW4gMTQsIDIwMTQgYXQgMDk6MzA6NTdQTSAtMDgwMCwgWmFjaGFyeSBLb3RsYXJl
-ayB3cm90ZToKPiAKPiBPbiBKYW4gMTQsIDIwMTQsIGF0IDc6NDggUE0sIERhdmUgQ2hpbm5lciA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gCj4gPiBJdCdzIGNhbGxlZCAqQVNDSUkqIENh
-c2UgSW5zZW5zaXRpdml0eSBmb3IgYSByZWFzb246IGl0IGRvZXNuJ3QKPiA+IHN1cHBvcnQgYW55
-dGhpbmcgb3RoZXIgdGhhbiBBU0NJSS4gU28geW91ciB1c2FnZSBpcyBub3QgYWN0dWFsbHkKPiA+
-IHN1cHBvcnRlZCBhdCBhbGwsIGhlbmNlIGl0J3Mgbm8gc3VycHJpc2UgdGhhdCBpdCBoYXMgY2F1
-c2VkCj4gPiBicmVha2FnZS4KPiAKPiBPa2F5LiBUaGFua3MgZm9yIHRoZSBleHBsYW5hdGlvbi4K
-PiAKPiBGV0lXLCBJIHJlYWQg4oCcQVNDSUktb25seSBjYXNlLWluc2Vuc2l0aXZl4oCdIHRvIG1l
-YW4g4oCcb25seSBjYXNlLWluc2Vuc2l0aXZlIGZvciBBU0NJSeKAnSBhcyBpbiDDsSBhbmQgw5Eg
-d291bGQgbm90IG1hdGNoIGVhY2ggb3RoZXIuIElmIGl0IGFjdHVhbGx5IG1lYW5zIOKAnGFueXRo
-aW5nIG90aGVyIHRoYW4gQVNDSUkgaXMgc3ViamVjdCB0byBjb21wbGV0ZSBicmVha2FnZeKAnSBh
-IG1vcmUgbnVhbmNlZCBleHBsYW5hdGlvbiBpbiB0aGUgbWFuIHBhZ2UgbWlnaHQgYmUgZGVzaXJh
-YmxlLgoKU3VyZS4gQ2FuIHlvdSB3cml0ZSBhIHBhdGNoIHRvIGFkZCBleHBsYW5hdGlvbiB0aGF0
-IGV4cGxhaW4gdGhlCnByb2JsZW0geW91J3ZlIGhhZD8KCj4gSSBkb27igJl0IHN1cHBvc2UgdGhl
-cmXigJlzIGFueSB3YXkgdG8gZGlzYWJsZSB0aGF0IHNldHRpbmcgc2hvcnQgb2YgY3JlYXRpbmcg
-YSBuZXcgZmlsZSBzeXN0ZW0/CgpOb3Qgb2ZmaWNpYWxseS4gQ2hhbmdpbmcgaXQgbWVhbnMgeW91
-IGhhdmUgdG8gY2hhbmdlIGV2ZXJ5IHNpbmdsZQpoYXNoIGZvciBldmVyeSBkaXJlY3RvcnkgZW50
-cnkuIEkgKnRoaW5rKiB0aGF0IHlvdSBjb3VsZCBwcm9iYWJseSBkbwppdCB3aXRoIGEgYml0IG9m
-IHhmc19kYiBtYWdpYyBhbmQgYW5kIHhmc19yZXBhaXIgcGFzcy4KCkZpcnN0LCBBIHdhcm5pbmcs
-IHNvbWUgYWR2aWNlIGFuZCBhIGRpc2NsYWltZXI6IGJhY2sgdXAgYW55dGhpbmcgeW91CmRvbid0
-IHdhbnQgdG8gbG9zZSwgYmVjYXVzZSBpZiB0aGlzIHNjcmV3cyB1cCBpdCdsbCB0cmFzaCB0aGUK
-ZGlyZWN0b3J5IHN0cnVjdHVyZSBhbmQgeW91IG1heSAqTE9TRSogKkFMTCogKllPVVIqICpEQVRB
-Ki4gVGhpcyBpcwpkYW5nZXJvdXMsIG5vdCByZWNvbW1lbmRlZCBhbmQgSSB0YWtlIG5vIHJlc3Bv
-bnNpYmlsaXR5IGZvciB3aGF0CmhhcHBlbnMgaWYgeW91IHRyeSBpdCBhbmQgaXQgZmFpbHMuCgpB
-ZnRlciB0YWtpbmcgYSBiYWNrdXAsIHVzZSB4ZnNfbWV0YWR1bXAgdG8gc2V0IHVwIGZvciBhCm5v
-bi1kZXN0cnVjdGl2ZSB0cmlhbCBydW4uICB0YWtlIGEgY29weSBvZiB0aGUgZmlsZXN5c3RlbSBt
-ZXRhZGF0YQp1c2luZyB4ZnNfbWV0YWR1bXA6CgojIHhmc19tZXRhZHVtcCA8ZGV2PiBzY3JhdGNo
-Lm1ldGFkdW1wCgpSZXN0b3JlIHRoZSBtZXRhZHVtcCB0byBhIGZpbGUgLSB0aGlzIGlzIGEgc3Bh
-cnNlIGltYWdlIGZpbGUgd2UgY2FuCm9wZXJhdGUgb24gc2FmZWx5LgoKIyB4ZnNfbWRyZXN0b3Jl
-IHNjcmF0Y2gubWV0YWR1bXAgc2NyYXRjaF94ZnNfZmlsZXN5c3RlbS5pbWcKClRoZW4gcG9pbnQg
-eGZzX2RiIGF0IHRoZSBpbWFnZSBmaWxlOgoKIyB4ZnNfZGIgLXggLWYgc2NyYXRjaF94ZnNfZmls
-ZXN5c3RlbS5pbWcKClJlbW92ZSB0aGUgY2FzZSBpbnNlbnNpdGl2ZSBmZWF0dXJlIGJpdCB1c2lu
-ZyB0aGUgdmVyc2lvbiBjb21tYW5kLgpGaXJzdCBkdW1wIHRoZSBjdXJyZW50IHZhbHVlcyB1c2lu
-ZyB2ZXJzaW9uOgoKeGZzX2RiPiB2ZXJzaW9uCnZlcnNpb25udW0gWzB4ZjRhNCsweDhhXSA9IFY0
-LE5MSU5LLEFMSUdOLERJUlYyLExPR1YyLEVYVEZMRyxBU0NJSV9DSSxNT1JFQklUUyxBVFRSMixM
-QVpZU0JDT1VOVCxQUk9KSUQzMkJJVAoKQW5kIHlvdSdsbCBzZWUgdGhlIEFTQ0lJX0NJIGJpdCBp
-biB0aGVyZS4gVGhhdCdzIHdoYXQgd2Ugd2FudCB0bwpyZW1vdmUuIEl0J3MgdmFsdWUgaXM6Cgoj
-ZGVmaW5lIFhGU19TQl9WRVJTSU9OX0JPUkdCSVQgICAgICAgICAgMHg0MDAwCgpzbyB3ZSBuZWVk
-IHRvIGNsZWFyIHRoYXQgZnJvbSB0aGUgdmVyc2lvbiBmaWVsZC4KCgkweGY0YTQgLSAweDQwMDAg
-PSAweGI0YTQKCkFuZCB3ZSB3YW50IHRvIHdyaXRlIHRoYXQgYmFjayBpbnRvIHRoZSB2ZXJzaW9u
-IGZpZWxkOgoKeGZzX2RiPiBzYiAwCnhmc19kYj4gcCB2ZXJzaW9ubnVtCnZlcnNpb25udW0gPSAw
-eGY0YTQKeGZzX2RiPiB3cml0ZSB2ZXJzaW9ubnVtIDB4YjRhNAp2ZXJzaW9ubnVtID0gMHhiNGE0
-Cnhmc19kYj4gcCB2ZXJzaW9ubnVtCnZlcnNpb25udW0gPSAweGI0YTQKeGZzX2RiPiBxdWl0CgpB
-bmQgbm93IHJ1biB4ZnNfcmVwYWlyIG9uIHRoZSBpbWFnZSBmaWxlOgoKIyB4ZnNfcmVwYWlyIC1m
-IHNjcmF0Y2hfeGZzX2ZpbGVzeXN0ZW0uaW1nCgpUaGF0IHNob3VsZCB0aHJvdWdoIGxvdHMgb2Yg
-ImJhZCBoYXNoIHRhYmxlLi4uLiByZXBhaXJpbmciIGVycm9ycy4KT25jZSBpdCBjb21wbGV0ZXMs
-IG1vdW50IHRoZSBmaWxlc3lzdGVtIGltYWdlIG9uIHRoZSBsb29wYmFjawpkZXZpY2U6CgojIG1v
-dW50IC1vIGxvb3Ascm8sbm9yZWNvdmVyeSBzY3JhdGNoX3hmc19maWxlc3lzdGVtLmltZyAvbW50
-L3NjcmF0Y2gKCkFuZCB3YWxrIGFyb3VuZCB0aGUgZmlsZXN5c3RlbSB0byBkZXRlcm1pbmUgaWYg
-dGhlIGRpcmVjdG9yeQpzdHJ1Y3R1cmUgaXMgY29ycmVjdCBhbmQgaW50YWN0LiBJZiB5b3UgaGF2
-ZSBhbnkgZG91YnRzLCBvciBhbnl0aGluZwp3YXMgbGVmdCBpbiBsb3N0K2ZvdW5kLCB0aGVuIGl0
-IGhhc24ndCB3b3JrZWQgcHJvcGVybHkgYW5kIHlvdQpzaG91bGQgbm90IGRvIHRoaXMgdG8geW91
-ciBmaWxlc3lzdGVtLgoKT25seSBpZiB5b3UgYXJlIGNvbnZpbmNlZCB0aGF0IGV2ZXJ5dGhpbmcg
-aXMgT0sgYW5kIHlvdSBjYW4gZG8gdGhlCmNvbnZlcnNpb24gd2l0aG91dCBzdHVmZmluZyB1cCwg
-cnVuIHRoZSBzYW1lIHhmc19kYi9yZXBhaXIgcHJvY2VzcwpvbiB0aGUgcmVhbCBmaWxlc3lzdGVt
-LiBJZiB5b3UgaGF2ZSBhbnkgZG91YnRzIG9yIG5vdCBjb25maWRlbnQgdGhhdAppdCBoYXMgd29y
-a2VkLCB0aGVuIGdvIHRoZSBsb25nIHdheSBvZiBta2ZzIGFuZCByZXN0b3JpbmcgdGhlIGJhY2t1
-cAp5b3UndmUgYWxyZWFkeSBtYWRlLgoKPiA+IEkgc3VzcGVjdCB0aGF0IHRoZSB3YXkgdG8gZml4
-IHlvdXIgZmlsZXN5c3RlbSBpcyB0byBydW4geGZzX3JlcGFpcgo+ID4gdW5kZXIgYSAiQyIgbG9j
-YWxlIHNvIHRoYXQgdGhlIGdsaWJjIHRvbG93ZXIoKSBmdW5jdGlvbiBiZWhhdmVzIHRoZQo+ID4g
-c2FtZSB3YXkgdGhlIGtlcm5lbCBiZWhhdmVzIGFuZCBzbyB0aGUgaGFzaGVzIGNhbGN1bGF0ZWQg
-YnkKPiA+IHhmc19yZXBhaXIgbWF0Y2ggdGhlIHdoYXQgdGhlIGtlcm5lbCB0aGlua3MgaXMgY29y
-cmVjdC4KPiAKPiBOZWl0aGVyIHRoaXM6Cj4gCUxDX0FMTD1DCj4gbm9yIHRoaXM6Cj4gCUxDX0FM
-TD1QT1NJWAo+IG9yIGZvciB0aGF0IG1hdHRlcjoKPiAJTENfQUxMPWVuX1VTLnV0ZjgKPiBtYWRl
-IGFueSBkaWZmZXJlbmNlLiBBbmQgbXkgZGVmYXVsdCB3YXMgYWxyZWFkeSBQT1NJWC4KPiAKPiBB
-bnkgb3RoZXIgdGhvdWdodHM/CgokIExDX0FMTD1DIGxvY2FsZQpMQU5HPWVuX0FVLlVURi04CkxB
-TkdVQUdFPWVuX0FVOmVuCkxDX0NUWVBFPSJDIgpMQ19OVU1FUklDPSJDIgpMQ19USU1FPSJDIgpM
-Q19DT0xMQVRFPSJDIgpMQ19NT05FVEFSWT0iQyIKTENfTUVTU0FHRVM9IkMiCkxDX1BBUEVSPSJD
-IgpMQ19OQU1FPSJDIgpMQ19BRERSRVNTPSJDIgpMQ19URUxFUEhPTkU9IkMiCkxDX01FQVNVUkVN
-RU5UPSJDIgpMQ19JREVOVElGSUNBVElPTj0iQyIKTENfQUxMPUMKJAoKUGVyaGFwcyB5b3UgYWxz
-byBuZWVkIHRvIG92ZXJyaWRlIExBTkcgYW5kIExBTkdVQUdFPwoKPiBUaGVvcmV0aWNhbGx5IEkg
-Y291bGQgZmluZCB0aGUgZXhwZWN0ZWQgaGFzaHZhbHMgYW5kIG92ZXJ3cml0ZQo+IHRoZW0gd2l0
-aCB4ZnNfZGIsIHJpZ2h0PwoKSW4gdGhlb3J5LCBidXQgaGFzaHZhbHMgbmVlZCB0byBiZSBvcmRl
-cmVkIGNvcnJlY3RseSBhbmQgdGhhdApwb3RlbnRpYWxseSBtZWFucyBoYXZpbmcgdG8gdXBkYXRl
-IGJ0cmVlIG5vZGUgcG9pbnRlcnMgYW5kIGFsbCBzb3J0cwpvZiBvdGhlciBjb21wbGV4aXRpZXMu
-IHhmc19kYiBpcyByZWFsbHkgbm90IGRlc2lnbmVkIHRvIHJld3JpdGUKZGlyZWN0b3J5IHN0cnVj
-dHVyZXMgbWFudWFsbHkuCgo+IE9yIGF0IGxlYXN0IHVubGluayB0aGUgZmlsZXMgc28gSSBjYW4K
-PiByZWNsYWltIHRoZSBkaXNrIHNwYWNlPwoKWW91IG5lZWQgdG8gYmUgYWJsZSB0byBzdGF0IHRo
-ZSBmaWxlIHRvIGJlIGFibGUgdG8gdW5saW5rIGl0Li4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRh
-dmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi Dave,
+
+On Mon, Dec 23, 2013 at 12:42:22PM +1100, Dave Chinner wrote:
+> On Sun, Dec 22, 2013 at 05:59:29PM +0800, Zheng Liu wrote:
+> > Hi all,
+> > 
+> > As discussed with ext4 folks, I will try to make ext4 file system support
+> > directory quota (a.k.a., project id in xfs).
+> 
+> Firstly, project quotas are not directory quotas.  Project groups
+> are simply an aggregation of unrelated inodes with a specific
+> identifier (i.e. the project ID). Files accessable only to
+> individual users can shared project ID and hence be accounted to the
+> same quota, and hence accounting is independent of uid/gid.
+> 
+> By themselves, project quotas cannot be used to implement direct
+> subtree quotas - thay requires help from a special inode flag that
+> is used on directory inodes: XFS_DIFLAG_PROJINHERIT
+> 
+> This flag indicates that the directory and all inodes created in the
+> directory inherit the project ID of the directory. Hence the act of
+> creating a file in a XFS_DIFLAG_PROJINHERIT marked directory
+> associates the new file with s a specific project group. New
+> directories also get marked with XFS_DIFLAG_PROJINHERIT so the
+> behaviour is propagated down the directory tree.
+> 
+> Now, there is nothing to stop us from having files outside the
+> inheritance subtree from also having the same project ID, and hence
+> be accounted to the same project group. Indeed, you can have
+> multiple sub-trees that all use the same project ID and hence are
+> accounted together. e.g. a project has subdirs in various
+> directories:
+> 
+> 	/documentation/project_A
+> 	/src/project_A
+> 	/build/project_A
+> 	/test/project_A
+> 	.....
+> 	/home/bill/project_A
+> 	/home/barry/project_A
+> 	/home/benito/project_A
+> 	/home/beryl/project_A
+> 	.....
+> 
+> All of these directories can be set up with the same project ID
+> and XFS_DIFLAG_PROJINHERIT flag, and hence all be accounted to the
+> same project quota, despite being separate, disconnected subtrees.
+> 
+> IOWs, project groups are an accounting mechanism associated with the
+> inode's project ID, while XFS_DIFLAG_PROJINHERIT is a policy used
+> to direct how project IDs are applied.
+> 
+> > For keeping consistency
+> > with xfs's implementation, I did some tests on xfs, and I summarized the
+> > result as following.  This will help us understand what we can do and
+> > what we can't do.  Please correct me if I miss doing some tests or mis-
+> > understand something.
+> > 
+> > I just do some tests about rename/hardlink because they are the key
+> > issue from our discussion.
+> > 
+> > + unaccounted dir
+> > x accounted dir
+> > 
+> > rename(mv)
+> > ==========
+> > 
+> > + -> +: ok
+> > 
+> > + -> x: ok
+> > 
+> > I use strace(1) to lookup which syscall is used, and I found that xfs
+> > will return EXDEV when mv(1) tries to use rename(2) to move a dir from
+> > a unaccounted dir to a accounted dir.  Then mv uses creat(2)/read(2)/
+> > write(2) syscalls to move this dir.
+> 
+> That's purely an implementation detail, designed to simplify the
+> change of project ID for an inode.  By forcing the new inode to be
+> created from scratch under the destination's project ID, we don't
+> have to care about whether rename needs to allocate or free source
+> directory metadata, what anonymous metadata was accounted to the
+> source project ID as the srouce file and directory was modified,
+> etc. It's as simple as this:
+> 
+>         /*
+>          * If we are using project inheritance, we only allow renames
+>          * into our tree when the project IDs are the same; else the
+>          * tree quota mechanism would be circumvented.
+>          */
+>         if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+>                      (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
+>                 error = XFS_ERROR(EXDEV);
+>                 goto error_return;
+>         }
+> 
+> It also documents the policy for accounting directory tree quotas:
+> that quota is accounted for when moving *into* an accounted
+> directory tree, not when moving out of a directory tree.
+> 
+> > x -> +: wrong (design by feature?) 
+> > 
+> > If we move a dir from a accounted dir to a unaccounted dir, the quota is
+> > still accounted.  It seems that xfs don't remove project id from this
+> > dir and its subdirs/files on this case.
+> 
+> That's the way the directory tree policy was designed: it's designed
+> to allow project quotas to account for individual files as well as
+> subtrees. Remember: projects are not confined to a single subtree
+> and directory tree accounting is done when moving *into* a
+> controlled tree, not the other way around.
+> 
+> > x -> x: ok
+> > 
+> > Xfs returns EXDEV error when mv(1) uses rename(2) to move a dir from a
+> > accounted dir to another accounted dir (These dirs have different
+> > project ids).  Then mv(1) uses creat(1)/read(1)/write(1) syscalls to
+> > move this dir.
+> > 
+> > summary:
+> > rename        +        x
+> > +             ok       ok (EXDEV)
+> > x             wrong    ok (EXDEV)
+> > 
+> > hardlink(ln)
+> > ========
+> > 
+> > + -> +: ok
+> > 
+> > + -> x: error
+> > 
+> > Xfs also returns EXDEV error to forbid this operation.  So that means
+> > that we don't allow users to do a hardlink for a file from a unaccount
+> > dir to a accounted dir.
+> 
+> Of course - who do you account new changes to? It's the same problem
+> as linking across directory trees with different project IDs....
+> 
+> > 
+> > x -> +: ok
+> > 
+> > This operation can be executed and no any error is reported.  After that
+> > the quota doesn't be changed.  When both of two hardlinks are removed,
+> > the quota will be discharged.
+> 
+> Consistent with the rename case - checking is done based on the
+> destination directory - you can link out to an uncontrolled
+> destination as the inode is still accounted to the project ID, but
+> you can't link into a controlled destination with a different
+> project ID. The check is identical to the one I quoted for rename
+> above.
+> 
+> > As always, any comment or idea are welcome.
+> 
+> I'd suggest that you implement project quotas, not directory quotas.
+> They are way more flexible than pure directory quotas, but with only
+> a few lines of code and a special directory flag they can be used to
+> implement directory subtree quotas....
+
+Sorry for the delay.  I really appreciate your detail explanation.
+
+Personally, I agree with you that we implement a project quota
+in ext4 and add a flag to support directory quota in order to keep
+consistency with xfs.  But this still needs to be discussed with other
+ext4 folks.  Later I will write a draft to describe my idea about
+project quota in ext4.  That will let me collect more comments and
+suggestions.
+
+> 
+> I'd also strongly suggest that you use the XFS userspace quota API
+> for managing project quotas, so that we can use the same management
+> tools and tests to verify that they behave the same. Please don't
+> invent a new version of the quota API to implement this - everything
+> you need ifor managing project/directory quotas is already there in
+> xfs_quota.....
+
+Frankly, I don't like this, really.  Now we have quota-tool to manage
+the quota in ext4.  So IMHO we'd better go on using this tool because it
+is natural for ext4 users.  I still couldn't accept this fact that I
+need to install xfsprogs for using a feature of ext4.  Further, it could
+make users puzzled because they use quota to control user/group quota in
+ext4, but it uses xfs_quota to control project quota.  It could bring
+some troubles for the ext4 users who have written some scripts to manage
+their machines.
+
+Thanks,
+                                                - Zheng
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
