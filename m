@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BA80E29DF8
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 16:07:33 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 69B3F29DF8
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 16:38:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9228D30408B
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 14:07:30 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 341F98F8033
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 14:38:54 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	26P8J3g3WSArWhD4 for <xfs@oss.sgi.com>;
-	Wed, 15 Jan 2014 14:07:25 -0800 (PST)
-Date: Thu, 16 Jan 2014 09:07:21 +1100
+	c9TMEaxBkocIM8uM for <xfs@oss.sgi.com>;
+	Wed, 15 Jan 2014 14:38:52 -0800 (PST)
+Date: Thu, 16 Jan 2014 09:38:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
-	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Message-ID: <20140115220721.GY3469@dastard>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
-	<20140106201032.GA13491@quack.suse.cz>
-	<20140107155830.GA28395@infradead.org>
-	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
-	<20140108140307.GA588@infradead.org>
-	<CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: allow logical-sector sized O_DIRECT for any fs
+	sector size
+Message-ID: <20140115223848.GZ3469@dastard>
+References: <52D6CC91.6000408@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
+In-Reply-To: <52D6CC91.6000408@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,69 +30,173 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sergey Meirovich <rathamahata@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Gluk <git.user@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jan 14, 2014 at 03:30:11PM +0200, Sergey Meirovich wrote:
-> Hi Cristoph,
+On Wed, Jan 15, 2014 at 11:59:45AM -0600, Eric Sandeen wrote:
+> Some time ago, mkfs.xfs started picking the storage physical
+> sector size as the default filesystem "sector size" in order
+> to avoid RMW costs incurred by doing IOs at logical sector
+> size alignments.
 > 
-> On 8 January 2014 16:03, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Tue, Jan 07, 2014 at 08:37:23PM +0200, Sergey Meirovich wrote:
-> >> Actually my initial report (14.67Mb/sec  3755.41 Requests/sec) was about ext4
-> >> However I have tried XFS as well. It was a bit slower than ext4 on all
-> >> occasions.
-> >
-> > I wasn't trying to say XFS fixes your problem, but that we could
-> > implement appending AIO writes in XFS fairly easily.
-> >
-> > To verify Jan's theory, can you try to preallocate the file to the full
-> > size and then run the benchmark by doing a:
-> >
-> > # fallocate -l <size> <filename>
-> >
-> > and then run it?  If that's indeed the issue I'd be happy to implement
-> > the "real aio" append support for you as well.
-> >
+> However, this means that for a filesystem made with i.e.
+> a 4k sector size on an "advanced format" 4k/512 disk,
+> 512-byte direct IOs are no longer allowed.  This means
+> that XFS has essentially turned this AF drive into a hard
+> 4K device, from the filesystem on up.
 > 
-> I've resorted to write simple wrapper around io_submit() and ran it
-> against preallocated file (exactly to avoid append AIO scenario).
-> Random data was used to avoid XtremIO online deduplication but results
-> were still wonderfull for 4k sequential AIO write:
+> XFS's mkfs-specified "sector size" is really just controlling
+> the minimum size & alignment of filesystem metadata IO.
 > 
-> 744.77 MB/s   190660.17 Req/sec
+> There is no real need to tightly couple XFS's minimal
+> metadata size to the minimum allowed direct IO size;
+> XFS can continue doing metadata in optimal sizes, but
+> still allow smaller DIOs for apps which issue them,
+> for whatever reason.
+
+Given that we already serialise sub-block IO completely, doing
+"sub-sector" IO will also be serialised so there shouldn't be any
+new issues introduced by this change.
+
+> This patch adds 2 new fields to the xfs_buftarg, so that
+> we now track 3 sizes:
 > 
-> Clearly Linux lacks "rial aio" append to be available for any FS.
-> Seems that you are thinking that it would be relatively easy to
-> implement it for XFS on Linux? If so - I will really appreciate your
-> afford.
+>  1) The device logical sector size
+>  2) The device physical sector size
+>  3) The filesystem sector size, which is the minimum unit and
+>     alignment of IO which will be performed by metadata operations.
 
-Yes, I think it can be done relatively simply. We'd have to change
-the code in xfs_file_aio_write_checks() to check whether EOF zeroing
-was required rather than always taking an exclusive lock (for block
-aligned IO at EOF sub-block zeroing isn't required), and then we'd
-have to modify the direct IO code to set the is_async flag
-appropriately. We'd probably need a new flag to say tell the DIO
-code that AIO beyond EOF is OK, but that isn't hard to do....
+I wouldn't call it the "filesystem sector size" because it's clear
+that it doesn't apply to everything in the filesystem. I'd prefer
+that we call it the "metadata sector size", similar to the "log
+sector size" we keep for situations where the external log device
+has a different sector size to the data device.
 
-And for those that are wondering about the stale data exposure problem
-documented in the aio code:
+> The first is used for the minimum allowed direct IO alignment,
+> the 2nd is used to report DIO sizes in XFS_IOC_DIOINFO
+> (the theory being, if an app actually asks, we can give them
+> the optimal answer, even if we allow smaller IOs), and the
+> 3rd is used internally by the filesystem for metadata IOs.
 
-        /*
-         * For file extending writes updating i_size before data
-         * writeouts complete can expose uninitialized blocks. So
-         * even for AIO, we need to wait for i/o to complete before
-         * returning in this case.
-         */
+Terminology nit: the 3rd is set by mkfs to define the physical
+format constraints that metadata in the filesystem must obey. If we
+ever have to allocate sector sized metadata, then it will be used
+for more than just IO....
 
-This is fixed in XFS by removing a single if() check in
-xfs_iomap_write_direct(). We already use unwritten extents for DIO
-within EOF to avoid races that could expose uninitialised blocks, so
-we just need to make that unconditional behaviour.  Hence racing IO
-on concurrent appending i_size updates will only ever see a hole
-(zeros), an unwritten region (zeros) or the written data.
+> This has passed xfstests on filesystems made with 4k sectors,
+> including when run under the patch I sent to ignore
+> XFS_IOC_DIOINFO, and issue 512 DIOs anyway.  I also directly
+> tested end of block behavior on preallocated, sparse, and
+> existing files when we do a 512 IO into a 4k file on a 
+> 4k-sector filesystem, to be sure there were no unexpected
+> behaviors.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> NB: This depends on this patch which is in the xfs tree,
+> but not yet upstream:
+>  xfs: simplify xfs_setsize_buftarg callchain; remove unused arg
+> 
+> 
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 9fccfb5..a89dcdf 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1599,6 +1599,7 @@ xfs_setsize_buftarg(
+>  	unsigned int		blocksize,
+>  	unsigned int		sectorsize)
+>  {
+> +	/* Set up filesystem block and sector sizes */
+>  	btp->bt_bsize = blocksize;
+>  	btp->bt_sshift = ffs(sectorsize) - 1;
 
-Christoph, are you going to get any time to look at doing this in
-the next few days?
+The two places that use bt_sshift convert it back to a byte count.
+We should change this simply to being a byte count.
+
+>  	btp->bt_smask = sectorsize - 1;
+> @@ -1614,6 +1615,9 @@ xfs_setsize_buftarg(
+>  		return EINVAL;
+>  	}
+>  
+> +	/* Set up device logical & physical sector size info */
+> +	btp->bt_lsmask = bdev_logical_block_size(btp->bt_bdev) - 1;
+> +	btp->bt_pssize = bdev_physical_block_size(btp->bt_bdev);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 1cf21a4..29a0db9 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -88,14 +88,28 @@ typedef unsigned int xfs_buf_flags_t;
+>   */
+>  #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
+>  
+> +/*
+> + * The xfs_buftarg contains 3 notions of "sector size" -
+> + *
+> + * 1) The device logical sector size
+> + * 2) The device physical sector size
+> + * 3) The filesystem sector size, which is the minimum unit and
+> + *    alignment of IO which will be performed by metadata operations.
+> + *
+> + * The latter is specified at mkfs time, stored on-disk in the
+> + * superblock's sb_sectsize, and is set from there.
+> + */
+> +
+>  typedef struct xfs_buftarg {
+>  	dev_t			bt_dev;
+>  	struct block_device	*bt_bdev;
+>  	struct backing_dev_info	*bt_bdi;
+>  	struct xfs_mount	*bt_mount;
+> -	unsigned int		bt_bsize;
+> -	unsigned int		bt_sshift;
+> -	size_t			bt_smask;
+> +	unsigned int		bt_bsize;	/* fs block size */
+> +	unsigned int		bt_sshift;	/* fs sector size shift */
+> +	size_t			bt_smask;	/* fs sector size mask */
+> +	size_t			bt_lsmask;	/* dev logical sectsz mask */
+> +	unsigned int		bt_pssize;	/* dev physical sector size */
+
+This patch makes bt_smask unused, so it can be removed. bt_bsize is
+also unused, so that should be removed, too. indeed, the buftarg has
+a backpointer to the xfs_mount, so we can get the block size from
+there if it is ever necessary.
+
+And I think we should make these names a little more descriptive
+while we are touching them so comments to describe them are
+unnecessary:
+
+	unsigned int		bt_meta_sectorsize;
+	unsigned int		bt_physical_sectorsize;
+	size_t			bt_logical_sectormask;
+
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 33ad9a7..1f3431f 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1587,7 +1587,12 @@ xfs_file_ioctl(
+>  			XFS_IS_REALTIME_INODE(ip) ?
+>  			mp->m_rtdev_targp : mp->m_ddev_targp;
+>  
+> -		da.d_mem = da.d_miniosz = 1 << target->bt_sshift;
+> +		/*
+> +		 * Report device physical sector size as "optimal" minimum,
+> +		 * unless blocksize is smaller than that.
+> +		 */
+> +		da.d_miniosz = min(target->bt_pssize, target->bt_bsize);
+
+Just grab the filesysetm block size from the xfs_mount:
+
+		da.d_miniosz = min(target->bt_pssize, mp->m_sb.sb_blocksize);
+
+> +		da.d_mem = da.d_miniosz;
+
+I'd suggest that this should be PAGE_SIZE - it's for memory buffer
+alignment, not IO alignment, so using the IO alignment just seems
+wrong to me...
 
 Cheers,
 
