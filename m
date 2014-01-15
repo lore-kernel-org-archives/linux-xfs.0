@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E3E429E19
+	by oss.sgi.com (Postfix) with ESMTP id B103529DF8
 	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:52 -0600 (CST)
 Received: from eagdhcp-232-151.americas.sgi.com
 	(eagdhcp-232-151.americas.sgi.com [128.162.232.151])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 126E6304032
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 95E30304032
 	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 16:30:52 -0800 (PST)
 Received: from eagdhcp-232-151.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-151.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s0G0UrEF003616
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:53 -0600 (CST)
+	s0G0Usri003632
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:54 -0600 (CST)
 	(envelope-from tinguely@eagdhcp-232-151.americas.sgi.com)
-Message-Id: <20140116000851.549991275@sgi.com>
-Date: Wed, 15 Jan 2014 16:00:17 -0600
+Message-Id: <20140116000851.941188004@sgi.com>
+Date: Wed, 15 Jan 2014 16:00:21 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [RFC 05/17] xfs: (parent ptr) add parent pointer support to attribute
-	code
+Subject: [RFC 09/17] xfs: (parent ptr) add parent pointer support to xfs_link
 References: <20140115220012.624438534@sgi.com>
-Content-Disposition: inline; filename=05-pptr-add-xfs_parent-files.patch
+Content-Disposition: inline; filename=09-pptr-add-to_xfs_link.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,152 +32,140 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+Add the parent inode / offset entry for a new link. If the
+parent inode pointer entries are not free, then add the
+entry as an extended attribute of ATTR_PARENT type. The
+entry uses an unique name composed of the 64 bit inode
+and the 32 bit offsets. No extend attribute value is used.
 
 ---
- fs/xfs/xfs_attr.c      |   20 ++++++++++++--------
- fs/xfs/xfs_attr.h      |    2 ++
- fs/xfs/xfs_da_format.h |   12 ++++++++----
- fs/xfs/xfs_fs.h        |    1 +
- fs/xfs/xfs_fsops.c     |    4 +++-
- 6 files changed, 65 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_inode.c  |   43 ++++++++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_parent.h |   39 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 79 insertions(+), 3 deletions(-)
 
-Index: b/fs/xfs/xfs_attr.c
+Index: b/fs/xfs/xfs_inode.c
 ===================================================================
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -234,7 +234,7 @@ xfs_attr_set_int(
- 	int			error, err2, committed;
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_trans_res	tres;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	int			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
- 	int			local;
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -51,6 +51,7 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_log.h"
+ #include "xfs_bmap_btree.h"
++#include "xfs_parent.h"
  
- 	/*
-@@ -444,18 +444,22 @@ xfs_attr_set(
- 	int		flags)
- {
- 	int             error;
--	struct xfs_name	xname;
-+	struct xfs_name	xname, *xnamep;
+ kmem_zone_t *xfs_inode_zone;
  
- 	XFS_STATS_INC(xs_attr_set);
+@@ -1358,6 +1359,7 @@ xfs_link(
+ 	int			cancel_flags;
+ 	int			committed;
+ 	int			resblks;
++	uint			offset;
  
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return (EIO);
+ 	trace_xfs_link(tdp, target_name);
  
--	error = xfs_attr_name_to_xname(&xname, name);
--	if (error)
--		return error;
--
--	return xfs_attr_set_int(dp, &xname, value, valuelen, flags);
-+	if ((flags & ATTR_PARENT) == 0) {
-+		error = xfs_attr_name_to_xname(&xname, name);
+@@ -1407,12 +1409,26 @@ xfs_link(
+ 	if (error)
+ 		goto error_return;
+ 
+-	xfs_bmap_init(&free_list, &first_block);
++ 	xfs_bmap_init(&free_list, &first_block);
+ 
+ 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+-				   &first_block, &free_list, resblks, NULL);
++				   &first_block, &free_list, resblks, &offset);
+ 	if (error)
+ 		goto abort_return;
++
++	if (xfs_sb_version_hasparent(&mp->m_sb) &&
++	    sip->i_d.di_parent == NULLFSINO) {
++		/*
++		 * store the parent information in the inode if the fields
++		 * are empty. zero the offset as a flag to not add the
++		 * information in an extended attribute.
++		 */
++		sip->i_d.di_parent = cpu_to_be64(tdp->i_ino);
++		sip->i_d.di_poffset = cpu_to_be32(offset);
++		xfs_trans_log_inode(tp, sip, XFS_ILOG_CORE);
++		offset = 0;
++	}
++
+ 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+ 
+@@ -1435,7 +1451,28 @@ xfs_link(
+ 		goto abort_return;
+ 	}
+ 
+-	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	if (error)
++		return error;
++
++	if (xfs_sb_version_hasparent(&mp->m_sb) && offset) {
++		struct xfs_pattr	p_entry;
++		struct xfs_name		p_name;
++
++		/*
++		 * The parent pointer information could not be stored
++		 * inode core, and must be stored in an extended attribute.
++		 */
++		xfs_parent_pname(tdp->i_ino, offset, &p_entry, &p_name);
++		error = xfs_attr_set(sip, (char *) &p_name, NULL, 0,
++				     ATTR_PARENT|ATTR_CREATE);
 +		if (error)
-+			return error;
-+		xnamep = &xname;
-+	} else
-+		xnamep = (struct xfs_name *) name;
-+	return xfs_attr_set_int(dp, xnamep, value, valuelen, flags);
-+					
- }
++			xfs_notice(mp,
++			   "%s: attr %llx/%x failed inode %llx %d\n",
++			   __func__, tdp->i_ino, offset, sip->i_ino,
++			   error);
++	}
++	return error;
  
- /*
-@@ -516,7 +520,7 @@ xfs_attr_remove_int(xfs_inode_t *dp, str
- 	 * operation if necessary
- 	 */
- 
--	if (flags & ATTR_ROOT)
-+	if (flags & (ATTR_ROOT | ATTR_PARENT))
- 		args.trans->t_flags |= XFS_TRANS_RESERVE;
- 
- 	error = xfs_trans_reserve(args.trans, &M_RES(mp)->tr_attrrm,
-Index: b/fs/xfs/xfs_attr.h
+  abort_return:
+ 	cancel_flags |= XFS_TRANS_ABORT;
+Index: b/fs/xfs/xfs_parent.h
 ===================================================================
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -44,6 +44,7 @@ struct xfs_attr_list_context;
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
- 
- #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
- #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-@@ -55,6 +56,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_PARENT,		"PARENT" }, \
- 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
- 	{ ATTR_KERNOVAL,	"KERNOVAL" }
- 
-Index: b/fs/xfs/xfs_da_format.h
-===================================================================
---- a/fs/xfs/xfs_da_format.h
-+++ b/fs/xfs/xfs_da_format.h
-@@ -895,24 +895,28 @@ struct xfs_attr3_icleaf_hdr {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
- 
- /*
-  * Conversion macros for converting namespace bits from argument flags
-  * to ondisk flags.
-  */
--#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
- #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
- #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
- #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
--					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-+					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-+					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
- #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
--					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-+					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-+					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
- 
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
-Index: b/fs/xfs/xfs_fs.h
-===================================================================
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -238,6 +238,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
- #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
- #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x20000	/* parent inode support */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-Index: b/fs/xfs/xfs_fsops.c
-===================================================================
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -104,7 +104,9 @@ xfs_fs_geometry(
- 			(xfs_sb_version_hascrc(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
- 			(xfs_sb_version_hasftype(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_FTYPE : 0);
-+				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
-+			(xfs_sb_version_hasparent(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_PARENT : 0);
- 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
- 				mp->m_sb.sb_logsectsize : BBSIZE;
- 		geo->rtsectsize = mp->m_sb.sb_blocksize;
+--- /dev/null
++++ b/fs/xfs/xfs_parent.h
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (c) 2014 SGI
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#ifndef	__XFS_PARENT_H__
++#define	__XFS_PARENT_H__
++
++#define XFSREMOVESRC	(1 << 0)
++#define XFSREMOVETAR	(1 << 1)
++#define XFSADD		(1 << 2)
++
++struct xfs_pattr {
++	__be64  p_ino;
++	__be32  p_offset;
++} __attribute__((packed));
++
++static inline void xfs_parent_pname(xfs_ino_t ino, __uint32_t off, struct xfs_pattr *pe, struct xfs_name *pn)
++{
++	pe->p_ino = cpu_to_be64(ino);
++	pe->p_offset = cpu_to_be32(off);
++	pn->name = (char *)pe;
++	pn->len = sizeof(struct xfs_pattr);
++}
++#endif /* __XFS_PARENT_H__ */
++
 
 
 _______________________________________________
