@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 713EF29E27
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:55 -0600 (CST)
-Received: from eagdhcp-232-151.americas.sgi.com
-	(eagdhcp-232-151.americas.sgi.com [128.162.232.151])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 627C18F8037
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 16:30:52 -0800 (PST)
-Received: from eagdhcp-232-151.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-151.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s0G0Ureo003624
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:53 -0600 (CST)
-	(envelope-from tinguely@eagdhcp-232-151.americas.sgi.com)
-Message-Id: <20140116000851.737600194@sgi.com>
-Date: Wed, 15 Jan 2014 16:00:19 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [RFC 07/17] xfs: (parent ptr) add parent pointer support to xfs_create
-References: <20140115220012.624438534@sgi.com>
-Content-Disposition: inline; filename=07-pptr-add-to-xfs_create.patch
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 603C029DF8
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 20:54:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 43A7C304084
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:54:04 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id QniW2JVpdRx5Yo07 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 Jan 2014 18:54:03 -0800 (PST)
+From: Anand Jain <anand.jain@oracle.com>
+Subject: [PATCH 1/2 v3] xfstests: make btrfs/001.out in line with subvol
+	delete output
+Date: Thu, 16 Jan 2014 11:03:15 +0800
+Message-Id: <1389841395-8935-1-git-send-email-anand.jain@oracle.com>
+In-Reply-To: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
+References: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,47 +30,69 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: lin^C-btrfs@vger.kernel.org, wangshilong1991@gmail.com, dsterba@suse.cz
 
-Add the parent inode / entry offset into the parent inode entries
-when creating a new file or directory. The first entry will always
-go into the inode.
+From: Anand Jain <Anand.Jain@oracle.com>
 
+btrfs/001 is failing as the below btrfs-progs patch changed the
+output during subvol delete.
+Patch :
+btrfs-progs: add options to set commit mode after subvol delete
+
+adding it to the filter
+
+Signed-off-by: Anand Jain <Anand.Jain@oracle.com>
 ---
- fs/xfs/xfs_inode.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ v3: takes in David suggested
+ v2: accepts Wang suggested
 
-Index: b/fs/xfs/xfs_inode.c
-===================================================================
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1163,6 +1163,7 @@ xfs_create(
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_trans_res	tres;
- 	uint			resblks;
-+	uint			offset;
+ common/filter.btrfs |   10 ++++++++++
+ tests/btrfs/001     |    3 ++-
+ 2 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/common/filter.btrfs b/common/filter.btrfs
+index 29512cd..b81ac49 100644
+--- a/common/filter.btrfs
++++ b/common/filter.btrfs
+@@ -56,5 +56,15 @@ _filter_btrfs_device_stats()
+ 	sed -e "s/ *$NUMDEVS /<NUMDEVS> /g"
+ }
  
- 	trace_xfs_create(dp, name);
- 
-@@ -1265,11 +1266,17 @@ xfs_create(
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 					&first_block, &free_list, resblks ?
- 					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
--					NULL);
-+					&offset);
- 	if (error) {
- 		ASSERT(error != ENOSPC);
- 		goto out_trans_abort;
- 	}
++_filter_transcation_commit_default() {
++	sed -e "/Transaction commit: none (default)/d"
++}
 +
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		/* set the parent pointer and offset to the inode core fields */
-+		ip->i_d.di_parent = cpu_to_be64(dp->i_ino);
-+		ip->i_d.di_poffset = cpu_to_be32(offset);
-+	}
- 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++_filter_btrfs_subvol_delete()
++{
++	_filter_scratch | _filter_transcation_commit_default
++
++}
++
+ # make sure this script returns success
+ /bin/true
+diff --git a/tests/btrfs/001 b/tests/btrfs/001
+index c05d772..8258d06 100755
+--- a/tests/btrfs/001
++++ b/tests/btrfs/001
+@@ -40,6 +40,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
++. ./common/filter.btrfs
  
-
+ # real QA test starts here
+ _supported_fs btrfs
+@@ -98,7 +99,7 @@ echo "Listing subvolumes"
+ $BTRFS_UTIL_PROG subvolume list $SCRATCH_MNT | awk '{ print $NF }'
+ 
+ # Delete the snapshot
+-$BTRFS_UTIL_PROG subvolume delete $SCRATCH_MNT/snap | _filter_scratch
++$BTRFS_UTIL_PROG subvolume delete $SCRATCH_MNT/snap | _filter_btrfs_subvol_delete
+ echo "List root dir"
+ ls $SCRATCH_MNT
+ _scratch_remount
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
