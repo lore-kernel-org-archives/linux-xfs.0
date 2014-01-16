@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9416A29DF8
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 11:07:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5A83B8F8050
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:24 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A7BFA29E20
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 11:07:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4BABAAC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:25 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id kY4DLPei1ucemouf (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id RM1BmJ7GVWKGf0mV (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Jan 2014 09:07:23 -0800 (PST)
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id DC0E4AC3E
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:07:21 +0000 (UTC)
+	Thu, 16 Jan 2014 09:07:24 -0800 (PST)
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 11C5CAC56
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:07:23 +0000 (UTC)
 From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH 4/5] xfstests: accept tests/ prefix for test name on
-	commandline
-Date: Thu, 16 Jan 2014 18:07:14 +0100
-Message-Id: <c126152c562d3aba42134874d838fda1f6e80d13.1389891730.git.dsterba@suse.cz>
+Subject: [PATCH 5/5] xfstests: update lsqa.pl for new tests layout
+Date: Thu, 16 Jan 2014 18:07:15 +0100
+Message-Id: <640bbf9ea0ed48cb817218af8a3311545c4cc1b8.1389891730.git.dsterba@suse.cz>
 In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
 References: <cover.1389891730.git.dsterba@suse.cz>
 In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
@@ -37,33 +36,81 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: David Sterba <dsterba@suse.cz>
 
-Just for convenience to let tab completion or shell globs work (files
-that are not in the group file are ignored).
+Accepted parameter types:
+- nothing - list all tests from all subdirectories in tests/*
+- tests/DIR - list all tests from DIR
+- tests/DIR/123 - show header from single test
 
 Signed-off-by: David Sterba <dsterba@suse.cz>
 ---
- check | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ lsqa.pl | 32 ++++++++++++++++++++++++--------
+ 1 file changed, 24 insertions(+), 8 deletions(-)
 
-diff --git a/check b/check
-index d578e49b78d4..a787c4a9f69f 100755
---- a/check
-+++ b/check
-@@ -263,12 +263,13 @@ if $have_test_arg; then
- 			exit $status
- 			;;
- 		*)	test_dir=`dirname $1`
-+			test_dir=${test_dir#$SRC_DIR/*}
- 			test_name=`basename $1`
- 			group_file=$SRC_DIR/$test_dir/group
+diff --git a/lsqa.pl b/lsqa.pl
+index 040196f70120..b4fc83f43f99 100755
+--- a/lsqa.pl
++++ b/lsqa.pl
+@@ -15,13 +15,20 @@
+ # along with this program; if not, write the Free Software Foundation,
+ # Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ #
++
++# Print headers of given tests
++# Accepted parameter types:
++# - nothing - list all tests from all subdirectories in tests/*
++# - tests/DIR - list all tests from DIR
++# - tests/DIR/123 - show header from single test
++
+ use strict;
  
- 			if egrep "^$test_name" $group_file >/dev/null ; then
- 				# in group file ... OK
--				echo $SRC_DIR/$1 >>$tmp.arglist
-+				echo $SRC_DIR/$test_dir/$test_name >>$tmp.arglist
- 			else
- 				# oops
- 				echo "$1 - unknown test, ignored"
+ use Getopt::Long;
+ 
+ sub help();
+ sub get_qa_header($);
+-sub get_qa_tests();
++sub get_qa_tests;
+ 
+ my %opt;
+ 
+@@ -43,8 +50,19 @@ if ($opt{'help'}) {
+     die help();
+ }
+ 
+-my @qatests = map {sprintf("%03d", $_)} @ARGV;
+-@qatests = get_qa_tests() unless (@qatests);
++my @qatests;
++
++if (!@ARGV) {
++    my $d="tests";
++    opendir(DIR, $d);
++    map { push @qatests,get_qa_tests("$d/$_") if -d "$d/$_" } readdir(DIR);
++    closedir(DIR);
++}
++
++foreach (@ARGV) {
++    push @qatests,$_ if -f && /\d{3}$/;
++    push @qatests,get_qa_tests($_) if -d;
++}
+ 
+ foreach (@qatests) {
+     my @h = get_qa_header($_);
+@@ -103,13 +121,11 @@ sub get_qa_header($) {
+     return @l;
+ }
+ 
+-sub get_qa_tests() {
++sub get_qa_tests {
+     my $d = shift || $ENV{'PWD'};
+ 
+     opendir(my $DIR, $d) || die "can't opendir $d: $!";
+-    my @qa = grep {m/^\d\d\d$/ && -f "$d/$_" } readdir($DIR);
++    my @qa = sort grep { m/^\d\d\d$/ && -f "$d/$_" } readdir($DIR);
+     closedir($DIR);
+-
+-    return @qa;
++    return map { $_ = "$d/$_" } @qa;
+ }
+-
 -- 
 1.8.5
 
