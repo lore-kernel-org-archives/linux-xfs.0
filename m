@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0D03829DF8
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 20:55:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C02FAC004
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:55:22 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id xEwICBHywgBAPtZX (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Jan 2014 18:55:21 -0800 (PST)
-From: Anand Jain <anand.jain@oracle.com>
-Subject: [PATCH 1/2 v3] xfstests: make btrfs/001.out in line with subvol
-	delete output
-Date: Thu, 16 Jan 2014 11:04:36 +0800
-Message-Id: <1389841476-8985-1-git-send-email-anand.jain@oracle.com>
-In-Reply-To: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
-References: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 389937F4E
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 11:07:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1D3EC8F8059
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:20 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id QpM51NbNIhiDiTp1 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 16 Jan 2014 09:07:19 -0800 (PST)
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 21D97AC56
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:07:18 +0000 (UTC)
+From: David Sterba <dsterba@suse.cz>
+Subject: [PATCH 1/5] xfstests: fix minor build warning
+Date: Thu, 16 Jan 2014 18:07:11 +0100
+Message-Id: <46203afc2c2423b9df110a38be39c632dd83d5c7.1389891730.git.dsterba@suse.cz>
+In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
+References: <cover.1389891730.git.dsterba@suse.cz>
+In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
+References: <cover.1389891730.git.dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,69 +34,44 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: wangshilong1991@gmail.com, linux-btrfs@vger.kernel.org, dsterba@suse.cz
+Cc: David Sterba <dsterba@suse.cz>
 
-From: Anand Jain <Anand.Jain@oracle.com>
+Make in the toplevel directory tries to process the 'group' file that
+existed in the previous file layout
 
-btrfs/001 is failing as the below btrfs-progs patch changed the
-output during subvol delete.
-Patch :
-btrfs-progs: add options to set commit mode after subvol delete
+$ make
+ sed: can't read group: No such file or directory
+ sed: can't read group: No such file or directory
+ ...
 
-adding it to the filter
-
-Signed-off-by: Anand Jain <Anand.Jain@oracle.com>
+Signed-off-by: David Sterba <dsterba@suse.cz>
 ---
- v3: takes in David suggested
- v2: accepts Wang suggested
+ Makefile | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
- common/filter.btrfs |   10 ++++++++++
- tests/btrfs/001     |    3 ++-
- 2 files changed, 12 insertions(+), 1 deletions(-)
-
-diff --git a/common/filter.btrfs b/common/filter.btrfs
-index 29512cd..b81ac49 100644
---- a/common/filter.btrfs
-+++ b/common/filter.btrfs
-@@ -56,5 +56,15 @@ _filter_btrfs_device_stats()
- 	sed -e "s/ *$NUMDEVS /<NUMDEVS> /g"
- }
+diff --git a/Makefile b/Makefile
+index a7f6f9d374ca..30d8747d1f79 100644
+--- a/Makefile
++++ b/Makefile
+@@ -41,7 +41,6 @@ endif
  
-+_filter_transcation_commit_default() {
-+	sed -e "/Transaction commit: none (default)/d"
-+}
-+
-+_filter_btrfs_subvol_delete()
-+{
-+	_filter_scratch | _filter_transcation_commit_default
-+
-+}
-+
- # make sure this script returns success
- /bin/true
-diff --git a/tests/btrfs/001 b/tests/btrfs/001
-index c05d772..8258d06 100755
---- a/tests/btrfs/001
-+++ b/tests/btrfs/001
-@@ -40,6 +40,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/filter.btrfs
+ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
  
- # real QA test starts here
- _supported_fs btrfs
-@@ -98,7 +99,7 @@ echo "Listing subvolumes"
- $BTRFS_UTIL_PROG subvolume list $SCRATCH_MNT | awk '{ print $NF }'
+-TESTS = $(shell sed -n -e '/^[0-9][0-9][0-9]*/s/ .*//p' group)
+ CONFIGURE = configure include/builddefs include/config.h
+ LSRCFILES = configure configure.ac aclocal.m4 README VERSION
+ LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+@@ -60,7 +59,7 @@ endif
+ export TESTS_DIR = tests
+ SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) $(TESTS_DIR)
  
- # Delete the snapshot
--$BTRFS_UTIL_PROG subvolume delete $SCRATCH_MNT/snap | _filter_scratch
-+$BTRFS_UTIL_PROG subvolume delete $SCRATCH_MNT/snap | _filter_btrfs_subvol_delete
- echo "List root dir"
- ls $SCRATCH_MNT
- _scratch_remount
+-default: include/builddefs $(DMAPI_MAKEFILE) $(TESTS)
++default: include/builddefs $(DMAPI_MAKEFILE)
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(Q)$(MAKE) $(MAKEOPTS) $@
+ else
 -- 
-1.7.1
+1.8.5
 
 _______________________________________________
 xfs mailing list
