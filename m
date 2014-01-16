@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3D5017F7C
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 00:38:17 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id DBC9B7F3F
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 23:56:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FDFC8F8070
-	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 22:38:14 -0800 (PST)
-Received: from mail-pd0-f182.google.com (mail-pd0-f182.google.com
-	[209.85.192.182]) by cuda.sgi.com with ESMTP id
-	HCv0oasfp31nKs19 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 27 Jan 2014 22:38:12 -0800 (PST)
-Received: by mail-pd0-f182.google.com with SMTP id v10so6731070pde.27
-	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 22:38:11 -0800 (PST)
-Date: Tue, 28 Jan 2014 14:42:49 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [RFC] A draft for making ext4 support project quota
-Message-ID: <20140128064248.GA8653@gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CEE198F8037
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 21:56:15 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ScWVDelpGe394Q68 for <xfs@oss.sgi.com>;
+	Wed, 15 Jan 2014 21:56:12 -0800 (PST)
+Date: Thu, 16 Jan 2014 16:56:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC 00/17] RFC parent inode pointers.
+Message-ID: <20140116055607.GR3431@dastard>
+References: <20140115220012.624438534@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20140115220012.624438534@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,153 +29,226 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Li Xi <pkuelelixi@gmail.com>, Theodore Ts'o <tytso@mit.edu>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi all,
+On Wed, Jan 15, 2014 at 04:00:12PM -0600, Mark Tinguely wrote:
+> Yeah, yeah, this has gotten buried several times and better get out on
+> the list for discussion before it gets buried yet again.
+> 
+> Parent inode support allow XFS to quickly derive a file name and
+> path from the mount point. This can aid in directory/path policies
+> and can help relocate items during filesystem shrink.
+> 
+>  1) Representation of a parent inode entry:
+> 
+>  There are several ways to represent the parent inode entry.
+>  A 2005 XFS meeting came up with the following ideas:
+> 
+>   1) Storing the parent inode# list inside the inode with a separate field
+>      separate fork
 
-Here is a draft about ext4 project quota.  After discussed in another
-thread [1], I believe that we have reached a consensus for supporting
-project quota in ext4 and keep consistency with xfs.  Thus I write this
-draft.  As always, comments, suggestions and ideas are welcome.
+Too complex, rejected in the first few minutes of discussion.
 
-1. http://www.spinics.net/lists/linux-ext4/msg41275.html
+>   2) Storing the parent inode# list in EA names with null values
+>      EA: <name=inode#, value=NULL>
 
-                   Ext4 Project Quota (ver. 0.10)
+Not uniquely identifying the filename of the inode in parent
+directory, so can't tell if name that points to inode is current.
+Hard links are impossible to handle.  never implemented. 
 
-Goal
-====
+>   3) As in (2) but store the 1st parent inode# in a field in the inode
+>      first-parent-ptr + <name=inode#, value=NULL>
 
-The goal is to make ext4 support project quota which keeps the same
-behaviour with xfs.  After adding this new feature, we can support
-directory quota based on it.
+Same problem, didn't handle hard links. Also not enough space in the
+inode core to implement. 
 
-Background
-==========
+>   4) As in (2) but store the hardlink names as EA values
+>      EA: <name=inode#, value=fname>
 
-The project quota is a quota mechanism can be used to implement a form
-of directory tree quota, where a specified directory and all of the
-files and subdirectories below it (i.e. a tree) can be restricted to
-using a subset of the available space in the filesystem [2].
+Same problem as 2, but added complexity in requiring multiple code
+paths to keep parent pointers up to date.  Never answered the
+question of "when we remove the parent in the inode, who is the new
+"primary" parent? Never implemented.
 
-*Note*
-Project quota is not directory quota.  Project quota is an aggregation
-of unrelated inodes with the same id (e.g. project id).  That means that
-some directories without the common parent directory could have the same
-id and are accounted as the same quota.
+>   5) As in (2) but store the EAs on directories as well as leaf files
+>      EAs on directories.
 
-Currently xfs has supported project quota several years, and has a mature
-interface to manage project quota on kernel and userspace side.  After
-discusstion we believe that we should use the same quota API for project
-quota on ext4.  Now xfs_quota (userspace tool for managing xfs quota) is
-used to get/set/check project id, which communicates with kernel via
-ioctl(2).  For quota management, xfs_quota uses Q_X* via quotactl(2) to
-manipulate quota.  A XFS_DIFLAG_PROJINHERIT flag is defined in xfs to
-mark a directory that new file and direcotry created in this directory
-will get marked with this flag.
+Tried to solve problems with 4) by adding more information to
+directories. Even more complex, had problems with uniquely
+identifying hard links, really convoluted transaction contexts and
+locking.  Never implemented.
 
-For project quota, the key issue is how to handle link(2)/rename(2).  We
-summarize the behaviour in xfs as following.
+>   6) Storing the parent inode# + directory offset in EA names with null values
+>      EA: <name=inode#diroffset, value=NULL>
 
-*Note*
-+ unaccounted dir
-x accounted dir
+Uniquely identifies the directory entry *slot*, but does not
+necessarily identify correct filename.  Handled hard links if you
+ignore the parent identity uniqueness issue, but demonstrated
+unscalable name lookup behaviour.
 
-link(2)
--------
-		+		x
-+		ok		error (EXDEV)
-x		ok		error (EXDEV)
+>  The preferred method was #6.
 
-rename(2)
----------
-		+		x
-+		ok		ok
-x		wrong		ok
+As it was, this once looked like the solution. IIRC, this was the
+design that was implemented for Irix and shipped in 6.5.28 but was
+never used in production by anyone because of problems that became
+apparent after it was shipped. It was fundamentally flawed, and
+those flaws were uncovered when porting the Irix implementation to
+Linux.
 
-Further, project quota *cannot* be used with group quota at the same time.
-On the other hand user quota and project quota can be used simultaneously.
+Using the directory offset was discovered to be problematic when
+there were multiple hardlinks into the same directory for the same
+inode. You can remove links and add links, and the only thing that
+changes is the diroffset. Hence to do a safe reverse lookup, you
+have to first lock the inode to stabilise the EA, then read the
+parent pointer to get the parent directory, then get the parent
+inode and lock it so that nobody is modifying it as we traverse it
+during a offset->name lookup.
 
-2. http://xfs.org/index.php/XFS_FAQ#Q:_Quota:_What.27s_project_quota.3F
+But this violated the VFS directory tree locking order, which is
+parent->child.  Think about a racing unlink that has locked the
+parent inode vs a parent pointer lookup that has lock the child and
+is trying to lock the parent.  Once this problem was understood,
+using directory offsets was considered a non-starter for the linux
+port given how complex working around the inversion makes the
+reverse path lookups.
 
-Design
-======
+I note that Mark's patch set will not trip over this,
+because the XFS_IOC_GETPARENTS_BY_HANDLE code never actually locks
+the child inode the handle points to. IOWs, it isn't safe against
+concurrent modification of the inode, and hence would never deadlock
+even if the problem was seen. It's more likely to have caused
+filesystem corruption or crashed.
 
-Project id
-----------
-We have two options to store project id in inode.  a) define a new member
-in ext4_inode structure; b) store project id in xattr.
+Further, not storing the filename in the attribute value has
+scalability limitations. A reverse lookup requires reading the
+directory entry to get the filename, and so if you have large
+directories and/or a large number of reverse lookups to perform the
+cost is huge. Every lookup has to walk the bmbt tree to find the
+directory data block that contains the offset, then it needs to be
+read from disk, and then it needs to be iterated to find the correct
+entry. It's a huge amount of work, and it's unnecessary because we
+have the name of the file at the time the parent pointer EA is
+created...
 
-Option a)
-Pros:
-  * Only need 4 bytes if we use a '__le32' type to store it
+>   7) (kind of (4) + (6))
+>      EA: <name=inode#diroffset, value=filename>
 
-Cons:
-  * Needs to change disk layout of ext4 inode
+This mostly solved the reverse lookup deadlock because it was no
+longer necessary to read the parent directory to find the filename.
+It didn't solve it entirely, though, because of the parent inode
+uniqueness issue.  We still have to hold the child locked to
+guarantee that when we look up the parent inode number it matches
+what is in the EA, and so we still have to lock the path from
+child->parent->root in volation of the VFs lock ordering.  First
+Linux solution considered, never implemented.
 
-Option b)
-Pros:
-  * Don't need to change disk layout
+	8) EA: <name=inode#,generation,diroffset>, value=<filename>
 
-Cons:
-  * Take 24 bytes
+Solved the deadlock problems, the scalability problems, and
+uniqueness. Early implementation showed up more flaws with using the
+directory offset and multiple hard links into the same directory -
+we could get races with unlink/link loads failing parent attribute
+creation because there was already an attribute of that name on the
+inode. This was because of the fact that inode locks are dropped
+during transaction commits between directory and attribute
+modifications. Hence we could lose parent pointers silently under
+such workloads.
 
-Here I propose to use option *b)* because it is easy for us to support
-project id and we don't need to worry about changing disk layout.  But
-I raise another issue here.  Now inline_data feature has been applied.
-After waiting inline_data feature stable, we'd better enable inline_data
-feature by default when we create a new ext4 file system.  Now the inode
-size is 256 bytes by default, we have 72 bytes extra size to store
-inline data:
-  256 (default inode size) -
-	156 (ext4_inode) + 4 (ext4_xattr_ibody_header) +
-	20 (ext4_xattr_entry) + 4 (value) = 72
+The solution that SGI then settled on was this:
 
-If we store project id in xattr, we just leave 48 bytes for inline data.
-I am not sure whether or not it is too small for some users.
+	9) EA: <name=inode#,generation,count>, value=<filename>
 
-When we store project id in xattr, we will use {get,set}fattr to get/set
-project id.  Thus we don't need to change userspace tool to manipulate
-project id.  Meanwhile a _INHERENT flag for inode needs to be defined to
-indicate that new directory creating in a directory with this flag will
-get the same project id and get marked with this flag.  
+It solved all the unique identifier problems, and the lookup
+scalability issues and all the deadlocks, and that was what was
+implemented in the patch posted here in 2009:
 
-Project quota API
------------------
-For keeping consistency with xfs, here I propose to use Q_X* flag to
-communicate with kernel via quotactl(2) as we discussed.  Due to this we
-need to define some callback functions to support Q_X* flag.  That means
-that ext4 will support two quota flag sets for being compatible with
-legacy userspace tools and use the same quotactl API to communicate with
-kernel for project id like xfs.
+	http://thread.gmane.org/gmane.comp.file-systems.xfs.general/27772
 
-Currently quota subsystem in vfs doesn't handle project quota.  Thus we
-need to make quota subsystem handle project id properly (e.g.
-dquot_transfer, dquot_initialize).  We need to define a new callback
-function in order to get project id.  Now in vfs we can access uid/gid
-directly from inode, but we have no way to get project id.  A generic
-callback function is defined to handle uid/gid.  The file system itself
-can handle project id.  Until now only ext4 needs to implement this
-callback function by itself because xfs doesn't use vfs quota subsystem.
+With the addition of the inode generation number, we can look up the
+parent inode without holding the child inode locked and know that we
+got the right inode by verifying the inode/gen tuple match on the
+inode we looked up.  However, we haven't got the child locked, so we
+need to have some other method of knowing if the child is still in
+the directory once it is locked. (e.g. unlink/link races).
 
-For handling link(2)/rename(2) like xfs, we only allow hard link or
-rename operation when the project ids are the same.  Otherwise we will
-return EXDEV error to notify the user.
+That's where the "count" field of the EA name comes from.  Each
+inode keeps a separate "parent counter" attribute so that hard links
+to the same directory can be uniquely identified by the EA name. The
+initial inode create always uses a value of "1", and when the first
+hardlink is added the special attribute is created with a value of
+2, and that is used (and incremented) on every subsequent hard link.
+Hence every hardlink has a unique attribute name/value pair.
 
-Quota-tools
------------
-Now quota-tools (e.g. quotaon, edquota, etc...) don't support project
-quota.  Thus we need to make it support project id.  I believe that Li
-Xi did some works on quota-tools.
+As a result, parent lookups (for path resolution or removal) can
+match on ino/gen/value, knowing that if we race with an unlink and a
+new hardlink of the *same name* there will be a second *unique*
+parent pointer attribute (under a ino/gen/cnt+N name) that has the
+same pointer information added to the tree for the new entry. Hence
+it is safe to use whatever parent pointer attribute for a given
+ino/gen/value we find because it is guaranteed to be valid for the
+operation we are about to perform.
 
-E2fsprogs
----------
-After supporting project quota, we need to change e2fsck(1) to make sure
-that all sub-directories with _INHERENT flag have the same project id.
-Meanwhile we need to make chattr(1) set/clear _INHERENT flag.
+A potential optimisation to improve it is that parent counter does
+not need to be in an EA. It's 32 bits, so can easily be added to the
+spare space in the v2 inode and avoid unnecessary attribute reads
+and writes on parent pointer creation.
 
-Regards,
-						- Zheng
+Hence the parent pointer structure and implementation in 9) solves
+all the known problems to do with hardlinks, scalability, locking
+order, code complexity etc, and it has relatively little additional
+runtime overhead. It also works for v4 filesystems - the proposed
+patch set cannot be made to work on older filesystem structures as
+there isn't room in the v2 inode for the fast-path fields.
+
+So, there are several problems with approach 6) that the proposed
+patchset is based on that were later discovered and solved. Mark,
+most of this information was given to you (but in less detail) a
+year ago. The patchset hasn't solved any of the flaws that were
+pointed out back then, and I don't see how they can be with the
+design that is being used.
+
+I don't expect anyone to understand all the intricacies of the
+problems that the 2009 parent pointer patchset solved. It's simple
+code, but the problems it solves are subtle and complex and were
+found the hard way - by shipping code for political/commercial
+reasons before the entire problem space was understood.
+
+That's the primary reason why SGI undertook to redesign parent
+pointers for the Linux code base rather than port the Irix code -
+the irix design was fundamentally flawed and a dead end. SGI might
+have lost that historical XFS knowledge and perspective, but the
+Linux XFS community hasn't.
+
+Hence the problems with various parent pointer designs are still
+well understood and, as such, the implementation needs to be done
+properly and solve all the known design flaws we've found in the
+past. To this day, the only parent pointer design that actually
+avoids all the known problems is one we have from SGI from 2009....
+
+>  On the other hand keeping the directory and extended attribute in one
+>  transaction should keeping the changes atomic when the filesystem
+>  is forced down between the directory and attribute changes. Despite
+>  all the gore (see below) of doing the directory and attribute changes
+>  in one transaction, I think it is the correct thing to do.
+
+Yes, I said that it was necessary a year ago and pointed you at how
+to do it:
+
+http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead#Atomic_Multi-Transaction_Operations
+
+Mark, it saddens me that you've wasted your time on a dead end.  I wish
+you had of spent your time implementing AMTs instead, and then just
+forward ported the 2009 patch. If you'd done that a year ago, we'd
+be just about ready to ship a working parent pointer implementation
+instead having to go back to square one. :(
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
