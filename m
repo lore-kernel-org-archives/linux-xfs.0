@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 631F429DF8
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 11:07:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 05A12AC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:22 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9416A29DF8
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 11:07:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5A83B8F8050
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:24 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id GhVQD9HsScLKTDVw (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id kY4DLPei1ucemouf (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Jan 2014 09:07:21 -0800 (PST)
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id 01A42AC56
+	Thu, 16 Jan 2014 09:07:23 -0800 (PST)
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id DC0E4AC3E
 	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:07:21 +0000 (UTC)
 From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH 3/5] xfstests: don't suggest to run full diff when DIFF_LENGTH
-	is 0
-Date: Thu, 16 Jan 2014 18:07:13 +0100
-Message-Id: <49b0cf305ade3444c3dcf3fbabb5e1e5e720c16d.1389891730.git.dsterba@suse.cz>
+Subject: [PATCH 4/5] xfstests: accept tests/ prefix for test name on
+	commandline
+Date: Thu, 16 Jan 2014 18:07:14 +0100
+Message-Id: <c126152c562d3aba42134874d838fda1f6e80d13.1389891730.git.dsterba@suse.cz>
 In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
 References: <cover.1389891730.git.dsterba@suse.cz>
 In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
@@ -37,33 +37,33 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: David Sterba <dsterba@suse.cz>
 
-If DIFF_LENGTH is set to 0, the full output is available and the message
-does not make sense.
+Just for convenience to let tab completion or shell globs work (files
+that are not in the group file are ignored).
 
 Signed-off-by: David Sterba <dsterba@suse.cz>
 ---
- check | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ check | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/check b/check
-index 9e4275b1fa37..d578e49b78d4 100755
+index d578e49b78d4..a787c4a9f69f 100755
 --- a/check
 +++ b/check
-@@ -510,11 +510,11 @@ do
- 				cat
+@@ -263,12 +263,13 @@ if $have_test_arg; then
+ 			exit $status
+ 			;;
+ 		*)	test_dir=`dirname $1`
++			test_dir=${test_dir#$SRC_DIR/*}
+ 			test_name=`basename $1`
+ 			group_file=$SRC_DIR/$test_dir/group
+ 
+ 			if egrep "^$test_name" $group_file >/dev/null ; then
+ 				# in group file ... OK
+-				echo $SRC_DIR/$1 >>$tmp.arglist
++				echo $SRC_DIR/$test_dir/$test_name >>$tmp.arglist
  			else
- 				head -n "$DIFF_LENGTH"
-+				echo "..."
-+				echo "(Run '$diff $seq.out $seqres.out.bad'"
-+					" to see the entire diff)"
- 			fi; } | \
- 			sed -e 's/^\(.\)/    \1/'
--		    echo "     ..."
--		    echo "     (Run '$diff $seq.out $seqres.out.bad' to see the" \
--			 "entire diff)"
- 		    err=true
- 		fi
- 	    fi
+ 				# oops
+ 				echo "$1 - unknown test, ignored"
 -- 
 1.8.5
 
