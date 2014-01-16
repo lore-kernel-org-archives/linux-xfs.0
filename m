@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 603C029DF8
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 20:54:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 43A7C304084
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:54:04 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id QniW2JVpdRx5Yo07 (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D03829DF8
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 20:55:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C02FAC004
+	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:55:22 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id xEwICBHywgBAPtZX (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Jan 2014 18:54:03 -0800 (PST)
+	Wed, 15 Jan 2014 18:55:21 -0800 (PST)
 From: Anand Jain <anand.jain@oracle.com>
 Subject: [PATCH 1/2 v3] xfstests: make btrfs/001.out in line with subvol
 	delete output
-Date: Thu, 16 Jan 2014 11:03:15 +0800
-Message-Id: <1389841395-8935-1-git-send-email-anand.jain@oracle.com>
+Date: Thu, 16 Jan 2014 11:04:36 +0800
+Message-Id: <1389841476-8985-1-git-send-email-anand.jain@oracle.com>
 In-Reply-To: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
 References: <1389618990-24544-1-git-send-email-anand.jain@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,7 +30,7 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: lin^C-btrfs@vger.kernel.org, wangshilong1991@gmail.com, dsterba@suse.cz
+Cc: wangshilong1991@gmail.com, linux-btrfs@vger.kernel.org, dsterba@suse.cz
 
 From: Anand Jain <Anand.Jain@oracle.com>
 
