@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1664129DF9
+	by oss.sgi.com (Postfix) with ESMTP id 631F429DF8
 	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 11:07:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BC0CBAC002
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:19 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 05A12AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 09:07:22 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id UAHuBorBZgShbeC2 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id GhVQD9HsScLKTDVw (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Jan 2014 09:07:18 -0800 (PST)
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id CEAD0AC3E
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:07:16 +0000 (UTC)
+	Thu, 16 Jan 2014 09:07:21 -0800 (PST)
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 01A42AC56
+	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:07:21 +0000 (UTC)
 From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH 0/5] xfstests: A few updates to non-test code
-Date: Thu, 16 Jan 2014 18:07:10 +0100
-Message-Id: <cover.1389891730.git.dsterba@suse.cz>
+Subject: [PATCH 3/5] xfstests: don't suggest to run full diff when DIFF_LENGTH
+	is 0
+Date: Thu, 16 Jan 2014 18:07:13 +0100
+Message-Id: <49b0cf305ade3444c3dcf3fbabb5e1e5e720c16d.1389891730.git.dsterba@suse.cz>
+In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
+References: <cover.1389891730.git.dsterba@suse.cz>
+In-Reply-To: <cover.1389891730.git.dsterba@suse.cz>
+References: <cover.1389891730.git.dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +37,33 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: David Sterba <dsterba@suse.cz>
 
-Minor bugfixes or enhancements.
+If DIFF_LENGTH is set to 0, the full output is available and the message
+does not make sense.
 
-David Sterba (5):
-  xfstests: fix minor build warning
-  xfstests: use value of FSTYP if defined externally
-  xfstests: don't suggest to run full diff when DIFF_LENGTH is 0
-  xfstests: accept tests/ prefix for test name on commandline
-  xfstests: update lsqa.pl for new tests layout
+Signed-off-by: David Sterba <dsterba@suse.cz>
+---
+ check | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- Makefile |  3 +--
- README   |  3 +++
- check    | 16 +++++++++-------
- lsqa.pl  | 32 ++++++++++++++++++++++++--------
- 4 files changed, 37 insertions(+), 17 deletions(-)
-
+diff --git a/check b/check
+index 9e4275b1fa37..d578e49b78d4 100755
+--- a/check
++++ b/check
+@@ -510,11 +510,11 @@ do
+ 				cat
+ 			else
+ 				head -n "$DIFF_LENGTH"
++				echo "..."
++				echo "(Run '$diff $seq.out $seqres.out.bad'"
++					" to see the entire diff)"
+ 			fi; } | \
+ 			sed -e 's/^\(.\)/    \1/'
+-		    echo "     ..."
+-		    echo "     (Run '$diff $seq.out $seqres.out.bad' to see the" \
+-			 "entire diff)"
+ 		    err=true
+ 		fi
+ 	    fi
 -- 
 1.8.5
 
