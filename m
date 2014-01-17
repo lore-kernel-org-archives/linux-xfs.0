@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 81B7D7F53
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 14:52:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 02A98AC004
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 12:52:43 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 5E9D3yxrkUhT08y6 for <xfs@oss.sgi.com>;
-	Fri, 17 Jan 2014 12:52:42 -0800 (PST)
-Message-ID: <52D99819.2090405@sandeen.net>
-Date: Fri, 17 Jan 2014 14:52:41 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: use tr_growrtalloc for growing rt files
-References: <1389989370-12159-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1389989370-12159-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A8A5F7F76
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 15:12:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8482430406A
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 13:12:20 -0800 (PST)
+Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
+	by cuda.sgi.com with SMTP id HTe8CbmA4HmBWPVF for
+	<xfs@oss.sgi.com>; Fri, 17 Jan 2014 13:12:18 -0800 (PST)
+Subject: Re: [PATCH 2/3] xfs: rename xfs_buftarg structure members
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <52D991E5.1010300@sandeen.net>
+References: <52D6CC91.6000408@redhat.com> <52D9910C.9000205@sandeen.net>
+	<52D991E5.1010300@sandeen.net>
+Date: Fri, 17 Jan 2014 21:12:17 +0000
+Message-Id: <1389993137.4298.938.camel@localhost.localdomain>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +28,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 1/17/14, 2:09 PM, Brian Foster wrote:
-> This is a regression from the following commit:
-> 
-> 3d3c8b5222b9 xfs: refactor xfs_trans_reserve() interface
-> 
-> Use the tr_growrtalloc log reservation for growing the
-> bitmap/summary files.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+- if ((pos & target->bt_smask) || (size & target->bt_smask)) {
++ if ((pos || size) & target->bt_meta_sectormask) {
 
-Looks right to me.  :)
+nope...
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+|| needs to be |
 
-> ---
->  fs/xfs/xfs_rtalloc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index a6a76b2..ec5ca65 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -842,7 +842,7 @@ xfs_growfs_rt_alloc(
->  		/*
->  		 * Reserve space & log for one extent added to the file.
->  		 */
-> -		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_growdata,
-> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_growrtalloc,
->  					  resblks, 0);
->  		if (error)
->  			goto error_cancel;
-> 
+(pos || size) yields a boolean
+
+
+
+ 
+Roger Willcocks <roger@filmlight.ltd.uk>
 
 _______________________________________________
 xfs mailing list
