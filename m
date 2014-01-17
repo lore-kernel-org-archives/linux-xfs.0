@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9EB067F5D
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 17:23:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7BAD2304084
-	for <xfs@oss.sgi.com>; Thu, 16 Jan 2014 15:23:28 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	MoqCVjt2rCKLIAeV for <xfs@oss.sgi.com>;
-	Thu, 16 Jan 2014 15:23:23 -0800 (PST)
-Date: Fri, 17 Jan 2014 10:21:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: allow logical-sector sized O_DIRECT for any fs
-	sector size
-Message-ID: <20140116232132.GT3431@dastard>
-References: <52D6CC91.6000408@redhat.com> <20140115223848.GZ3469@dastard>
-	<52D71115.1070309@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52D71115.1070309@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 04C397F3F
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 03:37:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 71FBBAC004
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 01:37:21 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id yaw7AbtJcN6TkAwb (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 17 Jan 2014 01:37:19 -0800 (PST)
+From: Koen De Wit <koen.de.wit@oracle.com>
+Subject: [PATCH RESEND] xfstests: btrfs/027: simple sparse copy testcase for
+	btrfs
+Date: Fri, 17 Jan 2014 10:36:49 +0100
+Message-Id: <1389951409-26029-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,75 +22,190 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Jan 15, 2014 at 04:52:05PM -0600, Eric Sandeen wrote:
-> On 1/15/14, 4:38 PM, Dave Chinner wrote:
-> > On Wed, Jan 15, 2014 at 11:59:45AM -0600, Eric Sandeen wrote:
-> >> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> >> index 33ad9a7..1f3431f 100644
-> >> --- a/fs/xfs/xfs_ioctl.c
-> >> +++ b/fs/xfs/xfs_ioctl.c
-> >> @@ -1587,7 +1587,12 @@ xfs_file_ioctl(
-> >>  			XFS_IS_REALTIME_INODE(ip) ?
-> >>  			mp->m_rtdev_targp : mp->m_ddev_targp;
-> >>  
-> >> -		da.d_mem = da.d_miniosz = 1 << target->bt_sshift;
-> >> +		/*
-> >> +		 * Report device physical sector size as "optimal" minimum,
-> >> +		 * unless blocksize is smaller than that.
-> >> +		 */
-> >> +		da.d_miniosz = min(target->bt_pssize, target->bt_bsize);
-> > 
-> > Just grab the filesysetm block size from the xfs_mount:
-> > 
-> > 		da.d_miniosz = min(target->bt_pssize, mp->m_sb.sb_blocksize);
-> > 
-> >> +		da.d_mem = da.d_miniosz;
-> > 
-> > I'd suggest that this should be PAGE_SIZE - it's for memory buffer
-> > alignment, not IO alignment, so using the IO alignment just seems
-> > wrong to me...
-> 
-> Ok.  Was just sticking close to what we had before.
-> 
-> So:
->  		da.d_miniosz = min(target->bt_pssize, mp->m_sb.sb_blocksize);
-> 		da.d_mem = PAGE_SIZE;
-> 
-> ?  Then we can have a minimum IO size of 512, and a memory alignment of
-> 4k, isn't that a little odd?
-> 
-> (IOWs we could do 512-aligned memory before, right?  What's the downside,
-> or the value in changing it now?)
+Tests file clone functionality of btrfs ("reflinks"):
+   - Reflink a file
+   - Reflink the reflinked file
+   - Modify the original file
+   - Modify the reflinked file
 
-We can do arbitrary byte aligned buffers if I understand
-get_user_pages() correctly - it just maps the page under the buffer
-into the kernel address space and then the bio is pointed at it.
-AFAICT, the reason for the "memory buffer needs 512 byte alignment"
-is simply that this is the minimum IO size supported.
+[sandeen: add helpers, make several mostly-cosmetic
+ changes to the original testcase]
 
-However, for large IOs, 512 byte alignment is not really optimal. If
-we don't align the buffer to PAGE_SIZE, then we have partial head
-and tail pages, so for a 512k IO we need to map 129 pages into a bio
-instead of 128. When you have hardware that can only handle 128
-segments in a DMA transfer, that means the 512k IO needs to be sent
-in two IOs rather than one.
+Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-There's quite a bit of hardware out there that have a limit of 128
-segments to each IO....
+Originally submitted as test 297, btrfs/308
 
-Cheers,
-
-Dave.
+diff --git a/common/rc b/common/rc
+index a585eb5..4157cc4 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2078,6 +2078,27 @@ _require_ugid_map()
+ 	fi
+ }
+ 
++_require_cp_reflink()
++{
++       cp --help | grep -q reflink || \
++               _notrun "This test requires a cp with --reflink support."
++}
++
++# Given 2 files, verify that they have the same mapping but different
++# inodes - i.e. an undisturbed reflink
++# Silent if so, make noise if not
++_verify_reflink()
++{
++       # not a hard link or symlink?
++       cmp -s  <(stat -c '%i' $1) <(stat -c '%i' $2) \
++               && echo "$1 and $2 are not reflinks: same inode number"
++
++       # same mapping?
++       diff -u <($XFS_IO_PROG -c "fiemap" $1 | grep -v $1) \
++               <($XFS_IO_PROG -c "fiemap" $2 | grep -v $2) \
++               || echo "$1 and $2 are not reflinks: different extents"
++}
++
+ _create_loop_device()
+ {
+ 	file=$1
+diff --git a/tests/btrfs/027 b/tests/btrfs/027
+new file mode 100644
+index 0000000..ec0d5b4
+--- /dev/null
++++ b/tests/btrfs/027
+@@ -0,0 +1,90 @@
++#! /bin/bash
++# FS QA Test No. 027
++#
++# Tests file clone functionality of btrfs ("reflinks"):
++#   - Reflink a file
++#   - Reflink the reflinked file
++#   - Modify the original file
++#   - Modify the reflinked file
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. common/rc
++. common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++
++_require_xfs_io_fiemap
++_require_cp_reflink
++
++TESTDIR1=$TEST_DIR/test-$seq
++rm -rf $TESTDIR1
++mkdir $TESTDIR1
++
++_checksum_files() {
++    for F in original copy1 copy2
++    do
++        md5sum $TESTDIR1/$F | _filter_test_dir
++    done
++}
++
++rm -f $seqres.full
++
++echo "Create the original file and reflink to copy1, copy2"
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original \
++    >> $seqres.full 2>&1
++cp --reflink $TESTDIR1/original $TESTDIR1/copy1
++cp --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
++_verify_reflink $TESTDIR1/original $TESTDIR1/copy1
++_verify_reflink $TESTDIR1/original $TESTDIR1/copy2
++echo "Original md5sums:"
++_checksum_files
++
++echo "Overwrite original file with new data"
++$XFS_IO_PROG -c 'pwrite -S 0x62 0 9000' $TESTDIR1/original \
++    >> $seqres.full 2>&1
++echo "md5sums after overwriting original:"
++_checksum_files
++
++echo "Overwrite copy1 with different new data"
++$XFS_IO_PROG -c 'pwrite -S 0x63 0 9000' $TESTDIR1/copy1 \
++    >> $seqres.full 2>&1
++echo "md5sums after overwriting copy1:"
++_checksum_files
++
++# success, all done
++status=0
++exit
+diff --git a/tests/btrfs/027.out b/tests/btrfs/027.out
+new file mode 100644
+index 0000000..13023bf
+--- /dev/null
++++ b/tests/btrfs/027.out
+@@ -0,0 +1,16 @@
++QA output created by 027
++Create the original file and reflink to copy1, copy2
++Original md5sums:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/original
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy1
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy2
++Overwrite original file with new data
++md5sums after overwriting original:
++4a847a25439532bf48b68c9e9536ed5b  TEST_DIR/test-027/original
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy1
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy2
++Overwrite copy1 with different new data
++md5sums after overwriting copy1:
++4a847a25439532bf48b68c9e9536ed5b  TEST_DIR/test-027/original
++e271cd47d9f62ebc96cb4e67ae4d16db  TEST_DIR/test-027/copy1
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy2
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 87e7bca..379f95b 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -27,3 +27,4 @@
+ 022 auto
+ 023 auto
+ 024 auto quick
++027 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.1
 
 _______________________________________________
 xfs mailing list
