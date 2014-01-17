@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 444727F5E
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 04:10:05 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 504957F5F
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 04:41:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F1D1304087
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 02:09:59 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 4tQTan2IpQeny5Zn (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BF6ECAC003
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 02:41:58 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id XzmSpeSROrdZ8SZE (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Jan 2014 02:09:54 -0800 (PST)
+	Fri, 17 Jan 2014 02:41:57 -0800 (PST)
 From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH RESEND] xfstests: btrfs/028: sparse copy of a directory tree
+Subject: [PATCH RESEND] xfstests: btrfs/029: moving and deleting sparse copies
 	on btrfs
-Date: Fri, 17 Jan 2014 11:09:45 +0100
-Message-Id: <1389953385-26559-1-git-send-email-koen.de.wit@oracle.com>
+Date: Fri, 17 Jan 2014 11:41:08 +0100
+Message-Id: <1389955268-27021-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +30,10 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-Tests file clone functionality of btrfs ("reflinks") on directory trees.
-   - Create directory and subdirectory, each having one file
-   - Create 2 recursive reflinked copies of the tree
-   - Modify the original files
-   - Modify one of the copies
+Moving and deleting cloned ("reflinked") files on btrfs:
+   - Create a file and a reflink
+   - Move both to a directory
+   - Delete the original (moved) file, check that the copy still exists.
 
 [sandeen: mostly cosmetic changes]
 
@@ -42,26 +41,24 @@ Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-Originally submitted as test 298, btrfs/309
+Originally submitted as test 299, btrfs/310
 
 The functions _require_cp_reflink() and _verify_reflink() in common/rc
 have been submitted with btrfs/027
 
-diff --git a/tests/btrfs/028 b/tests/btrfs/028
+diff --git a/tests/btrfs/029 b/tests/btrfs/029
 new file mode 100644
-index 0000000..a034008
+index 0000000..7740d8f
 --- /dev/null
-+++ b/tests/btrfs/028
-@@ -0,0 +1,107 @@
++++ b/tests/btrfs/029
+@@ -0,0 +1,81 @@
 +#! /bin/bash
-+# FS QA Test No. 028
++# FS QA Test No. 029
 +#
-+# Tests file clone functionality of btrfs ("reflinks") on directory
-+# trees.
-+#   - Create directory and subdirectory, each having one file
-+#   - Create 2 recursive reflinked copies of the tree
-+#   - Modify the original files
-+#   - Modify one of the copies
++# Moving and deleting cloned ("reflinked") files on btrfs:
++#   - Create a file and a reflink
++#   - Move both to a directory
++#   - Delete the original (moved) file, check that the copy still exists.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
@@ -95,8 +92,8 @@ index 0000000..a034008
 +}
 +
 +# get standard environment, filters and checks
-+. common/rc
-+. common/filter
++. ./common/rc
++. ./common/filter
 +
 +# real QA test starts here
 +_supported_fs btrfs
@@ -105,101 +102,59 @@ index 0000000..a034008
 +_require_xfs_io_fiemap
 +_require_cp_reflink
 +
++rm -f $seqres.full
++
 +TESTDIR1=$TEST_DIR/test-$seq
 +rm -rf $TESTDIR1
 +mkdir $TESTDIR1
 +
-+_checksum_files() {
-+    for F in original/file1 original/subdir/file2 \
-+                 copy1/file1 copy1/subdir/file2 \
-+                 copy2/file1 copy2/subdir/file2
-+        do
-+            md5sum $TESTDIR1/$F | _filter_test_dir
-+        done
-+}
-+
-+rm -f $seqres.full
-+
-+mkdir $TESTDIR1/original
-+mkdir $TESTDIR1/original/subdir
-+
 +echo "Create the original files and reflink dirs"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original/file1 \
-+    >> $seqres.full 2>&1
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 11000' \
-+    $TESTDIR1/original/subdir/file2 >> $seqres.full 2>&1
-+cp --recursive --reflink $TESTDIR1/original $TESTDIR1/copy1
-+cp --recursive --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original \
++    >> $seqres.full
++cp --reflink $TESTDIR1/original $TESTDIR1/copy
 +
-+_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy1/file1
-+_verify_reflink $TESTDIR1/original/subdir/file2 \
-+    $TESTDIR1/copy1/subdir/file2
-+_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy2/file1
-+_verify_reflink $TESTDIR1/original/subdir/file2 \
-+    $TESTDIR1/copy2/subdir/file2
++_verify_reflink $TESTDIR1/original $TESTDIR1/copy
 +
-+echo "Original md5sums:"
-+_checksum_files
++echo "Move orig & reflink copy to subdir and md5sum:"
++mkdir $TESTDIR1/subdir
++mv $TESTDIR1/original $TESTDIR1/subdir/original_moved
++mv $TESTDIR1/copy $TESTDIR1/subdir/copy_moved
++_verify_reflink $TESTDIR1/subdir/original_moved \
++    $TESTDIR1/subdir/copy_moved
 +
-+echo "Overwrite original/file1 and original/subdir/file2 with new data"
-+$XFS_IO_PROG -c 'pwrite -S 0x63 0 13000' $TESTDIR1/original/file1 \
-+    >> $seqres.full 2>&1
-+$XFS_IO_PROG -c 'pwrite -S 0x64 5000 1000' \
-+    $TESTDIR1/original/subdir/file2 >> $seqres.full 2>&1
-+echo "md5sums now:"
-+_checksum_files
++md5sum $TESTDIR1/subdir/original_moved | _filter_test_dir
++md5sum $TESTDIR1/subdir/copy_moved | _filter_test_dir
 +
-+echo "Overwrite copy1/file1 and copy1/subdir/file2 with new data"
-+$XFS_IO_PROG -c 'pwrite -S 0x65 0 9000' $TESTDIR1/copy1/file1 \
-+    >> $seqres.full 2>&1
-+$XFS_IO_PROG -c 'pwrite -S 0x66 5000 25000' \
-+    $TESTDIR1/copy1/subdir/file2 >> $seqres.full 2>&1
-+echo "md5sums now:"
-+_checksum_files
++echo "remove orig from subdir and md5sum reflink copy:"
++rm $TESTDIR1/subdir/original_moved
++md5sum $TESTDIR1/subdir/copy_moved | _filter_test_dir
++rm -rf $TESTDIR1/subdir
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/btrfs/028.out b/tests/btrfs/028.out
+diff --git a/tests/btrfs/029.out b/tests/btrfs/029.out
 new file mode 100644
-index 0000000..bd078db
+index 0000000..94e5808
 --- /dev/null
-+++ b/tests/btrfs/028.out
-@@ -0,0 +1,25 @@
-+QA output created by 028
++++ b/tests/btrfs/029.out
+@@ -0,0 +1,7 @@
++QA output created by 029
 +Create the original files and reflink dirs
-+Original md5sums:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/original/file1
-+ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/original/subdir/file2
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy1/file1
-+ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy1/subdir/file2
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy2/file1
-+ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy2/subdir/file2
-+Overwrite original/file1 and original/subdir/file2 with new data
-+md5sums now:
-+260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-028/original/file1
-+b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-028/original/subdir/file2
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy1/file1
-+ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy1/subdir/file2
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy2/file1
-+ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy2/subdir/file2
-+Overwrite copy1/file1 and copy1/subdir/file2 with new data
-+md5sums now:
-+260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-028/original/file1
-+b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-028/original/subdir/file2
-+b20229a003e3985c4b0e6806abcd6642  TEST_DIR/test-028/copy1/file1
-+b815b24069db14e0a3a07169fd563e93  TEST_DIR/test-028/copy1/subdir/file2
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy2/file1
-+ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy2/subdir/file2
++Move orig & reflink copy to subdir and md5sum:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-029/subdir/original_moved
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-029/subdir/copy_moved
++remove orig from subdir and md5sum reflink copy:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-029/subdir/copy_moved
 diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 87e7bca..372585d 100644
+index 372585d..9fcd15d 100644
 --- a/tests/btrfs/group
 +++ b/tests/btrfs/group
-@@ -27,3 +27,4 @@
- 022 auto
+@@ -28,3 +28,4 @@
  023 auto
  024 auto quick
-+028 auto quick
+ 028 auto quick
++029 auto quick
 -- 
 1.7.1
 
