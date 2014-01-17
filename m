@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 859377F6A
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 11:35:02 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A9E577F6B
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 12:02:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5EADD8F8054
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 09:34:59 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Zee2GtUBCCAF30i0 for <xfs@oss.sgi.com>;
-	Fri, 17 Jan 2014 09:34:58 -0800 (PST)
-Message-ID: <52D969E2.7030308@sandeen.net>
-Date: Fri, 17 Jan 2014 11:35:30 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: allow logical-sector sized O_DIRECT for any fs sector
-	size
-References: <52D6CC91.6000408@redhat.com>
-	<20140115223848.GZ3469@dastard>	<52D71115.1070309@sandeen.net>
-	<20140116232132.GT3431@dastard>
-In-Reply-To: <20140116232132.GT3431@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 828CC304071
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 10:02:06 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id klvHz74doefhHF94 for
+	<xfs@oss.sgi.com>; Fri, 17 Jan 2014 10:02:05 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0HI24mn024712
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 13:02:05 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s0HI24MW005495
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 13:02:04 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: use tr_qm_dqalloc log reservation for dquot alloc
+Date: Fri, 17 Jan 2014 13:02:03 -0500
+Message-Id: <1389981723-54311-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,112 +29,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 1/16/14, 5:21 PM, Dave Chinner wrote:
-> On Wed, Jan 15, 2014 at 04:52:05PM -0600, Eric Sandeen wrote:
->> On 1/15/14, 4:38 PM, Dave Chinner wrote:
->>> On Wed, Jan 15, 2014 at 11:59:45AM -0600, Eric Sandeen wrote:
->>>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->>>> index 33ad9a7..1f3431f 100644
->>>> --- a/fs/xfs/xfs_ioctl.c
->>>> +++ b/fs/xfs/xfs_ioctl.c
->>>> @@ -1587,7 +1587,12 @@ xfs_file_ioctl(
->>>>  			XFS_IS_REALTIME_INODE(ip) ?
->>>>  			mp->m_rtdev_targp : mp->m_ddev_targp;
->>>>  =
+The dquot allocation path in xfs_qm_dqread() currently uses the
+attribute set log reservation, which appears to be incorrect. We
+have reports of transaction reservation overruns with the current
+code. E.g., a repeated run of xfstests test generic/270 on a 512b
+block size fs occassionally produces the following in dmesg:
 
->>>> -		da.d_mem =3D da.d_miniosz =3D 1 << target->bt_sshift;
->>>> +		/*
->>>> +		 * Report device physical sector size as "optimal" minimum,
->>>> +		 * unless blocksize is smaller than that.
->>>> +		 */
->>>> +		da.d_miniosz =3D min(target->bt_pssize, target->bt_bsize);
->>>
->>> Just grab the filesysetm block size from the xfs_mount:
->>>
->>> 		da.d_miniosz =3D min(target->bt_pssize, mp->m_sb.sb_blocksize);
->>>
->>>> +		da.d_mem =3D da.d_miniosz;
->>>
->>> I'd suggest that this should be PAGE_SIZE - it's for memory buffer
->>> alignment, not IO alignment, so using the IO alignment just seems
->>> wrong to me...
->>
->> Ok.  Was just sticking close to what we had before.
->>
->> So:
->>  		da.d_miniosz =3D min(target->bt_pssize, mp->m_sb.sb_blocksize);
->> 		da.d_mem =3D PAGE_SIZE;
->>
->> ?  Then we can have a minimum IO size of 512, and a memory alignment of
->> 4k, isn't that a little odd?
->>
->> (IOWs we could do 512-aligned memory before, right?  What's the downside,
->> or the value in changing it now?)
-> =
+	XFS (sdN): xlog_write: reservation summary:
+	  trans type  = QM_DQALLOC (30)
+	  unit res    = 7080 bytes
+	  current res = -632 bytes
+	  total reg   = 0 bytes (o/flow = 0 bytes)
+	  ophdrs      = 0 (ophdr space = 0 bytes)
+	  ophdr + reg = 0 bytes
+	  num regions = 0
 
-> We can do arbitrary byte aligned buffers if I understand
-> get_user_pages() correctly - it just maps the page under the buffer
-> into the kernel address space and then the bio is pointed at it.
-> AFAICT, the reason for the "memory buffer needs 512 byte alignment"
-> is simply that this is the minimum IO size supported.
+	XFS (sdN): xlog_write: reservation ran out. Need to up reservation
 
-Actually, it's fs/direct-io.c which enforces this (not sure why I couldn't
-find that before), in do_blockdev_direct_IO(); the *enforced* minimum
-memory alignment is the size of the bev's logical block size.
+The dquot allocation case should consist of a write reservation
+(i.e., we are allocating a range of the internal quota file) plus
+the size of the actual dquots. We already have a log reservation
+definition for this operation (tr_qm_dqalloc). Use it in
+xfs_qm_dqread() and update the log reservation calculation function
+to use the write res. calculation function rather than reading the
+assumed to be pre-calculated value directly.
 
-> However, for large IOs, 512 byte alignment is not really optimal. If
-> we don't align the buffer to PAGE_SIZE, then we have partial head
-> and tail pages, so for a 512k IO we need to map 129 pages into a bio
-> instead of 128. When you have hardware that can only handle 128
-> segments in a DMA transfer, that means the 512k IO needs to be sent
-> in two IOs rather than one.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+Hi all,
 
-Ok, but I have a bit of a problem with changing what XFS_IOC_DIOINFO
-reports.  (I had originally thought to change the minimum IO size, but
-I have talked myself out of that, too).
+This issue was reported here:
 
-The xfsctl(3) manpage says that XFS_IOC_DIOINFO:  "Get(s) information
-required to perform direct I/O on the specified file descriptor."
-and "the user=92s data buffer must conform to the same type of =
+https://bugzilla.redhat.com/show_bug.cgi?id=1052787
 
-constraints as required for accessing a raw disk partition."
+... and the patch seems to address the reservation overrun from my testing.
+It also runs through an xfstests regression. Thanks.
 
-IOWs, the ioctl is documented as returning minimum, not optimal,
-requirements, and it has always been implemented as such.  Changing
-its meaning now seems wrong.  At least, I would not like to do so
-as part of this functional change; to do so would probably be best
-in a new ioctl which reports both minimum & optimal sizes.  And at
-that point we should just do a vfs interface.  :)
+Brian
 
-Of course, applications don't have to use the minimum sizes reported
-by the ioctl; they are free to be smarter and do larger sizes and
-alignments.  But if the ioctl was designed and documented to report
-required *minimums*, I think we should leave it as such.
+ fs/xfs/xfs_dquot.c      | 2 +-
+ fs/xfs/xfs_trans_resv.c | 3 +--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-I'm going to resend the change, split up a bit more to separate
-cleanups from functional changes, and maybe we can discuss the ioctl
-change as a potential additional patch.
-
-Thanks,
--Eric
-
-> There's quite a bit of hardware out there that have a limit of 128
-> segments to each IO....
-> =
-
-> Cheers,
-> =
-
-> Dave.
-> =
-
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 6b1e695..06280c6 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -614,7 +614,7 @@ xfs_qm_dqread(
+ 
+ 	if (flags & XFS_QMOPT_DQALLOC) {
+ 		tp = xfs_trans_alloc(mp, XFS_TRANS_QM_DQALLOC);
+-		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_attrsetm,
++		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_qm_dqalloc,
+ 					  XFS_QM_DQALLOC_SPACE_RES(mp), 0);
+ 		if (error)
+ 			goto error1;
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index 2fd59c0..60b7d40 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -651,8 +651,7 @@ STATIC uint
+ xfs_calc_qm_dqalloc_reservation(
+ 	struct xfs_mount	*mp)
+ {
+-	ASSERT(M_RES(mp)->tr_write.tr_logres);
+-	return M_RES(mp)->tr_write.tr_logres +
++	return xfs_calc_write_reservation(mp) +
+ 		xfs_calc_buf_res(1,
+ 			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
+ }
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
