@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 263817F75
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 14:28:08 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 81DE829E06
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 14:51:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F8B2AC002
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 12:28:07 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id aLLneLaxbcjeTrMJ for <xfs@oss.sgi.com>;
-	Fri, 17 Jan 2014 12:28:06 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9843C63BEBCB
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 14:28:05 -0600 (CST)
-Message-ID: <52D99255.9090609@sandeen.net>
-Date: Fri, 17 Jan 2014 14:28:05 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 14CCEAC003
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 12:51:13 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vnL2HOPDnRav1ySa for
+	<xfs@oss.sgi.com>; Fri, 17 Jan 2014 12:51:13 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0HKpAVP018953
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 15:51:11 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s0HKp99b021195
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 15:51:10 -0500
+Message-ID: <52D997BD.1090701@redhat.com>
+Date: Fri, 17 Jan 2014 14:51:09 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 3/3] xfs: allow logical-sector sized O_DIRECT IOs
-References: <52D6CC91.6000408@redhat.com> <52D9910C.9000205@sandeen.net>
-In-Reply-To: <52D9910C.9000205@sandeen.net>
+Subject: [PATCH] xfs: remove unused tr_swrite
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,143 +38,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Some time ago, mkfs.xfs started picking the storage physical
-sector size as the default filesystem "sector size" in order
-to avoid RMW costs incurred by doing IOs at logical sector
-size alignments.
+tr_swrite is never used, remove it.
 
-However, this means that for a filesystem made with i.e.
-a 4k sector size on an "advanced format" 4k/512 disk,
-512-byte direct IOs are no longer allowed.  This means
-that XFS has essentially turned this AF drive into a hard
-4K device, from the filesystem on up.
-
-XFS's mkfs-specified "sector size" is really just controlling
-the minimum size & alignment of filesystem metadata.
-
-There is no real need to tightly couple XFS's minimal
-metadata size to the minimum allowed direct IO size;
-XFS can continue doing metadata in optimal sizes, but
-still allow smaller DIOs for apps which issue them,
-for whatever reason.
-
-This patch adds new information to the xfs_buftarg, so that
-we now track 2 sizes:
-
- 1) The metadata sector size, which is the minimum unit and
-    alignment of IO which will be performed by metadata operations.
- 2) The device logical sector size.
-
-The first is used internally by the file system for metadata
-alignment and IOs.
-The second is used for the minimum allowed direct IO size and
-alignment.
-
-This has passed xfstests on filesystems made with 4k sectors,
-including when run under the patch I sent to ignore
-XFS_IOC_DIOINFO, and issue 512 DIOs anyway.  I also directly
-tested end of block behavior on preallocated, sparse, and
-existing files when we do a 512 IO into a 4k file on a 
-4k-sector filesystem, to be sure there were no unexpected
-behaviors.
+>From a very quick look, I think the usage of it (and its ancestor
+XFS_SWRITE_LOG_RES) went away in commit 13e6d5cd "xfs: merge fsync
+and O_SYNC handling" back in 2009.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a526f8d..5175711 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1599,6 +1599,7 @@ xfs_setsize_buftarg(
- 	unsigned int		blocksize,
- 	unsigned int		sectorsize)
- {
-+	/* Set up metadata sector size info */
- 	btp->bt_meta_sectorsize = sectorsize;
- 	btp->bt_meta_sectormask = sectorsize - 1;
- 
-@@ -1613,6 +1614,10 @@ xfs_setsize_buftarg(
- 		return EINVAL;
- 	}
- 
-+	/* Set up device logical sector size mask */
-+	btp->bt_logical_sectorsize = bdev_logical_block_size(btp->bt_bdev);
-+	btp->bt_logical_sectormask = bdev_logical_block_size(btp->bt_bdev) - 1;
-+
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index d5d88dd..9953395 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -88,6 +88,19 @@ typedef unsigned int xfs_buf_flags_t;
-  */
- #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
- 
-+/*
-+ * The xfs_buftarg contains 2 notions of "sector size" -
-+ *
-+ * 1) The metadata sector size, which is the minimum unit and
-+ *    alignment of IO which will be performed by metadata operations.
-+ * 2) The device logical sector size
-+ *
-+ * The first is specified at mkfs time, and is stored on-disk in the
-+ * superblock's sb_sectsize.
-+ *
-+ * The latter is derived from the underlying device, and controls direct IO
-+ * alignment constraints.
-+ */
- typedef struct xfs_buftarg {
- 	dev_t			bt_dev;
- 	struct block_device	*bt_bdev;
-@@ -95,6 +108,8 @@ typedef struct xfs_buftarg {
- 	struct xfs_mount	*bt_mount;
- 	unsigned int		bt_meta_sectorsize;
- 	size_t			bt_meta_sectormask;
-+	size_t			bt_logical_sectorsize;
-+	size_t			bt_logical_sectormask;
- 
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 61a7de0..5507420 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -261,7 +261,8 @@ xfs_file_aio_read(
- 		xfs_buftarg_t	*target =
- 			XFS_IS_REALTIME_INODE(ip) ?
- 				mp->m_rtdev_targp : mp->m_ddev_targp;
--		if ((pos || size) & target->bt_meta_sectormask) {
-+		/* DIO must be aligned to device logical sector size */
-+		if ((pos || size) & target->bt_logical_sectormask) {
- 			if (pos == i_size_read(inode))
- 				return 0;
- 			return -XFS_ERROR(EINVAL);
-@@ -641,9 +642,11 @@ xfs_file_dio_aio_write(
- 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
- 					mp->m_rtdev_targp : mp->m_ddev_targp;
- 
--	if ((pos || count) & target->bt_meta_sectormask)
-+	/* DIO must be aligned to device logical sector size */
-+	if ((pos || count) & target->bt_logical_sectormask)
- 		return -XFS_ERROR(EINVAL);
- 
-+	/* "unaligned" here means not aligned to a filesystem block */
- 	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
- 		unaligned_io = 1;
- 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 64ca8e9..f7ac335 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1587,7 +1587,7 @@ xfs_file_ioctl(
- 			XFS_IS_REALTIME_INODE(ip) ?
- 			mp->m_rtdev_targp : mp->m_ddev_targp;
- 
--		da.d_mem = da.d_miniosz = target->bt_meta_sectorsize;
-+		da.d_mem =  da.d_miniosz = target->bt_logical_sectorsize;
- 		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
- 
- 		if (copy_to_user(arg, &da, sizeof(da)))
+---
+
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index 2fd59c0..445e171 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -784,7 +784,6 @@ xfs_trans_resv_calc(
+ 	/* The following transaction are logged in logical format */
+ 	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
+ 	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
+-	resp->tr_swrite.tr_logres = xfs_calc_swrite_reservation(mp);
+ 	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
+ 	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
+ 	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
+index de7de9a..f76c129 100644
+--- a/fs/xfs/xfs_trans_resv.h
++++ b/fs/xfs/xfs_trans_resv.h
+@@ -42,7 +42,6 @@ struct xfs_trans_resv {
+ 	struct xfs_trans_res	tr_ifree;	/* inode free trans */
+ 	struct xfs_trans_res	tr_ichange;	/* inode update trans */
+ 	struct xfs_trans_res	tr_growdata;	/* fs data section grow trans */
+-	struct xfs_trans_res	tr_swrite;	/* sync write inode trans */
+ 	struct xfs_trans_res	tr_addafork;	/* add inode attr fork trans */
+ 	struct xfs_trans_res	tr_writeid;	/* write setuid/setgid file */
+ 	struct xfs_trans_res	tr_attrinval;	/* attr fork buffer
 
 _______________________________________________
 xfs mailing list
