@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 04C397F3F
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 03:37:25 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 444727F5E
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 04:10:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 71FBBAC004
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 01:37:21 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F1D1304087
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 02:09:59 -0800 (PST)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id yaw7AbtJcN6TkAwb (version=TLSv1
+	cuda.sgi.com with ESMTP id 4tQTan2IpQeny5Zn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Jan 2014 01:37:19 -0800 (PST)
+	Fri, 17 Jan 2014 02:09:54 -0800 (PST)
 From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH RESEND] xfstests: btrfs/027: simple sparse copy testcase for
-	btrfs
-Date: Fri, 17 Jan 2014 10:36:49 +0100
-Message-Id: <1389951409-26029-1-git-send-email-koen.de.wit@oracle.com>
+Subject: [PATCH RESEND] xfstests: btrfs/028: sparse copy of a directory tree
+	on btrfs
+Date: Fri, 17 Jan 2014 11:09:45 +0100
+Message-Id: <1389953385-26559-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,67 +30,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-Tests file clone functionality of btrfs ("reflinks"):
-   - Reflink a file
-   - Reflink the reflinked file
-   - Modify the original file
-   - Modify the reflinked file
+Tests file clone functionality of btrfs ("reflinks") on directory trees.
+   - Create directory and subdirectory, each having one file
+   - Create 2 recursive reflinked copies of the tree
+   - Modify the original files
+   - Modify one of the copies
 
-[sandeen: add helpers, make several mostly-cosmetic
- changes to the original testcase]
+[sandeen: mostly cosmetic changes]
 
 Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-Originally submitted as test 297, btrfs/308
+Originally submitted as test 298, btrfs/309
 
-diff --git a/common/rc b/common/rc
-index a585eb5..4157cc4 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2078,6 +2078,27 @@ _require_ugid_map()
- 	fi
- }
- 
-+_require_cp_reflink()
-+{
-+       cp --help | grep -q reflink || \
-+               _notrun "This test requires a cp with --reflink support."
-+}
-+
-+# Given 2 files, verify that they have the same mapping but different
-+# inodes - i.e. an undisturbed reflink
-+# Silent if so, make noise if not
-+_verify_reflink()
-+{
-+       # not a hard link or symlink?
-+       cmp -s  <(stat -c '%i' $1) <(stat -c '%i' $2) \
-+               && echo "$1 and $2 are not reflinks: same inode number"
-+
-+       # same mapping?
-+       diff -u <($XFS_IO_PROG -c "fiemap" $1 | grep -v $1) \
-+               <($XFS_IO_PROG -c "fiemap" $2 | grep -v $2) \
-+               || echo "$1 and $2 are not reflinks: different extents"
-+}
-+
- _create_loop_device()
- {
- 	file=$1
-diff --git a/tests/btrfs/027 b/tests/btrfs/027
+The functions _require_cp_reflink() and _verify_reflink() in common/rc
+have been submitted with btrfs/027
+
+diff --git a/tests/btrfs/028 b/tests/btrfs/028
 new file mode 100644
-index 0000000..ec0d5b4
+index 0000000..a034008
 --- /dev/null
-+++ b/tests/btrfs/027
-@@ -0,0 +1,90 @@
++++ b/tests/btrfs/028
+@@ -0,0 +1,107 @@
 +#! /bin/bash
-+# FS QA Test No. 027
++# FS QA Test No. 028
 +#
-+# Tests file clone functionality of btrfs ("reflinks"):
-+#   - Reflink a file
-+#   - Reflink the reflinked file
-+#   - Modify the original file
-+#   - Modify the reflinked file
++# Tests file clone functionality of btrfs ("reflinks") on directory
++# trees.
++#   - Create directory and subdirectory, each having one file
++#   - Create 2 recursive reflinked copies of the tree
++#   - Modify the original files
++#   - Modify one of the copies
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
@@ -108,7 +79,6 @@ index 0000000..ec0d5b4
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +#-----------------------------------------------------------------------
-+#
 +
 +seq=`basename $0`
 +echo "QA output created by $seq"
@@ -140,70 +110,96 @@ index 0000000..ec0d5b4
 +mkdir $TESTDIR1
 +
 +_checksum_files() {
-+    for F in original copy1 copy2
-+    do
-+        md5sum $TESTDIR1/$F | _filter_test_dir
-+    done
++    for F in original/file1 original/subdir/file2 \
++                 copy1/file1 copy1/subdir/file2 \
++                 copy2/file1 copy2/subdir/file2
++        do
++            md5sum $TESTDIR1/$F | _filter_test_dir
++        done
 +}
 +
 +rm -f $seqres.full
 +
-+echo "Create the original file and reflink to copy1, copy2"
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original \
++mkdir $TESTDIR1/original
++mkdir $TESTDIR1/original/subdir
++
++echo "Create the original files and reflink dirs"
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original/file1 \
 +    >> $seqres.full 2>&1
-+cp --reflink $TESTDIR1/original $TESTDIR1/copy1
-+cp --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
-+_verify_reflink $TESTDIR1/original $TESTDIR1/copy1
-+_verify_reflink $TESTDIR1/original $TESTDIR1/copy2
++$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 11000' \
++    $TESTDIR1/original/subdir/file2 >> $seqres.full 2>&1
++cp --recursive --reflink $TESTDIR1/original $TESTDIR1/copy1
++cp --recursive --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
++
++_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy1/file1
++_verify_reflink $TESTDIR1/original/subdir/file2 \
++    $TESTDIR1/copy1/subdir/file2
++_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy2/file1
++_verify_reflink $TESTDIR1/original/subdir/file2 \
++    $TESTDIR1/copy2/subdir/file2
++
 +echo "Original md5sums:"
 +_checksum_files
 +
-+echo "Overwrite original file with new data"
-+$XFS_IO_PROG -c 'pwrite -S 0x62 0 9000' $TESTDIR1/original \
++echo "Overwrite original/file1 and original/subdir/file2 with new data"
++$XFS_IO_PROG -c 'pwrite -S 0x63 0 13000' $TESTDIR1/original/file1 \
 +    >> $seqres.full 2>&1
-+echo "md5sums after overwriting original:"
++$XFS_IO_PROG -c 'pwrite -S 0x64 5000 1000' \
++    $TESTDIR1/original/subdir/file2 >> $seqres.full 2>&1
++echo "md5sums now:"
 +_checksum_files
 +
-+echo "Overwrite copy1 with different new data"
-+$XFS_IO_PROG -c 'pwrite -S 0x63 0 9000' $TESTDIR1/copy1 \
++echo "Overwrite copy1/file1 and copy1/subdir/file2 with new data"
++$XFS_IO_PROG -c 'pwrite -S 0x65 0 9000' $TESTDIR1/copy1/file1 \
 +    >> $seqres.full 2>&1
-+echo "md5sums after overwriting copy1:"
++$XFS_IO_PROG -c 'pwrite -S 0x66 5000 25000' \
++    $TESTDIR1/copy1/subdir/file2 >> $seqres.full 2>&1
++echo "md5sums now:"
 +_checksum_files
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/btrfs/027.out b/tests/btrfs/027.out
+diff --git a/tests/btrfs/028.out b/tests/btrfs/028.out
 new file mode 100644
-index 0000000..13023bf
+index 0000000..bd078db
 --- /dev/null
-+++ b/tests/btrfs/027.out
-@@ -0,0 +1,16 @@
-+QA output created by 027
-+Create the original file and reflink to copy1, copy2
++++ b/tests/btrfs/028.out
+@@ -0,0 +1,25 @@
++QA output created by 028
++Create the original files and reflink dirs
 +Original md5sums:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/original
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy1
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy2
-+Overwrite original file with new data
-+md5sums after overwriting original:
-+4a847a25439532bf48b68c9e9536ed5b  TEST_DIR/test-027/original
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy1
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy2
-+Overwrite copy1 with different new data
-+md5sums after overwriting copy1:
-+4a847a25439532bf48b68c9e9536ed5b  TEST_DIR/test-027/original
-+e271cd47d9f62ebc96cb4e67ae4d16db  TEST_DIR/test-027/copy1
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-027/copy2
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/original/file1
++ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/original/subdir/file2
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy1/file1
++ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy1/subdir/file2
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy2/file1
++ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy2/subdir/file2
++Overwrite original/file1 and original/subdir/file2 with new data
++md5sums now:
++260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-028/original/file1
++b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-028/original/subdir/file2
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy1/file1
++ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy1/subdir/file2
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy2/file1
++ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy2/subdir/file2
++Overwrite copy1/file1 and copy1/subdir/file2 with new data
++md5sums now:
++260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-028/original/file1
++b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-028/original/subdir/file2
++b20229a003e3985c4b0e6806abcd6642  TEST_DIR/test-028/copy1/file1
++b815b24069db14e0a3a07169fd563e93  TEST_DIR/test-028/copy1/subdir/file2
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-028/copy2/file1
++ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-028/copy2/subdir/file2
 diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 87e7bca..379f95b 100644
+index 87e7bca..372585d 100644
 --- a/tests/btrfs/group
 +++ b/tests/btrfs/group
 @@ -27,3 +27,4 @@
  022 auto
  023 auto
  024 auto quick
-+027 auto quick
++028 auto quick
 -- 
 1.7.1
 
