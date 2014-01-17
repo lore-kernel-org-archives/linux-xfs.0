@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 676D37F51
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 07:03:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 359CC304064
-	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 05:03:06 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 8iAkgkB5e8zK5LQz (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Jan 2014 05:03:04 -0800 (PST)
-From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH RESEND] xfstests: btrfs/030: sparse copy between different
-	filesystems/mountpoints
-Date: Fri, 17 Jan 2014 14:02:57 +0100
-Message-Id: <1389963777-29051-1-git-send-email-koen.de.wit@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 859377F6A
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 11:35:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5EADD8F8054
+	for <xfs@oss.sgi.com>; Fri, 17 Jan 2014 09:34:59 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Zee2GtUBCCAF30i0 for <xfs@oss.sgi.com>;
+	Fri, 17 Jan 2014 09:34:58 -0800 (PST)
+Message-ID: <52D969E2.7030308@sandeen.net>
+Date: Fri, 17 Jan 2014 11:35:30 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: allow logical-sector sized O_DIRECT for any fs sector
+	size
+References: <52D6CC91.6000408@redhat.com>
+	<20140115223848.GZ3469@dastard>	<52D71115.1070309@sandeen.net>
+	<20140116232132.GT3431@dastard>
+In-Reply-To: <20140116232132.GT3431@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,181 +26,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Check if creating a sparse copy ("reflink") of a file on btrfs
-expectedly fails when it's done between different filesystems or
-different mount points of the same filesystem.
+On 1/16/14, 5:21 PM, Dave Chinner wrote:
+> On Wed, Jan 15, 2014 at 04:52:05PM -0600, Eric Sandeen wrote:
+>> On 1/15/14, 4:38 PM, Dave Chinner wrote:
+>>> On Wed, Jan 15, 2014 at 11:59:45AM -0600, Eric Sandeen wrote:
+>>>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>>>> index 33ad9a7..1f3431f 100644
+>>>> --- a/fs/xfs/xfs_ioctl.c
+>>>> +++ b/fs/xfs/xfs_ioctl.c
+>>>> @@ -1587,7 +1587,12 @@ xfs_file_ioctl(
+>>>>  			XFS_IS_REALTIME_INODE(ip) ?
+>>>>  			mp->m_rtdev_targp : mp->m_ddev_targp;
+>>>>  =
 
-For both situations, these actions are executed:
-   - Copy a file with the reflink=auto option.
-     A normal copy should be created.
-   - Copy a file with the reflink=always option. Should result in
-     error.
+>>>> -		da.d_mem =3D da.d_miniosz =3D 1 << target->bt_sshift;
+>>>> +		/*
+>>>> +		 * Report device physical sector size as "optimal" minimum,
+>>>> +		 * unless blocksize is smaller than that.
+>>>> +		 */
+>>>> +		da.d_miniosz =3D min(target->bt_pssize, target->bt_bsize);
+>>>
+>>> Just grab the filesysetm block size from the xfs_mount:
+>>>
+>>> 		da.d_miniosz =3D min(target->bt_pssize, mp->m_sb.sb_blocksize);
+>>>
+>>>> +		da.d_mem =3D da.d_miniosz;
+>>>
+>>> I'd suggest that this should be PAGE_SIZE - it's for memory buffer
+>>> alignment, not IO alignment, so using the IO alignment just seems
+>>> wrong to me...
+>>
+>> Ok.  Was just sticking close to what we had before.
+>>
+>> So:
+>>  		da.d_miniosz =3D min(target->bt_pssize, mp->m_sb.sb_blocksize);
+>> 		da.d_mem =3D PAGE_SIZE;
+>>
+>> ?  Then we can have a minimum IO size of 512, and a memory alignment of
+>> 4k, isn't that a little odd?
+>>
+>> (IOWs we could do 512-aligned memory before, right?  What's the downside,
+>> or the value in changing it now?)
+> =
 
-[sandeen: mostly cosmetic changes]
+> We can do arbitrary byte aligned buffers if I understand
+> get_user_pages() correctly - it just maps the page under the buffer
+> into the kernel address space and then the bio is pointed at it.
+> AFAICT, the reason for the "memory buffer needs 512 byte alignment"
+> is simply that this is the minimum IO size supported.
 
-Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Actually, it's fs/direct-io.c which enforces this (not sure why I couldn't
+find that before), in do_blockdev_direct_IO(); the *enforced* minimum
+memory alignment is the size of the bev's logical block size.
 
-Originally submitted as test 301, btrfs/311
+> However, for large IOs, 512 byte alignment is not really optimal. If
+> we don't align the buffer to PAGE_SIZE, then we have partial head
+> and tail pages, so for a 512k IO we need to map 129 pages into a bio
+> instead of 128. When you have hardware that can only handle 128
+> segments in a DMA transfer, that means the 512k IO needs to be sent
+> in two IOs rather than one.
 
-The functions _require_cp_reflink() and _verify_reflink() in common/rc
-have been submitted with btrfs/027
+Ok, but I have a bit of a problem with changing what XFS_IOC_DIOINFO
+reports.  (I had originally thought to change the minimum IO size, but
+I have talked myself out of that, too).
 
-diff --git a/tests/btrfs/030 b/tests/btrfs/030
-new file mode 100644
-index 0000000..7bbc89a
---- /dev/null
-+++ b/tests/btrfs/030
-@@ -0,0 +1,108 @@
-+#! /bin/bash
-+# FS QA Test No. 030
-+#
-+# Check if creating a sparse copy ("reflink") of a file on btrfs
-+# expectedly fails when it's done between different filesystems or
-+# different mount points of the same filesystem.
-+#
-+# For both situations, these actions are executed:
-+#    - Copy a file with the reflink=auto option.
-+#      A normal copy should be created.
-+#    - Copy a file with the reflink=always option. Should result in
-+#      error.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT &>/dev/null
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+SOURCE_DIR=$TEST_DIR/test-$seq
-+CROSS_DEV_DIR=$SCRATCH_MNT/test-$seq
-+# mount point & target for twice-mounted device
-+TEST_DIR2=$TEST_DIR/mount2
-+DUAL_MOUNT_DIR=$SCRATCH_MNT/test-bis-$seq
-+
-+rm -rf $SOURCE_DIR
-+mkdir $SOURCE_DIR
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $SOURCE_DIR/original \
-+ >> $seqres.full
-+
-+_filter_testdirs()
-+{
-+    _filter_test_dir | _filter_scratch
-+}
-+
-+_create_reflinks_to()
-+{
-+    # auto reflink, should fall back to non-reflink
-+    rm -rf $1; mkdir $1
-+    echo "reflink=auto:"
-+    cp --reflink=auto $SOURCE_DIR/original $1/copy
-+    md5sum $SOURCE_DIR/original | _filter_testdirs
-+    md5sum $1/copy | _filter_testdirs
-+
-+    # always reflink, should fail outright
-+    rm -rf $1; mkdir $1
-+    echo "reflink=always:"
-+    cp --reflink=always $SOURCE_DIR/original $1/copyfail \
-+        2>&1 | _filter_testdirs
-+
-+    # The failed target actually gets created by cp:
-+    ls $1/copyfail | _filter_testdirs
-+}
-+
-+echo "test reflinks across different devices"
-+_scratch_mount
-+_create_reflinks_to $CROSS_DEV_DIR
-+_scratch_unmount
-+
-+echo "test reflinks across different mountpoints of same device"
-+mount $TEST_DEV $SCRATCH_MNT || _fail "Couldn't double-mount $TEST_DEV"
-+_create_reflinks_to $DUAL_MOUNT_DIR
-+umount $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
-new file mode 100644
-index 0000000..923a6e1
---- /dev/null
-+++ b/tests/btrfs/030.out
-@@ -0,0 +1,15 @@
-+QA output created by 030
-+test reflinks across different devices
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-030/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-030/copy
-+reflink=always:
-+cp: failed to clone 'SCRATCH_MNT/test-030/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-030/copyfail
-+test reflinks across different mountpoints of same device
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-030/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-bis-030/copy
-+reflink=always:
-+cp: failed to clone 'SCRATCH_MNT/test-bis-030/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-bis-030/copyfail
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 87e7bca..9231f7b 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -27,3 +27,4 @@
- 022 auto
- 023 auto
- 024 auto quick
-+030 auto quick
--- 
-1.7.1
+The xfsctl(3) manpage says that XFS_IOC_DIOINFO:  "Get(s) information
+required to perform direct I/O on the specified file descriptor."
+and "the user=92s data buffer must conform to the same type of =
+
+constraints as required for accessing a raw disk partition."
+
+IOWs, the ioctl is documented as returning minimum, not optimal,
+requirements, and it has always been implemented as such.  Changing
+its meaning now seems wrong.  At least, I would not like to do so
+as part of this functional change; to do so would probably be best
+in a new ioctl which reports both minimum & optimal sizes.  And at
+that point we should just do a vfs interface.  :)
+
+Of course, applications don't have to use the minimum sizes reported
+by the ioctl; they are free to be smarter and do larger sizes and
+alignments.  But if the ioctl was designed and documented to report
+required *minimums*, I think we should leave it as such.
+
+I'm going to resend the change, split up a bit more to separate
+cleanups from functional changes, and maybe we can discuss the ioctl
+change as a potential additional patch.
+
+Thanks,
+-Eric
+
+> There's quite a bit of hardware out there that have a limit of 128
+> segments to each IO....
+> =
+
+> Cheers,
+> =
+
+> Dave.
+> =
+
 
 _______________________________________________
 xfs mailing list
