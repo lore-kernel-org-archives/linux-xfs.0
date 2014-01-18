@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7EB0D7F93
-	for <xfs@oss.sgi.com>; Sat, 18 Jan 2014 02:44:57 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 01B107F6F
+	for <xfs@oss.sgi.com>; Sat, 18 Jan 2014 08:18:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 52B25304053
-	for <xfs@oss.sgi.com>; Sat, 18 Jan 2014 00:44:57 -0800 (PST)
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [149.20.54.216])
-	by cuda.sgi.com with ESMTP id aq2d12nH1V1Kv8JK for
-	<xfs@oss.sgi.com>; Sat, 18 Jan 2014 00:44:56 -0800 (PST)
-Date: Sat, 18 Jan 2014 00:44:53 -0800 (PST)
-Message-Id: <20140118.004453.1800341321580114709.davem@davemloft.net>
-Subject: Re: [PATCH 0/5] splice: locking changes and code refactoring
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140118082730.GH10323@ZenIV.linux.org.uk>
-References: <CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
-	<20140118074649.GF10323@ZenIV.linux.org.uk>
-	<20140118082730.GH10323@ZenIV.linux.org.uk>
-Mime-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E0CC98F8066
+	for <xfs@oss.sgi.com>; Sat, 18 Jan 2014 06:17:59 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 6oMI4giJi81Lg3RV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 18 Jan 2014 06:17:55 -0800 (PST)
+Message-ID: <52DA8D09.4000408@oracle.com>
+Date: Sat, 18 Jan 2014 22:17:45 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: use tr_qm_dqalloc log reservation for dquot alloc
+References: <1389981723-54311-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1389981723-54311-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,22 +28,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: viro@ZenIV.linux.org.uk
-Cc: axboe@kernel.dk, sfrench@samba.org, sage@inktank.com, mfasheh@suse.com, xfs@oss.sgi.com, hch@infradead.org, jlbec@evilplan.org, linux-fsdevel@vger.kernel.org, torvalds@linux-foundation.org
+To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Date: Sat, 18 Jan 2014 08:27:30 +0000
+On 01/18 2014 02:02 AM, Brian Foster wrote:
+> The dquot allocation path in xfs_qm_dqread() currently uses the
+> attribute set log reservation, which appears to be incorrect. We
+> have reports of transaction reservation overruns with the current
+> code. E.g., a repeated run of xfstests test generic/270 on a 512b
+> block size fs occassionally produces the following in dmesg:
+> 
+> 	XFS (sdN): xlog_write: reservation summary:
+> 	  trans type  = QM_DQALLOC (30)
+> 	  unit res    = 7080 bytes
+> 	  current res = -632 bytes
+> 	  total reg   = 0 bytes (o/flow = 0 bytes)
+> 	  ophdrs      = 0 (ophdr space = 0 bytes)
+> 	  ophdr + reg = 0 bytes
+> 	  num regions = 0
+> 
+> 	XFS (sdN): xlog_write: reservation ran out. Need to up reservation
+> 
+> The dquot allocation case should consist of a write reservation
+> (i.e., we are allocating a range of the internal quota file) plus
+> the size of the actual dquots. We already have a log reservation
+> definition for this operation (tr_qm_dqalloc). Use it in
+> xfs_qm_dqread() and update the log reservation calculation function
+> to use the write res. calculation function rather than reading the
+> assumed to be pre-calculated value directly.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> Hi all,
+> 
+> This issue was reported here:
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=1052787
+> 
+> ... and the patch seems to address the reservation overrun from my testing.
+> It also runs through an xfstests regression. Thanks.
+> 
+> Brian
+> 
+>  fs/xfs/xfs_dquot.c      | 2 +-
+>  fs/xfs/xfs_trans_resv.c | 3 +--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 6b1e695..06280c6 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -614,7 +614,7 @@ xfs_qm_dqread(
+>  
+>  	if (flags & XFS_QMOPT_DQALLOC) {
+>  		tp = xfs_trans_alloc(mp, XFS_TRANS_QM_DQALLOC);
+> -		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_attrsetm,
+> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_qm_dqalloc,
+>  					  XFS_QM_DQALLOC_SPACE_RES(mp), 0);
 
-> BTW, would sockets benefit from having ->sendpages() that would take an
-> array of (page, offset, len) triples?  It would be trivial to do and
-> some of the helpers that are falling out of writing that writev-based
-> default_file_splice_write() look like they could be reused for
-> calling that one...  Dave?
+Ah, another issue I introduced for refactoring xfs_trans_reserve() interface.
+>  		if (error)
+>  			goto error1;
+> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+> index 2fd59c0..60b7d40 100644
+> --- a/fs/xfs/xfs_trans_resv.c
+> +++ b/fs/xfs/xfs_trans_resv.c
+> @@ -651,8 +651,7 @@ STATIC uint
+>  xfs_calc_qm_dqalloc_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	ASSERT(M_RES(mp)->tr_write.tr_logres);
+> -	return M_RES(mp)->tr_write.tr_logres +
+> +	return xfs_calc_write_reservation(mp) +
+>  		xfs_calc_buf_res(1,
+>  			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
+>  }
 
-That's originally how the sendpage method was implemented, but back then
-Linus asked us to only pass one page at a time.
+I'm fine to call xfs_calc_write_reservation() rather than the current hard-code,
+especially we can get rid of the ASSERT() though tr_write.tr_logres should not
+be zero as it is initialized in advance at xfs_trans_resv_calc().
 
-I don't remember the details beyond that.
+Just a little nit pick :), that would be better to consolidate the comments in
+this fix as well, i.e, 
+*	the write transaction log space: M_RES(mp)->tr_write.tr_logres.
+
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
