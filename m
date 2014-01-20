@@ -1,25 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3B26B7F37
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 12:19:08 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DDD7A7F37
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 14:32:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BFFF304039
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 10:19:05 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id ddppvZA4kikvQtY7 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jan 2014 10:19:02 -0800 (PST)
-Date: Mon, 20 Jan 2014 19:19:01 +0100
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH 2/5] xfstests: use value of FSTYP if defined externally
-Message-ID: <20140120181901.GZ6498@suse.cz>
-References: <cover.1389891730.git.dsterba@suse.cz>
-	<efafb76f725148435b09a22c62c92a63eedb9b71.1389891730.git.dsterba@suse.cz>
-	<20140120021345.GG18112@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AC1BC8F8068
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 12:32:06 -0800 (PST)
+Received: from mail-ve0-f177.google.com (mail-ve0-f177.google.com
+	[209.85.128.177]) by cuda.sgi.com with ESMTP id
+	92pw28NK7q19ol3l (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 Jan 2014 12:32:02 -0800 (PST)
+Received: by mail-ve0-f177.google.com with SMTP id jz11so1093098veb.8
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 12:32:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140120021345.GG18112@dastard>
-Reply-To: dsterba@suse.cz
+In-Reply-To: <20140120135514.GA21567@infradead.org>
+References: <20140113141416.GA30117@infradead.org>
+	<20140113235646.GR10323@ZenIV.linux.org.uk>
+	<20140114132207.GA25170@infradead.org>
+	<20140114172033.GU10323@ZenIV.linux.org.uk>
+	<20140118064040.GE10323@ZenIV.linux.org.uk>
+	<CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
+	<20140118074649.GF10323@ZenIV.linux.org.uk>
+	<CA+55aFzM0N7WjqnLNnuqTkbj3iws9f3bYxei=ZBCM8hvps4zYg@mail.gmail.com>
+	<20140118201031.GI10323@ZenIV.linux.org.uk>
+	<20140119051335.GN10323@ZenIV.linux.org.uk>
+	<20140120135514.GA21567@infradead.org>
+Date: Mon, 20 Jan 2014 12:32:01 -0800
+Message-ID: <CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
+Subject: Re: [RFC] unifying write variants for filesystems
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,80 +41,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Dave Kleikamp <shaggy@kernel.org>, Sage Weil <sage@inktank.com>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Steve French <sfrench@samba.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>
 
-On Mon, Jan 20, 2014 at 01:13:45PM +1100, Dave Chinner wrote:
-> On Thu, Jan 16, 2014 at 06:07:12PM +0100, David Sterba wrote:
-> > --- a/check
-> > +++ b/check
-> > @@ -33,7 +33,7 @@ showme=false
-> >  have_test_arg=false
-> >  randomize=false
-> >  here=`pwd`
-> > -FSTYP=xfs
-> > +FSTYP=${FSTYP:-xfs}
-> 
-> ":-xfs" means assign the value of $xfs if $FTYPE is null. xfs is not
-> a variable....
+On Mon, Jan 20, 2014 at 5:55 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Sun, Jan 19, 2014 at 05:13:35AM +0000, Al Viro wrote:
+>> Folks, what do you think about the following:
+>
+> That's very much what Shaggy did in the aio-direct tree, except that
+> it kept using a single set of methods.  Linus really didn't like it
+> unfortunately.
 
-Docs say that
+Umm. That wasn't what I objected to.
 
-  ${parameter:-word}
-  If parameter is unset or null, the expansion of word is substituted.
-  Otherwise, the value of parameter is substituted.
+I objected to the incredibly ugly implementation, the crazy new flags
+arguments for core helper functions, ugly naming etc etc. I even
+outlined what might fix it.
 
-so 'xfs' will expand to itself.  And I did test this one with:
+In other words, I thought the code was shit and ugly. Not that
+iterators per se would be wrong. Just doing them badly is wrong.
 
-$ cat default.sh << EOF
-FSTYP=${FSTYP:-xfs}
-echo $FSTYP
-EOF
+So don't go putting words in my mouth. It isn't "unfortunate" at all
+that I have higher quality standards.
 
-$ cat external.sh << EOF
-FSTYP=btrfs
-source default.sh
-EOF
-
-$ sh default.sh
-xfs
-
-$ sh external.sh
-btrfs
-
-> > -# Autodetect fs type based on what's on $TEST_DEV
-> > -if [ "$HOSTOS" == "Linux" ]; then
-> > +# Autodetect fs type based on what's on $TEST_DEV unless it's been set
-> > +# externally
-> > +if [ -z "$FSTYP" -a "$HOSTOS" == "Linux" ]; then
-> 
-> If the default value expansion is fixed, FSTYP will always have a
-> value here Hence it will never, ever probe.
-
-> >      FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
-> >  fi
-> >  export FSTYP
-> 
-> I suspect what you want is:
-> 
-> -FSTYP=xfs
-> 
-> .....
-> 
-> if [ -z "$FSTYP" -a "$HOSTOS" == "Linux" ]; then
->      FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
-> fi
-> FSTYP=${FSTYP:=xfs}
-> export FSTYP
-
-Right, the default assignment has to be last. I'll use the := form
-to be consistent with what's used in the file, though :- works here as
-well, just does not assign the variable within the ${...} expression.
-The result is the same.
-
-
-thanks,
-david
+          Linus
 
 _______________________________________________
 xfs mailing list
