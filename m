@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 984007F62
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 00:22:50 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9BB207F62
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 01:10:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1B4BEAC005
-	for <xfs@oss.sgi.com>; Sun, 19 Jan 2014 22:22:47 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	peKX6hMLnkzQ07U0 for <xfs@oss.sgi.com>;
-	Sun, 19 Jan 2014 22:22:45 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1W58Fs-0004Kr-NC
-	for xfs@oss.sgi.com; Mon, 20 Jan 2014 17:22:40 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1W58Fs-0004UJ-MJ
-	for xfs@oss.sgi.com; Mon, 20 Jan 2014 17:22:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/7] xfs/104: use fixed log size
-Date: Mon, 20 Jan 2014 17:22:36 +1100
-Message-Id: <1390198957-17184-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390198957-17184-1-git-send-email-david@fromorbit.com>
-References: <1390198957-17184-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8DEE68F8054
+	for <xfs@oss.sgi.com>; Sun, 19 Jan 2014 23:09:58 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KmHparsD8XJBbG81 for
+	<xfs@oss.sgi.com>; Sun, 19 Jan 2014 23:09:57 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0K79uBv021071
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 02:09:56 -0500
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH RESEND] ext4: regression test for ext4 resize with non-extent
+	files
+Date: Mon, 20 Jan 2014 15:09:27 +0800
+Message-Id: <1390201767-5352-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,36 +32,152 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eric Sandeen <esandeen@redhat.com>, Eryu Guan <eguan@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Eric Sandeen <esandeen@redhat.com>
 
-In changing the default log sizes in mkfs, the freespace
-calculations in xfs/104 are no longer valid and so it fails with
-ENOSPC before running any of the growfs tests. Make the test use a
-fixed log size of 5MB so that freespace calculations remain valid
-and the test passes regardless of whether we have a new or old mkfs
-binary.
+From: Eric Sandeen <esandeen@redhat.com>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Regression test for:
+
+c5c72d8 ext4: fix online resizing for ext3-compat file systems
+
+Signed-off-by: Eric Sandeen <esandeen@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- tests/xfs/104 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index d31cf16..e899aca 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -84,7 +84,7 @@ nags=4
- size=`expr 120 \* 1048576`	# 120 megabytes initially
- sizeb=`expr $size / $dbsize`	# in data blocks
- echo "*** creating scratch filesystem"
--_create_scratch -dsize=${size} -dagcount=${nags}
-+_create_scratch -lsize=5m -dsize=${size} -dagcount=${nags}
- 
- fillsize=`expr 110 \* 1048576`	# 110 megabytes of filling
- echo "*** using some initial space on scratch filesystem"
+This test was originally written by Eric and didn't get merged. I did
+minor update and resent.
+
+v2: s/dangerous/auto/
+v3: remove "Silence is golden" output since it's not silent
+v4: rebase on top of master
+
+ tests/ext4/306     | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/306.out | 13 +++++++++
+ tests/ext4/group   |  1 +
+ 3 files changed, 96 insertions(+)
+ create mode 100755 tests/ext4/306
+ create mode 100644 tests/ext4/306.out
+
+diff --git a/tests/ext4/306 b/tests/ext4/306
+new file mode 100755
+index 0000000..398c4c0
+--- /dev/null
++++ b/tests/ext4/306
+@@ -0,0 +1,82 @@
++#! /bin/bash
++# FS QA Test No. ext4/306
++#
++# Test that blocks are available to non-extent files after a resize2fs
++# Regression test for commit:
++# c5c72d8 ext4: fix online resizing for ext3-compat file systems
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++PIDS=""
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    _scratch_unmount
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs ext4
++_supported_os Linux
++
++_require_scratch
++
++# This needs to mount ext3; might require ext3 driver, or ext4
++# might handle it itself.  Find out if we have it one way or another.
++modprobe ext3 > /dev/null 2>&1
++grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
++
++rm -f $seqres.full
++
++# Make a small ext3 fs, (extents disabled) & mount it
++yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
++_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
++# Create a small non-extent-based file
++echo "Create 1m testfile1"
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
++echo "Create testfile2 to fill the fs"
++# A large non-extent-based file filling the fs; this will run out & fail
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
++
++# Remount as ext4
++_scratch_unmount
++_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
++df -h $SCRATCH_MNT >> $seqres.full
++
++# Grow it by 512m
++echo "Resize to 1g"
++resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
++df -h $SCRATCH_MNT >> $seqres.full
++
++# See if we can add more blocks to the files
++echo "append 2m to testfile1"
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
++echo "append 2m to testfile2"
++$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
++
++status=0
++exit
+diff --git a/tests/ext4/306.out b/tests/ext4/306.out
+new file mode 100644
+index 0000000..ee6c90c
+--- /dev/null
++++ b/tests/ext4/306.out
+@@ -0,0 +1,13 @@
++QA output created by 306
++Create 1m testfile1
++wrote 1048576/1048576 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Create testfile2 to fill the fs
++pwrite64: No space left on device
++Resize to 1g
++append 2m to testfile1
++wrote 2097152/2097152 bytes at offset 1048576
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++append 2m to testfile2
++wrote 2097152/2097152 bytes at offset 536870912
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 53af708..7e1a68b 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -9,3 +9,4 @@
+ 303 aio dangerous ioctl rw stress
+ 304 aio dangerous ioctl rw stress
+ 305 auto
++306 auto rw resize quick
 -- 
-1.8.4.rc3
+1.8.4.2
 
 _______________________________________________
 xfs mailing list
