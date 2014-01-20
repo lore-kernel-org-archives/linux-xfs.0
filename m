@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1FAD17F37
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 07:59:01 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 74F017F37
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 08:21:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E5A34304051
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 05:58:57 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id guSqV1TWMmSzluTE (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jan 2014 05:58:57 -0800 (PST)
-Date: Mon, 20 Jan 2014 05:58:55 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
-	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
-Message-ID: <20140120135855.GA26280@infradead.org>
-References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
-	<20140106201032.GA13491@quack.suse.cz>
-	<20140107155830.GA28395@infradead.org>
-	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
-	<20140108140307.GA588@infradead.org>
-	<CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
-	<20140115220721.GY3469@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4800B304053
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 06:21:11 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 3PP3uQ9w0aGG6tmD for
+	<xfs@oss.sgi.com>; Mon, 20 Jan 2014 06:21:10 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0KEL9J8001315
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:21:09 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s0KEL8L5019770
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:21:09 -0500
+Message-ID: <52DD30D3.9000806@redhat.com>
+Date: Mon, 20 Jan 2014 09:21:07 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140115220721.GY3469@dastard>
+Subject: Re: [PATCH 1/3] xfs: clean up xfs_buftarg
+References: <52D6CC91.6000408@redhat.com> <52D9910C.9000205@sandeen.net>
+	<52D99158.8070108@sandeen.net>
+In-Reply-To: <52D99158.8070108@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,30 +37,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Gluk <git.user@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Sergey Meirovich <rathamahata@gmail.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jan 16, 2014 at 09:07:21AM +1100, Dave Chinner wrote:
-> Yes, I think it can be done relatively simply. We'd have to change
-> the code in xfs_file_aio_write_checks() to check whether EOF zeroing
-> was required rather than always taking an exclusive lock (for block
-> aligned IO at EOF sub-block zeroing isn't required),
+On 01/17/2014 03:23 PM, Eric Sandeen wrote:
+> Clean up the xfs_buftarg structure a bit:
+> - remove bt_bsize, which is never used
+> - replace bt_sshift with bt_ssize; we only ever shift it back
+>   to a size anyway
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-That's not even required for supporting aio appends, just a further
-optimization for it.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> and then we'd
-> have to modify the direct IO code to set the is_async flag
-> appropriately. We'd probably need a new flag to say tell the DIO
-> code that AIO beyond EOF is OK, but that isn't hard to do....
-
-Yep, need a flag to allow appending writes and then defer them.
-
-> Christoph, are you going to get any time to look at doing this in
-> the next few days?
-
-I'll probably need at least another week before I can get to it.  If you
-wanna pick it up before than feel free.
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 9fccfb5..b664bce 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -445,7 +445,7 @@ _xfs_buf_find(
+>  	numbytes = BBTOB(numblks);
+>  
+>  	/* Check for IOs smaller than the sector size / not sector aligned */
+> -	ASSERT(!(numbytes < (1 << btp->bt_sshift)));
+> +	ASSERT(!(numbytes < btp->bt_ssize));
+>  	ASSERT(!(BBTOB(blkno) & (xfs_off_t)btp->bt_smask));
+>  
+>  	/*
+> @@ -1599,8 +1599,7 @@ xfs_setsize_buftarg(
+>  	unsigned int		blocksize,
+>  	unsigned int		sectorsize)
+>  {
+> -	btp->bt_bsize = blocksize;
+> -	btp->bt_sshift = ffs(sectorsize) - 1;
+> +	btp->bt_ssize = sectorsize;
+>  	btp->bt_smask = sectorsize - 1;
+>  
+>  	if (set_blocksize(btp->bt_bdev, sectorsize)) {
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 1cf21a4..4ef949a 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -93,8 +93,7 @@ typedef struct xfs_buftarg {
+>  	struct block_device	*bt_bdev;
+>  	struct backing_dev_info	*bt_bdi;
+>  	struct xfs_mount	*bt_mount;
+> -	unsigned int		bt_bsize;
+> -	unsigned int		bt_sshift;
+> +	unsigned int		bt_ssize;
+>  	size_t			bt_smask;
+>  
+>  	/* LRU control structures */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 33ad9a7..39c38ee 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1587,7 +1587,7 @@ xfs_file_ioctl(
+>  			XFS_IS_REALTIME_INODE(ip) ?
+>  			mp->m_rtdev_targp : mp->m_ddev_targp;
+>  
+> -		da.d_mem = da.d_miniosz = 1 << target->bt_sshift;
+> +		da.d_mem = da.d_miniosz = target->bt_ssize;
+>  		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
+>  
+>  		if (copy_to_user(arg, &da, sizeof(da)))
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
