@@ -1,15 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6268A7F37
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:49:39 -0600 (CST)
-Message-ID: <52DD458E.1050201@sgi.com>
-Date: Mon, 20 Jan 2014 09:49:34 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5603E7F37
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 11:22:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 37BEE304039
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:22:52 -0800 (PST)
+Received: from mail-ee0-f42.google.com (mail-ee0-f42.google.com
+	[74.125.83.42]) by cuda.sgi.com with ESMTP id Bny3E3fJIGuj3U1q
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:22:51 -0800 (PST)
+Received: by mail-ee0-f42.google.com with SMTP id e49so3564651eek.15
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:22:50 -0800 (PST)
+Received: from t400.localnet (89-65-189-48.dynamic.chello.pl. [89.65.189.48])
+	by mx.google.com with ESMTPSA id 46sm5261929ees.4.2014.01.20.09.22.49
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Mon, 20 Jan 2014 09:22:49 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: xfsprogs 3.1.12 and 3.2.0 releases?
+Date: Mon, 20 Jan 2014 18:22:48 +0100
 MIME-Version: 1.0
-Subject: Re: [PATCH RESEND] ext4: regression test for ext4 resize with
-	non-extent files
-References: <1390201767-5352-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1390201767-5352-1-git-send-email-eguan@redhat.com>
+Message-Id: <201401201822.48520.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,25 +29,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
-Cc: Eric Sandeen <esandeen@redhat.com>
+To: xfs@oss.sgi.com
 
-This has been committed.
-
-Thanks
---Rich
-
-commit a93b1dd76cd6e639adaf79e077ba4300af9132d6
-Author: Eric Sandeen <esandeen@redhat.com>
-Date:   Mon Jan 20 07:09:27 2014 +0000
-
-     ext4: regression test for ext4 resize with non-extent files
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkhlbGxvLgoKV2hhdCdzIG5lZWRlZCBmb3IgYm90aCAzLjEuMTIgYW5kIDMuMi4wIHJlbGVhc2Vz
+IHRvIGhhcHBlbj8KCklmIDMuMi4wIGlzIHRvIGJlIHJlbGVhc2VkIHNvb24gdGhlbiBuaWNlLiBE
+YXZlLCBBRkFJSyBpdCBpcyB3YWl0aW5nIGZvciB5b3UgCmFuZCB4ZnNfZGIgY3JjIHdvcmsgb25s
+eT8KCklmIDMuMi4wIGlzIGZhciBhd2F5IHRoZW4gaXQgd291bGQgYmUgbmljZSB0byBzZWUgMy4x
+LjEyIHdpdGggYnVnZml4ZXMgb25seSAKKGZvciB0aG9zZSBwYXJhbm9pZCBhYm91dCBuZXcgc3R1
+ZmYpIGJ1dCAzLjEuMTMgdmVyeSBzb29uIGFmdGVyIHRoYXQgd2l0aCAKYmFja3BvcnRlZCBmZWF0
+dXJlcyBsaWtlIHByb2plY3QgcXVvdGEgc3VwcG9ydCwgcGFyYWxsZWxpc20sIHBlcmZvcm1hbmNl
+IAppbXByb3ZlbWVudHMuCgpPYnZpb3VzbHkgSSBob3BlIDMuMi4wIGlzIHNvb24gYW5kIHRoZXJl
+IGlzIG5vIG5lZWQgdG8gd2FzdGUgZWZmb3J0IG9uIDMuMS54LgoKLS0gCkFya2FkaXVzeiBNacWb
+a2lld2ljeiwgYXJla20gLyBtYXZlbi5wbAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
