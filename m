@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DF4227F37
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:35:49 -0600 (CST)
-Message-ID: <52DD4250.6050806@sgi.com>
-Date: Mon, 20 Jan 2014 09:35:44 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6268A7F37
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 09:49:39 -0600 (CST)
+Message-ID: <52DD458E.1050201@sgi.com>
+Date: Mon, 20 Jan 2014 09:49:34 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH RESEND] ext4: regression test for ext4 resize with
@@ -25,9 +25,16 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 Cc: Eric Sandeen <esandeen@redhat.com>
 
-Worked fine for me.
+This has been committed.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+Thanks
+--Rich
+
+commit a93b1dd76cd6e639adaf79e077ba4300af9132d6
+Author: Eric Sandeen <esandeen@redhat.com>
+Date:   Mon Jan 20 07:09:27 2014 +0000
+
+     ext4: regression test for ext4 resize with non-extent files
 
 _______________________________________________
 xfs mailing list
