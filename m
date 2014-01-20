@@ -1,34 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DDD7A7F37
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 14:32:06 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DA9F57F37
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 16:18:52 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AC1BC8F8068
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 12:32:06 -0800 (PST)
-Received: from mail-ve0-f177.google.com (mail-ve0-f177.google.com
-	[209.85.128.177]) by cuda.sgi.com with ESMTP id
-	92pw28NK7q19ol3l (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jan 2014 12:32:02 -0800 (PST)
-Received: by mail-ve0-f177.google.com with SMTP id jz11so1093098veb.8
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 12:32:01 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6DE90AC001
+	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 14:18:49 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	aGKusylJNz7WzhX9 for <xfs@oss.sgi.com>;
+	Mon, 20 Jan 2014 14:18:48 -0800 (PST)
+Date: Tue, 21 Jan 2014 09:18:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Terrible performance of sequential O_DIRECT 4k writes in SAN
+	environment. ~3 times slower then Solars 10 with the same HBA/Storage.
+Message-ID: <20140120221843.GJ18112@dastard>
+References: <CA+QCeVQRrqx=CrxyuAe7k0e0y4Nqo7x_8jtkuD99VM8L9Dxp+g@mail.gmail.com>
+	<20140106201032.GA13491@quack.suse.cz>
+	<20140107155830.GA28395@infradead.org>
+	<CA+QCeVRiwHU+C5utaLQXf_MpjoYMYEF4LKRyDPaqcd=H6n-RRw@mail.gmail.com>
+	<20140108140307.GA588@infradead.org>
+	<CA+QCeVRuvNtZ8+9D-NtMOD=B9UEA5HMvKaGdXOQCjO-KTnZdbw@mail.gmail.com>
+	<20140115220721.GY3469@dastard>
+	<20140120135855.GA26280@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20140120135514.GA21567@infradead.org>
-References: <20140113141416.GA30117@infradead.org>
-	<20140113235646.GR10323@ZenIV.linux.org.uk>
-	<20140114132207.GA25170@infradead.org>
-	<20140114172033.GU10323@ZenIV.linux.org.uk>
-	<20140118064040.GE10323@ZenIV.linux.org.uk>
-	<CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
-	<20140118074649.GF10323@ZenIV.linux.org.uk>
-	<CA+55aFzM0N7WjqnLNnuqTkbj3iws9f3bYxei=ZBCM8hvps4zYg@mail.gmail.com>
-	<20140118201031.GI10323@ZenIV.linux.org.uk>
-	<20140119051335.GN10323@ZenIV.linux.org.uk>
-	<20140120135514.GA21567@infradead.org>
-Date: Mon, 20 Jan 2014 12:32:01 -0800
-Message-ID: <CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
-Subject: Re: [RFC] unifying write variants for filesystems
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20140120135855.GA26280@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,29 +38,44 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Dave Kleikamp <shaggy@kernel.org>, Sage Weil <sage@inktank.com>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Steve French <sfrench@samba.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>
+Cc: Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, Gluk <git.user@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Sergey Meirovich <rathamahata@gmail.com>
 
-On Mon, Jan 20, 2014 at 5:55 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sun, Jan 19, 2014 at 05:13:35AM +0000, Al Viro wrote:
->> Folks, what do you think about the following:
->
-> That's very much what Shaggy did in the aio-direct tree, except that
-> it kept using a single set of methods.  Linus really didn't like it
-> unfortunately.
+On Mon, Jan 20, 2014 at 05:58:55AM -0800, Christoph Hellwig wrote:
+> On Thu, Jan 16, 2014 at 09:07:21AM +1100, Dave Chinner wrote:
+> > Yes, I think it can be done relatively simply. We'd have to change
+> > the code in xfs_file_aio_write_checks() to check whether EOF zeroing
+> > was required rather than always taking an exclusive lock (for block
+> > aligned IO at EOF sub-block zeroing isn't required),
+> 
+> That's not even required for supporting aio appends, just a further
+> optimization for it.
 
-Umm. That wasn't what I objected to.
+Oh, right, I got an off-by-one when reading the code - the EOF
+zeroing only occurs when the offset is beyond EOF, not at or beyond
+EOF...
 
-I objected to the incredibly ugly implementation, the crazy new flags
-arguments for core helper functions, ugly naming etc etc. I even
-outlined what might fix it.
+> > and then we'd
+> > have to modify the direct IO code to set the is_async flag
+> > appropriately. We'd probably need a new flag to say tell the DIO
+> > code that AIO beyond EOF is OK, but that isn't hard to do....
+> 
+> Yep, need a flag to allow appending writes and then defer them.
+> 
+> > Christoph, are you going to get any time to look at doing this in
+> > the next few days?
+> 
+> I'll probably need at least another week before I can get to it.  If you
+> wanna pick it up before than feel free.
 
-In other words, I thought the code was shit and ugly. Not that
-iterators per se would be wrong. Just doing them badly is wrong.
+I'm probably not going to get to it before then, either, so check
+back in a week?
 
-So don't go putting words in my mouth. It isn't "unfortunate" at all
-that I have higher quality standards.
+Cheers,
 
-          Linus
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
