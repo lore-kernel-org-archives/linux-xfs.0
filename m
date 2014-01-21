@@ -1,27 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E0E8529DF8
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 01:02:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C7043304048
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 23:02:48 -0800 (PST)
-Received: from mail-pb0-f41.google.com (mail-pb0-f41.google.com
-	[209.85.160.41]) by cuda.sgi.com with ESMTP id QPa6SZzbzPRlo6rn
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 20 Jan 2014 23:02:44 -0800 (PST)
-Received: by mail-pb0-f41.google.com with SMTP id up15so7453529pbc.14
-	for <xfs@oss.sgi.com>; Mon, 20 Jan 2014 23:02:44 -0800 (PST)
-Date: Tue, 21 Jan 2014 15:07:06 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: [RFC] directory quota survey on xfs
-Message-ID: <20140121070706.GA1819@gmail.com>
-References: <20131222095929.GA11444@gmail.com> <20131223014222.GC3220@dastard>
-	<20140115081201.GA3820@gmail.com>
-	<5966C533-EF18-4804-8C83-DFBD607D9BE6@dilger.ca>
-	<20140115213207.GJ3431@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D18617F3F
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 02:17:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D6BDAC003
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 00:17:43 -0800 (PST)
+Received: from mail-ea0-f178.google.com (mail-ea0-f178.google.com
+	[209.85.215.178]) by cuda.sgi.com with ESMTP id
+	yUkcgomQPkl2T9v8 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 21 Jan 2014 00:17:41 -0800 (PST)
+Received: by mail-ea0-f178.google.com with SMTP id a15so2402172eae.23
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 00:17:40 -0800 (PST)
+Received: from t400.localnet ([91.234.176.244])
+	by mx.google.com with ESMTPSA id u7sm11977756eep.11.2014.01.21.00.17.39
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Tue, 21 Jan 2014 00:17:39 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: xfsprogs 3.1.12 and 3.2.0 releases?
+Date: Tue, 21 Jan 2014 09:17:38 +0100
+References: <201401201822.48520.arekm@maven.pl>
+	<20140120230814.GA4287@infradead.org>
+	<20140120231158.GL1935@sgi.com>
+In-Reply-To: <20140120231158.GL1935@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140115213207.GJ3431@dastard>
+Message-Id: <201401210917.38674.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,91 +34,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Li Xi <pkuelelixi@gmail.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-Hi Dave,
-
-On Thu, Jan 16, 2014 at 08:32:07AM +1100, Dave Chinner wrote:
-> On Wed, Jan 15, 2014 at 11:03:22AM -0700, Andreas Dilger wrote:
-> > On Jan 15, 2014, at 1:12 AM, Zheng Liu <gnehzuil.liu@gmail.com> wrote:
-> > > On Mon, Dec 23, 2013 at 12:42:22PM +1100, Dave Chinner wrote:
-> > >> I'd also strongly suggest that you use the XFS userspace quota API
-> > >> for managing project quotas, so that we can use the same management
-> > >> tools and tests to verify that they behave the same. Please don't
-> > >> invent a new version of the quota API to implement this - everything
-> > >> you need ifor managing project/directory quotas is already there in
-> > >> xfs_quota.....
-> > > 
-> > > Frankly, I don't like this, really.  Now we have quota-tool to manage
-> > > the quota in ext4.  So IMHO we'd better go on using this tool because it
-> > > is natural for ext4 users.
-> 
-> Zheng - you're confusing the userspace tool that users run with
-> the quotactl API the tool uses to communicate with the kernel.
-
-Thanks for pointing it out.
-
-> 
-> > > I still couldn't accept this fact that I
-> > > need to install xfsprogs for using a feature of ext4.  Further, it could
-> > > make users puzzled because they use quota to control user/group quota in
-> > > ext4, but it uses xfs_quota to control project quota.  It could bring
-> > > some troubles for the ext4 users who have written some scripts to manage
-> > > their machines.
-> > 
-> > Please see Li Xi's recent email "Directory/Project quota supports" on
-> > the linux-ext4 list.  He has already added some prototype support for
-> > project quotas to quota-tools.
-> 
-> So, while it is a prototype, lets do it the right way. i.e. let's
-> not reinvent the wheel.
-
-Yes, I agree with you and Andreas that we shouldn't reinvent the wheel.
-
-> 
-> > I think it might make sense to keep the same API as XFS for the ext4
-> > quotas (to keep compatibility for existing XFS deployments), but add
-> > support into quota-tools so that it is usable by all filesystems.
-> 
-> Well, yes. If you are writing a generic quota tool, then it needs to
-> support all filesystems. We already have a fully featured quota API
-> that can provide this support - it's the API that XFS has been using
-> since it was ported to Linux.  We have the opportunity to unify the
-> quota APIs that ext4 and XFS, so we should take the opportunity
-> while it is here.  Don't create a new API for ext4 simply because of
-> NIH syndrome.
-
-These days I was thinking about your comment that uses quotactl API to
-communicate the userspace tool with the kernel.  But I am still
-confusing about your comment that unifies the quota API between ext4 and
-XFS.
-
-Now we have two flag sets in quotactl(2).  One (Q_QUOTAON, Q_GETQUOTA,
-etc...) is used by extN file system (I am not sure whether other file
-systems use these flags or not), and another (Q_XQUOTAON, Q_XGETQSTAT,
-etc...) is used by XFS.
-
-In xfs_quota it uses an ioctl(2) to get/set/check project id, and calls
-quotactl(2) with Q_XSETQLIM/Q_XGETQUOTA to set/get project quota.  On
-kernel side, ->set_dqblk()/get_dqblk() is called when we try to set/get
-project quota in XFS.  In ext4 the same callback functions are used to
-set/get user/group quota, although on userspace we use Q_SETQUOTA/
-Q_GETQUOTA to set/get quota.  I am not sure I fully understand your
-meaning that unifies the quota API between ext4 and XFS.  Do you mean
-that we should use Q_XSETQLIM/Q_XGETQUOTA flags to set/get quota on ext4?
-Or using quotactl(2) is fine for you.
-
-Please correct me if I miss something.
-
-Thanks,
-                                                - Zheng
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAyMSBvZiBKYW51YXJ5IDIwMTQsIEJlbiBNeWVycyB3cm90ZToKPiBPbiBNb24s
+IEphbiAyMCwgMjAxNCBhdCAwMzowODoxNFBNIC0wODAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToKPiA+IE9uIFR1ZSwgSmFuIDIxLCAyMDE0IGF0IDEwOjAyOjU5QU0gKzExMDAsIERhdmUgQ2hp
+bm5lciB3cm90ZToKPiA+ID4gV2VsbCwgdGhhdCdzIGFsd2F5cyBiZWVuIHRoZSBwbGFuIHNpbmNl
+IGEgMy4xLjEyIHJlbGVhc2Ugd2FzCj4gPiA+IHByb3Bvc2VkIDMgbW9udGhzIGFnby4gSG93IHdl
+bGwgaGFzIHRoYXQgcGxhbiBiZWVuIHdvcmtpbmcgb3V0IHNvCj4gPiA+IGZhcj8KPiA+IAo+ID4g
+VGhlIHNhZCBwYXJ0IGlzIHRoYXQgSSB3b3VsZCBoYXZlIGhhZCB0aGUgdGltZSAzIG1vbnRoIGFn
+bywgYnV0IHJpZ2h0Cj4gPiBub3cgaXQncyBoYXJkLiAgU3RpbGwgdHJ5aW5nIHRvIGdldCBpdCBk
+b25lLCB0aG91Z2guCj4gCj4gSWYgQXJrYWRpdXN6IGlzIHdpbGxpbmcgdG8gcHJvdmlkZSBhIGxp
+c3Qgb2YgY29tbWl0cyB0byBpbmNsdWRlIGl0Cj4gc2hvdWxkbid0IGJlIGEgcHJvYmxlbSB0byBn
+ZXQgdGhpcyBkb25lLiAgSSBiZWxpZXZlIGhlIGluZGljYXRlZCBhCj4gd2lsbGluZ25lc3MgdG8g
+aGVscCBvbiBJUkMgZWFybGllciB0b2RheS4KCkJ5IGxvb2tpbmcgaW50byBnaXQgbG9nIHRoZXNl
+IGxvb2sgbGlrZSBzbWFsbCBmaXhlcyBmb3IgMy4xLnguIENvdWxkIHNvbWVvbmUgZWxzZSByZWNo
+ZWNrPwoKMTA4ZTk4NWJjNTk2YTFmMWEzM2QzMWEzNDhmZGI0MzAyMTNmYjhjMCB4ZnNfZnNyOiBm
+aWxlIHJlYWRzIHNob3VsZCBiZSBPX0RJUkVDVAo0NmYzNGEyNTk5MzlkOGU4MTVkYTFhNWE1Mzc0
+ZDM5MTUzZWQ1N2UzIHhmc19tZXRhZHVtcDogbWFucGFnZSBmaXggcmVnYXJkaW5nIGZyb3plbiBm
+cwoxYjZiZjcxNGE3MTc5OTQyYjg1MjNjYzk2NjEyNDI0OWI3NDM4MWRhIG1rZnMueGZzOiBmaXgg
+cHJvdG9maWxlIG5hbWUgY3JlYXRlIGJsb2NrIHJlc2VydmF0aW9uCjUwNGRiZTQ2NTQ5ZDQ2MmU3
+OTU2NTUxNGQ4NmNlNjliNzRiOTY4OTMgeGZzcHJvZ3M6IGF2b2lkIGRvdWJsZS1mcmVlIGluIHhm
+c19hdHRyX25vZGVfYWRkbmFtZQphMTM0ODczZTI5MDM4MzdiZGJlYWIyNjFiNmQwY2VlZTJmZDQ5
+OWJhIHhmc3Byb2dzOiBmaXggYnVmZmVyIGxlYWsgaW4geGxvZ19wcmludF9maW5kX29sZGVzdAo0
+NjIzZDEwNDFkZDM0ZDczYWVhYjRiNTEwMDJmYzljYTZkNTQzNDE1IHhmc3Byb2dzOiBmcmVlIGJw
+IGluIHhsb2dfZmluZF96ZXJvZWQoKSBlcnJvciBwYXRoCmRjOTM5NTRhYTZmMTM5NjNiY2M4N2Zj
+MDBjZTU1YTQ3NDVkYzdiOTMgeGZzcHJvZ3M6ZnJlZSBicCBpbiB4bG9nX2ZpbmRfdGFpbCgpIGVy
+cm9yIHBhdGgKYWJhMjk1ODhmODFkYWQ1MjEyOTAzN2MxNWZlNTg0ZWM4OWIzNmE0ZiB4ZnNwcm9n
+czogZml4IGFnY250cyBsZWFrIGluIHhmc19yZXBhaXIncyBzY2FuX2FncwozMTI1OTJkZWZiOGI2
+MDUxMzg5YTU2YTVjNzgwODE5YjQyMzlkYWI0IHhmc3Byb2dzOiBmaXggdW5pbnQgdmFyIGluIHJl
+cGFpciBwaGFzZTYKM2FjODdmYmY2YWMyOTQ5NGRjNDYxMzQzMjM3MzM1NTFhYWMxNzM3YyB4ZnNw
+cm9nczogZml4IGlub2RlIGNyYXNoIGluIHhmc19yZXBhaXIKZTdjMDUwOTVmNWJhYTljZDJlMzVh
+NmRlMDNkN2RkOWY1MWRkMzkxMCB4ZnNwcm9nczogZml4IE91dC1vZi1ib3VuZHMgYWNjZXNzIGlu
+IHJlcGFpci9kaW5vZGUuYwpjYmQ3NTA4ZGI0Yzk1OTc4ODlhZDk4ZDVmMDI3NTQyMDAyZTBlNTdj
+IHhmc19yZXBhaXI6IHplcm8gb3V0IHVudXNlZCBwYXJ0cyBvZiBzdXBlcmJsb2NrcyBbd2UgaGFk
+IHJlYWwgaXNzdWUgdGhhdCB0aGlzIGZpeGVzXQplNmVmYjk2N2U2MWEzNjZkYmU4NzdmMzRlMjIw
+ZTMyODY2ZTdkYjQyIHhmc3Byb2dzOiBmaXggT3V0LW9mLWJvdW5kcyBhY2Nlc3MgaW4gcmVwYWly
+L2Rpbm9kZS5jCmU0OWYzMGE3NmY1ZTkxMDA5MmJkMjg1ZWJlZjNmNzY0MWEwOWVjMmUgeGZzcHJv
+Z3M6IGF2b2lkIGFycmF5IG92ZXJmbG93IGluIHBmX2JhdGNoX3JlYWQoKQo3MGVlNDE1M2Y0Yzk5
+ODc3NGFkY2VlMWU1NzZkM2MxZjMwNWI5MmQwIHhmc3Byb2dzOiBmaXggcG90ZW50aWFsIG1lbW9y
+eSBsZWFrIGluIHJlcGFyZS9zYi5jCjU0OGMyZTNlNWIxMjMyNjZiNGI4OWNjODFiZWRkMTEzNDQy
+NTcwYjggW3YzLCAxLzJdIHhmc3Byb2dzOiBmaXggcG90ZW50aWFsIG1lbW9yeSBsZWFrIGluIHZl
+cmlmeV9zZXRfcHJpbWFyeV9zYigpCmFlMTgxODIwZDAzZTE5ZjE0NWRiZDA1OGMwZjhmYTU5ZmEx
+ODQ2OGMgeGZzcHJvZ3M6IGZpeCByZXR1cm4gdmFsdWUgb2YgdmVyaWZ5X3NldF9wcmltYXJ5X3Ni
+KCkKMDUwYTdmMWY3OTMxNDQ3MGMxOGU5ZDExYzI4ZGFmNzVkZDk1OTgzMCB4ZnNwcm9nczogaGFu
+ZGxlIHN5bWxpbmtzIGV0YyBpbiBmc190YWJsZV9pbml0aWFsaXNlX21vdW50cygpCjc3M2Q2ZjZl
+MzgwMGRjZTVkMjdhZjY4N2ViZDNmZjMyM2RjZGZkNzIgIHhmc3Byb2dzOiBjb25maWcuZ3Vlc3Mv
+Y29uZmlnLnN1YiBvdXQgb2YgZGF0ZSBmb3IgYXJtNjQKN2YyZDZiODExNzU1YjZiOTFmMThhYTVi
+ZDlkNTk4MDg0OGE4MTI2NyB4ZnNfcmVwYWlyOiBhdm9pZCBzZWdmYXVsdCBpZiByZXBvcnRpbmcg
+cHJvZ3Jlc3MgZWFybHkgaW4gcmVwYWlyCjQ0ZGFlNWU2ODA0NDA4YjQxMjNhOTE2YTI3MzhiNzNl
+MjFkOGM2MWUgeGZzX3JlcGFpcjogdGVzdCBmb3IgYmFkIGxldmVsIGluIGRpcjIgbm9kZQoxNGUz
+NmUzNGVkOTc1YjFmZmJiY2JjMThhNzc0M2EzYTQ4NTliZTNkIHhmc3Byb2dzOiBmaXggcmVzb3Vy
+Y2UgbGVhayBpbiBsb25nZm9ybV9kaXIyX3JlYnVpbGQoKQoxMmE0OGY1ZDhhMDZhOGNhMjFiNjIy
+MWU5NDMxOGU0OTIyZjAzMTZjICB4ZnNwcm9nczogcmVtb3ZlIHhmc19jaGVjayByZWZlcmVuY2Vz
+IGZyb20gZnNjay54ZnMgc2NyaXB0ICYgbWFucGFnZQo2YWEzZDg3YmM0NTM0OGRjMDk0OGFlMGNl
+YTU3YmYzMDMzZDY0Njk0IHhmczogZG9uJ3QgZW1pdCBjb3JydXB0aW9uIG5vaXNlIG9uIGZzIHBy
+b2Jlcwo5YWE1NzExNjI5YjQ3NjQyYmI1YjY4OGE2YTE0MTBkMjIzNDU2ZmM4IGxpYnhmczogZml4
+IHJvb3QgaW5vZGUgaGFuZGxpbmcgaW5jb25zaXN0ZW5jaWVzCjNhMTlmYjdkY2U5ZDU3MGU3OGRl
+YWY1YzI2YzBhYjhhNGE1YmVmNjcgbGlieGZzOiBzdG9wIGNhY2hpbmcgaW5vZGUgc3RydWN0dXJl
+cwo2MTUxMDQzN2M2MjdiNTI5ZmViOTVlYmZmZGRkNzNkZjVlZDViMTA0IHJlcGFpcjogcHJlZmV0
+Y2hpbmcgaXMgdHVybmVkIG9mZiB1bm5lY2Vzc2FyaWx5CjBjY2U0YWExOThmMDQ3MDgxN2JlZGIz
+NzgxZWE1YjY5NTVlNDMwNzYgcmVwYWlyOiBJbmNyZWFzZSBkZWZhdWx0IHJlcGFpciBwYXJhbGxl
+bGlzbSBvbiBsYXJnZSBmaWxlc3lzdGVtcwoxYWRmZTVjNjI5NmQzZWE2YzE4MmYzMWE2NzI4ZmM5
+NGFmOTE0NmY3IHhmc19mc3I6IGZpeCBTV0FQRVhUIGZhaWx1cmVzIHVuZGVyIHNlbGludXgKNzll
+MTA2ZjA1ZjBmYmZmYjg5YWI1NDAxZmI5N2FmNTM5MWM2MjkxZiB4ZnNfcmVwYWlyOiBjb3JyZWN0
+IGRvY3MgZm9yICItdCIgdW5pdHMKMDMwOTFmYzI1Mzk2Mzg5MWM3MjhjZjM2MmMwZjk3MDAyOTRi
+NmRmZCB4ZnNwcm9nczogc3VnZ2VzdCAiLWQiIG9wdGlvbiBmb3IgcmVwYWlyIG9mIFJPIG1vdW50
+CjNhZTgxNTIwZTkxOTQ1NDU0ZjM1ZmE3NTgzM2E0NWI1YjAwMGZlMzMgeGZzX3JlcGFpcjogc3Vn
+Z2VzdCByZWJvb3QgYWZ0ZXIgZGFuZ2Vyb3VzIHJlcGFpcgo0ZTgzYWM3Yjc0MTZlZGI1MjgxNWM2
+ZTVmNGNhNjRkYWRmYTVmOTc0IHhmc19tZXRhZHVtcDogTWFrZSAtRiAoZm9yY2UpIG9wdGlvbmFs
+CgpOb3Qgc3VyZSBhYm91dCB0aGVzZToKCjFiYTI4YjY0ZTY5Y2UzYTc5ODlkZjg4ZjcxYTVjYjYw
+OGIxYzcxZTMgeGZzX3JlcGFpcjogZHJvcCBidWZmZXIgcmVmZXJlbmNlIG9uIHN5bWxpbmsgZXJy
+b3IKNGU1MDM3MzVmZDQwN2UyZTYxMjk1ZTZhZjZlYzQ3YWY0NjkzYmM5NSB4ZnNfcmVwYWlyOiBm
+aXggYnRyZWUgYmxvY2sgbWFnaWMgbnVtYmVyIG1hcHBpbmcKNGZiZWJmMzc0Y2NjMTc4ZjFmZWRj
+ZjJkOGE0MzMzOTAzMWY4ZGJiNCBsaWJ4ZnM6IGZpeCBkaXIzIGZyZWVzcGFjZSBibG9jayBjb3Jy
+dXB0aW9uCjQ5NDQzNGQ3ZmI3OTg0MGJhMTEzZWNkN2ZiMWFjM2FlMjBlMGY1NjkgeGZzOiBBZGQg
+cmVhZC1vbmx5IHN1cHBvcnQgZm9yIGRpcmVudCBmaWxldHlwZSBmaWVsZAo5MDZiNzYyZjU1MzMz
+OTY4MzIxMDYyNjQyYTBiOTBmZWFjMWZkZmZiIHhmczogQWRkIHdyaXRlIHN1cHBvcnQgZm9yIGRp
+cmVudCBmaWxldHlwZSBmaWVsZAozYmVlZDA4ZWIyMmY1NmIzODRkMjAyODU0MWNjYjQxMjg0ZmY5
+NzUxIHhmc3Byb2dzOiBhZGQgZHR5cGUgc3VwcG9ydCB0byBta2ZzIGFuZCBkYgoxYWNjNTM4NTQw
+Y2UyMmUxNmJiNTVjYTU3MzY5MTA3MGE4ZDM3NWRiIHhmc3Byb2dzOiBpbml0aWFsaXplIGZpbGV0
+eXBlIGZvciB4ZnNfbmFtZV9kb3QKNDEzMTU2ODdkOWRiOWI1MDg3NjQwMWU3YjBlZTIwZGQ3N2Nm
+YzcxMiB4ZnM6IGRpcmVudCBkdHlwZSBwcmVzZW5jZSBpcyBkZXBlbmRlbnQgb24gZGlyZWN0b3J5
+IG1hZ2ljIG51bWJlcnMKNjg3NzRiOTAwZTBjODM2ODM0MmNiMTJmNjQ5NTcyYTg2ZWYyZjZlNCB4
+ZnNwcm9nczogaW5pdGlhbGl6ZSBmaWxldHlwZSBmb3IgbG9zdCtmb3VuZCBjcmVhdGlvbgoyY2Nh
+MWRiZDFjM2UxMmQyNzBhOWJhYTVmODVlNTQ4ZThhNWEyMTI1IHhmc19yZXBhaXI6IGFkZCBkX3R5
+cGUgd2hlbiBtb3ZpbmcgZmlsZXMgdG8gbG9zdCtmb3VuZAo4N2UzNDNiZDA5MzdlNWJiNzVkZDhi
+YzQ2YmEzODhiNmY4YzY1NTJiIHhmc3Byb2c6IGFkZCB4ZnMgc2IgdjQgc3VwcG9ydCBmb3IgZGly
+ZW50IGZpbGV0eXBlIGZpZWxkCjZmNzAwNjMwYjA2YTJjZTE1YWViZTg2MDhiMmM1ODc3MDAyMjk5
+ZDYgeGZzcHJvZzogYWRkIGRpcmVudCBmaWxldHlwZSBpbmZvcm1hdGlvbiBmb3IgeGZzX2luZm8K
+NDI3MzdmMWFkMTYyMTNhM2RhYjE3NTZjOWZmZmI0OTRkYjhlZjI3ZSB4ZnNfcHJvZ3M6IGFkZCBk
+aXJlbnQgZmlsZXR5cGUgdG8geGZzX2RiIHZlcnNpb24KNGViMDJkOTViN2UwODFiNTEwYTcwMTU2
+MDlmMDEzODVhYWIyMjlhOSB4ZnNwcm9nOiBhZGQgbWtmcy54ZnMgc2IgdjQgc3VwcG9ydCBmb3Ig
+ZGlyZW50IGZpbGV0eXBlIGZpZWxkCjEyODY0ZmQ5OTJkZDVkNmJjM2MwODlhZWI2NDIyYzhkMjM1
+YTI4ZjAgeGZzOiByZW1vdmUgbmV3bGluZXMgZnJvbSBzdHJpbmdzIHBhc3NlZCB0byBfX3hmc19w
+cmludGsKM2UyMzUxNmFlNjA0MjE2NTJmZDQxMzU0MzA3YTZhNTE4MWQ0MDFlYiB4ZnM6IGZpeCB0
+aGUgd3JvbmcgbmV3X3NpemUvcm5ld19zaXplIGF0IHhmc19pZXh0X3JlYWxsb2NfZGlyZWN0KCkK
+Yzk1MjJmNGQ4NzkwZWNkNjFjNGU3NDc0NmI2MDc3ODc0ODVmMjAyNyB4ZnM6IGZpeCBub2RlIGZv
+cndhcmQgaW4geGZzX25vZGVfdG9vc21hbGwKODM5ZGFjN2YwNmQ1NDYwMGIzMDkyYTdhZDljYjkw
+MzMxNWEyN2Y5NyAgbGlieGZzOiB3b3JrIGFyb3VuZCBkb19kaXYoKSBub3QgaGFuZGxpbmcgMzIg
+Yml0IG51bWVyYXRvcnMKZWE0YThkZTFlMTM1OTA1ZTI0MGE1NGYxOTJkYWYyMzI3NWE3ZThhOCB4
+ZnNfcmVwYWlyOiBmaXggcHJvY2Vzc19ibWJ0X3JlY2xpc3RfaW50Cgo+IC1CZW4KCi0tIApBcmth
+ZGl1c3ogTWnFm2tpZXdpY3osIGFyZWttIC8gbWF2ZW4ucGwKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
