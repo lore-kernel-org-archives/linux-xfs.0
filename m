@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E5FB329DF8
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 05:41:22 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D11AD29DF8
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 05:43:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C7CD68F8052
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 03:41:19 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id SSLYpFg6s9SlksRf (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jan 2014 03:41:18 -0800 (PST)
-From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH RESEND] xfstests: btrfs: cross-subvolume sparse copy
-Date: Tue, 21 Jan 2014 12:40:48 +0100
-Message-Id: <1390304448-25752-1-git-send-email-koen.de.wit@oracle.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AE1DB304043
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 03:43:26 -0800 (PST)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id dvx6UZdVekc0q1BB (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 21 Jan 2014 03:43:25 -0800 (PST)
+Subject: Bug#725971: reuse this issue for the more general solution to use
+	dh-autoreconf
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.725971.B725971.139030442926917@bugs.debian.org>
+From: Matthias Klose <doko@debian.org>
+Message-Id: <E1W5Zgz-0003yG-Gp@ravel.debian.org>
+Date: Tue, 21 Jan 2014 11:40:29 +0000
+Reply-To: Matthias Klose <doko@debian.org>, 725971@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,226 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org
+To: 725971@bugs.debian.org
 
-This testscript creates reflinks to files on different subvolumes,
-overwrites the original files and reflinks, and moves reflinked files
-between subvolumes.
+Control: retitle -1 xfsprogs: run dh-autoreconf to update config.{sub,guess} and {libtool,aclocal}.m4
 
-Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
----
+Reusing this report for the more general solution to also update
+the libtool.m4 and/or aclocal.m4 files, needed for the port mentioned
+in bug #726404.
 
-Originally submitted as test 302, btrfs/316
+See https://wiki.debian.org/qa.debian.org/FTBFS for a guide how to
+address these.
 
-diff --git a/tests/btrfs/030 b/tests/btrfs/030
-new file mode 100644
-index 0000000..5ebc555
---- /dev/null
-+++ b/tests/btrfs/030
-@@ -0,0 +1,137 @@
-+#! /bin/bash
-+# FS QA Test No. 030
-+#
-+# Testing cross-subvolume sparse copy on btrfs
-+#    - Create two subvolumes, mount one of them
-+#    - Create a file on each (sub/root)volume,
-+#      reflink them on the other volumes
-+#    - Change one original and two reflinked files
-+#    - Move reflinked files between subvolumes
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT
-+    rm -rf $TESTDIR1
-+    rm -rf $TESTDIR2
-+    btrfs subvolume delete $SUBVOL1 >> $seqres.full
-+    btrfs subvolume delete $SUBVOL2 >> $seqres.full
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+_checksum_files() {
-+    for F in file1 file2 file3
-+    do
-+        echo "$F:"
-+        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
-+        do
-+            _md5_checksum $D/$F
-+        done
-+    done
-+}
-+
-+TESTDIR1=$TEST_DIR/test-$seq-1
-+TESTDIR2=$TEST_DIR/test-$seq-2
-+SUBVOL1=$TEST_DIR/subvol-$seq-1
-+SUBVOL2=$TEST_DIR/subvol-$seq-2
-+
-+_scratch_unmount 2>/dev/null
-+rm -rf $seqres.full
-+rm -rf $TESTDIR1 $TESTDIR2
-+btrfs subvol delete $SUBVOL1 >/dev/null 2>&1
-+btrfs subvol delete $SUBVOL2 >/dev/null 2>&1
-+
-+mkdir $TESTDIR1
-+mkdir $TESTDIR2
-+btrfs subvolume create $SUBVOL1 >> $seqres.full
-+btrfs subvolume create $SUBVOL2 >> $seqres.full
-+_mount -t btrfs -o subvol=subvol-$seq-1 $TEST_DEV $SCRATCH_MNT
-+
-+echo "Create initial files"
-+# TESTDIR1/file1 is very small and will be inlined
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 10' $TESTDIR1/file1 \
-+    >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 13000' $SCRATCH_MNT/file2 \
-+    >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x63 0 17000' $SUBVOL2/file3 \
-+    >> $seqres.full
-+
-+echo "Create reflinks to the initial files on other subvolumes"
-+cp --reflink $TESTDIR1/file1 $SUBVOL1
-+cp --reflink $TESTDIR1/file1 $SUBVOL2
-+cp --reflink $SUBVOL1/file2 $TESTDIR1/
-+cp --reflink $SUBVOL1/file2 $SUBVOL2
-+cp --reflink $SUBVOL2/file3 $TESTDIR1/
-+cp --reflink $SUBVOL2/file3 $SUBVOL1
-+
-+echo "Verify the reflinks"
-+_verify_reflink $SCRATCH_MNT/file2 $TESTDIR1/file2
-+_verify_reflink $SCRATCH_MNT/file2 $SUBVOL2/file2
-+_verify_reflink $SUBVOL2/file3 $TESTDIR1/file3
-+_verify_reflink $SUBVOL2/file3 $SCRATCH_MNT/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nOverwrite some files with new content"
-+$XFS_IO_PROG -c 'pwrite -S 0x64 0 20' $TESTDIR1/file1 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x66 0 21000' $SUBVOL2/file2 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x65 5000 5000' $SCRATCH_MNT/file3 \
-+    >> $seqres.full
-+
-+echo -n "Verify that non-overwritten reflinks "
-+echo "still have the same data blocks"
-+_verify_reflink $TESTDIR1/file2 $SCRATCH_MNT/file2
-+_verify_reflink $TESTDIR1/file3 $SUBVOL2/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nShuffle files between directories"
-+mv $TESTDIR1/file* $TESTDIR2
-+mv $SCRATCH_MNT/file* $TESTDIR1/
-+mv $SUBVOL2/file* $SCRATCH_MNT/
-+mv $TESTDIR2/file* $SUBVOL2/
-+
-+# No _verify_reflink here as data is copied when moving files
-+# between subvols
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
-new file mode 100644
-index 0000000..050ae0b
---- /dev/null
-+++ b/tests/btrfs/030.out
-@@ -0,0 +1,48 @@
-+QA output created by 030
-+Create initial files
-+Create reflinks to the initial files on other subvolumes
-+Verify the reflinks
-+Verify the file contents:
-+file1:
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+file3:
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-+---
-+Overwrite some files with new content
-+Verify that non-overwritten reflinks still have the same data blocks
-+Verify the file contents:
-+file1:
-+00d620f69f30327f0f8946b95c12de44
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+917619ae44b38bb9968af261c3c45440
-+file3:
-+5a95800e4c04b11117aa4e4de057721f
-+b9f275cd638cb784c9e61def94c622a8
-+5a95800e4c04b11117aa4e4de057721f
-+---
-+Shuffle files between directories
-+Verify the file contents:
-+file1:
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+00d620f69f30327f0f8946b95c12de44
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+917619ae44b38bb9968af261c3c45440
-+d7402b46310fbbfbc5e466b1dccb043b
-+file3:
-+b9f275cd638cb784c9e61def94c622a8
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 8eb8c4f..3f61799 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -32,3 +32,4 @@
- 027 auto quick
- 028 auto quick
- 029 auto quick
-+030 auto quick
--- 
-1.7.1
+Please ignore this email if the libtool.m4/aclocal.m4 update is not
+needed, and updating the config.{guess,sub} files is sufficient.
 
 _______________________________________________
 xfs mailing list
