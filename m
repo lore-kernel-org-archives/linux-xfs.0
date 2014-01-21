@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B06F029E05
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 17:42:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 751E7304043
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 15:41:57 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	mszDfMfr1f2eymCK for <xfs@oss.sgi.com>;
-	Tue, 21 Jan 2014 15:41:55 -0800 (PST)
-Date: Wed, 22 Jan 2014 10:41:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs 3.1.12 and 3.2.0 releases?
-Message-ID: <20140121234151.GJ13997@dastard>
-References: <201401201822.48520.arekm@maven.pl>
-	<20140120230814.GA4287@infradead.org>
-	<20140120231158.GL1935@sgi.com> <201401210917.38674.arekm@maven.pl>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201401210917.38674.arekm@maven.pl>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CF54229E05
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 17:57:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 38AEDAC007
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 15:57:00 -0800 (PST)
+Received: from mail-wg0-f53.google.com (mail-wg0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id CDtCPWxVDXKq0Y3Z
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 21 Jan 2014 15:56:58 -0800 (PST)
+Received: by mail-wg0-f53.google.com with SMTP id y10so8691999wgg.20
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 15:56:57 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH] xfstests: add test for btrfs incremental send infinite loop
+	issue
+Date: Tue, 21 Jan 2014 23:56:50 +0000
+Message-Id: <1390348610-8098-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +24,218 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-T24gVHVlLCBKYW4gMjEsIDIwMTQgYXQgMDk6MTc6MzhBTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIFR1ZXNkYXkgMjEgb2YgSmFudWFyeSAyMDE0LCBCZW4gTXllcnMg
-d3JvdGU6Cj4gPiBPbiBNb24sIEphbiAyMCwgMjAxNCBhdCAwMzowODoxNFBNIC0wODAwLCBDaHJp
-c3RvcGggSGVsbHdpZyB3cm90ZToKPiA+ID4gT24gVHVlLCBKYW4gMjEsIDIwMTQgYXQgMTA6MDI6
-NTlBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiA+IFdlbGwsIHRoYXQncyBhbHdh
-eXMgYmVlbiB0aGUgcGxhbiBzaW5jZSBhIDMuMS4xMiByZWxlYXNlIHdhcwo+ID4gPiA+IHByb3Bv
-c2VkIDMgbW9udGhzIGFnby4gSG93IHdlbGwgaGFzIHRoYXQgcGxhbiBiZWVuIHdvcmtpbmcgb3V0
-IHNvCj4gPiA+ID4gZmFyPwo+ID4gPiAKPiA+ID4gVGhlIHNhZCBwYXJ0IGlzIHRoYXQgSSB3b3Vs
-ZCBoYXZlIGhhZCB0aGUgdGltZSAzIG1vbnRoIGFnbywgYnV0IHJpZ2h0Cj4gPiA+IG5vdyBpdCdz
-IGhhcmQuICBTdGlsbCB0cnlpbmcgdG8gZ2V0IGl0IGRvbmUsIHRob3VnaC4KPiA+IAo+ID4gSWYg
-QXJrYWRpdXN6IGlzIHdpbGxpbmcgdG8gcHJvdmlkZSBhIGxpc3Qgb2YgY29tbWl0cyB0byBpbmNs
-dWRlIGl0Cj4gPiBzaG91bGRuJ3QgYmUgYSBwcm9ibGVtIHRvIGdldCB0aGlzIGRvbmUuICBJIGJl
-bGlldmUgaGUgaW5kaWNhdGVkIGEKPiA+IHdpbGxpbmduZXNzIHRvIGhlbHAgb24gSVJDIGVhcmxp
-ZXIgdG9kYXkuCj4gCj4gQnkgbG9va2luZyBpbnRvIGdpdCBsb2cgdGhlc2UgbG9vayBsaWtlIHNt
-YWxsIGZpeGVzIGZvciAzLjEueC4gQ291bGQgc29tZW9uZSBlbHNlIHJlY2hlY2s/Cj4gCi4uLi4u
-Cj4gM2ExOWZiN2RjZTlkNTcwZTc4ZGVhZjVjMjZjMGFiOGE0YTViZWY2NyBsaWJ4ZnM6IHN0b3Ag
-Y2FjaGluZyBpbm9kZSBzdHJ1Y3R1cmVzCj4gNjE1MTA0MzdjNjI3YjUyOWZlYjk1ZWJmZmRkZDcz
-ZGY1ZWQ1YjEwNCByZXBhaXI6IHByZWZldGNoaW5nIGlzIHR1cm5lZCBvZmYgdW5uZWNlc3Nhcmls
-eQo+IDBjY2U0YWExOThmMDQ3MDgxN2JlZGIzNzgxZWE1YjY5NTVlNDMwNzYgcmVwYWlyOiBJbmNy
-ZWFzZSBkZWZhdWx0IHJlcGFpciBwYXJhbGxlbGlzbSBvbiBsYXJnZSBmaWxlc3lzdGVtcwoKSSB0
-aGluayB0aGVzZSB0aHJlZSBhcmUgbm90IGEgZ3JlYXQgaWRlYSBmb3IgMy4xLnguIFRoZXkgcmVz
-dWx0IGluCnNpZ25pZmljYW50IGNoYW5nZXMgb2YgYmVoYXZpb3VyIHRoYXQgY2FuIHJlc3VsdCBp
-biBpbmNyZWFzZWQgbWVtb3J5CmNvbnN1bXB0aW9uIGJ5IGRlZmF1bHQuIEknZCBwcmVmZXIgdGhh
-dCB3ZSBkb24ndCBtYWtlIGNoYW5nZXMgdG8gdGhlCmRlZmF1bHQgYmVoYXZpb3VyIGluIGEgYnVn
-LWZpeCBvbmx5IHBvaW50IHJlbGVhc2UuCgouLi4uLgo+IE5vdCBzdXJlIGFib3V0IHRoZXNlOgo+
-IAo+IDFiYTI4YjY0ZTY5Y2UzYTc5ODlkZjg4ZjcxYTVjYjYwOGIxYzcxZTMgeGZzX3JlcGFpcjog
-ZHJvcCBidWZmZXIgcmVmZXJlbmNlIG9uIHN5bWxpbmsgZXJyb3IKPiA0ZTUwMzczNWZkNDA3ZTJl
-NjEyOTVlNmFmNmVjNDdhZjQ2OTNiYzk1IHhmc19yZXBhaXI6IGZpeCBidHJlZSBibG9jayBtYWdp
-YyBudW1iZXIgbWFwcGluZwo+IDRmYmViZjM3NGNjYzE3OGYxZmVkY2YyZDhhNDMzMzkwMzFmOGRi
-YjQgbGlieGZzOiBmaXggZGlyMyBmcmVlc3BhY2UgYmxvY2sgY29ycnVwdGlvbgo+IDQ5NDQzNGQ3
-ZmI3OTg0MGJhMTEzZWNkN2ZiMWFjM2FlMjBlMGY1NjkgeGZzOiBBZGQgcmVhZC1vbmx5IHN1cHBv
-cnQgZm9yIGRpcmVudCBmaWxldHlwZSBmaWVsZAo+IDkwNmI3NjJmNTUzMzM5NjgzMjEwNjI2NDJh
-MGI5MGZlYWMxZmRmZmIgeGZzOiBBZGQgd3JpdGUgc3VwcG9ydCBmb3IgZGlyZW50IGZpbGV0eXBl
-IGZpZWxkCj4gM2JlZWQwOGViMjJmNTZiMzg0ZDIwMjg1NDFjY2I0MTI4NGZmOTc1MSB4ZnNwcm9n
-czogYWRkIGR0eXBlIHN1cHBvcnQgdG8gbWtmcyBhbmQgZGIKPiAxYWNjNTM4NTQwY2UyMmUxNmJi
-NTVjYTU3MzY5MTA3MGE4ZDM3NWRiIHhmc3Byb2dzOiBpbml0aWFsaXplIGZpbGV0eXBlIGZvciB4
-ZnNfbmFtZV9kb3QKPiA0MTMxNTY4N2Q5ZGI5YjUwODc2NDAxZTdiMGVlMjBkZDc3Y2ZjNzEyIHhm
-czogZGlyZW50IGR0eXBlIHByZXNlbmNlIGlzIGRlcGVuZGVudCBvbiBkaXJlY3RvcnkgbWFnaWMg
-bnVtYmVycwo+IDY4Nzc0YjkwMGUwYzgzNjgzNDJjYjEyZjY0OTU3MmE4NmVmMmY2ZTQgeGZzcHJv
-Z3M6IGluaXRpYWxpemUgZmlsZXR5cGUgZm9yIGxvc3QrZm91bmQgY3JlYXRpb24KPiAyY2NhMWRi
-ZDFjM2UxMmQyNzBhOWJhYTVmODVlNTQ4ZThhNWEyMTI1IHhmc19yZXBhaXI6IGFkZCBkX3R5cGUg
-d2hlbiBtb3ZpbmcgZmlsZXMgdG8gbG9zdCtmb3VuZAo+IDg3ZTM0M2JkMDkzN2U1YmI3NWRkOGJj
-NDZiYTM4OGI2ZjhjNjU1MmIgeGZzcHJvZzogYWRkIHhmcyBzYiB2NCBzdXBwb3J0IGZvciBkaXJl
-bnQgZmlsZXR5cGUgZmllbGQKPiA2ZjcwMDYzMGIwNmEyY2UxNWFlYmU4NjA4YjJjNTg3NzAwMjI5
-OWQ2IHhmc3Byb2c6IGFkZCBkaXJlbnQgZmlsZXR5cGUgaW5mb3JtYXRpb24gZm9yIHhmc19pbmZv
-Cj4gNDI3MzdmMWFkMTYyMTNhM2RhYjE3NTZjOWZmZmI0OTRkYjhlZjI3ZSB4ZnNfcHJvZ3M6IGFk
-ZCBkaXJlbnQgZmlsZXR5cGUgdG8geGZzX2RiIHZlcnNpb24KPiA0ZWIwMmQ5NWI3ZTA4MWI1MTBh
-NzAxNTYwOWYwMTM4NWFhYjIyOWE5IHhmc3Byb2c6IGFkZCBta2ZzLnhmcyBzYiB2NCBzdXBwb3J0
-IGZvciBkaXJlbnQgZmlsZXR5cGUgZmllbGQKCkknZCBzYXkgbm90IHRvIHRoZSBkaXJlbnQgZmls
-ZXR5cGUgY2hhbmdlcy4gIFRoZXkgcmVxdWlyZSB0aGUgQ1JDCmZvcm1hdCBlbmFibGVkIGRpcmVj
-dG9yeSBjb2RlIGFuZCB0aGF0IGJhc2ljYWxseSBpbnZvbHZlcwpiYWNrcG9ydGluZyB0aGUgZW50
-aXJlIDMuMi1hbHBoYSBjb2RlIGJhc2UgdG8gc3VwcG9ydCBpdC4gT3RoZXJ3aXNlCmEgY29tcGxl
-dGUgcmUtaW1wbGVtZW50YXRpb24gaW4gbmVlZGVkIGZvciAzLjEueCwgbm90IGEgYmFja3BvcnQu
-CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
-IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
-L3hmcwo=
+Regression test for btrfs' incremental send feature:
+
+1) Create several nested directories;
+
+2) Create a read only snapshot;
+
+3) Change the parentship of some of the deepest directories in a reverse
+   way, so that parents become children and children become parents;
+
+4) Create another read only snapshot and use it for an incremental send
+   relative to the first snapshot.
+
+At step 4 btrfs' send entered an infinite loop, increasing the memory it
+used while building path strings until a krealloc was unable to allocate
+more memory, which caused a warning dump in dmesg.
+
+The following linux kernel patch fixes this issue.
+
+   Btrfs: fix infinite path build loops in incremental send
+   (https://patchwork.kernel.org/patch/3521191/)
+
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
+ tests/btrfs/030     |  140 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/030.out |    9 ++++
+ tests/btrfs/group   |    1 +
+ 3 files changed, 150 insertions(+)
+ create mode 100755 tests/btrfs/030
+ create mode 100644 tests/btrfs/030.out
+
+diff --git a/tests/btrfs/030 b/tests/btrfs/030
+new file mode 100755
+index 0000000..a492877
+--- /dev/null
++++ b/tests/btrfs/030
+@@ -0,0 +1,140 @@
++#! /bin/bash
++# FS QA Test No. btrfs/030
++#
++# Regression test for btrfs' incremental send feature:
++#
++# 1) Create several nested directories;
++# 2) Create a read only snapshot;
++# 3) Change the parentship of some of the deepest directories in a reverse
++#    way, so that parents become children and children become parents;
++# 4) Create another read only snapshot and use it for an incremental send
++#    relative to the first snapshot.
++#
++# At step 4 btrfs' send entered an infinite loop, increasing the memory it
++# used while building path strings until a krealloc was unable to allocate
++# more memory, which caused a warning dump in dmesg.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=`mktemp -d`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++FSSUM_PROG=$here/src/fssum
++[ -x $FSSUM_PROG ] || _notrun "fssum not built"
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++
++mkdir -p $SCRATCH_MNT/a/b/c
++echo "hello" > $SCRATCH_MNT/a/b/c/file.txt
++mkdir $SCRATCH_MNT/a/b/c/d
++mkdir $SCRATCH_MNT/a/b/c2
++mkdir -p $SCRATCH_MNT/a/b/c3/x/y
++
++# Directory tree looks like:
++#
++# .                         (ino 256)
++# |-- a/                    (ino 257)
++#     |-- b/                (ino 258)
++#         |-- c/            (ino 259)
++#         |   |-- file.txt  (ino 260)
++#         |   |-- d/        (ino 261)
++#         |
++#         |-- c2/           (ino 262)
++#         |
++#         |-- c3/           (ino 263)
++#             |-- x/        (ino 264)
++#                 |-- y/    (ino 265)
++
++$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1 | \
++    _filter_scratch
++
++echo " world" >> $SCRATCH_MNT/a/b/c/file.txt
++mv $SCRATCH_MNT/a/b/c/d $SCRATCH_MNT/a/b/c2/d2
++mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/a/b/c2/d2/cc
++mv $SCRATCH_MNT/a/b/c3/x/y $SCRATCH_MNT/a/b/c2/y2
++mv $SCRATCH_MNT/a/b/c3/x $SCRATCH_MNT/a/b/c2/y2/x2
++mv $SCRATCH_MNT/a/b/c3 $SCRATCH_MNT/a/b/c2/y2/x2/Z
++ln $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2/Z/file_link.txt
++mv $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2
++
++# Directory tree now looks like:
++#
++# .                                         (ino 256)
++# |-- a/                                    (ino 257)
++#     |-- b/                                (ino 258)
++#         |-- c2/                           (ino 262)
++#             |-- d2/                       (ino 261)
++#             |   |-- cc/                   (ino 259)
++#             |        |-- file.txt         (ino 260)
++#             |-- y2/                       (ino 265)
++#                 |-- x2/                   (ino 264)
++#                     |-- Z/                (ino 263)
++#                         |-- file_link.txt
++
++$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2 | \
++    _filter_scratch
++
++$FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
++$FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
++    $SCRATCH_MNT/mysnap2
++
++$BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap 2>&1 | _filter_scratch
++$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++    -f $tmp/2.snap 2>&1 | _filter_scratch
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
++$FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
++$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
++$FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++status=0
++exit
+diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
+new file mode 100644
+index 0000000..2999f8c
+--- /dev/null
++++ b/tests/btrfs/030.out
+@@ -0,0 +1,9 @@
++QA output created by 030
++Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap1'
++Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap2'
++At subvol SCRATCH_MNT/mysnap1
++At subvol SCRATCH_MNT/mysnap2
++At subvol mysnap1
++OK
++At snapshot mysnap2
++OK
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 8eb8c4f..3f61799 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -32,3 +32,4 @@
+ 027 auto quick
+ 028 auto quick
+ 029 auto quick
++030 auto quick
+-- 
+1.7.9.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
