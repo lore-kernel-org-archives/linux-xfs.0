@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5E1C07FA2
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:16:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 47081304051
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:16:22 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5D65B29E05
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:32:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E7E60AC005
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:32:15 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	atWbHXyzQZJ75k4Z for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 15:16:20 -0800 (PST)
-Date: Thu, 23 Jan 2014 10:14:39 +1100
+	j2bA2J4CIU0tV6Dm for <xfs@oss.sgi.com>;
+	Wed, 22 Jan 2014 15:32:12 -0800 (PST)
+Date: Thu, 23 Jan 2014 10:31:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3 V3] xfs: allow logical-sector sized O_DIRECT
-Message-ID: <20140122231439.GH27606@dastard>
-References: <52DEF81D.4090100@redhat.com>
- <52DEF8BF.5070106@sandeen.net>
+Subject: Re: Weird XFS Corruption Error
+Message-ID: <20140122233141.GI27606@dastard>
+References: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52DEF8BF.5070106@sandeen.net>
+In-Reply-To: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,64 +25,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Sascha Askani <saskani@inovex.de>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jan 21, 2014 at 04:46:23PM -0600, Eric Sandeen wrote:
-> Some time ago, mkfs.xfs started picking the storage physical
-> sector size as the default filesystem "sector size" in order
-> to avoid RMW costs incurred by doing IOs at logical sector
-> size alignments.
-> 
-> However, this means that for a filesystem made with i.e.
-> a 4k sector size on an "advanced format" 4k/512 disk,
-> 512-byte direct IOs are no longer allowed.  This means
-> that XFS has essentially turned this AF drive into a hard
-> 4K device, from the filesystem on up.
-> 
-> XFS's mkfs-specified "sector size" is really just controlling
-> the minimum size & alignment of filesystem metadata.
-> 
-> There is no real need to tightly couple XFS's minimal
-> metadata size to the minimum allowed direct IO size;
-> XFS can continue doing metadata in optimal sizes, but
-> still allow smaller DIOs for apps which issue them,
-> for whatever reason.
-> 
-> This patch adds a new field to the xfs_buftarg, so that
-> we now track 2 sizes:
-> 
->  1) The metadata sector size, which is the minimum unit and
->     alignment of IO which will be performed by metadata operations.
->  2) The device logical sector size
-> 
-> The first is used internally by the file system for metadata
-> alignment and IOs.
-> The second is used for the minimum allowed direct IO alignment.
-> 
-> This has passed xfstests on filesystems made with 4k sectors,
-> including when run under the patch I sent to ignore
-> XFS_IOC_DIOINFO, and issue 512 DIOs anyway.  I also directly
-> tested end of block behavior on preallocated, sparse, and
-> existing files when we do a 512 IO into a 4k file on a 
-> 4k-sector filesystem, to be sure there were no unexpected
-> behaviors.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Looks good. Nice work with the comments.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBKYW4gMjIsIDIwMTQgYXQgMDU6MDk6MTBQTSArMDEwMCwgU2FzY2hhIEFza2FuaSB3
+cm90ZToKPiBIaSBldmVyeWJvZHksCj4gCj4gV2UgZXhwZXJpZW5jZWQgYSB3ZWlyZCBYRlMgY29y
+cnVwdGlvbiB5ZXN0ZXJkYXkgYW5kIEkgZGVzcGVyYXRlbHkgdHJ5aW5nIHRvIGZpbmQgb3V0IHdo
+YXQgd2FzIGhhcHBlbmluZy4KPiBGaXJzdCwgdGhlIHNldHVwOgo+IAo+ICogUHJvTGlhbnQgREwz
+ODBwIEdlbjgKPiAqIDI1NkdCIFJBTQo+ICogSFAgU21hcnRBcnJheSBQNDIwaSBDb250cm9sbGVy
+Cj4gKiogMSBHQiBCQldDCj4gKiogRmlybXdhcmUgVmVyc2lvbiA0LjY4Cj4gKiogMjB4IE1LMDEw
+MEdDVFlVIDEwMEdCIFNTRCBEcml2ZXMKPiAqKiBSYWlkIDErMAo+ICogTFZNCj4gKiBVYnVudHUg
+MTIuMTAgTFRTCj4gKiBLZXJuZWwgMy4xMS4wLTE1LWdlbmVyaWMgIzIzfnByZWNpc2UxLVVidW50
+dQo+IAo+IGZzdGFiIEVudHJ5OiAKPiAvZGV2L3ZnMDAvb3B0X215c3FsYmFja3VwICAgL29wdC9t
+eXNxbGJhY2t1cCAgICAgICAgICAgIHhmcyAgICAgbm9iYXJyaWVyLG5vYXRpbWUsbm9kaXJhdGlt
+ZSxsb2didWZzPTgsbG9nYnNpemU9MjU2ayAgICAgICAwIDIKPiAKCj4gV2UgY3JlYXRlZCBhIDEy
+MEdCIExWIG1vdW50ZWQgb24gL29wdC9teXNxbGJhY2t1cCB3aXRoIHdoaWNoCj4gKG9idmlvdXNs
+eSkgdGVtcG9yYXJpbHkgaG9zdHMgb3VyIE1hcmlhREIgQmFja3VwcyB1bnRpbCB0aGV5IGFyZQo+
+IHRyYW5zZmVycmVkIHRvIHRhcGUuIFdlIHVzZSBteWx2bWJhY2t1cAo+IChodHRwOi8vd3d3Lmxl
+bnpnLm5ldC9teWx2bWJhY2t1cC8pIHRvIGNyZWF0ZSBhIChhcHByb3guIDU1R0IpCj4gdGFyLmd6
+IGZpbGUgY29udGFpbmluZyB0aGUgZHVtcC4gV2hpbGUgdGVzdGluZywgSSBjcmVhdGVkIGEKPiBo
+YXJkbGluayBmb3IgMiBGaWxlcyBpbiBhIHN1YmRpciAo4oCec2FmZeKAnCkgYW5kIGZvcmdvdCB0
+aGVtCj4gZm9yIGEgZGF5IHdoaWxlIHRoZSDigJ5vcmlnaW5hbOKAnCBmaWxlIHdhcyBkZWxldGVk
+IGFuZAo+IHJlcGxhY2VkIGJ5IG5leHQgZGF54oCZcyBiYWNrdXAuCj4gCj4gV2hlbiBJIHRyaWVk
+IGNsZWFuaW5nIHVwIHRoZSBubyBsb25nZXIgbmVlZGVkIGZpbGVzLCBJIGVuY291bnRlcmVkIHRo
+ZSBmb2xsb3dpbmc6Cj4gCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tCj4gbWVAaHNvaS1ndHMzLWRlMDI6L29wdC9teXNxbGJhY2t1cCQg
+c3VkbyBybSAtcmYgc2FmZS8KPiBzdWRvIHJtIC1yZiBzYWZlLwo+IFtzdWRvXSBwYXNzd29yZCBm
+b3Igc2Fza2FuaToKPiBybTogY2Fubm90IHJlbW92ZSBgc2FmZS9kYWlseV9zbmFwc2hvdC50YXIu
+Z3oubWQ1JzogSW5wdXQvb3V0cHV0IGVycm9yCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gCj4gZG1lc2cgdG9sZCBtZToKPiAtLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiBb
+OTY0MTk5LjEzODg0OF0gWEZTIChkbS04KTogSW50ZXJuYWwgZXJyb3IgeGZzX2JtYnRfcmVhZF92
+ZXJpZnkgYXQgbGluZSA3ODkgb2YgZmlsZSAvYnVpbGQvYnVpbGRkL2xpbnV4LWx0cy1zYXVjeS0z
+LjExLjAvZnMveGZzL3hmc19ibWFwX2J0cmVlLmMuICBDYWxsZXIgMHhmZmZmZmZmZmEwMTY0NDk1
+Cj4gWzk2NDE5OS4xMzg4NDhdCj4gWzk2NDE5OS4xMzg4NTBdIENQVTogMSBQSUQ6IDM2OTQgQ29t
+bToga3dvcmtlci8xOjFIIFRhaW50ZWQ6IEdGICAgICAgICAgICAgMy4xMS4wLTE1LWdlbmVyaWMg
+IzIzfnByZWNpc2UxLVVidW50dQo+IFs5NjQxOTkuMTM4ODUxXSBIYXJkd2FyZSBuYW1lOiBIUCBQ
+cm9MaWFudCBETDM4MHAgR2VuOCwgQklPUyBQNzAgMDkvMTgvMjAxMwo+IFs5NjQxOTkuMTM4ODc0
+XSBXb3JrcXVldWU6IHhmc2xvZ2QgeGZzX2J1Zl9pb2RvbmVfd29yayBbeGZzXQo+IFs5NjQxOTku
+MTM4ODc2XSAgMDAwMDAwMDAwMDAwMDAwMSBmZmZmODgxYzZiZTZmZDE4IGZmZmZmZmZmODE3M2Jj
+MGUgMDAwMDAwMDAwMDAwNDM2NAo+IFs5NjQxOTkuMTM4ODc4XSAgZmZmZjg4M2Y5MDYxYzAwMCBm
+ZmZmODgxYzZiZTZmZDM4IGZmZmZmZmZmYTAxNjYyOWYgZmZmZmZmZmZhMDE2NDQ5NQo+IFs5NjQx
+OTkuMTM4ODc5XSAgMDAwMDAwMDAwMDAwMDAwMSBmZmZmODgxYzZiZTZmZDc4IGZmZmZmZmZmYTAx
+NjYzMGUgZmZmZjg4MWM2YmU2ZmRhOAo+IFs5NjQxOTkuMTM4ODgwXSBDYWxsIFRyYWNlOgo+IFs5
+NjQxOTkuMTM4ODg2XSAgWzxmZmZmZmZmZjgxNzNiYzBlPl0gZHVtcF9zdGFjaysweDQ2LzB4NTgK
+PiBbOTY0MTk5LjEzODkwNl0gIFs8ZmZmZmZmZmZhMDE2NjI5Zj5dIHhmc19lcnJvcl9yZXBvcnQr
+MHgzZi8weDUwIFt4ZnNdCj4gWzk2NDE5OS4xMzg5MTNdICBbPGZmZmZmZmZmYTAxNjQ0OTU+XSA/
+IHhmc19idWZfaW9kb25lX3dvcmsrMHg5NS8weGMwIFt4ZnNdCj4gWzk2NDE5OS4xMzg5MjFdICBb
+PGZmZmZmZmZmYTAxNjYzMGU+XSB4ZnNfY29ycnVwdGlvbl9lcnJvcisweDVlLzB4OTAgW3hmc10K
+PiBbOTY0MTk5LjEzODkyOF0gIFs8ZmZmZmZmZmZhMDE2NDQ5NT5dID8geGZzX2J1Zl9pb2RvbmVf
+d29yaysweDk1LzB4YzAgW3hmc10KPiBbOTY0MTk5LjEzODkzOV0gIFs8ZmZmZmZmZmZhMDE5NDRk
+Nj5dIHhmc19ibWJ0X3JlYWRfdmVyaWZ5KzB4NzYvMHhmMCBbeGZzXQo+IFs5NjQxOTkuMTM4OTQ2
+XSAgWzxmZmZmZmZmZmEwMTY0NDk1Pl0gPyB4ZnNfYnVmX2lvZG9uZV93b3JrKzB4OTUvMHhjMCBb
+eGZzXQo+IFs5NjQxOTkuMTM4OTQ5XSAgWzxmZmZmZmZmZjgxMDk1YmIyPl0gPyBmaW5pc2hfdGFz
+a19zd2l0Y2grMHg1Mi8weGYwCj4gWzk2NDE5OS4xMzg5NjldICBbPGZmZmZmZmZmYTAxNjQ0OTU+
+XSB4ZnNfYnVmX2lvZG9uZV93b3JrKzB4OTUvMHhjMCBbeGZzXQo+IFs5NjQxOTkuMTM4OTcyXSAg
+WzxmZmZmZmZmZjgxMDgxMDYwPl0gcHJvY2Vzc19vbmVfd29yaysweDE3MC8weDRhMAo+IFs5NjQx
+OTkuMTM4OTczXSAgWzxmZmZmZmZmZjgxMDgyMTIxPl0gd29ya2VyX3RocmVhZCsweDEyMS8weDM5
+MAo+IFs5NjQxOTkuMTM4OTc1XSAgWzxmZmZmZmZmZjgxMDgyMDAwPl0gPyBtYW5hZ2Vfd29ya2Vy
+cy5pc3JhLjIxKzB4MTcwLzB4MTcwCj4gWzk2NDE5OS4xMzg5NzddICBbPGZmZmZmZmZmODEwODhm
+ZTA+XSBrdGhyZWFkKzB4YzAvMHhkMAo+IFs5NjQxOTkuMTM4OTc5XSAgWzxmZmZmZmZmZjgxMDg4
+ZjIwPl0gPyBmbHVzaF9rdGhyZWFkX3dvcmtlcisweGIwLzB4YjAKPiBbOTY0MTk5LjEzODk4MV0g
+IFs8ZmZmZmZmZmY4MTc1MDhhYz5dIHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwCj4gWzk2NDE5OS4x
+Mzg5ODNdICBbPGZmZmZmZmZmODEwODhmMjA+XSA/IGZsdXNoX2t0aHJlYWRfd29ya2VyKzB4YjAv
+MHhiMAo+IFs5NjQxOTkuMTM4OTg0XSBYRlMgKGRtLTgpOiBDb3JydXB0aW9uIGRldGVjdGVkLiBV
+bm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgo+IFs5NjQxOTkuMTM5MDE0XSBYRlMgKGRtLTgpOiBt
+ZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4MWYwICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIp
+IGVycm9yIDExNyBudW1ibGtzIDgKPiBbOTY0MTk5LjEzOTAxNl0gWEZTIChkbS04KTogeGZzX2Rv
+X2ZvcmNlX3NodXRkb3duKDB4MSkgY2FsbGVkIGZyb20gbGluZSAzNjcgb2YgZmlsZSAvYnVpbGQv
+YnVpbGRkL2xpbnV4LWx0cy1zYXVjeS0zLjExLjAvZnMveGZzL3hmc190cmFuc19idWYuYy4gIFJl
+dHVybiBhZGRyZXNzID0gMHhmZmZmZmZmZmEwMWNhZGJjCgpTbywgYW4gaW5vZGUgZXh0ZW50IG1h
+cCBidHJlZSBibG9jayBmYWlsZWQgdmVyaWZpY2F0aW9uIGZvciBzb21lCnJlYXNvbi4gSG1tbSAt
+IHRoZXJlIHNob3VsZCBoYXZlIGJlZW4gNCBsaW5lcyBvZiBoZXhkdW1wIG91dHB1dAp0aGVyZSBh
+cyB3ZWxsLiBDYW4geW91IHBvc3QgdGhhdCBhcyB3ZWxsPyBPciBoYXZlIHlvdSBtb2RpZmllZAov
+cHJvYy9zeXMvZnMveGZzL2Vycm9yX2xldmVsIHRvIGhhdmUgYSB2YWx1ZSBvZiAwIHNvIGl0IGlz
+IG5vdAplbWl0dGVkPwoKQW5kIG5vdCB0aGUgZGlzayBhZGRyZXNzIG9mIHRoZSBidWZmZXI/IDB4
+MWYwIC0gaXQncyByaWdodCBuZWFyIHRoZQpzdGFydCBvZiB0aGUgdm9sdW1lLgoKCj4gWzk2NDE5
+OS4xMzkzMjRdIFhGUyAoZG0tOCk6IEkvTyBFcnJvciBEZXRlY3RlZC4gU2h1dHRpbmcgZG93biBm
+aWxlc3lzdGVtCj4gWzk2NDE5OS4xMzkzMjVdIFhGUyAoZG0tOCk6IFBsZWFzZSB1bW91bnQgdGhl
+IGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiBbOTY0MjEyLjM2NzMwMF0g
+WEZTIChkbS04KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiBbOTY0MjQyLjQ3
+NzI4M10gWEZTIChkbS04KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiAtLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAK
+PiBBZnRlciB0aGF0LCBJIHRyaWVkIHRoZSBmb2xsb3dpbmcgKGluIG9yZGVyKToKCkRvIHlvdSBo
+YXZlIHRoZSBvdXRwdXQgYW5kIGxvZyBtZXNzYWdlcyBmcm9tIHRoZXNlIHN0ZXBzPyBUaGF0IHdv
+dWxkCmJlIHJlYWx5IGhlbHBmdWwgaW4gY29uZmlybWluZyBhbnkgZGlhZ25vc2lzLgoKPiAxLiB4
+ZnNfcmVwYWlyLCB3aGljaCBkaWQgbm90IGZpbmQgdGhlIHN1cGVyYmxvY2sgYW5kIHN0YXJ0ZWQg
+c2Nhbm5pbmcgdGhlIExWLCBhZnRlciBmaW5kaW5nIHRoZSBzZWNvbmRhcnkgc3VwZXJibG9jaywg
+aXQgdG9sZCBtZSB0aGVyZeKAmXMgc3RpbGwgc29tZXRoaW5nIGluIHRoZSBsb2csIHNvIEkKCk9o
+LCB3b3cuIE9rLCBpZiB0aGUgcHJpbWFyeSBzdXBlcmJsb2NrIGlzIGdvbmUsIGFsb25nIHdpdGgg
+bWV0YWRhdGEKaW4gdGhlIGZpcnN0IGZldyBibG9ja3Mgb2YgdGhlIGZpbGVzeXN0ZW0sIHRoZW4g
+c29tZXRoaW5nIGhhcwpvdmVyd3JpdHRlbiB0aGUgc3RhcnQgb2YgdGhlIGJsb2NrIGRldmljZSB0
+aGUgZmlsZXN5c3RlbSBpcyBvbi4KCj4gMi4gbW91bnRlZCB0aGUgZmlsZXN5c3RlbSwgd2hpY2gg
+Z2F2ZSBtZSBhIOKAnlN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZ+KAnCBhZnRlciBhIGNvdXBsZSBv
+ZiBzZWNvbmRzCj4gMy4gdHJpZWQgbW91bnRpbmcgYWdhaW4gZm9yIGdvb2QgbWVhc3VyZSwgc2Ft
+ZSBlcnJvciDigJ5TdHJ1Y3R1cmUgbmVlZHMgY2xlYW5pbmfigJwKClJpZ2h0IC0gdGhlIGtlcm5l
+bCBjYW4ndCByZWFkIGEgdmFsaWQgc3VwZXJsb2NrLCBlaXRoZXIuCgo+IDQuIHhmc19yZXBhaXIg
+LUwgd2hpY2ggcmVwYWlyZWQgZXZlcnl0aGluZywgYW5kIGVmZmVjdGl2ZWx5IGNsZWFuZWQgbXkg
+RmlsZXN5c3RlbSBpbiB0aGUgcHJvY2Vzcy4KClJlY3JlYXRpbmcgdGhlIHByaW1hcnkgc3VwZXJi
+bG9jayBmcm9tIHRoZSBiYWNrdXAgc3VwZXJibG9ja3MKCj4gNS4gbW91bnQgdGhlIGZpbGVzeXN0
+ZW0gdG8gZmluZCBpdCBlbXB0eS4KCkJlY2F1c2UgdGhlIHJvb3QgaW5vZGUgd2FzIGxvc3QsIGFs
+b25nIHdpdGggQUdJIDAgYW5kIHNvIGFsbAp0aGUgaW5vZGVzIGluIHRoZSBmaXJzdCBBRyB3ZXJl
+IGNvbXBsZXRlbHkgbG9zdCBhcyBhbGwgdGhlIHJlZHVuZGFudAppbmZvcm1hdGlvbiB0aGF0IGlz
+IHVzZWQgdG8gZmluZCB0aGVtIHdhcyB0cmFzaGVkLgoKPiBTaW5jZSB0aGVuLCBJ4oCZbSBkZXNw
+ZXJhdGVseSB0cnlpbmcgdG8gcmVwcm9kdWNlIHRoZSBwcm9ibGVtLAo+IGJ1dCB1bmZvcnR1bmF0
+ZWx5IHRvIG5vIGF2YWlsLiBDYW4gc29tZWJvZHkgZ2l2ZSBzb21lIGluc2lnaHQgb24KPiB0aGUg
+ZXJyb3JzIEkgZW5jb3VudGVyZWQuIEkgaGF2ZSBwcmV2aW91c2x5IG9wZXJhdGVkIDQsNVBCIHdv
+cnRoCj4gb2YgWEZTIEZpbGVzeXN0ZW1zIGZvciAzIHllYXJzIGFuZCBuZXZlciBnb3QgYW4gZXJy
+b3Igc2ltaWxhciB0bwo+IHRoaXMuCgpUaGlzIGRvZXNuJ3QgbG9vayBsaWtlIGFuIFhGUyBwcm9i
+bGVtLiBUaGlzIGxvb2tzIGxpa2Ugc29tZXRoaW5nCm92ZXJ3cm90ZSB0aGUgc3RhcnQgb2YgdGhl
+IGJsb2NrIGRldmljZSB1bmRlcm5lYXRoIHRoZSBYRlMKZmlsZXN5c3RlbS4gSSd2ZSBzZWVuIHRo
+aXMgaGFwcGVuIGJlZm9yZSB3aXRoIGZhdWx0eSBTU0RzLCBJJ3ZlIGFsc28Kc2VlbiBpdCB3aGVu
+IHNvbWVvbmUgaXNzdWVkIGEgZGlzY2FyZCB0byB0aGUgd3JvbmcgbG9jYXRpb24gb24gYQpibG9j
+ayBkZXZpY2UgKHlvdSBkaWRuJ3QgcnVuIGZzdHJpbSBvbiB0aGUgYmxvY2sgZGV2aWNlLCBkaWQg
+eW91PyksCmFuZCBJJ3ZlIHNlZW4gZmF1bHR5IFJBSUQgY29udHJvbGxlcnMgY2F1c2Ugc2ltaWxh
+ciBpc3N1ZXMuIFNvIHJpZ2h0Cm5vdyBJJ2QgYmUgbG9va2luZyBhdCBsb2dzIGFuZCBzbyBvbiBm
+b3IgaGFyZHdhcmUvc3RvcmFnZSBpc3N1ZXMKdGhhdCBvY2N1cnJlZCBpbiB0aGUgcGFzdCBjb3Vw
+bGUgb2YgZGF5cyBhcyBwb3RlbnRpYWwgY2F1c2VzLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUg
+Q2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
