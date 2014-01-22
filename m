@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3FB9C7F85
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 09:15:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F3F60304059
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 07:15:54 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id EE1AB7F87
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 09:33:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CD6AC304062
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 07:33:03 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id WnxNBhKbpeTwz6sT (version=TLSv1
+	cuda.sgi.com with ESMTP id Tr2vclOiprrxqDgQ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 07:15:53 -0800 (PST)
+	Wed, 22 Jan 2014 07:33:02 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s0MFX1wB025574
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:33:02 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s0MFX09u006218
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:33:01 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id
+	s0MFX0fF015065 for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:33:00 GMT
 From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH v2] xfstests: btrfs: cross-subvolume sparse copy
-Date: Wed, 22 Jan 2014 16:15:19 +0100
-Message-Id: <1390403719-32500-1-git-send-email-koen.de.wit@oracle.com>
+Subject: [PATCH] xfstests: define $seqres in btrfs/026-029
+Date: Wed, 22 Jan 2014 16:32:18 +0100
+Message-Id: <1390404738-387-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,228 +40,65 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Koen De Wit <koen.de.wit@oracle.com>, dsterba@suse.cz, linux-btrfs@vger.kernel.org
+Cc: Koen De Wit <koen.de.wit@oracle.com>
 
-This testscript creates reflinks to files on different subvolumes,
-overwrites the original files and reflinks, and moves reflinked files
-between subvolumes.
-
-Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
-Reviewed-by: David Sterba <dsterba@suse.cz>
+I forgot to define $seqres in btrfs/026-029. As a result, a file named
+.full was created in the current working directory. Fix it.
 ---
-v1: Resend (originally submitted as test 302, btrfs/316)
-v2: - use $BTRFS_UTIL_PROG instead of btrfs command
-    - use full subcommands
-    - explicitly define the "always" parameter to cp --reflink
-    - define $seqres
+ tests/btrfs/026 |    1 +
+ tests/btrfs/027 |    1 +
+ tests/btrfs/028 |    1 +
+ tests/btrfs/029 |    1 +
+ 4 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/tests/btrfs/030 b/tests/btrfs/030
-new file mode 100644
-index 0000000..3a1b970
---- /dev/null
-+++ b/tests/btrfs/030
-@@ -0,0 +1,138 @@
-+#! /bin/bash
-+# FS QA Test No. 030
-+#
-+# Testing cross-subvolume sparse copy on btrfs
-+#    - Create two subvolumes, mount one of them
-+#    - Create a file on each (sub/root)volume,
-+#      reflink them on the other volumes
-+#    - Change one original and two reflinked files
-+#    - Move reflinked files between subvolumes
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
+diff --git a/tests/btrfs/026 b/tests/btrfs/026
+index bf6f528..6c54590 100644
+--- a/tests/btrfs/026
++++ b/tests/btrfs/026
+@@ -26,6 +26,7 @@
+ #
+ 
+ seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT
-+    rm -rf $TESTDIR1
-+    rm -rf $TESTDIR2
-+    $BTRFS_UTIL_PROG subvolume delete $SUBVOL1 >> $seqres.full
-+    $BTRFS_UTIL_PROG subvolume delete $SUBVOL2 >> $seqres.full
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+_checksum_files() {
-+    for F in file1 file2 file3
-+    do
-+        echo "$F:"
-+        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
-+        do
-+            _md5_checksum $D/$F
-+        done
-+    done
-+}
-+
-+TESTDIR1=$TEST_DIR/test-$seq-1
-+TESTDIR2=$TEST_DIR/test-$seq-2
-+SUBVOL1=$TEST_DIR/subvol-$seq-1
-+SUBVOL2=$TEST_DIR/subvol-$seq-2
-+
-+_scratch_unmount 2>/dev/null
-+rm -rf $seqres.full
-+rm -rf $TESTDIR1 $TESTDIR2
-+$BTRFS_UTIL_PROG subvolume delete $SUBVOL1 >/dev/null 2>&1
-+$BTRFS_UTIL_PROG subvolume delete $SUBVOL2 >/dev/null 2>&1
-+
-+mkdir $TESTDIR1
-+mkdir $TESTDIR2
-+$BTRFS_UTIL_PROG subvolume create $SUBVOL1 >> $seqres.full
-+$BTRFS_UTIL_PROG subvolume create $SUBVOL2 >> $seqres.full
-+_mount -t btrfs -o subvol=subvol-$seq-1 $TEST_DEV $SCRATCH_MNT
-+
-+echo "Create initial files"
-+# TESTDIR1/file1 is very small and will be inlined
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 10' $TESTDIR1/file1 \
-+    >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 13000' $SCRATCH_MNT/file2 \
-+    >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x63 0 17000' $SUBVOL2/file3 \
-+    >> $seqres.full
-+
-+echo "Create reflinks to the initial files on other subvolumes"
-+cp --reflink=always $TESTDIR1/file1 $SUBVOL1
-+cp --reflink=always $TESTDIR1/file1 $SUBVOL2
-+cp --reflink=always $SUBVOL1/file2 $TESTDIR1/
-+cp --reflink=always $SUBVOL1/file2 $SUBVOL2
-+cp --reflink=always $SUBVOL2/file3 $TESTDIR1/
-+cp --reflink=always $SUBVOL2/file3 $SUBVOL1
-+
-+echo "Verify the reflinks"
-+_verify_reflink $SCRATCH_MNT/file2 $TESTDIR1/file2
-+_verify_reflink $SCRATCH_MNT/file2 $SUBVOL2/file2
-+_verify_reflink $SUBVOL2/file3 $TESTDIR1/file3
-+_verify_reflink $SUBVOL2/file3 $SCRATCH_MNT/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nOverwrite some files with new content"
-+$XFS_IO_PROG -c 'pwrite -S 0x64 0 20' $TESTDIR1/file1 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x66 0 21000' $SUBVOL2/file2 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x65 5000 5000' $SCRATCH_MNT/file3 \
-+    >> $seqres.full
-+
-+echo -n "Verify that non-overwritten reflinks "
-+echo "still have the same data blocks"
-+_verify_reflink $TESTDIR1/file2 $SCRATCH_MNT/file2
-+_verify_reflink $TESTDIR1/file3 $SUBVOL2/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nShuffle files between directories"
-+mv $TESTDIR1/file* $TESTDIR2
-+mv $SCRATCH_MNT/file* $TESTDIR1/
-+mv $SUBVOL2/file* $SCRATCH_MNT/
-+mv $TESTDIR2/file* $SUBVOL2/
-+
-+# No _verify_reflink here as data is copied when moving files
-+# between subvols
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
-new file mode 100644
-index 0000000..050ae0b
---- /dev/null
-+++ b/tests/btrfs/030.out
-@@ -0,0 +1,48 @@
-+QA output created by 030
-+Create initial files
-+Create reflinks to the initial files on other subvolumes
-+Verify the reflinks
-+Verify the file contents:
-+file1:
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+file3:
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-+---
-+Overwrite some files with new content
-+Verify that non-overwritten reflinks still have the same data blocks
-+Verify the file contents:
-+file1:
-+00d620f69f30327f0f8946b95c12de44
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+917619ae44b38bb9968af261c3c45440
-+file3:
-+5a95800e4c04b11117aa4e4de057721f
-+b9f275cd638cb784c9e61def94c622a8
-+5a95800e4c04b11117aa4e4de057721f
-+---
-+Shuffle files between directories
-+Verify the file contents:
-+file1:
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+00d620f69f30327f0f8946b95c12de44
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+917619ae44b38bb9968af261c3c45440
-+d7402b46310fbbfbc5e466b1dccb043b
-+file3:
-+b9f275cd638cb784c9e61def94c622a8
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 8eb8c4f..3f61799 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -32,3 +32,4 @@
- 027 auto quick
- 028 auto quick
- 029 auto quick
-+030 auto quick
+ echo "QA output created by $seq"
+ 
+ here=`pwd`
+diff --git a/tests/btrfs/027 b/tests/btrfs/027
+index d76bb0f..b2dff1c 100644
+--- a/tests/btrfs/027
++++ b/tests/btrfs/027
+@@ -26,6 +26,7 @@
+ #-----------------------------------------------------------------------
+ 
+ seq=`basename $0`
++seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+ here=`pwd`
+diff --git a/tests/btrfs/028 b/tests/btrfs/028
+index 06d2faf..f17f102 100644
+--- a/tests/btrfs/028
++++ b/tests/btrfs/028
+@@ -24,6 +24,7 @@
+ #-----------------------------------------------------------------------
+ 
+ seq=`basename $0`
++seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+ here=`pwd`
+diff --git a/tests/btrfs/029 b/tests/btrfs/029
+index 1fd2a93..b93b6df 100644
+--- a/tests/btrfs/029
++++ b/tests/btrfs/029
+@@ -29,6 +29,7 @@
+ #-----------------------------------------------------------------------
+ 
+ seq=`basename $0`
++seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+ here=`pwd`
 -- 
 1.7.1
 
