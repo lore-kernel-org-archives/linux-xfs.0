@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A03F629E05
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 22:45:06 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3BAD07F52
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 00:46:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7300A8F8065
-	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 20:45:06 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 20TNNfemz1GgpbHP (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Jan 2014 20:45:05 -0800 (PST)
-Message-ID: <52DF4CCB.1050003@oracle.com>
-Date: Wed, 22 Jan 2014 12:44:59 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfs: use tr_qm_dqalloc log reservation for dquot alloc
-References: <1390228140-49211-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1390228140-49211-1-git-send-email-bfoster@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C7A2AAC002
+	for <xfs@oss.sgi.com>; Tue, 21 Jan 2014 22:46:53 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	qurA8hAhA0ohuFKi for <xfs@oss.sgi.com>;
+	Tue, 21 Jan 2014 22:46:49 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1W5raH-0001UT-EC
+	for xfs@oss.sgi.com; Wed, 22 Jan 2014 17:46:45 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1W5raH-0002Gt-D4
+	for xfs@oss.sgi.com; Wed, 22 Jan 2014 17:46:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs/291: fix spurious ENOSPC errors
+Date: Wed, 22 Jan 2014 17:46:45 +1100
+Message-Id: <1390373205-8698-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +28,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+From: Dave Chinner <dchinner@redhat.com>
 
-On 01/20 2014 22:29 PM, Brian Foster wrote:
-> The dquot allocation path in xfs_qm_dqread() currently uses the
-> attribute set log reservation, which appears to be incorrect. We
-> have reports of transaction reservation overruns with the current
-> code. E.g., a repeated run of xfstests test generic/270 on a 512b
-> block size fs occassionally produces the following in dmesg:
-> 
-> 	XFS (sdN): xlog_write: reservation summary:
-> 	  trans type  = QM_DQALLOC (30)
-> 	  unit res    = 7080 bytes
-> 	  current res = -632 bytes
-> 	  total reg   = 0 bytes (o/flow = 0 bytes)
-> 	  ophdrs      = 0 (ophdr space = 0 bytes)
-> 	  ophdr + reg = 0 bytes
-> 	  num regions = 0
-> 
-> 	XFS (sdN): xlog_write: reservation ran out. Need to up reservation
-> 
-> The dquot allocation case should consist of a write reservation
-> (i.e., we are allocating a range of the internal quota file) plus
-> the size of the actual dquots. We already have a log reservation
-> definition for this operation (tr_qm_dqalloc). Use it in
-> xfs_qm_dqread() and update the log reservation calculation function
-> to use the write res. calculation function rather than reading the
-> assumed to be pre-calculated value directly.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+xfs/291 tries to fill the filesystem almost full, so if the log size
+changes with mkfs defaults then it's free space calculations are not
+longer valid and so it throws lots of ENOSPC errors during a run.
+This is not fatal for this test, but it does increase the runtime of
+it and fill the 291.full file with unnecessary errors.
 
-Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+The number of frag files it creates is also too many for a 512 byte
+inode filesystem (by about 900) so reduce the number of inodes
+initially created so the test works ofr 512 byte inodes. With 512
+byte inodes, the free space histogram looks like this after the frag
+phase:
 
+   from      to extents  blocks    pct
+      1       1   10730   10730 100.00
 
-Thanks,
--Jeff
+And for 256 byte inodes:
+
+   from      to extents  blocks    pct
+      1       1   12388   12388 100.00
+
+So these changes do not affect the intended operation of the test.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ tests/xfs/291 | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/tests/xfs/291 b/tests/xfs/291
+index d5a9b08..0f3f051 100755
+--- a/tests/xfs/291
++++ b/tests/xfs/291
+@@ -46,7 +46,7 @@ _supported_os IRIX Linux
+ # real QA test starts here
+ rm -f $seqres.full
+ _require_scratch
+-_scratch_mkfs_xfs -n size=16k -d size=128m >> $seqres.full 2>&1
++_scratch_mkfs_xfs -n size=16k -l size=5m -d size=128m >> $seqres.full 2>&1
+ _scratch_mount
+ 
+ # First we cause very badly fragmented freespace, then
+@@ -54,13 +54,16 @@ _scratch_mount
+ # should come out very fragmented as a result
+ 
+ # Step 1: Cause badly fragmented free space
++# 
++# XXX: this needs to be factored to match what generic/204 does to support
++# different inode sizes without ENOSPC
+ mkdir $SCRATCH_MNT/fragdir
+-for I in `seq 0 27200`; do
++for I in `seq 0 26200`; do
+         (echo data > $SCRATCH_MNT/fragdir/f$I) >> $seqres.full 2>&1
+ done
+ sync
+ 
+-for I in `seq 0 2 27200`; do
++for I in `seq 0 2 26200`; do
+         rm -f $SCRATCH_MNT/fragdir/f$I >> $seqres.full 2>&1
+ done
+ sync
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
