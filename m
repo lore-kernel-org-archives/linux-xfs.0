@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 467A57F91
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:10:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C97F0AC002
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:10:47 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 38D087F9E
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:14:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5FF8AC003
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:14:06 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	WMU3xuokkZB2yJX4 for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 15:10:46 -0800 (PST)
-Date: Thu, 23 Jan 2014 10:08:20 +1100
+	11AwcEr1DMmSz1IN for <xfs@oss.sgi.com>;
+	Wed, 22 Jan 2014 15:14:05 -0800 (PST)
+Date: Thu, 23 Jan 2014 10:12:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/291: fix spurious ENOSPC errors
-Message-ID: <20140122230819.GE27606@dastard>
-References: <1390373205-8698-1-git-send-email-david@fromorbit.com>
-	<52E03DB0.4060503@sandeen.net>
+Subject: Re: [PATCH 1/3 V3] xfs: clean up xfs_buftarg
+Message-ID: <20140122231231.GF27606@dastard>
+References: <52DEF81D.4090100@redhat.com>
+ <52DEF869.6040107@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52E03DB0.4060503@sandeen.net>
+In-Reply-To: <52DEF869.6040107@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +31,19 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Jan 22, 2014 at 03:52:48PM -0600, Eric Sandeen wrote:
-> On 1/22/14, 12:46 AM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > xfs/291 tries to fill the filesystem almost full, so if the log size
-> > changes with mkfs defaults then it's free space calculations are not
-> > longer valid and so it throws lots of ENOSPC errors during a run.
-> > This is not fatal for this test, but it does increase the runtime of
-> > it and fill the 291.full file with unnecessary errors.
+On Tue, Jan 21, 2014 at 04:44:57PM -0600, Eric Sandeen wrote:
+> Clean up the xfs_buftarg structure a bit:
+> - remove bt_bsize which is never used
+> - replace bt_sshift with bt_ssize; we only ever shift it back
 > 
-> Hm so you've set the log size to 5m (-l size=5m) but how does that
-> interact with any "-l size=XXX" set in MKFS_OPTS ? 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-see _scratch_mkfs_xfs:
+Looks good.
 
-        # a mkfs failure may be caused by conflicts between
-        # $MKFS_OPTIONS and $extra_mkfs_options
-        if [ $mkfs_status -ne 0 -a ! -z "$extra_mkfs_options" ]; then
-                (
-                echo -n "** mkfs failed with extra mkfs options "
-                echo "added to \"$MKFS_OPTIONS\" by test $seq **"
-                echo -n "** attempting to mkfs using only test $seq "
-                echo "options: $extra_mkfs_options **"
-                ) >> $seqres.full
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-                # running mkfs again. overwrite previous mkfs output files
-                _scratch_mkfs_xfs_opts $extra_mkfs_options \
-                        2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
-                local mkfs_status=$?
-        fi
-
-So, it will drop the MKFS_OPTIONS and just use the test specific
-options if there is a conflict/failure.
-
-> (It's certainly no worse than what I had in my original test; I just
-> wonder if we should ignore MKFS_OPTS altogether in this test, and
-> completely manually specify all options?)
-
-That's effectively what it already does automatically.... :)
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
