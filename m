@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DBEB47F96
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:52:53 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 30EE77F85
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:05:47 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 72B7FAC002
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 13:52:53 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id w5nPpyHFGrVab6cp for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 13:52:48 -0800 (PST)
-Message-ID: <52E03DB0.4060503@sandeen.net>
-Date: Wed, 22 Jan 2014 15:52:48 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B5728F8035
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:05:43 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	Y5G3JEtjBtGnshfb for <xfs@oss.sgi.com>;
+	Wed, 22 Jan 2014 15:05:42 -0800 (PST)
+Date: Thu, 23 Jan 2014 10:03:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs 3.1.12 and 3.2.0 releases?
+Message-ID: <20140122230356.GD27606@dastard>
+References: <201401201822.48520.arekm@maven.pl>
+	<201401210917.38674.arekm@maven.pl>
+	<20140121234151.GJ13997@dastard>
+	<201401221548.52273.arekm@maven.pl>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs/291: fix spurious ENOSPC errors
-References: <1390373205-8698-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390373205-8698-1-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <201401221548.52273.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,92 +28,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On 1/22/14, 12:46 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs/291 tries to fill the filesystem almost full, so if the log size
-> changes with mkfs defaults then it's free space calculations are not
-> longer valid and so it throws lots of ENOSPC errors during a run.
-> This is not fatal for this test, but it does increase the runtime of
-> it and fill the 291.full file with unnecessary errors.
-
-Hm so you've set the log size to 5m (-l size=5m) but how does that
-interact with any "-l size=XXX" set in MKFS_OPTS ? 
-
-(It's certainly no worse than what I had in my original test; I just
-wonder if we should ignore MKFS_OPTS altogether in this test, and
-completely manually specify all options?)
-
-((but I guess that would restrict this test too much, wouldn't it))
-
-Fine for now, I suppose:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
--Eric
-
-> The number of frag files it creates is also too many for a 512 byte
-> inode filesystem (by about 900) so reduce the number of inodes
-> initially created so the test works ofr 512 byte inodes. With 512
-> byte inodes, the free space histogram looks like this after the frag
-> phase:
-> 
->    from      to extents  blocks    pct
->       1       1   10730   10730 100.00
-> 
-> And for 256 byte inodes:
-> 
->    from      to extents  blocks    pct
->       1       1   12388   12388 100.00
-> 
-> So these changes do not affect the intended operation of the test.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  tests/xfs/291 | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/tests/xfs/291 b/tests/xfs/291
-> index d5a9b08..0f3f051 100755
-> --- a/tests/xfs/291
-> +++ b/tests/xfs/291
-> @@ -46,7 +46,7 @@ _supported_os IRIX Linux
->  # real QA test starts here
->  rm -f $seqres.full
->  _require_scratch
-> -_scratch_mkfs_xfs -n size=16k -d size=128m >> $seqres.full 2>&1
-> +_scratch_mkfs_xfs -n size=16k -l size=5m -d size=128m >> $seqres.full 2>&1
->  _scratch_mount
->  
->  # First we cause very badly fragmented freespace, then
-> @@ -54,13 +54,16 @@ _scratch_mount
->  # should come out very fragmented as a result
->  
->  # Step 1: Cause badly fragmented free space
-> +# 
-> +# XXX: this needs to be factored to match what generic/204 does to support
-> +# different inode sizes without ENOSPC
->  mkdir $SCRATCH_MNT/fragdir
-> -for I in `seq 0 27200`; do
-> +for I in `seq 0 26200`; do
->          (echo data > $SCRATCH_MNT/fragdir/f$I) >> $seqres.full 2>&1
->  done
->  sync
->  
-> -for I in `seq 0 2 27200`; do
-> +for I in `seq 0 2 26200`; do
->          rm -f $SCRATCH_MNT/fragdir/f$I >> $seqres.full 2>&1
->  done
->  sync
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBKYW4gMjIsIDIwMTQgYXQgMDM6NDg6NTJQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIFdlZG5lc2RheSAyMiBvZiBKYW51YXJ5IDIwMTQsIERhdmUgQ2hp
+bm5lciB3cm90ZToKPiA+IE9uIFR1ZSwgSmFuIDIxLCAyMDE0IGF0IDA5OjE3OjM4QU0gKzAxMDAs
+IEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiAKPiA+ID4gQnkgbG9va2luZyBpbnRvIGdp
+dCBsb2cgdGhlc2UgbG9vayBsaWtlIHNtYWxsIGZpeGVzIGZvciAzLjEueC4gQ291bGQKPiA+ID4g
+c29tZW9uZSBlbHNlIHJlY2hlY2s/Cj4gPiAKPiA+IC4uLi4uCj4gPiAKPiA+ID4gM2ExOWZiN2Rj
+ZTlkNTcwZTc4ZGVhZjVjMjZjMGFiOGE0YTViZWY2NyBsaWJ4ZnM6IHN0b3AgY2FjaGluZyBpbm9k
+ZQo+ID4gPiBzdHJ1Y3R1cmVzIDYxNTEwNDM3YzYyN2I1MjlmZWI5NWViZmZkZGQ3M2RmNWVkNWIx
+MDQgcmVwYWlyOiBwcmVmZXRjaGluZwo+ID4gPiBpcyB0dXJuZWQgb2ZmIHVubmVjZXNzYXJpbHkg
+MGNjZTRhYTE5OGYwNDcwODE3YmVkYjM3ODFlYTViNjk1NWU0MzA3Ngo+ID4gPiByZXBhaXI6IElu
+Y3JlYXNlIGRlZmF1bHQgcmVwYWlyIHBhcmFsbGVsaXNtIG9uIGxhcmdlIGZpbGVzeXN0ZW1zCj4g
+PiAKPiA+IEkgdGhpbmsgdGhlc2UgdGhyZWUgYXJlIG5vdCBhIGdyZWF0IGlkZWEgZm9yIDMuMS54
+LiBUaGV5IHJlc3VsdCBpbgo+ID4gc2lnbmlmaWNhbnQgY2hhbmdlcyBvZiBiZWhhdmlvdXIgdGhh
+dCBjYW4gcmVzdWx0IGluIGluY3JlYXNlZCBtZW1vcnkKPiA+IGNvbnN1bXB0aW9uIGJ5IGRlZmF1
+bHQuIEknZCBwcmVmZXIgdGhhdCB3ZSBkb24ndCBtYWtlIGNoYW5nZXMgdG8gdGhlCj4gPiBkZWZh
+dWx0IGJlaGF2aW91ciBpbiBhIGJ1Zy1maXggb25seSBwb2ludCByZWxlYXNlLgo+IAo+IDNhMTlm
+YjdkY2U5ZDU3MGU3OGRlYWY1YzI2YzBhYjhhNGE1YmVmNjcgbGlieGZzOiBzdG9wIGNhY2hpbmcg
+aW5vZGUKPiAKPiBsb29rcyBsaWtlIHdhc3RpbmcgbWVtb3J5IGZpeCB0byBtZSBidXQgb2suCgpU
+aGUgbGFzdCBwYXJhZ3JhcGggb2ZpIHRoZSBjb21taXQgbWVzc2FnZSBwb2ludHMgb3V0IHRoZSBw
+cm9ibGVtcwp0aGF0IGNhbiBvY2N1ciB3aXRoIG1lbW9yeSBjb25zdW1wdGlvbi4gRm9yIHNwYXJz
+ZSBpbm9kZQpwb3B1bGF0aW9ucywgdGhlIGJ1ZmZlciBjYWNoZSBjYW4gY29uc3VtZSBtdWNoIG1v
+cmUgbWVtb3J5IHRoYW4gdGhlCmlub2RlIGNhY2hlIGRpZCwgYW5kIHRoYXQgY2FuIGNhdXNlIE9P
+TSBwcm9ibGVtcyB3aXRoIHJlcGFpci4uLgoKQXMgaXQgaXMsIGl0IGlzIGEgc2lnbmlmaWNhbnQg
+Y2hhbmdlIG9mIGJlaGF2aW91ciwgc28gZm9yIGEKbGlnaHR3ZWlnaHQgYnVnLWZpeCBvbmx5IHJl
+bGVhc2UgSSBmZWVsIHRoYXQgaXQgaXMgb3V0LW9mLXNjb3BlLi4uCgpDaGVlcnMsCgpEYXZlLgot
+LSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
