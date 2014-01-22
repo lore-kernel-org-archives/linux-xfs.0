@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 30EE77F85
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:05:47 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 467A57F91
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:10:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B5728F8035
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:05:43 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C97F0AC002
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:10:47 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Y5G3JEtjBtGnshfb for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 15:05:42 -0800 (PST)
-Date: Thu, 23 Jan 2014 10:03:56 +1100
+	WMU3xuokkZB2yJX4 for <xfs@oss.sgi.com>;
+	Wed, 22 Jan 2014 15:10:46 -0800 (PST)
+Date: Thu, 23 Jan 2014 10:08:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs 3.1.12 and 3.2.0 releases?
-Message-ID: <20140122230356.GD27606@dastard>
-References: <201401201822.48520.arekm@maven.pl>
-	<201401210917.38674.arekm@maven.pl>
-	<20140121234151.GJ13997@dastard>
-	<201401221548.52273.arekm@maven.pl>
+Subject: Re: [PATCH] xfs/291: fix spurious ENOSPC errors
+Message-ID: <20140122230819.GE27606@dastard>
+References: <1390373205-8698-1-git-send-email-david@fromorbit.com>
+	<52E03DB0.4060503@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201401221548.52273.arekm@maven.pl>
+In-Reply-To: <52E03DB0.4060503@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +26,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBKYW4gMjIsIDIwMTQgYXQgMDM6NDg6NTJQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIFdlZG5lc2RheSAyMiBvZiBKYW51YXJ5IDIwMTQsIERhdmUgQ2hp
-bm5lciB3cm90ZToKPiA+IE9uIFR1ZSwgSmFuIDIxLCAyMDE0IGF0IDA5OjE3OjM4QU0gKzAxMDAs
-IEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiAKPiA+ID4gQnkgbG9va2luZyBpbnRvIGdp
-dCBsb2cgdGhlc2UgbG9vayBsaWtlIHNtYWxsIGZpeGVzIGZvciAzLjEueC4gQ291bGQKPiA+ID4g
-c29tZW9uZSBlbHNlIHJlY2hlY2s/Cj4gPiAKPiA+IC4uLi4uCj4gPiAKPiA+ID4gM2ExOWZiN2Rj
-ZTlkNTcwZTc4ZGVhZjVjMjZjMGFiOGE0YTViZWY2NyBsaWJ4ZnM6IHN0b3AgY2FjaGluZyBpbm9k
-ZQo+ID4gPiBzdHJ1Y3R1cmVzIDYxNTEwNDM3YzYyN2I1MjlmZWI5NWViZmZkZGQ3M2RmNWVkNWIx
-MDQgcmVwYWlyOiBwcmVmZXRjaGluZwo+ID4gPiBpcyB0dXJuZWQgb2ZmIHVubmVjZXNzYXJpbHkg
-MGNjZTRhYTE5OGYwNDcwODE3YmVkYjM3ODFlYTViNjk1NWU0MzA3Ngo+ID4gPiByZXBhaXI6IElu
-Y3JlYXNlIGRlZmF1bHQgcmVwYWlyIHBhcmFsbGVsaXNtIG9uIGxhcmdlIGZpbGVzeXN0ZW1zCj4g
-PiAKPiA+IEkgdGhpbmsgdGhlc2UgdGhyZWUgYXJlIG5vdCBhIGdyZWF0IGlkZWEgZm9yIDMuMS54
-LiBUaGV5IHJlc3VsdCBpbgo+ID4gc2lnbmlmaWNhbnQgY2hhbmdlcyBvZiBiZWhhdmlvdXIgdGhh
-dCBjYW4gcmVzdWx0IGluIGluY3JlYXNlZCBtZW1vcnkKPiA+IGNvbnN1bXB0aW9uIGJ5IGRlZmF1
-bHQuIEknZCBwcmVmZXIgdGhhdCB3ZSBkb24ndCBtYWtlIGNoYW5nZXMgdG8gdGhlCj4gPiBkZWZh
-dWx0IGJlaGF2aW91ciBpbiBhIGJ1Zy1maXggb25seSBwb2ludCByZWxlYXNlLgo+IAo+IDNhMTlm
-YjdkY2U5ZDU3MGU3OGRlYWY1YzI2YzBhYjhhNGE1YmVmNjcgbGlieGZzOiBzdG9wIGNhY2hpbmcg
-aW5vZGUKPiAKPiBsb29rcyBsaWtlIHdhc3RpbmcgbWVtb3J5IGZpeCB0byBtZSBidXQgb2suCgpU
-aGUgbGFzdCBwYXJhZ3JhcGggb2ZpIHRoZSBjb21taXQgbWVzc2FnZSBwb2ludHMgb3V0IHRoZSBw
-cm9ibGVtcwp0aGF0IGNhbiBvY2N1ciB3aXRoIG1lbW9yeSBjb25zdW1wdGlvbi4gRm9yIHNwYXJz
-ZSBpbm9kZQpwb3B1bGF0aW9ucywgdGhlIGJ1ZmZlciBjYWNoZSBjYW4gY29uc3VtZSBtdWNoIG1v
-cmUgbWVtb3J5IHRoYW4gdGhlCmlub2RlIGNhY2hlIGRpZCwgYW5kIHRoYXQgY2FuIGNhdXNlIE9P
-TSBwcm9ibGVtcyB3aXRoIHJlcGFpci4uLgoKQXMgaXQgaXMsIGl0IGlzIGEgc2lnbmlmaWNhbnQg
-Y2hhbmdlIG9mIGJlaGF2aW91ciwgc28gZm9yIGEKbGlnaHR3ZWlnaHQgYnVnLWZpeCBvbmx5IHJl
-bGVhc2UgSSBmZWVsIHRoYXQgaXQgaXMgb3V0LW9mLXNjb3BlLi4uCgpDaGVlcnMsCgpEYXZlLgot
-LSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Wed, Jan 22, 2014 at 03:52:48PM -0600, Eric Sandeen wrote:
+> On 1/22/14, 12:46 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfs/291 tries to fill the filesystem almost full, so if the log size
+> > changes with mkfs defaults then it's free space calculations are not
+> > longer valid and so it throws lots of ENOSPC errors during a run.
+> > This is not fatal for this test, but it does increase the runtime of
+> > it and fill the 291.full file with unnecessary errors.
+> 
+> Hm so you've set the log size to 5m (-l size=5m) but how does that
+> interact with any "-l size=XXX" set in MKFS_OPTS ? 
+
+see _scratch_mkfs_xfs:
+
+        # a mkfs failure may be caused by conflicts between
+        # $MKFS_OPTIONS and $extra_mkfs_options
+        if [ $mkfs_status -ne 0 -a ! -z "$extra_mkfs_options" ]; then
+                (
+                echo -n "** mkfs failed with extra mkfs options "
+                echo "added to \"$MKFS_OPTIONS\" by test $seq **"
+                echo -n "** attempting to mkfs using only test $seq "
+                echo "options: $extra_mkfs_options **"
+                ) >> $seqres.full
+
+                # running mkfs again. overwrite previous mkfs output files
+                _scratch_mkfs_xfs_opts $extra_mkfs_options \
+                        2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
+                local mkfs_status=$?
+        fi
+
+So, it will drop the MKFS_OPTIONS and just use the test specific
+options if there is a conflict/failure.
+
+> (It's certainly no worse than what I had in my original test; I just
+> wonder if we should ignore MKFS_OPTS altogether in this test, and
+> completely manually specify all options?)
+
+That's effectively what it already does automatically.... :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
