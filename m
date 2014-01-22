@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BE7317F72
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 08:38:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8FD608F8054
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 06:38:05 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 7GHBTFwW1H3U9uh6 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 06:38:04 -0800 (PST)
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id 41ED9AC5D
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 14:38:03 +0000 (UTC)
-From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH v2] xfstests: use value of FSTYP if defined externally
-Date: Wed, 22 Jan 2014 15:38:02 +0100
-Message-Id: <1390401482-13389-1-git-send-email-dsterba@suse.cz>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 75A637F72
+	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 08:39:00 -0600 (CST)
+Message-ID: <52DFD801.40801@sgi.com>
+Date: Wed, 22 Jan 2014 08:38:57 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: xfsprogs 3.1.12 and 3.2.0 releases?
+References: <201401201822.48520.arekm@maven.pl>
+	<20140120230814.GA4287@infradead.org>
+	<20140120231158.GL1935@sgi.com> <201401210917.38674.arekm@maven.pl>
+	<20140121234151.GJ13997@dastard>
+In-Reply-To: <20140121234151.GJ13997@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,78 +20,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: David Sterba <dsterba@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-The initial value of FSTYP is unconditionally set to 'xfs' and the
-filesystem type is taken from the TEST_DEV. This could lead to confusion
-if the device hasn't been formatted yet, eg. an empty image in VM, or
-a different test setup took place before.
-
-Now one can specify the desired FSTYP in advance and be safe. If unset,
-the fallback to TEST_DEV type continues to work.
-
-Signed-off-by: David Sterba <dsterba@suse.cz>
----
-
-v2:
-- fixed handling of default case, reorder as the last step
-- README: mention what's the default if FSTYP is unset
-
- README | 3 +++
- check  | 7 ++++---
- 2 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/README b/README
-index a49ca7c3ff15..295d67f56246 100644
---- a/README
-+++ b/README
-@@ -65,6 +65,9 @@ Preparing system for tests (IRIX and Linux):
-                environment variable set to "yes" will enable their use.
-              - setenv DIFF_LENGTH "number of diff lines to print from a failed test",
-                by default 10, set to 0 to print the full diff
-+             - setenv FSTYP "the filesystem you want to test", the filesystem
-+               type is devised from the TEST_DEV device, but you may want to
-+               override it; if unset, the default is 'xfs'
-         - or add a case to the switch in common/config assigning
-           these variables based on the hostname of your test
-           machine
-diff --git a/check b/check
-index 61fb91b82316..2fb4efe31771 100755
---- a/check
-+++ b/check
-@@ -33,7 +33,6 @@ showme=false
- have_test_arg=false
- randomize=false
- here=`pwd`
--FSTYP=xfs
- xfile=""
- 
- # start the initialisation work now
-@@ -57,10 +56,12 @@ then
-     exit 1
- fi
- 
--# Autodetect fs type based on what's on $TEST_DEV
--if [ "$HOSTOS" == "Linux" ]; then
-+# Autodetect fs type based on what's on $TEST_DEV unless it's been set
-+# externally
-+if [ -z "$FSTYP" -a "$HOSTOS" == "Linux" ]; then
-     FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
- fi
-+FSTYP=${FSTYP:=xfs}
- export FSTYP
- 
- SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
--- 
-1.8.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDEvMjEvMTQgMTc6NDEsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBUdWUsIEphbiAyMSwg
+MjAxNCBhdCAwOToxNzozOEFNICswMTAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3JvdGU6Cj4+
+IE9uIFR1ZXNkYXkgMjEgb2YgSmFudWFyeSAyMDE0LCBCZW4gTXllcnMgd3JvdGU6Cj4+PiBPbiBN
+b24sIEphbiAyMCwgMjAxNCBhdCAwMzowODoxNFBNIC0wODAwLCBDaHJpc3RvcGggSGVsbHdpZyB3
+cm90ZToKPj4+PiBPbiBUdWUsIEphbiAyMSwgMjAxNCBhdCAxMDowMjo1OUFNICsxMTAwLCBEYXZl
+IENoaW5uZXIgd3JvdGU6Cj4+Pj4+IFdlbGwsIHRoYXQncyBhbHdheXMgYmVlbiB0aGUgcGxhbiBz
+aW5jZSBhIDMuMS4xMiByZWxlYXNlIHdhcwo+Pj4+PiBwcm9wb3NlZCAzIG1vbnRocyBhZ28uIEhv
+dyB3ZWxsIGhhcyB0aGF0IHBsYW4gYmVlbiB3b3JraW5nIG91dCBzbwo+Pj4+PiBmYXI/Cj4+Pj4K
+Pj4+PiBUaGUgc2FkIHBhcnQgaXMgdGhhdCBJIHdvdWxkIGhhdmUgaGFkIHRoZSB0aW1lIDMgbW9u
+dGggYWdvLCBidXQgcmlnaHQKPj4+PiBub3cgaXQncyBoYXJkLiAgU3RpbGwgdHJ5aW5nIHRvIGdl
+dCBpdCBkb25lLCB0aG91Z2guCj4+Pgo+Pj4gSWYgQXJrYWRpdXN6IGlzIHdpbGxpbmcgdG8gcHJv
+dmlkZSBhIGxpc3Qgb2YgY29tbWl0cyB0byBpbmNsdWRlIGl0Cj4+PiBzaG91bGRuJ3QgYmUgYSBw
+cm9ibGVtIHRvIGdldCB0aGlzIGRvbmUuICBJIGJlbGlldmUgaGUgaW5kaWNhdGVkIGEKPj4+IHdp
+bGxpbmduZXNzIHRvIGhlbHAgb24gSVJDIGVhcmxpZXIgdG9kYXkuCj4+Cj4+IEJ5IGxvb2tpbmcg
+aW50byBnaXQgbG9nIHRoZXNlIGxvb2sgbGlrZSBzbWFsbCBmaXhlcyBmb3IgMy4xLnguIENvdWxk
+IHNvbWVvbmUgZWxzZSByZWNoZWNrPwo+Pgo+IC4uLi4uCj4+IDNhMTlmYjdkY2U5ZDU3MGU3OGRl
+YWY1YzI2YzBhYjhhNGE1YmVmNjcgbGlieGZzOiBzdG9wIGNhY2hpbmcgaW5vZGUgc3RydWN0dXJl
+cwo+PiA2MTUxMDQzN2M2MjdiNTI5ZmViOTVlYmZmZGRkNzNkZjVlZDViMTA0IHJlcGFpcjogcHJl
+ZmV0Y2hpbmcgaXMgdHVybmVkIG9mZiB1bm5lY2Vzc2FyaWx5Cj4+IDBjY2U0YWExOThmMDQ3MDgx
+N2JlZGIzNzgxZWE1YjY5NTVlNDMwNzYgcmVwYWlyOiBJbmNyZWFzZSBkZWZhdWx0IHJlcGFpciBw
+YXJhbGxlbGlzbSBvbiBsYXJnZSBmaWxlc3lzdGVtcwo+Cj4gSSB0aGluayB0aGVzZSB0aHJlZSBh
+cmUgbm90IGEgZ3JlYXQgaWRlYSBmb3IgMy4xLnguIFRoZXkgcmVzdWx0IGluCj4gc2lnbmlmaWNh
+bnQgY2hhbmdlcyBvZiBiZWhhdmlvdXIgdGhhdCBjYW4gcmVzdWx0IGluIGluY3JlYXNlZCBtZW1v
+cnkKPiBjb25zdW1wdGlvbiBieSBkZWZhdWx0LiBJJ2QgcHJlZmVyIHRoYXQgd2UgZG9uJ3QgbWFr
+ZSBjaGFuZ2VzIHRvIHRoZQo+IGRlZmF1bHQgYmVoYXZpb3VyIGluIGEgYnVnLWZpeCBvbmx5IHBv
+aW50IHJlbGVhc2UuCj4KPiAuLi4uLgo+PiBOb3Qgc3VyZSBhYm91dCB0aGVzZToKPj4KPj4gMWJh
+MjhiNjRlNjljZTNhNzk4OWRmODhmNzFhNWNiNjA4YjFjNzFlMyB4ZnNfcmVwYWlyOiBkcm9wIGJ1
+ZmZlciByZWZlcmVuY2Ugb24gc3ltbGluayBlcnJvcgo+PiA0ZTUwMzczNWZkNDA3ZTJlNjEyOTVl
+NmFmNmVjNDdhZjQ2OTNiYzk1IHhmc19yZXBhaXI6IGZpeCBidHJlZSBibG9jayBtYWdpYyBudW1i
+ZXIgbWFwcGluZwo+PiA0ZmJlYmYzNzRjY2MxNzhmMWZlZGNmMmQ4YTQzMzM5MDMxZjhkYmI0IGxp
+YnhmczogZml4IGRpcjMgZnJlZXNwYWNlIGJsb2NrIGNvcnJ1cHRpb24KPj4gNDk0NDM0ZDdmYjc5
+ODQwYmExMTNlY2Q3ZmIxYWMzYWUyMGUwZjU2OSB4ZnM6IEFkZCByZWFkLW9ubHkgc3VwcG9ydCBm
+b3IgZGlyZW50IGZpbGV0eXBlIGZpZWxkCj4+IDkwNmI3NjJmNTUzMzM5NjgzMjEwNjI2NDJhMGI5
+MGZlYWMxZmRmZmIgeGZzOiBBZGQgd3JpdGUgc3VwcG9ydCBmb3IgZGlyZW50IGZpbGV0eXBlIGZp
+ZWxkCj4+IDNiZWVkMDhlYjIyZjU2YjM4NGQyMDI4NTQxY2NiNDEyODRmZjk3NTEgeGZzcHJvZ3M6
+IGFkZCBkdHlwZSBzdXBwb3J0IHRvIG1rZnMgYW5kIGRiCj4+IDFhY2M1Mzg1NDBjZTIyZTE2YmI1
+NWNhNTczNjkxMDcwYThkMzc1ZGIgeGZzcHJvZ3M6IGluaXRpYWxpemUgZmlsZXR5cGUgZm9yIHhm
+c19uYW1lX2RvdAo+PiA0MTMxNTY4N2Q5ZGI5YjUwODc2NDAxZTdiMGVlMjBkZDc3Y2ZjNzEyIHhm
+czogZGlyZW50IGR0eXBlIHByZXNlbmNlIGlzIGRlcGVuZGVudCBvbiBkaXJlY3RvcnkgbWFnaWMg
+bnVtYmVycwo+PiA2ODc3NGI5MDBlMGM4MzY4MzQyY2IxMmY2NDk1NzJhODZlZjJmNmU0IHhmc3By
+b2dzOiBpbml0aWFsaXplIGZpbGV0eXBlIGZvciBsb3N0K2ZvdW5kIGNyZWF0aW9uCj4+IDJjY2Ex
+ZGJkMWMzZTEyZDI3MGE5YmFhNWY4NWU1NDhlOGE1YTIxMjUgeGZzX3JlcGFpcjogYWRkIGRfdHlw
+ZSB3aGVuIG1vdmluZyBmaWxlcyB0byBsb3N0K2ZvdW5kCj4+IDg3ZTM0M2JkMDkzN2U1YmI3NWRk
+OGJjNDZiYTM4OGI2ZjhjNjU1MmIgeGZzcHJvZzogYWRkIHhmcyBzYiB2NCBzdXBwb3J0IGZvciBk
+aXJlbnQgZmlsZXR5cGUgZmllbGQKPj4gNmY3MDA2MzBiMDZhMmNlMTVhZWJlODYwOGIyYzU4Nzcw
+MDIyOTlkNiB4ZnNwcm9nOiBhZGQgZGlyZW50IGZpbGV0eXBlIGluZm9ybWF0aW9uIGZvciB4ZnNf
+aW5mbwo+PiA0MjczN2YxYWQxNjIxM2EzZGFiMTc1NmM5ZmZmYjQ5NGRiOGVmMjdlIHhmc19wcm9n
+czogYWRkIGRpcmVudCBmaWxldHlwZSB0byB4ZnNfZGIgdmVyc2lvbgo+PiA0ZWIwMmQ5NWI3ZTA4
+MWI1MTBhNzAxNTYwOWYwMTM4NWFhYjIyOWE5IHhmc3Byb2c6IGFkZCBta2ZzLnhmcyBzYiB2NCBz
+dXBwb3J0IGZvciBkaXJlbnQgZmlsZXR5cGUgZmllbGQKPgo+IEknZCBzYXkgbm90IHRvIHRoZSBk
+aXJlbnQgZmlsZXR5cGUgY2hhbmdlcy4gIFRoZXkgcmVxdWlyZSB0aGUgQ1JDCj4gZm9ybWF0IGVu
+YWJsZWQgZGlyZWN0b3J5IGNvZGUgYW5kIHRoYXQgYmFzaWNhbGx5IGludm9sdmVzCj4gYmFja3Bv
+cnRpbmcgdGhlIGVudGlyZSAzLjItYWxwaGEgY29kZSBiYXNlIHRvIHN1cHBvcnQgaXQuIE90aGVy
+d2lzZQo+IGEgY29tcGxldGUgcmUtaW1wbGVtZW50YXRpb24gaW4gbmVlZGVkIGZvciAzLjEueCwg
+bm90IGEgYmFja3BvcnQuCj4KPiBDaGVlcnMsCj4KPiBEYXZlLgoKVGhhbmtzIGZvciBtYWtpbmcg
+dGhlIGxpc3QuIEkgYWdyZWUgd2l0aCBEYXZlIGFib3ZlIGFib3V0IDMgZmVhdHVyZSAKcGF0Y2hl
+cyBhbmQgdGhlIGRpcmVjdG9yeSBmaWxlIHR5cGUgY2hhbmdlcy4KClRoZSBmb2xsb3dpbmcgcGF0
+Y2ggdGhhdCBpcyBpbiB5b3VyICJub3Qgc3VyZSIgbGlzdCBsb29rcyBsaWtlIGEgZ29vZCAKYnVn
+IGZpeCB0aGF0IGlzIG5vdCBDUkMgcmVsYXRlZDoKCmJhMjhiNjRlNjljZTNhNzk4OWRmODhmNzFh
+NWNiNjA4YjFjNzFlMyB4ZnNfcmVwYWlyOiBkcm9wIGJ1ZmZlciAKcmVmZXJlbmNlIG9uIHN5bWxp
+bmsgZXJyb3IKCi0tTWFyay4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
