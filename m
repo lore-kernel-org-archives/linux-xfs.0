@@ -1,21 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 76E4F29E04
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 11:15:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 98C1AAC004
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 09:15:30 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 95F987F80
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 11:28:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5998AC005
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 09:28:34 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v9AoOg5fBYb1Rmpx for
-	<xfs@oss.sgi.com>; Thu, 23 Jan 2014 09:15:27 -0800 (PST)
-Message-ID: <52E14E2A.7000902@redhat.com>
-Date: Thu, 23 Jan 2014 12:15:22 -0500
+	cuda.sgi.com with ESMTP id 3xMOHhlTbPCdlWvg for
+	<xfs@oss.sgi.com>; Thu, 23 Jan 2014 09:15:02 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0NHF1FQ016772
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 12:15:01 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s0NHF0X0014157
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 12:15:01 -0500
+Message-ID: <52E14E13.5000805@redhat.com>
+Date: Thu, 23 Jan 2014 12:14:59 -0500
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] repair: fix discontiguous directory block support
+Subject: Re: [PATCH 1/3] libxfs: add a flags field to libxfs_getbuf_map
 References: <1390375033-10483-1-git-send-email-david@fromorbit.com>
-	<1390375033-10483-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390375033-10483-4-git-send-email-david@fromorbit.com>
+	<1390375033-10483-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1390375033-10483-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,290 +37,137 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 On 01/22/2014 02:17 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs/291 tests fragmented multi-block directories, and xfs_repair
-> throws lots of lookup badness errors in phase 3:
-> 
->         - agno = 1
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x1e040, len 4096 bytes) key=(bno 0x1e040, len 16384 bytes)
->         - agno = 2
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x2d0e8, len 4096 bytes) key=(bno 0x2d0e8, len 16384 bytes)
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x2d068, len 4096 bytes) key=(bno 0x2d068, len 16384 bytes)
->         - agno = 3
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x39130, len 4096 bytes) key=(bno 0x39130, len 16384 bytes)
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x391b0, len 4096 bytes) key=(bno 0x391b0, len 16384 bytes)
-> 7fa3d2758740: Badness in key lookup (length)
-> 
-> This is because it is trying to read a directory buffer in full
-> (16k), but is finding a single 4k block in the cache instead.
-> 
-> The opposite is happening in phase 6 - phase 6 is trying to read 4k
-> buffers but is finding a 16k buffer there instead.
-> 
-> The problem is caused by the fact that directory buffers can be
-> represented as compound buffers or as individual buffers depending
-> on the code reading the directory blocks. The main problem is that
-> the IO prefetch code doesn't understand compound buffers, so teach
-> it about compound buffers to make the problem go away.
+> It will be needed to make the repair prefetch code aware of compound
+> buffers.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-I think I get the gist of what's going on here. One potential issue
-noted below along with notes to self to confirm whether I follow the
-code correctly.
+Looks Ok.
 
->  repair/prefetch.c | 121 ++++++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 100 insertions(+), 21 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  include/libxfs.h |  8 ++++----
+>  libxfs/rdwr.c    | 15 +++++++++------
+>  libxfs/trans.c   |  4 ++--
+>  3 files changed, 15 insertions(+), 12 deletions(-)
 > 
-> diff --git a/repair/prefetch.c b/repair/prefetch.c
-> index d3491da..ab90b92 100644
-> --- a/repair/prefetch.c
-> +++ b/repair/prefetch.c
-> @@ -105,11 +105,12 @@ pf_start_io_workers(
->  static void
->  pf_queue_io(
->  	prefetch_args_t		*args,
-> -	xfs_fsblock_t		fsbno,
-> -	int			blen,
-> +	struct xfs_buf_map	*map,
-> +	int			nmaps,
->  	int			flag)
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index 4bf331c..2872410 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -392,9 +392,9 @@ extern struct cache_operations	libxfs_bcache_operations;
+>  #define libxfs_getbuf(dev, daddr, len) \
+>  	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
+>  			    (dev), (daddr), (len))
+> -#define libxfs_getbuf_map(dev, map, nmaps) \
+> +#define libxfs_getbuf_map(dev, map, nmaps, flags) \
+>  	libxfs_trace_getbuf_map(__FUNCTION__, __FILE__, __LINE__, \
+> -			    (dev), (map), (nmaps))
+> +			    (dev), (map), (nmaps), (flags))
+>  #define libxfs_getbuf_flags(dev, daddr, len, flags) \
+>  	libxfs_trace_getbuf_flags(__FUNCTION__, __FILE__, __LINE__, \
+>  			    (dev), (daddr), (len), (flags))
+> @@ -412,7 +412,7 @@ extern int	libxfs_trace_writebuf(const char *, const char *, int,
+>  extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int,
+>  			struct xfs_buftarg *, xfs_daddr_t, int);
+>  extern xfs_buf_t *libxfs_trace_getbuf_map(const char *, const char *, int,
+> -			struct xfs_buftarg *, struct xfs_buf_map *, int);
+> +			struct xfs_buftarg *, struct xfs_buf_map *, int, int);
+>  extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
+>  			struct xfs_buftarg *, xfs_daddr_t, int, unsigned int);
+>  extern void	libxfs_trace_putbuf (const char *, const char *, int,
+> @@ -427,7 +427,7 @@ extern xfs_buf_t *libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+>  extern int	libxfs_writebuf(xfs_buf_t *, int);
+>  extern xfs_buf_t *libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
+>  extern xfs_buf_t *libxfs_getbuf_map(struct xfs_buftarg *,
+> -			struct xfs_buf_map *, int);
+> +			struct xfs_buf_map *, int, int);
+>  extern xfs_buf_t *libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t,
+>  			int, unsigned int);
+>  extern void	libxfs_putbuf (xfs_buf_t *);
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 0219a08..bf92788 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -203,7 +203,8 @@ xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+>  				int, int, const struct xfs_buf_ops *);
+>  int		libxfs_writebuf(xfs_buf_t *, int);
+>  xfs_buf_t	*libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
+> -xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *, int);
+> +xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+> +				int, int);
+>  xfs_buf_t	*libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t, int,
+>  				unsigned int);
+>  void		libxfs_putbuf (xfs_buf_t *);
+> @@ -255,9 +256,10 @@ libxfs_trace_getbuf(const char *func, const char *file, int line,
+>  
+>  xfs_buf_t *
+>  libxfs_trace_getbuf_map(const char *func, const char *file, int line,
+> -		struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
+> +		struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+> +		int flags)
 >  {
-> -	xfs_buf_t		*bp;
-> +	struct xfs_buf		*bp;
-> +	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, map[0].bm_bn);
+> -	xfs_buf_t	*bp = libxfs_getbuf_map(btp, map, nmaps);
+> +	xfs_buf_t	*bp = libxfs_getbuf_map(btp, map, nmaps, flags);
+>  	__add_trace(bp, func, file, line);
+>  	return bp;
+>  }
+> @@ -582,7 +584,8 @@ libxfs_getbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len)
+>  }
 >  
->  	/*
->  	 * Never block on a buffer lock here, given that the actual repair
-> @@ -117,8 +118,7 @@ pf_queue_io(
->  	 * the lock holder is either reading it from disk himself or
->  	 * completely overwriting it this behaviour is perfectly fine.
->  	 */
-> -	bp = libxfs_getbuf_flags(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-> -			XFS_FSB_TO_BB(mp, blen), LIBXFS_GETBUF_TRYLOCK);
-> +	bp = libxfs_getbuf_map(mp->m_dev, map, nmaps, LIBXFS_GETBUF_TRYLOCK);
+>  struct xfs_buf *
+> -libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
+> +libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
+> +		  int nmaps, int flags)
+>  {
+>  	struct xfs_bufkey key = {0};
+>  	int i;
+> @@ -595,7 +598,7 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
+>  	key.map = map;
+>  	key.nmaps = nmaps;
+>  
+> -	return __cache_lookup(&key, 0);
+> +	return __cache_lookup(&key, flags);
+>  }
+>  
+>  void
+> @@ -775,7 +778,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+>  		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
+>  					flags, ops);
+>  
+> -	bp = libxfs_getbuf_map(btp, map, nmaps);
+> +	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
 >  	if (!bp)
->  		return;
+>  		return NULL;
 >  
-
-Interface change to support queuing a discontig buffer.
-
-> @@ -167,6 +167,14 @@ pf_read_bmbt_reclist(
->  	xfs_bmbt_irec_t		irec;
->  	xfs_dfilblks_t		cp = 0;		/* prev count */
->  	xfs_dfiloff_t		op = 0;		/* prev offset */
-> +#define MAP_ARRAY_SZ 4
-> +	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
-> +	struct xfs_buf_map	*map = map_array;
-> +	int			max_extents = MAP_ARRAY_SZ;
-> +	int			nmaps = 0;;
-> +	unsigned int		len = 0;
-> +	int			ret = 0;
-> +
-
-So if I understand correctly, the idea here is to now batch extent reads
-into buffers of the directory block size, quieting the messages
-described in the commit log.
-
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 6a05673..6c9d202 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -511,7 +511,7 @@ libxfs_trans_get_buf_map(
+>  	xfs_buf_log_item_t	*bip;
 >  
->  	for (i = 0; i < numrecs; i++) {
->  		libxfs_bmbt_disk_get_all(rp + i, &irec);
-> @@ -174,11 +182,11 @@ pf_read_bmbt_reclist(
->  		if (((i > 0) && (op + cp > irec.br_startoff)) ||
->  				(irec.br_blockcount == 0) ||
->  				(irec.br_startoff >= fs_max_file_offset))
-> -			return 0;
-> +			goto out_free;
+>  	if (tp == NULL)
+> -		return libxfs_getbuf_map(btp, map, nmaps);
+> +		return libxfs_getbuf_map(btp, map, nmaps, 0);
 >  
->  		if (!verify_dfsbno(mp, irec.br_startblock) || !verify_dfsbno(mp,
->  				irec.br_startblock + irec.br_blockcount - 1))
-> -			return 0;
-> +			goto out_free;
->  
->  		if (!args->dirs_only && ((irec.br_startoff +
->  				irec.br_blockcount) >= mp->m_dirfreeblk))
-> @@ -188,18 +196,60 @@ pf_read_bmbt_reclist(
->  		cp = irec.br_blockcount;
->  
->  		while (irec.br_blockcount) {
-> -			unsigned int	len;
-> +			unsigned int	bm_len;
->  
->  			pftrace("queuing dir extent in AG %d", args->agno);
->  
-> -			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
-> -					mp->m_dirblkfsbs : irec.br_blockcount;
-> -			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
-> -			irec.br_blockcount -= len;
-> -			irec.br_startblock += len;
-> +			if (len + irec.br_blockcount >= mp->m_dirblkfsbs) {
-> +				bm_len = mp->m_dirblkfsbs - len;
-> +				len = 0;
-> +			} else {
-> +				len += irec.br_blockcount;
-> +				bm_len = irec.br_blockcount;
-> +			}
-
-So len represents the total length of the maps attached to the current
-array...
-
-> +
-> +			map[nmaps].bm_bn = XFS_FSB_TO_DADDR(mp,
-> +							irec.br_startblock);
-> +			map[nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
-> +			nmaps++;
-> +
-> +			if (len == 0) {
-> +				pf_queue_io(args, map, nmaps, B_DIR_META);
-> +				nmaps = 0;
-> +			}
-
-Kind of a nit, but this looks a little weird to me. The logic would be a
-bit more clear with something like:
-
-	if (len + irec.br_blockcount > mp->dirblkfsbs)
-		bm_len = mp->m_dirblkfsbs - len;
-	else
-		bm_len = irec.br_blockcount;
-	len += bm_len;
-
-	...
-
-	if (len == mp->dirblkfsbs) {
-		len = 0;
-		pf_queue_io(...)
-	}
-
-... which then raises the question of what happens if the directory
-we're reading doesn't end with len == mp->dirblkfsbs? If so, perhaps not
-a performance regression, but it looks like we wouldn't queue the last
-I/O. Some of the directory code suggests that we fail if we don't alloc
-the dirblkfsbs block count, so maybe this doesn't happen.
-
-> +
-> +			irec.br_blockcount -= bm_len;
-> +			irec.br_startblock += bm_len;
-> +
-> +			/*
-> +			 * Handle very fragmented dir2 blocks with dynamically
-> +			 * allocated buffer maps.
-> +			 */
-> +			if (nmaps >= max_extents) {
-> +				struct xfs_buf_map *old_map = NULL;
-> +
-> +				if (map == map_array) {
-> +					old_map = map;
-> +					map = NULL;
-> +				}
-> +				max_extents *= 2;
-> +				map = realloc(map, max_extents * sizeof(*map));
-> +				if (map == NULL) {
-> +					do_error(
-> +			_("couldn't malloc dir2 buffer list\n"));
-> +					exit(1);
-> +				}
-> +				if (old_map)
-> +					memcpy(map, old_map, sizeof(map_array));
-> +			}
-> +
->  		}
+>  	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
+>  	if (bp != NULL) {
+> @@ -522,7 +522,7 @@ libxfs_trans_get_buf_map(
+>  		return bp;
 >  	}
-> -	return 1;
-> +	ret = 1;
-> +out_free:
-> +	if (map != map_array)
-> +		free(map);
-> +	return ret;
->  }
 >  
->  /*
-> @@ -395,9 +445,28 @@ pf_read_inode_dirs(
->  }
->  
->  /*
-> - * pf_batch_read must be called with the lock locked.
-> + * Discontiguous buffers require multiple IOs to fill, so we can't use any
-> + * linearising, hole filling algorithms on them to avoid seeks. Just remove them
-> + * for the prefetch queue and read them straight into the cache and release
-> + * them.
->   */
-> +static void
-> +pf_read_discontig(
-> +	struct prefetch_args	*args,
-> +	struct xfs_buf		*bp)
-> +{
-> +	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
-> +		do_error(_("prefetch corruption\n"));
-> +
-> +	pthread_mutex_unlock(&args->lock);
-> +	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
-> +	libxfs_putbuf(bp);
-> +	pthread_mutex_lock(&args->lock);
-> +}
->  
-> +/*
-> + * pf_batch_read must be called with the lock locked.
-> + */
->  static void
->  pf_batch_read(
->  	prefetch_args_t		*args,
-> @@ -426,8 +495,15 @@ pf_batch_read(
->  			max_fsbno = fsbno + pf_max_fsbs;
->  		}
->  		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
-> -			if (which != PF_META_ONLY ||
-> -			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
-> +			/*
-> +			 * Handle discontiguous buffers outside the seek
-> +			 * optimised IO loop below.
-> +			 */
-> +			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
-> +				pf_read_discontig(args, bplist[num]);
-> +				bplist[num] = NULL;
-
-So we pull these out from the processing below (which appears to want to
-issue largish reads comprised of multiple buffers, via bplist). Thanks
-for the comment above pf_read_discontig().
-
-> +			} else if (which != PF_META_ONLY ||
-> +				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
->  				num++;
->  			if (num == MAX_BUFS)
->  				break;
-> @@ -664,10 +740,13 @@ pf_queuing_worker(
->  		bno = XFS_AGINO_TO_AGBNO(mp, cur_irec->ino_startnum);
->  
->  		do {
-> -			pf_queue_io(args, XFS_AGB_TO_FSB(mp, args->agno, bno),
-> -					blks_per_cluster,
-> -					(cur_irec->ino_isa_dir != 0) ?
-> -						B_DIR_INODE : B_INODE);
-> +			struct xfs_buf_map	map;
-> +
-> +			map.bm_bn = XFS_AGB_TO_DADDR(mp, args->agno, bno);
-> +			map.bm_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> +			pf_queue_io(args, &map, 1,
-> +				    (cur_irec->ino_isa_dir != 0) ?  B_DIR_INODE
-> +		
-
-Straightforward change based on the new pf_queue_io().
-
-Brian
-
-						 : B_INODE);
->  			bno += blks_per_cluster;
->  			num_inos += inodes_per_cluster;
->  		} while (num_inos < XFS_IALLOC_INODES(mp));
+> -	bp = libxfs_getbuf_map(btp, map, nmaps);
+> +	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
+>  	if (bp == NULL)
+>  		return NULL;
+>  #ifdef XACT_DEBUG
 > 
 
 _______________________________________________
