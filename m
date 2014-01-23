@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 98F6C7F7D
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 12:40:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E7A68F8033
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 10:40:30 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6OHDLNBg1TIoZ0OX for
-	<xfs@oss.sgi.com>; Thu, 23 Jan 2014 10:40:29 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0NIeReR011029
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:40:28 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s0NIeRt0024318
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:40:27 -0500
-Message-ID: <52E1621A.6070006@redhat.com>
-Date: Thu, 23 Jan 2014 13:40:26 -0500
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 067547F8A
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:18:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB26F8F8059
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 11:18:33 -0800 (PST)
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
+	[67.231.153.30]) by cuda.sgi.com with ESMTP id u4CKTQzaI3ezrVpI
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 11:18:25 -0800 (PST)
+Message-ID: <52E16AE6.7010202@fb.com>
+Date: Thu, 23 Jan 2014 14:17:58 -0500
+From: Josef Bacik <jbacik@fb.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: convert xfs_log_commit_cil() to void
-References: <52E10BED.8090607@oracle.com>
-In-Reply-To: <52E10BED.8090607@oracle.com>
+Subject: Re: [PATCH v2] xfstests: add test for btrfs incremental send infinite
+	loop issue
+References: <1390348610-8098-1-git-send-email-fdmanana@gmail.com>
+	<1390385119-6998-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1390385119-6998-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,96 +25,225 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Filipe David Borba Manana <fdmanana@gmail.com>, xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-On 01/23/2014 07:32 AM, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> Convert xfs_log_commit_cil() to a void function since it return nothing
-> but 0 in any case, after that we can simplify the relative code logic
-> in xfs_trans_commit() accordingly.
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+
+On 01/22/2014 05:05 AM, Filipe David Borba Manana wrote:
+> Regression test for btrfs' incremental send feature:
+>
+> 1) Create several nested directories;
+>
+> 2) Create a read only snapshot;
+>
+> 3) Change the parentship of some of the deepest directories in a reverse
+>     way, so that parents become children and children become parents;
+>
+> 4) Create another read only snapshot and use it for an incremental send
+>     relative to the first snapshot.
+>
+> At step 4 btrfs' send entered an infinite loop, increasing the memory it
+> used while building path strings until a krealloc was unable to allocate
+> more memory, which caused a warning dump in dmesg.
+>
+> The following linux kernel patch fixes this issue.
+>
+>     Btrfs: fix infinite path build loops in incremental send
+>     (https://patchwork.kernel.org/patch/3522361/)
+>
+> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 > ---
+>
+> V2: Updated test to trigger one more code path in the corresponding
+>      btrfs linux kernel patch that fixes this issue.
+>
+>   tests/btrfs/030     |  144 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>   tests/btrfs/030.out |    9 ++++
+>   tests/btrfs/group   |    1 +
+>   3 files changed, 154 insertions(+)
+>   create mode 100755 tests/btrfs/030
+>   create mode 100644 tests/btrfs/030.out
+>
+> diff --git a/tests/btrfs/030 b/tests/btrfs/030
+> new file mode 100755
+> index 0000000..5e1b4fc
+> --- /dev/null
+> +++ b/tests/btrfs/030
+> @@ -0,0 +1,144 @@
+> +#! /bin/bash
+> +# FS QA Test No. btrfs/030
+> +#
+> +# Regression test for btrfs' incremental send feature:
+> +#
+> +# 1) Create several nested directories;
+> +# 2) Create a read only snapshot;
+> +# 3) Change the parentship of some of the deepest directories in a reverse
+> +#    way, so that parents become children and children become parents;
+> +# 4) Create another read only snapshot and use it for an incremental send
+> +#    relative to the first snapshot.
+> +#
+> +# At step 4 btrfs' send entered an infinite loop, increasing the memory it
+> +# used while building path strings until a krealloc was unable to allocate
+> +# more memory, which caused a warning dump in dmesg.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=`mktemp -d`
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    rm -fr $tmp
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +_require_scratch
+> +_need_to_be_root
+> +
+> +FSSUM_PROG=$here/src/fssum
+> +[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+> +
+> +rm -f $seqres.full
+> +
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +
+> +mkdir -p $SCRATCH_MNT/a/b/c
+> +echo "hello" > $SCRATCH_MNT/a/b/c/file.txt
+> +mkdir $SCRATCH_MNT/a/b/c/d
+> +mkdir $SCRATCH_MNT/a/b/c2
+> +mkdir $SCRATCH_MNT/a/b/www
+> +mkdir -p $SCRATCH_MNT/a/b/c3/x/y
+> +
+> +# Directory tree looks like:
+> +#
+> +# .                         (ino 256)
+> +# |-- a/                    (ino 257)
+> +#     |-- b/                (ino 258)
+> +#         |-- c/            (ino 259)
+> +#         |   |-- file.txt  (ino 260)
+> +#         |   |-- d/        (ino 261)
+> +#         |
+> +#         |-- c2/           (ino 262)
+> +#         |-- www/          (ino 263)
+> +#         |
+> +#         |-- c3/           (ino 264)
+> +#             |-- x/        (ino 265)
+> +#                 |-- y/    (ino 266)
+> +
+> +$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1 | \
+> +    _filter_scratch
+> +
+> +echo " world" >> $SCRATCH_MNT/a/b/c/file.txt
+> +mv $SCRATCH_MNT/a/b/c/d $SCRATCH_MNT/a/b/c2/d2
+> +mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/a/b/c2/d2/cc
+> +mv $SCRATCH_MNT/a/b/c3/x/y $SCRATCH_MNT/a/b/c2/y2
+> +mv $SCRATCH_MNT/a/b/c3/x $SCRATCH_MNT/a/b/c2/y2/x2
+> +mv $SCRATCH_MNT/a/b/c3 $SCRATCH_MNT/a/b/c2/y2/x2/Z
+> +mv $SCRATCH_MNT/a/b/www $SCRATCH_MNT/a/b/c2/y2/x2/WWW
+> +ln $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2/Z/file_link.txt
+> +mv $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2
+> +
+> +# Directory tree now looks like:
+> +#
+> +# .                                         (ino 256)
+> +# |-- a/                                    (ino 257)
+> +#     |-- b/                                (ino 258)
+> +#         |-- c2/                           (ino 262)
+> +#             |-- d2/                       (ino 261)
+> +#             |   |-- cc/                   (ino 259)
+> +#             |        |-- file.txt         (ino 260)
+> +#             |-- y2/                       (ino 266)
+> +#                 |-- x2/                   (ino 265)
+> +#                     |-- WWW/              (ino 263)
+> +#                     |-- Z/                (ino 264)
+> +#                         |-- file_link.txt
+> +
+> +$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2 | \
+> +    _filter_scratch
+> +
+> +$FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
+> +$FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
+> +    $SCRATCH_MNT/mysnap2
+> +
+> +$BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap 2>&1 | _filter_scratch
+> +$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
+> +    -f $tmp/2.snap 2>&1 | _filter_scratch
+> +
+> +_scratch_unmount
+> +_check_btrfs_filesystem $SCRATCH_DEV
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
+> +$FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
+> +$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
+> +$FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
+> +
 
-9 less lines. ;)
+You should do || _fail for the fssum stuff, and maybe redirect the 
+output to $seqres.full.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> +_scratch_unmount
+> +_check_btrfs_filesystem $SCRATCH_DEV
+> +
+> +status=0
+> +exit
+> diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
+> new file mode 100644
+> index 0000000..2999f8c
+> --- /dev/null
+> +++ b/tests/btrfs/030.out
+> @@ -0,0 +1,9 @@
+> +QA output created by 030
+> +Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap1'
+> +Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap2'
+> +At subvol SCRATCH_MNT/mysnap1
+> +At subvol SCRATCH_MNT/mysnap2
+> +At subvol mysnap1
+> +OK
+> +At snapshot mysnap2
+> +OK
 
->  fs/xfs/xfs_log.h     |  2 +-
->  fs/xfs/xfs_log_cil.c |  3 +--
->  fs/xfs/xfs_trans.c   | 12 ++----------
->  3 files changed, 4 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index e148719..67927c3 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -129,7 +129,7 @@ void	  xlog_iodone(struct xfs_buf *);
->  struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
->  void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
->  
-> -int	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
-> +void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
->  				xfs_lsn_t *commit_lsn, int flags);
->  bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
->  
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 5eb51fc..bb1027a 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -740,7 +740,7 @@ xlog_cil_empty(
->   * background commit, returns without it held once background commits are
->   * allowed again.
->   */
-> -int
-> +void
->  xfs_log_commit_cil(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
-> @@ -786,7 +786,6 @@ xfs_log_commit_cil(
->  	xlog_cil_push_background(log);
->  
->  	up_read(&cil->xc_ctx_lock);
-> -	return 0;
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index c812c5c..54a5732 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -887,12 +887,7 @@ xfs_trans_commit(
->  		xfs_trans_apply_sb_deltas(tp);
->  	xfs_trans_apply_dquot_deltas(tp);
->  
-> -	error = xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
-> -	if (error == ENOMEM) {
-> -		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-> -		error = XFS_ERROR(EIO);
-> -		goto out_unreserve;
-> -	}
-> +	xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
->  
->  	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
->  	xfs_trans_free(tp);
-> @@ -902,10 +897,7 @@ xfs_trans_commit(
->  	 * log out now and wait for it.
->  	 */
->  	if (sync) {
-> -		if (!error) {
-> -			error = _xfs_log_force_lsn(mp, commit_lsn,
-> -				      XFS_LOG_SYNC, NULL);
-> -		}
-> +		error = _xfs_log_force_lsn(mp, commit_lsn, XFS_LOG_SYNC, NULL);
->  		XFS_STATS_INC(xs_trans_sync);
->  	} else {
->  		XFS_STATS_INC(xs_trans_async);
-> 
+So this depends on the output of btrfs send not changing ever, which 
+historically is not a good assumption to make.  It would be better if 
+you do like the other send tests and just test for failure like the 
+other send tests do.  Thanks,
+
+Josef
 
 _______________________________________________
 xfs mailing list
