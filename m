@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4B0367F5D
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:12 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 314857F5D
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C8514AC005
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 14A668F8070
 	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 02:24:11 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	VyKSYuPHtE1F7C6O for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 02:24:09 -0800 (PST)
+	1zNWJRKdOsTCQ8Gr for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 02:24:08 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fF-Aa
+	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fG-BV
 	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004Va-9f
+	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004Vf-AH
 	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] metadump: walk single fsb objects a block at a time
-Date: Thu, 23 Jan 2014 21:23:54 +1100
-Message-Id: <1390472635-17225-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/5] metadump: fully support discontiguous directory blocks
+Date: Thu, 23 Jan 2014 21:23:55 +1100
+Message-Id: <1390472635-17225-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,277 +39,369 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To be able to support arbitrary discontiguous extents in multi-block
-objects, we need to be able to process a single object at a time
-presented as a single flat buffer. Right now we pass an arbitrary
-extent and have the individal object processing functions break it
-up and keep track of inter-call state.
+Now that directory block obfuscation can handle single contiguous
+directory blocks, we can make the multi-block code use discontiguous
+buffers to read in an entire directory block at a time. This allows
+us to pass a complete directory object to the processing function
+and hence be able to process any sort of directory object regardless
+of it's underlying layout.
 
-This greatly complicates the processing of directory objects, such
-that certain formats are simply not handled at all. Instead, for
-single block objects loop over the extent a block at a time, feeding
-a whole object to the processing function and hence making the
-extent walking generic instead of per object.
+With the, we can remove the multi-block loop from the directory
+processing code and get rid of allt eh structures used to hold
+inter-call state. This graeatly simplifies the code as well as
+adding the additional functionality.
 
-At thsi point multi-block directory objects still need to use the
-existing code, so duplicate the old single block object code into it
-so we can fix it up properly. This means directory block processing
-can't be fully cleaned up yet.
+With this patch, a CRC enabled filesystem now passes xfs/291.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/metadump.c | 180 ++++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 107 insertions(+), 73 deletions(-)
+ db/metadump.c | 280 ++++++++++++++++++++++++++++------------------------------
+ 1 file changed, 133 insertions(+), 147 deletions(-)
 
 diff --git a/db/metadump.c b/db/metadump.c
-index 9fc08ed..e973c5e 100644
+index e973c5e..6ed392b 100644
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -1257,12 +1257,11 @@ obfuscate_dir_data_blocks(
+@@ -1111,24 +1111,11 @@ obfuscate_sf_attr(
+ 	}
  }
  
+-/*
+- * dir_data structure is used to track multi-fsblock dir2 blocks between extent
+- * processing calls.
+- */
+-
+-static struct dir_data_s {
+-	int			end_of_data;
+-	int			block_index;
+-	int			offset_to_entry;
+-	int			bad_block;
+-} dir_data;
+-
  static void
--obfuscate_symlink_blocks(
+-obfuscate_dir_data_blocks(
 -	char			*block,
--	xfs_dfilblks_t		count)
-+obfuscate_symlink_block(
-+	char			*block)
- {
--	count <<= mp->m_sb.sb_blocklog;
--	obfuscate_path_components(block, count);
-+	/* XXX: need to handle CRC headers */
-+	obfuscate_path_components(block, mp->m_sb.sb_blocksize);
- }
- 
- #define MAX_REMOTE_VALS		4095
-@@ -1283,80 +1282,79 @@ add_remote_vals(
- 		blockidx++;
- 		length -= XFS_LBSIZE(mp);
- 	}
-+
-+	if (attr_data.remote_val_count >= MAX_REMOTE_VALS) {
-+		print_warning(
-+"Overflowed attr obfuscation array. No longer obfuscating remote attrs.");
-+	}
- }
- 
- static void
--obfuscate_attr_blocks(
-+obfuscate_attr_block(
- 	char			*block,
 -	xfs_dfiloff_t		offset,
--	xfs_dfilblks_t		count)
-+	xfs_dfiloff_t		offset)
+-	xfs_dfilblks_t		count,
+-	int			is_block_format)
++obfuscate_dir_data_block(
++	char		*block,
++	xfs_dfiloff_t	offset,
++	int		is_block_format)
  {
- 	xfs_attr_leafblock_t	*leaf;
+ 	/*
+ 	 * we have to rely on the fileoffset and signature of the block to
+@@ -1136,123 +1123,96 @@ obfuscate_dir_data_blocks(
+ 	 * for multi-fsblock dir blocks, if a name crosses an extent boundary,
+ 	 * ignore it and continue.
+ 	 */
 -	int			c;
- 	int			i;
- 	int			nentries;
- 	xfs_attr_leaf_entry_t 	*entry;
- 	xfs_attr_leaf_name_local_t *local;
- 	xfs_attr_leaf_name_remote_t *remote;
- 
--	for (c = 0; c < count; c++, offset++, block += XFS_LBSIZE(mp)) {
-+	leaf = (xfs_attr_leafblock_t *)block;
- 
--		leaf = (xfs_attr_leafblock_t *)block;
+-	int			dir_offset;
+-	char			*ptr;
+-	char			*endptr;
 -
--		if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
--			for (i = 0; i < attr_data.remote_val_count; i++) {
--				if (attr_data.remote_vals[i] == offset)
--					memset(block, 0, XFS_LBSIZE(mp));
+-	if (is_block_format && count != mp->m_dirblkfsbs)
+-		return; /* too complex to handle this rare case */
+-
+-	for (c = 0, endptr = block; c < count; c++) {
+-
+-		if (dir_data.block_index == 0) {
+-			int		wantmagic;
+-			struct xfs_dir2_data_hdr *datahdr;
+-
+-			datahdr = (struct xfs_dir2_data_hdr *)block;
+-
+-			if (offset % mp->m_dirblkfsbs != 0)
+-				return;	/* corrupted, leave it alone */
+-
+-			dir_data.bad_block = 0;
+-
+-			if (is_block_format) {
+-				xfs_dir2_leaf_entry_t	*blp;
+-				xfs_dir2_block_tail_t	*btp;
+-
+-				btp = xfs_dir2_block_tail_p(mp, datahdr);
+-				blp = xfs_dir2_block_leaf_p(btp);
+-				if ((char *)blp > (char *)btp)
+-					blp = (xfs_dir2_leaf_entry_t *)btp;
+-
+-				dir_data.end_of_data = (char *)blp - block;
+-				wantmagic = XFS_DIR2_BLOCK_MAGIC;
+-			} else { /* leaf/node format */
+-				dir_data.end_of_data = mp->m_dirblkfsbs <<
+-						mp->m_sb.sb_blocklog;
+-				wantmagic = XFS_DIR2_DATA_MAGIC;
 -			}
--			continue;
-+	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
-+		for (i = 0; i < attr_data.remote_val_count; i++) {
-+			/* XXX: need to handle CRC headers */
-+			if (attr_data.remote_vals[i] == offset)
-+				memset(block, 0, XFS_LBSIZE(mp));
- 		}
-+		return;
+-			dir_data.offset_to_entry =
+-					xfs_dir3_data_entry_offset(datahdr);
+-
+-			if (be32_to_cpu(datahdr->magic) != wantmagic) {
+-				if (show_warnings)
+-					print_warning("invalid magic in dir "
+-						"inode %llu block %ld",
+-						(long long)cur_ino,
+-						(long)offset);
+-				dir_data.bad_block = 1;
+-			}
+-		}
+-		dir_data.block_index++;
+-		if (dir_data.block_index == mp->m_dirblkfsbs)
+-			dir_data.block_index = 0;
++	int		dir_offset;
++	char		*ptr;
++	char		*endptr;
++	int		end_of_data;
++	int		wantmagic;
++	struct xfs_dir2_data_hdr *datahdr;
++
++	datahdr = (struct xfs_dir2_data_hdr *)block;
++
++	if (offset % mp->m_dirblkfsbs != 0)
++		return;	/* corrupted, leave it alone */
++
++	if (is_block_format) {
++		xfs_dir2_leaf_entry_t	*blp;
++		xfs_dir2_block_tail_t	*btp;
++
++		btp = xfs_dir2_block_tail_p(mp, datahdr);
++		blp = xfs_dir2_block_leaf_p(btp);
++		if ((char *)blp > (char *)btp)
++			blp = (xfs_dir2_leaf_entry_t *)btp;
++
++		end_of_data = (char *)blp - block;
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			wantmagic = XFS_DIR3_BLOCK_MAGIC;
++		else
++			wantmagic = XFS_DIR2_BLOCK_MAGIC;
++	} else { /* leaf/node format */
++		end_of_data = mp->m_dirblkfsbs << mp->m_sb.sb_blocklog;
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			wantmagic = XFS_DIR3_DATA_MAGIC;
++		else
++			wantmagic = XFS_DIR2_DATA_MAGIC;
 +	}
 +
-+	nentries = be16_to_cpu(leaf->hdr.count);
-+	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
-+			sizeof(xfs_attr_leaf_hdr_t) > XFS_LBSIZE(mp)) {
++	if (be32_to_cpu(datahdr->magic) != wantmagic) {
 +		if (show_warnings)
-+			print_warning("invalid attr count in inode %llu",
-+					(long long)cur_ino);
++			print_warning(
++		"invalid magic in dir inode %llu block %ld",
++					(long long)cur_ino, (long)offset);
 +		return;
 +	}
  
--		nentries = be16_to_cpu(leaf->hdr.count);
--		if (nentries * sizeof(xfs_attr_leaf_entry_t) +
--				sizeof(xfs_attr_leaf_hdr_t) > XFS_LBSIZE(mp)) {
-+	for (i = 0, entry = &leaf->entries[0]; i < nentries; i++, entry++) {
-+		if (be16_to_cpu(entry->nameidx) > XFS_LBSIZE(mp)) {
- 			if (show_warnings)
--				print_warning("invalid attr count in inode %llu",
-+				print_warning(
-+				"invalid attr nameidx in inode %llu",
- 						(long long)cur_ino);
+-		if (dir_data.bad_block)
 -			continue;
-+			break;
- 		}
++	dir_offset = xfs_dir3_data_entry_offset(datahdr);
++	ptr = block + dir_offset;
++	endptr = block + mp->m_sb.sb_blocksize;
+ 
+-		dir_offset = (dir_data.block_index << mp->m_sb.sb_blocklog) +
+-				dir_data.offset_to_entry;
 -
--		for (i = 0, entry = &leaf->entries[0]; i < nentries;
--				i++, entry++) {
--			if (be16_to_cpu(entry->nameidx) > XFS_LBSIZE(mp)) {
-+		if (entry->flags & XFS_ATTR_LOCAL) {
-+			local = xfs_attr3_leaf_name_local(leaf, i);
-+			if (local->namelen == 0) {
+-		ptr = endptr + dir_data.offset_to_entry;
+-		endptr += mp->m_sb.sb_blocksize;
+-
+-		while (ptr < endptr && dir_offset < dir_data.end_of_data) {
+-			xfs_dir2_data_entry_t	*dep;
+-			xfs_dir2_data_unused_t	*dup;
+-			int			length;
+-
+-			dup = (xfs_dir2_data_unused_t *)ptr;
+-
+-			if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-				int	length = be16_to_cpu(dup->length);
+-				if (dir_offset + length > dir_data.end_of_data ||
+-						length == 0 || (length &
+-						 (XFS_DIR2_DATA_ALIGN - 1))) {
+-					if (show_warnings)
+-						print_warning("invalid length "
+-							"for dir free space in "
+-							"inode %llu",
+-							(long long)cur_ino);
+-					dir_data.bad_block = 1;
+-					break;
+-				}
+-				if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+-						dir_offset) {
+-					dir_data.bad_block = 1;
+-					break;
+-				}
+-				dir_offset += length;
+-				ptr += length;
+-				if (dir_offset >= dir_data.end_of_data ||
+-						ptr >= endptr)
+-					break;
+-			}
++	while (ptr < endptr && dir_offset < end_of_data) {
++		xfs_dir2_data_entry_t	*dep;
++		xfs_dir2_data_unused_t	*dup;
++		int			length;
+ 
+-			dep = (xfs_dir2_data_entry_t *)ptr;
+-			length = xfs_dir3_data_entsize(mp, dep->namelen);
++		dup = (xfs_dir2_data_unused_t *)ptr;
+ 
+-			if (dir_offset + length > dir_data.end_of_data ||
+-					ptr + length > endptr) {
++		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++			int	length = be16_to_cpu(dup->length);
++			if (dir_offset + length > end_of_data ||
++			    !length || (length & (XFS_DIR2_DATA_ALIGN - 1))) {
  				if (show_warnings)
--					print_warning("invalid attr nameidx "
--							"in inode %llu",
--							(long long)cur_ino);
+-					print_warning("invalid length for "
+-						"dir entry name in inode %llu",
 +					print_warning(
-+				"zero length for attr name in inode %llu",
-+						(long long)cur_ino);
- 				break;
++			"invalid length for dir free space in inode %llu",
+ 						(long long)cur_ino);
+-				break;
+-			}
+-			if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
+-					dir_offset) {
+-				dir_data.bad_block = 1;
+-				break;
++				return;
  			}
--			if (entry->flags & XFS_ATTR_LOCAL) {
--				local = xfs_attr3_leaf_name_local(leaf, i);
--				if (local->namelen == 0) {
--					if (show_warnings)
--						print_warning("zero length for "
--							"attr name in inode %llu",
--							(long long)cur_ino);
--					break;
--				}
--				generate_obfuscated_name(0, local->namelen,
--					&local->nameval[0]);
--				memset(&local->nameval[local->namelen], 0,
--					be16_to_cpu(local->valuelen));
--			} else {
--				remote = xfs_attr3_leaf_name_remote(leaf, i);
--				if (remote->namelen == 0 ||
--						remote->valueblk == 0) {
--					if (show_warnings)
--						print_warning("invalid attr "
--							"entry in inode %llu",
--							(long long)cur_ino);
--					break;
--				}
--				generate_obfuscated_name(0, remote->namelen,
--					&remote->name[0]);
--				add_remote_vals(be32_to_cpu(remote->valueblk),
--					be32_to_cpu(remote->valuelen));
-+			generate_obfuscated_name(0, local->namelen,
-+				&local->nameval[0]);
-+			memset(&local->nameval[local->namelen], 0,
-+				be16_to_cpu(local->valuelen));
-+		} else {
-+			remote = xfs_attr3_leaf_name_remote(leaf, i);
-+			if (remote->namelen == 0 || remote->valueblk == 0) {
-+				if (show_warnings)
-+					print_warning(
-+				"invalid attr entry in inode %llu",
-+						(long long)cur_ino);
-+				break;
- 			}
-+			generate_obfuscated_name(0, remote->namelen,
-+						 &remote->name[0]);
-+			add_remote_vals(be32_to_cpu(remote->valueblk),
-+					be32_to_cpu(remote->valuelen));
+-			generate_obfuscated_name(be64_to_cpu(dep->inumber),
+-					dep->namelen, &dep->name[0]);
++			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
++					dir_offset)
++				return;
+ 			dir_offset += length;
+ 			ptr += length;
++			if (dir_offset >= end_of_data || ptr >= endptr)
++				return;
++		}
++
++		dep = (xfs_dir2_data_entry_t *)ptr;
++		length = xfs_dir3_data_entsize(mp, dep->namelen);
++
++		if (dir_offset + length > end_of_data ||
++		    ptr + length > endptr) {
++			if (show_warnings)
++				print_warning(
++			"invalid length for dir entry name in inode %llu",
++					(long long)cur_ino);
++			return;
  		}
+-		dir_data.offset_to_entry = dir_offset &
+-						(mp->m_sb.sb_blocksize - 1);
++		if (be16_to_cpu(*xfs_dir3_data_entry_tag_p(mp, dep)) !=
++				dir_offset)
++			return;
++		generate_obfuscated_name(be64_to_cpu(dep->inumber),
++					 dep->namelen, &dep->name[0]);
++		dir_offset += length;
++		ptr += length;
  	}
  }
-@@ -1369,7 +1367,9 @@ process_single_fsb_objects(
- 	typnm_t		btype,
- 	xfs_dfiloff_t	last)
- {
-+	char		*dp;
- 	int		ret = 0;
-+	int		i;
  
- 	push_cur();
- 	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
-@@ -1392,22 +1392,27 @@ process_single_fsb_objects(
- 		goto out_pop;
- 	}
+@@ -1399,8 +1359,8 @@ process_single_fsb_objects(
+ 			if (o >= mp->m_dirleafblk)
+ 				break;
  
--	switch (btype) {
--	case TYP_DIR2:
--		if (o >= mp->m_dirleafblk)
--			break;
-+	dp = iocur_top->data;
-+	for (i = 0; i < c; i++) {
-+		switch (btype) {
-+		case TYP_DIR2:
-+			if (o >= mp->m_dirleafblk)
-+				break;
+-			obfuscate_dir_data_blocks(dp, o, 1,
+-						  last == mp->m_dirblkfsbs);
++			obfuscate_dir_data_block(dp, o,
++						 last == mp->m_dirblkfsbs);
+ 			break;
+ 		case TYP_SYMLINK:
+ 			obfuscate_symlink_block(dp);
+@@ -1421,6 +1381,12 @@ out_pop:
+ 	return ret;
+ }
  
--		obfuscate_dir_data_blocks(iocur_top->data, o, c,
--					 last == mp->m_dirblkfsbs);
--		break;
--	case TYP_SYMLINK:
--		obfuscate_symlink_blocks(iocur_top->data, c);
--		break;
--	case TYP_ATTR:
--		obfuscate_attr_blocks(iocur_top->data, o, c);
--		break;
--	default:
--		break;
-+			obfuscate_dir_data_blocks(dp, o, 1,
-+						  last == mp->m_dirblkfsbs);
-+			break;
-+		case TYP_SYMLINK:
-+			obfuscate_symlink_block(dp);
-+			break;
-+		case TYP_ATTR:
-+			obfuscate_attr_block(dp, o);
-+			break;
-+		default:
-+			break;
-+		}
-+		o++;
-+		dp += mp->m_sb.sb_blocksize;
- 	}
- 	ret = write_buf(iocur_top);
- 
-@@ -1424,12 +1429,41 @@ process_multi_fsb_objects(
- 	typnm_t		btype,
- 	xfs_dfiloff_t	last)
- {
-+	int		ret = 0;
++/*
++ * Static map to aggregate multiple extents into a single directory block.
++ */
++static struct bbmap mfsb_map;
++static int mfsb_length;
 +
- 	if (btype != TYP_DIR2) {
- 		print_warning("bad type for multi-fsb object %d", btype);
+ static int
+ process_multi_fsb_objects(
+ 	xfs_dfiloff_t	o,
+@@ -1436,33 +1402,54 @@ process_multi_fsb_objects(
  		return -EINVAL;
  	}
  
--	return process_single_fsb_objects(o, s, c, btype, last);
-+	push_cur();
-+	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
-+			DB_RING_IGN, NULL);
+-	push_cur();
+-	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
+-			DB_RING_IGN, NULL);
++	while (c > 0) {
++		unsigned int	bm_len;
+ 
+-	if (!iocur_top->data) {
+-		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
+-		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
++		if (mfsb_length + c >= mp->m_dirblkfsbs) {
++			bm_len = mp->m_dirblkfsbs - mfsb_length;
++			mfsb_length = 0;
++		} else {
++			mfsb_length += c;
++			bm_len = c;
++		}
+ 
+-		print_warning("cannot read %s block %u/%u (%llu)",
+-				typtab[btype].name, agno, agbno, s);
+-		if (stop_on_read_error)
+-			ret = -EIO;
+-		goto out_pop;
++		mfsb_map.b[mfsb_map.nmaps].bm_bn = XFS_FSB_TO_DADDR(mp, s);
++		mfsb_map.b[mfsb_map.nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
++		mfsb_map.nmaps++;
+ 
+-	}
++		if (mfsb_length == 0) {
++			push_cur();
++			set_cur(&typtab[btype], 0, 0, DB_RING_IGN, &mfsb_map);
++			if (!iocur_top->data) {
++				xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
++				xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
+ 
+-	if (dont_obfuscate || o >= mp->m_dirleafblk) {
+-		ret = write_buf(iocur_top);
+-		goto out_pop;
+-	}
++				print_warning("cannot read %s block %u/%u (%llu)",
++						typtab[btype].name, agno, agbno, s);
++				if (stop_on_read_error)
++					ret = -1;
++				goto out_pop;
+ 
+-	obfuscate_dir_data_blocks(iocur_top->data, o, c,
+-				 last == mp->m_dirblkfsbs);
+-	ret = write_buf(iocur_top);
++			}
+ 
++			if (dont_obfuscate || o >= mp->m_dirleafblk) {
++				ret = write_buf(iocur_top);
++				goto out_pop;
++			}
 +
-+	if (!iocur_top->data) {
-+		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
-+		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
-+
-+		print_warning("cannot read %s block %u/%u (%llu)",
-+				typtab[btype].name, agno, agbno, s);
-+		if (stop_on_read_error)
-+			ret = -EIO;
-+		goto out_pop;
-+
++			obfuscate_dir_data_block(iocur_top->data, o,
++						  last == mp->m_dirblkfsbs);
++			ret = write_buf(iocur_top);
+ out_pop:
+-	pop_cur();
++			pop_cur();
++			mfsb_map.nmaps = 0;
++			if (ret)
++				break;
++		}
++		c -= bm_len;
++		s += bm_len;
 +	}
 +
-+	if (dont_obfuscate || o >= mp->m_dirleafblk) {
-+		ret = write_buf(iocur_top);
-+		goto out_pop;
-+	}
-+
-+	obfuscate_dir_data_blocks(iocur_top->data, o, c,
-+				 last == mp->m_dirblkfsbs);
-+	ret = write_buf(iocur_top);
-+
-+out_pop:
-+	pop_cur();
-+	return ret;
+ 	return ret;
  }
  
- /* inode copy routines */
+@@ -1750,7 +1737,6 @@ process_inode(
+ 	/* copy appropriate data fork metadata */
+ 	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+ 		case S_IFDIR:
+-			memset(&dir_data, 0, sizeof(dir_data));
+ 			success = process_inode_data(dip, TYP_DIR2);
+ 			break;
+ 		case S_IFLNK:
 -- 
 1.8.4.rc3
 
