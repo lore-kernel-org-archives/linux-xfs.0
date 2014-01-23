@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 938627F51
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:27:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27A5BAC007
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:27:44 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id BC6A67F98
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:42:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 675F1AC003
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:42:00 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ACnsztg05McJCKy9 for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 13:27:40 -0800 (PST)
-Date: Fri, 24 Jan 2014 08:27:35 +1100
+	ZNTvgsm6fCXck0ag for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 13:41:58 -0800 (PST)
+Date: Fri, 24 Jan 2014 08:41:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] libxfs: remove map from libxfs_readbufr_map
-Message-ID: <20140123212735.GW13997@dastard>
+Subject: Re: [PATCH 3/3] repair: fix discontiguous directory block support
+Message-ID: <20140123214155.GX13997@dastard>
 References: <1390375033-10483-1-git-send-email-david@fromorbit.com>
-	<1390375033-10483-3-git-send-email-david@fromorbit.com>
-	<52E14E1E.8040605@redhat.com>
+	<1390375033-10483-4-git-send-email-david@fromorbit.com>
+	<52E14E2A.7000902@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52E14E1E.8040605@redhat.com>
+In-Reply-To: <52E14E2A.7000902@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,67 +34,132 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 23, 2014 at 12:15:10PM -0500, Brian Foster wrote:
+On Thu, Jan 23, 2014 at 12:15:22PM -0500, Brian Foster wrote:
 > On 01/22/2014 02:17 AM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The map passed in to libxfs_readbufr_map is used to check the buffer
-> > matches the map. However, the repair readahead code has no map it
-> > can use to validate the buffer it set up previously, so just get rid
-> > of the map being passed in because it serves no useful purpose.
-> > 
+> > @@ -167,6 +167,14 @@ pf_read_bmbt_reclist(
+> >  	xfs_bmbt_irec_t		irec;
+> >  	xfs_dfilblks_t		cp = 0;		/* prev count */
+> >  	xfs_dfiloff_t		op = 0;		/* prev offset */
+> > +#define MAP_ARRAY_SZ 4
+> > +	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
+> > +	struct xfs_buf_map	*map = map_array;
+> > +	int			max_extents = MAP_ARRAY_SZ;
+> > +	int			nmaps = 0;;
+> > +	unsigned int		len = 0;
+> > +	int			ret = 0;
+> > +
 > 
-> The code looks fine, effectively just removing some assert code, but I'm
-> not following the reasoning. I'm probably missing some context. Is the
-> justification that no callers of libxfs_readbufr_map() will actually
-> pass a map, or that the checking is not useful (redundant)?
+> So if I understand correctly, the idea here is to now batch extent reads
+> into buffers of the directory block size, quieting the messages
+> described in the commit log.
 
-Lets start with "redundant".
+Yes.
 
-The libxfs_readbuf_map() call passes in the map it just passed to
-libxfs_getbuf_map() - there's no real point to testing it as we've
-got bigger problems if libxfs_getbuf_map() doesn't build the buffer
-correctly from the map.
-
-The call in db/io.c passes in the same map that was
-passed to libxfs_readbuf_map(), which means it's checking the buffer
-multiple times against the same map. Again, redundant because
-the only thing that has a reference to the buffer is the db IO code.
-
-Now API consistency:
-
-libxfs_writebufr() has no requirement for a map for checking,
-and takes no parameters other than the buffer and trusts the buffer
-to be set up correctly. It treats both contiguous and discontiguous
-buffers the same way.
-
-libxfs_readbufr() takes a blkno/len because there are use cases
-for partial buffer reads which we don't have for discontiguous
-buffers.
-
-Hence we don't need to pass a map to libxfs_readbuf_map()
-for any functional reason. And seeing as libxfs_writebufr() already
-trusts libxfs_getbuf_map() to set up a discontiguous buffer
-correctly, I don't see why the read path should be any different.
-
-Now for correctness:
-
-The ASSERT code is not built in by default. It's pretty
-obvious it has never been used because:
-
-> > +libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
-> >  {
-> >  	int	fd = libxfs_device_to_fd(btp->dev);
-> >  	int	error = 0;
-> >  	char	*buf;
-> >  	int	i;
+> > @@ -188,18 +196,60 @@ pf_read_bmbt_reclist(
+> >  		cp = irec.br_blockcount;
 > >  
-> > -	ASSERT(BBTOB(len) <= bp->b_bcount);
+> >  		while (irec.br_blockcount) {
+> > -			unsigned int	len;
+> > +			unsigned int	bm_len;
+> >  
+> >  			pftrace("queuing dir extent in AG %d", args->agno);
+> >  
+> > -			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
+> > -					mp->m_dirblkfsbs : irec.br_blockcount;
+> > -			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
+> > -			irec.br_blockcount -= len;
+> > -			irec.br_startblock += len;
+> > +			if (len + irec.br_blockcount >= mp->m_dirblkfsbs) {
+> > +				bm_len = mp->m_dirblkfsbs - len;
+> > +				len = 0;
+> > +			} else {
+> > +				len += irec.br_blockcount;
+> > +				bm_len = irec.br_blockcount;
+> > +			}
+> 
+> So len represents the total length of the maps attached to the current
+> array...
+> 
+> > +
+> > +			map[nmaps].bm_bn = XFS_FSB_TO_DADDR(mp,
+> > +							irec.br_startblock);
+> > +			map[nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
+> > +			nmaps++;
+> > +
+> > +			if (len == 0) {
+> > +				pf_queue_io(args, map, nmaps, B_DIR_META);
+> > +				nmaps = 0;
+> > +			}
+> 
+> Kind of a nit, but this looks a little weird to me. The logic would be a
+> bit more clear with something like:
+> 
+> 	if (len + irec.br_blockcount > mp->dirblkfsbs)
+> 		bm_len = mp->m_dirblkfsbs - len;
+> 	else
+> 		bm_len = irec.br_blockcount;
+> 	len += bm_len;
+> 
+> 	...
+> 
+> 	if (len == mp->dirblkfsbs) {
+> 		len = 0;
+> 		pf_queue_io(...)
+> 	}
 
-It's obviously broken.
+Yeah, that's more obvious and consistent with other code. Will fix.
 
-In summary, the map being passed in is unused, untested, redundant
-and broken....
+> ... which then raises the question of what happens if the directory
+> we're reading doesn't end with len == mp->dirblkfsbs? If so, perhaps not
+> a performance regression, but it looks like we wouldn't queue the last
+> I/O. Some of the directory code suggests that we fail if we don't alloc
+> the dirblkfsbs block count, so maybe this doesn't happen.
+
+That's not an issue the prefetch code needs to handle. Prefetching
+is just about walking the extent tree and pulling the necessary
+buffers into the cache prior to scanning them. Other code is
+responsible for checking that the block count/extent map is actually
+valid.
+
+Also, if we don't prefetch a block, then when it is required later
+it will be read directly. Hence not doing IO here is does not affect
+the behaviour of xfs_repair at all.
+
+> > +/*
+> > + * pf_batch_read must be called with the lock locked.
+> > + */
+> >  static void
+> >  pf_batch_read(
+> >  	prefetch_args_t		*args,
+> > @@ -426,8 +495,15 @@ pf_batch_read(
+> >  			max_fsbno = fsbno + pf_max_fsbs;
+> >  		}
+> >  		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
+> > -			if (which != PF_META_ONLY ||
+> > -			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
+> > +			/*
+> > +			 * Handle discontiguous buffers outside the seek
+> > +			 * optimised IO loop below.
+> > +			 */
+> > +			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
+> > +				pf_read_discontig(args, bplist[num]);
+> > +				bplist[num] = NULL;
+> 
+> So we pull these out from the processing below (which appears to want to
+> issue largish reads comprised of multiple buffers, via bplist). Thanks
+> for the comment above pf_read_discontig().
+
+Yes, that's right.
+
+FYI, the concept behind the prefetch algorithm is to optimise the IO
+if possible by doing a single large IO and cherry-picking the
+metadata out of it rather than lots of small semi-random IOs. i.e.
+use excess storage bandwidth instead of seeks to read dense
+regionsof metadata. With dense enough metadata and multi-threading
+this optimisation allows xfs_repair to pull in hundreds of megabytes
+of metadata every second for processing and as such can keep
+multiple CPUs busy even on seek-limited storage. The code is pretty
+gnarly, though....
 
 Cheers,
 
