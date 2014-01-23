@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 494D57F63
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 17:21:38 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E30EB7F96
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 17:21:39 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 29386304048
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:21:38 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 67E57AC006
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:21:36 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cHxakMPj3miE7b62 for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 15:21:36 -0800 (PST)
+	hiESTMss6qe81Oui for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 15:21:34 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1W6TaT-0006Pu-KE
+	(envelope-from <dave@fromorbit.com>) id 1W6TaT-0006Pt-Jf
 	for xfs@oss.sgi.com; Fri, 24 Jan 2014 10:21:29 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1W6TaT-0008C0-JX
+	(envelope-from <dave@disappointment.disaster>) id 1W6TaT-0008Bv-Iu
 	for xfs@oss.sgi.com; Fri, 24 Jan 2014 10:21:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] libxfs: remove map from libxfs_readbufr_map
-Date: Fri, 24 Jan 2014 10:21:23 +1100
-Message-Id: <1390519284-31440-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] libxfs: add a flags field to libxfs_getbuf_map
+Date: Fri, 24 Jan 2014 10:21:22 +1100
+Message-Id: <1390519284-31440-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1390519284-31440-1-git-send-email-david@fromorbit.com>
 References: <1390519284-31440-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,89 +39,128 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The map passed in to libxfs_readbufr_map is used to check the buffer
-matches the map. However, the repair readahead code has no map it
-can use to validate the buffer it set up previously, so just get rid
-of the map being passed in because it serves no useful purpose.
+It will be needed to make the repair prefetch code aware of compound
+buffers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- db/io.c          |  4 +---
- include/libxfs.h |  3 +--
- libxfs/rdwr.c    | 12 ++----------
- 3 files changed, 4 insertions(+), 15 deletions(-)
+ include/libxfs.h |  8 ++++----
+ libxfs/rdwr.c    | 15 +++++++++------
+ libxfs/trans.c   |  4 ++--
+ 3 files changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/db/io.c b/db/io.c
-index 123214d..d29816c 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -449,9 +449,7 @@ write_cur_bbs(void)
- 
- 
- 	/* re-read buffer from disk */
--	ret = libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp,
--				  iocur_top->bbmap->b, iocur_top->bbmap->nmaps,
--				  0);
-+	ret = libxfs_readbufr_map(mp->m_ddev_targp, iocur_top->bp, 0);
- 	if (ret != 0)
- 		dbprintf(_("read error: %s\n"), strerror(ret));
- }
 diff --git a/include/libxfs.h b/include/libxfs.h
-index 2872410..bb0369f 100644
+index 4bf331c..2872410 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -448,8 +448,7 @@ extern void	libxfs_putbufr(xfs_buf_t *);
- extern int	libxfs_writebuf_int(xfs_buf_t *, int);
- extern int	libxfs_writebufr(struct xfs_buf *);
- extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, xfs_buf_t *, int, int);
--extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *,
--				    struct xfs_buf_map *, int, int);
-+extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *, int);
- 
- extern int libxfs_bhash_size;
- 
+@@ -392,9 +392,9 @@ extern struct cache_operations	libxfs_bcache_operations;
+ #define libxfs_getbuf(dev, daddr, len) \
+ 	libxfs_trace_getbuf(__FUNCTION__, __FILE__, __LINE__, \
+ 			    (dev), (daddr), (len))
+-#define libxfs_getbuf_map(dev, map, nmaps) \
++#define libxfs_getbuf_map(dev, map, nmaps, flags) \
+ 	libxfs_trace_getbuf_map(__FUNCTION__, __FILE__, __LINE__, \
+-			    (dev), (map), (nmaps))
++			    (dev), (map), (nmaps), (flags))
+ #define libxfs_getbuf_flags(dev, daddr, len, flags) \
+ 	libxfs_trace_getbuf_flags(__FUNCTION__, __FILE__, __LINE__, \
+ 			    (dev), (daddr), (len), (flags))
+@@ -412,7 +412,7 @@ extern int	libxfs_trace_writebuf(const char *, const char *, int,
+ extern xfs_buf_t *libxfs_trace_getbuf(const char *, const char *, int,
+ 			struct xfs_buftarg *, xfs_daddr_t, int);
+ extern xfs_buf_t *libxfs_trace_getbuf_map(const char *, const char *, int,
+-			struct xfs_buftarg *, struct xfs_buf_map *, int);
++			struct xfs_buftarg *, struct xfs_buf_map *, int, int);
+ extern xfs_buf_t *libxfs_trace_getbuf_flags(const char *, const char *, int,
+ 			struct xfs_buftarg *, xfs_daddr_t, int, unsigned int);
+ extern void	libxfs_trace_putbuf (const char *, const char *, int,
+@@ -427,7 +427,7 @@ extern xfs_buf_t *libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+ extern int	libxfs_writebuf(xfs_buf_t *, int);
+ extern xfs_buf_t *libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
+ extern xfs_buf_t *libxfs_getbuf_map(struct xfs_buftarg *,
+-			struct xfs_buf_map *, int);
++			struct xfs_buf_map *, int, int);
+ extern xfs_buf_t *libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t,
+ 			int, unsigned int);
+ extern void	libxfs_putbuf (xfs_buf_t *);
 diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index bf92788..ac7739f 100644
+index 0219a08..bf92788 100644
 --- a/libxfs/rdwr.c
 +++ b/libxfs/rdwr.c
-@@ -727,27 +727,19 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+@@ -203,7 +203,8 @@ xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+ 				int, int, const struct xfs_buf_ops *);
+ int		libxfs_writebuf(xfs_buf_t *, int);
+ xfs_buf_t	*libxfs_getbuf(struct xfs_buftarg *, xfs_daddr_t, int);
+-xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *, int);
++xfs_buf_t	*libxfs_getbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
++				int, int);
+ xfs_buf_t	*libxfs_getbuf_flags(struct xfs_buftarg *, xfs_daddr_t, int,
+ 				unsigned int);
+ void		libxfs_putbuf (xfs_buf_t *);
+@@ -255,9 +256,10 @@ libxfs_trace_getbuf(const char *func, const char *file, int line,
+ 
+ xfs_buf_t *
+ libxfs_trace_getbuf_map(const char *func, const char *file, int line,
+-		struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
++		struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
++		int flags)
+ {
+-	xfs_buf_t	*bp = libxfs_getbuf_map(btp, map, nmaps);
++	xfs_buf_t	*bp = libxfs_getbuf_map(btp, map, nmaps, flags);
+ 	__add_trace(bp, func, file, line);
+ 	return bp;
+ }
+@@ -582,7 +584,8 @@ libxfs_getbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len)
  }
  
- int
--libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp,
--		    struct xfs_buf_map *map, int nmaps, int flags)
-+libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
+ struct xfs_buf *
+-libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
++libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
++		  int nmaps, int flags)
  {
- 	int	fd = libxfs_device_to_fd(btp->dev);
- 	int	error = 0;
- 	char	*buf;
- 	int	i;
+ 	struct xfs_bufkey key = {0};
+ 	int i;
+@@ -595,7 +598,7 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps)
+ 	key.map = map;
+ 	key.nmaps = nmaps;
  
--	ASSERT(BBTOB(len) <= bp->b_bcount);
--
--	ASSERT(bp->b_nmaps == nmaps);
--
- 	fd = libxfs_device_to_fd(btp->dev);
- 	buf = bp->b_addr;
- 	for (i = 0; i < bp->b_nmaps; i++) {
- 		off64_t	offset = LIBXFS_BBTOOFF64(bp->b_map[i].bm_bn);
- 		int len = BBTOB(bp->b_map[i].bm_len);
+-	return __cache_lookup(&key, 0);
++	return __cache_lookup(&key, flags);
+ }
  
--		ASSERT(bp->b_map[i].bm_bn == map[i].bm_bn);
--		ASSERT(bp->b_map[i].bm_len == map[i].bm_len);
--
- 		error = __read_buf(fd, buf, len, offset, flags);
- 		if (error) {
- 			bp->b_error = error;
-@@ -787,7 +779,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
- 	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+ void
+@@ -775,7 +778,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+ 		return libxfs_readbuf(btp, map[0].bm_bn, map[0].bm_len,
+ 					flags, ops);
+ 
+-	bp = libxfs_getbuf_map(btp, map, nmaps);
++	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
+ 	if (!bp)
+ 		return NULL;
+ 
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 6a05673..6c9d202 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -511,7 +511,7 @@ libxfs_trans_get_buf_map(
+ 	xfs_buf_log_item_t	*bip;
+ 
+ 	if (tp == NULL)
+-		return libxfs_getbuf_map(btp, map, nmaps);
++		return libxfs_getbuf_map(btp, map, nmaps, 0);
+ 
+ 	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
+ 	if (bp != NULL) {
+@@ -522,7 +522,7 @@ libxfs_trans_get_buf_map(
  		return bp;
+ 	}
  
--	error = libxfs_readbufr_map(btp, bp, map, nmaps, flags);
-+	error = libxfs_readbufr_map(btp, bp, flags);
- 	if (!error) {
- 		bp->b_flags |= LIBXFS_B_UPTODATE;
- 		if (bp->b_ops)
+-	bp = libxfs_getbuf_map(btp, map, nmaps);
++	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
+ 	if (bp == NULL)
+ 		return NULL;
+ #ifdef XACT_DEBUG
 -- 
 1.8.4.rc3
 
