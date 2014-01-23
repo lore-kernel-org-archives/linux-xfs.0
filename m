@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 067547F8A
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:18:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EB26F8F8059
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 11:18:33 -0800 (PST)
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
-	[67.231.153.30]) by cuda.sgi.com with ESMTP id u4CKTQzaI3ezrVpI
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 11:18:25 -0800 (PST)
-Message-ID: <52E16AE6.7010202@fb.com>
-Date: Thu, 23 Jan 2014 14:17:58 -0500
-From: Josef Bacik <jbacik@fb.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 938627F51
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:27:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 27A5BAC007
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:27:44 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	ACnsztg05McJCKy9 for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 13:27:40 -0800 (PST)
+Date: Fri, 24 Jan 2014 08:27:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] libxfs: remove map from libxfs_readbufr_map
+Message-ID: <20140123212735.GW13997@dastard>
+References: <1390375033-10483-1-git-send-email-david@fromorbit.com>
+	<1390375033-10483-3-git-send-email-david@fromorbit.com>
+	<52E14E1E.8040605@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: add test for btrfs incremental send infinite
-	loop issue
-References: <1390348610-8098-1-git-send-email-fdmanana@gmail.com>
-	<1390385119-6998-1-git-send-email-fdmanana@gmail.com>
-In-Reply-To: <1390385119-6998-1-git-send-email-fdmanana@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <52E14E1E.8040605@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,225 +27,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Filipe David Borba Manana <fdmanana@gmail.com>, xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
+On Thu, Jan 23, 2014 at 12:15:10PM -0500, Brian Foster wrote:
+> On 01/22/2014 02:17 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The map passed in to libxfs_readbufr_map is used to check the buffer
+> > matches the map. However, the repair readahead code has no map it
+> > can use to validate the buffer it set up previously, so just get rid
+> > of the map being passed in because it serves no useful purpose.
+> > 
+> 
+> The code looks fine, effectively just removing some assert code, but I'm
+> not following the reasoning. I'm probably missing some context. Is the
+> justification that no callers of libxfs_readbufr_map() will actually
+> pass a map, or that the checking is not useful (redundant)?
 
-On 01/22/2014 05:05 AM, Filipe David Borba Manana wrote:
-> Regression test for btrfs' incremental send feature:
->
-> 1) Create several nested directories;
->
-> 2) Create a read only snapshot;
->
-> 3) Change the parentship of some of the deepest directories in a reverse
->     way, so that parents become children and children become parents;
->
-> 4) Create another read only snapshot and use it for an incremental send
->     relative to the first snapshot.
->
-> At step 4 btrfs' send entered an infinite loop, increasing the memory it
-> used while building path strings until a krealloc was unable to allocate
-> more memory, which caused a warning dump in dmesg.
->
-> The following linux kernel patch fixes this issue.
->
->     Btrfs: fix infinite path build loops in incremental send
->     (https://patchwork.kernel.org/patch/3522361/)
->
-> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
-> ---
->
-> V2: Updated test to trigger one more code path in the corresponding
->      btrfs linux kernel patch that fixes this issue.
->
->   tests/btrfs/030     |  144 +++++++++++++++++++++++++++++++++++++++++++++++++++
->   tests/btrfs/030.out |    9 ++++
->   tests/btrfs/group   |    1 +
->   3 files changed, 154 insertions(+)
->   create mode 100755 tests/btrfs/030
->   create mode 100644 tests/btrfs/030.out
->
-> diff --git a/tests/btrfs/030 b/tests/btrfs/030
-> new file mode 100755
-> index 0000000..5e1b4fc
-> --- /dev/null
-> +++ b/tests/btrfs/030
-> @@ -0,0 +1,144 @@
-> +#! /bin/bash
-> +# FS QA Test No. btrfs/030
-> +#
-> +# Regression test for btrfs' incremental send feature:
-> +#
-> +# 1) Create several nested directories;
-> +# 2) Create a read only snapshot;
-> +# 3) Change the parentship of some of the deepest directories in a reverse
-> +#    way, so that parents become children and children become parents;
-> +# 4) Create another read only snapshot and use it for an incremental send
-> +#    relative to the first snapshot.
-> +#
-> +# At step 4 btrfs' send entered an infinite loop, increasing the memory it
-> +# used while building path strings until a krealloc was unable to allocate
-> +# more memory, which caused a warning dump in dmesg.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=`mktemp -d`
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    rm -fr $tmp
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +_require_scratch
-> +_need_to_be_root
-> +
-> +FSSUM_PROG=$here/src/fssum
-> +[ -x $FSSUM_PROG ] || _notrun "fssum not built"
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +
-> +mkdir -p $SCRATCH_MNT/a/b/c
-> +echo "hello" > $SCRATCH_MNT/a/b/c/file.txt
-> +mkdir $SCRATCH_MNT/a/b/c/d
-> +mkdir $SCRATCH_MNT/a/b/c2
-> +mkdir $SCRATCH_MNT/a/b/www
-> +mkdir -p $SCRATCH_MNT/a/b/c3/x/y
-> +
-> +# Directory tree looks like:
-> +#
-> +# .                         (ino 256)
-> +# |-- a/                    (ino 257)
-> +#     |-- b/                (ino 258)
-> +#         |-- c/            (ino 259)
-> +#         |   |-- file.txt  (ino 260)
-> +#         |   |-- d/        (ino 261)
-> +#         |
-> +#         |-- c2/           (ino 262)
-> +#         |-- www/          (ino 263)
-> +#         |
-> +#         |-- c3/           (ino 264)
-> +#             |-- x/        (ino 265)
-> +#                 |-- y/    (ino 266)
-> +
-> +$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1 | \
-> +    _filter_scratch
-> +
-> +echo " world" >> $SCRATCH_MNT/a/b/c/file.txt
-> +mv $SCRATCH_MNT/a/b/c/d $SCRATCH_MNT/a/b/c2/d2
-> +mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/a/b/c2/d2/cc
-> +mv $SCRATCH_MNT/a/b/c3/x/y $SCRATCH_MNT/a/b/c2/y2
-> +mv $SCRATCH_MNT/a/b/c3/x $SCRATCH_MNT/a/b/c2/y2/x2
-> +mv $SCRATCH_MNT/a/b/c3 $SCRATCH_MNT/a/b/c2/y2/x2/Z
-> +mv $SCRATCH_MNT/a/b/www $SCRATCH_MNT/a/b/c2/y2/x2/WWW
-> +ln $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2/Z/file_link.txt
-> +mv $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2
-> +
-> +# Directory tree now looks like:
-> +#
-> +# .                                         (ino 256)
-> +# |-- a/                                    (ino 257)
-> +#     |-- b/                                (ino 258)
-> +#         |-- c2/                           (ino 262)
-> +#             |-- d2/                       (ino 261)
-> +#             |   |-- cc/                   (ino 259)
-> +#             |        |-- file.txt         (ino 260)
-> +#             |-- y2/                       (ino 266)
-> +#                 |-- x2/                   (ino 265)
-> +#                     |-- WWW/              (ino 263)
-> +#                     |-- Z/                (ino 264)
-> +#                         |-- file_link.txt
-> +
-> +$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2 | \
-> +    _filter_scratch
-> +
-> +$FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
-> +$FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
-> +    $SCRATCH_MNT/mysnap2
-> +
-> +$BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap 2>&1 | _filter_scratch
-> +$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
-> +    -f $tmp/2.snap 2>&1 | _filter_scratch
-> +
-> +_scratch_unmount
-> +_check_btrfs_filesystem $SCRATCH_DEV
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
-> +$FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
-> +$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
-> +$FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
-> +
+Lets start with "redundant".
 
-You should do || _fail for the fssum stuff, and maybe redirect the 
-output to $seqres.full.
+The libxfs_readbuf_map() call passes in the map it just passed to
+libxfs_getbuf_map() - there's no real point to testing it as we've
+got bigger problems if libxfs_getbuf_map() doesn't build the buffer
+correctly from the map.
 
-> +_scratch_unmount
-> +_check_btrfs_filesystem $SCRATCH_DEV
-> +
-> +status=0
-> +exit
-> diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
-> new file mode 100644
-> index 0000000..2999f8c
-> --- /dev/null
-> +++ b/tests/btrfs/030.out
-> @@ -0,0 +1,9 @@
-> +QA output created by 030
-> +Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap1'
-> +Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap2'
-> +At subvol SCRATCH_MNT/mysnap1
-> +At subvol SCRATCH_MNT/mysnap2
-> +At subvol mysnap1
-> +OK
-> +At snapshot mysnap2
-> +OK
+The call in db/io.c passes in the same map that was
+passed to libxfs_readbuf_map(), which means it's checking the buffer
+multiple times against the same map. Again, redundant because
+the only thing that has a reference to the buffer is the db IO code.
 
-So this depends on the output of btrfs send not changing ever, which 
-historically is not a good assumption to make.  It would be better if 
-you do like the other send tests and just test for failure like the 
-other send tests do.  Thanks,
+Now API consistency:
 
-Josef
+libxfs_writebufr() has no requirement for a map for checking,
+and takes no parameters other than the buffer and trusts the buffer
+to be set up correctly. It treats both contiguous and discontiguous
+buffers the same way.
+
+libxfs_readbufr() takes a blkno/len because there are use cases
+for partial buffer reads which we don't have for discontiguous
+buffers.
+
+Hence we don't need to pass a map to libxfs_readbuf_map()
+for any functional reason. And seeing as libxfs_writebufr() already
+trusts libxfs_getbuf_map() to set up a discontiguous buffer
+correctly, I don't see why the read path should be any different.
+
+Now for correctness:
+
+The ASSERT code is not built in by default. It's pretty
+obvious it has never been used because:
+
+> > +libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
+> >  {
+> >  	int	fd = libxfs_device_to_fd(btp->dev);
+> >  	int	error = 0;
+> >  	char	*buf;
+> >  	int	i;
+> >  
+> > -	ASSERT(BBTOB(len) <= bp->b_bcount);
+
+It's obviously broken.
+
+In summary, the map being passed in is unused, untested, redundant
+and broken....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
