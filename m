@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6B2FC7F5D
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:10 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 25DE67F5D
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5E37D304064
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 02:24:07 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96459AC002
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 02:24:10 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9XDvxNLbPEbc32Op for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 02:24:05 -0800 (PST)
+	HnCkw4BikiHOlrYX for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 02:24:08 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fD-9Q
+	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fE-A0
 	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004VQ-8W
+	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004VV-94
 	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/5] metadump: support writing discontiguous io cursors
-Date: Thu, 23 Jan 2014 21:23:52 +1100
-Message-Id: <1390472635-17225-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/5] metadump: separate single block objects from multiblock
+	objects
+Date: Thu, 23 Jan 2014 21:23:53 +1100
+Message-Id: <1390472635-17225-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,85 +40,164 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To handle discontiguous buffers, metadump needs to be able to handle
-io cursrors that use discontiguous buffer mappings. Factor
-write_buf() to extract the data copy routine and use that to
-implement support for both flat and discontiguous buffer maps.
+When trying to dump objects, we have to treat multi-block objects
+differently to single block objects. Separate out the code paths for
+single block vs multi-block objects so we can add a separate path
+for multi-block objects.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/metadump.c | 45 ++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 36 insertions(+), 9 deletions(-)
+ db/metadump.c | 119 ++++++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 82 insertions(+), 37 deletions(-)
 
 diff --git a/db/metadump.c b/db/metadump.c
-index 4104fcb..a8bc297 100644
+index a8bc297..9fc08ed 100644
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -166,12 +166,34 @@ write_index(void)
- 	return 0;
+@@ -1361,9 +1361,79 @@ obfuscate_attr_blocks(
+ 	}
  }
  
-+/*
-+ * Return 0 for success, -errno for failure.
-+ */
+-/* inode copy routines */
 +static int
-+write_buf_segment(
-+	char		*data,
-+	__int64_t	off,
-+	int		len)
++process_single_fsb_objects(
++	xfs_dfiloff_t	o,
++	xfs_dfsbno_t	s,
++	xfs_dfilblks_t	c,
++	typnm_t		btype,
++	xfs_dfiloff_t	last)
 +{
-+	int		i;
-+	int		ret;
++	int		ret = 0;
 +
-+	for (i = 0; i < len; i++, off++, data += BBSIZE) {
-+		block_index[cur_index] = cpu_to_be64(off);
-+		memcpy(&block_buffer[cur_index << BBSHIFT], data, BBSIZE);
-+		if (++cur_index == num_indicies) {
-+			ret = write_index();
-+			if (ret)
-+				return -EIO;
-+		}
++	push_cur();
++	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
++			DB_RING_IGN, NULL);
++
++	if (!iocur_top->data) {
++		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
++		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
++
++		print_warning("cannot read %s block %u/%u (%llu)",
++				typtab[btype].name, agno, agbno, s);
++		if (stop_on_read_error)
++			ret = -EIO;
++		goto out_pop;
++
 +	}
-+	return 0;
++
++	if (dont_obfuscate) {
++		ret = write_buf(iocur_top);
++		goto out_pop;
++	}
++
++	switch (btype) {
++	case TYP_DIR2:
++		if (o >= mp->m_dirleafblk)
++			break;
++
++		obfuscate_dir_data_blocks(iocur_top->data, o, c,
++					 last == mp->m_dirblkfsbs);
++		break;
++	case TYP_SYMLINK:
++		obfuscate_symlink_blocks(iocur_top->data, c);
++		break;
++	case TYP_ATTR:
++		obfuscate_attr_blocks(iocur_top->data, o, c);
++		break;
++	default:
++		break;
++	}
++	ret = write_buf(iocur_top);
++
++out_pop:
++	pop_cur();
++	return ret;
++}
+ 
+ static int
++process_multi_fsb_objects(
++	xfs_dfiloff_t	o,
++	xfs_dfsbno_t	s,
++	xfs_dfilblks_t	c,
++	typnm_t		btype,
++	xfs_dfiloff_t	last)
++{
++	if (btype != TYP_DIR2) {
++		print_warning("bad type for multi-fsb object %d", btype);
++		return -EINVAL;
++	}
++
++	return process_single_fsb_objects(o, s, c, btype, last);
 +}
 +
- static int
- write_buf(
- 	iocur_t		*buf)
- {
--	char		*data;
--	__int64_t	off;
- 	int		i;
- 	int		ret;
++/* inode copy routines */
++static int
+ process_bmbt_reclist(
+ 	xfs_bmbt_rec_t 		*rp,
+ 	int 			numrecs,
+@@ -1377,6 +1447,7 @@ process_bmbt_reclist(
+ 	xfs_dfiloff_t		last;
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
++	int			error;
  
-@@ -191,15 +213,20 @@ write_buf(
+ 	if (btype == TYP_DATA)
+ 		return 1;
+@@ -1438,44 +1509,18 @@ process_bmbt_reclist(
+ 			break;
  		}
+ 
+-		push_cur();
+-		set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
+-				DB_RING_IGN, NULL);
+-		if (iocur_top->data == NULL) {
+-			print_warning("cannot read %s block %u/%u (%llu)",
+-					typtab[btype].name, agno, agbno, s);
+-			if (stop_on_read_error) {
+-				pop_cur();
+-				return 0;
+-			}
+-		} else {
+-			if (!dont_obfuscate)
+-			    switch (btype) {
+-				case TYP_DIR2:
+-					if (o < mp->m_dirleafblk)
+-						obfuscate_dir_data_blocks(
+-							iocur_top->data, o, c,
+-							last == mp->m_dirblkfsbs);
+-					break;
+-
+-				case TYP_SYMLINK:
+-					obfuscate_symlink_blocks(
+-						iocur_top->data, c);
+-					break;
+-
+-				case TYP_ATTR:
+-					obfuscate_attr_blocks(iocur_top->data,
+-						o, c);
+-					break;
+-
+-				default: ;
+-			    }
+-			if (write_buf(iocur_top)) {
+-				pop_cur();
++		/* single filesystem block objects are trivial to handle */
++		if (btype != TYP_DIR2 || mp->m_dirblkfsbs == 1) {
++			error = process_single_fsb_objects(o, s, c, btype, last);
++			if (error)
+ 				return 0;
+-			}
++			continue;
+ 		}
+-		pop_cur();
++
++		/* multi-extent directory blocks */
++		error = process_multi_fsb_objects(o, s, c, btype, last);
++		if (error)
++			return 0;
  	}
  
--	for (i = 0, off = buf->bb, data = buf->data;
--			i < buf->blen;
--			i++, off++, data += BBSIZE) {
--		block_index[cur_index] = cpu_to_be64(off);
--		memcpy(&block_buffer[cur_index << BBSHIFT], data, BBSIZE);
--		if (++cur_index == num_indicies) {
--			ret = write_index();
-+	/* handle discontiguous buffers */
-+	if (!buf->bbmap) {
-+		ret = write_buf_segment(buf->data, buf->bb, buf->blen);
-+		if (ret)
-+			return ret;
-+	} else {
-+		int	len = 0;
-+		for (i = 0; i < buf->bbmap->nmaps; i++) {
-+			ret = write_buf_segment(buf->data + BBTOB(len),
-+						buf->bbmap->b[i].bm_bn,
-+						buf->bbmap->b[i].bm_len);
- 			if (ret)
- 				return ret;
-+			len += buf->bbmap->b[i].bm_len;
- 		}
- 	}
- 	return seenint() ? -EINTR : 0;
+ 	return 1;
 -- 
 1.8.4.rc3
 
