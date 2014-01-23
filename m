@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5D65B29E05
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 17:32:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E7E60AC005
-	for <xfs@oss.sgi.com>; Wed, 22 Jan 2014 15:32:15 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	j2bA2J4CIU0tV6Dm for <xfs@oss.sgi.com>;
-	Wed, 22 Jan 2014 15:32:12 -0800 (PST)
-Date: Thu, 23 Jan 2014 10:31:41 +1100
+	by oss.sgi.com (Postfix) with ESMTP id 7F20B7F5D
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EFA40AC002
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 02:24:08 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	DW1PHfVjmaV5x806 for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 02:24:06 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fC-8s
+	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004VL-7v
+	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Weird XFS Corruption Error
-Message-ID: <20140122233141.GI27606@dastard>
-References: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
+Subject: [PATCH 1/5] metadump: sanitise write_buf/index return values
+Date: Thu, 23 Jan 2014 21:23:51 +1100
+Message-Id: <1390472635-17225-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1390472635-17225-1-git-send-email-david@fromorbit.com>
+References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,127 +30,171 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sascha Askani <saskani@inovex.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gV2VkLCBKYW4gMjIsIDIwMTQgYXQgMDU6MDk6MTBQTSArMDEwMCwgU2FzY2hhIEFza2FuaSB3
-cm90ZToKPiBIaSBldmVyeWJvZHksCj4gCj4gV2UgZXhwZXJpZW5jZWQgYSB3ZWlyZCBYRlMgY29y
-cnVwdGlvbiB5ZXN0ZXJkYXkgYW5kIEkgZGVzcGVyYXRlbHkgdHJ5aW5nIHRvIGZpbmQgb3V0IHdo
-YXQgd2FzIGhhcHBlbmluZy4KPiBGaXJzdCwgdGhlIHNldHVwOgo+IAo+ICogUHJvTGlhbnQgREwz
-ODBwIEdlbjgKPiAqIDI1NkdCIFJBTQo+ICogSFAgU21hcnRBcnJheSBQNDIwaSBDb250cm9sbGVy
-Cj4gKiogMSBHQiBCQldDCj4gKiogRmlybXdhcmUgVmVyc2lvbiA0LjY4Cj4gKiogMjB4IE1LMDEw
-MEdDVFlVIDEwMEdCIFNTRCBEcml2ZXMKPiAqKiBSYWlkIDErMAo+ICogTFZNCj4gKiBVYnVudHUg
-MTIuMTAgTFRTCj4gKiBLZXJuZWwgMy4xMS4wLTE1LWdlbmVyaWMgIzIzfnByZWNpc2UxLVVidW50
-dQo+IAo+IGZzdGFiIEVudHJ5OiAKPiAvZGV2L3ZnMDAvb3B0X215c3FsYmFja3VwICAgL29wdC9t
-eXNxbGJhY2t1cCAgICAgICAgICAgIHhmcyAgICAgbm9iYXJyaWVyLG5vYXRpbWUsbm9kaXJhdGlt
-ZSxsb2didWZzPTgsbG9nYnNpemU9MjU2ayAgICAgICAwIDIKPiAKCj4gV2UgY3JlYXRlZCBhIDEy
-MEdCIExWIG1vdW50ZWQgb24gL29wdC9teXNxbGJhY2t1cCB3aXRoIHdoaWNoCj4gKG9idmlvdXNs
-eSkgdGVtcG9yYXJpbHkgaG9zdHMgb3VyIE1hcmlhREIgQmFja3VwcyB1bnRpbCB0aGV5IGFyZQo+
-IHRyYW5zZmVycmVkIHRvIHRhcGUuIFdlIHVzZSBteWx2bWJhY2t1cAo+IChodHRwOi8vd3d3Lmxl
-bnpnLm5ldC9teWx2bWJhY2t1cC8pIHRvIGNyZWF0ZSBhIChhcHByb3guIDU1R0IpCj4gdGFyLmd6
-IGZpbGUgY29udGFpbmluZyB0aGUgZHVtcC4gV2hpbGUgdGVzdGluZywgSSBjcmVhdGVkIGEKPiBo
-YXJkbGluayBmb3IgMiBGaWxlcyBpbiBhIHN1YmRpciAo4oCec2FmZeKAnCkgYW5kIGZvcmdvdCB0
-aGVtCj4gZm9yIGEgZGF5IHdoaWxlIHRoZSDigJ5vcmlnaW5hbOKAnCBmaWxlIHdhcyBkZWxldGVk
-IGFuZAo+IHJlcGxhY2VkIGJ5IG5leHQgZGF54oCZcyBiYWNrdXAuCj4gCj4gV2hlbiBJIHRyaWVk
-IGNsZWFuaW5nIHVwIHRoZSBubyBsb25nZXIgbmVlZGVkIGZpbGVzLCBJIGVuY291bnRlcmVkIHRo
-ZSBmb2xsb3dpbmc6Cj4gCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCj4gbWVAaHNvaS1ndHMzLWRlMDI6L29wdC9teXNxbGJhY2t1cCQg
-c3VkbyBybSAtcmYgc2FmZS8KPiBzdWRvIHJtIC1yZiBzYWZlLwo+IFtzdWRvXSBwYXNzd29yZCBm
-b3Igc2Fza2FuaToKPiBybTogY2Fubm90IHJlbW92ZSBgc2FmZS9kYWlseV9zbmFwc2hvdC50YXIu
-Z3oubWQ1JzogSW5wdXQvb3V0cHV0IGVycm9yCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gCj4gZG1lc2cgdG9sZCBtZToKPiAtLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiBb
-OTY0MTk5LjEzODg0OF0gWEZTIChkbS04KTogSW50ZXJuYWwgZXJyb3IgeGZzX2JtYnRfcmVhZF92
-ZXJpZnkgYXQgbGluZSA3ODkgb2YgZmlsZSAvYnVpbGQvYnVpbGRkL2xpbnV4LWx0cy1zYXVjeS0z
-LjExLjAvZnMveGZzL3hmc19ibWFwX2J0cmVlLmMuICBDYWxsZXIgMHhmZmZmZmZmZmEwMTY0NDk1
-Cj4gWzk2NDE5OS4xMzg4NDhdCj4gWzk2NDE5OS4xMzg4NTBdIENQVTogMSBQSUQ6IDM2OTQgQ29t
-bToga3dvcmtlci8xOjFIIFRhaW50ZWQ6IEdGICAgICAgICAgICAgMy4xMS4wLTE1LWdlbmVyaWMg
-IzIzfnByZWNpc2UxLVVidW50dQo+IFs5NjQxOTkuMTM4ODUxXSBIYXJkd2FyZSBuYW1lOiBIUCBQ
-cm9MaWFudCBETDM4MHAgR2VuOCwgQklPUyBQNzAgMDkvMTgvMjAxMwo+IFs5NjQxOTkuMTM4ODc0
-XSBXb3JrcXVldWU6IHhmc2xvZ2QgeGZzX2J1Zl9pb2RvbmVfd29yayBbeGZzXQo+IFs5NjQxOTku
-MTM4ODc2XSAgMDAwMDAwMDAwMDAwMDAwMSBmZmZmODgxYzZiZTZmZDE4IGZmZmZmZmZmODE3M2Jj
-MGUgMDAwMDAwMDAwMDAwNDM2NAo+IFs5NjQxOTkuMTM4ODc4XSAgZmZmZjg4M2Y5MDYxYzAwMCBm
-ZmZmODgxYzZiZTZmZDM4IGZmZmZmZmZmYTAxNjYyOWYgZmZmZmZmZmZhMDE2NDQ5NQo+IFs5NjQx
-OTkuMTM4ODc5XSAgMDAwMDAwMDAwMDAwMDAwMSBmZmZmODgxYzZiZTZmZDc4IGZmZmZmZmZmYTAx
-NjYzMGUgZmZmZjg4MWM2YmU2ZmRhOAo+IFs5NjQxOTkuMTM4ODgwXSBDYWxsIFRyYWNlOgo+IFs5
-NjQxOTkuMTM4ODg2XSAgWzxmZmZmZmZmZjgxNzNiYzBlPl0gZHVtcF9zdGFjaysweDQ2LzB4NTgK
-PiBbOTY0MTk5LjEzODkwNl0gIFs8ZmZmZmZmZmZhMDE2NjI5Zj5dIHhmc19lcnJvcl9yZXBvcnQr
-MHgzZi8weDUwIFt4ZnNdCj4gWzk2NDE5OS4xMzg5MTNdICBbPGZmZmZmZmZmYTAxNjQ0OTU+XSA/
-IHhmc19idWZfaW9kb25lX3dvcmsrMHg5NS8weGMwIFt4ZnNdCj4gWzk2NDE5OS4xMzg5MjFdICBb
-PGZmZmZmZmZmYTAxNjYzMGU+XSB4ZnNfY29ycnVwdGlvbl9lcnJvcisweDVlLzB4OTAgW3hmc10K
-PiBbOTY0MTk5LjEzODkyOF0gIFs8ZmZmZmZmZmZhMDE2NDQ5NT5dID8geGZzX2J1Zl9pb2RvbmVf
-d29yaysweDk1LzB4YzAgW3hmc10KPiBbOTY0MTk5LjEzODkzOV0gIFs8ZmZmZmZmZmZhMDE5NDRk
-Nj5dIHhmc19ibWJ0X3JlYWRfdmVyaWZ5KzB4NzYvMHhmMCBbeGZzXQo+IFs5NjQxOTkuMTM4OTQ2
-XSAgWzxmZmZmZmZmZmEwMTY0NDk1Pl0gPyB4ZnNfYnVmX2lvZG9uZV93b3JrKzB4OTUvMHhjMCBb
-eGZzXQo+IFs5NjQxOTkuMTM4OTQ5XSAgWzxmZmZmZmZmZjgxMDk1YmIyPl0gPyBmaW5pc2hfdGFz
-a19zd2l0Y2grMHg1Mi8weGYwCj4gWzk2NDE5OS4xMzg5NjldICBbPGZmZmZmZmZmYTAxNjQ0OTU+
-XSB4ZnNfYnVmX2lvZG9uZV93b3JrKzB4OTUvMHhjMCBbeGZzXQo+IFs5NjQxOTkuMTM4OTcyXSAg
-WzxmZmZmZmZmZjgxMDgxMDYwPl0gcHJvY2Vzc19vbmVfd29yaysweDE3MC8weDRhMAo+IFs5NjQx
-OTkuMTM4OTczXSAgWzxmZmZmZmZmZjgxMDgyMTIxPl0gd29ya2VyX3RocmVhZCsweDEyMS8weDM5
-MAo+IFs5NjQxOTkuMTM4OTc1XSAgWzxmZmZmZmZmZjgxMDgyMDAwPl0gPyBtYW5hZ2Vfd29ya2Vy
-cy5pc3JhLjIxKzB4MTcwLzB4MTcwCj4gWzk2NDE5OS4xMzg5NzddICBbPGZmZmZmZmZmODEwODhm
-ZTA+XSBrdGhyZWFkKzB4YzAvMHhkMAo+IFs5NjQxOTkuMTM4OTc5XSAgWzxmZmZmZmZmZjgxMDg4
-ZjIwPl0gPyBmbHVzaF9rdGhyZWFkX3dvcmtlcisweGIwLzB4YjAKPiBbOTY0MTk5LjEzODk4MV0g
-IFs8ZmZmZmZmZmY4MTc1MDhhYz5dIHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwCj4gWzk2NDE5OS4x
-Mzg5ODNdICBbPGZmZmZmZmZmODEwODhmMjA+XSA/IGZsdXNoX2t0aHJlYWRfd29ya2VyKzB4YjAv
-MHhiMAo+IFs5NjQxOTkuMTM4OTg0XSBYRlMgKGRtLTgpOiBDb3JydXB0aW9uIGRldGVjdGVkLiBV
-bm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgo+IFs5NjQxOTkuMTM5MDE0XSBYRlMgKGRtLTgpOiBt
-ZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4MWYwICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIp
-IGVycm9yIDExNyBudW1ibGtzIDgKPiBbOTY0MTk5LjEzOTAxNl0gWEZTIChkbS04KTogeGZzX2Rv
-X2ZvcmNlX3NodXRkb3duKDB4MSkgY2FsbGVkIGZyb20gbGluZSAzNjcgb2YgZmlsZSAvYnVpbGQv
-YnVpbGRkL2xpbnV4LWx0cy1zYXVjeS0zLjExLjAvZnMveGZzL3hmc190cmFuc19idWYuYy4gIFJl
-dHVybiBhZGRyZXNzID0gMHhmZmZmZmZmZmEwMWNhZGJjCgpTbywgYW4gaW5vZGUgZXh0ZW50IG1h
-cCBidHJlZSBibG9jayBmYWlsZWQgdmVyaWZpY2F0aW9uIGZvciBzb21lCnJlYXNvbi4gSG1tbSAt
-IHRoZXJlIHNob3VsZCBoYXZlIGJlZW4gNCBsaW5lcyBvZiBoZXhkdW1wIG91dHB1dAp0aGVyZSBh
-cyB3ZWxsLiBDYW4geW91IHBvc3QgdGhhdCBhcyB3ZWxsPyBPciBoYXZlIHlvdSBtb2RpZmllZAov
-cHJvYy9zeXMvZnMveGZzL2Vycm9yX2xldmVsIHRvIGhhdmUgYSB2YWx1ZSBvZiAwIHNvIGl0IGlz
-IG5vdAplbWl0dGVkPwoKQW5kIG5vdCB0aGUgZGlzayBhZGRyZXNzIG9mIHRoZSBidWZmZXI/IDB4
-MWYwIC0gaXQncyByaWdodCBuZWFyIHRoZQpzdGFydCBvZiB0aGUgdm9sdW1lLgoKCj4gWzk2NDE5
-OS4xMzkzMjRdIFhGUyAoZG0tOCk6IEkvTyBFcnJvciBEZXRlY3RlZC4gU2h1dHRpbmcgZG93biBm
-aWxlc3lzdGVtCj4gWzk2NDE5OS4xMzkzMjVdIFhGUyAoZG0tOCk6IFBsZWFzZSB1bW91bnQgdGhl
-IGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiBbOTY0MjEyLjM2NzMwMF0g
-WEZTIChkbS04KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiBbOTY0MjQyLjQ3
-NzI4M10gWEZTIChkbS04KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiAtLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAK
-PiBBZnRlciB0aGF0LCBJIHRyaWVkIHRoZSBmb2xsb3dpbmcgKGluIG9yZGVyKToKCkRvIHlvdSBo
-YXZlIHRoZSBvdXRwdXQgYW5kIGxvZyBtZXNzYWdlcyBmcm9tIHRoZXNlIHN0ZXBzPyBUaGF0IHdv
-dWxkCmJlIHJlYWx5IGhlbHBmdWwgaW4gY29uZmlybWluZyBhbnkgZGlhZ25vc2lzLgoKPiAxLiB4
-ZnNfcmVwYWlyLCB3aGljaCBkaWQgbm90IGZpbmQgdGhlIHN1cGVyYmxvY2sgYW5kIHN0YXJ0ZWQg
-c2Nhbm5pbmcgdGhlIExWLCBhZnRlciBmaW5kaW5nIHRoZSBzZWNvbmRhcnkgc3VwZXJibG9jaywg
-aXQgdG9sZCBtZSB0aGVyZeKAmXMgc3RpbGwgc29tZXRoaW5nIGluIHRoZSBsb2csIHNvIEkKCk9o
-LCB3b3cuIE9rLCBpZiB0aGUgcHJpbWFyeSBzdXBlcmJsb2NrIGlzIGdvbmUsIGFsb25nIHdpdGgg
-bWV0YWRhdGEKaW4gdGhlIGZpcnN0IGZldyBibG9ja3Mgb2YgdGhlIGZpbGVzeXN0ZW0sIHRoZW4g
-c29tZXRoaW5nIGhhcwpvdmVyd3JpdHRlbiB0aGUgc3RhcnQgb2YgdGhlIGJsb2NrIGRldmljZSB0
-aGUgZmlsZXN5c3RlbSBpcyBvbi4KCj4gMi4gbW91bnRlZCB0aGUgZmlsZXN5c3RlbSwgd2hpY2gg
-Z2F2ZSBtZSBhIOKAnlN0cnVjdHVyZSBuZWVkcyBjbGVhbmluZ+KAnCBhZnRlciBhIGNvdXBsZSBv
-ZiBzZWNvbmRzCj4gMy4gdHJpZWQgbW91bnRpbmcgYWdhaW4gZm9yIGdvb2QgbWVhc3VyZSwgc2Ft
-ZSBlcnJvciDigJ5TdHJ1Y3R1cmUgbmVlZHMgY2xlYW5pbmfigJwKClJpZ2h0IC0gdGhlIGtlcm5l
-bCBjYW4ndCByZWFkIGEgdmFsaWQgc3VwZXJsb2NrLCBlaXRoZXIuCgo+IDQuIHhmc19yZXBhaXIg
-LUwgd2hpY2ggcmVwYWlyZWQgZXZlcnl0aGluZywgYW5kIGVmZmVjdGl2ZWx5IGNsZWFuZWQgbXkg
-RmlsZXN5c3RlbSBpbiB0aGUgcHJvY2Vzcy4KClJlY3JlYXRpbmcgdGhlIHByaW1hcnkgc3VwZXJi
-bG9jayBmcm9tIHRoZSBiYWNrdXAgc3VwZXJibG9ja3MKCj4gNS4gbW91bnQgdGhlIGZpbGVzeXN0
-ZW0gdG8gZmluZCBpdCBlbXB0eS4KCkJlY2F1c2UgdGhlIHJvb3QgaW5vZGUgd2FzIGxvc3QsIGFs
-b25nIHdpdGggQUdJIDAgYW5kIHNvIGFsbAp0aGUgaW5vZGVzIGluIHRoZSBmaXJzdCBBRyB3ZXJl
-IGNvbXBsZXRlbHkgbG9zdCBhcyBhbGwgdGhlIHJlZHVuZGFudAppbmZvcm1hdGlvbiB0aGF0IGlz
-IHVzZWQgdG8gZmluZCB0aGVtIHdhcyB0cmFzaGVkLgoKPiBTaW5jZSB0aGVuLCBJ4oCZbSBkZXNw
-ZXJhdGVseSB0cnlpbmcgdG8gcmVwcm9kdWNlIHRoZSBwcm9ibGVtLAo+IGJ1dCB1bmZvcnR1bmF0
-ZWx5IHRvIG5vIGF2YWlsLiBDYW4gc29tZWJvZHkgZ2l2ZSBzb21lIGluc2lnaHQgb24KPiB0aGUg
-ZXJyb3JzIEkgZW5jb3VudGVyZWQuIEkgaGF2ZSBwcmV2aW91c2x5IG9wZXJhdGVkIDQsNVBCIHdv
-cnRoCj4gb2YgWEZTIEZpbGVzeXN0ZW1zIGZvciAzIHllYXJzIGFuZCBuZXZlciBnb3QgYW4gZXJy
-b3Igc2ltaWxhciB0bwo+IHRoaXMuCgpUaGlzIGRvZXNuJ3QgbG9vayBsaWtlIGFuIFhGUyBwcm9i
-bGVtLiBUaGlzIGxvb2tzIGxpa2Ugc29tZXRoaW5nCm92ZXJ3cm90ZSB0aGUgc3RhcnQgb2YgdGhl
-IGJsb2NrIGRldmljZSB1bmRlcm5lYXRoIHRoZSBYRlMKZmlsZXN5c3RlbS4gSSd2ZSBzZWVuIHRo
-aXMgaGFwcGVuIGJlZm9yZSB3aXRoIGZhdWx0eSBTU0RzLCBJJ3ZlIGFsc28Kc2VlbiBpdCB3aGVu
-IHNvbWVvbmUgaXNzdWVkIGEgZGlzY2FyZCB0byB0aGUgd3JvbmcgbG9jYXRpb24gb24gYQpibG9j
-ayBkZXZpY2UgKHlvdSBkaWRuJ3QgcnVuIGZzdHJpbSBvbiB0aGUgYmxvY2sgZGV2aWNlLCBkaWQg
-eW91PyksCmFuZCBJJ3ZlIHNlZW4gZmF1bHR5IFJBSUQgY29udHJvbGxlcnMgY2F1c2Ugc2ltaWxh
-ciBpc3N1ZXMuIFNvIHJpZ2h0Cm5vdyBJJ2QgYmUgbG9va2luZyBhdCBsb2dzIGFuZCBzbyBvbiBm
-b3IgaGFyZHdhcmUvc3RvcmFnZSBpc3N1ZXMKdGhhdCBvY2N1cnJlZCBpbiB0aGUgcGFzdCBjb3Vw
-bGUgb2YgZGF5cyBhcyBwb3RlbnRpYWwgY2F1c2VzLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUg
-Q2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+Write_buf/write_index use confusing boolean values for return,
+meaning that it's hard to tell what the correct error return is
+supposed to be.  Convert them to return zero on success or a
+negative errno otherwise so that it's clear what the error case is.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ db/metadump.c | 34 +++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/db/metadump.c b/db/metadump.c
+index 117dc42..4104fcb 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -145,6 +145,8 @@ print_progress(const char *fmt, ...)
+  * even if the dump is exactly aligned, the last index will be full of
+  * zeros. If the last index entry is non-zero, the dump is incomplete.
+  * Correspondingly, the last chunk will have a count < num_indicies.
++ *
++ * Return 0 for success, -1 for failure.
+  */
+ 
+ static int
+@@ -156,12 +158,12 @@ write_index(void)
+ 	metablock->mb_count = cpu_to_be16(cur_index);
+ 	if (fwrite(metablock, (cur_index + 1) << BBSHIFT, 1, outf) != 1) {
+ 		print_warning("error writing to file: %s", strerror(errno));
+-		return 0;
++		return -errno;
+ 	}
+ 
+ 	memset(block_index, 0, num_indicies * sizeof(__be64));
+ 	cur_index = 0;
+-	return 1;
++	return 0;
+ }
+ 
+ static int
+@@ -171,6 +173,7 @@ write_buf(
+ 	char		*data;
+ 	__int64_t	off;
+ 	int		i;
++	int		ret;
+ 
+ 	/*
+ 	 * Run the write verifier to recalculate the buffer CRCs and check
+@@ -184,7 +187,7 @@ write_buf(
+ 	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+ 				__func__, (long long)buf->bp->b_bn,
+ 				buf->bp->b_bcount);
+-			return buf->bp->b_error;
++			return -buf->bp->b_error;
+ 		}
+ 	}
+ 
+@@ -194,11 +197,12 @@ write_buf(
+ 		block_index[cur_index] = cpu_to_be64(off);
+ 		memcpy(&block_buffer[cur_index << BBSHIFT], data, BBSIZE);
+ 		if (++cur_index == num_indicies) {
+-			if (!write_index())
+-				return 0;
++			ret = write_index();
++			if (ret)
++				return ret;
+ 		}
+ 	}
+-	return !seenint();
++	return seenint() ? -EINTR : 0;
+ }
+ 
+ 
+@@ -227,7 +231,7 @@ scan_btree(
+ 		rval = !stop_on_read_error;
+ 		goto pop_out;
+ 	}
+-	if (!write_buf(iocur_top))
++	if (write_buf(iocur_top))
+ 		goto pop_out;
+ 
+ 	if (!(*func)(iocur_top->data, agno, agbno, level - 1, btype, arg))
+@@ -1439,7 +1443,7 @@ process_bmbt_reclist(
+ 
+ 				default: ;
+ 			    }
+-			if (!write_buf(iocur_top)) {
++			if (write_buf(iocur_top)) {
+ 				pop_cur();
+ 				return 0;
+ 			}
+@@ -1748,7 +1752,7 @@ copy_inode_chunk(
+ 		xfs_dinode_calc_crc(mp, dip);
+ 	}
+ skip_processing:
+-	if (!write_buf(iocur_top))
++	if (write_buf(iocur_top))
+ 		goto pop_out;
+ 
+ 	inodes_copied += XFS_INODES_PER_CHUNK;
+@@ -1866,7 +1870,7 @@ scan_ag(
+ 		if (stop_on_read_error)
+ 			goto pop_out;
+ 	} else {
+-		if (!write_buf(iocur_top))
++		if (write_buf(iocur_top))
+ 			goto pop_out;
+ 	}
+ 
+@@ -1881,7 +1885,7 @@ scan_ag(
+ 		if (stop_on_read_error)
+ 			goto pop_out;
+ 	} else {
+-		if (!write_buf(iocur_top))
++		if (write_buf(iocur_top))
+ 			goto pop_out;
+ 	}
+ 
+@@ -1896,7 +1900,7 @@ scan_ag(
+ 		if (stop_on_read_error)
+ 			goto pop_out;
+ 	} else {
+-		if (!write_buf(iocur_top))
++		if (write_buf(iocur_top))
+ 			goto pop_out;
+ 	}
+ 
+@@ -1910,7 +1914,7 @@ scan_ag(
+ 		if (stop_on_read_error)
+ 			goto pop_out;
+ 	} else {
+-		if (!write_buf(iocur_top))
++		if (write_buf(iocur_top))
+ 			goto pop_out;
+ 	}
+ 
+@@ -2015,7 +2019,7 @@ copy_log(void)
+ 		print_warning("cannot read log");
+ 		return !stop_on_read_error;
+ 	}
+-	return write_buf(iocur_top);
++	return !write_buf(iocur_top);
+ }
+ 
+ static int
+@@ -2121,7 +2125,7 @@ metadump_f(
+ 
+ 	/* write the remaining index */
+ 	if (!exitcode)
+-		exitcode = !write_index();
++		exitcode = write_index() < 0;
+ 
+ 	if (progress_since_warning)
+ 		fputc('\n', (outf == stdout) ? stderr : stdout);
+-- 
+1.8.4.rc3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
