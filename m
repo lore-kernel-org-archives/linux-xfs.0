@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9C7477F9D
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 17:21:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C0C58F8040
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:21:38 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	dfZFaJuvda3J7Mrp for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 15:21:36 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1W6TaT-0006Pv-Kw
-	for xfs@oss.sgi.com; Fri, 24 Jan 2014 10:21:29 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1W6TaT-0008C5-K9
-	for xfs@oss.sgi.com; Fri, 24 Jan 2014 10:21:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] repair: fix discontiguous directory block support
-Date: Fri, 24 Jan 2014 10:21:24 +1100
-Message-Id: <1390519284-31440-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390519284-31440-1-git-send-email-david@fromorbit.com>
-References: <1390519284-31440-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8A5AB29E0F
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 17:38:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 65A1E8F8037
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:38:30 -0800 (PST)
+Received: from mail-we0-f180.google.com (mail-we0-f180.google.com
+	[74.125.82.180]) by cuda.sgi.com with ESMTP id Kc5zpl5GxUJCWz5V
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:38:29 -0800 (PST)
+Received: by mail-we0-f180.google.com with SMTP id q59so1958319wes.39
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:38:27 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH v3] xfstests: add test for btrfs incremental send infinite
+	loop issue
+Date: Thu, 23 Jan 2014 23:38:00 +0000
+Message-Id: <1390520280-19282-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1390348610-8098-1-git-send-email-fdmanana@gmail.com>
+References: <1390348610-8098-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,238 +32,217 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Regression test for btrfs' incremental send feature:
 
-xfs/291 tests fragmented multi-block directories, and xfs_repair
-throws lots of lookup badness errors in phase 3:
+1) Create several nested directories;
 
-        - agno = 1
-7fa3d2758740: Badness in key lookup (length)
-bp=(bno 0x1e040, len 4096 bytes) key=(bno 0x1e040, len 16384 bytes)
-        - agno = 2
-7fa3d2758740: Badness in key lookup (length)
-bp=(bno 0x2d0e8, len 4096 bytes) key=(bno 0x2d0e8, len 16384 bytes)
-7fa3d2758740: Badness in key lookup (length)
-bp=(bno 0x2d068, len 4096 bytes) key=(bno 0x2d068, len 16384 bytes)
-        - agno = 3
-7fa3d2758740: Badness in key lookup (length)
-bp=(bno 0x39130, len 4096 bytes) key=(bno 0x39130, len 16384 bytes)
-7fa3d2758740: Badness in key lookup (length)
-bp=(bno 0x391b0, len 4096 bytes) key=(bno 0x391b0, len 16384 bytes)
-7fa3d2758740: Badness in key lookup (length)
+2) Create a read only snapshot;
 
-This is because it is trying to read a directory buffer in full
-(16k), but is finding a single 4k block in the cache instead.
+3) Change the parentship of some of the deepest directories in a reverse
+   way, so that parents become children and children become parents;
 
-The opposite is happening in phase 6 - phase 6 is trying to read 4k
-buffers but is finding a 16k buffer there instead.
+4) Create another read only snapshot and use it for an incremental send
+   relative to the first snapshot.
 
-The problem is caused by the fact that directory buffers can be
-represented as compound buffers or as individual buffers depending
-on the code reading the directory blocks. The main problem is that
-the IO prefetch code doesn't understand compound buffers, so teach
-it about compound buffers to make the problem go away.
+At step 4 btrfs' send entered an infinite loop, increasing the memory it
+used while building path strings until a krealloc was unable to allocate
+more memory, which caused a warning dump in dmesg.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+The following linux kernel patch fixes this issue.
+
+   Btrfs: fix infinite path build loops in incremental send
+   (https://patchwork.kernel.org/patch/3522361/)
+
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 ---
- repair/prefetch.c | 120 ++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 99 insertions(+), 21 deletions(-)
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index d3491da..984beda 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -105,11 +105,12 @@ pf_start_io_workers(
- static void
- pf_queue_io(
- 	prefetch_args_t		*args,
--	xfs_fsblock_t		fsbno,
--	int			blen,
-+	struct xfs_buf_map	*map,
-+	int			nmaps,
- 	int			flag)
- {
--	xfs_buf_t		*bp;
-+	struct xfs_buf		*bp;
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, map[0].bm_bn);
- 
- 	/*
- 	 * Never block on a buffer lock here, given that the actual repair
-@@ -117,8 +118,7 @@ pf_queue_io(
- 	 * the lock holder is either reading it from disk himself or
- 	 * completely overwriting it this behaviour is perfectly fine.
- 	 */
--	bp = libxfs_getbuf_flags(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
--			XFS_FSB_TO_BB(mp, blen), LIBXFS_GETBUF_TRYLOCK);
-+	bp = libxfs_getbuf_map(mp->m_dev, map, nmaps, LIBXFS_GETBUF_TRYLOCK);
- 	if (!bp)
- 		return;
- 
-@@ -167,6 +167,14 @@ pf_read_bmbt_reclist(
- 	xfs_bmbt_irec_t		irec;
- 	xfs_dfilblks_t		cp = 0;		/* prev count */
- 	xfs_dfiloff_t		op = 0;		/* prev offset */
-+#define MAP_ARRAY_SZ 4
-+	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
-+	struct xfs_buf_map	*map = map_array;
-+	int			max_extents = MAP_ARRAY_SZ;
-+	int			nmaps = 0;;
-+	unsigned int		len = 0;
-+	int			ret = 0;
+V2: Updated test to trigger one more code path in the corresponding
+    btrfs linux kernel patch that fixes this issue.
+V3: Addressed Josef's comments, make the test not depend on 'btrfs send'
+    and fssum output, as it changed often in the past and can change again.
+
+ tests/btrfs/030     |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/030.out |    1 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 151 insertions(+)
+ create mode 100755 tests/btrfs/030
+ create mode 100644 tests/btrfs/030.out
+
+diff --git a/tests/btrfs/030 b/tests/btrfs/030
+new file mode 100755
+index 0000000..6678ed8
+--- /dev/null
++++ b/tests/btrfs/030
+@@ -0,0 +1,149 @@
++#! /bin/bash
++# FS QA Test No. btrfs/030
++#
++# Regression test for btrfs' incremental send feature:
++#
++# 1) Create several nested directories;
++# 2) Create a read only snapshot;
++# 3) Change the parentship of some of the deepest directories in a reverse
++#    way, so that parents become children and children become parents;
++# 4) Create another read only snapshot and use it for an incremental send
++#    relative to the first snapshot.
++#
++# At step 4 btrfs' send entered an infinite loop, increasing the memory it
++# used while building path strings until a krealloc was unable to allocate
++# more memory, which caused a warning dump in dmesg.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
- 
- 	for (i = 0; i < numrecs; i++) {
- 		libxfs_bmbt_disk_get_all(rp + i, &irec);
-@@ -174,11 +182,11 @@ pf_read_bmbt_reclist(
- 		if (((i > 0) && (op + cp > irec.br_startoff)) ||
- 				(irec.br_blockcount == 0) ||
- 				(irec.br_startoff >= fs_max_file_offset))
--			return 0;
-+			goto out_free;
- 
- 		if (!verify_dfsbno(mp, irec.br_startblock) || !verify_dfsbno(mp,
- 				irec.br_startblock + irec.br_blockcount - 1))
--			return 0;
-+			goto out_free;
- 
- 		if (!args->dirs_only && ((irec.br_startoff +
- 				irec.br_blockcount) >= mp->m_dirfreeblk))
-@@ -188,18 +196,59 @@ pf_read_bmbt_reclist(
- 		cp = irec.br_blockcount;
- 
- 		while (irec.br_blockcount) {
--			unsigned int	len;
-+			unsigned int	bm_len;
- 
- 			pftrace("queuing dir extent in AG %d", args->agno);
- 
--			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
--					mp->m_dirblkfsbs : irec.br_blockcount;
--			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
--			irec.br_blockcount -= len;
--			irec.br_startblock += len;
-+			if (len + irec.br_blockcount >= mp->m_dirblkfsbs)
-+				bm_len = mp->m_dirblkfsbs - len;
-+			else
-+				bm_len = irec.br_blockcount;
-+			len += bm_len;
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+			map[nmaps].bm_bn = XFS_FSB_TO_DADDR(mp,
-+							irec.br_startblock);
-+			map[nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
-+			nmaps++;
++here=`pwd`
++tmp=`mktemp -d`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+			if (len == mp->m_dirblkfsbs) {
-+				pf_queue_io(args, map, nmaps, B_DIR_META);
-+				len = 0;
-+				nmaps = 0;
-+			}
-+
-+			irec.br_blockcount -= bm_len;
-+			irec.br_startblock += bm_len;
-+
-+			/*
-+			 * Handle very fragmented dir2 blocks with dynamically
-+			 * allocated buffer maps.
-+			 */
-+			if (nmaps >= max_extents) {
-+				struct xfs_buf_map *old_map = NULL;
-+
-+				if (map == map_array) {
-+					old_map = map;
-+					map = NULL;
-+				}
-+				max_extents *= 2;
-+				map = realloc(map, max_extents * sizeof(*map));
-+				if (map == NULL) {
-+					do_error(
-+			_("couldn't malloc dir2 buffer list\n"));
-+					exit(1);
-+				}
-+				if (old_map)
-+					memcpy(map, old_map, sizeof(map_array));
-+			}
-+
- 		}
- 	}
--	return 1;
-+	ret = 1;
-+out_free:
-+	if (map != map_array)
-+		free(map);
-+	return ret;
- }
- 
- /*
-@@ -395,9 +444,28 @@ pf_read_inode_dirs(
- }
- 
- /*
-- * pf_batch_read must be called with the lock locked.
-+ * Discontiguous buffers require multiple IOs to fill, so we can't use any
-+ * linearising, hole filling algorithms on them to avoid seeks. Just remove them
-+ * for the prefetch queue and read them straight into the cache and release
-+ * them.
-  */
-+static void
-+pf_read_discontig(
-+	struct prefetch_args	*args,
-+	struct xfs_buf		*bp)
++_cleanup()
 +{
-+	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
-+		do_error(_("prefetch corruption\n"));
-+
-+	pthread_mutex_unlock(&args->lock);
-+	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
-+	libxfs_putbuf(bp);
-+	pthread_mutex_lock(&args->lock);
++    rm -fr $tmp
 +}
- 
-+/*
-+ * pf_batch_read must be called with the lock locked.
-+ */
- static void
- pf_batch_read(
- 	prefetch_args_t		*args,
-@@ -426,8 +494,15 @@ pf_batch_read(
- 			max_fsbno = fsbno + pf_max_fsbs;
- 		}
- 		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
--			if (which != PF_META_ONLY ||
--			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
-+			/*
-+			 * Handle discontiguous buffers outside the seek
-+			 * optimised IO loop below.
-+			 */
-+			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
-+				pf_read_discontig(args, bplist[num]);
-+				bplist[num] = NULL;
-+			} else if (which != PF_META_ONLY ||
-+				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
- 				num++;
- 			if (num == MAX_BUFS)
- 				break;
-@@ -664,10 +739,13 @@ pf_queuing_worker(
- 		bno = XFS_AGINO_TO_AGBNO(mp, cur_irec->ino_startnum);
- 
- 		do {
--			pf_queue_io(args, XFS_AGB_TO_FSB(mp, args->agno, bno),
--					blks_per_cluster,
--					(cur_irec->ino_isa_dir != 0) ?
--						B_DIR_INODE : B_INODE);
-+			struct xfs_buf_map	map;
 +
-+			map.bm_bn = XFS_AGB_TO_DADDR(mp, args->agno, bno);
-+			map.bm_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+			pf_queue_io(args, &map, 1,
-+				    (cur_irec->ino_isa_dir != 0) ?  B_DIR_INODE
-+								 : B_INODE);
- 			bno += blks_per_cluster;
- 			num_inos += inodes_per_cluster;
- 		} while (num_inos < XFS_IALLOC_INODES(mp));
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++FSSUM_PROG=$here/src/fssum
++[ -x $FSSUM_PROG ] || _notrun "fssum not built"
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++
++mkdir -p $SCRATCH_MNT/a/b/c
++echo "hello" > $SCRATCH_MNT/a/b/c/file.txt
++mkdir $SCRATCH_MNT/a/b/c/d
++mkdir $SCRATCH_MNT/a/b/c2
++mkdir $SCRATCH_MNT/a/b/www
++echo "hey" > $SCRATCH_MNT/a/b/foobar.txt
++mkdir -p $SCRATCH_MNT/a/b/c3/x/y
++
++# Directory tree looks like:
++#
++# .                         (ino 256)
++# |-- a/                    (ino 257)
++#     |-- b/                (ino 258)
++#         |-- c/            (ino 259)
++#         |   |-- file.txt  (ino 260)
++#         |   |-- d/        (ino 261)
++#         |
++#         |-- c2/           (ino 262)
++#         |-- www/          (ino 263)
++#         |-- foobar.txt    (ino 264)
++#         |
++#         |-- c3/           (ino 265)
++#             |-- x/        (ino 266)
++#                 |-- y/    (ino 267)
++
++run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++    $SCRATCH_MNT/mysnap1
++
++echo " world" >> $SCRATCH_MNT/a/b/c/file.txt
++mv $SCRATCH_MNT/a/b/c/d $SCRATCH_MNT/a/b/c2/d2
++mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/a/b/c2/d2/cc
++mv $SCRATCH_MNT/a/b/c3/x/y $SCRATCH_MNT/a/b/c2/y2
++mv $SCRATCH_MNT/a/b/c3/x $SCRATCH_MNT/a/b/c2/y2/x2
++mv $SCRATCH_MNT/a/b/c3 $SCRATCH_MNT/a/b/c2/y2/x2/Z
++mv $SCRATCH_MNT/a/b/www $SCRATCH_MNT/a/b/c2/y2/x2/WWW
++mv $SCRATCH_MNT/a/b/foobar.txt $SCRATCH_MNT/a/b/c2/y2/x2/qwerty.txt
++ln $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2/Z/file_link.txt
++mv $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2
++
++# Directory tree now looks like:
++#
++# .                                         (ino 256)
++# |-- a/                                    (ino 257)
++#     |-- b/                                (ino 258)
++#         |-- c2/                           (ino 262)
++#             |-- d2/                       (ino 261)
++#             |   |-- cc/                   (ino 259)
++#             |        |-- file.txt         (ino 260)
++#             |-- y2/                       (ino 267)
++#                 |-- x2/                   (ino 266)
++#                     |-- qwerty.txt        (ino 264)
++#                     |-- WWW/              (ino 263)
++#                     |-- Z/                (ino 265)
++#                         |-- file_link.txt
++
++run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++    $SCRATCH_MNT/mysnap2
++
++run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
++run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
++    $SCRATCH_MNT/mysnap2
++
++run_check $BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
++run_check $BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++    -f $tmp/2.snap
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
++run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1 2>> $seqres.full
++
++run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
++run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2 2>> $seqres.full
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++status=0
++exit
+diff --git a/tests/btrfs/030.out b/tests/btrfs/030.out
+new file mode 100644
+index 0000000..d0fe5a9
+--- /dev/null
++++ b/tests/btrfs/030.out
+@@ -0,0 +1 @@
++QA output created by 030
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 8eb8c4f..3f61799 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -32,3 +32,4 @@
+ 027 auto quick
+ 028 auto quick
+ 029 auto quick
++030 auto quick
 -- 
-1.8.4.rc3
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
