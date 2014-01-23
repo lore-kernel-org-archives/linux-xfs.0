@@ -1,32 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1CBE97F6A
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 06:32:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8EAB5AC001
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:32:56 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id k66qtzmVTkYUYRXK (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 04:32:55 -0800 (PST)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s0NCWroY024169
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 12:32:54 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s0NCWqJL025001
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 12:32:53 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s0NCWqN8010383 for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 12:32:52 GMT
-Message-ID: <52E10BED.8090607@oracle.com>
-Date: Thu, 23 Jan 2014 20:32:45 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs: convert xfs_log_commit_cil() to void
+	by oss.sgi.com (Postfix) with ESMTP id A4E977F6D
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 08:20:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 39088AC005
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 06:20:00 -0800 (PST)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id eA9HBpFExvducZ0k for
+	<xfs@oss.sgi.com>; Thu, 23 Jan 2014 06:19:54 -0800 (PST)
+Date: Thu, 23 Jan 2014 15:19:43 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Weird XFS Corruption Error
+Message-ID: <20140123151943.281baa04@harpe.intellique.com>
+In-Reply-To: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
+References: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,93 +23,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1439744459026444205=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Sascha Askani <saskani@inovex.de>
+Cc: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+--===============1439744459026444205==
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_//IsVBLCDX1E5Gr4hMKdOlw."; protocol="application/pgp-signature"
 
-Convert xfs_log_commit_cil() to a void function since it return nothing
-but 0 in any case, after that we can simplify the relative code logic
-in xfs_trans_commit() accordingly.
+--Sig_//IsVBLCDX1E5Gr4hMKdOlw.
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_log.h     |  2 +-
- fs/xfs/xfs_log_cil.c |  3 +--
- fs/xfs/xfs_trans.c   | 12 ++----------
- 3 files changed, 4 insertions(+), 13 deletions(-)
+Le Wed, 22 Jan 2014 17:09:10 +0100
+Sascha Askani <saskani@inovex.de> =E9crivait:
 
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index e148719..67927c3 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -129,7 +129,7 @@ void	  xlog_iodone(struct xfs_buf *);
- struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
- void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
- 
--int	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
-+void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
- 				xfs_lsn_t *commit_lsn, int flags);
- bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
- 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 5eb51fc..bb1027a 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -740,7 +740,7 @@ xlog_cil_empty(
-  * background commit, returns without it held once background commits are
-  * allowed again.
-  */
--int
-+void
- xfs_log_commit_cil(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
-@@ -786,7 +786,6 @@ xfs_log_commit_cil(
- 	xlog_cil_push_background(log);
- 
- 	up_read(&cil->xc_ctx_lock);
--	return 0;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index c812c5c..54a5732 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -887,12 +887,7 @@ xfs_trans_commit(
- 		xfs_trans_apply_sb_deltas(tp);
- 	xfs_trans_apply_dquot_deltas(tp);
- 
--	error = xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
--	if (error == ENOMEM) {
--		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
--		error = XFS_ERROR(EIO);
--		goto out_unreserve;
--	}
-+	xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
- 
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 	xfs_trans_free(tp);
-@@ -902,10 +897,7 @@ xfs_trans_commit(
- 	 * log out now and wait for it.
- 	 */
- 	if (sync) {
--		if (!error) {
--			error = _xfs_log_force_lsn(mp, commit_lsn,
--				      XFS_LOG_SYNC, NULL);
--		}
-+		error = _xfs_log_force_lsn(mp, commit_lsn, XFS_LOG_SYNC, NULL);
- 		XFS_STATS_INC(xs_trans_sync);
- 	} else {
- 		XFS_STATS_INC(xs_trans_async);
--- 
-1.8.3.2
+> Internal error xfs_bmbt_read_verify at line 789=20
+...
+> metadata I/O error: block 0x1f0 ("xfs_trans_read_buf_map") error 117
+> numblks 8
+
+
+A quick glance at the source code seems to indicate that there was an
+actual CRC error (on disk) at this point, so that could be a RAID
+problem;
+
+OTOH it looks really similar to an older bug :
+
+http://oss.sgi.com/archives/xfs/2013-02/msg00482.html
+
+AFAIK this one could be related to the current Ubuntu LTS lvm stack...
+We need Dave's advice on this one.
+
+Was there nothing in the xfs_repair output? nothing in lost+found
+either?
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_//IsVBLCDX1E5Gr4hMKdOlw.
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEUEARECAAYFAlLhJP8ACgkQX3jQXNUicVY6mACWKs1UPu0Nli8MqwrQ4rhvUFxP
+3ACg7DBJoisPj0jo3I3C00iN0UO1z7M=
+=LE3c
+-----END PGP SIGNATURE-----
+
+--Sig_//IsVBLCDX1E5Gr4hMKdOlw.--
+
+
+--===============1439744459026444205==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1439744459026444205==--
