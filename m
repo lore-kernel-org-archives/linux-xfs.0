@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BC6A67F98
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 15:42:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 675F1AC003
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 13:42:00 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 9D84729E09
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 16:35:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 10D39AC003
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 14:35:40 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ZNTvgsm6fCXck0ag for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 13:41:58 -0800 (PST)
-Date: Fri, 24 Jan 2014 08:41:55 +1100
+	nDSxUFqbS7VXIWsK for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 14:35:37 -0800 (PST)
+Date: Fri, 24 Jan 2014 09:32:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] repair: fix discontiguous directory block support
-Message-ID: <20140123214155.GX13997@dastard>
-References: <1390375033-10483-1-git-send-email-david@fromorbit.com>
-	<1390375033-10483-4-git-send-email-david@fromorbit.com>
-	<52E14E2A.7000902@redhat.com>
+Subject: Re: [RFC] directory quota survey on xfs
+Message-ID: <20140123223205.GJ27606@dastard>
+References: <20131222095929.GA11444@gmail.com> <20131223014222.GC3220@dastard>
+	<20140115081201.GA3820@gmail.com>
+	<5966C533-EF18-4804-8C83-DFBD607D9BE6@dilger.ca>
+	<20140115213207.GJ3431@dastard> <20140121070706.GA1819@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52E14E2A.7000902@redhat.com>
+In-Reply-To: <20140121070706.GA1819@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,135 +32,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Andreas Dilger <adilger@dilger.ca>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Dmitry Monakhov <dmonakhov@openvz.org>, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com, Li Xi <pkuelelixi@gmail.com>
 
-On Thu, Jan 23, 2014 at 12:15:22PM -0500, Brian Foster wrote:
-> On 01/22/2014 02:17 AM, Dave Chinner wrote:
-> > @@ -167,6 +167,14 @@ pf_read_bmbt_reclist(
-> >  	xfs_bmbt_irec_t		irec;
-> >  	xfs_dfilblks_t		cp = 0;		/* prev count */
-> >  	xfs_dfiloff_t		op = 0;		/* prev offset */
-> > +#define MAP_ARRAY_SZ 4
-> > +	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
-> > +	struct xfs_buf_map	*map = map_array;
-> > +	int			max_extents = MAP_ARRAY_SZ;
-> > +	int			nmaps = 0;;
-> > +	unsigned int		len = 0;
-> > +	int			ret = 0;
-> > +
+On Tue, Jan 21, 2014 at 03:07:06PM +0800, Zheng Liu wrote:
+> Hi Dave,
 > 
-> So if I understand correctly, the idea here is to now batch extent reads
-> into buffers of the directory block size, quieting the messages
-> described in the commit log.
-
-Yes.
-
-> > @@ -188,18 +196,60 @@ pf_read_bmbt_reclist(
-> >  		cp = irec.br_blockcount;
-> >  
-> >  		while (irec.br_blockcount) {
-> > -			unsigned int	len;
-> > +			unsigned int	bm_len;
-> >  
-> >  			pftrace("queuing dir extent in AG %d", args->agno);
-> >  
-> > -			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
-> > -					mp->m_dirblkfsbs : irec.br_blockcount;
-> > -			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
-> > -			irec.br_blockcount -= len;
-> > -			irec.br_startblock += len;
-> > +			if (len + irec.br_blockcount >= mp->m_dirblkfsbs) {
-> > +				bm_len = mp->m_dirblkfsbs - len;
-> > +				len = 0;
-> > +			} else {
-> > +				len += irec.br_blockcount;
-> > +				bm_len = irec.br_blockcount;
-> > +			}
+> On Thu, Jan 16, 2014 at 08:32:07AM +1100, Dave Chinner wrote:
+> > On Wed, Jan 15, 2014 at 11:03:22AM -0700, Andreas Dilger wrote:
+> > > quotas (to keep compatibility for existing XFS deployments), but add
+> > > support into quota-tools so that it is usable by all filesystems.
+> > 
+> > Well, yes. If you are writing a generic quota tool, then it needs to
+> > support all filesystems. We already have a fully featured quota API
+> > that can provide this support - it's the API that XFS has been using
+> > since it was ported to Linux.  We have the opportunity to unify the
+> > quota APIs that ext4 and XFS, so we should take the opportunity
+> > while it is here.  Don't create a new API for ext4 simply because of
+> > NIH syndrome.
 > 
-> So len represents the total length of the maps attached to the current
-> array...
+> These days I was thinking about your comment that uses quotactl API to
+> communicate the userspace tool with the kernel.  But I am still
+> confusing about your comment that unifies the quota API between ext4 and
+> XFS.
 > 
-> > +
-> > +			map[nmaps].bm_bn = XFS_FSB_TO_DADDR(mp,
-> > +							irec.br_startblock);
-> > +			map[nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
-> > +			nmaps++;
-> > +
-> > +			if (len == 0) {
-> > +				pf_queue_io(args, map, nmaps, B_DIR_META);
-> > +				nmaps = 0;
-> > +			}
-> 
-> Kind of a nit, but this looks a little weird to me. The logic would be a
-> bit more clear with something like:
-> 
-> 	if (len + irec.br_blockcount > mp->dirblkfsbs)
-> 		bm_len = mp->m_dirblkfsbs - len;
-> 	else
-> 		bm_len = irec.br_blockcount;
-> 	len += bm_len;
-> 
-> 	...
-> 
-> 	if (len == mp->dirblkfsbs) {
-> 		len = 0;
-> 		pf_queue_io(...)
-> 	}
+> Now we have two flag sets in quotactl(2).  One (Q_QUOTAON, Q_GETQUOTA,
+> etc...) is used by extN file system (I am not sure whether other file
+> systems use these flags or not), and another (Q_XQUOTAON, Q_XGETQSTAT,
+> etc...) is used by XFS.
 
-Yeah, that's more obvious and consistent with other code. Will fix.
+I'm talking about making ext4 be able to use Q_XQUOTAON,
+Q_XGETQSTAT, etc.
 
-> ... which then raises the question of what happens if the directory
-> we're reading doesn't end with len == mp->dirblkfsbs? If so, perhaps not
-> a performance regression, but it looks like we wouldn't queue the last
-> I/O. Some of the directory code suggests that we fail if we don't alloc
-> the dirblkfsbs block count, so maybe this doesn't happen.
+> In xfs_quota it uses an ioctl(2) to get/set/check project id,
 
-That's not an issue the prefetch code needs to handle. Prefetching
-is just about walking the extent tree and pulling the necessary
-buffers into the cache prior to scanning them. Other code is
-responsible for checking that the block count/extent map is actually
-valid.
+Right, because that's a filesystem specific operation that has no
+equivalent in any other filesystem at this point in time. Same for
+the project inheritence inode flag.
 
-Also, if we don't prefetch a block, then when it is required later
-it will be read directly. Hence not doing IO here is does not affect
-the behaviour of xfs_repair at all.
+You're going to need to add such an interface to ext4 to do this, so
+add a generic ioctl and wire XFS up to it as well. This is kind
+of why I want a generic xattr namespace for inode flags/attribute
+at the VFS - so we don't have to keep inventing new
+ioctl/fcntl interfaces to make this sort of functionality common
+between different filesystems - we just define a new attribute
+string and values and let individual filesystems handle how they
+store them.
 
-> > +/*
-> > + * pf_batch_read must be called with the lock locked.
-> > + */
-> >  static void
-> >  pf_batch_read(
-> >  	prefetch_args_t		*args,
-> > @@ -426,8 +495,15 @@ pf_batch_read(
-> >  			max_fsbno = fsbno + pf_max_fsbs;
-> >  		}
-> >  		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
-> > -			if (which != PF_META_ONLY ||
-> > -			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
-> > +			/*
-> > +			 * Handle discontiguous buffers outside the seek
-> > +			 * optimised IO loop below.
-> > +			 */
-> > +			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
-> > +				pf_read_discontig(args, bplist[num]);
-> > +				bplist[num] = NULL;
-> 
-> So we pull these out from the processing below (which appears to want to
-> issue largish reads comprised of multiple buffers, via bplist). Thanks
-> for the comment above pf_read_discontig().
+> and calls
+> quotactl(2) with Q_XSETQLIM/Q_XGETQUOTA to set/get project quota.
 
-Yes, that's right.
+Right, that's the quota management interface - it can also be used
+to manage user and group quotas, so in userspace you can just use
+the one interface for everything
 
-FYI, the concept behind the prefetch algorithm is to optimise the IO
-if possible by doing a single large IO and cherry-picking the
-metadata out of it rather than lots of small semi-random IOs. i.e.
-use excess storage bandwidth instead of seeks to read dense
-regionsof metadata. With dense enough metadata and multi-threading
-this optimisation allows xfs_repair to pull in hundreds of megabytes
-of metadata every second for processing and as such can keep
-multiple CPUs busy even on seek-limited storage. The code is pretty
-gnarly, though....
+> On
+> kernel side, ->set_dqblk()/get_dqblk() is called when we try to set/get
+> project quota in XFS.
+
+And user/group quotas, too.
+
+> In ext4 the same callback functions are used to
+> set/get user/group quota, although on userspace we use Q_SETQUOTA/
+> Q_GETQUOTA to set/get quota.  I am not sure I fully understand your
+> meaning that unifies the quota API between ext4 and XFS.  Do you mean
+> that we should use Q_XSETQLIM/Q_XGETQUOTA flags to set/get quota on ext4?
+
+What I mean is that you should have quotatool speak the Q_X* quota
+protocol defined in include/uapi/linux/dqblk_xfs.h via quotactl(2)
+if the underlying filesystem supports it.  Indeed, quotatool already
+detects XFS filesystems and switches to using the Q_X* interface
+automatically, so there shouldn't be a huge amount of change needed
+in it to support project quotas via this interface, nor add ext4
+support to use the interface.
+
+Then for project quota support in ext4, you implement the Q_X* quota
+ops methods for that protocol similar method to xfs in
+fs/xfs/xfs_quotaops.c.  That way ext4 will be able to speak both the
+current v0-v2 protocols (so it doesn't break userspace compatibility
+with older binaries), and the userspace quotatool will be able to
+fully manage project quotas on both XFS and ext4 filesystems in a
+common manner.
 
 Cheers,
 
