@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 25DE67F5D
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:11 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 9F3747F5F
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 04:24:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 96459AC002
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 02:24:10 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 267F8AC005
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 02:24:09 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HnCkw4BikiHOlrYX for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 02:24:08 -0800 (PST)
+	ixzoXc7Qt6hvfBoB for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 02:24:07 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fE-A0
+	(envelope-from <dave@fromorbit.com>) id 1W6HS4-0004fB-8I
 	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004VV-94
+	(envelope-from <dave@disappointment.disaster>) id 1W6HS4-0004VI-73
 	for xfs@oss.sgi.com; Thu, 23 Jan 2014 21:24:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/5] metadump: separate single block objects from multiblock
-	objects
-Date: Thu, 23 Jan 2014 21:23:53 +1100
-Message-Id: <1390472635-17225-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390472635-17225-1-git-send-email-david@fromorbit.com>
-References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/5] metadump: discontiguous directory block support
+Date: Thu, 23 Jan 2014 21:23:50 +1100
+Message-Id: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,168 +35,50 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-When trying to dump objects, we have to treat multi-block objects
-differently to single block objects. Separate out the code paths for
-single block vs multi-block objects so we can add a separate path
-for multi-block objects.
+In making xfs_repair handle discontiguous directory blocks properly,
+it uncovered the fact that xfs_metadump has never handled
+discontiguous directory blocks properly. It doesn't handle
+discontiguous block format directories, and there are a couple of
+other cases where it is just says "too hard" and gives up, leading
+to un-obfuscated, corrupt or missing directory blocks in the
+metadump image. xfs/291 on CRC enabled filesystems was causing all
+three of these conditions to occur.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- db/metadump.c | 119 ++++++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 82 insertions(+), 37 deletions(-)
+This patchset fixes metadump to fully support all forms of
+discontiguous directory blocks. It changes the obfuscation code from
+reading and extent at a time and trying to slice and dice the
+objects within it - which will never work for objects that need CRC
+recalculation as a result of obfuscation - to dealing with
+individual objects. This does affect IO patterns somewhat - single
+large contiguous IOs turn into multiple smaller sequential IOs - but
+it means that we can use the object verifiers to do CRC
+recalculation correctly.
 
-diff --git a/db/metadump.c b/db/metadump.c
-index a8bc297..9fc08ed 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1361,9 +1361,79 @@ obfuscate_attr_blocks(
- 	}
- }
- 
--/* inode copy routines */
-+static int
-+process_single_fsb_objects(
-+	xfs_dfiloff_t	o,
-+	xfs_dfsbno_t	s,
-+	xfs_dfilblks_t	c,
-+	typnm_t		btype,
-+	xfs_dfiloff_t	last)
-+{
-+	int		ret = 0;
-+
-+	push_cur();
-+	set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
-+			DB_RING_IGN, NULL);
-+
-+	if (!iocur_top->data) {
-+		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
-+		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
-+
-+		print_warning("cannot read %s block %u/%u (%llu)",
-+				typtab[btype].name, agno, agbno, s);
-+		if (stop_on_read_error)
-+			ret = -EIO;
-+		goto out_pop;
-+
-+	}
-+
-+	if (dont_obfuscate) {
-+		ret = write_buf(iocur_top);
-+		goto out_pop;
-+	}
-+
-+	switch (btype) {
-+	case TYP_DIR2:
-+		if (o >= mp->m_dirleafblk)
-+			break;
-+
-+		obfuscate_dir_data_blocks(iocur_top->data, o, c,
-+					 last == mp->m_dirblkfsbs);
-+		break;
-+	case TYP_SYMLINK:
-+		obfuscate_symlink_blocks(iocur_top->data, c);
-+		break;
-+	case TYP_ATTR:
-+		obfuscate_attr_blocks(iocur_top->data, o, c);
-+		break;
-+	default:
-+		break;
-+	}
-+	ret = write_buf(iocur_top);
-+
-+out_pop:
-+	pop_cur();
-+	return ret;
-+}
- 
- static int
-+process_multi_fsb_objects(
-+	xfs_dfiloff_t	o,
-+	xfs_dfsbno_t	s,
-+	xfs_dfilblks_t	c,
-+	typnm_t		btype,
-+	xfs_dfiloff_t	last)
-+{
-+	if (btype != TYP_DIR2) {
-+		print_warning("bad type for multi-fsb object %d", btype);
-+		return -EINVAL;
-+	}
-+
-+	return process_single_fsb_objects(o, s, c, btype, last);
-+}
-+
-+/* inode copy routines */
-+static int
- process_bmbt_reclist(
- 	xfs_bmbt_rec_t 		*rp,
- 	int 			numrecs,
-@@ -1377,6 +1447,7 @@ process_bmbt_reclist(
- 	xfs_dfiloff_t		last;
- 	xfs_agnumber_t		agno;
- 	xfs_agblock_t		agbno;
-+	int			error;
- 
- 	if (btype == TYP_DATA)
- 		return 1;
-@@ -1438,44 +1509,18 @@ process_bmbt_reclist(
- 			break;
- 		}
- 
--		push_cur();
--		set_cur(&typtab[btype], XFS_FSB_TO_DADDR(mp, s), c * blkbb,
--				DB_RING_IGN, NULL);
--		if (iocur_top->data == NULL) {
--			print_warning("cannot read %s block %u/%u (%llu)",
--					typtab[btype].name, agno, agbno, s);
--			if (stop_on_read_error) {
--				pop_cur();
--				return 0;
--			}
--		} else {
--			if (!dont_obfuscate)
--			    switch (btype) {
--				case TYP_DIR2:
--					if (o < mp->m_dirleafblk)
--						obfuscate_dir_data_blocks(
--							iocur_top->data, o, c,
--							last == mp->m_dirblkfsbs);
--					break;
--
--				case TYP_SYMLINK:
--					obfuscate_symlink_blocks(
--						iocur_top->data, c);
--					break;
--
--				case TYP_ATTR:
--					obfuscate_attr_blocks(iocur_top->data,
--						o, c);
--					break;
--
--				default: ;
--			    }
--			if (write_buf(iocur_top)) {
--				pop_cur();
-+		/* single filesystem block objects are trivial to handle */
-+		if (btype != TYP_DIR2 || mp->m_dirblkfsbs == 1) {
-+			error = process_single_fsb_objects(o, s, c, btype, last);
-+			if (error)
- 				return 0;
--			}
-+			continue;
- 		}
--		pop_cur();
-+
-+		/* multi-extent directory blocks */
-+		error = process_multi_fsb_objects(o, s, c, btype, last);
-+		if (error)
-+			return 0;
- 	}
- 
- 	return 1;
--- 
-1.8.4.rc3
+It also means we can walk the extent tree to gather discontiguous
+extents into a single buffer to build an object fom multiple IOs.
+This is what all the other directory block IO does, and we need to
+do it here too.
+
+The result is that the code is simpler and more obvious in what it
+does - the "walk over a large extent" code is generic rather than
+object specific, and the discontiguous block code is separated from
+the single block object code. Hence both cases are clearer and
+easier to understand.
+
+And it works, unlike the old code.
+
+FWIW, with this fixed and xfs/291 passing, the only remaining
+outstanding work that is blocking a 3.2.0 release is to trap IO
+verifier errors in repair so we repair/rebuild objects based on CRC
+errors.
+
+Comments, flames, thoughts all welcome.
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
