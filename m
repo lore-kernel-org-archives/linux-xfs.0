@@ -1,31 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 342C4800F
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 08:39:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 28C428F8064
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 06:39:32 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id E9MYr4FJUuXkfmaa for
-	<xfs@oss.sgi.com>; Fri, 24 Jan 2014 06:39:31 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0OEdUkF006047
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 09:39:31 -0500
-Received: from laptop.bfoster (vpn-54-164.rdu2.redhat.com [10.10.54.164])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s0OEdTd5006308
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 09:39:30 -0500
-Message-ID: <52E27B21.5060107@redhat.com>
-Date: Fri, 24 Jan 2014 09:39:29 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AA90F7FA8
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 13:37:06 -0600 (CST)
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 35560AC00A
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 11:37:03 -0800 (PST)
+Date: Fri, 24 Jan 2014 13:37:02 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: assert in xfs_log_commit_cil
+Message-ID: <20140124193702.GM26064@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] repair: fix discontiguous directory block support
-References: <1390519284-31440-1-git-send-email-david@fromorbit.com>
-	<1390519284-31440-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390519284-31440-4-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,240 +26,54 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 01/23/2014 06:21 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs/291 tests fragmented multi-block directories, and xfs_repair
-> throws lots of lookup badness errors in phase 3:
-> 
->         - agno = 1
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x1e040, len 4096 bytes) key=(bno 0x1e040, len 16384 bytes)
->         - agno = 2
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x2d0e8, len 4096 bytes) key=(bno 0x2d0e8, len 16384 bytes)
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x2d068, len 4096 bytes) key=(bno 0x2d068, len 16384 bytes)
->         - agno = 3
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x39130, len 4096 bytes) key=(bno 0x39130, len 16384 bytes)
-> 7fa3d2758740: Badness in key lookup (length)
-> bp=(bno 0x391b0, len 4096 bytes) key=(bno 0x391b0, len 16384 bytes)
-> 7fa3d2758740: Badness in key lookup (length)
-> 
-> This is because it is trying to read a directory buffer in full
-> (16k), but is finding a single 4k block in the cache instead.
-> 
-> The opposite is happening in phase 6 - phase 6 is trying to read 4k
-> buffers but is finding a 16k buffer there instead.
-> 
-> The problem is caused by the fact that directory buffers can be
-> represented as compound buffers or as individual buffers depending
-> on the code reading the directory blocks. The main problem is that
-> the IO prefetch code doesn't understand compound buffers, so teach
-> it about compound buffers to make the problem go away.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+Hi Folks,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I hit this assertion on one of my test boxes today:
 
->  repair/prefetch.c | 120 ++++++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 99 insertions(+), 21 deletions(-)
-> 
-> diff --git a/repair/prefetch.c b/repair/prefetch.c
-> index d3491da..984beda 100644
-> --- a/repair/prefetch.c
-> +++ b/repair/prefetch.c
-> @@ -105,11 +105,12 @@ pf_start_io_workers(
->  static void
->  pf_queue_io(
->  	prefetch_args_t		*args,
-> -	xfs_fsblock_t		fsbno,
-> -	int			blen,
-> +	struct xfs_buf_map	*map,
-> +	int			nmaps,
->  	int			flag)
->  {
-> -	xfs_buf_t		*bp;
-> +	struct xfs_buf		*bp;
-> +	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, map[0].bm_bn);
->  
->  	/*
->  	 * Never block on a buffer lock here, given that the actual repair
-> @@ -117,8 +118,7 @@ pf_queue_io(
->  	 * the lock holder is either reading it from disk himself or
->  	 * completely overwriting it this behaviour is perfectly fine.
->  	 */
-> -	bp = libxfs_getbuf_flags(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-> -			XFS_FSB_TO_BB(mp, blen), LIBXFS_GETBUF_TRYLOCK);
-> +	bp = libxfs_getbuf_map(mp->m_dev, map, nmaps, LIBXFS_GETBUF_TRYLOCK);
->  	if (!bp)
->  		return;
->  
-> @@ -167,6 +167,14 @@ pf_read_bmbt_reclist(
->  	xfs_bmbt_irec_t		irec;
->  	xfs_dfilblks_t		cp = 0;		/* prev count */
->  	xfs_dfiloff_t		op = 0;		/* prev offset */
-> +#define MAP_ARRAY_SZ 4
-> +	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
-> +	struct xfs_buf_map	*map = map_array;
-> +	int			max_extents = MAP_ARRAY_SZ;
-> +	int			nmaps = 0;;
-> +	unsigned int		len = 0;
-> +	int			ret = 0;
-> +
->  
->  	for (i = 0; i < numrecs; i++) {
->  		libxfs_bmbt_disk_get_all(rp + i, &irec);
-> @@ -174,11 +182,11 @@ pf_read_bmbt_reclist(
->  		if (((i > 0) && (op + cp > irec.br_startoff)) ||
->  				(irec.br_blockcount == 0) ||
->  				(irec.br_startoff >= fs_max_file_offset))
-> -			return 0;
-> +			goto out_free;
->  
->  		if (!verify_dfsbno(mp, irec.br_startblock) || !verify_dfsbno(mp,
->  				irec.br_startblock + irec.br_blockcount - 1))
-> -			return 0;
-> +			goto out_free;
->  
->  		if (!args->dirs_only && ((irec.br_startoff +
->  				irec.br_blockcount) >= mp->m_dirfreeblk))
-> @@ -188,18 +196,59 @@ pf_read_bmbt_reclist(
->  		cp = irec.br_blockcount;
->  
->  		while (irec.br_blockcount) {
-> -			unsigned int	len;
-> +			unsigned int	bm_len;
->  
->  			pftrace("queuing dir extent in AG %d", args->agno);
->  
-> -			len = (irec.br_blockcount > mp->m_dirblkfsbs) ?
-> -					mp->m_dirblkfsbs : irec.br_blockcount;
-> -			pf_queue_io(args, irec.br_startblock, len, B_DIR_META);
-> -			irec.br_blockcount -= len;
-> -			irec.br_startblock += len;
-> +			if (len + irec.br_blockcount >= mp->m_dirblkfsbs)
-> +				bm_len = mp->m_dirblkfsbs - len;
-> +			else
-> +				bm_len = irec.br_blockcount;
-> +			len += bm_len;
-> +
-> +			map[nmaps].bm_bn = XFS_FSB_TO_DADDR(mp,
-> +							irec.br_startblock);
-> +			map[nmaps].bm_len = XFS_FSB_TO_BB(mp, bm_len);
-> +			nmaps++;
-> +
-> +			if (len == mp->m_dirblkfsbs) {
-> +				pf_queue_io(args, map, nmaps, B_DIR_META);
-> +				len = 0;
-> +				nmaps = 0;
-> +			}
-> +
-> +			irec.br_blockcount -= bm_len;
-> +			irec.br_startblock += bm_len;
-> +
-> +			/*
-> +			 * Handle very fragmented dir2 blocks with dynamically
-> +			 * allocated buffer maps.
-> +			 */
-> +			if (nmaps >= max_extents) {
-> +				struct xfs_buf_map *old_map = NULL;
-> +
-> +				if (map == map_array) {
-> +					old_map = map;
-> +					map = NULL;
-> +				}
-> +				max_extents *= 2;
-> +				map = realloc(map, max_extents * sizeof(*map));
-> +				if (map == NULL) {
-> +					do_error(
-> +			_("couldn't malloc dir2 buffer list\n"));
-> +					exit(1);
-> +				}
-> +				if (old_map)
-> +					memcpy(map, old_map, sizeof(map_array));
-> +			}
-> +
->  		}
->  	}
-> -	return 1;
-> +	ret = 1;
-> +out_free:
-> +	if (map != map_array)
-> +		free(map);
-> +	return ret;
->  }
->  
->  /*
-> @@ -395,9 +444,28 @@ pf_read_inode_dirs(
->  }
->  
->  /*
-> - * pf_batch_read must be called with the lock locked.
-> + * Discontiguous buffers require multiple IOs to fill, so we can't use any
-> + * linearising, hole filling algorithms on them to avoid seeks. Just remove them
-> + * for the prefetch queue and read them straight into the cache and release
-> + * them.
->   */
-> +static void
-> +pf_read_discontig(
-> +	struct prefetch_args	*args,
-> +	struct xfs_buf		*bp)
-> +{
-> +	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
-> +		do_error(_("prefetch corruption\n"));
-> +
-> +	pthread_mutex_unlock(&args->lock);
-> +	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
-> +	libxfs_putbuf(bp);
-> +	pthread_mutex_lock(&args->lock);
-> +}
->  
-> +/*
-> + * pf_batch_read must be called with the lock locked.
-> + */
->  static void
->  pf_batch_read(
->  	prefetch_args_t		*args,
-> @@ -426,8 +494,15 @@ pf_batch_read(
->  			max_fsbno = fsbno + pf_max_fsbs;
->  		}
->  		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
-> -			if (which != PF_META_ONLY ||
-> -			    !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
-> +			/*
-> +			 * Handle discontiguous buffers outside the seek
-> +			 * optimised IO loop below.
-> +			 */
-> +			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
-> +				pf_read_discontig(args, bplist[num]);
-> +				bplist[num] = NULL;
-> +			} else if (which != PF_META_ONLY ||
-> +				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
->  				num++;
->  			if (num == MAX_BUFS)
->  				break;
-> @@ -664,10 +739,13 @@ pf_queuing_worker(
->  		bno = XFS_AGINO_TO_AGBNO(mp, cur_irec->ino_startnum);
->  
->  		do {
-> -			pf_queue_io(args, XFS_AGB_TO_FSB(mp, args->agno, bno),
-> -					blks_per_cluster,
-> -					(cur_irec->ino_isa_dir != 0) ?
-> -						B_DIR_INODE : B_INODE);
-> +			struct xfs_buf_map	map;
-> +
-> +			map.bm_bn = XFS_AGB_TO_DADDR(mp, args->agno, bno);
-> +			map.bm_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> +			pf_queue_io(args, &map, 1,
-> +				    (cur_irec->ino_isa_dir != 0) ?  B_DIR_INODE
-> +								 : B_INODE);
->  			bno += blks_per_cluster;
->  			num_inos += inodes_per_cluster;
->  		} while (num_inos < XFS_IALLOC_INODES(mp));
-> 
+[1167966.151275] XFS: Assertion failed: !list_empty(&cil->xc_cil), file: /root/xfs/fs/xfs/xfs_log_cil.c, line: 636
+[1167966.162659] ------------[ cut here ]------------
+[1167966.168021] kernel BUG at /root/xfs/fs/xfs/xfs_message.c:107!
+[1167966.168026] invalid opcode: 0000 [#4] SMP
+[1167966.168081] Modules linked in: xfs(OF) ext2(F) dm_flakey(F) crc32c(F) libcrc32c(F) autofs4(F) cpufreq_conservative(F) cpufreq_userspace(F) cpufreq_powersave(F) microcode(F) fuse(F) loop(F) dm_mod(F) joydev(F) hid_generic(F) usbhid(F) hid(F) ehci_pci(F) ehci_hcd(F) iTCO_wdt(F) iTCO_vendor_support(F) ipv6(F) usbcore(F) sg(F) igb(F) isci(F) sr_mod(F) pcspkr(F) mptctl(F) cdrom(F) libsas(F) usb_common(F) ioatdma(F) ptp(F) i2c_i801(F) lpc_ich(F) mfd_core(F) pps_core(F) dca(F) rtc_cmos(F) acpi_cpufreq(F) wmi(F) button(F) mgag200(F) ttm(F) drm_kms_helper(F) drm(F) i2c_algo_bit(F) sysimgblt(F) sysfillrect(F) i2c_core(F) syscopyarea(F) sd_mod(F) crc_t10dif(F) crct10dif_common(F) mpt2sas(F) raid_class(F) scsi_dh_emc(F) scsi_dh_rdac(F) scsi_dh_alua(F) scsi_dh_hp_sw(F) scsi_dh(F) thermal(F) sata_nv(F) processor(F) piix(F) mptsas(F) mptscsih(F) scsi_transport_sas(F) mptbase(F) megaraid_sas(F) ide_generic(F) ide_core(F) fan(F) thermal_sys(F) hwmon(F) ext3(F) jbd(F) mbcache(F) edd(F) at
+ a_piix(F) ahci(F) libahci(F) libata(F) scsi_mod(F) [last unloaded: scsi_debug]
+[1167966.168102] CPU: 10 PID: 13005 Comm: kworker/10:3 Tainted: GF     D   IO 3.13.0-rc2-0.9-default #28
+[1167966.168103] Hardware name: SGI.COM SUMMIT/S2600GZ, BIOS SE5C600.86B.01.06.0002.110120121539 11/01/2012
+[1167966.168139] Workqueue: xfs-data/sdb1 xfs_end_io [xfs]
+[1167966.168141] task: ffff88065a0f0450 ti: ffff88009f2a8000 task.ti: ffff88009f2a8000
+[1167966.168174] RIP: 0010:[<ffffffffa06cd39d>]  [<ffffffffa06cd39d>] assfail+0x1d/0x30 [xfs]
+[1167966.168176] RSP: 0018:ffff88009f2a9ce8  EFLAGS: 00010292
+[1167966.168177] RAX: 0000000000000061 RBX: ffff88070085f180 RCX: 0000000000000000
+[1167966.168179] RDX: ffff88083f68ed68 RSI: ffff88083f68d248 RDI: ffff88083f68d248
+[1167966.168180] RBP: ffff88009f2a9ce8 R08: 00000000000226fb R09: 000000000000000a
+[1167966.168182] R10: 00000000000226fb R11: 0000000000000006 R12: 0000000000000000
+[1167966.168183] R13: ffff88070085f180 R14: ffff880829c21000 R15: ffff88067f367400
+[1167966.168186] FS:  0000000000000000(0000) GS:ffff88083f680000(0000) knlGS:0000000000000000
+[1167966.168187] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1167966.168189] CR2: 00007fd326883160 CR3: 00000003623a0000 CR4: 00000000000407e0
+[1167966.168190] Stack:
+[1167966.168196]  ffff88009f2a9d38 ffffffffa072c3f0 ffff88009f2a9d38 ffff88009f2a9d58
+[1167966.168200]  ffff88070085f1c0 ffff88073d3d71c0 0000000000000000 0000000000000000
+[1167966.168205]  ffff880829c21000 0000000000000041 ffff88009f2a9d88 ffffffffa06d585c
+[1167966.168206] Call Trace:
+[1167966.168248]  [<ffffffffa072c3f0>] xfs_log_commit_cil+0x170/0x180 [xfs]
+[1167966.168281]  [<ffffffffa06d585c>] xfs_trans_commit+0x15c/0x2a0 [xfs]
+[1167966.168305]  [<ffffffffa06b404b>] xfs_setfilesize+0x12b/0x130 [xfs]
+[1167966.168327]  [<ffffffffa06b4775>] xfs_end_io+0x75/0xf0 [xfs]
+[1167966.168338]  [<ffffffff81065d6c>] process_one_work+0x17c/0x3d0
+[1167966.168343]  [<ffffffff8106715b>] worker_thread+0x12b/0x410
+[1167966.168349]  [<ffffffff81067030>] ? manage_workers+0x1a0/0x1a0
+[1167966.168356]  [<ffffffff8106cbdb>] kthread+0xdb/0xf0
+[1167966.168361]  [<ffffffff8106cb00>] ? kthread_freezable_should_stop+0x70/0x70
+[1167966.168369]  [<ffffffff814c4c3c>] ret_from_fork+0x7c/0xb0
+[1167966.168374]  [<ffffffff8106cb00>] ? kthread_freezable_should_stop+0x70/0x70
+[1167966.168401] Code: 00 00 00 48 89 45 c8 e8 42 fc ff ff c9 c3 55 41 89 d0 48 89 f1 48 89 fa 48 c7 c6 58 4e 75 a0 31 ff 48 89 e5 31 c0 e8 93 ff ff ff <0f> 0b eb fe 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 8b
+[1167966.168430] RIP  [<ffffffffa06cd39d>] assfail+0x1d/0x30 [xfs]
+[1167966.168431]  RSP <ffff88009f2a9ce8>
+[1167966.218543] ---[ end trace c4c3ac02d344970e ]---
+
+That machine was running xfs/109 at the time, at commit bf3964c1.
+
+-Ben 
 
 _______________________________________________
 xfs mailing list
