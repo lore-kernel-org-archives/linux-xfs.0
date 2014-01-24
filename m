@@ -1,9 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.14-rc1-3-g7c71ee7
-Message-Id: <20140124195415.719677FAD@oss.sgi.com>
-Date: Fri, 24 Jan 2014 13:54:15 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1E36D7F92
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 15:53:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 105408F8050
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 13:53:02 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	o4O0o5b4kGDAPdnu for <xfs@oss.sgi.com>;
+	Fri, 24 Jan 2014 13:53:01 -0800 (PST)
+Date: Sat, 25 Jan 2014 08:52:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Weird XFS Corruption Error
+Message-ID: <20140124215257.GA26397@dastard>
+References: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
+	<20140122233141.GI27606@dastard>
+	<FF1E62DE-5CFC-469B-BBF7-F5AB04AD4C0C@inovex.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <FF1E62DE-5CFC-469B-BBF7-F5AB04AD4C0C@inovex.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,125 +27,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Sascha Askani <saskani@inovex.de>
+Cc: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
-
-The branch, for-next has been updated
-  7c71ee7 xfs: allow logical-sector sized O_DIRECT
-  6da5417 xfs: rename xfs_buftarg structure members
-  f0bc998 xfs: clean up xfs_buftarg
-      from  bf3964c188d686424ff7b69a45941851b9f437f0 (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit 7c71ee78031c248dca13fc94dea9a4cc217db6cf
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue Jan 21 16:46:23 2014 -0600
-
-    xfs: allow logical-sector sized O_DIRECT
-    
-    Some time ago, mkfs.xfs started picking the storage physical
-    sector size as the default filesystem "sector size" in order
-    to avoid RMW costs incurred by doing IOs at logical sector
-    size alignments.
-    
-    However, this means that for a filesystem made with i.e.
-    a 4k sector size on an "advanced format" 4k/512 disk,
-    512-byte direct IOs are no longer allowed.  This means
-    that XFS has essentially turned this AF drive into a hard
-    4K device, from the filesystem on up.
-    
-    XFS's mkfs-specified "sector size" is really just controlling
-    the minimum size & alignment of filesystem metadata.
-    
-    There is no real need to tightly couple XFS's minimal
-    metadata size to the minimum allowed direct IO size;
-    XFS can continue doing metadata in optimal sizes, but
-    still allow smaller DIOs for apps which issue them,
-    for whatever reason.
-    
-    This patch adds a new field to the xfs_buftarg, so that
-    we now track 2 sizes:
-    
-     1) The metadata sector size, which is the minimum unit and
-        alignment of IO which will be performed by metadata operations.
-     2) The device logical sector size
-    
-    The first is used internally by the file system for metadata
-    alignment and IOs.
-    The second is used for the minimum allowed direct IO alignment.
-    
-    This has passed xfstests on filesystems made with 4k sectors,
-    including when run under the patch I sent to ignore
-    XFS_IOC_DIOINFO, and issue 512 DIOs anyway.  I also directly
-    tested end of block behavior on preallocated, sparse, and
-    existing files when we do a 512 IO into a 4k file on a
-    4k-sector filesystem, to be sure there were no unexpected
-    behaviors.
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 6da54179b3f1bb6a302fd5f3b38fae32ee463ed1
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue Jan 21 16:45:52 2014 -0600
-
-    xfs: rename xfs_buftarg structure members
-    
-    In preparation for adding new members to the structure,
-    give these old ones more descriptive names:
-    
-    	bt_ssize -> bt_meta_sectorsize
-    	bt_smask -> bt_meta_sectormask
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit f0bc9985fe8bf4377d5557cd7957d9be43ec8861
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue Jan 21 16:44:57 2014 -0600
-
-    xfs: clean up xfs_buftarg
-    
-    Clean up the xfs_buftarg structure a bit:
-    - remove bt_bsize which is never used
-    - replace bt_sshift with bt_ssize; we only ever shift it back
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_buf.c   | 14 +++++++++-----
- fs/xfs/xfs_buf.h   | 20 +++++++++++++++++---
- fs/xfs/xfs_file.c  |  7 +++++--
- fs/xfs/xfs_ioctl.c |  2 +-
- 4 files changed, 32 insertions(+), 11 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKYW4gMjQsIDIwMTQgYXQgMDg6NTY6MzJBTSArMDEwMCwgU2FzY2hhIEFza2FuaSB3
+cm90ZToKPiBIaSBEYXZlLCAKPiAKPiB0aGFua3MgZm9yIHlvdXIgcmVwbHkgYW5kIEnigJltIHNv
+cnJ5IGZvciB0aGUgZGVsYXllZCBhbnN3ZXLigKYKPiAKPiBBbSAyMy4wMS4yMDE0IHVtIDAwOjMx
+IHNjaHJpZWIgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjoKPiAKPiA+IE9uIFdl
+ZCwgSmFuIDIyLCAyMDE0IGF0IDA1OjA5OjEwUE0gKzAxMDAsIFNhc2NoYSBBc2thbmkgd3JvdGU6
+Cj4gPiAKPiA+IFNvLCBhbiBpbm9kZSBleHRlbnQgbWFwIGJ0cmVlIGJsb2NrIGZhaWxlZCB2ZXJp
+ZmljYXRpb24gZm9yIHNvbWUKPiA+IHJlYXNvbi4gSG1tbSAtIHRoZXJlIHNob3VsZCBoYXZlIGJl
+ZW4gNCBsaW5lcyBvZiBoZXhkdW1wIG91dHB1dAo+ID4gdGhlcmUgYXMgd2VsbC4gQ2FuIHlvdSBw
+b3N0IHRoYXQgYXMgd2VsbD8gT3IgaGF2ZSB5b3UgbW9kaWZpZWQKPiA+IC9wcm9jL3N5cy9mcy94
+ZnMvZXJyb3JfbGV2ZWwgdG8gaGF2ZSBhIHZhbHVlIG9mIDAgc28gaXQgaXMgbm90Cj4gPiBlbWl0
+dGVkPwo+ID4gCj4gCj4gL3Byb2Mvc3lzL2ZzL3hmcy9lcnJvcl9sZXZlbCBpcyBzZXQgdG8gMywg
+c29ycnkgZm9yIG5vdCBpbmNsdWRpbmcgdGhpcyBpbiBteSBvcmlnaW5hbCBwb3N0LCB0aGUgSGV4
+ZHVtcCBpcyBwcmV0dHkg4oCeYm9yaW5n4oCcIChvciBpbnRlcmVzdGluZywgZGVwZW5kaW5nIG9u
+IHlvdXIgcG9pbnQgb2Ygdmlldyk6Cj4gCj4gWzk2NDE5Ny40MzUzMjJdIGZmZmY4ODFmOGU1OWIw
+MDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4u
+Li4uLi4uLi4uLi4uCj4gWzk2NDE5Ny44NjIwMzddIGZmZmY4ODFmOGU1OWIwMTA6IDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4u
+Cj4gWzk2NDE5OC4yODg2OTRdIGZmZmY4ODFmOGU1OWIwMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCj4gWzk2NDE5OC43
+MTIwOTNdIGZmZmY4ODFmOGU1OWIwMzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCgpZZWFoLCB0aGF0IGNvbmZpcm1zIHdo
+YXQgSSBzdXNwZWN0ZWQgLSB0aGUgYnVmZmVyIGhhcyBiZWVuCm92ZXJ3cml0dGVuIHdpdGggemVy
+b3MuIFRoYXQgdGVuZHMgdG8gaW1wbHkgKnNvbWV0aGluZyogaGFzIHplcm9lZAp0aGUgc3RhcnQg
+b2YgdGhlIGJsb2NrIGRldmljZSwgYW5kIHRoYXQncyB0aGUgY2F1c2Ugb2YgYWxsIHRoZQpwcm9i
+bGVtcy4KCj4gPiBPaCwgd293LiBPaywgaWYgdGhlIHByaW1hcnkgc3VwZXJibG9jayBpcyBnb25l
+LCBhbG9uZyB3aXRoIG1ldGFkYXRhCj4gPiBpbiB0aGUgZmlyc3QgZmV3IGJsb2NrcyBvZiB0aGUg
+ZmlsZXN5c3RlbSwgdGhlbiBzb21ldGhpbmcgaGFzCj4gPiBvdmVyd3JpdHRlbiB0aGUgc3RhcnQg
+b2YgdGhlIGJsb2NrIGRldmljZSB0aGUgZmlsZXN5c3RlbSBpcyBvbi4KPiA+IAo+ID4+IDIuIG1v
+dW50ZWQgdGhlIGZpbGVzeXN0ZW0sIHdoaWNoIGdhdmUgbWUgYSDigJ5TdHJ1Y3R1cmUgbmVlZHMg
+Y2xlYW5pbmfigJwgYWZ0ZXIgYSBjb3VwbGUgb2Ygc2Vjb25kcwo+ID4+IDMuIHRyaWVkIG1vdW50
+aW5nIGFnYWluIGZvciBnb29kIG1lYXN1cmUsIHNhbWUgZXJyb3Ig4oCeU3RydWN0dXJlIG5lZWRz
+IGNsZWFuaW5n4oCcCj4gPiAKPiA+IFJpZ2h0IC0gdGhlIGtlcm5lbCBjYW4ndCByZWFkIGEgdmFs
+aWQgc3VwZXJsb2NrLCBlaXRoZXIuCj4gCj4gSnVzdCBzZWVuIHRoaXMgbWVzc2FnZXMgaW4gdGhl
+IGxvZyB3aGljaCB3ZXJlIGVtaXR0ZWQgd2hlbiB0cnlpbmcgdG8gbW91bnQgdGhlIEZTOgo+IAo+
+IFs5NjQ2MDYuMDM4NzMzXSBYRlMgKGRtLTgpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4
+MjAwICgieGxvZ19yZWNvdmVyX2RvLi4ocmVhZCMyKSIpIGVycm9yIDExNyBudW1ibGtzIDE2Cj4g
+Wzk2NDYwNi41MTUwNDhdIFhGUyAoZG0tOCk6IGxvZyBtb3VudC9yZWNvdmVyeSBmYWlsZWQ6IGVy
+cm9yIDExNwo+IFs5NjQ2MDYuNTE1Mzg2XSBYRlMgKGRtLTgpOiBsb2cgbW91bnQgZmFpbGVkCgpZ
+dXAsIHRoYXQncyB0cnlpbmcgdG8gcmVhZCBhbiBpbm9kZSBjbHVzdGVyLiBJdCdzIGFsc28gcmln
+aHQgbmVhcgp0aGUgc3RhcnQgb2YgdGhlIGZpbGVzeXN0ZW0gKDB4MjAwICogNTEyIGJ5dGVzID0g
+MjU2ayBpbnRvIHRoZQpmaWxlc3lzdGVtKSBTbyBsb2cgcmVjb3ZlcnkgaXMgdHJ5aW5nIHRvIHJl
+cGxheSBhbiBpbm9kZSBjaGFuZ2UgYW5kCmZpbmRpbmcgdGhlIGlub2RlcyB0aGF0IHVuZGVybHkg
+dGhlIGNoYW5nZSBpbiB0aGUgbG9nIGFyZSBjb3JydXB0LgoKVGhpcyByZWFsbHkgbG9va3MgbGlr
+ZSBzb21ldGhpbmcgb3V0c2lkZSB0aGUgZmlsZXN5c3RlbSBjYXVzZWQgdGhlCnByb2JsZW0uIEl0
+J3MgcHJvYmFibHkgdG9vIGxhdGUgdG8gZmluZCBvdXQgd2hhdCBjYXVzZWQgaXQgZWl0aGVyLApi
+dXQgSSdkIGJlIGNoZWNraW5nIHdpdGggeW91ciBIVyB2ZW5kb3IocykgYWJvdXQga25vd24gcHJv
+YmxlbXMgd2l0aAp0aGVpciBoYXJkd2FyZS9maXJtd2FyZS4uLi4KCkNoZWVycywKCkRhdmUuCi0t
+IApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5j
+b20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
