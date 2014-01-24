@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1E36D7F92
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 15:53:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 105408F8050
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 13:53:02 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1153B7FA9
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 16:20:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D98E9304048
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 14:20:21 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	o4O0o5b4kGDAPdnu for <xfs@oss.sgi.com>;
-	Fri, 24 Jan 2014 13:53:01 -0800 (PST)
-Date: Sat, 25 Jan 2014 08:52:57 +1100
+	0bgTrdY9AHLCQ90m for <xfs@oss.sgi.com>;
+	Fri, 24 Jan 2014 14:20:19 -0800 (PST)
+Date: Sat, 25 Jan 2014 09:20:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Weird XFS Corruption Error
-Message-ID: <20140124215257.GA26397@dastard>
-References: <CDBC891F-BCF6-4B9B-ADDB-9E143973D188@inovex.de>
-	<20140122233141.GI27606@dastard>
-	<FF1E62DE-5CFC-469B-BBF7-F5AB04AD4C0C@inovex.de>
+Subject: Re: assert in xfs_log_commit_cil
+Message-ID: <20140124222017.GB26397@dastard>
+References: <20140124193702.GM26064@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <FF1E62DE-5CFC-469B-BBF7-F5AB04AD4C0C@inovex.de>
+In-Reply-To: <20140124193702.GM26064@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +25,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sascha Askani <saskani@inovex.de>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gRnJpLCBKYW4gMjQsIDIwMTQgYXQgMDg6NTY6MzJBTSArMDEwMCwgU2FzY2hhIEFza2FuaSB3
-cm90ZToKPiBIaSBEYXZlLCAKPiAKPiB0aGFua3MgZm9yIHlvdXIgcmVwbHkgYW5kIEnigJltIHNv
-cnJ5IGZvciB0aGUgZGVsYXllZCBhbnN3ZXLigKYKPiAKPiBBbSAyMy4wMS4yMDE0IHVtIDAwOjMx
-IHNjaHJpZWIgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjoKPiAKPiA+IE9uIFdl
-ZCwgSmFuIDIyLCAyMDE0IGF0IDA1OjA5OjEwUE0gKzAxMDAsIFNhc2NoYSBBc2thbmkgd3JvdGU6
-Cj4gPiAKPiA+IFNvLCBhbiBpbm9kZSBleHRlbnQgbWFwIGJ0cmVlIGJsb2NrIGZhaWxlZCB2ZXJp
-ZmljYXRpb24gZm9yIHNvbWUKPiA+IHJlYXNvbi4gSG1tbSAtIHRoZXJlIHNob3VsZCBoYXZlIGJl
-ZW4gNCBsaW5lcyBvZiBoZXhkdW1wIG91dHB1dAo+ID4gdGhlcmUgYXMgd2VsbC4gQ2FuIHlvdSBw
-b3N0IHRoYXQgYXMgd2VsbD8gT3IgaGF2ZSB5b3UgbW9kaWZpZWQKPiA+IC9wcm9jL3N5cy9mcy94
-ZnMvZXJyb3JfbGV2ZWwgdG8gaGF2ZSBhIHZhbHVlIG9mIDAgc28gaXQgaXMgbm90Cj4gPiBlbWl0
-dGVkPwo+ID4gCj4gCj4gL3Byb2Mvc3lzL2ZzL3hmcy9lcnJvcl9sZXZlbCBpcyBzZXQgdG8gMywg
-c29ycnkgZm9yIG5vdCBpbmNsdWRpbmcgdGhpcyBpbiBteSBvcmlnaW5hbCBwb3N0LCB0aGUgSGV4
-ZHVtcCBpcyBwcmV0dHkg4oCeYm9yaW5n4oCcIChvciBpbnRlcmVzdGluZywgZGVwZW5kaW5nIG9u
-IHlvdXIgcG9pbnQgb2Ygdmlldyk6Cj4gCj4gWzk2NDE5Ny40MzUzMjJdIGZmZmY4ODFmOGU1OWIw
-MDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4u
-Li4uLi4uLi4uLi4uCj4gWzk2NDE5Ny44NjIwMzddIGZmZmY4ODFmOGU1OWIwMTA6IDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4u
-Cj4gWzk2NDE5OC4yODg2OTRdIGZmZmY4ODFmOGU1OWIwMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCj4gWzk2NDE5OC43
-MTIwOTNdIGZmZmY4ODFmOGU1OWIwMzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCgpZZWFoLCB0aGF0IGNvbmZpcm1zIHdo
-YXQgSSBzdXNwZWN0ZWQgLSB0aGUgYnVmZmVyIGhhcyBiZWVuCm92ZXJ3cml0dGVuIHdpdGggemVy
-b3MuIFRoYXQgdGVuZHMgdG8gaW1wbHkgKnNvbWV0aGluZyogaGFzIHplcm9lZAp0aGUgc3RhcnQg
-b2YgdGhlIGJsb2NrIGRldmljZSwgYW5kIHRoYXQncyB0aGUgY2F1c2Ugb2YgYWxsIHRoZQpwcm9i
-bGVtcy4KCj4gPiBPaCwgd293LiBPaywgaWYgdGhlIHByaW1hcnkgc3VwZXJibG9jayBpcyBnb25l
-LCBhbG9uZyB3aXRoIG1ldGFkYXRhCj4gPiBpbiB0aGUgZmlyc3QgZmV3IGJsb2NrcyBvZiB0aGUg
-ZmlsZXN5c3RlbSwgdGhlbiBzb21ldGhpbmcgaGFzCj4gPiBvdmVyd3JpdHRlbiB0aGUgc3RhcnQg
-b2YgdGhlIGJsb2NrIGRldmljZSB0aGUgZmlsZXN5c3RlbSBpcyBvbi4KPiA+IAo+ID4+IDIuIG1v
-dW50ZWQgdGhlIGZpbGVzeXN0ZW0sIHdoaWNoIGdhdmUgbWUgYSDigJ5TdHJ1Y3R1cmUgbmVlZHMg
-Y2xlYW5pbmfigJwgYWZ0ZXIgYSBjb3VwbGUgb2Ygc2Vjb25kcwo+ID4+IDMuIHRyaWVkIG1vdW50
-aW5nIGFnYWluIGZvciBnb29kIG1lYXN1cmUsIHNhbWUgZXJyb3Ig4oCeU3RydWN0dXJlIG5lZWRz
-IGNsZWFuaW5n4oCcCj4gPiAKPiA+IFJpZ2h0IC0gdGhlIGtlcm5lbCBjYW4ndCByZWFkIGEgdmFs
-aWQgc3VwZXJsb2NrLCBlaXRoZXIuCj4gCj4gSnVzdCBzZWVuIHRoaXMgbWVzc2FnZXMgaW4gdGhl
-IGxvZyB3aGljaCB3ZXJlIGVtaXR0ZWQgd2hlbiB0cnlpbmcgdG8gbW91bnQgdGhlIEZTOgo+IAo+
-IFs5NjQ2MDYuMDM4NzMzXSBYRlMgKGRtLTgpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4
-MjAwICgieGxvZ19yZWNvdmVyX2RvLi4ocmVhZCMyKSIpIGVycm9yIDExNyBudW1ibGtzIDE2Cj4g
-Wzk2NDYwNi41MTUwNDhdIFhGUyAoZG0tOCk6IGxvZyBtb3VudC9yZWNvdmVyeSBmYWlsZWQ6IGVy
-cm9yIDExNwo+IFs5NjQ2MDYuNTE1Mzg2XSBYRlMgKGRtLTgpOiBsb2cgbW91bnQgZmFpbGVkCgpZ
-dXAsIHRoYXQncyB0cnlpbmcgdG8gcmVhZCBhbiBpbm9kZSBjbHVzdGVyLiBJdCdzIGFsc28gcmln
-aHQgbmVhcgp0aGUgc3RhcnQgb2YgdGhlIGZpbGVzeXN0ZW0gKDB4MjAwICogNTEyIGJ5dGVzID0g
-MjU2ayBpbnRvIHRoZQpmaWxlc3lzdGVtKSBTbyBsb2cgcmVjb3ZlcnkgaXMgdHJ5aW5nIHRvIHJl
-cGxheSBhbiBpbm9kZSBjaGFuZ2UgYW5kCmZpbmRpbmcgdGhlIGlub2RlcyB0aGF0IHVuZGVybHkg
-dGhlIGNoYW5nZSBpbiB0aGUgbG9nIGFyZSBjb3JydXB0LgoKVGhpcyByZWFsbHkgbG9va3MgbGlr
-ZSBzb21ldGhpbmcgb3V0c2lkZSB0aGUgZmlsZXN5c3RlbSBjYXVzZWQgdGhlCnByb2JsZW0uIEl0
-J3MgcHJvYmFibHkgdG9vIGxhdGUgdG8gZmluZCBvdXQgd2hhdCBjYXVzZWQgaXQgZWl0aGVyLApi
-dXQgSSdkIGJlIGNoZWNraW5nIHdpdGggeW91ciBIVyB2ZW5kb3IocykgYWJvdXQga25vd24gcHJv
-YmxlbXMgd2l0aAp0aGVpciBoYXJkd2FyZS9maXJtd2FyZS4uLi4KCkNoZWVycywKCkRhdmUuCi0t
-IApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5j
-b20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Jan 24, 2014 at 01:37:02PM -0600, Ben Myers wrote:
+> Hi Folks,
+> 
+> I hit this assertion on one of my test boxes today:
+> 
+> [1167966.151275] XFS: Assertion failed: !list_empty(&cil->xc_cil), file: /root/xfs/fs/xfs/xfs_log_cil.c, line: 636
+
+I suppose that can happen if we are committing a transaction that
+has no dirty objects in it. But that can't happen from
+xfs_setfilesize(). That implies memory corruption or that someone has
+busted rwsem behaviour.
+
+> [1167966.162659] ------------[ cut here ]------------
+> [1167966.168021] kernel BUG at /root/xfs/fs/xfs/xfs_message.c:107!
+> [1167966.168026] invalid opcode: 0000 [#4] SMP
+> [1167966.168081] Modules linked in: xfs(OF) ext2(F) dm_flakey(F) crc32c(F) libcrc32c(F) autofs4(F) cpufreq_conservative(F) cpufreq_userspace(F) cpufreq_powersave(F) microcode(F) fuse(F) loop(F) dm_mod(F) joydev(F) hid_generic(F) usbhid(F) hid(F) ehci_pci(F) ehci_hcd(F) iTCO_wdt(F) iTCO_vendor_support(F) ipv6(F) usbcore(F) sg(F) igb(F) isci(F) sr_mod(F) pcspkr(F) mptctl(F) cdrom(F) libsas(F) usb_common(F) ioatdma(F) ptp(F) i2c_i801(F) lpc_ich(F) mfd_core(F) pps_core(F) dca(F) rtc_cmos(F) acpi_cpufreq(F) wmi(F) button(F) mgag200(F) ttm(F) drm_kms_helper(F) drm(F) i2c_algo_bit(F) sysimgblt(F) sysfillrect(F) i2c_core(F) syscopyarea(F) sd_mod(F) crc_t10dif(F) crct10dif_common(F) mpt2sas(F) raid_class(F) scsi_dh_emc(F) scsi_dh_rdac(F) scsi_dh_alua(F) scsi_dh_hp_sw(F) scsi_dh(F) thermal(F) sata_nv(F) processor(F) piix(F) mptsas(F) mptscsih(F) scsi_transport_sas(F) mptbase(F) megaraid_sas(F) ide_generic(F) ide_core(F) fan(F) thermal_sys(F) hwmon(F) ext3(F) jbd(F) mbcache(F) edd(F) 
+ at
+>  a_piix(F) ahci(F) libahci(F) libata(F) scsi_mod(F) [last unloaded: scsi_debug]
+> [1167966.168102] CPU: 10 PID: 13005 Comm: kworker/10:3 Tainted: GF     D   IO 3.13.0-rc2-0.9-default #28
+
+That's a rather heavily tainted kernel you are testing there. It's
+got forced module loads, TAINT_DIE which means this isn't the first
+oops the kernel has had, TAINT_FIRMWARE_WORKAROUND which means the
+hardware has bios/errata issues that need fixing, and you're
+building and using out-of-tree modules that are force loaded so
+there's no guarantee that all kernel/module ABIs match precisely....
+
+The key one is that TAINT_DIE is already set. Something has already
+paniced on the machine, and once that happens all bets are off. Can
+you reproduce this on a clean, untainted kernel?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
