@@ -1,10 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch,
-	xfs-allow-logical-sector-sized-O_DIRECT,
-	created. xfs-for-linus-v3.14-rc1-3-g7c71ee7
-Message-Id: <20140124195041.633137FAD@oss.sgi.com>
-Date: Fri, 24 Jan 2014 13:50:41 -0600 (CST)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-v3.14-rc1-3-g7c71ee7
+Message-Id: <20140124195415.719677FAD@oss.sgi.com>
+Date: Fri, 24 Jan 2014 13:54:15 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,8 +23,15 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-allow-logical-sector-sized-O_DIRECT has been created
-        at  7c71ee78031c248dca13fc94dea9a4cc217db6cf (commit)
+The branch, for-next has been updated
+  7c71ee7 xfs: allow logical-sector sized O_DIRECT
+  6da5417 xfs: rename xfs_buftarg structure members
+  f0bc998 xfs: clean up xfs_buftarg
+      from  bf3964c188d686424ff7b69a45941851b9f437f0 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
 commit 7c71ee78031c248dca13fc94dea9a4cc217db6cf
@@ -111,6 +117,13 @@ Date:   Tue Jan 21 16:44:57 2014 -0600
     Signed-off-by: Ben Myers <bpm@sgi.com>
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_buf.c   | 14 +++++++++-----
+ fs/xfs/xfs_buf.h   | 20 +++++++++++++++++---
+ fs/xfs/xfs_file.c  |  7 +++++--
+ fs/xfs/xfs_ioctl.c |  2 +-
+ 4 files changed, 32 insertions(+), 11 deletions(-)
 
 
 hooks/post-receive
