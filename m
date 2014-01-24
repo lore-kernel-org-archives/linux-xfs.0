@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1552A29E0F
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 18:07:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA0618F8040
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 16:07:01 -0800 (PST)
-Date: Thu, 23 Jan 2014 16:06:29 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] directory quota survey on xfs
-Message-ID: <20140124000629.GB8973@birch.djwong.org>
-References: <20131222095929.GA11444@gmail.com> <20131223014222.GC3220@dastard>
-	<20140115081201.GA3820@gmail.com>
-	<5966C533-EF18-4804-8C83-DFBD607D9BE6@dilger.ca>
-	<20140115213207.GJ3431@dastard> <20140121070706.GA1819@gmail.com>
-	<20140123223205.GJ27606@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E1DCB7F60
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 19:59:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BEE95304032
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 17:59:01 -0800 (PST)
+Date: Thu, 23 Jan 2014 20:58:56 -0500
+From: Josh Boyer <jwboyer@fedoraproject.org>
+Subject: XFS lockdep spew with v3.13-4156-g90804ed
+Message-ID: <20140124015855.GM16455@hansolo.jdub.homelinux.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140123223205.GJ27606@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,68 +23,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Li Xi <pkuelelixi@gmail.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, Ben Myers <bpm@sgi.com>
+Cc: sandeen@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Jan 24, 2014 at 09:32:05AM +1100, Dave Chinner wrote:
-> On Tue, Jan 21, 2014 at 03:07:06PM +0800, Zheng Liu wrote:
-> > Hi Dave,
-> > 
-> > On Thu, Jan 16, 2014 at 08:32:07AM +1100, Dave Chinner wrote:
-> > > On Wed, Jan 15, 2014 at 11:03:22AM -0700, Andreas Dilger wrote:
-> > > > quotas (to keep compatibility for existing XFS deployments), but add
-> > > > support into quota-tools so that it is usable by all filesystems.
-> > > 
-> > > Well, yes. If you are writing a generic quota tool, then it needs to
-> > > support all filesystems. We already have a fully featured quota API
-> > > that can provide this support - it's the API that XFS has been using
-> > > since it was ported to Linux.  We have the opportunity to unify the
-> > > quota APIs that ext4 and XFS, so we should take the opportunity
-> > > while it is here.  Don't create a new API for ext4 simply because of
-> > > NIH syndrome.
-> > 
-> > These days I was thinking about your comment that uses quotactl API to
-> > communicate the userspace tool with the kernel.  But I am still
-> > confusing about your comment that unifies the quota API between ext4 and
-> > XFS.
-> > 
-> > Now we have two flag sets in quotactl(2).  One (Q_QUOTAON, Q_GETQUOTA,
-> > etc...) is used by extN file system (I am not sure whether other file
-> > systems use these flags or not), and another (Q_XQUOTAON, Q_XGETQSTAT,
-> > etc...) is used by XFS.
-> 
-> I'm talking about making ext4 be able to use Q_XQUOTAON,
-> Q_XGETQSTAT, etc.
-> 
-> > In xfs_quota it uses an ioctl(2) to get/set/check project id,
-> 
-> Right, because that's a filesystem specific operation that has no
-> equivalent in any other filesystem at this point in time. Same for
-> the project inheritence inode flag.
-> 
-> You're going to need to add such an interface to ext4 to do this, so
-> add a generic ioctl and wire XFS up to it as well. This is kind
-> of why I want a generic xattr namespace for inode flags/attribute
-> at the VFS - so we don't have to keep inventing new
-> ioctl/fcntl interfaces to make this sort of functionality common
-> between different filesystems - we just define a new attribute
-> string and values and let individual filesystems handle how they
-> store them.
+Hi All,
 
-I wonder, do you have an opinion on my patches to do just that?  Since it was
-an RFC I only wired up ext4; first with string-based xattrs[1] and again as a
-(namespace, flags) integer tuple[2].  Jan disliked juggling strings around
-(they don't bring me oodles of happiness either), Christoph doesn't like the
-magic xattrs, and Ted seemed lukewarm so I'm inclined to fix up the other FSes
-a la [2].
+I'm hitting an XFS lockdep error with Linus' tree today after the XFS
+merge.  I wasn't hitting this with v3.13-3995-g0dc3fd0, which seems
+to backup the "before XFS merge" claim.  Full text below:
 
-(...and please everybody don't co-opt this thread for inode flags any more than
-I have.)
 
---D
+[  132.638044] ======================================================
+[  132.638045] [ INFO: possible circular locking dependency detected ]
+[  132.638047] 3.14.0-0.rc0.git7.1.fc21.x86_64 #1 Not tainted
+[  132.638048] -------------------------------------------------------
+[  132.638049] gnome-session/1432 is trying to acquire lock:
+[  132.638050]  (&mm->mmap_sem){++++++}, at: [<ffffffff811b846f>] might_fault+0x
+5f/0xb0
+[  132.638055] 
+but task is already holding lock:
+[  132.638056]  (&(&ip->i_lock)->mr_lock){++++..}, at: [<ffffffffa05b3c12>] xfs_
+ilock+0xf2/0x1c0 [xfs]
+[  132.638076] 
+which lock already depends on the new lock.
 
-[1] http://lkml.org/lkml/2014/1/6/1059 (fs: xattr-based FS_IOC_[GS]ETFLAGS interface)
-[2] http://lkml.org/lkml/2014/1/7/534 (fs: new FS_IOC_[GS]ETFLAGS2 interface)
+[  132.638077] 
+the existing dependency chain (in reverse order) is:
+[  132.638078] 
+-> #1 (&(&ip->i_lock)->mr_lock){++++..}:
+[  132.638080]        [<ffffffff810deaa2>] lock_acquire+0xa2/0x1d0
+[  132.638083]        [<ffffffff8178312e>] _raw_spin_lock+0x3e/0x80
+[  132.638085]        [<ffffffff8123c579>] __mark_inode_dirty+0x119/0x440
+[  132.638088]        [<ffffffff812447fc>] __set_page_dirty+0x6c/0xc0
+[  132.638090]        [<ffffffff812477e1>] mark_buffer_dirty+0x61/0x180
+[  132.638092]        [<ffffffff81247a31>] __block_commit_write.isra.21+0x81/0xb0
+[  132.638094]        [<ffffffff81247be6>] block_write_end+0x36/0x70
+[  132.638096]        [<ffffffff81247c48>] generic_write_end+0x28/0x90
+[  132.638097]        [<ffffffffa0554cab>] xfs_vm_write_end+0x2b/0x70 [xfs]
+[  132.638104]        [<ffffffff8118c4f6>] generic_file_buffered_write+0x156/0x260
+[  132.638107]        [<ffffffffa05651d7>] xfs_file_buffered_aio_write+0x107/0x250 [xfs]
+[  132.638115]        [<ffffffffa05653eb>] xfs_file_aio_write+0xcb/0x130 [xfs]
+[  132.638122]        [<ffffffff8120af8a>] do_sync_write+0x5a/0x90
+[  132.638125]        [<ffffffff8120b74d>] vfs_write+0xbd/0x1f0
+[  132.638126]        [<ffffffff8120c15c>] SyS_write+0x4c/0xa0
+[  132.638128]        [<ffffffff8178db69>] system_call_fastpath+0x16/0x1b
+[  132.638130] 
+-> #0 (&mm->mmap_sem){++++++}:
+[  132.638132]        [<ffffffff810de0fc>] __lock_acquire+0x18ec/0x1aa0
+[  132.638133]        [<ffffffff810deaa2>] lock_acquire+0xa2/0x1d0
+[  132.638135]        [<ffffffff811b849c>] might_fault+0x8c/0xb0
+[  132.638136]        [<ffffffff81220a91>] filldir+0x91/0x120
+[  132.638138]        [<ffffffffa0560f7f>] xfs_dir2_sf_getdents+0x23f/0x2a0 [xfs]
+[  132.638146]        [<ffffffffa05613fb>] xfs_readdir+0x16b/0x1d0 [xfs]
+[  132.638154]        [<ffffffffa056383b>] xfs_file_readdir+0x2b/0x40 [xfs]
+[  132.638161]        [<ffffffff812208d8>] iterate_dir+0xa8/0xe0
+[  132.638163]        [<ffffffff81220d83>] SyS_getdents+0x93/0x120
+[  132.638165]        [<ffffffff8178db69>] system_call_fastpath+0x16/0x1b
+[  132.638166] 
+other info that might help us debug this:
+[  132.638167]  Possible unsafe locking scenario:
+
+[  132.638168]        CPU0                    CPU1
+[  132.638169]        ----                    ----
+[  132.638169]   lock(&(&ip->i_lock)->mr_lock);
+[  132.638171]                                lock(&mm->mmap_sem);
+[  132.638172]                                lock(&(&ip->i_lock)->mr_lock);
+[  132.638173]   lock(&mm->mmap_sem);
+[  132.638174] 
+ *** DEADLOCK ***
+
+[  132.638176] 2 locks held by gnome-session/1432:
+[  132.638177]  #0:  (&type->i_mutex_dir_key#4){+.+.+.}, at: [<ffffffff81220892>] iterate_dir+0x62/0xe0
+[  132.638180]  #1:  (&(&ip->i_lock)->mr_lock){++++..}, at: [<ffffffffa05b3c12>] xfs_ilock+0xf2/0x1c0 [xfs]
+[  132.638193] 
+stack backtrace:
+[  132.638195] CPU: 3 PID: 1432 Comm: gnome-session Not tainted 3.14.0-0.rc0.git7.1.fc21.x86_64 #1
+[  132.638196] Hardware name: Dell Inc. XPS 8300  /0Y2MRG, BIOS A06 10/17/2011
+[  132.638197]  ffffffff825ba040 ffff88030dc75c60 ffffffff8177a8c9 ffffffff825ba040
+[  132.638199]  ffff88030dc75ca0 ffffffff8177616c ffff88030dc75cf0 ffff8802fb51dba8
+[  132.638201]  ffff8802fb51d010 0000000000000002 0000000000000002 ffff8802fb51dba8
+[  132.638203] Call Trace:
+[  132.638205]  [<ffffffff8177a8c9>] dump_stack+0x4d/0x66
+[  132.638207]  [<ffffffff8177616c>] print_circular_bug+0x201/0x20f
+[  132.638210]  [<ffffffff810de0fc>] __lock_acquire+0x18ec/0x1aa0
+[  132.638212]  [<ffffffff810deaa2>] lock_acquire+0xa2/0x1d0
+[  132.638213]  [<ffffffff811b846f>] ? might_fault+0x5f/0xb0
+[  132.638215]  [<ffffffff811b849c>] might_fault+0x8c/0xb0
+[  132.638216]  [<ffffffff811b846f>] ? might_fault+0x5f/0xb0
+[  132.638218]  [<ffffffff81220a91>] filldir+0x91/0x120
+[  132.638226]  [<ffffffffa0560f7f>] xfs_dir2_sf_getdents+0x23f/0x2a0 [xfs]
+[  132.638237]  [<ffffffffa05b3c12>] ? xfs_ilock+0xf2/0x1c0 [xfs]
+[  132.638245]  [<ffffffffa05613fb>] xfs_readdir+0x16b/0x1d0 [xfs]
+[  132.638253]  [<ffffffffa056383b>] xfs_file_readdir+0x2b/0x40 [xfs]
+[  132.638255]  [<ffffffff812208d8>] iterate_dir+0xa8/0xe0
+[  132.638258]  [<ffffffff8122ca7c>] ? fget_light+0x3c/0x4f0
+[  132.638260]  [<ffffffff81220d83>] SyS_getdents+0x93/0x120
+[  132.638261]  [<ffffffff81220a00>] ? fillonedir+0xf0/0xf0
+[  132.638264]  [<ffffffff81134ecc>] ? __audit_syscall_entry+0x9c/0xf0
+[  132.638265]  [<ffffffff8178db69>] system_call_fastpath+0x16/0x1b
+
+josh
 
 _______________________________________________
 xfs mailing list
