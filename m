@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C0D6D7FC5
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 20:59:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 854EB304048
-	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 18:59:19 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0635E7FC5
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 21:01:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 68780AC004
+	for <xfs@oss.sgi.com>; Thu, 23 Jan 2014 19:01:07 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	kJsNq8x07jxHmKQ6 for <xfs@oss.sgi.com>;
-	Thu, 23 Jan 2014 18:59:17 -0800 (PST)
-Date: Fri, 24 Jan 2014 13:58:46 +1100
+	Ar174beEJ4qRhVCo for <xfs@oss.sgi.com>;
+	Thu, 23 Jan 2014 19:01:05 -0800 (PST)
+Date: Fri, 24 Jan 2014 14:01:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfstests updated to 197f773
-Message-ID: <20140124025846.GL27606@dastard>
+Subject: Re: XFS lockdep spew with v3.13-4156-g90804ed
+Message-ID: <20140124030100.GM27606@dastard>
+References: <20140124015855.GM16455@hansolo.jdub.homelinux.org>
+	<20140124022903.GK27606@dastard>
+	<CA+5PVA4i0xp7jqcR=yMG3BjucXfkbM+yXP7YoDHWZgbLtdej-Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <CA+5PVA4i0xp7jqcR=yMG3BjucXfkbM+yXP7YoDHWZgbLtdej-Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,97 +31,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Josh Boyer <jwboyer@fedoraproject.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, Ben Myers <bpm@sgi.com>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi all,
+On Thu, Jan 23, 2014 at 09:51:05PM -0500, Josh Boyer wrote:
+> On Thu, Jan 23, 2014 at 9:29 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Jan 23, 2014 at 08:58:56PM -0500, Josh Boyer wrote:
+> >> the existing dependency chain (in reverse order) is:
+> >> [  132.638078]
+> >> -> #1 (&(&ip->i_lock)->mr_lock){++++..}:
+> >> [  132.638080]        [<ffffffff810deaa2>] lock_acquire+0xa2/0x1d0
+> >> [  132.638083]        [<ffffffff8178312e>] _raw_spin_lock+0x3e/0x80
+> >> [  132.638085]        [<ffffffff8123c579>] __mark_inode_dirty+0x119/0x440
+> >> [  132.638088]        [<ffffffff812447fc>] __set_page_dirty+0x6c/0xc0
+> >> [  132.638090]        [<ffffffff812477e1>] mark_buffer_dirty+0x61/0x180
+> >> [  132.638092]        [<ffffffff81247a31>] __block_commit_write.isra.21+0x81/0xb0
+> >> [  132.638094]        [<ffffffff81247be6>] block_write_end+0x36/0x70
+> >> [  132.638096]        [<ffffffff81247c48>] generic_write_end+0x28/0x90
+> >> [  132.638097]        [<ffffffffa0554cab>] xfs_vm_write_end+0x2b/0x70 [xfs]
+> >> [  132.638104]        [<ffffffff8118c4f6>] generic_file_buffered_write+0x156/0x260
+> >> [  132.638107]        [<ffffffffa05651d7>] xfs_file_buffered_aio_write+0x107/0x250 [xfs]
+> >> [  132.638115]        [<ffffffffa05653eb>] xfs_file_aio_write+0xcb/0x130 [xfs]
+> >> [  132.638122]        [<ffffffff8120af8a>] do_sync_write+0x5a/0x90
+> >> [  132.638125]        [<ffffffff8120b74d>] vfs_write+0xbd/0x1f0
+> >> [  132.638126]        [<ffffffff8120c15c>] SyS_write+0x4c/0xa0
+> >> [  132.638128]        [<ffffffff8178db69>] system_call_fastpath+0x16/0x1b
+> >
+> > Sorry, what? That trace is taking the ip->i_vnode->i_lock
+> > *spinlock*, not the ip->i_lock *rwsem*. And it's most definitely not
+> > currently holding the ip->i_lock rwsem here. I think lockdep has
+> > dumped the wrong stack trace here, because it most certainly doesn't
+> > match the unsafe locking scenario that has been detected.
+> 
+> I rebooted again with the same kernel and lockdep spit out a different
+> stacktrace for this part.  See below.  The rest looks mostly the same,
+> and it spews when I log into gnome, so at least it's recreatable.
 
-The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-just been updated. Patches often get missed, so please check if your
-outstanding patches were in this update. If they have not been in
-this update, please resubmit them to xfs@oss.sgi.com so they can be
-picked up in the next update.
+Right, it spat out the correct one this time - block mapping in the
+IO path run from a page fault.
+> 
+> > You can't mmap directories, and so the page fault lock order being
+> > shown for CPU1 can't happen on a directory. False positive.
+> >
+> > *sigh*
+> >
+> > More complexity in setting up inode lock order instances is required
+> > so that lockdep doesn't confuse the lock ordering semantics of
+> > directories with regular files. As if that code to make lockdep
+> > happy wasn't complex enough already....
+> 
+> So the summary is basically: false positive with additional annotations needed?
 
-The new head of the master branch is commit:
+Precisely.
 
-197f773 xfstests: define $seqres in btrfs/026-029
+Cheers,
 
-New Commits:
-
-Dave Chinner (7):
-      [ea0b6eb] xfs: test scratch device mkfs features
-      [b9b5d74] xfs: New _require_* tests for CRC enabled filesystems
-      [86e91cc] xfs: add fsstress/recovery test
-      [5b524ee] xfs/073, 208: remove .full output before starting the test
-      [b04b0fd] xfs: support xfs_metadump with external logs
-      [3ed573e] xfs/104: use fixed log size
-      [7657a10] generic/204: use fixed log size for XFS
-
-David Sterba (3):
-      [80622a6] xfstests: don't suggest to run full diff when DIFF_LENGTH is 0
-      [586a06c] xfstests: use value of FSTYP if defined externally
-      [1ed9046] xfstests: clean command names in btrfs tests
-
-Eric Sandeen (1):
-      [a93b1dd] ext4: regression test for ext4 resize with non-extent files
-
-Filipe David Borba Manana (1):
-      [8c427eb] xfstests: add test for btrfs incremental send infinite loop issue
-
-Koen De Wit (2):
-      [0c58766] xfstests: btrfs: cross-subvolume sparse copy
-      [197f773] xfstests: define $seqres in btrfs/026-029
-
-
-Code Diffstat:
-
- README              |   3 ++
- check               |  13 ++---
- common/attr         |   6 +++
- common/rc           | 122 +++++++++++++++++++++++++++---------------
- tests/btrfs/003     |   2 +-
- tests/btrfs/004     |   2 +-
- tests/btrfs/007     |   4 +-
- tests/btrfs/008     |  12 ++---
- tests/btrfs/009     |   6 +--
- tests/btrfs/013     |   2 +-
- tests/btrfs/014     |   6 +--
- tests/btrfs/015     |   2 +-
- tests/btrfs/016     |  14 ++---
- tests/btrfs/017     |   2 +-
- tests/btrfs/019     |  14 ++---
- tests/btrfs/022     |   6 +--
- tests/btrfs/024     |   2 +-
- tests/btrfs/025     |   4 +-
- tests/btrfs/026     |   1 +
- tests/btrfs/027     |   1 +
- tests/btrfs/028     |   1 +
- tests/btrfs/029     |   1 +
- tests/btrfs/030     | 149 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/030.out |   1 +
- tests/btrfs/031     | 138 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/031.out |  48 +++++++++++++++++
- tests/btrfs/group   |   2 +
- tests/ext4/306      |  82 +++++++++++++++++++++++++++++
- tests/ext4/306.out  |  13 +++++
- tests/ext4/group    |   1 +
- tests/generic/204   |   4 ++
- tests/generic/208   |   2 +
- tests/shared/298    |   2 +-
- tests/xfs/073       |   2 +
- tests/xfs/104       |   2 +-
- tests/xfs/186       |   1 +
- tests/xfs/187       |  32 ++++++-----
- tests/xfs/244       |   1 +
- tests/xfs/253       |   3 +-
- tests/xfs/278       |   1 +
- tests/xfs/287       |   3 +-
- tests/xfs/291       |   4 +-
- tests/xfs/306       | 105 ++++++++++++++++++++++++++++++++++++
- tests/xfs/306.out   |   2 +
- tests/xfs/group     |   1 +
- 45 files changed, 716 insertions(+), 109 deletions(-)
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
