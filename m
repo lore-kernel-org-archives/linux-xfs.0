@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1153B7FA9
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 16:20:25 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1E0507F7D
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 16:31:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D98E9304048
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 14:20:21 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 00F548F8054
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 14:31:19 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	0bgTrdY9AHLCQ90m for <xfs@oss.sgi.com>;
-	Fri, 24 Jan 2014 14:20:19 -0800 (PST)
-Date: Sat, 25 Jan 2014 09:20:17 +1100
+	HDmDinE2RXSswOMH for <xfs@oss.sgi.com>;
+	Fri, 24 Jan 2014 14:31:18 -0800 (PST)
+Date: Sat, 25 Jan 2014 09:30:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: assert in xfs_log_commit_cil
-Message-ID: <20140124222017.GB26397@dastard>
-References: <20140124193702.GM26064@sgi.com>
+Subject: Re: [PATCH V3] xfs_repair: add support for validating dirent ftype
+	field
+Message-ID: <20140124223053.GC26397@dastard>
+References: <1390517573-29898-1-git-send-email-david@fromorbit.com>
+	<52E26DD2.5020808@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140124193702.GM26064@sgi.com>
+In-Reply-To: <52E26DD2.5020808@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +31,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 24, 2014 at 01:37:02PM -0600, Ben Myers wrote:
-> Hi Folks,
+On Fri, Jan 24, 2014 at 08:42:42AM -0500, Brian Foster wrote:
+> On 01/23/2014 05:52 PM, Dave Chinner wrote:
+> > @@ -2189,6 +2238,59 @@ out_fix:
+> >   * shortform directory v2 processing routines -- entry verification and
+> >   * bad entry deletion (pruning).
+> >   */
+> > +static struct xfs_dir2_sf_entry *
+> > +shortform_dir2_junk(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_dir2_sf_hdr	*sfp,
+> > +	struct xfs_dir2_sf_entry *sfep,
+> > +	xfs_ino_t		lino,
+> > +	int			*max_size,
+> > +	int			*index,
+> > +	int			*bytes_deleted,
+> > +	int			*ino_dirty)
+> > +{
+> > +	struct xfs_dir2_sf_entry *tmp_sfep;
+> > +	int			tmp_len;
+> > +	int			tmp_elen;
+> > +
+> > +	if (lino == orphanage_ino)
+> > +		orphanage_ino = 0;
+> > +	if (no_modify) {
+> > +		do_warn(_("would junk entry\n"));
+> > +		return NULL;
 > 
-> I hit this assertion on one of my test boxes today:
+> Argh, sorry I missed this last time. ;) This looks like a problem. In
+> the no_modify case, we return NULL and 'continue' in the caller, which
+> skips the loop end logic and leads to bad things.
 > 
-> [1167966.151275] XFS: Assertion failed: !list_empty(&cil->xc_cil), file: /root/xfs/fs/xfs/xfs_log_cil.c, line: 636
+> We could calculate and return the next entry here, but it might be
+> cleaner to use a goto instead of continue in the callers and not
+> duplicate the logic.
 
-I suppose that can happen if we are committing a transaction that
-has no dirty objects in it. But that can't happen from
-xfs_setfilesize(). That implies memory corruption or that someone has
-busted rwsem behaviour.
+Argh, my bad. I missed that too. As it is, we already calculate the
+next entry in this function - tmp_sfep
 
-> [1167966.162659] ------------[ cut here ]------------
-> [1167966.168021] kernel BUG at /root/xfs/fs/xfs/xfs_message.c:107!
-> [1167966.168026] invalid opcode: 0000 [#4] SMP
-> [1167966.168081] Modules linked in: xfs(OF) ext2(F) dm_flakey(F) crc32c(F) libcrc32c(F) autofs4(F) cpufreq_conservative(F) cpufreq_userspace(F) cpufreq_powersave(F) microcode(F) fuse(F) loop(F) dm_mod(F) joydev(F) hid_generic(F) usbhid(F) hid(F) ehci_pci(F) ehci_hcd(F) iTCO_wdt(F) iTCO_vendor_support(F) ipv6(F) usbcore(F) sg(F) igb(F) isci(F) sr_mod(F) pcspkr(F) mptctl(F) cdrom(F) libsas(F) usb_common(F) ioatdma(F) ptp(F) i2c_i801(F) lpc_ich(F) mfd_core(F) pps_core(F) dca(F) rtc_cmos(F) acpi_cpufreq(F) wmi(F) button(F) mgag200(F) ttm(F) drm_kms_helper(F) drm(F) i2c_algo_bit(F) sysimgblt(F) sysfillrect(F) i2c_core(F) syscopyarea(F) sd_mod(F) crc_t10dif(F) crct10dif_common(F) mpt2sas(F) raid_class(F) scsi_dh_emc(F) scsi_dh_rdac(F) scsi_dh_alua(F) scsi_dh_hp_sw(F) scsi_dh(F) thermal(F) sata_nv(F) processor(F) piix(F) mptsas(F) mptscsih(F) scsi_transport_sas(F) mptbase(F) megaraid_sas(F) ide_generic(F) ide_core(F) fan(F) thermal_sys(F) hwmon(F) ext3(F) jbd(F) mbcache(F) edd(F) 
- at
->  a_piix(F) ahci(F) libahci(F) libata(F) scsi_mod(F) [last unloaded: scsi_debug]
-> [1167966.168102] CPU: 10 PID: 13005 Comm: kworker/10:3 Tainted: GF     D   IO 3.13.0-rc2-0.9-default #28
+> 
+> > +	}
+> > +
+> > +	tmp_elen = xfs_dir3_sf_entsize(mp, sfp,
+> > +					sfep->namelen);
+> > +	tmp_sfep = (xfs_dir2_sf_entry_t *)
+> > +		((__psint_t) sfep + tmp_elen);
+> > +	tmp_len = *max_size - ((__psint_t) tmp_sfep
+> > +				- (__psint_t) sfp);
+> > +	*max_size -= tmp_elen;
+> > +	*bytes_deleted += tmp_elen;
+> > +
+> > +	memmove(sfep, tmp_sfep, tmp_len);
 
-That's a rather heavily tainted kernel you are testing there. It's
-got forced module loads, TAINT_DIE which means this isn't the first
-oops the kernel has had, TAINT_FIRMWARE_WORKAROUND which means the
-hardware has bios/errata issues that need fixing, and you're
-building and using out-of-tree modules that are force loaded so
-there's no guarantee that all kernel/module ABIs match precisely....
+What this code is doing is moving all the subsequent entries after
+the one being junked down over the entry we are junking...
 
-The key one is that TAINT_DIE is already set. Something has already
-paniced on the machine, and once that happens all bets are off. Can
-you reproduce this on a clean, untainted kernel?
+> > +
+> > +	sfp->count -= 1;
+> > +	memset((void *)((__psint_t)sfep + tmp_len), 0,
+> > +			tmp_elen);
+
+And then zeroing the remaining bytes of the region that is no
+longer used.
+
+So the no modify check needs to happen after calculating tmp_sfep
+and return that...
 
 Cheers,
 
