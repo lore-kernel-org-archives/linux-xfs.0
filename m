@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4714A7FEF
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 03:12:21 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 79CED7FF4
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 03:12:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A79F8F8037
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 01:12:21 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C8028F8037
+	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 01:12:20 -0800 (PST)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id qOmISWAc0ELXm12T for
-	<xfs@oss.sgi.com>; Fri, 24 Jan 2014 01:12:19 -0800 (PST)
+	cuda.sgi.com with ESMTP id EjfvyXDISCoVSPQn for
+	<xfs@oss.sgi.com>; Fri, 24 Jan 2014 01:12:18 -0800 (PST)
 From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
-Subject: [PATCH] Btrfs: add regression test for iterating backrefs
-Date: Fri, 24 Jan 2014 17:09:57 +0800
-Message-Id: <1390554597-11076-2-git-send-email-wangsl.fnst@cn.fujitsu.com>
-In-Reply-To: <1390554597-11076-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
-References: <1390554597-11076-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH] Btrfs: add regression test for transaction abortion when
+	remounting
+Date: Fri, 24 Jan 2014 17:09:56 +0800
+Message-Id: <1390554597-11076-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +29,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-btrfs@vger.kernel.org
 
-Btrfs send/scrub/defrag/qgroup need to walk backrefs,this test
-is to make sure iterating backrefs with ulist is working and don't
-cause a kernel panic here.
+Btrfs would get a transaction abortion when remounting RW to RO with
+flushoncommit enabled.This test is to check if bug still exists.
 
 Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 ---
- tests/btrfs/033     | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/033.out |  2 ++
+ tests/btrfs/032     | 57 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/032.out |  3 +++
  tests/btrfs/group   |  1 +
- 3 files changed, 74 insertions(+)
- create mode 100755 tests/btrfs/033
- create mode 100644 tests/btrfs/033.out
+ 3 files changed, 61 insertions(+)
+ create mode 100755 tests/btrfs/032
+ create mode 100644 tests/btrfs/032.out
 
-diff --git a/tests/btrfs/033 b/tests/btrfs/033
+diff --git a/tests/btrfs/032 b/tests/btrfs/032
 new file mode 100755
-index 0000000..c6ddcdc
+index 0000000..0b666e5
 --- /dev/null
-+++ b/tests/btrfs/033
-@@ -0,0 +1,71 @@
++++ b/tests/btrfs/032
+@@ -0,0 +1,57 @@
 +#!/bin/bash
-+# FS QA Test No. btrfs/033
++# FS QA Test No. btrfs/032
 +#
-+# Regression test for iterating backrefs
++# Regression test for transaction abortion when remounting RW to RO
++# with flushoncommit option enabled.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
@@ -98,45 +97,31 @@ index 0000000..c6ddcdc
 +_require_scratch
 +
 +_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
++_scratch_mount "-o flushoncommit"
 +
-+touch $SCRATCH_MNT/foo
++$XFS_IO_PROG -f -c "pwrite 0 10M" "$SCRATCH_MNT/tmpfile" | _filter_xfs_io
 +
-+# get file with fragments by using backwards writes.
-+for i in `seq 10240 -1 1`; do
-+	$XFS_IO_PROG -f -d -c "pwrite $(($i * 4096)) 4096" \
-+	$SCRATCH_MNT/foo > /dev/null | _filter_xfs_io
-+done
++_scratch_mount "-o remount,ro"
 +
-+# get some snapshots here to make sure we are really
-+# suffering from walking backrefs.
-+for i in `seq 0 50`; do
-+	$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
-+	$SCRATCH_MNT/snap_$i >> $seqres.full 2>&1
-+done
-+
-+$BTRFS_UTIL_PROG send -f $SCRATCH_MNT/send_file \
-+	$SCRATCH_MNT/snap_1 >> $seqres.full 2>&1
-+
-+echo "Silence is golden"
 +status=0 ; exit
-diff --git a/tests/btrfs/033.out b/tests/btrfs/033.out
+diff --git a/tests/btrfs/032.out b/tests/btrfs/032.out
 new file mode 100644
-index 0000000..c5d2914
+index 0000000..bd0ac21
 --- /dev/null
-+++ b/tests/btrfs/033.out
-@@ -0,0 +1,2 @@
-+QA output created by 033
-+Silence is golden
++++ b/tests/btrfs/032.out
+@@ -0,0 +1,3 @@
++QA output created by 032
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
 diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 7f48b04..b29236c 100644
+index 2e2b8e1..7f48b04 100644
 --- a/tests/btrfs/group
 +++ b/tests/btrfs/group
-@@ -35,3 +35,4 @@
+@@ -34,3 +34,4 @@
+ 029 auto quick
  030 auto quick
  031 auto quick
- 032 auto quick
-+033 auto quick
++032 auto quick
 -- 
 1.8.3.1
 
