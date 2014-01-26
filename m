@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3E9A97FB4
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 17:38:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3068B8F8059
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 15:38:20 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4WmiXUL6vmyhYQF9 for
-	<xfs@oss.sgi.com>; Fri, 24 Jan 2014 15:38:19 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0ONcIpg026387
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 18:38:18 -0500
-Received: from laptop.bfoster (vpn-54-164.rdu2.redhat.com [10.10.54.164])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s0ONcHKe028046
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 24 Jan 2014 18:38:18 -0500
-Message-ID: <52E2F969.9050502@redhat.com>
-Date: Fri, 24 Jan 2014 18:38:17 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 124FD7F59
+	for <xfs@oss.sgi.com>; Sun, 26 Jan 2014 13:35:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A4271AC003
+	for <xfs@oss.sgi.com>; Sun, 26 Jan 2014 11:35:47 -0800 (PST)
+Received: from mail-ob0-f177.google.com (mail-ob0-f177.google.com
+	[209.85.214.177]) by cuda.sgi.com with ESMTP id
+	ybzjSyCB4O9GUjNg (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 26 Jan 2014 11:35:43 -0800 (PST)
+Received: by mail-ob0-f177.google.com with SMTP id wp18so5598994obc.22
+	for <xfs@oss.sgi.com>; Sun, 26 Jan 2014 11:35:42 -0800 (PST)
+Received: from [192.168.0.129] (rrcs-97-79-21-178.se.biz.rr.com.
+	[97.79.21.178])
+	by mx.google.com with ESMTPSA id hl3sm15151479obb.0.2014.01.26.11.35.41
+	for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Sun, 26 Jan 2014 11:35:41 -0800 (PST)
+Message-ID: <52E56386.5040802@gmail.com>
+Date: Sun, 26 Jan 2014 14:35:34 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V4] xfs_repair: add support for validating dirent ftype
-	field
-References: <1390603109-29667-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390603109-29667-1-git-send-email-david@fromorbit.com>
+Subject: [NOISE] merge window blues, XFS broken
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,718 +35,219 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 01/24/2014 05:38 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Add code to track the filetype of an inode from phase 3 when all the
-> inodes are scanned throught to phase 6 when the directory structure
-> is validated and corrected.
-> 
-> Add code to phase 6 shortform and long form directory entry
-> validation to read the ftype from the dirent, lookup the inode
-> record and check they are the same. If they aren't and we are in
-> no-modify mode, issue a warning such as:
-> 
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
-> would fix ftype mismatch (5/1) in directory/child inode 64/68
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> 
-> If we are fixing the problem:
-> 
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
-> fixing ftype mismatch (5/1) in directory/child inode 64/68
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> 
-> Note that this is from a leaf form directory entry that was
-> intentionally corrupted with xfs_db like so:
-> 
-> xfs_db> inode 64
-> xfs_db> a u3.bmx[0].startblock
-> xfs_db> p
-> ....
-> du[3].inumber = 68
-> du[3].namelen = 11
-> du[3].name = "syscalltest"
-> du[3].filetype = 1
-> du[3].tag = 0x70
-> ....
-> xfs_db> write du[3].filetype 5
-> du[3].filetype = 5
-> xfs_db> quit
-> 
-> Shortform directory entry repair was tested in a similar fashion.
-> 
-> Further, track the ftype in the directory hash table that is build,
-> so if the directory is rebuild from scratch it has the necessary
-> ftype information to rebuild the directory correctly. Further, if we
-> detect a ftype mismatch, update the entry in the hash so that later
-> directory errors that lead to it being rebuilt use the corrected
-> ftype field, not the bad one.
-> 
-> Note that this code pulls in some kernel side code that is currently
-> in kernel private locations (xfs_mode_to_ftype table), so there'll
-> be some kernel/userspace sync work needed to bring these back into
-> line.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Version 4:
-> - removed a couple more typedefs
-> - fixed no_modify return value from shortform_dir2_junk()
-> - cleaned up variable naming, formatting and comments in
->   shortform_dir2_junk() to make it more obvious what it is doing.
-> 
-> Version 3:
-> - fixed max_size updates
-> - fixed comment grammar
-> 
-> Version 2:
-> - factored out junking of entry in shortform directory code
-> - fixed leak of ftypes array memory
-> ---
+Hi!  This is more an observation than a bug report, me trying to figure 
+out what happened on what is now a 3-day-old kernel on 32-bit x86 
+(Pentium 4).  The report is marked as [NOISE] because I can do this...
 
-Looks good. Nice cleanup.
+git pull origin master
+git remote update # updates xfs-oss
+git reset --hard v3.13
+git merge xfs-oss/master
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+...and the resulting kernel and XFS will be as smooth as silk.  
+However, if I do this...
 
->  include/xfs_dir2.h   |   3 +
->  libxfs/xfs_dir2.c    |  16 ++++
->  repair/dino_chunks.c |  11 +++
->  repair/incore.h      |  27 +++++-
->  repair/incore_ino.c  |  30 ++++++-
->  repair/phase6.c      | 246 ++++++++++++++++++++++++++++++++++++---------------
->  repair/scan.c        |   4 +-
->  7 files changed, 258 insertions(+), 79 deletions(-)
-> 
-> diff --git a/include/xfs_dir2.h b/include/xfs_dir2.h
-> index 9910401..3900130 100644
-> --- a/include/xfs_dir2.h
-> +++ b/include/xfs_dir2.h
-> @@ -57,6 +57,9 @@ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
->  extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, uint resblks);
->  
-> +#define S_SHIFT 12
-> +extern const unsigned char xfs_mode_to_ftype[];
-> +
->  /*
->   * Direct call from the bmap code, bypassing the generic directory layer.
->   */
-> diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-> index 96a3c1d..4c8c836 100644
-> --- a/libxfs/xfs_dir2.c
-> +++ b/libxfs/xfs_dir2.c
-> @@ -20,6 +20,22 @@
->  
->  struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
->  
-> +/*
-> + * @mode, if set, indicates that the type field needs to be set up.
-> + * This uses the transformation from file mode to DT_* as defined in linux/fs.h
-> + * for file type specification. This will be propagated into the directory
-> + * structure if appropriate for the given operation and filesystem config.
-> + */
-> +const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
-> +	[0]			= XFS_DIR3_FT_UNKNOWN,
-> +	[S_IFREG >> S_SHIFT]	= XFS_DIR3_FT_REG_FILE,
-> +	[S_IFDIR >> S_SHIFT]	= XFS_DIR3_FT_DIR,
-> +	[S_IFCHR >> S_SHIFT]	= XFS_DIR3_FT_CHRDEV,
-> +	[S_IFBLK >> S_SHIFT]	= XFS_DIR3_FT_BLKDEV,
-> +	[S_IFIFO >> S_SHIFT]	= XFS_DIR3_FT_FIFO,
-> +	[S_IFSOCK >> S_SHIFT]	= XFS_DIR3_FT_SOCK,
-> +	[S_IFLNK >> S_SHIFT]	= XFS_DIR3_FT_SYMLINK,
-> +};
->  
->  /*
->   * ASCII case-insensitive (ie. A-Z) support for directories that was
-> diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-> index d3c2236..65281e4 100644
-> --- a/repair/dino_chunks.c
-> +++ b/repair/dino_chunks.c
-> @@ -788,6 +788,8 @@ process_inode_chunk(
->  		 * we do now, this is where to start.
->  		 */
->  		if (is_used)  {
-> +			__uint16_t	di_mode;
-> +
->  			if (is_inode_free(ino_rec, irec_offset))  {
->  				if (verbose || no_modify)  {
->  					do_warn(
-> @@ -803,6 +805,15 @@ process_inode_chunk(
->  			set_inode_used(ino_rec, irec_offset);
->  
->  			/*
-> +			 * store the on-disk file type for comparing in
-> +			 * phase 6.
-> +			 */
-> +			di_mode = be16_to_cpu(dino->di_mode);
-> +			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
-> +			set_inode_ftype(ino_rec, irec_offset,
-> +					xfs_mode_to_ftype[di_mode]);
-> +
-> +			/*
->  			 * store on-disk nlink count for comparing in phase 7
->  			 */
->  			set_inode_disk_nlinks(ino_rec, irec_offset,
-> diff --git a/repair/incore.h b/repair/incore.h
-> index 38caa6d..5419884 100644
-> --- a/repair/incore.h
-> +++ b/repair/incore.h
-> @@ -293,6 +293,7 @@ typedef struct ino_tree_node  {
->  		ino_ex_data_t	*ex_data;	/* phases 6,7 */
->  		parent_list_t	*plist;		/* phases 2-5 */
->  	} ino_un;
-> +	__uint8_t		*ftypes;	/* phases 3,6 */
->  } ino_tree_node_t;
->  
->  #define INOS_PER_IREC	(sizeof(__uint64_t) * NBBY)
-> @@ -359,7 +360,8 @@ ino_tree_node_t		*find_uncertain_inode_rec(xfs_agnumber_t agno,
->  						xfs_agino_t ino);
->  void			add_inode_uncertain(xfs_mount_t *mp,
->  						xfs_ino_t ino, int free);
-> -void			add_aginode_uncertain(xfs_agnumber_t agno,
-> +void			add_aginode_uncertain(struct xfs_mount *mp,
-> +						xfs_agnumber_t agno,
->  						xfs_agino_t agino, int free);
->  void			get_uncertain_inode_rec(struct xfs_mount *mp,
->  						xfs_agnumber_t agno,
-> @@ -476,6 +478,29 @@ static inline void add_inode_reached(struct ino_tree_node *irec, int offset)
->  }
->  
->  /*
-> + * get/set inode filetype. Only used if the superblock feature bit is set
-> + * which allocates irec->ftypes.
-> + */
-> +static inline void
-> +set_inode_ftype(struct ino_tree_node *irec,
-> +	int		ino_offset,
-> +	__uint8_t	ftype)
-> +{
-> +	if (irec->ftypes)
-> +		irec->ftypes[ino_offset] = ftype;
-> +}
-> +
-> +static inline __uint8_t
-> +get_inode_ftype(
-> +	struct ino_tree_node *irec,
-> +	int		ino_offset)
-> +{
-> +	if (!irec->ftypes)
-> +		return XFS_DIR3_FT_UNKNOWN;
-> +	return irec->ftypes[ino_offset];
-> +}
-> +
-> +/*
->   * set/get inode number of parent -- works for directory inodes only
->   */
->  void		set_inode_parent(ino_tree_node_t *irec, int ino_offset,
-> diff --git a/repair/incore_ino.c b/repair/incore_ino.c
-> index 735737a..9502648 100644
-> --- a/repair/incore_ino.c
-> +++ b/repair/incore_ino.c
-> @@ -211,6 +211,21 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
->  	return 0;
->  }
->  
-> +static __uint8_t *
-> +alloc_ftypes_array(
-> +	struct xfs_mount *mp)
-> +{
-> +	__uint8_t	*ptr;
-> +
-> +	if (!xfs_sb_version_hasftype(&mp->m_sb))
-> +		return NULL;
-> +
-> +	ptr = calloc(XFS_INODES_PER_CHUNK, sizeof(*ptr));
-> +	if (!ptr)
-> +		do_error(_("could not allocate ftypes array\n"));
-> +	return ptr;
-> +}
-> +
->  /*
->   * Next is the uncertain inode list -- a sorted (in ascending order)
->   * list of inode records sorted on the starting inode number.  There
-> @@ -226,6 +241,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
->   */
->  static struct ino_tree_node *
->  alloc_ino_node(
-> +	struct xfs_mount	*mp,
->  	xfs_agino_t		starting_ino)
->  {
->  	struct ino_tree_node 	*irec;
-> @@ -245,6 +261,7 @@ alloc_ino_node(
->  	irec->ino_un.ex_data = NULL;
->  	irec->nlink_size = sizeof(__uint8_t);
->  	irec->disk_nlinks.un8 = alloc_nlink_array(irec->nlink_size);
-> +	irec->ftypes = alloc_ftypes_array(mp);
->  	return irec;
->  }
->  
-> @@ -285,6 +302,7 @@ free_ino_tree_node(
->  
->  	}
->  
-> +	free(irec->ftypes);
->  	free(irec);
->  }
->  
-> @@ -303,7 +321,11 @@ static ino_tree_node_t **last_rec;
->   * free is set to 1 if the inode is thought to be free, 0 if used
->   */
->  void
-> -add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
-> +add_aginode_uncertain(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	xfs_agino_t		ino,
-> +	int			free)
->  {
->  	ino_tree_node_t		*ino_rec;
->  	xfs_agino_t		s_ino;
-> @@ -334,7 +356,7 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
->  	ino_rec = (ino_tree_node_t *)
->  		avl_findrange(inode_uncertain_tree_ptrs[agno], s_ino);
->  	if (!ino_rec) {
-> -		ino_rec = alloc_ino_node(s_ino);
-> +		ino_rec = alloc_ino_node(mp, s_ino);
->  
->  		if (!avl_insert(inode_uncertain_tree_ptrs[agno],
->  				&ino_rec->avl_node))
-> @@ -360,7 +382,7 @@ add_aginode_uncertain(xfs_agnumber_t agno, xfs_agino_t ino, int free)
->  void
->  add_inode_uncertain(xfs_mount_t *mp, xfs_ino_t ino, int free)
->  {
-> -	add_aginode_uncertain(XFS_INO_TO_AGNO(mp, ino),
-> +	add_aginode_uncertain(mp, XFS_INO_TO_AGNO(mp, ino),
->  				XFS_INO_TO_AGINO(mp, ino), free);
->  }
->  
-> @@ -432,7 +454,7 @@ add_inode(
->  {
->  	struct ino_tree_node	*irec;
->  
-> -	irec = alloc_ino_node(agino);
-> +	irec = alloc_ino_node(mp, agino);
->  	if (!avl_insert(inode_tree_ptrs[agno],	&irec->avl_node))
->  		do_warn(_("add_inode - duplicate inode range\n"));
->  	return irec;
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index d2d4a44..cdbf4db 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -134,7 +134,8 @@ dir_hash_add(
->  	__uint32_t		addr,
->  	xfs_ino_t		inum,
->  	int			namelen,
-> -	unsigned char		*name)
-> +	unsigned char		*name,
-> +	__uint8_t		ftype)
->  {
->  	xfs_dahash_t		hash = 0;
->  	int			byaddr;
-> @@ -148,6 +149,7 @@ dir_hash_add(
->  
->  	xname.name = name;
->  	xname.len = namelen;
-> +	xname.type = ftype;
->  
->  	junk = name[0] == '/';
->  	byaddr = DIR_HASH_FUNC(hashtab, addr);
-> @@ -312,6 +314,23 @@ dir_hash_see(
->  	return DIR_HASH_CK_NODATA;
->  }
->  
-> +static void
-> +dir_hash_update_ftype(
-> +	dir_hash_tab_t		*hashtab,
-> +	xfs_dir2_dataptr_t	addr,
-> +	__uint8_t		ftype)
-> +{
-> +	int			i;
-> +	dir_hash_ent_t		*p;
-> +
-> +	i = DIR_HASH_FUNC(hashtab, addr);
-> +	for (p = hashtab->byaddr[i]; p; p = p->nextbyaddr) {
-> +		if (p->address != addr)
-> +			continue;
-> +		p->name.type = ftype;
-> +	}
-> +}
-> +
->  /*
->   * checks to make sure leafs match a data entry, and that the stale
->   * count is valid.
-> @@ -1685,11 +1704,12 @@ longform_dir2_entry_check_data(
->  			if (!orphanage_ino)
->  				orphanage_ino = inum;
->  		}
-> +
->  		/*
->  		 * check for duplicate names in directory.
->  		 */
->  		if (!dir_hash_add(mp, hashtab, addr, inum, dep->namelen,
-> -							dep->name)) {
-> +				dep->name, xfs_dir3_dirent_get_ftype(mp, dep))) {
->  			nbad++;
->  			if (entry_junked(
->  	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
-> @@ -1763,6 +1783,35 @@ longform_dir2_entry_check_data(
->  		 */
->  		if (no_modify && verify_inum(mp, inum))
->  			continue;
-> +
-> +		/* validate ftype field if supported */
-> +		if (xfs_sb_version_hasftype(&mp->m_sb)) {
-> +			__uint8_t dir_ftype;
-> +			__uint8_t ino_ftype;
-> +
-> +			dir_ftype = xfs_dir3_dirent_get_ftype(mp, dep);
-> +			ino_ftype = get_inode_ftype(irec, ino_offset);
-> +
-> +			if (dir_ftype != ino_ftype) {
-> +				if (no_modify) {
-> +					do_warn(
-> +	_("would fix ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
-> +						dir_ftype, ino_ftype,
-> +						ip->i_ino, inum);
-> +				} else {
-> +					do_warn(
-> +	_("fixing ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
-> +						dir_ftype, ino_ftype,
-> +						ip->i_ino, inum);
-> +					xfs_dir3_dirent_put_ftype(mp, dep,
-> +								ino_ftype);
-> +					libxfs_dir2_data_log_entry(tp, bp, dep);
-> +					dir_hash_update_ftype(hashtab, addr,
-> +							      ino_ftype);
-> +				}
-> +			}
-> +		}
-> +
->  		/*
->  		 * check easy case first, regular inode, just bump
->  		 * the link count and continue
-> @@ -2189,6 +2238,62 @@ out_fix:
->   * shortform directory v2 processing routines -- entry verification and
->   * bad entry deletion (pruning).
->   */
-> +static struct xfs_dir2_sf_entry *
-> +shortform_dir2_junk(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_dir2_sf_hdr	*sfp,
-> +	struct xfs_dir2_sf_entry *sfep,
-> +	xfs_ino_t		lino,
-> +	int			*max_size,
-> +	int			*index,
-> +	int			*bytes_deleted,
-> +	int			*ino_dirty)
-> +{
-> +	struct xfs_dir2_sf_entry *next_sfep;
-> +	int			next_len;
-> +	int			next_elen;
-> +
-> +	if (lino == orphanage_ino)
-> +		orphanage_ino = 0;
-> +
-> +	next_elen = xfs_dir3_sf_entsize(mp, sfp, sfep->namelen);
-> +	next_sfep = (xfs_dir2_sf_entry_t *)((__psint_t)sfep + next_elen);
-> +
-> +	/*
-> +	 * if we are just checking, simply return the pointer to the next entry
-> +	 * here so that the checking loop can continue.
-> +	 */
-> +	if (no_modify) {
-> +		do_warn(_("would junk entry\n"));
-> +		return next_sfep;
-> +	}
-> +
-> +	/*
-> +	 * now move all the remaining entries down over the junked entry and
-> +	 * clear the newly unused bytes at the tail of the directory region.
-> +	 */
-> +	next_len = *max_size - ((__psint_t)next_sfep - (__psint_t)sfp);
-> +	*max_size -= next_elen;
-> +	*bytes_deleted += next_elen;
-> +
-> +	memmove(sfep, next_sfep, next_len);
-> +	memset((void *)((__psint_t)sfep + next_len), 0, next_elen);
-> +	sfp->count -= 1;
-> +	*ino_dirty = 1;
-> +
-> +	/*
-> +	 * WARNING:  drop the index i by one so it matches the decremented count
-> +	 * for accurate comparisons in the loop test
-> +	 */
-> +	(*index)--;
-> +
-> +	if (verbose)
-> +		do_warn(_("junking entry\n"));
-> +	else
-> +		do_warn("\n");
-> +	return sfep;
-> +}
-> +
->  static void
->  shortform_dir2_entry_check(xfs_mount_t	*mp,
->  			xfs_ino_t	ino,
-> @@ -2201,15 +2306,13 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  	xfs_ino_t		lino;
->  	xfs_ino_t		parent;
->  	struct xfs_dir2_sf_hdr	*sfp;
-> -	xfs_dir2_sf_entry_t	*sfep, *next_sfep, *tmp_sfep;
-> -	xfs_ifork_t		*ifp;
-> -	ino_tree_node_t		*irec;
-> +	struct xfs_dir2_sf_entry *sfep;
-> +	struct xfs_dir2_sf_entry *next_sfep;
-> +	struct xfs_ifork	*ifp;
-> +	struct ino_tree_node	*irec;
->  	int			max_size;
->  	int			ino_offset;
->  	int			i;
-> -	int			junkit;
-> -	int			tmp_len;
-> -	int			tmp_elen;
->  	int			bad_sfnamelen;
->  	int			namelen;
->  	int			bytes_deleted;
-> @@ -2266,9 +2369,7 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  	for (i = 0; i < sfp->count && max_size >
->  					(__psint_t)next_sfep - (__psint_t)sfp;
->  			sfep = next_sfep, i++)  {
-> -		junkit = 0;
->  		bad_sfnamelen = 0;
-> -		tmp_sfep = NULL;
->  
->  		lino = xfs_dir3_sfe_get_ino(mp, sfp, sfep);
->  
-> @@ -2340,7 +2441,10 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  			do_warn(
->  	_("entry \"%s\" in shortform directory %" PRIu64 " references non-existent inode %" PRIu64 "\n"),
->  				fname, ino, lino);
-> -			goto do_junkit;
-> +			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
-> +						&max_size, &i, &bytes_deleted,
-> +						ino_dirty);
-> +			continue;
->  		}
->  
->  		ino_offset = XFS_INO_TO_AGINO(mp, lino) - irec->ino_startnum;
-> @@ -2354,7 +2458,10 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  			do_warn(
->  	_("entry \"%s\" in shortform directory inode %" PRIu64 " points to free inode %" PRIu64 "\n"),
->  				fname, ino, lino);
-> -			goto do_junkit;
-> +			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
-> +						&max_size, &i, &bytes_deleted,
-> +						ino_dirty);
-> +			continue;
->  		}
->  		/*
->  		 * check if this inode is lost+found dir in the root
-> @@ -2367,7 +2474,10 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  				do_warn(
->  	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory"),
->  					ORPHANAGE, lino, ino);
-> -				goto do_junkit;
-> +				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
-> +						lino, &max_size, &i,
-> +						&bytes_deleted, ino_dirty);
-> +				continue;
->  			}
->  			/*
->  			 * if this is a dup, it will be picked up below,
-> @@ -2381,11 +2491,15 @@ shortform_dir2_entry_check(xfs_mount_t	*mp,
->  		 */
->  		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
->  				(sfep - xfs_dir2_sf_firstentry(sfp)),
-> -				lino, sfep->namelen, sfep->name)) {
-> +				lino, sfep->namelen, sfep->name,
-> +				xfs_dir3_sfe_get_ftype(mp, sfp, sfep))) {
->  			do_warn(
->  _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
->  				fname, lino, ino);
-> -			goto do_junkit;
-> +			next_sfep = shortform_dir2_junk(mp, sfp, sfep, lino,
-> +						&max_size, &i, &bytes_deleted,
-> +						ino_dirty);
-> +			continue;
->  		}
->  
->  		if (!inode_isadir(irec, ino_offset))  {
-> @@ -2403,11 +2517,14 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
->  			 * the .. in the child, blow out the entry
->  			 */
->  			if (is_inode_reached(irec, ino_offset))  {
-> -				junkit = 1;
->  				do_warn(
->  	_("entry \"%s\" in directory inode %" PRIu64
->  	  " references already connected inode %" PRIu64 ".\n"),
->  					fname, ino, lino);
-> +				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
-> +						lino, &max_size, &i,
-> +						&bytes_deleted, ino_dirty);
-> +				continue;
->  			} else if (parent == ino)  {
->  				add_inode_reached(irec, ino_offset);
->  				add_inode_ref(current_irec, current_ino_offset);
-> @@ -2423,76 +2540,60 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
->  				add_dotdot_update(XFS_INO_TO_AGNO(mp, lino),
->  							irec, ino_offset);
->  			} else  {
-> -				junkit = 1;
->  				do_warn(
->  	_("entry \"%s\" in directory inode %" PRIu64
->  	  " not consistent with .. value (%" PRIu64
->  	  ") in inode %" PRIu64 ",\n"),
->  					fname, ino, parent, lino);
-> +				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
-> +						lino, &max_size, &i,
-> +						&bytes_deleted, ino_dirty);
-> +				continue;
->  			}
->  		}
->  
-> -		if (junkit)  {
-> -do_junkit:
-> -			if (lino == orphanage_ino)
-> -				orphanage_ino = 0;
-> -			if (!no_modify)  {
-> -				tmp_elen = xfs_dir3_sf_entsize(mp, sfp,
-> -								sfep->namelen);
-> -				tmp_sfep = (xfs_dir2_sf_entry_t *)
-> -					((__psint_t) sfep + tmp_elen);
-> -				tmp_len = max_size - ((__psint_t) tmp_sfep
-> -							- (__psint_t) sfp);
-> -				max_size -= tmp_elen;
-> -				bytes_deleted += tmp_elen;
-> -
-> -				memmove(sfep, tmp_sfep, tmp_len);
-> -
-> -				sfp->count -= 1;
-> -				memset((void *)((__psint_t)sfep + tmp_len), 0,
-> -						tmp_elen);
-> -
-> -				/*
-> -				 * set the tmp value to the current
-> -				 * pointer so we'll process the entry
-> -				 * we just moved up
-> -				 */
-> -				tmp_sfep = sfep;
-> -
-> -				/*
-> -				 * WARNING:  drop the index i by one
-> -				 * so it matches the decremented count for
-> -				 * accurate comparisons in the loop test
-> -				 */
-> -				i--;
-> +		/* validate ftype field if supported */
-> +		if (xfs_sb_version_hasftype(&mp->m_sb)) {
-> +			__uint8_t dir_ftype;
-> +			__uint8_t ino_ftype;
->  
-> -				*ino_dirty = 1;
-> +			dir_ftype = xfs_dir3_sfe_get_ftype(mp, sfp, sfep);
-> +			ino_ftype = get_inode_ftype(irec, ino_offset);
->  
-> -				if (verbose)
-> -					do_warn(_("junking entry\n"));
-> -				else
-> -					do_warn("\n");
-> -			} else  {
-> -				do_warn(_("would junk entry\n"));
-> +			if (dir_ftype != ino_ftype) {
-> +				if (no_modify) {
-> +					do_warn(
-> +	_("would fix ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
-> +						dir_ftype, ino_ftype,
-> +						ino, lino);
-> +				} else {
-> +					do_warn(
-> +	_("fixing ftype mismatch (%d/%d) in directory/child inode %" PRIu64 "/%" PRIu64 "\n"),
-> +						dir_ftype, ino_ftype,
-> +						ino, lino);
-> +					xfs_dir3_sfe_put_ftype(mp, sfp, sfep,
-> +								ino_ftype);
-> +					dir_hash_update_ftype(hashtab,
-> +			(xfs_dir2_dataptr_t)(sfep - xfs_dir2_sf_firstentry(sfp)),
-> +							      ino_ftype);
-> +					*ino_dirty = 1;
-> +				}
->  			}
-> -		} else if (lino > XFS_DIR2_MAX_SHORT_INUM)
-> +		}
-> +
-> +		if (lino > XFS_DIR2_MAX_SHORT_INUM)
->  			i8++;
->  
->  		/*
-> -		 * go onto next entry unless we've just junked an
-> -		 * entry in which the current entry pointer points
-> -		 * to an unprocessed entry.  have to take into entries
-> -		 * with bad namelen into account in no modify mode since we
-> -		 * calculate size based on next_sfep.
-> +		 * go onto next entry - we have to take entries with bad namelen
-> +		 * into account in no modify mode since we calculate size based
-> +		 * on next_sfep.
->  		 */
->  		ASSERT(no_modify || bad_sfnamelen == 0);
-> -
-> -		next_sfep = (tmp_sfep == NULL)
-> -			? (xfs_dir2_sf_entry_t *) ((__psint_t) sfep
-> -							+ ((!bad_sfnamelen)
-> -				? xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)
-> -				: xfs_dir3_sf_entsize(mp, sfp, namelen)))
-> -			: tmp_sfep;
-> +		next_sfep = (struct xfs_dir2_sf_entry *)((__psint_t)sfep +
-> +			      (bad_sfnamelen
-> +				? xfs_dir3_sf_entsize(mp, sfp, namelen)
-> +				: xfs_dir3_sf_entsize(mp, sfp, sfep->namelen)));
->  	}
->  
->  	if (sfp->i8count != i8) {
-> @@ -2501,6 +2602,8 @@ do_junkit:
->  				ino);
->  		} else {
->  			if (i8 == 0) {
-> +				struct xfs_dir2_sf_entry *tmp_sfep;
-> +
->  				tmp_sfep = next_sfep;
->  				process_sf_dir2_fixi8(mp, sfp, &tmp_sfep);
->  				bytes_deleted +=
-> @@ -2518,8 +2621,7 @@ do_junkit:
->  	/*
->  	 * sync up sizes if required
->  	 */
-> -	if (*ino_dirty)  {
-> -		ASSERT(bytes_deleted > 0);
-> +	if (*ino_dirty && bytes_deleted > 0)  {
->  		ASSERT(!no_modify);
->  		libxfs_idata_realloc(ip, -bytes_deleted, XFS_DATA_FORK);
->  		ip->i_d.di_size -= bytes_deleted;
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 49ed194..73b4581 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -866,9 +866,9 @@ _("inode rec for ino %" PRIu64 " (%d/%d) overlaps existing rec (start %d/%d)\n")
->  		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
->  			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
->  				nfree++;
-> -				add_aginode_uncertain(agno, ino + j, 1);
-> +				add_aginode_uncertain(mp, agno, ino + j, 1);
->  			} else  {
-> -				add_aginode_uncertain(agno, ino + j, 0);
-> +				add_aginode_uncertain(mp, agno, ino + j, 0);
->  			}
->  		}
->  	}
-> 
+git pull origin master
+git remote update # at time of pull, "Already up-to-date."
+git merge xfs-oss/master
+
+...the resulting XFS will not pass this, for either v4- or v5-
+superblock XFS:
+
+mkfs.xfs -f $TEST_DEV      # always OK
+mount $TEST_DEV $TEST_DIR  # may succeed, may fail
+ls $TEST_DIR/              # may succeed, may fail
+umount $TEST_DEV           # always fails
+
+The assertion is this (from notes taken by hand):
+
+Assertion failed: IS_ALIGNED((unsigned long)vec->i_addr, sizeof(uint64_t)), file: fs/xfs/xfs_log.h, line: 49
+
+Anything after my closing is supporting data.  My questions are these:
+
+1) Could the patch "xfs: format log items write directly into the linear 
+CIL buffer" have thrown off alignment with XFS, when combined with the 
+kernel changes for v3.14-rc?
+
+2) Can kernel header changes--especially for this kernfs feature that 
+keeps getting in the way--bleed into structures that XFS uses and cause 
+chaos?
+
+3) Because the XFS behavior changed due to some kernel change that 
+probably isn't going away, do I need to keep worrying about this issue?
+
+I tried to use pahole and hoped that it would point out something 
+obvious.  However, after attempting to use Perl to massage the large 
+amount of data created by pahole, it looks like a little bit changed 
+for XFS and a lot changed for the kernel.  Lack of knowledge keeps that 
+piece of data that must be aligned from jumping out at me.
+
+In case I botched something in my report, I can reproduce this problem at 
+will and can try to make a better report next time.  A crash dump is 
+available.
+
+Thanks!
+
+Michael
+
+The stack trace is this (from the "crash" utility, different session):
+
+root@plbearer:/mnt/storage/crashdump# crash vmlinux System.map vmcore
+# `crash` initialization snipped
+
+  SYSTEM MAP: System.map
+DEBUG KERNEL: vmlinux  
+    DUMPFILE: vmcore
+        CPUS: 1
+        DATE: Fri Jan 24 10:04:35 2014
+      UPTIME: 00:02:26
+LOAD AVERAGE: 0.50, 0.20, 0.08
+       TASKS: 63
+    NODENAME: plbearer
+     RELEASE: 3.13.0+
+     VERSION: #1 Fri Jan 24 09:57:19 EST 2014
+     MACHINE: i686  (1794 Mhz)
+      MEMORY: 1.2 GB
+       PANIC: "kernel BUG at fs/xfs/xfs_message.c:107!"
+         PID: 301
+     COMMAND: "mount"
+        TASK: c5528c30  [THREAD_INFO: bca5a000]
+         CPU: 0
+       STATE: TASK_RUNNING (PANIC)
+
+crash> bt
+PID: 301    TASK: c5528c30  CPU: 0   COMMAND: "mount"
+ #0 [bca5bc60] crash_kexec at 7907489a
+ #1 [bca5bcac] do_invalid_op at 790023c8
+ #2 [bca5bd48] error_code (via invalid_op) at 7944b2ff
+    EAX: 00000071  EBX: a40c11bc  ECX: 000002ac  EDX: c5529020  EBP: bca5bd9c 
+    DS:  007b      ESI: 78135a00  ES:  007b      EDI: 78135a1c  GS:  2342
+    CS:  0060      EIP: 79175065  ERR: ffffffff  EFLAGS: 00010286 
+ #3 [bca5bd7c] assfail at 79175065
+ #4 [bca5bda0] xfs_buf_item_format at 791cbd67
+ #5 [bca5bde8] xfs_log_commit_cil at 791cb4c8
+ #6 [bca5be4c] xfs_trans_commit at 7917c4fe
+ #7 [bca5be78] xfs_log_sbcount at 79176043
+ #8 [bca5be8c] xfs_unmountfs at 791760f8
+ #9 [bca5beb4] xfs_fs_put_super at 79179257
+#10 [bca5bec0] generic_shutdown_super at 790d7b5b
+#11 [bca5bedc] kill_block_super at 790d89be
+#12 [bca5beec] deactivate_locked_super at 790d7814
+#13 [bca5befc] deactivate_super at 790d7871
+#14 [bca5bf0c] mntput_no_expire at 790ef90b
+#15 [bca5bf28] mntput at 790f047f
+#16 [bca5bf30] do_mount at 790f1c66
+#17 [bca5bf80] sys_mount at 790f26ed
+#18 [bca5bfb0] ia32_sysenter_target at 7944b5b1
+    EAX: 00000015  EBX: 09bd3b70  ECX: 09bd3b80  EDX: 09bd61e0 
+    DS:  007b      ESI: c0ed0000  ES:  007b      EDI: 00000000
+    SS:  007b      ESP: 77c3d2f0  EBP: 00000000  GS:  0000
+    CS:  0073      EIP: 6f708424  ERR: 00000015  EFLAGS: 00000246 
+crash> quit
+
+Bisect led me here:
+
+bde7cff67c39227c6ad503394e19e58debdbc5e3 is the first bad commit
+commit bde7cff67c39227c6ad503394e19e58debdbc5e3
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Fri Dec 13 11:34:02 2013 +1100
+
+    xfs: format log items write directly into the linear CIL buffer
+
+# git bisect log
+
+git bisect start
+# good: [d8ec26d7f8287f5788a494f56e8814210f0e64be] Linux 3.13
+git bisect good d8ec26d7f8287f5788a494f56e8814210f0e64be
+# bad: [12e881fb6be0cada0ed4bebe6806945fb85f170a] nilfs2: implementation of NILFS_IOCTL_SET_SUINFO ioctl
+git bisect bad 12e881fb6be0cada0ed4bebe6806945fb85f170a
+# good: [de4fe30af1620b5117d65489621a5037913e7a92] Merge tag 'staging-3.14-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging
+git bisect good de4fe30af1620b5117d65489621a5037913e7a92
+# good: [d4371f94bc003e912d4825f5c4bdf57959857073] Merge tag 'sound-3.14-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
+git bisect good d4371f94bc003e912d4825f5c4bdf57959857073
+# good: [e1ba84597c9012b9f9075aac283ac7537d7561ba] Merge tag 'pci-v3.14-changes' of git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci
+git bisect good e1ba84597c9012b9f9075aac283ac7537d7561ba
+# good: [7ebd3faa9b5b42caf2d5aa1352a93dcfa0098011] Merge tag 'for-linus' of git://git.kernel.org/pub/scm/virt/kvm/kvm
+git bisect good 7ebd3faa9b5b42caf2d5aa1352a93dcfa0098011
+# bad: [1d32bdafaaa8bcc4c39b41ab9f674887d147f188] Merge tag 'xfs-for-linus-v3.14-rc1' of git://oss.sgi.com/xfs/xfs
+git bisect bad 1d32bdafaaa8bcc4c39b41ab9f674887d147f188
+# good: [93b05cba8ed52a751da9c4c7da6c97bc514bec77] Merge tag 'virtio-next-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/rusty/linux
+git bisect good 93b05cba8ed52a751da9c4c7da6c97bc514bec77
+# good: [eef334e5776c8ef547ada4cec17549929fe590b4] xfs: assert that we hold the ilock for extent map access
+git bisect good eef334e5776c8ef547ada4cec17549929fe590b4
+# bad: [46f23adf78545c49591619a615edeec41ed5a549] Merge branch 'xfs-factor-icluster-macros' into for-next
+git bisect bad 46f23adf78545c49591619a615edeec41ed5a549
+# bad: [ce8e962939ca12218092f8eb3c8cfb196cd8cc51] xfs: remove the dquot log format from the dquot log item
+git bisect bad ce8e962939ca12218092f8eb3c8cfb196cd8cc51
+# good: [3de559fbd04d67473b9be2bd183823c40c4b7557] xfs: refactor xfs_inode_item_format
+git bisect good 3de559fbd04d67473b9be2bd183823c40c4b7557
+# bad: [bde7cff67c39227c6ad503394e19e58debdbc5e3] xfs: format log items write directly into the linear CIL buffer
+git bisect bad bde7cff67c39227c6ad503394e19e58debdbc5e3
+# good: [1234351cba958cd5d4338172ccfc869a687cd736] xfs: introduce xlog_copy_iovec
+git bisect good 1234351cba958cd5d4338172ccfc869a687cd736
+# first bad commit: [bde7cff67c39227c6ad503394e19e58debdbc5e3] xfs: format log items write directly into the linear CIL buffer
+
+Note:  For the data below, I tried my hardest to run both good and bad 
+kernels with the same kernel config.  Kernel source code was generated 
+by the `git merge xfs-oss/master` methods cited above.
+
+Changes from kernel with working XFS (a) and kernel with broken 
+XFS (b), looking for size changes:
+
+struct xsave_struct {
+a:	/* size: 832, cachelines: 13, members: 3 */
+b:	/* size: 1088, cachelines: 17, members: 6 */
+struct perf_event {
+a:	/* size: 864, cachelines: 14, members: 55 */
+b:	/* size: 872, cachelines: 14, members: 56 */
+struct task_struct {
+a:	/* size: 2988, cachelines: 47, members: 139 */
+b:	/* size: 3116, cachelines: 49, members: 143 */
+struct zone {
+a:	/* size: 764, cachelines: 12, members: 29 */
+b:	/* size: 768, cachelines: 12, members: 30 */
+struct pglist_data {
+a:	/* size: 3236, cachelines: 51, members: 14 */
+b:	/* size: 3252, cachelines: 51, members: 14 */
+struct mm_struct {
+a:	/* size: 564, cachelines: 9, members: 45 */
+b:	/* size: 576, cachelines: 9, members: 46 */
+struct signal_struct {
+a:	/* size: 632, cachelines: 10, members: 53 */
+b:	/* size: 640, cachelines: 10, members: 54 */
+struct xfs_dquot {
+a:	/* size: 516, cachelines: 9, members: 22 */
+b:	/* size: 492, cachelines: 8, members: 22 */
+struct xfs_inode_log_item {
+a:	/* size: 160, cachelines: 3, members: 11 */
+b:	/* size: 100, cachelines: 2, members: 8 */
+struct xfs_dq_logitem {
+a:	/* size: 104, cachelines: 2, members: 4 */
+b:	/* size: 80, cachelines: 2, members: 3 */
+struct ftrace_event_call {
+a:	/* size: 72, cachelines: 2, members: 12 */
+b:	/* size: 76, cachelines: 2, members: 13 */
+struct ftrace_event_file {
+a:	/* size: 36, cachelines: 1, members: 8 */
+b:	/* size: 48, cachelines: 1, members: 10 */
+struct xfs_qoff_logitem {
+a:	/* size: 92, cachelines: 2, members: 3 */
+b:	/* size: 76, cachelines: 2, members: 3 */
+
+Changes from kernel with working XFS (a) and kernel with broken 
+XFS (b), looking changes in the holes in structures.
+
+struct kernfs_open_file {
+a:
+b:	/* XXX 3 bytes hole, try to pack */
+
+I work with pahole maybe once every three months, and my fuzzy memory, it 
+seems like there are more holes total on 32-bit x86 than there used to be, 
+don't know why.  As always, maybe there's a glitch in the system that 
+created all of this.  My systems evolve over time and may be in a 
+substandard state at present.
 
 _______________________________________________
 xfs mailing list
