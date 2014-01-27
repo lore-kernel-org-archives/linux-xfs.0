@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 645177F57
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 03:56:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E13A8AC004
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 01:56:10 -0800 (PST)
-Received: from mail-pd0-f171.google.com (mail-pd0-f171.google.com
-	[209.85.192.171]) by cuda.sgi.com with ESMTP id
-	8MGImGCOVCRDhWyL (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Dec 2013 01:56:09 -0800 (PST)
-Received: by mail-pd0-f171.google.com with SMTP id z10so4172982pdj.30
-	for <xfs@oss.sgi.com>; Sun, 22 Dec 2013 01:56:09 -0800 (PST)
-Date: Sun, 22 Dec 2013 17:59:29 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [RFC] directory quota survey on xfs
-Message-ID: <20131222095929.GA11444@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D33D27F6C
+	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 17:24:35 -0600 (CST)
+Date: Mon, 27 Jan 2014 17:24:35 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v2] xfs: use tr_qm_dqalloc log reservation for dquot alloc
+Message-ID: <20140127232435.GN1935@sgi.com>
+References: <1390228140-49211-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1390228140-49211-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,84 +22,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-ext4@vger.kernel.org
-Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Andreas Dilger <adilger.kernel@dilger.ca>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Hi all,
+On Mon, Jan 20, 2014 at 09:29:00AM -0500, Brian Foster wrote:
+> The dquot allocation path in xfs_qm_dqread() currently uses the
+> attribute set log reservation, which appears to be incorrect. We
+> have reports of transaction reservation overruns with the current
+> code. E.g., a repeated run of xfstests test generic/270 on a 512b
+> block size fs occassionally produces the following in dmesg:
+> 
+> 	XFS (sdN): xlog_write: reservation summary:
+> 	  trans type  = QM_DQALLOC (30)
+> 	  unit res    = 7080 bytes
+> 	  current res = -632 bytes
+> 	  total reg   = 0 bytes (o/flow = 0 bytes)
+> 	  ophdrs      = 0 (ophdr space = 0 bytes)
+> 	  ophdr + reg = 0 bytes
+> 	  num regions = 0
+> 
+> 	XFS (sdN): xlog_write: reservation ran out. Need to up reservation
+> 
+> The dquot allocation case should consist of a write reservation
+> (i.e., we are allocating a range of the internal quota file) plus
+> the size of the actual dquots. We already have a log reservation
+> definition for this operation (tr_qm_dqalloc). Use it in
+> xfs_qm_dqread() and update the log reservation calculation function
+> to use the write res. calculation function rather than reading the
+> assumed to be pre-calculated value directly.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-As discussed with ext4 folks, I will try to make ext4 file system support
-directory quota (a.k.a., project id in xfs).  For keeping consistency
-with xfs's implementation, I did some tests on xfs, and I summarized the
-result as following.  This will help us understand what we can do and
-what we can't do.  Please correct me if I miss doing some tests or mis-
-understand something.
+Looks good to me as well.
 
-I just do some tests about rename/hardlink because they are the key
-issue from our discussion.
-
-+ unaccounted dir
-x accounted dir
-
-rename(mv)
-==========
-
-+ -> +: ok
-
-+ -> x: ok
-
-I use strace(1) to lookup which syscall is used, and I found that xfs
-will return EXDEV when mv(1) tries to use rename(2) to move a dir from
-a unaccounted dir to a accounted dir.  Then mv uses creat(2)/read(2)/
-write(2) syscalls to move this dir.
-
-x -> +: wrong (design by feature?) 
-
-If we move a dir from a accounted dir to a unaccounted dir, the quota is
-still accounted.  It seems that xfs don't remove project id from this
-dir and its subdirs/files on this case.
-
-x -> x: ok
-
-Xfs returns EXDEV error when mv(1) uses rename(2) to move a dir from a
-accounted dir to another accounted dir (These dirs have different
-project ids).  Then mv(1) uses creat(1)/read(1)/write(1) syscalls to
-move this dir.
-
-summary:
-rename        +        x
-+             ok       ok (EXDEV)
-x             wrong    ok (EXDEV)
-
-hardlink(ln)
-========
-
-+ -> +: ok
-
-+ -> x: error
-
-Xfs also returns EXDEV error to forbid this operation.  So that means
-that we don't allow users to do a hardlink for a file from a unaccount
-dir to a accounted dir.
-
-x -> +: ok
-
-This operation can be executed and no any error is reported.  After that
-the quota doesn't be changed.  When both of two hardlinks are removed,
-the quota will be discharged.
-
-x -> x: error
-
-Xfs returns EXDEV error to forbid this operation.
-
-summary:
-hardlink        +        x
-+               ok       error (EXDEV)
-x               ok       error (EXDEV)
-
-As always, any comment or idea are welcome.
-
-Thanks,
-						- Zheng
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
