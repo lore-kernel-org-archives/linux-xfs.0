@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 272297F86
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 08:33:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 05FE2304032
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 06:33:10 -0800 (PST)
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
-	[67.231.153.30]) by cuda.sgi.com with ESMTP id PLpE7rzutHF5JpC7
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 06:33:10 -0800 (PST)
-Message-ID: <52E7BFA0.4040204@fb.com>
-Date: Tue, 28 Jan 2014 09:33:04 -0500
-From: Josef Bacik <jbacik@fb.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 535FE7F88
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 08:35:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4010E8F8037
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 06:35:18 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id yMiH11kZREfgv8XV (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Jan 2014 06:35:16 -0800 (PST)
+Date: Tue, 28 Jan 2014 15:35:14 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [RFC] A draft for making ext4 support project quota
+Message-ID: <20140128143514.GB13676@quack.suse.cz>
+References: <20140128064248.GA8653@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: test btrfs send issue with non-aligned clone
-	operations
-References: <1389476202-19683-1-git-send-email-fdmanana@gmail.com>
-In-Reply-To: <1389476202-19683-1-git-send-email-fdmanana@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20140128064248.GA8653@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,167 +25,176 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Filipe David Borba Manana <fdmanana@gmail.com>, xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Li Xi <pkuelelixi@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-ext4 <linux-ext4@vger.kernel.org>
 
+On Tue 28-01-14 14:42:49, Zheng Liu wrote:
+> Hi all,
+> 
+> Here is a draft about ext4 project quota.  After discussed in another
+> thread [1], I believe that we have reached a consensus for supporting
+> project quota in ext4 and keep consistency with xfs.  Thus I write this
+> draft.  As always, comments, suggestions and ideas are welcome.
+> 
+> 1. http://www.spinics.net/lists/linux-ext4/msg41275.html
+> 
+>                    Ext4 Project Quota (ver. 0.10)
+> 
+> Goal
+> ====
+> 
+> The goal is to make ext4 support project quota which keeps the same
+> behaviour with xfs.  After adding this new feature, we can support
+> directory quota based on it.
+> 
+> Background
+> ==========
+> 
+> The project quota is a quota mechanism can be used to implement a form
+> of directory tree quota, where a specified directory and all of the
+> files and subdirectories below it (i.e. a tree) can be restricted to
+> using a subset of the available space in the filesystem [2].
+> 
+> *Note*
+> Project quota is not directory quota.  Project quota is an aggregation
+> of unrelated inodes with the same id (e.g. project id).  That means that
+> some directories without the common parent directory could have the same
+> id and are accounted as the same quota.
+> 
+> Currently xfs has supported project quota several years, and has a mature
+> interface to manage project quota on kernel and userspace side.  After
+> discusstion we believe that we should use the same quota API for project
+> quota on ext4.  Now xfs_quota (userspace tool for managing xfs quota) is
+> used to get/set/check project id, which communicates with kernel via
+> ioctl(2).  For quota management, xfs_quota uses Q_X* via quotactl(2) to
+> manipulate quota.  A XFS_DIFLAG_PROJINHERIT flag is defined in xfs to
+> mark a directory that new file and direcotry created in this directory
+> will get marked with this flag.
+> 
+> For project quota, the key issue is how to handle link(2)/rename(2).  We
+> summarize the behaviour in xfs as following.
+> 
+> *Note*
+> + unaccounted dir
+> x accounted dir
+> 
+> link(2)
+> -------
+> 		+		x
+> +		ok		error (EXDEV)
+> x		ok		error (EXDEV)
+> 
+> rename(2)
+> ---------
+> 		+		x
+> +		ok		ok
+> x		wrong		ok
+  So moving unaccounted file/dir into an accounted dir would be OK? How is
+that?
 
-On 01/11/2014 04:36 PM, Filipe David Borba Manana wrote:
-> Test for an issue in btrfs send where it sent clone operations to user
-> space with a range (offset + length) that was not aligned with the block
-> size. This caused the btrfs receive command to send such clone operations
-> to the ioctl clone API, which would return -EINVAL errors to btrfs receive,
-> causing the receive command to abort immediately.
->
-> This corresponding btrfs linux kernel patch that fixes this issue is at:
->
-> https://patchwork.kernel.org/patch/3470401/
->
-> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
-> ---
->   tests/btrfs/025     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++
->   tests/btrfs/025.out |   18 ++++++++++
->   tests/btrfs/group   |    1 +
->   3 files changed, 117 insertions(+)
->   create mode 100755 tests/btrfs/025
->   create mode 100644 tests/btrfs/025.out
->
-> diff --git a/tests/btrfs/025 b/tests/btrfs/025
-> new file mode 100755
-> index 0000000..5f13832
-> --- /dev/null
-> +++ b/tests/btrfs/025
-> @@ -0,0 +1,98 @@
-> +#! /bin/bash
-> +# FS QA Test No. btrfs/025
-> +#
-> +# Test for an issue in btrfs send where it sent clone operations to user
-> +# space with a range (offset + length) that was not aligned with the block
-> +# size. This caused the btrfs receive command to send such clone operations
-> +# to the ioctl clone API, which would return -EINVAL errors to btrfs receive,
-> +# causing the receive command to abort immediately.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +tmp=`mktemp -d`
-> +
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    rm -fr $tmp
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +_require_scratch
-> +_need_to_be_root
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +$XFS_IO_PROG -f -c "truncate 819200" $SCRATCH_MNT/foo | _filter_xfs_io
-> +$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT | _filter_scratch
-> +
-> +$XFS_IO_PROG -c "falloc -k 819200 667648" $SCRATCH_MNT/foo | _filter_xfs_io
-> +$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT | _filter_scratch
-> +
-> +$XFS_IO_PROG -f -c "pwrite 1482752 2978" $SCRATCH_MNT/foo | _filter_xfs_io
-> +$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT | _filter_scratch
-> +
-> +$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1 | \
-> +    _filter_scratch
-> +
-> +$XFS_IO_PROG -f -c "truncate 883305" $SCRATCH_MNT/foo | _filter_xfs_io
-> +$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT | _filter_scratch
-> +
-> +$BTRFS_UTIL_PROG subvol snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2 | \
-> +    _filter_scratch
-> +
-> +$BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap 2>&1 | _filter_scratch
-> +$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
-> +    -f $tmp/2.snap 2>&1 | _filter_scratch
-> +
-> +md5sum $SCRATCH_MNT/foo | _filter_scratch
-> +md5sum $SCRATCH_MNT/mysnap1/foo | _filter_scratch
-> +md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
-> +
-> +_scratch_unmount
-> +_check_btrfs_filesystem $SCRATCH_DEV
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
-> +md5sum $SCRATCH_MNT/mysnap1/foo | _filter_scratch
-> +
-> +$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
-> +md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
-> +
-> +_scratch_unmount
-> +_check_btrfs_filesystem $SCRATCH_DEV
-> +
-> +status=0
-> +exit
-> diff --git a/tests/btrfs/025.out b/tests/btrfs/025.out
-> new file mode 100644
-> index 0000000..aaad4ab
-> --- /dev/null
-> +++ b/tests/btrfs/025.out
-> @@ -0,0 +1,18 @@
-> +QA output created by 025
-> +FSSync 'SCRATCH_MNT'
-> +FSSync 'SCRATCH_MNT'
-> +wrote 2978/2978 bytes at offset 1482752
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +FSSync 'SCRATCH_MNT'
-> +Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap1'
-> +FSSync 'SCRATCH_MNT'
-> +Create a readonly snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/mysnap2'
-> +At subvol SCRATCH_MNT/mysnap1
-> +At subvol SCRATCH_MNT/mysnap2
-> +129b8eaee8d3c2bcad49bec596591cb3  SCRATCH_MNT/foo
-> +42b6369eae2a8725c1aacc0440e597aa  SCRATCH_MNT/mysnap1/foo
-> +129b8eaee8d3c2bcad49bec596591cb3  SCRATCH_MNT/mysnap2/foo
-> +At subvol mysnap1
-> +42b6369eae2a8725c1aacc0440e597aa  SCRATCH_MNT/mysnap1/foo
-> +At snapshot mysnap2
-> +129b8eaee8d3c2bcad49bec596591cb3  SCRATCH_MNT/mysnap2/foo
+> Further, project quota *cannot* be used with group quota at the same time.
+> On the other hand user quota and project quota can be used simultaneously.
+  There's no fundamental reason for this and XFS folks actually recently
+worked to remove this limitation. I don't think we should carry it over to
+ext4.
 
-Same feedback as earlier, don't rely on the output from btrfs send, just 
-use run_check.  Thanks,
+> 2. http://xfs.org/index.php/XFS_FAQ#Q:_Quota:_What.27s_project_quota.3F
+> 
+> Design
+> ======
+> 
+> Project id
+> ----------
+> We have two options to store project id in inode.  a) define a new member
+> in ext4_inode structure; b) store project id in xattr.
+> 
+> Option a)
+> Pros:
+>   * Only need 4 bytes if we use a '__le32' type to store it
+> 
+> Cons:
+>   * Needs to change disk layout of ext4 inode
+> 
+> Option b)
+> Pros:
+>   * Don't need to change disk layout
+> 
+> Cons:
+>   * Take 24 bytes
+  Cons of the b) is also that it's somewhat messier to get / set project id
+from kernel. So I'm more in favor of a). I even think we could introduce
+the additional id rather seamlessly using i_extra_i_size but I have to have
+a look into details. Anyway I guess we can talk about the options at LSF.
 
-Josef
+> Here I propose to use option *b)* because it is easy for us to support
+> project id and we don't need to worry about changing disk layout.  But
+> I raise another issue here.  Now inline_data feature has been applied.
+> After waiting inline_data feature stable, we'd better enable inline_data
+> feature by default when we create a new ext4 file system.  Now the inode
+> size is 256 bytes by default, we have 72 bytes extra size to store
+> inline data:
+>   256 (default inode size) -
+> 	156 (ext4_inode) + 4 (ext4_xattr_ibody_header) +
+> 	20 (ext4_xattr_entry) + 4 (value) = 72
+> 
+> If we store project id in xattr, we just leave 48 bytes for inline data.
+> I am not sure whether or not it is too small for some users.
+> 
+> When we store project id in xattr, we will use {get,set}fattr to get/set
+> project id.  Thus we don't need to change userspace tool to manipulate
+> project id.  Meanwhile a _INHERENT flag for inode needs to be defined to
+> indicate that new directory creating in a directory with this flag will
+> get the same project id and get marked with this flag.  
+> 
+> Project quota API
+> -----------------
+> For keeping consistency with xfs, here I propose to use Q_X* flag to
+> communicate with kernel via quotactl(2) as we discussed.  Due to this we
+> need to define some callback functions to support Q_X* flag.  That means
+> that ext4 will support two quota flag sets for being compatible with
+> legacy userspace tools and use the same quotactl API to communicate with
+> kernel for project id like xfs.
+  We can as well extend current VFS API to cover also project quotas. That
+would make things somewhat more logical from userspace POV. 
+
+> Currently quota subsystem in vfs doesn't handle project quota.  Thus we
+> need to make quota subsystem handle project id properly (e.g.
+> dquot_transfer, dquot_initialize).  We need to define a new callback
+> function in order to get project id.  Now in vfs we can access uid/gid
+> directly from inode, but we have no way to get project id.  A generic
+> callback function is defined to handle uid/gid.  The file system itself
+> can handle project id.  Until now only ext4 needs to implement this
+> callback function by itself because xfs doesn't use vfs quota subsystem.
+  So we need to get ids from external structures only in two places. One is
+dquot_initialize() and the other is dquot_transfer(). Instead of providing
+callback to get project id, we could just create a variant of these functions
+which will get required ids from a passed array instead of directly from
+the inode.
+
+> For handling link(2)/rename(2) like xfs, we only allow hard link or
+> rename operation when the project ids are the same.  Otherwise we will
+> return EXDEV error to notify the user.
+> 
+> Quota-tools
+> -----------
+> Now quota-tools (e.g. quotaon, edquota, etc...) don't support project
+> quota.  Thus we need to make it support project id.  I believe that Li
+> Xi did some works on quota-tools.
+> 
+> E2fsprogs
+> ---------
+> After supporting project quota, we need to change e2fsck(1) to make sure
+> that all sub-directories with _INHERENT flag have the same project id.
+> Meanwhile we need to make chattr(1) set/clear _INHERENT flag.
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
