@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5EFDB7F8A
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 08:52:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 47316304032
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 06:52:09 -0800 (PST)
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
-	[67.231.145.42]) by cuda.sgi.com with ESMTP id O33POTfHkTMBv0rV
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 06:52:08 -0800 (PST)
-Message-ID: <52E7C403.5020700@fb.com>
-Date: Tue, 28 Jan 2014 09:51:47 -0500
-From: Josef Bacik <jbacik@fb.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7C1687F77
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 09:33:16 -0600 (CST)
+Message-ID: <52E7CDBA.5000709@sgi.com>
+Date: Tue, 28 Jan 2014 09:33:14 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: make test btrfs/025 more robust
-References: <1390920396-20311-1-git-send-email-fdmanana@gmail.com>
-In-Reply-To: <1390920396-20311-1-git-send-email-fdmanana@gmail.com>
+Subject: Re: [ANNOUNCE] xfsprogs for-3.1.12 branch has been updated to 40c65a7
+References: <201401201822.48520.arekm@maven.pl> <52E6A9A2.1010905@sgi.com>
+	<20140128044216.GI2212@dastard>
+In-Reply-To: <20140128044216.GI2212@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,33 +18,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Filipe David Borba Manana <fdmanana@gmail.com>, xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-
-On 01/28/2014 09:46 AM, Filipe David Borba Manana wrote:
-> Make the test btrfs/025 not depend on the output of the btrfs tools
-> subvolume, send, receive and filesystem commands output. The output
-> of these commands has changed several times in the past, and it can
-> change again in the future. Therefore just test for failure/success
-> and not for the exact output on the success case.
->
-> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
-
-Wow sorry didn't realize this already got taken, but still a good change 
-to have anyway.
-
-Reviewed-by: Josef Bacik <jbacik@fb.com>
-
-Thanks,
-
-Josef
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgpPbiAwMS8yNy8yMDE0IDEwOjQyIFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gT24gTW9uLCBK
+YW4gMjcsIDIwMTQgYXQgMTI6NDY6NThQTSAtMDYwMCwgUmljaCBKb2huc3RvbiB3cm90ZToKPj4g
+QXJrYWRpdXN6LAo+Pgo+PiBUaGFua3MgZm9yIGNvbXBpbGluZyB0aGUgbGlzdC4KPj4KPj4gVGhl
+IGZvci0zLjEuMTIgIEJyYW5jaCBjcmVhdGVkIGZyb20gImE1NDcyODAuLi4gMy4xLjExIHJlbGVh
+c2UiCj4+Cj4+IElmIHRoZXJlIGFyZSBvdGhlcnMgeW91IHdhbnQgY29tbWl0dGVkLCBwbGVhc2Ug
+bGV0IG1lIGtub3cuCj4+Cj4+IFRoYW5rcwo+PiAtLVJpY2gKPj4KPj4KPj4gVGhlIGZvbGxvd2lu
+ZyBoYXZlIGJlZW4gY29tbWl0dGVkIGZyb20gdGhlIGNhbmRpZGF0ZSBsaXN0Cj4+IHByb3ZpZGVk
+IGJ5IEFya2FkaXVzejoKPj4KPj4KPj4gNDBjNjVhNy4uLiB4ZnNfbWV0YWR1bXA6IE1ha2UgLUYg
+KGZvcmNlKSBvcHRpb25hbAo+PiBlYzNhMWYxLi4uIHhmc19yZXBhaXI6IHN1Z2dlc3QgcmVib290
+IGFmdGVyIGRhbmdlcm91cyByZXBhaXIKPj4gODY2MDk1Mi4uLiB4ZnNwcm9nczogc3VnZ2VzdCAi
+LWQiIG9wdGlvbiBmb3IgcmVwYWlyIG9mIFJPIG1vdW50Cj4+IDVhODIwNmMuLi4geGZzX3JlcGFp
+cjogY29ycmVjdCBkb2NzIGZvciAiLXQiIHVuaXRzCj4+IDBkNWM0NDQuLi4geGZzX2ZzcjogZml4
+IFNXQVBFWFQgZmFpbHVyZXMgdW5kZXIgc2VsaW51eAo+PiBmM2QzZGFlLi4uIGxpYnhmczogZml4
+IHJvb3QgaW5vZGUgaGFuZGxpbmcgaW5jb25zaXN0ZW5jaWVzCj4KPiBJbnRyb2R1Y2VzIHRoaXMg
+Y29tcGlsZXIgd2FybmluZyBpbiBkYi9pbml0LmM6Cj4KPiBpbml0LmM6IEluIGZ1bmN0aW9uIMK/
+aW5pdMK/Ogo+IGluaXQuYzoxNTI6Mzogd2FybmluZzogaW1wbGljaXQgZGVjbGFyYXRpb24gb2Yg
+ZnVuY3Rpb24gwr94ZnNfaW5pdGlhbGl6ZV9wZXJhZ19kYXRhwr8gWy1XaW1wbGljaXQtZnVuY3Rp
+b24tZGVjbGFyYXRpb25dCj4KPgo+PiBjZjUwN2I2Li4uIHhmc3Byb2dzOiByZW1vdmUgeGZzX2No
+ZWNrIHJlZmVyZW5jZXMgZnJvbSBmc2NrLnhmcwo+PiBzY3JpcHQgJiBtYW5wYWdlCj4+IDZlMmYy
+ZDEuLi4geGZzcHJvZ3M6IGZpeCByZXNvdXJjZSBsZWFrIGluIGxvbmdmb3JtX2RpcjJfcmVidWls
+ZCgpCj4+IGVjZGUzZjkuLi4geGZzX3JlcGFpcjogdGVzdCBmb3IgYmFkIGxldmVsIGluIGRpcjIg
+bm9kZQo+PiBkMjk5ZGY3Li4uIHhmc19yZXBhaXI6IGF2b2lkIHNlZ2ZhdWx0IGlmIHJlcG9ydGlu
+ZyBwcm9ncmVzcyBlYXJseSBpbiByZXBhaXIKPj4gZTY2MGMyZS4uLiBTZW50OiBGcmlkYXksIE9j
+dG9iZXIgMTEsIDIwMTMgMTI6Mzg6MTEgQU0gU3ViamVjdDoKPj4gQnVnIzcyNTk3MTogeGZzcHJv
+Z3M6IGNvbmZpZy5ndWVzcy9jb25maWcuc3ViIG91dCBvZiBkYXRlIGZvciBhcm02NAo+PiA1ZTFj
+N2FjLi4uIHhmc3Byb2dzOiBoYW5kbGUgc3ltbGlua3MgZXRjIGluIGZzX3RhYmxlX2luaXRpYWxp
+c2VfbW91bnRzKCkKPj4gYWJhNjIwNC4uLiB4ZnNwcm9nczogZml4IHJldHVybiB2YWx1ZSBvZiB2
+ZXJpZnlfc2V0X3ByaW1hcnlfc2IoKQo+PiBhMmVhMTk1Li4uIHhmc3Byb2dzOiBmaXggcG90ZW50
+aWFsIG1lbW9yeSBsZWFrIGluIHZlcmlmeV9zZXRfcHJpbWFyeV9zYigpCj4+IDNlNTM5MzkuLi4g
+eGZzcHJvZ3M6IGZpeCBwb3RlbnRpYWwgbWVtb3J5IGxlYWsgaW4gcmVwYXJlL3NiLmMKPj4gODIw
+YjhjMi4uLiB4ZnNwcm9nczogYXZvaWQgYXJyYXkgb3ZlcmZsb3cgaW4gcGZfYmF0Y2hfcmVhZCgp
+Cj4+IDJhMWRjZGIuLi4geGZzX3JlcGFpcjogemVybyBvdXQgdW51c2VkIHBhcnRzIG9mIHN1cGVy
+YmxvY2tzCj4+IDk4MjUwOGIuLi4geGZzcHJvZ3M6IGZpeCBpbm9kZSBjcmFzaCBpbiB4ZnNfcmVw
+YWlyCj4KPiBJbnRyb2R1Y2VzIHRoaXMgY29tcGlsZXIgd2FybmluZyBpbiByZXBhaXIvcGhhc2U2
+LmM6Cj4KPiBwaGFzZTYuYzogSW4gZnVuY3Rpb24gwr9ta19vcnBoYW5hZ2XCvzoKPiBwaGFzZTYu
+Yzo4OTU6Mzogd2FybmluZzogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YgZnVuY3Rpb24gwr9hbGxv
+Y19leF9kYXRhwr8gWy1XaW1wbGljaXQtZnVuY3Rpb24tZGVjbGFyYXRpb25dCj4KPiBSdW5uaW5n
+IHNvbWUgc21va2UgdGVzdGluZyBvbiB0aGUgYnJhbmNoIG5vdy4gUmljaCwgSSBleHBlY3QgdGhh
+dAo+IHlvdSdsbCBiZSBkb2luZyBzb21lIGluLWRlcHRoIGZ1bmN0aW9uYWxpdHksIHNjYWxhYmls
+aXR5IGFuZCBzdHJlc3MKPiB0ZXN0aW5nIG9mIHRoZSBicmFuY2ggb3ZlciB0aGUgbmV4dCB3ZWVr
+IG9yIHR3bz8KCkkgd2lsbCBkbyAqc29tZSogdGVzdGluZyB5ZXMuIFRoaXMgaXMgbW9yZSBmb3Ig
+dGhvc2Ugd2hvIGFyZSBpbnRlcmVzdGVkIAppbiB0aGlzIGJyYW5jaC4gSSBkbyBub3QgcGxhbiBv
+biB1c2luZyBpdCBteXNlbGYuIEkgcHV0IGl0IG91dCB0aGVyZSBmb3IgCnRob3NlIGludGVyZXN0
+ZWQgaW4gYSAzLjEuMTIgcmVsZWFzZS4KClRoYW5rcwotLVJpY2gKCj4KPiBDaGVlcnMsCj4KPiBE
+YXZlLgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
+ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
+bi9saXN0aW5mby94ZnMK
