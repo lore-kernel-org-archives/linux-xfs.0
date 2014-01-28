@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7C1687F77
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 09:33:16 -0600 (CST)
-Message-ID: <52E7CDBA.5000709@sgi.com>
-Date: Tue, 28 Jan 2014 09:33:14 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D6C4C7F91
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 09:36:13 -0600 (CST)
+Message-ID: <52E7CE68.6030207@sgi.com>
+Date: Tue, 28 Jan 2014 09:36:08 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [ANNOUNCE] xfsprogs for-3.1.12 branch has been updated to 40c65a7
 References: <201401201822.48520.arekm@maven.pl> <52E6A9A2.1010905@sgi.com>
-	<20140128044216.GI2212@dastard>
-In-Reply-To: <20140128044216.GI2212@dastard>
+	<20140128042024.GH2212@dastard>
+In-Reply-To: <20140128042024.GH2212@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,57 +18,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-CgpPbiAwMS8yNy8yMDE0IDEwOjQyIFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gT24gTW9uLCBK
-YW4gMjcsIDIwMTQgYXQgMTI6NDY6NThQTSAtMDYwMCwgUmljaCBKb2huc3RvbiB3cm90ZToKPj4g
-QXJrYWRpdXN6LAo+Pgo+PiBUaGFua3MgZm9yIGNvbXBpbGluZyB0aGUgbGlzdC4KPj4KPj4gVGhl
-IGZvci0zLjEuMTIgIEJyYW5jaCBjcmVhdGVkIGZyb20gImE1NDcyODAuLi4gMy4xLjExIHJlbGVh
-c2UiCj4+Cj4+IElmIHRoZXJlIGFyZSBvdGhlcnMgeW91IHdhbnQgY29tbWl0dGVkLCBwbGVhc2Ug
-bGV0IG1lIGtub3cuCj4+Cj4+IFRoYW5rcwo+PiAtLVJpY2gKPj4KPj4KPj4gVGhlIGZvbGxvd2lu
-ZyBoYXZlIGJlZW4gY29tbWl0dGVkIGZyb20gdGhlIGNhbmRpZGF0ZSBsaXN0Cj4+IHByb3ZpZGVk
-IGJ5IEFya2FkaXVzejoKPj4KPj4KPj4gNDBjNjVhNy4uLiB4ZnNfbWV0YWR1bXA6IE1ha2UgLUYg
-KGZvcmNlKSBvcHRpb25hbAo+PiBlYzNhMWYxLi4uIHhmc19yZXBhaXI6IHN1Z2dlc3QgcmVib290
-IGFmdGVyIGRhbmdlcm91cyByZXBhaXIKPj4gODY2MDk1Mi4uLiB4ZnNwcm9nczogc3VnZ2VzdCAi
-LWQiIG9wdGlvbiBmb3IgcmVwYWlyIG9mIFJPIG1vdW50Cj4+IDVhODIwNmMuLi4geGZzX3JlcGFp
-cjogY29ycmVjdCBkb2NzIGZvciAiLXQiIHVuaXRzCj4+IDBkNWM0NDQuLi4geGZzX2ZzcjogZml4
-IFNXQVBFWFQgZmFpbHVyZXMgdW5kZXIgc2VsaW51eAo+PiBmM2QzZGFlLi4uIGxpYnhmczogZml4
-IHJvb3QgaW5vZGUgaGFuZGxpbmcgaW5jb25zaXN0ZW5jaWVzCj4KPiBJbnRyb2R1Y2VzIHRoaXMg
-Y29tcGlsZXIgd2FybmluZyBpbiBkYi9pbml0LmM6Cj4KPiBpbml0LmM6IEluIGZ1bmN0aW9uIMK/
-aW5pdMK/Ogo+IGluaXQuYzoxNTI6Mzogd2FybmluZzogaW1wbGljaXQgZGVjbGFyYXRpb24gb2Yg
-ZnVuY3Rpb24gwr94ZnNfaW5pdGlhbGl6ZV9wZXJhZ19kYXRhwr8gWy1XaW1wbGljaXQtZnVuY3Rp
-b24tZGVjbGFyYXRpb25dCj4KPgo+PiBjZjUwN2I2Li4uIHhmc3Byb2dzOiByZW1vdmUgeGZzX2No
-ZWNrIHJlZmVyZW5jZXMgZnJvbSBmc2NrLnhmcwo+PiBzY3JpcHQgJiBtYW5wYWdlCj4+IDZlMmYy
-ZDEuLi4geGZzcHJvZ3M6IGZpeCByZXNvdXJjZSBsZWFrIGluIGxvbmdmb3JtX2RpcjJfcmVidWls
-ZCgpCj4+IGVjZGUzZjkuLi4geGZzX3JlcGFpcjogdGVzdCBmb3IgYmFkIGxldmVsIGluIGRpcjIg
-bm9kZQo+PiBkMjk5ZGY3Li4uIHhmc19yZXBhaXI6IGF2b2lkIHNlZ2ZhdWx0IGlmIHJlcG9ydGlu
-ZyBwcm9ncmVzcyBlYXJseSBpbiByZXBhaXIKPj4gZTY2MGMyZS4uLiBTZW50OiBGcmlkYXksIE9j
-dG9iZXIgMTEsIDIwMTMgMTI6Mzg6MTEgQU0gU3ViamVjdDoKPj4gQnVnIzcyNTk3MTogeGZzcHJv
-Z3M6IGNvbmZpZy5ndWVzcy9jb25maWcuc3ViIG91dCBvZiBkYXRlIGZvciBhcm02NAo+PiA1ZTFj
-N2FjLi4uIHhmc3Byb2dzOiBoYW5kbGUgc3ltbGlua3MgZXRjIGluIGZzX3RhYmxlX2luaXRpYWxp
-c2VfbW91bnRzKCkKPj4gYWJhNjIwNC4uLiB4ZnNwcm9nczogZml4IHJldHVybiB2YWx1ZSBvZiB2
-ZXJpZnlfc2V0X3ByaW1hcnlfc2IoKQo+PiBhMmVhMTk1Li4uIHhmc3Byb2dzOiBmaXggcG90ZW50
-aWFsIG1lbW9yeSBsZWFrIGluIHZlcmlmeV9zZXRfcHJpbWFyeV9zYigpCj4+IDNlNTM5MzkuLi4g
-eGZzcHJvZ3M6IGZpeCBwb3RlbnRpYWwgbWVtb3J5IGxlYWsgaW4gcmVwYXJlL3NiLmMKPj4gODIw
-YjhjMi4uLiB4ZnNwcm9nczogYXZvaWQgYXJyYXkgb3ZlcmZsb3cgaW4gcGZfYmF0Y2hfcmVhZCgp
-Cj4+IDJhMWRjZGIuLi4geGZzX3JlcGFpcjogemVybyBvdXQgdW51c2VkIHBhcnRzIG9mIHN1cGVy
-YmxvY2tzCj4+IDk4MjUwOGIuLi4geGZzcHJvZ3M6IGZpeCBpbm9kZSBjcmFzaCBpbiB4ZnNfcmVw
-YWlyCj4KPiBJbnRyb2R1Y2VzIHRoaXMgY29tcGlsZXIgd2FybmluZyBpbiByZXBhaXIvcGhhc2U2
-LmM6Cj4KPiBwaGFzZTYuYzogSW4gZnVuY3Rpb24gwr9ta19vcnBoYW5hZ2XCvzoKPiBwaGFzZTYu
-Yzo4OTU6Mzogd2FybmluZzogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YgZnVuY3Rpb24gwr9hbGxv
-Y19leF9kYXRhwr8gWy1XaW1wbGljaXQtZnVuY3Rpb24tZGVjbGFyYXRpb25dCj4KPiBSdW5uaW5n
-IHNvbWUgc21va2UgdGVzdGluZyBvbiB0aGUgYnJhbmNoIG5vdy4gUmljaCwgSSBleHBlY3QgdGhh
-dAo+IHlvdSdsbCBiZSBkb2luZyBzb21lIGluLWRlcHRoIGZ1bmN0aW9uYWxpdHksIHNjYWxhYmls
-aXR5IGFuZCBzdHJlc3MKPiB0ZXN0aW5nIG9mIHRoZSBicmFuY2ggb3ZlciB0aGUgbmV4dCB3ZWVr
-IG9yIHR3bz8KCkkgd2lsbCBkbyAqc29tZSogdGVzdGluZyB5ZXMuIFRoaXMgaXMgbW9yZSBmb3Ig
-dGhvc2Ugd2hvIGFyZSBpbnRlcmVzdGVkIAppbiB0aGlzIGJyYW5jaC4gSSBkbyBub3QgcGxhbiBv
-biB1c2luZyBpdCBteXNlbGYuIEkgcHV0IGl0IG91dCB0aGVyZSBmb3IgCnRob3NlIGludGVyZXN0
-ZWQgaW4gYSAzLjEuMTIgcmVsZWFzZS4KClRoYW5rcwotLVJpY2gKCj4KPiBDaGVlcnMsCj4KPiBE
-YXZlLgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+
+
+On 01/27/2014 10:20 PM, Dave Chinner wrote:
+> On Mon, Jan 27, 2014 at 12:46:58PM -0600, Rich Johnston wrote:
+>> Arkadiusz,
+>>
+>> Thanks for compiling the list.
+>>
+>> The for-3.1.12  Branch created from "a547280... 3.1.11 release"
+>>
+>> If there are others you want committed, please let me know.
+>
+> What testing have you done on the branch?
+
+Just a quick test.  I wanted to get it out for others who are interested 
+in this branch to start testing.
+
+>
+>> 40c65a7... xfs_metadump: Make -F (force) optional
+>> ec3a1f1... xfs_repair: suggest reboot after dangerous repair
+>> 8660952... xfsprogs: suggest "-d" option for repair of RO mount
+>> 5a8206c... xfs_repair: correct docs for "-t" units
+>> 0d5c444... xfs_fsr: fix SWAPEXT failures under selinux
+>> f3d3dae... libxfs: fix root inode handling inconsistencies
+>> cf507b6... xfsprogs: remove xfs_check references from fsck.xfs
+>> script & manpage
+>> 6e2f2d1... xfsprogs: fix resource leak in longform_dir2_rebuild()
+>> ecde3f9... xfs_repair: test for bad level in dir2 node
+>> d299df7... xfs_repair: avoid segfault if reporting progress early in repair
+>> e660c2e... Sent: Friday, October 11, 2013 12:38:11 AM Subject:
+>> Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
+>
+> Can you fix the subject line of this commit, please?
+
+Sorry I missed that.
+
+I can, but a git rebase --interactive e660c2e^ will change the commit 
+ids after it.  Is there another way to do this that does not change the 
+commit ids?
+
+Thanks
+--Rich
+>
+> Cheers,
+>
+> Dave.
+>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
