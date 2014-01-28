@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F1EFC7F80
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 03:05:52 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BB8A47F82
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 03:56:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BDE0B8F8066
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 01:05:52 -0800 (PST)
-Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
-	[209.85.192.178]) by cuda.sgi.com with ESMTP id
-	0RHDz6s2ym8r6A52 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Jan 2014 01:05:47 -0800 (PST)
-Received: by mail-pd0-f178.google.com with SMTP id y13so105356pdi.37
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 01:05:46 -0800 (PST)
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [PATCH v3] xfstests: add a new test case to test i_size updated
-	properly under dio
-Date: Tue, 28 Jan 2014 17:10:17 +0800
-Message-Id: <1390900217-6967-1-git-send-email-wenqing.lz@taobao.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 441DEAC003
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 01:56:06 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	6AiuNOyNFcbueLvv for <xfs@oss.sgi.com>;
+	Tue, 28 Jan 2014 01:56:03 -0800 (PST)
+Date: Tue, 28 Jan 2014 20:55:59 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [NOISE] merge window blues, XFS broken
+Message-ID: <20140128095559.GJ2212@dastard>
+References: <52E56386.5040802@gmail.com> <20140127015614.GD2212@dastard>
+	<52E62ADA.2040800@gmail.com> <20140127233039.GF2212@dastard>
+	<52E768CF.5040908@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52E768CF.5040908@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,357 +27,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Rich Johnston <rjohnston@sgi.com>, Zheng Liu <wenqing.lz@taobao.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-From: Zheng Liu <wenqing.lz@taobao.com>
+On Tue, Jan 28, 2014 at 03:22:39AM -0500, Michael L. Semon wrote:
+> On 01/27/2014 06:30 PM, Dave Chinner wrote:
+> > On Mon, Jan 27, 2014 at 04:46:02AM -0500, Michael L. Semon wrote:
+> >> root@plbearer:~# ls $TEST_DIR/
+> >>
+> >> [   94.140207] XFS: Assertion failed: IS_ALIGNED((unsigned long)vec->i_addr, sizeof(uint64_t)), file: fs/xfs/xfs_log.h, line: 49
+> >>
+> >> Entering kdb (current=0xc5298c30, pid 297) Oops: (null)
+> >> due to oops @ 0x791752c5
+> >> CPU: 0 PID: 297 Comm: ls Not tainted 3.13.0+ #1
+> >> Hardware name: Dell Computer Corporation Dimension 2350/07W080, BIOS A01 12/17/2002
+> >> task: c5298c30 ti: c520e000 task.ti: c520e000
+> >> EIP: 0060:[<791752c5>] EFLAGS: 00010286 CPU: 0
+> >> EIP is at assfail+0x2b/0x2d
+> >> EAX: 00000071 EBX: c60ba600 ECX: 00000296 EDX: c5299098
+> >> ESI: c60ba61c EDI: c60ba600 EBP: c520fe40 ESP: c520fe2c
+> >>  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+> >> CR0: 80050033 CR2: 08f1612c CR3: 4d1f0000 CR4: 000007d0
+> >> Stack:
+> >>  00000000 79570bc8 79576e28 7956946d 00000031 c520fe70 791ce45f c520fe70
+> >>  7917ceb0 c520fec4 c50d5068 c520fe70 c55d8000 00000000 c50d5068 c607ae30
+> >>  c60ba600 c520fed4 791cb72b c607af80 c6c01e80 000000d8 c4294000 c520feec
+> >> Call Trace:
+> >>  [<791ce45f>] xfs_inode_item_format+0x4a/0x1c5
+> > 
+> > It's not clear to me that there's anything wrong with the inode log
+> > item structure, so I need to know what iovec we tripped over here.
+> > Can you post the disassembly of this function so we can see which
+> > call to xlog_prepare_iovec tripped the assert? i.e.:
+.....
+> OK, I had to generate a new crash for this, so pardon the dust:
 
-In this commit a new test case is added to test that i_size is updated
-properly under dio reads/writes.  We add a program in /src dir, which
-has a writer to issue some append dio writes.  Meanwhile it has a reader
-in this test to do some dio reads.  As we expect, reader should read
-nothing or data with 'a'.  But it might read some data with '0'.
+Actually, you don't ned to crash a kernel to do this. Just run
+'gdb vmlinux' from your build directory....
 
-The bug can be reproduced by this test case [1].
+> crash> gdb disass /m xfs_inode_item_format
+> Dump of assembler code for function xfs_inode_item_format:
+> 367     {
+>    0x791ce415 <+0>:     push   %ebp
+>    0x791ce416 <+1>:     mov    %esp,%ebp
+>    0x791ce418 <+3>:     push   %edi
+>    0x791ce419 <+4>:     push   %esi
+>    0x791ce41a <+5>:     push   %ebx
+>    0x791ce41b <+6>:     sub    $0x1c,%esp
+>    0x791ce41e <+9>:     lea    %ds:0x0(%esi,%eiz,1),%esi
+>    0x791ce423 <+14>:    mov    %eax,-0x1c(%ebp)
+>    0x791ce426 <+17>:    mov    %edx,%ebx
+> 
+> 368             struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+> 369             struct xfs_inode        *ip = iip->ili_inode;
+>    0x791ce428 <+19>:    mov    0x44(%eax),%eax
+>    0x791ce42b <+22>:    mov    %eax,-0x14(%ebp)
+> 
+> 370             struct xfs_inode_log_format *ilf;
+> 371             struct xfs_log_iovec    *vecp = NULL;
+>    0x791ce42e <+25>:    movl   $0x0,-0x10(%ebp)
+> 
+> 372     
+> 373             ilf = xlog_prepare_iovec(lv, &vecp, XLOG_REG_TYPE_IFORMAT);
+> 374             ilf->ilf_type = XFS_LI_INODE;
+>    0x791ce464 <+79>:    movw   $0x123b,(%esi)
 
-1.  http://patchwork.ozlabs.org/patch/311761/
+Ok, so xfs_inode_item_format+0x4a is inside the very first call to
+preapre the ilf structure. That tells us that the initial
+xfs_log_vec/xfs_log_iovec array are resulting in an unaligned
+buffer.
 
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Rich Johnston <rjohnston@sgi.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
----
-changelog v3:
- * rebase against latest xfstests/master branch
- * update commit log
+Can you try the patch below, Michael?
 
-changelog v2:
- * add '-lpthread' into LLDLIBS
+Cheers,
 
- aclocal.m4            |    1 +
- configure.ac          |    1 +
- include/builddefs.in  |    1 +
- src/Makefile          |    4 +-
- src/diotest.c         |  166 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/323     |   56 +++++++++++++++++
- tests/generic/323.out |    1 +
- tests/generic/group   |    1 +
- 8 files changed, 229 insertions(+), 2 deletions(-)
- create mode 100644 src/diotest.c
- create mode 100755 tests/generic/323
- create mode 100644 tests/generic/323.out
-
-diff --git a/aclocal.m4 b/aclocal.m4
-index f3412e1..89bb816 100644
---- a/aclocal.m4
-+++ b/aclocal.m4
-@@ -44,6 +44,7 @@ m4_include([m4/package_attrdev.m4])
- m4_include([m4/package_dmapidev.m4])
- m4_include([m4/package_gdbmdev.m4])
- m4_include([m4/package_globals.m4])
-+m4_include([m4/package_pthread.m4])
- m4_include([m4/package_ssldev.m4])
- m4_include([m4/package_utilies.m4])
- m4_include([m4/package_uuiddev.m4])
-diff --git a/configure.ac b/configure.ac
-index bd48fd9..5eba21a 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -62,6 +62,7 @@ in
- 		AC_PACKAGE_NEED_SYS_ACL_H
- 		AC_PACKAGE_NEED_ACL_LIBACL_H
- 		AC_PACKAGE_NEED_ACLINIT_LIBACL
-+		AC_PACKAGE_NEED_PTHREADMUTEXINIT
- 
- 		AC_PACKAGE_WANT_GDBM
- 		AC_PACKAGE_WANT_AIO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 24f838f..d612ac1 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -23,6 +23,7 @@ LIBGDBM = @libgdbm@
- LIBUUID = @libuuid@
- LIBHANDLE = @libhdl@
- LIBDM = @libdm@
-+LIBPTHREAD = @libpthread@
- LIBTEST = $(TOPDIR)/lib/libtest.la
- 
- PKG_NAME        = @pkg_name@
-diff --git a/src/Makefile b/src/Makefile
-index 84c8297..f0fa9b9 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -18,11 +18,11 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
- 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
- 	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
--	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec
-+	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec diotest
- 
- SUBDIRS =
- 
--LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
-+LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL) $(LIBPTHREAD)
- 
- ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
- LINUX_TARGETS += loggen
-diff --git a/src/diotest.c b/src/diotest.c
-new file mode 100644
-index 0000000..7d2378f
---- /dev/null
-+++ b/src/diotest.c
-@@ -0,0 +1,166 @@
-+/*
-+ * Copyright (c) 2013 Alibaba Group.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+/*
-+ * This is a normal case that we do some append dio writes and meanwhile
-+ * we do some dio reads.  Currently in vfs we don't ensure that i_size
-+ * is updated properly.  Hence the reader will read some data with '0'.
-+ * But we expect that the reader should read nothing or data with 'a'.
-+ */
-+
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#include <errno.h>
-+
-+#include <pthread.h>
-+
-+static char *prog;
-+
-+struct writer_data {
-+	int fd;
-+	size_t blksize;
-+	char *buf;
-+};
-+
-+static void usage(void)
-+{
-+	fprintf(stderr, "usage: %s [FILE]\n", prog);
-+}
-+
-+static void *writer(void *arg)
-+{
-+	struct writer_data *data = (struct writer_data *)arg;
-+	int ret;
-+
-+	ret = write(data->fd, data->buf, data->blksize);
-+	if (ret < 0)
-+		fprintf(stderr, "write file failed: %s\n", strerror(errno));
-+
-+	return NULL;
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	pthread_t tid;
-+	struct writer_data wdata;
-+	size_t max_blocks = 128;		/* 128 */
-+	size_t blksize = 1 * 1024 * 1024;	/* 1M */
-+	char *rbuf = NULL, *wbuf = NULL;
-+	int rfd = 0, wfd = 0;
-+	int i, j;
-+	int ret = 0;
-+
-+	prog = basename(argv[0]);
-+
-+	if (argc != 2) {
-+		usage();
-+		exit(1);
-+	}
-+
-+	wfd = open(argv[1], O_CREAT|O_DIRECT|O_WRONLY|O_APPEND|O_TRUNC, S_IRWXU);
-+	if (wfd < 0) {
-+		fprintf(stderr, "failed to open write file: %s\n",
-+			strerror(errno));
-+		exit(1);
-+	}
-+
-+	rfd = open(argv[1], O_DIRECT|O_RDONLY, S_IRWXU);
-+	if (wfd < 0) {
-+		fprintf(stderr, "failed to open read file: %s\n",
-+			strerror(errno));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	/*
-+	 * We set 1024 as an alignment size for write buf.  Feel free to change
-+	 * it with 4096.  But the problem is also hitted.
-+	 */
-+	if (posix_memalign((void **)&wbuf, 1024, blksize)) {
-+		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	if (posix_memalign((void **)&rbuf, 4096, blksize)) {
-+		fprintf(stderr, "failed to alloc memory: %s\n", strerror(errno));
-+		ret = 1;
-+		goto err;
-+	}
-+
-+	memset(wbuf, 'a', blksize);
-+	wdata.fd = wfd;
-+	wdata.blksize = blksize;
-+	wdata.buf = wbuf;
-+
-+	for (i = 0; i < max_blocks; i++) {
-+		void *retval;
-+
-+		if (pthread_create(&tid, NULL, writer, &wdata)) {
-+			fprintf(stderr, "create thread failed: %s\n",
-+				strerror(errno));
-+			ret = 1;
-+			goto err;
-+		}
-+
-+		memset(rbuf, 'b', blksize);
-+		do {
-+			ret = pread(rfd, rbuf, blksize, i * blksize);
-+			if (ret < 0)
-+				fprintf(stderr, "read file failed: %s\n",
-+					strerror(errno));
-+		} while (ret <= 0);
-+
-+		if (pthread_join(tid, &retval)) {
-+			fprintf(stderr, " pthread join failed: %s\n",
-+				strerror(errno));
-+			ret = 1;
-+			goto err;
-+		}
-+
-+		if (ret >= 0) {
-+			for (j = 0; j < ret; j ++) {
-+				if (rbuf[j] != 'a') {
-+					fprintf(stderr, "encounter an error: "
-+						"offset %d content %c\n",
-+						i, rbuf[j]);
-+					ret = 1;
-+					goto err;
-+				}
-+			}
-+		}
-+	}
-+
-+err:
-+	if (rfd)
-+		close(rfd);
-+	if (wfd)
-+		close(wfd);
-+	if (rbuf)
-+		free(rbuf);
-+	if (wbuf)
-+		free(wbuf);
-+
-+	return ret;
-+}
-diff --git a/tests/generic/323 b/tests/generic/323
-new file mode 100755
-index 0000000..e4783d7
---- /dev/null
-+++ b/tests/generic/323
-@@ -0,0 +1,56 @@
-+#! /bin/bash
-+# FS QA Test No. 323
-+#
-+# Test i_size is updated properly under dio read/write
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.* $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+testfile=$TEST_DIR/$seq.$$
-+
-+[ -x $here/src/diotest ] || _notrun "diotest not built"
-+
-+$here/src/diotest $testfile > $seqres.full 2>&1 ||
-+	_fail "i_size isn't update properly!"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/323.out b/tests/generic/323.out
-new file mode 100644
-index 0000000..d5318f5
---- /dev/null
-+++ b/tests/generic/323.out
-@@ -0,0 +1 @@
-+QA output created by 323
-diff --git a/tests/generic/group b/tests/generic/group
-index f492461..710a3d4 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -125,3 +125,4 @@
- 320 auto rw
- 321 auto quick metadata log
- 322 auto quick metadata log
-+323 auto rw quick
+Dave.
 -- 
-1.7.9.7
+Dave Chinner
+david@fromorbit.com
+
+xfs: ensure correct log item buffer alignment
+
+From: Dave Chinner <dchinner@redhat.com>
+
+On 32 bit platforms, the log item vector headers are not 64 bit
+aligned or sized. hence if we don't take care to align them
+correctly or pad the buffer appropriately for 8 byte alignment, we
+can end up with alignment issues when accessing the user buffer
+directly as a structure.
+
+To solve this, simply pad the buffer headers to 64 bit offset so
+that the data section is always 8 byte aligned. 
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index cdebd83..4ef6fdb 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -205,16 +205,25 @@ xlog_cil_insert_format_items(
+ 		/*
+ 		 * We 64-bit align the length of each iovec so that the start
+ 		 * of the next one is naturally aligned.  We'll need to
+-		 * account for that slack space here.
++		 * account for that slack space here. Then round nbytes up
++		 * to 64-bit alignment so that the initial buffer alignment is
++		 * easy to calculate and verify.
+ 		 */
+ 		nbytes += niovecs * sizeof(uint64_t);
++		nbytes = round_up(nbytes, sizeof(uint64_t));
+ 
+ 		/* grab the old item if it exists for reservation accounting */
+ 		old_lv = lip->li_lv;
+ 
+-		/* calc buffer size */
+-		buf_size = sizeof(struct xfs_log_vec) + nbytes +
+-				niovecs * sizeof(struct xfs_log_iovec);
++		/*
++		 * The data buffer needs to start 64-bit aligned, so round up
++		 * that space to ensure we can align it appropriately and not
++		 * overrun the buffer.
++		 */
++		buf_size = nbytes +
++			   round_up((sizeof(struct xfs_log_vec) +
++				     niovecs * sizeof(struct xfs_log_iovec)),
++				    sizeof(uint64_t));
+ 
+ 		/* compare to existing item size */
+ 		if (lip->li_lv && buf_size <= lip->li_lv->lv_size) {
+@@ -251,6 +260,8 @@ xlog_cil_insert_format_items(
+ 		/* The allocated data region lies beyond the iovec region */
+ 		lv->lv_buf_len = 0;
+ 		lv->lv_buf = (char *)lv + buf_size - nbytes;
++		ASSERT(IS_ALIGNED((unsigned long)lv->lv_buf, sizeof(uint64_t)));
++
+ 		lip->li_ops->iop_format(lip, lv);
+ insert:
+ 		ASSERT(lv->lv_buf_len <= nbytes);
 
 _______________________________________________
 xfs mailing list
