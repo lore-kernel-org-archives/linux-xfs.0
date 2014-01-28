@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 415327F6C
-	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 17:30:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 16AE38F804B
-	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 15:30:43 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uP8ORHJ3RRalJCmx for <xfs@oss.sgi.com>;
-	Mon, 27 Jan 2014 15:30:41 -0800 (PST)
-Date: Tue, 28 Jan 2014 10:30:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [NOISE] merge window blues, XFS broken
-Message-ID: <20140127233039.GF2212@dastard>
-References: <52E56386.5040802@gmail.com> <20140127015614.GD2212@dastard>
-	<52E62ADA.2040800@gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52E62ADA.2040800@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 418167F72
+	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 19:41:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1FA068F8035
+	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 17:41:06 -0800 (PST)
+Received: from mail-wg0-f52.google.com (mail-wg0-f52.google.com
+	[74.125.82.52]) by cuda.sgi.com with ESMTP id YO68RHcp6Bd7KH7O
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 27 Jan 2014 17:41:04 -0800 (PST)
+Received: by mail-wg0-f52.google.com with SMTP id b13so6697554wgh.19
+	for <xfs@oss.sgi.com>; Mon, 27 Jan 2014 17:41:03 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH] xfstests: add test for btrfs incremental send data corruption
+Date: Tue, 28 Jan 2014 01:40:42 +0000
+Message-Id: <1390873242-8723-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +23,162 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-On Mon, Jan 27, 2014 at 04:46:02AM -0500, Michael L. Semon wrote:
-> root@plbearer:~# ls $TEST_DIR/
-> 
-> [   94.140207] XFS: Assertion failed: IS_ALIGNED((unsigned long)vec->i_addr, sizeof(uint64_t)), file: fs/xfs/xfs_log.h, line: 49
-> 
-> Entering kdb (current=0xc5298c30, pid 297) Oops: (null)
-> due to oops @ 0x791752c5
-> CPU: 0 PID: 297 Comm: ls Not tainted 3.13.0+ #1
-> Hardware name: Dell Computer Corporation Dimension 2350/07W080, BIOS A01 12/17/2002
-> task: c5298c30 ti: c520e000 task.ti: c520e000
-> EIP: 0060:[<791752c5>] EFLAGS: 00010286 CPU: 0
-> EIP is at assfail+0x2b/0x2d
-> EAX: 00000071 EBX: c60ba600 ECX: 00000296 EDX: c5299098
-> ESI: c60ba61c EDI: c60ba600 EBP: c520fe40 ESP: c520fe2c
->  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-> CR0: 80050033 CR2: 08f1612c CR3: 4d1f0000 CR4: 000007d0
-> Stack:
->  00000000 79570bc8 79576e28 7956946d 00000031 c520fe70 791ce45f c520fe70
->  7917ceb0 c520fec4 c50d5068 c520fe70 c55d8000 00000000 c50d5068 c607ae30
->  c60ba600 c520fed4 791cb72b c607af80 c6c01e80 000000d8 c4294000 c520feec
-> Call Trace:
->  [<791ce45f>] xfs_inode_item_format+0x4a/0x1c5
+Btrfs incremental send had an issue where it would detect a non-existent
+file hole and then overwrite the file section that hole covers with zeroes,
+overriding file data that it shouldn't.
 
-It's not clear to me that there's anything wrong with the inode log
-item structure, so I need to know what iovec we tripped over here.
-Can you post the disassembly of this function so we can see which
-call to xlog_prepare_iovec tripped the assert? i.e.:
+The respective btrfs kernel patch that fixed this issue is titled:
 
-gdb> disass xfs_inode_item_format
+   Btrfs: fix send file hole detection leading to data corruption
+   (https://patchwork.kernel.org/patch/3544831/)
 
-to give the raw disassembly output, and
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
+ tests/btrfs/034     |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/034.out |    6 +++
+ tests/btrfs/group   |    1 +
+ 3 files changed, 108 insertions(+)
+ create mode 100755 tests/btrfs/034
+ create mode 100644 tests/btrfs/034.out
 
-gdb> disass /m xfs_inode_item_format
-
-To output the c-code annotated version.
-
-Or even just annotating the code with printk()s prior to each
-xlog_prepare_iovec() call in xfs_inode_item_format will do ;)
-
-Cheers,
-
-Dave.
+diff --git a/tests/btrfs/034 b/tests/btrfs/034
+new file mode 100755
+index 0000000..db792de
+--- /dev/null
++++ b/tests/btrfs/034
+@@ -0,0 +1,101 @@
++#! /bin/bash
++# FS QA Test No. btrfs/034
++#
++# Test for a btrfs incremental send data corruption issue due to
++# bad detection of file holes.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++tmp=`mktemp -d`
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# Create a file such that its file extent items span at least 3 btree leafs.
++# This is necessary to trigger a btrfs incremental send bug where file hole
++# detection was not correct, leading to data corruption by overriding latest
++# data regions of a file with zeroes.
++
++run_check $XFS_IO_PROG -f -c "truncate 104857600" $SCRATCH_MNT/foo
++
++for ((i = 0; i < 940; i++))
++do
++    OFFSET=$((32768 + i * 8192))
++    LEN=$((OFFSET + 8192))
++    run_check $XFS_IO_PROG -c "falloc -k $OFFSET $LEN" $SCRATCH_MNT/foo
++    run_check $XFS_IO_PROG -c "pwrite -S 0xf0 $OFFSET 4096" $SCRATCH_MNT/foo
++done
++
++run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++    $SCRATCH_MNT/mysnap1
++
++run_check $BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT
++run_check $XFS_IO_PROG -c "truncate 3882008" $SCRATCH_MNT/foo
++
++run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++    $SCRATCH_MNT/mysnap2
++
++run_check $BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
++run_check $BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++    -f $tmp/2.snap
++
++md5sum $SCRATCH_MNT/foo | _filter_scratch
++md5sum $SCRATCH_MNT/mysnap1/foo | _filter_scratch
++md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
++md5sum $SCRATCH_MNT/mysnap1/foo | _filter_scratch
++
++run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
++md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++status=0
++exit
+diff --git a/tests/btrfs/034.out b/tests/btrfs/034.out
+new file mode 100644
+index 0000000..808e6b4
+--- /dev/null
++++ b/tests/btrfs/034.out
+@@ -0,0 +1,6 @@
++QA output created by 034
++9023ed93111c422d82e9cd54043a6fb0  SCRATCH_MNT/foo
++8e58ce8749d203f29f6b8f6990da722f  SCRATCH_MNT/mysnap1/foo
++9023ed93111c422d82e9cd54043a6fb0  SCRATCH_MNT/mysnap2/foo
++8e58ce8749d203f29f6b8f6990da722f  SCRATCH_MNT/mysnap1/foo
++9023ed93111c422d82e9cd54043a6fb0  SCRATCH_MNT/mysnap2/foo
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 3f61799..b0a6b70 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -33,3 +33,4 @@
+ 028 auto quick
+ 029 auto quick
+ 030 auto quick
++034 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
