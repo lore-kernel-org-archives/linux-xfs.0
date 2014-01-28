@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0C6CD7F77
-	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 10:54:47 -0600 (CST)
-Date: Tue, 28 Jan 2014 10:54:43 -0600
-From: Ben Myers <bpm@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 27D767F95
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 11:29:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A27CFAC00B
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 09:29:54 -0800 (PST)
+Received: from mail-ee0-f44.google.com (mail-ee0-f44.google.com
+	[74.125.83.44]) by cuda.sgi.com with ESMTP id gd7NTDWpE9XX4Wkf
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 28 Jan 2014 09:29:52 -0800 (PST)
+Received: by mail-ee0-f44.google.com with SMTP id c13so367790eek.31
+	for <xfs@oss.sgi.com>; Tue, 28 Jan 2014 09:29:51 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Subject: Re: [ANNOUNCE] xfsprogs for-3.1.12 branch has been updated to 40c65a7
-Message-ID: <20140128165443.GO1935@sgi.com>
+Date: Tue, 28 Jan 2014 18:29:49 +0100
 References: <201401201822.48520.arekm@maven.pl> <52E6A9A2.1010905@sgi.com>
-	<20140128042024.GH2212@dastard> <52E7CE68.6030207@sgi.com>
+	<20140128044216.GI2212@dastard>
+In-Reply-To: <20140128044216.GI2212@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52E7CE68.6030207@sgi.com>
+Message-Id: <201401281829.49414.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,64 +27,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Rich Johnston <rjohnston@sgi.com>, xfs@oss.sgi.com
 
-Hey Rich,
-
-On Tue, Jan 28, 2014 at 09:36:08AM -0600, Rich Johnston wrote:
-> On 01/27/2014 10:20 PM, Dave Chinner wrote:
-> >On Mon, Jan 27, 2014 at 12:46:58PM -0600, Rich Johnston wrote:
-> >>Arkadiusz,
-> >>
-> >>Thanks for compiling the list.
-> >>
-> >>The for-3.1.12  Branch created from "a547280... 3.1.11 release"
-> >>
-> >>If there are others you want committed, please let me know.
-> >
-> >What testing have you done on the branch?
-> 
-> Just a quick test.  I wanted to get it out for others who are
-> interested in this branch to start testing.
-> 
-> >
-> >>40c65a7... xfs_metadump: Make -F (force) optional
-> >>ec3a1f1... xfs_repair: suggest reboot after dangerous repair
-> >>8660952... xfsprogs: suggest "-d" option for repair of RO mount
-> >>5a8206c... xfs_repair: correct docs for "-t" units
-> >>0d5c444... xfs_fsr: fix SWAPEXT failures under selinux
-> >>f3d3dae... libxfs: fix root inode handling inconsistencies
-> >>cf507b6... xfsprogs: remove xfs_check references from fsck.xfs
-> >>script & manpage
-> >>6e2f2d1... xfsprogs: fix resource leak in longform_dir2_rebuild()
-> >>ecde3f9... xfs_repair: test for bad level in dir2 node
-> >>d299df7... xfs_repair: avoid segfault if reporting progress early in repair
-> >>e660c2e... Sent: Friday, October 11, 2013 12:38:11 AM Subject:
-> >>Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
-> >
-> >Can you fix the subject line of this commit, please?
-> 
-> Sorry I missed that.
-> 
-> I can, but a git rebase --interactive e660c2e^ will change the
-> commit ids after it.  Is there another way to do this that does not
-> change the commit ids?
-
-Any way you do it will change the commit ids.  Just don't worry about it.  If
-you really don't want to lose those old commits, you can create a tag
-for-3.1.12.bad to keep those old commits pinned in the repo, and then just
-force replace the branch after your rebase.  Then you can remove the 'bad' tag
-after the release is completed.  No big deal.
-
-Regards,
-	Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAyOCBvZiBKYW51YXJ5IDIwMTQsIERhdmUgQ2hpbm5lciB3cm90ZToKCj4gPiBm
+M2QzZGFlLi4uIGxpYnhmczogZml4IHJvb3QgaW5vZGUgaGFuZGxpbmcgaW5jb25zaXN0ZW5jaWVz
+Cj4gCj4gSW50cm9kdWNlcyB0aGlzIGNvbXBpbGVyIHdhcm5pbmcgaW4gZGIvaW5pdC5jOgo+IAo+
+IGluaXQuYzogSW4gZnVuY3Rpb24gwr9pbml0wr86Cj4gaW5pdC5jOjE1MjozOiB3YXJuaW5nOiBp
+bXBsaWNpdCBkZWNsYXJhdGlvbiBvZiBmdW5jdGlvbgo+IMK/eGZzX2luaXRpYWxpemVfcGVyYWdf
+ZGF0YcK/IFstV2ltcGxpY2l0LWZ1bmN0aW9uLWRlY2xhcmF0aW9uXQoKUHJvYmFibHkgcmV2ZXJ0
+IHRoaXMgb25lLCByaWdodD8KCj4gPiA5ODI1MDhiLi4uIHhmc3Byb2dzOiBmaXggaW5vZGUgY3Jh
+c2ggaW4geGZzX3JlcGFpcgo+IAo+IEludHJvZHVjZXMgdGhpcyBjb21waWxlciB3YXJuaW5nIGlu
+IHJlcGFpci9waGFzZTYuYzoKPiAKPiBwaGFzZTYuYzogSW4gZnVuY3Rpb24gwr9ta19vcnBoYW5h
+Z2XCvzoKPiBwaGFzZTYuYzo4OTU6Mzogd2FybmluZzogaW1wbGljaXQgZGVjbGFyYXRpb24gb2Yg
+ZnVuY3Rpb24gwr9hbGxvY19leF9kYXRhwr8KPiBbLVdpbXBsaWNpdC1mdW5jdGlvbi1kZWNsYXJh
+dGlvbgoKMmUxNjIyNzAzYmI1YzAxZTVmNmQ1ZmEwODc5OTljNzY4ODY4YWEwYiB4ZnNfcmVwYWly
+OiBhZGQgcHJvdG90eXBlIGZvciBhbGxvY19leF9kYXRhKCkKCgotLSAKQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6LCBhcmVrbSAvIG1hdmVuLnBsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
