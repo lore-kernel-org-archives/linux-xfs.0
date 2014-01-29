@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 76BF87F86
-	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 11:42:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 60E9030407A
-	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 09:42:55 -0800 (PST)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id vPETxuk1Dz2SrIs2 for
-	<xfs@oss.sgi.com>; Wed, 29 Jan 2014 09:42:50 -0800 (PST)
-Date: Wed, 29 Jan 2014 18:42:50 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Not being able to recover a RAID 5 20 Tb partition, help needed
-Message-ID: <20140129184250.7af7200f@harpe.intellique.com>
-In-Reply-To: <1391014448.2573.95.camel@islero.dmt.upm.es>
-References: <1391002795.2573.79.camel@islero.dmt.upm.es>
-	<1391009068.4294.83.camel@montana.filmlight.ltd.uk>
-	<1391014448.2573.95.camel@islero.dmt.upm.es>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D3F6A7F86
+	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 13:12:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B410A8F8066
+	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 11:12:02 -0800 (PST)
+Received: from internal-smtp4.wesleyan.edu (internal-smtp4.wesleyan.edu
+	[129.133.6.200]) by cuda.sgi.com with ESMTP id MlJaKSRYyZIPe191
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 29 Jan 2014 11:12:01 -0800 (PST)
+Received: from localhost (al.wesleyan.edu [129.133.22.76])
+	(authenticated bits=0)
+	by msa.wesleyan.edu (8.14.4/8.14.4) with ESMTP id s0TJBxhi002716
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NOT)
+	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 14:11:59 -0500
+From: "C. Morgan Hamill" <chamill@wesleyan.edu>
+In-reply-to: <52E91923.4070706@sandeen.net>
+Subject: Re: Question regarding XFS on LVM over hardware RAID.
+References: <1391005406-sup-1881@al.wesleyan.edu>
+	<52E91923.4070706@sandeen.net>
+Date: Wed, 29 Jan 2014 14:11:59 -0500
+Message-Id: <1391022066-sup-5863@al.wesleyan.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,35 +29,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: sillero@torroja.dmt.upm.es
-Cc: xfs@oss.sgi.com, Roger Willcocks <roger@filmlight.ltd.uk>, guillem <guillem@torroja.dmt.upm.es>
+To: xfs <xfs@oss.sgi.com>
 
-Le Wed, 29 Jan 2014 17:54:08 +0100
-"Juan A. Sillero" <sillero@torroja.dmt.upm.es> =E9crivait:
+Thanks for the quick reply.
 
-> We'd like to know your opinion about what to do next. The data is
-> still probably on the disks, but the RAID topology is gone.  We'd
-> also like to know if someone has experienced a similar hardware
-> problem that could give us some advice.
+Excerpts from Eric Sandeen's message of 2014-01-29 10:07:15 -0500:
+> The stripe unit and width are units of geometry of the underlying
+> storage; a filesystem will span some number of stripe units, depending
+> on its size.
+> 
+> So no, the filesystem's notion of stripe geometry does not change
+> with the filesystem size.
+> 
+> You do want to make sure that stripe geometry is correct and aligned
+> from top to bottom.
 
-I tought it was a dmraid raid 5 device? If it's a RAID controller, what
-brand/model is it? =
+Just to make sure I've understood, for 3 14-disk RAID 6 groups striped
+together into a single RAID 60, with stripe units of 128k, split up into
+some number of LVM logical volumes, I'd create the filesystems with the
+following:
 
+    mkfs.xfs -d su=128k,sw=36 ...
 
-At this point you could give a try to UFS Explorer.
+for all of the filesystems, regardless of how many and what size they
+were.  Does that sound right?
 
--- =
+> I helped write up the RHEL storage admin guide, and there are some
+> nice words about geometry and alignment in there:
+> 
+> https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/ch-iolimits.html
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Thanks for the resource!
+--
+Morgan Hamill
 
 _______________________________________________
 xfs mailing list
