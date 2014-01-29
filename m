@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5F7A17F80
-	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 08:26:46 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id CC5B07F80
+	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 08:58:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4BC628F8054
-	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 06:26:43 -0800 (PST)
-Received: from internal-smtp4.wesleyan.edu (internal-smtp4.wesleyan.edu
-	[129.133.6.200]) by cuda.sgi.com with ESMTP id SkjiOZgnOTz6vUfA
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 29 Jan 2014 06:26:42 -0800 (PST)
-Received: from localhost (al.wesleyan.edu [129.133.22.76])
-	(authenticated bits=0)
-	by msa.wesleyan.edu (8.14.4/8.14.4) with ESMTP id s0TEQeVx020755
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NOT)
-	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 09:26:40 -0500
-From: "C. Morgan Hamill" <chamill@wesleyan.edu>
-Subject: Question regarding XFS on LVM over hardware RAID.
-Date: Wed, 29 Jan 2014 09:26:40 -0500
-Message-Id: <1391005406-sup-1881@al.wesleyan.edu>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A19978F8039
+	for <xfs@oss.sgi.com>; Wed, 29 Jan 2014 06:58:55 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id OS2LwI2bkwqOZCF5 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Jan 2014 06:58:54 -0800 (PST)
+Message-ID: <52E91727.2060106@oracle.com>
+Date: Wed, 29 Jan 2014 22:58:47 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: sanitize sb_inopblock in xfs_mount_validate_sb
+References: <52E88357.6090104@redhat.com>
+In-Reply-To: <52E88357.6090104@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +24,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Howdy folks,
 
-I understand that XFS have stripe unit and width configured according to
-the underlying RAID device when using LVM, but I was wondering if this
-is still the case when a given XFS-formatted logical volume takes up
-only part of the available space on the RAID.  In particular, I could
-imagine that stripe width would need to be modified proportionally with
-the decrease in filesystem size.  My intuition says that's false, but
-I wanted to check with folks who know for sure.
+On 01/29 2014 12:28 AM, Eric Sandeen wrote:
+> xfs_mount_validate_sb doesn't check sb_inopblock for sanity
+> (as does its xfs_repair counterpart, FWIW).
+> 
+> If it's out of bounds, we can go off the rails in i.e.
+> xfs_inode_buf_verify(), which uses sb_inopblock as a loop
+> limit when stepping through a metadata buffer.
+> 
+> The problem can be demonstrated easily by corrupting
+> sb_inopblock with xfs_db and trying to mount the result:
+> 
+> # mkfs.xfs -dfile,name=fsfile,size=1g
+> # xfs_db -x fsfile 
+> xfs_db> sb 0
+> xfs_db> write inopblock 512
+> inopblock = 512
+> xfs_db> quit
+> 
+> # mount -o loop fsfile  mnt
+> and we blow up in xfs_inode_buf_verify().
+> 
+> With this patch, we get a (very noisy) corruption error,
+> and fail the mount as we should.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+> index b7c9aea..511cce9 100644
+> --- a/fs/xfs/xfs_sb.c
+> +++ b/fs/xfs/xfs_sb.c
+> @@ -288,6 +288,7 @@ xfs_mount_validate_sb(
+>  	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+>  	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
+>  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+> +	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+>  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
 
-Thanks for any help!
---
-Morgan Hamill
+Looks good to me.
+
+Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
