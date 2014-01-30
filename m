@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5B0CA7F85
-	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 14:26:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C6F94AC003
-	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 12:26:24 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ErtCBfcFGW2AyiNA for
-	<xfs@oss.sgi.com>; Thu, 30 Jan 2014 12:26:23 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0UKQNL8001212
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 15:26:23 -0500
-Message-ID: <52EAB56D.2050203@redhat.com>
-Date: Thu, 30 Jan 2014 15:26:21 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 382237F7C
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 14:28:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2478B8F8064
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 12:28:25 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	V05hbEgvXtP7QIZr for <xfs@oss.sgi.com>;
+	Thu, 30 Jan 2014 12:28:23 -0800 (PST)
+Date: Fri, 31 Jan 2014 07:28:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Question regarding XFS on LVM over hardware RAID.
+Message-ID: <20140130202819.GO2212@dastard>
+References: <1391005406-sup-1881@al.wesleyan.edu>
+	<52E91923.4070706@sandeen.net>
+	<1391022066-sup-5863@al.wesleyan.edu>
+	<52E99504.4030902@hardwarefreak.com>
+	<1391090527-sup-4664@al.wesleyan.edu>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: limit superblock corruption errors to probable
-	corruption
-References: <52E88D8B.90208@redhat.com>
-In-Reply-To: <52E88D8B.90208@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1391090527-sup-4664@al.wesleyan.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,97 +33,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: "C. Morgan Hamill" <chamill@wesleyan.edu>
+Cc: stan <stan@hardwarefreak.com>, xfs <xfs@oss.sgi.com>
 
-On 01/29/2014 12:11 AM, Eric Sandeen wrote:
-> Today, if
+On Thu, Jan 30, 2014 at 09:28:45AM -0500, C. Morgan Hamill wrote:
+> First, thanks very much for your help.  We're weening ourselves off
+> unnecessarily expensive storage and as such I unfortunately haven't had
+> as much experience with physical filesystems as I'd like.  I am also
+> unfamiliar with XFS.  I appreciate the help immensely.
 > 
-> xfs_sb_read_verify
->   xfs_sb_verify
->     xfs_mount_validate_sb
+> Excerpts from Stan Hoeppner's message of 2014-01-29 18:55:48 -0500:
+> > This is not correct.  You must align to either the outer stripe or the
+> > inner stripe when using a nested array.  In this case it appears your
+> > inner stripe is RAID6 su 128KB * sw 12 = 1536KB.  You did not state your
+> > outer RAID0 stripe geometry.  Which one you align to depends entirely on
+> > your workload.
 > 
-> detects superblock corruption, it'll be extremely noisy, dumping
-> 2 stacks, 2 hexdumps, etc.
+> Ahh this makes sense; it had occurred to me that something like this
+> might be the case.  I'm not exactly sure what you mean by inner and
+> outer; I can imagine it going both ways.
 > 
-> This is because we call XFS_CORRUPTION_ERROR in xfs_mount_validate_sb
-> as well as in xfs_sb_read_verify.
+> Just to clarify, it looks like this:
 > 
-> Also, *any* errors in xfs_mount_validate_sb which are not corruption
-> per se; things like too-big-blocksize, bad version, bad magic, v1 dirs,
-> rw-incompat etc - things which do not return EFSCORRUPTED - will
-> still do the whole XFS_CORRUPTION_ERROR spew when xfs_sb_read_verify
-> sees any error at all.  And it suggests to the user that they 
-> should run xfs_repair, even if the root cause of the mount failure
-> is a simple incompatibility.
-> 
-> I'll submit that the probably-not-corrupted errors don't warrant
-> this much noise, so this patch removes the high-level
-> XFS_CORRUPTION_ERROR which was firing for every error return
-> except EWRONGFS.
-> 
-> It also adds one to the path which detects a failed checksum.
-> 
-> The idea is, if it's really _corruption_ we can call
-> XFS_CORRUPTION_ERROR at the point of detection.  More benign
-> incompatibilities can do a little printk & fail the mount without
-> so much drama.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> I could see an argument where we might still want the hexdump
-> for things like bad magic - ok, just what *was* the magic?  But
-> I think we do need to reserve the oops-mimicing-backtraces for
-> the most severe problems.  Discuss.  ;)
-> 
+>      XFS     |      XFS    |     XFS      |      XFS
+> ---------------------------------------------------------
+>                     LVM volume group
+> ---------------------------------------------------------
+>                          RAID 0
+> ---------------------------------------------------------
+> RAID 6 (14 disks) | RAID 6 (14 disks) | RAID 6 (14 disks)
+> ---------------------------------------------------------
+>                     42 4TB SAS disks
 
-This seems pretty reasonable to me, particularly if pretty much any
-error via the xfs_sb_verify() path dumps corruption noise...
+So optimised for sequential IO. The time-honoured method of setting
+up XFS for this if the workload is large files is to use a stripe
+unit that is equal to the width of the underlying RAID6 volumes with
+a stripe width of 3. That way XFS tries to align files to the start
+of each RAID6 volume, and allocate in full RAID6 stripe chunks. This
+mostly avoids RMW cycles for large files and sequential IO. i.e. su
+= 1536k, sw = 3.
 
-> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-> index 511cce9..b575317 100644
-> --- a/fs/xfs/xfs_sb.c
-> +++ b/fs/xfs/xfs_sb.c
-> @@ -617,6 +617,8 @@ xfs_sb_read_verify(
->  			/* Only fail bad secondaries on a known V5 filesystem */
->  			if (bp->b_bn != XFS_SB_DADDR &&
->  			    xfs_sb_version_hascrc(&mp->m_sb)) {
-> +				XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-> +						     mp, bp->b_addr);
->  				error = EFSCORRUPTED;
->  				goto out_error;
->  			}
-> @@ -625,12 +627,8 @@ xfs_sb_read_verify(
->  	error = xfs_sb_verify(bp, true);
->  
->  out_error:
-> -	if (error) {
-> -		if (error != EWRONGFS)
-> -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-> -					     mp, bp->b_addr);
-> +	if (error)
->  		xfs_buf_ioerror(bp, error);
-> -	}
->  }
-
-... but why not leave the corruption output here in out_error, change
-the check to (error == EFSCORRUPTED) and remove the now duplicate
-corruption message in xfs_mount_validate_sb() (or replace it with a
-warn/notice message)? This would catch the other EFSCORRUPTED returns in
-a consistent manner, including another potential duplicate in the write
-verifier. I guess we'd lose a little specificity between the crc failure
-and sb validation, but we could add a warn/notice for the former too.
-
-Brian
-
->  
->  /*
+> ...more or less.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> I agree that it's quite weird, but I'll describe the workload and the
+> constraints.
+
+[snip]
+
+summary: concurrent (initially slow) sequential writes of ~4GB files.
+
+> Now, here's the constraints, which is why I was planning on setting
+> things up as above:
 > 
+>   - This is a budget job, so sane things like RAID 10 are our.  RAID
+>     6 or 60 are (as far as I can tell, correct me if I'm wrong) our only
+>     real options here, as anything else either sacrifices too much
+>     storage or is too susceptible failure from UREs.
+
+RAID6 is fine for this.
+
+>   - I need to expose, in the end, three-ish (two or four would be OK)
+>     filesystems to the backup software, which should come fairly close
+>     to minimizing the effects of the archive maintenance jobs (integrity
+>     checks, mostly).  CrashPlan will spawn 2 jobs per store point, so
+>     a max of 8 at any given time should be a nice balance between
+>     under-utilizing and saturating the IO.
+
+So concurrency is up to 8 files being written at a time. That's
+pretty much on the money for striped RAID. Much more than this and
+you end up with performance being limited by seeking on the slowest
+disk in the RAID sets.
+
+> So I had thought LVM over RAID 60 would make sense because it would give
+> me the option of leaving a bit of disk unallocated and being able to
+> tweak filesystem sizes a bit as time goes on.
+
+*nod*
+
+And it allows you, in future, to add more disks and grow across them
+via linear concatentation of more RAID60 luns of the same layout...
+
+> Now that I think of it though, perhaps something like 2 or 3 RAID6
+> volumes would make more sense, with XFS directly on top of them.  In
+> that case I have to balance number of volumes against the loss of
+> 2 parity disks, however.
+
+Probably not worth the complexity.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
