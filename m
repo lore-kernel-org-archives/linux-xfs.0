@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F26A27F69
-	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 13:20:10 -0600 (CST)
-Message-ID: <52EAA5E9.8020402@sgi.com>
-Date: Thu, 30 Jan 2014 13:20:09 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DB7967F63
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 13:42:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 61CDAAC00A
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 11:42:27 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id s822VRq2SUCORFbH (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 30 Jan 2014 11:42:26 -0800 (PST)
+Date: Thu, 30 Jan 2014 20:42:24 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [RFC] A draft for making ext4 support project quota
+Message-ID: <20140130194224.GA22955@quack.suse.cz>
+References: <20140128064248.GA8653@gmail.com>
+	<20140128143514.GB13676@quack.suse.cz>
+	<20140129034824.GA12757@gmail.com>
+	<A5AD0D66-C4F5-4177-9F87-E3BC59B348B8@dilger.ca>
 MIME-Version: 1.0
-Subject: Re: [ANNOUNCE] xfsprogs for-3.1.12 branch has been updated to 40c65a7
-References: <201401201822.48520.arekm@maven.pl> <52E6A9A2.1010905@sgi.com>
-	<20140128044216.GI2212@dastard> <201401281829.49414.arekm@maven.pl>
-In-Reply-To: <201401281829.49414.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <A5AD0D66-C4F5-4177-9F87-E3BC59B348B8@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,30 +28,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Theodore Ts'o <tytso@mit.edu>, Zheng Liu <gnehzuil.liu@gmail.com>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Li Xi <pkuelelixi@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-SGV5IEFya2FkaXVzeiwKCgpPbiAwMS8yOC8yMDE0IDExOjI5IEFNLCBBcmthZGl1c3ogTWnFm2tp
-ZXdpY3ogd3JvdGU6Cj4gT24gVHVlc2RheSAyOCBvZiBKYW51YXJ5IDIwMTQsIERhdmUgQ2hpbm5l
-ciB3cm90ZToKPgo+Pj4gZjNkM2RhZS4uLiBsaWJ4ZnM6IGZpeCByb290IGlub2RlIGhhbmRsaW5n
-IGluY29uc2lzdGVuY2llcwo+Pgo+PiBJbnRyb2R1Y2VzIHRoaXMgY29tcGlsZXIgd2FybmluZyBp
-biBkYi9pbml0LmM6Cj4+Cj4+IGluaXQuYzogSW4gZnVuY3Rpb24gwr9pbml0wr86Cj4+IGluaXQu
-YzoxNTI6Mzogd2FybmluZzogaW1wbGljaXQgZGVjbGFyYXRpb24gb2YgZnVuY3Rpb24KPj4gwr94
-ZnNfaW5pdGlhbGl6ZV9wZXJhZ19kYXRhwr8gWy1XaW1wbGljaXQtZnVuY3Rpb24tZGVjbGFyYXRp
-b25dCj4KPiBQcm9iYWJseSByZXZlcnQgdGhpcyBvbmUsIHJpZ2h0PwoKSnVzdCBhIGNvbXBpbGVy
-IHdhcm5pbmcgd2hpY2ggZG9lcyBub3QgaGFwcGVuIGluIHRoZSBtYXN0ZXIgYnJhbmNoLgoKPgo+
-Pj4gOTgyNTA4Yi4uLiB4ZnNwcm9nczogZml4IGlub2RlIGNyYXNoIGluIHhmc19yZXBhaXIKPj4K
-Pj4gSW50cm9kdWNlcyB0aGlzIGNvbXBpbGVyIHdhcm5pbmcgaW4gcmVwYWlyL3BoYXNlNi5jOgo+
-Pgo+PiBwaGFzZTYuYzogSW4gZnVuY3Rpb24gwr9ta19vcnBoYW5hZ2XCvzoKPj4gcGhhc2U2LmM6
-ODk1OjM6IHdhcm5pbmc6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mIGZ1bmN0aW9uIMK/YWxsb2Nf
-ZXhfZGF0YcK/Cj4+IFstV2ltcGxpY2l0LWZ1bmN0aW9uLWRlY2xhcmF0aW9uCj4KPiAyZTE2MjI3
-MDNiYjVjMDFlNWY2ZDVmYTA4Nzk5OWM3Njg4NjhhYTBiIHhmc19yZXBhaXI6IGFkZCBwcm90b3R5
-cGUgZm9yIGFsbG9jX2V4X2RhdGEoKQo+ClRoaXMgaGFzIGJlZW4gY29tbWl0dGVkCgplM2ZmZTY4
-Li4uIHhmc19yZXBhaXI6IGFkZCBwcm90b3R5cGUgZm9yIGFsbG9jX2V4X2RhdGEoKQoKClRoYW5r
-cwotLVJpY2gKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+On Thu 30-01-14 11:57:10, Andreas Dilger wrote:
+> On Jan 28, 2014, at 8:48 PM, Zheng Liu <gnehzuil.liu@gmail.com> wrote:
+> > On Tue, Jan 28, 2014 at 03:35:14PM +0100, Jan Kara wrote:
+> >> On Tue 28-01-14 14:42:49, Zheng Liu wrote:
+> >>> For project quota, the key issue is how to handle link(2)/rename(2).  We
+> >>> summarize the behaviour in xfs as following.
+> >>> 
+> >>> *Note*
+> >>> + unaccounted dir
+> >>> x accounted dir
+> >>> 
+> >>> link(2)
+> >>> -------
+> >>> 		+		x
+> >>> +		ok		error (EXDEV)
+> >>> x		ok		error (EXDEV)
+> 
+> Presumably this accounted-to-accounted link() is only an error if
+> it is between directories of two different projects?
+  Yes, I understand it that way.
+
+> >>> rename(2)
+> >>> ---------
+> >>> 		+		x
+> >>> +		ok		ok
+> >>> x		wrong		ok
+> >> 
+> >>  So moving unaccounted file/dir into an accounted dir would be OK? How is
+> >> that?
+> > 
+> > Actually xfs will return EXDEV error when we try to move unaccounted
+> > file/dir into an accounted dir.  Then userspace tools (e.g. mv(1)) will
+> > use create(2)/read(2)/write(2) syscalls to create these files/dirs from
+> > scratch, and get the same id from their parent.
+> 
+> Why wouldn't renaming an unaccounted file into an accounted directory
+> just be implemented by doing the equivalent of chown() to change the
+> project ID and setting the quota?  That could avoid a HUGE amount of
+> data copying for large files.
+  Well, the trouble is not so much with a file but with a directory. If you
+move an unaccounted directory in an accounted dir, you would have to
+recursively go through it and account each file. That isn't possible to do
+reliably from the kernel... And allowing files but disallowing dirs seems
+inconsistent so I'm in favor of a simple API.
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
