@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A73567F7D
-	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 14:20:07 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 64F017F81
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 14:26:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BD1DAC003
-	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 12:20:03 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gu4Pz9gLnaahjq9a for <xfs@oss.sgi.com>;
-	Thu, 30 Jan 2014 12:20:02 -0800 (PST)
-Message-ID: <52EAB3F0.3010605@sandeen.net>
-Date: Thu, 30 Jan 2014 14:20:00 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D6AC30407A
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 12:26:09 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id foH2WYmtPYONmlf2 for
+	<xfs@oss.sgi.com>; Thu, 30 Jan 2014 12:26:08 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s0UKQ7EN001091
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 15:26:08 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s0UKQ7d8013177
+	for <xfs@oss.sgi.com>; Thu, 30 Jan 2014 15:26:07 -0500
+Message-ID: <52EAB55E.5030204@redhat.com>
+Date: Thu, 30 Jan 2014 15:26:06 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [ANNOUNCE] xfsprogs for-3.1.12 branch has been updated to 40c65a7
-References: <201401201822.48520.arekm@maven.pl>
-	<52E6A9A2.1010905@sgi.com>	<20140128044216.GI2212@dastard>
-	<201401281829.49414.arekm@maven.pl> <52EAA5E9.8020402@sgi.com>
-In-Reply-To: <52EAA5E9.8020402@sgi.com>
+Subject: Re: [PATCH] xfs: sanitize sb_inopblock in xfs_mount_validate_sb
+References: <52E88357.6090104@redhat.com>
+In-Reply-To: <52E88357.6090104@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,24 +32,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>, =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3?= =?UTF-8?B?aWN6?= <arekm@maven.pl>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gMS8zMC8xNCwgMToyMCBQTSwgUmljaCBKb2huc3RvbiB3cm90ZToKPiBIZXkgQXJrYWRpdXN6
-LAo+IAo+IAo+IE9uIDAxLzI4LzIwMTQgMTE6MjkgQU0sIEFya2FkaXVzeiBNacWba2lld2ljeiB3
-cm90ZToKPj4gT24gVHVlc2RheSAyOCBvZiBKYW51YXJ5IDIwMTQsIERhdmUgQ2hpbm5lciB3cm90
-ZToKPj4KPj4+PiBmM2QzZGFlLi4uIGxpYnhmczogZml4IHJvb3QgaW5vZGUgaGFuZGxpbmcgaW5j
-b25zaXN0ZW5jaWVzCj4+Pgo+Pj4gSW50cm9kdWNlcyB0aGlzIGNvbXBpbGVyIHdhcm5pbmcgaW4g
-ZGIvaW5pdC5jOgo+Pj4KPj4+IGluaXQuYzogSW4gZnVuY3Rpb24gwr9pbml0wr86Cj4+PiBpbml0
-LmM6MTUyOjM6IHdhcm5pbmc6IGltcGxpY2l0IGRlY2xhcmF0aW9uIG9mIGZ1bmN0aW9uCj4+PiDC
-v3hmc19pbml0aWFsaXplX3BlcmFnX2RhdGHCvyBbLVdpbXBsaWNpdC1mdW5jdGlvbi1kZWNsYXJh
-dGlvbl0KPj4KPj4gUHJvYmFibHkgcmV2ZXJ0IHRoaXMgb25lLCByaWdodD8KPiAKPiBKdXN0IGEg
-Y29tcGlsZXIgd2FybmluZyB3aGljaCBkb2VzIG5vdCBoYXBwZW4gaW4gdGhlIG1hc3RlciBicmFu
-Y2guCgp3ZWxsLCBsZXQncyBnZXQgaXQgZml4ZWQgYW55d2F5LgoKbW92aW5nIHRoZSBwcm90b3R5
-cGUgdG8gaW5jbHVkZS94ZnNfbW91bnQuaCBmaXhlcyBpdCB1cC4KCi1FcmljCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 01/28/2014 11:28 PM, Eric Sandeen wrote:
+> xfs_mount_validate_sb doesn't check sb_inopblock for sanity
+> (as does its xfs_repair counterpart, FWIW).
+> 
+> If it's out of bounds, we can go off the rails in i.e.
+> xfs_inode_buf_verify(), which uses sb_inopblock as a loop
+> limit when stepping through a metadata buffer.
+> 
+> The problem can be demonstrated easily by corrupting
+> sb_inopblock with xfs_db and trying to mount the result:
+> 
+> # mkfs.xfs -dfile,name=fsfile,size=1g
+> # xfs_db -x fsfile 
+> xfs_db> sb 0
+> xfs_db> write inopblock 512
+> inopblock = 512
+> xfs_db> quit
+> 
+> # mount -o loop fsfile  mnt
+> and we blow up in xfs_inode_buf_verify().
+> 
+> With this patch, we get a (very noisy) corruption error,
+> and fail the mount as we should.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> 
+> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+> index b7c9aea..511cce9 100644
+> --- a/fs/xfs/xfs_sb.c
+> +++ b/fs/xfs/xfs_sb.c
+> @@ -288,6 +288,7 @@ xfs_mount_validate_sb(
+>  	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+>  	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
+>  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+> +	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+>  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
