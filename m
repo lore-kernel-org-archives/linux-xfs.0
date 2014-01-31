@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B8B677F91
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 09:53:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 94622304032
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 07:53:36 -0800 (PST)
-Received: from mail-qc0-f174.google.com (mail-qc0-f174.google.com
-	[209.85.216.174]) by cuda.sgi.com with ESMTP id
-	IIdKBMNLfwXvdE3J (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 31 Jan 2014 07:53:35 -0800 (PST)
-Received: by mail-qc0-f174.google.com with SMTP id x13so7290417qcv.33
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 07:53:35 -0800 (PST)
-Date: Fri, 31 Jan 2014 10:53:32 -0500
-From: Eric Whitney <enwlinux@gmail.com>
-Subject: [PATCH v2] xfstests: avoid ext4/306 failures caused by incompatible
-	mount options
-Message-ID: <20140131155332.GB2385@wallace>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9EE557F8E
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 10:28:05 -0600 (CST)
+Message-ID: <52EBCF12.1020403@sgi.com>
+Date: Fri, 31 Jan 2014 10:28:02 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] xfs: improve xfs_bitmap_empty()
+References: <52EBAF91.10608@oracle.com>
+	<52EBBC3D.5030507@sandeen.net>	<52EBC103.5050006@oracle.com>
+	<52EBC1AF.6020000@sandeen.net> <52EBC67B.7020806@oracle.com>
+In-Reply-To: <52EBC67B.7020806@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,71 +19,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-ext4/306 will fail when mounting the ext3 file system it creates if an
-ext3-incompatible mount option is applied by _scratch_mount.  This can
-happen if EXT_MOUNT_OPTIONS is defined appropriately in the test
-environment.  For example, the block_validity option is commonly used
-to enhance ext4 testing, and it is not supported by ext3.
+On 01/31/14 09:51, Jeff Liu wrote:
+>
+> On 01/31 2014 23:30 PM, Eric Sandeen wrote:
+>> On 1/31/14, 9:28 AM, Jeff Liu wrote:
+>>>
+>>> On 01/31 2014 23:07 PM, Eric Sandeen wrote:
+>>>> On 1/31/14, 8:13 AM, Jeff Liu wrote:
+>>>>> From: Jie Liu<jeff.liu@oracle.com>
+>>>>>
+>>>>> There is no need to travel through the whole bitmap items to verify
+>>>>> if the bitmap array is empty or not, instead, just return 0 directly
+>>>>> if an item is detected in bitmap array.
+>>>>>
+>>>>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>>>>
+>>>> Makes sense (and the long loop was my fault, I guess, but it's
+>>>> better than it was, see commit 24ad33f!)
+>>>
+>>> Ah, you have killed a lots code there! :)
+>>>> Reviewed-by: Eric Sandeen<sandeen@redhat.com>
+>>>>
+>>>> I wonder if something like:
+>>>>
+>>>> return (find_first_set(map, size) == size);
+>>>>
+>>>> would be faster (or if it'd be worth it)...?
+>>>> Probably not.  :)
+>>>>
+>>>
+>>> Well, when I looking through our bitmap source, I once thought if
+>>> we can replace the current code with the generic bitmap library.
+>>> However, our map is uint rather than unsigned long...
+>>
+>> Technically the unsigned long (pointer) is just the bitmap address,
+>> I think.
+>
+> Yeah, so this might worth to try on long terms.
+>
 
-Fix this by instead creating an ext4 file system without extents as a
-functionally equivalent substitute.  This will also eliminate a
-dependency for ext3 support on the test system.
+The blf_data_map[] is int aligned, not long aligned.
+You could reflect the alignment difference in the offset or
+change the alignment in the structure.
 
-Signed-off-by: Eric Whitney <enwlinux@gmail.com>
----
- tests/ext4/306 | 21 +++++++--------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
-
-diff --git a/tests/ext4/306 b/tests/ext4/306
-index 398c4c0..9559cf2 100755
---- a/tests/ext4/306
-+++ b/tests/ext4/306
-@@ -45,29 +45,22 @@ _supported_os Linux
- 
- _require_scratch
- 
--# This needs to mount ext3; might require ext3 driver, or ext4
--# might handle it itself.  Find out if we have it one way or another.
--modprobe ext3 > /dev/null 2>&1
--grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
--
- rm -f $seqres.full
- 
--# Make a small ext3 fs, (extents disabled) & mount it
--yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
--_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
-+# Make a small ext4 fs with extents disabled & mount it
-+yes | mkfs.ext4 -O ^extents $SCRATCH_DEV 512m >> $seqres.full 2>&1
-+_scratch_mount || _fail "couldn't mount fs"
-+
- # Create a small non-extent-based file
- echo "Create 1m testfile1"
- $XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
-+
-+# Create a large non-extent-based file filling the fs; this will run out & fail
- echo "Create testfile2 to fill the fs"
--# A large non-extent-based file filling the fs; this will run out & fail
- $XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
--
--# Remount as ext4
--_scratch_unmount
--_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
- df -h $SCRATCH_MNT >> $seqres.full
- 
--# Grow it by 512m
-+# Grow fs by 512m
- echo "Resize to 1g"
- resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
- df -h $SCRATCH_MNT >> $seqres.full
--- 
-1.8.3.2
+--Mark.
 
 _______________________________________________
 xfs mailing list
