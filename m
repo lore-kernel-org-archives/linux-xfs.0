@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 045287F56
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 13:24:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD0E2304039
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:24:38 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id SPq1jlL4wZ2sevzD for <xfs@oss.sgi.com>;
-	Fri, 31 Jan 2014 11:24:37 -0800 (PST)
-Message-ID: <52EBF870.1000603@sandeen.net>
-Date: Fri, 31 Jan 2014 13:24:32 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: avoid ext4/306 failures caused by
-	incompatible mount options
-References: <20140131155332.GB2385@wallace>
-In-Reply-To: <20140131155332.GB2385@wallace>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CF11C7F56
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 13:25:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AFD028F8068
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:25:14 -0800 (PST)
+Received: from mail-lb0-f182.google.com (mail-lb0-f182.google.com
+	[209.85.217.182]) by cuda.sgi.com with ESMTP id
+	3AILH2vQ4i0KR4ze (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 31 Jan 2014 11:25:12 -0800 (PST)
+Received: by mail-lb0-f182.google.com with SMTP id w7so3800589lbi.13
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:25:11 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Subject: Re: Extended attributes limit in Linux
+From: Sun_Blood <sblood@gmail.com>
+In-Reply-To: <52EBB431.50301@oracle.com>
+Date: Fri, 31 Jan 2014 20:25:08 +0100
+Message-Id: <6C94A326-DADE-4A32-97F6-AE84E9F57777@gmail.com>
+References: <CAMN6oR=a0G6O-3CVVkTwhYKavJTa543U3MLezCM8KW1ASZcPnA@mail.gmail.com>	<52EB64DC.4020603@oracle.com>
+	<1391165083.4275.7.camel@ubuntu>	<52EB960D.607@oracle.com>
+	<1391172723.4275.11.camel@ubuntu>	<52EBA783.1080801@oracle.com>
+	<1391178074.4275.19.camel@ubuntu> <52EBB431.50301@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,82 +30,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Whitney <enwlinux@gmail.com>, xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org
+To: Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+Cc: Vyacheslav Dubeyko <slava@dubeyko.com>
 
-On 1/31/14, 9:53 AM, Eric Whitney wrote:
-> ext4/306 will fail when mounting the ext3 file system it creates if an
-> ext3-incompatible mount option is applied by _scratch_mount.  This can
-> happen if EXT_MOUNT_OPTIONS is defined appropriately in the test
-> environment.  For example, the block_validity option is commonly used
-> to enhance ext4 testing, and it is not supported by ext3.
-> 
-> Fix this by instead creating an ext4 file system without extents as a
-> functionally equivalent substitute.  This will also eliminate a
-> dependency for ext3 support on the test system.
 
-this seems like it should be fine, but a quick check[1] makes me think
-that it's passing when it should not.  My flexible test boxes are tied up
-right now; the fix hit v3.10 (dunno about stable) so we should make sure
-this fails on v3.9 before & after your, I guess.
+On 31 jan 2014, at 15:33, Jeff Liu <jeff.liu@oracle.com> wrote:
 
-I can try to get to it, or if you do first, let me now :)
+> =
 
--Eric
+> On 01/31 2014 22:21 PM, Vyacheslav Dubeyko wrote:
+>> On Fri, 2014-01-31 at 21:39 +0800, Jeff Liu wrote:
+>> =
 
-[1] on an old RHEL5 box so that's a bit of a strange beast
+>>>> =
 
-> Signed-off-by: Eric Whitney <enwlinux@gmail.com>
-> ---
->  tests/ext4/306 | 21 +++++++--------------
->  1 file changed, 7 insertions(+), 14 deletions(-)
-> 
-> diff --git a/tests/ext4/306 b/tests/ext4/306
-> index 398c4c0..9559cf2 100755
-> --- a/tests/ext4/306
-> +++ b/tests/ext4/306
-> @@ -45,29 +45,22 @@ _supported_os Linux
->  
->  _require_scratch
->  
-> -# This needs to mount ext3; might require ext3 driver, or ext4
-> -# might handle it itself.  Find out if we have it one way or another.
-> -modprobe ext3 > /dev/null 2>&1
-> -grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
-> -
->  rm -f $seqres.full
->  
-> -# Make a small ext3 fs, (extents disabled) & mount it
-> -yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> -_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
-> +# Make a small ext4 fs with extents disabled & mount it
-> +yes | mkfs.ext4 -O ^extents $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> +_scratch_mount || _fail "couldn't mount fs"
-> +
->  # Create a small non-extent-based file
->  echo "Create 1m testfile1"
->  $XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
-> +
-> +# Create a large non-extent-based file filling the fs; this will run out & fail
->  echo "Create testfile2 to fill the fs"
-> -# A large non-extent-based file filling the fs; this will run out & fail
->  $XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
-> -
-> -# Remount as ext4
-> -_scratch_unmount
-> -_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
->  df -h $SCRATCH_MNT >> $seqres.full
->  
-> -# Grow it by 512m
-> +# Grow fs by 512m
->  echo "Resize to 1g"
->  resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
->  df -h $SCRATCH_MNT >> $seqres.full
-> 
+>>>> I checked the same under Mac OS X 10.6.8 (Snow Leopard). And I have
+>>>> failed on 3803 bytes size of xattr. So, I suppose that you have Mac OS=
+ X
+>>>> Lion. And EAs is larger under Lion yet.
+>>>> =
+
+>>>> What version of Mac OS X have you?
+>>>> =
+
+>>> Yup, Mountain Lion v10.8.4 :)
+>>> =
+
+>> =
+
+>> I suspect that xattrs with significant size is stored in compressed
+>> state on HFS+. I implemented support of compressed xattrs partially but
+>> I don't share this code yet. But, yes, EAs with size greater than 64 KB
+>> can be a problem.
+
+
+FYI, Example of output from one of the failing files. First from OS X and t=
+hen same file after failed copy to XFS.
+
+OS X Maverik:
+file: "/Users/username/Pictures/iPhoto Library/Database/apdb/BigBlobs.apdb"
+type: "\0\0\0\0"
+creator: "\0\0\0\0"
+attributes: avbstclinmedz
+created: 01/25/2014 11:43:17
+modified: 01/28/2014 20:02:46
+
+
+Ubunutu =
+
+getfattr: Removing leading '/' from absolute path names
+# file: srv/nas/home/apple_bak_rsync/username/Pictures/iPhoto Library/Datab=
+ase/BigBlobs.apdb
+user.com.apple.quarantine=3D"0006;52e39545;iPhoto;=94
+
+>> =
+
+>>> FYI, there have a couple of things regarding HFSPlus+xattr+acl on Linux=
+ might be
+>>> deserved to discuss together.
+>>> =
+
+>>> We once have a discussion about the errno in case of hit the limits of =
+ACLs, which
+>>> could be referred to:
+>>> http://www.spinics.net/lists/linux-fsdevel/msg71125.html
+>>> =
+
+>>> HFSPlus return ENOMEM in this case, but it should be E2BIG as per Dave'=
+s comments.
+>>> I worked out a patch series includes HFSPlus, but not yet posted for so=
+me reasons.
+>>> =
+
+>>> Also, it seems to me we'd better consolidate the errno for EA as well, =
+that is to
+>>> say, it's better to fix the return error to be consistent with VFS inte=
+rface in case
+>>> of the given EA name/value length is larger than the specified limits.
+>>> =
+
+>>> Would you like to take a look at the following two patches?
+>>> =
+
+>> =
+
+>> Yes, sure. Patches looks correct and good for me. But did you take into
+>> account recent significant changes of Christoph Hellwig? If so, then all
+>> looks good.
+> =
+
+> Thanks for the review.  That's one major reason I postpone the patch set =
+submission
+> as I did it before Christoph's changes got merged, it looks like no obvio=
+us conflicts
+> with that, but I will find time to double check and sent it to you -- sti=
+ll on vacation
+> for Chinese Spring Festival.
+> =
+
+> Thanks,
+> -Jeff
 
 _______________________________________________
 xfs mailing list
