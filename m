@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CF11C7F56
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 13:25:17 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2CAFB7FA1
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 13:32:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AFD028F8068
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:25:14 -0800 (PST)
-Received: from mail-lb0-f182.google.com (mail-lb0-f182.google.com
-	[209.85.217.182]) by cuda.sgi.com with ESMTP id
-	3AILH2vQ4i0KR4ze (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 31 Jan 2014 11:25:12 -0800 (PST)
-Received: by mail-lb0-f182.google.com with SMTP id w7so3800589lbi.13
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:25:11 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Subject: Re: Extended attributes limit in Linux
-From: Sun_Blood <sblood@gmail.com>
-In-Reply-To: <52EBB431.50301@oracle.com>
-Date: Fri, 31 Jan 2014 20:25:08 +0100
-Message-Id: <6C94A326-DADE-4A32-97F6-AE84E9F57777@gmail.com>
-References: <CAMN6oR=a0G6O-3CVVkTwhYKavJTa543U3MLezCM8KW1ASZcPnA@mail.gmail.com>	<52EB64DC.4020603@oracle.com>
-	<1391165083.4275.7.camel@ubuntu>	<52EB960D.607@oracle.com>
-	<1391172723.4275.11.camel@ubuntu>	<52EBA783.1080801@oracle.com>
-	<1391178074.4275.19.camel@ubuntu> <52EBB431.50301@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB86EAC003
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:31:59 -0800 (PST)
+Received: from mail-ee0-f51.google.com (mail-ee0-f51.google.com
+	[74.125.83.51]) by cuda.sgi.com with ESMTP id L2MITT1aJVaC5yVw
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:31:58 -0800 (PST)
+Received: by mail-ee0-f51.google.com with SMTP id b57so2520852eek.10
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 11:31:57 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: Not being able to recover a RAID 5 20 Tb partition, help needed
+From: "Juan A. Sillero" <juan.sillero@gmail.com>
+In-Reply-To: <20140129184250.7af7200f@harpe.intellique.com>
+Date: Fri, 31 Jan 2014 20:31:25 +0100
+Message-Id: <CC18E95B-75B3-47CE-8FBE-9FA511A38CD5@torroja.dmt.upm.es>
+References: <1391002795.2573.79.camel@islero.dmt.upm.es>
+	<1391009068.4294.83.camel@montana.filmlight.ltd.uk>
+	<1391014448.2573.95.camel@islero.dmt.upm.es>
+	<20140129184250.7af7200f@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,110 +29,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
-Cc: Vyacheslav Dubeyko <slava@dubeyko.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com, Roger Willcocks <roger@filmlight.ltd.uk>, Guillem Borrell i Nogueras <guillem@torroja.dmt.upm.es>
+
+Hello Emmanuel,
+
+The disk controller are QLogic:
+
+04:00.0 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel to PCI =
+Express HBA (rev 02)
+04:00.1 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel to PCI =
+Express HBA (rev 02)
+05:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI =
+Express HBA (rev 03)
+05:00.1 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI =
+Express HBA (rev 03)
+
+06:00.0 InfiniBand: Mellanox Technologies MT26428 [ConnectX VPI PCIe 2.0 5G=
+T/s - IB QDR / 10GigE] (rev b0)
 
 
-On 31 jan 2014, at 15:33, Jeff Liu <jeff.liu@oracle.com> wrote:
+Thanks again,
+
+Juan
+
+On Jan 29, 2014, at 6:42 PM, Emmanuel Florac <eflorac@intellique.com> wrote:
+
+> Le Wed, 29 Jan 2014 17:54:08 +0100
+> "Juan A. Sillero" <sillero@torroja.dmt.upm.es> =E9crivait:
+> =
+
+>> We'd like to know your opinion about what to do next. The data is
+>> still probably on the disks, but the RAID topology is gone.  We'd
+>> also like to know if someone has experienced a similar hardware
+>> problem that could give us some advice.
+> =
+
+> I tought it was a dmraid raid 5 device? If it's a RAID controller, what
+> brand/model is it? =
 
 > =
 
-> On 01/31 2014 22:21 PM, Vyacheslav Dubeyko wrote:
->> On Fri, 2014-01-31 at 21:39 +0800, Jeff Liu wrote:
->> =
-
->>>> =
-
->>>> I checked the same under Mac OS X 10.6.8 (Snow Leopard). And I have
->>>> failed on 3803 bytes size of xattr. So, I suppose that you have Mac OS=
- X
->>>> Lion. And EAs is larger under Lion yet.
->>>> =
-
->>>> What version of Mac OS X have you?
->>>> =
-
->>> Yup, Mountain Lion v10.8.4 :)
->>> =
-
->> =
-
->> I suspect that xattrs with significant size is stored in compressed
->> state on HFS+. I implemented support of compressed xattrs partially but
->> I don't share this code yet. But, yes, EAs with size greater than 64 KB
->> can be a problem.
-
-
-FYI, Example of output from one of the failing files. First from OS X and t=
-hen same file after failed copy to XFS.
-
-OS X Maverik:
-file: "/Users/username/Pictures/iPhoto Library/Database/apdb/BigBlobs.apdb"
-type: "\0\0\0\0"
-creator: "\0\0\0\0"
-attributes: avbstclinmedz
-created: 01/25/2014 11:43:17
-modified: 01/28/2014 20:02:46
-
-
-Ubunutu =
-
-getfattr: Removing leading '/' from absolute path names
-# file: srv/nas/home/apple_bak_rsync/username/Pictures/iPhoto Library/Datab=
-ase/BigBlobs.apdb
-user.com.apple.quarantine=3D"0006;52e39545;iPhoto;=94
-
->> =
-
->>> FYI, there have a couple of things regarding HFSPlus+xattr+acl on Linux=
- might be
->>> deserved to discuss together.
->>> =
-
->>> We once have a discussion about the errno in case of hit the limits of =
-ACLs, which
->>> could be referred to:
->>> http://www.spinics.net/lists/linux-fsdevel/msg71125.html
->>> =
-
->>> HFSPlus return ENOMEM in this case, but it should be E2BIG as per Dave'=
-s comments.
->>> I worked out a patch series includes HFSPlus, but not yet posted for so=
-me reasons.
->>> =
-
->>> Also, it seems to me we'd better consolidate the errno for EA as well, =
-that is to
->>> say, it's better to fix the return error to be consistent with VFS inte=
-rface in case
->>> of the given EA name/value length is larger than the specified limits.
->>> =
-
->>> Would you like to take a look at the following two patches?
->>> =
-
->> =
-
->> Yes, sure. Patches looks correct and good for me. But did you take into
->> account recent significant changes of Christoph Hellwig? If so, then all
->> looks good.
+> At this point you could give a try to UFS Explorer.
 > =
 
-> Thanks for the review.  That's one major reason I postpone the patch set =
-submission
-> as I did it before Christoph's changes got merged, it looks like no obvio=
-us conflicts
-> with that, but I will find time to double check and sent it to you -- sti=
-ll on vacation
-> for Chinese Spring Festival.
-> =
+> -- =
 
-> Thanks,
-> -Jeff
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                    |   Intellique
+>                    |	<eflorac@intellique.com>
+>                    |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
