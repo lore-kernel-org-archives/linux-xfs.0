@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E7217FB1
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 15:51:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1523F8F8066
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 13:51:26 -0800 (PST)
-Received: from mail-ea0-f171.google.com (mail-ea0-f171.google.com
-	[209.85.215.171]) by cuda.sgi.com with ESMTP id
-	BM1BEuvvj5kVZf72 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 31 Jan 2014 13:51:24 -0800 (PST)
-Received: by mail-ea0-f171.google.com with SMTP id f15so2599169eak.16
-	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 13:51:23 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: Not being able to recover a RAID 5 20 Tb partition, help needed
-From: Juan Antonio Sillero Sepulveda <juan.sillero@gmail.com>
-In-Reply-To: <20140131223715.0a977fc2@galadriel.home>
-Date: Fri, 31 Jan 2014 22:50:51 +0100
-Message-Id: <D52B7046-0672-4C4E-AC79-DCB7F811DB2E@gmail.com>
-References: <1391002795.2573.79.camel@islero.dmt.upm.es>
-	<1391009068.4294.83.camel@montana.filmlight.ltd.uk>
-	<1391014448.2573.95.camel@islero.dmt.upm.es>
-	<20140129184250.7af7200f@harpe.intellique.com>
-	<CC18E95B-75B3-47CE-8FBE-9FA511A38CD5@torroja.dmt.upm.es>
-	<20140131223715.0a977fc2@galadriel.home>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BFDA17FB5
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 20:05:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3E696AC003
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 18:05:50 -0800 (PST)
+Received: from mail-we0-f171.google.com (mail-we0-f171.google.com
+	[74.125.82.171]) by cuda.sgi.com with ESMTP id ubsiWptZqepA4xyc
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 31 Jan 2014 18:05:45 -0800 (PST)
+Received: by mail-we0-f171.google.com with SMTP id u56so286356wes.16
+	for <xfs@oss.sgi.com>; Fri, 31 Jan 2014 18:05:44 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH] xfstests: more tests for test case btrfs/030
+Date: Sat,  1 Feb 2014 02:05:32 +0000
+Message-Id: <1391220332-22118-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,65 +23,147 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com, Roger Willcocks <roger@filmlight.ltd.uk>, Guillem Borrell i Nogueras <guillem@torroja.dmt.upm.es>
+To: xfs@oss.sgi.com
+Cc: jbacik@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-Sorry,
+This change adds some new tests for btrfs' incremental send feature.
+These are all related with inverting the parent-child relationship
+of directories, and cover the cases:
 
-Guillem, my colleague and expert, correct me. These is the hardware.
+* when the new parent didn't get renamed (just moved)
+* when a child file of the former parent gets renamed too
 
-Disk /dev/sdq - 20 TB / 18 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdr - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sds - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdt - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdu - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdv - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdw - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdx - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdy - 22 TB / 20 TiB - DotHill R/Evo 5730-2R
-Disk /dev/sdz - 20 TB / 18 TiB - DotHill R/Evo 5730-2R
+These new cases are fixed by the following btrfs linux kernel patches:
 
-We store everything, basically. Images, matlabs files, txt, dat, pdf, binar=
-y files, hdf5 files, .mat, Fortran files, etc...
+* "Btrfs: more send support for parent/child dir relationship inversion"
+* "Btrfs: fix send dealing with file renames and directory moves"
 
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
+ tests/btrfs/030 |   86 +++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 65 insertions(+), 21 deletions(-)
 
-On Jan 31, 2014, at 10:37 PM, Emmanuel Florac <eflorac@intellique.com> wrot=
-e:
-
-> Le Fri, 31 Jan 2014 20:31:25 +0100 vous =E9criviez:
-> =
-
->> The disk controller are QLogic:
->> =
-
->> 04:00.0 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel
->> to PCI Express HBA (rev 02) =
-
-> =
-
-> =
-
-> So it's just a FC HBA, not a RAID controller, so there isn't much to
-> do there. As I said previously, your best bet at this point is first try
-> UFS explorer first.
-> =
-
-> Is your data made of  standard file formats (i.e. JPEG images, etc)? Or
-> is it special?
-> =
-
-> -- =
-
-> ------------------------------------------------------------------------
-> Emmanuel Florac     |   Direction technique
->                    |   Intellique
->                    |	<eflorac@intellique.com>
->                    |   +33 1 78 94 84 02
-> ------------------------------------------------------------------------
+diff --git a/tests/btrfs/030 b/tests/btrfs/030
+index 6678ed8..6b52a0d 100755
+--- a/tests/btrfs/030
++++ b/tests/btrfs/030
+@@ -73,22 +73,41 @@ mkdir $SCRATCH_MNT/a/b/www
+ echo "hey" > $SCRATCH_MNT/a/b/foobar.txt
+ mkdir -p $SCRATCH_MNT/a/b/c3/x/y
+ 
++mkdir -p $SCRATCH_MNT/a/b/foo1/foo2
++echo "hey" > $SCRATCH_MNT/a/b/foo1/foo2/f.txt
++mkdir $SCRATCH_MNT/a/b/foo3
++
++mkdir -p $SCRATCH_MNT/a/b/bar1/bar2/bar3/bar4
++echo "ola" > $SCRATCH_MNT/a/b/bar1/bar2/bar3/bar4/hello.txt
++
+ # Directory tree looks like:
+ #
+-# .                         (ino 256)
+-# |-- a/                    (ino 257)
+-#     |-- b/                (ino 258)
+-#         |-- c/            (ino 259)
+-#         |   |-- file.txt  (ino 260)
+-#         |   |-- d/        (ino 261)
++# .                                      (ino 256)
++# |-- a/                                 (ino 257)
++#     |-- b/                             (ino 258)
++#         |-- c/                         (ino 259)
++#         |   |-- file.txt               (ino 260)
++#         |   |-- d/                     (ino 261)
++#         |
++#         |-- c2/                        (ino 262)
++#         |-- www/                       (ino 263)
++#         |-- foobar.txt                 (ino 264)
++#         |
++#         |-- c3/                        (ino 265)
++#         |   |-- x/                     (ino 266)
++#         |       |-- y/                 (ino 267)
++#         |
++#         |-- foo1/                      (ino 268)
++#         |    |---foo2/                 (ino 269)
++#         |         |---f.txt            (ino 270)
+ #         |
+-#         |-- c2/           (ino 262)
+-#         |-- www/          (ino 263)
+-#         |-- foobar.txt    (ino 264)
++#         |-- foo3/                      (ino 271)
+ #         |
+-#         |-- c3/           (ino 265)
+-#             |-- x/        (ino 266)
+-#                 |-- y/    (ino 267)
++#         |-- bar1/                      (ino 272)
++#              |-- bar2/                 (ino 273)
++#                  |-- bar3/             (ino 274)
++#                      |-- bar4          (ino 275)
++#                           |--hello.txt (ino 276)
+ 
+ run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
+     $SCRATCH_MNT/mysnap1
+@@ -104,21 +123,46 @@ mv $SCRATCH_MNT/a/b/foobar.txt $SCRATCH_MNT/a/b/c2/y2/x2/qwerty.txt
+ ln $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2/Z/file_link.txt
+ mv $SCRATCH_MNT/a/b/c2/d2/cc/file.txt $SCRATCH_MNT/a/b/c2/y2/x2
+ 
++mv $SCRATCH_MNT/a/b/foo3 $SCRATCH_MNT/a/b/foo1/foo33
++mv $SCRATCH_MNT/a/b/foo1/foo2 $SCRATCH_MNT/a/b/foo1/foo33/foo22
++mv $SCRATCH_MNT/a/b/foo1/foo33/foo22/f.txt \
++    $SCRATCH_MNT/a/b/foo1/foo33/foo22/fff.txt
++
++echo " hello" >> $SCRATCH_MNT/a/b/bar1/bar2/bar3/bar4/hello.txt
++mv $SCRATCH_MNT/a/b/bar1/bar2/bar3/bar4/hello.txt \
++    $SCRATCH_MNT/a/b/bar1/bar2/bar3/bar4/hello2.txt
++mv $SCRATCH_MNT/a/b/bar1/bar2/bar3/bar4 $SCRATCH_MNT/a/b/k44
++mv $SCRATCH_MNT/a/b/bar1/bar2/bar3 $SCRATCH_MNT/a/b/k44
++mv $SCRATCH_MNT/a/b/bar1/bar2 $SCRATCH_MNT/a/b/k44/bar3
++mv $SCRATCH_MNT/a/b/bar1 $SCRATCH_MNT/a/b/k44/bar3/bar2/k11
++
+ # Directory tree now looks like:
+ #
+ # .                                         (ino 256)
+ # |-- a/                                    (ino 257)
+ #     |-- b/                                (ino 258)
+ #         |-- c2/                           (ino 262)
+-#             |-- d2/                       (ino 261)
+-#             |   |-- cc/                   (ino 259)
+-#             |        |-- file.txt         (ino 260)
+-#             |-- y2/                       (ino 267)
+-#                 |-- x2/                   (ino 266)
+-#                     |-- qwerty.txt        (ino 264)
+-#                     |-- WWW/              (ino 263)
+-#                     |-- Z/                (ino 265)
+-#                         |-- file_link.txt
++#         |   |-- d2/                       (ino 261)
++#         |   |   |-- cc/                   (ino 259)
++#         |   |
++#         |   |-- y2/                       (ino 267)
++#         |       |-- x2/                   (ino 266)
++#         |           |-- file.txt          (ino 260)
++#         |           |-- qwerty.txt        (ino 264)
++#         |           |-- WWW/              (ino 263)
++#         |           |-- Z/                (ino 265)
++#         |               |-- file_link.txt
++#         |
++#         |-- foo1/                         (ino 268)
++#         |    |---foo33/                   (ino 271)
++#         |          |---foo22/             (ino 269)
++#         |                |---fff.txt      (ino 270)
++#         |
++#         |-- k44/                          (ino 275)
++#              |-- hello2.txt               (ino 276)
++#              |-- bar3/                    (ino 274)
++#                   |-- bar2/               (ino 273)
++#                        |-- k11/           (ino 272)
+ 
+ run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
+     $SCRATCH_MNT/mysnap2
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
