@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6E9A87FAB
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 07:03:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5DB378F8052
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 05:03:46 -0800 (PST)
-Received: from gproxy2-pub.mail.unifiedlayer.com
-	(gproxy2-pub.mail.unifiedlayer.com [69.89.18.3]) by
-	cuda.sgi.com with SMTP id Q2laFebErFFKiHXC for
-	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 05:03:41 -0800 (PST)
-Subject: Re: Extended attributes limit in Linux
-Mime-Version: 1.0 (Apple Message framework v1085)
-From: Vyacheslav Dubeyko <slava@dubeyko.com>
-In-Reply-To: <6C94A326-DADE-4A32-97F6-AE84E9F57777@gmail.com>
-Date: Sat, 1 Feb 2014 17:08:09 +0300
-Message-Id: <1D87A7C9-988F-4F61-A577-67300DAF2554@dubeyko.com>
-References: <CAMN6oR=a0G6O-3CVVkTwhYKavJTa543U3MLezCM8KW1ASZcPnA@mail.gmail.com>	<52EB64DC.4020603@oracle.com>
-	<1391165083.4275.7.camel@ubuntu>	<52EB960D.607@oracle.com>
-	<1391172723.4275.11.camel@ubuntu>	<52EBA783.1080801@oracle.com>
-	<1391178074.4275.19.camel@ubuntu> <52EBB431.50301@oracle.com>
-	<6C94A326-DADE-4A32-97F6-AE84E9F57777@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id C3ABB7F53
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 12:47:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B30CE8F804C
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 10:47:33 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id PYpr79Ca6HSXhB6m
+	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 10:47:32 -0800 (PST)
+Message-ID: <52ED4143.6090303@hardwarefreak.com>
+Date: Sat, 01 Feb 2014 12:47:31 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: relationship of nested stripe sizes, was: Question regarding
+	XFS on LVM over hardware RAID.
+References: <7A732267-B34F-4286-9B49-3AF8767C0B89@colorremedies.com>
+In-Reply-To: <7A732267-B34F-4286-9B49-3AF8767C0B89@colorremedies.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,77 +29,40 @@ Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sun_Blood <sblood@gmail.com>
-Cc: Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-
-On Jan 31, 2014, at 10:25 PM, Sun_Blood wrote:
-
+On 1/31/2014 12:35 AM, Chris Murphy wrote:
+> Hopefully this is an acceptable way to avoid thread jacking, by
+> renaming the  subject=85
 > =
 
-> On 31 jan 2014, at 15:33, Jeff Liu <jeff.liu@oracle.com> wrote:
-> =
-
+> On Jan 30, 2014, at 10:58 PM, Stan Hoeppner <stan@hardwarefreak.com>
+> wrote:
 >> =
 
->> On 01/31 2014 22:21 PM, Vyacheslav Dubeyko wrote:
->>> On Fri, 2014-01-31 at 21:39 +0800, Jeff Liu wrote:
->>> =
+>> RAID60 is a nested RAID level just like RAID10 and RAID50.  It is
+>> a stripe, or RAID0, across multiple primary array types, RAID6 in
+>> this case.  The stripe width of each 'inner' RAID6 becomes the
+>> stripe unit of the 'outer' RAID0 array:
+>> =
 
->>>>> =
-
->>>>> I checked the same under Mac OS X 10.6.8 (Snow Leopard). And I have
->>>>> failed on 3803 bytes size of xattr. So, I suppose that you have Mac O=
-S X
->>>>> Lion. And EAs is larger under Lion yet.
->>>>> =
-
->>>>> What version of Mac OS X have you?
->>>>> =
-
->>>> Yup, Mountain Lion v10.8.4 :)
->>>> =
-
->>> =
-
->>> I suspect that xattrs with significant size is stored in compressed
->>> state on HFS+. I implemented support of compressed xattrs partially but
->>> I don't share this code yet. But, yes, EAs with size greater than 64 KB
->>> can be a problem.
+>> RAID6 geometry	 128KB * 12 =3D 1536KB RAID0 geometry  1536KB * 3  =3D
+>> 4608KB
 > =
 
-> =
+> My question is on this particular point. If this were hardware raid6,
+> but I wanted to then stripe using md raid0, using the numbers above
+> would I choose a raid0 chunk size of 1536KB? How critical is this
+> value for, e.g. only large streaming read/write workloads? If it were
+> smaller, say 256KB or even 32KB, would there be a significant
+> performance consequence?
 
-> FYI, Example of output from one of the failing files. First from OS X and=
- then same file after failed copy to XFS.
-> =
+You say 'if it were smaller...256/32KB'.  What is "it" referencing?
 
-> OS X Maverik:
-> file: "/Users/username/Pictures/iPhoto Library/Database/apdb/BigBlobs.apd=
-b"
-> type: "\0\0\0\0"
-> creator: "\0\0\0\0"
-> attributes: avbstclinmedz
-> created: 01/25/2014 11:43:17
-> modified: 01/28/2014 20:02:46
-> =
+-- =
 
-> =
-
-> Ubunutu =
-
-> getfattr: Removing leading '/' from absolute path names
-> # file: srv/nas/home/apple_bak_rsync/username/Pictures/iPhoto Library/Dat=
-abase/BigBlobs.apdb
-> user.com.apple.quarantine=3D"0006;52e39545;iPhoto;=94
-
-
-Sorry, but I don't quite follow your thought. What do you show by this outp=
-ut?
-What do you mean? Could you describe in more details?
-
-Thanks,
-Vyacheslav Dubeyko.
+Stan
 
 _______________________________________________
 xfs mailing list
