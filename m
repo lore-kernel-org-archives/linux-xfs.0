@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 45FA429E38
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:55 -0600 (CST)
-Received: from eagdhcp-232-151.americas.sgi.com
-	(eagdhcp-232-151.americas.sgi.com [128.162.232.151])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AEE1FAC006
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 16:30:51 -0800 (PST)
-Received: from eagdhcp-232-151.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-151.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s0G0Ur8s003600
-	for <xfs@oss.sgi.com>; Wed, 15 Jan 2014 18:30:53 -0600 (CST)
-	(envelope-from tinguely@eagdhcp-232-151.americas.sgi.com)
-Message-Id: <20140116000851.190452695@sgi.com>
-Date: Wed, 15 Jan 2014 16:00:13 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [RFC 01/17] xfs: (parent ptr) get offset when adding directory name
-References: <20140115220012.624438534@sgi.com>
-Content-Disposition: inline;
-	filename=01-pptr-retrieve-info-from-directory.patch
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4C0D27FB2
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 03:56:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 294DE8F8050
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 01:56:47 -0800 (PST)
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
+	cuda.sgi.com with ESMTP id wjU1mFnmAeeAQLFe for
+	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 01:56:45 -0800 (PST)
+Date: Sat, 1 Feb 2014 10:56:16 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Not being able to recover a RAID 5 20 Tb partition, help needed
+Message-ID: <20140201105616.1a1906eb@galadriel.home>
+In-Reply-To: <D52B7046-0672-4C4E-AC79-DCB7F811DB2E@gmail.com>
+References: <1391002795.2573.79.camel@islero.dmt.upm.es>
+	<1391009068.4294.83.camel@montana.filmlight.ltd.uk>
+	<1391014448.2573.95.camel@islero.dmt.upm.es>
+	<20140129184250.7af7200f@harpe.intellique.com>
+	<CC18E95B-75B3-47CE-8FBE-9FA511A38CD5@torroja.dmt.upm.es>
+	<20140131223715.0a977fc2@galadriel.home>
+	<D52B7046-0672-4C4E-AC79-DCB7F811DB2E@gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,187 +29,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Juan Antonio Sillero Sepulveda <juan.sillero@gmail.com>
+Cc: xfs@oss.sgi.com, Roger Willcocks <roger@filmlight.ltd.uk>, Guillem Borrell i Nogueras <guillem@torroja.dmt.upm.es>
 
-Return the directory offset information when adding an entry to the
-directory.
-
-This offset will be used as the parent pointer offset in xfs_create,
-xfs_symlink, xfs_link and xfs_rename.
-
----
- fs/xfs/xfs_da_btree.h   |    1 +
- fs/xfs/xfs_dir2.c       |    6 +++++-
- fs/xfs/xfs_dir2.h       |    3 ++-
- fs/xfs/xfs_dir2_block.c |    1 +
- fs/xfs/xfs_dir2_leaf.c  |    2 ++
- fs/xfs/xfs_dir2_node.c  |    2 ++
- fs/xfs/xfs_dir2_sf.c    |    2 ++
- fs/xfs/xfs_inode.c      |    7 ++++---
- fs/xfs/xfs_symlink.c    |    2 +-
- 9 files changed, 20 insertions(+), 6 deletions(-)
-
-Index: b/fs/xfs/xfs_da_btree.h
-===================================================================
---- a/fs/xfs/xfs_da_btree.h
-+++ b/fs/xfs/xfs_da_btree.h
-@@ -66,6 +66,7 @@ typedef struct xfs_da_args {
- 	int		rmtblkcnt2;	/* remote attr value block count */
- 	int		op_flags;	/* operation flags */
- 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-+	__uint32_t	offset;		/* OUT: offset in directory */
- } xfs_da_args_t;
- 
- /*
-Index: b/fs/xfs/xfs_dir2.c
-===================================================================
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -203,7 +203,8 @@ xfs_dir_createname(
- 	xfs_ino_t		inum,		/* new entry inode number */
- 	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	xfs_bmap_free_t		*flist,		/* bmap's freeblock list */
--	xfs_extlen_t		total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	__uint32_t		*offset)	/* OUT entry's dir offset */
- {
- 	xfs_da_args_t		args;
- 	int			rval;
-@@ -240,6 +241,9 @@ xfs_dir_createname(
- 		rval = xfs_dir2_leaf_addname(&args);
- 	else
- 		rval = xfs_dir2_node_addname(&args);
-+	/* return the location that this entry was place in the parent inode */
-+	if (offset)
-+		*offset = args.offset;
- 	return rval;
- }
- 
-Index: b/fs/xfs/xfs_dir2.h
-===================================================================
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -119,7 +119,8 @@ extern int xfs_dir_init(struct xfs_trans
- extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_bmap_free *flist, xfs_extlen_t tot);
-+				struct xfs_bmap_free *flist, xfs_extlen_t tot,
-+				 __uint32_t *offset);
- extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t *inum,
- 				struct xfs_name *ci_name);
-Index: b/fs/xfs/xfs_dir2_block.c
-===================================================================
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -554,6 +554,7 @@ xfs_dir2_block_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_byte_to_dataptr(mp, (char *)dep - (char *)hdr);
- 	/*
- 	 * Clean up the bestfree array and log the header, tail, and entry.
- 	 */
-Index: b/fs/xfs/xfs_dir2_leaf.c
-===================================================================
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -860,6 +860,8 @@ xfs_dir2_leaf_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(mp, use_block,
-+						(char *)dep - (char *)hdr);
- 	/*
- 	 * Need to scan fix up the bestfree table.
- 	 */
-Index: b/fs/xfs/xfs_dir2_node.c
-===================================================================
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1973,6 +1973,8 @@ xfs_dir2_node_addname_int(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(mp, dbno,
-+						  (char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(tp, dp, dbp, dep);
- 	/*
- 	 * Rescan the block for bestfree if needed.
-Index: b/fs/xfs/xfs_dir2_sf.c
-===================================================================
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -425,6 +425,7 @@ xfs_dir2_sf_addname_easy(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(dp->i_mount, offset);
- 
- 	/*
- 	 * Update the header and inode.
-@@ -520,6 +521,7 @@ xfs_dir2_sf_addname_hard(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(dp->i_mount, offset);
- 	sfp->count++;
- #if XFS_BIG_INUMS
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
-Index: b/fs/xfs/xfs_inode.c
-===================================================================
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1264,7 +1264,8 @@ xfs_create(
- 
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 					&first_block, &free_list, resblks ?
--					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
-+					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
-+					NULL);
- 	if (error) {
- 		ASSERT(error != ENOSPC);
- 		goto out_trans_abort;
-@@ -1402,7 +1403,7 @@ xfs_link(
- 	xfs_bmap_init(&free_list, &first_block);
- 
- 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
--					&first_block, &free_list, resblks);
-+				   &first_block, &free_list, resblks, NULL);
- 	if (error)
- 		goto abort_return;
- 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-@@ -2736,7 +2737,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
- 						src_ip->i_ino, &first_block,
--						&free_list, spaceres);
-+						&free_list, spaceres, NULL);
- 		if (error == ENOSPC)
- 			goto error_return;
- 		if (error)
-Index: b/fs/xfs/xfs_symlink.c
-===================================================================
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -375,7 +375,7 @@ xfs_symlink(
- 	 * Create the directory entry for the symlink.
- 	 */
- 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
--					&first_block, &free_list, resblks);
-+				   &first_block, &free_list, resblks, NULL);
- 	if (error)
- 		goto error2;
- 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgRnJpLCAzMSBKYW4gMjAxNCAyMjo1MDo1MSArMDEwMCB2b3VzIMOpY3JpdmllejoKCj4gR3Vp
+bGxlbSwgbXkgY29sbGVhZ3VlIGFuZCBleHBlcnQsIGNvcnJlY3QgbWUuIFRoZXNlIGlzIHRoZSBo
+YXJkd2FyZS4KPiAKPiBEaXNrIC9kZXYvc2RxIC0gMjAgVEIgLyAxOCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2RyIC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2RzIC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R0IC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R1IC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R2IC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R3IC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R4IC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R5IC0gMjIgVEIgLyAyMCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKPiBEaXNrIC9kZXYvc2R6IC0gMjAgVEIgLyAxOCBUaUIgLSBEb3RIaWxsIFIv
+RXZvIDU3MzAtMlIKClRoaXMgaXMgcXVpdGUgbmV3IGhhcmR3YXJlLCBpdCdzIHByb2JhYmx5IHN1
+cHBvcnRlZC9tYWludGFpbmVkLiBZb3UKc2hvdWxkIGRlZmluaXRlbHkgY2hlY2sgd2l0aCBEb3RI
+aWxsIHN1cHBvcnQuCgo+IFdlIHN0b3JlIGV2ZXJ5dGhpbmcsIGJhc2ljYWxseS4gSW1hZ2VzLCBt
+YXRsYWJzIGZpbGVzLCB0eHQsIGRhdCwgcGRmLAo+IGJpbmFyeSBmaWxlcywgaGRmNSBmaWxlcywg
+Lm1hdCwgRm9ydHJhbiBmaWxlcywgZXRjLi4uCgpQaG90b3JlYyBjYW4gcmVjb2duaXplIG1hbnkg
+Y29tbW9uIGZpbGUgZm9ybWF0cywgYnV0IG5vdCBhbGwuIEkndmUKc3VjY2Vzc2Z1bGx5IHJlc3Rv
+cmVkIHNldmVyYWwgdGVyYWJ5dGVzIHdpdGggaXQsIGhvd2V2ZXIgeW91IHdvbid0IGdldAphbnkg
+bWV0YWRhdGEgYmFjayB3aXRoIGl0LgoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9y
+YWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIElu
+dGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgog
+ICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
