@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D8D8F7F8E
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 09:21:09 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ECA4E7F96
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 09:22:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69ACCAC001
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 07:21:09 -0800 (PST)
-Received: from mail.parisc-linux.org (palinux.external.hp.com [192.25.206.14])
-	by cuda.sgi.com with ESMTP id 2BvwDydgJzyq7rCB (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CBCDB304070
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 07:22:32 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id LUSswEu0ln4EXiSN (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 02 Feb 2014 07:21:08 -0800 (PST)
-Date: Sun, 2 Feb 2014 08:21:06 -0700
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH RESEND 0/10] fs: Introduce new
-	flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
-Message-ID: <20140202152106.GL20939@parisc-linux.org>
-References: <1391319694-3089-1-git-send-email-linkinjeon@gmail.com>
-	<20140202151624.GK20939@parisc-linux.org>
+	Sun, 02 Feb 2014 07:22:31 -0800 (PST)
+Message-ID: <52EE62AD.4030509@oracle.com>
+Date: Sun, 02 Feb 2014 23:22:21 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140202151624.GK20939@parisc-linux.org>
+Subject: Re: Extended attributes limit in Linux
+References: <CAMN6oR=a0G6O-3CVVkTwhYKavJTa543U3MLezCM8KW1ASZcPnA@mail.gmail.com>	<52EB64DC.4020603@oracle.com>	<1391165083.4275.7.camel@ubuntu>	<52EB960D.607@oracle.com>	<1391172723.4275.11.camel@ubuntu>	<52EBA783.1080801@oracle.com>	<1391178074.4275.19.camel@ubuntu>	<52EBB431.50301@oracle.com>	<6C94A326-DADE-4A32-97F6-AE84E9F57777@gmail.com>	<1D87A7C9-988F-4F61-A577-67300DAF2554@dubeyko.com>	<14FE2575-4C84-43B8-9992-F91ABE2B6F26@gmail.com>
+	<52EE6069.7090905@oracle.com>
+In-Reply-To: <52EE6069.7090905@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,42 +25,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
+To: Sun_Blood <sblood@gmail.com>, Vyacheslav Dubeyko <slava@dubeyko.com>
+Cc: xfs@oss.sgi.com
 
-On Sun, Feb 02, 2014 at 08:16:24AM -0700, Matthew Wilcox wrote:
-> On Sun, Feb 02, 2014 at 02:41:34PM +0900, Namjae Jeon wrote:
-> > The semantics of this flag are following:
-> > 1) It collapses the range lying between offset and length by removing any data
-> >    blocks which are present in this range and than updates all the logical
-> >    offsets of extents beyond "offset + len" to nullify the hole created by
-> >    removing blocks. In short, it does not leave a hole.
-> > 2) It should be used exclusively. No other fallocate flag in combination.
-> > 3) Offset and length supplied to fallocate should be fs block size aligned
-> >    in case of xfs and ext4.
-> > 4) Collaspe range does not work beyond i_size.
-> 
-> What if the file is mmaped at the time somebody issues this command?
-> Seems to me we should drop pagecache pages that overlap with the
-> removed blocks.  If the removed range is not a multiple of PAGE_SIZE,
-> then we should also drop any pagecache pages after the removed range.
 
-Oops, forgot to add "and if it is a multiple of page size, then we need
-to update the offsets of any pages after the removed page".  We should
-probably start easy though; just drop all pages that overlap the beginning
-of the affected range to the end of the file.  At some later point,
-if there's demand, we can add the optimisation to adjust the offsets of
-pages still in the cache.
+On 02/02 2014 23:12 PM, Jeff Liu wrote:
+> =
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> On 02/02 2014 22:33 PM, Sun_Blood wrote:
+<snip>
+>>>> FYI, Example of output from one of the failing files. First from OS X
+>>>> and then same file after failed copy to XFS.
+>>>>
+>>>> OS X Maverik:
+>>>> file: "/Users/username/Pictures/iPhoto
+>>>> Library/Database/apdb/BigBlobs.apdb"
+>>>> type: "\0\0\0\0"
+>>>> creator: "\0\0\0\0"
+>>>> attributes: avbstclinmedz
+>>>> created: 01/25/2014 11:43:17
+>>>> modified: 01/28/2014 20:02:46
+>>>>
+>>>>
+>>>> Ubunutu =
+
+>>>> getfattr: Removing leading '/' from absolute path names
+>>>> # file: srv/nas/home/apple_bak_rsync/username/Pictures/iPhoto
+>>>> Library/Database/BigBlobs.apdb
+>>>> user.com.apple.quarantine=3D"0006;52e39545;iPhoto;=94
+>>>
+>>>
+>>> Sorry, but I don't quite follow your thought. What do you show by this
+>>> output?
+>>> What do you mean? Could you describe in more details?
+>>>
+>>> Thanks,
+>>> Vyacheslav Dubeyko.
+>>
+>> Sorry late reply. The output is just to show what happen after I
+>> transfer a file from OS X to XFS that has EA bigger then 64k(I think).
+>> When I try for example to rsync this file from OS X to Linux XFS I get
+>> this error:
+>> rsync: rsync_xal_set:
+>> lsetxattr(""/srv/nas/home/apple_bak_rsync/xxxxxx/Pictures/iPhoto
+>> Library/Database/BigBlobs.apdb"","user.com.apple.FinderInfo") failed:
+>> Operation not permitted (1)
+>>
+>> But also rsync can give this error.
+>> rsync: rsync_xal_set:
+>> lsetxattr(""/srv/danne/extern2/1000_EXT/2013/2013-03-05/IMG_6872-Edit.ti=
+f"","user.com.apple.ResourceFork")
+>> failed: Argument list too long (7)
+>>
+>> Is this 2 errors related?
+> =
+
+> Those errors are unrelated IMO, the first one is due to the permission ru=
+les but
+> I'm not sure the root cause, the second one is occurred as the EA value i=
+s larger
+> than 64K I guess.
+>  =
+
+>>
+>> I will make a bug report for rsync also that it should not try to copy
+>> files with EA bigger then the destination can handle. But it would be
+>> great if XFS could handle this files and be fully compatible with OS X
+>> backups.
+> =
+
+> 64K size is not limited by XFS directly, it is limited by VFS setxattr sy=
+scall.
+> IOWs, EA set operation is not yet get into XFS when "Argument list too lo=
+ng" error
+> is returned, so I think you would ran into the same error on other file s=
+ystems
+> which are support 64K EA value size as well.
+
+To be more precise, larger EA set operation would not works via setxattr(2)=
+ on Linux
+regardless of the underlying file systems :).
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
