@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4EA277F9E
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 16:03:55 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id EB9557F69
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 16:08:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 292D18F8033
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 14:03:52 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Cle21Ol6JXSG2RE7 for <xfs@oss.sgi.com>;
-	Sun, 02 Feb 2014 14:03:50 -0800 (PST)
-Date: Mon, 3 Feb 2014 09:03:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RESEND 0/10] fs: Introduce new
-	flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
-Message-ID: <20140202220346.GU2212@dastard>
-References: <1391319694-3089-1-git-send-email-linkinjeon@gmail.com>
-	<20140202151624.GK20939@parisc-linux.org>
-	<20140202152106.GL20939@parisc-linux.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BFD3F8F8033
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 14:08:09 -0800 (PST)
+Received: from mail-bk0-f41.google.com (mail-bk0-f41.google.com
+	[209.85.214.41]) by cuda.sgi.com with ESMTP id iZN8iOzFKiky92ij
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 02 Feb 2014 14:08:08 -0800 (PST)
+Received: by mail-bk0-f41.google.com with SMTP id na10so2817887bkb.0
+	for <xfs@oss.sgi.com>; Sun, 02 Feb 2014 14:08:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140202152106.GL20939@parisc-linux.org>
+In-Reply-To: <20140202215720.GT2212@dastard>
+References: <1391220332-22118-1-git-send-email-fdmanana@gmail.com>
+	<20140202215720.GT2212@dastard>
+Date: Sun, 2 Feb 2014 22:08:06 +0000
+Message-ID: <CAL3q7H7wgDvUWUJdZJSswm+hx==GvyeVMd=sh_yNkCVOTyyypw@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: more tests for test case btrfs/030
+From: Filipe David Manana <fdmanana@gmail.com>
+Reply-To: fdmanana@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +32,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Namjae Jeon <linkinjeon@gmail.com>, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Josef Bacik <jbacik@fb.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Sun, Feb 02, 2014 at 08:21:06AM -0700, Matthew Wilcox wrote:
-> On Sun, Feb 02, 2014 at 08:16:24AM -0700, Matthew Wilcox wrote:
-> > On Sun, Feb 02, 2014 at 02:41:34PM +0900, Namjae Jeon wrote:
-> > > The semantics of this flag are following:
-> > > 1) It collapses the range lying between offset and length by removing any data
-> > >    blocks which are present in this range and than updates all the logical
-> > >    offsets of extents beyond "offset + len" to nullify the hole created by
-> > >    removing blocks. In short, it does not leave a hole.
-> > > 2) It should be used exclusively. No other fallocate flag in combination.
-> > > 3) Offset and length supplied to fallocate should be fs block size aligned
-> > >    in case of xfs and ext4.
-> > > 4) Collaspe range does not work beyond i_size.
-> > 
-> > What if the file is mmaped at the time somebody issues this command?
-> > Seems to me we should drop pagecache pages that overlap with the
-> > removed blocks.  If the removed range is not a multiple of PAGE_SIZE,
-> > then we should also drop any pagecache pages after the removed range.
-> 
-> Oops, forgot to add "and if it is a multiple of page size, then we need
-> to update the offsets of any pages after the removed page". 
+On Sun, Feb 2, 2014 at 9:57 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sat, Feb 01, 2014 at 02:05:32AM +0000, Filipe David Borba Manana wrote:
+>> This change adds some new tests for btrfs' incremental send feature.
+>> These are all related with inverting the parent-child relationship
+>> of directories, and cover the cases:
+>>
+>> * when the new parent didn't get renamed (just moved)
+>> * when a child file of the former parent gets renamed too
+>>
+>> These new cases are fixed by the following btrfs linux kernel patches:
+>>
+>> * "Btrfs: more send support for parent/child dir relationship inversion"
+>> * "Btrfs: fix send dealing with file renames and directory moves"
+>>
+>> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+>
+> Rather than modifying 030 which will cause it to fail on kernels
+> where it previously passed, can you factor out the common code and
+> create a new test with the additional coverage?
+>
+> i.e. the rule of thumb is that once a test is "done" we don't go
+> back and modify it in significant ways - we write a new unit test
+> that covers the new/extended functionality. Redundancy in unit tests
+> is not a bad thing...
 
-Yup, that's what the XFS implementation does when it punches the
-hole out of the file before shifting the extents down. Check
-xfs_free_file_space():
+Right. The only reason I did this, instead of a new test file, is that
+because the former fix which btrfs/030 relates to is not yet in any
+kernel release. Given this fact, what do you think?
 
-1275         /* wait for the completion of any pending DIOs */
-1276         inode_dio_wait(VFS_I(ip));
-1277
-1278         rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
-1279         ioffset = offset & ~(rounding - 1);
-1280         error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-1281                                               ioffset, -1);
-1282         if (error)
-1283                 goto out;
-1284         truncate_pagecache_range(VFS_I(ip), ioffset, -1);
+thanks
 
-Bonus points for working out why the XFS code doesn't just use
-PAGE_CACHE_SIZE for rounding here....
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
-Cheers,
 
-Dave.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Filipe David Manana,
+
+"Reasonable men adapt themselves to the world.
+ Unreasonable men adapt the world to themselves.
+ That's why all progress depends on unreasonable men."
 
 _______________________________________________
 xfs mailing list
