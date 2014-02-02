@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 800167FAB
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 20:02:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C133304070
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 18:02:56 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id IA98byOLW7q3YPkw (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 01 Feb 2014 18:02:51 -0800 (PST)
-Date: Sun, 2 Feb 2014 02:02:38 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC] unifying write variants for filesystems
-Message-ID: <20140202020238.GT10323@ZenIV.linux.org.uk>
-References: <20140118064040.GE10323@ZenIV.linux.org.uk>
-	<CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
-	<20140118074649.GF10323@ZenIV.linux.org.uk>
-	<CA+55aFzM0N7WjqnLNnuqTkbj3iws9f3bYxei=ZBCM8hvps4zYg@mail.gmail.com>
-	<20140118201031.GI10323@ZenIV.linux.org.uk>
-	<20140119051335.GN10323@ZenIV.linux.org.uk>
-	<20140120135514.GA21567@infradead.org>
-	<CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
-	<20140201224301.GS10323@ZenIV.linux.org.uk>
-	<CA+55aFxtfMZ82CUmxFKb1zqB2Qy9JAztpPYXgimzya653NY3Og@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+55aFxtfMZ82CUmxFKb1zqB2Qy9JAztpPYXgimzya653NY3Og@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E73747F52
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:43:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B142D8F804C
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:43:23 -0800 (PST)
+Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
+	[209.85.220.47]) by cuda.sgi.com with ESMTP id rd7IDENGVmY9ANUW
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:43:19 -0800 (PST)
+Received: by mail-pa0-f47.google.com with SMTP id kp14so5933756pab.20
+	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:43:18 -0800 (PST)
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH RESEND 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
+	for fallocate
+Date: Sun,  2 Feb 2014 14:41:34 +0900
+Message-Id: <1391319694-3089-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,41 +24,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Steve French <sfrench@samba.org>, Sage Weil <sage@inktank.com>, Dave Kleikamp <shaggy@kernel.org>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Anton Altaparmakov <anton@tuxera.com>
+To: viro@zeniv.linux.org.uk, david@fromorbit.com, bpm@sgi.com, tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.cz, mtk.manpages@gmail.com
+Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Sat, Feb 01, 2014 at 04:13:36PM -0800, Linus Torvalds wrote:
-> On Sat, Feb 1, 2014 at 2:43 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> >
-> > BTW, Linus, when did you comment on that patchset?  I've found an iteration
-> > of that patchset circa last October (v9, apparently the latest posted),
-> > but it looks like your comments had either got lost or had been on the
-> > earlier iteration of that thing...
-> 
-> I commented on the pull request in November. Something like this:
-> 
->   http://lkml.indiana.edu/hypermail/linux/kernel/1311.2/02278.html
-> 
-> and then I have a follow-up in a reply to that that at least outlines
-> a few things that could be done to make it less barfy.
-> 
-> But judging from your email, you actually went through that
-> patch-series with a finer comb, I don't think there is anything in
-> that commentary of mine that adds anything to yours, apart on a
-> comment on the naming that I hated.
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-Heh...  You've actually been a lot more polite than what I started to
-write on that particular topic.  Mine had started with "folks, identifiers
-should be possible to read aloud, without the people around getting nervous.
-I mean, ai,ai-ai,owwie-...?" and then got so nasty that I decided to leave
-the whole thing alone.
+This patch series is in response of the following post:
+http://lwn.net/Articles/556136/
+"ext4: introduce two new ioctls"
 
-But yes, references to the importance of remembering the safeword aside,
-the naming is really atrocious.
+Dave chinner suggested that truncate_block_range
+(which was one of the ioctls name) should be an fallocate operation
+and not any fs specific ioctl, hence we add this functionality to fallocate.
+
+This patch series introduces new flag FALLOC_FL_COLLAPSE_RANGE for fallocate
+and implements it for XFS and Ext4.
+
+The semantics of this flag are following:
+1) It collapses the range lying between offset and length by removing any data
+   blocks which are present in this range and than updates all the logical
+   offsets of extents beyond "offset + len" to nullify the hole created by
+   removing blocks. In short, it does not leave a hole.
+2) It should be used exclusively. No other fallocate flag in combination.
+3) Offset and length supplied to fallocate should be fs block size aligned
+   in case of xfs and ext4.
+4) Collaspe range does not work beyond i_size.
+
+This new functionality of collapsing range could be used by media editing tools
+which does non linear editing to quickly purge and edit parts of a media file.
+This will immensely improve the performance of these operations.
+The limitation of fs block size aligned offsets can be easily handled
+by media codecs which are encapsulated in a conatiner as they have to
+just change the offset to next keyframe value to match the proper alignment.
+
+Change log
+v4:
+ - vfs: Move block size aligned check from VFS layer to FS specific layer.
+ - vfs: update comments for FALLOC_FL_COLLAPSE_RANGE in user visible header file.
+ - xfs: update comments for xfs_bmap_shift_extents and change variable name
+        to more reasonable name.
+ - xfs: add ASSERTs for pointers in XFS patch.
+ - xfs: drop all the xfs_bmbt_get*() wrappers.
+ - xfs and ext4: change return errno from EFSCORRUPTED to EINVAL
+                 when hole is not large enough to shift.
+ - xfs: remove extents from on-disk btree also in case of merge.
+ - xfstest: separate shared/316 test to shared/001 ~ 004 in xfstest.
+ - xfstest: update multi collapse test shared/005 for block size less than page size case.
+ - manpage: update description.
+
+v3:
+ Fix checkpatch.pl errors
+
+v2:
+ Fix review points from Dave Chinner.
+
+ Namjae Jeon (10):
+  fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
+  xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+  ext4: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+  xfsprog: xfsio: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+  xfstest: shared/001: Standard collapse range tests
+  xfstest: shared/002: Delayed allocation collapse range
+  xfstest: shared/003: Multi collapse range tests
+  xfstest: shared/004: Delayed allocation multi collapse
+  xfstest: shared/005: Test multiple fallocate collapse
+  manpage: update FALLOC_FL_COLLAPSE_RANGE flag in fallocate
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
