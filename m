@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 806637F8C
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 13:23:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 48B338F8040
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 11:23:16 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id ossG0CMsNypaWmtX (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 02 Feb 2014 11:23:14 -0800 (PST)
-Date: Sun, 2 Feb 2014 19:23:06 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC] unifying write variants for filesystems
-Message-ID: <20140202192306.GU10323@ZenIV.linux.org.uk>
-References: <20140118064040.GE10323@ZenIV.linux.org.uk>
-	<CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
-	<20140118074649.GF10323@ZenIV.linux.org.uk>
-	<CA+55aFzM0N7WjqnLNnuqTkbj3iws9f3bYxei=ZBCM8hvps4zYg@mail.gmail.com>
-	<20140118201031.GI10323@ZenIV.linux.org.uk>
-	<20140119051335.GN10323@ZenIV.linux.org.uk>
-	<20140120135514.GA21567@infradead.org>
-	<CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
-	<20140201224301.GS10323@ZenIV.linux.org.uk>
-	<20140202192104.GA21959@ZenIV.linux.org.uk>
+	by oss.sgi.com (Postfix) with ESMTP id 767C37F7B
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 15:22:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 505E08F8037
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 13:22:02 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	rUqRho4av61heFOy for <xfs@oss.sgi.com>;
+	Sun, 02 Feb 2014 13:21:57 -0800 (PST)
+Date: Mon, 3 Feb 2014 08:21:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Question regarding XFS on LVM over hardware RAID.
+Message-ID: <20140202212152.GP2212@dastard>
+References: <1391005406-sup-1881@al.wesleyan.edu>
+	<52E91923.4070706@sandeen.net>
+	<1391022066-sup-5863@al.wesleyan.edu>
+	<52E99504.4030902@hardwarefreak.com>
+	<1391090527-sup-4664@al.wesleyan.edu>
+	<20140130202819.GO2212@dastard>
+	<52EB3B96.7000103@hardwarefreak.com>
+	<1391202273-sup-9265@al.wesleyan.edu>
+	<52ED61C9.8060504@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140202192104.GA21959@ZenIV.linux.org.uk>
+In-Reply-To: <52ED61C9.8060504@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,25 +37,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Steve French <sfrench@samba.org>, Sage Weil <sage@inktank.com>, Dave Kleikamp <shaggy@kernel.org>, Mark Fasheh <mfasheh@suse.com>, Miklos Szeredi <miklos@szeredi.hu>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Anton Altaparmakov <anton@tuxera.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: "C. Morgan Hamill" <chamill@wesleyan.edu>, xfs <xfs@oss.sgi.com>
 
-On Sun, Feb 02, 2014 at 07:21:04PM +0000, Al Viro wrote:
-> BTW, is there any reason why fuse/dev.c doesn't use atomic kmaps for
-> everything?  After all, as soon as we'd done kmap() in there, we
-> grab a spinlock and don't drop it until just before kunmap().  With
-> nothing by memcpy() done in between...  Miklos?  AFAICS, we only win
+On Sat, Feb 01, 2014 at 03:06:17PM -0600, Stan Hoeppner wrote:
+> On 1/31/2014 3:14 PM, C. Morgan Hamill wrote:
+> > So, basically, --dataalignment is my friend during pvcreate and
+> > lvcreate.
+> 
+> If the logical sector size reported by your RAID controller is 512
+> bytes, then "--dataalignment=9216s" should start your data section on a
+> RAID60 stripe boundary after the metadata section.
+> 
+> Tthe PhysicalExtentSize should probably also match the 4608KB stripe
+> width, but this is apparently not possible.  PhysicalExtentSize must be
+> a power of 2 value.  I don't know if or how this will affect XFS aligned
+> write out.  You'll need to consult with someone more knowledgeable of LVM.
 
-s/by/but/ - sorry...
+You can't do single IOs of that size, anyway, so this is where the
+BBWC on the raid controller does it's magic and caches sequntial IOs
+until it has full stripe writes cached....
 
-> from switching to kmap_atomic there - we can't block anyway, we don't
-> need it to be visible on other CPUs and nesting isn't a problem.
-> Looks like it'll be cheaper in highmem cases and do exactly the same
-> thing as now for non-highmem...  Comments?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
