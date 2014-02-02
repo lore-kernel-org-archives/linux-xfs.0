@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9B9777FAA
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 17:56:17 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 353187FAA
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 17:56:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1A052AC002
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 15:56:16 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DFF1E304043
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 15:56:17 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	6uEutTbHXDx7kXqO for <xfs@oss.sgi.com>;
-	Sun, 02 Feb 2014 15:56:15 -0800 (PST)
+	zQAjrAg0DtfViXEH for <xfs@oss.sgi.com>;
+	Sun, 02 Feb 2014 15:56:16 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1WA6tU-0005p3-RO
+	(envelope-from <dave@fromorbit.com>) id 1WA6tU-0005p5-Sr
 	for xfs@oss.sgi.com; Mon, 03 Feb 2014 10:56:08 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WA6tU-0003N0-Qc
+	(envelope-from <dave@disappointment.disaster>) id 1WA6tU-0003N8-S0
 	for xfs@oss.sgi.com; Mon, 03 Feb 2014 10:56:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/4] xfstests: xfs and hole punch test fixes
-Date: Mon,  3 Feb 2014 10:56:01 +1100
-Message-Id: <1391385365-12790-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/4] xfs/291: fix spurious ENOSPC errors
+Date: Mon,  3 Feb 2014 10:56:03 +1100
+Message-Id: <1391385365-12790-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1391385365-12790-1-git-send-email-david@fromorbit.com>
+References: <1391385365-12790-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,18 +37,69 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi Folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-The first couple of patches fix failures in XFS tests that occur
-with different configurations and block sizes. The last two patches
-fix failures of the hole punch tests on filesystems that have a
-block size other than 4k. It does this by a combination of filtering
-and changing the way we detect failures on the block size sensitive
-part of the test.
+xfs/291 tries to fill the filesystem almost full, so if the log size
+changes with mkfs defaults then it's free space calculations are not
+longer valid and so it throws lots of ENOSPC errors during a run.
+This is not fatal for this test, but it does increase the runtime of
+it and fill the 291.full file with unnecessary errors.
 
-Cheers,
+The number of frag files it creates is also too many for a 512 byte
+inode filesystem (by about 900) so reduce the number of inodes
+initially created so the test works ofr 512 byte inodes. With 512
+byte inodes, the free space histogram looks like this after the frag
+phase:
 
-Dave.
+   from      to extents  blocks    pct
+      1       1   10730   10730 100.00
+
+And for 256 byte inodes:
+
+   from      to extents  blocks    pct
+      1       1   12388   12388 100.00
+
+So these changes do not affect the intended operation of the test.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ tests/xfs/291 | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/tests/xfs/291 b/tests/xfs/291
+index d5a9b08..0f3f051 100755
+--- a/tests/xfs/291
++++ b/tests/xfs/291
+@@ -46,7 +46,7 @@ _supported_os IRIX Linux
+ # real QA test starts here
+ rm -f $seqres.full
+ _require_scratch
+-_scratch_mkfs_xfs -n size=16k -d size=128m >> $seqres.full 2>&1
++_scratch_mkfs_xfs -n size=16k -l size=5m -d size=128m >> $seqres.full 2>&1
+ _scratch_mount
+ 
+ # First we cause very badly fragmented freespace, then
+@@ -54,13 +54,16 @@ _scratch_mount
+ # should come out very fragmented as a result
+ 
+ # Step 1: Cause badly fragmented free space
++# 
++# XXX: this needs to be factored to match what generic/204 does to support
++# different inode sizes without ENOSPC
+ mkdir $SCRATCH_MNT/fragdir
+-for I in `seq 0 27200`; do
++for I in `seq 0 26200`; do
+         (echo data > $SCRATCH_MNT/fragdir/f$I) >> $seqres.full 2>&1
+ done
+ sync
+ 
+-for I in `seq 0 2 27200`; do
++for I in `seq 0 2 26200`; do
+         rm -f $SCRATCH_MNT/fragdir/f$I >> $seqres.full 2>&1
+ done
+ sync
+-- 
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
