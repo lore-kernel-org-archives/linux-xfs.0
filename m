@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5A1867F60
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:46:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D429304051
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:46:10 -0800 (PST)
-Received: from mail-pd0-f170.google.com (mail-pd0-f170.google.com
-	[209.85.192.170]) by cuda.sgi.com with ESMTP id
-	n2vK9sNM8oFVEyxV (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2715B7F60
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:46:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B3000AC005
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:46:28 -0800 (PST)
+Received: from mail-pd0-f176.google.com (mail-pd0-f176.google.com
+	[209.85.192.176]) by cuda.sgi.com with ESMTP id
+	d2wttXCDtNabWjz7 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 01 Feb 2014 21:46:08 -0800 (PST)
-Received: by mail-pd0-f170.google.com with SMTP id p10so5782948pdj.1
-	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:46:08 -0800 (PST)
+	Sat, 01 Feb 2014 21:46:27 -0800 (PST)
+Received: by mail-pd0-f176.google.com with SMTP id w10so5742821pde.7
+	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:46:27 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 5/10] xfstest: shared/001: Standard collapse range tests
-Date: Sun,  2 Feb 2014 14:45:58 +0900
-Message-Id: <1391319958-3275-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 6/10] xfstest: shared/002: Delayed allocation collapse
+	range
+Date: Sun,  2 Feb 2014 14:46:18 +0900
+Message-Id: <1391319978-3311-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,315 +35,29 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, l
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(001) tries to test various corner cases
+This testcase(002) tries to test various corner cases with delayed extents
 for fcollapse range functionality over different type of extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- common/punch         |  133 ++++++++++++++++++++++++++++----------------------
- common/rc            |   14 ++++++
- tests/shared/001     |   65 ++++++++++++++++++++++++
- tests/shared/001.out |   53 ++++++++++++++++++++
+ tests/shared/002     |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/002.out |   53 ++++++++++++++++++++++++++++++++++++++++
  tests/shared/group   |    1 +
- 5 files changed, 209 insertions(+), 57 deletions(-)
- create mode 100644 tests/shared/001
- create mode 100644 tests/shared/001.out
+ 3 files changed, 119 insertions(+)
+ create mode 100755 tests/shared/002
+ create mode 100644 tests/shared/002.out
 
-diff --git a/common/punch b/common/punch
-index a49638c..f401455 100644
---- a/common/punch
-+++ b/common/punch
-@@ -317,13 +317,23 @@ _test_generic_punch()
- 	map_cmd=$4
- 	filter_cmd=$5
- 	testfile=$6
-+	multiple=1
-+
-+	#
-+	# If we are testing collapse range, we increare all the offsets of this
-+	# test by a factor of 4. We do this because unlike punch, collapse
-+	# range also decreases the size of file hence require bigger offsets.
-+	#
-+	if [ "$zero_cmd" == "fcollapse" ]; then
-+		multiple=4
-+	fi
- 
- 	echo "	1. into a hole"
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "$zero_cmd 4k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -332,9 +342,9 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 0 20k" $sync_cmd \
--		-c "$zero_cmd 4k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite 0 $(($multiple * 20))k" $sync_cmd \
-+		-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -344,9 +354,9 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "$alloc_cmd 0 20k" \
--			-c "$zero_cmd 4k 8k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "$alloc_cmd 0 $(($multiple * 20))k" \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -356,9 +366,9 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 8k 8k" $sync_cmd \
--		-c "$zero_cmd 4k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite $(($multiple * 8))k $(($multiple * 8))k" $sync_cmd \
-+		-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -368,9 +378,9 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "$alloc_cmd 8k 8k" \
--			-c "$zero_cmd 4k 8k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "$alloc_cmd $(($multiple * 8))k $(($multiple * 8))k" \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -380,9 +390,9 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 0 8k" $sync_cmd \
--		-c "$zero_cmd 4k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite 0 $(($multiple * 8))k" $sync_cmd \
-+		 -c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -392,10 +402,10 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "pwrite 0 8k" $sync_cmd \
--			-c "$alloc_cmd 8k 8k" \
--			-c "$zero_cmd 4k 8k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "pwrite 0 $(($multiple * 8))k" $sync_cmd \
-+			-c "$alloc_cmd $(($multiple * 8))k $(($multiple * 8))k" \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -404,9 +414,9 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "$alloc_cmd 0 8k" \
--			-c "$zero_cmd 4k 8k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "$alloc_cmd 0 $(($multiple * 8))k" \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -415,10 +425,10 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "$alloc_cmd 0 8k" \
--			-c "pwrite 8k 8k" $sync_cmd \
--			-c "$zero_cmd 4k 8k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "$alloc_cmd 0 $(($multiple * 8))k" \
-+			-c "pwrite $(($multiple * 8))k $(($multiple * 8))k" $sync_cmd \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -428,9 +438,9 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 8k 4k" $sync_cmd \
--		-c "$zero_cmd 4k 12k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite $(($multiple * 8))k $(($multiple * 4))k" $sync_cmd \
-+		-c "$zero_cmd $(($multiple * 4))k $(($multiple * 12))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -439,12 +449,12 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "$alloc_cmd 0 20k" \
--		-c "pwrite 0 8k" \
--		-c "pwrite 12k 8k" $sync_cmd \
--		-c "$punch_cmd 8k 4k" \
--		-c "$zero_cmd 4k 12k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "$alloc_cmd 0 $(($multiple * 20))k" \
-+		-c "pwrite 0 $(($multiple * 8))k" \
-+		-c "pwrite $(($multiple * 12))k $(($multiple * 8))k" $sync_cmd \
-+		-c "$punch_cmd $(($multiple * 8))k $(($multiple * 4))k" \
-+		-c "$zero_cmd $(($multiple * 4))k $(($multiple * 12))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -454,10 +464,10 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "$alloc_cmd 0 20k" \
--			-c "pwrite 8k 4k" $sync_cmd \
--			-c "$zero_cmd 4k 12k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "$alloc_cmd 0 $(($multiple * 20))k" \
-+			-c "pwrite $(($multiple * 8))k $(($multiple * 4))k" $sync_cmd \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 12))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -466,11 +476,11 @@ _test_generic_punch()
- 		if [ "$remove_testfile" ]; then
- 			rm -f $testfile
- 		fi
--		$XFS_IO_PROG -f -c "truncate 20k" \
--			-c "$alloc_cmd 0 20k" \
--			-c "pwrite 0k 8k" $sync_cmd \
--			-c "pwrite 12k 8k" -c "fsync" \
--			-c "$zero_cmd 4k 12k" \
-+		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+			-c "$alloc_cmd 0 $(($multiple * 20))k" \
-+			-c "pwrite 0k $(($multiple * 4))k" $sync_cmd \
-+			-c "pwrite $(($multiple * 12))k $(($multiple * 8))k" -c "fsync" \
-+			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 12))k" \
- 			-c "$map_cmd -v" $testfile | $filter_cmd
- 		[ $? -ne 0 ] && die_now
- 		_md5_checksum $testfile
-@@ -478,9 +488,9 @@ _test_generic_punch()
- 
- 	echo "	14. data -> hole @ EOF"
- 	rm -f $testfile
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 0 20k" $sync_cmd \
--		-c "$zero_cmd 12k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite 0 $(($multiple * 20))k" $sync_cmd \
-+		-c "$zero_cmd $(($multiple * 12))k $(($multiple * 8))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
-@@ -489,13 +499,22 @@ _test_generic_punch()
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 0 20k" $sync_cmd \
--		-c "$zero_cmd 0k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite 0 $(($multiple * 20))k" $sync_cmd \
-+		-c "$zero_cmd 0 $(($multiple * 8))k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 	_md5_checksum $testfile
- 
-+	# If zero_cmd is fcollpase, don't check unaligned offsets
-+	if [ "$zero_cmd" == "fcollapse" ]; then
-+		if [ "$remove_testfile" ]; then
-+			rm -f $testfile
-+			rm -f $testfile.2
-+		fi
-+		return
-+	fi
-+	
- 	echo "	16. data -> cache cold ->hole"
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
-@@ -503,12 +522,12 @@ _test_generic_punch()
- 	else
- 		cp $testfile $testfile.2
- 	fi
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 8k 12k" -c "fsync" $testfile.2 \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite $(($multiple * 8))k $(($multiple * 12))k" -c "fsync" $testfile.2 \
- 		> /dev/null
--	$XFS_IO_PROG -f -c "truncate 20k" \
--		-c "pwrite 0 20k" $sync_cmd \
--		-c "$zero_cmd 0k 8k" \
-+	$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
-+		-c "pwrite 0 $(($multiple * 20))k" $sync_cmd \
-+		-c "$zero_cmd 0k $(($multiple * 8))k" \
- 		-c "fadvise -d" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	diff $testfile $testfile.2
-diff --git a/common/rc b/common/rc
-index 5f61d57..3be4721 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1259,6 +1259,20 @@ _require_xfs_io_falloc_punch()
- 		_notrun "xfs_io fallocate punch command failed (no fs support?)"
- }
- 
-+# check that xfs_io, kernel and filesystem all support fallocate with collapse
-+# range
-+_require_xfs_io_falloc_collapse()
-+{
-+	testfile=$TEST_DIR/$$.falloc
-+	testio=`$XFS_IO_PROG -f -c "pwrite 0 20k" -c "fsync" \
-+		-c "fcollapse 4k 8k" $testfile 2>&1`
-+	rm -f $testfile 2>&1 > /dev/null
-+	echo $testio | grep -q "not found" && \
-+		_notrun "xfs_io fallocate collapse range support is missing"
-+	echo $testio | grep -q "Operation not supported" && \
-+		_notrun "xfs_io fallocate collapse range failed (no fs support?)"
-+}
-+
- # check that xfs_io, kernel and filesystem support fiemap
- _require_xfs_io_fiemap()
- {
-diff --git a/tests/shared/001 b/tests/shared/001
-new file mode 100644
-index 0000000..b3ebbba
+diff --git a/tests/shared/002 b/tests/shared/002
+new file mode 100755
+index 0000000..54b957d
 --- /dev/null
-+++ b/tests/shared/001
++++ b/tests/shared/002
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. 1
++# FS QA Test No. 2
 +#
-+# Standard collapse range tests 
++# Delayed allocation collapse range tests
 +# This testcase is one of the 4 testcases (shared 001 - 004) which tries to
 +# test various corner cases for fcollapse range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -399,18 +114,18 @@ index 0000000..b3ebbba
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -d falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/shared/001.out b/tests/shared/001.out
+diff --git a/tests/shared/002.out b/tests/shared/002.out
 new file mode 100644
-index 0000000..bff2bab
+index 0000000..14c239c
 --- /dev/null
-+++ b/tests/shared/001.out
++++ b/tests/shared/002.out
 @@ -0,0 +1,53 @@
-+QA output created by 001
++QA output created by 002
 +	1. into a hole
 +f4f35d60b3cc18aaa6d8d92f0cd3708a
 +	2. into allocated space
@@ -464,14 +179,14 @@ index 0000000..bff2bab
 +0: [0..95]: extent
 +f1894a71ac539f6f90426d98a4990a47
 diff --git a/tests/shared/group b/tests/shared/group
-index 0ad640b..5562f92 100644
+index 5562f92..7230b28 100644
 --- a/tests/shared/group
 +++ b/tests/shared/group
-@@ -3,6 +3,7 @@
- # - do not start group names with a digit
+@@ -4,6 +4,7 @@
  # - comment line before each group is "new" description
  #
-+001 auto prealloc
+ 001 auto prealloc
++002 auto prealloc
  032 mkfs auto quick
  051 acl udf auto quick
  218 auto fsr quick
