@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E73747F52
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:43:23 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F17F17F52
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:43:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B142D8F804C
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:43:23 -0800 (PST)
-Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
-	[209.85.220.47]) by cuda.sgi.com with ESMTP id rd7IDENGVmY9ANUW
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BAD8F304051
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:43:52 -0800 (PST)
+Received: from mail-pb0-f44.google.com (mail-pb0-f44.google.com
+	[209.85.160.44]) by cuda.sgi.com with ESMTP id rhRfamSM54y9lPxe
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:43:19 -0800 (PST)
-Received: by mail-pa0-f47.google.com with SMTP id kp14so5933756pab.20
-	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:43:18 -0800 (PST)
+	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:43:51 -0800 (PST)
+Received: by mail-pb0-f44.google.com with SMTP id rq2so5903744pbb.17
+	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:43:51 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
-	for fallocate
-Date: Sun,  2 Feb 2014 14:41:34 +0900
-Message-Id: <1391319694-3089-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 1/10] fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for
+	fallocate
+Date: Sun,  2 Feb 2014 14:43:41 +0900
+Message-Id: <1391319821-3135-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,70 +30,103 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: viro@zeniv.linux.org.uk, david@fromorbit.com, bpm@sgi.com, tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.cz, mtk.manpages@gmail.com
-Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This patch series is in response of the following post:
-http://lwn.net/Articles/556136/
-"ext4: introduce two new ioctls"
+Add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate.
+updated detailed semantics in comments.
 
-Dave chinner suggested that truncate_block_range
-(which was one of the ioctls name) should be an fallocate operation
-and not any fs specific ioctl, hence we add this functionality to fallocate.
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+---
+ fs/open.c                   |   24 +++++++++++++++++++++---
+ include/uapi/linux/falloc.h |   21 +++++++++++++++++++++
+ 2 files changed, 42 insertions(+), 3 deletions(-)
 
-This patch series introduces new flag FALLOC_FL_COLLAPSE_RANGE for fallocate
-and implements it for XFS and Ext4.
-
-The semantics of this flag are following:
-1) It collapses the range lying between offset and length by removing any data
-   blocks which are present in this range and than updates all the logical
-   offsets of extents beyond "offset + len" to nullify the hole created by
-   removing blocks. In short, it does not leave a hole.
-2) It should be used exclusively. No other fallocate flag in combination.
-3) Offset and length supplied to fallocate should be fs block size aligned
-   in case of xfs and ext4.
-4) Collaspe range does not work beyond i_size.
-
-This new functionality of collapsing range could be used by media editing tools
-which does non linear editing to quickly purge and edit parts of a media file.
-This will immensely improve the performance of these operations.
-The limitation of fs block size aligned offsets can be easily handled
-by media codecs which are encapsulated in a conatiner as they have to
-just change the offset to next keyframe value to match the proper alignment.
-
-Change log
-v4:
- - vfs: Move block size aligned check from VFS layer to FS specific layer.
- - vfs: update comments for FALLOC_FL_COLLAPSE_RANGE in user visible header file.
- - xfs: update comments for xfs_bmap_shift_extents and change variable name
-        to more reasonable name.
- - xfs: add ASSERTs for pointers in XFS patch.
- - xfs: drop all the xfs_bmbt_get*() wrappers.
- - xfs and ext4: change return errno from EFSCORRUPTED to EINVAL
-                 when hole is not large enough to shift.
- - xfs: remove extents from on-disk btree also in case of merge.
- - xfstest: separate shared/316 test to shared/001 ~ 004 in xfstest.
- - xfstest: update multi collapse test shared/005 for block size less than page size case.
- - manpage: update description.
-
-v3:
- Fix checkpatch.pl errors
-
-v2:
- Fix review points from Dave Chinner.
-
- Namjae Jeon (10):
-  fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
-  xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
-  ext4: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
-  xfsprog: xfsio: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
-  xfstest: shared/001: Standard collapse range tests
-  xfstest: shared/002: Delayed allocation collapse range
-  xfstest: shared/003: Multi collapse range tests
-  xfstest: shared/004: Delayed allocation multi collapse
-  xfstest: shared/005: Test multiple fallocate collapse
-  manpage: update FALLOC_FL_COLLAPSE_RANGE flag in fallocate
+diff --git a/fs/open.c b/fs/open.c
+index 4b3e1ed..4a923a5 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -231,7 +231,8 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -EINVAL;
+ 
+ 	/* Return error if mode is not supported */
+-	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
++	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
++		     FALLOC_FL_COLLAPSE_RANGE))
+ 		return -EOPNOTSUPP;
+ 
+ 	/* Punch hole must have keep size set */
+@@ -239,11 +240,20 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	    !(mode & FALLOC_FL_KEEP_SIZE))
+ 		return -EOPNOTSUPP;
+ 
++	/* Collapse range should only be used exclusively. */
++	if ((mode & FALLOC_FL_COLLAPSE_RANGE) &&
++	    (mode & ~FALLOC_FL_COLLAPSE_RANGE))
++		return -EINVAL;
++
+ 	if (!(file->f_mode & FMODE_WRITE))
+ 		return -EBADF;
+ 
+-	/* It's not possible punch hole on append only file */
+-	if (mode & FALLOC_FL_PUNCH_HOLE && IS_APPEND(inode))
++	/*
++	 * It's not possible to punch hole or perform collapse range
++	 * on append only file
++	 */
++	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE)
++	    && IS_APPEND(inode))
+ 		return -EPERM;
+ 
+ 	if (IS_IMMUTABLE(inode))
+@@ -271,6 +281,14 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	if (((offset + len) > inode->i_sb->s_maxbytes) || ((offset + len) < 0))
+ 		return -EFBIG;
+ 
++	/*
++	 * There is no need to overlap collapse range with EOF, in which case
++	 * it is effectively a truncate operation
++	 */
++	if ((mode & FALLOC_FL_COLLAPSE_RANGE) &&
++	    (offset + len >= i_size_read(inode)))
++		return -EINVAL;
++
+ 	if (!file->f_op->fallocate)
+ 		return -EOPNOTSUPP;
+ 
+diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+index 990c4cc..5b214cc 100644
+--- a/include/uapi/linux/falloc.h
++++ b/include/uapi/linux/falloc.h
+@@ -5,5 +5,26 @@
+ #define FALLOC_FL_PUNCH_HOLE	0x02 /* de-allocates range */
+ #define FALLOC_FL_NO_HIDE_STALE	0x04 /* reserved codepoint */
+ 
++/*
++ * FALLOC_FL_COLLAPSE_RANGE is used to remove a range of a file
++ * without leaving a hole in the file. The contents of the file beyond
++ * the range being removed is appended to the start offset of the range
++ * being removed (i.e. the hole that was punched is "collapsed"),
++ * resulting in a file layout that looks like the range that was
++ * removed never existed. As such collapsing a range of a file changes
++ * the size of the file, reducing it by the same length of the range
++ * that has been removed by the operation.
++ *
++ * Different filesystems may implement different limitations on the
++ * granularity of the operation. Most will limit operations to
++ * filesystem block size boundaries, but this boundary may be larger or
++ * smaller depending on the filesystem and/or the configuration of the
++ * filesystem or file.
++ *
++ * Attempting to collapse a range that crosses the end of the file is
++ * considered an illegal operation - just use ftruncate(2) if you need
++ * to collapse a range that crosses EOF.
++ */
++#define FALLOC_FL_COLLAPSE_RANGE	0x08
+ 
+ #endif /* _UAPI_FALLOC_H_ */
 -- 
 1.7.9.5
 
