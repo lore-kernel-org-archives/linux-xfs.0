@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 42CD17FAB
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:46:47 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 01BED7FAB
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:47:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 25EFB8F804C
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:46:47 -0800 (PST)
-Received: from mail-pd0-f170.google.com (mail-pd0-f170.google.com
-	[209.85.192.170]) by cuda.sgi.com with ESMTP id
-	JlsTzeFWqlckQItz (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 01 Feb 2014 21:46:46 -0800 (PST)
-Received: by mail-pd0-f170.google.com with SMTP id p10so5750940pdj.15
-	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:46:45 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8DE9304051
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:47:10 -0800 (PST)
+Received: from mail-pb0-f44.google.com (mail-pb0-f44.google.com
+	[209.85.160.44]) by cuda.sgi.com with ESMTP id 1Uk4KQGlP6BMsuYs
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:47:10 -0800 (PST)
+Received: by mail-pb0-f44.google.com with SMTP id rq2so5905077pbb.17
+	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:47:09 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 7/10] xfstest: shared/003: Multi collapse range tests
-Date: Sun,  2 Feb 2014 14:46:36 +0900
-Message-Id: <1391319996-3345-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 8/10] xfstest: shared/004: Delayed allocation multi
+	collapse
+Date: Sun,  2 Feb 2014 14:46:58 +0900
+Message-Id: <1391320018-3379-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +34,30 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, l
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(003) tries to test various corner cases with pre-existing holes
-for fcollapse range functionality over different type of extents.
+This testcase(004) tries to test various corner cases with delayed extents and
+pre-existing holes for fcollapse range functionality
+over different type of extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/shared/003     |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/003.out |   53 ++++++++++++++++++++++++++++++++++++++++
+ tests/shared/004     |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/004.out |   53 ++++++++++++++++++++++++++++++++++++++++
  tests/shared/group   |    1 +
  3 files changed, 119 insertions(+)
- create mode 100755 tests/shared/003
- create mode 100644 tests/shared/003.out
+ create mode 100755 tests/shared/004
+ create mode 100644 tests/shared/004.out
 
-diff --git a/tests/shared/003 b/tests/shared/003
+diff --git a/tests/shared/004 b/tests/shared/004
 new file mode 100755
-index 0000000..7b7f2df
+index 0000000..5902b9f
 --- /dev/null
-+++ b/tests/shared/003
++++ b/tests/shared/004
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. 3
++# FS QA Test No. 4
 +#
-+# Multi collapse range tests
++# Delayed allocation multi collapse range tests
 +# This testcase is one of the 4 testcases (shared 001 - 004) which tries to
 +# test various corner cases for fcollapse range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -113,18 +114,18 @@ index 0000000..7b7f2df
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch -k falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -d -k falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/shared/003.out b/tests/shared/003.out
+diff --git a/tests/shared/004.out b/tests/shared/004.out
 new file mode 100644
-index 0000000..545304e
+index 0000000..a7d0f52
 --- /dev/null
-+++ b/tests/shared/003.out
++++ b/tests/shared/004.out
 @@ -0,0 +1,53 @@
-+QA output created by 003
++QA output created by 004
 +	1. into a hole
 +f4f35d60b3cc18aaa6d8d92f0cd3708a
 +	2. into allocated space
@@ -178,14 +179,14 @@ index 0000000..545304e
 +0: [0..95]: extent
 +f1894a71ac539f6f90426d98a4990a47
 diff --git a/tests/shared/group b/tests/shared/group
-index 7230b28..9226032 100644
+index 9226032..fb1d6d0 100644
 --- a/tests/shared/group
 +++ b/tests/shared/group
-@@ -5,6 +5,7 @@
- #
+@@ -6,6 +6,7 @@
  001 auto prealloc
  002 auto prealloc
-+003 auto prealloc
+ 003 auto prealloc
++004 auto prealloc
  032 mkfs auto quick
  051 acl udf auto quick
  218 auto fsr quick
