@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 01BED7FAB
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:47:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D8DE9304051
-	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:47:10 -0800 (PST)
-Received: from mail-pb0-f44.google.com (mail-pb0-f44.google.com
-	[209.85.160.44]) by cuda.sgi.com with ESMTP id 1Uk4KQGlP6BMsuYs
+	by oss.sgi.com (Postfix) with ESMTP id A26CA7FC5
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 23:47:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68631304075
+	for <xfs@oss.sgi.com>; Sat,  1 Feb 2014 21:47:30 -0800 (PST)
+Received: from mail-pa0-f50.google.com (mail-pa0-f50.google.com
+	[209.85.220.50]) by cuda.sgi.com with ESMTP id 2Zqpo3bnLUet3TPO
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:47:10 -0800 (PST)
-Received: by mail-pb0-f44.google.com with SMTP id rq2so5905077pbb.17
-	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:47:09 -0800 (PST)
+	<xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:47:29 -0800 (PST)
+Received: by mail-pa0-f50.google.com with SMTP id kp14so5901416pab.23
+	for <xfs@oss.sgi.com>; Sat, 01 Feb 2014 21:47:28 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 8/10] xfstest: shared/004: Delayed allocation multi
+Subject: [PATCH RESEND 9/10] xfstest: shared/005: Test multiple fallocate
 	collapse
-Date: Sun,  2 Feb 2014 14:46:58 +0900
-Message-Id: <1391320018-3379-1-git-send-email-linkinjeon@gmail.com>
+Date: Sun,  2 Feb 2014 14:47:20 +0900
+Message-Id: <1391320040-3414-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,35 +34,36 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, l
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(004) tries to test various corner cases with delayed extents and
-pre-existing holes for fcollapse range functionality
-over different type of extents.
+We execute collapse range multiple times on same file.
+Each collapse range call collapses a single alternate block.
+After the test execution, file will be left with 80 blocks and
+as much number of extents.
+We also check for file system consistency after the completion.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/shared/004     |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/004.out |   53 ++++++++++++++++++++++++++++++++++++++++
+ tests/shared/005     |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/005.out |    4 +++
  tests/shared/group   |    1 +
- 3 files changed, 119 insertions(+)
- create mode 100755 tests/shared/004
- create mode 100644 tests/shared/004.out
+ 3 files changed, 95 insertions(+)
+ create mode 100644 tests/shared/005
+ create mode 100644 tests/shared/005.out
 
-diff --git a/tests/shared/004 b/tests/shared/004
-new file mode 100755
-index 0000000..5902b9f
+diff --git a/tests/shared/005 b/tests/shared/005
+new file mode 100644
+index 0000000..1347e7f
 --- /dev/null
-+++ b/tests/shared/004
-@@ -0,0 +1,65 @@
++++ b/tests/shared/005
+@@ -0,0 +1,90 @@
 +#! /bin/bash
-+# FS QA Test No. 4
++# FS QA Test No. 5
 +#
-+# Delayed allocation multi collapse range tests
-+# This testcase is one of the 4 testcases (shared 001 - 004) which tries to
-+# test various corner cases for fcollapse range functionality over different
-+# type of extents. These tests are based on generic/255 test case.
-+# For the type of tests, check the description of _test_generic_punch
-+# in common/rc.
++# Test multiple fallocate collapse range calls on same file.
++# For different blocksizes, collapse a single alternate block multiple times
++# until the file is left with 80 blocks and as much number of extents.
++# Also check for file system consistency after completing this operation
++# for each blocksize.
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2013 Samsung Electronics.  All Rights Reserved.
 +#
@@ -89,104 +90,81 @@ index 0000000..5902b9f
 +here=`pwd`
 +tmp=/tmp/$$
 +status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
-+# we need to include common/punch to get defination fo filter functions
 +. ./common/rc
 +. ./common/filter
-+. ./common/punch
 +
 +# real QA test starts here
 +_supported_fs xfs ext4
 +_supported_os Linux
 +
-+_require_xfs_io_falloc_punch
-+_require_xfs_io_falloc
++_require_scratch
 +_require_xfs_io_fiemap
 +_require_xfs_io_falloc_collapse
++_do_die_on_error=y
++testfile=$SCRATCH_MNT/$seq.$$
++BLOCKS=10240
 +
-+testfile=$TEST_DIR/$seq.$$
++for (( BSIZE = 1024; BSIZE <= 4096; BSIZE *= 2 )); do
 +
-+_test_generic_punch -d -k falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
-+_check_test_fs
++	length=$(($BLOCKS * $BSIZE))
++	case $FSTYP in
++	xfs)
++	_scratch_mkfs -b size=$BSIZE >> $seqres.full 2>&1
++	;;
++	ext4)
++	_scratch_mkfs -b $BSIZE >> $seqres.full 2>&1
++	;;
++	esac
++	_scratch_mount >> $seqres.full 2>&1
 +
++	# Write file
++	$XFS_IO_PROG -f -c "pwrite 0 $length" -c fsync $testfile > /dev/null
++
++	# Collapse alternate blocks 
++	for (( i = 1; i <= 7; i++ )); do
++		for (( j=0; j < $(($BLOCKS/(2**$i))); j++ )); do
++			offset=$(($j*$BSIZE))
++			$XFS_IO_PROG -c "fcollapse $offset $BSIZE" $testfile > /dev/null
++		done
++	done
++
++	# Check if 80 extents are present
++	$XFS_IO_PROG -c "fiemap -v" $testfile | grep "^ *[0-9]*:" |wc -l
++
++	_check_scratch_fs
++	if [ $? -ne 0 ]; then
++		status=1
++		exit
++	fi
++
++	umount $SCRATCH_MNT
++done
++
++# success, all done
 +status=0
 +exit
-diff --git a/tests/shared/004.out b/tests/shared/004.out
+diff --git a/tests/shared/005.out b/tests/shared/005.out
 new file mode 100644
-index 0000000..a7d0f52
+index 0000000..8d30b9d
 --- /dev/null
-+++ b/tests/shared/004.out
-@@ -0,0 +1,53 @@
-+QA output created by 004
-+	1. into a hole
-+f4f35d60b3cc18aaa6d8d92f0cd3708a
-+	2. into allocated space
-+0: [0..95]: extent
-+f1894a71ac539f6f90426d98a4990a47
-+	3. into unwritten space
-+0: [0..95]: extent
-+f07217d5ac7ffa15dd8910c4aa912674
-+	4. hole -> data
-+0: [0..63]: extent
-+1: [64..95]: hole
-+e5c94f6299822646f9f57aeacd8bdc01
-+	5. hole -> unwritten
-+0: [0..63]: extent
-+1: [64..95]: hole
-+f07217d5ac7ffa15dd8910c4aa912674
-+	6. data -> hole
-+0: [0..31]: extent
-+1: [32..95]: hole
-+f07217d5ac7ffa15dd8910c4aa912674
-+	7. data -> unwritten
-+0: [0..63]: extent
-+1: [64..95]: hole
-+f07217d5ac7ffa15dd8910c4aa912674
-+	8. unwritten -> hole
-+0: [0..31]: extent
-+1: [32..95]: hole
-+f07217d5ac7ffa15dd8910c4aa912674
-+	9. unwritten -> data
-+0: [0..63]: extent
-+1: [64..95]: hole
-+e5c94f6299822646f9f57aeacd8bdc01
-+	10. hole -> data -> hole
-+0: [0..31]: extent
-+1: [32..63]: hole
-+76cc863b386460b228a493933813a6a0
-+	11. data -> hole -> data
-+0: [0..63]: extent
-+0f0151cbed83e4bf6e5bde26e82ab115
-+	12. unwritten -> data -> unwritten
-+0: [0..63]: extent
-+76cc863b386460b228a493933813a6a0
-+	13. data -> unwritten -> data
-+0: [0..63]: extent
-+0f0151cbed83e4bf6e5bde26e82ab115
-+	14. data -> hole @ EOF
-+fallocate: Invalid argument
-+0: [0..159]: extent
-+7670f4830c6724a25e7c22d9eb9a6f4f
-+	15. data -> hole @ 0
-+0: [0..95]: extent
-+f1894a71ac539f6f90426d98a4990a47
++++ b/tests/shared/005.out
+@@ -0,0 +1,4 @@
++QA output created by 005
++80
++80
++80
 diff --git a/tests/shared/group b/tests/shared/group
-index 9226032..fb1d6d0 100644
+index fb1d6d0..22f1d3a 100644
 --- a/tests/shared/group
 +++ b/tests/shared/group
-@@ -6,6 +6,7 @@
- 001 auto prealloc
+@@ -7,6 +7,7 @@
  002 auto prealloc
  003 auto prealloc
-+004 auto prealloc
+ 004 auto prealloc
++005 auto prealloc
  032 mkfs auto quick
  051 acl udf auto quick
  218 auto fsr quick
