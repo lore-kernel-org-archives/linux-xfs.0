@@ -1,31 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 33B9C7FF0
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 15:41:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CBDC8F8037
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 13:41:36 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 375FC7FF7
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 15:54:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 016C88F8035
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 13:54:18 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	B8GwjUC43DxYvpMJ for <xfs@oss.sgi.com>;
-	Mon, 03 Feb 2014 13:41:33 -0800 (PST)
-Date: Tue, 4 Feb 2014 08:41:28 +1100
+	ZBnLq0Sk6PjfOfOR for <xfs@oss.sgi.com>;
+	Mon, 03 Feb 2014 13:54:16 -0800 (PST)
+Date: Tue, 4 Feb 2014 08:54:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question regarding XFS on LVM over hardware RAID.
-Message-ID: <20140203214128.GR13997@dastard>
-References: <52E91923.4070706@sandeen.net>
-	<1391022066-sup-5863@al.wesleyan.edu>
-	<52E99504.4030902@hardwarefreak.com>
-	<1391090527-sup-4664@al.wesleyan.edu>
-	<20140130202819.GO2212@dastard>
-	<52EB3B96.7000103@hardwarefreak.com>
-	<1391202273-sup-9265@al.wesleyan.edu>
-	<52ED61C9.8060504@hardwarefreak.com>
-	<20140202212152.GP2212@dastard>
-	<1391443675-sup-1730@al.wesleyan.edu>
+Subject: Re: relationship of nested stripe sizes, was: Question regarding XFS
+	on LVM over hardware RAID.
+Message-ID: <20140203215411.GS13997@dastard>
+References: <7A732267-B34F-4286-9B49-3AF8767C0B89@colorremedies.com>
+	<52ED4143.6090303@hardwarefreak.com>
+	<EDBD7355-F1EC-4773-9138-CA864CB2E84B@colorremedies.com>
+	<52ED6AAF.6030703@hardwarefreak.com>
+	<98961D3F-769D-44A9-98A8-FC7867893138@colorremedies.com>
+	<20140202213030.GQ2212@dastard>
+	<52EF1D76.6070302@hardwarefreak.com>
+	<20140203052415.GQ13997@dastard>
+	<52EF6301.5040406@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1391443675-sup-1730@al.wesleyan.edu>
+In-Reply-To: <52EF6301.5040406@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,86 +38,154 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "C. Morgan Hamill" <chamill@wesleyan.edu>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs <xfs@oss.sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-On Mon, Feb 03, 2014 at 11:12:39AM -0500, C. Morgan Hamill wrote:
-> Excerpts from Dave Chinner's message of 2014-02-02 16:21:52 -0500:
-> > On Sat, Feb 01, 2014 at 03:06:17PM -0600, Stan Hoeppner wrote:
-> > > On 1/31/2014 3:14 PM, C. Morgan Hamill wrote:
-> > > > So, basically, --dataalignment is my friend during pvcreate and
-> > > > lvcreate.
-> > > 
-> > > If the logical sector size reported by your RAID controller is 512
-> > > bytes, then "--dataalignment=9216s" should start your data section on a
-> > > RAID60 stripe boundary after the metadata section.
-> > > 
-> > > Tthe PhysicalExtentSize should probably also match the 4608KB stripe
-> > > width, but this is apparently not possible.  PhysicalExtentSize must be
-> > > a power of 2 value.  I don't know if or how this will affect XFS aligned
-> > > write out.  You'll need to consult with someone more knowledgeable of LVM.
+On Mon, Feb 03, 2014 at 03:36:01AM -0600, Stan Hoeppner wrote:
+> On 2/2/2014 11:24 PM, Dave Chinner wrote:
+> > On Sun, Feb 02, 2014 at 10:39:18PM -0600, Stan Hoeppner wrote:
+> >> On 2/2/2014 3:30 PM, Dave Chinner wrote:
+> ...
+> >>> And that is why this is a perfect example of what I'd like to see
+> >>> people writing documentation for.
+> >>>
+> >>> http://oss.sgi.com/archives/xfs/2013-12/msg00588.html
+> >>>
+> >>> This is not the first time we've had this nested RAID discussion,
+> >>> nor will it be the last. However, being able to point ot a web page
+> >>> or or documentation makes it a whole lot easier.....
+> >>>
+> >>> Stan - any chance you might be able to spare an hour a week to write
+> >>> something about optimal RAID storage configuration for XFS?
+> >>
+> >> I could do more, probably rather quickly.  What kind of scope, format,
+> >> style?  Should this be structured as reference manual style
+> >> documentation, FAQ, blog??  I'm leaning more towards reference style.
 > > 
-> > You can't do single IOs of that size, anyway, so this is where the
-> > BBWC on the raid controller does it's magic and caches sequntial IOs
-> > until it has full stripe writes cached....
+> > Agreed - reference style is probably best. As for format style, I'm
+> > tending towards a simple, text editor friendly markup like asciidoc.
+> > From there we can use it to generate PDFs, wiki documentation, etc
+> > and so make it available in whatever format is convenient.
 > 
-> So I am probably missing something here, could you clarify?  Are you
-> saying that I can't do single IOs of that size (by which I take your
-> meaning to be IOs as small as 9216 sectors) because my RAID controllers
-> controller won't let me (i.e., it will cache anything smaller than the
-> stripe size anyway)?
+> Works for me, I'm a plain text kinda guy.
 
-Typical limitations on IO size are the size of the hardware DMA
-scatter-gather rings of the HBA/raid controller. For example, the
-two hardware RAID controllers in my largest test box have
-limitations of 70 and 80 segments and maximum IO sizes of 280k and
-320k.
+Ok, I'll put together a basic repository and build framework for us
+to work from.
 
-And looking at the IO being dispatched with blktrace, I see the
-maximum size is:
+> > The only thing I can think of that is obviously missing from this is
+> > the process of problem diagnosis. e.g. what to do when something
+> > goes wrong. The most common the mistake we see is trying to repair
+> > the filesystem when th storage is still broken and making a bigger
+> > mess. Having something that describes what to look for (e.g. raid
+> > reconstruction getting disks out of order) and how to recover from
+> > problems with as little risk and data loss as possible would be
+> > invaluable.
+> 
+> Ahh ok.  So you're going for the big scope described in your Dec 13
+> email, not the paltry "optimal RAID storage configuration for XFS"
+> described above.  Now I understand the 1 hour a week question. :)
 
-  8,80   2       61     0.769857112 44866  D  WS 12423408 + 560 [qemu-system-x86]
-  8,80   2       71     0.769877563 44866  D  WS 12423968 + 560 [qemu-system-x86]
-  8,80   2       72     0.769889767 44866  D  WS 12424528 + 560 [qemu-system-x86]
-                                                            ^^^
+Well, that's where I'd like such a document to end up. Let's plan
+for the big picture, but start with small chunks of work that slowly
+fill in the big picture.
 
-560 sectors or 280k. So for this hardware, sequential 280k writes
-are hitting the BBWC. And because they are sequential, the BBWC is
-writing them back as fully stripe writes after aggregating them in
-NVRAM. Hence there are no performance diminishing RMW cycles
-occurring, even though the individual IO size is much smaller than
-the stripe unit/width....
+> I'll brain dump as much as I can, in a hopefully somewhat coherent
+> starting doc.  I'll do my best starting the XFS troubleshooting part,
+> but I'm much weaker here than with XFS architecture and theory.
 
-> Or are you saying that XFS with these given
-> settings won't make writes that small (which seems false, since I'm
-> essentially telling it to do writes of precisely that size).  I'm a bit
-> unclear on that.
+That's fine, I don't expect you to write everything ;)
 
-What su/sw tells XFs is how to align allocation of files, so that
-when we dispatch sequential IO to that file it is aligned to the
-underlying storage because the extents that the filesystem allocated
-for it are aligned. This means that if you write exactly one stripe
-width of data, it will hit each disk exactly once. It might take 10
-IOs to get the data to the storage, but it will only hit each disk
-once.
+> >> I should be able to knock most of this out fairly quickly, but I'll need
+> >> help on some of it.  For example I don't have any first hand experience
+> >> with large high end workloads.  I could make up a plausible theoretical
+> >> example but I'd rather have as many real-world workloads as possible.
+> >> What I have in mind for workload examples is something like the
+> >> following.  It would be great if list members who have one the workloads
+> >> below would contribute their details and pointers, any secret sauce,
+> >> etc.  Thus when we refer someone to this document they know they're
+> >> reading of an actual real world production configuration.  Though I
+> >> don't plan to name sites, people, etc, just the technical configurations.
+> > 
+> > 1. General purpose (i.e. unspecialised) configuration that should be
+> > good for most users.
+> 
+> Format with XFS defaults.  Done. :)
+> 
+> What detail should go with this?  Are you thinking SOHO server here,
+> single disk web server.  Anything with low IO rate and a smallish disk/RAID?
 
-The function of the stripe cache (in software raid) and the BBWC (in
-hardware RAID) is to prevent RMW cycles while the
-filesystem/hardware is still flinging data at the RAID lun. Only
-once the controller has complete stripe widths will it calculate
-parity and write back the data, thereby avoiding a RMW cycle....
+I'm not really thinking of a specific configuration here. This is
+more a case of "don't [want to] care about optimisation" or "don't
+know enough about the workload to optimise it", etc. So not really a
+specific configuration, but more of "get the basics right"
+configuration guideline.
 
-> In addition, does this in effect mean that when it comes to LVM, extent
-> size makes no difference for alignment purposes?  So I don't have to
-> worry about anything other that aligning the beginning and ending of
-> logical volumes, volume groups, etc. to 9216 sector multiples?
+> >> 1.  Small file, highly parallel, random IO
+> >>  -- mail queue, maildir mailbox storage
+> >>  -- HPC, filesystem as a database
+> >>  -- ??
+> > 
+> > The hot topic of the moment that fits into this category is object
+> > stores for distributed storage. i.e. gluster and ceph running
+> > openstack storage layers like swift to store large numbers of
+> > pictures of cats.
+> 
+> The direction I was really wanting to go here is highlighting the
+> difference between striped RAID and linear concat, how XFS AG
+> parallelism on concat can provide better performance than striping for
+> some workloads, and why.  For a long time I've wanted to create a
+> document about this with graphs containing "disk silo" icons, showing
+> the AGs spanning the striped RAID horizontally and spanning the concat
+> disks vertically, explaining the difference in seek patterns and how
+> they affect a random IO workload.
 
-No, you still have to align everything to the underlying storage so
-that the filesystem on top of the volumes is correctly aligned.
-Where the data will be written (i.e. howthe filesystem allocates the
-underlying blocks) determines the IO alignment of sequential/large
-user IOs, and that matters far more than the size of the sequntial
-IOs the kernel uses to write the data.
+I would expect that to be part of the "theory of operation" section
+more than an example.
+
+> Maybe I should make concat a separate topic entirely, as it can benefit
+> multiple workload types, from the smallest to the largest storage
+> setups.  XFS' ability to scale IO throughput nearly infinitely over
+> concatenated storage is unique to Linux, and fairly unique to
+> filesystems in general TTBOMK.  It is one of its greatest strengths.
+> I'd like to cover this in good detail.
+
+Right - and that's one of the reasons I mentioned that the NFS
+server setups should be dealt with specially, as they are prime
+candidates for optimisation via linear concatentation of RAID
+stripes rather than nested stripes....
+
+> >> 2.  Virtual machine consolidation w/mixed guest workload
+> > 
+> > There's a whole lot of stuff here that is dependent on exactly how
+> > the VM infrastructure is set up, so this might be difficult to
+> > simplify enough to be useful.
+> 
+> I was thinking along the lines of consolidating lots of relatively low
+> IO throughput guests with thin provisioning, like VPS hosting.  For
+> instance a KVM host and a big XFS, sparse files exported to Linux guests
+> as drives.  Maybe nobody is doing this with XFS.
+
+If you consider me nobody, then nobody is doing that. All my test
+VMs are hosted this way using either sparse or preallocated files.
+Make sure that you describe the use of extent size hints for sparse
+image files to minimise fragmentation....
+
+> >> Lemme know if this is ok or if you'd like it to take a different
+> >> direction, if you have better or additional example workload classes,
+> >> etc.  If mostly ok, I'll get started on the first 2 sections and fill in
+> >> the 3rd as people submit examples.
+> > 
+> > It sounds good to me - I think that the first 2 sections are the
+> > core of the work - it's the theory that is in our heads (i.e. the
+> > black magic) that is simply not documented in a way that people can
+> > use.
+> 
+> Agreed.
+> 
+> I'll get started.
+
+Ok, I'll get a repo and build skeleton together, and we can go from
+there.
 
 Cheers,
 
