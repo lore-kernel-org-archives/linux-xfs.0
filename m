@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 18E987FFA
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 15:15:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1AA9E8F804B
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 13:15:13 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 0BNU7Ii778zHxDCB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Feb 2014 13:15:08 -0800 (PST)
-Date: Mon, 3 Feb 2014 13:15:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/5] metadump: fully support discontiguous directory blocks
-Message-ID: <20140203211507.GA27453@infradead.org>
-References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
-	<1390472635-17225-6-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E6D27FF0
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 15:38:22 -0600 (CST)
+Date: Mon, 3 Feb 2014 15:38:18 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [GIT PULL] XFS update #2 for 3.14-rc1
+Message-ID: <20140203213818.GA2258@sgi.com>
+References: <20140129011209.253624266DC@whiskey.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1390472635-17225-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140129011209.253624266DC@whiskey.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +22,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Looks good,
+Hey Linus,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Tue, Jan 28, 2014 at 07:12:09PM -0600, Ben Myers wrote:
+>    Please pull this xfs update for 3.14.  This is to allow logical sector sized
+>    direct io on advanced format disks.
+
+Could you pick this up for -rc2?
+
+Thanks,
+	Ben
+
+> The following changes since commit bf3964c188d686424ff7b69a45941851b9f437f0:
+> 
+>   Merge branch 'xfs-extent-list-locking-fixes' into for-next (2014-01-09 16:03:18 -0600)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-v3.14-rc1-2
+> 
+> for you to fetch changes up to 7c71ee78031c248dca13fc94dea9a4cc217db6cf:
+> 
+>   xfs: allow logical-sector sized O_DIRECT (2014-01-24 11:55:42 -0600)
+> 
+> ----------------------------------------------------------------
+> xfs: update #2 for v3.14-rc1
+> 
+> - allow logical sector sized direct io on 'advanced format' 4k/512 disk.
+> 
+> ----------------------------------------------------------------
+> Eric Sandeen (3):
+>       xfs: clean up xfs_buftarg
+>       xfs: rename xfs_buftarg structure members
+>       xfs: allow logical-sector sized O_DIRECT
+> 
+>  fs/xfs/xfs_buf.c   | 14 +++++++++-----
+>  fs/xfs/xfs_buf.h   | 20 +++++++++++++++++---
+>  fs/xfs/xfs_file.c  |  7 +++++--
+>  fs/xfs/xfs_ioctl.c |  2 +-
+>  4 files changed, 32 insertions(+), 11 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
 _______________________________________________
 xfs mailing list
