@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 375FC7FF7
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 15:54:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 016C88F8035
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 13:54:18 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 92D467FFA
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 16:13:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 900878F8035
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 14:13:26 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZBnLq0Sk6PjfOfOR for <xfs@oss.sgi.com>;
-	Mon, 03 Feb 2014 13:54:16 -0800 (PST)
-Date: Tue, 4 Feb 2014 08:54:11 +1100
+	ooaAutLtOkEJ8W8w for <xfs@oss.sgi.com>;
+	Mon, 03 Feb 2014 14:13:23 -0800 (PST)
+Date: Tue, 4 Feb 2014 09:12:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: relationship of nested stripe sizes, was: Question regarding XFS
-	on LVM over hardware RAID.
-Message-ID: <20140203215411.GS13997@dastard>
-References: <7A732267-B34F-4286-9B49-3AF8767C0B89@colorremedies.com>
-	<52ED4143.6090303@hardwarefreak.com>
-	<EDBD7355-F1EC-4773-9138-CA864CB2E84B@colorremedies.com>
-	<52ED6AAF.6030703@hardwarefreak.com>
-	<98961D3F-769D-44A9-98A8-FC7867893138@colorremedies.com>
-	<20140202213030.GQ2212@dastard>
-	<52EF1D76.6070302@hardwarefreak.com>
-	<20140203052415.GQ13997@dastard>
-	<52EF6301.5040406@hardwarefreak.com>
+Subject: Re: >>: Re: =?utf-8?B?SNCwOiBSZTogWEZTOiBB?= =?utf-8?Q?ssertion?=
+	failed: fs_is_ok, file: fs/xfs/xfs_alloc.c, line: 1590
+Message-ID: <20140203221257.GT13997@dastard>
+References: <OF16FE6E5B.C3E862DE-ON44257C74.001D9802-44257C74.001DDBB0@beeline.ru>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52EF6301.5040406@hardwarefreak.com>
+In-Reply-To: <OF16FE6E5B.C3E862DE-ON44257C74.001D9802-44257C74.001DDBB0@beeline.ru>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,154 +30,183 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Dmitriy Yu Leonov <DLeonov@beeline.ru>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 03, 2014 at 03:36:01AM -0600, Stan Hoeppner wrote:
-> On 2/2/2014 11:24 PM, Dave Chinner wrote:
-> > On Sun, Feb 02, 2014 at 10:39:18PM -0600, Stan Hoeppner wrote:
-> >> On 2/2/2014 3:30 PM, Dave Chinner wrote:
-> ...
-> >>> And that is why this is a perfect example of what I'd like to see
-> >>> people writing documentation for.
-> >>>
-> >>> http://oss.sgi.com/archives/xfs/2013-12/msg00588.html
-> >>>
-> >>> This is not the first time we've had this nested RAID discussion,
-> >>> nor will it be the last. However, being able to point ot a web page
-> >>> or or documentation makes it a whole lot easier.....
-> >>>
-> >>> Stan - any chance you might be able to spare an hour a week to write
-> >>> something about optimal RAID storage configuration for XFS?
-> >>
-> >> I could do more, probably rather quickly.  What kind of scope, format,
-> >> style?  Should this be structured as reference manual style
-> >> documentation, FAQ, blog??  I'm leaning more towards reference style.
-> > 
-> > Agreed - reference style is probably best. As for format style, I'm
-> > tending towards a simple, text editor friendly markup like asciidoc.
-> > From there we can use it to generate PDFs, wiki documentation, etc
-> > and so make it available in whatever format is convenient.
+On Mon, Feb 03, 2014 at 09:26:04AM +0400, Dmitriy Yu Leonov wrote:
+> Repost my message, because I accidentally answered Dave instead of
+> answering all. Sorry.
+> I'm registered problem also in XFS bugzilla:
+> http://oss.sgi.com/bugzilla/show_bug.cgi?id=1045
 > 
-> Works for me, I'm a plain text kinda guy.
-
-Ok, I'll put together a basic repository and build framework for us
-to work from.
-
-> > The only thing I can think of that is obviously missing from this is
-> > the process of problem diagnosis. e.g. what to do when something
-> > goes wrong. The most common the mistake we see is trying to repair
-> > the filesystem when th storage is still broken and making a bigger
-> > mess. Having something that describes what to look for (e.g. raid
-> > reconstruction getting disks out of order) and how to recover from
-> > problems with as little risk and data loss as possible would be
-> > invaluable.
+> Good evening, Dave.
 > 
-> Ahh ok.  So you're going for the big scope described in your Dec 13
-> email, not the paltry "optimal RAID storage configuration for XFS"
-> described above.  Now I understand the 1 hour a week question. :)
+> I?m installed xfsprogs version 3.1.11 and try to repair filesystem on the
+> raid disk. But command xfs_repair -P /dev/sdb1 hanged.
+> Then I decided to reboot with old kernel version 3.7.10 (I have several
+> versions of kernel). After reboot the system, I ran the command again.
+> Command executed successfully in the old kernel 3.7.10. Output of the
+> commands attached to the letter after the text.
 
-Well, that's where I'd like such a document to end up. Let's plan
-for the big picture, but start with small chunks of work that slowly
-fill in the big picture.
+So you changed the kernel and xfs_repair completed? That sounds like
+there might be a problem with the storage drivers for your hardware
+on the kernel that repair is hanging on. can you run an strace to
+find what syscall xfs_repair is hanging on?
 
-> I'll brain dump as much as I can, in a hopefully somewhat coherent
-> starting doc.  I'll do my best starting the XFS troubleshooting part,
-> but I'm much weaker here than with XFS architecture and theory.
-
-That's fine, I don't expect you to write everything ;)
-
-> >> I should be able to knock most of this out fairly quickly, but I'll need
-> >> help on some of it.  For example I don't have any first hand experience
-> >> with large high end workloads.  I could make up a plausible theoretical
-> >> example but I'd rather have as many real-world workloads as possible.
-> >> What I have in mind for workload examples is something like the
-> >> following.  It would be great if list members who have one the workloads
-> >> below would contribute their details and pointers, any secret sauce,
-> >> etc.  Thus when we refer someone to this document they know they're
-> >> reading of an actual real world production configuration.  Though I
-> >> don't plan to name sites, people, etc, just the technical configurations.
-> > 
-> > 1. General purpose (i.e. unspecialised) configuration that should be
-> > good for most users.
+> From the description of the commands output clear that there is a loss of
+> log file data. Now I need to restore the file system with a minimum of data
+> loss. Is it possible? What command set correctly for that use?
 > 
-> Format with XFS defaults.  Done. :)
+> PS: output of programs and system info in the bottom of signature.
 > 
-> What detail should go with this?  Are you thinking SOHO server here,
-> single disk web server.  Anything with low IO rate and a smallish disk/RAID?
-
-I'm not really thinking of a specific configuration here. This is
-more a case of "don't [want to] care about optimisation" or "don't
-know enough about the workload to optimise it", etc. So not really a
-specific configuration, but more of "get the basics right"
-configuration guideline.
-
-> >> 1.  Small file, highly parallel, random IO
-> >>  -- mail queue, maildir mailbox storage
-> >>  -- HPC, filesystem as a database
-> >>  -- ??
-> > 
-> > The hot topic of the moment that fits into this category is object
-> > stores for distributed storage. i.e. gluster and ceph running
-> > openstack storage layers like swift to store large numbers of
-> > pictures of cats.
 > 
-> The direction I was really wanting to go here is highlighting the
-> difference between striped RAID and linear concat, how XFS AG
-> parallelism on concat can provide better performance than striping for
-> some workloads, and why.  For a long time I've wanted to create a
-> document about this with graphs containing "disk silo" icons, showing
-> the AGs spanning the striped RAID horizontally and spanning the concat
-> disks vertically, explaining the difference in seek patterns and how
-> they affect a random IO workload.
-
-I would expect that to be part of the "theory of operation" section
-more than an example.
-
-> Maybe I should make concat a separate topic entirely, as it can benefit
-> multiple workload types, from the smallest to the largest storage
-> setups.  XFS' ability to scale IO throughput nearly infinitely over
-> concatenated storage is unique to Linux, and fairly unique to
-> filesystems in general TTBOMK.  It is one of its greatest strengths.
-> I'd like to cover this in good detail.
-
-Right - and that's one of the reasons I mentioned that the NFS
-server setups should be dealt with specially, as they are prime
-candidates for optimisation via linear concatentation of RAID
-stripes rather than nested stripes....
-
-> >> 2.  Virtual machine consolidation w/mixed guest workload
-> > 
-> > There's a whole lot of stuff here that is dependent on exactly how
-> > the VM infrastructure is set up, so this might be difficult to
-> > simplify enough to be useful.
 > 
-> I was thinking along the lines of consolidating lots of relatively low
-> IO throughput guests with thin provisioning, like VPS hosting.  For
-> instance a KVM host and a big XFS, sparse files exported to Linux guests
-> as drives.  Maybe nobody is doing this with XFS.
-
-If you consider me nobody, then nobody is doing that. All my test
-VMs are hosted this way using either sparse or preallocated files.
-Make sure that you describe the use of extent size hints for sparse
-image files to minimise fragmentation....
-
-> >> Lemme know if this is ok or if you'd like it to take a different
-> >> direction, if you have better or additional example workload classes,
-> >> etc.  If mostly ok, I'll get started on the first 2 sections and fill in
-> >> the 3rd as people submit examples.
-> > 
-> > It sounds good to me - I think that the first 2 sections are the
-> > core of the work - it's the theory that is in our heads (i.e. the
-> > black magic) that is simply not documented in a way that people can
-> > use.
+> ?
+>   Sincerely, Dmitry.
 > 
-> Agreed.
 > 
-> I'll get started.
+> uname -a
+> Linux devastator 3.7.10-gentoo #2 SMP Wed Mar 27 13:28:00 MSK 2013 x86_64
+> Intel(R) Xeon(TM) CPU 3.00GHz GenuineIntel GNU/Linux
+> 
+> 
+> xfs_repair -P /dev/sdb1
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>        - zero log...
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_repair.  If you are unable to mount the filesystem, then use
+> the -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
 
-Ok, I'll get a repo and build skeleton together, and we can go from
-there.
+YOu're in the catch-22 state here - the log contains a corruption,
+so it can't be replayed. hence you are going to have to zero the log
+at some point to repair the problem.
+
+> xfs_repair -n /dev/sdb1
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>        - scan filesystem freespace and inode maps...
+> block (3,1498933-1498933) multiply claimed by cnt space tree, state - 2
+> agf_freeblks 259940761, counted 259940776 in ag 3
+> agf_freeblks 255012362, counted 255012365 in ag 4
+> agf_freeblks 260627255, counted 260627372 in ag 5
+> agf_freeblks 255168644, counted 255168626 in ag 2
+> agf_freeblks 207044983, counted 207044984 in ag 6
+> agf_freeblks 243646150, counted 243646100 in ag 1
+> block (0,9288775-9288775) multiply claimed by cnt space tree, state - 2
+> block (0,9292880-9292880) multiply claimed by cnt space tree, state - 2
+> block (0,9311746-9311746) multiply claimed by cnt space tree, state - 2
+> block (0,9313774-9313774) multiply claimed by cnt space tree, state - 2
+> block (0,4010552-4010552) multiply claimed by cnt space tree, state - 2
+> block (0,7294010-7294010) multiply claimed by cnt space tree, state - 2
+> block (0,6907114-6907114) multiply claimed by cnt space tree, state - 2
+> block (0,4058360-4058360) multiply claimed by cnt space tree, state - 2
+> block (0,3891784-3891784) multiply claimed by cnt space tree, state - 2
+> block (0,9322824-9322824) multiply claimed by cnt space tree, state - 2
+> agf_freeblks 228242757, counted 228242913 in ag 0
+> sb_fdblocks 1709684933, counted 1709685157
+
+So what this is telling us is that there are lots of block
+allocations and removals in the log that are being ignored.
+
+>        - found root inode chunk
+> Phase 3 - for each AG...
+>        - scan (but don't clear) agi unlinked lists...
+>        - process known inodes and perform inode discovery...
+>        - agno = 0
+> data fork in ino 16762966 claims free block 16654424
+> bad nblocks 256 for inode 16764668, would reset to 255
+
+That's indicating that the inode has less blocks than it thinks.
+i.e. the allocation of the last block will be lost.
+
+> data fork in ino 16767882 claims free block 9317836
+> data fork in ino 16767882 claims free block 9317837
+
+These should be recovered just fine
+
+> bad nblocks 530 for inode 16767882, would reset to 545
+> data fork in ino 16770934 claims free block 9309594
+> data fork in ino 16770934 claims free block 9309595
+> bad nblocks 2396 for inode 16772596, would reset to 2395
+> data fork in ino 16775619 claims free block 9319785
+> data fork in ino 16775619 claims free block 9319786
+> bad nblocks 6284 for inode 16775619, would reset to 6291
+
+And that's the opposite - a truncate will be lost. Whether the
+truncated space still contains good data, I can't say.
+
+> bad nblocks 103 for inode 16780498, would reset to 102
+> bad nextents 27 for inode 16780498, would reset to 26
+> data fork in ino 16781959 claims free block 7295214
+> data fork in ino 16781959 claims free block 7295215
+> bad nblocks 76 for inode 16781959, would reset to 81
+> bad key in bmbt root (is 1856, would reset to 1844) in inode 16782070 data
+> fork
+
+That's an error in an block map btree block which means it may be
+pointing to bad data now.
+
+.....
+
+> bad magic # 0x20313030 in inode 16927721 (data fork) bmbt block 9305534
+> bad data fork in inode 16927721
+> would have cleared inode 16927721
+
+That's an inode whose block map is corrupt and cannot be recovered
+at all, so the data is lost here.
+
+.....
+> entry "10.6.114.148" at block 297 offset 496 in directory inode 19125
+> references free inode 16927721
+>        would clear inode number in entry at offset 496...
+
+That inode is considered free and would be reclaimed.
+
+> Phase 6 - check inode connectivity...
+>        - traversing filesystem ...
+> entry "10.6.114.148" in directory inode 19125 points to free inode 16927721
+> , would junk entry
+
+and that's cleaning up the directory entry.
+
+> 
+> xfsprogs util?s works fine with kernel 3.7.10 (config kernel params list
+> below):
+> /usr/src/linux-3.7.10-gentoo/.config
+> CONFIG_XFS_FS=y
+> CONFIG_XFS_QUOTA=y
+> CONFIG_XFS_POSIX_ACL=y
+> CONFIG_XFS_RT=y
+> # CONFIG_XFS_DEBUG is not set
+> 
+> xfsprogs util?s hangs in start with kernel 3.10.25 (config kernel params
+> list below):
+> /usr/src/linux-3.10.25-gentoo/.config
+> CONFIG_XFS_FS=y
+> CONFIG_XFS_QUOTA=y
+> CONFIG_XFS_POSIX_ACL=y
+> CONFIG_XFS_RT=y
+> CONFIG_XFS_DEBUG=y
+
+Any reason you are running CONFIG_XFS_DEBUG=y? You shoul dnot do
+that unless you are actively trying to debug a problem as it has
+impact on runtime performance, availability (i.e. it will panic on
+certain errors that can otherwise be handled) and it affects
+allocation algorithms in a way that causes accelerated aging of the
+filesystem....
+
+> Output of log print command I?am upload in web-site:
+> xfs_logprint -d -C ./xfs_log.dump
+> http://yadi.sk/d/Jxv-ItRSGt8vN
+
+I'm not going to be able to do anything with that. Even if I could
+fine the corruption in the log from it, I'd just say "run xfs_repair
+and look at all the inodes that it fixed and determine what was
+lost from that"...
 
 Cheers,
 
