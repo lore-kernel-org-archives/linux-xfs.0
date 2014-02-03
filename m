@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B56B27F85
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 19:16:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9685C304043
-	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 17:16:04 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id Z2eECuuSJz3KB9Dp
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 02 Feb 2014 17:16:03 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: Extended attributes limit in Linux
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <14FE2575-4C84-43B8-9992-F91ABE2B6F26@gmail.com>
-Date: Sun, 2 Feb 2014 18:15:59 -0700
-Message-Id: <83F9F221-9387-47D5-B67C-E9252056E408@colorremedies.com>
-References: <CAMN6oR=a0G6O-3CVVkTwhYKavJTa543U3MLezCM8KW1ASZcPnA@mail.gmail.com>	<52EB64DC.4020603@oracle.com>
-	<1391165083.4275.7.camel@ubuntu>	<52EB960D.607@oracle.com>
-	<1391172723.4275.11.camel@ubuntu>	<52EBA783.1080801@oracle.com>
-	<1391178074.4275.19.camel@ubuntu> <52EBB431.50301@oracle.com>
-	<6C94A326-DADE-4A32-97F6-AE84E9F57777@gmail.com>
-	<1D87A7C9-988F-4F61-A577-67300DAF2554@dubeyko.com>
-	<14FE2575-4C84-43B8-9992-F91ABE2B6F26@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 474067F5E
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 21:19:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DF7B4AC002
+	for <xfs@oss.sgi.com>; Sun,  2 Feb 2014 19:19:35 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	wAFQ6fSbg0mbfc8V for <xfs@oss.sgi.com>;
+	Sun, 02 Feb 2014 19:19:31 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1WAA4E-0006BY-Vw
+	for xfs@oss.sgi.com; Mon, 03 Feb 2014 14:19:27 +1100
+Date: Mon, 3 Feb 2014 14:19:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/5] metadump: discontiguous directory block support
+Message-ID: <20140203031926.GP13997@dastard>
+References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1390472635-17225-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +32,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sun_Blood <sblood@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+ping?
 
-On Feb 2, 2014, at 7:33 AM, Sun_Blood <sblood@gmail.com> wrote:
-> I will make a bug report for rsync also that it should not try to copy files with EA bigger then the destination can handle. But it would be great if XFS could handle this files and be fully compatible with OS X backups.
+On Thu, Jan 23, 2014 at 09:23:50PM +1100, Dave Chinner wrote:
+> Hi folks,
+> 
+> In making xfs_repair handle discontiguous directory blocks properly,
+> it uncovered the fact that xfs_metadump has never handled
+> discontiguous directory blocks properly. It doesn't handle
+> discontiguous block format directories, and there are a couple of
+> other cases where it is just says "too hard" and gives up, leading
+> to un-obfuscated, corrupt or missing directory blocks in the
+> metadump image. xfs/291 on CRC enabled filesystems was causing all
+> three of these conditions to occur.
+> 
+> This patchset fixes metadump to fully support all forms of
+> discontiguous directory blocks. It changes the obfuscation code from
+> reading and extent at a time and trying to slice and dice the
+> objects within it - which will never work for objects that need CRC
+> recalculation as a result of obfuscation - to dealing with
+> individual objects. This does affect IO patterns somewhat - single
+> large contiguous IOs turn into multiple smaller sequential IOs - but
+> it means that we can use the object verifiers to do CRC
+> recalculation correctly.
+> 
+> It also means we can walk the extent tree to gather discontiguous
+> extents into a single buffer to build an object fom multiple IOs.
+> This is what all the other directory block IO does, and we need to
+> do it here too.
+> 
+> The result is that the code is simpler and more obvious in what it
+> does - the "walk over a large extent" code is generic rather than
+> object specific, and the discontiguous block code is separated from
+> the single block object code. Hence both cases are clearer and
+> easier to understand.
+> 
+> And it works, unlike the old code.
+> 
+> FWIW, with this fixed and xfs/291 passing, the only remaining
+> outstanding work that is blocking a 3.2.0 release is to trap IO
+> verifier errors in repair so we repair/rebuild objects based on CRC
+> errors.
+> 
+> Comments, flames, thoughts all welcome.
+> 
+> Cheers,
+> 
+> Dave.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-What application(s) are creating such files on OS X? Or how are they coming to have such large extended attributes?
+-- 
+Dave Chinner
+david@fromorbit.com
 
-
-Chris Murphy
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
