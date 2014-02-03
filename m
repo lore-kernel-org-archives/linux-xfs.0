@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 78F017F54
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 10:07:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0B64DAC002
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 08:07:42 -0800 (PST)
-Received: from internal-smtp3.wesleyan.edu (internal-smtp3.wesleyan.edu
-	[129.133.6.182]) by cuda.sgi.com with ESMTP id 6ebFGHKvsQ67dDEJ
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 702447FD6
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 10:12:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B22430406A
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 08:12:44 -0800 (PST)
+Received: from internal-smtp4.wesleyan.edu (internal-smtp4.wesleyan.edu
+	[129.133.6.200]) by cuda.sgi.com with ESMTP id EodGAgKc3BMyFFTo
 	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 03 Feb 2014 08:07:39 -0800 (PST)
+	<xfs@oss.sgi.com>; Mon, 03 Feb 2014 08:12:42 -0800 (PST)
 From: "C. Morgan Hamill" <chamill@wesleyan.edu>
-In-reply-to: <52ED61C9.8060504@hardwarefreak.com>
+In-reply-to: <20140202212152.GP2212@dastard>
 Subject: Re: Question regarding XFS on LVM over hardware RAID.
 References: <1391005406-sup-1881@al.wesleyan.edu>
 	<52E91923.4070706@sandeen.net>
@@ -21,8 +21,9 @@ References: <1391005406-sup-1881@al.wesleyan.edu>
 	<52EB3B96.7000103@hardwarefreak.com>
 	<1391202273-sup-9265@al.wesleyan.edu>
 	<52ED61C9.8060504@hardwarefreak.com>
-Date: Mon, 03 Feb 2014 11:07:34 -0500
-Message-Id: <1391442947-sup-8195@al.wesleyan.edu>
+	<20140202212152.GP2212@dastard>
+Date: Mon, 03 Feb 2014 11:12:39 -0500
+Message-Id: <1391443675-sup-1730@al.wesleyan.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,62 +37,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan <stan@hardwarefreak.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs <xfs@oss.sgi.com>
 
-Excerpts from Stan Hoeppner's message of 2014-02-01 16:06:17 -0500:
-> Yes, that's one of the beauties of LVM.  However, there are other
-> reasons you may not want to do this.  For example, if you have allocated
-> space from two different JBOD or SAN units to a single LVM volume, and
-> you lack multipath connections, if you have a cable, switch, HBA, or
-> other failure disconnecting one LUN that will wreak havoc on your
-> mounted XFS filesystem.  If you have multipath and the storage device
-> disappears due to some other failure such as backplane,  UPS, etc, you
-> have the same problem.
+Excerpts from Dave Chinner's message of 2014-02-02 16:21:52 -0500:
+> On Sat, Feb 01, 2014 at 03:06:17PM -0600, Stan Hoeppner wrote:
+> > On 1/31/2014 3:14 PM, C. Morgan Hamill wrote:
+> > > So, basically, --dataalignment is my friend during pvcreate and
+> > > lvcreate.
+> > 
+> > If the logical sector size reported by your RAID controller is 512
+> > bytes, then "--dataalignment=9216s" should start your data section on a
+> > RAID60 stripe boundary after the metadata section.
+> > 
+> > Tthe PhysicalExtentSize should probably also match the 4608KB stripe
+> > width, but this is apparently not possible.  PhysicalExtentSize must be
+> > a power of 2 value.  I don't know if or how this will affect XFS aligned
+> > write out.  You'll need to consult with someone more knowledgeable of LVM.
+> 
+> You can't do single IOs of that size, anyway, so this is where the
+> BBWC on the raid controller does it's magic and caches sequntial IOs
+> until it has full stripe writes cached....
 
-Very true; I gather this would only take out any volumes which at least
-partially rest on the failed device, however?  As in, I don't lose the
-whole volume group, correct?
+So I am probably missing something here, could you clarify?  Are you
+saying that I can't do single IOs of that size (by which I take your
+meaning to be IOs as small as 9216 sectors) because my RAID controllers
+controller won't let me (i.e., it will cache anything smaller than the
+stripe size anyway)?  Or are you saying that XFS with these given
+settings won't make writes that small (which seems false, since I'm
+essentially telling it to do writes of precisely that size).  I'm a bit
+unclear on that.
 
-> This isn't a deal breaker.  There are many large XFS filesystems in
-> production that span multiple storage arrays.  You just need to be
-> mindful of your architecture at all times, and it needs to be
-> documented.  Scenario:  XFS unmounts due to an IO error.  You're not yet
-> aware an entire chassis is offline.  You can't remount the filesystem so
-> you start a destructive xfs_repair thinking that will fix the problem.
-> Doing so will wreck your filesystem and you'll likely lose access to all
-> the files on the offline chassis, with no ability to get it back short
-> of some magic and a full restore from tape or D2D backup server.  We had
-> a case similar to this reported a couple of years ago.
+In addition, does this in effect mean that when it comes to LVM, extent
+size makes no difference for alignment purposes?  So I don't have to
+worry about anything other that aligning the beginning and ending of
+logical volumes, volume groups, etc. to 9216 sector multiples?
 
-Oh God, that sounds terrible.  My sysadmininess is wondering why the
-chassis wasn't monitored, but hindsight, etc. etc. ;-)
-
-> If the logical sector size reported by your RAID controller is 512
-> bytes, then "--dataalignment=9216s" should start your data section on a
-> RAID60 stripe boundary after the metadata section.
-
-I see that 9216s == 2608k/512b, but I'm missing something: is the
-default metadata size guaranteed to be less than a single stripe, or is
-there more to it?
-
-Oh, wait, I think I just got it: '--dataalignment' will take care to
-start on some multiple of 9216 sectors, regardless of the size of the
-metadata section. Doy.
-
-> The PhysicalExtentSize should probably also match the 4608KB stripe
-> width, but this is apparently not possible.  PhysicalExtentSize must be
-> a power of 2 value.  I don't know if or how this will affect XFS aligned
-> write out.  You'll need to consult with someone more knowledgeable of LVM.
-
-Makes sense.  If it would have an impact, then I'd probably just end up
-going with RAID 0 on top of 2 or 4 RAID 6 groups, which looks like the
-math would work out there.
-
-> You bet.
-
-Honestly, this is the most helpful and straightforward I've ever found
-any project's mailing list, so kudos++.
+Thanks again!
 --
 Morgan Hamill
 
