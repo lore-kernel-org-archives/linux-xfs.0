@@ -1,34 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 12AFD7F4E
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 06:50:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CA1F48F8054
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 04:50:43 -0800 (PST)
-Received: from mail-ea0-f175.google.com (mail-ea0-f175.google.com
-	[209.85.215.175]) by cuda.sgi.com with ESMTP id
-	0wqUIfGfsIHPO75l (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Feb 2014 04:50:41 -0800 (PST)
-Received: by mail-ea0-f175.google.com with SMTP id z10so4376587ead.34
-	for <xfs@oss.sgi.com>; Tue, 04 Feb 2014 04:50:40 -0800 (PST)
-Date: Tue, 4 Feb 2014 04:52:20 -0800
-From: Kent Overstreet <kmo@daterainc.com>
-Subject: Re: [RFC] unifying write variants for filesystems
-Message-ID: <20140204125220.GB12440@kmo-pixel>
-References: <CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
-	<20140118074649.GF10323@ZenIV.linux.org.uk>
-	<CA+55aFzM0N7WjqnLNnuqTkbj3iws9f3bYxei=ZBCM8hvps4zYg@mail.gmail.com>
-	<20140118201031.GI10323@ZenIV.linux.org.uk>
-	<20140119051335.GN10323@ZenIV.linux.org.uk>
-	<20140120135514.GA21567@infradead.org>
-	<CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
-	<20140201224301.GS10323@ZenIV.linux.org.uk>
-	<52EFC271.3090205@oracle.com>
-	<20140204124409.GG10323@ZenIV.linux.org.uk>
+	by oss.sgi.com (Postfix) with ESMTP id 14B127F51
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 09:10:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 000EE8F8052
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 07:10:24 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id FklukXKBRD94116G (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 04 Feb 2014 07:10:23 -0800 (PST)
+Message-ID: <52F102D3.9020507@oracle.com>
+Date: Tue, 04 Feb 2014 23:10:11 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140204124409.GG10323@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] xfs: improve xfs_bitmap_empty()
+References: <52EBAF91.10608@oracle.com> <52EBBC3D.5030507@sandeen.net>
+	<52EBC103.5050006@oracle.com> <52EBC1AF.6020000@sandeen.net>
+	<52EBC67B.7020806@oracle.com> <52EBCF12.1020403@sgi.com>
+	<52EC6EA0.9000501@oracle.com> <20140202215231.GS2212@dastard>
+In-Reply-To: <20140202215231.GS2212@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,40 +31,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Jens Axboe <axboe@kernel.dk>, Steve French <sfrench@samba.org>, Sage Weil <sage@inktank.com>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Zach Brown <zab@zabbo.net>, Linus Torvalds <torvalds@linux-foundation.org>, Anton Altaparmakov <anton@tuxera.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Feb 04, 2014 at 12:44:09PM +0000, Al Viro wrote:
-> On Mon, Feb 03, 2014 at 10:23:13AM -0600, Dave Kleikamp wrote:
+
+On 02/03 2014 05:52 AM, Dave Chinner wrote:
+> On Sat, Feb 01, 2014 at 11:48:48AM +0800, Jeff Liu wrote:
+>> On 02/01 2014 00:28 AM, Mark Tinguely wrote:
+>>> On 01/31/14 09:51, Jeff Liu wrote:
+>>>> On 01/31 2014 23:30 PM, Eric Sandeen wrote:
+>>>>> On 1/31/14, 9:28 AM, Jeff Liu wrote:
+>>>>>> Well, when I looking through our bitmap source, I once thought if
+>>>>>> we can replace the current code with the generic bitmap library.
+>>>>>> However, our map is uint rather than unsigned long...
+>>>>>
+>>>>> Technically the unsigned long (pointer) is just the bitmap address,
+>>>>> I think.
+>>>>
+>>>> Yeah, so this might worth to try on long terms.
+>>>
+>>> The blf_data_map[] is int aligned, not long aligned.
+>>> You could reflect the alignment difference in the offset or
+>>> change the alignment in the structure.
+>>
+>> For now, I think we can not simply turn to generic bitmap just because
+>> of the alignment difference on 64-bits OS.
 > 
-> > Thanks for the feedback. I'd been asking for feedback on this patchset
-> > for some time now, and have not received very much.
-> > 
-> > This is all based on some years-old work by Zach Brown that he probably
-> > wishes would have disappeared by now. I pretty much left what I could
-> > alone since 1) it was working, and 2) I didn't hear any objections
-> > (until now).
-> > 
-> > It's clear now that the patchset isn't close to mergable, so treat it
-> > like a proof-of-concept and we can come up with a better container and
-> > read/write interface. I won't respond individually to your comments, but
-> > will take them all into consideration going forward.
+> The bitmaps end up on disk (in the log), so replacing the
+> implementation with a generic implementation is something we need to
+> be very careful about.
 > 
-> FWIW, I suspect that the right way to deal with dio side of things would
-> be a primitive along the lines of "get first N <page,start,len> for the
-> iov_iter".  With get_user_pages_fast() for iovec-backed ones and "just
-> grab references" for array-of-page-subranges ones.
+> IMO, we should be getting rid of the bitmaps from the
+> xfs_buf_log_item first (by moving to a low byte/high byte offset
+> range), then we only have to worry about bitmaps when doing log
+> recovery after a kernel upgrade on a filesystem with a dirty log.
+> 
+> Getting rid of the bitmaps also solves a scalability problem with
+> large block sizes tracking all the changes in buffer - we burn a
+> huge amount of CPU walking bits when logging 64k directory buffers:
+> 
+> +  21.19%  [kernel]  [k] xfs_dir3_leaf_check_int
+> +  12.20%  [kernel]  [k] memcpy
+> +   9.29%  [kernel]  [k] xfs_next_bit
+> +   5.04%  [kernel]  [k] xfs_buf_offset
+> +   3.63%  [kernel]  [k] xfs_buf_item_format
+> +   3.59%  [kernel]  [k] xfs_buf_item_size_segment
+> 
+> The logging of xfs_buf_log_items there is consuming >30% of the CPU
+> being used under this workload (xfs_dir3_leaf_check_int() is high
+> because this is from a debug kernel.)
+> 
+> IOWs, we should work to remove the bitmap code from general
+> operations first, then replace the remaining legacy log recovery
+> code with the generic bitmap implemention....
 
-I'm on vacation in Switzerland, didn't bring my adderall, and
-direct-io.c makes my head hurt at the best of times, but - have a look
-at my in-progress dio rewrite:
+Sorry for my too late response as I was on vacations.
 
-http://evilpiepirate.org/git/linux-bcache.git/commit/?h=block_stuff&id=ca09c20f08efd640f255fabd778de0dbf43ed1da
+I only moved a little progress after a quick hacking, but I can see the point
+in getting rid of the bitmap, just give me yet a week once I was totally return
+to work.
 
-Where I'm headed with things is to just start out by allocating bios and
-pinning pages into them, and _then_ doing all the fun "ask the
-filesystem where it goes and what to do with it" dance. The goal is to
-push the bios as far up the stack as possible.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
