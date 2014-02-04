@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 14B127F51
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 09:10:28 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id D05F27F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 09:17:42 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 000EE8F8052
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 07:10:24 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id FklukXKBRD94116G (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8F0E88F8050
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 07:17:42 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id lqwxkyd5P6AHQ45C (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Feb 2014 07:10:23 -0800 (PST)
-Message-ID: <52F102D3.9020507@oracle.com>
-Date: Tue, 04 Feb 2014 23:10:11 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Tue, 04 Feb 2014 07:17:40 -0800 (PST)
+Date: Tue, 4 Feb 2014 15:17:28 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [RFC] unifying write variants for filesystems
+Message-ID: <20140204151728.GH10323@ZenIV.linux.org.uk>
+References: <20140118074649.GF10323@ZenIV.linux.org.uk>
+	<CA+55aFzM0N7WjqnLNnuqTkbj3iws9f3bYxei=ZBCM8hvps4zYg@mail.gmail.com>
+	<20140118201031.GI10323@ZenIV.linux.org.uk>
+	<20140119051335.GN10323@ZenIV.linux.org.uk>
+	<20140120135514.GA21567@infradead.org>
+	<CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
+	<20140201224301.GS10323@ZenIV.linux.org.uk>
+	<52EFC271.3090205@oracle.com>
+	<20140204124409.GG10323@ZenIV.linux.org.uk>
+	<20140204125220.GB12440@kmo-pixel>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: improve xfs_bitmap_empty()
-References: <52EBAF91.10608@oracle.com> <52EBBC3D.5030507@sandeen.net>
-	<52EBC103.5050006@oracle.com> <52EBC1AF.6020000@sandeen.net>
-	<52EBC67B.7020806@oracle.com> <52EBCF12.1020403@sgi.com>
-	<52EC6EA0.9000501@oracle.com> <20140202215231.GS2212@dastard>
-In-Reply-To: <20140202215231.GS2212@dastard>
+Content-Disposition: inline
+In-Reply-To: <20140204125220.GB12440@kmo-pixel>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,69 +38,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Kent Overstreet <kmo@daterainc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Steve French <sfrench@samba.org>, Sage Weil <sage@inktank.com>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Zach Brown <zab@zabbo.net>, Linus Torvalds <torvalds@linux-foundation.org>, Anton Altaparmakov <anton@tuxera.com>
 
+On Tue, Feb 04, 2014 at 04:52:20AM -0800, Kent Overstreet wrote:
 
-On 02/03 2014 05:52 AM, Dave Chinner wrote:
-> On Sat, Feb 01, 2014 at 11:48:48AM +0800, Jeff Liu wrote:
->> On 02/01 2014 00:28 AM, Mark Tinguely wrote:
->>> On 01/31/14 09:51, Jeff Liu wrote:
->>>> On 01/31 2014 23:30 PM, Eric Sandeen wrote:
->>>>> On 1/31/14, 9:28 AM, Jeff Liu wrote:
->>>>>> Well, when I looking through our bitmap source, I once thought if
->>>>>> we can replace the current code with the generic bitmap library.
->>>>>> However, our map is uint rather than unsigned long...
->>>>>
->>>>> Technically the unsigned long (pointer) is just the bitmap address,
->>>>> I think.
->>>>
->>>> Yeah, so this might worth to try on long terms.
->>>
->>> The blf_data_map[] is int aligned, not long aligned.
->>> You could reflect the alignment difference in the offset or
->>> change the alignment in the structure.
->>
->> For now, I think we can not simply turn to generic bitmap just because
->> of the alignment difference on 64-bits OS.
+> I'm on vacation in Switzerland, didn't bring my adderall, and
+> direct-io.c makes my head hurt at the best of times, but - have a look
+> at my in-progress dio rewrite:
 > 
-> The bitmaps end up on disk (in the log), so replacing the
-> implementation with a generic implementation is something we need to
-> be very careful about.
+> http://evilpiepirate.org/git/linux-bcache.git/commit/?h=block_stuff&id=ca09c20f08efd640f255fabd778de0dbf43ed1da
 > 
-> IMO, we should be getting rid of the bitmaps from the
-> xfs_buf_log_item first (by moving to a low byte/high byte offset
-> range), then we only have to worry about bitmaps when doing log
-> recovery after a kernel upgrade on a filesystem with a dirty log.
-> 
-> Getting rid of the bitmaps also solves a scalability problem with
-> large block sizes tracking all the changes in buffer - we burn a
-> huge amount of CPU walking bits when logging 64k directory buffers:
-> 
-> +  21.19%  [kernel]  [k] xfs_dir3_leaf_check_int
-> +  12.20%  [kernel]  [k] memcpy
-> +   9.29%  [kernel]  [k] xfs_next_bit
-> +   5.04%  [kernel]  [k] xfs_buf_offset
-> +   3.63%  [kernel]  [k] xfs_buf_item_format
-> +   3.59%  [kernel]  [k] xfs_buf_item_size_segment
-> 
-> The logging of xfs_buf_log_items there is consuming >30% of the CPU
-> being used under this workload (xfs_dir3_leaf_check_int() is high
-> because this is from a debug kernel.)
-> 
-> IOWs, we should work to remove the bitmap code from general
-> operations first, then replace the remaining legacy log recovery
-> code with the generic bitmap implemention....
+> Where I'm headed with things is to just start out by allocating bios and
+> pinning pages into them, and _then_ doing all the fun "ask the
+> filesystem where it goes and what to do with it" dance. The goal is to
+> push the bios as far up the stack as possible.
 
-Sorry for my too late response as I was on vacations.
+How far would that be?  E.g. for something like NFS it would be
+completely wrong.  AFAICS, what you are doing there isn't incompatible
+with what I described; bio_get_user_pages() would just use that
+primitive (in fact, the loop in it is a damn good starting point for
+implementation of that primitive for iovec-based instances of iov_iter).
 
-I only moved a little progress after a quick hacking, but I can see the point
-in getting rid of the bitmap, just give me yet a week once I was totally return
-to work.
+I'm not too fond of the names, TBH - it might make sense to rename
+iov_iter to something like mem_stream; maybe even leave iov_iter as-is
+for whatever users might remain, but for now I don't see any that
+would fundamentally depend on the thing being iovev-backed...
+And bio_vec is a bad misnomer - it's not related to block subsystem at
+all.  Sure, it had originated there, but...  Hell knows; by now it's
+probably too much PITA to rename (we have about half a thousand instances
+in the tree).  Pity, that...
 
+I definitely don't buy "bio is a natural object for carrying an array
+of pieces of pages"; not sure if that's what you implied in earlier
+thread, but it has too much baggage from block subsystem *and* it lacks
+the things we may want to associate with individual elements of such
+array (starting with "how can I steal that page?" method).
 
-Thanks,
--Jeff
+I'm not sure if you'd been reading that thread back when it started;
+my interest in that thing is mostly because I want to get rid of
+duplication (and inconsistencies) between ->aio_write() and ->splice_write().
+I hadn't been watching the threads around iov_iter last year; hch has
+pointed to those when I proposed to use an object that could carry
+both iovec and (possibly extended) analog of bio_vec and make
+generic_file_aio_write() et.al. agnostic wrt what's behind that object.
+Then we could use the same method to implement both ->aio_write() and
+->splice_write() in a lot of cases.  iov_iter is a good starting point
+for such object, and for now I'm mostly doing stuff that encapsulates
+the knowledge of its guts (including "there's an iovec behind it").
+Those cleanups aside (and they make sense on their own, regardless of
+where the rest goes), it might make sense to add a copy of struct iov_iter
+that would have a tagged union in it (originally just for iovec, with
+IOVEC_READ/IOVEC_WRITE as possible tags) and switch a bunch of places that
+do not look into the guts of iov_iter to that thing.  I'm not sure if
+there will be any other places left (so far it looks like we'll be able
+to get away with a reasonable set of primitives), but... we'll see.
+For now the whole thing is fairly experimental and it will almost certainly
+be reordered, etc. quite a few times.  I'm trying to keep the part of
+queue in vfs.git#iov_iter more or less stable (with a lot of stuff in
+flux sitting in the local one), but it's not at the state where I'd
+recommend merges from it; there will be rebases, etc.
+
+BTW, folks, any suggestions about the name of that "memory stream" thing?
+struct iov_iter really implies iterator for iovec and more generic name
+would probably be better...  struct mem_stream would probably do if nobody
+comes up with better variant, but it's long and somewhat clumsy...
 
 _______________________________________________
 xfs mailing list
