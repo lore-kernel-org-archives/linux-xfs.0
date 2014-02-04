@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 17931800B
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 18:47:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C8EBE7F37
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 21:49:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DD3B28F8037
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 16:47:28 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3nLiGugt19hr59vx for <xfs@oss.sgi.com>;
-	Mon, 03 Feb 2014 16:47:27 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1WAUAb-0000JY-Ob
-	for xfs@oss.sgi.com; Tue, 04 Feb 2014 11:47:21 +1100
-Date: Tue, 4 Feb 2014 11:47:21 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: master branch updated to 6e79202
-Message-ID: <20140204004721.GY13997@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A3F0A8F8039
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 19:49:35 -0800 (PST)
+Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com
+	[209.85.216.172]) by cuda.sgi.com with ESMTP id
+	GUmGuYz3I5lXJHE8 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 03 Feb 2014 19:49:34 -0800 (PST)
+Received: by mail-qc0-f172.google.com with SMTP id c9so12911891qcz.31
+	for <xfs@oss.sgi.com>; Mon, 03 Feb 2014 19:49:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20140203231737.GV13997@dastard>
+References: <1391319958-3275-1-git-send-email-linkinjeon@gmail.com>
+	<20140203231737.GV13997@dastard>
+Date: Tue, 4 Feb 2014 12:49:33 +0900
+Message-ID: <CAKYAXd_ags=K+OAcJoRHdTFLuU7vUbR+afdmpR2sj3jgTeQnPA@mail.gmail.com>
+Subject: Re: [PATCH RESEND 5/10] xfstest: shared/001: Standard collapse range
+	tests
+From: Namjae Jeon <linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +33,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
 
-Hi Folks,
+2014-02-04, Dave Chinner <david@fromorbit.com>:
+> On Sun, Feb 02, 2014 at 02:45:58PM +0900, Namjae Jeon wrote:
+>> From: Namjae Jeon <namjae.jeon@samsung.com>
+>>
+>> This testcase(001) tries to test various corner cases
+>> for fcollapse range functionality over different type of extents.
+>>
+>> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+>> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+>
+> Couple of things:
+>
+>>  			-c "$map_cmd -v" $testfile | $filter_cmd
+>>  		[ $? -ne 0 ] && die_now
+>>  		_md5_checksum $testfile
+>> @@ -415,10 +425,10 @@ _test_generic_punch()
+>>  		if [ "$remove_testfile" ]; then
+>>  			rm -f $testfile
+>>  		fi
+>> -		$XFS_IO_PROG -f -c "truncate 20k" \
+>> -			-c "$alloc_cmd 0 8k" \
+>> -			-c "pwrite 8k 8k" $sync_cmd \
+>> -			-c "$zero_cmd 4k 8k" \
+>> +		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
+>> +			-c "$alloc_cmd 0 $(($multiple * 8))k" \
+>> +			-c "pwrite $(($multiple * 8))k $(($multiple * 8))k" $sync_cmd \
+>> +			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
+>>  			-c "$map_cmd -v" $testfile | $filter_cmd
+>
+Hi. Dave.
+> This is unreadable, and therefore I'd consider that these changes
+> render _test_generic_punch unmaintainable.
+>
+> Either it needs tobe factored to be more readable, or we need a more
+> readable way of representing the offsets and sizes if we want them
+> to be variable. For example:
+>
+> _4k="$((multiple * 4))k"
+> _8k="$((multiple * 8))k"
+> _20k="$((multiple * 20))k"
+>
+> leads to:
+>
+> 		$XFS_IO_PROG -f -c "truncate $_20k" \
+> 			-c "$alloc_cmd 0 $_8k" \
+> 			-c "pwrite $_8k $_8k" $sync_cmd \
+> 			-c "$zero_cmd $_4k $_8k" \
+> 			-c "$map_cmd -v" $testfile | $filter_cmd
+>
+> which is still readable and allows us to arbitrarily scale the
+> parameters. It even allows us to handle different filesystem block
+> sizes if we really want to....
+Okay, I will change it as you suggest.
+>
+>>  		-c "$map_cmd -v" $testfile | $filter_cmd
+>>  	[ $? -ne 0 ] && die_now
+>>  	_md5_checksum $testfile
+>>
+>> +	# If zero_cmd is fcollpase, don't check unaligned offsets
+>> +	if [ "$zero_cmd" == "fcollapse" ]; then
+>> +		if [ "$remove_testfile" ]; then
+>> +			rm -f $testfile
+>> +			rm -f $testfile.2
+>> +		fi
+>> +		return
+>> +	fi
+>
+> No need to remove the test files here - we remove them at
+> test startup to ensure we have a known initial state....
+Okay.
+>
+>> +0: [0..63]: extent
+>> +bb7df04e1b0a2570657527a7e108ae23
+>> +	13. data -> unwritten -> data
+>> +0: [0..63]: extent
+>> +0f0151cbed83e4bf6e5bde26e82ab115
+>> +	14. data -> hole @ EOF
+>> +fallocate: Invalid argument
+>> +0: [0..159]: extent
+>
+> This error appears in all the golden outputs. If it's correct, then
+> perhaps it should be filtered out or commented somewhere to explain
+> why it is expected.
+Okay, I will add the comments to explain about this.
 
-The xfsprogs repository at git://oss.sgi.com/xfs/cmds/xfsprogs has
-just been updated.
-
-The new head of the master branch is commit:
-
-6e79202 metadump: fully support discontiguous directory blocks
-
-New Commits:
-
-Dave Chinner (9):
-      [aaca101] xfs_repair: add support for validating dirent ftype field
-      [7e3ab89] libxfs: add a flags field to libxfs_getbuf_map
-      [6d5e5ee] libxfs: remove map from libxfs_readbufr_map
-      [dd9093d] xfs_repair: fix discontiguous directory block support
-      [878afc6] metadump: sanitise write_buf/index return values
-      [1516a5b] metadump: support writing discontiguous io cursors
-      [d452ae4] metadump: separate single block objects from multiblock objects
-      [ed73748] metadump: walk single fsb objects a block at a time
-      [6e79202] metadump: fully support discontiguous directory blocks
-
-
-Code Diffstat:
-
- db/io.c              |   4 +-
- db/metadump.c        | 573 ++++++++++++++++++++++++++++++---------------------
- include/libxfs.h     |  11 +-
- include/xfs_dir2.h   |   3 +
- libxfs/rdwr.c        |  27 +--
- libxfs/trans.c       |   4 +-
- libxfs/xfs_dir2.c    |  16 ++
- repair/dino_chunks.c |  11 +
- repair/incore.h      |  27 ++-
- repair/incore_ino.c  |  30 ++-
- repair/phase6.c      | 246 +++++++++++++++-------
- repair/prefetch.c    | 120 +++++++++--
- repair/scan.c        |   4 +-
- 13 files changed, 710 insertions(+), 366 deletions(-)
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks for your review :)
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
 _______________________________________________
 xfs mailing list
