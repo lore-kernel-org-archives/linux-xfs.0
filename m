@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0F7B97F53
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 11:53:09 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B33AC7F58
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 12:00:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0339C30408D
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 09:53:08 -0800 (PST)
-Received: from mail-ee0-f44.google.com (mail-ee0-f44.google.com
-	[74.125.83.44]) by cuda.sgi.com with ESMTP id rw39cqlFFAWQo3qr
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 04 Feb 2014 09:53:06 -0800 (PST)
-Received: by mail-ee0-f44.google.com with SMTP id c13so4447792eek.31
-	for <xfs@oss.sgi.com>; Tue, 04 Feb 2014 09:53:05 -0800 (PST)
-Message-ID: <4D99B558BC4F49568900AE5DEA05DE86@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <20140124025846.GL27606@dastard>
-	<CAOcd+r1wUaMyrhvkq++WoswM1ND9+VZJNx0mZeC1Uiu663xbtg@mail.gmail.com>
-	<52E95EB8.8080003@sandeen.net> <20140202223525.GW2212@dastard>
-In-Reply-To: <20140202223525.GW2212@dastard>
-Subject: Re: [ANNOUNCE] xfstests updated to 197f773
-Date: Tue, 4 Feb 2014 19:53:04 +0200
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8CB388F8040
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 10:00:55 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id rAJcIUkaCFdZBHy2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 04 Feb 2014 10:00:54 -0800 (PST)
+Date: Tue, 4 Feb 2014 18:00:40 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [RFC] unifying write variants for filesystems
+Message-ID: <20140204180040.GI10323@ZenIV.linux.org.uk>
+References: <20140118201031.GI10323@ZenIV.linux.org.uk>
+	<20140119051335.GN10323@ZenIV.linux.org.uk>
+	<20140120135514.GA21567@infradead.org>
+	<CA+55aFzEA-eM9v2PvsWx4v4ANaKXuRGYyGCkegJg++rhtHvnig@mail.gmail.com>
+	<20140201224301.GS10323@ZenIV.linux.org.uk>
+	<52EFC271.3090205@oracle.com>
+	<20140204124409.GG10323@ZenIV.linux.org.uk>
+	<20140204125220.GB12440@kmo-pixel>
+	<20140204151728.GH10323@ZenIV.linux.org.uk>
+	<20140204172723.GA11325@lenny.home.zabbo.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140204172723.GA11325@lenny.home.zabbo.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,157 +34,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Zach Brown <zab@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Steve French <sfrench@samba.org>, Sage Weil <sage@inktank.com>, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Kent Overstreet <kmo@daterainc.com>, Dave Kleikamp <dave.kleikamp@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Anton Altaparmakov <anton@tuxera.com>
 
-Hi Eric and Dave,
-Thank you for your comments.
+On Tue, Feb 04, 2014 at 09:27:23AM -0800, Zach Brown wrote:
+> I think Kent is talking about what happens after the user addresses are
+> consumed.  Turning dio into more of a bio mapping and redirection engine
+> would use more of the bio machinery instead of the bits that dio has
+> implemented itself with state in struct dio that hangs off the bios.  I
+> imagine it'd still make sense to clean up the addresses/pages arguments
+> that feed that engine.  (And give another entry point that already has
+> bios for callers like loop, etc.)
+> 
+> > BTW, folks, any suggestions about the name of that "memory stream" thing?
+> > struct iov_iter really implies iterator for iovec and more generic name
+> > would probably be better...  struct mem_stream would probably do if nobody
+> > comes up with better variant, but it's long and somewhat clumsy...
+> 
+> I don't like 'stream'.  To me that sounds more strictly advancing than I
+> think this'd be capable of.  Maybe something dirt simple like 'mem_vec'?
+> With 'mvec_' call prefixes?
 
-I don't know whether my information is of any value to you or anybody else, 
-because I am using an EOL kernel 3.8.13.
-I have run xfstests several times on two different kinds of block devices. 
-One is a local file attached to a KVM instance through virtio, second is a 
-custom Device Mapper. My local.config file is:
-export TEST_DEV=/dev/mapper/vol-0x5
-export SCRATCH_DEV=/dev/mapper/vol-0x6
-export TEST_DIR=/mnt/TEST_DIR
-export SCRATCH_MNT=/mnt/SCRATCH_DIR
-export FSTYP="xfs"
+Umm...  Frankly, I would rather discourage attempts to read the same data
+twice, if only on the naming level...
 
-A good amount of tests did not run, because, e.g., I do not have dump device 
-etc. I list below the tests that failed for me consistently. I analyzed to a 
-very limited extent these failures. At some point I decided to focus on 
-making the tests that pass on a pristine XFS from my kernel, pass on XFS 
-with my changes.
+Case in point: commit 1c1c87 (btrfs: sanitize BTRFS_IOC_FILE_EXTENT_SAME).
+I really wonder how many places have similar holes.  What used to happen
+was this: we have a userland structure, with a variable-sized array hanging
+off its arse.  The size of array is determined by the field in fixed-sized
+header.  We copy the header in, decide what size the whole thing should have,
+and do memdup_user() to bring everything in.  Very convenient, since at that
+point we have a pointer to that struct-with-array in the kernel space.
+Attacker manages to increase the 'desc_count' field between two
+copy_from_user()... and the sucker proceeds to loop over the array in
+kernel-side copy, using the ->desc_count of that copy as the upper limit
+of the loop.  Oops - in the best case, that is.
 
-xfstests/xfsprogs/xfsdumps were built from latest git. fio was build on a 
-"golden" commit aeb32dfccbd05.
-
-tests/generic:
-generic/091 - dowrite: write: Invalid argument
-generic/204 - echo: write error: No space left on device
-generic/240 - silence is golden, but then: AIO write offset 512 expected 
-4096 got -22 ...
-generic/263 - ???
-generic/299 - fio crash
-generic/300 - fio crash
-generic/314 - need XFS fix for that, which is not in kernel 3.8.13
-
-tests/xfs:
-xfs/016 - log size 853 blocks too small, minimum size is 1605 blocks
-xfs/018 - ???
-xfs/033 - Corrupting root inode - setting bits to 0, xfsrepair: 
-xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
-xfs/041 - for some reason, in my case the log occupies much more blocks, and 
-the 32-mb FS has no free space, so fill2fs fails
-xfs/073 - after copying, the target device has dirty log..
-xfs/081 - logprint with quotas
-xfs/082 - v2 stripe logs with logprint
-xfs/096 - mkfs.xfs: Specified data stripe width 520 is not the same as the 
-volume stripe width 1024
-xfs/104 - log size 1280 blocks too small, minimum size is 1605 blocks
-xfs/109 - fails with ENOSPC
-xfs/111 - Overwrote IN @offset 16384
-xfs/119 - log size 1200 blocks too small, minimum size is 1968 blocks
-xfs/122 - sizes/offsets of some structs/fields differ
-xfs/136 - difference in internal structure's content
-xfs/171 - failed, 4 streams with matching AGs
-xfs/172 - expected failure, matching AGs
-xfs/199 - different feature flags, like 0x8a instead of 0xa
-xfs/201 - pwrite64: Invalid argument
-xfs/206 - existing superblock read failed: Invalid argument
-xfs/216 - number of blocks for FS's up to 64g is 12800 (constant); fssize=1g 
-existing superblock read failed: Invalid argument
-xfs/250 - xfs_repair: read failed: Invalid argument, _check_xfs_filesystem: 
-filesystem on /mnt/TEST_DIR/250.fs is inconsistent (r) (see 
-/mnt/work/alex/xfstests/results//xfs/250.full)
-xfs/262 - hard limit 0 bytes, expected 524288000
-xfs/279 - mkfs failures and ERROR: Module scsi_debug is in use
-xfs/291 - *** glibc detected *** xfs_repair: double free or corruption 
-(!prev): 0x00007fbd3c0008c0 ***
-xfs/292 - output differs only in spaces
-xfs/296 - output is identical, except missing: missing: 
-RESTORE_DIR/DUMP_SUBDIR/testfile cap_setgid,cap_setuid+ep
-xfs/297 - output is identical, at the end: _check_xfs_filesystem: filesystem 
-on /dev/vdb is inconsistent (c) (see 
-/mnt/work/alex/xfstests/results//xfs/297.full)
-xfs/298 - single difference: core.nextents = 1 vs 0
-
-xfs/306 doesn't fail, but sometimes triggers a memleak in xfs_trans
-
-
-Thanks,
-Alex.
-
-
-
------Original Message----- 
-From: Dave Chinner
-Sent: 03 February, 2014 12:35 AM
-To: Eric Sandeen
-Cc: Alex Lyakas ; xfs@oss.sgi.com
-Subject: Re: [ANNOUNCE] xfstests updated to 197f773
-
-On Wed, Jan 29, 2014 at 02:04:08PM -0600, Eric Sandeen wrote:
-> On 1/29/14, 1:55 PM, Alex Lyakas wrote:
-> > Hi Dave,
-> > are all tests in xfstests (those relevant for XFS) in principle
-> > supposed to pass on XFS?
-> > I am running these tests on a pristine XFS from kernel 3.8.13
-> > (srcversion 9862FA08CF42E06A4151111) and I get:
-> >
-> > root@vc-13-12-1095-35-dev:/mnt/work/alex/xfstests# ./check 
-> > tests/generic/013
-> > FSTYP         -- xfs (non-debug)
-> > PLATFORM      -- Linux/x86_64 vc-13-12-1095-35-dev 3.8.13-030813-generic
-> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-> > MOUNT_OPTIONS -- /dev/vdb /mnt/SCRATCH_DIR
-> >
-> > generic/013      34s
-> > _check_xfs_filesystem: filesystem on /dev/vda is inconsistent (c) (see
-> > /mnt/work/alex/xfstests/results//generic/013.full)
->
-> uh, so it failed
->
-> > Ran: generic/013
-> > Passed all 1 tests
->
-> but it passed?  ;)
-
-It passed the test, but failed the post test filesystem checks.
-
-> The fact that you saw:
->
-> > generic/013      34s
->
-> and not:
->
-> > generic/013      34s ... 33s
-> or
-> > generic/013      34s ... output mismatch
->
-> or similar, makes me think the test did not even start, and /dev/vda was
-> corrupted before you even started the test, but I'm not certain.
-
-No, what that means is that there was no results/check.time file
-that had previous runtime information in it. i.e. this is the first
-time the test was run, or that it has always failed like this in the
-past on this machine.
-
-As it is:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com 
+Double reads really ought to raise red flags on review.  I'm not saying that
+they should be hard to do (after all, the fix in that commit *does* read the
+same thing twice), but it's better if they are not used without thinking.
+And no, I'm not suggesting to make ioctls use iov_iter/whatnot - it's just
+an example of the class of bugs.  I wouldn't be surprised to find ->write()
+instances in drivers suffering the same problem...
 
 _______________________________________________
 xfs mailing list
