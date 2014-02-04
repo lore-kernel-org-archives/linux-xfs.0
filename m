@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 53C9F7F53
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 11:25:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0113DAC003
-	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 09:25:20 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 640A17F51
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 11:25:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 01C4DAC003
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 09:25:18 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id h8aYfobZzVeZL81M (version=TLSv1 cipher=AES256-SHA
+	ESMTP id 6Hi8otPwcU9eSTip (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Feb 2014 09:25:16 -0800 (PST)
-Message-Id: <20140204172516.641738827@bombadil.infradead.org>
-Date: Tue, 04 Feb 2014 09:24:04 -0800
+	Tue, 04 Feb 2014 09:25:17 -0800 (PST)
+Message-Id: <20140204172516.456901390@bombadil.infradead.org>
+Date: Tue, 04 Feb 2014 09:24:03 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/3] xfs: always use unwritten extents for direct I/O writes
+Subject: [PATCH 1/3] direct-io: add flag to allow aio writes beyond i_size
 References: <20140204172402.380571745@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0002-xfs-always-use-unwritten-extents-for-direct-I-O-writ.patch
+	filename=0001-direct-io-add-flag-to-allow-aio-writes-beyond-i_size.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,53 +32,59 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 Cc: Sergey Meirovich <rathamahata@gmail.com>
 
-To allow aio writes beyond i_size we need to create unwritten extents for
-newly allocated blocks, similar to how we already do inside i_size.
-
-Instead of adding another special case we now use unwritten extents
-unconditionally.  This also marks the end of directly allocation data
-extents in all of XFS - we now always use either delalloc or unwritten
-extents.
+Some filesystems can handle direct I/O writes beyond i_size safely,
+so allow them to opt into receiving them.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iomap.c |   10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ fs/direct-io.c     |   18 ++++++++++++------
+ include/linux/fs.h |    3 +++
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 22d1cbe..3b80eba 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -128,7 +128,6 @@ xfs_iomap_write_direct(
- 	xfs_fsblock_t	firstfsb;
- 	xfs_extlen_t	extsz, temp;
- 	int		nimaps;
--	int		bmapi_flag;
- 	int		quota_flag;
- 	int		rt;
- 	xfs_trans_t	*tp;
-@@ -200,18 +199,15 @@ xfs_iomap_write_direct(
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 0e04142..11882e8 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -1194,13 +1194,19 @@ do_blockdev_direct_IO(int rw, struct kiocb *iocb, struct inode *inode,
+ 	}
  
- 	xfs_trans_ijoin(tp, ip, 0);
- 
--	bmapi_flag = 0;
--	if (offset < XFS_ISIZE(ip) || extsz)
--		bmapi_flag |= XFS_BMAPI_PREALLOC;
--
  	/*
- 	 * From this point onwards we overwrite the imap pointer that the
- 	 * caller gave to us.
+-	 * For file extending writes updating i_size before data
+-	 * writeouts complete can expose uninitialized blocks. So
+-	 * even for AIO, we need to wait for i/o to complete before
+-	 * returning in this case.
++	 * For file extending writes updating i_size before data writeouts
++	 * complete can expose uninitialized blocks in dumb filesystems.
++	 * In that case we need to wait for I/O completion even if asked
++	 * for an asynchronous write.
  	 */
- 	xfs_bmap_init(&free_list, &firstfsb);
- 	nimaps = 1;
--	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb, bmapi_flag,
--				&firstfsb, 0, imap, &nimaps, &free_list);
-+	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-+				XFS_BMAPI_PREALLOC, &firstfsb, 0,
-+				imap, &nimaps, &free_list);
- 	if (error)
- 		goto out_bmap_cancel;
+-	dio->is_async = !is_sync_kiocb(iocb) && !((rw & WRITE) &&
+-		(end > i_size_read(inode)));
++	if (is_sync_kiocb(iocb))
++		dio->is_async = false;
++	else if (!(dio->flags & DIO_ASYNC_EXTEND) &&
++            (rw & WRITE) && end > i_size_read(inode))
++		dio->is_async = false;
++	else
++		dio->is_async = true;
++
+ 	dio->inode = inode;
+ 	dio->rw = rw;
  
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 121f11f..f8416fd 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2526,6 +2526,9 @@ enum {
+ 
+ 	/* filesystem does not support filling holes */
+ 	DIO_SKIP_HOLES	= 0x02,
++
++	/* filesystem can handle aio writes beyond i_size */
++	DIO_ASYNC_EXTEND = 0x04,
+ };
+ 
+ void dio_end_io(struct bio *bio, int error);
 -- 
 1.7.10.4
 
