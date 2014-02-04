@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 017E67CBE
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 23:38:02 -0600 (CST)
-Date: Mon, 3 Feb 2014 23:37:58 -0600
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: [RFC 00/17] RFC parent inode pointers.
-Message-ID: <20140204053757.GA19307@sgi.com>
-References: <20140115220012.624438534@sgi.com> <20140116055607.GR3431@dastard>
-	<52D99FD2.6000601@sgi.com> <20140118031247.GE18112@dastard>
-	<52E6B67B.6070001@sgi.com> <20140128030040.GG2212@dastard>
-	<20140128220230.GF13953@sgi.com> <20140204000944.GX13997@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4F9087F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 02:00:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C6574AC002
+	for <xfs@oss.sgi.com>; Tue,  4 Feb 2014 00:00:57 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id PYcufFkREQwKdEV0
+	for <xfs@oss.sgi.com>; Tue, 04 Feb 2014 00:00:53 -0800 (PST)
+Message-ID: <52F09E36.8050606@hardwarefreak.com>
+Date: Tue, 04 Feb 2014 02:00:54 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140204000944.GX13997@dastard>
+Subject: Re: Question regarding XFS on LVM over hardware RAID.
+References: <52E91923.4070706@sandeen.net>	<1391022066-sup-5863@al.wesleyan.edu>	<52E99504.4030902@hardwarefreak.com>	<1391090527-sup-4664@al.wesleyan.edu>	<20140130202819.GO2212@dastard>	<52EB3B96.7000103@hardwarefreak.com>	<1391202273-sup-9265@al.wesleyan.edu>	<52ED61C9.8060504@hardwarefreak.com>	<20140202212152.GP2212@dastard>	<1391443675-sup-1730@al.wesleyan.edu>
+	<20140203214128.GR13997@dastard>
+In-Reply-To: <20140203214128.GR13997@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,78 +29,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, "C. Morgan Hamill" <chamill@wesleyan.edu>
+Cc: xfs <xfs@oss.sgi.com>
 
-On Tue, Feb 04, 2014 at 11:09:44AM +1100, Dave Chinner wrote:
-| On Tue, Jan 28, 2014 at 04:02:30PM -0600, Geoffrey Wehrman wrote:
-| > On Tue, Jan 28, 2014 at 02:00:40PM +1100, Dave Chinner wrote:
-| > | On Mon, Jan 27, 2014 at 01:41:47PM -0600, Mark Tinguely wrote:
-| > | > 2) Add the filename to EA. Not a fan, but I will ask but if DMF needs it
-| > | >    for performance then it has to be done. My point was this assumes
-| > | >    that we can keep all the links' EA entries inline in the inode. A
-| > | >    couple 255 character files or several links of modest sized filenames
-| > | >    would negate that assumption. I tried to minimize the EA entries to
-| > | >    keep them inline in the inode. I will talk to the DMF group.
-| > | 
-| > | Actually, I made the point about DMF needing them inline performance
-| > | because that's an argument SGI might find persuasive. What I didn't
-| > | say just then is that *I* need them inline, too, as online directory
-| > | tree scrubbing needs to be able to do bulks scans, as does
-| > | xfs_repair. However, I have idefinitely said this before in previous
-| > | parent poitner discussions, so it should be no surprise here...
-| > 
-| > I appologize in advance for my ignorance.  What is "online directory
-| > tree scrubbing" and how does it benefit from parent inode pointers?
-| 
-| It will be a kernel thread that walks the directory tree
-| periodically verifying that all inodes are reachable and that the
-| directory tree is intact. It's the same principle as RAID array
-| media scrubbing - proactive detection of errors that could cause
-| failures and repairing them before an error is delivered to the
-| application. The reason for wanting parent pointers is that it
-| enables immediate repair of most corruptions as the scrubbing
-| detects them without requiring duplicate copies of the metadata.
-| 
-| IOWs, parent pointers are a fundamental part of bringing on-line
-| repair functionality to XFS. While parent pointers are not directly
-| mentioned in this document:
-| 
-| http://xfs.org/index.php/Reliable_Detection_and_Repair_of_Metadata_Corruption
-| 
-| There is a section on reverse mapping for used blocks and how to use
-| that for online repair of detected damage. Parent pointers provide
-| reverse mappings for the directory structure, and hence provide the
-| same functionality. Parent pointers also means that if we get an IO
-| error in a block in a file, we can identify the owner of the block
-| by full path and offset into the file where the error has
-| occurred...
-| 
-| The v5 metadata format has an owner field in all metadata that has a
-| single parent object for keeping such parent information, and it is
-| intended for improving scrub-based validation and for identifying
-| the owner of lost metadata blocks to improve recover from errors.
-| i.e. reverse mapping is a one of the fundamental architectural
-| requirements underlying the v5 metadata changes.
-| 
-| The two missing pieces are the parent pointers for directory
-| structure reverse mapping, and an AGF reverse mapping btree to
-| enable arbitrary block->owner lookups. I have prototype code for the
-| AGF rmap btree, and the parent pointers provide that functionality
-| for the directory structure. With both of these implemented, we will
-| be able to do fully-online filesystem metadata validity checking
-| equivalent to 'xfs_repair -n' or better.....
-| 
-| Reverse block mapping and directory structure parent pointers have
-| been considered necessary for robust exception handling and online
-| repair since we first started thinking about the CRC metadata format
-| changes....
+On 2/3/2014 3:41 PM, Dave Chinner wrote:
+> On Mon, Feb 03, 2014 at 11:12:39AM -0500, C. Morgan Hamill wrote:
+>> Excerpts from Dave Chinner's message of 2014-02-02 16:21:52 -0500:
+>>> On Sat, Feb 01, 2014 at 03:06:17PM -0600, Stan Hoeppner wrote:
+>>>> On 1/31/2014 3:14 PM, C. Morgan Hamill wrote:
+>>>>> So, basically, --dataalignment is my friend during pvcreate and
+>>>>> lvcreate.
+>>>>
+>>>> If the logical sector size reported by your RAID controller is 512
+>>>> bytes, then "--dataalignment=9216s" should start your data section on a
+>>>> RAID60 stripe boundary after the metadata section.
+>>>>
+>>>> Tthe PhysicalExtentSize should probably also match the 4608KB stripe
+>>>> width, but this is apparently not possible.  PhysicalExtentSize must be
+>>>> a power of 2 value.  I don't know if or how this will affect XFS aligned
+>>>> write out.  You'll need to consult with someone more knowledgeable of LVM.
+>>>
+>>> You can't do single IOs of that size, anyway, so this is where the
+>>> BBWC on the raid controller does it's magic and caches sequntial IOs
+>>> until it has full stripe writes cached....
+>>
+>> So I am probably missing something here, could you clarify?  Are you
+>> saying that I can't do single IOs of that size (by which I take your
+>> meaning to be IOs as small as 9216 sectors) because my RAID controllers
+>> controller won't let me (i.e., it will cache anything smaller than the
+>> stripe size anyway)?
+> 
+> Typical limitations on IO size are the size of the hardware DMA
+> scatter-gather rings of the HBA/raid controller. For example, the
+> two hardware RAID controllers in my largest test box have
+> limitations of 70 and 80 segments and maximum IO sizes of 280k and
+> 320k.
+> 
+> And looking at the IO being dispatched with blktrace, I see the
+> maximum size is:
+> 
+>   8,80   2       61     0.769857112 44866  D  WS 12423408 + 560 [qemu-system-x86]
+>   8,80   2       71     0.769877563 44866  D  WS 12423968 + 560 [qemu-system-x86]
+>   8,80   2       72     0.769889767 44866  D  WS 12424528 + 560 [qemu-system-x86]
+>                                                             ^^^
+> 
+> 560 sectors or 280k. So for this hardware, sequential 280k writes
+> are hitting the BBWC. And because they are sequential, the BBWC is
+> writing them back as fully stripe writes after aggregating them in
+> NVRAM. Hence there are no performance diminishing RMW cycles
+> occurring, even though the individual IO size is much smaller than
+> the stripe unit/width....
+> 
+>> Or are you saying that XFS with these given
+>> settings won't make writes that small (which seems false, since I'm
+>> essentially telling it to do writes of precisely that size).  I'm a bit
+>> unclear on that.
+> 
+> What su/sw tells XFs is how to align allocation of files, so that
+> when we dispatch sequential IO to that file it is aligned to the
+> underlying storage because the extents that the filesystem allocated
+> for it are aligned. This means that if you write exactly one stripe
+> width of data, it will hit each disk exactly once. It might take 10
+> IOs to get the data to the storage, but it will only hit each disk
+> once.
+> 
+> The function of the stripe cache (in software raid) and the BBWC (in
+> hardware RAID) is to prevent RMW cycles while the
+> filesystem/hardware is still flinging data at the RAID lun. Only
+> once the controller has complete stripe widths will it calculate
+> parity and write back the data, thereby avoiding a RMW cycle....
 
-I understand now.  Thanks for the detailed explanation!
+-------
+>> In addition, does this in effect mean that when it comes to LVM, extent
+>> size makes no difference for alignment purposes?  So I don't have to
+>> worry about anything other that aligning the beginning and ending of
+>> logical volumes, volume groups, etc. to 9216 sector multiples?
+> 
+> No, you still have to align everything to the underlying storage so
+> that the filesystem on top of the volumes is correctly aligned.
+> Where the data will be written (i.e. howthe filesystem allocates the
+> underlying blocks) determines the IO alignment of sequential/large
+> user IOs, and that matters far more than the size of the sequntial
+> IOs the kernel uses to write the data.
 
+After a little digging and thinking this through...
+
+The default PE size is 4MB but up to 16GB with LVM1, and apparently
+unlimited size with LVM2.  It can be a few thousand times larger than
+any sane stripe width.  This makes it pretty clear that PEs exist
+strictly for volume management operations, used by the LVM tools, but
+have no relationship to regular write IOs.  Thus the PE size need not
+match nor be evenly divisible by the stripe width.  It's not part of the
+alignment equation.
 
 -- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
+Stan
 
 _______________________________________________
 xfs mailing list
