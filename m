@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6A6277FA1
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 17:42:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B0F58F8037
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 15:42:24 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C1DC7F52
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 18:09:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C56FAC001
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 16:09:50 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	S7EYFzpMHGYvChQo for <xfs@oss.sgi.com>;
-	Mon, 03 Feb 2014 15:42:18 -0800 (PST)
-Date: Tue, 4 Feb 2014 10:42:12 +1100
+	6SfEvDH1LjARPEU4 for <xfs@oss.sgi.com>;
+	Mon, 03 Feb 2014 16:09:48 -0800 (PST)
+Date: Tue, 4 Feb 2014 11:09:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Btrfs: add regression test for running snapshot and send
-	concurrently
-Message-ID: <20140203234212.GW13997@dastard>
-References: <1391440956-31924-1-git-send-email-wangshilong1991@gmail.com>
+Subject: Re: [RFC 00/17] RFC parent inode pointers.
+Message-ID: <20140204000944.GX13997@dastard>
+References: <20140115220012.624438534@sgi.com> <20140116055607.GR3431@dastard>
+	<52D99FD2.6000601@sgi.com> <20140118031247.GE18112@dastard>
+	<52E6B67B.6070001@sgi.com> <20140128030040.GG2212@dastard>
+	<20140128220230.GF13953@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1391440956-31924-1-git-send-email-wangshilong1991@gmail.com>
+In-Reply-To: <20140128220230.GF13953@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +32,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Wang Shilong <wangshilong1991@gmail.com>
-Cc: jbacik@fb.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Geoffrey Wehrman <gwehrman@sgi.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On Mon, Feb 03, 2014 at 11:22:36PM +0800, Wang Shilong wrote:
-> From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+On Tue, Jan 28, 2014 at 04:02:30PM -0600, Geoffrey Wehrman wrote:
+> On Tue, Jan 28, 2014 at 02:00:40PM +1100, Dave Chinner wrote:
+> | On Mon, Jan 27, 2014 at 01:41:47PM -0600, Mark Tinguely wrote:
+> | > 2) Add the filename to EA. Not a fan, but I will ask but if DMF needs it
+> | >    for performance then it has to be done. My point was this assumes
+> | >    that we can keep all the links' EA entries inline in the inode. A
+> | >    couple 255 character files or several links of modest sized filenames
+> | >    would negate that assumption. I tried to minimize the EA entries to
+> | >    keep them inline in the inode. I will talk to the DMF group.
+> | 
+> | Actually, I made the point about DMF needing them inline performance
+> | because that's an argument SGI might find persuasive. What I didn't
+> | say just then is that *I* need them inline, too, as online directory
+> | tree scrubbing needs to be able to do bulks scans, as does
+> | xfs_repair. However, I have idefinitely said this before in previous
+> | parent poitner discussions, so it should be no surprise here...
 > 
-> Btrfs would fail to send if snapshot run concurrently, this test is to make
-> sure we have fixed the bug.
-> 
-Couple of comments below.
+> I appologize in advance for my ignorance.  What is "online directory
+> tree scrubbing" and how does it benefit from parent inode pointers?
 
-> +_scratch_mkfs > /dev/null 2>&1
-> +_scratch_mount
-> +
-> +
-> +touch $SCRATCH_MNT/foo
-> +
-> +# get file with fragments by using backwards writes.
-> +for i in `seq 10240 -1 1`; do
-> +	$XFS_IO_PROG -f -d -c "pwrite $(($i * 4096)) 4096" \
-> +	$SCRATCH_MNT/foo > /dev/null | _filter_xfs_io
+It will be a kernel thread that walks the directory tree
+periodically verifying that all inodes are reachable and that the
+directory tree is intact. It's the same principle as RAID array
+media scrubbing - proactive detection of errors that could cause
+failures and repairing them before an error is delivered to the
+application. The reason for wanting parent pointers is that it
+enables immediate repair of most corruptions as the scrubbing
+detects them without requiring duplicate copies of the metadata.
 
-Indentation.
+IOWs, parent pointers are a fundamental part of bringing on-line
+repair functionality to XFS. While parent pointers are not directly
+mentioned in this document:
 
-> +done
-> +
-> +$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
-> +	$SCRATCH_MNT/snap_1 >> $seqres.full 2>&1
-> +
-> +$BTRFS_UTIL_PROG send -f $SCRATCH_MNT/send_file \
-> +	$SCRATCH_MNT/snap_1 >> $seqres.full 2>&1 &
-> +
-> +pid=$!
-> +
-> +$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT/snap_1 \
-> +	$SCRATCH_MNT/snap_2 >> $seqres.full 2>&1
-> +
-> +wait $pid || echo "Failed to send, see dmesg"
+http://xfs.org/index.php/Reliable_Detection_and_Repair_of_Metadata_Corruption
 
-This seems kind of racy. It assumes that the send command
-doesn't complete before the wait $pid call is made. If $pid doesn't
-exist at this time because it has completed, wait will return 127
-and the test will fail....
+There is a section on reverse mapping for used blocks and how to use
+that for online repair of detected damage. Parent pointers provide
+reverse mappings for the directory structure, and hence provide the
+same functionality. Parent pointers also means that if we get an IO
+error in a block in a file, we can identify the owner of the block
+by full path and offset into the file where the error has
+occurred...
 
-Also, why would a failure to send result in meaingful information in
-dmesg? Shouldn't the userspace command output information to tell
-you why there was a failure into $seqres.full?
+The v5 metadata format has an owner field in all metadata that has a
+single parent object for keeping such parent information, and it is
+intended for improving scrub-based validation and for identifying
+the owner of lost metadata blocks to improve recover from errors.
+i.e. reverse mapping is a one of the fundamental architectural
+requirements underlying the v5 metadata changes.
+
+The two missing pieces are the parent pointers for directory
+structure reverse mapping, and an AGF reverse mapping btree to
+enable arbitrary block->owner lookups. I have prototype code for the
+AGF rmap btree, and the parent pointers provide that functionality
+for the directory structure. With both of these implemented, we will
+be able to do fully-online filesystem metadata validity checking
+equivalent to 'xfs_repair -n' or better.....
+
+Reverse block mapping and directory structure parent pointers have
+been considered necessary for robust exception handling and online
+repair since we first started thinking about the CRC metadata format
+changes....
 
 Cheers,
 
