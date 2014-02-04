@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C8EBE7F37
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 21:49:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A3F0A8F8039
-	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 19:49:35 -0800 (PST)
-Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com
-	[209.85.216.172]) by cuda.sgi.com with ESMTP id
-	GUmGuYz3I5lXJHE8 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Feb 2014 19:49:34 -0800 (PST)
-Received: by mail-qc0-f172.google.com with SMTP id c9so12911891qcz.31
-	for <xfs@oss.sgi.com>; Mon, 03 Feb 2014 19:49:33 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 1DD5F7F51
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 22:15:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 074F98F804C
+	for <xfs@oss.sgi.com>; Mon,  3 Feb 2014 20:15:32 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	p9ld1ONCrUzxLBTE for <xfs@oss.sgi.com>;
+	Mon, 03 Feb 2014 20:15:31 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1WAXPv-0000h6-3S
+	for xfs@oss.sgi.com; Tue, 04 Feb 2014 15:15:23 +1100
+Date: Tue, 4 Feb 2014 15:15:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfstests: updated to 4356e45
+Message-ID: <20140204041523.GZ13997@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20140203231737.GV13997@dastard>
-References: <1391319958-3275-1-git-send-email-linkinjeon@gmail.com>
-	<20140203231737.GV13997@dastard>
-Date: Tue, 4 Feb 2014 12:49:33 +0900
-Message-ID: <CAKYAXd_ags=K+OAcJoRHdTFLuU7vUbR+afdmpR2sj3jgTeQnPA@mail.gmail.com>
-Subject: Re: [PATCH RESEND 5/10] xfstest: shared/001: Standard collapse range
-	tests
-From: Namjae Jeon <linkinjeon@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,103 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
+To: xfs@oss.sgi.com
 
-2014-02-04, Dave Chinner <david@fromorbit.com>:
-> On Sun, Feb 02, 2014 at 02:45:58PM +0900, Namjae Jeon wrote:
->> From: Namjae Jeon <namjae.jeon@samsung.com>
->>
->> This testcase(001) tries to test various corner cases
->> for fcollapse range functionality over different type of extents.
->>
->> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
->> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
->
-> Couple of things:
->
->>  			-c "$map_cmd -v" $testfile | $filter_cmd
->>  		[ $? -ne 0 ] && die_now
->>  		_md5_checksum $testfile
->> @@ -415,10 +425,10 @@ _test_generic_punch()
->>  		if [ "$remove_testfile" ]; then
->>  			rm -f $testfile
->>  		fi
->> -		$XFS_IO_PROG -f -c "truncate 20k" \
->> -			-c "$alloc_cmd 0 8k" \
->> -			-c "pwrite 8k 8k" $sync_cmd \
->> -			-c "$zero_cmd 4k 8k" \
->> +		$XFS_IO_PROG -f -c "truncate $(($multiple * 20))k" \
->> +			-c "$alloc_cmd 0 $(($multiple * 8))k" \
->> +			-c "pwrite $(($multiple * 8))k $(($multiple * 8))k" $sync_cmd \
->> +			-c "$zero_cmd $(($multiple * 4))k $(($multiple * 8))k" \
->>  			-c "$map_cmd -v" $testfile | $filter_cmd
->
-Hi. Dave.
-> This is unreadable, and therefore I'd consider that these changes
-> render _test_generic_punch unmaintainable.
->
-> Either it needs tobe factored to be more readable, or we need a more
-> readable way of representing the offsets and sizes if we want them
-> to be variable. For example:
->
-> _4k="$((multiple * 4))k"
-> _8k="$((multiple * 8))k"
-> _20k="$((multiple * 20))k"
->
-> leads to:
->
-> 		$XFS_IO_PROG -f -c "truncate $_20k" \
-> 			-c "$alloc_cmd 0 $_8k" \
-> 			-c "pwrite $_8k $_8k" $sync_cmd \
-> 			-c "$zero_cmd $_4k $_8k" \
-> 			-c "$map_cmd -v" $testfile | $filter_cmd
->
-> which is still readable and allows us to arbitrarily scale the
-> parameters. It even allows us to handle different filesystem block
-> sizes if we really want to....
-Okay, I will change it as you suggest.
->
->>  		-c "$map_cmd -v" $testfile | $filter_cmd
->>  	[ $? -ne 0 ] && die_now
->>  	_md5_checksum $testfile
->>
->> +	# If zero_cmd is fcollpase, don't check unaligned offsets
->> +	if [ "$zero_cmd" == "fcollapse" ]; then
->> +		if [ "$remove_testfile" ]; then
->> +			rm -f $testfile
->> +			rm -f $testfile.2
->> +		fi
->> +		return
->> +	fi
->
-> No need to remove the test files here - we remove them at
-> test startup to ensure we have a known initial state....
-Okay.
->
->> +0: [0..63]: extent
->> +bb7df04e1b0a2570657527a7e108ae23
->> +	13. data -> unwritten -> data
->> +0: [0..63]: extent
->> +0f0151cbed83e4bf6e5bde26e82ab115
->> +	14. data -> hole @ EOF
->> +fallocate: Invalid argument
->> +0: [0..159]: extent
->
-> This error appears in all the golden outputs. If it's correct, then
-> perhaps it should be filtered out or commented somewhere to explain
-> why it is expected.
-Okay, I will add the comments to explain about this.
+Hi folks,
 
-Thanks for your review :)
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
+just been updated. Patches often get missed, so please check if your
+outstanding patches were in this update. If they have not been in
+this update, please resubmit them to xfs@oss.sgi.com so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+4356e45 generic: inconsistent initial state for test_generic_punch
+
+New Commits:
+
+Dave Chinner (4):
+      [586d190] xfs/199: enforce v4 superblock format for test
+      [180adeb] xfs/291: fix spurious ENOSPC errors
+      [9c5d298] generic: _test_generic_punch not blocksize clean
+      [4356e45] generic: inconsistent initial state for test_generic_punch
+
+Filipe David Borba Manana (1):
+      [1a258e9] xfstests: add test for btrfs incremental send data corruption
+
+
+Code Diffstat:
+
+ common/punch          |  19 +++++++---
+ tests/btrfs/034       | 101 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/034.out   |   6 +++
+ tests/btrfs/group     |   1 +
+ tests/generic/255.out |  36 +++++++++++++-----
+ tests/generic/316.out |  36 +++++++++++++-----
+ tests/xfs/199         |   5 ++-
+ tests/xfs/242.out     |   7 +++-
+ tests/xfs/252.out     |  36 +++++++++++++-----
+ tests/xfs/291         |   9 +++--
+ 10 files changed, 215 insertions(+), 41 deletions(-)
+ create mode 100755 tests/btrfs/034
+ create mode 100644 tests/btrfs/034.out
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
