@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6DB597F55
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 17:02:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 51BBA304084
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 15:02:46 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 253317F58
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 17:09:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BEB9AAC002
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 15:09:45 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	hCP2vl7SNGobmNuO for <xfs@oss.sgi.com>;
-	Wed, 05 Feb 2014 15:02:44 -0800 (PST)
-Date: Thu, 6 Feb 2014 10:02:05 +1100
+	SBBKgvNq10y2KtWz for <xfs@oss.sgi.com>;
+	Wed, 05 Feb 2014 15:09:40 -0800 (PST)
+Date: Thu, 6 Feb 2014 10:09:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: initialize "valid" bitmap in randholes.c
-Message-ID: <20140205230205.GH13997@dastard>
-References: <52F2848B.5070704@redhat.com>
+Subject: Re: [PATCH 1/2] btrfs: add small program for clone testing
+Message-ID: <20140205230936.GI13997@dastard>
+References: <1391599009-2402-1-git-send-email-ddiss@suse.de>
+	<1391599009-2402-2-git-send-email-ddiss@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52F2848B.5070704@redhat.com>
+In-Reply-To: <1391599009-2402-2-git-send-email-ddiss@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +30,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: David Disseldorp <ddiss@suse.de>
+Cc: dsterba@suse.cz, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Feb 05, 2014 at 12:35:55PM -0600, Eric Sandeen wrote:
-> Failures were reported in xfs/008 on s390; dchinner suggested that
-> perhaps the uninitialized "valid" bitmap was behaving differently on
-> that platform, and sure enough, this patch fixes things up.
+On Wed, Feb 05, 2014 at 12:16:48PM +0100, David Disseldorp wrote:
+> The cloner program is capable of cloning files using the BTRFS_IOC_CLONE
+> and BTRFS_IOC_CLONE_RANGE ioctls.
 > 
-> TBH, I'm not sure why using an uninitialized bitmap worked at
-> all, ever, anywhere...?
+> Signed-off-by: David Disseldorp <ddiss@suse.de>
 
-It depends on glibc behaviour to whether newly allocated memory is
-zeroed or not. e.g. for large allocations glibc uses
-mmap() to directly map anonymous pages for the allocation. These get
-zeroed by the kernel before being mapped into the user address
-space. If glibc allocates from the heap and needs to grow it, it
-uses sbrk() to grow the heap an dthose pages are, again, zeroed by
-the kernel. However, if the allocation comes from the heap from
-previously freed memory, then it doesn't get zeroed.
+Hi Dave - long time since I've seen your head pop up around here ;)
 
-I'd say that the 3rd case is occurring here - there's memory that is
-allocated and freed as part of the program startup that the bitmap
-is being allocated from, and so it's not newly zeroed pages that it
-is being allocated from...
+A few comments below.
 
-Regardless of the cause, the fix looks good.
+> +struct btrfs_ioctl_clone_range_args {
+> +	int64_t src_fd;
+> +	uint64_t src_offset;
+> +	uint64_t src_length;
+> +	uint64_t dest_offset;
+> +};
+> +
+> +#define BTRFS_IOCTL_MAGIC 0x94
+> +#define BTRFS_IOC_CLONE       _IOW(BTRFS_IOCTL_MAGIC, 9, int)
+> +#define BTRFS_IOC_CLONE_RANGE _IOW(BTRFS_IOCTL_MAGIC, 13, \
+> +				   struct btrfs_ioctl_clone_range_args)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Is there some published header file that these belong to? i.e.
+somewhere in the include/linux/uapi/ kernel directory? Normally the
+way to handle this sort of thing is by autoconf - if the header file
+exists, then we include it, otherwise we use the manual definitions.
+This just means that if the public api ever changes, we'll pick it
+up automatically in future...
 
+> +int
+> +main(int argc, char **argv)
+> +{
+> +	bool full_file = true;
+> +	uint64_t src_off = 0;
+> +	uint64_t dst_off = 0;
+> +	uint64_t len = 0;
+> +	char *src_file;
+> +	int src_fd;
+> +	char *dst_file;
+> +	int dst_fd;
+> +	int ret;
+> +	int opt;
+> +
+> +	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
+> +		switch (opt) {
+> +		case 's':
+> +			src_off = atoi(optarg);
+
+atoi() only returns 32 bit numbers. You probably should use
+strtoull() as the offset parameters are 64 bit.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
