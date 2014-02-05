@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2BABA7F52
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 08:52:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AD5E5AC003
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 06:52:53 -0800 (PST)
-Received: from mail-la0-f47.google.com (mail-la0-f47.google.com
-	[209.85.215.47]) by cuda.sgi.com with ESMTP id B3fYxSVcSWZxPRtn
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 05 Feb 2014 06:52:48 -0800 (PST)
-Received: by mail-la0-f47.google.com with SMTP id hr17so400124lab.6
-	for <xfs@oss.sgi.com>; Wed, 05 Feb 2014 06:52:47 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 286587F52
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 12:36:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1BCA58F8050
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 10:35:59 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DDODYvH1pm1gOsD0 for
+	<xfs@oss.sgi.com>; Wed, 05 Feb 2014 10:35:58 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s15IZvpH004374
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 5 Feb 2014 13:35:57 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s15IZupJ016253
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 5 Feb 2014 13:35:56 -0500
+Message-ID: <52F2848B.5070704@redhat.com>
+Date: Wed, 05 Feb 2014 12:35:55 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20140204172402.380571745@bombadil.infradead.org>
-References: <20140204172402.380571745@bombadil.infradead.org>
-From: Sergey Meirovich <rathamahata@gmail.com>
-Date: Wed, 5 Feb 2014 16:52:27 +0200
-Message-ID: <CA+QCeVRmDFjF9YMgEOR7UpdQMQU98cR0KeO1HMNoP9k1ZvOzaA@mail.gmail.com>
-Subject: Re: [PATCH 0/3] support appending AIO writes
+Subject: [PATCH] xfstests: initialize "valid" bitmap in randholes.c
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,30 +36,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hi Christoph,
+Failures were reported in xfs/008 on s390; dchinner suggested that
+perhaps the uninitialized "valid" bitmap was behaving differently on
+that platform, and sure enough, this patch fixes things up.
 
-Thanks a lot! Applied your patches on top of 3.13.1 and they indeed
-make a huge difference.
+TBH, I'm not sure why using an uninitialized bitmap worked at
+all, ever, anywhere...?
 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Append AIO
-
-chunk size           w/o patches                               with patches
-===================================================
-4k               6.8834 Mb/sec 1762.15 IOps      31.542 Mb/sec 8074.75 IOps
-8k               15.321 Mb/sec 1961.12 IOps      62.873 Mb/sec 8047.71 IOps
-16k             28.257 Mb/sec 1808.46 IOps      139.35 Mb/sec 8918.45 IOps
-
-
-On 4 February 2014 19:24, Christoph Hellwig <hch@infradead.org> wrote:
-> At least XFS can support appending AIO writes easily, and Sergey has
-> demonstrated a use case for them.
->
-> I've not done any performance testing myself, but ensured that xfstests
-> already exercises the code path.
+diff --git a/src/randholes.c b/src/randholes.c
+index 5ad602e..ee5b6b6 100644
+--- a/src/randholes.c
++++ b/src/randholes.c
+@@ -437,6 +437,7 @@ main(int argc, char *argv[])
+ 		perror("malloc");
+ 		return 1;
+ 	}
++	memset(valid, 0, size);
+ 
+ 	/* Lots of arguments affect how we open the file */
+ 	oflags = test ? O_RDONLY : O_RDWR|O_CREAT;
 
 _______________________________________________
 xfs mailing list
