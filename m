@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7DFA27F51
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 03:39:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 529A7304071
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 01:39:29 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 8I8WCHqgcKuxN0a9 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 05 Feb 2014 01:39:28 -0800 (PST)
-Message-ID: <52F206AA.20505@oracle.com>
-Date: Wed, 05 Feb 2014 17:38:50 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: return -E2BIG if hit the maximum size limits of ACLs
-References: <52EBB032.8070306@oracle.com> <20140204155156.GA3810@infradead.org>
-In-Reply-To: <20140204155156.GA3810@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E12447F4E
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 05:17:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BCAAC8F804C
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 03:17:02 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id q8IOEbEfbMJ7tiln (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 05 Feb 2014 03:17:01 -0800 (PST)
+From: David Disseldorp <ddiss@suse.de>
+Subject: [PATCH 2/2] btrfs/035: add new clone overwrite regression test
+Date: Wed,  5 Feb 2014 12:16:49 +0100
+Message-Id: <1391599009-2402-3-git-send-email-ddiss@suse.de>
+In-Reply-To: <1391599009-2402-1-git-send-email-ddiss@suse.de>
+References: <1391599009-2402-1-git-send-email-ddiss@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,31 +23,128 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: David Disseldorp <ddiss@suse.de>, dsterba@suse.cz, linux-btrfs@vger.kernel.org
 
+This test uses the newly added cloner binary to dispatch full file and
+range specific clone (reflink) requests.
 
-On 02/04 2014 23:51 PM, Christoph Hellwig wrote:
-> On Fri, Jan 31, 2014 at 10:16:18PM +0800, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> We should return -E2BIG rather than -EINVAL if hit the maximum size
->> limits of ACLS, as the former is consistent with VFS xattr syscalls.
-> 
-> Looks good,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> You were already working on tests for this area, right?
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+---
+ tests/btrfs/035     | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/035.out |  3 +++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 80 insertions(+)
+ create mode 100755 tests/btrfs/035
+ create mode 100644 tests/btrfs/035.out
 
-Not yet, but I'll work out a separate generic test towards ACLs.
-
-Thanks,
--Jeff
+diff --git a/tests/btrfs/035 b/tests/btrfs/035
+new file mode 100755
+index 0000000..03c2cd3
+--- /dev/null
++++ b/tests/btrfs/035
+@@ -0,0 +1,76 @@
++#!/bin/bash
++# FS QA Test No. btrfs/035
++#
++# Regression test for overwriting clones
++#
++#-----------------------------------------------------------------------
++# Copyright (C) 2014 SUSE Linux Products GmbH. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++CLONER_PROG=$here/src/cloner
++
++src_str="aaaaaaaaaa"
++
++echo -n "$src_str" > $SCRATCH_MNT/src || _fail "failed to create src"
++
++$CLONER_PROG $SCRATCH_MNT/src  $SCRATCH_MNT/src.clone1
++
++src_str="bbbbbbbbbbcccccccccc"
++
++echo -n "$src_str" > $SCRATCH_MNT/src || _fail "failed to create src"
++
++$CLONER_PROG $SCRATCH_MNT/src $SCRATCH_MNT/src.clone2
++
++snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone1 | awk '{print $5}'`
++echo "attempting ioctl (src.clone1 src)"
++$CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
++	$SCRATCH_MNT/src.clone1 $SCRATCH_MNT/src || _fail "ioctl failed"
++
++snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone2 | awk '{print $5}'`
++echo "attempting ioctl (src.clone2 src)"
++$CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
++	$SCRATCH_MNT/src.clone2 $SCRATCH_MNT/src || _fail "ioctl failed"
++
++status=0 ; exit
+diff --git a/tests/btrfs/035.out b/tests/btrfs/035.out
+new file mode 100644
+index 0000000..f86cadf
+--- /dev/null
++++ b/tests/btrfs/035.out
+@@ -0,0 +1,3 @@
++QA output created by 035
++attempting ioctl (src.clone1 src)
++attempting ioctl (src.clone2 src)
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index f9f062f..bee57cb 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -37,3 +37,4 @@
+ 032 auto quick
+ 033 auto quick
+ 034 auto quick
++035 auto quick
+-- 
+1.8.4.5
 
 _______________________________________________
 xfs mailing list
