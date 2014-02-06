@@ -1,24 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 873AF7F50
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 10:29:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6604930406B
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 08:29:34 -0800 (PST)
-Received: from mail-la0-f50.google.com (mail-la0-f50.google.com
-	[209.85.215.50]) by cuda.sgi.com with ESMTP id ado76seZQSNcgg9T
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 06 Feb 2014 08:29:33 -0800 (PST)
-Received: by mail-la0-f50.google.com with SMTP id ec20so1636723lab.37
-	for <xfs@oss.sgi.com>; Thu, 06 Feb 2014 08:29:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+QCeVRmDFjF9YMgEOR7UpdQMQU98cR0KeO1HMNoP9k1ZvOzaA@mail.gmail.com>
-References: <20140204172402.380571745@bombadil.infradead.org>
-	<CA+QCeVRmDFjF9YMgEOR7UpdQMQU98cR0KeO1HMNoP9k1ZvOzaA@mail.gmail.com>
-From: Sergey Meirovich <rathamahata@gmail.com>
-Date: Thu, 6 Feb 2014 18:29:11 +0200
-Message-ID: <CA+QCeVQxTk=ZNucLG4WPrQC=oHf1sFtJ7nj5dhJg=BUyuVbsOQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] support appending AIO writes
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0FC797F51
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 11:32:02 -0600 (CST)
+Subject: [GIT PULL] XFS fix for 3.14-rc2
+Message-Id: <20140206173158.6A2A14266DC@whiskey.americas.sgi.com>
+Date: Thu,  6 Feb 2014 11:31:58 -0600 (CST)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +14,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 5 February 2014 16:52, Sergey Meirovich <rathamahata@gmail.com> wrote:
-> Hi Christoph,
->
-> Thanks a lot! Applied your patches on top of 3.13.1 and they indeed
-> make a huge difference.
->
->
-> Append AIO
->
-> chunk size           w/o patches                               with patches
-> ===================================================
-> 4k               6.8834 Mb/sec 1762.15 IOps      31.542 Mb/sec 8074.75 IOps
-> 8k               15.321 Mb/sec 1961.12 IOps      62.873 Mb/sec 8047.71 IOps
-> 16k             28.257 Mb/sec 1808.46 IOps      139.35 Mb/sec 8918.45 IOps
+Hi Linus,
 
-And with simple wrapper around io_submit() difference for 4 k is even
-more impressive than with sysbench:
+   Please pull this xfs update for 3.14.  This is to allow logical sector sized
+   direct io on advanced format disks.  Eric expressed a desire to get this fix
+   in 3.14 because this bug affects some virtualization packages.
 
-without patches:
-=====================
-bandwidth (MiB/s):    11.89
-IOps:                    3044.58
+Thanks,
+	Ben
 
-with patches:
-=====================
-bandwidth (MiB/s):    118.16
-IOps:                   30250.17
+The following changes since commit bf3964c188d686424ff7b69a45941851b9f437f0:
+
+  Merge branch 'xfs-extent-list-locking-fixes' into for-next (2014-01-09 16:03:18 -0600)
+
+are available in the git repository at:
+
+
+  git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-v3.14-rc1-2
+
+for you to fetch changes up to 7c71ee78031c248dca13fc94dea9a4cc217db6cf:
+
+  xfs: allow logical-sector sized O_DIRECT (2014-01-24 11:55:42 -0600)
+
+----------------------------------------------------------------
+xfs: update #2 for v3.14-rc1
+
+- allow logical sector sized direct io on 'advanced format' 4k/512 disk.
+
+----------------------------------------------------------------
+Eric Sandeen (3):
+      xfs: clean up xfs_buftarg
+      xfs: rename xfs_buftarg structure members
+      xfs: allow logical-sector sized O_DIRECT
+
+ fs/xfs/xfs_buf.c   | 14 +++++++++-----
+ fs/xfs/xfs_buf.h   | 20 +++++++++++++++++---
+ fs/xfs/xfs_file.c  |  7 +++++--
+ fs/xfs/xfs_ioctl.c |  2 +-
+ 4 files changed, 32 insertions(+), 11 deletions(-)
 
 _______________________________________________
 xfs mailing list
