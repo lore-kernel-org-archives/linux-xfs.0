@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3FFAF7F54
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 08:52:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 35EFA8F8073
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 06:52:20 -0800 (PST)
-Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
-	[209.85.220.41]) by cuda.sgi.com with ESMTP id rfrMJxdcHbTxawQW
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E6B337F50
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 10:12:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DBA9AC001
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 08:12:16 -0800 (PST)
+Received: from mail-pb0-f45.google.com (mail-pb0-f45.google.com
+	[209.85.160.45]) by cuda.sgi.com with ESMTP id VFlHCdVBEl0MiESP
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 06 Feb 2014 06:52:19 -0800 (PST)
-Received: by mail-pa0-f41.google.com with SMTP id fa1so1770714pad.14
-	for <xfs@oss.sgi.com>; Thu, 06 Feb 2014 06:52:18 -0800 (PST)
+	<xfs@oss.sgi.com>; Thu, 06 Feb 2014 08:12:15 -0800 (PST)
+Received: by mail-pb0-f45.google.com with SMTP id un15so1933613pbc.32
+	for <xfs@oss.sgi.com>; Thu, 06 Feb 2014 08:12:15 -0800 (PST)
 From: Wang Shilong <wangshilong1991@gmail.com>
-Subject: [PATCH v2] Btrfs: add regression test for running snapshot and send
+Subject: [PATCH v3] Btrfs: add regression test for running snapshot and send
 	concurrently
-Date: Thu,  6 Feb 2014 22:50:12 +0800
-Message-Id: <1391698212-2358-1-git-send-email-wangshilong1991@gmail.com>
+Date: Fri,  7 Feb 2014 00:10:08 +0800
+Message-Id: <1391703008-2322-1-git-send-email-wangshilong1991@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,8 +39,11 @@ sure we have fixed the bug.
 
 Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 ---
-Changelog v1->v2:
-	Avoid race codes and a code style update(Thanks to Dave Chinner's comments)
+Changelog
+ v1->v2:
+        Avoid race codes and a code style update(Thanks to Dave Chinner's comments)
+ v2->v3:
+        make sure we kill background snapshots on test failure
 ---
  tests/btrfs/034     | 83 +++++++++++++++++++++++++++++++++++++++++++++++++++++
  tests/btrfs/034.out |  2 ++
@@ -51,7 +54,7 @@ Changelog v1->v2:
 
 diff --git a/tests/btrfs/034 b/tests/btrfs/034
 new file mode 100644
-index 0000000..1fcd792
+index 0000000..5152969
 --- /dev/null
 +++ b/tests/btrfs/034
 @@ -0,0 +1,83 @@
@@ -95,7 +98,7 @@ index 0000000..1fcd792
 +do_snapshots()
 +{
 +	i=2
-+	while [ 1 ]
++	while [ $i -lt 50 ]
 +	do
 +		$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT/snap_1 \
 +			$SCRATCH_MNT/snap_$i >> $seqres.full 2>&1
@@ -132,7 +135,7 @@ index 0000000..1fcd792
 +do_snapshots &
 +snapshots_pid=$!
 +
-+$BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 > /dev/null 2>&1 || _fail "btrfs send failed"
++$BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 > /dev/null 2>&1 || echo "btrfs send failed"
 +
 +kill -TERM $snapshots_pid 2> /dev/null
 +
