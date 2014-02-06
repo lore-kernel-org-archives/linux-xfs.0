@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CA6A47F51
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 15:53:36 -0600 (CST)
-Date: Thu, 6 Feb 2014 15:53:32 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [GIT PULL] XFS fix for 3.14-rc2
-Message-ID: <20140206215332.GQ1935@sgi.com>
-References: <20140206173158.6A2A14266DC@whiskey.americas.sgi.com>
-	<CA+55aFzxUtHWL1hPcNv-zUXFWzrZtKAsh_ZVotfFUvH1hqDrMg@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A145F7F51
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 16:43:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7824F8F8050
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 14:43:47 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	zCN6MVDo6qpCiJNZ for <xfs@oss.sgi.com>;
+	Thu, 06 Feb 2014 14:43:42 -0800 (PST)
+Date: Fri, 7 Feb 2014 09:43:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] Btrfs: add regression test for running snapshot and
+	send concurrently
+Message-ID: <20140206224337.GB13647@dastard>
+References: <1391703008-2322-1-git-send-email-wangshilong1991@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFzxUtHWL1hPcNv-zUXFWzrZtKAsh_ZVotfFUvH1hqDrMg@mail.gmail.com>
+In-Reply-To: <1391703008-2322-1-git-send-email-wangshilong1991@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +30,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Wang Shilong <wangshilong1991@gmail.com>
+Cc: jbacik@fb.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Feb 06, 2014 at 01:34:53PM -0800, Linus Torvalds wrote:
-> I have no idea why you keep re-sending this.
-> 
-> It got merged a week ago. See commit f1499382f114.
+On Fri, Feb 07, 2014 at 12:10:08AM +0800, Wang Shilong wrote:
+> +$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
+> +	$SCRATCH_MNT/snap_1 >> $seqres.full 2>&1
+> +
+> +do_snapshots &
+> +snapshots_pid=$!
+> +
+> +$BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 > /dev/null 2>&1 || echo "btrfs send failed"
 
-Ok, there it is.  Sorry for the noise.
+Let's stop this anti-pattern before it takes hold.
 
-Thanks,
-	Ben	
+If there's output from the send command it should be
+filtered and captured in the golden image. Hence any deviation
+caused by errors is automatically flagged as an error.
 
-> On Thu, Feb 6, 2014 at 9:31 AM, Ben Myers <bpm@sgi.com> wrote:
-> > Hi Linus,
-> >
-> >    Please pull this xfs update for 3.14.  This is to allow logical sector sized
-> >    direct io on advanced format disks.  Eric expressed a desire to get this fix
-> >    in 3.14 because this bug affects some virtualization packages.
-> >
-> > Thanks,
-> >         Ben
-> >
-> > The following changes since commit bf3964c188d686424ff7b69a45941851b9f437f0:
-> >
-> >   Merge branch 'xfs-extent-list-locking-fixes' into for-next (2014-01-09 16:03:18 -0600)
-> >
-> > are available in the git repository at:
-> >
-> >
-> >   git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-v3.14-rc1-2
-> >
-> > for you to fetch changes up to 7c71ee78031c248dca13fc94dea9a4cc217db6cf:
-> >
-> >   xfs: allow logical-sector sized O_DIRECT (2014-01-24 11:55:42 -0600)
-> >
-> > ----------------------------------------------------------------
-> > xfs: update #2 for v3.14-rc1
-> >
-> > - allow logical sector sized direct io on 'advanced format' 4k/512 disk.
-> >
-> > ----------------------------------------------------------------
-> > Eric Sandeen (3):
-> >       xfs: clean up xfs_buftarg
-> >       xfs: rename xfs_buftarg structure members
-> >       xfs: allow logical-sector sized O_DIRECT
-> >
-> >  fs/xfs/xfs_buf.c   | 14 +++++++++-----
-> >  fs/xfs/xfs_buf.h   | 20 +++++++++++++++++---
-> >  fs/xfs/xfs_file.c  |  7 +++++--
-> >  fs/xfs/xfs_ioctl.c |  2 +-
-> >  4 files changed, 32 insertions(+), 11 deletions(-)
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+That's the whole point of using golden images for capturing errors -
+you don't need to capture return values from binaries and it
+guarantees that users are informed about failures through error
+messages. IOWs:
+
+$BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 | _btrfs_send_filter
+
+is what you should be doing here.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
