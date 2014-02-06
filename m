@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5DBF37F54
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 07:12:57 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A7DD47F54
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 07:59:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E62C8F8050
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 05:12:56 -0800 (PST)
-Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
-	[209.85.192.173]) by cuda.sgi.com with ESMTP id
-	LEQVTFFLRX1JEKEu (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Feb 2014 05:12:56 -0800 (PST)
-Received: by mail-pd0-f173.google.com with SMTP id y10so1675924pdj.4
-	for <xfs@oss.sgi.com>; Thu, 06 Feb 2014 05:12:55 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Subject: Re: [PATCH] Btrfs: add regression test for running snapshot and send
-	concurrently
-From: Wang Shilong <wangshilong1991@gmail.com>
-In-Reply-To: <20140203234212.GW13997@dastard>
-Date: Thu, 6 Feb 2014 21:12:51 +0800
-Message-Id: <9BC2AB41-F187-4A1A-89D6-743C72446293@gmail.com>
-References: <1391440956-31924-1-git-send-email-wangshilong1991@gmail.com>
-	<20140203234212.GW13997@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8EC9C30407A
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 05:59:25 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id osY60BjayrbVGyNz (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 06 Feb 2014 05:59:23 -0800 (PST)
+From: David Disseldorp <ddiss@suse.de>
+Subject: [PATCH v2 2/3] src/cloner: use btrfs/ioctl.h header if present
+Date: Thu,  6 Feb 2014 14:59:13 +0100
+Message-Id: <1391695154-2039-3-git-send-email-ddiss@suse.de>
+In-Reply-To: <1391695154-2039-1-git-send-email-ddiss@suse.de>
+References: <1391695154-2039-1-git-send-email-ddiss@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +23,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jbacik@fb.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: David Disseldorp <ddiss@suse.de>, dsterba@suse.cz, linux-btrfs@vger.kernel.org
 
-SGkgRGF2ZSwKCj4gT24gTW9uLCBGZWIgMDMsIDIwMTQgYXQgMTE6MjI6MzZQTSArMDgwMCwgV2Fu
-ZyBTaGlsb25nIHdyb3RlOgo+PiBGcm9tOiBXYW5nIFNoaWxvbmcgPHdhbmdzbC5mbnN0QGNuLmZ1
-aml0c3UuY29tPgo+PiAKPj4gQnRyZnMgd291bGQgZmFpbCB0byBzZW5kIGlmIHNuYXBzaG90IHJ1
-biBjb25jdXJyZW50bHksIHRoaXMgdGVzdCBpcyB0byBtYWtlCj4+IHN1cmUgd2UgaGF2ZSBmaXhl
-ZCB0aGUgYnVnLgo+PiAKPiBDb3VwbGUgb2YgY29tbWVudHMgYmVsb3cuCj4gCj4+ICtfc2NyYXRj
-aF9ta2ZzID4gL2Rldi9udWxsIDI+JjEKPj4gK19zY3JhdGNoX21vdW50Cj4+ICsKPj4gKwo+PiAr
-dG91Y2ggJFNDUkFUQ0hfTU5UL2Zvbwo+PiArCj4+ICsjIGdldCBmaWxlIHdpdGggZnJhZ21lbnRz
-IGJ5IHVzaW5nIGJhY2t3YXJkcyB3cml0ZXMuCj4+ICtmb3IgaSBpbiBgc2VxIDEwMjQwIC0xIDFg
-OyBkbwo+PiArCSRYRlNfSU9fUFJPRyAtZiAtZCAtYyAicHdyaXRlICQoKCRpICogNDA5NikpIDQw
-OTYiIFwKPj4gKwkkU0NSQVRDSF9NTlQvZm9vID4gL2Rldi9udWxsIHwgX2ZpbHRlcl94ZnNfaW8K
-PiAKPiBJbmRlbnRhdGlvbi4KPiAKPj4gK2RvbmUKPj4gKwo+PiArJEJUUkZTX1VUSUxfUFJPRyBz
-dWJ2b2x1bWUgc25hcHNob3QgLXIgJFNDUkFUQ0hfTU5UIFwKPj4gKwkkU0NSQVRDSF9NTlQvc25h
-cF8xID4+ICRzZXFyZXMuZnVsbCAyPiYxCj4+ICsKPj4gKyRCVFJGU19VVElMX1BST0cgc2VuZCAt
-ZiAkU0NSQVRDSF9NTlQvc2VuZF9maWxlIFwKPj4gKwkkU0NSQVRDSF9NTlQvc25hcF8xID4+ICRz
-ZXFyZXMuZnVsbCAyPiYxICYKPj4gKwo+PiArcGlkPSQhCj4+ICsKPj4gKyRCVFJGU19VVElMX1BS
-T0cgc3Vidm9sdW1lIHNuYXBzaG90IC1yICRTQ1JBVENIX01OVC9zbmFwXzEgXAo+PiArCSRTQ1JB
-VENIX01OVC9zbmFwXzIgPj4gJHNlcXJlcy5mdWxsIDI+JjEKPj4gKwo+PiArd2FpdCAkcGlkIHx8
-IGVjaG8gIkZhaWxlZCB0byBzZW5kLCBzZWUgZG1lc2ciCj4gCj4gVGhpcyBzZWVtcyBraW5kIG9m
-IHJhY3kuIEl0IGFzc3VtZXMgdGhhdCB0aGUgc2VuZCBjb21tYW5kCj4gZG9lc24ndCBjb21wbGV0
-ZSBiZWZvcmUgdGhlIHdhaXQgJHBpZCBjYWxsIGlzIG1hZGUuIElmICRwaWQgZG9lc24ndAo+IGV4
-aXN0IGF0IHRoaXMgdGltZSBiZWNhdXNlIGl0IGhhcyBjb21wbGV0ZWQsIHdhaXQgd2lsbCByZXR1
-cm4gMTI3Cj4gYW5kIHRoZSB0ZXN0IHdpbGwgZmFpbKGtLgoKU29ycnkgZm9yIGRlbGF5IHJlcGx5
-IQoKTWF5YmUgYSBiZXR0ZXIgaWRlYSBmb3IgdGhpcyB3aWxsIGJlOgoKT3Bwb3NpdGUgdG8gcHJl
-dmlvdXMgd2F5LCB3ZSBkbyBzbmFwc2hvdHMgYmFja2dyb3VuZCB3aGlsZSBhdCB0aGUKc2FtZSB0
-aW1lIHdlIGRvIHNlbmRpbmcuCgpBbmQgYnRyZnMtcHJvZ3Mgc2hvdWxkIG91dHB1dCBtZWFuaW5n
-ZnVsIGluZm9ybWF0aW9uIG9uIHNlbmQgZmFpbHVyZSwgaSB3aWxsCm1ha2UgYSB0aW55IHBhdGNo
-IHRvIGFkZHJlc3MgdGhpcyBpc3N1ZS4gYnV0IHRvIG1ha2UgdGhpcyB0ZXN0IG1vcmUgZnJpZW5k
-bHksIGkKdGhpbmsgd2UgY2FuIHN0aWxsIGRvIHNvbWV0aGluZyBsaWtlOgoKYnRyZnMgc2VuZCA8
-Li4+ICB8fCBlY2hvICJGYWlsZWQgdG8gc2VuZCIKCldoYXQgZG8geW91IHRoaW5rIG9mIHRoaXMg
-d2F5PyAgRmVlbCBmcmVlIHRvIHRlbGwgbWUgaWYgdGhlcmUgYXJlIGJldHRlciBpZGVhc15fXi4K
-ClRoYW5rcywKV2FuZwo+IEFsc28sIHdoeSB3b3VsZCBhIGZhaWx1cmUgdG8gc2VuZCByZXN1bHQg
-aW4gbWVhaW5nZnVsIGluZm9ybWF0aW9uIGluCj4gZG1lc2c/IFNob3VsZG4ndCB0aGUgdXNlcnNw
-YWNlIGNvbW1hbmQgb3V0cHV0IGluZm9ybWF0aW9uIHRvIHRlbGwKPiB5b3Ugd2h5IHRoZXJlIHdh
-cyBhIGZhaWx1cmUgaW50byAkc2VxcmVzLmZ1bGw/Cj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4g
-LS0gCj4gRGF2ZSBDaGlubmVyCj4gZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
-LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Check for the btrfsprogs-devel ioctl.h header at configure time. Use it
+in src/cloner if present, otherwise fall back to using the copied clone
+ioctl definitions.
+
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+---
+ configure.ac | 1 +
+ src/cloner.c | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index bd48fd9..6fba3ad 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -30,6 +30,7 @@ AC_HEADER_STDC
+     AC_CHECK_HEADERS([	sys/fs/xfs_fsops.h	\
+ 			sys/fs/xfs_itable.h	\
+ 			xfs/platform_defs.h	\
++			btrfs/ioctl.h		\
+     ])
+ 
+ AC_PACKAGE_NEED_UUIDCOMPARE
+diff --git a/src/cloner.c b/src/cloner.c
+index dfce837..ccc2354 100644
+--- a/src/cloner.c
++++ b/src/cloner.c
+@@ -30,6 +30,9 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <errno.h>
++#ifdef HAVE_BTRFS_IOCTL_H
++#include <btrfs/ioctl.h>
++#else
+ 
+ struct btrfs_ioctl_clone_range_args {
+ 	int64_t src_fd;
+@@ -42,6 +45,7 @@ struct btrfs_ioctl_clone_range_args {
+ #define BTRFS_IOC_CLONE       _IOW(BTRFS_IOCTL_MAGIC, 9, int)
+ #define BTRFS_IOC_CLONE_RANGE _IOW(BTRFS_IOCTL_MAGIC, 13, \
+ 				   struct btrfs_ioctl_clone_range_args)
++#endif
+ 
+ static void
+ usage(char *name, const char *msg)
+-- 
+1.8.4.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
