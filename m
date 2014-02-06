@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6A6997F54
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 08:29:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 609F4304039
-	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 06:29:01 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3FFAF7F54
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 08:52:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35EFA8F8073
+	for <xfs@oss.sgi.com>; Thu,  6 Feb 2014 06:52:20 -0800 (PST)
 Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
-	[209.85.220.41]) by cuda.sgi.com with ESMTP id MkqGCxkeRkg5IKws
+	[209.85.220.41]) by cuda.sgi.com with ESMTP id rfrMJxdcHbTxawQW
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 06 Feb 2014 06:29:00 -0800 (PST)
-Received: by mail-pa0-f41.google.com with SMTP id fa1so1753618pad.0
-	for <xfs@oss.sgi.com>; Thu, 06 Feb 2014 06:28:59 -0800 (PST)
+	<xfs@oss.sgi.com>; Thu, 06 Feb 2014 06:52:19 -0800 (PST)
+Received: by mail-pa0-f41.google.com with SMTP id fa1so1770714pad.14
+	for <xfs@oss.sgi.com>; Thu, 06 Feb 2014 06:52:18 -0800 (PST)
 From: Wang Shilong <wangshilong1991@gmail.com>
 Subject: [PATCH v2] Btrfs: add regression test for running snapshot and send
 	concurrently
-Date: Thu,  6 Feb 2014 22:26:50 +0800
-Message-Id: <1391696810-29957-1-git-send-email-wangshilong1991@gmail.com>
+Date: Thu,  6 Feb 2014 22:50:12 +0800
+Message-Id: <1391698212-2358-1-git-send-email-wangshilong1991@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,7 +30,7 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: jbacik@fb.com, linux-btrfs@vger.kerne.org
+Cc: jbacik@fb.com, linux-btrfs@vger.kernel.org
 
 From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 
