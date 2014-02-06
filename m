@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 838577F54
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 23:47:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 342FAAC003
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 21:47:44 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CC2AF7F54
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 23:53:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B85DC8F8033
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 21:53:53 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	C2murwOpL3xpNyfB for <xfs@oss.sgi.com>;
-	Wed, 05 Feb 2014 21:47:40 -0800 (PST)
+	GghPxxwNR0Cs3c6g for <xfs@oss.sgi.com>;
+	Wed, 05 Feb 2014 21:53:51 -0800 (PST)
 Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1WBHoF-0007Cr-Rk
-	for xfs@oss.sgi.com; Thu, 06 Feb 2014 16:47:35 +1100
-Date: Thu, 6 Feb 2014 16:47:35 +1100
+	(envelope-from <david@fromorbit.com>) id 1WBHuD-0007Eg-9c
+	for xfs@oss.sgi.com; Thu, 06 Feb 2014 16:53:45 +1100
+Date: Thu, 6 Feb 2014 16:53:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfstests updated to 9d00bf8
-Message-ID: <20140206054735.GK13997@dastard>
+Subject: [ANNOUNCE] xfsdump: master branch updated to a88c490
+Message-ID: <20140206055345.GL13997@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,32 +34,23 @@ To: xfs@oss.sgi.com
 
 Hi folks,
 
-The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-just been updated. Patches often get missed, so please check if your
-outstanding patches were in this update. If they have not been in
-this update, please resubmit them to xfs@oss.sgi.com so they can be
-picked up in the next update.
+The xfsdump repository at git://oss.sgi.com/xfs/cmds/xfsdump has
+just been updated.
 
 The new head of the master branch is commit:
 
-9d00bf8 xfs/008: initialize "valid" bitmap in randholes.c
+a88c490 restore: don't trash file capabilities
 
 New Commits:
 
-Dave Chinner (2):
-      [6442726] xfs/296: fix golden output
-      [7c9748f] xfs/066: stat the test file, not the directory
+Dave Chinner (1):
+      [a88c490] restore: don't trash file capabilities
 
-Eric Sandeen (1):
-      [9d00bf8] xfs/008: initialize "valid" bitmap in randholes.c
 
 Code Diffstat:
 
- src/randholes.c   | 1 +
- tests/xfs/066     | 6 ++++--
- tests/xfs/066.out | 6 ++++--
- tests/xfs/296.out | 3 ++-
- 4 files changed, 11 insertions(+), 5 deletions(-)
+ restore/content.c | 116 ++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 77 insertions(+), 39 deletions(-)
 -- 
 Dave Chinner
 david@fromorbit.com
