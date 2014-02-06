@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D2E907F54
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 17:15:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B317A304051
-	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 15:15:30 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	FKwm1ixqXcS5LA2P for <xfs@oss.sgi.com>;
-	Wed, 05 Feb 2014 15:15:28 -0800 (PST)
-Date: Thu, 6 Feb 2014 10:15:26 +1100
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 838577F54
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 23:47:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 342FAAC003
+	for <xfs@oss.sgi.com>; Wed,  5 Feb 2014 21:47:44 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	C2murwOpL3xpNyfB for <xfs@oss.sgi.com>;
+	Wed, 05 Feb 2014 21:47:40 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1WBHoF-0007Cr-Rk
+	for xfs@oss.sgi.com; Thu, 06 Feb 2014 16:47:35 +1100
+Date: Thu, 6 Feb 2014 16:47:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] btrfs/035: add new clone overwrite regression test
-Message-ID: <20140205231526.GJ13997@dastard>
-References: <1391599009-2402-1-git-send-email-ddiss@suse.de>
-	<1391599009-2402-3-git-send-email-ddiss@suse.de>
+Subject: [ANNOUNCE] xfstests updated to 9d00bf8
+Message-ID: <20140206054735.GK13997@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1391599009-2402-3-git-send-email-ddiss@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,54 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Disseldorp <ddiss@suse.de>
-Cc: dsterba@suse.cz, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Feb 05, 2014 at 12:16:49PM +0100, David Disseldorp wrote:
-> This test uses the newly added cloner binary to dispatch full file and
-> range specific clone (reflink) requests.
+Hi folks,
 
-A couple of small nits:
+The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
+just been updated. Patches often get missed, so please check if your
+outstanding patches were in this update. If they have not been in
+this update, please resubmit them to xfs@oss.sgi.com so they can be
+picked up in the next update.
 
-> +CLONER_PROG=$here/src/cloner
+The new head of the master branch is commit:
 
-Need to test that the binary was build and is present.
+9d00bf8 xfs/008: initialize "valid" bitmap in randholes.c
 
-> +
-> +src_str="aaaaaaaaaa"
-> +
-> +echo -n "$src_str" > $SCRATCH_MNT/src || _fail "failed to create src"
+New Commits:
 
-No need for the "|| _fail ..." in any part of this test. Failures
-will be caught in the output and hence cause golden output
-mismatches.
+Dave Chinner (2):
+      [6442726] xfs/296: fix golden output
+      [7c9748f] xfs/066: stat the test file, not the directory
 
-Letting the test run even after a failure exercises the filesystem
-in interesting ways, so it's worthwhile ignoring failures in the
-test and letting the harness pick up the failures through error
-messages.
+Eric Sandeen (1):
+      [9d00bf8] xfs/008: initialize "valid" bitmap in randholes.c
 
-> +$CLONER_PROG $SCRATCH_MNT/src  $SCRATCH_MNT/src.clone1
-> +
-> +src_str="bbbbbbbbbbcccccccccc"
-> +
-> +echo -n "$src_str" > $SCRATCH_MNT/src || _fail "failed to create src"
-> +
-> +$CLONER_PROG $SCRATCH_MNT/src $SCRATCH_MNT/src.clone2
-> +
-> +snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone1 | awk '{print $5}'`
-> +echo "attempting ioctl (src.clone1 src)"
-> +$CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
-> +	$SCRATCH_MNT/src.clone1 $SCRATCH_MNT/src || _fail "ioctl failed"
+Code Diffstat:
 
-And to do that here, you probably need to add perror() output to
-the cloner program when it detects an error. i.e. let it give you
-the exact error that was detected, rather than lumping them all into
-a catchall here...
-
-Cheers,
-
-Dave.
+ src/randholes.c   | 1 +
+ tests/xfs/066     | 6 ++++--
+ tests/xfs/066.out | 6 ++++--
+ tests/xfs/296.out | 3 ++-
+ 4 files changed, 11 insertions(+), 5 deletions(-)
 -- 
 Dave Chinner
 david@fromorbit.com
