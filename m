@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
+Subject: [XFS updates] XFS development tree branch, master,
 	updated. xfs-for-linus-v3.14-rc1-2-12920-g38dbfb5
-Message-Id: <20140207001158.5F0D97F53@oss.sgi.com>
-Date: Thu,  6 Feb 2014 18:11:57 -0600 (CST)
+Message-Id: <20140207001445.E55117F53@oss.sgi.com>
+Date: Thu,  6 Feb 2014 18:14:43 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -13,19 +13,19 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============5353808140204056726=="
+Content-Type: multipart/mixed; boundary="===============8920664969741017602=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============5353808140204056726==
+--===============8920664969741017602==
 Content-Type: text/plain
 
 This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, for-next has been updated
+The branch, master has been updated
   f568849 Merge branch 'for-3.14/core' of git://git.kernel.dk/linux-block
   f149938 Merge tag 'xfs-for-linus-v3.14-rc1-2' of git://oss.sgi.com/xfs/xfs
   bf3d846 Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs
@@ -33,11 +33,60 @@ The branch, for-next has been updated
   37bc153 fs: make posix_acl_create more useful
   5bf3258 fs: make posix_acl_chmod more useful
   96c8c44 xfs: switch to kfree_put_link()
+  7c71ee7 xfs: allow logical-sector sized O_DIRECT
+  6da5417 xfs: rename xfs_buftarg structure members
+  f0bc998 xfs: clean up xfs_buftarg
   1f4a63b xfs: Calling destroy_work_on_stack() to pair with INIT_WORK_ONSTACK()
   bba719b xfs: fix off-by-one error in xfs_attr3_rmt_verify
+  bf3964c Merge branch 'xfs-extent-list-locking-fixes' into for-next
+  dc16b18 Merge branch 'xfs-misc' into for-next
+  6f96b30 xfs: Calling destroy_work_on_stack() to pair with INIT_WORK_ONSTACK()
+  85dd070 xfs: fix off-by-one error in xfs_attr3_rmt_verify
   b28bc9b Merge tag 'v3.13-rc6' into for-3.14/core
+  eef334e xfs: assert that we hold the ilock for extent map access
+  568d994 xfs: use xfs_ilock_attr_map_shared in xfs_attr_list_int
+  683cb94 xfs: use xfs_ilock_attr_map_shared in xfs_attr_get
+  da51d32 xfs: use xfs_ilock_data_map_shared in xfs_qm_dqiterate
+  f4df8ad xfs: use xfs_ilock_data_map_shared in xfs_qm_dqtobp
+  4f31736 xfs: take the ilock around xfs_bmapi_read in xfs_zero_remaining_bytes
+  40194ec xfs: reinstate the ilock in xfs_readdir
+  efa70be xfs: add xfs_ilock_attr_map_shared
+  309ecac xfs: rename xfs_ilock_map_shared
+  01f4f32 xfs: remove xfs_iunlock_map_shared
+  30ba7ad xfs: no need to lock the inode in xfs_find_handle
+  324bb26 Merge branch 'xfs-for-linus-v3.13-rc5' into for-next
+  ac8809f xfs: abort metadata writeback on permanent errors
+  33177f0 xfs: swalloc doesn't align allocations properly
+  83a0adc xfs: remove xfsbdstrat error
+  6e708bc xfs: align initial file allocations correctly
+  718cc6f xfs: fix infinite loop by detaching the group/project hints from user dquot
+  5c22727 xfs: fix assertion failure at xfs_setattr_nonsize
+  30d161c xfs: fix false assertion at xfs_qm_vop_create_dqattach
+  3a8c920 xfs: fix memory leak in xfs_dir2_node_removename
+  46f23ad Merge branch 'xfs-factor-icluster-macros' into for-next
+  f9e5abc xfs: use xfs_icluster_size_fsb in xfs_imap
+  982e939 xfs: use xfs_icluster_size_fsb in xfs_ifree_cluster
+  6e0c7b8 xfs: use xfs_icluster_size_fsb in xfs_ialloc_inode_init
+  a2ba07b xfs: use xfs_icluster_size_fsb in xfs_bulkstat
+  904957b xfs: introduce a common helper xfs_icluster_size_fsb
+  126cd10 xfs: get rid of XFS_IALLOC_BLOCKS macros
+  0f49efd xfs: get rid of XFS_INODE_CLUSTER_SIZE macros
+  7178343 xfs: get rid of XFS_IALLOC_INODES macros
+  ffda4e8 xfs: remove the quotaoff log format from the quotaoff log item
+  ce8e962 xfs: remove the dquot log format from the dquot log item
+  2f25129 xfs: remove the inode log format from the inode log item
+  da77650 xfs: format logged extents directly into the CIL
+  bde7cff xfs: format log items write directly into the linear CIL buffer
+  1234351 xfs: introduce xlog_copy_iovec
+  3de559fb xfs: refactor xfs_inode_item_format
+  ce9641d xfs: refactor xfs_inode_item_size
+  7aeb722 xfs: refactor xfs_buf_item_format_segment
+  9597df6 xfs: remove duplicate code in xlog_cil_insert_format_items
+  f94c445 xfs: growfs overruns AGFL buffer on V4 filesystems
+  2f42d61 xfs: don't perform discard if the given range length is less than block size
+  31978b5 xfs: underflow bug in xfs_attrlist_by_handle()
   4f024f3 block: Abstract out bvec iterator
-      from  7c71ee78031c248dca13fc94dea9a4cc217db6cf (commit)
+      from  f9b395a8ef8f34d19cae2cde361e19c96e097fad (commit)
 
 Those revisions listed above that are new to this repository have
 not appeared on any other notification email; so we list those
@@ -398,14 +447,45 @@ Date:   Fri Oct 11 15:44:27 2013 -0700
 -----------------------------------------------------------------------
 
 Summary of changes:
- fs/xfs/xfs_acl.c   | 151 +++--------------------------------------------------
- fs/xfs/xfs_acl.h   |   9 +---
- fs/xfs/xfs_aops.c  |   2 +-
- fs/xfs/xfs_buf.c   |   4 +-
- fs/xfs/xfs_iops.c  |  55 +++++++++----------
- fs/xfs/xfs_iops.h  |   2 +-
- fs/xfs/xfs_xattr.c |   4 +-
- 7 files changed, 40 insertions(+), 187 deletions(-)
+ fs/xfs/xfs_acl.c          | 151 +----------------
+ fs/xfs/xfs_acl.h          |   9 +-
+ fs/xfs/xfs_aops.c         |   4 +-
+ fs/xfs/xfs_attr.c         |   5 +-
+ fs/xfs/xfs_attr_list.c    |   8 +-
+ fs/xfs/xfs_attr_remote.c  |   2 +-
+ fs/xfs/xfs_bmap.c         |  27 +++-
+ fs/xfs/xfs_bmap_util.c    |  50 ++++--
+ fs/xfs/xfs_buf.c          |  55 +++----
+ fs/xfs/xfs_buf.h          |  31 +++-
+ fs/xfs/xfs_buf_item.c     | 124 +++++++-------
+ fs/xfs/xfs_dir2_readdir.c |   4 +
+ fs/xfs/xfs_dquot.c        |   7 +-
+ fs/xfs/xfs_dquot_item.c   |  67 +++-----
+ fs/xfs/xfs_dquot_item.h   |   3 +-
+ fs/xfs/xfs_extfree_item.c |  21 +--
+ fs/xfs/xfs_file.c         |  17 +-
+ fs/xfs/xfs_ialloc.c       |  53 +++---
+ fs/xfs/xfs_ialloc.h       |  21 +--
+ fs/xfs/xfs_icreate_item.c |  10 +-
+ fs/xfs/xfs_inode.c        |  85 +++++-----
+ fs/xfs/xfs_inode.h        |   4 +-
+ fs/xfs/xfs_inode_fork.c   |  17 +-
+ fs/xfs/xfs_inode_item.c   | 400 +++++++++++++++++++---------------------------
+ fs/xfs/xfs_inode_item.h   |   5 -
+ fs/xfs/xfs_ioctl.c        |   6 +-
+ fs/xfs/xfs_iops.c         |  55 +++----
+ fs/xfs/xfs_iops.h         |   2 +-
+ fs/xfs/xfs_itable.c       |  22 ++-
+ fs/xfs/xfs_log.h          |  46 ++++++
+ fs/xfs/xfs_log_cil.c      |  74 +++------
+ fs/xfs/xfs_log_recover.c  |  29 ++--
+ fs/xfs/xfs_qm.c           |   6 +-
+ fs/xfs/xfs_trans.h        |   2 +-
+ fs/xfs/xfs_trans_buf.c    |  13 +-
+ fs/xfs/xfs_trans_resv.c   |  10 +-
+ fs/xfs/xfs_trans_space.h  |   2 +-
+ fs/xfs/xfs_xattr.c        |   4 +-
+ 38 files changed, 649 insertions(+), 802 deletions(-)
 
 
 hooks/post-receive
@@ -413,7 +493,7 @@ hooks/post-receive
 XFS development tree
 
 
---===============5353808140204056726==
+--===============8920664969741017602==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -424,4 +504,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5353808140204056726==--
+--===============8920664969741017602==--
