@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A89EC29DF8
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 11:10:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D25A30408C
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 09:10:41 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id LeeIIYH19bw878EM (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 0D0A429DF8
+	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 11:15:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CF276304066
+	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 09:15:09 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 8vrAXRkvV3uDhg5x (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Feb 2014 09:10:39 -0800 (PST)
-Date: Fri, 7 Feb 2014 17:10:23 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 0/5] splice: locking changes and code refactoring
-Message-ID: <20140207171023.GU10323@ZenIV.linux.org.uk>
-References: <CA+55aFw4LgyYEkygxHUnpKZg3jMACGzsyENc9a9rWFmLcaRefQ@mail.gmail.com>
-	<20140118074649.GF10323@ZenIV.linux.org.uk>
-	<20140118082730.GH10323@ZenIV.linux.org.uk>
-	<20140118.004453.1800341321580114709.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140118.004453.1800341321580114709.davem@davemloft.net>
+	Fri, 07 Feb 2014 09:15:08 -0800 (PST)
+From: Koen De Wit <koen.de.wit@oracle.com>
+Subject: [PATCH] xfstests: Btrfs: add test for large metadata blocks
+Date: Fri,  7 Feb 2014 18:14:45 +0100
+Message-Id: <1391793285-935-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +21,184 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Miller <davem@davemloft.net>
-Cc: axboe@kernel.dk, sfrench@samba.org, sage@inktank.com, mfasheh@suse.com, xfs@oss.sgi.com, hch@infradead.org, jlbec@evilplan.org, linux-fsdevel@vger.kernel.org, torvalds@linux-foundation.org
+To: xfs@oss.sgi.com
+Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org
 
-On Sat, Jan 18, 2014 at 12:44:53AM -0800, David Miller wrote:
-> From: Al Viro <viro@ZenIV.linux.org.uk>
-> Date: Sat, 18 Jan 2014 08:27:30 +0000
-> 
-> > BTW, would sockets benefit from having ->sendpages() that would take an
-> > array of (page, offset, len) triples?  It would be trivial to do and
-> > some of the helpers that are falling out of writing that writev-based
-> > default_file_splice_write() look like they could be reused for
-> > calling that one...  Dave?
-> 
-> That's originally how the sendpage method was implemented, but back then
-> Linus asked us to only pass one page at a time.
-> 
-> I don't remember the details beyond that.
+Tests Btrfs filesystems with all possible metadata block sizes, by
+setting large extended attributes on files.
 
-FWIW, I wonder if what we are doing with ->msg_iov is the right thing.
-We modify the iovecs in array as we drain it.  And that's inconvenient
-for at least some callers (see e.g. complaints in fs/ncpfs about the
-need to copy the array, etc.).
+Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+---
+ tests/btrfs/036     |  128 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/036.out |    7 +++
+ tests/btrfs/group   |    1 +
+ 3 files changed, 136 insertions(+), 0 deletions(-)
+ create mode 100644 tests/btrfs/036
+ create mode 100644 tests/btrfs/036.out
 
-What if we embed iov_iter into the sucker and replace memcpy_{to,from}iovec*
-with variants taking iov_iter *?  If nothing else, it'll be marginally more
-efficient (no more skipping the already-emptied iovecs) and it seems to be
-more convenient for callers.  If we are lucky, that might even eliminate
-the need of ->sendpage() - just set the iov_iter over <page,offset,size>
-array instead of iovec one and let ->sendmsg() do the smart thing if it
-knows how.  I hadn't done comparison of {tcp,udp}_send{page,msg}, though -
-there might be dragons...  Even if that will turn out to be infeasible,
-it will at least drive the kmap/kunmap done by sock_no_sendpage() down
-into memcpy_from_iter(), turning them into kmap_atomic/kunmap_atomic.
-
-The obvious price is that kernel-side msghdr diverges from the userland
-one, so copy_msghdr_from_user() needs to deal with that, but I really
-doubt that you'll find a load where the price of copying it in two
-chunks instead of one would be measurable.  
-
-What else am I missing?
+diff --git a/tests/btrfs/036 b/tests/btrfs/036
+new file mode 100644
+index 0000000..0f8287a
+--- /dev/null
++++ b/tests/btrfs/036
+@@ -0,0 +1,128 @@
++#! /bin/bash
++# FS QA Test No. 036
++#
++# Tests large metadata blocks in btrfs, which allows large extended
++# attributes.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++status=1	# failure is the default!
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++rm -f $seqres.full
++
++pagesize=`$here/src/feature -s`
++pagesize_kb=`expr $pagesize / 1024`
++
++# Test all valid leafsizes
++for leafsize in `seq $pagesize_kb $pagesize_kb 64`; do
++    _scratch_unmount >/dev/null 2>&1
++    _scratch_mkfs -l ${leafsize}K >/dev/null
++    _scratch_mount
++    # Calculate the xattr size, but leave 512 bytes for other metadata.
++    xattr_size=`expr $leafsize \* 1024 - 512`
++
++    touch $SCRATCH_MNT/emptyfile
++    # smallfile will be inlined, bigfile not.
++    $XFS_IO_PROG -f -c "pwrite 0 100" $SCRATCH_MNT/smallfile >/dev/null
++    $XFS_IO_PROG -f -c "pwrite 0 9000" $SCRATCH_MNT/bigfile >/dev/null
++    ln -s $SCRATCH_MNT/bigfile $SCRATCH_MNT/bigfile_softlink
++
++    files=(emptyfile smallfile bigfile bigfile_softlink)
++    chars=(a b c d)
++    for i in `seq 0 1 3`; do
++        char=${chars[$i]}
++        file=$SCRATCH_MNT/${files[$i]}
++        lnkfile=${file}_hardlink
++        ln $file $lnkfile
++        xattr_value=`head -c $xattr_size < /dev/zero | tr '\0' $char`
++
++        set_md5=`echo -n "$xattr_value" | md5sum`
++        ${ATTR_PROG} -Lq -s attr_$char -V $xattr_value $file
++        get_md5=`${ATTR_PROG} -Lq -g attr_$char $file | md5sum`
++        get_ln_md5=`${ATTR_PROG} -Lq -g attr_$char $lnkfile | md5sum`
++
++        # Using md5sums for comparison instead of the values themselves
++        # because bash command lines cannot be larger than 64K chars.
++        if [ "$set_md5" != "$get_md5" ]; then
++            echo "Got unexpected xattr value for attr_$char"
++            echo "from file $file . (leafsize is ${leafsize}K)"
++        fi
++        if [ "$set_md5" != "$get_ln_md5" ]; then
++            echo "Value for attr_$char differs for $file and"
++            echo "$lnkfile . (leafsize is ${leafsize}K)"
++        fi
++    done
++
++    # Test attributes with a size larger than the leafsize.
++    # Should result in an error.
++    if [ "$leafsize" -lt "64" ]; then
++        # Bash command lines cannot be larger than 64K characters, so we
++        # do not test attribute values with a size >64KB.
++        xattr_size=`expr $leafsize \* 1024 + 512`
++        xattr_value=`head -c $xattr_size < /dev/zero | tr '\0' x`
++        ${ATTR_PROG} -q -s attr_toobig -V $xattr_value \
++            $SCRATCH_MNT/emptyfile >> $seqres.full 2>&1
++        if [ "$?" -eq "0" ]; then
++            echo "Expected error, xattr_size is bigger than ${leafsize}K"
++        fi
++    fi
++
++done
++
++# Illegal attribute name (more than 256 characters)
++attr_name=`head -c 260 < /dev/zero | tr '\0' n`
++${ATTR_PROG} -s $attr_name -V attribute_name_too_big \
++    $SCRATCH_MNT/emptyfile 2>&1 | head -n 1
++
++_scratch_unmount
++
++# Some illegal leafsizes
++
++_scratch_mkfs -l 0 2>> $seqres.full
++echo $?
++
++_scratch_mkfs -l 5678 2>> $seqres.full
++echo $?
++
++_scratch_mkfs -l `expr $pagesize / 2 + $pagesize` 2>> $seqres.full
++echo $?
++
++_scratch_mkfs -l 128K 2>> $seqres.full
++echo $?
++
++_scratch_mkfs -l K
++
++# success, all done
++status=0
++exit
+diff --git a/tests/btrfs/036.out b/tests/btrfs/036.out
+new file mode 100644
+index 0000000..1d9bdfb
+--- /dev/null
++++ b/tests/btrfs/036.out
+@@ -0,0 +1,7 @@
++QA output created by 036
++attr_set: Invalid argument
++1
++1
++1
++1
++ERROR: size value is empty
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index f9f062f..2ca2225 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -37,3 +37,4 @@
+ 032 auto quick
+ 033 auto quick
+ 034 auto quick
++036 auto quick
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
