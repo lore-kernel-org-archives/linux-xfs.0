@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5AB9D7F56
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 04:48:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 36D9E8F804C
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 02:48:55 -0800 (PST)
-Received: from mail-pb0-f46.google.com (mail-pb0-f46.google.com
-	[209.85.160.46]) by cuda.sgi.com with ESMTP id xNcwBMr5OBMZ1gJt
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 07 Feb 2014 02:48:54 -0800 (PST)
-Received: by mail-pb0-f46.google.com with SMTP id um1so3068817pbc.5
-	for <xfs@oss.sgi.com>; Fri, 07 Feb 2014 02:48:53 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
-Subject: Re: [PATCH v3] Btrfs: add regression test for running snapshot and
-	send concurrently
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9585C7F4E
+	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 08:03:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 72FBF30407B
+	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 06:03:07 -0800 (PST)
+Received: from mail-pd0-f179.google.com (mail-pd0-f179.google.com
+	[209.85.192.179]) by cuda.sgi.com with ESMTP id
+	YvHDXkgQamYepD0P (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 07 Feb 2014 06:03:03 -0800 (PST)
+Received: by mail-pd0-f179.google.com with SMTP id fp1so2783066pdb.24
+	for <xfs@oss.sgi.com>; Fri, 07 Feb 2014 06:03:02 -0800 (PST)
 From: Wang Shilong <wangshilong1991@gmail.com>
-In-Reply-To: <20140207044153.GF13647@dastard>
-Date: Fri, 7 Feb 2014 18:48:47 +0800
-Message-Id: <DE88907C-C829-4555-919E-6B3FB4D9A787@gmail.com>
-References: <1391703008-2322-1-git-send-email-wangshilong1991@gmail.com>
-	<20140206224337.GB13647@dastard>
-	<D32F9438-DA80-41AF-9247-A81E6EC90497@gmail.com>
-	<20140207044153.GF13647@dastard>
+Subject: [PATCH v4] xfstests/btrfs: add a regression test for running snapshot
+	and send concurrently
+Date: Fri,  7 Feb 2014 22:00:56 +0800
+Message-Id: <1391781656-9469-1-git-send-email-wangshilong1991@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,79 +25,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jbacik@fb.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 
-Hi Dave,
+Btrfs would fail to send if snapshot run concurrently, this test is to make
+sure we have fixed the bug.
 
-> On Fri, Feb 07, 2014 at 12:18:31PM +0800, Wang Shilong wrote:
->> 
->> Hi Dave,
->> 
->>> On Fri, Feb 07, 2014 at 12:10:08AM +0800, Wang Shilong wrote:
->>>> +$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
->>>> +	$SCRATCH_MNT/snap_1 >> $seqres.full 2>&1
->>>> +
->>>> +do_snapshots &
->>>> +snapshots_pid=$!
->>>> +
->>>> +$BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 > /dev/null 2>&1 || echo "btrfs send failed"
->>> 
->>> Let's stop this anti-pattern before it takes hold.
->>> 
->>> If there's output from the send command it should be
->>> filtered and captured in the golden image. Hence any deviation
->>> caused by errors is automatically flagged as an error.
->>> 
->>> That's the whole point of using golden images for capturing errors -
->>> you don't need to capture return values from binaries and it
->>> guarantees that users are informed about failures through error
->>> messages. IOWs:
->>> 
->>> $BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 | _btrfs_send_filter
->>> 
->>> is what you should be doing here.
->> 
->> I knew what you mean here, in fact, i did this on purpose.
-> 
-> Ok, then you need to explain why you did it on purpose with a comment.
-> It's just as important to explain the reason for doing something in
-> test code as it is in the kernel code. i.e. so when we are looking
-> at the test in 5 years time we know the reason for it being that
-> way.
-> 
->> for this test failure, btrfs-prog did not output failure
->> information from the beginning. 
-> 
-> I have nothing good to say about that state of affairs, but...
-> 
->> So to make older progs can also
->> detect the test failure, i dropped into this way.
-> 
-> .. it's going to have to stay like it. Please insert an
-> appropriately sarcastic comment about the usefulness of a silent
-> send command here, because if I write it I'm going to offend lots of
-> people. :/
+Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+---
+v3->v4:
+  avoid to use silent send command(thanks to Dave Chinner)
+  rename patch's subject from Btrfs to xfstest/btrfs(thanks to Anand)
+  make sure background snapshots exists before killing it. 
 
-Sorry, my miss, when i was going to give a patch for btrfs-progs, i noticed
-the issue has been fixed in latest btrfs-progs(3.12 which has released for a long time).
+v2->v3:
+  make sure we kill backgrund snapshots on test failure.
 
-So let's drop the way you have said before.
+v1-v2:
+  Avoid race codes and a code style update(Thanks to Dave Chinner's comments)
+---
+ tests/btrfs/034     | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/034.out |  2 ++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 88 insertions(+)
+ create mode 100644 tests/btrfs/034
+ create mode 100644 tests/btrfs/034.out
 
-Thanks,
-Wang
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/tests/btrfs/034 b/tests/btrfs/034
+new file mode 100644
+index 0000000..06c796e
+--- /dev/null
++++ b/tests/btrfs/034
+@@ -0,0 +1,85 @@
++#!/bin/bash
++# FS QA Test No. btrfs/034
++#
++# Regression test for running snapshots and send concurrently.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++snapshots_pid=0
++
++_cleanup()
++{
++	# kill backgroud snapshots
++	if [ $snapshots_pid -ne 0 ] && ps -p $snapshots_pid | grep -q $snapshots_pid; then
++		kill -TERM $snapshots_pid 2> /dev/null
++	fi
++	rm -f $tmp.*
++}
++
++do_snapshots()
++{
++	i=2
++	while [ 1 ]
++	do
++		$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT/snap_1 \
++			$SCRATCH_MNT/snap_$i >> $seqres.full 2>&1
++		let i=$i+1
++		sleep 1
++	done
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++touch $SCRATCH_MNT/foo
++
++# get file with fragments by using backwards writes.
++for i in `seq 10240 -1 1`; do
++	$XFS_IO_PROG -f -d -c "pwrite $(($i * 4096)) 4096" \
++		$SCRATCH_MNT/foo > /dev/null | _filter_xfs_io
++done
++
++$BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++	$SCRATCH_MNT/snap_1 >> $seqres.full 2>&1
++
++do_snapshots &
++snapshots_pid=$!
++
++$BTRFS_UTIL_PROG send $SCRATCH_MNT/snap_1 -f /dev/null 2>&1 | _filter_scratch
++
++status=0 ; exit
+diff --git a/tests/btrfs/034.out b/tests/btrfs/034.out
+new file mode 100644
+index 0000000..9ed31e8
+--- /dev/null
++++ b/tests/btrfs/034.out
+@@ -0,0 +1,2 @@
++QA output created by 034
++At subvol SCRATCH_MNT/snap_1
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index b29236c..f9f062f 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -36,3 +36,4 @@
+ 031 auto quick
+ 032 auto quick
+ 033 auto quick
++034 auto quick
+-- 
+1.8.4
 
 _______________________________________________
 xfs mailing list
