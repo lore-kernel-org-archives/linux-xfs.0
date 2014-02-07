@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C6E7C7CBE
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 16:49:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 48413AC009
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 14:49:40 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	LhFjGMsaATlWen6B for <xfs@oss.sgi.com>;
-	Fri, 07 Feb 2014 14:49:38 -0800 (PST)
-Date: Sat, 8 Feb 2014 09:49:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: Btrfs: add test for large metadata blocks
-Message-ID: <20140207224934.GH13647@dastard>
-References: <1391793285-935-1-git-send-email-koen.de.wit@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4A0D17CBE
+	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 17:13:22 -0600 (CST)
+Message-ID: <52F56891.5020305@sgi.com>
+Date: Fri, 07 Feb 2014 17:13:21 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1391793285-935-1-git-send-email-koen.de.wit@oracle.com>
+Subject: Re: [PATCH] xfs_db: fix the setting of unaligned directory fields
+References: <20140207210348.249387765@sgi.com> <20140207223327.GG13647@dastard>
+In-Reply-To: <20140207223327.GG13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,113 +17,193 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Koen De Wit <koen.de.wit@oracle.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Feb 07, 2014 at 06:14:45PM +0100, Koen De Wit wrote:
-> Tests Btrfs filesystems with all possible metadata block sizes, by
-> setting large extended attributes on files.
-> 
-> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+On 02/07/14 16:33, Dave Chinner wrote:
+> On Fri, Feb 07, 2014 at 04:03:42PM -0600, Mark Tinguely wrote:
+>> Setting the directory startoff, startblock, and blockcount
+>> bit fields is difficult on both big and little endian machines.
+>> The setting of extentflag bit field was completely broken.
+>>
+>> big endian test:
+>> xfs_db>  write u.bmx[0].startblock 12
+>> u.bmx[0].startblock = 0
+>> xfs_db>  write u.bmx[0].startblock 0xc0000
+>> u.bmx[0].startblock = 192
+>>
+>> little endian test:
+>> xfs_db>  write u.bmx[0].startblock 12
+>> u.bmx[0].startblock = 211106232532992
+>> xfs_db>  write u.bmx[0].startblock 0xc0000
+>> u.bmx[0].startblock = 3221225472
+>
+> Can you please write an xfstest for this? The BMBT extent records
+> are the only structures that have unaligned bit offsets and hence
+> the only ones that exercise this specific code. Clearly no-one
+> has needed to write a BMBT record in the past 10 years....
 
-There's a few things here that need fixing.
+nod. I manually ran through the values valid values for the fields to 
+test. A test would be nice.
 
-> +pagesize=`$here/src/feature -s`
-> +pagesize_kb=`expr $pagesize / 1024`
-> +
-> +# Test all valid leafsizes
-> +for leafsize in `seq $pagesize_kb $pagesize_kb 64`; do
-> +    _scratch_unmount >/dev/null 2>&1
+>> Since these output fields and the lengths are not aligned to a byte,
+>> setbitval requires them to be entered in big endian and properly
+>> byte/nibble shifted. The extentflag out field is aligned to a byte
+>> boundary but was not shifted correctly.
+>>
+>> Convert the input to big endian on little endian machines and
+>> bit/byte shift on all platforms so setbitval can set the bits
+>> correctly. As noted in the comment, the bit shift must be done
+>> before doing the endian conversion or end result will be shifted
+>> in the wrong direction..
+>
+> Ok, so while we are touching this code, some documentation
+> explaining the bit shifting requirements, the format of the return
+> buffer from convert_args, what parameter format setbitval() expects,
+> etc. Some ascii art demonstrating the incoming and outgoing buffer
+> contents for convert_arg would be a great help.
+>
 
-Indentation are tabs, and tabs are 8 spaces in size, please.
+okay.
 
-> +    _scratch_mkfs -l ${leafsize}K >/dev/null
-> +    _scratch_mount
+>> +	char	*in	= (char *)ibuf;
+>> +	char	*out	= (char *)obuf;
+>> +	int	bit;
+>
+> ibuf/obuf are void *, so don't need casts. Also, whitespace:
+>
+> 	char	*in = ibuf;
+> 	char	*out = obuf;
+>
+>> +	/*
+>> +	 * The input data is in big endian and aligned to the bit length.
+>> +	 * Set the individual bits if the destination field or the source
+>> +	 * end are not aligned.
+>> +	 */
+>> +	if (bitoff % NBBY || nbits % NBBY) {
+>> +		for (bit=0; bit<nbits; bit++)
+>> +			setbit(out, bit+bitoff, getbit(in, bit));
+>> +	} else
+>> +		memcpy(out+byteize(bitoff), in, byteize(nbits));
+>
+> This is also rather whitespace challenged.
 
-No need to use _scratch_unmount here - you should be doing a
-_check_scratch_fs at the end of the loop.
+Nod, did not see that.
 
-> +    # Calculate the xattr size, but leave 512 bytes for other metadata.
-> +    xattr_size=`expr $leafsize \* 1024 - 512`
-> +
-> +    touch $SCRATCH_MNT/emptyfile
-> +    # smallfile will be inlined, bigfile not.
-> +    $XFS_IO_PROG -f -c "pwrite 0 100" $SCRATCH_MNT/smallfile >/dev/null
-> +    $XFS_IO_PROG -f -c "pwrite 0 9000" $SCRATCH_MNT/bigfile >/dev/null
-> +    ln -s $SCRATCH_MNT/bigfile $SCRATCH_MNT/bigfile_softlink
-> +
-> +    files=(emptyfile smallfile bigfile bigfile_softlink)
-> +    chars=(a b c d)
-> +    for i in `seq 0 1 3`; do
-> +        char=${chars[$i]}
-> +        file=$SCRATCH_MNT/${files[$i]}
-> +        lnkfile=${file}_hardlink
-> +        ln $file $lnkfile
-> +        xattr_value=`head -c $xattr_size < /dev/zero | tr '\0' $char`
-> +
-> +        set_md5=`echo -n "$xattr_value" | md5sum`
+>
+>>   }
+>> Index: b/db/write.c
+>> ===================================================================
+>> --- a/db/write.c
+>> +++ b/db/write.c
+>> @@ -451,6 +451,7 @@ convert_arg(
+>>   	int alloc_size;
+>>   	char *ostr;
+>>   	int octval, ret;
+>> +	int offadj;
+>
+> Just "offset" is sufficient here, and with the scope of use, it
+> can be declared in the else branch where it is used.
+>
+>>
+>>   	if (bit_length<= 64)
+>>   		alloc_size = 8;
+>> @@ -526,16 +527,20 @@ convert_arg(
+>>   		 */
+>>   		*value = strtoll(arg, NULL, 0);
+>
+> If we are touching this code, the return value here should be error
+> checked.
+>
+> xfs_db>  write u3.bmx[0].startblock 3rgfdw
+> u3.bmx[0].startblock = 52776558133248
 
-Just dump the md5sum to the output file.
+hmm, It should stop at 3. I will take a look.
 
-> +        ${ATTR_PROG} -Lq -s attr_$char -V $xattr_value $file
+> xfs_db>  write u3.bmx[0].startblock x3rgfdw
+> u3.bmx[0].startblock = 0
+> xfs_db>
+>
+> i.e. it accepts garbage rather than erroring out.
 
-> +        get_md5=`${ATTR_PROG} -Lq -g attr_$char $file | md5sum`
-> +        get_ln_md5=`${ATTR_PROG} -Lq -g attr_$char $lnkfile | md5sum`
+as does all the other writes ...
+xfs_db>  write core.nblocks x3rgfdw
+core.nblocks = 0
 
-And dump these to the output file, too. Then the golden image
-matching when the test is finish will tell you if it passed or not.
-i.e:
+Fixing convert_arg() is beyond the scope of just this patch.
 
-	echo -n "$xattr_value" | md5sum
-	${ATTR_PROG} -Lq -s attr_$char -V $xattr_value $file
-	${ATTR_PROG} -Lq -g attr_$char $file | md5sum
-	${ATTR_PROG} -Lq -g attr_$char $lnkfile | md5sum
+>> -#if __BYTE_ORDER == BIG_ENDIAN
+>> -		/* hackery for big endian */
+>> -		if (bit_length<= 8) {
+>> -			rbuf += 7;
+>> -		} else if (bit_length<= 16) {
+>> -			rbuf += 6;
+>> -		} else if (bit_length<= 32) {
+>> -			rbuf += 4;
+>> -		}
+>> -#endif
+>> +		/*
+>> +		 * Align the significant bits in the result length.
+>> +		 * Must be done before the endian conversion.
+>> +		 */
+>> +		offadj = bit_length % NBBY;
+>> +		if (offadj)
+>> +			*value<<= (8 - offadj);
+>
+> So it gets shifted up by a number 1-7 bits to align the first bit of
+> the range to a byte boundary. So, that magic "8" should be:
+>
+> 			*value<<= NBBY - offadj;
+>
+> Ascii art to help readers. Before (host order):
+>
+> 	rbuf
+> 	+---+---+---+---+---+--n+nnn+nnn+
+> 		               + bitlen +
+> After (host order):
+> 	+---+---+---+---+---+nnn+nnn+n--+
+> 			    + bitlen +
+> then
+>
+>> +
+>> +		/* convert to big endian */
+>> +		*value = cpu_to_be64(*value);
+>> +
+>> +		/* Align the signifant bytes in the result length. */
+>> +		offadj = 7 - (bit_length - 1)/ 8;
+>> +		rbuf += offadj;
+>
+> So the buffer pointer get moved forward by a certain number of bytes
+> to point at the first byte of the 64 bit big endian value. IOWs, the
+> magic "7" is actually (sizeof(__be64) - 1) and the "8" is
+> "sizeof(__be64)" because we are talking about adjusting the offset
+> within a __be64 variable. IOWs the calculation should be:
+>
+> 		offset = sizeof(__be64) - 1 -
+> 				((bit_length - 1) / sizeof(__be64));
+>
+> Ascii art to help readers. Before (big endian):
+>
+> 	rbuf
+> 	+---+---+---+---+---+nnn+nnn+n--+
+> 			    + bitlen +
+>
+> After (big endian):
+> 		            rbuf
+>                              +nnn+nnn+n--+
+> 			    + bitlen +
+>
+> And a similar diagram should be added to setbitval to describe the
+> format of the bit information required in @ibuf.
+>
 
-is all that neds to be done here.
+Yep, good idea.
 
-> +    # Test attributes with a size larger than the leafsize.
-> +    # Should result in an error.
-> +    if [ "$leafsize" -lt "64" ]; then
-> +        # Bash command lines cannot be larger than 64K characters, so we
-> +        # do not test attribute values with a size >64KB.
-> +        xattr_size=`expr $leafsize \* 1024 + 512`
-> +        xattr_value=`head -c $xattr_size < /dev/zero | tr '\0' x`
-> +        ${ATTR_PROG} -q -s attr_toobig -V $xattr_value \
-> +            $SCRATCH_MNT/emptyfile >> $seqres.full 2>&1
-> +        if [ "$?" -eq "0" ]; then
-> +            echo "Expected error, xattr_size is bigger than ${leafsize}K"
-> +        fi
-
-What you are doing is redirecting the error to $seqres.full
-so that it doesn't end up in the output file, then detecting the
-absence of an error and dumping a message to the output file to make
-the test fail.
-
-IOWs, the ATTR_PROG failure message should be in the golden output
-file and you don't have to do anything else to detect a pass/fail
-condition.
-
-> +_scratch_unmount
-> +
-> +# Some illegal leafsizes
-> +
-> +_scratch_mkfs -l 0 2>> $seqres.full
-> +echo $?
-
-Same again - you are dumping the error output into a different file,
-then detecting the error manually. pass the output of _scratch_mkfs
-through a filter, and let errors cause golden output mismatches.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Mark.
 
 _______________________________________________
 xfs mailing list
