@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 229947F3F
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 02:32:41 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2BC307F3F
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 09:50:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DBD058F8052
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 00:32:40 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	0BTta5XAjyLpTCCL for <xfs@oss.sgi.com>;
-	Sat, 08 Feb 2014 00:32:39 -0800 (PST)
-Date: Sat, 8 Feb 2014 19:32:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: lockdep warning in 3.14-rc1
-Message-ID: <20140208083234.GJ13647@dastard>
-References: <52F57E6C.10907@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52F57E6C.10907@linux.vnet.ibm.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 00DDC304032
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 07:50:37 -0800 (PST)
+Received: from mail-we0-f169.google.com (mail-we0-f169.google.com
+	[74.125.82.169]) by cuda.sgi.com with ESMTP id 2OlvPGuHcd43S1Mg
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 08 Feb 2014 07:50:32 -0800 (PST)
+Received: by mail-we0-f169.google.com with SMTP id t61so3149313wes.0
+	for <xfs@oss.sgi.com>; Sat, 08 Feb 2014 07:50:31 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH] xfstests: add test for btrfs data corruption when using
+	compression
+Date: Sat,  8 Feb 2014 15:50:09 +0000
+Message-Id: <1391874609-19721-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,63 +24,169 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Cody P Schafer <cody@linux.vnet.ibm.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: jbacik@fb.com, clm@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-On Fri, Feb 07, 2014 at 04:46:36PM -0800, Cody P Schafer wrote:
-> Appears consistently during boot up.
-....
+Test for a btrfs data corruption when using compressed files/extents.
+Under certain cases, it was possible for reads to return random data
+(content from a previously used page) instead of zeroes. This also
+caused partial updates to those regions that were supposed to be filled
+with zeroes to save random (and invalid) data into the file extents.
 
-> [    2.080292]        CPU0                    CPU1
-> [    2.080295]        ----                    ----
-> [    2.080298]   lock(&(&ip->i_lock)->mr_lock);
-> [    2.080303]                                lock(&mm->mmap_sem);
-> [    2.080307]                                lock(&(&ip->i_lock)->mr_lock);
-> [    2.080312]   lock(&mm->mmap_sem);
-> [    2.080316] 
->  *** DEADLOCK ***
-> 
-> [    2.080321] 2 locks held by systemd/1:
-> [    2.080323]  #0:  (&type->i_mutex_dir_key#2){+.+.+.}, at: [<c000000000297470>] .iterate_dir+0xa0/0x160
-> [    2.080334]  #1:  (&(&ip->i_lock)->mr_lock){++++..}, at: [<c00000000042e7ec>] .xfs_ilock+0x15c/0x1b0
-> [    2.080343] 
-> stack backtrace:
-> [    2.080348] CPU: 2 PID: 1 Comm: systemd Tainted: G        W    3.14.0-rc1-24x7+ #8
-> [    2.080353] Call Trace:
-> [    2.080357] [c0000001fa103370] [c000000000016590] .show_stack+0x170/0x290 (unreliable)
-> [    2.080364] [c0000001fa103460] [c000000000934f5c] .dump_stack+0xa0/0xdc
-> [    2.080370] [c0000001fa1034e0] [c00000000092b6b4] .print_circular_bug+0x364/0x39c
-> [    2.080376] [c0000001fa103590] [c00000000010ba70] .check_prev_add+0x8d0/0x8e0
-> [    2.080381] [c0000001fa1036a0] [c00000000010c364] .validate_chain.isra.31+0x8e4/0xc40
-> [    2.080386] [c0000001fa103790] [c00000000010de08] .__lock_acquire+0x488/0xd40
-> [    2.080391] [c0000001fa1038b0] [c00000000010f08c] .lock_acquire+0xac/0x190
-> [    2.080397] [c0000001fa103980] [c00000000021fe44] .might_fault+0xa4/0xe0
-> [    2.080402] [c0000001fa1039f0] [c000000000297924] .filldir+0x1f4/0x290
-> [    2.080407] [c0000001fa103ab0] [c0000000003cebc8] .xfs_dir2_block_getdents+0x218/0x2b0
-> [    2.080413] [c0000001fa103b80] [c0000000003cf1e8] .xfs_readdir+0x168/0x1d0
-> [    2.080418] [c0000001fa103c30] [c0000000003d2508] .xfs_file_readdir+0x48/0x80
-> [    2.080423] [c0000001fa103cc0] [c0000000002974ec] .iterate_dir+0x11c/0x160
-> [    2.080428] [c0000001fa103d60] [c000000000297df0] .SyS_getdents+0xa0/0x190
-> [    2.080433] [c0000001fa103e30] [c00000000000a164] syscall_exit+0x0/0x98
+This is fixed by the commit for the linux kernel titled:
 
-False positive. We need to add new lockdep annotations because
-lockdep doesn't know the difference between directory locking and
-file IO path locking.
+   Btrfs: fix data corruption when reading/updating compressed extents
+   (https://patchwork.kernel.org/patch/3610391/)
 
-Ben, can you look at this? It is being caused by the addition of the
-iolock to the directory readdir code, so directory inodes need a
-different lockdep context to regular file inodes...
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
+ tests/btrfs/036     |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/036.out |    1 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 113 insertions(+)
+ create mode 100755 tests/btrfs/036
+ create mode 100644 tests/btrfs/036.out
 
-Cheers,
-
-Dave.
+diff --git a/tests/btrfs/036 b/tests/btrfs/036
+new file mode 100755
+index 0000000..533b6ee
+--- /dev/null
++++ b/tests/btrfs/036
+@@ -0,0 +1,111 @@
++#! /bin/bash
++# FS QA Test No. btrfs/036
++#
++# Test for a btrfs data corruption when using compressed files/extents.
++# Under certain cases, it was possible for reads to return random data
++# (content from a previously used page) instead of zeroes. This also
++# caused partial updates to those regions that were supposed to be filled
++# with zeroes to save random (and invalid) data into the file extents.
++#
++# This is fixed by the commit for the linux kernel titled:
++#
++#   Btrfs: fix data corruption when reading/updating compressed extents
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++tmp=`mktemp -d`
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount "-o compress-force=lzo"
++
++run_check $XFS_IO_PROG -f -c "pwrite -S 0x06 -b 18670 266978 18670" \
++    $SCRATCH_MNT/foobar
++run_check $XFS_IO_PROG -c "falloc 26450 665194" $SCRATCH_MNT/foobar
++run_check $XFS_IO_PROG -c "truncate 542872" $SCRATCH_MNT/foobar
++run_check $XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foobar
++
++# Expected file items in the fs tree are (from btrfs-debug-tree):
++#
++#   item 4 key (257 INODE_ITEM 0) itemoff 15879 itemsize 160
++#       inode generation 6 transid 6 size 542872 block group 0 mode 100600
++#   item 5 key (257 INODE_REF 256) itemoff 15863 itemsize 16
++#       inode ref index 2 namelen 6 name: foobar
++#   item 6 key (257 EXTENT_DATA 0) itemoff 15810 itemsize 53
++#       extent data disk byte 0 nr 0 gen 6
++#       extent data offset 0 nr 24576 ram 266240
++#       extent compression 0
++#   item 7 key (257 EXTENT_DATA 24576) itemoff 15757 itemsize 53
++#       prealloc data disk byte 12849152 nr 241664 gen 6
++#       prealloc data offset 0 nr 241664
++#   item 8 key (257 EXTENT_DATA 266240) itemoff 15704 itemsize 53
++#       extent data disk byte 12845056 nr 4096 gen 6
++#       extent data offset 0 nr 20480 ram 20480
++#       extent compression 2
++#   item 9 key (257 EXTENT_DATA 286720) itemoff 15651 itemsize 53
++#       prealloc data disk byte 13090816 nr 405504 gen 6
++#       prealloc data offset 0 nr 258048
++#
++# The on disk extent at 266240, contains 5 compressed chunks of file data.
++# Each of the first 4 chunks compress 4096 bytes of file data, while the last
++# one compresses only 3024 bytes of file data. Because this extent item is not
++# the last one in the file, as it followed by a prealloc extent, reads into
++# the region [285648 ; 286720[ (length = 4096 - 3024) should return zeroes.
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++EXPECTED_MD5="b8b0dbb8e02f94123c741c23659a1c0a"
++
++for i in `seq 1 27`
++do
++    _scratch_mount "-o ro"
++    MD5=`md5sum $SCRATCH_MNT/foobar | cut -f 1 -d ' '`
++    _scratch_unmount
++    if [ "${MD5}x" != "${EXPECTED_MD5}x" ]
++    then
++	echo "Unexpected file digest (wanted $EXPECTED_MD5, got $MD5)"
++    fi
++done
++
++status=0
++exit
+diff --git a/tests/btrfs/036.out b/tests/btrfs/036.out
+new file mode 100644
+index 0000000..8a5bd23
+--- /dev/null
++++ b/tests/btrfs/036.out
+@@ -0,0 +1 @@
++QA output created by 036
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index f9f062f..2ca2225 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -37,3 +37,4 @@
+ 032 auto quick
+ 033 auto quick
+ 034 auto quick
++036 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
