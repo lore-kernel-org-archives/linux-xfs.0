@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 09FBC7F3F
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 01:11:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F01FB8F8039
-	for <xfs@oss.sgi.com>; Fri,  7 Feb 2014 23:11:01 -0800 (PST)
-Date: Fri, 7 Feb 2014 23:11:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: ensure correct timestamp updates from truncate
-Message-ID: <20140208071100.GC25719@infradead.org>
-References: <20140110122700.GA12624@localhost> <52CFF402.5080409@oracle.com>
-	<20140110133306.GA22918@infradead.org>
-	<52CFFD1C.7050005@oracle.com>
-	<20140111111045.GA29380@infradead.org>
-	<52E8FE81.7040402@redhat.com>
-	<20140130080652.GA23758@infradead.org>
-	<20140130154701.GP1935@sgi.com>
-	<20140203102323.GC11829@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 77E8C7F3F
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 02:30:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BFD28F8052
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 00:30:20 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	i5UBx6qyjrtYtnVk for <xfs@oss.sgi.com>;
+	Sat, 08 Feb 2014 00:30:18 -0800 (PST)
+Date: Sat, 8 Feb 2014 19:30:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_db: fix the setting of unaligned directory fields
+Message-ID: <20140208083012.GI13647@dastard>
+References: <20140207210348.249387765@sgi.com> <20140207223327.GG13647@dastard>
+	<52F56891.5020305@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140203102323.GC11829@infradead.org>
+In-Reply-To: <52F56891.5020305@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +30,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 03, 2014 at 02:23:23AM -0800, Christoph Hellwig wrote:
-> On Thu, Jan 30, 2014 at 09:47:01AM -0600, Ben Myers wrote:
-> > That is v3.13-rc2-14-gc91c46c, so I believe we'll want to Cc: stable on this
-> > one.  Correct?
+On Fri, Feb 07, 2014 at 05:13:21PM -0600, Mark Tinguely wrote:
+> On 02/07/14 16:33, Dave Chinner wrote:
+> >On Fri, Feb 07, 2014 at 04:03:42PM -0600, Mark Tinguely wrote:
+> >>@@ -526,16 +527,20 @@ convert_arg(
+> >>  		 */
+> >>  		*value = strtoll(arg, NULL, 0);
+> >
+> >If we are touching this code, the return value here should be error
+> >checked.
+> >
+> >xfs_db>  write u3.bmx[0].startblock 3rgfdw
+> >u3.bmx[0].startblock = 52776558133248
+> 
+> hmm, It should stop at 3. I will take a look.
 
-We'll need to get it to Linus for 3.14 first, though.
+Even if it stops at 3, that's still wrong because it's failed to
+process the entire user input....
+
+> >xfs_db>  write u3.bmx[0].startblock x3rgfdw
+> >u3.bmx[0].startblock = 0
+> >xfs_db>
+> >
+> >i.e. it accepts garbage rather than erroring out.
+> 
+> as does all the other writes ...
+> xfs_db>  write core.nblocks x3rgfdw
+> core.nblocks = 0
+> 
+> Fixing convert_arg() is beyond the scope of just this patch.
+
+Sure, but I'm not asking you to fix all of convert_args in this
+patch, just asking you to do a complete job of fixing the bitval
+input processing in this patch.
+
+But, seeing as you've raised that convert_args() has other broken
+paths, can you also write new patches to address those issues? It
+won't take you long while all this code is fresh in your mind, and
+if you do it now it won't get dropped on the floor until somebody
+else hits it a couple of years down the track...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
