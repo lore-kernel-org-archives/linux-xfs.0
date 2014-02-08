@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2BC307F3F
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 09:50:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 00DDC304032
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 07:50:37 -0800 (PST)
-Received: from mail-we0-f169.google.com (mail-we0-f169.google.com
-	[74.125.82.169]) by cuda.sgi.com with ESMTP id 2OlvPGuHcd43S1Mg
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 08 Feb 2014 07:50:32 -0800 (PST)
-Received: by mail-we0-f169.google.com with SMTP id t61so3149313wes.0
-	for <xfs@oss.sgi.com>; Sat, 08 Feb 2014 07:50:31 -0800 (PST)
-From: Filipe David Borba Manana <fdmanana@gmail.com>
-Subject: [PATCH] xfstests: add test for btrfs data corruption when using
-	compression
-Date: Sat,  8 Feb 2014 15:50:09 +0000
-Message-Id: <1391874609-19721-1-git-send-email-fdmanana@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4043B7F3F
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 11:30:54 -0600 (CST)
+Message-ID: <52F669CA.7050000@sgi.com>
+Date: Sat, 08 Feb 2014 11:30:50 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_db: fix the setting of unaligned directory fields
+References: <20140207210348.249387765@sgi.com>
+	<20140207223327.GG13647@dastard> <52F56891.5020305@sgi.com>
+	<20140208083012.GI13647@dastard>
+In-Reply-To: <20140208083012.GI13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,169 +19,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jbacik@fb.com, clm@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Test for a btrfs data corruption when using compressed files/extents.
-Under certain cases, it was possible for reads to return random data
-(content from a previously used page) instead of zeroes. This also
-caused partial updates to those regions that were supposed to be filled
-with zeroes to save random (and invalid) data into the file extents.
+On 02/08/14 02:30, Dave Chinner wrote:
+> On Fri, Feb 07, 2014 at 05:13:21PM -0600, Mark Tinguely wrote:
+>> On 02/07/14 16:33, Dave Chinner wrote:
+>>> On Fri, Feb 07, 2014 at 04:03:42PM -0600, Mark Tinguely wrote:
+>>>> @@ -526,16 +527,20 @@ convert_arg(
+>>>>   		 */
+>>>>   		*value = strtoll(arg, NULL, 0);
+>>>
+>>> If we are touching this code, the return value here should be error
+>>> checked.
+>>>
+>>> xfs_db>   write u3.bmx[0].startblock 3rgfdw
+>>> u3.bmx[0].startblock = 52776558133248
+>>
+>> hmm, It should stop at 3. I will take a look.
+>
+> Even if it stops at 3, that's still wrong because it's failed to
+> process the entire user input....
+>
+>>> xfs_db>   write u3.bmx[0].startblock x3rgfdw
+>>> u3.bmx[0].startblock = 0
+>>> xfs_db>
+>>>
+>>> i.e. it accepts garbage rather than erroring out.
+>>
+>> as does all the other writes ...
+>> xfs_db>   write core.nblocks x3rgfdw
+>> core.nblocks = 0
+>>
+>> Fixing convert_arg() is beyond the scope of just this patch.
+>
+> Sure, but I'm not asking you to fix all of convert_args in this
+> patch, just asking you to do a complete job of fixing the bitval
+> input processing in this patch.
+>
+> But, seeing as you've raised that convert_args() has other broken
+> paths, can you also write new patches to address those issues? It
+> won't take you long while all this code is fresh in your mind, and
+> if you do it now it won't get dropped on the floor until somebody
+> else hits it a couple of years down the track...
+>
 
-This is fixed by the commit for the linux kernel titled:
+It needs to be split up. write_string() needs string inputs, 
+write_struct() need numeric inputs.  Who uses the UUID-style hex blocks? 
+It feels like a black hole of time.
 
-   Btrfs: fix data corruption when reading/updating compressed extents
-   (https://patchwork.kernel.org/patch/3610391/)
+It goes on my 'off the clock' to do list.
 
-Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
----
- tests/btrfs/036     |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/036.out |    1 +
- tests/btrfs/group   |    1 +
- 3 files changed, 113 insertions(+)
- create mode 100755 tests/btrfs/036
- create mode 100644 tests/btrfs/036.out
+--Mark.
 
-diff --git a/tests/btrfs/036 b/tests/btrfs/036
-new file mode 100755
-index 0000000..533b6ee
---- /dev/null
-+++ b/tests/btrfs/036
-@@ -0,0 +1,111 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/036
-+#
-+# Test for a btrfs data corruption when using compressed files/extents.
-+# Under certain cases, it was possible for reads to return random data
-+# (content from a previously used page) instead of zeroes. This also
-+# caused partial updates to those regions that were supposed to be filled
-+# with zeroes to save random (and invalid) data into the file extents.
-+#
-+# This is fixed by the commit for the linux kernel titled:
-+#
-+#   Btrfs: fix data corruption when reading/updating compressed extents
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+tmp=`mktemp -d`
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    rm -fr $tmp
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+_need_to_be_root
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount "-o compress-force=lzo"
-+
-+run_check $XFS_IO_PROG -f -c "pwrite -S 0x06 -b 18670 266978 18670" \
-+    $SCRATCH_MNT/foobar
-+run_check $XFS_IO_PROG -c "falloc 26450 665194" $SCRATCH_MNT/foobar
-+run_check $XFS_IO_PROG -c "truncate 542872" $SCRATCH_MNT/foobar
-+run_check $XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foobar
-+
-+# Expected file items in the fs tree are (from btrfs-debug-tree):
-+#
-+#   item 4 key (257 INODE_ITEM 0) itemoff 15879 itemsize 160
-+#       inode generation 6 transid 6 size 542872 block group 0 mode 100600
-+#   item 5 key (257 INODE_REF 256) itemoff 15863 itemsize 16
-+#       inode ref index 2 namelen 6 name: foobar
-+#   item 6 key (257 EXTENT_DATA 0) itemoff 15810 itemsize 53
-+#       extent data disk byte 0 nr 0 gen 6
-+#       extent data offset 0 nr 24576 ram 266240
-+#       extent compression 0
-+#   item 7 key (257 EXTENT_DATA 24576) itemoff 15757 itemsize 53
-+#       prealloc data disk byte 12849152 nr 241664 gen 6
-+#       prealloc data offset 0 nr 241664
-+#   item 8 key (257 EXTENT_DATA 266240) itemoff 15704 itemsize 53
-+#       extent data disk byte 12845056 nr 4096 gen 6
-+#       extent data offset 0 nr 20480 ram 20480
-+#       extent compression 2
-+#   item 9 key (257 EXTENT_DATA 286720) itemoff 15651 itemsize 53
-+#       prealloc data disk byte 13090816 nr 405504 gen 6
-+#       prealloc data offset 0 nr 258048
-+#
-+# The on disk extent at 266240, contains 5 compressed chunks of file data.
-+# Each of the first 4 chunks compress 4096 bytes of file data, while the last
-+# one compresses only 3024 bytes of file data. Because this extent item is not
-+# the last one in the file, as it followed by a prealloc extent, reads into
-+# the region [285648 ; 286720[ (length = 4096 - 3024) should return zeroes.
-+
-+_scratch_unmount
-+_check_btrfs_filesystem $SCRATCH_DEV
-+
-+EXPECTED_MD5="b8b0dbb8e02f94123c741c23659a1c0a"
-+
-+for i in `seq 1 27`
-+do
-+    _scratch_mount "-o ro"
-+    MD5=`md5sum $SCRATCH_MNT/foobar | cut -f 1 -d ' '`
-+    _scratch_unmount
-+    if [ "${MD5}x" != "${EXPECTED_MD5}x" ]
-+    then
-+	echo "Unexpected file digest (wanted $EXPECTED_MD5, got $MD5)"
-+    fi
-+done
-+
-+status=0
-+exit
-diff --git a/tests/btrfs/036.out b/tests/btrfs/036.out
-new file mode 100644
-index 0000000..8a5bd23
---- /dev/null
-+++ b/tests/btrfs/036.out
-@@ -0,0 +1 @@
-+QA output created by 036
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index f9f062f..2ca2225 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -37,3 +37,4 @@
- 032 auto quick
- 033 auto quick
- 034 auto quick
-+036 auto quick
--- 
-1.7.9.5
+--Mark.
 
 _______________________________________________
 xfs mailing list
