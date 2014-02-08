@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 390A67F55
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 02:31:01 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 229947F3F
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 02:32:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E4348AC006
-	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 00:30:57 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id bkNe1ImcTEEBVHu5 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 08 Feb 2014 00:30:56 -0800 (PST)
-Message-ID: <52F5EB3B.5030902@oracle.com>
-Date: Sat, 08 Feb 2014 09:30:51 +0100
-From: Koen De Wit <koen.de.wit@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DBD058F8052
+	for <xfs@oss.sgi.com>; Sat,  8 Feb 2014 00:32:40 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	0BTta5XAjyLpTCCL for <xfs@oss.sgi.com>;
+	Sat, 08 Feb 2014 00:32:39 -0800 (PST)
+Date: Sat, 8 Feb 2014 19:32:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: lockdep warning in 3.14-rc1
+Message-ID: <20140208083234.GJ13647@dastard>
+References: <52F57E6C.10907@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Btrfs: add test for large metadata blocks
-References: <1391793285-935-1-git-send-email-koen.de.wit@oracle.com>
-	<20140207224934.GH13647@dastard>
-In-Reply-To: <20140207224934.GH13647@dastard>
+Content-Disposition: inline
+In-Reply-To: <52F57E6C.10907@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,118 +25,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Cody P Schafer <cody@linux.vnet.ibm.com>
+Cc: xfs@oss.sgi.com
 
-Thanks for the review, Dave!
-Comments inline.
+On Fri, Feb 07, 2014 at 04:46:36PM -0800, Cody P Schafer wrote:
+> Appears consistently during boot up.
+....
 
-On 02/07/2014 11:49 PM, Dave Chinner wrote:
-> On Fri, Feb 07, 2014 at 06:14:45PM +0100, Koen De Wit wrote:
->> Tests Btrfs filesystems with all possible metadata block sizes, by
->> setting large extended attributes on files.
->>
->> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
-> There's a few things here that need fixing.
->
->> +pagesize=`$here/src/feature -s`
->> +pagesize_kb=`expr $pagesize / 1024`
->> +
->> +# Test all valid leafsizes
->> +for leafsize in `seq $pagesize_kb $pagesize_kb 64`; do
->> +    _scratch_unmount >/dev/null 2>&1
-> Indentation are tabs, and tabs are 8 spaces in size, please.
+> [    2.080292]        CPU0                    CPU1
+> [    2.080295]        ----                    ----
+> [    2.080298]   lock(&(&ip->i_lock)->mr_lock);
+> [    2.080303]                                lock(&mm->mmap_sem);
+> [    2.080307]                                lock(&(&ip->i_lock)->mr_lock);
+> [    2.080312]   lock(&mm->mmap_sem);
+> [    2.080316] 
+>  *** DEADLOCK ***
+> 
+> [    2.080321] 2 locks held by systemd/1:
+> [    2.080323]  #0:  (&type->i_mutex_dir_key#2){+.+.+.}, at: [<c000000000297470>] .iterate_dir+0xa0/0x160
+> [    2.080334]  #1:  (&(&ip->i_lock)->mr_lock){++++..}, at: [<c00000000042e7ec>] .xfs_ilock+0x15c/0x1b0
+> [    2.080343] 
+> stack backtrace:
+> [    2.080348] CPU: 2 PID: 1 Comm: systemd Tainted: G        W    3.14.0-rc1-24x7+ #8
+> [    2.080353] Call Trace:
+> [    2.080357] [c0000001fa103370] [c000000000016590] .show_stack+0x170/0x290 (unreliable)
+> [    2.080364] [c0000001fa103460] [c000000000934f5c] .dump_stack+0xa0/0xdc
+> [    2.080370] [c0000001fa1034e0] [c00000000092b6b4] .print_circular_bug+0x364/0x39c
+> [    2.080376] [c0000001fa103590] [c00000000010ba70] .check_prev_add+0x8d0/0x8e0
+> [    2.080381] [c0000001fa1036a0] [c00000000010c364] .validate_chain.isra.31+0x8e4/0xc40
+> [    2.080386] [c0000001fa103790] [c00000000010de08] .__lock_acquire+0x488/0xd40
+> [    2.080391] [c0000001fa1038b0] [c00000000010f08c] .lock_acquire+0xac/0x190
+> [    2.080397] [c0000001fa103980] [c00000000021fe44] .might_fault+0xa4/0xe0
+> [    2.080402] [c0000001fa1039f0] [c000000000297924] .filldir+0x1f4/0x290
+> [    2.080407] [c0000001fa103ab0] [c0000000003cebc8] .xfs_dir2_block_getdents+0x218/0x2b0
+> [    2.080413] [c0000001fa103b80] [c0000000003cf1e8] .xfs_readdir+0x168/0x1d0
+> [    2.080418] [c0000001fa103c30] [c0000000003d2508] .xfs_file_readdir+0x48/0x80
+> [    2.080423] [c0000001fa103cc0] [c0000000002974ec] .iterate_dir+0x11c/0x160
+> [    2.080428] [c0000001fa103d60] [c000000000297df0] .SyS_getdents+0xa0/0x190
+> [    2.080433] [c0000001fa103e30] [c00000000000a164] syscall_exit+0x0/0x98
 
-OK, I fixed this in v2.
+False positive. We need to add new lockdep annotations because
+lockdep doesn't know the difference between directory locking and
+file IO path locking.
 
->> +    _scratch_mkfs -l ${leafsize}K >/dev/null
->> +    _scratch_mount
-> No need to use _scratch_unmount here - you should be doing a
-> _check_scratch_fs at the end of the loop.
+Ben, can you look at this? It is being caused by the addition of the
+iolock to the directory readdir code, so directory inodes need a
+different lockdep context to regular file inodes...
 
-Fixed in v2 too.
+Cheers,
 
->> +    # Calculate the xattr size, but leave 512 bytes for other metadata.
->> +    xattr_size=`expr $leafsize \* 1024 - 512`
->> +
->> +    touch $SCRATCH_MNT/emptyfile
->> +    # smallfile will be inlined, bigfile not.
->> +    $XFS_IO_PROG -f -c "pwrite 0 100" $SCRATCH_MNT/smallfile >/dev/null
->> +    $XFS_IO_PROG -f -c "pwrite 0 9000" $SCRATCH_MNT/bigfile >/dev/null
->> +    ln -s $SCRATCH_MNT/bigfile $SCRATCH_MNT/bigfile_softlink
->> +
->> +    files=(emptyfile smallfile bigfile bigfile_softlink)
->> +    chars=(a b c d)
->> +    for i in `seq 0 1 3`; do
->> +        char=${chars[$i]}
->> +        file=$SCRATCH_MNT/${files[$i]}
->> +        lnkfile=${file}_hardlink
->> +        ln $file $lnkfile
->> +        xattr_value=`head -c $xattr_size < /dev/zero | tr '\0' $char`
->> +
->> +        set_md5=`echo -n "$xattr_value" | md5sum`
-> Just dump the md5sum to the output file.
->
->> +        ${ATTR_PROG} -Lq -s attr_$char -V $xattr_value $file
->> +        get_md5=`${ATTR_PROG} -Lq -g attr_$char $file | md5sum`
->> +        get_ln_md5=`${ATTR_PROG} -Lq -g attr_$char $lnkfile | md5sum`
-> And dump these to the output file, too. Then the golden image
-> matching when the test is finish will tell you if it passed or not.
-> i.e:
->
-> 	echo -n "$xattr_value" | md5sum
-> 	${ATTR_PROG} -Lq -s attr_$char -V $xattr_value $file
-> 	${ATTR_PROG} -Lq -g attr_$char $file | md5sum
-> 	${ATTR_PROG} -Lq -g attr_$char $lnkfile | md5sum
->
-> is all that neds to be done here.
-
-The problem with this is that the length of the output will depend on the page size. The code above runs for every valid leafsize, which can be any multiple of the page size up to 64KB, as defined in the loop initialization:
-     for leafsize in `seq $pagesize_kb $pagesize_kb 64`; do
-
->> +    # Test attributes with a size larger than the leafsize.
->> +    # Should result in an error.
->> +    if [ "$leafsize" -lt "64" ]; then
->> +        # Bash command lines cannot be larger than 64K characters, so we
->> +        # do not test attribute values with a size >64KB.
->> +        xattr_size=`expr $leafsize \* 1024 + 512`
->> +        xattr_value=`head -c $xattr_size < /dev/zero | tr '\0' x`
->> +        ${ATTR_PROG} -q -s attr_toobig -V $xattr_value \
->> +            $SCRATCH_MNT/emptyfile >> $seqres.full 2>&1
->> +        if [ "$?" -eq "0" ]; then
->> +            echo "Expected error, xattr_size is bigger than ${leafsize}K"
->> +        fi
-> What you are doing is redirecting the error to $seqres.full
-> so that it doesn't end up in the output file, then detecting the
-> absence of an error and dumping a message to the output file to make
-> the test fail.
->
-> IOWs, the ATTR_PROG failure message should be in the golden output
-> file and you don't have to do anything else to detect a pass/fail
-> condition.
-
-Same here: the bigger the page size, the less this code will be executed. If the page size is 64KB, this code isn't executed at all.
-To make sure the golden output does not depend on the page size, I chose to suppress all output as long as the test is successful. Is there a better way to accomplish this?
-
->> +_scratch_unmount
->> +
->> +# Some illegal leafsizes
->> +
->> +_scratch_mkfs -l 0 2>> $seqres.full
->> +echo $?
-> Same again - you are dumping the error output into a different file,
-> then detecting the error manually. pass the output of _scratch_mkfs
-> through a filter, and let errors cause golden output mismatches.
-
-I did this to make the golden output not depend on the output of mkfs.btrfs, inspired by http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=commit;h=fd7a8e885732475c17488e28b569ac1530c8eb59 and http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=commit;h=78d86b996c9c431542fdbac11fa08764b16ceb7d
-However, in my opinion the test should simply be updated if the output of mkfs.btrfs changes, so I agree with you and I fixed this in v2.
-
-Thanks,
-Koen.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
