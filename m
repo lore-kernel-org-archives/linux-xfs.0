@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2DC327F3F
-	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 17:22:54 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C26FA7F4E
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 17:57:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C5180AC005
-	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 15:22:53 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	jQAq9JAsCCUZ9YIK for <xfs@oss.sgi.com>;
-	Sun, 09 Feb 2014 15:22:49 -0800 (PST)
-Date: Mon, 10 Feb 2014 10:22:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_db: fix the setting of unaligned directory fields
-Message-ID: <20140209232243.GL13647@dastard>
-References: <20140207210348.249387765@sgi.com> <20140207223327.GG13647@dastard>
-	<52F56891.5020305@sgi.com> <20140208083012.GI13647@dastard>
-	<52F669CA.7050000@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7D09F304048
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 15:57:37 -0800 (PST)
+Received: from mail-oa0-f53.google.com (mail-oa0-f53.google.com
+	[209.85.219.53]) by cuda.sgi.com with ESMTP id 9AoGUrWtX11oKeJP
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 09 Feb 2014 15:57:36 -0800 (PST)
+Received: by mail-oa0-f53.google.com with SMTP id m1so6802972oag.12
+	for <xfs@oss.sgi.com>; Sun, 09 Feb 2014 15:57:35 -0800 (PST)
+Received: from [192.168.0.129] (rrcs-97-79-21-178.se.biz.rr.com.
+	[97.79.21.178])
+	by mx.google.com with ESMTPSA id tr7sm14562948oec.0.2014.02.09.15.57.34
+	for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Sun, 09 Feb 2014 15:57:35 -0800 (PST)
+Message-ID: <52F815EE.3030600@gmail.com>
+Date: Sun, 09 Feb 2014 18:57:34 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52F669CA.7050000@sgi.com>
+Subject: XFS on 3.14.0-rc1 (x86): xfs_isilocked() assertion on realtime
+	subvolume
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,109 +35,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Feb 08, 2014 at 11:30:50AM -0600, Mark Tinguely wrote:
-> On 02/08/14 02:30, Dave Chinner wrote:
-> >On Fri, Feb 07, 2014 at 05:13:21PM -0600, Mark Tinguely wrote:
-> >>On 02/07/14 16:33, Dave Chinner wrote:
-> >>>On Fri, Feb 07, 2014 at 04:03:42PM -0600, Mark Tinguely wrote:
-> >>>>@@ -526,16 +527,20 @@ convert_arg(
-> >>>>  		 */
-> >>>>  		*value = strtoll(arg, NULL, 0);
-> >>>
-> >>>If we are touching this code, the return value here should be error
-> >>>checked.
-> >>>
-> >>>xfs_db>   write u3.bmx[0].startblock 3rgfdw
-> >>>u3.bmx[0].startblock = 52776558133248
-> >>
-> >>hmm, It should stop at 3. I will take a look.
-> >
-> >Even if it stops at 3, that's still wrong because it's failed to
-> >process the entire user input....
-> >
-> >>>xfs_db>   write u3.bmx[0].startblock x3rgfdw
-> >>>u3.bmx[0].startblock = 0
-> >>>xfs_db>
-> >>>
-> >>>i.e. it accepts garbage rather than erroring out.
-> >>
-> >>as does all the other writes ...
-> >>xfs_db>   write core.nblocks x3rgfdw
-> >>core.nblocks = 0
-> >>
-> >>Fixing convert_arg() is beyond the scope of just this patch.
-> >
-> >Sure, but I'm not asking you to fix all of convert_args in this
-> >patch, just asking you to do a complete job of fixing the bitval
-> >input processing in this patch.
-> >
-> >But, seeing as you've raised that convert_args() has other broken
-> >paths, can you also write new patches to address those issues? It
-> >won't take you long while all this code is fresh in your mind, and
-> >if you do it now it won't get dropped on the floor until somebody
-> >else hits it a couple of years down the track...
-> >
-> 
-> It needs to be split up. write_string() needs string inputs,
-> write_struct() need numeric inputs.
+Hi!  I was working with realtime subvolumes on a 3.14.0-rc1+ kernel, doing 
+something like this...
 
-write_struct() handles every type of possible input -
-string varables, integers, UUIDs, etc. i.e. something like
+mkfs.xfs -l logdev=$TEST_LOGDEV -r rtdev=$TEST_RTDEV $TEST_DEV
+mount -t xfs -o logdev=$TEST_LOGDEV -o rtdev=$TEST_RTDEV $TEST_DEV $TEST_DIR
 
-xfs_db> write sb.uuid <xxxx-yyyy-....>
+cd $TEST_DIR
+mkdir testrtdir
+xfs_io -c 'chattr +t' testrtdir
+cd testrtdir
+dd if=/dev/zero of=testrtfile bs=512 count=65536
 
-runs through write_struct(), it finds the uuid field definition in
-the superblock description and then calls convert_args() on it to
-convert the uuid format input.
+...and was greeted by this:
 
-IOWs, convert_args() needs to handle all the types of input. Hence
-you might like to factor convert_args, but it still needs to handle
-arbitrary input types.
+XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL), file: fs/xfs/xfs_bmap.c, line: 4016
+------------[ cut here ]------------
+kernel BUG at fs/xfs/xfs_message.c:107!
+invalid opcode: 0000 [#1] 
+CPU: 0 PID: 279 Comm: dd Not tainted 3.13.0+ #11
+Hardware name: Dell Computer Corporation Dimension 2350/07W080, BIOS A01 12/17/2002
+task: c6044f40 ti: c6088000 task.ti: c6088000
+EIP: 0060:[<79150f60>] EFLAGS: 00010286 CPU: 0
+EIP is at assfail+0x2b/0x2d
+EAX: 0000006e EBX: c6a7e500 ECX: 794ecef0 EDX: 794e9aa4
+ESI: 00000000 EDI: c6001800 EBP: c60898e0 ESP: c60898cc
+ DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+CR0: 8005003b CR2: 0804cad0 CR3: 4d4f6000 CR4: 000007d0
+Stack:
+ 00000000 794876b0 7948a814 7947fe84 00000fb0 c6089978 7916e73c c60fa2c0
+ c60fa2c0 c60e1e00 c6089918 c6c01e80 c606c000 c60fa2c0 c606c000 c6089918
+ 79157bb8 c60fa2c0 c60e1e00 c6089930 791a7a79 00000001 00000000 00000000
+Call Trace:
+ [<7916e73c>] xfs_bmapi_read+0x89/0x39f
+ [<79157bb8>] ? xfs_trans_add_item+0x58/0x82
+ [<791a7a79>] ? _xfs_trans_bjoin+0xa5/0xb0
+ [<791a803c>] ? xfs_trans_read_buf_map+0x2fe/0x54b
+ [<791a4e14>] ? xfs_buf_item_free+0x2d/0x30
+ [<791b421d>] xfs_rtbuf_get+0x59/0x132
+ [<791a83fb>] ? xfs_trans_brelse+0x172/0x1c0
+ [<791b46b7>] ? xfs_rtfind_forw+0x130/0x275
+ [<791b4860>] xfs_rtmodify_summary+0x64/0xcb
+ [<791b2742>] xfs_rtallocate_range+0xb4/0x17b
+ [<791b2a26>] xfs_rtallocate_extent_exact+0xa4/0xe8
+ [<791b2aee>] xfs_rtallocate_extent_near+0x84/0x317
+ [<791588a4>] ? kmem_zone_alloc+0x64/0xe0
+ [<791588a4>] ? kmem_zone_alloc+0x64/0xe0
+ [<791b3be1>] xfs_rtallocate_extent+0x1e9/0x233
+ [<7913c6a5>] xfs_bmap_rtalloc+0x193/0x2d7
+ [<7916e24b>] xfs_bmap_alloc+0x26/0x2c
+ [<7916f260>] __xfs_bmapi_allocate+0xca/0x32f
+ [<7919c80e>] ? xfs_perag_get+0x1e/0xa7
+ [<7913c864>] xfs_bmapi_allocate+0x7b/0x81
+ [<7916fc77>] xfs_bmapi_write+0x648/0xa76
+ [<7914cd96>] xfs_iomap_write_direct+0x276/0x44b
+ [<7913a4ce>] __xfs_get_blocks+0x398/0x5d3
+ [<7913a728>] xfs_get_blocks+0x1f/0x25
+ [<790e39d8>] __block_write_begin+0x10b/0x2d9
+ [<7913aa57>] xfs_vm_write_begin+0x66/0xdf
+ [<7913a709>] ? __xfs_get_blocks+0x5d3/0x5d3
+ [<79093ace>] generic_file_buffered_write+0xcd/0x1fe
+ [<791457da>] xfs_file_buffered_aio_write+0xf5/0x16b
+ [<791458f9>] xfs_file_aio_write+0xa9/0xe8
+ [<790bde06>] do_sync_write+0x56/0x79
+ [<790bddb0>] ? vfs_read+0x10d/0x10d
+ [<790bdfab>] vfs_write+0x9e/0x189
+ [<790bddb0>] ? vfs_read+0x10d/0x10d
+ [<790be160>] SyS_write+0x49/0x81
+ [<79385538>] sysenter_do_call+0x12/0x26
+Code: 55 89 e5 83 ec 14 3e 8d 74 26 00 89 4c 24 10 89 54 24 0c 89 44 24 08 c7 44 24 04 b0 76 48 79 c7 04 24 00 00 00 00 e8 ad fd ff ff <0f> 0b 55 89 e5 83 ec 14 3e 8d 74 26 00 c7 44 24 10 01 00 00 00
+EIP: [<79150f60>] assfail+0x2b/0x2d SS:ESP 0068:c60898cc
 
->  Who uses the UUID-style hex
-> blocks? It feels like a black hole of time.
+A bisect brought me here:
 
-Obvious answer: UUIDs
+root@plbearer:/usr/src/kernel-git/linux# git bisect good
+eef334e5776c8ef547ada4cec17549929fe590b4 is the first bad commit
+commit eef334e5776c8ef547ada4cec17549929fe590b4
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Fri Dec 6 12:30:17 2013 -0800
 
-$ git grep FLDT_UUID
-db/agf.c:       { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-db/agfl.c:      { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-db/agi.c:       { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
-db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
-db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-db/dir2.c:      { "uuid", FLDT_UUID, OI(DBH3OFF(uuid)), C1, 0, TYP_NONE },
-db/dir2.c:      { "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
-db/dquot.c:     { "uuid", FLDT_UUID, OI(DDOFF(uuid)), C1, 0, TYP_NONE },
-db/field.c:     { FLDT_UUID, "uuid", fp_uuid, NULL, SI(bitsz(uuid_t)), 0, NULL, N
-db/field.h:     FLDT_UUID,
-db/inode.c:     { "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
-db/inode.c:     { "muuid", FLDT_UUID, NULL, inode_u_muuid_count, FLD_COUNT, TYP_N
-db/sb.c:        { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-db/symlink.c:   { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-$
+    xfs: assert that we hold the ilock for extent map access
 
-Slightly less obvious answer is writing arbitrary binary data to
-block regions in structures, such as writing multiple entries in an
-array in a single command (e.g. FLD_ARRAY structure sections). I've
-used this to move sections of directory blocks around in the past....
+    Make sure that xfs_bmapi_read has the ilock held in some way, and that
+    xfs_bmapi_write, xfs_bmapi_delay, xfs_bunmapi and xfs_iread_extents are
+    called with the ilock held exclusively.
 
-> It goes on my 'off the clock' to do list.
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Ok, I'll just assume that means it'll never get done so I'll get a
-pleasent surprise when you send the patch tomorrow....
+:040000 040000 5e579f7be412556585187374aec9ba314a66ddaf 449dc42e832d92fb2d6f8551708135d2ce7d2f79 M      fs
 
-Cheers,
+I scanned over the patch, and indeed, it's almost nothing but new 
+assertions.  Very good!
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Is this particular assert a false positive, or is it a sign that the 
+ilock usage by realtime subvolumes needs to be reviewed?
+
+This issue was found and bisected using v4-superblock XFS.  A quick 
+test on v5-superblock XFS exhibited the same behavior.
+
+The PC was an i686 Pentium 4 running Slackware 14.1.  Memory is hazy, 
+but I think that $TEST_DEV was around 19 GB, $TEST_LOGDEV was 128 MB, 
+and $TEST_RTDEV was 1 GB, all normal GPT partitions.
+
+Thanks!
+
+Michael
 
 _______________________________________________
 xfs mailing list
