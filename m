@@ -1,9 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-v3.14-rc1-2-12934-g39f30ca
-Message-Id: <20140210031746.5D7A67F59@oss.sgi.com>
-Date: Sun,  9 Feb 2014 21:17:45 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C16817F4E
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 21:31:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 53EDAAC001
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 19:31:45 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	XFEG6cFpDdKmRybA for <xfs@oss.sgi.com>;
+	Sun, 09 Feb 2014 19:31:43 -0800 (PST)
+Date: Mon, 10 Feb 2014 14:31:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/6] xfs: add helper for verifying checksums on xfs_bufs
+Message-ID: <20140210033140.GP13647@dastard>
+References: <52F83630.4020008@redhat.com>
+ <52F83907.9070004@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <52F83907.9070004@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,74 +26,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Sun, Feb 09, 2014 at 08:27:19PM -0600, Eric Sandeen wrote:
+> Many/most callers of xfs_verify_cksum() pass bp->b_addr and
+> BBTOB(bp->b_length) as the first 2 args.  Add a helper
+> which can just accept the bp and the crc offset, and work
+> it out on its own, for brevity.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> I'm not wedded to this; seems helpful and cleaner, but
+> if there's a reason not to, *shrug*
+> 
+>  fs/xfs/xfs_alloc.c          |    7 +++----
+>  fs/xfs/xfs_attr_leaf.c      |    3 +--
+>  fs/xfs/xfs_btree.c          |    8 ++++----
+>  fs/xfs/xfs_cksum.h          |    7 +++++++
+>  fs/xfs/xfs_da_btree.c       |    3 +--
+>  fs/xfs/xfs_dir2_block.c     |    3 +--
+>  fs/xfs/xfs_dir2_data.c      |    3 +--
+>  fs/xfs/xfs_dir2_leaf.c      |    3 +--
+>  fs/xfs/xfs_dir2_node.c      |    3 +--
+>  fs/xfs/xfs_ialloc.c         |    4 ++--
+>  fs/xfs/xfs_symlink_remote.c |    2 +-
+>  11 files changed, 23 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+> index 9eab2df..ab33714 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -485,8 +485,7 @@ xfs_agfl_read_verify(
+>  	if (!xfs_sb_version_hascrc(&mp->m_sb))
+>  		return;
+>  
+> -	agfl_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+> -				   offsetof(struct xfs_agfl, agfl_crc));
+> +	agfl_ok = xfs_buf_verify_cksum(bp, offsetof(struct xfs_agfl, agfl_crc));
+					   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+vs
 
-The branch, for-next has been updated
-  39f30ca Merge branch 'xfs-async-aio-extend' into for-next
-  0084826 Merge branch 'xfs-fixes-for-3.15-1' into for-next
-  3895e51 xfs: ensure correct log item buffer alignment
-  fe60a8a xfs: ensure correct timestamp updates from truncate
-  9862f62 xfs: allow appending aio writes
-  d531d91 xfs: always use unwritten extents for direct I/O writes
-  492185e xfs: remove XFS_TRANS_DEBUG dead code
-  4ae69fe xfs: return -E2BIG if hit the maximum size limits of ACLs
-  392c6de xfs: sanitize sb_inopblock in xfs_mount_validate_sb
-  c6f9726 xfs: convert xfs_log_commit_cil() to void
-  410b11a xfs: use tr_qm_dqalloc log reservation for dquot alloc
-  c19ec23 xfs: remove unused tr_swrite
-  70bbca07 xfs: use tr_growrtalloc for growing rt files
-      from  38dbfb59d1175ef458d006556061adeaa8751b72 (commit)
+> +          !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF)) ||
+> 				       ^^^^^^^^^^^^^^^^^^^^^^
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+I think that we also be consistent with the way we specify
+the offset of the CRC field. Some of the code uses a #define, and
+some doesn't. My preference would be to use the #define format
+everywhere as it makes the code briefer and easier to read and it
+gets rid of the long lines and wrapping that is done in places.
 
-- Log -----------------------------------------------------------------
-commit 39f30ca7eaa4fe9224094c7a9964cff36c584dab
-Merge: 0084826 9862f62
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Mon Feb 10 14:14:14 2014 +1100
+> diff --git a/fs/xfs/xfs_cksum.h b/fs/xfs/xfs_cksum.h
+> index fad1676..f605d64 100644
+> --- a/fs/xfs/xfs_cksum.h
+> +++ b/fs/xfs/xfs_cksum.h
+> @@ -60,4 +60,11 @@ xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+>  	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
+>  }
+>  
+> +static inline int
+> +xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+> +{
+> +	return xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+> +				cksum_offset);
+> +}
+> +
 
-    Merge branch 'xfs-async-aio-extend' into for-next
+This introduces a dependency between xfs_buf.h and xfs_cksum.h.
+i.e. if we include xfs_cksum.h we now have to include xfs_buf.h
+before it.
 
-commit 008482657169c0276ddd2ba00a1ad14a324b91f0
-Merge: 3895e51 492185e
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Mon Feb 10 14:13:50 2014 +1100
+Even though it means we'll have to juggle header files in quite a
+few files, I'd prefer that we swap the dependency order as
+xfs_cksum.h is shared with userspace and used in places that don't
+necessarily know (or should know) what an xfs_buf is....
 
-    Merge branch 'xfs-fixes-for-3.15-1' into for-next
+Otherwise it's a good cleanup.
 
------------------------------------------------------------------------
+Cheers,
 
-Summary of changes:
- fs/xfs/xfs_acl.c        |  2 +-
- fs/xfs/xfs_aops.c       |  3 ++-
- fs/xfs/xfs_buf_item.c   | 19 -------------------
- fs/xfs/xfs_dquot.c      |  2 +-
- fs/xfs/xfs_iomap.c      | 10 +++-------
- fs/xfs/xfs_iops.c       | 16 ++++++++--------
- fs/xfs/xfs_log.h        |  2 +-
- fs/xfs/xfs_log_cil.c    | 22 ++++++++++++++++------
- fs/xfs/xfs_rtalloc.c    |  2 +-
- fs/xfs/xfs_sb.c         |  1 +
- fs/xfs/xfs_trans.c      | 12 ++----------
- fs/xfs/xfs_trans_resv.c |  6 ++----
- fs/xfs/xfs_trans_resv.h |  1 -
- 13 files changed, 38 insertions(+), 60 deletions(-)
-
-
-hooks/post-receive
+Dave.
 -- 
-XFS development tree
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
