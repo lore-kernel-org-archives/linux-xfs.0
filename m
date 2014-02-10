@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 006DA7F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 16:39:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DBBDE8F804B
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:39:45 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id e2GGRFNJhVq11f6Y for
-	<xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:39:44 -0800 (PST)
-Message-ID: <52F9552C.7020001@redhat.com>
-Date: Mon, 10 Feb 2014 17:39:40 -0500
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: avoid AGI/AGF deadlock scenario for inode chunk
-	allocation
-References: <1392042807-41697-1-git-send-email-bfoster@redhat.com>
-	<20140210220134.GU13647@dastard>
-In-Reply-To: <20140210220134.GU13647@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E6F7F7F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 17:10:04 -0600 (CST)
+Received: from eagdhcp-232-208.americas.sgi.com
+	(eagdhcp-232-208.americas.sgi.com [128.162.232.208])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C7473304039
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 15:10:01 -0800 (PST)
+Received: from eagdhcp-232-208.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-208.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	s1ANA4xA003105
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 17:10:04 -0600 (CST)
+	(envelope-from tinguely@eagdhcp-232-208.americas.sgi.com)
+Message-Id: <20140210230923.268327906@sgi.com>
+Date: Mon, 10 Feb 2014 17:09:12 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v2] xfs_db: fix the setting of unaligned directory fields
+Content-Disposition: inline; filename=xfs_db-fix-dir-settings.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,160 +24,387 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 02/10/2014 05:01 PM, Dave Chinner wrote:
-> On Mon, Feb 10, 2014 at 09:33:27AM -0500, Brian Foster wrote:
->> The inode chunk allocation path can lead to deadlock conditions if
->> a transaction is dirtied with an AGF (to fix up the freelist) for
->> an AG that cannot satisfy the actual allocation request. This code
->> path is written to try and avoid this scenario, but it can be
->> reproduced by running xfstests generic/270 in a loop on a 512b fs.
-> 
-> Yup, I've been seeing this problem for a few months now. Frequently
-> enough that I expunged 269 and 270 from my 1k block size test
-> machines. I simply hadn't found the time to debug it...
-> 
+Setting the directory startoff, startblock, and blockcount
+fields are difficult on both big and little endian machines.
+The setting of extentflag was completely broken.
 
-Yeah, I've been doing something similar here and had spent a few hours
-here and there to try and narrow in on it.
+big endian test:
+xfs_db> write u.bmx[0].startblock 12
+u.bmx[0].startblock = 0
+xfs_db> write u.bmx[0].startblock 0xc0000
+u.bmx[0].startblock = 192
 
->> An example situation is:
->> - process A attempts an inode allocation on AG 3, modifies
->>   the freelist, fails the allocation and ultimately moves on to
->>   AG 0 with the AG 3 AGF held
->> - process B is doing a free space operation (i.e., truncate) and
->>   acquires the AG 0 AGF, waits on the AG 3 AGF
->> - process A acquires the AG 0 AGI, waits on the AG 0 AGF (deadlock)
-> 
-> Yup, the "dirty an AGF then fail to allocate" is the typical cause
-> of shutdowns due to cancelling a dirty create transaction because of
-> ENOSPC. I'm not surprised that we can trigger deadlocks like this,
-> either.
-> 
->> The problem here is that process A acquired the AG 3 AGF while
->> moving on to AG 0 (and releasing the AG 3 AGI with the AG 3 AGF
->> held).
-> 
-> Right, AGF/AGI locking order is ascending AG order only.
-> 
->> xfs_dialloc() makes one pass through each of the AGs when
->> attempting to allocate an inode chunk. The expectation is a clean
->> transaction if a particular AG cannot satisfy the allocation
->> request. xfs_ialloc_ag_alloc() is written to support this through
->> use of the minalignslop allocation args field.
-> 
-> *nod*
-> 
->> When using the agi->agi_newino optimization, we attempt an exact
->> bno allocation request based on the location of the previously
->> allocated chunk. minalignslop is set to inform the allocator that
->> we will require alignment on this chunk, and thus to not allow the
->> request for this AG if the extra space is not available. Suppose
->> that the AG in question has just enough space for this request, but
->> not at the requested bno.
-> 
-> Ok, so an exact (XFS_ALLOCTYPE_THIS_BNO) allocation fails?
-> 
+little endian test:
+xfs_db> write u.bmx[0].startblock 12
+u.bmx[0].startblock = 211106232532992
+xfs_db> write u.bmx[0].startblock 0xc0000
+u.bmx[0].startblock = 3221225472
 
-I didn't dig all the way down to precisely characterize the state of
-things at the point of allocation failure, but I observed a pattern of a
-process attempting the THIS_BNO request, which passed through the
-fix_freelist code but ultimately fails (in terms of returning a
-NULLFSBLOCK). It then attempts the NEAR_BNO request which fails in the
-fix_freelist code. Some instrumentation down in the fix_freelist code
-confirmed that the latter failure occurred because the request sizes had
-changed from the previous invocation (for which it apparently allowed
-the agfl to be modified and thus agf locked).
+Since the output fields and the lengths are not aligned to a byte,
+setbitval requires them to be entered in big endian and properly
+byte/nibble shifted. The extentflag output was aligned to a byte
+but was not shifted correctly.
 
->>
->> xfs_alloc_fix_freelist() will proceed as
->> normal as it determines the request should succeed, and thus it is
->> allowed to modify the agf. xfs_alloc_ag_vextent() ultimately fails
->> because the requested bno is not available.
-> 
-> *nod*
-> 
->> In response, the caller
->> moves on to a NEAR_BNO allocation request for the same AG. The
->> alignment is set, but the minalignslop field is never reset. This
->> increases the overall requirement of the request from the first
->> attempt. If this delta is the difference between allocation success
->> and failure for the AG, xfs_alloc_fix_freelist() rejects this
->> request outright the second time around and causes the allocation
->> request to unnecessarily fail for this AG.
-> 
-> Yup, that looks like a bug.
-> 
->> To address this situation, reset the minalignslop field when we
->> transition from a THIS_BNO to a NEAR_BNO allocation request in
->> xfs_ialloc_ag_alloc().
->>
->> [NOTE: It appears at first glance that the optimized agi_newino
->>  allocation case is problematic in that it doesn't consider use of
->>  mp->m_sinoalign, if enabled. If the m_sinoalign allocation fails,
->>  however, we revert back to normal cluster alignment, which I think
->>  makes the overall sequence safe.]
-> 
-> The agi_newino allocation case is not meant to stripe align the new
-> inode chunk. What it is meant to do is cluster inode allocation
-> within a stripe. i.e. the first allocation will be stripe aligned,
-> which sets newino. then newino will move to the adjacent cluster,
-> and we'll try to allocate that. i.e. we try to densely pack inodes
-> within a stripe unit before we spread them out onto other stripe
-> units. Hence when you are doing large file workloads, inodes get
-> clustered into a single stripe unit rather than being distributed
-> around between files....
-> 
+Convert the input to big endian on little endian machines and
+nibble/byte shift on all platforms so setbitval can set the bits
+correctly.
 
-Ah, thanks. That turns on a light bulb. ;) I wasn't familiar with the
-purpose of m_sinoalign to this point and was a little confused about
-what (or why, more specifically) was going on there in the allocation
-algorithm. It makes much more sense now. I'll probably remove the above
-bit of confusion from the commit log (and replace it with a more
-accurate comment called for below)...
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+v2:
+ Ignore extra characters in input.
+ Fix hash input if still used as an integer input.
+  It was broken on big endian, but someone may use this input in a
+  little endian script.
+ Add documentation.
+ Did more clean up.
 
->> Signed-off-by: Brian Foster <bfoster@redhat.com>
->> ---
->>  fs/xfs/xfs_ialloc.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
->> index 5d7f105..584daf0 100644
->> --- a/fs/xfs/xfs_ialloc.c
->> +++ b/fs/xfs/xfs_ialloc.c
->> @@ -382,6 +382,8 @@ xfs_ialloc_ag_alloc(
->>  			isaligned = 1;
->>  		} else
->>  			args.alignment = xfs_ialloc_cluster_alignment(&args);
->> +		args.minalignslop = 0;
->> +
->>  		/*
->>  		 * Need to figure out where to allocate the inode blocks.
->>  		 * Ideally they should be spaced out through the a.g.
-> 
-> I think I'd prefer that this is cleared immediately after the
-> allocation that required it, regardless of whether it succeeds or
-> not. i.e. confine the minalignslop context to that specific
-> allocation call, and hence if we modify this code in future we don't
-> have a landmine to trip on. It also needs a comment to explain why
-> it needs to be cleared....
-> 
+ db/bit.c   |   84 +++++++++++------------------
+ db/write.c |  173 +++++++++++++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 152 insertions(+), 105 deletions(-)
 
-Yeah, that sounds a bit nicer. I'll send a new version. Thanks for the
-review/insight. :)
+Index: b/db/bit.c
+===================================================================
+--- a/db/bit.c
++++ b/db/bit.c
+@@ -128,57 +128,41 @@ getbitval(
+ 	return rval;
+ }
+ 
++/*
++ * The input data can be 8, 16, 32, and 64 sized numeric values
++ * aligned on a byte boundry, or odd sized numbers stored on odd
++ * aligned offset (for example the bmbt fields).
++ *
++ * The input data sent to this routine has been converted to big endian
++ * and has been adjusted in the array so that the first input bit is to
++ * be written in the first bit in the output.
++ *
++ * If the field length and the output buffer are byte aligned, then use
++ * memcpy from the input to the output, but if either entries are not byte
++ * aligned, then loop over the entire bit range reading the input value
++ * and set/clear the matching bit in the output.
++ *
++ * example when ibuf is not multiple of a byte in length:
++ *
++ * ibuf:	| BBBBBBBB | bbbxxxxx |
++ *		  \\\\\\\\--\\\\
++ * obuf+bitoff:	| xBBBBBBB | Bbbbxxxx |
++ *
++ */
+ void
+ setbitval(
+-	void *obuf,      /* buffer to write into */
+-	int bitoff,      /* bit offset of where to write */
+-	int nbits,       /* number of bits to write */
+-	void *ibuf)      /* source bits */
++	void	*obuf,		/* start of buffer to write into */
++	int	bitoff,		/* bit offset into the output buffer */
++	int	nbits,		/* number of bits to write */
++	void	*ibuf)		/* source bits */
+ {
+-	char    *in           = (char *)ibuf;
+-	char    *out          = (char *)obuf;
+-
+-	int     bit;
+-
+-#if BYTE_ORDER == LITTLE_ENDIAN
+-	int     big           = 0;
+-#else
+-	int     big           = 1;
+-#endif
+-
+-	/* only need to swap LE integers */
+-	if (big || (nbits!=16 && nbits!=32 && nbits!=64) ) {
+-		/* We don't have type info, so we can only assume
+-		 * that 2,4 & 8 byte values are integers. sigh.
+-		 */
+-
+-		/* byte aligned ? */
+-		if (bitoff%NBBY) {
+-			/* no - bit copy */
+-			for (bit=0; bit<nbits; bit++)
+-				setbit(out, bit+bitoff, getbit(in, bit));
+-		} else {
+-			/* yes - byte copy */
+-			memcpy(out+byteize(bitoff), in, byteize(nbits));
+-		}
+-
+-	} else {
+-		int     ibit;
+-		int     obit;
+-
+-		/* we need to endian swap this value */
+-
+-		out+=byteize(bitoff);
+-		obit=bitoffs(bitoff);
+-
+-		ibit=nbits-NBBY;
+-
+-		for (bit=0; bit<nbits; bit++) {
+-			setbit(out, bit+obit, getbit(in, ibit));
+-			if (ibit%NBBY==NBBY-1)
+-				ibit-=NBBY*2-1;
+-			else
+-				ibit++;
+-		}
+-	}
++	char	*in = ibuf;
++	char	*out = obuf;
++	int	bit;
++
++	if (bitoff % NBBY || nbits % NBBY) {
++		for (bit=0; bit<nbits; bit++)
++			setbit(out, bit+bitoff, getbit(in, bit));
++	} else
++		memcpy(out+byteize(bitoff), in, byteize(nbits));
+ }
+Index: b/db/write.c
+===================================================================
+--- a/db/write.c
++++ b/db/write.c
+@@ -439,55 +439,78 @@ convert_oct(
+ 
+ #define NYBBLE(x) (isdigit(x)?(x-'0'):(tolower(x)-'a'+0xa))
+ 
++/*
++ * convert_arg allow input in the following forms:
++ * A string ("ABTB") whose ASCII value is placed in an array in the order
++ * matching the input.
++ *
++ * An even number of hex numbers. If the length is greater than
++ * 64 bits, then the output is an array of bytes whose top nibble
++ * is the first hex digit in the input, the lower nibble is the second
++ * hex digit in the input. UUID entries are entered in this manner.
++ * If the length is 64 bits or less, then treat the hex input characters
++ * as a number used with setbitval().
++ *
++ * A decimal or hexadecimal integer to be used with setbitval().
++ *	---
++ * Numbers that will use setbitval() are in big endian format and
++ * are adjusted in the array so that the first input bit is to be
++ * be written to the first bit in the output.
++ */
+ static char *
+ convert_arg(
+-	char *arg,
+-	int  bit_length)
++	char		*arg,
++	int		bit_length)
+ {
+-	int i;
+-	static char *buf = NULL;
+-	char *rbuf;
+-	long long *value;
+-	int alloc_size;
+-	char *ostr;
+-	int octval, ret;
++	int		i;
++	int		alloc_size;
++	int		octval;
++	int		offset;
++	int		ret;
++	static char	*buf = NULL;
++	char		*endp;
++	char		*rbuf;
++	char		*ostr;
++	__u64		*value;
++	__u64		val = 0;
+ 
+ 	if (bit_length <= 64)
+ 		alloc_size = 8;
+ 	else
+-		alloc_size = (bit_length+7)/8;
++		alloc_size = (bit_length + 7)/8;
+ 
+ 	buf = xrealloc(buf, alloc_size);
+ 	memset(buf, 0, alloc_size);
+-	value = (long long *)buf;
++	value = (__u64 *)buf;
+ 	rbuf = buf;
+ 
+ 	if (*arg == '\"') {
+-		/* handle strings */
++		/* input a string and output ASCII array of characters */
+ 
+ 		/* zap closing quote if there is one */
+-		if ((ostr = strrchr(arg+1, '\"')) != NULL)
++		if ((ostr = strrchr(arg + 1, '\"')) != NULL)
+ 			*ostr = '\0';
+ 
+-		ostr = arg+1;
++		ostr = arg + 1;
+ 		for (i = 0; i < alloc_size; i++) {
+ 			if (!*ostr)
+ 				break;
+ 
+-			/* do octal */
++			/* do octal conversion */
+ 			if (*ostr == '\\') {
+-				if (*(ostr+1) >= '0' || *(ostr+1) <= '7') {
+-					ret = convert_oct(ostr+1, &octval);
++				if (*(ostr + 1) >= '0' || *(ostr + 1) <= '7') {
++					ret = convert_oct(ostr + 1, &octval);
+ 					*rbuf++ = octval;
+-					ostr += ret+1;
++					ostr += ret + 1;
+ 					continue;
+ 				}
+ 			}
+ 			*rbuf++ = *ostr++;
+ 		}
+-
+ 		return buf;
+-	} else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
++	}
++
++	if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
+ 		/*
+ 		 * handle hex blocks ie
+ 		 *    #00112233445566778899aabbccddeeff
+@@ -495,49 +518,89 @@ convert_arg(
+ 		 *    1122334455667788-99aa-bbcc-ddee-ff00112233445566778899
+ 		 *
+ 		 * (but if it starts with "-" assume it's just an integer)
++		 *
++		 * Treat all requests 64 bits or smaller as numbers and
++		 * requests larger than 64 bits as hex blocks arrays.
+ 		 */
+-		int bytes=bit_length/8;
++		int bytes = bit_length / NBBY;
+ 
+ 		/* skip leading hash */
+-		if (*arg=='#') arg++;
++		if (*arg == '#') arg++;
+ 
+ 		while (*arg && bytes--) {
+-		    /* skip hypens */
+-		    while (*arg=='-') arg++;
++			/* skip hypens */
++			while (*arg == '-') arg++;
+ 
+-		    /* get first nybble */
+-		    if (!isxdigit((int)*arg)) return NULL;
+-		    *rbuf=NYBBLE((int)*arg)<<4;
+-		    arg++;
+-
+-		    /* skip more hyphens */
+-		    while (*arg=='-') arg++;
+-
+-		    /* get second nybble */
+-		    if (!isxdigit((int)*arg)) return NULL;
+-		    *rbuf++|=NYBBLE((int)*arg);
+-		    arg++;
++			/* get first nybble */
++			if (!isxdigit((int)*arg))
++				return NULL;
++			if (bit_length <= 64)
++				val = (val << 4) + NYBBLE((int)*arg);
++			else
++				*rbuf = NYBBLE((int)*arg) << 4;
++			arg++;
++
++			/* skip more hyphens */
++			while (*arg == '-')
++				arg++;
++
++			/* get second nybble */
++			if (!isxdigit((int)*arg))
++				return NULL;
++			if (bit_length <= 64)
++				val = (val << 4) + NYBBLE((int)*arg);
++			else
++				*rbuf++ |= NYBBLE((int)*arg);
++			arg++;
+ 		}
+-		if (bytes<0&&*arg) return NULL;
+-		return buf;
+-	} else {
++		if (bytes < 0 && *arg)
++			return NULL;
++
+ 		/*
+-		 * handle integers
++		 * Values larger than 64 bits are array of hex digits that
++		 * already in the desired ordering (example UUID).
+ 		 */
+-		*value = strtoll(arg, NULL, 0);
++		if (bit_length > 64)
++			return buf;
++	} else {
++		/* handle decimal / hexadecimal integers */
+ 
+-#if __BYTE_ORDER == BIG_ENDIAN
+-		/* hackery for big endian */
+-		if (bit_length <= 8) {
+-			rbuf += 7;
+-		} else if (bit_length <= 16) {
+-			rbuf += 6;
+-		} else if (bit_length <= 32) {
+-			rbuf += 4;
+-		}
+-#endif
+-		return rbuf;
++		val = strtoll(arg, &endp, 0);
++		/* return if not a clean number */
++		if (*endp != '\0')
++			return NULL;
+ 	}
++
++	/* Is this value valid for the bit length? */
++	if (val >> bit_length)
++		return NULL;
++	/*
++	 * If the length of the field is not a multiple of a byte, push
++	 * the bits up in the field, so the most signicant field bit is
++	 * the most significant bit in the byte:
++	 *
++	 * before:
++	 * val  |----|----|----|----|----|--MM|mmmm|llll|
++	 * after
++	 * val  |----|----|----|----|----|MMmm|mmll|ll00|
++	 */
++	offset = bit_length % NBBY;
++	if (offset)
++		val <<= (NBBY - offset);
++
++	/*
++	 * convert to big endian and copy into the array
++	 * rbuf |----|----|----|----|----|MMmm|mmll|ll00|
++	 */
++	*value = cpu_to_be64(val);
++
++	/*
++	 * Align the array to point to the field in the array.
++	 *  rbuf  = |MMmm|mmll|ll00|
++	 */
++	offset = sizeof(__be64) - 1 - ((bit_length - 1)/ sizeof(__be64));
++	rbuf += offset;
++	return rbuf;
+ }
+ 
+ 
+@@ -550,9 +613,9 @@ write_struct(
+ {
+ 	const ftattr_t	*fa;
+ 	flist_t		*fl;
+-	flist_t         *sfl;
+-	int             bit_length;
+-	char            *buf;
++	flist_t		*sfl;
++	int		bit_length;
++	char		*buf;
+ 	int		parentoffset;
+ 
+ 	if (argc != 2) {
 
-Brian
-
-> Cheers,
-> 
-> Dave.
-> 
 
 _______________________________________________
 xfs mailing list
