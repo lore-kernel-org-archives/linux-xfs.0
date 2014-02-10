@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-async-aio-extend,
-	created. xfs-for-linus-v3.14-rc1-2-12923-g9862f62
-Message-Id: <20140210031723.8C7C27F55@oss.sgi.com>
-Date: Sun,  9 Feb 2014 21:17:22 -0600 (CST)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-v3.14-rc1-2-12934-g39f30ca
+Message-Id: <20140210031746.5D7A67F59@oss.sgi.com>
+Date: Sun,  9 Feb 2014 21:17:45 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,56 +23,58 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-async-aio-extend has been created
-        at  9862f62faba8c279ac07415a6f610041116fbdc0 (commit)
+The branch, for-next has been updated
+  39f30ca Merge branch 'xfs-async-aio-extend' into for-next
+  0084826 Merge branch 'xfs-fixes-for-3.15-1' into for-next
+  3895e51 xfs: ensure correct log item buffer alignment
+  fe60a8a xfs: ensure correct timestamp updates from truncate
+  9862f62 xfs: allow appending aio writes
+  d531d91 xfs: always use unwritten extents for direct I/O writes
+  492185e xfs: remove XFS_TRANS_DEBUG dead code
+  4ae69fe xfs: return -E2BIG if hit the maximum size limits of ACLs
+  392c6de xfs: sanitize sb_inopblock in xfs_mount_validate_sb
+  c6f9726 xfs: convert xfs_log_commit_cil() to void
+  410b11a xfs: use tr_qm_dqalloc log reservation for dquot alloc
+  c19ec23 xfs: remove unused tr_swrite
+  70bbca07 xfs: use tr_growrtalloc for growing rt files
+      from  38dbfb59d1175ef458d006556061adeaa8751b72 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
-commit 9862f62faba8c279ac07415a6f610041116fbdc0
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Mon Feb 10 10:28:04 2014 +1100
+commit 39f30ca7eaa4fe9224094c7a9964cff36c584dab
+Merge: 0084826 9862f62
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Mon Feb 10 14:14:14 2014 +1100
 
-    xfs: allow appending aio writes
-    
-    XFS can easily support appending aio writes by ensuring we always allocate
-    blocks as unwritten extents when performing direct I/O writes and only
-    converting them to written extents at I/O completion.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-async-aio-extend' into for-next
 
-commit d531d91d69902e55633ed834f531aa0b48d618cc
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Mon Feb 10 10:27:43 2014 +1100
+commit 008482657169c0276ddd2ba00a1ad14a324b91f0
+Merge: 3895e51 492185e
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Mon Feb 10 14:13:50 2014 +1100
 
-    xfs: always use unwritten extents for direct I/O writes
-    
-    To allow aio writes beyond i_size we need to create unwritten extents for
-    newly allocated blocks, similar to how we already do inside i_size.
-    
-    Instead of adding another special case we now use unwritten extents
-    unconditionally.  This also marks the end of directly allocation data
-    extents in all of XFS - we now always use either delalloc or unwritten
-    extents.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 6039257378e4c84da06e68230b14fef955508ce6
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Mon Feb 10 10:27:11 2014 +1100
-
-    direct-io: add flag to allow aio writes beyond i_size
-    
-    Some filesystems can handle direct I/O writes beyond i_size safely,
-    so allow them to opt into receiving them.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-fixes-for-3.15-1' into for-next
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_acl.c        |  2 +-
+ fs/xfs/xfs_aops.c       |  3 ++-
+ fs/xfs/xfs_buf_item.c   | 19 -------------------
+ fs/xfs/xfs_dquot.c      |  2 +-
+ fs/xfs/xfs_iomap.c      | 10 +++-------
+ fs/xfs/xfs_iops.c       | 16 ++++++++--------
+ fs/xfs/xfs_log.h        |  2 +-
+ fs/xfs/xfs_log_cil.c    | 22 ++++++++++++++++------
+ fs/xfs/xfs_rtalloc.c    |  2 +-
+ fs/xfs/xfs_sb.c         |  1 +
+ fs/xfs/xfs_trans.c      | 12 ++----------
+ fs/xfs/xfs_trans_resv.c |  6 ++----
+ fs/xfs/xfs_trans_resv.h |  1 -
+ 13 files changed, 38 insertions(+), 60 deletions(-)
 
 
 hooks/post-receive
