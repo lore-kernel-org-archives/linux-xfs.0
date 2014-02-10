@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DAA6C7F50
-	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 20:20:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B0F978F8035
-	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 18:20:36 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 472D17F3F
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 20:24:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DCD70AC001
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 18:24:12 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id qAOSwLWmwKtUiQ2Y for <xfs@oss.sgi.com>;
-	Sun, 09 Feb 2014 18:20:35 -0800 (PST)
-Message-ID: <52F83771.9080202@sandeen.net>
-Date: Sun, 09 Feb 2014 20:20:33 -0600
+	ESMTP id GnjgyJZ48RgRvc6d for <xfs@oss.sgi.com>;
+	Sun, 09 Feb 2014 18:24:11 -0800 (PST)
+Message-ID: <52F83849.4040209@sandeen.net>
+Date: Sun, 09 Feb 2014 20:24:09 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/6] xfs: limit superblock corruption errors to actual
-	corruption
+Subject: [PATCH 2/6] xfs: skip pointless CRC updates after verifier failures
 References: <52F83630.4020008@redhat.com>
 In-Reply-To: <52F83630.4020008@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,63 +29,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Today, if
+Most write verifiers don't update CRCs after the verifier
+has failed and the buffer has been marked in error.  These
+two didn't, but should.
 
-xfs_sb_read_verify
-  xfs_sb_verify
-    xfs_mount_validate_sb
-
-detects superblock corruption, it'll be extremely noisy, dumping
-2 stacks, 2 hexdumps, etc.
-
-This is because we call XFS_CORRUPTION_ERROR in xfs_mount_validate_sb
-as well as in xfs_sb_read_verify.
-
-Also, *any* errors in xfs_mount_validate_sb which are not corruption
-per se; things like too-big-blocksize, bad version, bad magic, v1 dirs,
-rw-incompat etc - things which do not return EFSCORRUPTED - will
-still do the whole XFS_CORRUPTION_ERROR spew when xfs_sb_read_verify
-sees any error at all.  And it suggests to the user that they 
-should run xfs_repair, even if the root cause of the mount failure
-is a simple incompatibility.
-
-I'll submit that the probably-not-corrupted errors don't warrant
-this much noise, so this patch removes the warning for anything
-other than EFSCORRUPTED returns, and replaces the lower-level
-XFS_CORRUPTION_ERROR with an xfs_notice().
+Add returns to the verifier failure block, 
+since the buffer won't be written anyway.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
+ fs/xfs/xfs_alloc_btree.c  |    1 +
+ fs/xfs/xfs_ialloc_btree.c |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks to Brian for pointing out this better solution to my
-earlier patch.
-
- fs/xfs/xfs_sb.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-index b7c9aea..efaef71 100644
---- a/fs/xfs/xfs_sb.c
-+++ b/fs/xfs/xfs_sb.c
-@@ -295,8 +295,7 @@ xfs_mount_validate_sb(
- 	    sbp->sb_dblocks == 0					||
- 	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
- 	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
--		XFS_CORRUPTION_ERROR("SB sanity check failed",
--				XFS_ERRLEVEL_LOW, mp, sbp);
-+		xfs_notice(mp, "SB sanity check failed");
- 		return XFS_ERROR(EFSCORRUPTED);
+diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
+index 1308542..144d3b0 100644
+--- a/fs/xfs/xfs_alloc_btree.c
++++ b/fs/xfs/xfs_alloc_btree.c
+@@ -373,6 +373,7 @@ xfs_allocbt_write_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+ 				     bp->b_target->bt_mount, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
  	}
+ 	xfs_btree_sblock_calc_crc(bp);
  
-@@ -625,7 +624,7 @@ xfs_sb_read_verify(
+diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+index c8fa5bb..0028c50 100644
+--- a/fs/xfs/xfs_ialloc_btree.c
++++ b/fs/xfs/xfs_ialloc_btree.c
+@@ -261,6 +261,7 @@ xfs_inobt_write_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+ 				     bp->b_target->bt_mount, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
+ 	}
+ 	xfs_btree_sblock_calc_crc(bp);
  
- out_error:
- 	if (error) {
--		if (error != EWRONGFS)
-+		if (error == EFSCORRUPTED)
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
- 					     mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, error);
 -- 1.7.1
 
 
