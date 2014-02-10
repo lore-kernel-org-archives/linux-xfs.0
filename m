@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A01167F3F
-	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 19:52:05 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0DEB37F3F
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 20:15:19 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 467BBAC005
-	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 17:52:05 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	QQbYzd1BRfCN2PTw for <xfs@oss.sgi.com>;
-	Sun, 09 Feb 2014 17:52:03 -0800 (PST)
-Date: Mon, 10 Feb 2014 12:52:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/189: noattr2 invalid for CRC enabled filesystems
-Message-ID: <20140210015200.GO13647@dastard>
-References: <1391590000-7171-1-git-send-email-david@fromorbit.com>
-	<20140207174754.GA31464@infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9813AC002
+	for <xfs@oss.sgi.com>; Sun,  9 Feb 2014 18:15:15 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hOzFLhxlsMOp9ANd for
+	<xfs@oss.sgi.com>; Sun, 09 Feb 2014 18:15:14 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1A2FER9009377
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 9 Feb 2014 21:15:14 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1A2FC7h014460
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 9 Feb 2014 21:15:13 -0500
+Message-ID: <52F83630.4020008@redhat.com>
+Date: Sun, 09 Feb 2014 20:15:12 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140207174754.GA31464@infradead.org>
+Subject: [PATCH 0/6] xfs: verifier modification series
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,61 +36,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Feb 07, 2014 at 09:47:54AM -0800, Christoph Hellwig wrote:
-> On Wed, Feb 05, 2014 at 07:46:40PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Version 5 filesystems always have attr2 format enabled, and it
-> > cannot be turned off via the noattr2 mount option. As such, attempts
-> > to mount with noattr2 will be rejected and this causes cascading
-> > failures within the test.
-> > 
-> > Hence detect if we've created a CRC enabled filesystem, and if this
-> > is the case _notrun the test.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  tests/xfs/189 | 11 ++++++++++-
-> >  1 file changed, 10 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/tests/xfs/189 b/tests/xfs/189
-> > index 27bfb63..addf7ce 100755
-> > --- a/tests/xfs/189
-> > +++ b/tests/xfs/189
-> > @@ -241,7 +241,16 @@ _require_scratch
-> >  unset SCRATCH_RTDEV
-> >  unset SCRATCH_LOGDEV
-> >  
-> > -_scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
-> > +_scratch_mkfs_xfs | _filter_mkfs 2> $tmp.mkfs
-> > +
-> > +# check to see if we've made a CRC enabled filesystem. If so,
-> > +# we can't run the test because CRc enabled filesystems don't support
-> > +# noattr2 mount options and this will cause cascading failures that are
-> > +# impossible to filter.
-> > +. $tmp.mkfs
-> > +if [ $crc -eq 1 ]; then
-> > +	_notrun "Filesystem CRCs enabled, noattr2 is not supported."
-> > +fi
-> 
-> I really don't like opencoding this.  Shouldn't we instead simplfy
-> pass a nocrc argument to _scratch_mkfs_xfs?
+This is a handful of changes related to the verifiers.  The end goal is to differentiate CRC errors from other non-CRC verifier errors.
 
-No, that simply breaks old mkfs binaries.
+At this point it's somewhat RFC, if you don't like some of the changes made along the way, just speak up.
 
-> Alternatively this magic should move into a helper.
-
-I'll roll it into a _requires_noattr2 helper.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
