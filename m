@@ -1,34 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 45EB97F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:22:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2C61B8F8035
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:22:09 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id RYhqNGbjsvQdbkfC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Feb 2014 06:22:08 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s1AEM7JX023835
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:22:08 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s1AEM6JX007841
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:22:07 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s1AEM58U009506 for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:22:05 GMT
-Message-ID: <52F8E086.8030805@oracle.com>
-Date: Mon, 10 Feb 2014 22:21:58 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 13D9F7F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:23:09 -0600 (CST)
+Message-ID: <52F8E0CF.1000305@sgi.com>
+Date: Mon, 10 Feb 2014 08:23:11 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: potential use after free in xfs_iomap_write_allocate()
-References: <20140210103626.GA15018@elgon.mountain>
-In-Reply-To: <20140210103626.GA15018@elgon.mountain>
+Subject: Re: [PATCH] xfs_db: fix the setting of unaligned directory fields
+References: <20140207210348.249387765@sgi.com>
+	<20140207223327.GG13647@dastard> <52F56891.5020305@sgi.com>
+	<20140208083012.GI13647@dastard> <52F669CA.7050000@sgi.com>
+	<20140209232243.GL13647@dastard>
+In-Reply-To: <20140209232243.GL13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,163 +20,130 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Carpenter <dan.carpenter@oracle.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On 02/09/14 17:22, Dave Chinner wrote:
+> On Sat, Feb 08, 2014 at 11:30:50AM -0600, Mark Tinguely wrote:
+>> On 02/08/14 02:30, Dave Chinner wrote:
+>>> On Fri, Feb 07, 2014 at 05:13:21PM -0600, Mark Tinguely wrote:
+>>>> On 02/07/14 16:33, Dave Chinner wrote:
+>>>>> On Fri, Feb 07, 2014 at 04:03:42PM -0600, Mark Tinguely wrote:
+>>>>>> @@ -526,16 +527,20 @@ convert_arg(
+>>>>>>   		 */
+>>>>>>   		*value = strtoll(arg, NULL, 0);
+>>>>>
+>>>>> If we are touching this code, the return value here should be error
+>>>>> checked.
+>>>>>
+>>>>> xfs_db>    write u3.bmx[0].startblock 3rgfdw
+>>>>> u3.bmx[0].startblock = 52776558133248
+>>>>
+>>>> hmm, It should stop at 3. I will take a look.
+>>>
+>>> Even if it stops at 3, that's still wrong because it's failed to
+>>> process the entire user input....
+>>>
+>>>>> xfs_db>    write u3.bmx[0].startblock x3rgfdw
+>>>>> u3.bmx[0].startblock = 0
+>>>>> xfs_db>
+>>>>>
+>>>>> i.e. it accepts garbage rather than erroring out.
+>>>>
+>>>> as does all the other writes ...
+>>>> xfs_db>    write core.nblocks x3rgfdw
+>>>> core.nblocks = 0
+>>>>
+>>>> Fixing convert_arg() is beyond the scope of just this patch.
+>>>
+>>> Sure, but I'm not asking you to fix all of convert_args in this
+>>> patch, just asking you to do a complete job of fixing the bitval
+>>> input processing in this patch.
+>>>
+>>> But, seeing as you've raised that convert_args() has other broken
+>>> paths, can you also write new patches to address those issues? It
+>>> won't take you long while all this code is fresh in your mind, and
+>>> if you do it now it won't get dropped on the floor until somebody
+>>> else hits it a couple of years down the track...
+>>>
+>>
+>> It needs to be split up. write_string() needs string inputs,
+>> write_struct() need numeric inputs.
+>
+> write_struct() handles every type of possible input -
+> string varables, integers, UUIDs, etc. i.e. something like
+>
+> xfs_db>  write sb.uuid<xxxx-yyyy-....>
+>
+> runs through write_struct(), it finds the uuid field definition in
+> the superblock description and then calls convert_args() on it to
+> convert the uuid format input.
+>
+> IOWs, convert_args() needs to handle all the types of input. Hence
+> you might like to factor convert_args, but it still needs to handle
+> arbitrary input types.
+>
+>>   Who uses the UUID-style hex
+>> blocks? It feels like a black hole of time.
+>
+> Obvious answer: UUIDs
+>
+> $ git grep FLDT_UUID
+> db/agf.c:       { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+> db/agfl.c:      { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+> db/agi.c:       { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
+> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
+> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
+> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
+> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
+> db/dir2.c:      { "uuid", FLDT_UUID, OI(DBH3OFF(uuid)), C1, 0, TYP_NONE },
+> db/dir2.c:      { "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
+> db/dquot.c:     { "uuid", FLDT_UUID, OI(DDOFF(uuid)), C1, 0, TYP_NONE },
+> db/field.c:     { FLDT_UUID, "uuid", fp_uuid, NULL, SI(bitsz(uuid_t)), 0, NULL, N
+> db/field.h:     FLDT_UUID,
+> db/inode.c:     { "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
+> db/inode.c:     { "muuid", FLDT_UUID, NULL, inode_u_muuid_count, FLD_COUNT, TYP_N
+> db/sb.c:        { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+> db/symlink.c:   { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+> $
+>
+> Slightly less obvious answer is writing arbitrary binary data to
+> block regions in structures, such as writing multiple entries in an
+> array in a single command (e.g. FLD_ARRAY structure sections). I've
+> used this to move sections of directory blocks around in the past....
+>
+>> It goes on my 'off the clock' to do list.
+>
+> Ok, I'll just assume that means it'll never get done so I'll get a
+> pleasent surprise when you send the patch tomorrow....
+>
+> Cheers,
+>
+> Dave.
 
-On 02/10 2014 18:36 PM, Dan Carpenter wrote:
-> There is a static checker warning in xfs_iomap_write_allocate().  It's
-> sort of old so probably it's a false positive.
-> 
-> 	fs/xfs/xfs_iomap.c:798 xfs_iomap_write_allocate()
-> 	warn: 'tp' was already freed.
-> 
-> fs/xfs/xfs_iomap.c
->    677  
->    678          while (count_fsb != 0) {
-> 
-> There are some paths where if (count_fsb == 0) then "tp" is free.
+Yes, realized that the types are all needed:
+  write core.magic "IN"
+does make sense. And the following is legal:
+  write core.mode "IN"
+but may not make a lot of sense.
 
-I can not see a call pach would introduce "count_fsb == 0" because we only
-call xfs_iomap_write_allocate() in extent delayed allocation context,
-that is the count_fsb should be >= 1.
-> 
->    679                  /*
->    680                   * Set up a transaction with which to allocate the
->    681                   * backing store for the file.  Do allocations in a
->    682                   * loop until we get some space in the range we are
->    683                   * interested in.  The other space that might be allocated
->    684                   * is in the delayed allocation extent on which we sit
->    685                   * but before our buffer starts.
->    686                   */
->    687  
->    688                  nimaps = 0;
->    689                  while (nimaps == 0) {
->    690                          tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
->    691                          tp->t_flags |= XFS_TRANS_RESERVE;
->    692                          nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
->    693                          error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
->    694                                                    nres, 0);
->    695                          if (error) {
->    696                                  xfs_trans_cancel(tp, 0);
->    697                                  return XFS_ERROR(error);
->    698                          }
->    699                          xfs_ilock(ip, XFS_ILOCK_EXCL);
->    700                          xfs_trans_ijoin(tp, ip, 0);
->    701  
->    702                          xfs_bmap_init(&free_list, &first_block);
->    703  
->    704                          /*
->    705                           * it is possible that the extents have changed since
->    706                           * we did the read call as we dropped the ilock for a
->    707                           * while. We have to be careful about truncates or hole
->    708                           * punchs here - we are not allowed to allocate
->    709                           * non-delalloc blocks here.
->    710                           *
->    711                           * The only protection against truncation is the pages
->    712                           * for the range we are being asked to convert are
->    713                           * locked and hence a truncate will block on them
->    714                           * first.
->    715                           *
->    716                           * As a result, if we go beyond the range we really
->    717                           * need and hit an delalloc extent boundary followed by
->    718                           * a hole while we have excess blocks in the map, we
->    719                           * will fill the hole incorrectly and overrun the
->    720                           * transaction reservation.
->    721                           *
->    722                           * Using a single map prevents this as we are forced to
->    723                           * check each map we look for overlap with the desired
->    724                           * range and abort as soon as we find it. Also, given
->    725                           * that we only return a single map, having one beyond
->    726                           * what we can return is probably a bit silly.
->    727                           *
->    728                           * We also need to check that we don't go beyond EOF;
->    729                           * this is a truncate optimisation as a truncate sets
->    730                           * the new file size before block on the pages we
->    731                           * currently have locked under writeback. Because they
->    732                           * are about to be tossed, we don't need to write them
->    733                           * back....
->    734                           */
->    735                          nimaps = 1;
->    736                          end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
->    737                          error = xfs_bmap_last_offset(NULL, ip, &last_block,
->    738                                                          XFS_DATA_FORK);
->    739                          if (error)
->    740                                  goto trans_cancel;
->    741  
->    742                          last_block = XFS_FILEOFF_MAX(last_block, end_fsb);
->    743                          if ((map_start_fsb + count_fsb) > last_block) {
->    744                                  count_fsb = last_block - map_start_fsb;
->    745                                  if (count_fsb == 0) {
->    746                                          error = EAGAIN;
->    747                                          goto trans_cancel;
->    748                                  }
->    749                          }
->    750  
->    751                          /*
->    752                           * From this point onwards we overwrite the imap
->    753                           * pointer that the caller gave to us.
->    754                           */
->    755                          error = xfs_bmapi_write(tp, ip, map_start_fsb,
->    756                                                  count_fsb,
->    757                                                  XFS_BMAPI_STACK_SWITCH,
->    758                                                  &first_block, 1,
->    759                                                  imap, &nimaps, &free_list);
->    760                          if (error)
->    761                                  goto trans_cancel;
->    762  
->    763                          error = xfs_bmap_finish(&tp, &free_list, &committed);
->    764                          if (error)
->    765                                  goto trans_cancel;
->    766  
->    767                          error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
->    768                          if (error)
->    769                                  goto error0;
-> 
-> The call to xfs_trans_commit() frees "tp". 
+My patch broke on little endian the ability to input 8-64 bit hex values:
 
-Yep, seems to me this is correct because if no error is occurred in xfs_trans_commit(),
-tp is freed up internally, otherwise it would be freed in error0 path.
-> 
->    770  
->    771                          xfs_iunlock(ip, XFS_ILOCK_EXCL);
->    772                  }
->    773  
->    774                  /*
->    775                   * See if we were able to allocate an extent that
->    776                   * covers at least part of the callers request
->    777                   */
->    778                  if (!(imap->br_startblock || XFS_IS_REALTIME_INODE(ip)))
->    779                          return xfs_alert_fsblock_zero(ip, imap);
->    780  
->    781                  if ((offset_fsb >= imap->br_startoff) &&
->    782                      (offset_fsb < (imap->br_startoff +
->    783                                     imap->br_blockcount))) {
->    784                          XFS_STATS_INC(xs_xstrat_quick);
->    785                          return 0;
->    786                  }
->    787  
->    788                  /*
->    789                   * So far we have not mapped the requested part of the
->    790                   * file, just surrounding data, try again.
->    791                   */
->    792                  count_fsb -= imap->br_blockcount;
->    793                  map_start_fsb = imap->br_startoff + imap->br_blockcount;
->    794          }
->    795  
->    796  trans_cancel:
->    797          xfs_bmap_cancel(&free_list);
->    798          xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
->                                  ^^
-> We dereference "tp" in xfs_trans_cancel().
+   write core.magic #494e
 
-Maybe I missed something, but the current logic looks correct to me. :)
+it was always broke on big endian, so I fixed it for both.
 
-Thanks,
--Jeff
+I cleaned up the trailing junk characters.
+
+The test has been written and it will be reposted once I get to the 
+documentation changes.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
