@@ -1,17 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 13D9F7F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:23:09 -0600 (CST)
-Message-ID: <52F8E0CF.1000305@sgi.com>
-Date: Mon, 10 Feb 2014 08:23:11 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_db: fix the setting of unaligned directory fields
-References: <20140207210348.249387765@sgi.com>
-	<20140207223327.GG13647@dastard> <52F56891.5020305@sgi.com>
-	<20140208083012.GI13647@dastard> <52F669CA.7050000@sgi.com>
-	<20140209232243.GL13647@dastard>
-In-Reply-To: <20140209232243.GL13647@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D10927F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:33:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9104304064
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:33:30 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FTisEYZH21eTLa2u for
+	<xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:33:29 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1AEXTnR025632
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 09:33:29 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1AEXR1v019172
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 09:33:28 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: avoid AGI/AGF deadlock scenario for inode chunk
+	allocation
+Date: Mon, 10 Feb 2014 09:33:27 -0500
+Message-Id: <1392042807-41697-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,130 +30,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 02/09/14 17:22, Dave Chinner wrote:
-> On Sat, Feb 08, 2014 at 11:30:50AM -0600, Mark Tinguely wrote:
->> On 02/08/14 02:30, Dave Chinner wrote:
->>> On Fri, Feb 07, 2014 at 05:13:21PM -0600, Mark Tinguely wrote:
->>>> On 02/07/14 16:33, Dave Chinner wrote:
->>>>> On Fri, Feb 07, 2014 at 04:03:42PM -0600, Mark Tinguely wrote:
->>>>>> @@ -526,16 +527,20 @@ convert_arg(
->>>>>>   		 */
->>>>>>   		*value = strtoll(arg, NULL, 0);
->>>>>
->>>>> If we are touching this code, the return value here should be error
->>>>> checked.
->>>>>
->>>>> xfs_db>    write u3.bmx[0].startblock 3rgfdw
->>>>> u3.bmx[0].startblock = 52776558133248
->>>>
->>>> hmm, It should stop at 3. I will take a look.
->>>
->>> Even if it stops at 3, that's still wrong because it's failed to
->>> process the entire user input....
->>>
->>>>> xfs_db>    write u3.bmx[0].startblock x3rgfdw
->>>>> u3.bmx[0].startblock = 0
->>>>> xfs_db>
->>>>>
->>>>> i.e. it accepts garbage rather than erroring out.
->>>>
->>>> as does all the other writes ...
->>>> xfs_db>    write core.nblocks x3rgfdw
->>>> core.nblocks = 0
->>>>
->>>> Fixing convert_arg() is beyond the scope of just this patch.
->>>
->>> Sure, but I'm not asking you to fix all of convert_args in this
->>> patch, just asking you to do a complete job of fixing the bitval
->>> input processing in this patch.
->>>
->>> But, seeing as you've raised that convert_args() has other broken
->>> paths, can you also write new patches to address those issues? It
->>> won't take you long while all this code is fresh in your mind, and
->>> if you do it now it won't get dropped on the floor until somebody
->>> else hits it a couple of years down the track...
->>>
->>
->> It needs to be split up. write_string() needs string inputs,
->> write_struct() need numeric inputs.
->
-> write_struct() handles every type of possible input -
-> string varables, integers, UUIDs, etc. i.e. something like
->
-> xfs_db>  write sb.uuid<xxxx-yyyy-....>
->
-> runs through write_struct(), it finds the uuid field definition in
-> the superblock description and then calls convert_args() on it to
-> convert the uuid format input.
->
-> IOWs, convert_args() needs to handle all the types of input. Hence
-> you might like to factor convert_args, but it still needs to handle
-> arbitrary input types.
->
->>   Who uses the UUID-style hex
->> blocks? It feels like a black hole of time.
->
-> Obvious answer: UUIDs
->
-> $ git grep FLDT_UUID
-> db/agf.c:       { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-> db/agfl.c:      { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-> db/agi.c:       { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
-> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
-> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-> db/btblock.c:   { "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
-> db/dir2.c:      { "uuid", FLDT_UUID, OI(DBH3OFF(uuid)), C1, 0, TYP_NONE },
-> db/dir2.c:      { "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
-> db/dquot.c:     { "uuid", FLDT_UUID, OI(DDOFF(uuid)), C1, 0, TYP_NONE },
-> db/field.c:     { FLDT_UUID, "uuid", fp_uuid, NULL, SI(bitsz(uuid_t)), 0, NULL, N
-> db/field.h:     FLDT_UUID,
-> db/inode.c:     { "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
-> db/inode.c:     { "muuid", FLDT_UUID, NULL, inode_u_muuid_count, FLD_COUNT, TYP_N
-> db/sb.c:        { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-> db/symlink.c:   { "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-> $
->
-> Slightly less obvious answer is writing arbitrary binary data to
-> block regions in structures, such as writing multiple entries in an
-> array in a single command (e.g. FLD_ARRAY structure sections). I've
-> used this to move sections of directory blocks around in the past....
->
->> It goes on my 'off the clock' to do list.
->
-> Ok, I'll just assume that means it'll never get done so I'll get a
-> pleasent surprise when you send the patch tomorrow....
->
-> Cheers,
->
-> Dave.
+The inode chunk allocation path can lead to deadlock conditions if
+a transaction is dirtied with an AGF (to fix up the freelist) for
+an AG that cannot satisfy the actual allocation request. This code
+path is written to try and avoid this scenario, but it can be
+reproduced by running xfstests generic/270 in a loop on a 512b fs.
 
-Yes, realized that the types are all needed:
-  write core.magic "IN"
-does make sense. And the following is legal:
-  write core.mode "IN"
-but may not make a lot of sense.
+An example situation is:
+- process A attempts an inode allocation on AG 3, modifies
+  the freelist, fails the allocation and ultimately moves on to
+  AG 0 with the AG 3 AGF held
+- process B is doing a free space operation (i.e., truncate) and
+  acquires the AG 0 AGF, waits on the AG 3 AGF
+- process A acquires the AG 0 AGI, waits on the AG 0 AGF (deadlock)
 
-My patch broke on little endian the ability to input 8-64 bit hex values:
+The problem here is that process A acquired the AG 3 AGF while
+moving on to AG 0 (and releasing the AG 3 AGI with the AG 3 AGF
+held). xfs_dialloc() makes one pass through each of the AGs when
+attempting to allocate an inode chunk. The expectation is a clean
+transaction if a particular AG cannot satisfy the allocation
+request. xfs_ialloc_ag_alloc() is written to support this through
+use of the minalignslop allocation args field.
 
-   write core.magic #494e
+When using the agi->agi_newino optimization, we attempt an exact
+bno allocation request based on the location of the previously
+allocated chunk. minalignslop is set to inform the allocator that
+we will require alignment on this chunk, and thus to not allow the
+request for this AG if the extra space is not available. Suppose
+that the AG in question has just enough space for this request, but
+not at the requested bno. xfs_alloc_fix_freelist() will proceed as
+normal as it determines the request should succeed, and thus it is
+allowed to modify the agf. xfs_alloc_ag_vextent() ultimately fails
+because the requested bno is not available. In response, the caller
+moves on to a NEAR_BNO allocation request for the same AG. The
+alignment is set, but the minalignslop field is never reset. This
+increases the overall requirement of the request from the first
+attempt. If this delta is the difference between allocation success
+and failure for the AG, xfs_alloc_fix_freelist() rejects this
+request outright the second time around and causes the allocation
+request to unnecessarily fail for this AG.
 
-it was always broke on big endian, so I fixed it for both.
+To address this situation, reset the minalignslop field when we
+transition from a THIS_BNO to a NEAR_BNO allocation request in
+xfs_ialloc_ag_alloc().
 
-I cleaned up the trailing junk characters.
+[NOTE: It appears at first glance that the optimized agi_newino
+ allocation case is problematic in that it doesn't consider use of
+ mp->m_sinoalign, if enabled. If the m_sinoalign allocation fails,
+ however, we revert back to normal cluster alignment, which I think
+ makes the overall sequence safe.]
 
-The test has been written and it will be reposted once I get to the 
-documentation changes.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_ialloc.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---Mark.
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 5d7f105..584daf0 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -382,6 +382,8 @@ xfs_ialloc_ag_alloc(
+ 			isaligned = 1;
+ 		} else
+ 			args.alignment = xfs_ialloc_cluster_alignment(&args);
++		args.minalignslop = 0;
++
+ 		/*
+ 		 * Need to figure out where to allocate the inode blocks.
+ 		 * Ideally they should be spaced out through the a.g.
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
