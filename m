@@ -1,36 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4EEF77F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:50:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E3F36AC004
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:50:26 -0800 (PST)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id t2GyyDbmNaFcFkOQ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Feb 2014 06:50:25 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s1AEoOI8029068
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:50:24 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s1AEoNBZ011749
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:50:24 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s1AEoNpY000577 for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:50:23 GMT
-Date: Mon, 10 Feb 2014 17:50:41 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: potential use after free in xfs_iomap_write_allocate()
-Message-ID: <20140210145041.GC26776@mwanda>
-References: <20140210103626.GA15018@elgon.mountain>
-	<52F8E086.8030805@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E221E7F4E
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:52:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C0D6E8F8033
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:52:44 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id GUEG6JbpmZBXTdRk for <xfs@oss.sgi.com>;
+	Mon, 10 Feb 2014 06:52:43 -0800 (PST)
+Message-ID: <52F8E7AE.8060103@sandeen.net>
+Date: Mon, 10 Feb 2014 08:52:30 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52F8E086.8030805@oracle.com>
+Subject: Re: [PATCH 5/6] xfs: add xfs_verifier_error()
+References: <52F83630.4020008@redhat.com>
+	<52F83A8D.7030506@sandeen.net>	<20140210034321.GR13647@dastard>
+	<52F85294.6010309@sandeen.net> <20140210111042.GY13997@dastard>
+In-Reply-To: <20140210111042.GY13997@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,38 +29,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Feb 10, 2014 at 10:21:58PM +0800, Jeff Liu wrote:
+On 2/10/14, 5:10 AM, Dave Chinner wrote:
+> On Sun, Feb 09, 2014 at 10:16:20PM -0600, Eric Sandeen wrote:
+>> On 2/9/14, 9:43 PM, Dave Chinner wrote:
+>>> On Sun, Feb 09, 2014 at 08:33:49PM -0600, Eric Sandeen wrote:
+>>>> We want to distinguish between corruption, CRC errors,
+>>>> etc.  In addition, the full stack trace on verifier errors
+>>>> seems less than helpful; it looks more like an oops than
+>>>> corruption.  
+>>>>
+>>>> Create a new function to specifically alert the user to
+>>>> verifier errors, which can differentiate between
+>>>> EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
+>>>> unless the xfs error level is turned up high.
+>>>>
+>>>> Define a new error message (EFSBADCRC) to clearly identify
+>>>> CRC errors.  (Defined to EILSEQ, bad byte sequence)
+>>>>
+>>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>>> ---
+>>>>  fs/xfs/xfs_error.c |   22 ++++++++++++++++++++++
+>>>>  fs/xfs/xfs_error.h |    3 +++
+>>>>  fs/xfs/xfs_linux.h |    1 +
+>>>>  3 files changed, 26 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+>>>> index 9995b80..08d76f4 100644
+>>>> --- a/fs/xfs/xfs_error.c
+>>>> +++ b/fs/xfs/xfs_error.c
+>>>> @@ -178,3 +178,25 @@ xfs_corruption_error(
+>>>>  	xfs_error_report(tag, level, mp, filename, linenum, ra);
+>>>>  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+>>>>  }
+>>>> +
+>>>> +/*
+>>>> + * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
+>>>> + * values, and omit the stack trace unless the error level is tuned high.
+>>>> + */
+>>>> +void
+>>>> +__xfs_verifier_error(
+>>>> +	const char		*func,
+>>>> +	struct xfs_buf		*bp)
+>>>> +{
+>>>> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+>>>> +
+>>>> +	xfs_alert(mp,
+>>>> +"%sCorruption detected in %s, block 0x%llx. Unmount and run xfs_repair",
+>>>> +		  bp->b_error == EFSBADCRC ? "CRC " : "", func, bp->b_bn);
+>>>
+>>> Perhaps if we do this:
+>>>
+>>> 	xfs_alert(mp,
+>>> "Metadata %s detected at %pF, block 0x%llx. Unmount and run xfs_repair",
+>>> 		  bp->b_error == EFSBADCRC ? "CRC error"
+>>> 					   : "corruption", _RET_IP_, bp->b_bn);
+>>>
+>>> We'll get a symbol of the form caller_name+0xoffset similar to a
+>>> stack dump. That way if we have multiple calls to a
+>>> xfs_verifier_error() inside a single function we get something that
+>>> tells us which call detected the error...
+>>
+>> Hm, but the point of the switch based on error nrs was to require only
+>> one call in each ->verifier, and ...
 > 
-> On 02/10 2014 18:36 PM, Dan Carpenter wrote:
-> > There is a static checker warning in xfs_iomap_write_allocate().  It's
-> > sort of old so probably it's a false positive.
-> > 
-> > 	fs/xfs/xfs_iomap.c:798 xfs_iomap_write_allocate()
-> > 	warn: 'tp' was already freed.
-> > 
-> > fs/xfs/xfs_iomap.c
-> >    677  
-> >    678          while (count_fsb != 0) {
-> > 
-> > There are some paths where if (count_fsb == 0) then "tp" is free.
+> Right, that's the current usage of it because we are simply
+> returning true/false from the checking code. Determining the exact
+> error is the report is much more useful - let's not lose sight of
+> the end goal....
 > 
-> I can not see a call pach would introduce "count_fsb == 0" because we only
-> call xfs_iomap_write_allocate() in extent delayed allocation context,
-> that is the count_fsb should be >= 1.
+>>> Also, the use of _RET_IP_ gets rid of the need for the wrapper
+>>> macro....
+>>
+>> 0x${SPLAT} is a lot less useful than i.e. "xfs_agi_read_verify"
+> 
+> Note the format string I used: "%pF". That decodes the _RET_IP_
+> into the function name and offset from the start of the function.
+> i.e. it returns xfs_agi_read_verify+0x<splat>.
 
-I am confused.  That's a while condition and not an if condition.
-On line 792 we do:
+I forgot that it did this, TBH.  Ok, I'll rethink things a bit.
 
-	count_fsb -= imap->br_blockcount;
+(although with multiple failure points in a verifier, +0x4a vs +0x5b
+will still require some digging; a line number might be nice, but
+then we'd need a wrapper again)
 
-I assume you saw that, and it's still a false positive but I just want
-to be sure.
-
-regards,
-dan carpenter
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
