@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1F3FD7F50
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 05:10:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E2A758F8037
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 03:10:50 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	U04R91Q90J35dTk3 for <xfs@oss.sgi.com>;
-	Mon, 10 Feb 2014 03:10:48 -0800 (PST)
-Date: Mon, 10 Feb 2014 22:10:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/6] xfs: add xfs_verifier_error()
-Message-ID: <20140210111042.GY13997@dastard>
-References: <52F83630.4020008@redhat.com> <52F83A8D.7030506@sandeen.net>
-	<20140210034321.GR13647@dastard> <52F85294.6010309@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52F85294.6010309@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id A97C07F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:13:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 93B6C8F8035
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:13:14 -0800 (PST)
+Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
+	[209.85.220.49]) by cuda.sgi.com with ESMTP id YJgljdPW0qAzIfuy
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:13:13 -0800 (PST)
+Received: by mail-pa0-f49.google.com with SMTP id hz1so6099416pad.36
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:13:12 -0800 (PST)
+From: Wang Shilong <wangshilong1991@gmail.com>
+Subject: [PATCH] xfstests: btrfs/004: fix to make test really work
+Date: Mon, 10 Feb 2014 20:10:56 +0800
+Message-Id: <1392034256-2412-1-git-send-email-wangshilong1991@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,102 +23,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 
-On Sun, Feb 09, 2014 at 10:16:20PM -0600, Eric Sandeen wrote:
-> On 2/9/14, 9:43 PM, Dave Chinner wrote:
-> > On Sun, Feb 09, 2014 at 08:33:49PM -0600, Eric Sandeen wrote:
-> >> We want to distinguish between corruption, CRC errors,
-> >> etc.  In addition, the full stack trace on verifier errors
-> >> seems less than helpful; it looks more like an oops than
-> >> corruption.  
-> >>
-> >> Create a new function to specifically alert the user to
-> >> verifier errors, which can differentiate between
-> >> EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
-> >> unless the xfs error level is turned up high.
-> >>
-> >> Define a new error message (EFSBADCRC) to clearly identify
-> >> CRC errors.  (Defined to EILSEQ, bad byte sequence)
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>  fs/xfs/xfs_error.c |   22 ++++++++++++++++++++++
-> >>  fs/xfs/xfs_error.h |    3 +++
-> >>  fs/xfs/xfs_linux.h |    1 +
-> >>  3 files changed, 26 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> >> index 9995b80..08d76f4 100644
-> >> --- a/fs/xfs/xfs_error.c
-> >> +++ b/fs/xfs/xfs_error.c
-> >> @@ -178,3 +178,25 @@ xfs_corruption_error(
-> >>  	xfs_error_report(tag, level, mp, filename, linenum, ra);
-> >>  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
-> >>  }
-> >> +
-> >> +/*
-> >> + * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
-> >> + * values, and omit the stack trace unless the error level is tuned high.
-> >> + */
-> >> +void
-> >> +__xfs_verifier_error(
-> >> +	const char		*func,
-> >> +	struct xfs_buf		*bp)
-> >> +{
-> >> +	struct xfs_mount *mp = bp->b_target->bt_mount;
-> >> +
-> >> +	xfs_alert(mp,
-> >> +"%sCorruption detected in %s, block 0x%llx. Unmount and run xfs_repair",
-> >> +		  bp->b_error == EFSBADCRC ? "CRC " : "", func, bp->b_bn);
-> > 
-> > Perhaps if we do this:
-> > 
-> > 	xfs_alert(mp,
-> > "Metadata %s detected at %pF, block 0x%llx. Unmount and run xfs_repair",
-> > 		  bp->b_error == EFSBADCRC ? "CRC error"
-> > 					   : "corruption", _RET_IP_, bp->b_bn);
-> > 
-> > We'll get a symbol of the form caller_name+0xoffset similar to a
-> > stack dump. That way if we have multiple calls to a
-> > xfs_verifier_error() inside a single function we get something that
-> > tells us which call detected the error...
-> 
-> Hm, but the point of the switch based on error nrs was to require only
-> one call in each ->verifier, and ...
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 
-Right, that's the current usage of it because we are simply
-returning true/false from the checking code. Determining the exact
-error is the report is much more useful - let's not lose sight of
-the end goal....
+So i was wandering why test 004 could pass my previous wrong
+kernel patch while it defenitely should not.
 
-> > Also, the use of _RET_IP_ gets rid of the need for the wrapper
-> > macro....
-> 
-> 0x${SPLAT} is a lot less useful than i.e. "xfs_agi_read_verify"
+By some debugging, i found here perl script is wrong, we did not
+filter out anything and this unit test did not work acutally.so
+it came out we will never fail this test.
 
-Note the format string I used: "%pF". That decodes the _RET_IP_
-into the function name and offset from the start of the function.
-i.e. it returns xfs_agi_read_verify+0x<splat>.
+Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+---
+ tests/btrfs/004 | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+ mode change 100755 => 100644 tests/btrfs/004
 
-> Printing the _RET_IP_ requires disassembly of that particular build
-> to figure out where we went wrong, whereas printing __func__ makes it
-> clear on the initial read of the dmesg.
-
-The function is already there in plain test. You only need to go to
-tools if you want ot know the exact line it came from....
-
-Cheers,
-
-Dave.
+diff --git a/tests/btrfs/004 b/tests/btrfs/004
+old mode 100755
+new mode 100644
+index 14da9f1..17a6e34
+--- a/tests/btrfs/004
++++ b/tests/btrfs/004
+@@ -57,10 +57,9 @@ _require_command "/usr/sbin/filefrag"
+ 
+ rm -f $seqres.full
+ 
+-FILEFRAG_FILTER='if (/, blocksize (\d+)/) {$blocksize = $1; next} ($ext, '\
+-'$logical, $physical, $expected, $length, $flags) = (/^\s*(\d+)\s+(\d+)'\
+-'\s+(\d+)\s+(?:(\d+)\s+)?(\d+)\s+(.*)/) or next; $flags =~ '\
+-'/(?:^|,)inline(?:,|$)/ and next; print $physical * $blocksize, "#", '\
++FILEFRAG_FILTER='if (/blocks of (\d+) bytes/) {$blocksize = $1; next} ($ext, '\
++'$logical, $physical, $length) = (/^\s*(\d+):\s+(\d+)..\s+\d+:'\
++'\s+(\d+)..\s+\d+:\s+(\d+):/) or next; print $physical * $blocksize, "#", '\
+ '$length * $blocksize, "#", $logical * $blocksize, " "'
+ 
+ # this makes filefrag output script readable by using a perl helper.
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.4
 
 _______________________________________________
 xfs mailing list
