@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 844EE7F56
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:45:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DB638F8033
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 02:45:16 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id xLP0vUEmJvPgUGE4 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Feb 2014 02:45:14 -0800 (PST)
-Date: Mon, 10 Feb 2014 02:45:14 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs/189: noattr2 invalid for CRC enabled filesystems
-Message-ID: <20140210104514.GB9840@infradead.org>
-References: <1391590000-7171-1-git-send-email-david@fromorbit.com>
-	<20140207174754.GA31464@infradead.org>
-	<20140210015200.GO13647@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C55F77F52
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:55:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 63ED6AC004
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 02:55:37 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	9C3Ravso3D6BODlq for <xfs@oss.sgi.com>;
+	Mon, 10 Feb 2014 02:55:35 -0800 (PST)
+Date: Mon, 10 Feb 2014 21:55:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs/033: add golden output for CRC enaled filesystems
+Message-ID: <20140210105533.GX13997@dastard>
+References: <1391588590-6035-1-git-send-email-david@fromorbit.com>
+	<20140207174950.GB31464@infradead.org>
+	<20140210015105.GN13647@dastard>
+	<20140210104426.GA9840@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140210015200.GO13647@dastard>
+In-Reply-To: <20140210104426.GA9840@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,17 +32,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 10, 2014 at 12:52:00PM +1100, Dave Chinner wrote:
-> > I really don't like opencoding this.  Shouldn't we instead simplfy
-> > pass a nocrc argument to _scratch_mkfs_xfs?
+On Mon, Feb 10, 2014 at 02:44:26AM -0800, Christoph Hellwig wrote:
+> On Mon, Feb 10, 2014 at 12:51:05PM +1100, Dave Chinner wrote:
+> > I can't say I like adding that prefix to the mkfs varaibles. I'll
+> > change this one to something less generic, but I'm going to ignore
+> > the others right now because changing them involves modifying 30+
+> > tests....
 > 
-> No, that simply breaks old mkfs binaries.
+> In that case let's keep the crc one without prefix for now.  But I think
+> introducing very generic variables into the environment implicitly is
+> a bad idea and will bite us long term.
+> 
+> Reluctantly:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Well, we couldn't pass it unconditionally - the main idea is to hide
-the magic and allow tests to easily create a noncrc filesystem.
+I renamed it earlier this afternoon to "_fs_has_crc" so that code
+that checks it makes sense when you read it:
+
+	if [ $_fs_has_crc -eq 1 ]; then
+		.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
