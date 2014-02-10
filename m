@@ -1,20 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A97C07F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:13:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 93B6C8F8035
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:13:14 -0800 (PST)
-Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
-	[209.85.220.49]) by cuda.sgi.com with ESMTP id YJgljdPW0qAzIfuy
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:13:13 -0800 (PST)
-Received: by mail-pa0-f49.google.com with SMTP id hz1so6099416pad.36
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 04:13:12 -0800 (PST)
-From: Wang Shilong <wangshilong1991@gmail.com>
-Subject: [PATCH] xfstests: btrfs/004: fix to make test really work
-Date: Mon, 10 Feb 2014 20:10:56 +0800
-Message-Id: <1392034256-2412-1-git-send-email-wangshilong1991@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 45EB97F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 08:22:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2C61B8F8035
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 06:22:09 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id RYhqNGbjsvQdbkfC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 10 Feb 2014 06:22:08 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s1AEM7JX023835
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:22:08 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s1AEM6JX007841
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:22:07 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s1AEM58U009506 for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 14:22:05 GMT
+Message-ID: <52F8E086.8030805@oracle.com>
+Date: Mon, 10 Feb 2014 22:21:58 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: potential use after free in xfs_iomap_write_allocate()
+References: <20140210103626.GA15018@elgon.mountain>
+In-Reply-To: <20140210103626.GA15018@elgon.mountain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,51 +37,163 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org, Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, xfs@oss.sgi.com
 
-From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 
-So i was wandering why test 004 could pass my previous wrong
-kernel patch while it defenitely should not.
+On 02/10 2014 18:36 PM, Dan Carpenter wrote:
+> There is a static checker warning in xfs_iomap_write_allocate().  It's
+> sort of old so probably it's a false positive.
+> 
+> 	fs/xfs/xfs_iomap.c:798 xfs_iomap_write_allocate()
+> 	warn: 'tp' was already freed.
+> 
+> fs/xfs/xfs_iomap.c
+>    677  
+>    678          while (count_fsb != 0) {
+> 
+> There are some paths where if (count_fsb == 0) then "tp" is free.
 
-By some debugging, i found here perl script is wrong, we did not
-filter out anything and this unit test did not work acutally.so
-it came out we will never fail this test.
+I can not see a call pach would introduce "count_fsb == 0" because we only
+call xfs_iomap_write_allocate() in extent delayed allocation context,
+that is the count_fsb should be >= 1.
+> 
+>    679                  /*
+>    680                   * Set up a transaction with which to allocate the
+>    681                   * backing store for the file.  Do allocations in a
+>    682                   * loop until we get some space in the range we are
+>    683                   * interested in.  The other space that might be allocated
+>    684                   * is in the delayed allocation extent on which we sit
+>    685                   * but before our buffer starts.
+>    686                   */
+>    687  
+>    688                  nimaps = 0;
+>    689                  while (nimaps == 0) {
+>    690                          tp = xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE);
+>    691                          tp->t_flags |= XFS_TRANS_RESERVE;
+>    692                          nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+>    693                          error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
+>    694                                                    nres, 0);
+>    695                          if (error) {
+>    696                                  xfs_trans_cancel(tp, 0);
+>    697                                  return XFS_ERROR(error);
+>    698                          }
+>    699                          xfs_ilock(ip, XFS_ILOCK_EXCL);
+>    700                          xfs_trans_ijoin(tp, ip, 0);
+>    701  
+>    702                          xfs_bmap_init(&free_list, &first_block);
+>    703  
+>    704                          /*
+>    705                           * it is possible that the extents have changed since
+>    706                           * we did the read call as we dropped the ilock for a
+>    707                           * while. We have to be careful about truncates or hole
+>    708                           * punchs here - we are not allowed to allocate
+>    709                           * non-delalloc blocks here.
+>    710                           *
+>    711                           * The only protection against truncation is the pages
+>    712                           * for the range we are being asked to convert are
+>    713                           * locked and hence a truncate will block on them
+>    714                           * first.
+>    715                           *
+>    716                           * As a result, if we go beyond the range we really
+>    717                           * need and hit an delalloc extent boundary followed by
+>    718                           * a hole while we have excess blocks in the map, we
+>    719                           * will fill the hole incorrectly and overrun the
+>    720                           * transaction reservation.
+>    721                           *
+>    722                           * Using a single map prevents this as we are forced to
+>    723                           * check each map we look for overlap with the desired
+>    724                           * range and abort as soon as we find it. Also, given
+>    725                           * that we only return a single map, having one beyond
+>    726                           * what we can return is probably a bit silly.
+>    727                           *
+>    728                           * We also need to check that we don't go beyond EOF;
+>    729                           * this is a truncate optimisation as a truncate sets
+>    730                           * the new file size before block on the pages we
+>    731                           * currently have locked under writeback. Because they
+>    732                           * are about to be tossed, we don't need to write them
+>    733                           * back....
+>    734                           */
+>    735                          nimaps = 1;
+>    736                          end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+>    737                          error = xfs_bmap_last_offset(NULL, ip, &last_block,
+>    738                                                          XFS_DATA_FORK);
+>    739                          if (error)
+>    740                                  goto trans_cancel;
+>    741  
+>    742                          last_block = XFS_FILEOFF_MAX(last_block, end_fsb);
+>    743                          if ((map_start_fsb + count_fsb) > last_block) {
+>    744                                  count_fsb = last_block - map_start_fsb;
+>    745                                  if (count_fsb == 0) {
+>    746                                          error = EAGAIN;
+>    747                                          goto trans_cancel;
+>    748                                  }
+>    749                          }
+>    750  
+>    751                          /*
+>    752                           * From this point onwards we overwrite the imap
+>    753                           * pointer that the caller gave to us.
+>    754                           */
+>    755                          error = xfs_bmapi_write(tp, ip, map_start_fsb,
+>    756                                                  count_fsb,
+>    757                                                  XFS_BMAPI_STACK_SWITCH,
+>    758                                                  &first_block, 1,
+>    759                                                  imap, &nimaps, &free_list);
+>    760                          if (error)
+>    761                                  goto trans_cancel;
+>    762  
+>    763                          error = xfs_bmap_finish(&tp, &free_list, &committed);
+>    764                          if (error)
+>    765                                  goto trans_cancel;
+>    766  
+>    767                          error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+>    768                          if (error)
+>    769                                  goto error0;
+> 
+> The call to xfs_trans_commit() frees "tp". 
 
-Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
----
- tests/btrfs/004 | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
- mode change 100755 => 100644 tests/btrfs/004
+Yep, seems to me this is correct because if no error is occurred in xfs_trans_commit(),
+tp is freed up internally, otherwise it would be freed in error0 path.
+> 
+>    770  
+>    771                          xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>    772                  }
+>    773  
+>    774                  /*
+>    775                   * See if we were able to allocate an extent that
+>    776                   * covers at least part of the callers request
+>    777                   */
+>    778                  if (!(imap->br_startblock || XFS_IS_REALTIME_INODE(ip)))
+>    779                          return xfs_alert_fsblock_zero(ip, imap);
+>    780  
+>    781                  if ((offset_fsb >= imap->br_startoff) &&
+>    782                      (offset_fsb < (imap->br_startoff +
+>    783                                     imap->br_blockcount))) {
+>    784                          XFS_STATS_INC(xs_xstrat_quick);
+>    785                          return 0;
+>    786                  }
+>    787  
+>    788                  /*
+>    789                   * So far we have not mapped the requested part of the
+>    790                   * file, just surrounding data, try again.
+>    791                   */
+>    792                  count_fsb -= imap->br_blockcount;
+>    793                  map_start_fsb = imap->br_startoff + imap->br_blockcount;
+>    794          }
+>    795  
+>    796  trans_cancel:
+>    797          xfs_bmap_cancel(&free_list);
+>    798          xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+>                                  ^^
+> We dereference "tp" in xfs_trans_cancel().
 
-diff --git a/tests/btrfs/004 b/tests/btrfs/004
-old mode 100755
-new mode 100644
-index 14da9f1..17a6e34
---- a/tests/btrfs/004
-+++ b/tests/btrfs/004
-@@ -57,10 +57,9 @@ _require_command "/usr/sbin/filefrag"
- 
- rm -f $seqres.full
- 
--FILEFRAG_FILTER='if (/, blocksize (\d+)/) {$blocksize = $1; next} ($ext, '\
--'$logical, $physical, $expected, $length, $flags) = (/^\s*(\d+)\s+(\d+)'\
--'\s+(\d+)\s+(?:(\d+)\s+)?(\d+)\s+(.*)/) or next; $flags =~ '\
--'/(?:^|,)inline(?:,|$)/ and next; print $physical * $blocksize, "#", '\
-+FILEFRAG_FILTER='if (/blocks of (\d+) bytes/) {$blocksize = $1; next} ($ext, '\
-+'$logical, $physical, $length) = (/^\s*(\d+):\s+(\d+)..\s+\d+:'\
-+'\s+(\d+)..\s+\d+:\s+(\d+):/) or next; print $physical * $blocksize, "#", '\
- '$length * $blocksize, "#", $logical * $blocksize, " "'
- 
- # this makes filefrag output script readable by using a perl helper.
--- 
-1.8.4
+Maybe I missed something, but the current logic looks correct to me. :)
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
