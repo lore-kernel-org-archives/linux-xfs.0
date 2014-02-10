@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1FE2C7F52
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 17:10:11 -0600 (CST)
-Received: from eagdhcp-232-208.americas.sgi.com
-	(eagdhcp-232-208.americas.sgi.com [128.162.232.208])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 948A0AC00B
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 15:10:07 -0800 (PST)
-Received: from eagdhcp-232-208.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-208.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s1ANA9KY003109
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 17:10:09 -0600 (CST)
-	(envelope-from tinguely@eagdhcp-232-208.americas.sgi.com)
-Message-Id: <20140210231046.910977175@sgi.com>
-Date: Mon, 10 Feb 2014 17:10:43 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfstests: test setting XFS BMBT fields
-Content-Disposition: inline; filename=xfstests-setting-xfs-bmbt-fields.patch
+	by oss.sgi.com (Postfix) with ESMTP id 569667F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 17:33:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D9AB3AC00C
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 15:33:05 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	wb9SmdBdnW9ShDfw for <xfs@oss.sgi.com>;
+	Mon, 10 Feb 2014 15:33:03 -0800 (PST)
+Date: Tue, 11 Feb 2014 10:32:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RESEND 2/10] xfs: Add support FALLOC_FL_COLLAPSE_RANGE
+	for fallocate
+Message-ID: <20140210233258.GX13647@dastard>
+References: <1391319851-3169-1-git-send-email-linkinjeon@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1391319851-3169-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,312 +26,279 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
 
-Test the setting of the XFS BMBT fields. Runs through the valid
-bit values for each field. Also test the value past the last legal
-value.
+On Sun, Feb 02, 2014 at 02:44:11PM +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+> 
+> Add support FALLOC_FL_COLLAPSE_RANGE for fallocate.
+> 
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 
-Additionally, ensures setting a core entry (core.gen is used) is
-still correct. Test that the hex (#HH) input on a BMBT field and a
-core entry are also correct.
+A more detailed description would be nice for the change logs.
+.....
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- tests/xfs/307     |  112 +++++++++++++++++++++++++++++++++++++++
- tests/xfs/307.out |  152 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/group   |    1 
- 3 files changed, 265 insertions(+)
+> +	while (nexts++ < num_exts &&
+> +	       *current_ext <  XFS_IFORK_NEXTENTS(ip, whichfork)) {
+> +
+> +		gotp = xfs_iext_get_ext(ifp, *current_ext);
+> +		xfs_bmbt_get_all(gotp, &got);
+> +		startoff = got.br_startoff - offset_shift_fsb;
+> +
+> +		/*
+> +		 * Before shifting extent into hole, make sure that the hole
+> +		 * is large enough to accomodate the shift.
+> +		 */
+> +		if (*current_ext) {
+> +			xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
+> +						*current_ext - 1), &left);
+> +
+> +			if (startoff < left.br_startoff + left.br_blockcount)
+> +				error = XFS_ERROR(EINVAL);
+> +
+> +		} else if (startoff > xfs_bmbt_get_startoff(gotp)) {
+> +			/* Hole is at the start but not large enough */
+> +			error = XFS_ERROR(EINVAL);
+> +		}
 
-Index: b/tests/xfs/307
-===================================================================
---- /dev/null
-+++ b/tests/xfs/307
-@@ -0,0 +1,112 @@
-+#! /bin/bash
-+# FS QA Test No. 307
-+#
-+# Test the xfs_db write of the XFS BMBT entries. For each XFS BMBT field,
-+# write the value 0, each bit and finally the entry beyond the maximum legal
-+# value. Also makes sure a core write and hex input still work.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+_do_bit_test()
-+{
-+	_field="$1"
-+	_bits="$2"
-+
-+	echo "testing ${_field} ${_bits} bits" | sed 's/u3/u/'
-+	$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write ${_field} 0" \
-+			  $SCRATCH_DEV | sed 's/u3/u/'
-+	num=1
-+	for n in `seq 0 1 ${_bits}`; do
-+		$XFS_DB_PROG -x -c "inode $FILE_INO"  \
-+			  -c "write ${_field} ${num}" \
-+			  $SCRATCH_DEV | sed 's/u3/u/'
-+		let num=$num*2
-+	done
-+	echo
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_scratch_unmount
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# create the test file
-+echo "test file" > $SCRATCH_MNT/testfile
-+
-+# find the inode for the test file
-+FILE_INO=`ls -i $SCRATCH_MNT |awk '{print $1}'`
-+
-+_scratch_unmount
-+
-+# test bit length constants
-+BMBT_EXNTFLAG_BITLEN=1
-+BMBT_STARTOFF_BITLEN=54
-+BMBT_STARTBLOCK_BITLEN=52
-+BMBT_BLOCKCOUNT_BITLEN=21
-+
-+# Which version of the filesystem?
-+echo $XFS_MKFS_OPTIONS | grep "crc=1" > /dev/null
-+if [ $? == 1 ]; then
-+ prefix="u"
-+else
-+ prefix="u3"
-+fi
-+
-+# test setting the BMBT entries from 0 to past the valid number.
-+_do_bit_test "$prefix.bmx[0].extentflag" $BMBT_EXNTFLAG_BITLEN
-+_do_bit_test "$prefix.bmx[0].startoff" $BMBT_STARTOFF_BITLEN
-+_do_bit_test "$prefix.bmx[0].startblock" $BMBT_STARTBLOCK_BITLEN
-+_do_bit_test "$prefix.bmx[0].blockcount" $BMBT_BLOCKCOUNT_BITLEN
-+# test setting the 32 bit generation number
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0x5a" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0xa5" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0" $SCRATCH_DEV
-+# test setting the entry using #HH hex
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $prefix.bmx[0].startoff #573a" \
-+		$SCRATCH_DEV | sed 's/u3/u/'
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $prefix.bmx[0].startoff #a573" \
-+		$SCRATCH_DEV | sed 's/u3/u/'
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #185a" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #a518" $SCRATCH_DEV
-+status=0
-+exit
-Index: b/tests/xfs/307.out
-===================================================================
---- /dev/null
-+++ b/tests/xfs/307.out
-@@ -0,0 +1,152 @@
-+QA output created by 307
-+testing u.bmx[0].extentflag 1 bits
-+u.bmx[0].extentflag = 0
-+u.bmx[0].extentflag = 1
-+unable to convert value '2'.
-+
-+testing u.bmx[0].startoff 54 bits
-+u.bmx[0].startoff = 0
-+u.bmx[0].startoff = 1
-+u.bmx[0].startoff = 2
-+u.bmx[0].startoff = 4
-+u.bmx[0].startoff = 8
-+u.bmx[0].startoff = 16
-+u.bmx[0].startoff = 32
-+u.bmx[0].startoff = 64
-+u.bmx[0].startoff = 128
-+u.bmx[0].startoff = 256
-+u.bmx[0].startoff = 512
-+u.bmx[0].startoff = 1024
-+u.bmx[0].startoff = 2048
-+u.bmx[0].startoff = 4096
-+u.bmx[0].startoff = 8192
-+u.bmx[0].startoff = 16384
-+u.bmx[0].startoff = 32768
-+u.bmx[0].startoff = 65536
-+u.bmx[0].startoff = 131072
-+u.bmx[0].startoff = 262144
-+u.bmx[0].startoff = 524288
-+u.bmx[0].startoff = 1048576
-+u.bmx[0].startoff = 2097152
-+u.bmx[0].startoff = 4194304
-+u.bmx[0].startoff = 8388608
-+u.bmx[0].startoff = 16777216
-+u.bmx[0].startoff = 33554432
-+u.bmx[0].startoff = 67108864
-+u.bmx[0].startoff = 134217728
-+u.bmx[0].startoff = 268435456
-+u.bmx[0].startoff = 536870912
-+u.bmx[0].startoff = 1073741824
-+u.bmx[0].startoff = 2147483648
-+u.bmx[0].startoff = 4294967296
-+u.bmx[0].startoff = 8589934592
-+u.bmx[0].startoff = 17179869184
-+u.bmx[0].startoff = 34359738368
-+u.bmx[0].startoff = 68719476736
-+u.bmx[0].startoff = 137438953472
-+u.bmx[0].startoff = 274877906944
-+u.bmx[0].startoff = 549755813888
-+u.bmx[0].startoff = 1099511627776
-+u.bmx[0].startoff = 2199023255552
-+u.bmx[0].startoff = 4398046511104
-+u.bmx[0].startoff = 8796093022208
-+u.bmx[0].startoff = 17592186044416
-+u.bmx[0].startoff = 35184372088832
-+u.bmx[0].startoff = 70368744177664
-+u.bmx[0].startoff = 140737488355328
-+u.bmx[0].startoff = 281474976710656
-+u.bmx[0].startoff = 562949953421312
-+u.bmx[0].startoff = 1125899906842624
-+u.bmx[0].startoff = 2251799813685248
-+u.bmx[0].startoff = 4503599627370496
-+u.bmx[0].startoff = 9007199254740992
-+unable to convert value '18014398509481984'.
-+
-+testing u.bmx[0].startblock 52 bits
-+u.bmx[0].startblock = 0
-+u.bmx[0].startblock = 1
-+u.bmx[0].startblock = 2
-+u.bmx[0].startblock = 4
-+u.bmx[0].startblock = 8
-+u.bmx[0].startblock = 16
-+u.bmx[0].startblock = 32
-+u.bmx[0].startblock = 64
-+u.bmx[0].startblock = 128
-+u.bmx[0].startblock = 256
-+u.bmx[0].startblock = 512
-+u.bmx[0].startblock = 1024
-+u.bmx[0].startblock = 2048
-+u.bmx[0].startblock = 4096
-+u.bmx[0].startblock = 8192
-+u.bmx[0].startblock = 16384
-+u.bmx[0].startblock = 32768
-+u.bmx[0].startblock = 65536
-+u.bmx[0].startblock = 131072
-+u.bmx[0].startblock = 262144
-+u.bmx[0].startblock = 524288
-+u.bmx[0].startblock = 1048576
-+u.bmx[0].startblock = 2097152
-+u.bmx[0].startblock = 4194304
-+u.bmx[0].startblock = 8388608
-+u.bmx[0].startblock = 16777216
-+u.bmx[0].startblock = 33554432
-+u.bmx[0].startblock = 67108864
-+u.bmx[0].startblock = 134217728
-+u.bmx[0].startblock = 268435456
-+u.bmx[0].startblock = 536870912
-+u.bmx[0].startblock = 1073741824
-+u.bmx[0].startblock = 2147483648
-+u.bmx[0].startblock = 4294967296
-+u.bmx[0].startblock = 8589934592
-+u.bmx[0].startblock = 17179869184
-+u.bmx[0].startblock = 34359738368
-+u.bmx[0].startblock = 68719476736
-+u.bmx[0].startblock = 137438953472
-+u.bmx[0].startblock = 274877906944
-+u.bmx[0].startblock = 549755813888
-+u.bmx[0].startblock = 1099511627776
-+u.bmx[0].startblock = 2199023255552
-+u.bmx[0].startblock = 4398046511104
-+u.bmx[0].startblock = 8796093022208
-+u.bmx[0].startblock = 17592186044416
-+u.bmx[0].startblock = 35184372088832
-+u.bmx[0].startblock = 70368744177664
-+u.bmx[0].startblock = 140737488355328
-+u.bmx[0].startblock = 281474976710656
-+u.bmx[0].startblock = 562949953421312
-+u.bmx[0].startblock = 1125899906842624
-+u.bmx[0].startblock = 2251799813685248
-+unable to convert value '4503599627370496'.
-+
-+testing u.bmx[0].blockcount 21 bits
-+u.bmx[0].blockcount = 0
-+u.bmx[0].blockcount = 1
-+u.bmx[0].blockcount = 2
-+u.bmx[0].blockcount = 4
-+u.bmx[0].blockcount = 8
-+u.bmx[0].blockcount = 16
-+u.bmx[0].blockcount = 32
-+u.bmx[0].blockcount = 64
-+u.bmx[0].blockcount = 128
-+u.bmx[0].blockcount = 256
-+u.bmx[0].blockcount = 512
-+u.bmx[0].blockcount = 1024
-+u.bmx[0].blockcount = 2048
-+u.bmx[0].blockcount = 4096
-+u.bmx[0].blockcount = 8192
-+u.bmx[0].blockcount = 16384
-+u.bmx[0].blockcount = 32768
-+u.bmx[0].blockcount = 65536
-+u.bmx[0].blockcount = 131072
-+u.bmx[0].blockcount = 262144
-+u.bmx[0].blockcount = 524288
-+u.bmx[0].blockcount = 1048576
-+unable to convert value '2097152'.
-+
-+core.gen = 90
-+core.gen = 165
-+core.gen = 0
-+u.bmx[0].startoff = 22330
-+u.bmx[0].startoff = 42355
-+core.gen = 6234
-+core.gen = 42264
-Index: b/tests/xfs/group
-===================================================================
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -186,3 +186,4 @@
- 304 auto quick quota
- 305 auto quota
- 306 auto stress log metadata repair
-+307 auto db
+This second branch seems wrong to me:
 
+	startoff = got.br_startoff - offset_shift_fsb;
+and
+	got.br_startoff = xfs_bmbt_get_startoff(gotp)).
+
+I'm not 100% sure what you are trying to check in this case -
+perhaps some basic ascii art to describe the two cases is in order
+here:
+
+	left	hole		got
+	+-------+hhhhhhhhhhhhhhh+---------+
+	LS      LE              GS        GE
+		HS              HE
+
+The first is checking that GS - offset_shift_fsb is greater than LE.
+i.e the shift doesn't overrun the hole betwenn LE and GS.
+
+	left	hole		got
+	+-------+hhhhhhhhhhhhhhh+---------+
+	LS      LE              GS        GE
+		HS              HE
+	+-------+hhhhhhh+---------+
+	LS      LE      GS'       GE'
+		HS      HE'
+
+The second I can't visualise from the code or comment....
+
+
+> +
+> +		if (error)
+> +			goto del_cursor;
+> +
+> +		if (cur) {
+> +			error = xfs_bmbt_lookup_eq(cur,
+> +					got.br_startoff,
+> +					got.br_startblock,
+> +					got.br_blockcount,
+> +					&i);
+
+Whitespace comment - a more compact form is the typical XFS
+convention if it will fit in 80 columns:
+
+			error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+						   got.br_startblock,
+						   got.br_blockcount, &i);
+
+> +			if (error)
+> +				goto del_cursor;
+> +			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +		}
+> +
+> +		/* Check if we can merge 2 adjacent extents */
+> +		if (*current_ext &&
+> +		    left.br_startoff + left.br_blockcount == startoff &&
+> +		    left.br_startblock + left.br_blockcount ==
+> +				got.br_startblock &&
+> +		    left.br_state == got.br_state &&
+> +		    left.br_blockcount + got.br_blockcount <= MAXEXTLEN) {
+> +			blockcount = left.br_blockcount +
+> +				xfs_bmbt_get_blockcount(gotp);
+
+				got.br_blockcount?
+
+> +			xfs_iext_remove(ip, *current_ext, 1, 0);
+> +			if (cur) {
+> +				error = xfs_btree_delete(cur, &i);
+> +				if (error)
+> +					goto del_cursor;
+> +				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +			}
+> +			XFS_IFORK_NEXT_SET(ip, whichfork,
+> +				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> +			gotp = xfs_iext_get_ext(ifp, --*current_ext);
+> +			xfs_bmbt_get_all(gotp, &got);
+> +
+> +			/* Make cursor point to the extent we will update */
+> +			if (cur) {
+> +				error = xfs_bmbt_lookup_eq(cur,
+> +				got.br_startoff,
+> +				got.br_startblock,
+> +				got.br_blockcount,
+> +				&i);
+
+whitespace.
+
+> +				if (error)
+> +					goto del_cursor;
+> +				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +			}
+> +
+> +			xfs_bmbt_set_blockcount(gotp, blockcount);
+> +			got.br_blockcount = blockcount;
+> +			goto bmbt_update;
+> +		}
+> +
+> +		/* We have to update the startoff */
+> +		xfs_bmbt_set_startoff(gotp, startoff);
+> +		got.br_startoff = startoff;
+> +
+> +bmbt_update:
+
+Use an } else {} for this, and the goto can be removed.
+
+....
+>  /*
+> + * xfs_collapse_file_space()
+> + *      This routine frees disk space and shift extent for the given file.
+> + *
+> + * RETURNS:
+> + *      0 on success
+> + *      errno on error
+> + *
+> + */
+> +int
+> +xfs_collapse_file_space(
+> +	struct xfs_inode	*ip,
+> +	xfs_off_t		offset,
+> +	xfs_off_t		len)
+> +{
+> +	int			done = 0;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	int			error;
+> +	xfs_extnum_t		current_ext = 0;
+> +	struct xfs_bmap_free	free_list;
+> +	xfs_fsblock_t		first_block;
+> +	int			committed;
+> +	xfs_fileoff_t		start_fsb;
+> +	xfs_fileoff_t		shift_fsb;
+> +
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> +
+> +	trace_xfs_collapse_file_space(ip);
+> +
+> +	start_fsb = XFS_B_TO_FSB(mp, offset + len);
+> +	shift_fsb = XFS_B_TO_FSB(mp, len);
+> +
+> +	/*
+> +	 * The first thing we do is to free data blocks in the specified range
+> +	 * by calling xfs_free_file_space(). It would also sync dirty data
+> +	 * and invalidate page cache over the region on which collapse range
+> +	 * is working.
+> +	 */
+
+This can probably go in the function header as part of describing
+the overall algorithm the code is using.
+
+> +	error = xfs_free_file_space(ip, offset, len);
+> +	if (error)
+> +		return error;
+> +
+> +	while (!error && !done) {
+> +		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+> +		tp->t_flags |= XFS_TRANS_RESERVE;
+> +		/*
+> +		 * We would need to reserve permanent block for transaction.
+> +		 * This will come into picture when after shifting extent into
+> +		 * hole we found that adjacent extents can be merged which
+> +		 * may lead to freeing of a block during record update.
+> +		 */
+> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
+> +				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
+> +		if (error) {
+> +			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+> +			xfs_trans_cancel(tp, 0);
+> +			break;
+> +		}
+> +
+> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> +				ip->i_gdquot, ip->i_pdquot,
+> +				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+> +				XFS_QMOPT_RES_REGBLKS);
+> +		if (error)
+> +			goto out;
+> +
+> +		xfs_trans_ijoin(tp, ip, 0);
+> +
+> +		xfs_bmap_init(&free_list, &first_block);
+> +
+> +		/*
+> +		 * We are using the write transaction in which max 2 bmbt
+> +		 * updates are allowed
+> +		 */
+
+Right, but you've only reserved blocks for a single BMBT split
+through XFS_DIOSTRAT_SPACE_RES(). In cases of allocation, adjacent
+offset allocation is guaranteed to only require one split at most
+and hence it's safe from that perspective. However, I can see how a
+shift can require a split on the first extent move, and a merge on
+the second. e.g:
+
+
+		left		middle		right
+before		maxrecs		minrecs + 1	minrecs
+first shift	maxrecs + 1	minrecs		minrecs
+		split
+		maxrecs / 2	minrecs		minrecs
+second shift
+		maxrecs/2 + 1	minrecs - 1	minrecs
+				merge		merge
+				minrecs*2 - 1	(freed)
+
+So the question is whether the transaction reservations (both log
+space and block allocation requirements) are covered.
+
+> +		error = xfs_bmap_shift_extents(tp, ip, &done, start_fsb,
+> +				shift_fsb, &current_ext,
+> +				&first_block, &free_list, 2);
+
+And that should really have a #define associated with it. ie.:
+
+#define XFS_BMAP_MAX_SHIFT_EXTENTS	2
+
+And document the constraints that lead to that number with the
+definition.
+
+Overall, all I'm really looking for here is sufficient comments to
+document the constraints the code is operating under. Functionally
+the code looks correct (apart from the branch above I can't work
+out). Mostly I just want to make sure that in a couple of
+years time I don't have to work it all out from first principles
+again. ;)
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
