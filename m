@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CFC817F50
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 12:00:43 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9A04A7F50
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 13:01:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C13B2304043
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 10:00:40 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8eOPxxOsyzs8v9hW for
-	<xfs@oss.sgi.com>; Tue, 11 Feb 2014 10:00:39 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1BI0VRM010971
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 13:00:31 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s1BI0Sl1018835
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 13:00:28 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: avoid AGI/AGF deadlock scenario for inode chunk
-	allocation
-Date: Tue, 11 Feb 2014 13:07:46 -0500
-Message-Id: <1392142066-16174-1-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B7708F806F
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 11:01:18 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id iPHdF4oAHkjNjbcJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Feb 2014 11:01:14 -0800 (PST)
+Message-ID: <52FA7374.2000209@oracle.com>
+Date: Tue, 11 Feb 2014 20:01:08 +0100
+From: Koen De Wit <koen.de.wit@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v3] xfstests: Btrfs: add test for large metadata blocks
+References: <1392068362-14049-1-git-send-email-koen.de.wit@oracle.com>
+	<20140210220400.GV13647@dastard>
+In-Reply-To: <20140210220400.GV13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,93 +25,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6905559259632128873=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-The inode chunk allocation path can lead to deadlock conditions if
-a transaction is dirtied with an AGF (to fix up the freelist) for
-an AG that cannot satisfy the actual allocation request. This code
-path is written to try and avoid this scenario, but it can be
-reproduced by running xfstests generic/270 in a loop on a 512b fs.
+This is a multi-part message in MIME format.
+--===============6905559259632128873==
+Content-Type: multipart/alternative;
+ boundary="------------060601040306060204000006"
 
-An example situation is:
-- process A attempts an inode allocation on AG 3, modifies
-  the freelist, fails the allocation and ultimately moves on to
-  AG 0 with the AG 3 AGF held
-- process B is doing a free space operation (i.e., truncate) and
-  acquires the AG 0 AGF, waits on the AG 3 AGF
-- process A acquires the AG 0 AGI, waits on the AG 0 AGF (deadlock)
+This is a multi-part message in MIME format.
+--------------060601040306060204000006
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The problem here is that process A acquired the AG 3 AGF while
-moving on to AG 0 (and releasing the AG 3 AGI with the AG 3 AGF
-held). xfs_dialloc() makes one pass through each of the AGs when
-attempting to allocate an inode chunk. The expectation is a clean
-transaction if a particular AG cannot satisfy the allocation
-request. xfs_ialloc_ag_alloc() is written to support this through
-use of the minalignslop allocation args field.
+On 02/10/2014 11:04 PM, Dave Chinner wrote:
+> On Mon, Feb 10, 2014 at 10:39:22PM +0100, Koen De Wit wrote:
+>> +
+>> +_test_illegal_leafsize() {
+>> +        _scratch_mkfs -l $1 >>$seqres.full 2>&1
+>> +        [ $? -ne 0 ] || _fail "'$1' is an illegal value for the" \
+>> +                "leafsize option, mkfs should have failed."
+>> +}
+> You just re-implemented run_check....
 
-When using the agi->agi_newino optimization, we attempt an exact
-bno allocation request based on the location of the previously
-allocated chunk. minalignslop is set to inform the allocator that
-we will require alignment on this chunk, and thus to not allow the
-request for this AG if the extra space is not available. Suppose
-that the AG in question has just enough space for this request, but
-not at the requested bno. xfs_alloc_fix_freelist() will proceed as
-normal as it determines the request should succeed, and thus it is
-allowed to modify the agf. xfs_alloc_ag_vextent() ultimately fails
-because the requested bno is not available. In response, the caller
-moves on to a NEAR_BNO allocation request for the same AG. The
-alignment is set, but the minalignslop field is never reset. This
-increases the overall requirement of the request from the first
-attempt. If this delta is the difference between allocation success
-and failure for the AG, xfs_alloc_fix_freelist() rejects this
-request outright the second time around and causes the allocation
-request to unnecessarily fail for this AG.
+I believe I didn't :
 
-To address this situation, reset the minalignslop field immediately
-after use and prevent it from leaking into subsequent requests.
+    run_check()
+    {
+             echo "# $@" >> $seqres.full 2>&1
+             "$@" >> $seqres.full 2>&1 || _fail "failed: '$@'"
+    }
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+run_check() takes an arbitrary command and executes it, _test_illegal_leafsize() takes a leafsize as parameter and tries mkfs.btrfs with that leafsize. run_check() makes the test fail if the return code is not zero, _test_illegal_leafsize() does the opposite.
 
-v2:
-- Reset minalignslop immediately after use rather than prior to the
-  subsequent request and add a comment. [dchinner]
+Thanks,
+Koen.
 
- fs/xfs/xfs_ialloc.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+--------------060601040306060204000006
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 5d7f105..a57843f 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -363,6 +363,18 @@ xfs_ialloc_ag_alloc(
- 		args.minleft = args.mp->m_in_maxlevels - 1;
- 		if ((error = xfs_alloc_vextent(&args)))
- 			return error;
-+
-+		/*
-+		 * This request might have dirtied the transaction if the AG can
-+		 * satisfy the request, but the exact block was not available. 
-+		 * If the allocation did fail, subsequent requests will relax 
-+		 * the exact agbno requirement and increase the alignment
-+		 * instead. It is critical that the total size of the request
-+		 * (len + alignment + slop) does not increase from this point
-+		 * on, so reset minalignslop to ensure it is not included in
-+		 * subsequent requests.
-+		 */
-+		args.minalignslop = 0;
- 	} else
- 		args.fsbno = NULLFSBLOCK;
- 
--- 
-1.8.3.1
+<html>
+  <head>
+    <meta content="text/html; charset=ISO-8859-1"
+      http-equiv="Content-Type">
+  </head>
+  <body text="#000000" bgcolor="#FFFFFF">
+    On 02/10/2014 11:04 PM, Dave Chinner wrote:<br>
+    <blockquote cite="mid:20140210220400.GV13647@dastard" type="cite">
+      <pre wrap="">On Mon, Feb 10, 2014 at 10:39:22PM +0100, Koen De Wit wrote:
+</pre>
+      <blockquote type="cite">
+        <pre wrap="">+
++_test_illegal_leafsize() {
++        _scratch_mkfs -l $1 &gt;&gt;$seqres.full 2&gt;&amp;1
++        [ $? -ne 0 ] || _fail "'$1' is an illegal value for the" \
++                "leafsize option, mkfs should have failed."
++}
+</pre>
+      </blockquote>
+      <pre wrap="">
+You just re-implemented run_check....
+</pre>
+    </blockquote>
+    <br>
+    I believe I didn't :<br>
+    <blockquote>run_check()<br>
+      {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; echo "# $@" &gt;&gt; $seqres.full 2&gt;&amp;1<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "$@" &gt;&gt; $seqres.full 2&gt;&amp;1 || _fail "failed:
+      '$@'"<br>
+      }<br>
+    </blockquote>
+    run_check() takes an arbitrary command and executes it,
+    _test_illegal_leafsize() takes a leafsize as parameter and tries
+    mkfs.btrfs with that leafsize. run_check() makes the test fail if
+    the return code is not zero, _test_illegal_leafsize() does the
+    opposite.<br>
+    <br>
+    Thanks,<br>
+    Koen.<br>
+  </body>
+</html>
+
+--------------060601040306060204000006--
+
+
+--===============6905559259632128873==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6905559259632128873==--
