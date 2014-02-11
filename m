@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F16F17F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:08:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C4202304067
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 19:08:27 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 48A957F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:09:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BCC0EAC009
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 19:09:19 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 0Ttx3R4Cp2hQEUTB for <xfs@oss.sgi.com>;
-	Mon, 10 Feb 2014 19:08:23 -0800 (PST)
+	ESMTP id tMqiJyImDz6Mm34y for <xfs@oss.sgi.com>;
+	Mon, 10 Feb 2014 19:09:17 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 7B9BA6142695
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:08:22 -0600 (CST)
-Message-ID: <52F99426.3010409@sandeen.net>
-Date: Mon, 10 Feb 2014 21:08:22 -0600
+	by sandeen.net (Postfix) with ESMTPSA id A311B63CE389
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:09:16 -0600 (CST)
+Message-ID: <52F9945C.8090206@sandeen.net>
+Date: Mon, 10 Feb 2014 21:09:16 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 0/7 V2] xfs: verifier modification series
+Subject: [PATCH 1/7] xfs: limit superblock corruption errors to actual
+	corruption
+References: <52F99426.3010409@sandeen.net>
+In-Reply-To: <52F99426.3010409@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,14 +35,62 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-This is a handful of changes related to the verifiers.  The end goal is to differentiate CRC errors from other non-CRC verifier errors.
+Today, if
 
-At this point it's somewhat RFC, if you don't like some of the changes made along the way, just speak up.
+xfs_sb_read_verify
+  xfs_sb_verify
+    xfs_mount_validate_sb
 
-Changes from V1 noted in each patch.
+detects superblock corruption, it'll be extremely noisy, dumping
+2 stacks, 2 hexdumps, etc.
 
-Thanks,
--Eric
+This is because we call XFS_CORRUPTION_ERROR in xfs_mount_validate_sb
+as well as in xfs_sb_read_verify.
+
+Also, *any* errors in xfs_mount_validate_sb which are not corruption
+per se; things like too-big-blocksize, bad version, bad magic, v1 dirs,
+rw-incompat etc - things which do not return EFSCORRUPTED - will
+still do the whole XFS_CORRUPTION_ERROR spew when xfs_sb_read_verify
+sees any error at all.  And it suggests to the user that they
+should run xfs_repair, even if the root cause of the mount failure
+is a simple incompatibility.
+
+I'll submit that the probably-not-corrupted errors don't warrant
+this much noise, so this patch removes the warning for anything
+other than EFSCORRUPTED returns, and replaces the lower-level
+XFS_CORRUPTION_ERROR with an xfs_notice().
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/xfs_sb.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+Unchanged from V1
+
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index b7c9aea..efaef71 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -295,8 +295,7 @@ xfs_mount_validate_sb(
+ 	    sbp->sb_dblocks == 0					||
+ 	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
+ 	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
+-		XFS_CORRUPTION_ERROR("SB sanity check failed",
+-				XFS_ERRLEVEL_LOW, mp, sbp);
++		xfs_notice(mp, "SB sanity check failed");
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 
+@@ -625,7 +624,7 @@ xfs_sb_read_verify(
+ 
+ out_error:
+ 	if (error) {
+-		if (error != EWRONGFS)
++		if (error == EFSCORRUPTED)
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+ 					     mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, error);
+-- 1.7.1
 
 _______________________________________________
 xfs mailing list
