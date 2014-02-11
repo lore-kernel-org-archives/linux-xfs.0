@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 82AD47F4E
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:15:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 50C39304071
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 19:15:15 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zDGNEXuGACD7cawF for <xfs@oss.sgi.com>;
-	Mon, 10 Feb 2014 19:15:13 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 56A8363CE389
-	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:15:13 -0600 (CST)
-Message-ID: <52F995C1.10709@sandeen.net>
-Date: Mon, 10 Feb 2014 21:15:13 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EF80D7F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 23:33:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7342BAC00B
+	for <xfs@oss.sgi.com>; Mon, 10 Feb 2014 21:33:41 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	OUDxZr26Ye5ug974 for <xfs@oss.sgi.com>;
+	Mon, 10 Feb 2014 21:33:37 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1WD5yM-0004vL-HB
+	for xfs@oss.sgi.com; Tue, 11 Feb 2014 16:33:30 +1100
+Date: Tue, 11 Feb 2014 16:33:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs-documentation: master branch updated to 8421062
+Message-ID: <20140211053330.GB13647@dastard>
 MIME-Version: 1.0
-Subject: [PATCH 7/7] xfs: modify verifiers to differentiate CRC failures from
-	other errors
-References: <52F99426.3010409@sandeen.net>
-In-Reply-To: <52F99426.3010409@sandeen.net>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,673 +30,192 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Modify all read & write verifiers to differentiate
-between CRC errors and other inconsistencies.
+Hi Folks,
 
-This sets the appropriate error number on bp->b_error,
-and then calls xfs_verifier_error() if something went
-wrong.  That function will issue the appropriate message
-to the user.
+The XFS Documentation repository at
+git://oss.sgi.com/xfs/cmds/xfs-documentation has just been updated.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/xfs_alloc.c          |   37 +++++++++++++++++--------------------
- fs/xfs/xfs_alloc_btree.c    |   15 ++++++++-------
- fs/xfs/xfs_attr_leaf.c      |   14 ++++++++------
- fs/xfs/xfs_attr_remote.c    |   15 ++++++---------
- fs/xfs/xfs_bmap_btree.c     |   16 ++++++++--------
- fs/xfs/xfs_da_btree.c       |   14 ++++++++------
- fs/xfs/xfs_dir2_block.c     |   14 ++++++++------
- fs/xfs/xfs_dir2_data.c      |   17 +++++++++--------
- fs/xfs/xfs_dir2_leaf.c      |   14 ++++++++------
- fs/xfs/xfs_dir2_node.c      |   14 ++++++++------
- fs/xfs/xfs_dquot_buf.c      |   11 +++++++----
- fs/xfs/xfs_ialloc.c         |   12 ++++++++----
- fs/xfs/xfs_ialloc_btree.c   |   15 ++++++++-------
- fs/xfs/xfs_inode_buf.c      |    3 +--
- fs/xfs/xfs_sb.c             |   11 ++++-------
- fs/xfs/xfs_symlink_remote.c |   12 +++++++-----
- 16 files changed, 123 insertions(+), 111 deletions(-)
+The new head of the master branch is commit:
 
-V2: unchanged other than modifications to accommodate prior
-changes.
+8421062 doc: import XFS Filesystem Structure documentation
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 9c7cf3d..9a93601 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -474,7 +474,6 @@ xfs_agfl_read_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
--	int		agfl_ok = 1;
- 
- 	/*
- 	 * There is no verification of non-crc AGFLs because mkfs does not
-@@ -485,14 +484,13 @@ xfs_agfl_read_verify(
- 	if (!xfs_sb_version_hascrc(&mp->m_sb))
- 		return;
- 
--	agfl_ok = xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF);
--
--	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
--
--	if (!agfl_ok) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (!xfs_buf_verify_cksum(bp, offsetof(struct xfs_agfl, agfl_crc)))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_agfl_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -507,8 +505,8 @@ xfs_agfl_write_verify(
- 		return;
- 
- 	if (!xfs_agfl_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-@@ -2236,18 +2234,17 @@ xfs_agf_read_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
--	int		agf_ok = 1;
--
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		agf_ok = xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF);
- 
--	agf_ok = agf_ok && xfs_agf_verify(mp, bp);
--
--	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
--			XFS_RANDOM_ALLOC_READ_AGF))) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    !xfs_buf_verify_cksum(bp, offsetof(struct xfs_agf, agf_crc)))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (XFS_TEST_ERROR(!xfs_agf_verify(mp, bp), mp,
-+				XFS_ERRTAG_ALLOC_READ_AGF,
-+				XFS_RANDOM_ALLOC_READ_AGF))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -2258,8 +2255,8 @@ xfs_agf_write_verify(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
- 	if (!xfs_agf_verify(mp, bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
-index 144d3b0..cc1eadc 100644
---- a/fs/xfs/xfs_alloc_btree.c
-+++ b/fs/xfs/xfs_alloc_btree.c
-@@ -355,12 +355,14 @@ static void
- xfs_allocbt_read_verify(
- 	struct xfs_buf	*bp)
- {
--	if (!(xfs_btree_sblock_verify_crc(bp) &&
--	      xfs_allocbt_verify(bp))) {
--		trace_xfs_btree_corrupt(bp, _RET_IP_);
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     bp->b_target->bt_mount, bp->b_addr);
-+	if (!xfs_btree_sblock_verify_crc(bp))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_allocbt_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+
-+	if (bp->b_error) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_verifier_error(bp);
- 	}
- }
- 
-@@ -370,9 +372,8 @@ xfs_allocbt_write_verify(
- {
- 	if (!xfs_allocbt_verify(bp)) {
- 		trace_xfs_btree_corrupt(bp, _RET_IP_);
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     bp->b_target->bt_mount, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 	xfs_btree_sblock_calc_crc(bp);
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index b552378..fe9587f 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -213,8 +213,8 @@ xfs_attr3_leaf_write_verify(
- 	struct xfs_attr3_leaf_hdr *hdr3 = bp->b_addr;
- 
- 	if (!xfs_attr3_leaf_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-@@ -239,12 +239,14 @@ xfs_attr3_leaf_read_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
--	     !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF)) ||
--	    !xfs_attr3_leaf_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_attr3_leaf_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
-diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-index 5549d69..6e37823 100644
---- a/fs/xfs/xfs_attr_remote.c
-+++ b/fs/xfs/xfs_attr_remote.c
-@@ -125,7 +125,6 @@ xfs_attr3_rmt_read_verify(
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	char		*ptr;
- 	int		len;
--	bool		corrupt = false;
- 	xfs_daddr_t	bno;
- 
- 	/* no verification of non-crc buffers */
-@@ -140,11 +139,11 @@ xfs_attr3_rmt_read_verify(
- 	while (len > 0) {
- 		if (!xfs_verify_cksum(ptr, XFS_LBSIZE(mp),
- 				      XFS_ATTR3_RMT_CRC_OFF)) {
--			corrupt = true;
-+			xfs_buf_ioerror(bp, EFSBADCRC);
- 			break;
- 		}
- 		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
--			corrupt = true;
-+			xfs_buf_ioerror(bp, EFSCORRUPTED);
- 			break;
- 		}
- 		len -= XFS_LBSIZE(mp);
-@@ -152,10 +151,9 @@ xfs_attr3_rmt_read_verify(
- 		bno += mp->m_bsize;
- 	}
- 
--	if (corrupt) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	} else
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
-+	else
- 		ASSERT(len == 0);
- }
- 
-@@ -180,9 +178,8 @@ xfs_attr3_rmt_write_verify(
- 
- 	while (len > 0) {
- 		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
--			XFS_CORRUPTION_ERROR(__func__,
--					    XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 			xfs_buf_ioerror(bp, EFSCORRUPTED);
-+			xfs_verifier_error(bp);
- 			return;
- 		}
- 		if (bip) {
-diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
-index 706bc3f..818d546 100644
---- a/fs/xfs/xfs_bmap_btree.c
-+++ b/fs/xfs/xfs_bmap_btree.c
-@@ -780,12 +780,14 @@ static void
- xfs_bmbt_read_verify(
- 	struct xfs_buf	*bp)
- {
--	if (!(xfs_btree_lblock_verify_crc(bp) &&
--	      xfs_bmbt_verify(bp))) {
--		trace_xfs_btree_corrupt(bp, _RET_IP_);
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     bp->b_target->bt_mount, bp->b_addr);
-+	if (!xfs_btree_lblock_verify_crc(bp))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_bmbt_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+
-+	if (bp->b_error) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_verifier_error(bp);
- 	}
- }
- 
-@@ -794,11 +796,9 @@ xfs_bmbt_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	if (!xfs_bmbt_verify(bp)) {
--		xfs_warn(bp->b_target->bt_mount, "bmbt daddr 0x%llx failed", bp->b_bn);
- 		trace_xfs_btree_corrupt(bp, _RET_IP_);
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     bp->b_target->bt_mount, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 	xfs_btree_lblock_calc_crc(bp);
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 75ef990..1f5af79 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -185,8 +185,8 @@ xfs_da3_node_write_verify(
- 	struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
- 
- 	if (!xfs_da3_node_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-@@ -209,17 +209,20 @@ static void
- xfs_da3_node_read_verify(
- 	struct xfs_buf		*bp)
- {
--	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_da_blkinfo	*info = bp->b_addr;
- 
- 	switch (be16_to_cpu(info->magic)) {
- 		case XFS_DA3_NODE_MAGIC:
--			if (!xfs_buf_verify_cksum(bp, XFS_DA3_NODE_CRC_OFF))
-+			if (!xfs_buf_verify_cksum(bp, XFS_DA3_NODE_CRC_OFF)) {
-+				xfs_buf_ioerror(bp, EFSBADCRC);
- 				break;
-+			}
- 			/* fall through */
- 		case XFS_DA_NODE_MAGIC:
--			if (!xfs_da3_node_verify(bp))
-+			if (!xfs_da3_node_verify(bp)) {
-+				xfs_buf_ioerror(bp, EFSCORRUPTED);
- 				break;
-+			}
- 			return;
- 		case XFS_ATTR_LEAF_MAGIC:
- 		case XFS_ATTR3_LEAF_MAGIC:
-@@ -236,8 +239,7 @@ xfs_da3_node_read_verify(
- 	}
- 
- 	/* corrupt block */
--	XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
--	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	xfs_verifier_error(bp);
- }
- 
- const struct xfs_buf_ops xfs_da3_node_buf_ops = {
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 724377e..4f6a38c 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -89,12 +89,14 @@ xfs_dir3_block_read_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
--	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF)) ||
--	    !xfs_dir3_block_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_dir3_block_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -106,8 +108,8 @@ xfs_dir3_block_write_verify(
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 
- 	if (!xfs_dir3_block_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
-index 74ae85e..afa4ad5 100644
---- a/fs/xfs/xfs_dir2_data.c
-+++ b/fs/xfs/xfs_dir2_data.c
-@@ -241,7 +241,6 @@ static void
- xfs_dir3_data_reada_verify(
- 	struct xfs_buf		*bp)
- {
--	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
- 
- 	switch (hdr->magic) {
-@@ -255,8 +254,8 @@ xfs_dir3_data_reada_verify(
- 		xfs_dir3_data_verify(bp);
- 		return;
- 	default:
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		break;
- 	}
- }
-@@ -267,12 +266,14 @@ xfs_dir3_data_read_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
--	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF)) ||
--	    !xfs_dir3_data_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF))
-+		 xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_dir3_data_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -284,8 +285,8 @@ xfs_dir3_data_write_verify(
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 
- 	if (!xfs_dir3_data_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index dffb61b..d36e97d 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -179,12 +179,14 @@ __read_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
--	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF)) ||
--	    !xfs_dir3_leaf_verify(bp, magic)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_dir3_leaf_verify(bp, magic))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -197,8 +199,8 @@ __write_verify(
- 	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
- 
- 	if (!xfs_dir3_leaf_verify(bp, magic)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 0904b20..cb434d7 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -115,12 +115,14 @@ xfs_dir3_free_read_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
--	     !xfs_buf_verify_cksum(bp, XFS_DIR3_FREE_CRC_OFF)) ||
--	    !xfs_dir3_free_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    !xfs_buf_verify_cksum(bp, XFS_DIR3_FREE_CRC_OFF))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_dir3_free_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -132,8 +134,8 @@ xfs_dir3_free_write_verify(
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 
- 	if (!xfs_dir3_free_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_dquot_buf.c b/fs/xfs/xfs_dquot_buf.c
-index d401457..610da81 100644
---- a/fs/xfs/xfs_dquot_buf.c
-+++ b/fs/xfs/xfs_dquot_buf.c
-@@ -257,10 +257,13 @@ xfs_dquot_buf_read_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (!xfs_dquot_buf_verify_crc(mp, bp))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_dquot_buf_verify(mp, bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- /*
-@@ -275,8 +278,8 @@ xfs_dquot_buf_write_verify(
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
- 	if (!xfs_dquot_buf_verify(mp, bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- }
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 4657586..8aa720d 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1573,13 +1573,17 @@ xfs_agi_read_verify(
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
- 		agi_ok = xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF);
- 
-+	if (!agi_ok)
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+
- 	agi_ok = agi_ok && xfs_agi_verify(bp);
- 
- 	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
--			XFS_RANDOM_IALLOC_READ_AGI))) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+			XFS_RANDOM_IALLOC_READ_AGI)))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -1590,8 +1594,8 @@ xfs_agi_write_verify(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
- 	if (!xfs_agi_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
-index 0028c50..7e309b1 100644
---- a/fs/xfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/xfs_ialloc_btree.c
-@@ -243,12 +243,14 @@ static void
- xfs_inobt_read_verify(
- 	struct xfs_buf	*bp)
- {
--	if (!(xfs_btree_sblock_verify_crc(bp) &&
--	      xfs_inobt_verify(bp))) {
--		trace_xfs_btree_corrupt(bp, _RET_IP_);
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     bp->b_target->bt_mount, bp->b_addr);
-+	if (!xfs_btree_sblock_verify_crc(bp))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_inobt_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+
-+	if (bp->b_error) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_verifier_error(bp);
- 	}
- }
- 
-@@ -258,9 +260,8 @@ xfs_inobt_write_verify(
- {
- 	if (!xfs_inobt_verify(bp)) {
- 		trace_xfs_btree_corrupt(bp, _RET_IP_);
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     bp->b_target->bt_mount, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 	xfs_btree_sblock_calc_crc(bp);
-diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
-index 606b43a..24e9939 100644
---- a/fs/xfs/xfs_inode_buf.c
-+++ b/fs/xfs/xfs_inode_buf.c
-@@ -102,8 +102,7 @@ xfs_inode_buf_verify(
- 			}
- 
- 			xfs_buf_ioerror(bp, EFSCORRUPTED);
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
--					     mp, dip);
-+			xfs_verifier_error(bp);
- #ifdef DEBUG
- 			xfs_alert(mp,
- 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
-diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-index 0498e44..e778411 100644
---- a/fs/xfs/xfs_sb.c
-+++ b/fs/xfs/xfs_sb.c
-@@ -615,7 +615,7 @@ xfs_sb_read_verify(
- 			/* Only fail bad secondaries on a known V5 filesystem */
- 			if (bp->b_bn != XFS_SB_DADDR &&
- 			    xfs_sb_version_hascrc(&mp->m_sb)) {
--				error = EFSCORRUPTED;
-+				error = EFSBADCRC;
- 				goto out_error;
- 			}
- 		}
-@@ -624,10 +624,9 @@ xfs_sb_read_verify(
- 
- out_error:
- 	if (error) {
--		if (error == EFSCORRUPTED)
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--					     mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, error);
-+		if (error == EFSCORRUPTED || error == EFSBADCRC)
-+			xfs_verifier_error(bp);
- 	}
- }
- 
-@@ -643,7 +642,6 @@ xfs_sb_quiet_read_verify(
- {
- 	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
- 
--
- 	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
- 		/* XFS filesystem, verify noisily! */
- 		xfs_sb_read_verify(bp);
-@@ -663,9 +661,8 @@ xfs_sb_write_verify(
- 
- 	error = xfs_sb_verify(bp, false);
- 	if (error) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
--				     mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, error);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
-diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
-index defa09f..9b32052 100644
---- a/fs/xfs/xfs_symlink_remote.c
-+++ b/fs/xfs/xfs_symlink_remote.c
-@@ -133,11 +133,13 @@ xfs_symlink_read_verify(
- 	if (!xfs_sb_version_hascrc(&mp->m_sb))
- 		return;
- 
--	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF) ||
--	    !xfs_symlink_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF))
-+		xfs_buf_ioerror(bp, EFSBADCRC);
-+	else if (!xfs_symlink_verify(bp))
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
-+
-+	if (bp->b_error)
-+		xfs_verifier_error(bp);
- }
- 
- static void
-@@ -152,8 +154,8 @@ xfs_symlink_write_verify(
- 		return;
- 
- 	if (!xfs_symlink_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		xfs_verifier_error(bp);
- 		return;
- 	}
- 
--- 1.7.1
+This is the first of the major documents that we need to convert to
+asciidoc to make them easier to maintain and update. The build
+system requires the a2x asciidoc toolchain, which requires the
+entire docbook build infrastructure. Essentially the first build
+step is to turn the asciidoc into docbook XML, and it is then built
+into the destination format from there.
 
+Essentially, this gives us the ability to include all sorts of
+docbook metadata in XML format to the document, while keeping the
+actual contents of the document in asciidoc markup. Hence we should
+be able to make this build and document structure work (eventually)
+with distro documentation toolchains like Publican.
+
+As it is, we really need to convert the rest of the documentation
+to asciidoc format and updating it to be current before we go much
+further. Ideally, I'd like to convert a significant amount of the
+documentation on the xfs.org wiki to asciidoc (e.g. the FAQ, all the
+design docs, etc) and replace the wiki contents with the html files
+built from this repository.
+
+And finally, with asciidoc being able to generate manpage format
+output, I'd really like to convert a bunch of the man pages into
+asciidoc so that we can build html/pdf user manuals fromteh same
+source as we generate man pages. A good example of this is the
+xfs_db man page, which describes just about every command xfs_db
+supports....
+
+Anyway, try it out, have a look at the built documentation, the
+structure of documentation source, etc. I'm interested to see what
+people think and what ideas people have for being able to skin the
+documentation appropriately....
+
+Cheers,
+
+Dave.
+
+New Commits:
+
+Dave Chinner (1):
+      [8421062] doc: import XFS Filesystem Structure documentation
+
+
+Code Diffstat:
+
+ design/Makefile                                    |   26 +-
+ design/XFS_Filesystem_Structure/Makefile           |   34 +
+ .../allocation_groups.asciidoc                     |  782 ++++
+ .../XFS_Filesystem_Structure/common_types.asciidoc |   49 +
+ .../XFS_Filesystem_Structure/data_extents.asciidoc |  247 ++
+ .../XFS_Filesystem_Structure/directories.asciidoc  | 1193 ++++++
+ design/XFS_Filesystem_Structure/docinfo.xml        |   72 +
+ .../extended_attributes.asciidoc                   |  609 +++
+ design/XFS_Filesystem_Structure/images/15a.png     |  Bin 0 -> 50788 bytes
+ design/XFS_Filesystem_Structure/images/15b.png     |  Bin 0 -> 95395 bytes
+ design/XFS_Filesystem_Structure/images/16.png      |  Bin 0 -> 36702 bytes
+ design/XFS_Filesystem_Structure/images/18.png      |  Bin 0 -> 23260 bytes
+ design/XFS_Filesystem_Structure/images/20a.png     |  Bin 0 -> 72052 bytes
+ design/XFS_Filesystem_Structure/images/20b.png     |  Bin 0 -> 91930 bytes
+ design/XFS_Filesystem_Structure/images/23.png      |  Bin 0 -> 19185 bytes
+ design/XFS_Filesystem_Structure/images/28.png      |  Bin 0 -> 48498 bytes
+ design/XFS_Filesystem_Structure/images/30.png      |  Bin 0 -> 27246 bytes
+ design/XFS_Filesystem_Structure/images/31.png      |  Bin 0 -> 10652 bytes
+ design/XFS_Filesystem_Structure/images/32.png      |  Bin 0 -> 60716 bytes
+ design/XFS_Filesystem_Structure/images/35.png      |  Bin 0 -> 167184 bytes
+ design/XFS_Filesystem_Structure/images/36.png      |  Bin 0 -> 188957 bytes
+ design/XFS_Filesystem_Structure/images/39.png      |  Bin 0 -> 48607 bytes
+ design/XFS_Filesystem_Structure/images/43.png      |  Bin 0 -> 103425 bytes
+ design/XFS_Filesystem_Structure/images/48.png      |  Bin 0 -> 145519 bytes
+ design/XFS_Filesystem_Structure/images/54.png      |  Bin 0 -> 217092 bytes
+ design/XFS_Filesystem_Structure/images/6.png       |  Bin 0 -> 87067 bytes
+ design/XFS_Filesystem_Structure/images/61.png      |  Bin 0 -> 33415 bytes
+ design/XFS_Filesystem_Structure/images/62.png      |  Bin 0 -> 53958 bytes
+ design/XFS_Filesystem_Structure/images/64.png      |  Bin 0 -> 49003 bytes
+ design/XFS_Filesystem_Structure/images/69.png      |  Bin 0 -> 128382 bytes
+ design/XFS_Filesystem_Structure/images/72.png      |  Bin 0 -> 138179 bytes
+ design/XFS_Filesystem_Structure/images/76.png      |  Bin 0 -> 31266 bytes
+ .../XFS_Filesystem_Structure/images/code/33a.png   |  Bin 0 -> 106484 bytes
+ .../XFS_Filesystem_Structure/images/code/33b.png   |  Bin 0 -> 40229 bytes
+ design/XFS_Filesystem_Structure/images/code/40.png |  Bin 0 -> 94094 bytes
+ design/XFS_Filesystem_Structure/images/code/46.png |  Bin 0 -> 78484 bytes
+ design/XFS_Filesystem_Structure/images/code/57.png |  Bin 0 -> 17987 bytes
+ design/XFS_Filesystem_Structure/images/code/60.png |  Bin 0 -> 32907 bytes
+ design/XFS_Filesystem_Structure/images/code/61.png |  Bin 0 -> 54687 bytes
+ design/XFS_Filesystem_Structure/images/code/65.png |  Bin 0 -> 107515 bytes
+ design/XFS_Filesystem_Structure/images/code/66.png |  Bin 0 -> 69316 bytes
+ design/XFS_Filesystem_Structure/images/code/67.png |  Bin 0 -> 109738 bytes
+ design/XFS_Filesystem_Structure/images/code/71.png |  Bin 0 -> 62675 bytes
+ .../XFS_Filesystem_Structure/images/code/73-74.png |  Bin 0 -> 153732 bytes
+ design/XFS_Filesystem_Structure/images/code/74.png |  Bin 0 -> 62210 bytes
+ .../images/code/SVG/33a.svg                        |  185 +
+ .../images/code/SVG/33b.svg                        |  158 +
+ .../images/code/SVG/40.svg                         |  177 +
+ .../images/code/SVG/46.svg                         |  197 +
+ .../images/code/SVG/57.svg                         |  129 +
+ .../images/code/SVG/60.svg                         |  182 +
+ .../images/code/SVG/61.svg                         |  157 +
+ .../images/code/SVG/65.svg                         |  233 ++
+ .../images/code/SVG/66.svg                         |  260 ++
+ .../images/code/SVG/67.svg                         |  232 ++
+ .../images/code/SVG/71.svg                         |  150 +
+ .../images/code/SVG/73-74.svg                      |  364 ++
+ .../images/code/SVG/74.svg                         |  201 +
+ design/XFS_Filesystem_Structure/images/icon.svg    | 3936 ++++++++++++++++++++
+ .../internal_inodes.asciidoc                       |  182 +
+ .../journaling_log.asciidoc                        |    3 +
+ .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |  448 +++
+ .../symbolic_links.asciidoc                        |   81 +
+ .../xfs_filesystem_structure.asciidoc              |   53 +
+ 64 files changed, 10337 insertions(+), 3 deletions(-)
+ create mode 100644 design/XFS_Filesystem_Structure/Makefile
+ create mode 100644 design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/common_types.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/data_extents.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/directories.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/docinfo.xml
+ create mode 100644 design/XFS_Filesystem_Structure/extended_attributes.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/images/15a.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/15b.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/16.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/18.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/20a.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/20b.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/23.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/28.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/30.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/31.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/32.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/35.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/36.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/39.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/43.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/48.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/54.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/6.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/61.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/62.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/64.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/69.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/72.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/76.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/33a.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/33b.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/40.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/46.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/57.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/60.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/61.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/65.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/66.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/67.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/71.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/73-74.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/74.png
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/33a.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/33b.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/40.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/46.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/57.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/60.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/61.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/65.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/66.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/67.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/71.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/73-74.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/code/SVG/74.svg
+ create mode 100644 design/XFS_Filesystem_Structure/images/icon.svg
+ create mode 100644 design/XFS_Filesystem_Structure/internal_inodes.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/journaling_log.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/symbolic_links.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
