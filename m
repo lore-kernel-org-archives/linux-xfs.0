@@ -1,21 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C44537F50
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 14:11:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A0580304043
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 12:11:56 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id cnAmFl3azytoxycR for <xfs@oss.sgi.com>;
-	Tue, 11 Feb 2014 12:11:55 -0800 (PST)
-Message-ID: <52FA840A.7090309@sandeen.net>
-Date: Tue, 11 Feb 2014 14:11:54 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 369957F50
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 14:18:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2AC85304043
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 12:18:50 -0800 (PST)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id ogncnszNAxv1Ga8I (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Feb 2014 12:18:48 -0800 (PST)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <cody@linux.vnet.ibm.com>;
+	Tue, 11 Feb 2014 15:18:48 -0500
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com
+	[9.57.198.26])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 69A1638C804F
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 15:18:46 -0500 (EST)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp22036.gho.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	s1BKIkrM7274952 for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 20:18:46 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	s1BKIj9D025117 for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 15:18:45 -0500
+Message-ID: <52FA8598.1060805@linux.vnet.ibm.com>
+Date: Tue, 11 Feb 2014 12:18:32 -0800
+From: Cody P Schafer <cody@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Subject: Re: xfs_repair fails to repair, run under valgrind shows "Invalid
 	read..." and XFS_CORRUPTION_ERROR
 References: <52FA8021.9050604@linux.vnet.ibm.com>
-In-Reply-To: <52FA8021.9050604@linux.vnet.ibm.com>
+	<52FA840A.7090309@sandeen.net>
+In-Reply-To: <52FA840A.7090309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +41,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Cody P Schafer <cody@linux.vnet.ibm.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On 2/11/14, 1:55 PM, Cody P Schafer wrote:
-> xfsprogs version: v3.2.0-alpha2-14-g6e79202
-> 
-> uname: Linux hostname 3.11.10-301.fc20.ppc64 #1 SMP Tue Dec 10 00:35:15 MST 2013 ppc64 POWER8 (architected), altivec supported CHRP IBM,8286-42A GNU/Linux
-> 
-> full log attached.
+On 02/11/2014 12:11 PM, Eric Sandeen wrote:
+> On 2/11/14, 1:55 PM, Cody P Schafer wrote:
+>> xfsprogs version: v3.2.0-alpha2-14-g6e79202
+>>
+>> uname: Linux hostname 3.11.10-301.fc20.ppc64 #1 SMP Tue Dec 10 00:35:15 MST 2013 ppc64 POWER8 (architected), altivec supported CHRP IBM,8286-42A GNU/Linux
+>>
+>> full log attached.
+>
+> Yikes, that's one destroyed filesystem.  What happened?
+>
 
-Yikes, that's one destroyed filesystem.  What happened?
-
-==6700== Invalid read of size 8
-==6700==    at 0x1003DB10: libxfs_trans_commit (trans.c:743)
-==6700==    by 0x10028F9B: mv_orphanage (phase6.c:1222)
-==6700==    by 0x1002A627: phase6 (phase6.c:2970)
-==6700==    by 0x1000490F: main (xfs_repair.c:779)
-
-So it's reading ip:
-
-        if (ip->i_itemp) <--- read here, line 743
-                kmem_zone_free(xfs_ili_zone, ip->i_itemp);
-
-==6700==  Address 0x13cbf4b8 is 216 bytes inside a block of size 416 free'd
-==6700==    at 0x4067C2C: free (in /usr/lib64/valgrind/vgpreload_memcheck-ppc64-linux.so)
-==6700==    by 0x1003C9EF: libxfs_iput (kmem.h:41)
-==6700==    by 0x1003DB0B: libxfs_trans_commit (trans.c:740)
-==6700==    by 0x10028F9B: mv_orphanage (phase6.c:1222)
-==6700==    by 0x1002A627: phase6 (phase6.c:2970)
-==6700==    by 0x1000490F: main (xfs_repair.c:779)
-
-after it's been previously freed
-
-        if (iip->ili_lock_flags) {
-                iip->ili_lock_flags = 0;
-                return;
-        } else {
-                libxfs_iput(ip, 0);  <--- freed here, line 740
-        }
-
-==6700== Invalid write of size 8
-==6700==    at 0x1003DB38: libxfs_trans_commit (trans.c:747)
-==6700==    by 0x10028F9B: mv_orphanage (phase6.c:1222)
-==6700==    by 0x1002A627: phase6 (phase6.c:2970)
-==6700==    by 0x1000490F: main (xfs_repair.c:779)
-
-ditto for this write:
-
-        ip->i_itemp = NULL; <--- written here, line 747
-
-So, this should be fixed, but I kind of doubt it's the underlying
-problem with your xfs_repair failure.
-
--Eric
+Well, initially? no idea. This is the second time that the repair 
+failed, so the first one may not have been too kind to the system. The 
+fs still mounts fine (or did before this particular failed repair), but 
+has random file corruption (pieces of files get replaced with other 
+junk). Most of the time without any XFS_CORRUPTION errors showing up in 
+dmesg (though they did appear a few times in the past).
 
 _______________________________________________
 xfs mailing list
