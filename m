@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CA3C87F50
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 15:07:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 48465AC013
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 13:07:06 -0800 (PST)
-Received: from mail-qc0-f170.google.com (mail-qc0-f170.google.com
-	[209.85.216.170]) by cuda.sgi.com with ESMTP id
-	1kns5igzOqXwiVW5 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 11 Feb 2014 13:07:04 -0800 (PST)
-Received: by mail-qc0-f170.google.com with SMTP id e9so14040550qcy.15
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 13:07:03 -0800 (PST)
-Received: from [192.168.123.135] (c-71-236-220-78.hsd1.wa.comcast.net.
-	[71.236.220.78])
-	by mx.google.com with ESMTPSA id u20sm30457584qge.2.2014.02.11.13.07.02
-	for <xfs@oss.sgi.com>
-	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-	Tue, 11 Feb 2014 13:07:02 -0800 (PST)
-Message-ID: <52FA90EA.9080107@codyps.com>
-Date: Tue, 11 Feb 2014 13:06:50 -0800
-From: Cody P Schafer <dev@codyps.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 381D47F50
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 15:08:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 36CAE8F8078
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 13:08:50 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	5yCizGZAxtgCiHok for <xfs@oss.sgi.com>;
+	Tue, 11 Feb 2014 13:08:44 -0800 (PST)
+Date: Wed, 12 Feb 2014 08:08:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
+Message-ID: <20140211210841.GM13647@dastard>
+References: <20140211172707.GA1749@redhat.com>
 MIME-Version: 1.0
-Subject: Re: xfs_repair fails to repair, run under valgrind shows "Invalid
-	read..." and XFS_CORRUPTION_ERROR
-References: <52FA8021.9050604@linux.vnet.ibm.com>
-	<20140211204331.GL13647@dastard>
-In-Reply-To: <20140211204331.GL13647@dastard>
+Content-Disposition: inline
+In-Reply-To: <20140211172707.GA1749@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,102 +25,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 02/11/2014 12:43 PM, Dave Chinner wrote:
-> On Tue, Feb 11, 2014 at 11:55:13AM -0800, Cody P Schafer wrote:
->> xfsprogs version: v3.2.0-alpha2-14-g6e79202
->>
->> uname: Linux hostname 3.11.10-301.fc20.ppc64 #1 SMP Tue Dec 10
->> 00:35:15 MST 2013 ppc64 POWER8 (architected), altivec supported CHRP
->> IBM,8286-42A GNU/Linux
->>
->> full log attached.
->
->>
->> syncop8lp7 xfsprogs # valgrind ./repair/xfs_repair -n /dev/sda5
-> .....
->
-> Runs fine becuase it doesn't try to fix and write changes.
->
->> ==6601== Memcheck, a memory error detector
->> ==6601== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
->> ==6601== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
->> ==6601== Command: ./repair/xfs_repair -n /dev/sda5
->> ==6601==
->> --6601-- WARNING: Serious error when reading debug info
->> --6601-- When reading debug info from /usr/lib64/valgrind/memcheck-ppc64-linux:
->
-> Ok, so you're on ppc64. Big endian or little endian?
->
+On Tue, Feb 11, 2014 at 12:27:07PM -0500, Dave Jones wrote:
+> BUG: sleeping function called from invalid context at mm/mempool.c:203
+> in_atomic(): 0, irqs_disabled(): 1, pid: 27511, name: trinity-c3
+> 5 locks held by trinity-c3/27511:
+>  #0:  (sb_writers#9){......}, at: [<ffffffff831df3b4>] mnt_want_write+0x24/0x50
+>  #1:  (&type->i_mutex_dir_key#3){......}, at: [<ffffffff831cced4>] do_last.isra.51+0x294/0x11f0
+>  #2:  (sb_internal#2){......}, at: [<ffffffffc03225c4>] xfs_trans_alloc+0x24/0x40 [xfs]
+>  #3:  (&(&ip->i_lock)->mr_lock/1){......}, at: [<ffffffffc036447f>] xfs_ilock+0x16f/0x1b0 [xfs]
+>  #4:  (&(&ip->i_lock)->mr_lock){......}, at: [<ffffffffc03646d4>] xfs_ilock_nowait+0x184/0x200 [xfs]
+> CPU: 3 PID: 27511 Comm: trinity-c3 Not tainted 3.14.0-rc2+ #111 
+>  ffffffff83a3fd56 0000000045a3849a ffff88009f368f60 ffffffff8372afea
+>  0000000000000000 ffff88009f368f88 ffffffff8309ddb5 0000000000000010
+>  ffff880243566288 0000000000000008 ffff88009f369008 ffffffff831534d3
+> Call Trace:
+>  [<ffffffff8372afea>] dump_stack+0x4e/0x7a
+>  [<ffffffff8309ddb5>] __might_sleep+0x105/0x150
+>  [<ffffffff831534d3>] mempool_alloc+0xa3/0x170
+>  [<ffffffff831a955a>] ? deactivate_slab+0x51a/0x590
+>  [<ffffffff831f8fd6>] bio_alloc_bioset+0x156/0x210
+>  [<ffffffffc0308231>] _xfs_buf_ioapply+0x1c1/0x3c0 [xfs]
+>  [<ffffffffc03798f2>] ? xlog_bdstrat+0x22/0x60 [xfs]
+>  [<ffffffffc030849b>] xfs_buf_iorequest+0x6b/0xf0 [xfs]
+>  [<ffffffffc03798f2>] xlog_bdstrat+0x22/0x60 [xfs]
+>  [<ffffffffc037ba87>] xlog_sync+0x3a7/0x5b0 [xfs]
+>  [<ffffffffc037bd9f>] xlog_state_release_iclog+0x10f/0x120 [xfs]
+>  [<ffffffffc037c840>] xlog_write+0x6f0/0x800 [xfs]
+>  [<ffffffffc037e061>] xlog_cil_push+0x2f1/0x410 [xfs]
+>  [<ffffffffc037e948>] xlog_cil_force_lsn+0x1d8/0x210 [xfs]
+>  [<ffffffffc03428a8>] ? xfs_bmbt_get_all+0x18/0x20 [xfs]
+>  [<ffffffffc037cc40>] _xfs_log_force+0x70/0x290 [xfs]
+>  [<ffffffff830a4edd>] ? get_parent_ip+0xd/0x50
+>  [<ffffffffc037ce86>] xfs_log_force+0x26/0xb0 [xfs]
+>  [<ffffffffc03076e6>] ? _xfs_buf_find+0x1f6/0x3c0 [xfs]
+>  [<ffffffffc03074e3>] xfs_buf_lock+0x133/0x140 [xfs]
+>  [<ffffffffc03076e6>] _xfs_buf_find+0x1f6/0x3c0 [xfs]
+>  [<ffffffffc030796a>] xfs_buf_get_map+0x2a/0x1b0 [xfs]
+>  [<ffffffffc0383c61>] xfs_trans_get_buf_map+0x1a1/0x240 [xfs]
+>  [<ffffffffc034e03d>] xfs_da_get_buf+0xbd/0x100 [xfs]
+>  [<ffffffffc0356869>] xfs_dir3_data_init+0x59/0x1d0 [xfs]
+>  [<ffffffffc03526db>] ? xfs_dir2_grow_inode+0x13b/0x150 [xfs]
+>  [<ffffffffc0354ede>] xfs_dir2_sf_to_block+0x17e/0x7b0 [xfs]
+>  [<ffffffffc0351f5a>] ? xfs_dir2_sfe_get_ino+0x1a/0x20 [xfs]
+>  [<ffffffffc035e9b4>] ? xfs_dir2_sf_check.isra.7+0x114/0x1b0 [xfs]
+>  [<ffffffffc034c24f>] ? xfs_da_compname+0x1f/0x30 [xfs]
+>  [<ffffffffc035f503>] ? xfs_dir2_sf_lookup+0x303/0x310 [xfs]
+>  [<ffffffffc035f858>] xfs_dir2_sf_addname+0x348/0x6d0 [xfs]
+>  [<ffffffffc031970d>] ? xfs_setup_inode+0x1cd/0x320 [xfs]
+>  [<ffffffffc03529a4>] xfs_dir_createname+0x184/0x1e0 [xfs]
+>  [<ffffffffc03663d9>] xfs_create+0x469/0x580 [xfs]
+>  [<ffffffffc0318864>] xfs_vn_mknod+0xc4/0x1e0 [xfs]
+>  [<ffffffffc0318993>] xfs_vn_create+0x13/0x20 [xfs]
+>  [<ffffffff831ccc15>] vfs_create+0x95/0xc0
+>  [<ffffffff831cd638>] do_last.isra.51+0x9f8/0x11f0
+>  [<ffffffff831c9e11>] ? link_path_walk+0x81/0x870
+>  [<ffffffff831cdef9>] path_openat+0xc9/0x620
+>  [<ffffffff8331cc02>] ? put_dec+0x72/0x90
+>  [<ffffffff831ceb6d>] do_filp_open+0x4d/0xb0
+>  [<ffffffff831bc4ae>] file_open_name+0xfe/0x160
+>  [<ffffffff831bc554>] filp_open+0x44/0x60
+>  [<ffffffff83221862>] do_coredump+0x602/0xf60
+>  [<ffffffff83081358>] get_signal_to_deliver+0x2b8/0x6b0
+>  [<ffffffff830024d7>] do_signal+0x57/0x9d0
+>  [<ffffffff8311115e>] ? __acct_update_integrals+0x8e/0x120
+>  [<ffffffff83730000>] ? __schedule+0x60/0x850
+>  [<ffffffff8373a1db>] ? preempt_count_sub+0x6b/0xf0
+>  [<ffffffff83735a31>] ? _raw_spin_unlock+0x31/0x50
+>  [<ffffffff830ab671>] ? vtime_account_user+0x91/0xa0
+>  [<ffffffff8314f57b>] ? context_tracking_user_exit+0x9b/0x100
+>  [<ffffffff83002eac>] do_notify_resume+0x5c/0xa0
+>  [<ffffffff83736746>] retint_signal+0x46/0x90
 
-Big endian.
+There's nowhere in this XFS stack that disables interrupts, so I
+thinks it's either above or below XFS that is causing this problem.
 
->> syncop8lp7 xfsprogs # valgrind ./repair/xfs_repair /dev/sda5
-> ....
->
->> resetting inode 67687581 nlinks from 4 to 3
->> xfs_dir3_data_write_verify: XFS_CORRUPTION_ERROR
->> libxfs_writebufr: write verifer failed on bno 0x3239040/0x1000
->> Invalid inode number 0xfeffffffffffffff
->
-> That's the smoking gun - the dirents in the rebuilt directory have
-> invalid inode numbers. They all have the same invalid inode number,
-> which indicates a bug in the directory reconstruction.
->
-> Can you provide a metadump of the broken filesystem to one of us fo
-> deeper inspection?
->
+Cheers,
 
-Sure:
-http://turntable.einic.org/~cody/sda5-2.meta
-
-> FWIW, the write verifiers have once again done their job - catching
-> corruptions caused by software bugs and preventing them from causing
-> further corruption to the filesystem...
->
->> libxfs_writebufr: write verifer failed on bno 0x3298f38/0x1000
->> ==6700== Syscall param pwrite64(buf) points to uninitialised byte(s)
->> ==6700==    at 0x40F810C: pwrite64 (pwrite64.c:51)
->> ==6700==    by 0x1003ABDB: __write_buf (rdwr.c:801)
->> ==6700==    by 0x1003C1B7: libxfs_writebufr (rdwr.c:863)
->> ==6700==    by 0x10036C4F: cache_flush (cache.c:600)
->> ==6700==    by 0x1003C77B: libxfs_bcache_flush (rdwr.c:994)
->> ==6700==    by 0x10004C6B: main (xfs_repair.c:886)
->> ==6700==  Address 0xbeb0622 is 34 bytes inside a block of size 4,096 alloc'd
->> ==6700==    at 0x406631C: memalign (in /usr/lib64/valgrind/vgpreload_memcheck-ppc64-linux.so)
->> ==6700==    by 0x1003ADEF: __initbuf (rdwr.c:367)
->> ==6700==    by 0x1003B797: libxfs_getbufr_map (rdwr.c:416)
->> ==6700==    by 0x100365C3: cache_node_get (cache.c:273)
->> ==6700==    by 0x1003A8DB: __cache_lookup (rdwr.c:519)
->> ==6700==    by 0x1003BA6F: libxfs_getbuf_map (rdwr.c:601)
->> ==6700==    by 0x1003D333: libxfs_trans_get_buf_map (trans.c:525)
->> ==6700==    by 0x10059A3B: xfs_da_get_buf (xfs_da_btree.c:2580)
->> ==6700==    by 0x10060E27: xfs_dir3_data_init (xfs_dir2_data.c:558)
->> ==6700==    by 0x1006407F: xfs_dir2_leaf_addname (xfs_dir2_leaf.c:826)
->> ==6700==    by 0x1005D59B: xfs_dir_createname (xfs_dir2.c:233)
->> ==6700==    by 0x100290D3: mv_orphanage (phase6.c:1205)
->
-> And that looks kinda related. This has been triggered by the write
-> of a directory buffer that was created during lost+found processing,
-> and is a prime candidate for incorrect reconstruction. What is the
-> head commit of the repo you built this xfs_repair binary from, and
-> what version of gcc did you use?
-
->> xfsprogs version: v3.2.0-alpha2-14-g6e79202
-full hash: 6e79202b24ed0dc9ddd8f02e0506182cc6587258
-
-gcc version 4.7.3 (Gentoo 4.7.3-r1 p1.4, pie-0.5.5)
-
->
-> Cheers,
->
-> Dave.
->
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
