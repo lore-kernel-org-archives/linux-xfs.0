@@ -1,32 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 126FD7F52
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 15:32:58 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C2287F57
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 15:14:47 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E852230406A
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 13:32:57 -0800 (PST)
-Received: from mail-vb0-f50.google.com (mail-vb0-f50.google.com
-	[209.85.212.50]) by cuda.sgi.com with ESMTP id BzJmBENzgITAUFBi
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 12 Feb 2014 13:32:56 -0800 (PST)
-Received: by mail-vb0-f50.google.com with SMTP id w8so7691100vbj.9
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 13:32:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140212211421.GP18016@ZenIV.linux.org.uk>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EAACFAC002
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 13:14:43 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	qLRkogZ03tHrBFxL for <xfs@oss.sgi.com>;
+	Wed, 12 Feb 2014 13:14:41 -0800 (PST)
+Date: Thu, 13 Feb 2014 08:14:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
+Message-ID: <20140212211437.GG13997@dastard>
 References: <52FA9ADA.9040803@sandeen.net> <20140212004403.GA17129@redhat.com>
 	<20140212010941.GM18016@ZenIV.linux.org.uk>
 	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
 	<20140212040358.GA25327@redhat.com>
 	<20140212042215.GN18016@ZenIV.linux.org.uk>
 	<20140212054043.GB13997@dastard>
-	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
-	<20140212113928.GO18016@ZenIV.linux.org.uk>
-	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
-	<20140212211421.GP18016@ZenIV.linux.org.uk>
-Date: Wed, 12 Feb 2014 13:32:55 -0800
-Message-ID: <CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
-Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-From: Linus Torvalds <torvalds@linux-foundation.org>
+	<20140212055027.GA28502@redhat.com>
+	<20140212061038.GC13997@dastard>
+	<20140212142538.GA11046@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140212142538.GA11046@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,30 +37,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@zeniv.linux.org.uk>, Oleg Nesterov <oleg@redhat.com>
-Cc: Dave Jones <davej@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Jones <davej@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Wed, Feb 12, 2014 at 1:14 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
->
-> Umm...  What if we delay __sigqueue_free()?  After all, that's where the
-> fat sucker normally comes from.  That way we might get away with much
-> smaller structure on stack...
+On Wed, Feb 12, 2014 at 09:25:38AM -0500, Dave Jones wrote:
+> On Wed, Feb 12, 2014 at 05:10:38PM +1100, Dave Chinner wrote:
+>  > On Wed, Feb 12, 2014 at 12:50:27AM -0500, Dave Jones wrote:
+>  > > On Wed, Feb 12, 2014 at 04:40:43PM +1100, Dave Chinner wrote:
+>  > > 
+>  > >  > None of the XFS code disables interrupts in that path, not does is
+>  > >  > call outside XFS except to dispatch IO. The stack is pretty deep at
+>  > >  > this point and I know that the standard (non stacked) IO stack can
+>  > >  > consume >3kb of stack space when it gets down to having to do memory
+>  > >  > reclaim during GFP_NOIO allocation at the lowest level of SCSI
+>  > >  > drivers. Stack overruns typically show up with symptoms like we are
+>  > >  > seeing.
+>  > >  > ..
+>  > >  > 
+>  > >  > Dave, before chasing ghosts, can you (like Eric originally asked)
+>  > >  > turn on stack overrun detection?
+>  > > 
+>  > > CONFIG_DEBUG_STACKOVERFLOW ? Already turned on.
+>  > 
+>  > That only checks stack usage when an interrupt is taken. If no
+>  > interrupts are taken when stack usage is within 128 bytes of
+>  > overflow, then it doesn't catch it.
+>  > 
+>  > I tend to use CONFIG_DEBUG_STACK_USAGE=y as it records the maximum
+>  > stack usage of a process via canary overwrites and it records it in
+>  > do_exit().
+> 
+> I had that on too. The only message from it came from quite a while
+> before the trace that happened overnight..
 
-Sounds like the RightThing(tm) to do to me, and I don't see why it
-wouldn't work.
+Right, it won't capture an overrun at the point in time an overrun
+occurs, either, because it only checks when the process exits. But
+it does tell you what stack usage is being seen, as this:
 
-We'd have to teach each user of "dequeue_signal()" to free the siginfo
-thing. Which shouldn't be too bad - I think we've collected all of
-that into generic code, and there isn't the mass or architecture code
-that knows about these things any more. But there are a few odd
-drivers etc and signalfd. I didn't look at what the lifetimes were.
+> [ 3415.655125] trinity-c0 (4383) used greatest stack depth: 992 bytes left
+> [12900.804230] BUG: sleeping function called from invalid context at mm/mempool.c:203
 
-Adding Oleg to the cc, since any time we touch any of that code, he
-should be involved. Oleg - the issue is the biggish size of 'struct
-ksignal' on stack, brought on by the silly "put a whole siginfo_t in
-it".
+is a pretty a good indication that trinity is at risk of stack
+overuns...
 
-            Linus
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
