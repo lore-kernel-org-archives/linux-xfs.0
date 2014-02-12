@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2A1137F50
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 18:22:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2243D8F8064
-	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 16:22:45 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HdHvc6T5pdRD0NVK for <xfs@oss.sgi.com>;
-	Tue, 11 Feb 2014 16:22:42 -0800 (PST)
-Date: Wed, 12 Feb 2014 11:22:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs_db: fix the setting of unaligned directory fields
-Message-ID: <20140212002222.GO13647@dastard>
-References: <20140210230923.268327906@sgi.com> <20140211013145.GA13647@dastard>
-	<52FA3141.20901@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B99057F50
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 18:44:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4EFCEAC003
+	for <xfs@oss.sgi.com>; Tue, 11 Feb 2014 16:44:15 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7xbG9IYC5tzZWghH for
+	<xfs@oss.sgi.com>; Tue, 11 Feb 2014 16:44:14 -0800 (PST)
+Date: Tue, 11 Feb 2014 19:44:03 -0500
+From: Dave Jones <davej@redhat.com>
+Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
+Message-ID: <20140212004403.GA17129@redhat.com>
+References: <20140211172707.GA1749@redhat.com> <20140211210841.GM13647@dastard>
+	<52FA9ADA.9040803@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52FA3141.20901@sgi.com>
+In-Reply-To: <52FA9ADA.9040803@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,148 +29,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-On Tue, Feb 11, 2014 at 08:18:41AM -0600, Mark Tinguely wrote:
-> On 02/10/14 19:31, Dave Chinner wrote:
-> >On Mon, Feb 10, 2014 at 05:09:12PM -0600, Mark Tinguely wrote:
-> 
-> <delete>
-> 
-> >>>  +		 * Values larger than 64 bits are array of hex digits that
-> >>>  +		 * already in the desired ordering (example UUID).
-> >>>    		*/
-> >>>  -		*value = strtoll(arg, NULL, 0);
-> >>>  +		if (bit_length > 64)
-> >>>  +			return buf;
-> >I don't understand why you added this - how can we have input left
-> >that we need to parse after the above loop? @bytes will always be<=
-> >0 at this point in time, which means we have no space in the bit
-> >field left to put values into....
-> 
-> The comment explains the return.
+On Tue, Feb 11, 2014 at 03:49:14PM -0600, Eric Sandeen wrote:
+ > On 2/11/14, 3:08 PM, Dave Chinner wrote:
+ > > On Tue, Feb 11, 2014 at 12:27:07PM -0500, Dave Jones wrote:
+ > >> BUG: sleeping function called from invalid context at mm/mempool.c:203
+ > >> in_atomic(): 0, irqs_disabled(): 1, pid: 27511, name: trinity-c3
+ > >> 5 locks held by trinity-c3/27511:
+ > >>  #0:  (sb_writers#9){......}, at: [<ffffffff831df3b4>] mnt_want_write+0x24/0x50
+ > >>  #1:  (&type->i_mutex_dir_key#3){......}, at: [<ffffffff831cced4>] do_last.isra.51+0x294/0x11f0
+ > >>  #2:  (sb_internal#2){......}, at: [<ffffffffc03225c4>] xfs_trans_alloc+0x24/0x40 [xfs]
+ > >>  #3:  (&(&ip->i_lock)->mr_lock/1){......}, at: [<ffffffffc036447f>] xfs_ilock+0x16f/0x1b0 [xfs]
+ > >>  #4:  (&(&ip->i_lock)->mr_lock){......}, at: [<ffffffffc03646d4>] xfs_ilock_nowait+0x184/0x200 [xfs]
+ > >> CPU: 3 PID: 27511 Comm: trinity-c3 Not tainted 3.14.0-rc2+ #111 
+ > >>  ffffffff83a3fd56 0000000045a3849a ffff88009f368f60 ffffffff8372afea
+ > >>  0000000000000000 ffff88009f368f88 ffffffff8309ddb5 0000000000000010
+ > >>  ffff880243566288 0000000000000008 ffff88009f369008 ffffffff831534d3
+ > >> Call Trace:
+ > >>  [<ffffffff8372afea>] dump_stack+0x4e/0x7a
+ > >>  [<ffffffff8309ddb5>] __might_sleep+0x105/0x150
+ > >>  [<ffffffff831534d3>] mempool_alloc+0xa3/0x170
+ > >>  [<ffffffff831a955a>] ? deactivate_slab+0x51a/0x590
+ > >>  [<ffffffff831f8fd6>] bio_alloc_bioset+0x156/0x210
+ > >>  [<ffffffffc0308231>] _xfs_buf_ioapply+0x1c1/0x3c0 [xfs]
+ > >>  [<ffffffffc03798f2>] ? xlog_bdstrat+0x22/0x60 [xfs]
+ > >>  [<ffffffffc030849b>] xfs_buf_iorequest+0x6b/0xf0 [xfs]
+ > >>  [<ffffffffc03798f2>] xlog_bdstrat+0x22/0x60 [xfs]
+ > >>  [<ffffffffc037ba87>] xlog_sync+0x3a7/0x5b0 [xfs]
+ > >>  [<ffffffffc037bd9f>] xlog_state_release_iclog+0x10f/0x120 [xfs]
+ > >>  [<ffffffffc037c840>] xlog_write+0x6f0/0x800 [xfs]
+ > >>  [<ffffffffc037e061>] xlog_cil_push+0x2f1/0x410 [xfs]
+ > >>  [<ffffffffc037e948>] xlog_cil_force_lsn+0x1d8/0x210 [xfs]
+ > >>  [<ffffffffc03428a8>] ? xfs_bmbt_get_all+0x18/0x20 [xfs]
+ > >>  [<ffffffffc037cc40>] _xfs_log_force+0x70/0x290 [xfs]
+ > >>  [<ffffffff830a4edd>] ? get_parent_ip+0xd/0x50
+ > >>  [<ffffffffc037ce86>] xfs_log_force+0x26/0xb0 [xfs]
+ > >>  [<ffffffffc03076e6>] ? _xfs_buf_find+0x1f6/0x3c0 [xfs]
+ > >>  [<ffffffffc03074e3>] xfs_buf_lock+0x133/0x140 [xfs]
+ > >>  [<ffffffffc03076e6>] _xfs_buf_find+0x1f6/0x3c0 [xfs]
+ > >>  [<ffffffffc030796a>] xfs_buf_get_map+0x2a/0x1b0 [xfs]
+ > >>  [<ffffffffc0383c61>] xfs_trans_get_buf_map+0x1a1/0x240 [xfs]
+ > >>  [<ffffffffc034e03d>] xfs_da_get_buf+0xbd/0x100 [xfs]
+ > >>  [<ffffffffc0356869>] xfs_dir3_data_init+0x59/0x1d0 [xfs]
+ > >>  [<ffffffffc03526db>] ? xfs_dir2_grow_inode+0x13b/0x150 [xfs]
+ > >>  [<ffffffffc0354ede>] xfs_dir2_sf_to_block+0x17e/0x7b0 [xfs]
+ > >>  [<ffffffffc0351f5a>] ? xfs_dir2_sfe_get_ino+0x1a/0x20 [xfs]
+ > >>  [<ffffffffc035e9b4>] ? xfs_dir2_sf_check.isra.7+0x114/0x1b0 [xfs]
+ > >>  [<ffffffffc034c24f>] ? xfs_da_compname+0x1f/0x30 [xfs]
+ > >>  [<ffffffffc035f503>] ? xfs_dir2_sf_lookup+0x303/0x310 [xfs]
+ > >>  [<ffffffffc035f858>] xfs_dir2_sf_addname+0x348/0x6d0 [xfs]
+ > >>  [<ffffffffc031970d>] ? xfs_setup_inode+0x1cd/0x320 [xfs]
+ > >>  [<ffffffffc03529a4>] xfs_dir_createname+0x184/0x1e0 [xfs]
+ > >>  [<ffffffffc03663d9>] xfs_create+0x469/0x580 [xfs]
+ > >>  [<ffffffffc0318864>] xfs_vn_mknod+0xc4/0x1e0 [xfs]
+ > >>  [<ffffffffc0318993>] xfs_vn_create+0x13/0x20 [xfs]
+ > >>  [<ffffffff831ccc15>] vfs_create+0x95/0xc0
+ > >>  [<ffffffff831cd638>] do_last.isra.51+0x9f8/0x11f0
+ > >>  [<ffffffff831c9e11>] ? link_path_walk+0x81/0x870
+ > >>  [<ffffffff831cdef9>] path_openat+0xc9/0x620
+ > >>  [<ffffffff8331cc02>] ? put_dec+0x72/0x90
+ > >>  [<ffffffff831ceb6d>] do_filp_open+0x4d/0xb0
+ > >>  [<ffffffff831bc4ae>] file_open_name+0xfe/0x160
+ > >>  [<ffffffff831bc554>] filp_open+0x44/0x60
+ > >>  [<ffffffff83221862>] do_coredump+0x602/0xf60
+ > >>  [<ffffffff83081358>] get_signal_to_deliver+0x2b8/0x6b0
+ > >>  [<ffffffff830024d7>] do_signal+0x57/0x9d0
+ > >>  [<ffffffff8311115e>] ? __acct_update_integrals+0x8e/0x120
+ > >>  [<ffffffff83730000>] ? __schedule+0x60/0x850
+ > >>  [<ffffffff8373a1db>] ? preempt_count_sub+0x6b/0xf0
+ > >>  [<ffffffff83735a31>] ? _raw_spin_unlock+0x31/0x50
+ > >>  [<ffffffff830ab671>] ? vtime_account_user+0x91/0xa0
+ > >>  [<ffffffff8314f57b>] ? context_tracking_user_exit+0x9b/0x100
+ > >>  [<ffffffff83002eac>] do_notify_resume+0x5c/0xa0
+ > >>  [<ffffffff83736746>] retint_signal+0x46/0x90
+ > > 
+ > > There's nowhere in this XFS stack that disables interrupts, so I
+ > > thinks it's either above or below XFS that is causing this problem.
+ > 
+ > any chance the stack got blown & corrupted things such that it
+ > only _looks_ like irqs are disabled?
 
-If the comment answered my question then I wouldn't have asked it.
+The 'good' news is I seem to be able to reproduce it fairly quickly.
+I've seen it 3-4 times this afternoon. (Always from the coredump path)
 
-> If the input bit_length is bigger than 64 bit then it is an array of
-> hex numbers (for example UUID can be entered this way).
+I was on vacation last week, but I wasn't hitting this before then, so it's a
+fairly recent change that's introduced this.
 
-Yes, I know that.
+Al ?
 
-> buf is the beginning of the allocated array before rbuf pointer put
-> nibbles into it. So this returns the beginning of the hex bytes.
-
-Yes, I know that, too.
-
-> If this return is not taken then it is 64 bits or less and is some
-> kind of integer. The integer will get its fields fixed and converted
-> to big endian....
-
-Oh, now I understand what you've done - you've changed the
-definition of what a hex block contains. A hex block is a
-hex-encoded binary format - it is just an array of bytes. What
-you've changed is that you now define a hex block of less than 64
-bits to encode a host-endian format integer.
-
-That's what you comment didn't explain and what confused me - why we
-should be bit shifting or endian converting a raw data encoding.
-
-For example, if I want to write 4 bytes of hex data to a field, then
-I use "#12345678" to do it. When I dump the raw contents of that
-field, I expect to see four bytes in big endian format in that
-field: 12 34 56 78. When I print the structure value, I expect to
-see the host-endian conversion of that raw data, not the on-disk
-encoded value.
-
-IOWs, we do not want small hex block arrays to be interpretted as a
-host endian integer - if you need to enter an integer value in host
-endian then use "0x12345678". i.e. hex blocks are not integers. i.e.
-
-xfs_db> write lsn #12345678
-lsn = 0x78563412
-xfs_db> write lsn 0x12345678
-lsn = 0x12345678
-
-The above behaviour is correct and expected on a little endian host.
-Having them both result in "lsn = 0x12345678" is not the correct or
-desired behaviour. I didn't pick this up when looking that the tst
-you wrote, but it's now obvious:
-
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #185a" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #a518" $SCRATCH_DEV
-...
-+core.gen = 6234
-+core.gen = 42264
-
-This is how a little endian host should behave:
-
-xfs_db> write core.gen 0xa518
-core.gen = 42264
-xfs_db> write core.gen #a518
-core.gen = 6309
-xfs_db> write core.gen 0x18a5
-core.gen = 6309
-xfs_db> write core.gen #18a5
-core.gen = 42264
-
-
-So, back to my original question, now I undersand what you've done,
-which was "how does hexblock data on unaligned bit_length fields
-work?". The code ends up like this:
-
-		int bytes = bit_length / NBBY;
-
-		while (*arg && bytes--) {
-			.....
-		}
-
-		if (bytes < 0 && *arg)
-			return NULL;
-
-		/*
-		 * Values larger than 64 bits are array of hex digits that
-		 * already in the desired ordering (example UUID).
-		 */
-		if (bit_length > 64)
-		     return buf;
-	} else {
-		....
-	}
-
-	/* do integer parsing */
-	......
-
-Let's say bit length is 1 (e.g. unwritten extent flag) and we pass a
-value of "#1". That gives us bytes = 0 as the initial condition.
-This:
-
-	while (*arg && bytes--)
-
-sees *arg != NULL and bytes = 0 so it doesn't run the loop and
-then post-decrements bytes Now we have bytes = -1 and *arg != 0.
-So we return NULL instead of parsing the byte.
-
-The same thing will happen with any unaligned bit field that needs
-the high byte set via this code as it will fail to parse the last
-character of the input.
-
-IOWs, using hexblock format on unaligned bitfields does not work
-properly. In fact, it's never been supported, as hex blocks
-were never intended to be used that way. i.e. the use for a hexblock
-when writting an extent record to to write the entire record as a
-binary value, not to write individual elements as integer values....
-
-Hence I'd suggest that "if (bit_field & NBBY) return NULL;" is
-appropriate for hex block format input, and the input should never
-be treated as a host-endian integer...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	Dave
 
 _______________________________________________
 xfs mailing list
