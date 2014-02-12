@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 59C617F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:10:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E6277AC005
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 10:10:20 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jjzrH5WTeorCaUJP for
-	<xfs@oss.sgi.com>; Thu, 13 Feb 2014 10:10:20 -0800 (PST)
-Date: Thu, 13 Feb 2014 19:10:13 +0100
-From: Oleg Nesterov <oleg@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B59377F50
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 15:14:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 976FF304077
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 13:14:32 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id ltpq2t8C2xtMAOjx (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 12 Feb 2014 13:14:30 -0800 (PST)
+Date: Wed, 12 Feb 2014 21:14:22 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140213181013.GA15596@redhat.com>
-References: <20140212040358.GA25327@redhat.com>
+Message-ID: <20140212211421.GP18016@ZenIV.linux.org.uk>
+References: <52FA9ADA.9040803@sandeen.net> <20140212004403.GA17129@redhat.com>
+	<20140212010941.GM18016@ZenIV.linux.org.uk>
+	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
+	<20140212040358.GA25327@redhat.com>
 	<20140212042215.GN18016@ZenIV.linux.org.uk>
 	<20140212054043.GB13997@dastard>
 	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
 	<20140212113928.GO18016@ZenIV.linux.org.uk>
 	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
-	<20140212211421.GP18016@ZenIV.linux.org.uk>
-	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
-	<20140213174020.GA14455@redhat.com>
-	<CA+55aFxwozCQ05axLB02R3huX8sj=20EoFfw0cSDDL8fBE_Y6Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFxwozCQ05axLB02R3huX8sj=20EoFfw0cSDDL8fBE_Y6Q@mail.gmail.com>
+In-Reply-To: <CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,38 +38,49 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>
+Cc: Dave Jones <davej@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 02/13, Linus Torvalds wrote:
->
-> On Thu, Feb 13, 2014 at 9:40 AM, Oleg Nesterov <oleg@redhat.com> wrote:
+On Wed, Feb 12, 2014 at 12:13:19PM -0800, Linus Torvalds wrote:
+> On Wed, Feb 12, 2014 at 3:39 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> > On Tue, Feb 11, 2014 at 10:28:12PM -0800, Linus Torvalds wrote:
 > >
-> > And we should be careful with SIGQUEUE_PREALLOC, at least
-> > collect_signal() should not do list_del_init()... Plus we need to
-> > handle the SEND_SIG_FORCED-like case.
->
-> I don't think the users need to care. They'd just call
-> "sigqueue_free()" not knowing about our preallocations etc.
+> >> It looks like just "do_signal()" has a stack frame that is about 230
+> >> bytes even under normal circumstancs (largely due to "struct ksignal"
+> >> - which in turn is largely due to the insane 128-byte padding in
+> >> siginfo_t). Add a few other frames in there, and I guess that if it
+> >> was close before, the coredump path just makes it go off.
+> >
+> > We could, in principle, put it into task_struct and make get_signal()
+> > return its address - do_signal() is called only in the code that does
+> > assorted returns to userland...
+> 
+> We have better uses for random buffers in "struct task_struct", I'd
+> hate to put a siginfo_t there.
 
-Yes, but we need to be careful to avoid the races with
-release_posix_timer().
+*nod*
 
-> That kind
-> of detail should be confined to inside signal.c.
+> The thing is, siginfo_t has that idiotic 128-byte area, but it's all
+> "for future expansion". I think it's some damn glibc disease - we've
+> seen these kinds of insane paddings before.
+> 
+> The actual *useful* part of siginfo_t is on the order of 32 bytes. If that.
+> 
+> Sad.
 
-Yes, sure.
+Umm...  What if we delay __sigqueue_free()?  After all, that's where the
+fat sucker normally comes from.  That way we might get away with much
+smaller structure on stack...
 
-> But there really aren't that many users. There's a couple of
-> "dequeue_signal_lock()" users, but they don't actually *want* the
-> siginfo at all (they're kernel threads), so we can just make that
-> function free the siginfo immediately (and get rid of the totally
-> unnecessay kernel stack allocation).
+Just introduce a small structure that would contain signr, uid, pid and
+pointer to struct sigqueue.  And pass a pointer to _that_ all the way down
+to collect_signal().  Pointer's NULL == it's SI_USER with signr/uid/pid
+from the small struct and all other fields are zero.  Pointer isn't NULL -
+use &small_struct->p->info.  And have struct sigqueue actually freed
+via task_work_add() in that case.
 
-Yes. Perhaps this helper should be changed/renamed. And perhaps we
-can even change __send_signal() to avoid __sigqueue_alloc() if
-PF_KTHREAD. Or sig == SIGKILL.
+Do you see any fundamental problems with that?  Looks like it would be
+faster as well - less copying involved...
 
-Oleg.
 
 _______________________________________________
 xfs mailing list
