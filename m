@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A4E987F54
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 09:57:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E8008F8039
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 07:57:57 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id UKbTF0wX7WFq8UyG for <xfs@oss.sgi.com>;
-	Wed, 12 Feb 2014 07:57:55 -0800 (PST)
-Message-ID: <52FB9A01.8060601@sandeen.net>
-Date: Wed, 12 Feb 2014 09:57:53 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1DAB67F50
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 14:13:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9326EAC007
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 12:13:21 -0800 (PST)
+Received: from mail-ve0-f174.google.com (mail-ve0-f174.google.com
+	[209.85.128.174]) by cuda.sgi.com with ESMTP id
+	OtDt6hDplwCuMysT (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 12 Feb 2014 12:13:20 -0800 (PST)
+Received: by mail-ve0-f174.google.com with SMTP id pa12so7615060veb.5
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 12:13:19 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20140212113928.GO18016@ZenIV.linux.org.uk>
+References: <20140211172707.GA1749@redhat.com> <20140211210841.GM13647@dastard>
+	<52FA9ADA.9040803@sandeen.net> <20140212004403.GA17129@redhat.com>
+	<20140212010941.GM18016@ZenIV.linux.org.uk>
+	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
+	<20140212040358.GA25327@redhat.com>
+	<20140212042215.GN18016@ZenIV.linux.org.uk>
+	<20140212054043.GB13997@dastard>
+	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
+	<20140212113928.GO18016@ZenIV.linux.org.uk>
+Date: Wed, 12 Feb 2014 12:13:19 -0800
+Message-ID: <CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-References: <20140211172707.GA1749@redhat.com>
-	<20140211210841.GM13647@dastard>	<52FA9ADA.9040803@sandeen.net>
-	<20140212004403.GA17129@redhat.com>	<20140212010941.GM18016@ZenIV.linux.org.uk>	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>	<20140212040358.GA25327@redhat.com>	<20140212042215.GN18016@ZenIV.linux.org.uk>	<20140212054043.GB13997@dastard>	<20140212055027.GA28502@redhat.com>
-	<20140212061038.GC13997@dastard>
-In-Reply-To: <20140212061038.GC13997@dastard>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,85 +39,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Dave Jones <davej@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Dave Jones <davej@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 2/12/14, 12:10 AM, Dave Chinner wrote:
-> On Wed, Feb 12, 2014 at 12:50:27AM -0500, Dave Jones wrote:
->> On Wed, Feb 12, 2014 at 04:40:43PM +1100, Dave Chinner wrote:
->>
->>  > None of the XFS code disables interrupts in that path, not does is
->>  > call outside XFS except to dispatch IO. The stack is pretty deep at
->>  > this point and I know that the standard (non stacked) IO stack can
->>  > consume >3kb of stack space when it gets down to having to do memory
->>  > reclaim during GFP_NOIO allocation at the lowest level of SCSI
->>  > drivers. Stack overruns typically show up with symptoms like we are
->>  > seeing.
->>  > ..
->>  > 
->>  > Dave, before chasing ghosts, can you (like Eric originally asked)
->>  > turn on stack overrun detection?
->>
->> CONFIG_DEBUG_STACKOVERFLOW ? Already turned on.
-> 
-> That only checks stack usage when an interrupt is taken. If no
-> interrupts are taken when stack usage is within 128 bytes of
-> overflow, then it doesn't catch it.
-> 
-> I tend to use CONFIG_DEBUG_STACK_USAGE=y as it records the maximum
-> stack usage of a process via canary overwrites and it records it in
-> do_exit(). I also use the stack tracer to record the largest stack
-> usage seen so I know exactly what code paths are approaching stack
-> overruns...
-> 
-> Cheers,
-> 
-> Dave.
-> 
+On Wed, Feb 12, 2014 at 3:39 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> On Tue, Feb 11, 2014 at 10:28:12PM -0800, Linus Torvalds wrote:
+>
+>> It looks like just "do_signal()" has a stack frame that is about 230
+>> bytes even under normal circumstancs (largely due to "struct ksignal"
+>> - which in turn is largely due to the insane 128-byte padding in
+>> siginfo_t). Add a few other frames in there, and I guess that if it
+>> was close before, the coredump path just makes it go off.
+>
+> We could, in principle, put it into task_struct and make get_signal()
+> return its address - do_signal() is called only in the code that does
+> assorted returns to userland...
 
+We have better uses for random buffers in "struct task_struct", I'd
+hate to put a siginfo_t there.
 
-I'm not sure if I'm off base here, but maybe this would make sense: check
-for a corrupted stack in __might_sleep.  Compile tested only,
-possibly inelegant, and/or completely wrong, but:
+The thing is, siginfo_t has that idiotic 128-byte area, but it's all
+"for future expansion". I think it's some damn glibc disease - we've
+seen these kinds of insane paddings before.
 
+The actual *useful* part of siginfo_t is on the order of 32 bytes. If that.
 
-From: Eric Sandeen <sandeen@redhat.com>
+Sad.
 
-sched: Test for corrupted task_struct in __might_sleep
-
-If a thread overruns the stack, it may corrupt the task_struct,
-leading to false positives on tests like irqs_disabled().
-
-Warn if this seems to be the case.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index b46131e..6920c3c 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6934,6 +6934,8 @@ static inline int preempt_count_equals(int preempt_offset)
- 
- void __might_sleep(const char *file, int line, int preempt_offset)
- {
-+	struct task_struct *tsk = current;
-+	unsigned long *stackend;
- 	static unsigned long prev_jiffy;	/* ratelimiting */
- 
- 	rcu_sleep_check(); /* WARN_ON_ONCE() by default, no rate limit reqd. */
-@@ -6952,6 +6954,11 @@ void __might_sleep(const char *file, int line, int preempt_offset)
- 			in_atomic(), irqs_disabled(),
- 			current->pid, current->comm);
- 
-+	/* A corrupted stack can cause a false positive on irqs_disabled etc */
-+	stackend = end_of_stack(tsk);
-+	if (tsk != &init_task && *stackend != STACK_END_MAGIC)
-+		printk(KERN_EMERG "Thread overran stack, or stack corrupted\n");
-+	
- 	debug_show_held_locks(current);
- 	if (irqs_disabled())
- 		print_irqtrace_events(current);
-
+                Linus
 
 _______________________________________________
 xfs mailing list
