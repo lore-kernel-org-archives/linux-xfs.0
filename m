@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 43A267F50
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 07:30:11 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5A6207F50
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 08:25:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C028DAC001
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 05:30:07 -0800 (PST)
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id tCDF3YPiJMl2f1xZ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 12 Feb 2014 05:30:04 -0800 (PST)
-Date: Wed, 12 Feb 2014 14:29:52 +0100
-From: Peter Zijlstra <peterz@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 32C8A30407A
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 06:25:53 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FgLmyhkqii5qNg4i for
+	<xfs@oss.sgi.com>; Wed, 12 Feb 2014 06:25:52 -0800 (PST)
+Date: Wed, 12 Feb 2014 09:25:38 -0500
+From: Dave Jones <davej@redhat.com>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140212132952.GX27965@twins.programming.kicks-ass.net>
-References: <20140212010941.GM18016@ZenIV.linux.org.uk>
+Message-ID: <20140212142538.GA11046@redhat.com>
+References: <20140211210841.GM13647@dastard> <52FA9ADA.9040803@sandeen.net>
+	<20140212004403.GA17129@redhat.com>
+	<20140212010941.GM18016@ZenIV.linux.org.uk>
 	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
 	<20140212040358.GA25327@redhat.com>
 	<20140212042215.GN18016@ZenIV.linux.org.uk>
 	<20140212054043.GB13997@dastard>
 	<20140212055027.GA28502@redhat.com>
-	<20140212061038.GC13997@dastard> <20140212063150.GD13997@dastard>
-	<CA+55aFyp91=1seVT0ZV8T+GjOuafWvvjHNHn+MKGydsG+8eUEQ@mail.gmail.com>
-	<20140212074036.4c6105b5@gandalf.local.home>
+	<20140212061038.GC13997@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140212074036.4c6105b5@gandalf.local.home>
+In-Reply-To: <20140212061038.GC13997@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,83 +36,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, Frederic Weisbecker <fweisbec@gmail.com>, Tejun Heo <tj@kernel.org>, Dave Jones <davej@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 07:40:36AM -0500, Steven Rostedt wrote:
-> The pt_regs structure.
-> 
-> That's what? 21 unsigned longs? 21 * 8 = 168. I think that's the
-> culprit here.
-> 
-> Peter and Frederic, is there a way not to store that on the stack?
+On Wed, Feb 12, 2014 at 05:10:38PM +1100, Dave Chinner wrote:
+ > On Wed, Feb 12, 2014 at 12:50:27AM -0500, Dave Jones wrote:
+ > > On Wed, Feb 12, 2014 at 04:40:43PM +1100, Dave Chinner wrote:
+ > > 
+ > >  > None of the XFS code disables interrupts in that path, not does is
+ > >  > call outside XFS except to dispatch IO. The stack is pretty deep at
+ > >  > this point and I know that the standard (non stacked) IO stack can
+ > >  > consume >3kb of stack space when it gets down to having to do memory
+ > >  > reclaim during GFP_NOIO allocation at the lowest level of SCSI
+ > >  > drivers. Stack overruns typically show up with symptoms like we are
+ > >  > seeing.
+ > >  > ..
+ > >  > 
+ > >  > Dave, before chasing ghosts, can you (like Eric originally asked)
+ > >  > turn on stack overrun detection?
+ > > 
+ > > CONFIG_DEBUG_STACKOVERFLOW ? Already turned on.
+ > 
+ > That only checks stack usage when an interrupt is taken. If no
+ > interrupts are taken when stack usage is within 128 bytes of
+ > overflow, then it doesn't catch it.
+ > 
+ > I tend to use CONFIG_DEBUG_STACK_USAGE=y as it records the maximum
+ > stack usage of a process via canary overwrites and it records it in
+ > do_exit().
 
-Something like so?
+I had that on too. The only message from it came from quite a while
+before the trace that happened overnight..
 
----
- include/trace/ftrace.h          | 7 ++++---
- kernel/trace/trace_event_perf.c | 5 ++++-
- 2 files changed, 8 insertions(+), 4 deletions(-)
+[ 3415.655125] trinity-c0 (4383) used greatest stack depth: 992 bytes left
+[12900.804230] BUG: sleeping function called from invalid context at mm/mempool.c:203
 
-diff --git a/include/trace/ftrace.h b/include/trace/ftrace.h
-index 1a8b28db3775..87ae3ef1d278 100644
---- a/include/trace/ftrace.h
-+++ b/include/trace/ftrace.h
-@@ -678,7 +678,7 @@ perf_trace_##call(void *__data, proto)					\
- 	struct ftrace_event_call *event_call = __data;			\
- 	struct ftrace_data_offsets_##call __maybe_unused __data_offsets;\
- 	struct ftrace_raw_##call *entry;				\
--	struct pt_regs __regs;						\
-+	struct pt_regs *__regs;						\
- 	u64 __addr = 0, __count = 1;					\
- 	struct task_struct *__task = NULL;				\
- 	struct hlist_head *head;					\
-@@ -697,18 +697,19 @@ perf_trace_##call(void *__data, proto)					\
- 			     sizeof(u64));				\
- 	__entry_size -= sizeof(u32);					\
- 									\
--	perf_fetch_caller_regs(&__regs);				\
- 	entry = perf_trace_buf_prepare(__entry_size,			\
- 			event_call->event.type, &__regs, &rctx);	\
- 	if (!entry)							\
- 		return;							\
- 									\
-+	perf_fetch_caller_regs(__regs);					\
-+									\
- 	tstruct								\
- 									\
- 	{ assign; }							\
- 									\
- 	perf_trace_buf_submit(entry, __entry_size, rctx, __addr,	\
--		__count, &__regs, head, __task);			\
-+		__count, __regs, head, __task);				\
- }
- 
- /*
-diff --git a/kernel/trace/trace_event_perf.c b/kernel/trace/trace_event_perf.c
-index e854f420e033..1885f4aac109 100644
---- a/kernel/trace/trace_event_perf.c
-+++ b/kernel/trace/trace_event_perf.c
-@@ -232,8 +232,10 @@ void perf_trace_del(struct perf_event *p_event, int flags)
- 	tp_event->class->reg(tp_event, TRACE_REG_PERF_DEL, p_event);
- }
- 
-+static DEFINE_PER_CPU(struct pt_regs, tp_regs[4]);
-+
- __kprobes void *perf_trace_buf_prepare(int size, unsigned short type,
--				       struct pt_regs *regs, int *rctxp)
-+				       struct pt_regs **regs, int *rctxp)
- {
- 	struct trace_entry *entry;
- 	unsigned long flags;
-@@ -252,6 +254,7 @@ __kprobes void *perf_trace_buf_prepare(int size, unsigned short type,
- 	if (*rctxp < 0)
- 		return NULL;
- 
-+	*regs = this_cpu_ptr(&tp_regs[*rctxp]);
- 	raw_data = this_cpu_ptr(perf_trace_buf[*rctxp]);
- 
- 	/* zero the dead bytes from align to not leak stack to user */
+ > I also use the stack tracer to record the largest stack
+ > usage seen so I know exactly what code paths are approaching stack
+ > overruns...
+
+I can give that a try later.
+
+	Dave
 
 _______________________________________________
 xfs mailing list
