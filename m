@@ -1,22 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 63D527F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:26:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 35C44304043
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:26:09 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	SvAsJFvLSu7he4Iv for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 14:26:07 -0800 (PST)
-Date: Fri, 14 Feb 2014 09:26:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.14.0-rc2: WARNING: at mm/slub.c:1007
-Message-ID: <20140213222602.GK13997@dastard>
-References: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-v3.14-rc1-2-12935-ga64b760
+Message-Id: <20140213223525.B7E517F57@oss.sgi.com>
+Date: Thu, 13 Feb 2014 16:35:24 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +12,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Feb 13, 2014 at 11:53:05AM -0800, Christian Kujau wrote:
-> Hi,
-> 
-> after upgrading from 3.13-rc8 to 3.14.0-rc2 on this PowerPC G4 machine, 
-> the WARNING below was printed.
-> 
-> Shortly after, a lockdep warning appeared (possibly related to my 
-> post to the XFS list yesterday[0]).
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Unlikely.
+The branch, for-next has been updated
+  discards  39f30ca7eaa4fe9224094c7a9964cff36c584dab (commit)
+  discards  008482657169c0276ddd2ba00a1ad14a324b91f0 (commit)
+  a64b760 Merge branch 'xfs-async-aio-extend' into for-next
+  692f68a Merge branch 'xfs-fixes-for-3.15-1' into for-next
+  55daffa xfs: xfs_sb_read_verify() doesn't flag bad crcs on primary sb
+      from  39f30ca7eaa4fe9224094c7a9964cff36c584dab (commit)
 
-> Even later in the log an out-of-memory error appeared, that may or may not 
-> be relatd to that WARNING at all but which I'm trying to chase down ever 
-> since 3.13, but which tends to appear more often lately.
-> 
-> Can anyone take a look if this is something to worry about?
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-Already fixed upstream:
+- Log -----------------------------------------------------------------
+commit a64b760771e85f54e0921fb05ac48b0585adccec
+Merge: 692f68a 9862f62
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Thu Feb 13 23:11:55 2014 +1100
 
-commit 255d0884f5635122adb23866b242b4ca112f4bc8
-Author: David Rientjes <rientjes@google.com>
-Date:   Mon Feb 10 14:25:39 2014 -0800
+    Merge branch 'xfs-async-aio-extend' into for-next
 
-    mm/slub.c: list_lock may not be held in some circumstances
-    
-    Commit c65c1877bd68 ("slub: use lockdep_assert_held") incorrectly
-    required that add_full() and remove_full() hold n->list_lock.  The lock
-    is only taken when kmem_cache_debug(s), since that's the only time it
-    actually does anything.
-    
-    Require that the lock only be taken under such a condition.
-    
-    Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
-    Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-    Tested-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-    Acked-by: Christoph Lameter <cl@linux.com>
-    Cc: Pekka Enberg <penberg@kernel.org>
-    Signed-off-by: David Rientjes <rientjes@google.com>
-    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+commit 692f68aab2c794ed9bbb05da5c52c906d91885d0
+Merge: 55daffa 492185e
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Thu Feb 13 23:11:29 2014 +1100
+
+    Merge branch 'xfs-fixes-for-3.15-1' into for-next
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_sb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-Cheers,
-
-Dave.
-
+hooks/post-receive
 -- 
-Dave Chinner
-david@fromorbit.com
+XFS development tree
 
 _______________________________________________
 xfs mailing list
