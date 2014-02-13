@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 023C27F57
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:02:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA271304064
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:01:59 -0800 (PST)
-Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
-	with ESMTP id XuqNk9gaqECBaSGJ for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 12:01:58 -0800 (PST)
-Date: Thu, 13 Feb 2014 12:01:56 -0800 (PST)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: 3.14.0-rc2: WARNING: at mm/slub.c:1007
-In-Reply-To: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
-Message-ID: <alpine.DEB.2.19.4.1402131158590.6233@trent.utfs.org>
-References: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 86B6E7F55
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:25:08 -0600 (CST)
+Received: from eagdhcp-232-183.americas.sgi.com
+	(eagdhcp-232-183.americas.sgi.com [128.162.232.183])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 04139AC005
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:25:04 -0800 (PST)
+Received: from eagdhcp-232-183.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-183.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	s1DKP6Pq005446
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:25:06 -0600 (CST)
+	(envelope-from tinguely@eagdhcp-232-183.americas.sgi.com)
+Message-Id: <20140213202555.996721782@sgi.com>
+Date: Thu, 13 Feb 2014 14:25:36 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v3] xfs_db: fix the setting of unaligned directory fields
+References: <20140210230923.268327906@sgi.com>
+Content-Disposition: inline; filename=xfs_db-fix-dir-settings.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,105 +25,383 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
-Cc: linux-mm@kvack.org
+To: xfs@oss.sgi.com
 
-On Thu, 13 Feb 2014 at 11:53, Christian Kujau wrote:
-> after upgrading from 3.13-rc8 to 3.14.0-rc2 on this PowerPC G4 machine, 
-> the WARNING below was printed.
-> 
-> Shortly after, a lockdep warning appeared (possibly related to my 
-> post to the XFS list yesterday[0]).
+Setting the directory startoff, startblock, and blockcount
+fields are difficult on both big and little endian machines.
+The setting of extentflag was completely broken.
 
-Sigh, only _after_ sending the email, I came across an earlier posting on 
-lkml: http://marc.info/?l=linux-mm&m=139145788623391
+big endian test:
+xfs_db> write u.bmx[0].startblock 12
+u.bmx[0].startblock = 0
+xfs_db> write u.bmx[0].startblock 0xc0000
+u.bmx[0].startblock = 192
 
-Sorry for the noise. These out-of-memory messages below appeared without 
-the WARNING though and started somewhere in 3.13, but are impossible to 
-bisect, as they're happening only every few days / weeks.
+little endian test:
+xfs_db> write u.bmx[0].startblock 12
+u.bmx[0].startblock = 211106232532992
+xfs_db> write u.bmx[0].startblock 0xc0000
+u.bmx[0].startblock = 3221225472
 
-Christian.
+Since the output fields and the lengths are not aligned to a byte,
+setbitval requires them to be entered in big endian and properly
+byte/nibble shifted. The extentflag output was aligned to a byte
+but was not shifted correctly.
 
-> Even later in the log an out-of-memory error appeared, that may or may not 
-> be relatd to that WARNING at all but which I'm trying to chase down ever 
-> since 3.13, but which tends to appear more often lately.
-> 
-> Can anyone take a look if this is something to worry about?
-> 
-> Full dmesg & .config: http://nerdbynature.de/bits/3.14-rc2/mm/
-> 
-> Thanks,
-> Christian.
-> 
-> [0] http://oss.sgi.com/pipermail/xfs/2014-February/034054.html
-> 
->  ------------[ cut here ]------------
->  WARNING: at /usr/local/src/linux-git/mm/slub.c:1007
->  Modules linked in: md5 ecb nfs i2c_powermac therm_adt746x ecryptfs arc4 
-> firewire_sbp2 b43 usb_storage mac80211 cfg80211
->  CPU: 0 PID: 9025 Comm: nfsd Not tainted 3.14.0-rc2 #1
->  task: efbf8000 ti: ed2a0000 task.ti: ed2a0000
->  NIP: c00ccc28 LR: c00ccc20 CTR: 00000000
->  REGS: ed2a1980 TRAP: 0700   Not tainted  (3.14.0-rc2)
->  MSR: 00021032 <ME,IR,DR,RI>  CR: 22f82b82  XER: 20000000
->  
->  GPR00: c00ccc20 ed2a1a30 efbf8000 00000000 ef96e550 00000000 00000000 
-> 00002ce0 
->  GPR08: 00000000 00000001 efbf86f8 000005e7 82fc2b88 00000000 00000001 
-> 00080011 
->  GPR16: 00000000 00000000 c0760000 00000000 ef96e564 00100100 00200200 
-> c1203914 
->  GPR24: 00000000 ef96e540 00000002 ef96fa80 00000000 00000000 ed2a0000 
-> c1203900 
->  NIP [c00ccc28] deactivate_slab+0x4c0/0x538
->  LR [c00ccc20] deactivate_slab+0x4b8/0x538
->  Call Trace:
->  [ed2a1a30] [c00ccc20] deactivate_slab+0x4b8/0x538 (unreliable)
->  [ed2a1ae0] [c055d5f0] __slab_alloc.constprop.77+0x260/0x38c
->  [ed2a1b50] [c00cd524] kmem_cache_alloc+0x118/0x140
->  [ed2a1b70] [c01de4bc] kmem_zone_alloc+0x94/0x108
->  [ed2a1ba0] [c01cccd4] xfs_inode_alloc+0x2c/0xd4
->  [ed2a1bc0] [c01cd7a4] xfs_iget+0x2e4/0x584
->  [ed2a1c30] [c020e664] xfs_lookup+0xc8/0xe4
->  [ed2a1c70] [c01d3c28] xfs_vn_lookup+0x64/0xbc
->  [ed2a1c90] [c00db3ac] lookup_real+0x30/0x70
->  [ed2a1ca0] [c00dc384] __lookup_hash+0x3c/0x58
->  [ed2a1cc0] [c00e1438] lookup_one_len+0x10c/0x15c
->  [ed2a1ce0] [c01a170c] nfsd4_encode_dirent+0xb4/0x328
->  [ed2a1d10] [c018f580] nfsd_readdir+0x1d4/0x288
->  [ed2a1d90] [c019d648] nfsd4_encode_readdir+0x138/0x1f4
->  [ed2a1dd0] [c01a1b18] nfsd4_encode_operation+0x8c/0xf0
->  [ed2a1df0] [c019aa4c] nfsd4_proc_compound+0x1b8/0x4f8
->  [ed2a1e30] [c0189d20] nfsd_dispatch+0x90/0x1a0
->  [ed2a1e50] [c0536b04] svc_process+0x3d0/0x698
->  [ed2a1e90] [c01895bc] nfsd+0xc0/0x120
->  [ed2a1eb0] [c004f8fc] kthread+0xbc/0xd0
->  [ed2a1f40] [c0010ae4] ret_from_kernel_thread+0x5c/0x64
->  Instruction dump:
->  7fe4fb78 800100b4 b9c10068 7d810120 7d808120 7c0803a6 382100b0 4bfffb00 
->  80610048 4bf95dc5 2f830000 40beff4c <0fe00000> 4bffff44 815e000c 394a0001 
->  ---[ end trace 1f5ed3ea8b3e4403 ]---
-> 
-> 
-> -- 
-> BOFH excuse #65:
-> 
-> system needs to be rebooted
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Convert the input to big endian on little endian machines and
+nibble/byte shift on all platforms so setbitval can set the bits
+correctly.
 
--- 
-BOFH excuse #65:
+Clean some whitespace while in the setbitbal() function.
 
-system needs to be rebooted
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+v3:
+ Hex input is not a number.
+ More ten year old white space cleanups.
+
+v2:
+ Ignore extra characters in input.
+ Fix hash input if still used as an integer input.
+  It was broken on big endian, but someone may use this input in a
+  little endian script.
+ Add documentation.
+ Did more clean up.
+
+ db/bit.c   |   84 ++++++++++++------------------
+ db/write.c |  166 ++++++++++++++++++++++++++++++++++++++++---------------------
+ 2 files changed, 143 insertions(+), 107 deletions(-)
+
+Index: b/db/bit.c
+===================================================================
+--- a/db/bit.c
++++ b/db/bit.c
+@@ -128,57 +128,41 @@ getbitval(
+ 	return rval;
+ }
+ 
++/*
++ * The input data can be 8, 16, 32, and 64 sized numeric values
++ * aligned on a byte boundry, or odd sized numbers stored on odd
++ * aligned offset (for example the bmbt fields).
++ *
++ * The input data sent to this routine has been converted to big endian
++ * and has been adjusted in the array so that the first input bit is to
++ * be written in the first bit in the output.
++ *
++ * If the field length and the output buffer are byte aligned, then use
++ * memcpy from the input to the output, but if either entries are not byte
++ * aligned, then loop over the entire bit range reading the input value
++ * and set/clear the matching bit in the output.
++ *
++ * example when ibuf is not multiple of a byte in length:
++ *
++ * ibuf:	| BBBBBBBB | bbbxxxxx |
++ *		  \\\\\\\\--\\\\
++ * obuf+bitoff:	| xBBBBBBB | Bbbbxxxx |
++ *
++ */
+ void
+ setbitval(
+-	void *obuf,      /* buffer to write into */
+-	int bitoff,      /* bit offset of where to write */
+-	int nbits,       /* number of bits to write */
+-	void *ibuf)      /* source bits */
++	void	*obuf,		/* start of buffer to write into */
++	int	bitoff,		/* bit offset into the output buffer */
++	int	nbits,		/* number of bits to write */
++	void	*ibuf)		/* source bits */
+ {
+-	char    *in           = (char *)ibuf;
+-	char    *out          = (char *)obuf;
+-
+-	int     bit;
+-
+-#if BYTE_ORDER == LITTLE_ENDIAN
+-	int     big           = 0;
+-#else
+-	int     big           = 1;
+-#endif
+-
+-	/* only need to swap LE integers */
+-	if (big || (nbits!=16 && nbits!=32 && nbits!=64) ) {
+-		/* We don't have type info, so we can only assume
+-		 * that 2,4 & 8 byte values are integers. sigh.
+-		 */
+-
+-		/* byte aligned ? */
+-		if (bitoff%NBBY) {
+-			/* no - bit copy */
+-			for (bit=0; bit<nbits; bit++)
+-				setbit(out, bit+bitoff, getbit(in, bit));
+-		} else {
+-			/* yes - byte copy */
+-			memcpy(out+byteize(bitoff), in, byteize(nbits));
+-		}
+-
+-	} else {
+-		int     ibit;
+-		int     obit;
+-
+-		/* we need to endian swap this value */
+-
+-		out+=byteize(bitoff);
+-		obit=bitoffs(bitoff);
+-
+-		ibit=nbits-NBBY;
+-
+-		for (bit=0; bit<nbits; bit++) {
+-			setbit(out, bit+obit, getbit(in, ibit));
+-			if (ibit%NBBY==NBBY-1)
+-				ibit-=NBBY*2-1;
+-			else
+-				ibit++;
+-		}
+-	}
++	char	*in = ibuf;
++	char	*out = obuf;
++	int	bit;
++
++	if (bitoff % NBBY || nbits % NBBY) {
++		for (bit=0; bit < nbits; bit++)
++			setbit(out, bit + bitoff, getbit(in, bit));
++	} else
++		memcpy(out + byteize(bitoff), in, byteize(nbits));
+ }
+Index: b/db/write.c
+===================================================================
+--- a/db/write.c
++++ b/db/write.c
+@@ -439,55 +439,78 @@ convert_oct(
+ 
+ #define NYBBLE(x) (isdigit(x)?(x-'0'):(tolower(x)-'a'+0xa))
+ 
++/*
++ * convert_arg allow input in the following forms:
++ * A string ("ABTB") whose ASCII value is placed in an array in the order
++ * matching the input.
++ *
++ * An even number of hex numbers. If the length is greater than
++ * 64 bits, then the output is an array of bytes whose top nibble
++ * is the first hex digit in the input, the lower nibble is the second
++ * hex digit in the input. UUID entries are entered in this manner.
++ * If the length is 64 bits or less, then treat the hex input characters
++ * as a number used with setbitval().
++ *
++ * A decimal or hexadecimal integer to be used with setbitval().
++ *	---
++ * Numbers that will use setbitval() are in big endian format and
++ * are adjusted in the array so that the first input bit is to be
++ * be written to the first bit in the output.
++ */
+ static char *
+ convert_arg(
+-	char *arg,
+-	int  bit_length)
++	char		*arg,
++	int		bit_length)
+ {
+-	int i;
+-	static char *buf = NULL;
+-	char *rbuf;
+-	long long *value;
+-	int alloc_size;
+-	char *ostr;
+-	int octval, ret;
++	int		i;
++	int		alloc_size;
++	int		octval;
++	int		offset;
++	int		ret;
++	static char	*buf = NULL;
++	char		*endp;
++	char		*rbuf;
++	char		*ostr;
++	__u64		*value;
++	__u64		val = 0;
+ 
+ 	if (bit_length <= 64)
+ 		alloc_size = 8;
+ 	else
+-		alloc_size = (bit_length+7)/8;
++		alloc_size = (bit_length + 7)/8;
+ 
+ 	buf = xrealloc(buf, alloc_size);
+ 	memset(buf, 0, alloc_size);
+-	value = (long long *)buf;
++	value = (__u64 *)buf;
+ 	rbuf = buf;
+ 
+ 	if (*arg == '\"') {
+-		/* handle strings */
++		/* input a string and output ASCII array of characters */
+ 
+ 		/* zap closing quote if there is one */
+-		if ((ostr = strrchr(arg+1, '\"')) != NULL)
++		if ((ostr = strrchr(arg + 1, '\"')) != NULL)
+ 			*ostr = '\0';
+ 
+-		ostr = arg+1;
++		ostr = arg + 1;
+ 		for (i = 0; i < alloc_size; i++) {
+ 			if (!*ostr)
+ 				break;
+ 
+-			/* do octal */
++			/* do octal conversion */
+ 			if (*ostr == '\\') {
+-				if (*(ostr+1) >= '0' || *(ostr+1) <= '7') {
+-					ret = convert_oct(ostr+1, &octval);
++				if (*(ostr + 1) >= '0' || *(ostr + 1) <= '7') {
++					ret = convert_oct(ostr + 1, &octval);
+ 					*rbuf++ = octval;
+-					ostr += ret+1;
++					ostr += ret + 1;
+ 					continue;
+ 				}
+ 			}
+ 			*rbuf++ = *ostr++;
+ 		}
+-
+ 		return buf;
+-	} else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
++	}
++
++	if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
+ 		/*
+ 		 * handle hex blocks ie
+ 		 *    #00112233445566778899aabbccddeeff
+@@ -496,48 +519,77 @@ convert_arg(
+ 		 *
+ 		 * (but if it starts with "-" assume it's just an integer)
+ 		 */
+-		int bytes=bit_length/8;
++		int bytes = bit_length / NBBY;
++
++		/* is this an array of hec numbers? */
++		if (bit_length % NBBY)
++			return NULL;
+ 
+ 		/* skip leading hash */
+-		if (*arg=='#') arg++;
++		if (*arg == '#') arg++;
+ 
+ 		while (*arg && bytes--) {
+-		    /* skip hypens */
+-		    while (*arg=='-') arg++;
++			/* skip hypens */
++			while (*arg == '-') arg++;
+ 
+-		    /* get first nybble */
+-		    if (!isxdigit((int)*arg)) return NULL;
+-		    *rbuf=NYBBLE((int)*arg)<<4;
+-		    arg++;
+-
+-		    /* skip more hyphens */
+-		    while (*arg=='-') arg++;
+-
+-		    /* get second nybble */
+-		    if (!isxdigit((int)*arg)) return NULL;
+-		    *rbuf++|=NYBBLE((int)*arg);
+-		    arg++;
++			/* get first nybble */
++			if (!isxdigit((int)*arg))
++				return NULL;
++			*rbuf = NYBBLE((int)*arg) << 4;
++			arg++;
++
++			/* skip more hyphens */
++			while (*arg == '-')
++				arg++;
++
++			/* get second nybble */
++			if (!isxdigit((int)*arg))
++				return NULL;
++			*rbuf++ |= NYBBLE((int)*arg);
++			arg++;
+ 		}
+-		if (bytes<0&&*arg) return NULL;
++		if (bytes < 0 && *arg)
++			return NULL;
++
+ 		return buf;
+-	} else {
+-		/*
+-		 * handle integers
+-		 */
+-		*value = strtoll(arg, NULL, 0);
++	} 
+ 
+-#if __BYTE_ORDER == BIG_ENDIAN
+-		/* hackery for big endian */
+-		if (bit_length <= 8) {
+-			rbuf += 7;
+-		} else if (bit_length <= 16) {
+-			rbuf += 6;
+-		} else if (bit_length <= 32) {
+-			rbuf += 4;
+-		}
+-#endif
+-		return rbuf;
+-	}
++	/* handle decimal / hexadecimal integers */
++	val = strtoll(arg, &endp, 0);
++	/* return if not a clean number */
++	if (*endp != '\0')
++		return NULL;
++
++	/* Is this value valid for the bit length? */
++	if ((val >> bit_length) > 0)
++		return NULL;
++	/*
++	 * If the length of the field is not a multiple of a byte, push
++	 * the bits up in the field, so the most signicant field bit is
++	 * the most significant bit in the byte:
++	 *
++	 * before:
++	 * val  |----|----|----|----|----|--MM|mmmm|llll|
++	 * after
++	 * val  |----|----|----|----|----|MMmm|mmll|ll00|
++	 */
++	offset = bit_length % NBBY;
++	if (offset)
++		val <<= (NBBY - offset);
++
++	/*
++	 * convert to big endian and copy into the array
++	 * rbuf |----|----|----|----|----|MMmm|mmll|ll00|
++	 */
++	*value = cpu_to_be64(val);
++
++	/*
++	 * Align the array to point to the field in the array.
++	 *  rbuf  = |MMmm|mmll|ll00|
++	 */
++	offset = sizeof(__be64) - 1 - ((bit_length - 1)/ sizeof(__be64));
++	rbuf += offset;
++	return rbuf;
+ }
+ 
+ 
+@@ -550,9 +602,9 @@ write_struct(
+ {
+ 	const ftattr_t	*fa;
+ 	flist_t		*fl;
+-	flist_t         *sfl;
+-	int             bit_length;
+-	char            *buf;
++	flist_t		*sfl;
++	int		bit_length;
++	char		*buf;
+ 	int		parentoffset;
+ 
+ 	if (argc != 2) {
+
 
 _______________________________________________
 xfs mailing list
