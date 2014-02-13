@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B94D57F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 15:50:06 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B97987F55
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:08:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 800CD8F8037
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:50:06 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id D7qQQOMTNWPuqJDp for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 13:50:01 -0800 (PST)
-Message-ID: <52FD3E08.8010500@sandeen.net>
-Date: Thu, 13 Feb 2014 15:50:00 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7FB8A304059
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:08:19 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Phr99Lsksr8iBh3D for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 14:08:17 -0800 (PST)
+Date: Fri, 14 Feb 2014 09:08:12 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: skip verification on initial "guess" superblock read
+Message-ID: <20140213220812.GI13997@dastard>
 References: <52FD3C59.3050400@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <52FD3C59.3050400@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,27 +29,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Note, this one might need to be in 3.14 fixes as well, if
-
-[PATCH] xfs: xfs_sb_read_verify() doesn't flag bad crcs on primary sb
-
-is queued up; with that patch in place, we'll fail mounting
-i.e. a 4K sector size FS on a 512 sector disk, because we'll
-try to do a 4K metadata checksum on a 512 byte buffer...  :/
-
-I had thought about just skipping the CRC if BBTOB(bp->b_length) !=
-sb->sb_sectsize, but it seemed like other superblock read paths
-would wind up skipping CRCs based what would be corruption.
-
-By doing this (ugly?) no-op verifier, at least this first
-(short?) sb read is under complete control, with no guessing required
-in the normal verifier.
-
--Eric
-
-On 2/13/14, 3:42 PM, Eric Sandeen wrote:
+On Thu, Feb 13, 2014 at 03:42:49PM -0600, Eric Sandeen wrote:
 > When xfs_readsb() does the very first read of the superblock,
 > it makes a guess at the length of the buffer, based on the
 > sector size of the underlying storage.  This may or may
@@ -65,6 +50,20 @@ On 2/13/14, 3:42 PM, Eric Sandeen wrote:
 > by the superblock's sb_sectsize.  The verifier for
 > this guessed length buffer is a no-op; we'll do proper
 > verification on the 2nd time around.
+
+We don't need a verifier for a "don't verify" read. Just pass in
+NULL to avoid verification completely.
+
+Also, you don't need to re-read the buffer to verify it unless the
+sector size was not what was predicted. All you need to do is call
+the verifier directly on the buffer in question, then attach it
+directly to the buffer. So no need for @xfs_sb_guess_buf_ops. :)
+
+Cheers,
+
+Dave.
+
+
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
@@ -192,6 +191,10 @@ On 2/13/14, 3:42 PM, Eric Sandeen wrote:
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
 > 
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
