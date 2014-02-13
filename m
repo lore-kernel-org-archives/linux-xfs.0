@@ -1,31 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BF31A7F58
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 18:09:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A842A304039
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:09:11 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id F9eKdaGFZCzsG7AC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 16:09:10 -0800 (PST)
-Date: Fri, 14 Feb 2014 00:09:02 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140214000902.GA3078@ZenIV.linux.org.uk>
-References: <20140212040358.GA25327@redhat.com>
-	<20140212042215.GN18016@ZenIV.linux.org.uk>
-	<20140212054043.GB13997@dastard>
-	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
-	<20140212113928.GO18016@ZenIV.linux.org.uk>
-	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
-	<20140212211421.GP18016@ZenIV.linux.org.uk>
-	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
-	<20140212214411.GQ18016@ZenIV.linux.org.uk>
-	<20140213205146.GS18016@ZenIV.linux.org.uk>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 617887F55
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 15:42:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 44CC98F8039
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:42:55 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id CVSkh26kZoprgHcm for
+	<xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:42:52 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1DLgoVd032480
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:42:50 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id s1DLgnvd005649
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:42:50 -0500
+Message-ID: <52FD3C59.3050400@redhat.com>
+Date: Thu, 13 Feb 2014 15:42:49 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140213205146.GS18016@ZenIV.linux.org.uk>
+Subject: [PATCH] xfs: skip verification on initial "guess" superblock read
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,53 +36,146 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Oleg Nesterov <oleg@redhat.com>, xfs@oss.sgi.com, Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Feb 13, 2014 at 08:51:46PM +0000, Al Viro wrote:
-> On Wed, Feb 12, 2014 at 09:44:11PM +0000, Al Viro wrote:
-> 
-> > I'll try to put something along those lines together, if you or Oleg don't
-> > do it first.
-> 
-> OK, having looked at that stuff...
-> 
-> 1) things become much more compact if we finish conversion to get_signal()
-> first.  Callers of get_signal_to_deliver() have k_sigaction and siginfo in
-> pair of local variables; switching to ksignal will be neutral wrt stack
-> footprint (it just gathers those two in one struct) *and* we are getting
-> rid of passing struct siginfo * around.  With that done, we can change
-> struct ksignal ->info with zero impact on the code in arch/*, and conversion
-> makes sense on its own.  In the mainline we have it done for alpha, arm,
-> openrisc, sparc and x86.  I've just put together preliminary (and completely
-> untested) patches for arm64, m68k and um; doing the rest won't take long, but
-> they'll obviously need to be tested.  It's a fairly safe conversion;
-> I'd expect the worst bugs to be typos.
+When xfs_readsb() does the very first read of the superblock,
+it makes a guess at the length of the buffer, based on the
+sector size of the underlying storage.  This may or may
+not match the filesystem sector size in sb_sectsize, so
+we can't i.e. do a CRC check on it; it might be too short.
 
-OK, there's a couple of tricks that allow to reorder that.  First of all,
-temporary config symbol (ARCH_USES_KSIGNAL) selecting that stuff; if it's
-not selected, we just have #define small_siginfo siginfo and
-#define assign_sigqueue(info, q) WARN_ON((q) != NULL)
-and that's it - most of the changes in core kernel consist of s/siginfo/small_&/
-and non-trivial ones are under ifdef CONFIG_ARCH_USES_KSIGNAL for the time
-being.  Small ifdefs, at that...
+In fact, mounting a filesystem with sb_sectsize larger
+than the device sector size will cause a mount failure
+if CRCs are enabled, because we are checksumming a length
+which exceeds the buffer passed to it.
 
-Once all architectures get converted, we'll just kill that config symbol and
-make ifdefs unconditional.
+The only really foolproof way I see around this is to
+*always* read the superblock twice in xfs_readsb();
+first with a guess, and again with a length as indicated
+by the superblock's sb_sectsize.  The verifier for
+this guessed length buffer is a no-op; we'll do proper
+verification on the 2nd time around.
 
-Another is that we don't need to bother with task_work_add() at all; on
-converted architectures we have signal_setup_done(..., ksig, ...) called after
-each successful get_signal() (the first argument of signal_setup_done() is
-"has sigframe setup failed" flag; we get there regardless of success or
-failure of setup_...frame()).  So we can just have that sucker do
-assign_sigqueue(&ksig->info, NULL) and be done with that - all this delayed
-freeing is explicit now (and we don't get locking overhead, etc. of
-task_work_add()).
-
-If what I've got survives the local beating, I'll put it into signal.git,
-throw the arch conversions I could test in there and ask on linux-arch for
-help with the missing ones.  With any luck we'll get the full set by the
-next merge window, at which point we'll be able to kill ifdefs.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 02df7b4..b4413fe 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -282,22 +282,28 @@ xfs_readsb(
+ 	struct xfs_sb	*sbp = &mp->m_sb;
+ 	int		error;
+ 	int		loud = !(flags & XFS_MFSI_QUIET);
++	const struct xfs_buf_ops *buf_ops;
+ 
+ 	ASSERT(mp->m_sb_bp == NULL);
+ 	ASSERT(mp->m_ddev_targp != NULL);
+ 
+ 	/*
++	 * For the initial read, we must guess at the sector
++	 * size based on the block device.  It's enough to
++	 * get the sb_sectsize out of the superblock and
++	 * then reread with the proper length.
++	 */
++	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
++	buf_ops = &xfs_sb_guess_buf_ops;
++
++	/*
+ 	 * Allocate a (locked) buffer to hold the superblock.
+ 	 * This will be kept around at all times to optimize
+ 	 * access to the superblock.
+ 	 */
+-	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
+-
+ reread:
+ 	bp = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
+-				   BTOBB(sector_size), 0,
+-				   loud ? &xfs_sb_buf_ops
+-				        : &xfs_sb_quiet_buf_ops);
++				   BTOBB(sector_size), 0, buf_ops);
+ 	if (!bp) {
+ 		if (loud)
+ 			xfs_warn(mp, "SB buffer read failed");
+@@ -328,12 +334,13 @@ reread:
+ 	}
+ 
+ 	/*
+-	 * If device sector size is smaller than the superblock size,
+-	 * re-read the superblock so the buffer is correctly sized.
++	 * Re-read the superblock so the buffer is correctly sized,
++	 * and properly verified.
+ 	 */
+-	if (sector_size < sbp->sb_sectsize) {
++	if (buf_ops == &xfs_sb_guess_buf_ops) {
+ 		xfs_buf_relse(bp);
+ 		sector_size = sbp->sb_sectsize;
++		buf_ops = loud ? &xfs_sb_buf_ops : &xfs_sb_quiet_buf_ops;
+ 		goto reread;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index 5071ccb..abbbbb7 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -653,6 +653,20 @@ xfs_sb_quiet_read_verify(
+ 	/* quietly fail */
+ 	xfs_buf_ioerror(bp, EWRONGFS);
+ }
++/*
++ * The initial superblock read from xfs_readsb only guesses at
++ * the sector size based on the block device sector size, so
++ * we may get here with a buffer length shorter than the filesystem
++ * sb_sectsize.  We can't properly verify it, so just return,
++ * and xfs_readsb will call the proper verifer with a real length
++ * on the 2nd time around.
++ */
++static void
++xfs_sb_guess_read_verify(
++	struct xfs_buf	*bp)
++{
++	return;
++}
+ 
+ static void
+ xfs_sb_write_verify(
+@@ -680,16 +694,24 @@ xfs_sb_write_verify(
+ 			 offsetof(struct xfs_sb, sb_crc));
+ }
+ 
++/* Normal read verifier */
+ const struct xfs_buf_ops xfs_sb_buf_ops = {
+ 	.verify_read = xfs_sb_read_verify,
+ 	.verify_write = xfs_sb_write_verify,
+ };
+ 
++/* Quiet verifier for MS_SILENT mounts; ignore non-XFS magic */
+ const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
+ 	.verify_read = xfs_sb_quiet_read_verify,
+ 	.verify_write = xfs_sb_write_verify,
+ };
+ 
++/* The very first superblock read must guess at the size */
++const struct xfs_buf_ops xfs_sb_guess_buf_ops = {
++	.verify_read = xfs_sb_guess_read_verify,
++	.verify_write = xfs_sb_write_verify,
++};
++
+ /*
+  * xfs_mount_common
+  *
+diff --git a/fs/xfs/xfs_shared.h b/fs/xfs/xfs_shared.h
+index 8c5035a..a4294a6 100644
+--- a/fs/xfs/xfs_shared.h
++++ b/fs/xfs/xfs_shared.h
+@@ -51,6 +51,7 @@ extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
+ extern const struct xfs_buf_ops xfs_dquot_buf_ops;
+ extern const struct xfs_buf_ops xfs_sb_buf_ops;
+ extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
++extern const struct xfs_buf_ops xfs_sb_guess_buf_ops;
+ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
