@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 86B6E7F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:25:08 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id EA5FF29DFD
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:25:11 -0600 (CST)
 Received: from eagdhcp-232-183.americas.sgi.com
 	(eagdhcp-232-183.americas.sgi.com [128.162.232.183])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04139AC005
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:25:04 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 63321AC00B
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:25:11 -0800 (PST)
 Received: from eagdhcp-232-183.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-183.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s1DKP6Pq005446
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:25:06 -0600 (CST)
+	s1DKPCaF005450
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:25:12 -0600 (CST)
 	(envelope-from tinguely@eagdhcp-232-183.americas.sgi.com)
-Message-Id: <20140213202555.996721782@sgi.com>
-Date: Thu, 13 Feb 2014 14:25:36 -0600
+Message-Id: <20140213202608.627433955@sgi.com>
+Date: Thu, 13 Feb 2014 14:26:56 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH v3] xfs_db: fix the setting of unaligned directory fields
-References: <20140210230923.268327906@sgi.com>
-Content-Disposition: inline; filename=xfs_db-fix-dir-settings.patch
+Subject: [PATCH v2] xfstests: test setting XFS BMBT fields
+References: <20140210231046.910977175@sgi.com>
+Content-Disposition: inline; filename=xfstests-setting-xfs-bmbt-fields.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,375 +32,285 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Setting the directory startoff, startblock, and blockcount
-fields are difficult on both big and little endian machines.
-The setting of extentflag was completely broken.
-
-big endian test:
-xfs_db> write u.bmx[0].startblock 12
-u.bmx[0].startblock = 0
-xfs_db> write u.bmx[0].startblock 0xc0000
-u.bmx[0].startblock = 192
-
-little endian test:
-xfs_db> write u.bmx[0].startblock 12
-u.bmx[0].startblock = 211106232532992
-xfs_db> write u.bmx[0].startblock 0xc0000
-u.bmx[0].startblock = 3221225472
-
-Since the output fields and the lengths are not aligned to a byte,
-setbitval requires them to be entered in big endian and properly
-byte/nibble shifted. The extentflag output was aligned to a byte
-but was not shifted correctly.
-
-Convert the input to big endian on little endian machines and
-nibble/byte shift on all platforms so setbitval can set the bits
-correctly.
-
-Clean some whitespace while in the setbitbal() function.
+Test the setting of the XFS BMBT fields. Runs through the valid
+bit values for each field and tests an illegal value.
 
 Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 ---
-v3:
- Hex input is not a number.
- More ten year old white space cleanups.
-
 v2:
- Ignore extra characters in input.
- Fix hash input if still used as an integer input.
-  It was broken on big endian, but someone may use this input in a
-  little endian script.
- Add documentation.
- Did more clean up.
+ Removed the test for CRC filesystems which also removes need for the nasty
+  prefixes and filtering output.
+ Remove the hex input as an integer test because it aint a number.
+ Remove "__" from function variable names.
+ Add to quick test group.
 
- db/bit.c   |   84 ++++++++++++------------------
- db/write.c |  166 ++++++++++++++++++++++++++++++++++++++++---------------------
- 2 files changed, 143 insertions(+), 107 deletions(-)
+ tests/xfs/307     |   95 ++++++++++++++++++++++++++++++++++
+ tests/xfs/307.out |  148 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/group   |    1 
+ 3 files changed, 244 insertions(+)
 
-Index: b/db/bit.c
+Index: b/tests/xfs/307
 ===================================================================
---- a/db/bit.c
-+++ b/db/bit.c
-@@ -128,57 +128,41 @@ getbitval(
- 	return rval;
- }
- 
-+/*
-+ * The input data can be 8, 16, 32, and 64 sized numeric values
-+ * aligned on a byte boundry, or odd sized numbers stored on odd
-+ * aligned offset (for example the bmbt fields).
-+ *
-+ * The input data sent to this routine has been converted to big endian
-+ * and has been adjusted in the array so that the first input bit is to
-+ * be written in the first bit in the output.
-+ *
-+ * If the field length and the output buffer are byte aligned, then use
-+ * memcpy from the input to the output, but if either entries are not byte
-+ * aligned, then loop over the entire bit range reading the input value
-+ * and set/clear the matching bit in the output.
-+ *
-+ * example when ibuf is not multiple of a byte in length:
-+ *
-+ * ibuf:	| BBBBBBBB | bbbxxxxx |
-+ *		  \\\\\\\\--\\\\
-+ * obuf+bitoff:	| xBBBBBBB | Bbbbxxxx |
-+ *
-+ */
- void
- setbitval(
--	void *obuf,      /* buffer to write into */
--	int bitoff,      /* bit offset of where to write */
--	int nbits,       /* number of bits to write */
--	void *ibuf)      /* source bits */
-+	void	*obuf,		/* start of buffer to write into */
-+	int	bitoff,		/* bit offset into the output buffer */
-+	int	nbits,		/* number of bits to write */
-+	void	*ibuf)		/* source bits */
- {
--	char    *in           = (char *)ibuf;
--	char    *out          = (char *)obuf;
--
--	int     bit;
--
--#if BYTE_ORDER == LITTLE_ENDIAN
--	int     big           = 0;
--#else
--	int     big           = 1;
--#endif
--
--	/* only need to swap LE integers */
--	if (big || (nbits!=16 && nbits!=32 && nbits!=64) ) {
--		/* We don't have type info, so we can only assume
--		 * that 2,4 & 8 byte values are integers. sigh.
--		 */
--
--		/* byte aligned ? */
--		if (bitoff%NBBY) {
--			/* no - bit copy */
--			for (bit=0; bit<nbits; bit++)
--				setbit(out, bit+bitoff, getbit(in, bit));
--		} else {
--			/* yes - byte copy */
--			memcpy(out+byteize(bitoff), in, byteize(nbits));
--		}
--
--	} else {
--		int     ibit;
--		int     obit;
--
--		/* we need to endian swap this value */
--
--		out+=byteize(bitoff);
--		obit=bitoffs(bitoff);
--
--		ibit=nbits-NBBY;
--
--		for (bit=0; bit<nbits; bit++) {
--			setbit(out, bit+obit, getbit(in, ibit));
--			if (ibit%NBBY==NBBY-1)
--				ibit-=NBBY*2-1;
--			else
--				ibit++;
--		}
--	}
-+	char	*in = ibuf;
-+	char	*out = obuf;
-+	int	bit;
+--- /dev/null
++++ b/tests/xfs/307
+@@ -0,0 +1,95 @@
++#! /bin/bash
++# FS QA Test No. 307
++#
++# Test the xfs_db write of the XFS BMBT entries. For each XFS BMBT field,
++# write the value 0, each bit and finally the entry beyond the maximum legal
++# value. Also makes sure a core write and hex input still work.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+	if (bitoff % NBBY || nbits % NBBY) {
-+		for (bit=0; bit < nbits; bit++)
-+			setbit(out, bit + bitoff, getbit(in, bit));
-+	} else
-+		memcpy(out + byteize(bitoff), in, byteize(nbits));
- }
-Index: b/db/write.c
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++_do_bit_test()
++{
++	field="$1"
++	bits="$2"
++
++	echo "testing $field with $bits bits"
++	$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $field 0" $SCRATCH_DEV
++	num=1
++	for n in `seq 0 1 $bits`; do
++		$XFS_DB_PROG -x -c "inode $FILE_INO" \
++			  -c "write $field $num" $SCRATCH_DEV
++		let num=$num*2
++	done
++	echo
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++
++_scratch_unmount
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# create the test file
++echo "make a file with data so it has an extent" > $SCRATCH_MNT/file
++
++# find the inode for the test file
++FILE_INO=`ls -i $SCRATCH_MNT |awk '{print $1}'`
++
++_scratch_unmount
++
++# test bit length constants
++BMBT_EXNTFLAG_BITLEN=1
++BMBT_STARTOFF_BITLEN=54
++BMBT_STARTBLOCK_BITLEN=52
++BMBT_BLOCKCOUNT_BITLEN=21
++
++# test setting the BMBT entries from 0 to past the valid number.
++_do_bit_test "u.bmx[0].extentflag" $BMBT_EXNTFLAG_BITLEN
++_do_bit_test "u.bmx[0].startoff" $BMBT_STARTOFF_BITLEN
++_do_bit_test "u.bmx[0].startblock" $BMBT_STARTBLOCK_BITLEN
++_do_bit_test "u.bmx[0].blockcount" $BMBT_BLOCKCOUNT_BITLEN
++# test setting the 32 bit generation number
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0x5a" $SCRATCH_DEV
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0xa5" $SCRATCH_DEV
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0" $SCRATCH_DEV
++status=0
++exit
+Index: b/tests/xfs/307.out
 ===================================================================
---- a/db/write.c
-+++ b/db/write.c
-@@ -439,55 +439,78 @@ convert_oct(
- 
- #define NYBBLE(x) (isdigit(x)?(x-'0'):(tolower(x)-'a'+0xa))
- 
-+/*
-+ * convert_arg allow input in the following forms:
-+ * A string ("ABTB") whose ASCII value is placed in an array in the order
-+ * matching the input.
-+ *
-+ * An even number of hex numbers. If the length is greater than
-+ * 64 bits, then the output is an array of bytes whose top nibble
-+ * is the first hex digit in the input, the lower nibble is the second
-+ * hex digit in the input. UUID entries are entered in this manner.
-+ * If the length is 64 bits or less, then treat the hex input characters
-+ * as a number used with setbitval().
-+ *
-+ * A decimal or hexadecimal integer to be used with setbitval().
-+ *	---
-+ * Numbers that will use setbitval() are in big endian format and
-+ * are adjusted in the array so that the first input bit is to be
-+ * be written to the first bit in the output.
-+ */
- static char *
- convert_arg(
--	char *arg,
--	int  bit_length)
-+	char		*arg,
-+	int		bit_length)
- {
--	int i;
--	static char *buf = NULL;
--	char *rbuf;
--	long long *value;
--	int alloc_size;
--	char *ostr;
--	int octval, ret;
-+	int		i;
-+	int		alloc_size;
-+	int		octval;
-+	int		offset;
-+	int		ret;
-+	static char	*buf = NULL;
-+	char		*endp;
-+	char		*rbuf;
-+	char		*ostr;
-+	__u64		*value;
-+	__u64		val = 0;
- 
- 	if (bit_length <= 64)
- 		alloc_size = 8;
- 	else
--		alloc_size = (bit_length+7)/8;
-+		alloc_size = (bit_length + 7)/8;
- 
- 	buf = xrealloc(buf, alloc_size);
- 	memset(buf, 0, alloc_size);
--	value = (long long *)buf;
-+	value = (__u64 *)buf;
- 	rbuf = buf;
- 
- 	if (*arg == '\"') {
--		/* handle strings */
-+		/* input a string and output ASCII array of characters */
- 
- 		/* zap closing quote if there is one */
--		if ((ostr = strrchr(arg+1, '\"')) != NULL)
-+		if ((ostr = strrchr(arg + 1, '\"')) != NULL)
- 			*ostr = '\0';
- 
--		ostr = arg+1;
-+		ostr = arg + 1;
- 		for (i = 0; i < alloc_size; i++) {
- 			if (!*ostr)
- 				break;
- 
--			/* do octal */
-+			/* do octal conversion */
- 			if (*ostr == '\\') {
--				if (*(ostr+1) >= '0' || *(ostr+1) <= '7') {
--					ret = convert_oct(ostr+1, &octval);
-+				if (*(ostr + 1) >= '0' || *(ostr + 1) <= '7') {
-+					ret = convert_oct(ostr + 1, &octval);
- 					*rbuf++ = octval;
--					ostr += ret+1;
-+					ostr += ret + 1;
- 					continue;
- 				}
- 			}
- 			*rbuf++ = *ostr++;
- 		}
--
- 		return buf;
--	} else if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
-+	}
+--- /dev/null
++++ b/tests/xfs/307.out
+@@ -0,0 +1,148 @@
++QA output created by 307
++testing u.bmx[0].extentflag with 1 bits
++u.bmx[0].extentflag = 0
++u.bmx[0].extentflag = 1
++unable to convert value '2'.
 +
-+	if (arg[0] == '#' || ((arg[0] != '-') && strchr(arg,'-'))) {
- 		/*
- 		 * handle hex blocks ie
- 		 *    #00112233445566778899aabbccddeeff
-@@ -496,48 +519,77 @@ convert_arg(
- 		 *
- 		 * (but if it starts with "-" assume it's just an integer)
- 		 */
--		int bytes=bit_length/8;
-+		int bytes = bit_length / NBBY;
++testing u.bmx[0].startoff with 54 bits
++u.bmx[0].startoff = 0
++u.bmx[0].startoff = 1
++u.bmx[0].startoff = 2
++u.bmx[0].startoff = 4
++u.bmx[0].startoff = 8
++u.bmx[0].startoff = 16
++u.bmx[0].startoff = 32
++u.bmx[0].startoff = 64
++u.bmx[0].startoff = 128
++u.bmx[0].startoff = 256
++u.bmx[0].startoff = 512
++u.bmx[0].startoff = 1024
++u.bmx[0].startoff = 2048
++u.bmx[0].startoff = 4096
++u.bmx[0].startoff = 8192
++u.bmx[0].startoff = 16384
++u.bmx[0].startoff = 32768
++u.bmx[0].startoff = 65536
++u.bmx[0].startoff = 131072
++u.bmx[0].startoff = 262144
++u.bmx[0].startoff = 524288
++u.bmx[0].startoff = 1048576
++u.bmx[0].startoff = 2097152
++u.bmx[0].startoff = 4194304
++u.bmx[0].startoff = 8388608
++u.bmx[0].startoff = 16777216
++u.bmx[0].startoff = 33554432
++u.bmx[0].startoff = 67108864
++u.bmx[0].startoff = 134217728
++u.bmx[0].startoff = 268435456
++u.bmx[0].startoff = 536870912
++u.bmx[0].startoff = 1073741824
++u.bmx[0].startoff = 2147483648
++u.bmx[0].startoff = 4294967296
++u.bmx[0].startoff = 8589934592
++u.bmx[0].startoff = 17179869184
++u.bmx[0].startoff = 34359738368
++u.bmx[0].startoff = 68719476736
++u.bmx[0].startoff = 137438953472
++u.bmx[0].startoff = 274877906944
++u.bmx[0].startoff = 549755813888
++u.bmx[0].startoff = 1099511627776
++u.bmx[0].startoff = 2199023255552
++u.bmx[0].startoff = 4398046511104
++u.bmx[0].startoff = 8796093022208
++u.bmx[0].startoff = 17592186044416
++u.bmx[0].startoff = 35184372088832
++u.bmx[0].startoff = 70368744177664
++u.bmx[0].startoff = 140737488355328
++u.bmx[0].startoff = 281474976710656
++u.bmx[0].startoff = 562949953421312
++u.bmx[0].startoff = 1125899906842624
++u.bmx[0].startoff = 2251799813685248
++u.bmx[0].startoff = 4503599627370496
++u.bmx[0].startoff = 9007199254740992
++unable to convert value '18014398509481984'.
 +
-+		/* is this an array of hec numbers? */
-+		if (bit_length % NBBY)
-+			return NULL;
- 
- 		/* skip leading hash */
--		if (*arg=='#') arg++;
-+		if (*arg == '#') arg++;
- 
- 		while (*arg && bytes--) {
--		    /* skip hypens */
--		    while (*arg=='-') arg++;
-+			/* skip hypens */
-+			while (*arg == '-') arg++;
- 
--		    /* get first nybble */
--		    if (!isxdigit((int)*arg)) return NULL;
--		    *rbuf=NYBBLE((int)*arg)<<4;
--		    arg++;
--
--		    /* skip more hyphens */
--		    while (*arg=='-') arg++;
--
--		    /* get second nybble */
--		    if (!isxdigit((int)*arg)) return NULL;
--		    *rbuf++|=NYBBLE((int)*arg);
--		    arg++;
-+			/* get first nybble */
-+			if (!isxdigit((int)*arg))
-+				return NULL;
-+			*rbuf = NYBBLE((int)*arg) << 4;
-+			arg++;
++testing u.bmx[0].startblock with 52 bits
++u.bmx[0].startblock = 0
++u.bmx[0].startblock = 1
++u.bmx[0].startblock = 2
++u.bmx[0].startblock = 4
++u.bmx[0].startblock = 8
++u.bmx[0].startblock = 16
++u.bmx[0].startblock = 32
++u.bmx[0].startblock = 64
++u.bmx[0].startblock = 128
++u.bmx[0].startblock = 256
++u.bmx[0].startblock = 512
++u.bmx[0].startblock = 1024
++u.bmx[0].startblock = 2048
++u.bmx[0].startblock = 4096
++u.bmx[0].startblock = 8192
++u.bmx[0].startblock = 16384
++u.bmx[0].startblock = 32768
++u.bmx[0].startblock = 65536
++u.bmx[0].startblock = 131072
++u.bmx[0].startblock = 262144
++u.bmx[0].startblock = 524288
++u.bmx[0].startblock = 1048576
++u.bmx[0].startblock = 2097152
++u.bmx[0].startblock = 4194304
++u.bmx[0].startblock = 8388608
++u.bmx[0].startblock = 16777216
++u.bmx[0].startblock = 33554432
++u.bmx[0].startblock = 67108864
++u.bmx[0].startblock = 134217728
++u.bmx[0].startblock = 268435456
++u.bmx[0].startblock = 536870912
++u.bmx[0].startblock = 1073741824
++u.bmx[0].startblock = 2147483648
++u.bmx[0].startblock = 4294967296
++u.bmx[0].startblock = 8589934592
++u.bmx[0].startblock = 17179869184
++u.bmx[0].startblock = 34359738368
++u.bmx[0].startblock = 68719476736
++u.bmx[0].startblock = 137438953472
++u.bmx[0].startblock = 274877906944
++u.bmx[0].startblock = 549755813888
++u.bmx[0].startblock = 1099511627776
++u.bmx[0].startblock = 2199023255552
++u.bmx[0].startblock = 4398046511104
++u.bmx[0].startblock = 8796093022208
++u.bmx[0].startblock = 17592186044416
++u.bmx[0].startblock = 35184372088832
++u.bmx[0].startblock = 70368744177664
++u.bmx[0].startblock = 140737488355328
++u.bmx[0].startblock = 281474976710656
++u.bmx[0].startblock = 562949953421312
++u.bmx[0].startblock = 1125899906842624
++u.bmx[0].startblock = 2251799813685248
++unable to convert value '4503599627370496'.
 +
-+			/* skip more hyphens */
-+			while (*arg == '-')
-+				arg++;
++testing u.bmx[0].blockcount with 21 bits
++u.bmx[0].blockcount = 0
++u.bmx[0].blockcount = 1
++u.bmx[0].blockcount = 2
++u.bmx[0].blockcount = 4
++u.bmx[0].blockcount = 8
++u.bmx[0].blockcount = 16
++u.bmx[0].blockcount = 32
++u.bmx[0].blockcount = 64
++u.bmx[0].blockcount = 128
++u.bmx[0].blockcount = 256
++u.bmx[0].blockcount = 512
++u.bmx[0].blockcount = 1024
++u.bmx[0].blockcount = 2048
++u.bmx[0].blockcount = 4096
++u.bmx[0].blockcount = 8192
++u.bmx[0].blockcount = 16384
++u.bmx[0].blockcount = 32768
++u.bmx[0].blockcount = 65536
++u.bmx[0].blockcount = 131072
++u.bmx[0].blockcount = 262144
++u.bmx[0].blockcount = 524288
++u.bmx[0].blockcount = 1048576
++unable to convert value '2097152'.
 +
-+			/* get second nybble */
-+			if (!isxdigit((int)*arg))
-+				return NULL;
-+			*rbuf++ |= NYBBLE((int)*arg);
-+			arg++;
- 		}
--		if (bytes<0&&*arg) return NULL;
-+		if (bytes < 0 && *arg)
-+			return NULL;
-+
- 		return buf;
--	} else {
--		/*
--		 * handle integers
--		 */
--		*value = strtoll(arg, NULL, 0);
-+	} 
- 
--#if __BYTE_ORDER == BIG_ENDIAN
--		/* hackery for big endian */
--		if (bit_length <= 8) {
--			rbuf += 7;
--		} else if (bit_length <= 16) {
--			rbuf += 6;
--		} else if (bit_length <= 32) {
--			rbuf += 4;
--		}
--#endif
--		return rbuf;
--	}
-+	/* handle decimal / hexadecimal integers */
-+	val = strtoll(arg, &endp, 0);
-+	/* return if not a clean number */
-+	if (*endp != '\0')
-+		return NULL;
-+
-+	/* Is this value valid for the bit length? */
-+	if ((val >> bit_length) > 0)
-+		return NULL;
-+	/*
-+	 * If the length of the field is not a multiple of a byte, push
-+	 * the bits up in the field, so the most signicant field bit is
-+	 * the most significant bit in the byte:
-+	 *
-+	 * before:
-+	 * val  |----|----|----|----|----|--MM|mmmm|llll|
-+	 * after
-+	 * val  |----|----|----|----|----|MMmm|mmll|ll00|
-+	 */
-+	offset = bit_length % NBBY;
-+	if (offset)
-+		val <<= (NBBY - offset);
-+
-+	/*
-+	 * convert to big endian and copy into the array
-+	 * rbuf |----|----|----|----|----|MMmm|mmll|ll00|
-+	 */
-+	*value = cpu_to_be64(val);
-+
-+	/*
-+	 * Align the array to point to the field in the array.
-+	 *  rbuf  = |MMmm|mmll|ll00|
-+	 */
-+	offset = sizeof(__be64) - 1 - ((bit_length - 1)/ sizeof(__be64));
-+	rbuf += offset;
-+	return rbuf;
- }
- 
- 
-@@ -550,9 +602,9 @@ write_struct(
- {
- 	const ftattr_t	*fa;
- 	flist_t		*fl;
--	flist_t         *sfl;
--	int             bit_length;
--	char            *buf;
-+	flist_t		*sfl;
-+	int		bit_length;
-+	char		*buf;
- 	int		parentoffset;
- 
- 	if (argc != 2) {
++core.gen = 90
++core.gen = 165
++core.gen = 0
+Index: b/tests/xfs/group
+===================================================================
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -186,3 +186,4 @@
+ 304 auto quick quota
+ 305 auto quota
+ 306 auto stress log metadata repair
++307 auto db quick
 
 
 _______________________________________________
