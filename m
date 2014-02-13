@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 955A97F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:14:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 16980AC00B
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:14:43 -0800 (PST)
-Received: from mail-pb0-f49.google.com (mail-pb0-f49.google.com
-	[209.85.160.49]) by cuda.sgi.com with ESMTP id w5eX0kQ8SeIDwHpC
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:14:39 -0800 (PST)
-Received: by mail-pb0-f49.google.com with SMTP id up15so11307552pbc.8
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:14:39 -0800 (PST)
-Date: Thu, 13 Feb 2014 14:14:37 -0800 (PST)
-From: David Rientjes <rientjes@google.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 63D527F55
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:26:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 35C44304043
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:26:09 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	SvAsJFvLSu7he4Iv for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 14:26:07 -0800 (PST)
+Date: Fri, 14 Feb 2014 09:26:02 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: 3.14.0-rc2: WARNING: at mm/slub.c:1007
-In-Reply-To: <alpine.DEB.2.19.4.1402131158590.6233@trent.utfs.org>
-Message-ID: <alpine.DEB.2.02.1402131413070.13899@chino.kir.corp.google.com>
+Message-ID: <20140213222602.GK13997@dastard>
 References: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
-	<alpine.DEB.2.19.4.1402131158590.6233@trent.utfs.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,20 +32,55 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christian Kujau <lists@nerdbynature.de>
 Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, 13 Feb 2014, Christian Kujau wrote:
-
-> > after upgrading from 3.13-rc8 to 3.14.0-rc2 on this PowerPC G4 machine, 
-> > the WARNING below was printed.
-> > 
-> > Shortly after, a lockdep warning appeared (possibly related to my 
-> > post to the XFS list yesterday[0]).
+On Thu, Feb 13, 2014 at 11:53:05AM -0800, Christian Kujau wrote:
+> Hi,
 > 
-> Sigh, only _after_ sending the email, I came across an earlier posting on 
-> lkml: http://marc.info/?l=linux-mm&m=139145788623391
+> after upgrading from 3.13-rc8 to 3.14.0-rc2 on this PowerPC G4 machine, 
+> the WARNING below was printed.
 > 
+> Shortly after, a lockdep warning appeared (possibly related to my 
+> post to the XFS list yesterday[0]).
 
-There's a fix for that: http://marc.info/?l=linux-kernel&m=139145999324131
-or alternatively wait for 3.14-rc3 which will already have it.
+Unlikely.
+
+> Even later in the log an out-of-memory error appeared, that may or may not 
+> be relatd to that WARNING at all but which I'm trying to chase down ever 
+> since 3.13, but which tends to appear more often lately.
+> 
+> Can anyone take a look if this is something to worry about?
+
+Already fixed upstream:
+
+commit 255d0884f5635122adb23866b242b4ca112f4bc8
+Author: David Rientjes <rientjes@google.com>
+Date:   Mon Feb 10 14:25:39 2014 -0800
+
+    mm/slub.c: list_lock may not be held in some circumstances
+    
+    Commit c65c1877bd68 ("slub: use lockdep_assert_held") incorrectly
+    required that add_full() and remove_full() hold n->list_lock.  The lock
+    is only taken when kmem_cache_debug(s), since that's the only time it
+    actually does anything.
+    
+    Require that the lock only be taken under such a condition.
+    
+    Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Tested-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+    Acked-by: Christoph Lameter <cl@linux.com>
+    Cc: Pekka Enberg <penberg@kernel.org>
+    Signed-off-by: David Rientjes <rientjes@google.com>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
