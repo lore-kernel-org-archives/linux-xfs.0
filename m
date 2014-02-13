@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 93FC07F58
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 21:20:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FC13304062
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 19:20:55 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id ep5aF3ChayeU990D for
-	<xfs@oss.sgi.com>; Wed, 12 Feb 2014 19:20:53 -0800 (PST)
-From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
-Subject: [PATCH 2/3] xfstests/btrfs: add basic functional test for btrfs quota
-	groups
-Date: Thu, 13 Feb 2014 11:18:58 +0800
-Message-Id: <1392261539-28903-2-git-send-email-wangsl.fnst@cn.fujitsu.com>
-In-Reply-To: <1392261539-28903-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
-References: <1392261539-28903-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A65357F58
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 09:23:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B53E8F8039
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 07:23:47 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id IyTVOwcfTGMzk3n8 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 07:23:43 -0800 (PST)
+From: Koen De Wit <koen.de.wit@oracle.com>
+Subject: [PATCH] xfstests: test for atime-related mount options
+Date: Thu, 13 Feb 2014 16:23:36 +0100
+Message-Id: <1392305016-7424-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +27,36 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org
 
-Add missing test for btrfs quota groups feature,test idea is to create
-a parent qgroup that groups some subvolume groups, we try to write
-some data into every subvolume and then check if we exceed parent
-qgroup's limit size.
+Tests the noatime, relatime, strictatime and nodiratime mount options.
 
-Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+There is an extra check for Btrfs to ensure that the access time is
+never updated on read-only subvolumes. (Regression test for bug fixed
+with commit 93fd63c2f001ca6797c6b15b696a484b165b4800)
+
+Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
 ---
- tests/btrfs/039     | 94 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/039.out |  2 ++
- tests/btrfs/group   |  1 +
- 3 files changed, 97 insertions(+)
- create mode 100644 tests/btrfs/039
- create mode 100644 tests/btrfs/039.out
+ tests/generic/323     |  186 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/323.out |    2 +
+ tests/generic/group   |    1 +
+ 3 files changed, 189 insertions(+), 0 deletions(-)
+ create mode 100644 tests/generic/323
+ create mode 100644 tests/generic/323.out
 
-diff --git a/tests/btrfs/039 b/tests/btrfs/039
+diff --git a/tests/generic/323 b/tests/generic/323
 new file mode 100644
-index 0000000..f8c9bee
+index 0000000..423b141
 --- /dev/null
-+++ b/tests/btrfs/039
-@@ -0,0 +1,94 @@
-+#! /bin/bash
-+# FS QA Test No. 039
-+#
-+# Test the basic functionality of Quota groups
++++ b/tests/generic/323
+@@ -0,0 +1,186 @@
++# Tests the noatime, relatime, strictatime and nodiratime mount options.
++# There is an extra check for Btrfs to ensure that the access time is
++# never updated on read-only subvolumes. (Regression test for bug fixed
++# with commit 93fd63c2f001ca6797c6b15b696a484b165b4800)
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
++# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -72,7 +71,6 @@ index 0000000..f8c9bee
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +#-----------------------------------------------------------------------
-+#
 +
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -85,85 +83,178 @@ index 0000000..f8c9bee
 +
 +_cleanup()
 +{
-+    rm -f $tmp.*
++    cd /
++    rm -f $*
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
 +
-+_supported_fs btrfs
++# real QA test starts here
++
++_supported_fs generic
 +_supported_os Linux
 +_require_scratch
 +
 +rm -f $seqres.full
 +
-+run_check _scratch_mkfs
-+run_check _scratch_mount
++_stat() {
++    stat --printf="%x;%y;%z" $1
++}
 +
-+LIMIT_SIZE=$((10 * 1024 * 1024))
++_compare_stat_times() {
++    updated=$1      # 3 chars indicating if access, modify and
++                    # change times should be updated (Y) or not (N)
++    IFS=';' read -a first_stat <<< "$2"   # Convert first stat to array
++    IFS=';' read -a second_stat <<< "$3"  # Convert second stat to array
++    test_step=$4    # Will be printed to output stream in case of an
++                    # error, to make debugging easier
++    types=( access modify change )
 +
-+run_check $BTRFS_UTIL_PROG quota enable $SCRATCH_MNT
-+run_check $BTRFS_UTIL_PROG qgroup create 1/1 $SCRATCH_MNT
-+run_check $BTRFS_UTIL_PROG qgroup limit $LIMIT_SIZE 1/1 $SCRATCH_MNT
++    for i in 0 1 2; do
++        if [ "${first_stat[$i]}" == "${second_stat[$i]}" ]; then
++            if [ "${updated:$i:1}" == "Y" ]; then
++                echo -n "ERROR: ${types[$i]} time has not been updated "
++                echo $test_step
++            fi
++        else
++            if [ "${updated:$i:1}" == "N" ]; then
++                echo -n "ERROR: ${types[$i]} time has changed "
++                echo $test_step
++            fi
++        fi
++    done
++}
 +
-+for i in `seq 10 -1 1`; do
-+	#add newly created subvolume qgroup to it's parent qgroup
-+	run_check $BTRFS_UTIL_PROG subvolume create -i 1/1 \
-+		$SCRATCH_MNT/subv_$i
-+done
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount
 +
-+#try to write data into every subvolume
-+for i in `seq 10 -1 1`; do
-+	dd if=/dev/zero of=$SCRATCH_MNT/subv_$i/data bs=4k \
-+		>> /dev/null 2>&1 &
-+done
++cat /proc/mounts | grep "$SCRATCH_MNT" | grep relatime >> $seqres.full
++[ $? -ne 0 ] && echo "The relatime mount option should be the default."
 +
-+wait
-+$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT \
-+	>>$seqres.full 2>&1
++if [ "$FSTYP" = "btrfs" ]; then
++    TPATH=$SCRATCH_MNT/sub1
++    $BTRFS_UTIL_PROG subvolume create $TPATH > $seqres.full
++else
++    TPATH=$SCRATCH_MNT
++fi
 +
-+total_written=0
-+#calculate every subvolume's data.
-+for i in `seq 10 -1 1`; do
-+	#we may fail to create the file, skip this subvolume
-+	test -f $SCRATCH_MNT/subv_$i || continue
++mkdir $TPATH/dir1
++echo "aaa" > $TPATH/dir1/file1
++file1_stat_before_first_access=`_stat $TPATH/dir1/file1`
 +
-+	filesize=`du -b $SCRATCH_MNT/subv_$i/data | $AWK_PROG '{print $1}'`
-+	if [ $filesize -gt $LIMIT_SIZE ];then
-+		_fail "subv_$i/data size should be less than $LIMIT_SIZE"
-+	fi
-+	total_written=$(($total_written+$filesize))
-+done
++# Accessing file1 the first time
++cat $TPATH/dir1/file1 > /dev/null
++file1_stat_after_first_access=`_stat $TPATH/dir1/file1`
++_compare_stat_times YNN "$file1_stat_before_first_access" \
++    "$file1_stat_after_first_access" "after accessing file1 first time"
 +
-+#check if total written exceeds limit
-+if [ $total_written -gt $LIMIT_SIZE ];then
-+	_fail "total written should be less than $LIMIT_SIZE"
++# Accessing file1 a second time
++cat $TPATH/dir1/file1 > /dev/null
++file1_stat_after_second_access=`_stat $TPATH/dir1/file1`
++_compare_stat_times NNN "$file1_stat_after_first_access" \
++    "$file1_stat_after_second_access" "after accessing file1 second time"
++
++# Remounting with nodiratime option
++_scratch_unmount
++_scratch_mount "-o nodiratime"
++file1_stat_after_remount=`_stat $TPATH/dir1/file1`
++_compare_stat_times NNN "$file1_stat_after_second_access" \
++    "$file1_stat_after_remount" "for file1 after remount"
++
++# Creating dir2 and file2, checking directory stats
++mkdir $TPATH/dir2
++dir2_stat_before_file_creation=`_stat $TPATH/dir2`
++echo "bbb" > $TPATH/dir2/file2
++dir2_stat_after_file_creation=`_stat $TPATH/dir2`
++_compare_stat_times NYY "$dir2_stat_before_file_creation" \
++    "$dir2_stat_after_file_creation" "for dir2 after file creation"
++
++# Accessing file2
++file2_stat_before_first_access=`_stat $TPATH/dir2/file2`
++cat $TPATH/dir2/file2 > /dev/null
++file2_stat_after_first_access=`_stat $TPATH/dir2/file2`
++_compare_stat_times YNN "$file2_stat_before_first_access" \
++    "$file2_stat_after_first_access" "after accessing file2"
++dir2_stat_after_file_access=`_stat $TPATH/dir2`
++_compare_stat_times NNN "$dir2_stat_after_file_creation" \
++    "$dir2_stat_after_file_access" "for dir2 after file access"
++
++# Remounting with noatime option, creating a file and accessing it
++_scratch_unmount
++_scratch_mount "-o noatime"
++echo "ccc" > $TPATH/dir2/file3
++file3_stat_before_first_access=`_stat $TPATH/dir2/file3`
++cat $TPATH/dir2/file3 > /dev/null
++file3_stat_after_first_access=`_stat $TPATH/dir2/file3`
++_compare_stat_times NNN "$file3_stat_before_first_access" \
++    "$file3_stat_after_first_access" "after accessing file3 first time"
++
++# Checking that the modify and change times are still updated
++file1_stat_before_modify=`_stat $TPATH/dir1/file1`
++echo "xyz" > $TPATH/dir1/file1
++file1_stat_after_modify=`_stat $TPATH/dir1/file1`
++_compare_stat_times NYY "$file1_stat_before_modify" \
++    "$file1_stat_after_modify" "after modifying file1"
++mv $TPATH/dir1/file1 $TPATH/dir1/file1_renamed
++file1_stat_after_change=`_stat $TPATH/dir1/file1_renamed`
++_compare_stat_times NNY "$file1_stat_after_modify" \
++    "$file1_stat_after_change" "after changing file1"
++
++# Remounting with strictatime option and
++# accessing a previously created file twice
++_scratch_unmount
++_scratch_mount "-o strictatime"
++cat $TPATH/dir2/file3 > /dev/null
++file3_stat_after_second_access=`_stat $TPATH/dir2/file3`
++_compare_stat_times YNN "$file3_stat_after_first_access" \
++    "$file3_stat_after_second_access" "after accessing file3 second time"
++cat $TPATH/dir2/file3 > /dev/null
++file3_stat_after_third_access=`_stat $TPATH/dir2/file3`
++_compare_stat_times YNN "$file3_stat_after_second_access" \
++    "$file3_stat_after_third_access" "after accessing file3 third time"
++
++# Btrfs only: Creating readonly snapshot. Access time should never
++# be updated, even when the strictatime mount option is active
++if [ "$FSTYP" = "btrfs" ]; then
++    SPATH=$SCRATCH_MNT/snap1
++    btrfs subvol snapshot -r $TPATH $SPATH >> $seqres.full
++    dir2_stat_readonly_before_access=`_stat $SPATH/dir2`
++    ls $SPATH/dir2 >> $seqres.full
++    cat $SPATH/dir2/file3 >> $seqres.full
++    dir2_stat_readonly_after_access=`_stat $SPATH/dir2`
++    _compare_stat_times NNN "$dir2_stat_readonly_before_access" \
++        "$dir2_stat_readonly_after_access" "for dir in readonly subvol"
++    file3_stat_readonly_after_access=`_stat $SPATH/dir2/file3`
++    _compare_stat_times NNN "$file3_stat_after_third_access" \
++        "$file3_stat_readonly_after_access" "for file in readonly subvol"
 +fi
 +
 +# success, all done
++_scratch_unmount
 +echo "Silence is golden"
 +status=0
 +exit
-diff --git a/tests/btrfs/039.out b/tests/btrfs/039.out
+diff --git a/tests/generic/323.out b/tests/generic/323.out
 new file mode 100644
-index 0000000..d4e7ef6
+index 0000000..5dba9b5
 --- /dev/null
-+++ b/tests/btrfs/039.out
++++ b/tests/generic/323.out
 @@ -0,0 +1,2 @@
-+QA output created by 039
++QA output created by 323
 +Silence is golden
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 7ac9f0a..ba6b70c 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -38,3 +38,4 @@
- 033 auto quick
- 034 auto quick
- 038 auto quick
-+039 auto quick
+diff --git a/tests/generic/group b/tests/generic/group
+index f492461..3a72ee4 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -125,3 +125,4 @@
+ 320 auto rw
+ 321 auto quick metadata log
+ 322 auto quick metadata log
++323 atime auto quick
 -- 
-1.8.3.1
+1.7.1
 
 _______________________________________________
 xfs mailing list
