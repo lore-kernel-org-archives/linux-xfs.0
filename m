@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B31457F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:53:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8CE65304064
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 11:53:12 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 203D27F55
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:56:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A25C4AC00C
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 11:56:40 -0800 (PST)
 Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
-	with ESMTP id LiWGOZEVzBH63bBp for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 11:53:07 -0800 (PST)
-Date: Thu, 13 Feb 2014 11:53:05 -0800 (PST)
+	with ESMTP id IHMtfH3fjlzV6lPC for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 11:56:37 -0800 (PST)
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by trent.utfs.org (Postfix) with ESMTP id 9A32C3DB2D
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 20:56:36 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by trent.utfs.org (Postfix) with ESMTP id 7B8A33DAAC
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 20:56:36 +0100 (CET)
+Date: Thu, 13 Feb 2014 11:56:36 -0800 (PST)
 From: Christian Kujau <lists@nerdbynature.de>
-Subject: 3.14.0-rc2: WARNING: at mm/slub.c:1007
-Message-ID: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
+Subject: Re: 3.14-rc2: RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order detected
+In-Reply-To: <alpine.DEB.2.19.4.1402120008320.6233@trent.utfs.org>
+Message-ID: <alpine.DEB.2.19.4.1402131153300.6233@trent.utfs.org>
+References: <alpine.DEB.2.19.4.1402120008320.6233@trent.utfs.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,78 +33,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
-Cc: linux-mm@kvack.org
+To: xfs@oss.sgi.com
 
-Hi,
+On Wed, 12 Feb 2014 at 00:11, Christian Kujau wrote:
+> After upgrading from 3.13-rc8 to 3.14-rc2 on this PowerPC G4 machine, this 
+> happened:
 
-after upgrading from 3.13-rc8 to 3.14.0-rc2 on this PowerPC G4 machine, 
-the WARNING below was printed.
+Yesterday a slighly different lockdep warning was printed:
 
-Shortly after, a lockdep warning appeared (possibly related to my 
-post to the XFS list yesterday[0]).
+ =========================================================
+ [ INFO: possible irq lock inversion dependency detected ]
+ 3.14.0-rc2 #1 Tainted: G        W   
+ ---------------------------------------------------------
+ kswapd0/279 just changed the state of lock:
+  (&(&ip->i_lock)->mr_lock){++++.?}, at: [<c01c213c>] 
+xfs_free_eofblocks+0xe8/0x2e0
+ but this lock took another, RECLAIM_FS-unsafe lock in the past:
+  (&mm->mmap_sem){++++++}
+ 
+ and interrupts could create inverse lock ordering between them.
+ 
+ 
+ other info that might help us debug this:
+  Possible interrupt unsafe locking scenario:
+ 
+        CPU0                    CPU1
+        ----                    ----
+   lock(&mm->mmap_sem);
+                                local_irq_disable();
+                                lock(&(&ip->i_lock)->mr_lock);
+                                lock(&mm->mmap_sem);
+   <Interrupt>
+     lock(&(&ip->i_lock)->mr_lock);
+ 
+  *** DEADLOCK ***
+ 
+ 2 locks held by kswapd0/279:
+  #0:  (shrinker_rwsem){++++..}, at: [<c00a5218>] shrink_slab+0x40/0x13c
+  #1:  (&type->s_umount_key#36){+++++.}, at: [<c00d4840>] grab_super_passive+0x54/0xc0
+ the shortest dependencies between 2nd lock and 1st lock:
+  -> (&mm->mmap_sem){++++++} ops: 58148911 {
+     HARDIRQ-ON-W at:
+                       [<c0066b38>] lock_acquire+0x4c/0x68
+                       [<c0558724>] down_write+0x4c/0x98
+                       [<c00d88fc>] do_execve+0x2dc/0x574
+                       [<c000425c>] try_to_run_init_process+0x18/0x58
+                       [<c0004a48>] kernel_init+0xac/0x104
+                       [<c0010ae4>] ret_from_kernel_thread+0x5c/0x64
 
-Even later in the log an out-of-memory error appeared, that may or may not 
-be relatd to that WARNING at all but which I'm trying to chase down ever 
-since 3.13, but which tends to appear more often lately.
 
-Can anyone take a look if this is something to worry about?
-
-Full dmesg & .config: http://nerdbynature.de/bits/3.14-rc2/mm/
+...and on it goes, full dmesg: http://nerdbynature.de/bits/3.14-rc2/mm/
 
 Thanks,
 Christian.
-
-[0] http://oss.sgi.com/pipermail/xfs/2014-February/034054.html
-
- ------------[ cut here ]------------
- WARNING: at /usr/local/src/linux-git/mm/slub.c:1007
- Modules linked in: md5 ecb nfs i2c_powermac therm_adt746x ecryptfs arc4 
-firewire_sbp2 b43 usb_storage mac80211 cfg80211
- CPU: 0 PID: 9025 Comm: nfsd Not tainted 3.14.0-rc2 #1
- task: efbf8000 ti: ed2a0000 task.ti: ed2a0000
- NIP: c00ccc28 LR: c00ccc20 CTR: 00000000
- REGS: ed2a1980 TRAP: 0700   Not tainted  (3.14.0-rc2)
- MSR: 00021032 <ME,IR,DR,RI>  CR: 22f82b82  XER: 20000000
- 
- GPR00: c00ccc20 ed2a1a30 efbf8000 00000000 ef96e550 00000000 00000000 
-00002ce0 
- GPR08: 00000000 00000001 efbf86f8 000005e7 82fc2b88 00000000 00000001 
-00080011 
- GPR16: 00000000 00000000 c0760000 00000000 ef96e564 00100100 00200200 
-c1203914 
- GPR24: 00000000 ef96e540 00000002 ef96fa80 00000000 00000000 ed2a0000 
-c1203900 
- NIP [c00ccc28] deactivate_slab+0x4c0/0x538
- LR [c00ccc20] deactivate_slab+0x4b8/0x538
- Call Trace:
- [ed2a1a30] [c00ccc20] deactivate_slab+0x4b8/0x538 (unreliable)
- [ed2a1ae0] [c055d5f0] __slab_alloc.constprop.77+0x260/0x38c
- [ed2a1b50] [c00cd524] kmem_cache_alloc+0x118/0x140
- [ed2a1b70] [c01de4bc] kmem_zone_alloc+0x94/0x108
- [ed2a1ba0] [c01cccd4] xfs_inode_alloc+0x2c/0xd4
- [ed2a1bc0] [c01cd7a4] xfs_iget+0x2e4/0x584
- [ed2a1c30] [c020e664] xfs_lookup+0xc8/0xe4
- [ed2a1c70] [c01d3c28] xfs_vn_lookup+0x64/0xbc
- [ed2a1c90] [c00db3ac] lookup_real+0x30/0x70
- [ed2a1ca0] [c00dc384] __lookup_hash+0x3c/0x58
- [ed2a1cc0] [c00e1438] lookup_one_len+0x10c/0x15c
- [ed2a1ce0] [c01a170c] nfsd4_encode_dirent+0xb4/0x328
- [ed2a1d10] [c018f580] nfsd_readdir+0x1d4/0x288
- [ed2a1d90] [c019d648] nfsd4_encode_readdir+0x138/0x1f4
- [ed2a1dd0] [c01a1b18] nfsd4_encode_operation+0x8c/0xf0
- [ed2a1df0] [c019aa4c] nfsd4_proc_compound+0x1b8/0x4f8
- [ed2a1e30] [c0189d20] nfsd_dispatch+0x90/0x1a0
- [ed2a1e50] [c0536b04] svc_process+0x3d0/0x698
- [ed2a1e90] [c01895bc] nfsd+0xc0/0x120
- [ed2a1eb0] [c004f8fc] kthread+0xbc/0xd0
- [ed2a1f40] [c0010ae4] ret_from_kernel_thread+0x5c/0x64
- Instruction dump:
- 7fe4fb78 800100b4 b9c10068 7d810120 7d808120 7c0803a6 382100b0 4bfffb00 
- 80610048 4bf95dc5 2f830000 40beff4c <0fe00000> 4bffff44 815e000c 394a0001 
- ---[ end trace 1f5ed3ea8b3e4403 ]---
-
-
 -- 
 BOFH excuse #65:
 
