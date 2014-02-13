@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6EE747F58
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 21:20:53 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F0D3A7F58
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 21:20:54 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 46CB2304062
-	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 19:20:53 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E7D0AC006
+	for <xfs@oss.sgi.com>; Wed, 12 Feb 2014 19:20:54 -0800 (PST)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id egREgbJ3KDemAyve for
-	<xfs@oss.sgi.com>; Wed, 12 Feb 2014 19:20:45 -0800 (PST)
+	cuda.sgi.com with ESMTP id w50v95j5qR29oaCY for
+	<xfs@oss.sgi.com>; Wed, 12 Feb 2014 19:20:51 -0800 (PST)
 From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
-Subject: [PATCH 1/3] xfstests/btrfs: add qgroup rescan stress test
-Date: Thu, 13 Feb 2014 11:18:57 +0800
-Message-Id: <1392261539-28903-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH 3/3] xfstests/btrfs: add stress test for btrfs quota operations
+Date: Thu, 13 Feb 2014 11:18:59 +0800
+Message-Id: <1392261539-28903-3-git-send-email-wangsl.fnst@cn.fujitsu.com>
+In-Reply-To: <1392261539-28903-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+References: <1392261539-28903-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +30,34 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-btrfs@vger.kernel.org
 
-Test flow is to run fsstress after triggering quota rescan.
-the ruler is simple, we just remove all files and directories,
-sync filesystem and see if qgroup's ref and excl are nodesize.
+So this is a stress test for btrfs quota operations. it can also
+detect the following commit fixed problem:
+
+4082bd3d73(Btrfs: fix oops when writting dirty qgroups to disk)
 
 Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 ---
- tests/btrfs/038     | 75 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/038.out |  3 +++
+ tests/btrfs/040     | 75 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/040.out |  2 ++
  tests/btrfs/group   |  1 +
- 3 files changed, 79 insertions(+)
- create mode 100644 tests/btrfs/038
- create mode 100644 tests/btrfs/038.out
+ 3 files changed, 78 insertions(+)
+ create mode 100644 tests/btrfs/040
+ create mode 100644 tests/btrfs/040.out
 
-diff --git a/tests/btrfs/038 b/tests/btrfs/038
+diff --git a/tests/btrfs/040 b/tests/btrfs/040
 new file mode 100644
-index 0000000..f6bd872
+index 0000000..d991304
 --- /dev/null
-+++ b/tests/btrfs/038
++++ b/tests/btrfs/040
 @@ -0,0 +1,75 @@
 +#! /bin/bash
-+# FSQA Test No. btrfs/038
++# FS QA Test No. 040
 +#
-+# Quota rescan stress test, we run fsstress and quota rescan concurrently
++# stresstest for btrfs quota operations. we run fsstress and quota
++# operations concurrently.
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (C) 2014 Fujitsu.  All rights reserved.
++# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -67,7 +71,6 @@ index 0000000..f6bd872
 +# You should have received a copy of the GNU General Public License
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
 +#-----------------------------------------------------------------------
 +#
 +
@@ -77,69 +80,68 @@ index 0000000..f6bd872
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=1
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
-+       rm -f $tmp.*
++    rm -f $tmp.*
 +}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
 +
-+# real QA test starts here
-+_need_to_be_root
 +_supported_fs btrfs
 +_supported_os Linux
 +_require_scratch
 +
 +rm -f $seqres.full
 +
-+run_check _scratch_mkfs "-b 2g --nodesize 4096"
++_quota_enabled_background()
++{
++	i=1
++	while [ $i -le 5 ]
++	do
++		run_check $BTRFS_UTIL_PROG quota enable $SCRATCH_MNT
++		run_check $BTRFS_UTIL_PROG quota disable $SCRATCH_MNT
++		i=$(($i+1))
++		sleep 1
++	done
++}
++
++MKFS_SIZE=$((2 * 1024 * 1024 * 1024))
++run_check _scratch_mkfs_sized $MKFS_SIZE
 +run_check _scratch_mount
 +
-+# -w ensures that the only ops are ones which cause write I/O
++_quota_enabled_background &
 +run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p 5 -n 1000 \
-+		$FSSTRESS_AVOID >&/dev/null
++	$FSSTRESS_AVOID
 +
-+run_check $BTRFS_UTIL_PROG subvolume snapshot $SCRATCH_MNT \
-+       $SCRATCH_MNT/snap1 >>$seqres.full 2>&1
++run_check _scratch_unmount
++_check_scratch_fs
 +
-+run_check $FSSTRESS_PROG -d $SCRATCH_MNT/snap1 -w -p 5 -n 1000 \
-+       $FSSTRESS_AVOID >&/dev/null
-+
-+run_check $BTRFS_UTIL_PROG quota enable $SCRATCH_MNT
-+run_check $BTRFS_UTIL_PROG quota rescan -w $SCRATCH_MNT
-+
-+#ignore removing subvolume errors
-+rm -rf $SCRATCH_MNT/* >& /dev/null
-+$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT >> $seqres.full 2>&1
-+
-+$BTRFS_UTIL_PROG qgroup show $SCRATCH_MNT | $SED_PROG -n '/[0-9]/p' \
-+	| $AWK_PROG '{print $1" "$2" "$3 }'
-+
++# success, all done
++echo "Silence is golden"
 +status=0
 +exit
-diff --git a/tests/btrfs/038.out b/tests/btrfs/038.out
+diff --git a/tests/btrfs/040.out b/tests/btrfs/040.out
 new file mode 100644
-index 0000000..1c24c55
+index 0000000..9e3d4d9
 --- /dev/null
-+++ b/tests/btrfs/038.out
-@@ -0,0 +1,3 @@
-+QA output created by 038
-+0/5 4096 4096
-+0/258 4096 4096
++++ b/tests/btrfs/040.out
+@@ -0,0 +1,2 @@
++QA output created by 040
++Silence is golden
 diff --git a/tests/btrfs/group b/tests/btrfs/group
-index f9f062f..7ac9f0a 100644
+index ba6b70c..3dc82e5 100644
 --- a/tests/btrfs/group
 +++ b/tests/btrfs/group
-@@ -37,3 +37,4 @@
- 032 auto quick
- 033 auto quick
+@@ -39,3 +39,4 @@
  034 auto quick
-+038 auto quick
+ 038 auto quick
+ 039 auto quick
++040 auto quick
 -- 
 1.8.3.1
 
