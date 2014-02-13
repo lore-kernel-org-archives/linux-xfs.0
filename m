@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2EA217F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:30:02 -0600 (CST)
-Message-ID: <52FD1D38.1010006@sgi.com>
-Date: Thu, 13 Feb 2014 13:30:00 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id B31457F55
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 13:53:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8CE65304064
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 11:53:12 -0800 (PST)
+Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
+	with ESMTP id LiWGOZEVzBH63bBp for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 11:53:07 -0800 (PST)
+Date: Thu, 13 Feb 2014 11:53:05 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: 3.14.0-rc2: WARNING: at mm/slub.c:1007
+Message-ID: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/5] metadump: sanitise write_buf/index return values
-References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
-	<1390472635-17225-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1390472635-17225-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,60 +21,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: linux-mm@kvack.org
 
-On 01/23/14 04:23, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Write_buf/write_index use confusing boolean values for return,
-> meaning that it's hard to tell what the correct error return is
-> supposed to be.  Convert them to return zero on success or a
-> negative errno otherwise so that it's clear what the error case is.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+Hi,
 
-Looks like this patch broke metadumps on some corrupted filesystems. 
-This is a legacy filesystem that has zeroes overwriting the SB/AGF/AGI 
-on AG 1/2/3:
+after upgrading from 3.13-rc8 to 3.14.0-rc2 on this PowerPC G4 machine, 
+the WARNING below was printed.
+
+Shortly after, a lockdep warning appeared (possibly related to my 
+post to the XFS list yesterday[0]).
+
+Even later in the log an out-of-memory error appeared, that may or may not 
+be relatd to that WARNING at all but which I'm trying to chase down ever 
+since 3.13, but which tends to appear more often lately.
+
+Can anyone take a look if this is something to worry about?
+
+Full dmesg & .config: http://nerdbynature.de/bits/3.14-rc2/mm/
+
+Thanks,
+Christian.
+
+[0] http://oss.sgi.com/pipermail/xfs/2014-February/034054.html
+
+ ------------[ cut here ]------------
+ WARNING: at /usr/local/src/linux-git/mm/slub.c:1007
+ Modules linked in: md5 ecb nfs i2c_powermac therm_adt746x ecryptfs arc4 
+firewire_sbp2 b43 usb_storage mac80211 cfg80211
+ CPU: 0 PID: 9025 Comm: nfsd Not tainted 3.14.0-rc2 #1
+ task: efbf8000 ti: ed2a0000 task.ti: ed2a0000
+ NIP: c00ccc28 LR: c00ccc20 CTR: 00000000
+ REGS: ed2a1980 TRAP: 0700   Not tainted  (3.14.0-rc2)
+ MSR: 00021032 <ME,IR,DR,RI>  CR: 22f82b82  XER: 20000000
+ 
+ GPR00: c00ccc20 ed2a1a30 efbf8000 00000000 ef96e550 00000000 00000000 
+00002ce0 
+ GPR08: 00000000 00000001 efbf86f8 000005e7 82fc2b88 00000000 00000001 
+00080011 
+ GPR16: 00000000 00000000 c0760000 00000000 ef96e564 00100100 00200200 
+c1203914 
+ GPR24: 00000000 ef96e540 00000002 ef96fa80 00000000 00000000 ed2a0000 
+c1203900 
+ NIP [c00ccc28] deactivate_slab+0x4c0/0x538
+ LR [c00ccc20] deactivate_slab+0x4b8/0x538
+ Call Trace:
+ [ed2a1a30] [c00ccc20] deactivate_slab+0x4b8/0x538 (unreliable)
+ [ed2a1ae0] [c055d5f0] __slab_alloc.constprop.77+0x260/0x38c
+ [ed2a1b50] [c00cd524] kmem_cache_alloc+0x118/0x140
+ [ed2a1b70] [c01de4bc] kmem_zone_alloc+0x94/0x108
+ [ed2a1ba0] [c01cccd4] xfs_inode_alloc+0x2c/0xd4
+ [ed2a1bc0] [c01cd7a4] xfs_iget+0x2e4/0x584
+ [ed2a1c30] [c020e664] xfs_lookup+0xc8/0xe4
+ [ed2a1c70] [c01d3c28] xfs_vn_lookup+0x64/0xbc
+ [ed2a1c90] [c00db3ac] lookup_real+0x30/0x70
+ [ed2a1ca0] [c00dc384] __lookup_hash+0x3c/0x58
+ [ed2a1cc0] [c00e1438] lookup_one_len+0x10c/0x15c
+ [ed2a1ce0] [c01a170c] nfsd4_encode_dirent+0xb4/0x328
+ [ed2a1d10] [c018f580] nfsd_readdir+0x1d4/0x288
+ [ed2a1d90] [c019d648] nfsd4_encode_readdir+0x138/0x1f4
+ [ed2a1dd0] [c01a1b18] nfsd4_encode_operation+0x8c/0xf0
+ [ed2a1df0] [c019aa4c] nfsd4_proc_compound+0x1b8/0x4f8
+ [ed2a1e30] [c0189d20] nfsd_dispatch+0x90/0x1a0
+ [ed2a1e50] [c0536b04] svc_process+0x3d0/0x698
+ [ed2a1e90] [c01895bc] nfsd+0xc0/0x120
+ [ed2a1eb0] [c004f8fc] kthread+0xbc/0xd0
+ [ed2a1f40] [c0010ae4] ret_from_kernel_thread+0x5c/0x64
+ Instruction dump:
+ 7fe4fb78 800100b4 b9c10068 7d810120 7d808120 7c0803a6 382100b0 4bfffb00 
+ 80610048 4bf95dc5 2f830000 40beff4c <0fe00000> 4bffff44 815e000c 394a0001 
+ ---[ end trace 1f5ed3ea8b3e4403 ]---
 
 
-# xfs_metadump -wgo /dev/sda8 myfile.metadata
-xfs_agf_read_verify: XFS_CORRUPTION_ERROR
-xfs_metadump: cannot init perag data (117). Continuing anyway.
-Copied 64 of 64 inodes (0 of 4 AGs) 
-xfs_agf_write_verify: XF
-S_CORRUPTION_ERROR
-write_buf: write verifer failed on bno 0x1100919/0x200
-(no output)
+-- 
+BOFH excuse #65:
 
-commit dd9093de944cd802427bd42953ad5ccc1d5fb875 before it:
-
-# xfs_metadump -wgo /dev/sda8 myfile.metadata
-xfs_agf_read_verify: XFS_CORRUPTION_ERROR
-xfs_metadump: cannot init perag data (117). Continuing anyway.
-Copied 64 of 64 inodes (0 of 4 AGs) 
-xfs_agf_write_verify: XF
-S_CORRUPTION_ERROR
-write_buf: write verifer failed on bno 0x1100919/0x200
-Copying free space trees of AG 1
-xfs_metadump: invalid block number (0) in bnobt root in agf 1
-xfs_metadump: invalid block number (0) in cntbt root in agf 1
-xfs_metadump: invalid block number (0) in inobt root in agi 1
-Copying free space trees of AG 2
-xfs_metadump: invalid block number (0) in bnobt root in agf 2
-xfs_metadump: invalid block number (0) in cntbt root in agf 2
-xfs_metadump: invalid block number (0) in inobt root in agi 2
-Copying free space trees of AG 3
-xfs_metadump: invalid block number (4294967295) in bnobt root in agf 3
-xfs_metadump: invalid block number (4294967295) in cntbt root in agf 3
-xfs_metadump: invalid block number (0) in inobt root in agi 3
-Copying log
+system needs to be rebooted
 
 _______________________________________________
 xfs mailing list
