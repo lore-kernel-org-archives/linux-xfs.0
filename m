@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 067207F57
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:45:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 766DCAC005
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:45:38 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Ekwtp7FIgcEsBK4n for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 14:45:36 -0800 (PST)
-Message-ID: <52FD4B10.2010005@sandeen.net>
-Date: Thu, 13 Feb 2014 16:45:36 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6D52629DFD
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:45:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 416398F8033
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:45:46 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	V0yigibDiBV0nbRi for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 14:45:44 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1WE52H-0004sW-Df
+	for xfs@oss.sgi.com; Fri, 14 Feb 2014 09:45:37 +1100
+Date: Fri, 14 Feb 2014 09:45:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [XFS updates] XFS development tree branch, for-next, updated.
+	xfs-for-linus-v3.14-rc1-2-12935-ga64b760
+Message-ID: <20140213224537.GL13997@dastard>
+References: <20140213223525.B7E517F57@oss.sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfs: skip verification if initial sb read is wrong length
-References: <52FD3C59.3050400@redhat.com>
-In-Reply-To: <52FD3C59.3050400@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20140213223525.B7E517F57@oss.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,91 +33,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-When xfs_readsb() does the very first read of the superblock,
-it makes a guess at the length of the buffer, based on the
-sector size of the underlying storage.  This may or may
-not match the filesystem sector size in sb_sectsize; if
-it's too short, we can't do a proper validity check on it.
+On Thu, Feb 13, 2014 at 04:35:24PM -0600, xfs@oss.sgi.com wrote:
+> This is an automated email from the git hooks/post-receive script. It was
+> generated because a ref change was pushed to the repository containing
+> the project "XFS development tree".
+> 
+> The branch, for-next has been updated
+>   discards  39f30ca7eaa4fe9224094c7a9964cff36c584dab (commit)
+>   discards  008482657169c0276ddd2ba00a1ad14a324b91f0 (commit)
+>   a64b760 Merge branch 'xfs-async-aio-extend' into for-next
+>   692f68a Merge branch 'xfs-fixes-for-3.15-1' into for-next
+>   55daffa xfs: xfs_sb_read_verify() doesn't flag bad crcs on primary sb
+>       from  39f30ca7eaa4fe9224094c7a9964cff36c584dab (commit)
+> 
+> Those revisions listed above that are new to this repository have
+> not appeared on any other notification email; so we list those
+> revisions in full, below.
 
-In fact, mounting a filesystem with sb_sectsize larger
-than the device sector size will cause a mount failure
-if CRCs are enabled, because we are checksumming a length
-which exceeds the buffer passed to it.
+Just a note for everyone because this is the first time it has
+happened since this discussion:
 
-Work around this by setting the verifier ops to NULL
-on the first read; if the guess was right, hook up the
-normal ops and verify it directly, otherwise reread
-with the newly discovered proper length.
+http://oss.sgi.com/archives/xfs/2013-12/msg00586.html
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+This update is a rebase of the for-next branch as the initial topic
+branch that forms the current base of the for-next tree
+(xfs-fixes-for-3.14-rc3) was updated. The commit 55daffa mentioned
+above is the new commit that was added to that that branch.
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 02df7b4..ff5ed4a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -282,22 +282,29 @@ xfs_readsb(
- 	struct xfs_sb	*sbp = &mp->m_sb;
- 	int		error;
- 	int		loud = !(flags & XFS_MFSI_QUIET);
-+	const struct xfs_buf_ops *buf_ops;
- 
- 	ASSERT(mp->m_sb_bp == NULL);
- 	ASSERT(mp->m_ddev_targp != NULL);
- 
- 	/*
-+	 * For the initial read, we must guess at the fs sector
-+	 * size based on the block device.  It's enough to
-+	 * get the sb_sectsize out of the superblock and
-+	 * then reread with the proper length if necessary.
-+	 * We don't verify it yet, because it may not be complete.
-+	 */
-+	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
-+	buf_ops = NULL;
-+
-+	/*
- 	 * Allocate a (locked) buffer to hold the superblock.
- 	 * This will be kept around at all times to optimize
- 	 * access to the superblock.
- 	 */
--	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
--
- reread:
- 	bp = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
--				   BTOBB(sector_size), 0,
--				   loud ? &xfs_sb_buf_ops
--				        : &xfs_sb_quiet_buf_ops);
-+				   BTOBB(sector_size), 0, buf_ops);
- 	if (!bp) {
- 		if (loud)
- 			xfs_warn(mp, "SB buffer read failed");
-@@ -334,7 +341,12 @@ reread:
- 	if (sector_size < sbp->sb_sectsize) {
- 		xfs_buf_relse(bp);
- 		sector_size = sbp->sb_sectsize;
-+		buf_ops = loud ? &xfs_sb_buf_ops : &xfs_sb_quiet_buf_ops;
- 		goto reread;
-+	} else {
-+		/* We guessed right!  Verify it. */
-+		bp->b_ops = &xfs_sb_buf_ops;
-+		bp->b_ops->verify_read(bp);
- 	}
- 
- 	/* Initialize per-cpu counters */
-diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-index 5071ccb..1b0b503 100644
---- a/fs/xfs/xfs_sb.c
-+++ b/fs/xfs/xfs_sb.c
-@@ -644,7 +644,6 @@ xfs_sb_quiet_read_verify(
- {
- 	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
- 
--
- 	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
- 		/* XFS filesystem, verify noisily! */
- 		xfs_sb_read_verify(bp);
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
