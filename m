@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CDC727F55
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 14:42:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5EF8EAC005
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:42:15 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id aGYWPAbhYuTCthEi
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 13 Feb 2014 12:42:13 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: 3.14-rc2: RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order detected
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <alpine.DEB.2.19.4.1402131153300.6233@trent.utfs.org>
-Date: Thu, 13 Feb 2014 13:42:11 -0700
-Message-Id: <ED7CE863-BA78-4DD7-9ACD-AF6EF18411AD@colorremedies.com>
-References: <alpine.DEB.2.19.4.1402120008320.6233@trent.utfs.org>
-	<alpine.DEB.2.19.4.1402131153300.6233@trent.utfs.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BF31A7F58
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 18:09:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A842A304039
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 16:09:11 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id F9eKdaGFZCzsG7AC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 16:09:10 -0800 (PST)
+Date: Fri, 14 Feb 2014 00:09:02 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
+Message-ID: <20140214000902.GA3078@ZenIV.linux.org.uk>
+References: <20140212040358.GA25327@redhat.com>
+	<20140212042215.GN18016@ZenIV.linux.org.uk>
+	<20140212054043.GB13997@dastard>
+	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
+	<20140212113928.GO18016@ZenIV.linux.org.uk>
+	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
+	<20140212211421.GP18016@ZenIV.linux.org.uk>
+	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
+	<20140212214411.GQ18016@ZenIV.linux.org.uk>
+	<20140213205146.GS18016@ZenIV.linux.org.uk>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140213205146.GS18016@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,91 +34,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Oleg Nesterov <oleg@redhat.com>, xfs@oss.sgi.com, Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>
 
+On Thu, Feb 13, 2014 at 08:51:46PM +0000, Al Viro wrote:
+> On Wed, Feb 12, 2014 at 09:44:11PM +0000, Al Viro wrote:
+> 
+> > I'll try to put something along those lines together, if you or Oleg don't
+> > do it first.
+> 
+> OK, having looked at that stuff...
+> 
+> 1) things become much more compact if we finish conversion to get_signal()
+> first.  Callers of get_signal_to_deliver() have k_sigaction and siginfo in
+> pair of local variables; switching to ksignal will be neutral wrt stack
+> footprint (it just gathers those two in one struct) *and* we are getting
+> rid of passing struct siginfo * around.  With that done, we can change
+> struct ksignal ->info with zero impact on the code in arch/*, and conversion
+> makes sense on its own.  In the mainline we have it done for alpha, arm,
+> openrisc, sparc and x86.  I've just put together preliminary (and completely
+> untested) patches for arm64, m68k and um; doing the rest won't take long, but
+> they'll obviously need to be tested.  It's a fairly safe conversion;
+> I'd expect the worst bugs to be typos.
 
-On Feb 13, 2014, at 12:56 PM, Christian Kujau <lists@nerdbynature.de> wrote:
+OK, there's a couple of tricks that allow to reorder that.  First of all,
+temporary config symbol (ARCH_USES_KSIGNAL) selecting that stuff; if it's
+not selected, we just have #define small_siginfo siginfo and
+#define assign_sigqueue(info, q) WARN_ON((q) != NULL)
+and that's it - most of the changes in core kernel consist of s/siginfo/small_&/
+and non-trivial ones are under ifdef CONFIG_ARCH_USES_KSIGNAL for the time
+being.  Small ifdefs, at that...
 
-> On Wed, 12 Feb 2014 at 00:11, Christian Kujau wrote:
->> After upgrading from 3.13-rc8 to 3.14-rc2 on this PowerPC G4 machine, th=
-is =
+Once all architectures get converted, we'll just kill that config symbol and
+make ifdefs unconditional.
 
->> happened:
-> =
+Another is that we don't need to bother with task_work_add() at all; on
+converted architectures we have signal_setup_done(..., ksig, ...) called after
+each successful get_signal() (the first argument of signal_setup_done() is
+"has sigframe setup failed" flag; we get there regardless of success or
+failure of setup_...frame()).  So we can just have that sucker do
+assign_sigqueue(&ksig->info, NULL) and be done with that - all this delayed
+freeing is explicit now (and we don't get locking overhead, etc. of
+task_work_add()).
 
-> Yesterday a slighly different lockdep warning was printed:
-> =
-
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-> [ INFO: possible irq lock inversion dependency detected ]
-> 3.14.0-rc2 #1 Tainted: G        W   =
-
-> ---------------------------------------------------------
-> kswapd0/279 just changed the state of lock:
->  (&(&ip->i_lock)->mr_lock){++++.?}, at: [<c01c213c>] =
-
-> xfs_free_eofblocks+0xe8/0x2e0
-> but this lock took another, RECLAIM_FS-unsafe lock in the past:
->  (&mm->mmap_sem){++++++}
-> =
-
-> and interrupts could create inverse lock ordering between them.
-> =
-
-> =
-
-> other info that might help us debug this:
->  Possible interrupt unsafe locking scenario:
-> =
-
->        CPU0                    CPU1
->        ----                    ----
->   lock(&mm->mmap_sem);
->                                local_irq_disable();
->                                lock(&(&ip->i_lock)->mr_lock);
->                                lock(&mm->mmap_sem);
->   <Interrupt>
->     lock(&(&ip->i_lock)->mr_lock);
-> =
-
->  *** DEADLOCK ***
-> =
-
-> 2 locks held by kswapd0/279:
->  #0:  (shrinker_rwsem){++++..}, at: [<c00a5218>] shrink_slab+0x40/0x13c
->  #1:  (&type->s_umount_key#36){+++++.}, at: [<c00d4840>] grab_super_passi=
-ve+0x54/0xc0
-> the shortest dependencies between 2nd lock and 1st lock:
->  -> (&mm->mmap_sem){++++++} ops: 58148911 {
->     HARDIRQ-ON-W at:
->                       [<c0066b38>] lock_acquire+0x4c/0x68
->                       [<c0558724>] down_write+0x4c/0x98
->                       [<c00d88fc>] do_execve+0x2dc/0x574
->                       [<c000425c>] try_to_run_init_process+0x18/0x58
->                       [<c0004a48>] kernel_init+0xac/0x104
->                       [<c0010ae4>] ret_from_kernel_thread+0x5c/0x64
-> =
-
-> =
-
-> =85and on it goes, full dmesg: http://nerdbynature.de/bits/3.14-rc2/mm/
-
-A user is seeing something similar on Fedora 3.14.x kernels with Btrfs also.
-
-
-https://bugzilla.redhat.com/show_bug.cgi?id=3D1062439
-
-
-
-Chris Murphy
-
+If what I've got survives the local beating, I'll put it into signal.git,
+throw the arch conversions I could test in there and ask on linux-arch for
+help with the missing ones.  With any luck we'll get the full set by the
+next merge window, at which point we'll be able to kill ifdefs.
 
 _______________________________________________
 xfs mailing list
