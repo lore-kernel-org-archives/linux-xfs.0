@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9BF8A7F6F
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 20:21:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 33E59AC005
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 18:21:03 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	5AsJNBj3ZXa9gCst for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 18:20:58 -0800 (PST)
-Date: Fri, 14 Feb 2014 13:20:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] metadump: sanitise write_buf/index return values
-Message-ID: <20140214022053.GQ13997@dastard>
-References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
-	<1390472635-17225-2-git-send-email-david@fromorbit.com>
-	<52FD1D38.1010006@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 36F127F73
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 21:56:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D1014AC00C
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 19:56:40 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 3jK6PO6folFlezuS for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 19:56:36 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id E43FD6519A6D
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 21:56:35 -0600 (CST)
+Message-ID: <52FD93F3.4010506@sandeen.net>
+Date: Thu, 13 Feb 2014 21:56:35 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52FD1D38.1010006@sgi.com>
+Subject: Re: [PATCH 6/7] xfs: add xfs_verifier_error()
+References: <52F99426.3010409@sandeen.net> <52F9957A.4050301@sandeen.net>
+In-Reply-To: <52F9957A.4050301@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,43 +32,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Feb 13, 2014 at 01:30:00PM -0600, Mark Tinguely wrote:
-> On 01/23/14 04:23, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >Write_buf/write_index use confusing boolean values for return,
-> >meaning that it's hard to tell what the correct error return is
-> >supposed to be.  Convert them to return zero on success or a
-> >negative errno otherwise so that it's clear what the error case is.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >---
+On 2/10/14, 9:14 PM, Eric Sandeen wrote:
+> We want to distinguish between corruption and CRC errors.
+> In addition, the full stack trace on verifier errors
+> seems less than helpful; it looks more like an oops than
+> corruption.
 > 
-> Looks like this patch broke metadumps on some corrupted filesystems.
-> This is a legacy filesystem that has zeroes overwriting the
-> SB/AGF/AGI on AG 1/2/3:
+> Create a new function to specifically alert the user to
+> verifier errors, which can differentiate between
+> EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
+> unless the xfs error level is turned up high.
 > 
+> Define a new error message (EFSBADCRC) to clearly identify
+> CRC errors.  (Defined to EILSEQ, bad byte sequence)
 > 
-> # xfs_metadump -wgo /dev/sda8 myfile.metadata
-> xfs_agf_read_verify: XFS_CORRUPTION_ERROR
-> xfs_metadump: cannot init perag data (117). Continuing anyway.
-> Copied 64 of 64 inodes (0 of 4 AGs) xfs_agf_write_verify: XF
-> S_CORRUPTION_ERROR
-> write_buf: write verifer failed on bno 0x1100919/0x200
-> (no output)
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Where did it crash? Can you post the stack trace from gdb? Even
-better, can you send a patch to fix the problem? ;)
+...
 
-Cheers,
+> +void
+> +xfs_verifier_error(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> +
+> +	xfs_alert(mp,
+> +"Metadata %s detected at %pF, block 0x%llx. Unmount and run xfs_repair",
+> +		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
+> +		  __builtin_return_address(0), bp->b_bn);
+> +
+> +	if (xfs_error_level >= XFS_ERRLEVEL_LOW)
+> +		xfs_hex_dump(bp->b_addr, 64);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This needs to handle the case where we have a page array rather than a b_addr, as well.
+
+(The existing calls to XFS_CORRUPTION_ERROR would have oopsed on this too)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
