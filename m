@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0F2797F6A
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 20:04:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0072A304039
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 18:04:09 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TaeNoVAtUJbxbuFl for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 18:04:08 -0800 (PST)
-Message-ID: <52FD7997.1020407@sandeen.net>
-Date: Thu, 13 Feb 2014 20:04:07 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9BF8A7F6F
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 20:21:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 33E59AC005
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 18:21:03 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	5AsJNBj3ZXa9gCst for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 18:20:58 -0800 (PST)
+Date: Fri, 14 Feb 2014 13:20:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] metadump: sanitise write_buf/index return values
+Message-ID: <20140214022053.GQ13997@dastard>
+References: <1390472635-17225-1-git-send-email-david@fromorbit.com>
+	<1390472635-17225-2-git-send-email-david@fromorbit.com>
+	<52FD1D38.1010006@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V3] xfs: skip verification on initial "guess" superblock
-	read
-References: <52FD3C59.3050400@redhat.com> <52FD55FC.1000103@sandeen.net>
-	<20140214002708.GO13997@dastard>
-In-Reply-To: <20140214002708.GO13997@dastard>
+Content-Disposition: inline
+In-Reply-To: <52FD1D38.1010006@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +31,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 2/13/14, 6:27 PM, Dave Chinner wrote:
-
-> Looks fine. I'll run it through some testing and we can go from
-> there. FWIW, does this make your "check the sector size in the sb
-> verifier" patch redundant?
-
-Well, it'll be safe for the primary SB, but I assume that a corrupted
-secondary would still trip things up.
-
-I think that at this point we can switch to using BBTOB(bp->b_length)
-in the verifier and be safe.  I'll look into it.
-
--Eric
- 
-> Cheers,
+On Thu, Feb 13, 2014 at 01:30:00PM -0600, Mark Tinguely wrote:
+> On 01/23/14 04:23, Dave Chinner wrote:
+> >From: Dave Chinner<dchinner@redhat.com>
+> >
+> >Write_buf/write_index use confusing boolean values for return,
+> >meaning that it's hard to tell what the correct error return is
+> >supposed to be.  Convert them to return zero on success or a
+> >negative errno otherwise so that it's clear what the error case is.
+> >
+> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >---
 > 
-> Dave.
+> Looks like this patch broke metadumps on some corrupted filesystems.
+> This is a legacy filesystem that has zeroes overwriting the
+> SB/AGF/AGI on AG 1/2/3:
 > 
+> 
+> # xfs_metadump -wgo /dev/sda8 myfile.metadata
+> xfs_agf_read_verify: XFS_CORRUPTION_ERROR
+> xfs_metadump: cannot init perag data (117). Continuing anyway.
+> Copied 64 of 64 inodes (0 of 4 AGs) xfs_agf_write_verify: XF
+> S_CORRUPTION_ERROR
+> write_buf: write verifer failed on bno 0x1100919/0x200
+> (no output)
+
+Where did it crash? Can you post the stack trace from gdb? Even
+better, can you send a patch to fix the problem? ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
