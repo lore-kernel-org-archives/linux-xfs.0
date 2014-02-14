@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4522A7F69
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 19:22:13 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0F2797F6A
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 20:04:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C3351AC00C
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 17:22:09 -0800 (PST)
-Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
-	with ESMTP id wQDB2u5XqP5O3AhZ for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 17:22:08 -0800 (PST)
-Date: Thu, 13 Feb 2014 17:22:06 -0800 (PST)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: 3.14.0-rc2: WARNING: at mm/slub.c:1007
-In-Reply-To: <20140214011453.GP13997@dastard>
-Message-ID: <alpine.DEB.2.19.4.1402131721190.6233@trent.utfs.org>
-References: <alpine.DEB.2.19.4.1402131144390.6233@trent.utfs.org>
-	<20140213222602.GK13997@dastard>
-	<alpine.DEB.2.19.4.1402131531290.6233@trent.utfs.org>
-	<20140214011453.GP13997@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0072A304039
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 18:04:09 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id TaeNoVAtUJbxbuFl for <xfs@oss.sgi.com>;
+	Thu, 13 Feb 2014 18:04:08 -0800 (PST)
+Message-ID: <52FD7997.1020407@sandeen.net>
+Date: Thu, 13 Feb 2014 20:04:07 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH V3] xfs: skip verification on initial "guess" superblock
+	read
+References: <52FD3C59.3050400@redhat.com> <52FD55FC.1000103@sandeen.net>
+	<20140214002708.GO13997@dastard>
+In-Reply-To: <20140214002708.GO13997@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,24 +30,26 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, 14 Feb 2014 at 12:14, Dave Chinner wrote:
-> > OK, so the "possible irq lock inversion dependency detected" is a lockdep 
-> > regression, as you explained in the xfs-list thread. What about the 
-> > "RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order detected" warning - I 
-> > haven't seen it again though, only once with 3.14.0-rc2.
+On 2/13/14, 6:27 PM, Dave Chinner wrote:
+
+> Looks fine. I'll run it through some testing and we can go from
+> there. FWIW, does this make your "check the sector size in the sb
+> verifier" patch redundant?
+
+Well, it'll be safe for the primary SB, but I assume that a corrupted
+secondary would still trip things up.
+
+I think that at this point we can switch to using BBTOB(bp->b_length)
+in the verifier and be safe.  I'll look into it.
+
+-Eric
+ 
+> Cheers,
 > 
-> That was also an i_lock/mmapsem issue, so it's likely to be the same
-> root cause. I'm testing a fix for it at the moment.
-
-Understood. Thanks for looking into this.
-
-Christian.
--- 
-BOFH excuse #129:
-
-The ring needs another token
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
