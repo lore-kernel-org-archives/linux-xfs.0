@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AA4307F55
-	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 06:47:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A1698F8033
-	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 04:47:02 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id LLGbqZWorwlXYW8r (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Feb 2014 04:47:00 -0800 (PST)
-Date: Fri, 14 Feb 2014 13:46:56 +0100
-From: David Disseldorp <ddiss@suse.de>
-Subject: Re: [PATCH v3 0/3] __btrfs_drop_extents() BUG_ON reproducer
-Message-ID: <20140214134656.7c1f2544@plati.site>
-In-Reply-To: <1391769341-20688-1-git-send-email-ddiss@suse.de>
-References: <1391769341-20688-1-git-send-email-ddiss@suse.de>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 9CCC27F55
+	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 07:29:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FDB08F8064
+	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 05:29:41 -0800 (PST)
+Received: from radon.swed.at (b.ns.miles-group.at [95.130.255.144]) by
+	cuda.sgi.com with ESMTP id RuiPFMiabhH7ozBm (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 14 Feb 2014 05:29:39 -0800 (PST)
+Message-ID: <52FE1A3A.9090301@nod.at>
+Date: Fri, 14 Feb 2014 14:29:30 +0100
+From: Richard Weinberger <richard@nod.at>
+MIME-Version: 1.0
+Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
+References: <20140212040358.GA25327@redhat.com>
+	<20140212042215.GN18016@ZenIV.linux.org.uk>
+	<20140212054043.GB13997@dastard>
+	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
+	<20140212113928.GO18016@ZenIV.linux.org.uk>
+	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
+	<20140212211421.GP18016@ZenIV.linux.org.uk>
+	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
+	<20140212214411.GQ18016@ZenIV.linux.org.uk>
+	<20140213205146.GS18016@ZenIV.linux.org.uk>
+	<20140214132503.GA23265@infradead.org>
+In-Reply-To: <20140214132503.GA23265@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,57 +38,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linus Torvalds <torvalds@linux-foundation.org>
 
-Ping, any Btrfsers get a chance to look at this patch series?
-I'd like to get it into the QA tree.
+Am 14.02.2014 14:25, schrieb Christoph Hellwig:
+> On Thu, Feb 13, 2014 at 08:51:46PM +0000, Al Viro wrote:
+>> On Wed, Feb 12, 2014 at 09:44:11PM +0000, Al Viro wrote:
+>>
+>>> I'll try to put something along those lines together, if you or Oleg don't
+>>> do it first.
+>>
+>> OK, having looked at that stuff...
+>>
+>> 1) things become much more compact if we finish conversion to get_signal()
+>> first.
+> 
+> I have vague memories that Richard sent out a series to convert over all
+> architectures a while ago.  Hopefully he has better memory than I do.
 
-On Fri,  7 Feb 2014 11:35:38 +0100, David Disseldorp wrote:
+Yeah. Sending v2 of that series is on my overflowing TODO list. :-\
+I think this is a good reason for me to start working on that series again.
+Stay tuned.
 
-> This patch-set provides a reproducer for hitting the 3.14.0-rc1 BUG_ON()
-> at:
->  692 int __btrfs_drop_extents(struct btrfs_trans_handle *trans,
-> ...
->  839                 /*
->  840                  *  | ---- range to drop ----- |
->  841                  *      | -------- extent -------- |
->  842                  */
->  843                 if (start <= key.offset && end < extent_end) {
->  844                         BUG_ON(extent_type == BTRFS_FILE_EXTENT_INLINE);
->  845 
->  846                         memcpy(&new_key, &key, sizeof(new_key));
-> 
-> The first patch adds a small cloner binary which is used by btrfs/035 to
-> dispatch BTRFS_IOC_CLONE_RANGE requests.
-> 
-> This workload resembles that of Samba's vfs_btrfs module, when a Windows
-> client restores a file from a shadow-copy (snapshot) using server-side
-> copy requests.
-> 
-> Changes since V2:
-> - Remove explicit write error checks
-> 
-> Changes since V1:
-> - Use strtoull instead of atoi
-> - Print error conditions in cloner
-> - Check for cloner binary before running test
-> - Continue test on failure
-> - Add cloner to .gitignore
-> 
-> Feedback appreciated.
-> 
-> Cheers, David
-> 
-> 
->  .gitignore          |   1 +
->  configure.ac        |   1 +
->  src/Makefile        |   2 +-
->  src/cloner.c        | 192 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/035     |  77 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/035.out |   3 +++
->  tests/btrfs/group   |   1 +
->  7 files changed, 276 insertions(+), 1 deletion(-)
+Thanks,
+//richard
 
 _______________________________________________
 xfs mailing list
