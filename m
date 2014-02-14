@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 36F127F73
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 21:56:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D1014AC00C
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 19:56:40 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 3jK6PO6folFlezuS for <xfs@oss.sgi.com>;
-	Thu, 13 Feb 2014 19:56:36 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id E43FD6519A6D
-	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 21:56:35 -0600 (CST)
-Message-ID: <52FD93F3.4010506@sandeen.net>
-Date: Thu, 13 Feb 2014 21:56:35 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 6/7] xfs: add xfs_verifier_error()
-References: <52F99426.3010409@sandeen.net> <52F9957A.4050301@sandeen.net>
-In-Reply-To: <52F9957A.4050301@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 4E0A57F55
+	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 00:16:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CC070AC00F
+	for <xfs@oss.sgi.com>; Thu, 13 Feb 2014 22:16:10 -0800 (PST)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id y0p9Q6LOaMBPKMLN for
+	<xfs@oss.sgi.com>; Thu, 13 Feb 2014 22:16:05 -0800 (PST)
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH] xfstests: btrfs/005: log test result to right path
+Date: Fri, 14 Feb 2014 14:14:22 +0800
+Message-Id: <1392358462-2574-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,49 +20,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-On 2/10/14, 9:14 PM, Eric Sandeen wrote:
-> We want to distinguish between corruption and CRC errors.
-> In addition, the full stack trace on verifier errors
-> seems less than helpful; it looks more like an oops than
-> corruption.
-> 
-> Create a new function to specifically alert the user to
-> verifier errors, which can differentiate between
-> EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
-> unless the xfs error level is turned up high.
-> 
-> Define a new error message (EFSBADCRC) to clearly identify
-> CRC errors.  (Defined to EILSEQ, bad byte sequence)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+We should log test results to $reqres.full not $req.full.
 
-...
+Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+---
+ tests/btrfs/005 | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-> +void
-> +xfs_verifier_error(
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_mount *mp = bp->b_target->bt_mount;
-> +
-> +	xfs_alert(mp,
-> +"Metadata %s detected at %pF, block 0x%llx. Unmount and run xfs_repair",
-> +		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
-> +		  __builtin_return_address(0), bp->b_bn);
-> +
-> +	if (xfs_error_level >= XFS_ERRLEVEL_LOW)
-> +		xfs_hex_dump(bp->b_addr, 64);
-
-This needs to handle the case where we have a page array rather than a b_addr, as well.
-
-(The existing calls to XFS_CORRUPTION_ERROR would have oopsed on this too)
-
--Eric
+diff --git a/tests/btrfs/005 b/tests/btrfs/005
+index c364e11..7639635 100755
+--- a/tests/btrfs/005
++++ b/tests/btrfs/005
+@@ -77,14 +77,14 @@ _btrfs_online_defrag()
+ 	fi
+ 
+ 	if [ "$str" != "" ]; then
+-		$BTRFS_UTIL_PROG filesystem defragment $str $SCRATCH_MNT/tmp_file >> $seq.full 2>&1
++		$BTRFS_UTIL_PROG filesystem defragment $str $SCRATCH_MNT/tmp_file >> $seqres.full 2>&1
+ 	else
+ 		if [ "$1" = "1" ];then
+-			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_file >> $seq.full 2>&1
++			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_file >> $seqres.full 2>&1
+ 		elif [ "$1" = "2" ];then
+-			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_dir >> $seq.full 2>&1
++			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_dir >> $seqres.full 2>&1
+ 		elif [ "$1" = "3" ];then
+-			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT >> $seq.full 2>&1
++			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT >> $seqres.full 2>&1
+ 		fi
+ 	fi
+ 	ret_val=$?
+@@ -134,9 +134,10 @@ _rundefrag()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
+-
+-## We require scratch so that we'll have free contiguous space
+ _require_scratch
++
++rm -f $seqres.full
++
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount
+ _require_defrag
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
