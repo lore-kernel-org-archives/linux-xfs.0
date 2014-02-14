@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 405EF7F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 10:01:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C775BAC00B
-	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 08:01:38 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uiTjAj9iV76b7XoC for
-	<xfs@oss.sgi.com>; Fri, 14 Feb 2014 08:01:37 -0800 (PST)
-Date: Fri, 14 Feb 2014 11:01:23 -0500
-From: Dave Jones <davej@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8EBD17F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 10:13:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E09D8F8039
+	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 08:13:11 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id JUNK8tPlWQ7EQq91 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 14 Feb 2014 08:13:08 -0800 (PST)
+Date: Fri, 14 Feb 2014 08:13:02 -0800
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140214160123.GA28125@redhat.com>
-References: <52FA9ADA.9040803@sandeen.net> <20140212004403.GA17129@redhat.com>
-	<20140212010941.GM18016@ZenIV.linux.org.uk>
+Message-ID: <20140214161302.GA16416@infradead.org>
+References: <20140212010941.GM18016@ZenIV.linux.org.uk>
 	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
 	<20140212040358.GA25327@redhat.com>
 	<20140212042215.GN18016@ZenIV.linux.org.uk>
 	<20140212054043.GB13997@dastard>
 	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
-	<20140212071829.GE13997@dastard> <20140214002427.GN13997@dastard>
+	<20140212113928.GO18016@ZenIV.linux.org.uk>
+	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
+	<20140212211421.GP18016@ZenIV.linux.org.uk>
+	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140214002427.GN13997@dastard>
+In-Reply-To: <CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,25 +38,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, Oleg Nesterov <oleg@redhat.com>, Dave Jones <davej@redhat.com>
 
-On Fri, Feb 14, 2014 at 11:24:27AM +1100, Dave Chinner wrote:
- 
- > > I can fix this one easily - we already have a workqueue for doing
- > > async log pushes (will split the stack between xlog_cil_force_lsn
- > > and xlog_cil_push), but the reason we haven't used it for synchronous
- > > log forces is that screws up fsync performance on CFQ. We don't
- > > recommend CFQ with XFS anyway, so I think I'll make this change
- > > anyway.
- > 
- > Dave, the patch below should chop off the stack usage from
- > xfs_log_force_lsn() issuing IO by deferring it to the CIL workqueue.
- > Can you given this a run?
+On Wed, Feb 12, 2014 at 01:32:55PM -0800, Linus Torvalds wrote:
+> We'd have to teach each user of "dequeue_signal()" to free the siginfo
+> thing. Which shouldn't be too bad - I think we've collected all of
+> that into generic code, and there isn't the mass or architecture code
+> that knows about these things any more. But there are a few odd
+> drivers etc and signalfd.
 
-Looks like it's survived an overnight run..
-
-	Dave
+The few odd drivers are nbd, jffs2 and the usb mass storage gadget.
+All of these have in common that they try to handle signals in a kernel
+thread (which we don't even allow by default), and that they ignore the
+siginfo.  I think they could mostly be replaced by an addition to the
+kthread API to allow a kthread to be killed by signals for legacy
+reasons.
 
 _______________________________________________
 xfs mailing list
