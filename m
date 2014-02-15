@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6A01729DF8
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 12:18:51 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6C12B29DF8
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 16:24:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6009D8F8087
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 10:18:48 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id a3AOM3Rs0DKMd2DL (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 15 Feb 2014 10:05:28 -0800 (PST)
-Date: Sat, 15 Feb 2014 18:05:20 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A139304043
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 14:24:06 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	vrRvJ2P0VTX2CXGJ for <xfs@oss.sgi.com>;
+	Sat, 15 Feb 2014 14:24:04 -0800 (PST)
+Date: Sun, 16 Feb 2014 09:23:56 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140215180520.GC18016@ZenIV.linux.org.uk>
-References: <20140212211421.GP18016@ZenIV.linux.org.uk>
-	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
-	<20140213174020.GA14455@redhat.com>
-	<CA+55aFxwozCQ05axLB02R3huX8sj=20EoFfw0cSDDL8fBE_Y6Q@mail.gmail.com>
-	<20140215052531.GX18016@ZenIV.linux.org.uk>
-	<20140215142700.GA15540@redhat.com>
-	<20140215152251.GY18016@ZenIV.linux.org.uk>
-	<20140215153631.GZ18016@ZenIV.linux.org.uk>
-	<20140215155838.GA18016@ZenIV.linux.org.uk>
-	<20140215174345.GA24799@redhat.com>
+Message-ID: <20140215222356.GU13997@dastard>
+References: <20140212004403.GA17129@redhat.com>
+	<20140212010941.GM18016@ZenIV.linux.org.uk>
+	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
+	<20140212040358.GA25327@redhat.com>
+	<20140212042215.GN18016@ZenIV.linux.org.uk>
+	<20140212054043.GB13997@dastard>
+	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
+	<20140212071829.GE13997@dastard> <20140214002427.GN13997@dastard>
+	<20140214160123.GA28125@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140215174345.GA24799@redhat.com>
+In-Reply-To: <20140214160123.GA28125@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,34 +37,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Dave Jones <davej@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Dave Jones <davej@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Sat, Feb 15, 2014 at 06:43:45PM +0100, Oleg Nesterov wrote:
-> > So basically we want a different condition for "can we just go ahead and
-> > free that sucker", right?  Instead of "it's on the list, shan't free it"
-> > it ought to be something like "it's on the list or it is referenced by
-> > ksiginfo".  Locking will be interesting, though... ;-/
+On Fri, Feb 14, 2014 at 11:01:23AM -0500, Dave Jones wrote:
+> On Fri, Feb 14, 2014 at 11:24:27AM +1100, Dave Chinner wrote:
+>  
+>  > > I can fix this one easily - we already have a workqueue for doing
+>  > > async log pushes (will split the stack between xlog_cil_force_lsn
+>  > > and xlog_cil_push), but the reason we haven't used it for synchronous
+>  > > log forces is that screws up fsync performance on CFQ. We don't
+>  > > recommend CFQ with XFS anyway, so I think I'll make this change
+>  > > anyway.
+>  > 
+>  > Dave, the patch below should chop off the stack usage from
+>  > xfs_log_force_lsn() issuing IO by deferring it to the CIL workqueue.
+>  > Can you given this a run?
 > 
-> I guess yes... send_sigqueue() checks list_empty() too, probably nobody else.
+> Looks like it's survived an overnight run..
 
-The trouble being, we might end up with
-	Q picked by collect_signal and and stuff into ksiginfo
-	Q resubmitted by timer code
-	Q picked by *another* thread into its ksiginfo
-	the first thread finally done with signal
-and at that point we still have a reference in the second thread's ksiginfo.
-Hell knows - my first reflex in that kind of situation is to replace
-that flag with refcount, so that timer code would hold a reference from
-timer_create(2) to timer_delete(2), send_sigqueue() would bump it and
-dismiss_siginfo() - drop the sucker.  But that means either grabbing
-siglock in dismiss_siginfo() or making the counter atomic; either way
-it's a cacheline ping-pong.  Atomic counter is less painful in that respect -
-it would be right next to the list, so we dirty that cacheline anyway...
+Great.
 
-I'm still trying another approach (slightly bigger ksiginfo used to store
-all variants with si_code >= 0), but it has messiness of its own; we'll
-see how it goes...
+One thing that has been puzzling me is why I'm seeing stack usage
+reported that is way above what we declare locally on the stack.
+e.g.
+
+ 29)     2048     224   xfs_da_grow_inode_int+0xbb/0x340
+ 30)     1824      96   xfs_dir2_grow_inode+0x63/0x110
+ 31)     1728     208   xfs_dir2_sf_to_block+0xe7/0x5e0
+ 32)     1520     144   xfs_dir2_sf_addname+0x115/0x5c0
+ 33)     1376      96   xfs_dir_createname+0x164/0x1a0
+ 34)     1280     224   xfs_create+0x536/0x660
+ 35)     1056     128   xfs_vn_mknod+0xc8/0x1d0
+
+I pulled 128 bytes out of xfs_dir_createname by allocating the
+xfs_da_args structure, but I still couldn't reconcile the amount of
+stack use being reported with the amount used by locally declared
+variables (even considering in-lined leaf functions). For example:
+
+Locally
+Declared	Used   function
+  88             224   xfs_da_grow_inode_int
+  32              96   xfs_dir2_grow_inode
+ 168             208   xfs_dir2_sf_to_block
+  56             144   xfs_dir2_sf_addname
+  16              96   xfs_dir_createname
+ 120             224   xfs_create
+  52             128   xfs_vn_mknod
+
+There's a pretty massive difference between the actual stack usage
+of the local variables and the amount of stack being used by the
+compiled code.
+
+What it appears to be is that the compiler is pushing 6-10 registers
+to the stack on every function call. So a function that only has 3
+local variables and does very little but allocate a structure and
+call other functions saves an 6 registers to the stack before it
+starts:
+
+Dump of assembler code for function xfs_dir_createname:
+214     {
+   0xffffffff814d7380 <+0>:     callq  0xffffffff81cf0940
+   0xffffffff814d7385 <+5>:     push   %rbp
+   0xffffffff814d7386 <+6>:     mov    %rsp,%rbp
+   0xffffffff814d7389 <+9>:     sub    $0x50,%rsp
+   0xffffffff814d738d <+13>:    mov    %rbx,-0x28(%rbp)
+   0xffffffff814d7391 <+17>:    mov    %rdi,%rbx
+   0xffffffff814d7394 <+20>:    mov    %r12,-0x20(%rbp)
+   0xffffffff814d7398 <+24>:    mov    %rcx,%r12
+   0xffffffff814d739b <+27>:    mov    %r13,-0x18(%rbp)
+   0xffffffff814d739f <+31>:    mov    %rsi,%r13
+   0xffffffff814d73a5 <+37>:    mov    %r14,-0x10(%rbp)
+   0xffffffff814d73a9 <+41>:    mov    %rdx,%r14
+   0xffffffff814d73ac <+44>:    mov    %r15,-0x8(%rbp)
+   0xffffffff814d73b0 <+48>:    mov    %r8,%r15
+   0xffffffff814d73b7 <+55>:    mov    %r9,-0x48(%rbp)
+.....
+
+If this is typical across the call chain (appears to be from my
+quick survey) then we are averaging 40-50 bytes of stack per
+call for saved registers. That's a lot of stack space we can't
+directly control the usage of, especially when we are talking about
+call chains that can get 50+ functions deep...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
