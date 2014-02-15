@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8EBD17F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 10:13:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E09D8F8039
-	for <xfs@oss.sgi.com>; Fri, 14 Feb 2014 08:13:11 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id JUNK8tPlWQ7EQq91 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Feb 2014 08:13:08 -0800 (PST)
-Date: Fri, 14 Feb 2014 08:13:02 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4441B7F51
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 09:34:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3CF2A304129
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 07:33:52 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id X514p22WSi1xh0R0 for
+	<xfs@oss.sgi.com>; Sat, 15 Feb 2014 07:33:45 -0800 (PST)
+Date: Sat, 15 Feb 2014 16:33:41 +0100
+From: Oleg Nesterov <oleg@redhat.com>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140214161302.GA16416@infradead.org>
-References: <20140212010941.GM18016@ZenIV.linux.org.uk>
-	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
-	<20140212040358.GA25327@redhat.com>
-	<20140212042215.GN18016@ZenIV.linux.org.uk>
-	<20140212054043.GB13997@dastard>
-	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
+Message-ID: <20140215153341.GA18472@redhat.com>
+References: <CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
 	<20140212113928.GO18016@ZenIV.linux.org.uk>
 	<CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
 	<20140212211421.GP18016@ZenIV.linux.org.uk>
 	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
+	<20140213174020.GA14455@redhat.com>
+	<CA+55aFxwozCQ05axLB02R3huX8sj=20EoFfw0cSDDL8fBE_Y6Q@mail.gmail.com>
+	<20140215052531.GX18016@ZenIV.linux.org.uk>
+	<20140215142700.GA15540@redhat.com>
+	<20140215152251.GY18016@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
+In-Reply-To: <20140215152251.GY18016@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,22 +37,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, Oleg Nesterov <oleg@redhat.com>, Dave Jones <davej@redhat.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Dave Jones <davej@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Wed, Feb 12, 2014 at 01:32:55PM -0800, Linus Torvalds wrote:
-> We'd have to teach each user of "dequeue_signal()" to free the siginfo
-> thing. Which shouldn't be too bad - I think we've collected all of
-> that into generic code, and there isn't the mass or architecture code
-> that knows about these things any more. But there are a few odd
-> drivers etc and signalfd.
+On 02/15, Al Viro wrote:
+>
+> On Sat, Feb 15, 2014 at 03:27:00PM +0100, Oleg Nesterov wrote:
+>
+> > 1. info->q can be already freed if SIGQUEUE_PREALLOC.
+> >
+> >    Once get_signal_to_deliver() or any other caller drops ->siglock
+> >    another thread can do sys_timer_delete()->sigqueue_free().
+>
+> How the devil would it find the sucker?
 
-The few odd drivers are nbd, jffs2 and the usb mass storage gadget.
-All of these have in common that they try to handle signals in a kernel
-thread (which we don't even allow by default), and that they ignore the
-siginfo.  I think they could mostly be replaced by an addition to the
-kthread API to allow a kthread to be killed by signals for legacy
-reasons.
+It simply frees the SIGQUEUE_PREALLOC sigqueue, k_itimer->sigq.
+
+> It's off the list already.
+
+Exactly, list_empty(q->list) == T. So release_posix_timer()->sigqueue_free()
+assumes we can safely free it.
+
+> > 2. We need to move do_schedule_next_timer() from dequeue_signal()
+> >    here.
+> >
+> >    Otherwise ->q can be reused/overwritten by the next send_sigqueue()
+> >    right affter ->siglock is dropped.
+>
+> Ditto.  We rip them out of queue on collect_signal();
+
+Yes, and dequeue_signal()->do_schedule_next_timer() can trigger another
+send_sigqueue() which uses the same SIGQUEUE_PREALLOC sigqueue once we
+drop ->siglock.
+
+This is not that bad, but at least ->si_overrun can be overwritten
+before __setup_rt_frame()->copy_siginfo_to_user().
+
+Oleg.
 
 _______________________________________________
 xfs mailing list
