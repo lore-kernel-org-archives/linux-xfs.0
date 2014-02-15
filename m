@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3D1957F55
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 11:00:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 338DB8F812E
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 09:00:10 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id j3ClwCb6tscvAEft (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 15 Feb 2014 08:59:58 -0800 (PST)
-Date: Sat, 15 Feb 2014 16:59:51 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
+	by oss.sgi.com (Postfix) with ESMTP id 7837529DF8
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 11:44:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 775DC8F8131
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 09:44:16 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 81qWAFSUVFbGiv6J for
+	<xfs@oss.sgi.com>; Sat, 15 Feb 2014 09:43:54 -0800 (PST)
+Date: Sat, 15 Feb 2014 18:43:45 +0100
+From: Oleg Nesterov <oleg@redhat.com>
 Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140215165951.GB18016@ZenIV.linux.org.uk>
+Message-ID: <20140215174345.GA24799@redhat.com>
 References: <CA+55aFywwx0Q8xK2GJiRJ+FV7PQEKoBRxDUxW4052FVyd5XOpg@mail.gmail.com>
 	<20140212211421.GP18016@ZenIV.linux.org.uk>
 	<CA+55aFyobyUNFo=3rpdbxTqgV7OQetCKbCfwEEbgxUcT-1+30w@mail.gmail.com>
@@ -38,10 +37,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Oleg Nesterov <oleg@redhat.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
 Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Dave Jones <davej@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Sat, Feb 15, 2014 at 03:58:38PM +0000, Al Viro wrote:
+On 02/15, Al Viro wrote:
+>
+> > Ouch...  I think I see what you mean.  Let me see if I got it right:
+> > timer->sigq is *not* freed by collect_signal(); it's done by
+> > release_posix_timer() instead, under siglock.  Frankly, this
+> >         /*
+> >          * If it is queued it will be freed when dequeued,
+> >          * like the "regular" sigqueue.
+> >          */
+> >         if (!list_empty(&q->list))
+> >                 q = NULL;
+> > in sigqueue_free() smells like it's asking for races.  Sigh...
+
+This is protected by ->siglock, should be safe...
+
+> So basically we want a different condition for "can we just go ahead and
+> free that sucker", right?  Instead of "it's on the list, shan't free it"
+> it ought to be something like "it's on the list or it is referenced by
+> ksiginfo".  Locking will be interesting, though... ;-/
+
+I guess yes... send_sigqueue() checks list_empty() too, probably nobody else.
+
 
 > BTW, I really wonder how does that stuff interact with PTRACE_SETSIGINFO.
 > What happens if tracer does PTRACE_GETSIGINFO, changes ->si_signo to
@@ -50,14 +70,16 @@ On Sat, Feb 15, 2014 at 03:58:38PM +0000, Al Viro wrote:
 > with the same ->si_tid, one of them matching the timer->sigq and another
 > - not?
 
-I wonder if it would be simpler to use the pointer *only* for si_code < 0
-case.  It still gives us ksiginfo_t much smaller than siginfo_t, avoids
-all the mess with timers and AFAICS results in less intrusive patch.
-IOW, the split between "we know what that sucker is" and "completely
-opaque shit the userland has given us".
+Or the task sends a SI_TIMER info to itself via sys_rt_sigqueueinfo().
 
-I'll try to put together something along those lines and see how well does
-that work...
+Afaics, nothing really bad can happen, I mean the kernel should not
+crash or something like this. do_schedule_next_timer() can be fooled,
+but at least lock_timer() can only succeed if this process actually
+has a timer with the same timer_id. This sigqueue != timer->sigq, but
+I think this doesn't matter, posix_timer_event() will use timer->sigq
+anyway.
+
+Oleg.
 
 _______________________________________________
 xfs mailing list
