@@ -1,27 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C7B429DF8
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 16:29:20 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1A62229DF8
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 16:43:07 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F616AC002
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 14:29:20 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	YPJOVshAuqJzoMgH for <xfs@oss.sgi.com>;
-	Sat, 15 Feb 2014 14:29:18 -0800 (PST)
-Date: Sun, 16 Feb 2014 09:29:15 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: test for atime-related mount options
-Message-ID: <20140215222915.GU13647@dastard>
-References: <1392305016-7424-1-git-send-email-koen.de.wit@oracle.com>
-	<52FCF60F.6030703@sandeen.net>
-	<20140214163925.GW16073@twin.jikos.cz>
-	<52FE472C.8070503@sandeen.net> <20140214222418.GT13997@dastard>
-	<52FEAB6B.10107@redhat.com> <20140215013931.GT13647@dastard>
-	<52FED8B0.6040009@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CCA90304043
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 14:43:06 -0800 (PST)
+Received: from mail-vc0-f177.google.com (mail-vc0-f177.google.com
+	[209.85.220.177]) by cuda.sgi.com with ESMTP id
+	7OhHUnV7CXIrZ39B (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 15 Feb 2014 14:43:05 -0800 (PST)
+Received: by mail-vc0-f177.google.com with SMTP id if11so10163364vcb.8
+	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 14:43:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <52FED8B0.6040009@redhat.com>
+In-Reply-To: <20140215222844.GA18201@redhat.com>
+References: <20140212010941.GM18016@ZenIV.linux.org.uk>
+	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
+	<20140212040358.GA25327@redhat.com>
+	<20140212042215.GN18016@ZenIV.linux.org.uk>
+	<20140212054043.GB13997@dastard>
+	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
+	<20140212071829.GE13997@dastard> <20140214002427.GN13997@dastard>
+	<20140214160123.GA28125@redhat.com>
+	<20140215222356.GU13997@dastard>
+	<20140215222844.GA18201@redhat.com>
+Date: Sat, 15 Feb 2014 14:43:03 -0800
+Message-ID: <CA+55aFyGgjSgdJm=cBXGdrSO1pV95yxjVymC1QbjvonB-_GF8g@mail.gmail.com>
+Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,104 +40,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Koen De Wit <koen.de.wit@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, dsterba@suse.cz, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Jones <davej@redhat.com>, Dave Chinner <david@fromorbit.com>, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Feb 14, 2014 at 09:02:08PM -0600, Eric Sandeen wrote:
-> On 2/14/14, 7:39 PM, Dave Chinner wrote:
-> > On Fri, Feb 14, 2014 at 05:48:59PM -0600, Eric Sandeen wrote:
-> >> On 2/14/14, 4:24 PM, Dave Chinner wrote:
-> >>> On Fri, Feb 14, 2014 at 10:41:16AM -0600, Eric Sandeen wrote:
-> >>>> On 2/14/14, 10:39 AM, David Sterba wrote:
-> >>>>> On Thu, Feb 13, 2014 at 10:42:55AM -0600, Eric Sandeen wrote:
-> >>>>>>> +cat /proc/mounts | grep "$SCRATCH_MNT" | grep relatime >> $seqres.full
-> >>>>>>> +[ $? -ne 0 ] && echo "The relatime mount option should be the default."
-> >>>>>>
-> >>>>>> Ok, I guess "relatime" in /proc/mounts is from core vfs code and
-> >>>>>> should be there for the foreseeable future, so seems ok.
-> >>>>>>
-> >>>>>> But - relatime was added in v2.6.20, and made default in 2.6.30.  So
-> >>>>>> testing older kernels may not go as expected; it'd probably be best to
-> >>>>>> catch situations where relatime isn't available (< 2.6.20) or not
-> >>>>>> default (< 2.6.30), by explicitly mounting with relatime, and skipping
-> >>>>>> relatime/strictatime tests if that fails?
-> >>>>>
-> >>>>> Is there some consensus what's the lowest kernel version to be supported
-> >>>>> by xfstests? 2.6.32 is the lowest base for kernels in use today, so
-> >>>>> worrying about anything older does not seem necessary.
-> >>>>>
-> >>>>
-> >>>> I don't know that it's been discussed - selfishly, I know our QE uses
-> >>>> xfstests on RHEL5, which is 2.6.18-based.
-> >>>
-> >>> Sure, but they can just add the test to a "rhel5-expunged" file and
-> >>> they don't have to care about tests that won't work on RHEL 5 or
-> >>> other older kernels. Or to send patches to add "_requires_relatime"
-> >>> so that it automatically does the right thing for older kernels.
-> >>
-> >> sure but some of this test is still valid on a kernel w/o relatime.
-> >> And since it's the default, "relatime" might disappear from /proc/mounts
-> >> some day anyway, so explicitly mounting with the option & failing
-> >> if that fails might be good future-proofind in any case.
-> >>
-> >> *shrug*
-> >>
-> >> It was just a request, not a demand.  :)  Koen, you can do with
-> >> it whatever you like.  Reviews aren't ultimatums.  :)
-> >>
-> >> If xfstests upstream is only targeted at the current kernel, that's
-> >> fine, but maye we should make that a little more explicit.
-> > 
-> > That's not what I meant. ;)
-> > 
-> > Really, all I'm saying is that we can't expect people who are
-> > writing tests that work on current kernels to know what is necessary
-> > to make tests work on 7 year old distros that don't support a
-> > feature that has been in mainline for 5 years. Hence that shouldn't
-> > be a barrier to having a test committed as we have mechanisms for
-> > distro QE to handle these sorts of issues...
-> 
-> Sure, that's perfectly fair.
-> 
-> I wasn't really thinking of RHEL5 when I made my first comment,
-> just general portability across kernels.  dsterba suggested that
-> 2.6.32 is the oldest kernel used, and I pointed out that we do
-> still use 2.6.18.  :)
-> 
-> Anyway, for general portability across releases, perhaps rather than:
-> 
-> +cat /proc/mounts | grep "$SCRATCH_MNT" | grep relatime >> $seqres.full
-> +[ $? -ne 0 ] && echo "The relatime mount option should be the default."
-> 
-> which would fail the test, it should just [notrun] if relatime
-> isn't there, for any reason, on any kernel, if relatime is not
-> default as expected for the test framework.  i.e.
-> 
-> +[ $? -ne 0 ] && _notrun "The relatime mount option is not the default."
+On Sat, Feb 15, 2014 at 2:28 PM, Dave Jones <davej@redhat.com> wrote:
+>
+> I've got a shitload of debug options enabled, which may explain it.
+> Or perhaps that new STACK_PROTECTOR_STRONG stuff ?
 
-I disagree - the test doesn't need to care what the default mount
-option is - it's a relatively silly thing to test because it doesn't
-determine whether the behaviour of the option is correct or not.
-Especially as the test is checking the behaviour of specific atime
-mount options so it should just specify each one it is testing and
-ignoring what the default is. IOWs, the default atime behaviour just
-doesn't matter for the purpose of the test....
+Well, a lot of it is just the callee-saved registers. The compiler
+will tend to preferentially allocate registers in the callee-trashed
+registers, but if the function isn't a leaf function, any registers
+that are live around a function call will have to be saved somewhere -
+either explicitly around the function call, or - more likely - in
+callee-saved registers that then get saved in the prologue/epilogue of
+the function. And this will happen even in leaf functions when there
+is enough register pressure that the callee-trashed registers aren't
+sufficient (which is pretty common).
 
-What the test actually cares about is this:
+So saving 5-6 registers on the stack (in addition to any actual stack
+frame) is pretty much the norm for anything but the very simplest
+cases.
 
-_require_relatime()
-{
-	_scratch_mkfs > /dev/null 2>&1
-	_mount -t $FSTYP -o relatime $SCRATCH_DEV $SCRATCH_MNT || \
-		_notrun "relatime not supported by the current kernel"
-}
+But yeah, I'm sure some config options make it worse.
+STACK_PROTECTOR_STRONG could easily be one of those.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+            Linus
 
 _______________________________________________
 xfs mailing list
