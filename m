@@ -1,32 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CD93929DF8
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 17:50:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AA9348F8039
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 15:50:31 -0800 (PST)
-Received: from mail-vc0-f171.google.com (mail-vc0-f171.google.com
-	[209.85.220.171]) by cuda.sgi.com with ESMTP id
-	2nc3sl5zrPUv23WW (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 15 Feb 2014 15:50:30 -0800 (PST)
-Received: by mail-vc0-f171.google.com with SMTP id le5so10360737vcb.2
-	for <xfs@oss.sgi.com>; Sat, 15 Feb 2014 15:50:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140214002427.GN13997@dastard>
-References: <20140211210841.GM13647@dastard> <52FA9ADA.9040803@sandeen.net>
-	<20140212004403.GA17129@redhat.com>
-	<20140212010941.GM18016@ZenIV.linux.org.uk>
-	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
-	<20140212040358.GA25327@redhat.com>
-	<20140212042215.GN18016@ZenIV.linux.org.uk>
-	<20140212054043.GB13997@dastard>
-	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
-	<20140212071829.GE13997@dastard> <20140214002427.GN13997@dastard>
-Date: Sat, 15 Feb 2014 15:50:29 -0800
-Message-ID: <CA+55aFx=i6dbzCUZ6TwCMqniyS4C=tJx9+72p=EA+dU8Vn=2jQ@mail.gmail.com>
-Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 99C157F6B
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 07:44:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2A972AC00B
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 05:44:36 -0800 (PST)
+Received: from mail-we0-f172.google.com (mail-we0-f172.google.com
+	[74.125.82.172]) by cuda.sgi.com with ESMTP id G0jFlY3kI1ElkxGs
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 16 Feb 2014 05:44:31 -0800 (PST)
+Received: by mail-we0-f172.google.com with SMTP id p61so10066701wes.17
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 05:44:29 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH] xfstests: add test for btrfs incremental send after dir
+	renames
+Date: Sun, 16 Feb 2014 13:44:20 +0000
+Message-Id: <1392558260-14546-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,53 +24,192 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, linux-mm <linux-mm@kvack.org>
-Cc: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Al Viro <viro@zeniv.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
+Cc: Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-[ Added linux-mm to the participants list ]
+Regression test for a btrfs incremental send issue related to renaming of
+directories. If at the time of the initial send we have a directory that is
+a child of a directory with a higher inode number, and then later after the
+initial full send we rename both the child and parent directories, but
+without moving any of them, a subsequent incremental send would produce a
+rename instruction for the child directory that pointed to an invalid path.
+This made the btrfs receive operation fail.
 
-On Thu, Feb 13, 2014 at 4:24 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> Dave, the patch below should chop off the stack usage from
-> xfs_log_force_lsn() issuing IO by deferring it to the CIL workqueue.
-> Can you given this a run?
+This issue is fixed by the following linux kernel btrfs patch:
 
-Ok, so DaveJ confirmed that DaveC's patch fixes his issue (damn,
-people, your parents were some seriously boring people, were they not?
-We've got too many Dave's around), but DaveC earlier pointed out that
-pretty much any memory allocation path can end up using 3kB of stack
-even without XFS being involved.
+   Btrfs: incremental send, fix invalid path after dir rename
 
-Which does bring up the question whether we should look (once more) at
-the VM direct-reclaim path, and try to avoid GFP_FS/IO direct
-reclaim..
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
+ tests/btrfs/041     |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/041.out |    1 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 135 insertions(+)
+ create mode 100755 tests/btrfs/041
+ create mode 100644 tests/btrfs/041.out
 
-Direct reclaim historically used to be an important throttling
-mechanism, and I used to not be a fan of trying to avoid direct
-reclaim. But the stack depth issue really looks to be pretty bad, and
-I think we've gotten better at throttling explicitly, so..
-
-I *think* we already limit filesystem writeback to just kswapd (in
-shrink_page_list()), but DaveC posted a backtrace that goes through
-do_try_to_free_pages() to shrink_slab(), and through there to the
-filesystem and then IO. That looked like a disaster.
-
-And that's because (if I read things right) shrink_page_list() limits
-filesystem page writeback to kswapd, but not swap pages. Which I think
-probably made more sense back in the days than it does now (I
-certainly *hope* that swapping is less important today than it was,
-say, ten years ago)
-
-So I'm wondering whether we should remove that page_is_file_cache()
-check from shrink_page_list()?
-
-And then there is that whole shrink_slab() case...
-
-               Linus
+diff --git a/tests/btrfs/041 b/tests/btrfs/041
+new file mode 100755
+index 0000000..14309f2
+--- /dev/null
++++ b/tests/btrfs/041
+@@ -0,0 +1,133 @@
++#! /bin/bash
++# FS QA Test No. btrfs/041
++#
++# Regression test for a btrfs incremental send issue related to renaming of
++# directories. If at the time of the initial send we have a directory that is
++# a child of a directory with a higher inode number, and then later after the
++# initial full send we rename both the child and parent directories, but
++# without moving any of them, a subsequent incremental send would produce a
++# rename instruction for the child directory that pointed to an invalid path.
++# This made the btrfs receive operation fail.
++#
++# This issue is fixed by the following linux kernel btrfs patch:
++#
++#   Btrfs: incremental send, fix invalid path after dir rename
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=`mktemp -d`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++FSSUM_PROG=$here/src/fssum
++[ -x $FSSUM_PROG ] || _notrun "fssum not built"
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++mkdir -p $SCRATCH_MNT/a/b
++mkdir $SCRATCH_MNT/d
++mkdir $SCRATCH_MNT/a/b/c
++mv $SCRATCH_MNT/d $SCRATCH_MNT/a/b/c
++mkdir $SCRATCH_MNT/e
++mkdir -p $SCRATCH_MNT/a/b/f/g
++mv $SCRATCH_MNT/e $SCRATCH_MNT/a/b/f/g
++
++# Filesystem looks like:
++#
++# .                      (ino 256)
++# |-- a                  (ino 258)
++#     |-- b              (ino 260)
++#         |-- c          (ino 266)
++#         |   |-- d      (ino 265)
++#         |
++#         |-- f          (ino 267)
++#             |-- g      (ino 268)
++#                 |-- e  (ino 266)
++
++run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++	$SCRATCH_MNT/mysnap1
++
++mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/a/b/x
++mv $SCRATCH_MNT/a/b/x/d $SCRATCH_MNT/a/b/x/y
++mv $SCRATCH_MNT/a/b/f $SCRATCH_MNT/a/b/w
++mv $SCRATCH_MNT/a/b/w/g/e $SCRATCH_MNT/a/b/w/g/z
++
++# Filesystem now looks like:
++#
++# .                      (ino 256)
++# |-- a                  (ino 258)
++#     |-- b              (ino 260)
++#         |-- x          (ino 266)
++#         |   |-- y      (ino 265)
++#         |
++#         |-- w          (ino 267)
++#             |-- g      (ino 268)
++#                 |-- z  (ino 266)
++
++run_check $BTRFS_UTIL_PROG subvolume snapshot -r $SCRATCH_MNT \
++	$SCRATCH_MNT/mysnap2
++
++run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
++run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
++	$SCRATCH_MNT/mysnap2
++
++run_check $BTRFS_UTIL_PROG send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
++run_check $BTRFS_UTIL_PROG send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++	-f $tmp/2.snap
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/1.snap
++run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1 2>> $seqres.full
++
++run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $tmp/2.snap
++run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2 2>> $seqres.full
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++status=0
++exit
+diff --git a/tests/btrfs/041.out b/tests/btrfs/041.out
+new file mode 100644
+index 0000000..309876c
+--- /dev/null
++++ b/tests/btrfs/041.out
+@@ -0,0 +1 @@
++QA output created by 041
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index a687634..09e309c 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -39,3 +39,4 @@
+ 034 auto quick
+ 036 auto quick
+ 040 auto quick
++041 auto quick
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
