@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C16C37F81
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 16:22:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6416BAC02C
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 14:22:10 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 888CB7F82
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 16:28:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 562D1304053
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 14:28:22 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	P5GYvOehzOHnab21 for <xfs@oss.sgi.com>;
-	Sun, 16 Feb 2014 14:22:01 -0800 (PST)
-Date: Mon, 17 Feb 2014 09:21:53 +1100
+	4vA8jflR8hmV491U for <xfs@oss.sgi.com>;
+	Sun, 16 Feb 2014 14:28:20 -0800 (PST)
+Date: Mon, 17 Feb 2014 09:28:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Volume fine on x86_64, corruption on ARM
-Message-ID: <20140216222153.GV13647@dastard>
-References: <CALgDg0bhoo5WgkxygCX+yNXgGNG8-KkXLXRrf+TQvva0ct80jQ@mail.gmail.com>
+Subject: Re: Tasks blocked in xlog_grant_log_space
+Message-ID: <20140216222811.GW13647@dastard>
+References: <532438291.2495843.1392394364516.JavaMail.zimbra@redhat.com>
+	<461400101.2501294.1392394773671.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CALgDg0bhoo5WgkxygCX+yNXgGNG8-KkXLXRrf+TQvva0ct80jQ@mail.gmail.com>
+In-Reply-To: <461400101.2501294.1392394773671.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bill Webster <shaman@gdblabs.com>
-Cc: xfs@oss.sgi.com
+To: Laurence Oberman <loberman@redhat.com>
+Cc: Leonardo Menezes Vaz <lvaz@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Feb 14, 2014 at 08:18:45PM -0700, Bill Webster wrote:
-> Has this issue been resolved?
+On Fri, Feb 14, 2014 at 11:19:33AM -0500, Laurence Oberman wrote:
+> Hello
+> 
+> I have a customer seeing multiple tasks blocked in xlog_grant_log_space
+> This lands up hitting the hungtask timer for pdflush.
+> 
+> I have seen on the list that this issue is still out there.
+> I also don't see outstanding I/O requests on the XFS file system that experienced this block.
+> 
+> The last hung_task timeout was on dm-9 
+> ffff81011c78c080 ffff81081a43bc00 xfs    /dev/vgautocomp/lv_autocomp /bb/autocomp
+> 
+> crash> gendisk ffff810814d24400 | grep in_flight
+>   in_flight = 0, 
+> 
+> So just wondering if I am hitting an existing bug or if its a new one.
+> 
+> This is an older 2.6.18 kernel
 
-You need to be more specific abou tthe problem you are having than
-the subject line....
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+There's been lots of problems fixed in this area in the past seven
+years. Your best bet is to upgrade to a more recent 3.x based kernel
+where the known issues in this area have been resolved.
 
 Cheers,
 
