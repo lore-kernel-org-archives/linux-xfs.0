@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 40D297FA3
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 14:40:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C5157AC004
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 12:40:50 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XaCgpA6oSGlLVYQM for
-	<xfs@oss.sgi.com>; Mon, 17 Feb 2014 12:40:49 -0800 (PST)
-Message-ID: <530273CD.3090303@redhat.com>
-Date: Mon, 17 Feb 2014 14:40:45 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: test for atime-related mount options
-References: <1392668720-6135-1-git-send-email-koen.de.wit@oracle.com>
-In-Reply-To: <1392668720-6135-1-git-send-email-koen.de.wit@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B26DD7FA3
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 17:12:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 953508F8059
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 15:12:23 -0800 (PST)
+Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
+	[209.85.192.172]) by cuda.sgi.com with ESMTP id
+	ksu1ZnowGdHv50C0 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 17 Feb 2014 15:12:19 -0800 (PST)
+Received: by mail-pd0-f172.google.com with SMTP id p10so15501760pdj.3
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 15:12:18 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Subject: Re: [PATCH 1/6] ext4: Update inode i_size after the preallocation
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <1392649703-10772-2-git-send-email-lczerner@redhat.com>
+Date: Mon, 17 Feb 2014 16:12:14 -0700
+Message-Id: <9288BED9-A44E-4ACC-9A3D-BC086AB4E121@dilger.ca>
+References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
+	<1392649703-10772-2-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,281 +28,260 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3596242918601154807=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Koen De Wit <koen.de.wit@oracle.com>, xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
 
-On 2/17/14, 2:25 PM, Koen De Wit wrote:
-> Tests the noatime, relatime, strictatime and nodiratime mount options.
-> 
-> There is an extra check for Btrfs to ensure that the access time is
-> never updated on read-only subvolumes. (Regression test for bug fixed
-> with commit 93fd63c2f001ca6797c6b15b696a484b165b4800)
 
-I think this looks ok.  Only little nit is that _require_relatime
-now implicitly requires scratch, but *shrug* it was Dave's idea.  ;)
+--===============3596242918601154807==
+Content-Type: multipart/signed; boundary="Apple-Mail=_FCB0203D-3913-401C-B3E8-80734072523A"; protocol="application/pgp-signature"; micalg=pgp-sha1
 
-Thanks!
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+--Apple-Mail=_FCB0203D-3913-401C-B3E8-80734072523A
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+On Feb 17, 2014, at 8:08 AM, Lukas Czerner <lczerner@redhat.com> wrote:
+> Currently in ext4_fallocate we would update inode size, c_time and =
+sync
+> the file with every partial allocation which is entirely unnecessary. =
+It
+> is true that if the crash happens in the middle of truncate we might =
+end
+> up with unchanged i size, or c_time which I do not think is really a
+> problem - it does not mean file system corruption in any way. Note =
+that
+> xfs is doing things the same way e.g. update all of the mentioned =
+after
+> the allocation is done.
+
+I'm OK with this part.
+
+> This commit moves all the updates after the allocation is done. In
+> addition we also need to change m_time as not only inode has been =
+change
+> bot also data regions might have changed (unwritten extents).
+
+I don't necessarily agree about this.  Calling fallocate() will not
+change the user-visible data at all, so there is no reason to e.g.
+do a new backup of the file or reprocess the contents, or any other
+reason that an application cares about a changed mtime.
+
+Cheers, Andreas
+
+> Also we do
+> not need to be paranoid about changing the c_time and m_time only if =
+the
+> actual allocation have happened, we can change it even if we try to
+> allocate only to find out that there are already block allocated. It's
+> not really a big deal and it will save us some additional complexity.
+>=20
+> Also use ext4_debug, instead of ext4_warning in #ifdef EXT4FS_DEBUG
+> section.
+>=20
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 > ---
-> 
-> v1->v2:
->     - Fix typo in _cleanup()
->     - Explicitly passing relatime mount option
->     - Adding _require_relatime method to common/rc
->     - Adding extra test for read-only mounts 
-> 
-> diff --git a/common/rc b/common/rc
-> index e91568b..e55d09e 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2159,6 +2159,14 @@ _verify_reflink()
->                 || echo "$1 and $2 are not reflinks: different extents"
->  }
->  
-> +_require_relatime()
-> +{
-> +        _scratch_mkfs > /dev/null 2>&1
-> +        _mount -t $FSTYP -o relatime $SCRATCH_DEV $SCRATCH_MNT || \
-> +                _notrun "relatime not supported by the current kernel"
-> +	_scratch_unmount
-> +}
+> fs/ext4/extents.c | 86 =
++++++++++++++++++++++----------------------------------
+> 1 file changed, 32 insertions(+), 54 deletions(-)
+>=20
+> diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+> index 10cff47..6a52851 100644
+> --- a/fs/ext4/extents.c
+> +++ b/fs/ext4/extents.c
+> @@ -4513,36 +4513,6 @@ retry:
+> 	ext4_std_error(inode->i_sb, err);
+> }
+>=20
+> -static void ext4_falloc_update_inode(struct inode *inode,
+> -				int mode, loff_t new_size, int =
+update_ctime)
+> -{
+> -	struct timespec now;
+> -
+> -	if (update_ctime) {
+> -		now =3D current_fs_time(inode->i_sb);
+> -		if (!timespec_equal(&inode->i_ctime, &now))
+> -			inode->i_ctime =3D now;
+> -	}
+> -	/*
+> -	 * Update only when preallocation was requested beyond
+> -	 * the file size.
+> -	 */
+> -	if (!(mode & FALLOC_FL_KEEP_SIZE)) {
+> -		if (new_size > i_size_read(inode))
+> -			i_size_write(inode, new_size);
+> -		if (new_size > EXT4_I(inode)->i_disksize)
+> -			ext4_update_i_disksize(inode, new_size);
+> -	} else {
+> -		/*
+> -		 * Mark that we allocate beyond EOF so the subsequent =
+truncate
+> -		 * can proceed even if the new size is the same as =
+i_size.
+> -		 */
+> -		if (new_size > i_size_read(inode))
+> -			ext4_set_inode_flag(inode, =
+EXT4_INODE_EOFBLOCKS);
+> -	}
+> -
+> -}
+> -
+> /*
+>  * preallocate space for a file. This implements ext4's fallocate file
+>  * operation, which gets called from sys_fallocate system call.
+> @@ -4554,7 +4524,7 @@ long ext4_fallocate(struct file *file, int mode, =
+loff_t offset, loff_t len)
+> {
+> 	struct inode *inode =3D file_inode(file);
+> 	handle_t *handle;
+> -	loff_t new_size;
+> +	loff_t new_size =3D 0;
+> 	unsigned int max_blocks;
+> 	int ret =3D 0;
+> 	int ret2 =3D 0;
+> @@ -4594,12 +4564,15 @@ long ext4_fallocate(struct file *file, int =
+mode, loff_t offset, loff_t len)
+> 	 */
+> 	credits =3D ext4_chunk_trans_blocks(inode, max_blocks);
+> 	mutex_lock(&inode->i_mutex);
+> -	ret =3D inode_newsize_ok(inode, (len + offset));
+> -	if (ret) {
+> -		mutex_unlock(&inode->i_mutex);
+> -		trace_ext4_fallocate_exit(inode, offset, max_blocks, =
+ret);
+> -		return ret;
 > +
->  _create_loop_device()
->  {
->  	file=$1
-> diff --git a/tests/generic/323 b/tests/generic/323
-> new file mode 100644
-> index 0000000..54f2739
-> --- /dev/null
-> +++ b/tests/generic/323
-> @@ -0,0 +1,199 @@
-> +# Tests the noatime, relatime, strictatime and nodiratime mount options.
-> +# There is an extra check for Btrfs to ensure that the access time is
-> +# never updated on read-only subvolumes. (Regression test for bug fixed
-> +# with commit 93fd63c2f001ca6797c6b15b696a484b165b4800)
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2014, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
+> +	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+> +	     offset + len > i_size_read(inode)) {
+> +		new_size =3D offset + len;
+> +		ret =3D inode_newsize_ok(inode, new_size);
+> +		if (ret)
+> +			goto out;
+> 	}
 > +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
+> 	flags =3D EXT4_GET_BLOCKS_CREATE_UNINIT_EXT;
+> 	if (mode & FALLOC_FL_KEEP_SIZE)
+> 		flags |=3D EXT4_GET_BLOCKS_KEEP_SIZE;
+> @@ -4623,28 +4596,14 @@ retry:
+> 		}
+> 		ret =3D ext4_map_blocks(handle, inode, &map, flags);
+> 		if (ret <=3D 0) {
+> -#ifdef EXT4FS_DEBUG
+> -			ext4_warning(inode->i_sb,
+> -				     "inode #%lu: block %u: len %u: "
+> -				     "ext4_ext_map_blocks returned %d",
+> -				     inode->i_ino, map.m_lblk,
+> -				     map.m_len, ret);
+> -#endif
+> +			ext4_debug("inode #%lu: block %u: len %u: "
+> +				   "ext4_ext_map_blocks returned %d",
+> +				   inode->i_ino, map.m_lblk,
+> +				   map.m_len, ret);
+> 			ext4_mark_inode_dirty(handle, inode);
+> 			ret2 =3D ext4_journal_stop(handle);
+> 			break;
+> 		}
+> -		if ((map.m_lblk + ret) >=3D (EXT4_BLOCK_ALIGN(offset + =
+len,
+> -						blkbits) >> blkbits))
+> -			new_size =3D offset + len;
+> -		else
+> -			new_size =3D ((loff_t) map.m_lblk + ret) << =
+blkbits;
+> -
+> -		ext4_falloc_update_inode(inode, mode, new_size,
+> -					 (map.m_flags & EXT4_MAP_NEW));
+> -		ext4_mark_inode_dirty(handle, inode);
+> -		if ((file->f_flags & O_SYNC) && ret >=3D max_blocks)
+> -			ext4_handle_sync(handle);
+> 		ret2 =3D ext4_journal_stop(handle);
+> 		if (ret2)
+> 			break;
+> @@ -4654,6 +4613,25 @@ retry:
+> 		ret =3D 0;
+> 		goto retry;
+> 	}
 > +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +	handle =3D ext4_journal_start(inode, EXT4_HT_INODE, 2);
+> +	if (IS_ERR(handle))
+> +		goto out;
 > +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -rf $tmp.*
-> +}
+> +	inode->i_mtime =3D inode->i_ctime =3D ext4_current_time(inode);
 > +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
+> +	if (ret > 0 && new_size) {
+> +		if (new_size > i_size_read(inode))
+> +			i_size_write(inode, new_size);
+> +		if (new_size > EXT4_I(inode)->i_disksize)
+> +			ext4_update_i_disksize(inode, new_size);
+> +	}
+> +	ext4_mark_inode_dirty(handle, inode);
+> +	if (file->f_flags & O_SYNC)
+> +		ext4_handle_sync(handle);
 > +
-> +# real QA test starts here
-> +
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +_require_relatime
-> +
-> +rm -f $seqres.full
-> +
-> +_stat() {
-> +    stat --printf="%x;%y;%z" $1
-> +}
-> +
-> +_compare_stat_times() {
-> +    updated=$1      # 3 chars indicating if access, modify and
-> +                    # change times should be updated (Y) or not (N)
-> +    IFS=';' read -a first_stat <<< "$2"   # Convert first stat to array
-> +    IFS=';' read -a second_stat <<< "$3"  # Convert second stat to array
-> +    test_step=$4    # Will be printed to output stream in case of an
-> +                    # error, to make debugging easier
-> +    types=( access modify change )
-> +
-> +    for i in 0 1 2; do
-> +        if [ "${first_stat[$i]}" == "${second_stat[$i]}" ]; then
-> +            if [ "${updated:$i:1}" == "Y" ]; then
-> +                echo -n "ERROR: ${types[$i]} time has not been updated "
-> +                echo $test_step
-> +            fi
-> +        else
-> +            if [ "${updated:$i:1}" == "N" ]; then
-> +                echo -n "ERROR: ${types[$i]} time has changed "
-> +                echo $test_step
-> +            fi
-> +        fi
-> +    done
-> +}
-> +
-> +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> +_scratch_mount "-o relatime"
-> +
-> +if [ "$FSTYP" = "btrfs" ]; then
-> +    TPATH=$SCRATCH_MNT/sub1
-> +    $BTRFS_UTIL_PROG subvolume create $TPATH > $seqres.full
-> +else
-> +    TPATH=$SCRATCH_MNT
-> +fi
-> +
-> +mkdir $TPATH/dir1
-> +echo "aaa" > $TPATH/dir1/file1
-> +file1_stat_before_first_access=`_stat $TPATH/dir1/file1`
-> +
-> +# Accessing file1 the first time
-> +cat $TPATH/dir1/file1 > /dev/null
-> +file1_stat_after_first_access=`_stat $TPATH/dir1/file1`
-> +_compare_stat_times YNN "$file1_stat_before_first_access" \
-> +    "$file1_stat_after_first_access" "after accessing file1 first time"
-> +
-> +# Accessing file1 a second time
-> +cat $TPATH/dir1/file1 > /dev/null
-> +file1_stat_after_second_access=`_stat $TPATH/dir1/file1`
-> +_compare_stat_times NNN "$file1_stat_after_first_access" \
-> +    "$file1_stat_after_second_access" "after accessing file1 second time"
-> +
-> +# Remounting with nodiratime option
-> +_scratch_unmount
-> +_scratch_mount "-o nodiratime"
-> +file1_stat_after_remount=`_stat $TPATH/dir1/file1`
-> +_compare_stat_times NNN "$file1_stat_after_second_access" \
-> +    "$file1_stat_after_remount" "for file1 after remount"
-> +
-> +# Creating dir2 and file2, checking directory stats
-> +mkdir $TPATH/dir2
-> +dir2_stat_before_file_creation=`_stat $TPATH/dir2`
-> +echo "bbb" > $TPATH/dir2/file2
-> +dir2_stat_after_file_creation=`_stat $TPATH/dir2`
-> +_compare_stat_times NYY "$dir2_stat_before_file_creation" \
-> +    "$dir2_stat_after_file_creation" "for dir2 after file creation"
-> +
-> +# Accessing file2
-> +file2_stat_before_first_access=`_stat $TPATH/dir2/file2`
-> +cat $TPATH/dir2/file2 > /dev/null
-> +file2_stat_after_first_access=`_stat $TPATH/dir2/file2`
-> +_compare_stat_times YNN "$file2_stat_before_first_access" \
-> +    "$file2_stat_after_first_access" "after accessing file2"
-> +dir2_stat_after_file_access=`_stat $TPATH/dir2`
-> +_compare_stat_times NNN "$dir2_stat_after_file_creation" \
-> +    "$dir2_stat_after_file_access" "for dir2 after file access"
-> +
-> +# Remounting with noatime option, creating a file and accessing it
-> +_scratch_unmount
-> +_scratch_mount "-o noatime"
-> +echo "ccc" > $TPATH/dir2/file3
-> +file3_stat_before_first_access=`_stat $TPATH/dir2/file3`
-> +cat $TPATH/dir2/file3 > /dev/null
-> +file3_stat_after_first_access=`_stat $TPATH/dir2/file3`
-> +_compare_stat_times NNN "$file3_stat_before_first_access" \
-> +    "$file3_stat_after_first_access" "after accessing file3 first time"
-> +
-> +# Checking that the modify and change times are still updated
-> +file1_stat_before_modify=`_stat $TPATH/dir1/file1`
-> +echo "xyz" > $TPATH/dir1/file1
-> +file1_stat_after_modify=`_stat $TPATH/dir1/file1`
-> +_compare_stat_times NYY "$file1_stat_before_modify" \
-> +    "$file1_stat_after_modify" "after modifying file1"
-> +mv $TPATH/dir1/file1 $TPATH/dir1/file1_renamed
-> +file1_stat_after_change=`_stat $TPATH/dir1/file1_renamed`
-> +_compare_stat_times NNY "$file1_stat_after_modify" \
-> +    "$file1_stat_after_change" "after changing file1"
-> +
-> +# Remounting with strictatime option and
-> +# accessing a previously created file twice
-> +_scratch_unmount
-> +_scratch_mount "-o strictatime"
-> +cat $TPATH/dir2/file3 > /dev/null
-> +file3_stat_after_second_access=`_stat $TPATH/dir2/file3`
-> +_compare_stat_times YNN "$file3_stat_after_first_access" \
-> +    "$file3_stat_after_second_access" "after accessing file3 second time"
-> +cat $TPATH/dir2/file3 > /dev/null
-> +file3_stat_after_third_access=`_stat $TPATH/dir2/file3`
-> +_compare_stat_times YNN "$file3_stat_after_second_access" \
-> +    "$file3_stat_after_third_access" "after accessing file3 third time"
-> +
-> +# Btrfs only: Creating readonly snapshot. Access time should never
-> +# be updated, even when the strictatime mount option is active
-> +if [ "$FSTYP" = "btrfs" ]; then
-> +    SPATH=$SCRATCH_MNT/snap1
-> +    btrfs subvol snapshot -r $TPATH $SPATH >> $seqres.full
-> +    dir2_stat_readonly_before_access=`_stat $SPATH/dir2`
-> +    ls $SPATH/dir2 >> $seqres.full
-> +    cat $SPATH/dir2/file3 >> $seqres.full
-> +    dir2_stat_readonly_after_access=`_stat $SPATH/dir2`
-> +    _compare_stat_times NNN "$dir2_stat_readonly_before_access" \
-> +        "$dir2_stat_readonly_after_access" "for dir in readonly subvol"
-> +    file3_stat_readonly_after_access=`_stat $SPATH/dir2/file3`
-> +    _compare_stat_times NNN "$file3_stat_after_third_access" \
-> +        "$file3_stat_readonly_after_access" "for file in readonly subvol"
-> +fi
-> +
-> +# Remounting read-only. Access time should never be updated, despite the
-> +# strictatime mount option.
-> +dir2_stat_before_ro_mount=`_stat $TPATH/dir2`
-> +file3_stat_before_ro_mount=`_stat $TPATH/dir2/file3`
-> +_scratch_unmount
-> +_scratch_mount "-o ro,strictatime"
-> +ls $TPATH/dir2 > /dev/null
-> +cat $TPATH/dir2/file3 > /dev/null
-> +dir2_stat_after_ro_mount=`_stat $TPATH/dir2`
-> +_compare_stat_times NNN "$dir2_stat_before_ro_mount" \
-> +    "$dir2_stat_after_ro_mount" "for dir in read-only filesystem"
-> +file3_stat_after_ro_mount=`_stat $TPATH/dir2/file3`
-> +_compare_stat_times NNN "$file3_stat_before_ro_mount" \
-> +    "$file3_stat_after_ro_mount" "for file in read-only filesystem"
-> +
-> +# success, all done
-> +_scratch_unmount
-> +echo "Silence is golden"
-> +status=0
-> +exit
-> diff --git a/tests/generic/323.out b/tests/generic/323.out
-> new file mode 100644
-> index 0000000..5dba9b5
-> --- /dev/null
-> +++ b/tests/generic/323.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 323
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index f492461..3a72ee4 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -125,3 +125,4 @@
->  320 auto rw
->  321 auto quick metadata log
->  322 auto quick metadata log
-> +323 atime auto quick
-> 
-	
+> +	ext4_journal_stop(handle);
+> +out:
+> 	mutex_unlock(&inode->i_mutex);
+> 	trace_ext4_fallocate_exit(inode, offset, max_blocks,
+> 				ret > 0 ? ret2 : ret);
+> --=20
+> 1.8.3.1
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe =
+linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_FCB0203D-3913-401C-B3E8-80734072523A
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIVAwUBUwKXTnKl2rkXzB/gAQID4BAAuZpAwsZ645L8aWEPVTXgvfgQbml/dqvf
+BKOBiVTXIhmcxBWPrFjkwy/wDQlg7Q3HAZOOxizEDN6pjfYUlOucIUGF5GOKnYv/
+X2gUe4AtZOuU1jDV0bW5AwXv9cqWIYK7KdM1zqFhBBT3T2Bs/hHrh+AbLBksyOhZ
+oBeVRMElbWpHpHEIma0+FGKuCeDlA/jfa8wIDkKyAnAR+4nmbOclWC48UuVcBqr2
+JRE+aX5kicm0sTFlEB23wZQ2cHN2YC4v8e5SK+NAxJ0xcpTXVj71D4ouKLPjxmiF
+5txEznarmqpP0abr02g85nnZIzu8ujSAkBD6q6RQxvs22O+3vvlgo6u4+2B81809
+Nkf1nJ+P5yqSpUVB/gzj/GggMqAOQWjUCpPvqobSnraDoO8whB0Tfnk0E/Jpq/GX
+iFB75W94jcK/RvDDoIifKtiah9OMDMGZO5em9EVxRCFLgJhosbvUiDvns3nSe/yB
+ucGFe0fntU4H8T7GxwFac0y9UUmt+6M5rUIt+MS/Isrb7doD2LodDAV8MHHSxCZz
+YQ2Xdk9w/ICcs+9G3Y8fizEO+CYRtTnf6ZIWSutyZEfCZmciu60iZ7gHHeb0DJKh
+DxQpozmYiRlr8mQL+Qurn/u6bH1zW0x8QJk42FzG1wn/WBmr/BoTQLFKeyMtowAJ
+d2UgGDlQT0w=
+=c8xK
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_FCB0203D-3913-401C-B3E8-80734072523A--
+
+
+--===============3596242918601154807==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3596242918601154807==--
