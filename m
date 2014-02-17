@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 11CE67F75
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 19:53:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93D01AC06E
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:53:08 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id TmWmq5iVcowJgJPW
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:53:07 -0800 (PST)
-Message-ID: <53016B83.1050406@hardwarefreak.com>
-Date: Sun, 16 Feb 2014 19:53:07 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3D0CD7F76
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 19:58:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A2B14AC06E
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:58:02 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	M1BJ8VI2IvJW8DSs for <xfs@oss.sgi.com>;
+	Sun, 16 Feb 2014 17:58:00 -0800 (PST)
+Date: Mon, 17 Feb 2014 12:57:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] xfstests: Btrfs: add test for large metadata blocks
+Message-ID: <20140217015757.GC13997@dastard>
+References: <1392068362-14049-1-git-send-email-koen.de.wit@oracle.com>
+	<20140210220400.GV13647@dastard> <52FA7374.2000209@oracle.com>
 MIME-Version: 1.0
-Subject: Re: Volume fine on x86_64, corruption on ARM
-References: <CALgDg0bhoo5WgkxygCX+yNXgGNG8-KkXLXRrf+TQvva0ct80jQ@mail.gmail.com>
-	<20140216222153.GV13647@dastard>
-In-Reply-To: <20140216222153.GV13647@dastard>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <52FA7374.2000209@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +30,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Bill Webster <shaman@gdblabs.com>
-Cc: xfs@oss.sgi.com
+To: Koen De Wit <koen.de.wit@oracle.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 2/16/2014 4:21 PM, Dave Chinner wrote:
-> On Fri, Feb 14, 2014 at 08:18:45PM -0700, Bill Webster wrote:
->> Has this issue been resolved?
+On Tue, Feb 11, 2014 at 08:01:08PM +0100, Koen De Wit wrote:
+> On 02/10/2014 11:04 PM, Dave Chinner wrote:
+> >On Mon, Feb 10, 2014 at 10:39:22PM +0100, Koen De Wit wrote:
+> >>+
+> >>+_test_illegal_leafsize() {
+> >>+        _scratch_mkfs -l $1 >>$seqres.full 2>&1
+> >>+        [ $? -ne 0 ] || _fail "'$1' is an illegal value for the" \
+> >>+                "leafsize option, mkfs should have failed."
+> >>+}
+> >You just re-implemented run_check....
 > 
-> You need to be more specific abou tthe problem you are having than
-> the subject line....
+> I believe I didn't :
 > 
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>    run_check()
+>    {
+>             echo "# $@" >> $seqres.full 2>&1
+>             "$@" >> $seqres.full 2>&1 || _fail "failed: '$@'"
+>    }
+> 
+> run_check() takes an arbitrary command and executes it,
+> _test_illegal_leafsize() takes a leafsize as parameter and tries
+> mkfs.btrfs with that leafsize. run_check() makes the test fail if
+> the return code is not zero, _test_illegal_leafsize() does the
+> opposite.
 
-Bill seems to be replying to this thread from January 2013, apparently
-assuming everyone would remember it simply by the subject line.  First
-post of the thread:
+Which points out the madness of trying to determine pass/fail by
+return codes. See how easy it is to get wrong when reading the
+test code?
 
-http://oss.sgi.com/archives/xfs/2013-01/msg00494.html
+So, this tends to point towards writing a proper mkfs filter for
+btrfs that anonymizes the output so that the golden output can do
+the checking without having to care about return values. That's what
+we do for XFS (see _filter_mkfs), and i'd suggest that this is the
+correct thing to do for btrfs as well. Then you can stop having to
+check the return value of mkfs.btrfs....
 
-Bill, in the future please reference the archived thread link, as I've
-done here, so people know what you're talking about without them having
-to dig through the archives.
+i.e. factor _filter_mkfs into _filter_mkfs_xfs() and
+_filter_mkfs_btrfs() and implement the necessary filtering in
+_filter_mkfs_btrfs.
 
-Thanks,
+Yes, it's a bit of a pain to do in the first place, but once the
+filter is in place it will capture any future unintended
+modifications to mkfs output and make people modifying mkfs.btrfs
+think about what they are actually doing when they break the filter.
+Indeed, we've been modifying the output of mkfs.xfs for years (every
+new feature changes the mkfs output) and we've been able to do in a
+way that doesn't break the filtering.....
 
-Stan
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
