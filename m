@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 758FE7F8A
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 09:08:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 63A89304084
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 07:08:37 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CCD657F88
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 09:08:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CDAEAC002
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 07:08:36 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id V54FO70YirwQCPip for
-	<xfs@oss.sgi.com>; Mon, 17 Feb 2014 07:08:36 -0800 (PST)
+	cuda.sgi.com with ESMTP id EOXsx2Q8ZlqyM7uM for
+	<xfs@oss.sgi.com>; Mon, 17 Feb 2014 07:08:35 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 3/6] ext4: translate fallocate mode bits to strings
-Date: Mon, 17 Feb 2014 16:08:20 +0100
-Message-Id: <1392649703-10772-4-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 2/6] ext4: refactor ext4_fallocate code
+Date: Mon, 17 Feb 2014 16:08:19 +0100
+Message-Id: <1392649703-10772-3-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,66 +30,195 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, tytso@mit.edu, xfs@oss.sgi.com
 
+Move block allocation out of the ext4_fallocate into separate function
+called ext4_alloc_file_blocks(). This will allow us to use the same
+allocation code for other allocation operations such as zero range which
+is commit in the next patch.
+
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- fs/ext4/ext4.h              | 1 +
- fs/ext4/extents.c           | 1 -
- include/trace/events/ext4.h | 9 +++++++--
- 3 files changed, 8 insertions(+), 3 deletions(-)
+ fs/ext4/extents.c | 127 +++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 73 insertions(+), 54 deletions(-)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index ece5556..3b9601c 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -31,6 +31,7 @@
- #include <linux/percpu_counter.h>
- #include <linux/ratelimit.h>
- #include <crypto/hash.h>
-+#include <linux/falloc.h>
- #ifdef __KERNEL__
- #include <linux/compat.h>
- #endif
 diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index 2d68a46..4bfa870 100644
+index 6a52851..2d68a46 100644
 --- a/fs/ext4/extents.c
 +++ b/fs/ext4/extents.c
-@@ -37,7 +37,6 @@
- #include <linux/quotaops.h>
- #include <linux/string.h>
- #include <linux/slab.h>
--#include <linux/falloc.h>
- #include <asm/uaccess.h>
- #include <linux/fiemap.h>
- #include "ext4_jbd2.h"
-diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
-index 197d312..451e020 100644
---- a/include/trace/events/ext4.h
-+++ b/include/trace/events/ext4.h
-@@ -68,6 +68,11 @@ struct extent_status;
- 	{ EXTENT_STATUS_DELAYED,	"D" },			\
- 	{ EXTENT_STATUS_HOLE,		"H" })
+@@ -4513,6 +4513,64 @@ retry:
+ 	ext4_std_error(inode->i_sb, err);
+ }
  
-+#define show_falloc_mode(mode) __print_flags(mode, "|",		\
-+	{ FALLOC_FL_KEEP_SIZE,		"KEEP_SIZE"},		\
-+	{ FALLOC_FL_PUNCH_HOLE,		"PUNCH_HOLE"},		\
-+	{ FALLOC_FL_NO_HIDE_STALE,	"NO_HIDE_STALE"})
++int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
++			   ext4_lblk_t len, int flags, int mode)
++{
++	struct inode *inode = file_inode(file);
++	handle_t *handle;
++	int ret = 0;
++	int ret2 = 0;
++	int retries = 0;
++	struct ext4_map_blocks map;
++	unsigned int credits;
 +
++	map.m_lblk = offset;
++	/*
++	 * Don't normalize the request if it can fit in one extent so
++	 * that it doesn't get unnecessarily split into multiple
++	 * extents.
++	 */
++	if (len <= EXT_UNINIT_MAX_LEN)
++		flags |= EXT4_GET_BLOCKS_NO_NORMALIZE;
++
++	/*
++	 * credits to insert 1 extent into extent tree
++	 */
++	credits = ext4_chunk_trans_blocks(inode, len);
++
++retry:
++	while (ret >= 0 && ret < len) {
++		map.m_lblk = map.m_lblk + ret;
++		map.m_len = len = len - ret;
++		handle = ext4_journal_start(inode, EXT4_HT_MAP_BLOCKS,
++					    credits);
++		if (IS_ERR(handle)) {
++			ret = PTR_ERR(handle);
++			break;
++		}
++		ret = ext4_map_blocks(handle, inode, &map, flags);
++		if (ret <= 0) {
++			ext4_debug("inode #%lu: block %u: len %u: "
++				   "ext4_ext_map_blocks returned %d",
++				   inode->i_ino, map.m_lblk,
++				   map.m_len, ret);
++			ext4_mark_inode_dirty(handle, inode);
++			ret2 = ext4_journal_stop(handle);
++			break;
++		}
++		ret2 = ext4_journal_stop(handle);
++		if (ret2)
++			break;
++	}
++	if (ret == -ENOSPC &&
++			ext4_should_retry_alloc(inode->i_sb, &retries)) {
++		ret = 0;
++		goto retry;
++	}
++
++	return ret > 0 ? ret2 : ret;
++}
++
+ /*
+  * preallocate space for a file. This implements ext4's fallocate file
+  * operation, which gets called from sys_fallocate system call.
+@@ -4527,11 +4585,9 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	loff_t new_size = 0;
+ 	unsigned int max_blocks;
+ 	int ret = 0;
+-	int ret2 = 0;
+-	int retries = 0;
+ 	int flags;
+-	struct ext4_map_blocks map;
+-	unsigned int credits, blkbits = inode->i_blkbits;
++	ext4_lblk_t lblk;
++	unsigned int blkbits = inode->i_blkbits;
  
- TRACE_EVENT(ext4_free_inode,
- 	TP_PROTO(struct inode *inode),
-@@ -1349,10 +1354,10 @@ TRACE_EVENT(ext4_fallocate_enter,
- 		__entry->mode	= mode;
- 	),
+ 	/* Return error if mode is not supported */
+ 	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
+@@ -4552,17 +4608,18 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -EOPNOTSUPP;
  
--	TP_printk("dev %d,%d ino %lu pos %lld len %lld mode %d",
-+	TP_printk("dev %d,%d ino %lu pos %lld len %lld mode %s",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  (unsigned long) __entry->ino, __entry->pos,
--		  __entry->len, __entry->mode)
-+		  __entry->len, show_falloc_mode(__entry->mode))
- );
+ 	trace_ext4_fallocate_enter(inode, offset, len, mode);
+-	map.m_lblk = offset >> blkbits;
++	lblk = offset >> blkbits;
+ 	/*
+ 	 * We can't just convert len to max_blocks because
+ 	 * If blocksize = 4096 offset = 3072 and len = 2048
+ 	 */
+ 	max_blocks = (EXT4_BLOCK_ALIGN(len + offset, blkbits) >> blkbits)
+-		- map.m_lblk;
+-	/*
+-	 * credits to insert 1 extent into extent tree
+-	 */
+-	credits = ext4_chunk_trans_blocks(inode, max_blocks);
++		- lblk;
++
++	flags = EXT4_GET_BLOCKS_CREATE_UNINIT_EXT;
++	if (mode & FALLOC_FL_KEEP_SIZE)
++		flags |= EXT4_GET_BLOCKS_KEEP_SIZE;
++
+ 	mutex_lock(&inode->i_mutex);
  
- TRACE_EVENT(ext4_fallocate_exit,
+ 	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+@@ -4573,46 +4630,9 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 			goto out;
+ 	}
+ 
+-	flags = EXT4_GET_BLOCKS_CREATE_UNINIT_EXT;
+-	if (mode & FALLOC_FL_KEEP_SIZE)
+-		flags |= EXT4_GET_BLOCKS_KEEP_SIZE;
+-	/*
+-	 * Don't normalize the request if it can fit in one extent so
+-	 * that it doesn't get unnecessarily split into multiple
+-	 * extents.
+-	 */
+-	if (len <= EXT_UNINIT_MAX_LEN << blkbits)
+-		flags |= EXT4_GET_BLOCKS_NO_NORMALIZE;
+-
+-retry:
+-	while (ret >= 0 && ret < max_blocks) {
+-		map.m_lblk = map.m_lblk + ret;
+-		map.m_len = max_blocks = max_blocks - ret;
+-		handle = ext4_journal_start(inode, EXT4_HT_MAP_BLOCKS,
+-					    credits);
+-		if (IS_ERR(handle)) {
+-			ret = PTR_ERR(handle);
+-			break;
+-		}
+-		ret = ext4_map_blocks(handle, inode, &map, flags);
+-		if (ret <= 0) {
+-			ext4_debug("inode #%lu: block %u: len %u: "
+-				   "ext4_ext_map_blocks returned %d",
+-				   inode->i_ino, map.m_lblk,
+-				   map.m_len, ret);
+-			ext4_mark_inode_dirty(handle, inode);
+-			ret2 = ext4_journal_stop(handle);
+-			break;
+-		}
+-		ret2 = ext4_journal_stop(handle);
+-		if (ret2)
+-			break;
+-	}
+-	if (ret == -ENOSPC &&
+-			ext4_should_retry_alloc(inode->i_sb, &retries)) {
+-		ret = 0;
+-		goto retry;
+-	}
++	ret = ext4_alloc_file_blocks(file, lblk, max_blocks, flags, mode);
++	if (ret)
++		goto out;
+ 
+ 	handle = ext4_journal_start(inode, EXT4_HT_INODE, 2);
+ 	if (IS_ERR(handle))
+@@ -4620,7 +4640,7 @@ retry:
+ 
+ 	inode->i_mtime = inode->i_ctime = ext4_current_time(inode);
+ 
+-	if (ret > 0 && new_size) {
++	if (!ret && new_size) {
+ 		if (new_size > i_size_read(inode))
+ 			i_size_write(inode, new_size);
+ 		if (new_size > EXT4_I(inode)->i_disksize)
+@@ -4633,9 +4653,8 @@ retry:
+ 	ext4_journal_stop(handle);
+ out:
+ 	mutex_unlock(&inode->i_mutex);
+-	trace_ext4_fallocate_exit(inode, offset, max_blocks,
+-				ret > 0 ? ret2 : ret);
+-	return ret > 0 ? ret2 : ret;
++	trace_ext4_fallocate_exit(inode, offset, max_blocks, ret);
++	return ret;
+ }
+ 
+ /*
 -- 
 1.8.3.1
 
