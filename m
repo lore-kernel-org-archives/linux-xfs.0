@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E34747F6C
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 19:36:06 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id AB0DA7F72
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 19:40:08 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D2C8AC065
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:36:06 -0800 (PST)
-Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id wzBuYeL5p4xFtOll
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 26997AC06B
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:40:08 -0800 (PST)
+Received: from mail-bk0-f50.google.com (mail-bk0-f50.google.com
+	[209.85.214.50]) by cuda.sgi.com with ESMTP id YZummPUFcRoEX4jU
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:36:04 -0800 (PST)
-Received: by mail-bk0-f53.google.com with SMTP id my13so4027553bkb.12
-	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:36:03 -0800 (PST)
+	<xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:40:05 -0800 (PST)
+Received: by mail-bk0-f50.google.com with SMTP id d7so741543bkh.37
+	for <xfs@oss.sgi.com>; Sun, 16 Feb 2014 17:40:04 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20140217011929.GA13997@dastard>
+In-Reply-To: <20140217011714.GZ13997@dastard>
 References: <1392408522-764-1-git-send-email-fdmanana@gmail.com>
-	<1392596438-6509-1-git-send-email-fdmanana@gmail.com>
-	<20140217011929.GA13997@dastard>
-Date: Mon, 17 Feb 2014 01:36:02 +0000
-Message-ID: <CAL3q7H4JLbMS+JL4h4du60S1vKFtvceP-Mx-e=0v4nTBwjkATA@mail.gmail.com>
-Subject: Re: [PATCH] xfstests: add regression test for btrfs incremental send
+	<1392478573-4513-1-git-send-email-fdmanana@gmail.com>
+	<20140216230851.GX13647@dastard>
+	<CAL3q7H46_AHDtACuZunRJgSymejgr73NVZ-TWNuBuD6z3j9KXg@mail.gmail.com>
+	<20140217011714.GZ13997@dastard>
+Date: Mon, 17 Feb 2014 01:40:04 +0000
+Message-ID: <CAL3q7H7aJcyV6pDwCmCYhHdQBQvQu0Asd6J3u1_nH8B3FuY_BA@mail.gmail.com>
+Subject: Re: [PATCH v2] xfstests: add regression test for btrfs incremental
+	send
 From: Filipe David Manana <fdmanana@gmail.com>
 Reply-To: fdmanana@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,74 +32,174 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8505334364473525909=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============8505334364473525909==
-Content-Type: multipart/alternative; boundary=047d7b873f16b76d4804f2902dd3
-
---047d7b873f16b76d4804f2902dd3
-Content-Type: text/plain; charset=UTF-8
-
-On Monday, February 17, 2014, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Mon, Feb 17, 2014 at 12:20:38AM +0000, Filipe David Borba Manana wrote:
-> > Test for a btrfs incremental send issue where we end up sending a
-> > wrong section of data from a file extent if the corresponding file
-> > extent is compressed and the respective file extent item has a non
-> > zero data offset.
-> >
-> > Fixed by the following linux kernel btrfs patch:
-> >
-> >    Btrfs: use right clone root offset for compressed extents
-> >
-> > Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com<javascript:;>
-> >
-> > ---
-> >
-> > V2: Made the test more reliable. Now it doesn't depend anymore of btrfs'
-> >     hole punch implementation leaving hole file extent items when we
-> punch
-> >     beyond the file's current size.
-> > V3: Filter xfs_io output and make less use of the run_check function, as
-> >     suggested by Dave Chinner.
+On Mon, Feb 17, 2014 at 1:17 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Feb 16, 2014 at 11:43:17PM +0000, Filipe David Manana wrote:
+>> On Sun, Feb 16, 2014 at 11:08 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Sat, Feb 15, 2014 at 03:36:13PM +0000, Filipe David Borba Manana wrote:
+>> >> Test for a btrfs incremental send issue where we end up sending a
+>> >> wrong section of data from a file extent if the corresponding file
+>> >> extent is compressed and the respective file extent item has a non
+>> >> zero data offset.
+>> >>
+>> >> Fixed by the following linux kernel btrfs patch:
+>> >>
+>> >>    Btrfs: use right clone root offset for compressed extents
+>> >>
+>> >> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+>> >> ---
+>> >>
+>> >> V2: Made the test more reliable. Now it doesn't depend anymore of btrfs'
+>> >>     hole punch implementation leaving hole file extent items when we punch
+>> >>     beyond the file's current size.
+>> >>
+>> >>  tests/btrfs/040     |  115 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>> >>  tests/btrfs/040.out |    1 +
+>> >>  tests/btrfs/group   |    1 +
+>> >>  3 files changed, 117 insertions(+)
+>> >>  create mode 100755 tests/btrfs/040
+>> >>  create mode 100644 tests/btrfs/040.out
+>> >>
+>> >> diff --git a/tests/btrfs/040 b/tests/btrfs/040
+>> >> new file mode 100755
+>> >> index 0000000..d6b37bf
+>> >> --- /dev/null
+>> >> +++ b/tests/btrfs/040
+>> >> @@ -0,0 +1,115 @@
+>> >> +#! /bin/bash
+>> >> +# FS QA Test No. btrfs/040
+>> >> +#
+>> >> +# Test for a btrfs incremental send issue where we end up sending a
+>> >> +# wrong section of data from a file extent if the corresponding file
+>> >> +# extent is compressed and the respective file extent item has a non
+>> >> +# zero data offset.
+>> >> +#
+>> >> +# Fixed by the following linux kernel btrfs patch:
+>> >> +#
+>> >> +#   Btrfs: use right clone root offset for compressed extents
+>> >> +#
+>> >> +#-----------------------------------------------------------------------
+>> >> +# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
+>> >> +#
+>> >> +# This program is free software; you can redistribute it and/or
+>> >> +# modify it under the terms of the GNU General Public License as
+>> >> +# published by the Free Software Foundation.
+>> >> +#
+>> >> +# This program is distributed in the hope that it would be useful,
+>> >> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> >> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> >> +# GNU General Public License for more details.
+>> >> +#
+>> >> +# You should have received a copy of the GNU General Public License
+>> >> +# along with this program; if not, write the Free Software Foundation,
+>> >> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> >> +#-----------------------------------------------------------------------
+>> >> +#
+>> >> +
+>> >> +seq=`basename $0`
+>> >> +seqres=$RESULT_DIR/$seq
+>> >> +echo "QA output created by $seq"
+>> >> +
+>> >> +here=`pwd`
+>> >> +tmp=`mktemp -d`
+>> >> +status=1     # failure is the default!
+>> >> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> >> +
+>> >> +_cleanup()
+>> >> +{
+>> >> +    rm -fr $tmp
+>> >> +}
+>> >> +
+>> >> +# get standard environment, filters and checks
+>> >> +. ./common/rc
+>> >> +. ./common/filter
+>> >> +
+>> >> +# real QA test starts here
+>> >> +_supported_fs btrfs
+>> >> +_supported_os Linux
+>> >> +_require_scratch
+>> >> +_need_to_be_root
+>> >> +
+>> >> +FSSUM_PROG=$here/src/fssum
+>> >> +[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+>> >> +
+>> >> +rm -f $seqres.full
+>> >> +
+>> >> +_scratch_mkfs >/dev/null 2>&1
+>> >> +_scratch_mount "-o compress-force=lzo"
+>> >> +
+>> >> +run_check $XFS_IO_PROG -f -c "truncate 118811" $SCRATCH_MNT/foo
+>> >> +run_check $XFS_IO_PROG -c "pwrite -S 0x0d -b 39987 92267 39987" \
+>> >> +     $SCRATCH_MNT/foo
+>> >
+>> > Ugh. filter the output, don't use run_check.
+>> >
+>> > $XFS_IO_PROG -f -c "truncate 118811" $SCRATCH_MNT/foo
+>> > $XFS_IO_PROG -c "pwrite -S 0x0d -b 39987 92267 39987" \
+>> >         $SCRATCH_MNT/foo | _filter_xfs_io
+>> >
+>> > If something fails, we still want the test to continue running, even
+>> > if all it does is exercise error handling paths. run_check simply
+>> > terminates the test at the first failure.
+>>
+>> What's the point of continuing? The test will fail anyway, all of the
+>> xfs_io calls are necessary to trigger the bug.
 >
-> Awesome. Thanks for the quick turn around.
+> Users don't stop doing doing stuff on a filesystem when a single
+> failure occurs, so why should the tests? If you stop the moment a
+> single failure occurs then you aren't ever going to stress the error
+> handling paths, are you?
 >
-> >  common/rc           |    5 +++
-> >  tests/btrfs/040     |  119
-> +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/btrfs/040.out |    9 ++++
-> >  tests/btrfs/group   |    1 +
-> >  4 files changed, 134 insertions(+)
-> >  create mode 100755 tests/btrfs/040
-> >  create mode 100644 tests/btrfs/040.out
-> >
-> > diff --git a/common/rc b/common/rc
-> > index e91568b..27be009 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -2207,6 +2207,11 @@ run_check()
-> >       "$@" >> $seqres.full 2>&1 || _fail "failed: '$@'"
-> >  }
-> >
-> > +_run_btrfs_util_prog()
-> > +{
-> > +     run_check $BTRFS_UTIL_PROG $*
-> > +}
+>> > _run_btrfs_util_prog()
+>> > {
+>> >         run_check $BTRFS_UTIL_PROG $*
+>> > }
+>> >
+>> > would be a good start because it gets that run_check pattern out of
+>> > the main test scripts and hence out of the heads of test writers.
+>>
+>> Well, will get rid of those run_check calls, but that will imply
+>> adding some | _filter_scratch in many places. So shortening lines is
+>> not a great argument :)
 >
-> Can you do a cleanup of all the other btrfs tests that can use this?
+> I'm not talking about shortening lines here. I'm talking about the
+> correct principles and conceptsi being in the forefront of a test
+> writer's mind. Having the concept of "need to filter the output" in
+> the head of test writers is *exactly* the right mindset to have.
+>
+> Indeed, if you have a block of code that needs common filtering,
+> that's easy to do:
+>
+> do_test()
+> {
+>         # put test in function
+> }
+>
+> do_test | _filter_scratch
+>
+> Will apply that filter to the entire output of the test, and so
+> you don't need it on every command.
+>
+> Remember - an xfstest is not a "pass/fail" test. It's a "run this
+> set of commands, and then check the entire output matches the known
+> good output" test. i.e. we are testing the entire set of commands as
+> a whole - we are not testing each individual command that is run.
+> It's a very different principle to the "test every command that can
+> fail" method of writing tests.
+>
+> _fail should only be used if the test cannot possibly be continued
+> (e.g. scratch filesystem corrupted and cannot be mounted).  If one
+> of the early commands fails, then that's fine - the test will fail -
+> but we still want to run the other commands if we can so as to get
+> the best test coverage we can get even on failed tests.
 
-
-Ok. I just did that for all the test cases not yet merged, as you probably
-noticed already.
-For the ones already in the repository, I'll see if I can do it soon this
-coming week.
-
-Thanks
+Ok, thanks for the very detailed explanation, very helpful :)
 
 
 >
@@ -105,8 +208,8 @@ Thanks
 > Dave.
 > --
 > Dave Chinner
-> david@fromorbit.com <javascript:;>
->
+> david@fromorbit.com
+
 
 
 -- 
@@ -116,100 +219,7 @@ Filipe David Manana,
  Unreasonable men adapt the world to themselves.
  That's why all progress depends on unreasonable men."
 
---047d7b873f16b76d4804f2902dd3
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<br><br>On Monday, February 17, 2014, Dave Chinner &lt;<a href=3D"mailto:da=
-vid@fromorbit.com">david@fromorbit.com</a>&gt; wrote:<br><blockquote class=
-=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padd=
-ing-left:1ex">
-On Mon, Feb 17, 2014 at 12:20:38AM +0000, Filipe David Borba Manana wrote:<=
-br>
-&gt; Test for a btrfs incremental send issue where we end up sending a<br>
-&gt; wrong section of data from a file extent if the corresponding file<br>
-&gt; extent is compressed and the respective file extent item has a non<br>
-&gt; zero data offset.<br>
-&gt;<br>
-&gt; Fixed by the following linux kernel btrfs patch:<br>
-&gt;<br>
-&gt; =C2=A0 =C2=A0Btrfs: use right clone root offset for compressed extents=
-<br>
-&gt;<br>
-&gt; Signed-off-by: Filipe David Borba Manana &lt;<a href=3D"javascript:;" =
-onclick=3D"_e(event, &#39;cvml&#39;, &#39;fdmanana@gmail.com&#39;)">fdmanan=
-a@gmail.com</a>&gt;<br>
-&gt; ---<br>
-&gt;<br>
-&gt; V2: Made the test more reliable. Now it doesn&#39;t depend anymore of =
-btrfs&#39;<br>
-&gt; =C2=A0 =C2=A0 hole punch implementation leaving hole file extent items=
- when we punch<br>
-&gt; =C2=A0 =C2=A0 beyond the file&#39;s current size.<br>
-&gt; V3: Filter xfs_io output and make less use of the run_check function, =
-as<br>
-&gt; =C2=A0 =C2=A0 suggested by Dave Chinner.<br>
-<br>
-Awesome. Thanks for the quick turn around.<br>
-<br>
-&gt; =C2=A0common/rc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A05 ++=
-+<br>
-&gt; =C2=A0tests/btrfs/040 =C2=A0 =C2=A0 | =C2=A0119 ++++++++++++++++++++++=
-+++++++++++++++++++++++++++++<br>
-&gt; =C2=A0tests/btrfs/040.out | =C2=A0 =C2=A09 ++++<br>
-&gt; =C2=A0tests/btrfs/group =C2=A0 | =C2=A0 =C2=A01 +<br>
-&gt; =C2=A04 files changed, 134 insertions(+)<br>
-&gt; =C2=A0create mode 100755 tests/btrfs/040<br>
-&gt; =C2=A0create mode 100644 tests/btrfs/040.out<br>
-&gt;<br>
-&gt; diff --git a/common/rc b/common/rc<br>
-&gt; index e91568b..27be009 100644<br>
-&gt; --- a/common/rc<br>
-&gt; +++ b/common/rc<br>
-&gt; @@ -2207,6 +2207,11 @@ run_check()<br>
-&gt; =C2=A0 =C2=A0 =C2=A0 &quot;$@&quot; &gt;&gt; $seqres.full 2&gt;&amp;1 =
-|| _fail &quot;failed: &#39;$@&#39;&quot;<br>
-&gt; =C2=A0}<br>
-&gt;<br>
-&gt; +_run_btrfs_util_prog()<br>
-&gt; +{<br>
-&gt; + =C2=A0 =C2=A0 run_check $BTRFS_UTIL_PROG $*<br>
-&gt; +}<br>
-<br>
-Can you do a cleanup of all the other btrfs tests that can use this?</block=
-quote><div><br></div><div>Ok. I just did=C2=A0that for all the test cases n=
-ot yet merged, as you probably noticed already.</div><div>For the ones alre=
-ady in the repository, I&#39;ll see if I can do it soon this coming week.</=
-div>
-<div><br></div><div>Thanks</div><div>=C2=A0</div><blockquote class=3D"gmail=
-_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:=
-1ex">
-<br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"javascript:;" onclick=3D"_e(event, &#39;cvml&#39;, &#39;david@fr=
-omorbit.com&#39;)">david@fromorbit.com</a><br>
-</blockquote><br><br>-- <br>Filipe David Manana,<br><br>&quot;Reasonable me=
-n adapt themselves to the world.<br>=C2=A0Unreasonable men adapt the world =
-to themselves.<br>=C2=A0That&#39;s why all progress depends on unreasonable=
- men.&quot;<br>
-<br>
-
---047d7b873f16b76d4804f2902dd3--
-
-
---===============8505334364473525909==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8505334364473525909==--
