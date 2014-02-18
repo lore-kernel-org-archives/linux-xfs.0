@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 796CA7FBD
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 02:33:48 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B00AB7F69
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 03:06:07 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4102A304059
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 00:33:48 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	EYRRcxCUXzW7Kct6 for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 00:33:46 -0800 (PST)
-Date: Tue, 18 Feb 2014 19:33:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-Message-ID: <20140218083324.GB28666@dastard>
-References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
-	<20140218010138.GE13997@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 481F4AC004
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:06:03 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jmxjPrs63pJcy5OF for
+	<xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:06:03 -0800 (PST)
+Date: Tue, 18 Feb 2014 10:05:49 +0100 (CET)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [PATCH RESEND 3/10] ext4: Add support FALLOC_FL_COLLAPSE_RANGE
+	for fallocate
+In-Reply-To: <CAKYAXd-bD6ZZgpc9E8V1kD9Dj2wrCkbi1i6drNBdUAwsMiv5gg@mail.gmail.com>
+Message-ID: <alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
+References: <1391319874-3203-1-git-send-email-linkinjeon@gmail.com>
+	<alpine.LFD.2.00.1402111209450.2225@localhost.localdomain>
+	<CAKYAXd-bD6ZZgpc9E8V1kD9Dj2wrCkbi1i6drNBdUAwsMiv5gg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140218010138.GE13997@dastard>
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1913822621-1392714354=:2216"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,60 +27,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
 
-On Tue, Feb 18, 2014 at 12:01:38PM +1100, Dave Chinner wrote:
-> On Mon, Feb 17, 2014 at 04:08:17PM +0100, Lukas Czerner wrote:
-> > Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-> > functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
-> > 
-> > It can be used to convert a range of file to zeros preferably without
-> > issuing data IO. Blocks should be preallocated for the regions that span
-> > holes in the file, and the entire range is preferable converted to
-> > unwritten extents - even though file system may choose to zero out the
-> > extent or do whatever which will result in reading zeros from the range
-> > while the range remains allocated for the file.
-> > 
-> > This can be also used to preallocate blocks past EOF in the same way as
-> > with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-> > size to remain the same.
-> > 
-> > You can test this feature yourself using xfstests, of fallocate(1) however
-> > you'll need patches for util_linux, xfsprogs and xfstests which you
-> > can find here:
-> > 
-> > http://people.redhat.com/lczerner/zero_range/
-> > 
-> > I'll post the patches after we agree and merge the kernel functionality.
-> > 
-> > I tested this mostly with a subset of xfstests using fsx and fsstress and
-> > even with new generic/290 which is just a copy of xfs/290 usinz fzero
-> > command for xfs_io instead of zero (which uses ioctl). I was testing on
-> > x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--8323328-1913822621-1392714354=:2216
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+On Wed, 12 Feb 2014, Namjae Jeon wrote:
+
+> Date: Wed, 12 Feb 2014 11:28:35 +0900
+> From: Namjae Jeon <linkinjeon@gmail.com>
+> To: Lukáš Czerner <lczerner@redhat.com>
+> Cc: viro@zeniv.linux.org.uk, david@fromorbit.com, bpm@sgi.com, tytso@mit.edu,
+>     adilger.kernel@dilger.ca, jack@suse.cz, mtk.manpages@gmail.com,
+>     linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com,
+>     linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
+>     Namjae Jeon <namjae.jeon@samsung.com>,
+>     Ashish Sangwan <a.sangwan@samsung.com>
+> Subject: Re: [PATCH RESEND 3/10] ext4: Add support FALLOC_FL_COLLAPSE_RANGE
+>     for fallocate
 > 
-> You also want to convert xfs/242 to be a generic test - it uses the
-> _generic_test_punch helper to test all the corner cases across
-> different extent type transitions.
-> 
-> > ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083 generic/117 generic/068 generic/231 generic/127 generic/091 generic/075 generic/112 generic/263 generic/091 generic/075 generic/256 generic/255 generic/316 generic/300 generic/290;
+> 2014-02-11 20:59 GMT+09:00, Lukáš Czerner <lczerner@redhat.com>:
+> > On Sun, 2 Feb 2014, Namjae Jeon wrote:
+> >
+> >> Date: Sun,  2 Feb 2014 14:44:34 +0900
+> >> From: Namjae Jeon <linkinjeon@gmail.com>
+> >> To: viro@zeniv.linux.org.uk, david@fromorbit.com, bpm@sgi.com,
+> >> tytso@mit.edu,
+> >>     adilger.kernel@dilger.ca, jack@suse.cz, mtk.manpages@gmail.com
+> >> Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com,
+> >>     linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
+> >>     Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon
+> >> <namjae.jeon@samsung.com>,
+> >>     Ashish Sangwan <a.sangwan@samsung.com>
+> >> Subject: [PATCH RESEND 3/10] ext4: Add support FALLOC_FL_COLLAPSE_RANGE
+> >> for
+> >>     fallocate
+> >>
+> >> From: Namjae Jeon <namjae.jeon@samsung.com>
+> >>
+> >> Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+> Hi Lukas.
+> >
+> > Description is missing here, please provide FALLOC_FL_COLLAPSE_RANGE
+> > description so people know what it's supposed to be doing.
+> >
+> > more comments bellow.
+> Okay, I will udpate.
+> >
+> > Thanks!
+> > -Lukas
 
-FWIW. if that's a group of tests you consider good for testing
-extent tree modifications, then can you create a test group for
-these by adding "extent" to each of the tests in the group file?
+Hi,
 
-Cheers,
+you may have noticed my patches for new FALLOC_FL_ZERO_RANGE
+fallocate flag. This changes things around the same area as your
+patches does so we should probably figure out which are going to
+land in first and then rebase the other on top of that.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+One concern I have is that I have not seen any tests provided to
+verify the feature. But I just may have missed it. Do you have any
+xfstests test or at least fsx and fsstress patches to provide
+support for testing FALLOC_FL_COLLAPSE_RANGE ? Patches for
+util_linux might also be handy.
+
+Thanks!
+-Lukas
+--8323328-1913822621-1392714354=:2216
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--8323328-1913822621-1392714354=:2216--
