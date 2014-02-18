@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5D957FD4
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 04:18:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64C508F8068
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 02:18:21 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D4C757FDD
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 04:34:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C2DB2304062
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 02:34:51 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	OyzLNvwACJQszfq7 for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 02:18:18 -0800 (PST)
-Date: Tue, 18 Feb 2014 21:18:08 +1100
+	z5kgX9pH8OmZ1JU7 for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 02:34:49 -0800 (PST)
+Date: Tue, 18 Feb 2014 21:34:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfstests: test setting XFS BMBT fields
-Message-ID: <20140218101808.GE28666@dastard>
-References: <20140210231046.910977175@sgi.com>
-	<20140213202608.627433955@sgi.com>
+Subject: Re: [PATCH v3] xfs_db: fix the setting of unaligned directory fields
+Message-ID: <20140218103444.GF28666@dastard>
+References: <20140210230923.268327906@sgi.com>
+	<20140213202555.996721782@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140213202608.627433955@sgi.com>
+In-Reply-To: <20140213202555.996721782@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,28 +33,228 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Feb 13, 2014 at 02:26:56PM -0600, Mark Tinguely wrote:
-> Test the setting of the XFS BMBT fields. Runs through the valid
-> bit values for each field and tests an illegal value.
+On Thu, Feb 13, 2014 at 02:25:36PM -0600, Mark Tinguely wrote:
+> Setting the directory startoff, startblock, and blockcount
+> fields are difficult on both big and little endian machines.
+> The setting of extentflag was completely broken.
+> 
+> big endian test:
+> xfs_db> write u.bmx[0].startblock 12
+> u.bmx[0].startblock = 0
+> xfs_db> write u.bmx[0].startblock 0xc0000
+> u.bmx[0].startblock = 192
+> 
+> little endian test:
+> xfs_db> write u.bmx[0].startblock 12
+> u.bmx[0].startblock = 211106232532992
+> xfs_db> write u.bmx[0].startblock 0xc0000
+> u.bmx[0].startblock = 3221225472
+> 
+> Since the output fields and the lengths are not aligned to a byte,
+> setbitval requires them to be entered in big endian and properly
+> byte/nibble shifted. The extentflag output was aligned to a byte
+> but was not shifted correctly.
+> 
+> Convert the input to big endian on little endian machines and
+> nibble/byte shift on all platforms so setbitval can set the bits
+> correctly.
+> 
+> Clean some whitespace while in the setbitbal() function.
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > ---
+> v3:
+>  Hex input is not a number.
+>  More ten year old white space cleanups.
+> 
 > v2:
->  Removed the test for CRC filesystems which also removes need for the nasty
->   prefixes and filtering output.
+>  Ignore extra characters in input.
+>  Fix hash input if still used as an integer input.
+>   It was broken on big endian, but someone may use this input in a
+>   little endian script.
+>  Add documentation.
+>  Did more clean up.
+> 
+>  db/bit.c   |   84 ++++++++++++------------------
+>  db/write.c |  166 ++++++++++++++++++++++++++++++++++++++++---------------------
+>  2 files changed, 143 insertions(+), 107 deletions(-)
+> 
+> Index: b/db/bit.c
+> ===================================================================
+> --- a/db/bit.c
+> +++ b/db/bit.c
+> @@ -128,57 +128,41 @@ getbitval(
+>  	return rval;
+>  }
+>  
+> +/*
+> + * The input data can be 8, 16, 32, and 64 sized numeric values
+> + * aligned on a byte boundry, or odd sized numbers stored on odd
+> + * aligned offset (for example the bmbt fields).
+> + *
+> + * The input data sent to this routine has been converted to big endian
+> + * and has been adjusted in the array so that the first input bit is to
+> + * be written in the first bit in the output.
+> + *
+> + * If the field length and the output buffer are byte aligned, then use
+> + * memcpy from the input to the output, but if either entries are not byte
+> + * aligned, then loop over the entire bit range reading the input value
+> + * and set/clear the matching bit in the output.
+> + *
+> + * example when ibuf is not multiple of a byte in length:
+> + *
+> + * ibuf:	| BBBBBBBB | bbbxxxxx |
+> + *		  \\\\\\\\--\\\\
+> + * obuf+bitoff:	| xBBBBBBB | Bbbbxxxx |
+> + *
+> + */
+>  void
+>  setbitval(
+> -	void *obuf,      /* buffer to write into */
+> -	int bitoff,      /* bit offset of where to write */
+> -	int nbits,       /* number of bits to write */
+> -	void *ibuf)      /* source bits */
+> +	void	*obuf,		/* start of buffer to write into */
+> +	int	bitoff,		/* bit offset into the output buffer */
+> +	int	nbits,		/* number of bits to write */
+> +	void	*ibuf)		/* source bits */
+>  {
+> -	char    *in           = (char *)ibuf;
+> -	char    *out          = (char *)obuf;
+> -
+> -	int     bit;
+> -
+> -#if BYTE_ORDER == LITTLE_ENDIAN
+> -	int     big           = 0;
+> -#else
+> -	int     big           = 1;
+> -#endif
+> -
+> -	/* only need to swap LE integers */
+> -	if (big || (nbits!=16 && nbits!=32 && nbits!=64) ) {
+> -		/* We don't have type info, so we can only assume
+> -		 * that 2,4 & 8 byte values are integers. sigh.
+> -		 */
+> -
+> -		/* byte aligned ? */
+> -		if (bitoff%NBBY) {
+> -			/* no - bit copy */
+> -			for (bit=0; bit<nbits; bit++)
+> -				setbit(out, bit+bitoff, getbit(in, bit));
+> -		} else {
+> -			/* yes - byte copy */
+> -			memcpy(out+byteize(bitoff), in, byteize(nbits));
+> -		}
+> -
+> -	} else {
+> -		int     ibit;
+> -		int     obit;
+> -
+> -		/* we need to endian swap this value */
+> -
+> -		out+=byteize(bitoff);
+> -		obit=bitoffs(bitoff);
+> -
+> -		ibit=nbits-NBBY;
+> -
+> -		for (bit=0; bit<nbits; bit++) {
+> -			setbit(out, bit+obit, getbit(in, ibit));
+> -			if (ibit%NBBY==NBBY-1)
+> -				ibit-=NBBY*2-1;
+> -			else
+> -				ibit++;
+> -		}
+> -	}
+> +	char	*in = ibuf;
+> +	char	*out = obuf;
+> +	int	bit;
+> +
+> +	if (bitoff % NBBY || nbits % NBBY) {
+> +		for (bit=0; bit < nbits; bit++)
 
-Breaking CRC filesystem testing isn't the best approach, IMO. Using
-Eric's approach of turning off CRCs - as the bug fix will be in
-xfs_db binaries that support CRCs - is a much better idea.
+Still whitespace damaged. I'll fix it when I commit it.
 
-It's also missing _require_scratch.
 
->  Remove the hex input as an integer test because it aint a number.
+> +/*
+> + * convert_arg allow input in the following forms:
+> + * A string ("ABTB") whose ASCII value is placed in an array in the order
+> + * matching the input.
+> + *
+> + * An even number of hex numbers. If the length is greater than
+> + * 64 bits, then the output is an array of bytes whose top nibble
+> + * is the first hex digit in the input, the lower nibble is the second
+> + * hex digit in the input. UUID entries are entered in this manner.
+> + * If the length is 64 bits or less, then treat the hex input characters
+> + * as a number used with setbitval().
 
-And so we should be testing that it isn't endian converted.
+Comment is now wrong. I'll fix it when I commit it.
 
-So rather than go around again, here's an updated patch below that
-fixes all these issues.
+> +	char		*ostr;
+> +	__u64		*value;
+> +	__u64		val = 0;
+>  
+>  	if (bit_length <= 64)
+>  		alloc_size = 8;
+>  	else
+> -		alloc_size = (bit_length+7)/8;
+> +		alloc_size = (bit_length + 7)/8;
+
+Whitespace still broken. I'll fix it when I commit it.
+
+>  
+>  	buf = xrealloc(buf, alloc_size);
+>  	memset(buf, 0, alloc_size);
+> -	value = (long long *)buf;
+> +	value = (__u64 *)buf;
+>  	rbuf = buf;
+>  
+>  	if (*arg == '\"') {
+> -		/* handle strings */
+> +		/* input a string and output ASCII array of characters */
+>  
+>  		/* zap closing quote if there is one */
+> -		if ((ostr = strrchr(arg+1, '\"')) != NULL)
+> +		if ((ostr = strrchr(arg + 1, '\"')) != NULL)
+>  			*ostr = '\0';
+
+You didn't update this like I asked. I'll fix it when I commit it.
+
+> @@ -496,48 +519,77 @@ convert_arg(
+>  		 *
+>  		 * (but if it starts with "-" assume it's just an integer)
+>  		 */
+> -		int bytes=bit_length/8;
+> +		int bytes = bit_length / NBBY;
+> +
+> +		/* is this an array of hec numbers? */
+> +		if (bit_length % NBBY)
+> +			return NULL;
+>  
+>  		/* skip leading hash */
+> -		if (*arg=='#') arg++;
+> +		if (*arg == '#') arg++;
+
+You didn't update this like I asked. I'll fix it when I commit it.
+
+> +	/*
+> +	 * Align the array to point to the field in the array.
+> +	 *  rbuf  = |MMmm|mmll|ll00|
+> +	 */
+> +	offset = sizeof(__be64) - 1 - ((bit_length - 1)/ sizeof(__be64));
+
+More whitespace that I've previously pointed out. I'll fix it when I
+commit it.
+
+The fix works, so I'll say:
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+with the caveat that, as the maintainer, I'm going just going to fix
+the whitespace problems I've pointed out twice now because I just
+want the bug fixed ASAP.
+
+Mark, please take more care in future to address all the review
+comments that are made.
 
 Cheers,
 
@@ -62,300 +262,6 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-
-xfs: test setting XFS BMBT fields in xfs_db
-
-From: Mark Tinguely <tinguely@sgi.com>
-
-Test the setting of the XFS BMBT fields via xfs_db. Runs through the
-valid bit values for each field and tests an illegal value.
-
-[dchinner: added _require_xfs_mkfs_crc and turned off crcs so that
-the test doesn't just fail on CRC enabled test runs.]
-
-[dchinner: added hex block values to check they don't get endian
-swapped.]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-
----
- tests/xfs/001     |  98 +++++++++++++++++++++++++++++++++++
- tests/xfs/001.out | 150 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/group   |   1 +
- 3 files changed, 249 insertions(+)
-
-diff --git a/tests/xfs/001 b/tests/xfs/001
-new file mode 100755
-index 0000000..e72e6fd
---- /dev/null
-+++ b/tests/xfs/001
-@@ -0,0 +1,98 @@
-+#! /bin/bash
-+# FS QA Test No. 001
-+#
-+# Test the xfs_db write of the XFS BMBT entries. For each XFS BMBT field,
-+# write the value 0, each bit and finally the entry beyond the maximum legal
-+# value. Also makes sure a core write and hex input still work.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+_do_bit_test()
-+{
-+	field="$1"
-+	bits="$2"
-+
-+	echo "testing $field with $bits bits"
-+	$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $field 0" $SCRATCH_DEV
-+	num=1
-+	for n in `seq 0 1 $bits`; do
-+		$XFS_DB_PROG -x -c "inode $FILE_INO" \
-+			  -c "write $field $num" $SCRATCH_DEV
-+		let num=$num*2
-+	done
-+	echo
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_scratch
-+_require_xfs_mkfs_crc
-+
-+_scratch_mkfs -m crc=0 >/dev/null 2>&1
-+_scratch_mount
-+
-+# create the test file
-+echo "make a file with data so it has an extent" > $SCRATCH_MNT/file
-+
-+# find the inode for the test file
-+FILE_INO=`ls -i $SCRATCH_MNT |awk '{print $1}'`
-+
-+_scratch_unmount
-+
-+# test bit length constants
-+BMBT_EXNTFLAG_BITLEN=1
-+BMBT_STARTOFF_BITLEN=54
-+BMBT_STARTBLOCK_BITLEN=52
-+BMBT_BLOCKCOUNT_BITLEN=21
-+
-+# test setting the BMBT entries from 0 to past the valid number.
-+_do_bit_test "u.bmx[0].extentflag" $BMBT_EXNTFLAG_BITLEN
-+_do_bit_test "u.bmx[0].startoff" $BMBT_STARTOFF_BITLEN
-+_do_bit_test "u.bmx[0].startblock" $BMBT_STARTBLOCK_BITLEN
-+_do_bit_test "u.bmx[0].blockcount" $BMBT_BLOCKCOUNT_BITLEN
-+# test setting the 32 bit generation number
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0x5a" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0xa5" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #5a5a" $SCRATCH_DEV
-+$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #a5a5" $SCRATCH_DEV
-+status=0
-+exit
-diff --git a/tests/xfs/001.out b/tests/xfs/001.out
-new file mode 100644
-index 0000000..53aba1c
---- /dev/null
-+++ b/tests/xfs/001.out
-@@ -0,0 +1,150 @@
-+QA output created by 001
-+testing u.bmx[0].extentflag with 1 bits
-+u.bmx[0].extentflag = 0
-+u.bmx[0].extentflag = 1
-+unable to convert value '2'.
-+
-+testing u.bmx[0].startoff with 54 bits
-+u.bmx[0].startoff = 0
-+u.bmx[0].startoff = 1
-+u.bmx[0].startoff = 2
-+u.bmx[0].startoff = 4
-+u.bmx[0].startoff = 8
-+u.bmx[0].startoff = 16
-+u.bmx[0].startoff = 32
-+u.bmx[0].startoff = 64
-+u.bmx[0].startoff = 128
-+u.bmx[0].startoff = 256
-+u.bmx[0].startoff = 512
-+u.bmx[0].startoff = 1024
-+u.bmx[0].startoff = 2048
-+u.bmx[0].startoff = 4096
-+u.bmx[0].startoff = 8192
-+u.bmx[0].startoff = 16384
-+u.bmx[0].startoff = 32768
-+u.bmx[0].startoff = 65536
-+u.bmx[0].startoff = 131072
-+u.bmx[0].startoff = 262144
-+u.bmx[0].startoff = 524288
-+u.bmx[0].startoff = 1048576
-+u.bmx[0].startoff = 2097152
-+u.bmx[0].startoff = 4194304
-+u.bmx[0].startoff = 8388608
-+u.bmx[0].startoff = 16777216
-+u.bmx[0].startoff = 33554432
-+u.bmx[0].startoff = 67108864
-+u.bmx[0].startoff = 134217728
-+u.bmx[0].startoff = 268435456
-+u.bmx[0].startoff = 536870912
-+u.bmx[0].startoff = 1073741824
-+u.bmx[0].startoff = 2147483648
-+u.bmx[0].startoff = 4294967296
-+u.bmx[0].startoff = 8589934592
-+u.bmx[0].startoff = 17179869184
-+u.bmx[0].startoff = 34359738368
-+u.bmx[0].startoff = 68719476736
-+u.bmx[0].startoff = 137438953472
-+u.bmx[0].startoff = 274877906944
-+u.bmx[0].startoff = 549755813888
-+u.bmx[0].startoff = 1099511627776
-+u.bmx[0].startoff = 2199023255552
-+u.bmx[0].startoff = 4398046511104
-+u.bmx[0].startoff = 8796093022208
-+u.bmx[0].startoff = 17592186044416
-+u.bmx[0].startoff = 35184372088832
-+u.bmx[0].startoff = 70368744177664
-+u.bmx[0].startoff = 140737488355328
-+u.bmx[0].startoff = 281474976710656
-+u.bmx[0].startoff = 562949953421312
-+u.bmx[0].startoff = 1125899906842624
-+u.bmx[0].startoff = 2251799813685248
-+u.bmx[0].startoff = 4503599627370496
-+u.bmx[0].startoff = 9007199254740992
-+unable to convert value '18014398509481984'.
-+
-+testing u.bmx[0].startblock with 52 bits
-+u.bmx[0].startblock = 0
-+u.bmx[0].startblock = 1
-+u.bmx[0].startblock = 2
-+u.bmx[0].startblock = 4
-+u.bmx[0].startblock = 8
-+u.bmx[0].startblock = 16
-+u.bmx[0].startblock = 32
-+u.bmx[0].startblock = 64
-+u.bmx[0].startblock = 128
-+u.bmx[0].startblock = 256
-+u.bmx[0].startblock = 512
-+u.bmx[0].startblock = 1024
-+u.bmx[0].startblock = 2048
-+u.bmx[0].startblock = 4096
-+u.bmx[0].startblock = 8192
-+u.bmx[0].startblock = 16384
-+u.bmx[0].startblock = 32768
-+u.bmx[0].startblock = 65536
-+u.bmx[0].startblock = 131072
-+u.bmx[0].startblock = 262144
-+u.bmx[0].startblock = 524288
-+u.bmx[0].startblock = 1048576
-+u.bmx[0].startblock = 2097152
-+u.bmx[0].startblock = 4194304
-+u.bmx[0].startblock = 8388608
-+u.bmx[0].startblock = 16777216
-+u.bmx[0].startblock = 33554432
-+u.bmx[0].startblock = 67108864
-+u.bmx[0].startblock = 134217728
-+u.bmx[0].startblock = 268435456
-+u.bmx[0].startblock = 536870912
-+u.bmx[0].startblock = 1073741824
-+u.bmx[0].startblock = 2147483648
-+u.bmx[0].startblock = 4294967296
-+u.bmx[0].startblock = 8589934592
-+u.bmx[0].startblock = 17179869184
-+u.bmx[0].startblock = 34359738368
-+u.bmx[0].startblock = 68719476736
-+u.bmx[0].startblock = 137438953472
-+u.bmx[0].startblock = 274877906944
-+u.bmx[0].startblock = 549755813888
-+u.bmx[0].startblock = 1099511627776
-+u.bmx[0].startblock = 2199023255552
-+u.bmx[0].startblock = 4398046511104
-+u.bmx[0].startblock = 8796093022208
-+u.bmx[0].startblock = 17592186044416
-+u.bmx[0].startblock = 35184372088832
-+u.bmx[0].startblock = 70368744177664
-+u.bmx[0].startblock = 140737488355328
-+u.bmx[0].startblock = 281474976710656
-+u.bmx[0].startblock = 562949953421312
-+u.bmx[0].startblock = 1125899906842624
-+u.bmx[0].startblock = 2251799813685248
-+unable to convert value '4503599627370496'.
-+
-+testing u.bmx[0].blockcount with 21 bits
-+u.bmx[0].blockcount = 0
-+u.bmx[0].blockcount = 1
-+u.bmx[0].blockcount = 2
-+u.bmx[0].blockcount = 4
-+u.bmx[0].blockcount = 8
-+u.bmx[0].blockcount = 16
-+u.bmx[0].blockcount = 32
-+u.bmx[0].blockcount = 64
-+u.bmx[0].blockcount = 128
-+u.bmx[0].blockcount = 256
-+u.bmx[0].blockcount = 512
-+u.bmx[0].blockcount = 1024
-+u.bmx[0].blockcount = 2048
-+u.bmx[0].blockcount = 4096
-+u.bmx[0].blockcount = 8192
-+u.bmx[0].blockcount = 16384
-+u.bmx[0].blockcount = 32768
-+u.bmx[0].blockcount = 65536
-+u.bmx[0].blockcount = 131072
-+u.bmx[0].blockcount = 262144
-+u.bmx[0].blockcount = 524288
-+u.bmx[0].blockcount = 1048576
-+unable to convert value '2097152'.
-+
-+core.gen = 90
-+core.gen = 165
-+core.gen = 0
-+core.gen = 1515847680
-+core.gen = 2779054080
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 279ffe2..88285eb 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -1,3 +1,4 @@
-+001 db auto quick
- 003 db auto quick
- 004 db auto quick
- 008 rw ioctl auto quick
 
 _______________________________________________
 xfs mailing list
