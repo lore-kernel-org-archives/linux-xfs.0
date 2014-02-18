@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D0A337FB8
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 03:09:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9819F8F804B
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:09:55 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FAp60CbFqIBpwjZW for
-	<xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:09:54 -0800 (PST)
-Date: Tue, 18 Feb 2014 10:09:48 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6F1217FC4
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 03:41:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A1D8304043
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:41:50 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	7yMMcOpnd0zOIBEp for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 01:41:47 -0800 (PST)
+Date: Tue, 18 Feb 2014 20:41:42 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-In-Reply-To: <20140218083324.GB28666@dastard>
-Message-ID: <alpine.LFD.2.00.1402181006250.2216@localhost.localdomain>
+Message-ID: <20140218094142.GC28666@dastard>
 References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 	<20140218010138.GE13997@dastard> <20140218083324.GB28666@dastard>
+	<alpine.LFD.2.00.1402181006250.2216@localhost.localdomain>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1402181006250.2216@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,80 +27,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
 
-On Tue, 18 Feb 2014, Dave Chinner wrote:
-
-> Date: Tue, 18 Feb 2014 19:33:24 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-fsdevel@vger.kernel.org,
->     xfs@oss.sgi.com
-> Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for
->     fallocate
-> 
-> On Tue, Feb 18, 2014 at 12:01:38PM +1100, Dave Chinner wrote:
-> > On Mon, Feb 17, 2014 at 04:08:17PM +0100, Lukas Czerner wrote:
-> > > Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-> > > functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
-> > > 
-> > > It can be used to convert a range of file to zeros preferably without
-> > > issuing data IO. Blocks should be preallocated for the regions that span
-> > > holes in the file, and the entire range is preferable converted to
-> > > unwritten extents - even though file system may choose to zero out the
-> > > extent or do whatever which will result in reading zeros from the range
-> > > while the range remains allocated for the file.
-> > > 
-> > > This can be also used to preallocate blocks past EOF in the same way as
-> > > with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-> > > size to remain the same.
-> > > 
-> > > You can test this feature yourself using xfstests, of fallocate(1) however
-> > > you'll need patches for util_linux, xfsprogs and xfstests which you
-> > > can find here:
-> > > 
-> > > http://people.redhat.com/lczerner/zero_range/
-> > > 
-> > > I'll post the patches after we agree and merge the kernel functionality.
-> > > 
-> > > I tested this mostly with a subset of xfstests using fsx and fsstress and
-> > > even with new generic/290 which is just a copy of xfs/290 usinz fzero
-> > > command for xfs_io instead of zero (which uses ioctl). I was testing on
-> > > x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
-> > 
-> > You also want to convert xfs/242 to be a generic test - it uses the
-> > _generic_test_punch helper to test all the corner cases across
-> > different extent type transitions.
-
-That was the plan originally, however it uses xfs bmap which is not
-supported for other file systems. But I can take a better look and
-possibly port it to generic as well.
-
-> > 
-> > > ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083 generic/117 generic/068 generic/231 generic/127 generic/091 generic/075 generic/112 generic/263 generic/091 generic/075 generic/256 generic/255 generic/316 generic/300 generic/290;
-> 
-> FWIW. if that's a group of tests you consider good for testing
-> extent tree modifications, then can you create a test group for
-> these by adding "extent" to each of the tests in the group file?
-
-I've made patches adding support for FALLOC_FL_ZERO_RANGE into fsx
-and fsstress so those tests are mostly tests which are using fsx and
-fsstress.
-
-It would require more careful look to identify tests which are
-useful for extent tree modification. I'll see what I can do.
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBGZWIgMTgsIDIwMTQgYXQgMTA6MDk6NDhBTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIFR1ZSwgMTggRmViIDIwMTQsIERhdmUgQ2hpbm5lciB3cm90ZToKPiAKPiA+
+IERhdGU6IFR1ZSwgMTggRmViIDIwMTQgMTk6MzM6MjQgKzExMDAKPiA+IEZyb206IERhdmUgQ2hp
+bm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiA+IFRvOiBMdWthcyBDemVybmVyIDxsY3plcm5l
+ckByZWRoYXQuY29tPgo+ID4gQ2M6IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwub3JnLCB0eXRzb0Bt
+aXQuZWR1LCBsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZywKPiA+ICAgICB4ZnNAb3NzLnNn
+aS5jb20KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMC82XVtSRkNdIEludHJvZHVjZSBGQUxMT0Nf
+RkxfWkVST19SQU5HRSBmbGFnIGZvcgo+ID4gICAgIGZhbGxvY2F0ZQo+ID4gCj4gPiBPbiBUdWUs
+IEZlYiAxOCwgMjAxNCBhdCAxMjowMTozOFBNICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+PiA+IE9uIE1vbiwgRmViIDE3LCAyMDE0IGF0IDA0OjA4OjE3UE0gKzAxMDAsIEx1a2FzIEN6ZXJu
+ZXIgd3JvdGU6Cj4gPiA+ID4gSW50cm9kdWNlIG5ldyBGQUxMT0NfRkxfWkVST19SQU5HRSBmbGFn
+IGZvciBmYWxsb2NhdGUuIFRoaXMgaGFzIHRoZSBzYW1lCj4gPiA+ID4gZnVuY3Rpb25hbGl0eSBh
+cyB4ZnMgaW9jdGwgWEZTX0lPQ19aRVJPX1JBTkdFLgo+ID4gPiA+IAo+ID4gPiA+IEl0IGNhbiBi
+ZSB1c2VkIHRvIGNvbnZlcnQgYSByYW5nZSBvZiBmaWxlIHRvIHplcm9zIHByZWZlcmFibHkgd2l0
+aG91dAo+ID4gPiA+IGlzc3VpbmcgZGF0YSBJTy4gQmxvY2tzIHNob3VsZCBiZSBwcmVhbGxvY2F0
+ZWQgZm9yIHRoZSByZWdpb25zIHRoYXQgc3Bhbgo+ID4gPiA+IGhvbGVzIGluIHRoZSBmaWxlLCBh
+bmQgdGhlIGVudGlyZSByYW5nZSBpcyBwcmVmZXJhYmxlIGNvbnZlcnRlZCB0bwo+ID4gPiA+IHVu
+d3JpdHRlbiBleHRlbnRzIC0gZXZlbiB0aG91Z2ggZmlsZSBzeXN0ZW0gbWF5IGNob29zZSB0byB6
+ZXJvIG91dCB0aGUKPiA+ID4gPiBleHRlbnQgb3IgZG8gd2hhdGV2ZXIgd2hpY2ggd2lsbCByZXN1
+bHQgaW4gcmVhZGluZyB6ZXJvcyBmcm9tIHRoZSByYW5nZQo+ID4gPiA+IHdoaWxlIHRoZSByYW5n
+ZSByZW1haW5zIGFsbG9jYXRlZCBmb3IgdGhlIGZpbGUuCj4gPiA+ID4gCj4gPiA+ID4gVGhpcyBj
+YW4gYmUgYWxzbyB1c2VkIHRvIHByZWFsbG9jYXRlIGJsb2NrcyBwYXN0IEVPRiBpbiB0aGUgc2Ft
+ZSB3YXkgYXMKPiA+ID4gPiB3aXRoIGZhbGxvY2F0ZS4gRmxhZyBGQUxMT0NfRkxfS0VFUF9TSVpF
+IHdoaWNoIHNob3VsZCBjYXVzZSB0aGUgaW5vZGUKPiA+ID4gPiBzaXplIHRvIHJlbWFpbiB0aGUg
+c2FtZS4KPiA+ID4gPiAKPiA+ID4gPiBZb3UgY2FuIHRlc3QgdGhpcyBmZWF0dXJlIHlvdXJzZWxm
+IHVzaW5nIHhmc3Rlc3RzLCBvZiBmYWxsb2NhdGUoMSkgaG93ZXZlcgo+ID4gPiA+IHlvdSdsbCBu
+ZWVkIHBhdGNoZXMgZm9yIHV0aWxfbGludXgsIHhmc3Byb2dzIGFuZCB4ZnN0ZXN0cyB3aGljaCB5
+b3UKPiA+ID4gPiBjYW4gZmluZCBoZXJlOgo+ID4gPiA+IAo+ID4gPiA+IGh0dHA6Ly9wZW9wbGUu
+cmVkaGF0LmNvbS9sY3plcm5lci96ZXJvX3JhbmdlLwo+ID4gPiA+IAo+ID4gPiA+IEknbGwgcG9z
+dCB0aGUgcGF0Y2hlcyBhZnRlciB3ZSBhZ3JlZSBhbmQgbWVyZ2UgdGhlIGtlcm5lbCBmdW5jdGlv
+bmFsaXR5Lgo+ID4gPiA+IAo+ID4gPiA+IEkgdGVzdGVkIHRoaXMgbW9zdGx5IHdpdGggYSBzdWJz
+ZXQgb2YgeGZzdGVzdHMgdXNpbmcgZnN4IGFuZCBmc3N0cmVzcyBhbmQKPiA+ID4gPiBldmVuIHdp
+dGggbmV3IGdlbmVyaWMvMjkwIHdoaWNoIGlzIGp1c3QgYSBjb3B5IG9mIHhmcy8yOTAgdXNpbnog
+Znplcm8KPiA+ID4gPiBjb21tYW5kIGZvciB4ZnNfaW8gaW5zdGVhZCBvZiB6ZXJvICh3aGljaCB1
+c2VzIGlvY3RsKS4gSSB3YXMgdGVzdGluZyBvbgo+ID4gPiA+IHg4Nl82NCBhbmQgcHBjNjQgd2l0
+aCBibG9jayBzaXplcyBvZiAxMDI0LCAyMDQ4IGFuZCA0MDk2Lgo+ID4gPiAKPiA+ID4gWW91IGFs
+c28gd2FudCB0byBjb252ZXJ0IHhmcy8yNDIgdG8gYmUgYSBnZW5lcmljIHRlc3QgLSBpdCB1c2Vz
+IHRoZQo+ID4gPiBfZ2VuZXJpY190ZXN0X3B1bmNoIGhlbHBlciB0byB0ZXN0IGFsbCB0aGUgY29y
+bmVyIGNhc2VzIGFjcm9zcwo+ID4gPiBkaWZmZXJlbnQgZXh0ZW50IHR5cGUgdHJhbnNpdGlvbnMu
+Cj4gCj4gVGhhdCB3YXMgdGhlIHBsYW4gb3JpZ2luYWxseSwgaG93ZXZlciBpdCB1c2VzIHhmcyBi
+bWFwIHdoaWNoIGlzIG5vdAo+IHN1cHBvcnRlZCBmb3Igb3RoZXIgZmlsZSBzeXN0ZW1zLiBCdXQg
+SSBjYW4gdGFrZSBhIGJldHRlciBsb29rIGFuZAo+IHBvc3NpYmx5IHBvcnQgaXQgdG8gZ2VuZXJp
+YyBhcyB3ZWxsLgoKU2ltcGx5IHBhc3MgZmllbWFwIHJhdGhlciB0aGFuICJibWFwIC12IiBsaWtl
+IGFsbCB0aGUgb3RoZXIgZmFsbG9jCnRlc3RzIGRvLiBUaGUgb3V0cHV0IG9mIHRoZSB4ZnNfaW8g
+ZmllbWFwIGFuZCBibWFwIGNvbW1hbmRzIGlzCnByZXR0eSBtdWNoIGlkZW50aWNhbCBzbyB0aGlz
+IHNob3VsZG4ndCBiZSBhbiBpc3N1ZS4KCj4gPiA+ID4gLi9jaGVjayBnZW5lcmljLzA3NiBnZW5l
+cmljLzIzMiBnZW5lcmljLzAxMyBnZW5lcmljLzA3MCBnZW5lcmljLzI2OSBnZW5lcmljLzA4MyBn
+ZW5lcmljLzExNyBnZW5lcmljLzA2OCBnZW5lcmljLzIzMSBnZW5lcmljLzEyNyBnZW5lcmljLzA5
+MSBnZW5lcmljLzA3NSBnZW5lcmljLzExMiBnZW5lcmljLzI2MyBnZW5lcmljLzA5MSBnZW5lcmlj
+LzA3NSBnZW5lcmljLzI1NiBnZW5lcmljLzI1NSBnZW5lcmljLzMxNiBnZW5lcmljLzMwMCBnZW5l
+cmljLzI5MDsKPiA+IAo+ID4gRldJVy4gaWYgdGhhdCdzIGEgZ3JvdXAgb2YgdGVzdHMgeW91IGNv
+bnNpZGVyIGdvb2QgZm9yIHRlc3RpbmcKPiA+IGV4dGVudCB0cmVlIG1vZGlmaWNhdGlvbnMsIHRo
+ZW4gY2FuIHlvdSBjcmVhdGUgYSB0ZXN0IGdyb3VwIGZvcgo+ID4gdGhlc2UgYnkgYWRkaW5nICJl
+eHRlbnQiIHRvIGVhY2ggb2YgdGhlIHRlc3RzIGluIHRoZSBncm91cCBmaWxlPwo+IAo+IEkndmUg
+bWFkZSBwYXRjaGVzIGFkZGluZyBzdXBwb3J0IGZvciBGQUxMT0NfRkxfWkVST19SQU5HRSBpbnRv
+IGZzeAo+IGFuZCBmc3N0cmVzcyBzbyB0aG9zZSB0ZXN0cyBhcmUgbW9zdGx5IHRlc3RzIHdoaWNo
+IGFyZSB1c2luZyBmc3ggYW5kCj4gZnNzdHJlc3MuCgpPaywgc28gaXQncyBhICJmYWxsb2NhdGUi
+IHRlc3QgZ3JvdXAsIHRoZW4/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlk
+QGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
