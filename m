@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 37D437FB9
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 10:39:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 109EB304070
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:39:02 -0800 (PST)
-Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
-	[209.85.192.172]) by cuda.sgi.com with ESMTP id
-	GxxyuSJ8nyntMdTq (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 08:39:00 -0800 (PST)
-Received: by mail-pd0-f172.google.com with SMTP id p10so16419475pdj.31
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:39:00 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D687C7FB9
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 10:39:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D13CAC001
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:39:20 -0800 (PST)
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id iEQFQJUhBVgTQePD
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:39:19 -0800 (PST)
+Received: by mail-pb0-f53.google.com with SMTP id md12so16832678pbc.26
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:39:18 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v5 6/10] xfstest: shared/002: Delayed allocation collapse range
-Date: Wed, 19 Feb 2014 01:38:50 +0900
-Message-Id: <1392741530-20199-1-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v5 7/10] xfstest: shared/003: Multi collapse range tests
+Date: Wed, 19 Feb 2014 01:39:04 +0900
+Message-Id: <1392741544-20233-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +33,29 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, l
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(002) tries to test various corner cases with delayed extents
+This testcase(003) tries to test various corner cases with pre-existing holes
 for fcollapse range functionality over different type of extents.
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Signed-off-by: Namjae Jeon <linkinjeon@gmail.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/shared/002     |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/002.out |   49 +++++++++++++++++++++++++++++++++++++
+ tests/shared/003     |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/003.out |   49 +++++++++++++++++++++++++++++++++++++
  tests/shared/group   |    1 +
  3 files changed, 115 insertions(+)
- create mode 100644 tests/shared/002
- create mode 100644 tests/shared/002.out
+ create mode 100644 tests/shared/003
+ create mode 100644 tests/shared/003.out
 
-diff --git a/tests/shared/002 b/tests/shared/002
+diff --git a/tests/shared/003 b/tests/shared/003
 new file mode 100644
-index 0000000..54b957d
+index 0000000..7b7f2df
 --- /dev/null
-+++ b/tests/shared/002
++++ b/tests/shared/003
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. 2
++# FS QA Test No. 3
 +#
-+# Delayed allocation collapse range tests
++# Multi collapse range tests
 +# This testcase is one of the 4 testcases (shared 001 - 004) which tries to
 +# test various corner cases for fcollapse range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -113,18 +112,18 @@ index 0000000..54b957d
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch -d falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -k falloc fpunch fcollapse fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/shared/002.out b/tests/shared/002.out
+diff --git a/tests/shared/003.out b/tests/shared/003.out
 new file mode 100644
-index 0000000..60aaadc
+index 0000000..0a786c9
 --- /dev/null
-+++ b/tests/shared/002.out
++++ b/tests/shared/003.out
 @@ -0,0 +1,49 @@
-+QA output created by 002
++QA output created by 003
 +	1. into a hole
 +f4f35d60b3cc18aaa6d8d92f0cd3708a
 +	2. into allocated space
@@ -132,17 +131,15 @@ index 0000000..60aaadc
 +f1894a71ac539f6f90426d98a4990a47
 +	3. into unwritten space
 +0: [0..95]: extent
-+f4f35d60b3cc18aaa6d8d92f0cd3708a
++f07217d5ac7ffa15dd8910c4aa912674
 +	4. hole -> data
-+0: [0..31]: hole
-+1: [32..63]: extent
-+2: [64..95]: hole
-+d8f51c20223dbce5c7c90db87bc221b0
++0: [0..63]: extent
++1: [64..95]: hole
++e5c94f6299822646f9f57aeacd8bdc01
 +	5. hole -> unwritten
-+0: [0..31]: hole
-+1: [32..63]: extent
-+2: [64..95]: hole
-+f4f35d60b3cc18aaa6d8d92f0cd3708a
++0: [0..63]: extent
++1: [64..95]: hole
++f07217d5ac7ffa15dd8910c4aa912674
 +	6. data -> hole
 +0: [0..31]: extent
 +1: [32..95]: hole
@@ -154,19 +151,21 @@ index 0000000..60aaadc
 +	8. unwritten -> hole
 +0: [0..31]: extent
 +1: [32..95]: hole
-+f4f35d60b3cc18aaa6d8d92f0cd3708a
++f07217d5ac7ffa15dd8910c4aa912674
 +	9. unwritten -> data
 +0: [0..63]: extent
 +1: [64..95]: hole
-+d8f51c20223dbce5c7c90db87bc221b0
++e5c94f6299822646f9f57aeacd8bdc01
 +	10. hole -> data -> hole
-+bb7df04e1b0a2570657527a7e108ae23
++0: [0..31]: extent
++1: [32..63]: hole
++76cc863b386460b228a493933813a6a0
 +	11. data -> hole -> data
 +0: [0..63]: extent
 +0f0151cbed83e4bf6e5bde26e82ab115
 +	12. unwritten -> data -> unwritten
 +0: [0..63]: extent
-+bb7df04e1b0a2570657527a7e108ae23
++76cc863b386460b228a493933813a6a0
 +	13. data -> unwritten -> data
 +0: [0..63]: extent
 +0f0151cbed83e4bf6e5bde26e82ab115
@@ -174,14 +173,14 @@ index 0000000..60aaadc
 +0: [0..95]: extent
 +f1894a71ac539f6f90426d98a4990a47
 diff --git a/tests/shared/group b/tests/shared/group
-index 5562f92..7230b28 100644
+index 7230b28..9226032 100644
 --- a/tests/shared/group
 +++ b/tests/shared/group
-@@ -4,6 +4,7 @@
- # - comment line before each group is "new" description
+@@ -5,6 +5,7 @@
  #
  001 auto prealloc
-+002 auto prealloc
+ 002 auto prealloc
++003 auto prealloc
  032 mkfs auto quick
  051 acl udf auto quick
  218 auto fsr quick
