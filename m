@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 93BB67FD5
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 03:50:57 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B5D957FD4
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 04:18:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 59DEF304059
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:50:57 -0800 (PST)
-Received: from mail-qc0-f171.google.com (mail-qc0-f171.google.com
-	[209.85.216.171]) by cuda.sgi.com with ESMTP id
-	VR2YvlZhD0g9Q6o5 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 01:50:55 -0800 (PST)
-Received: by mail-qc0-f171.google.com with SMTP id x3so264132qcv.30
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 01:50:54 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 64C508F8068
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 02:18:21 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	OyzLNvwACJQszfq7 for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 02:18:18 -0800 (PST)
+Date: Tue, 18 Feb 2014 21:18:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfstests: test setting XFS BMBT fields
+Message-ID: <20140218101808.GE28666@dastard>
+References: <20140210231046.910977175@sgi.com>
+	<20140213202608.627433955@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
-References: <1391319874-3203-1-git-send-email-linkinjeon@gmail.com>
-	<alpine.LFD.2.00.1402111209450.2225@localhost.localdomain>
-	<CAKYAXd-bD6ZZgpc9E8V1kD9Dj2wrCkbi1i6drNBdUAwsMiv5gg@mail.gmail.com>
-	<alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
-Date: Tue, 18 Feb 2014 18:50:54 +0900
-Message-ID: <CAKYAXd_xpWg-=T_1PghL_u9wDKTX_Ey5mJxbgVVKth8NoexQQg@mail.gmail.com>
-Subject: Re: [PATCH RESEND 3/10] ext4: Add support FALLOC_FL_COLLAPSE_RANGE
-	for fallocate
-From: Namjae Jeon <linkinjeon@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20140213202608.627433955@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,66 +26,338 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>
-Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-MjAxNC0wMi0xOCAxODowNSBHTVQrMDk6MDAsIEx1a8OhxaEgQ3plcm5lciA8bGN6ZXJuZXJAcmVk
-aGF0LmNvbT46Cj4gT24gV2VkLCAxMiBGZWIgMjAxNCwgTmFtamFlIEplb24gd3JvdGU6Cj4KPj4g
-RGF0ZTogV2VkLCAxMiBGZWIgMjAxNCAxMToyODozNSArMDkwMAo+PiBGcm9tOiBOYW1qYWUgSmVv
-biA8bGlua2luamVvbkBnbWFpbC5jb20+Cj4+IFRvOiBMdWvDocWhIEN6ZXJuZXIgPGxjemVybmVy
-QHJlZGhhdC5jb20+Cj4+IENjOiB2aXJvQHplbml2LmxpbnV4Lm9yZy51aywgZGF2aWRAZnJvbW9y
-Yml0LmNvbSwgYnBtQHNnaS5jb20sCj4+IHR5dHNvQG1pdC5lZHUsCj4+ICAgICBhZGlsZ2VyLmtl
-cm5lbEBkaWxnZXIuY2EsIGphY2tAc3VzZS5jeiwgbXRrLm1hbnBhZ2VzQGdtYWlsLmNvbSwKPj4g
-ICAgIGxpbnV4LWZzZGV2ZWxAdmdlci5rZXJuZWwub3JnLCB4ZnNAb3NzLnNnaS5jb20sCj4+ICAg
-ICBsaW51eC1leHQ0QHZnZXIua2VybmVsLm9yZywgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
-ZywKPj4gICAgIE5hbWphZSBKZW9uIDxuYW1qYWUuamVvbkBzYW1zdW5nLmNvbT4sCj4+ICAgICBB
-c2hpc2ggU2FuZ3dhbiA8YS5zYW5nd2FuQHNhbXN1bmcuY29tPgo+PiBTdWJqZWN0OiBSZTogW1BB
-VENIIFJFU0VORCAzLzEwXSBleHQ0OiBBZGQgc3VwcG9ydAo+PiBGQUxMT0NfRkxfQ09MTEFQU0Vf
-UkFOR0UKPj4gICAgIGZvciBmYWxsb2NhdGUKPj4KPj4gMjAxNC0wMi0xMSAyMDo1OSBHTVQrMDk6
-MDAsIEx1a8OhxaEgQ3plcm5lciA8bGN6ZXJuZXJAcmVkaGF0LmNvbT46Cj4+ID4gT24gU3VuLCAy
-IEZlYiAyMDE0LCBOYW1qYWUgSmVvbiB3cm90ZToKPj4gPgo+PiA+PiBEYXRlOiBTdW4sICAyIEZl
-YiAyMDE0IDE0OjQ0OjM0ICswOTAwCj4+ID4+IEZyb206IE5hbWphZSBKZW9uIDxsaW5raW5qZW9u
-QGdtYWlsLmNvbT4KPj4gPj4gVG86IHZpcm9AemVuaXYubGludXgub3JnLnVrLCBkYXZpZEBmcm9t
-b3JiaXQuY29tLCBicG1Ac2dpLmNvbSwKPj4gPj4gdHl0c29AbWl0LmVkdSwKPj4gPj4gICAgIGFk
-aWxnZXIua2VybmVsQGRpbGdlci5jYSwgamFja0BzdXNlLmN6LCBtdGsubWFucGFnZXNAZ21haWwu
-Y29tCj4+ID4+IENjOiBsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZywgeGZzQG9zcy5zZ2ku
-Y29tLAo+PiA+PiAgICAgbGludXgtZXh0NEB2Z2VyLmtlcm5lbC5vcmcsIGxpbnV4LWtlcm5lbEB2
-Z2VyLmtlcm5lbC5vcmcsCj4+ID4+ICAgICBOYW1qYWUgSmVvbiA8bGlua2luamVvbkBnbWFpbC5j
-b20+LCBOYW1qYWUgSmVvbgo+PiA+PiA8bmFtamFlLmplb25Ac2Ftc3VuZy5jb20+LAo+PiA+PiAg
-ICAgQXNoaXNoIFNhbmd3YW4gPGEuc2FuZ3dhbkBzYW1zdW5nLmNvbT4KPj4gPj4gU3ViamVjdDog
-W1BBVENIIFJFU0VORCAzLzEwXSBleHQ0OiBBZGQgc3VwcG9ydAo+PiA+PiBGQUxMT0NfRkxfQ09M
-TEFQU0VfUkFOR0UKPj4gPj4gZm9yCj4+ID4+ICAgICBmYWxsb2NhdGUKPj4gPj4KPj4gPj4gRnJv
-bTogTmFtamFlIEplb24gPG5hbWphZS5qZW9uQHNhbXN1bmcuY29tPgo+PiA+Pgo+PiA+PiBBZGQg
-c3VwcG9ydCBGQUxMT0NfRkxfQ09MTEFQU0VfUkFOR0UgZm9yIGZhbGxvY2F0ZQo+PiBIaSBMdWth
-cy4KPj4gPgo+PiA+IERlc2NyaXB0aW9uIGlzIG1pc3NpbmcgaGVyZSwgcGxlYXNlIHByb3ZpZGUg
-RkFMTE9DX0ZMX0NPTExBUFNFX1JBTkdFCj4+ID4gZGVzY3JpcHRpb24gc28gcGVvcGxlIGtub3cg
-d2hhdCBpdCdzIHN1cHBvc2VkIHRvIGJlIGRvaW5nLgo+PiA+Cj4+ID4gbW9yZSBjb21tZW50cyBi
-ZWxsb3cuCj4+IE9rYXksIEkgd2lsbCB1ZHBhdGUuCj4+ID4KPj4gPiBUaGFua3MhCj4+ID4gLUx1
-a2FzCj4KPiBIaSwKSGkgTHVrYXMuCj4KPiB5b3UgbWF5IGhhdmUgbm90aWNlZCBteSBwYXRjaGVz
-IGZvciBuZXcgRkFMTE9DX0ZMX1pFUk9fUkFOR0UKPiBmYWxsb2NhdGUgZmxhZy4gVGhpcyBjaGFu
-Z2VzIHRoaW5ncyBhcm91bmQgdGhlIHNhbWUgYXJlYSBhcyB5b3VyCj4gcGF0Y2hlcyBkb2VzIHNv
-IHdlIHNob3VsZCBwcm9iYWJseSBmaWd1cmUgb3V0IHdoaWNoIGFyZSBnb2luZyB0bwo+IGxhbmQg
-aW4gZmlyc3QgYW5kIHRoZW4gcmViYXNlIHRoZSBvdGhlciBvbiB0b3Agb2YgdGhhdC4KWWVzLCBJ
-IGhhdmUgc2VlbiB5b3VyIHBhdGNoZXMuIEkgdGhpbmsgdGhhdCBWRlMgKyBYRlMgcGF0Y2hlcyBm
-b3IKRkFMTE9DX0ZMX0NPTExBUFNFX1JBTkdFIGhhdmUgZ290IGEgZmFpciBhbW91bnQgb2YgcmV2
-aWV3IGZyb20gRGF2ZS4KU28gdGhleSBhcmUgYWxtb3N0IHJlYWR5LiBJIHdpbGwgcG9zdCBjb2xs
-YXBzZSByYW5nZSB2NSBwYXRjaGVzIGFmdGVyCmZpeGluZyBzb21lIG1pbm9yIGNvbW1lbnRzIHRv
-bmlnaHQgb3IgdG9tbW9yb3cuCklmIHRoZXJlIHdpbGwgYmUgbm8gbW9yZSBjb21tZW50cyBmb3Ig
-WEZTIHBhdGNoLCBWRlMgKyBYRlMgcGF0Y2hlcyBjYW4KZ28gdGhyb3VnaCB0byB4ZnMgdHJlZSBi
-eSBEYXZlLgpJIHRoaW5rIHRoYXQgRXh0NCBjb2xsYXBzZSByYW5nZSBjb3VsZCBnbyBhdCBhIGxh
-dGVyIHRpbWUuKE5lZWQgeW91cgpyZXZpZXdlZC1ieSB0YWcpCklmIHN0aWxsIHRoZXJlIGFyZSBj
-b21tZW50cyBmb3IgeGZzIHBhdGNoLCBJIHdpbGwgcmViYXNlIG9uIHRvcCBvZiB5b3VyIHBhdGNo
-Lgo+Cj4gT25lIGNvbmNlcm4gSSBoYXZlIGlzIHRoYXQgSSBoYXZlIG5vdCBzZWVuIGFueSB0ZXN0
-cyBwcm92aWRlZCB0bwo+IHZlcmlmeSB0aGUgZmVhdHVyZS4gQnV0IEkganVzdCBtYXkgaGF2ZSBt
-aXNzZWQgaXQuIERvIHlvdSBoYXZlIGFueQo+IHhmc3Rlc3RzIHRlc3Qgb3IgYXQgbGVhc3QgZnN4
-IGFuZCBmc3N0cmVzcyBwYXRjaGVzIHRvIHByb3ZpZGUKPiBzdXBwb3J0IGZvciB0ZXN0aW5nIEZB
-TExPQ19GTF9DT0xMQVBTRV9SQU5HRSA/IFBhdGNoZXMgZm9yCj4gdXRpbF9saW51eCBtaWdodCBh
-bHNvIGJlIGhhbmR5LgpZZXMsIFRoZXJlIGFyZSA1IG5ldyB4ZnN0ZXN0cyBjYXNlcyBpbiB0aGlz
-IHBhdGNoLXNldC4gdGhlc2Ugd2lsbCBhbHNvCmJlIHBvc3RlZCB3aXRoIGNvbGxhcHNlIHJhbmdl
-IHBhdGNoLXNldCBzb29uLgoKVGhhbmtzIDopCj4KPiBUaGFua3MhCj4gLUx1a2FzCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
-Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Feb 13, 2014 at 02:26:56PM -0600, Mark Tinguely wrote:
+> Test the setting of the XFS BMBT fields. Runs through the valid
+> bit values for each field and tests an illegal value.
+> 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+> v2:
+>  Removed the test for CRC filesystems which also removes need for the nasty
+>   prefixes and filtering output.
+
+Breaking CRC filesystem testing isn't the best approach, IMO. Using
+Eric's approach of turning off CRCs - as the bug fix will be in
+xfs_db binaries that support CRCs - is a much better idea.
+
+It's also missing _require_scratch.
+
+>  Remove the hex input as an integer test because it aint a number.
+
+And so we should be testing that it isn't endian converted.
+
+So rather than go around again, here's an updated patch below that
+fixes all these issues.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+
+xfs: test setting XFS BMBT fields in xfs_db
+
+From: Mark Tinguely <tinguely@sgi.com>
+
+Test the setting of the XFS BMBT fields via xfs_db. Runs through the
+valid bit values for each field and tests an illegal value.
+
+[dchinner: added _require_xfs_mkfs_crc and turned off crcs so that
+the test doesn't just fail on CRC enabled test runs.]
+
+[dchinner: added hex block values to check they don't get endian
+swapped.]
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+---
+ tests/xfs/001     |  98 +++++++++++++++++++++++++++++++++++
+ tests/xfs/001.out | 150 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/group   |   1 +
+ 3 files changed, 249 insertions(+)
+
+diff --git a/tests/xfs/001 b/tests/xfs/001
+new file mode 100755
+index 0000000..e72e6fd
+--- /dev/null
++++ b/tests/xfs/001
+@@ -0,0 +1,98 @@
++#! /bin/bash
++# FS QA Test No. 001
++#
++# Test the xfs_db write of the XFS BMBT entries. For each XFS BMBT field,
++# write the value 0, each bit and finally the entry beyond the maximum legal
++# value. Also makes sure a core write and hex input still work.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++_do_bit_test()
++{
++	field="$1"
++	bits="$2"
++
++	echo "testing $field with $bits bits"
++	$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $field 0" $SCRATCH_DEV
++	num=1
++	for n in `seq 0 1 $bits`; do
++		$XFS_DB_PROG -x -c "inode $FILE_INO" \
++			  -c "write $field $num" $SCRATCH_DEV
++		let num=$num*2
++	done
++	echo
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++_require_xfs_mkfs_crc
++
++_scratch_mkfs -m crc=0 >/dev/null 2>&1
++_scratch_mount
++
++# create the test file
++echo "make a file with data so it has an extent" > $SCRATCH_MNT/file
++
++# find the inode for the test file
++FILE_INO=`ls -i $SCRATCH_MNT |awk '{print $1}'`
++
++_scratch_unmount
++
++# test bit length constants
++BMBT_EXNTFLAG_BITLEN=1
++BMBT_STARTOFF_BITLEN=54
++BMBT_STARTBLOCK_BITLEN=52
++BMBT_BLOCKCOUNT_BITLEN=21
++
++# test setting the BMBT entries from 0 to past the valid number.
++_do_bit_test "u.bmx[0].extentflag" $BMBT_EXNTFLAG_BITLEN
++_do_bit_test "u.bmx[0].startoff" $BMBT_STARTOFF_BITLEN
++_do_bit_test "u.bmx[0].startblock" $BMBT_STARTBLOCK_BITLEN
++_do_bit_test "u.bmx[0].blockcount" $BMBT_BLOCKCOUNT_BITLEN
++# test setting the 32 bit generation number
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0x5a" $SCRATCH_DEV
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0xa5" $SCRATCH_DEV
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen 0" $SCRATCH_DEV
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #5a5a" $SCRATCH_DEV
++$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write core.gen #a5a5" $SCRATCH_DEV
++status=0
++exit
+diff --git a/tests/xfs/001.out b/tests/xfs/001.out
+new file mode 100644
+index 0000000..53aba1c
+--- /dev/null
++++ b/tests/xfs/001.out
+@@ -0,0 +1,150 @@
++QA output created by 001
++testing u.bmx[0].extentflag with 1 bits
++u.bmx[0].extentflag = 0
++u.bmx[0].extentflag = 1
++unable to convert value '2'.
++
++testing u.bmx[0].startoff with 54 bits
++u.bmx[0].startoff = 0
++u.bmx[0].startoff = 1
++u.bmx[0].startoff = 2
++u.bmx[0].startoff = 4
++u.bmx[0].startoff = 8
++u.bmx[0].startoff = 16
++u.bmx[0].startoff = 32
++u.bmx[0].startoff = 64
++u.bmx[0].startoff = 128
++u.bmx[0].startoff = 256
++u.bmx[0].startoff = 512
++u.bmx[0].startoff = 1024
++u.bmx[0].startoff = 2048
++u.bmx[0].startoff = 4096
++u.bmx[0].startoff = 8192
++u.bmx[0].startoff = 16384
++u.bmx[0].startoff = 32768
++u.bmx[0].startoff = 65536
++u.bmx[0].startoff = 131072
++u.bmx[0].startoff = 262144
++u.bmx[0].startoff = 524288
++u.bmx[0].startoff = 1048576
++u.bmx[0].startoff = 2097152
++u.bmx[0].startoff = 4194304
++u.bmx[0].startoff = 8388608
++u.bmx[0].startoff = 16777216
++u.bmx[0].startoff = 33554432
++u.bmx[0].startoff = 67108864
++u.bmx[0].startoff = 134217728
++u.bmx[0].startoff = 268435456
++u.bmx[0].startoff = 536870912
++u.bmx[0].startoff = 1073741824
++u.bmx[0].startoff = 2147483648
++u.bmx[0].startoff = 4294967296
++u.bmx[0].startoff = 8589934592
++u.bmx[0].startoff = 17179869184
++u.bmx[0].startoff = 34359738368
++u.bmx[0].startoff = 68719476736
++u.bmx[0].startoff = 137438953472
++u.bmx[0].startoff = 274877906944
++u.bmx[0].startoff = 549755813888
++u.bmx[0].startoff = 1099511627776
++u.bmx[0].startoff = 2199023255552
++u.bmx[0].startoff = 4398046511104
++u.bmx[0].startoff = 8796093022208
++u.bmx[0].startoff = 17592186044416
++u.bmx[0].startoff = 35184372088832
++u.bmx[0].startoff = 70368744177664
++u.bmx[0].startoff = 140737488355328
++u.bmx[0].startoff = 281474976710656
++u.bmx[0].startoff = 562949953421312
++u.bmx[0].startoff = 1125899906842624
++u.bmx[0].startoff = 2251799813685248
++u.bmx[0].startoff = 4503599627370496
++u.bmx[0].startoff = 9007199254740992
++unable to convert value '18014398509481984'.
++
++testing u.bmx[0].startblock with 52 bits
++u.bmx[0].startblock = 0
++u.bmx[0].startblock = 1
++u.bmx[0].startblock = 2
++u.bmx[0].startblock = 4
++u.bmx[0].startblock = 8
++u.bmx[0].startblock = 16
++u.bmx[0].startblock = 32
++u.bmx[0].startblock = 64
++u.bmx[0].startblock = 128
++u.bmx[0].startblock = 256
++u.bmx[0].startblock = 512
++u.bmx[0].startblock = 1024
++u.bmx[0].startblock = 2048
++u.bmx[0].startblock = 4096
++u.bmx[0].startblock = 8192
++u.bmx[0].startblock = 16384
++u.bmx[0].startblock = 32768
++u.bmx[0].startblock = 65536
++u.bmx[0].startblock = 131072
++u.bmx[0].startblock = 262144
++u.bmx[0].startblock = 524288
++u.bmx[0].startblock = 1048576
++u.bmx[0].startblock = 2097152
++u.bmx[0].startblock = 4194304
++u.bmx[0].startblock = 8388608
++u.bmx[0].startblock = 16777216
++u.bmx[0].startblock = 33554432
++u.bmx[0].startblock = 67108864
++u.bmx[0].startblock = 134217728
++u.bmx[0].startblock = 268435456
++u.bmx[0].startblock = 536870912
++u.bmx[0].startblock = 1073741824
++u.bmx[0].startblock = 2147483648
++u.bmx[0].startblock = 4294967296
++u.bmx[0].startblock = 8589934592
++u.bmx[0].startblock = 17179869184
++u.bmx[0].startblock = 34359738368
++u.bmx[0].startblock = 68719476736
++u.bmx[0].startblock = 137438953472
++u.bmx[0].startblock = 274877906944
++u.bmx[0].startblock = 549755813888
++u.bmx[0].startblock = 1099511627776
++u.bmx[0].startblock = 2199023255552
++u.bmx[0].startblock = 4398046511104
++u.bmx[0].startblock = 8796093022208
++u.bmx[0].startblock = 17592186044416
++u.bmx[0].startblock = 35184372088832
++u.bmx[0].startblock = 70368744177664
++u.bmx[0].startblock = 140737488355328
++u.bmx[0].startblock = 281474976710656
++u.bmx[0].startblock = 562949953421312
++u.bmx[0].startblock = 1125899906842624
++u.bmx[0].startblock = 2251799813685248
++unable to convert value '4503599627370496'.
++
++testing u.bmx[0].blockcount with 21 bits
++u.bmx[0].blockcount = 0
++u.bmx[0].blockcount = 1
++u.bmx[0].blockcount = 2
++u.bmx[0].blockcount = 4
++u.bmx[0].blockcount = 8
++u.bmx[0].blockcount = 16
++u.bmx[0].blockcount = 32
++u.bmx[0].blockcount = 64
++u.bmx[0].blockcount = 128
++u.bmx[0].blockcount = 256
++u.bmx[0].blockcount = 512
++u.bmx[0].blockcount = 1024
++u.bmx[0].blockcount = 2048
++u.bmx[0].blockcount = 4096
++u.bmx[0].blockcount = 8192
++u.bmx[0].blockcount = 16384
++u.bmx[0].blockcount = 32768
++u.bmx[0].blockcount = 65536
++u.bmx[0].blockcount = 131072
++u.bmx[0].blockcount = 262144
++u.bmx[0].blockcount = 524288
++u.bmx[0].blockcount = 1048576
++unable to convert value '2097152'.
++
++core.gen = 90
++core.gen = 165
++core.gen = 0
++core.gen = 1515847680
++core.gen = 2779054080
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 279ffe2..88285eb 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -1,3 +1,4 @@
++001 db auto quick
+ 003 db auto quick
+ 004 db auto quick
+ 008 rw ioctl auto quick
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
