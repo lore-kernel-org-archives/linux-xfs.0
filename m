@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0E9FE7FDB
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 06:04:37 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 813FA7FD5
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:23:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E34FB30406B
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 04:04:33 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Vc1bQHB2psqLwhHf for
-	<xfs@oss.sgi.com>; Tue, 18 Feb 2014 04:04:33 -0800 (PST)
-Date: Tue, 18 Feb 2014 13:04:24 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D045AC006
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 06:23:11 -0800 (PST)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id ntEvyh837JN5YXo3 (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 06:23:10 -0800 (PST)
+Date: Tue, 18 Feb 2014 09:23:05 -0500
+From: Theodore Ts'o <tytso@mit.edu>
 Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-In-Reply-To: <20140218094142.GC28666@dastard>
-Message-ID: <alpine.LFD.2.00.1402181302230.2216@localhost.localdomain>
+Message-ID: <20140218142305.GN26580@thunk.org>
 References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 	<20140218010138.GE13997@dastard> <20140218083324.GB28666@dastard>
 	<alpine.LFD.2.00.1402181006250.2216@localhost.localdomain>
 	<20140218094142.GC28666@dastard>
+	<alpine.LFD.2.00.1402181302230.2216@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-863531103-1392725067=:2216"
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1402181302230.2216@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,116 +29,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-863531103-1392725067=:2216
-Content-Type: TEXT/PLAIN; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-
-On Tue, 18 Feb 2014, Dave Chinner wrote:
-
-> Date: Tue, 18 Feb 2014 20:41:42 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukáš Czerner <lczerner@redhat.com>
-> Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-fsdevel@vger.kernel.org,
->     xfs@oss.sgi.com
-> Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for
->     fallocate
-> 
-> On Tue, Feb 18, 2014 at 10:09:48AM +0100, Lukáš Czerner wrote:
-> > On Tue, 18 Feb 2014, Dave Chinner wrote:
-> > 
-> > > Date: Tue, 18 Feb 2014 19:33:24 +1100
-> > > From: Dave Chinner <david@fromorbit.com>
-> > > To: Lukas Czerner <lczerner@redhat.com>
-> > > Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, linux-fsdevel@vger.kernel.org,
-> > >     xfs@oss.sgi.com
-> > > Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for
-> > >     fallocate
-> > > 
-> > > On Tue, Feb 18, 2014 at 12:01:38PM +1100, Dave Chinner wrote:
-> > > > On Mon, Feb 17, 2014 at 04:08:17PM +0100, Lukas Czerner wrote:
-> > > > > Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-> > > > > functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
-> > > > > 
-> > > > > It can be used to convert a range of file to zeros preferably without
-> > > > > issuing data IO. Blocks should be preallocated for the regions that span
-> > > > > holes in the file, and the entire range is preferable converted to
-> > > > > unwritten extents - even though file system may choose to zero out the
-> > > > > extent or do whatever which will result in reading zeros from the range
-> > > > > while the range remains allocated for the file.
-> > > > > 
-> > > > > This can be also used to preallocate blocks past EOF in the same way as
-> > > > > with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-> > > > > size to remain the same.
-> > > > > 
-> > > > > You can test this feature yourself using xfstests, of fallocate(1) however
-> > > > > you'll need patches for util_linux, xfsprogs and xfstests which you
-> > > > > can find here:
-> > > > > 
-> > > > > http://people.redhat.com/lczerner/zero_range/
-> > > > > 
-> > > > > I'll post the patches after we agree and merge the kernel functionality.
-> > > > > 
-> > > > > I tested this mostly with a subset of xfstests using fsx and fsstress and
-> > > > > even with new generic/290 which is just a copy of xfs/290 usinz fzero
-> > > > > command for xfs_io instead of zero (which uses ioctl). I was testing on
-> > > > > x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
-> > > > 
-> > > > You also want to convert xfs/242 to be a generic test - it uses the
-> > > > _generic_test_punch helper to test all the corner cases across
-> > > > different extent type transitions.
-> > 
-> > That was the plan originally, however it uses xfs bmap which is not
-> > supported for other file systems. But I can take a better look and
-> > possibly port it to generic as well.
-> 
-> Simply pass fiemap rather than "bmap -v" like all the other falloc
-> tests do. The output of the xfs_io fiemap and bmap commands is
-> pretty much identical so this shouldn't be an issue.
-
-ok, will do.
-
-> 
-> > > > > ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083 generic/117 generic/068 generic/231 generic/127 generic/091 generic/075 generic/112 generic/263 generic/091 generic/075 generic/256 generic/255 generic/316 generic/300 generic/290;
-> > > 
-> > > FWIW. if that's a group of tests you consider good for testing
-> > > extent tree modifications, then can you create a test group for
-> > > these by adding "extent" to each of the tests in the group file?
-> > 
-> > I've made patches adding support for FALLOC_FL_ZERO_RANGE into fsx
-> > and fsstress so those tests are mostly tests which are using fsx and
-> > fsstress.
-> 
-> Ok, so it's a "fallocate" test group, then?
-
-More like "fsx_fsstress" group, which might sound as a terrible name
-for the group but it explains it quite well. So if you do not have
-anything against that I'll call the new group "fsx_fsstress"
-
-Thanks!
--Lukas
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
---8323328-863531103-1392725067=:2216
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-863531103-1392725067=:2216--
+T24gVHVlLCBGZWIgMTgsIDIwMTQgYXQgMDE6MDQ6MjRQTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+Cj4gPiBPaywgc28gaXQncyBhICJmYWxsb2NhdGUiIHRlc3QgZ3JvdXAsIHRoZW4/
+Cj4gCj4gTW9yZSBsaWtlICJmc3hfZnNzdHJlc3MiIGdyb3VwLCB3aGljaCBtaWdodCBzb3VuZCBh
+cyBhIHRlcnJpYmxlIG5hbWUKPiBmb3IgdGhlIGdyb3VwIGJ1dCBpdCBleHBsYWlucyBpdCBxdWl0
+ZSB3ZWxsLiBTbyBpZiB5b3UgZG8gbm90IGhhdmUKPiBhbnl0aGluZyBhZ2FpbnN0IHRoYXQgSSds
+bCBjYWxsIHRoZSBuZXcgZ3JvdXAgImZzeF9mc3N0cmVzcyIKCkhvdyBhYm91dCAiYmxvY2tfbWFw
+IiBncm91cD8gIEkgbGlrZSBEYXZlJ3Mgc3VnZ2VzdGlvbiBhYm91dCBuYW1pbmcKdGhlIGdyb3Vw
+IGFmdGVyIHdoYXQgaXQgaXMgdHJ5aW5nIHRvIHRlc3QsIGFzIG9wcG9zZWQgdG8gaG93IGl0IGRv
+ZXMKdGhhdCB0ZXN0aW5nLiAgVGhpcyBpcyBhbHNvIGNvbnNpc3RlbnQgd2l0aCBob3cgdGhlIG90
+aGVyIHRlc3RzIGdyb3VwcwphcmUgbmFtZWQgaW4geGZzdGVzdHMuCgpIb3dldmVyLCBleHRlbnRz
+IGFyZSBhbiBpbXBsZW1lbnRhdGlvbiBzdHJhdGVneSwgYW5kIHlvdSBtaWdodCBqdXN0IGFzCmVh
+c2lseSB1c2UgdGhpcyB0ZXN0IHRvIHZlcmlmeSB3aGV0aGVyIG9yIG5vdCB0aGUgcHVuY2ggaG9s
+ZQpmdW5jdGlvbmFsaXR5IGZvciBpbmRpcmVjdCBibG9jayBtYXBzIHdvcmtlZCBjb3JyZWN0bHku
+CgpXaGF0IEkgdGhpbmsgdXNpbmcgZnN4IGFuZCBmc3RyZXNzIHRvZ2V0aGVyIGhhdmUgaW4gY29t
+bW9uIGlzIHRoYXQKaXQncyBhIGdyZWF0IHdheSBvZiBzdHJlc3MgdGVzdGluZyB3aGF0ZXZlciB0
+aGUgZmlsZSBzeXN0ZW0gdXNlcyBmb3IKY3JlYXRpbmcgYW5kIG1haW50YWluaW5nIHRoZSB0cmFu
+c2xhdGlvbiBtYXAgYmV0d2VlbiAoaW5vZGUsIGxvZ2ljYWwKYmxvY2spIHRvIHBoeXNpY2FsIGJs
+b2NrLCBzbyB0aGF0J3Mgd2h5IHBlcmhhcHMgImJsb2NrX21hcCIgbWlnaHQgYmUgYQpnb29kIHRl
+c3QgZ3JvdXAgbmFtZS4KClJlZ2FyZHMsCgoJCQkJCQktIFRlZAoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
