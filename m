@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5E4D77F76
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 050E07F51
 	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 17:52:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C4813AC004
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D77DD30408E
 	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 15:52:33 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 6z56WtutI9UQJerz for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 15:52:32 -0800 (PST)
+	ESMTP id Kjpfi7Ur3tvwhuHy for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 15:52:31 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 7/9] xfs: add xfs_verifier_error()
-Date: Tue, 18 Feb 2014 17:52:27 -0600
-Message-Id: <1392767549-25574-8-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 4/9] xfs: Use defines for CRC offsets in all cases
+Date: Tue, 18 Feb 2014 17:52:24 -0600
+Message-Id: <1392767549-25574-5-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
 References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,84 +29,228 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We want to distinguish between corruption, CRC errors,
-etc.  In addition, the full stack trace on verifier errors
-seems less than helpful; it looks more like an oops than
-corruption.
+Some calls to crc functions used useful #defines,
+others used awkward offsetof() constructs.
 
-Create a new function to specifically alert the user to
-verifier errors, which can differentiate between
-EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
-unless the xfs error level is turned up high.
-
-Define a new error message (EFSBADCRC) to clearly identify
-CRC errors.  (Defined to EILSEQ, bad byte sequence)
+Switch them all to #define to make things a bit
+cleaner.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_error.c |   26 ++++++++++++++++++++++++++
- fs/xfs/xfs_error.h |    1 +
- fs/xfs/xfs_linux.h |    1 +
- 3 files changed, 28 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_ag.h             |    6 ++++++
+ fs/xfs/xfs_alloc.c          |   10 ++++------
+ fs/xfs/xfs_dinode.h         |    2 ++
+ fs/xfs/xfs_format.h         |    2 ++
+ fs/xfs/xfs_ialloc.c         |    5 ++---
+ fs/xfs/xfs_inode_buf.c      |    4 ++--
+ fs/xfs/xfs_sb.c             |    5 ++---
+ fs/xfs/xfs_sb.h             |    2 ++
+ fs/xfs/xfs_symlink_remote.c |    5 ++---
+ 9 files changed, 24 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 9995b80..8733c59 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -178,3 +178,29 @@ xfs_corruption_error(
- 	xfs_error_report(tag, level, mp, filename, linenum, ra);
- 	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index 3fc1098..0fdd410 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -89,6 +89,8 @@ typedef struct xfs_agf {
+ 	/* structure must be padded to 64 bit alignment */
+ } xfs_agf_t;
+ 
++#define XFS_AGF_CRC_OFF		offsetof(struct xfs_agf, agf_crc)
++
+ #define	XFS_AGF_MAGICNUM	0x00000001
+ #define	XFS_AGF_VERSIONNUM	0x00000002
+ #define	XFS_AGF_SEQNO		0x00000004
+@@ -167,6 +169,8 @@ typedef struct xfs_agi {
+ 	/* structure must be padded to 64 bit alignment */
+ } xfs_agi_t;
+ 
++#define XFS_AGI_CRC_OFF		offsetof(struct xfs_agi, agi_crc)
++
+ #define	XFS_AGI_MAGICNUM	0x00000001
+ #define	XFS_AGI_VERSIONNUM	0x00000002
+ #define	XFS_AGI_SEQNO		0x00000004
+@@ -222,6 +226,8 @@ typedef struct xfs_agfl {
+ 	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
+ } xfs_agfl_t;
+ 
++#define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
++
+ /*
+  * tags for inode radix tree
+  */
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index 9eab2df..72ea855 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -486,7 +486,7 @@ xfs_agfl_read_verify(
+ 		return;
+ 
+ 	agfl_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-				   offsetof(struct xfs_agfl, agfl_crc));
++				   XFS_AGFL_CRC_OFF);
+ 
+ 	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
+ 
+@@ -516,8 +516,7 @@ xfs_agfl_write_verify(
+ 	if (bip)
+ 		XFS_BUF_TO_AGFL(bp)->agfl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_agfl, agfl_crc));
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_AGFL_CRC_OFF);
  }
-+
-+/*
-+ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
-+ * values, and omit the stack trace unless the error level is tuned high.
-+ */
-+void
-+xfs_verifier_error(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+
-+	xfs_alert(mp, "Metadata %s detected at %pF, block 0x%llx",
-+		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
-+		  __return_address, bp->b_bn);
-+
-+	xfs_alert(mp, "Unmount and run xfs_repair");
-+
-+	/* XXX handle page-mapped buffers too? */
-+	if (xfs_error_level >= XFS_ERRLEVEL_LOW && bp->b_addr) {
-+		xfs_alert(mp, "First 64 bytes of corrupted metadata buffer:");
-+		xfs_hex_dump(bp->b_addr, 64);
-+	}
-+
-+	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
-+		xfs_stack_trace();
-+}
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 079a367..c1c57d4 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -34,6 +34,7 @@ extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
- extern void xfs_corruption_error(const char *tag, int level,
- 			struct xfs_mount *mp, void *p, const char *filename,
- 			int linenum, inst_t *ra);
-+extern void xfs_verifier_error(struct xfs_buf *bp);
  
- #define	XFS_ERROR_REPORT(e, lvl, mp)	\
- 	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index e8fed74..016ea8d 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -179,6 +179,7 @@ typedef __uint64_t __psunsigned_t;
- #define ENOATTR		ENODATA		/* Attribute not found */
- #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
- #define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
-+#define EFSBADCRC	EILSEQ		/* Bad CRC detected */
+ const struct xfs_buf_ops xfs_agfl_buf_ops = {
+@@ -2242,7 +2241,7 @@ xfs_agf_read_verify(
  
- #define SYNCHRONIZE()	barrier()
- #define __return_address __builtin_return_address(0)
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+ 		agf_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-					  offsetof(struct xfs_agf, agf_crc));
++					  XFS_AGF_CRC_OFF);
+ 
+ 	agf_ok = agf_ok && xfs_agf_verify(mp, bp);
+ 
+@@ -2272,8 +2271,7 @@ xfs_agf_write_verify(
+ 	if (bip)
+ 		XFS_BUF_TO_AGF(bp)->agf_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_agf, agf_crc));
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_AGF_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_agf_buf_ops = {
+diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
+index e5869b5..623bbe8 100644
+--- a/fs/xfs/xfs_dinode.h
++++ b/fs/xfs/xfs_dinode.h
+@@ -89,6 +89,8 @@ typedef struct xfs_dinode {
+ 	/* structure must be padded to 64 bit alignment */
+ } xfs_dinode_t;
+ 
++#define XFS_DINODE_CRC_OFF	offsetof(struct xfs_dinode, di_crc)
++
+ #define DI_MAX_FLUSH 0xffff
+ 
+ /*
+diff --git a/fs/xfs/xfs_format.h b/fs/xfs/xfs_format.h
+index b6ab5a3..9898f31 100644
+--- a/fs/xfs/xfs_format.h
++++ b/fs/xfs/xfs_format.h
+@@ -145,6 +145,8 @@ struct xfs_dsymlink_hdr {
+ 	__be64	sl_lsn;
+ };
+ 
++#define XFS_SYMLINK_CRC_OFF	offsetof(struct xfs_dsymlink_hdr, sl_crc)
++
+ /*
+  * The maximum pathlen is 1024 bytes. Since the minimum file system
+  * blocksize is 512 bytes, we can get a max of 3 extents back from
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 5d7f105..d79210b 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1572,7 +1572,7 @@ xfs_agi_read_verify(
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+ 		agi_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-					  offsetof(struct xfs_agi, agi_crc));
++					  XFS_AGI_CRC_OFF);
+ 	agi_ok = agi_ok && xfs_agi_verify(bp);
+ 
+ 	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+@@ -1600,8 +1600,7 @@ xfs_agi_write_verify(
+ 
+ 	if (bip)
+ 		XFS_BUF_TO_AGI(bp)->agi_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_agi, agi_crc));
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_AGI_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_agi_buf_ops = {
+diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
+index 4fc9f39..606b43a 100644
+--- a/fs/xfs/xfs_inode_buf.c
++++ b/fs/xfs/xfs_inode_buf.c
+@@ -306,7 +306,7 @@ xfs_dinode_verify(
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return false;
+ 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+-			      offsetof(struct xfs_dinode, di_crc)))
++			      XFS_DINODE_CRC_OFF))
+ 		return false;
+ 	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
+ 		return false;
+@@ -327,7 +327,7 @@ xfs_dinode_calc_crc(
+ 
+ 	ASSERT(xfs_sb_version_hascrc(&mp->m_sb));
+ 	crc = xfs_start_cksum((char *)dip, mp->m_sb.sb_inodesize,
+-			      offsetof(struct xfs_dinode, di_crc));
++			      XFS_DINODE_CRC_OFF);
+ 	dip->di_crc = xfs_end_cksum(crc);
+ }
+ 
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index 1e11679..1ea7c86 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -611,7 +611,7 @@ xfs_sb_read_verify(
+ 	     dsb->sb_crc != 0)) {
+ 
+ 		if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-				      offsetof(struct xfs_sb, sb_crc))) {
++				      XFS_SB_CRC_OFF)) {
+ 			/* Only fail bad secondaries on a known V5 filesystem */
+ 			if (bp->b_bn == XFS_SB_DADDR ||
+ 			    xfs_sb_version_hascrc(&mp->m_sb)) {
+@@ -674,8 +674,7 @@ xfs_sb_write_verify(
+ 	if (bip)
+ 		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_sb, sb_crc));
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_SB_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_sb_buf_ops = {
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index 35061d4..f7b2fe7 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -182,6 +182,8 @@ typedef struct xfs_sb {
+ 	/* must be padded to 64 bit alignment */
+ } xfs_sb_t;
+ 
++#define XFS_SB_CRC_OFF		offsetof(struct xfs_sb, sb_crc)
++
+ /*
+  * Superblock - on disk version.  Must match the in core version above.
+  * Must be padded to 64 bit alignment.
+diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
+index bf59a2b..7a705a4 100644
+--- a/fs/xfs/xfs_symlink_remote.c
++++ b/fs/xfs/xfs_symlink_remote.c
+@@ -134,7 +134,7 @@ xfs_symlink_read_verify(
+ 		return;
+ 
+ 	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
++				  XFS_SYMLINK_CRC_OFF) ||
+ 	    !xfs_symlink_verify(bp)) {
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+@@ -162,8 +162,7 @@ xfs_symlink_write_verify(
+ 		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+ 		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_SYMLINK_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_symlink_buf_ops = {
 -- 
 1.7.1
 
