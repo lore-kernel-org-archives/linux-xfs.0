@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 92E347FAA
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 19:01:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 789D7304048
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 17:01:48 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B54A97FAB
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 19:05:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45213AC002
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 17:05:26 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	gNr3ioIupcLm2FTT for <xfs@oss.sgi.com>;
-	Mon, 17 Feb 2014 17:01:43 -0800 (PST)
-Date: Tue, 18 Feb 2014 12:01:38 +1100
+	Wz35rZ7gl10I4UaN for <xfs@oss.sgi.com>;
+	Mon, 17 Feb 2014 17:05:24 -0800 (PST)
+Date: Tue, 18 Feb 2014 12:05:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-Message-ID: <20140218010138.GE13997@dastard>
-References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
+Subject: Re: [PATCH v2] xfstests: test for atime-related mount options
+Message-ID: <20140218010503.GF13997@dastard>
+References: <1392668720-6135-1-git-send-email-koen.de.wit@oracle.com>
+	<530273CD.3090303@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <530273CD.3090303@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Feb 17, 2014 at 04:08:17PM +0100, Lukas Czerner wrote:
-> Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-> functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
+On Mon, Feb 17, 2014 at 02:40:45PM -0600, Eric Sandeen wrote:
+> On 2/17/14, 2:25 PM, Koen De Wit wrote:
+> > Tests the noatime, relatime, strictatime and nodiratime mount options.
+> > 
+> > There is an extra check for Btrfs to ensure that the access time is
+> > never updated on read-only subvolumes. (Regression test for bug fixed
+> > with commit 93fd63c2f001ca6797c6b15b696a484b165b4800)
 > 
-> It can be used to convert a range of file to zeros preferably without
-> issuing data IO. Blocks should be preallocated for the regions that span
-> holes in the file, and the entire range is preferable converted to
-> unwritten extents - even though file system may choose to zero out the
-> extent or do whatever which will result in reading zeros from the range
-> while the range remains allocated for the file.
-> 
-> This can be also used to preallocate blocks past EOF in the same way as
-> with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-> size to remain the same.
-> 
-> You can test this feature yourself using xfstests, of fallocate(1) however
-> you'll need patches for util_linux, xfsprogs and xfstests which you
-> can find here:
-> 
-> http://people.redhat.com/lczerner/zero_range/
-> 
-> I'll post the patches after we agree and merge the kernel functionality.
-> 
-> I tested this mostly with a subset of xfstests using fsx and fsstress and
-> even with new generic/290 which is just a copy of xfs/290 usinz fzero
-> command for xfs_io instead of zero (which uses ioctl). I was testing on
-> x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
+> I think this looks ok.  Only little nit is that _require_relatime
+> now implicitly requires scratch, but *shrug* it was Dave's idea.  ;)
 
-You also want to convert xfs/242 to be a generic test - it uses the
-_generic_test_punch helper to test all the corner cases across
-different extent type transitions.
+There's a _require_scratch call in there, so it's all good. ;)
+Thanks Koen!
 
-> ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083 generic/117 generic/068 generic/231 generic/127 generic/091 generic/075 generic/112 generic/263 generic/091 generic/075 generic/256 generic/255 generic/316 generic/300 generic/290;
+> Thanks!
 > 
-> Note that there is a work in progress on FALLOC_FL_COLLAPSE_RANGE which
-> touches the same area as this pach set does, so we should figure out
-> which one should go first and modify the other on top of it.
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-I was going to push the FALLOC_FL_COLLAPSE_RANGE stuff through
-the XFS tree once it was done - perhaps you and Namjae can get
-together and work out which order the patch series should go.
+And thanks for the reivew, Eric ;)
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
