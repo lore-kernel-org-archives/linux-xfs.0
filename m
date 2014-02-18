@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 813FA7FD5
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:23:12 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8C90D7FD6
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 08:30:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D045AC006
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 06:23:11 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id ntEvyh837JN5YXo3 (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 06:23:10 -0800 (PST)
-Date: Tue, 18 Feb 2014 09:23:05 -0500
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 70DDA304043
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 06:30:13 -0800 (PST)
+Date: Tue, 18 Feb 2014 09:30:05 -0500
 From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-Message-ID: <20140218142305.GN26580@thunk.org>
-References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
-	<20140218010138.GE13997@dastard> <20140218083324.GB28666@dastard>
-	<alpine.LFD.2.00.1402181006250.2216@localhost.localdomain>
-	<20140218094142.GC28666@dastard>
-	<alpine.LFD.2.00.1402181302230.2216@localhost.localdomain>
+Subject: Re: [PATCH RESEND 3/10] ext4: Add support FALLOC_FL_COLLAPSE_RANGE
+	for fallocate
+Message-ID: <20140218143005.GO26580@thunk.org>
+References: <1391319874-3203-1-git-send-email-linkinjeon@gmail.com>
+	<alpine.LFD.2.00.1402111209450.2225@localhost.localdomain>
+	<CAKYAXd-bD6ZZgpc9E8V1kD9Dj2wrCkbi1i6drNBdUAwsMiv5gg@mail.gmail.com>
+	<alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
+	<CAKYAXd_xpWg-=T_1PghL_u9wDKTX_Ey5mJxbgVVKth8NoexQQg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1402181302230.2216@localhost.localdomain>
+In-Reply-To: <CAKYAXd_xpWg-=T_1PghL_u9wDKTX_Ey5mJxbgVVKth8NoexQQg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: jack@suse.cz, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
 
-T24gVHVlLCBGZWIgMTgsIDIwMTQgYXQgMDE6MDQ6MjRQTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
-IHdyb3RlOgo+Cj4gPiBPaywgc28gaXQncyBhICJmYWxsb2NhdGUiIHRlc3QgZ3JvdXAsIHRoZW4/
-Cj4gCj4gTW9yZSBsaWtlICJmc3hfZnNzdHJlc3MiIGdyb3VwLCB3aGljaCBtaWdodCBzb3VuZCBh
-cyBhIHRlcnJpYmxlIG5hbWUKPiBmb3IgdGhlIGdyb3VwIGJ1dCBpdCBleHBsYWlucyBpdCBxdWl0
-ZSB3ZWxsLiBTbyBpZiB5b3UgZG8gbm90IGhhdmUKPiBhbnl0aGluZyBhZ2FpbnN0IHRoYXQgSSds
-bCBjYWxsIHRoZSBuZXcgZ3JvdXAgImZzeF9mc3N0cmVzcyIKCkhvdyBhYm91dCAiYmxvY2tfbWFw
-IiBncm91cD8gIEkgbGlrZSBEYXZlJ3Mgc3VnZ2VzdGlvbiBhYm91dCBuYW1pbmcKdGhlIGdyb3Vw
-IGFmdGVyIHdoYXQgaXQgaXMgdHJ5aW5nIHRvIHRlc3QsIGFzIG9wcG9zZWQgdG8gaG93IGl0IGRv
-ZXMKdGhhdCB0ZXN0aW5nLiAgVGhpcyBpcyBhbHNvIGNvbnNpc3RlbnQgd2l0aCBob3cgdGhlIG90
-aGVyIHRlc3RzIGdyb3VwcwphcmUgbmFtZWQgaW4geGZzdGVzdHMuCgpIb3dldmVyLCBleHRlbnRz
-IGFyZSBhbiBpbXBsZW1lbnRhdGlvbiBzdHJhdGVneSwgYW5kIHlvdSBtaWdodCBqdXN0IGFzCmVh
-c2lseSB1c2UgdGhpcyB0ZXN0IHRvIHZlcmlmeSB3aGV0aGVyIG9yIG5vdCB0aGUgcHVuY2ggaG9s
-ZQpmdW5jdGlvbmFsaXR5IGZvciBpbmRpcmVjdCBibG9jayBtYXBzIHdvcmtlZCBjb3JyZWN0bHku
-CgpXaGF0IEkgdGhpbmsgdXNpbmcgZnN4IGFuZCBmc3RyZXNzIHRvZ2V0aGVyIGhhdmUgaW4gY29t
-bW9uIGlzIHRoYXQKaXQncyBhIGdyZWF0IHdheSBvZiBzdHJlc3MgdGVzdGluZyB3aGF0ZXZlciB0
-aGUgZmlsZSBzeXN0ZW0gdXNlcyBmb3IKY3JlYXRpbmcgYW5kIG1haW50YWluaW5nIHRoZSB0cmFu
-c2xhdGlvbiBtYXAgYmV0d2VlbiAoaW5vZGUsIGxvZ2ljYWwKYmxvY2spIHRvIHBoeXNpY2FsIGJs
-b2NrLCBzbyB0aGF0J3Mgd2h5IHBlcmhhcHMgImJsb2NrX21hcCIgbWlnaHQgYmUgYQpnb29kIHRl
-c3QgZ3JvdXAgbmFtZS4KClJlZ2FyZHMsCgoJCQkJCQktIFRlZAoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Namjae,
+
+Did you respond to Matthew Wilcox's comments/question from Feb. 2nd?
+
+> > What if the file is mmaped at the time somebody issues this command?
+> > Seems to me we should drop pagecache pages that overlap with the
+> > removed blocks.  If the removed range is not a multiple of PAGE_SIZE,
+> > then we should also drop any pagecache pages after the removed range.
+>
+> Oops, forgot to add "and if it is a multiple of page size, then we need
+> to update the offsets of any pages after the removed page".
+
+Dave responded that XFS does the right thing when doing a punch hole
+operation, but it wasn't obvious to me whether FL_COLLAPSE_RANGE does
+the right thing with ext4.
+
+Thanks,
+
+					- Ted
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
