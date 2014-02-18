@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2DC937FA3
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 17:21:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EE4F48F804B
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 15:21:07 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id OYRCwDFiZncTl8ns (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Feb 2014 15:21:06 -0800 (PST)
-Date: Mon, 17 Feb 2014 18:21:00 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH 1/6] ext4: Update inode i_size after the preallocation
-Message-ID: <20140217232100.GA26580@thunk.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 92E347FAA
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 19:01:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 789D7304048
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 17:01:48 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	gNr3ioIupcLm2FTT for <xfs@oss.sgi.com>;
+	Mon, 17 Feb 2014 17:01:43 -0800 (PST)
+Date: Tue, 18 Feb 2014 12:01:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+Message-ID: <20140218010138.GE13997@dastard>
 References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
-	<1392649703-10772-2-git-send-email-lczerner@redhat.com>
-	<9288BED9-A44E-4ACC-9A3D-BC086AB4E121@dilger.ca>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <9288BED9-A44E-4ACC-9A3D-BC086AB4E121@dilger.ca>
+In-Reply-To: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Lukas Czerner <lczerner@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
 
-On Mon, Feb 17, 2014 at 04:12:14PM -0700, Andreas Dilger wrote:
+On Mon, Feb 17, 2014 at 04:08:17PM +0100, Lukas Czerner wrote:
+> Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
+> functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
 > 
-> I don't necessarily agree about this.  Calling fallocate() will not
-> change the user-visible data at all, so there is no reason to e.g.
-> do a new backup of the file or reprocess the contents, or any other
-> reason that an application cares about a changed mtime.
+> It can be used to convert a range of file to zeros preferably without
+> issuing data IO. Blocks should be preallocated for the regions that span
+> holes in the file, and the entire range is preferable converted to
+> unwritten extents - even though file system may choose to zero out the
+> extent or do whatever which will result in reading zeros from the range
+> while the range remains allocated for the file.
+> 
+> This can be also used to preallocate blocks past EOF in the same way as
+> with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
+> size to remain the same.
+> 
+> You can test this feature yourself using xfstests, of fallocate(1) however
+> you'll need patches for util_linux, xfsprogs and xfstests which you
+> can find here:
+> 
+> http://people.redhat.com/lczerner/zero_range/
+> 
+> I'll post the patches after we agree and merge the kernel functionality.
+> 
+> I tested this mostly with a subset of xfstests using fsx and fsstress and
+> even with new generic/290 which is just a copy of xfs/290 usinz fzero
+> command for xfs_io instead of zero (which uses ioctl). I was testing on
+> x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
 
-Well, if i_size has changed, then the visible results of reading from
-the file will change, so in that case I'd argue m_time should change.
-If the results of reading file doesn't change then we can keep m_time
-unchanged --- but since the inode is changing, c_time *should* always
-change any time we've made any changes to the extent tree.
+You also want to convert xfs/242 to be a generic test - it uses the
+_generic_test_punch helper to test all the corner cases across
+different extent type transitions.
 
-	      	  	    	     - Ted
+> ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083 generic/117 generic/068 generic/231 generic/127 generic/091 generic/075 generic/112 generic/263 generic/091 generic/075 generic/256 generic/255 generic/316 generic/300 generic/290;
+> 
+> Note that there is a work in progress on FALLOC_FL_COLLAPSE_RANGE which
+> touches the same area as this pach set does, so we should figure out
+> which one should go first and modify the other on top of it.
+
+I was going to push the FALLOC_FL_COLLAPSE_RANGE stuff through
+the XFS tree once it was done - perhaps you and Namjae can get
+together and work out which order the patch series should go.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
