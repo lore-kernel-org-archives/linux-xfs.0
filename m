@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5CE977FAD
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 19:28:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BD38DAC006
-	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 17:28:39 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 7F42E7FAD
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 20:51:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 05D6AAC004
+	for <xfs@oss.sgi.com>; Mon, 17 Feb 2014 18:51:19 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	EDfnwM3Tkwrm2nt2 for <xfs@oss.sgi.com>;
-	Mon, 17 Feb 2014 17:28:37 -0800 (PST)
-Date: Tue, 18 Feb 2014 12:27:53 +1100
+	s8WsB9q5nOTUQ3xH for <xfs@oss.sgi.com>;
+	Mon, 17 Feb 2014 18:51:18 -0800 (PST)
+Date: Tue, 18 Feb 2014 13:51:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.14-rc2 XFS backtrace because irqs_disabled.
-Message-ID: <20140218012753.GG13997@dastard>
-References: <20140212004403.GA17129@redhat.com>
-	<20140212010941.GM18016@ZenIV.linux.org.uk>
-	<CA+55aFwoWT-0A_KTkXMkNqOy8hc=YmouTMBgWUD_z+8qYPphjA@mail.gmail.com>
-	<20140212040358.GA25327@redhat.com>
-	<20140212042215.GN18016@ZenIV.linux.org.uk>
-	<20140212054043.GB13997@dastard>
-	<CA+55aFxy2t7bnCUc-DhhxYxsZ0+GwL9GuQXRYtE_VzqZusmB9A@mail.gmail.com>
-	<20140212071829.GE13997@dastard> <20140214002427.GN13997@dastard>
-	<CA+55aFx=i6dbzCUZ6TwCMqniyS4C=tJx9+72p=EA+dU8Vn=2jQ@mail.gmail.com>
+Subject: Re: [PATCH 4/6] fs: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+Message-ID: <20140218025112.GH13997@dastard>
+References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
+	<1392649703-10772-5-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFx=i6dbzCUZ6TwCMqniyS4C=tJx9+72p=EA+dU8Vn=2jQ@mail.gmail.com>
+In-Reply-To: <1392649703-10772-5-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,86 +30,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm <linux-mm@kvack.org>, Al Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
 
-On Sat, Feb 15, 2014 at 03:50:29PM -0800, Linus Torvalds wrote:
-> [ Added linux-mm to the participants list ]
+On Mon, Feb 17, 2014 at 04:08:21PM +0100, Lukas Czerner wrote:
+> Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
+> functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
 > 
-> On Thu, Feb 13, 2014 at 4:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Dave, the patch below should chop off the stack usage from
-> > xfs_log_force_lsn() issuing IO by deferring it to the CIL workqueue.
-> > Can you given this a run?
+> It can be used to convert a range of file to zeros preferably without
+> issuing data IO. Blocks should be preallocated for the regions that span
+> holes in the file, and the entire range is preferable converted to
+> unwritten extents - even though file system may choose to zero out the
+> extent or do whatever which will result in reading zeros from the range
+> while the range remains allocated for the file.
 > 
-> Ok, so DaveJ confirmed that DaveC's patch fixes his issue (damn,
-> people, your parents were some seriously boring people, were they not?
-> We've got too many Dave's around),
-
-It's an exclusive club - we have 'kernel hacker Dave' reunions in
-bars around the world. We should get some tshirts made up....  :)
-
-> but DaveC earlier pointed out that
-> pretty much any memory allocation path can end up using 3kB of stack
-> even without XFS being involved.
+> This can be also used to preallocate blocks past EOF in the same way as
+> with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
+> size to remain the same.
 > 
-> Which does bring up the question whether we should look (once more) at
-> the VM direct-reclaim path, and try to avoid GFP_FS/IO direct
-> reclaim..
-
-We do that mostly already, but GFP_KERNEL allows swap IO and that's
-where the deepest stack I saw came from.
-
-Even if we don't allow IO at all, we're still going to see stack
-usage of 2-2.5k in direct reclaim. e.g.  invalidate a page and enter
-the rmap code.  The rmap is protected by a mutex, so if we fail to
-get that we have about 1.2k of stack consumed from there and that is
-on top of the the allocator/reclaim that has already consumes ~1k of
-stack...
-
-> Direct reclaim historically used to be an important throttling
-> mechanism, and I used to not be a fan of trying to avoid direct
-> reclaim. But the stack depth issue really looks to be pretty bad, and
-> I think we've gotten better at throttling explicitly, so..
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> ---
+>  fs/open.c                   | 7 ++++++-
+>  include/uapi/linux/falloc.h | 1 +
+>  2 files changed, 7 insertions(+), 1 deletion(-)
 > 
-> I *think* we already limit filesystem writeback to just kswapd (in
-> shrink_page_list()), but DaveC posted a backtrace that goes through
-> do_try_to_free_pages() to shrink_slab(), and through there to the
-> filesystem and then IO. That looked like a disaster.
+> diff --git a/fs/open.c b/fs/open.c
+> index 4b3e1ed..6dc46c1 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -231,7 +231,12 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  		return -EINVAL;
+>  
+>  	/* Return error if mode is not supported */
+> -	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
+> +	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
+> +		     FALLOC_FL_ZERO_RANGE))
+> +		return -EOPNOTSUPP;
+> +
+> +	/* Punch hole and zero range are mutually exclusive */
+> +	if (mode & FALLOC_FL_PUNCH_HOLE && mode & FALLOC_FL_ZERO_RANGE)
 
-Right, that's an XFS problem, and I'm working on fixing it. The
-Patch I sent to DaveJ fixes the worst case, but I need to make it
-completely IO-less while still retaining the throttling the IO gives
-us.
+I would have expected gcc to throw a warning on this. Even if it
+doesn't, it's so easy to mix up & an && and & it needs parenthesis
+around it to make it obvious what you actually meant and it doesn't
+have a && where an & should be or vice versa.  Better, IMO, is this:
 
-> And that's because (if I read things right) shrink_page_list() limits
-> filesystem page writeback to kswapd, but not swap pages. Which I think
-> probably made more sense back in the days than it does now (I
-> certainly *hope* that swapping is less important today than it was,
-> say, ten years ago)
-> 
-> So I'm wondering whether we should remove that page_is_file_cache()
-> check from shrink_page_list()?
+	/* Punch hole and zero range are mutually exclusive */
+	if ((mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE)) ==
+		    (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE))
+		return -EOPNOTSUPP;
 
-The thing is, the stack usage from the swap IO path is pretty well
-bound - it's just the worst case stack of issuing IO. We know it
-won't recurse into direct reclaim, so mempool allocation and
-blocking is all we need to consider. Compare that to a filesystem
-which may need to allocate extents and hence do transactions and
-split btrees and read metadata and allocate large amounts of memory
-even before it gets to the IO layers.
-
-Hence I suspect that we could do a simple thing like only allow swap
-if there's more than half the stack available in the current reclaim
-context. Because, let's face it, if the submit_bio path is consuming
-more than half the available stack then we're totally screwed from a
-filesystem perspective....
-
-> And then there is that whole shrink_slab() case...
-
-I think with shrinkers we just need to be more careful. The XFS
-behaviour is all my fault, and I should have known better that to
-design code that requires IO in the direct reclaim path. :/
+because it's obvious what the intent is and easy to spot typos.
 
 Cheers,
 
