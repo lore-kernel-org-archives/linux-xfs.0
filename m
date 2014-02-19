@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 09C447F5F
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 09:52:36 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id D59097F3F
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 10:12:40 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 010AE3040AA
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 07:52:32 -0800 (PST)
-Received: from mail-qc0-f180.google.com (mail-qc0-f180.google.com
-	[209.85.216.180]) by cuda.sgi.com with ESMTP id
-	1Zb9PcCHepkMPDKK (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 07:52:31 -0800 (PST)
-Received: by mail-qc0-f180.google.com with SMTP id i17so779402qcy.11
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 07:52:31 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CBC99304097
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 08:12:37 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id buae4hhGSJCt8dkM for <xfs@oss.sgi.com>;
+	Wed, 19 Feb 2014 08:12:32 -0800 (PST)
+Message-ID: <5304D7EE.8050406@sandeen.net>
+Date: Wed, 19 Feb 2014 10:12:30 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.00.1402191609550.9903@localhost.localdomain>
-References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
-	<20140219145239.GA14849@gmail.com>
-	<alpine.LFD.2.00.1402191609550.9903@localhost.localdomain>
-From: Dongsu Park <dongsu.park@profitbricks.com>
-Date: Wed, 19 Feb 2014 16:51:23 +0100
-Message-ID: <CANWERqOyv3dP-4x2OVO9-1q+LaGh7aQDY-WtZRFkc9opWudHZA@mail.gmail.com>
-Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+Subject: Re: [PATCH 9/9] xfs: modify verifiers to differentiate CRC from other
+	errors
+References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>	<1392767549-25574-10-git-send-email-sandeen@redhat.com>
+	<5304B941.5090800@redhat.com>
+In-Reply-To: <5304B941.5090800@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,109 +25,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-2?Q?Luk=E1=B9_Czerner?= <lczerner@redhat.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, tytso <tytso@mit.edu>, xfs <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-T24gV2VkLCBGZWIgMTksIDIwMTQgYXQgNDoxOCBQTSwgTHVrw6HFoSBDemVybmVyIDxsY3plcm5l
-ckByZWRoYXQuY29tPiB3cm90ZToKPiBPbiBXZWQsIDE5IEZlYiAyMDE0LCBEb25nc3UgUGFyayB3
-cm90ZToKPiBBcmUgeW91IGFibGUgdG8gcmVwcm9kdWNlIGl0ID8gQ2FuIHlvdSB0ZWxsIG1lIHRo
-ZSBzdGVwcyB0bwo+IHJlcHJvZHVjZSB0aGlzID8gVGhlIHByb2JsZW0gaXMgdGhhdCB0aGUgZXh0
-ZW50IHdlJ3JlIHRyeWluZyB0byBtYXJrCj4gYXMgdW5pbml0aWFsaXplZCBoYXMgemVybyBsZW5n
-dGguLi4uCj4KPiBBaC4uLkkgY2FuIHByb2JhYmx5IHNlZSB3aGF0IGlzIGdvaW5nIG9uLiBGb3Ig
-c29tZSBpbmV4cGxpY2FibGUKPiByZWFzb24gSSBhbSBmb3JnZXR0aW5nIHRvIHRha2UgaV9kYXRh
-X3NlbSB3aGljaCBtZWFucyB0aGF0IHdlJ3JlCj4gcHJvYmFibHkgcmFjaW5nIHdpdGggdHJ1bmNh
-dGUgb3Igc29tZXRoaW5nIGVsc2UuCj4KPiBUaGFua3MgYSBsb3QgZm9yIGxldHRpbmcgbWUga25v
-dyBhbmQgSWYgeW91IGNhbiBwbGVhc2Ugc2VuZCBtZSBhCj4gcmVwcm9kdWNlciBmb3IgeW91ciBj
-YXNlIGJlY2F1c2UgYXMgSSBzYWlkIEkgaGF2ZSBub3Qgc2VlbiB0aGlzCj4gYmVmb3JlLgoKWWVz
-LCBpdCdzIHJlbGlhYmx5IHJlcHJvZHVjaWJsZS4KV2hhdCBJJ20gZG9pbmcgZm9yIHRlc3Rpbmcg
-aXMgcXVpdGUgc2ltcGxlLCBqdXN0IGxpa2UgdGhhdDoKKC9kZXYvdmRiIGlzIGEgdGVzdCBibG9j
-ayBkZXZpY2UsIDE2R2lCIGluIHNpemUpCgojIG1rZTJmcyAtdCBleHQ0IC9kZXYvdmRiCiMgbWtk
-aXIgLXAgL21udC90ZXN0MQojIG1vdW50IC10IGV4dDQgLW8gZGlzY2FyZCAvZGV2L3ZkYiAvbW50
-L3Rlc3QxCiMgZGQgaWY9L2Rldi91cmFuZG9tIG9mPS9tbnQvdGVzdDEvZmlsZTEgYnM9MkcgY291
-bnQ9MQojIGZhbGxvY2F0ZSAteiAtbCAyRyAvbW50L3Rlc3QxL2ZpbGUxCgpUaGVuIGtlcm5lbCBj
-cmFzaGVzIGltbWVkaWF0ZWx5LgoKQ2hlZXJzLApEb25nc3UKCj4gVGhhbmtzIQo+IC1MdWthcwo+
-Cj4gPgo+ID4gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tCj4gPiBrZXJuZWwg
-QlVHIGF0IGZzL2V4dDQvZXh0NF9leHRlbnRzLmg6MTkzIQo+ID4gaW52YWxpZCBvcGNvZGU6IDAw
-MDAgWyMxXSBTTVAKPiA+IE1vZHVsZXMgbGlua2VkIGluOiA5cG5ldF92aXJ0aW8gdmlydGlvX25l
-dCA5cG5ldCB2aXJ0aW9fYmxrIHZpcnRpb19wY2kKPiA+IHZpcnRpb19yaW5nIHZpcnRpbwo+ID4g
-Q1BVOiAyIFBJRDogMjk1OSBDb21tOiBmYWxsb2NhdGUgTm90IHRhaW50ZWQgMy4xNC4wLXJjMysg
-IzM0Cj4gPiBIYXJkd2FyZSBuYW1lOiBCb2NocyBCb2NocywgQklPUyBCb2NocyAwMS8wMS8yMDEx
-Cj4gPiB0YXNrOiBmZmZmODgwMGRhOTdkYTEwIHRpOiBmZmZmODgwMTE5MDY4MDAwIHRhc2sudGk6
-IGZmZmY4ODAxMTkwNjgwMDAKPiA+IFJJUDogMDAxMDpbPGZmZmZmZmZmODEzNjk0Yzk+XSAgWzxm
-ZmZmZmZmZjgxMzY5NGM5Pl0KPiA+IGV4dDRfZXh0X21hcF9ibG9ja3MrMHgyODk5LzB4Mjk0MAo+
-ID4gUlNQOiAwMDE4OmZmZmY4ODAxMTkwNjljNTAgIEVGTEFHUzogMDAwMTAyMDIKPiA+IFJBWDog
-MDAwMDAwMDAwMDAwMDAwMyBSQlg6IGZmZmY4ODAwMzZmYTg0NzAgUkNYOiAwMDAwMDAwMDAwMDAw
-MDAyCj4gPiBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwMDAwMDAwMDAwMDAxIFJESTog
-ZmZmZmZmZmY4MjEyMGU5OAo+ID4gUkJQOiBmZmZmODgwMTE5MDY5ZDMwIFIwODogZmZmZjg4MDEx
-OTc1ZDkwMCBSMDk6IDAxMWFkMTU2MTgwODAwMDAKPiA+IFIxMDogZmVjNzJlZjA5YzRkODYwMiBS
-MTE6IDAwMDAwMDAwMDAwMDgwMDAgUjEyOiBmZmZmODgwMTE5MDY5ZGQwCj4gPiBSMTM6IDAwMDAw
-MDAwMDAwMDA0MDMgUjE0OiAwMDAwMDAwMDAwMDAwMDAxIFIxNTogZmZmZjg4MDExOGM2NzAwYwo+
-ID4gRlM6ICAwMDAwN2ZhNTRhMGJhNzQwKDAwMDApIEdTOmZmZmY4ODAxMWZjNDAwMDAoMDAwMCkK
-PiA+IGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKPiA+IENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
-MCBDUjA6IDAwMDAwMDAwODAwNTAwMzMKPiA+IENSMjogMDAwMDAwM2NkYmY2ZjdlMCBDUjM6IDAw
-MDAwMDAxMTkwNzcwMDAgQ1I0OiAwMDAwMDAwMDAwMDAwNmUwCj4gPiBTdGFjazoKPiA+ICAwMDAw
-MDAwMDAwMDAwMDAwIDAwMDAwMDAwMDAwMDgwMDAgZmZmZjg4MDAzNmZhODZjOCAwMDAwMDAwMDAw
-MDAwMDAwCj4gPiAgZmZmZjg4MDEwMDAwMDAwMCAwMDAwODAwMDgxMzg0ZGVlIDAwMDAwMDAwMDAw
-MDAwMDEgZmZmZjg4MDAwMDAwMDAwMAo+ID4gIDAwMDAwMDAwMDAwMDg4MDAgMDAwMDAwMDAwMDAw
-MDAwMCBmZmZmODgwMDM2ZjZmMDAwIGZmZmY4ODAxMTk3NWQ5MDAKPiA+IENhbGwgVHJhY2U6Cj4g
-PiAgWzxmZmZmZmZmZjgxMzg1YmFhPl0gPyBleHQ0X2VzX2luc2VydF9leHRlbnQrMHgxNWEvMHgy
-NDAKPiA+ICBbPGZmZmZmZmZmODEzNjY5YWU+XSA/IGV4dDRfZmluZF9kZWxhbGxvY19yYW5nZSsw
-eDFlLzB4YjAKPiA+ICBbPGZmZmZmZmZmODEzMjJkM2Y+XSBleHQ0X21hcF9ibG9ja3MrMHgyNWYv
-MHg4MzAKPiA+ICBbPGZmZmZmZmZmODEzNjk3NjQ+XSA/IGV4dDRfYWxsb2NfZmlsZV9ibG9ja3Mr
-MHhjNC8weDFlMAo+ID4gIFs8ZmZmZmZmZmY4MTM2OTdkYT5dIGV4dDRfYWxsb2NfZmlsZV9ibG9j
-a3MrMHgxM2EvMHgxZTAKPiA+ICBbPGZmZmZmZmZmODEzNjllOWY+XSBleHQ0X3plcm9fcmFuZ2Ur
-MHg2MWYvMHg4NzAKPiA+ICBbPGZmZmZmZmZmODEzNmE1ZDM+XSBleHQ0X2ZhbGxvY2F0ZSsweDRl
-My8weDZjMAo+ID4gIFs8ZmZmZmZmZmY4MTIzOTY3NT5dID8gX19zYl9zdGFydF93cml0ZSsweDE0
-NS8weDFhMAo+ID4gIFs8ZmZmZmZmZmY4MTIwZWYwMD5dID8ga21lbV9jYWNoZV9mcmVlKzB4MmYw
-LzB4M2YwCj4gPiAgWzxmZmZmZmZmZjgxMjQ2Y2EwPl0gPyBmaW5hbF9wdXRuYW1lKzB4MzAvMHg2
-MAo+ID4gIFs8ZmZmZmZmZmY4MTIzMjZhNz5dIGRvX2ZhbGxvY2F0ZSsweDFlNy8weDI5MAo+ID4g
-IFs8ZmZmZmZmZmY4MTIzMjdjOT5dIFN5U19mYWxsb2NhdGUrMHg3OS8weGMwCj4gPiAgWzxmZmZm
-ZmZmZjgxYWU3ZGU5Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiCj4gPiBDb2RlOiBi
-YSBkYyAwNSAwMCAwMCA0OCBjNyBjNiBiMCA5MSBjNyA4MSA0OCA4OSBkZiA4OSAwNCAyNCAzMSBj
-MCBlOCA5OQo+ID4gODMgZmUgZmYgZTkgZjUgZjggZmYgZmYgNDggODMgMDUgMzQgYjMgZjUgMDAg
-MDEgZTkgMGEgZGIgZmYgZmYgPDBmPiAwYgo+ID4gMGYgMGIgMGYgMGIgMGYgMGIgNDUgODkgZDEg
-NDkgYzcgYzAgNDggMjIgZTUgODEgMzEKPiA+IFJJUCAgWzxmZmZmZmZmZjgxMzY5NGM5Pl0gZXh0
-NF9leHRfbWFwX2Jsb2NrcysweDI4OTkvMHgyOTQwCj4gPiAgUlNQIDxmZmZmODgwMTE5MDY5YzUw
-Pgo+ID4gLS0tWyBlbmQgdHJhY2UgYmEyMTIwNGEzYTk4ZmJkYyBdLS0tCj4gPgo+ID4gUmVnYXJk
-cywKPiA+IERvbmdzdQo+ID4KPiA+ID4gSSdsbCBwb3N0IHRoZSBwYXRjaGVzIGFmdGVyIHdlIGFn
-cmVlIGFuZCBtZXJnZSB0aGUga2VybmVsIGZ1bmN0aW9uYWxpdHkuCj4gPiA+Cj4gPiA+IEkgdGVz
-dGVkIHRoaXMgbW9zdGx5IHdpdGggYSBzdWJzZXQgb2YgeGZzdGVzdHMgdXNpbmcgZnN4IGFuZCBm
-c3N0cmVzcyBhbmQKPiA+ID4gZXZlbiB3aXRoIG5ldyBnZW5lcmljLzI5MCB3aGljaCBpcyBqdXN0
-IGEgY29weSBvZiB4ZnMvMjkwIHVzaW56IGZ6ZXJvCj4gPiA+IGNvbW1hbmQgZm9yIHhmc19pbyBp
-bnN0ZWFkIG9mIHplcm8gKHdoaWNoIHVzZXMgaW9jdGwpLiBJIHdhcyB0ZXN0aW5nIG9uCj4gPiA+
-IHg4Nl82NCBhbmQgcHBjNjQgd2l0aCBibG9jayBzaXplcyBvZiAxMDI0LCAyMDQ4IGFuZCA0MDk2
-Lgo+ID4gPgo+ID4gPiAuL2NoZWNrIGdlbmVyaWMvMDc2IGdlbmVyaWMvMjMyIGdlbmVyaWMvMDEz
-IGdlbmVyaWMvMDcwIGdlbmVyaWMvMjY5IGdlbmVyaWMvMDgzIGdlbmVyaWMvMTE3IGdlbmVyaWMv
-MDY4IGdlbmVyaWMvMjMxIGdlbmVyaWMvMTI3IGdlbmVyaWMvMDkxIGdlbmVyaWMvMDc1IGdlbmVy
-aWMvMTEyIGdlbmVyaWMvMjYzIGdlbmVyaWMvMDkxIGdlbmVyaWMvMDc1IGdlbmVyaWMvMjU2IGdl
-bmVyaWMvMjU1IGdlbmVyaWMvMzE2IGdlbmVyaWMvMzAwIGdlbmVyaWMvMjkwOwo+ID4gPgo+ID4g
-PiBOb3RlIHRoYXQgdGhlcmUgaXMgYSB3b3JrIGluIHByb2dyZXNzIG9uIEZBTExPQ19GTF9DT0xM
-QVBTRV9SQU5HRSB3aGljaAo+ID4gPiB0b3VjaGVzIHRoZSBzYW1lIGFyZWEgYXMgdGhpcyBwYWNo
-IHNldCBkb2VzLCBzbyB3ZSBzaG91bGQgZmlndXJlIG91dAo+ID4gPiB3aGljaCBvbmUgc2hvdWxk
-IGdvIGZpcnN0IGFuZCBtb2RpZnkgdGhlIG90aGVyIG9uIHRvcCBvZiBpdC4KPiA+ID4KPiA+ID4g
-VGhhbmtzIQo+ID4gPiAtTHVrYXMKPiA+ID4KPiA+ID4gLS0KPiA+ID4gW1BBVENIIDEvNl0gZXh0
-NDogVXBkYXRlIGlub2RlIGlfc2l6ZSBhZnRlciB0aGUgcHJlYWxsb2NhdGlvbgo+ID4gPiBbUEFU
-Q0ggMi82XSBleHQ0OiByZWZhY3RvciBleHQ0X2ZhbGxvY2F0ZSBjb2RlCj4gPiA+IFtQQVRDSCAz
-LzZdIGV4dDQ6IHRyYW5zbGF0ZSBmYWxsb2NhdGUgbW9kZSBiaXRzIHRvIHN0cmluZ3MKPiA+ID4g
-W1BBVENIIDQvNl0gZnM6IEludHJvZHVjZSBGQUxMT0NfRkxfWkVST19SQU5HRSBmbGFnIGZvciBm
-YWxsb2NhdGUKPiA+ID4gW1BBVENIIDUvNl0gZXh0NDogSW50cm9kdWNlIEZBTExPQ19GTF9aRVJP
-X1JBTkdFIGZsYWcgZm9yIGZhbGxvY2F0ZQo+ID4gPiBbUEFUQ0ggNi82XSB4ZnM6IEFkZCBzdXBw
-b3J0IGZvciBGQUxMT0NfRkxfWkVST19SQU5HRQo+ID4gPgo+ID4gPiAgZnMvZXh0NC9leHQ0Lmgg
-ICAgICAgICAgICAgIHwgICAzICsKPiA+ID4gIGZzL2V4dDQvZXh0ZW50cy5jICAgICAgICAgICB8
-IDQzMCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-LS0tLS0tLS0tLS0tLS0tLQo+ID4gPiAgZnMvZXh0NC9pbm9kZS5jICAgICAgICAgICAgIHwgIDE3
-ICsrLQo+ID4gPiAgZnMvb3Blbi5jICAgICAgICAgICAgICAgICAgIHwgICA3ICstCj4gPiA+ICBm
-cy94ZnMveGZzX2ZpbGUuYyAgICAgICAgICAgfCAgMTAgKy0KPiA+ID4gIGluY2x1ZGUvdHJhY2Uv
-ZXZlbnRzL2V4dDQuaCB8ICA2NyArKysrKystLS0tLQo+ID4gPiAgaW5jbHVkZS91YXBpL2xpbnV4
-L2ZhbGxvYy5oIHwgICAxICsKPiA+ID4gIDcgZmlsZXMgY2hhbmdlZCwgMzkzIGluc2VydGlvbnMo
-KyksIDE0MiBkZWxldGlvbnMoLSkKPiA+ID4gLS0KPiA+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0
-aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LWZzZGV2ZWwiIGluCj4g
-PiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4g
-PiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jk
-b21vLWluZm8uaHRtbAo+ID4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 2/19/14, 8:01 AM, Brian Foster wrote:
+> On 02/18/2014 06:52 PM, Eric Sandeen wrote:
+>> Modify all read & write verifiers to differentiate
+>> between CRC errors and other inconsistencies.
+>>
+>> This sets the appropriate error number on bp->b_error,
+>> and then calls xfs_verifier_error() if something went
+>> wrong.  That function will issue the appropriate message
+>> to the user.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+
+...
+
+>> @@ -485,14 +484,13 @@ xfs_agfl_read_verify(
+>>  	if (!xfs_sb_version_hascrc(&mp->m_sb))
+>>  		return;
+>>  
+>> -	agfl_ok = xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF);
+>> -
+>> -	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
+>> -
+>> -	if (!agfl_ok) {
+>> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>> +	if (!xfs_buf_verify_cksum(bp, offsetof(struct xfs_agfl, agfl_crc)))
+>> +		xfs_buf_ioerror(bp, EFSBADCRC);
+>> +	else if (!xfs_agfl_verify(bp))
+> 
+> Obviously you added the CRC_OFF directives earlier in the set. It looks
+> like this patch squashed a couple of them (XFS_AGF_CRC_OFF as well).
+
+Whoops, no idea how that happened :/ Thanks.
+
+>>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+>> -	}
+>> +
+>> +	if (bp->b_error)
+>> +		xfs_verifier_error(bp);
+>>  }
+>>  
+> ...
+>> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+>> index 4657586..8aa720d 100644
+>> --- a/fs/xfs/xfs_ialloc.c
+>> +++ b/fs/xfs/xfs_ialloc.c
+>> @@ -1573,13 +1573,17 @@ xfs_agi_read_verify(
+>>  	if (xfs_sb_version_hascrc(&mp->m_sb))
+>>  		agi_ok = xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF);
+>>  
+>> +	if (!agi_ok)
+>> +		xfs_buf_ioerror(bp, EFSBADCRC);
+>> +
+>>  	agi_ok = agi_ok && xfs_agi_verify(bp);
+>>  
+>>  	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+>> -			XFS_RANDOM_IALLOC_READ_AGI))) {
+>> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>> +			XFS_RANDOM_IALLOC_READ_AGI)))
+>>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+>> -	}
+>> +
+>> +	if (bp->b_error)
+>> +		xfs_verifier_error(bp);
+>>  }
+> 
+> Any reason not to use the same if/else pattern here that the others are
+> now using (i.e., similar to xfs_agf_read_verify(), removing the need for
+> agi_ok)?
+
+Hm I was thinking it was the weird XFS_TEST_ERROR construction but
+xfs_agf_read_verify has that too.  I'll take another look, thanks.
+
+(TBH all these verifiers are so similar, I wish there were a way
+to not do so much of what is essentially cut and paste with different
+error tags & offsets...)
+
+Thanks for the careful review,
+
+-Eric
+
+> Brian
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
