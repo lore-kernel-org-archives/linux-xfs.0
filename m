@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7E1DB801B
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 08:01:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 75FFE8F804B
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 06:01:46 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PzcP5JHEAqHci0hQ for
-	<xfs@oss.sgi.com>; Wed, 19 Feb 2014 06:01:45 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1JE1h7u005825
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 09:01:43 -0500
-Message-ID: <5304B941.5090800@redhat.com>
-Date: Wed, 19 Feb 2014 09:01:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 9/9] xfs: modify verifiers to differentiate CRC from other
-	errors
-References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
-	<1392767549-25574-10-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1392767549-25574-10-git-send-email-sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 471B97F89
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 08:33:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B6F9DAC00B
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 06:33:29 -0800 (PST)
+Received: from mail-we0-f175.google.com (mail-we0-f175.google.com
+	[74.125.82.175]) by cuda.sgi.com with ESMTP id 2GvE7JGcZ1hGRNCw
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 19 Feb 2014 06:33:27 -0800 (PST)
+Received: by mail-we0-f175.google.com with SMTP id q59so390310wes.6
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 06:33:26 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH] xfstests: add test for btrfs send issuing premature rmdir
+	operations
+Date: Wed, 19 Feb 2014 14:32:32 +0000
+Message-Id: <1392820352-8550-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,239 +24,208 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-On 02/18/2014 06:52 PM, Eric Sandeen wrote:
-> Modify all read & write verifiers to differentiate
-> between CRC errors and other inconsistencies.
-> 
-> This sets the appropriate error number on bp->b_error,
-> and then calls xfs_verifier_error() if something went
-> wrong.  That function will issue the appropriate message
-> to the user.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  fs/xfs/xfs_alloc.c          |   37 +++++++++++++++++--------------------
->  fs/xfs/xfs_alloc_btree.c    |   15 ++++++++-------
->  fs/xfs/xfs_attr_leaf.c      |   14 ++++++++------
->  fs/xfs/xfs_attr_remote.c    |   15 ++++++---------
->  fs/xfs/xfs_bmap_btree.c     |   16 ++++++++--------
->  fs/xfs/xfs_da_btree.c       |   14 ++++++++------
->  fs/xfs/xfs_dir2_block.c     |   14 ++++++++------
->  fs/xfs/xfs_dir2_data.c      |   17 +++++++++--------
->  fs/xfs/xfs_dir2_leaf.c      |   14 ++++++++------
->  fs/xfs/xfs_dir2_node.c      |   14 ++++++++------
->  fs/xfs/xfs_dquot_buf.c      |   11 +++++++----
->  fs/xfs/xfs_ialloc.c         |   12 ++++++++----
->  fs/xfs/xfs_ialloc_btree.c   |   15 ++++++++-------
->  fs/xfs/xfs_inode_buf.c      |    3 +--
->  fs/xfs/xfs_sb.c             |   10 ++++------
->  fs/xfs/xfs_symlink_remote.c |   12 +++++++-----
->  16 files changed, 123 insertions(+), 110 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-> index 9c7cf3d..9a93601 100644
-> --- a/fs/xfs/xfs_alloc.c
-> +++ b/fs/xfs/xfs_alloc.c
-> @@ -474,7 +474,6 @@ xfs_agfl_read_verify(
->  	struct xfs_buf	*bp)
->  {
->  	struct xfs_mount *mp = bp->b_target->bt_mount;
-> -	int		agfl_ok = 1;
->  
->  	/*
->  	 * There is no verification of non-crc AGFLs because mkfs does not
-> @@ -485,14 +484,13 @@ xfs_agfl_read_verify(
->  	if (!xfs_sb_version_hascrc(&mp->m_sb))
->  		return;
->  
-> -	agfl_ok = xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF);
-> -
-> -	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
-> -
-> -	if (!agfl_ok) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-> +	if (!xfs_buf_verify_cksum(bp, offsetof(struct xfs_agfl, agfl_crc)))
-> +		xfs_buf_ioerror(bp, EFSBADCRC);
-> +	else if (!xfs_agfl_verify(bp))
+Regression test for btrfs incremental send issue where a rmdir instruction
+is sent against an orphan directory inode which is not empty yet, causing
+btrfs receive to fail when it attempts to remove the directory.
 
-Obviously you added the CRC_OFF directives earlier in the set. It looks
-like this patch squashed a couple of them (XFS_AGF_CRC_OFF as well).
+This issue is fixed by the following linux kernel btrfs patch:
 
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> -	}
-> +
-> +	if (bp->b_error)
-> +		xfs_verifier_error(bp);
->  }
->  
-...
-> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-> index 4657586..8aa720d 100644
-> --- a/fs/xfs/xfs_ialloc.c
-> +++ b/fs/xfs/xfs_ialloc.c
-> @@ -1573,13 +1573,17 @@ xfs_agi_read_verify(
->  	if (xfs_sb_version_hascrc(&mp->m_sb))
->  		agi_ok = xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF);
->  
-> +	if (!agi_ok)
-> +		xfs_buf_ioerror(bp, EFSBADCRC);
-> +
->  	agi_ok = agi_ok && xfs_agi_verify(bp);
->  
->  	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
-> -			XFS_RANDOM_IALLOC_READ_AGI))) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-> +			XFS_RANDOM_IALLOC_READ_AGI)))
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> -	}
-> +
-> +	if (bp->b_error)
-> +		xfs_verifier_error(bp);
->  }
+   Btrfs: fix send attempting to rmdir non-empty directories
 
-Any reason not to use the same if/else pattern here that the others are
-now using (i.e., similar to xfs_agf_read_verify(), removing the need for
-agi_ok)?
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
+ tests/btrfs/041     |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/041.out |    1 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 155 insertions(+)
+ create mode 100755 tests/btrfs/041
+ create mode 100644 tests/btrfs/041.out
 
-Brian
-
->  
->  static void
-> @@ -1590,8 +1594,8 @@ xfs_agi_write_verify(
->  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
->  
->  	if (!xfs_agi_verify(bp)) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +		xfs_verifier_error(bp);
->  		return;
->  	}
->  
-> diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
-> index 0028c50..7e309b1 100644
-> --- a/fs/xfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/xfs_ialloc_btree.c
-> @@ -243,12 +243,14 @@ static void
->  xfs_inobt_read_verify(
->  	struct xfs_buf	*bp)
->  {
-> -	if (!(xfs_btree_sblock_verify_crc(bp) &&
-> -	      xfs_inobt_verify(bp))) {
-> -		trace_xfs_btree_corrupt(bp, _RET_IP_);
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-> -				     bp->b_target->bt_mount, bp->b_addr);
-> +	if (!xfs_btree_sblock_verify_crc(bp))
-> +		xfs_buf_ioerror(bp, EFSBADCRC);
-> +	else if (!xfs_inobt_verify(bp))
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +
-> +	if (bp->b_error) {
-> +		trace_xfs_btree_corrupt(bp, _RET_IP_);
-> +		xfs_verifier_error(bp);
->  	}
->  }
->  
-> @@ -258,9 +260,8 @@ xfs_inobt_write_verify(
->  {
->  	if (!xfs_inobt_verify(bp)) {
->  		trace_xfs_btree_corrupt(bp, _RET_IP_);
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-> -				     bp->b_target->bt_mount, bp->b_addr);
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +		xfs_verifier_error(bp);
->  		return;
->  	}
->  	xfs_btree_sblock_calc_crc(bp);
-> diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
-> index 606b43a..24e9939 100644
-> --- a/fs/xfs/xfs_inode_buf.c
-> +++ b/fs/xfs/xfs_inode_buf.c
-> @@ -102,8 +102,7 @@ xfs_inode_buf_verify(
->  			}
->  
->  			xfs_buf_ioerror(bp, EFSCORRUPTED);
-> -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
-> -					     mp, dip);
-> +			xfs_verifier_error(bp);
->  #ifdef DEBUG
->  			xfs_alert(mp,
->  				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
-> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-> index 818359f..b134aa8 100644
-> --- a/fs/xfs/xfs_sb.c
-> +++ b/fs/xfs/xfs_sb.c
-> @@ -614,7 +614,7 @@ xfs_sb_read_verify(
->  			/* Only fail bad secondaries on a known V5 filesystem */
->  			if (bp->b_bn == XFS_SB_DADDR ||
->  			    xfs_sb_version_hascrc(&mp->m_sb)) {
-> -				error = EFSCORRUPTED;
-> +				error = EFSBADCRC;
->  				goto out_error;
->  			}
->  		}
-> @@ -623,10 +623,9 @@ xfs_sb_read_verify(
->  
->  out_error:
->  	if (error) {
-> -		if (error == EFSCORRUPTED)
-> -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-> -					     mp, bp->b_addr);
->  		xfs_buf_ioerror(bp, error);
-> +		if (error == EFSCORRUPTED || error == EFSBADCRC)
-> +			xfs_verifier_error(bp);
->  	}
->  }
->  
-> @@ -661,9 +660,8 @@ xfs_sb_write_verify(
->  
->  	error = xfs_sb_verify(bp, false);
->  	if (error) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-> -				     mp, bp->b_addr);
->  		xfs_buf_ioerror(bp, error);
-> +		xfs_verifier_error(bp);
->  		return;
->  	}
->  
-> diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
-> index defa09f..9b32052 100644
-> --- a/fs/xfs/xfs_symlink_remote.c
-> +++ b/fs/xfs/xfs_symlink_remote.c
-> @@ -133,11 +133,13 @@ xfs_symlink_read_verify(
->  	if (!xfs_sb_version_hascrc(&mp->m_sb))
->  		return;
->  
-> -	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF) ||
-> -	    !xfs_symlink_verify(bp)) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-> +	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF))
-> +		xfs_buf_ioerror(bp, EFSBADCRC);
-> +	else if (!xfs_symlink_verify(bp))
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> -	}
-> +
-> +	if (bp->b_error)
-> +		xfs_verifier_error(bp);
->  }
->  
->  static void
-> @@ -152,8 +154,8 @@ xfs_symlink_write_verify(
->  		return;
->  
->  	if (!xfs_symlink_verify(bp)) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
->  		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +		xfs_verifier_error(bp);
->  		return;
->  	}
->  
-> 
+diff --git a/tests/btrfs/041 b/tests/btrfs/041
+new file mode 100755
+index 0000000..9de9326
+--- /dev/null
++++ b/tests/btrfs/041
+@@ -0,0 +1,153 @@
++#! /bin/bash
++# FS QA Test No. btrfs/041
++#
++# Regression test for btrfs incremental send issue where a rmdir instruction
++# is sent against an orphan directory inode which is not empty yet, causing
++# btrfs receive to fail when it attempts to remove the directory.
++#
++# This issue is fixed by the following linux kernel btrfs patch:
++#
++#   Btrfs: fix send attempting to rmdir non-empty directories
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=`mktemp -d`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++FSSUM_PROG=$here/src/fssum
++[ -x $FSSUM_PROG ] || _notrun "fssum not built"
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++mkdir -p $SCRATCH_MNT/a/b
++mkdir $SCRATCH_MNT/0
++mkdir $SCRATCH_MNT/1
++mkdir $SCRATCH_MNT/a/b/c
++mv $SCRATCH_MNT/0 $SCRATCH_MNT/a/b/c
++mv $SCRATCH_MNT/1 $SCRATCH_MNT/a/b/c
++echo 'ola mundo' > $SCRATCH_MNT/a/b/c/foo.txt
++mkdir $SCRATCH_MNT/a/b/c/x
++mkdir $SCRATCH_MNT/a/b/c/x2
++mkdir $SCRATCH_MNT/a/b/y
++mkdir $SCRATCH_MNT/a/b/z
++mkdir -p $SCRATCH_MNT/a/b/d1/d2/d3
++mkdir $SCRATCH_MNT/a/b/d4
++
++# Filesystem looks like:
++#
++# .                        (ino 256)
++# |-- a/                   (ino 257)
++#     |-- b/               (ino 258)
++#         |-- c/           (ino 261)
++#         |   |-- foo.txt  (ino 262)
++#         |   |-- 0/       (ino 259)
++#         |   |-- 1/       (ino 260)
++#         |   |-- x/       (ino 263)
++#         |   |-- x2/      (ino 264)
++#         |
++#         |-- y/           (ino 265)
++#         |-- z/           (ino 266)
++#         |-- d1/          (ino 267)
++#         |   |-- d2/      (ino 268)
++#         |       |-- d3/  (ino 269)
++#         |
++#         |-- d4/          (ino 270)
++
++_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1
++
++rm -f $SCRATCH_MNT/a/b/c/foo.txt
++mv $SCRATCH_MNT/a/b/y $SCRATCH_MNT/a/b/YY
++mv $SCRATCH_MNT/a/b/z $SCRATCH_MNT/a
++mv $SCRATCH_MNT/a/b/c/x $SCRATCH_MNT/a/b/YY
++mv $SCRATCH_MNT/a/b/c/0 $SCRATCH_MNT/a/b/YY/00
++mv $SCRATCH_MNT/a/b/c/x2 $SCRATCH_MNT/a/z/X_2
++mv $SCRATCH_MNT/a/b/c/1 $SCRATCH_MNT/a/z/X_2
++rmdir $SCRATCH_MNT/a/b/c
++mv $SCRATCH_MNT/a/b/d4 $SCRATCH_MNT/a/d44
++mv $SCRATCH_MNT/a/b/d1/d2 $SCRATCH_MNT/a/d44
++rmdir $SCRATCH_MNT/a/b/d1
++
++# Filesystem now looks like:
++#
++# .                        (ino 256)
++# |-- a/                   (ino 257)
++#     |-- b/               (ino 258)
++#     |   |-- YY/          (ino 265)
++#     |        |-- x/      (ino 263)
++#     |        |-- 00/     (ino 259)
++#     |
++#     |-- z/               (ino 266)
++#     |   |-- X_2/         (ino 264)
++#     |        |-- 1/      (ino 260)
++#     |
++#     |-- d44/             (ino 270)
++#          |-- d2/         (ino 268)
++#              |-- d3/     (ino 269)
++
++_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2
++
++run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
++run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
++	$SCRATCH_MNT/mysnap2
++
++_run_btrfs_util_prog send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
++_run_btrfs_util_prog send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++	-f $tmp/2.snap
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/1.snap
++run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1 2>> $seqres.full
++
++_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
++run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2 2>> $seqres.full
++
++_scratch_unmount
++_check_btrfs_filesystem $SCRATCH_DEV
++
++status=0
++exit
+diff --git a/tests/btrfs/041.out b/tests/btrfs/041.out
+new file mode 100644
+index 0000000..309876c
+--- /dev/null
++++ b/tests/btrfs/041.out
+@@ -0,0 +1 @@
++QA output created by 041
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index f5452b5..fd0193c 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -43,3 +43,4 @@
+ 038 auto quick
+ 039 auto quick
+ 040 auto quick
++041 auto quick
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
