@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A35FC8019
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 22:17:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 98B8C30408E
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 20:17:21 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 54E5E8001
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 00:31:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D14B0AC00A
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 22:31:00 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	JiUvwyRr2sWO0evR for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 20:17:18 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1WFyaT-00022l-7R
-	for xfs@oss.sgi.com; Wed, 19 Feb 2014 15:16:45 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WFyaT-0001Ff-64
-	for xfs@oss.sgi.com; Wed, 19 Feb 2014 15:16:45 +1100
+	xkVG3QJU4qUapNcc for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 22:30:57 -0800 (PST)
+Date: Wed, 19 Feb 2014 17:30:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: allocate xfs_da_args to reduce stack footprint
-Date: Wed, 19 Feb 2014 15:16:42 +1100
-Message-Id: <1392783402-4726-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1392783402-4726-1-git-send-email-david@fromorbit.com>
-References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 7/9] xfs: add xfs_verifier_error()
+Message-ID: <20140219063037.GN13647@dastard>
+References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
+	<1392767549-25574-8-git-send-email-sandeen@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1392767549-25574-8-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,469 +26,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Feb 18, 2014 at 05:52:27PM -0600, Eric Sandeen wrote:
+> We want to distinguish between corruption, CRC errors,
+> etc.  In addition, the full stack trace on verifier errors
+> seems less than helpful; it looks more like an oops than
+> corruption.
+> 
+> Create a new function to specifically alert the user to
+> verifier errors, which can differentiate between
+> EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
+> unless the xfs error level is turned up high.
+> 
+> Define a new error message (EFSBADCRC) to clearly identify
+> CRC errors.  (Defined to EILSEQ, bad byte sequence)
 
-The struct xfs_da_args used to pass directory/attribute operation
-information to the lower layers is 128 bytes in size and is
-allocated on the stack. Dynamically allocate them to reduce the
-stack footprint of directory operations.
+I think we decided the other best candidates were:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dir2.c | 344 +++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 214 insertions(+), 130 deletions(-)
+EBADE: Invalid exchange
+EPROTO: Protocol error
+EBADMSG: Bad message
+EKEYREJECTED: Key was rejected by service
 
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index ce16ef0..fc9a41f 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -180,16 +180,23 @@ xfs_dir_init(
- 	xfs_inode_t	*dp,
- 	xfs_inode_t	*pdp)
- {
--	xfs_da_args_t	args;
-+	struct xfs_da_args *args;
- 	int		error;
- 
--	memset((char *)&args, 0, sizeof(args));
--	args.dp = dp;
--	args.trans = tp;
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
--	if ((error = xfs_dir_ino_validate(tp->t_mountp, pdp->i_ino)))
-+	error = xfs_dir_ino_validate(tp->t_mountp, pdp->i_ino);
-+	if (error)
- 		return error;
--	return xfs_dir2_sf_create(&args, pdp->i_ino);
-+
-+	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-+	if (!args)
-+		return ENOMEM;
-+
-+	args->dp = dp;
-+	args->trans = tp;
-+	error = xfs_dir2_sf_create(args, pdp->i_ino);
-+	kmem_free(args);
-+	return error;
- }
- 
- /*
-@@ -205,41 +212,56 @@ xfs_dir_createname(
- 	xfs_bmap_free_t		*flist,		/* bmap's freeblock list */
- 	xfs_extlen_t		total)		/* bmap's total block count */
- {
--	xfs_da_args_t		args;
-+	struct xfs_da_args	*args;
- 	int			rval;
- 	int			v;		/* type-checking value */
- 
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
--	if ((rval = xfs_dir_ino_validate(tp->t_mountp, inum)))
-+	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
-+	if (rval)
- 		return rval;
- 	XFS_STATS_INC(xs_dir_create);
- 
--	memset(&args, 0, sizeof(xfs_da_args_t));
--	args.name = name->name;
--	args.namelen = name->len;
--	args.filetype = name->type;
--	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
--	args.inumber = inum;
--	args.dp = dp;
--	args.firstblock = first;
--	args.flist = flist;
--	args.total = total;
--	args.whichfork = XFS_DATA_FORK;
--	args.trans = tp;
--	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
--
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_addname(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_block_addname(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_leaf_addname(&args);
-+	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-+	if (!args)
-+		return ENOMEM;
-+
-+	args->name = name->name;
-+	args->namelen = name->len;
-+	args->filetype = name->type;
-+	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
-+	args->inumber = inum;
-+	args->dp = dp;
-+	args->firstblock = first;
-+	args->flist = flist;
-+	args->total = total;
-+	args->whichfork = XFS_DATA_FORK;
-+	args->trans = tp;
-+	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		rval = xfs_dir2_sf_addname(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isblock(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v) {
-+		rval = xfs_dir2_block_addname(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isleaf(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v)
-+		rval = xfs_dir2_leaf_addname(args);
- 	else
--		rval = xfs_dir2_node_addname(&args);
-+		rval = xfs_dir2_node_addname(args);
-+
-+out_free:
-+	kmem_free(args);
- 	return rval;
- }
- 
-@@ -282,46 +304,68 @@ xfs_dir_lookup(
- 	xfs_ino_t	*inum,		/* out: inode number */
- 	struct xfs_name *ci_name)	/* out: actual name if CI match */
- {
--	xfs_da_args_t	args;
-+	struct xfs_da_args *args;
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
- 	XFS_STATS_INC(xs_dir_lookup);
- 
--	memset(&args, 0, sizeof(xfs_da_args_t));
--	args.name = name->name;
--	args.namelen = name->len;
--	args.filetype = name->type;
--	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
--	args.dp = dp;
--	args.whichfork = XFS_DATA_FORK;
--	args.trans = tp;
--	args.op_flags = XFS_DA_OP_OKNOENT;
-+	/*
-+	 * If we don't use KM_NOFS here, lockdep will through false positive
-+	 * deadlock warnings when we come through here of the non-transactional
-+	 * lookup path because the allocation can recurse into inode reclaim.
-+	 * Doing this avoids having to add a bunch of lockdep class
-+	 * annotations into the reclaim patch for the ilock.
-+	 */
-+	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-+	if (!args)
-+		return ENOMEM;
-+
-+	args->name = name->name;
-+	args->namelen = name->len;
-+	args->filetype = name->type;
-+	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
-+	args->dp = dp;
-+	args->whichfork = XFS_DATA_FORK;
-+	args->trans = tp;
-+	args->op_flags = XFS_DA_OP_OKNOENT;
- 	if (ci_name)
--		args.op_flags |= XFS_DA_OP_CILOOKUP;
-+		args->op_flags |= XFS_DA_OP_CILOOKUP;
- 
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_lookup(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_block_lookup(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_leaf_lookup(&args);
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		rval = xfs_dir2_sf_lookup(args);
-+		goto out_check_rval;
-+	}
-+
-+	rval = xfs_dir2_isblock(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v) {
-+		rval = xfs_dir2_block_lookup(args);
-+		goto out_check_rval;
-+	}
-+
-+	rval = xfs_dir2_isleaf(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v)
-+		rval = xfs_dir2_leaf_lookup(args);
- 	else
--		rval = xfs_dir2_node_lookup(&args);
-+		rval = xfs_dir2_node_lookup(args);
-+
-+out_check_rval:
- 	if (rval == EEXIST)
- 		rval = 0;
- 	if (!rval) {
--		*inum = args.inumber;
-+		*inum = args->inumber;
- 		if (ci_name) {
--			ci_name->name = args.value;
--			ci_name->len = args.valuelen;
-+			ci_name->name = args->value;
-+			ci_name->len = args->valuelen;
- 		}
- 	}
-+out_free:
-+	kmem_free(args);
- 	return rval;
- }
- 
-@@ -338,38 +382,51 @@ xfs_dir_removename(
- 	xfs_bmap_free_t	*flist,		/* bmap's freeblock list */
- 	xfs_extlen_t	total)		/* bmap's total block count */
- {
--	xfs_da_args_t	args;
-+	struct xfs_da_args *args;
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
- 	XFS_STATS_INC(xs_dir_remove);
- 
--	memset(&args, 0, sizeof(xfs_da_args_t));
--	args.name = name->name;
--	args.namelen = name->len;
--	args.filetype = name->type;
--	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
--	args.inumber = ino;
--	args.dp = dp;
--	args.firstblock = first;
--	args.flist = flist;
--	args.total = total;
--	args.whichfork = XFS_DATA_FORK;
--	args.trans = tp;
--
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_removename(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_block_removename(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_leaf_removename(&args);
-+	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-+	if (!args)
-+		return ENOMEM;
-+
-+	args->name = name->name;
-+	args->namelen = name->len;
-+	args->filetype = name->type;
-+	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
-+	args->inumber = ino;
-+	args->dp = dp;
-+	args->firstblock = first;
-+	args->flist = flist;
-+	args->total = total;
-+	args->whichfork = XFS_DATA_FORK;
-+	args->trans = tp;
-+
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		rval = xfs_dir2_sf_removename(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isblock(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v) {
-+		rval = xfs_dir2_block_removename(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isleaf(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v)
-+		rval = xfs_dir2_leaf_removename(args);
- 	else
--		rval = xfs_dir2_node_removename(&args);
-+		rval = xfs_dir2_node_removename(args);
-+out_free:
-+	kmem_free(args);
- 	return rval;
- }
- 
-@@ -386,40 +443,54 @@ xfs_dir_replace(
- 	xfs_bmap_free_t	*flist,		/* bmap's freeblock list */
- 	xfs_extlen_t	total)		/* bmap's total block count */
- {
--	xfs_da_args_t	args;
-+	struct xfs_da_args *args;
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
- 
--	if ((rval = xfs_dir_ino_validate(tp->t_mountp, inum)))
-+	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
-+	if (rval)
- 		return rval;
- 
--	memset(&args, 0, sizeof(xfs_da_args_t));
--	args.name = name->name;
--	args.namelen = name->len;
--	args.filetype = name->type;
--	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
--	args.inumber = inum;
--	args.dp = dp;
--	args.firstblock = first;
--	args.flist = flist;
--	args.total = total;
--	args.whichfork = XFS_DATA_FORK;
--	args.trans = tp;
--
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_replace(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_block_replace(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_leaf_replace(&args);
-+	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-+	if (!args)
-+		return ENOMEM;
-+
-+	args->name = name->name;
-+	args->namelen = name->len;
-+	args->filetype = name->type;
-+	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
-+	args->inumber = inum;
-+	args->dp = dp;
-+	args->firstblock = first;
-+	args->flist = flist;
-+	args->total = total;
-+	args->whichfork = XFS_DATA_FORK;
-+	args->trans = tp;
-+
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		rval = xfs_dir2_sf_replace(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isblock(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v) {
-+		rval = xfs_dir2_block_replace(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isleaf(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v)
-+		rval = xfs_dir2_leaf_replace(args);
- 	else
--		rval = xfs_dir2_node_replace(&args);
-+		rval = xfs_dir2_node_replace(args);
-+out_free:
-+	kmem_free(args);
- 	return rval;
- }
- 
-@@ -434,7 +505,7 @@ xfs_dir_canenter(
- 	struct xfs_name	*name,		/* name of entry to add */
- 	uint		resblks)
- {
--	xfs_da_args_t	args;
-+	struct xfs_da_args *args;
- 	int		rval;
- 	int		v;		/* type-checking value */
- 
-@@ -443,29 +514,42 @@ xfs_dir_canenter(
- 
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
- 
--	memset(&args, 0, sizeof(xfs_da_args_t));
--	args.name = name->name;
--	args.namelen = name->len;
--	args.filetype = name->type;
--	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
--	args.dp = dp;
--	args.whichfork = XFS_DATA_FORK;
--	args.trans = tp;
--	args.op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
-+	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-+	if (!args)
-+		return ENOMEM;
-+
-+	args->name = name->name;
-+	args->namelen = name->len;
-+	args->filetype = name->type;
-+	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
-+	args->dp = dp;
-+	args->whichfork = XFS_DATA_FORK;
-+	args->trans = tp;
-+	args->op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
- 							XFS_DA_OP_OKNOENT;
- 
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_addname(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_block_addname(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
--		return rval;
--	else if (v)
--		rval = xfs_dir2_leaf_addname(&args);
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		rval = xfs_dir2_sf_addname(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isblock(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v) {
-+		rval = xfs_dir2_block_addname(args);
-+		goto out_free;
-+	}
-+
-+	rval = xfs_dir2_isleaf(tp, dp, &v);
-+	if (rval)
-+		goto out_free;
-+	if (v)
-+		rval = xfs_dir2_leaf_addname(args);
- 	else
--		rval = xfs_dir2_node_addname(&args);
-+		rval = xfs_dir2_node_addname(args);
-+out_free:
-+	kmem_free(args);
- 	return rval;
- }
- 
+because of the silly glibc translation of EILSEQ:
+
+EILSEQ: Invalid or incomplete multibyte or wide character
+
+I'm leaning towards EBADMSG as the one to use here.
+
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/xfs_error.c |   26 ++++++++++++++++++++++++++
+>  fs/xfs/xfs_error.h |    1 +
+>  fs/xfs/xfs_linux.h |    1 +
+>  3 files changed, 28 insertions(+), 0 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index 9995b80..8733c59 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -178,3 +178,29 @@ xfs_corruption_error(
+>  	xfs_error_report(tag, level, mp, filename, linenum, ra);
+>  	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+>  }
+> +
+> +/*
+> + * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
+> + * values, and omit the stack trace unless the error level is tuned high.
+> + */
+> +void
+> +xfs_verifier_error(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> +
+> +	xfs_alert(mp, "Metadata %s detected at %pF, block 0x%llx",
+> +		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
+> +		  __return_address, bp->b_bn);
+> +
+> +	xfs_alert(mp, "Unmount and run xfs_repair");
+> +
+> +	/* XXX handle page-mapped buffers too? */
+> +	if (xfs_error_level >= XFS_ERRLEVEL_LOW && bp->b_addr) {
+> +		xfs_alert(mp, "First 64 bytes of corrupted metadata buffer:");
+> +		xfs_hex_dump(bp->b_addr, 64);
+> +	}
+
+Just use xfs_buf_offset(bp, 0) here, and you don't have to care
+about how the buffer is mapped or allocated.
+
+Cheers,
+
+Dave.
 -- 
-1.8.4.rc3
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
