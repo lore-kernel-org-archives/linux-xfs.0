@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 044447FED
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 18:13:21 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 896978001
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 18:34:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3DC0304081
-	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 16:13:17 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GDdl6GOP9Rl6d3r8 for <xfs@oss.sgi.com>;
-	Tue, 18 Feb 2014 16:13:12 -0800 (PST)
-Date: Wed, 19 Feb 2014 11:13:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Add a warning about non-ASCII filenames in ASCII-CI mode
-Message-ID: <20140219001307.GI13647@dastard>
-References: <1389806582-26815-1-git-send-email-zach@kotlarek.com>
-	<1389806582-26815-2-git-send-email-zach@kotlarek.com>
-	<8D3FA7645C1CFC4E9E783D22B4C708644AA855@P-EXMB2-DC21.corp.sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 70BD630408D
+	for <xfs@oss.sgi.com>; Tue, 18 Feb 2014 16:34:11 -0800 (PST)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id i1i9GrSn4XQrJOQe (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 18 Feb 2014 16:34:09 -0800 (PST)
+Date: Tue, 18 Feb 2014 19:33:51 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+Message-ID: <20140219003351.GE7339@thunk.org>
+References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
+	<20140218010138.GE13997@dastard> <20140218083324.GB28666@dastard>
+	<alpine.LFD.2.00.1402181006250.2216@localhost.localdomain>
+	<20140218094142.GC28666@dastard>
+	<alpine.LFD.2.00.1402181302230.2216@localhost.localdomain>
+	<20140218142305.GN26580@thunk.org>
+	<alpine.LFD.2.00.1402181536110.2216@localhost.localdomain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <8D3FA7645C1CFC4E9E783D22B4C708644AA855@P-EXMB2-DC21.corp.sgi.com>
+In-Reply-To: <alpine.LFD.2.00.1402181536110.2216@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +31,19 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shaun Gosse <sgosse@sgi.com>
-Cc: Zachary Kotlarek <zach@kotlarek.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jan 15, 2014 at 05:31:34PM +0000, Shaun Gosse wrote:
-> Looks good.
-> 
-> Reviewed-by: Shaun Gosse <sgosse@sgi.com>
-> 
-> Thanks again,
-> -Shaun
-> 
-> -----Original Message-----
-> From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of Zachary Kotlarek
-> Sent: Wednesday, January 15, 2014 11:23 AM
-> To: xfs@oss.sgi.com
-> Cc: Zachary Kotlarek
-> Subject: [PATCH] Add a warning about non-ASCII filenames in ASCII-CI mode
-> 
-> ---
->  man/man8/mkfs.xfs.8 |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8 index 8184e10..e1c5cf7 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -513,9 +513,11 @@ any power of 2 size from the filesystem block size up to 65536.
->  .IP
->  The
->  .B version=ci
-> -option enables ASCII only case-insensitive filename lookup and version
-> +option enables ASCII-only case-insensitive filename lookup and version
->  2 directories. Filenames are case-preserving, that is, the names -are stored in directories using the case they were created with.
-> +are stored in directories using the case they were created with. In 
-> +this mode non-ASCII file and directory names are not supported and are 
-> +likely to become inaccessible if used.
->  .IP
->  Note: Version 1 directories are not supported.
->  .TP
-> --
-
-I missed this when it was posted and only just caught it. Sorry
-about that.
-
-I can't commit it without a Signed-off-by. Zachary, can you resned
-this with a commit message indicating why the documentation change
-is necessary and with a proper SOB on it?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBGZWIgMTgsIDIwMTQgYXQgMDM6NDI6MTBQTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IAo+IFRvIGJlIGhvbmVzdCAiYmxvY2tfbWFwIiBncm91cCBuYW1lIGRvZXMgbm90
+IG1lYW4gYW55dGhpbmcgdG8gbWUuCgpXZWxsLCB0cmFkaXRpb25hbGx5IHRoZSAiYm1hcCIgZnVu
+Y3Rpb24gaXMgd2hhdCBpcyB1c2VkIHRvIG1hcCBmcm9tIGFuCmlub2RlIGFuZCBhIGxvZ2NhbCBi
+bG9jayBhbmQgYSBwaHlzaWNhbCBibG9jay4gIEkgdGhvdWdodCBibG9ja19tYXAKd2FzIG1vcmUg
+b2J2aW91cywgYnV0IG1heWJlIHRoaXMgaXMgYSBjYXNlIHdoZXJlICJibWFwIiB3b3VsZCBiZSBt
+b3JlCnVuZGVyc3RhbmRhYmxlPyAgSSBkdW5uby4KCgkJCQkJCS0gVGVkCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
