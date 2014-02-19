@@ -1,14 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A46FA7FCA
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 13:18:30 -0600 (CST)
-Message-ID: <53050391.7020701@sgi.com>
-Date: Wed, 19 Feb 2014 13:18:41 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D48CF7FA6
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 15:10:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C48228F807A
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 13:10:20 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id K9rWGrqiyJ3x61G7 for
+	<xfs@oss.sgi.com>; Wed, 19 Feb 2014 13:10:16 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1JLAFwB025224
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 16:10:15 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1JLAEOx016232
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 16:10:14 -0500
+Message-ID: <53051DB5.4080403@redhat.com>
+Date: Wed, 19 Feb 2014 15:10:13 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [ANNOUNCE] xfsprogs for-3.1.12 branch has been updated to 40c65a7
-References: <201401201822.48520.arekm@maven.pl> <52E6A9A2.1010905@sgi.com>
-In-Reply-To: <52E6A9A2.1010905@sgi.com>
+Subject: [PATCH] xfs_repair: fix sibling pointer tests in verify_dir2_path()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,81 +32,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hey Folks,
+RH QE reported that if we create a 1G filesystem with default
+options, mount it, and create inodes until full, then run
+repair, repair reports corruption in verify_dir2_path() with:
 
-Has anyone been testing this branch, any feedback? There are still a 
-couple of platforms I would like to test before releasing this branch.
+> bad back pointer in block 8390324 for directory inode 131
 
-Unless there are objections or problems I plan to have all my testing 
-done by Wednesday February 26.
+The commit 88b32f0 xfs: add CRCs to dir2/da node blocks
+had a small error which regressed this; although we switch
+to the "newnode," to check sibling pointers, we re-populate
+the node hdr with the old "node" data.  This causes the
+backpointer test to be testing the wrong node's values.
 
-Thanks
---Rich
+Fixing this bug fixes the testcase.
 
-On 01/27/2014 12:46 PM, Rich Johnston wrote:
-> Arkadiusz,
->
-> Thanks for compiling the list.
->
-> The for-3.1.12  Branch created from "a547280... 3.1.11 release"
->
-> If there are others you want committed, please let me know.
->
-> Thanks
-> --Rich
->
->
-> The following have been committed from the candidate list
-> provided by Arkadiusz:
->
->
-> 40c65a7... xfs_metadump: Make -F (force) optional
-> ec3a1f1... xfs_repair: suggest reboot after dangerous repair
-> 8660952... xfsprogs: suggest "-d" option for repair of RO mount
-> 5a8206c... xfs_repair: correct docs for "-t" units
-> 0d5c444... xfs_fsr: fix SWAPEXT failures under selinux
-> f3d3dae... libxfs: fix root inode handling inconsistencies
-> cf507b6... xfsprogs: remove xfs_check references from fsck.xfs script &
-> manpage
-> 6e2f2d1... xfsprogs: fix resource leak in longform_dir2_rebuild()
-> ecde3f9... xfs_repair: test for bad level in dir2 node
-> d299df7... xfs_repair: avoid segfault if reporting progress early in repair
-> e660c2e... Sent: Friday, October 11, 2013 12:38:11 AM Subject:
-> Bug#725971: xfsprogs: config.guess/config.sub out of date for arm64
-> 5e1c7ac... xfsprogs: handle symlinks etc in fs_table_initialise_mounts()
-> aba6204... xfsprogs: fix return value of verify_set_primary_sb()
-> a2ea195... xfsprogs: fix potential memory leak in verify_set_primary_sb()
-> 3e53939... xfsprogs: fix potential memory leak in repare/sb.c
-> 820b8c2... xfsprogs: avoid array overflow in pf_batch_read()
-> 2a1dcdb... xfs_repair: zero out unused parts of superblocks
-> 982508b... xfsprogs: fix inode crash in xfs_repair
-> b8890d7... xfsprogs: fix unint var in repair phase6
-> 7d710b9... xfsprogs: fix agcnts leak in xfs_repair's scan_ags
-> 291c159... xfsprogs:free bp in xlog_find_tail() error path
-> 40b9d95... xfsprogs: free bp in xlog_find_zeroed() error path
-> a9b4757... xfsprogs: fix buffer leak in xlog_print_find_oldest
-> 32aae5b... xfsprogs: avoid double-free in xfs_attr_node_addname
-> 243cf82... mkfs.xfs: fix protofile name create block reservation
-> b31a23d... xfs_metadump: manpage fix regarding frozen fs
-> f8b80a3... xfs_fsr: file reads should be O_DIRECT
->
-> The following commits were not applicable.
-> e7c05095, e6efb967 6aa3d87b
->
->
->
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/repair/dir2.c b/repair/dir2.c
+index 3aabcaa..06dc000 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -552,7 +552,7 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
+ 
+ 		newnode = bp->b_addr;
+ 		btree = xfs_da3_node_tree_p(newnode);
+-		xfs_da3_node_hdr_from_disk(&nodehdr, node);
++		xfs_da3_node_hdr_from_disk(&nodehdr, newnode);
+ 		/*
+ 		 * verify magic number and back pointer, sanity-check
+ 		 * entry count, verify level
 
 _______________________________________________
 xfs mailing list
