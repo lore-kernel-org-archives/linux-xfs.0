@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 61F327FAA
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 23:55:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EAA8BAC004
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 21:55:49 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hyEb28JCYtMtznvJ for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 21:55:46 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1WGMbV-00057F-Ol
-	for xfs@oss.sgi.com; Thu, 20 Feb 2014 16:55:25 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WGMbV-0001CA-NW
-	for xfs@oss.sgi.com; Thu, 20 Feb 2014 16:55:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfs_repair: fix xfs/033 issues.
-Date: Thu, 20 Feb 2014 16:55:20 +1100
-Message-Id: <1392875722-4390-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6A25C7F7C
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 03:33:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 530398F807A
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 01:33:39 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 43PrnAbWdaEzqyOx (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Feb 2014 01:33:38 -0800 (PST)
+Message-ID: <5305CBE8.7050500@oracle.com>
+Date: Thu, 20 Feb 2014 17:33:28 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 4/9] xfs: Use defines for CRC offsets in all cases
+References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>	<1392767549-25574-5-git-send-email-sandeen@redhat.com>	<530463C6.6050509@oracle.com>
+	<20140220002713.GI4916@dastard>
+In-Reply-To: <20140220002713.GI4916@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,30 +25,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-Hi folks,
 
-Eric reported that there was a regression in v3.2.0-alpha2 where
-xfs/033 was failing to repair the corrupted root inode. He also
-discovered that the discontiguous buffer support in xfs_repair
-fixed it. Turns out that was a regression in xfs_repair covering up
-another regression in xfs_repair.
+On 02/20 2014 08:27 AM, Dave Chinner wrote:
+> On Wed, Feb 19, 2014 at 03:56:54PM +0800, Jeff Liu wrote:
+>> Hi Eric,
+>>
+>> I read the previous comments from Dave about using defines for CRC offsets,
+>> and with a grep search after applying this patch, looks there have another
+>> two places maybe we should switch them to the macros as well:
+>>
+>> fs/xfs/xfs_log.c:
+>> Do we need a log record crc offset macros for offsetof(struct xlog_rec_header, h_crc))?
+>>
+>> xfs_dinode.h:
+>> we added the XFS_DINODE_CRC_OFF, just use it at below routine?
+>>
+>> static inline uint xfs_dinode_size(int version)
+>> {
+>>         if (version == 3)
+>>                 return sizeof(struct xfs_dinode);
+>>         return offsetof(struct xfs_dinode, di_crc);
+>> }
+> 
+> No, that's a different case - it's not being used for determining
+> the offset of a CRC varaible - it's being used to calculate the size
+> of the version 2 inode core. Hence it should remain open coded like
+> because it has a different purpose in life....
 
-Two bugs don't make broken code better.
+Thanks for the clarification, so we don't need that for the second inode
+case, but the first case is used to determine the log record crc offset
+to generate the crc for record header, shouldn't we make it consistent
+with others?
 
-The first patch fixes the regression that discontiguous buffer
-support introduced, re-exposing the original regression so it can be
-debugged. The second patch fixes the original regression.
 
-Cheers,
-
-Dave.
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
