@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CB2507F88
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 05:16:37 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9E5127FC0
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 07:10:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A8D2C8F8037
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 03:16:37 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 061D1AC003
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 05:10:16 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4aayfMvtUCk4nN5R for
-	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 03:16:33 -0800 (PST)
-Date: Thu, 20 Feb 2014 12:16:26 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-In-Reply-To: <CANWERqOyv3dP-4x2OVO9-1q+LaGh7aQDY-WtZRFkc9opWudHZA@mail.gmail.com>
-Message-ID: <alpine.LFD.2.00.1402201207410.2245@localhost.localdomain>
-References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
-	<20140219145239.GA14849@gmail.com>
-	<alpine.LFD.2.00.1402191609550.9903@localhost.localdomain>
-	<CANWERqOyv3dP-4x2OVO9-1q+LaGh7aQDY-WtZRFkc9opWudHZA@mail.gmail.com>
+	cuda.sgi.com with ESMTP id 5j894nA9rZqtB8re for
+	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 05:10:15 -0800 (PST)
+Message-ID: <5305FEAA.702@redhat.com>
+Date: Thu, 20 Feb 2014 08:10:02 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-416043165-1392894989=:2245"
+Subject: Re: [PATCH 9/9 V2] xfs: modify verifiers to differentiate CRC from
+	other errors
+References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>	<1392767549-25574-10-git-send-email-sandeen@redhat.com>
+	<53057208.3010308@sandeen.net>
+In-Reply-To: <53057208.3010308@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,168 +25,673 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dongsu Park <dongsu.park@profitbricks.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, tytso <tytso@mit.edu>, xfs <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-416043165-1392894989=:2245
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-On Wed, 19 Feb 2014, Dongsu Park wrote:
-
-> Date: Wed, 19 Feb 2014 16:51:23 +0100
-> From: Dongsu Park <dongsu.park@profitbricks.com>
-> To: Lukáš Czerner <lczerner@redhat.com>
-> Cc: linux-ext4 <linux-ext4@vger.kernel.org>, tytso <tytso@mit.edu>,
->     linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <xfs@oss.sgi.com>
-> Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for
->     fallocate
+On 02/19/2014 10:10 PM, Eric Sandeen wrote:
+> Modify all read & write verifiers to differentiate
+> between CRC errors and other inconsistencies.
 > 
-> On Wed, Feb 19, 2014 at 4:18 PM, Lukáš Czerner <lczerner@redhat.com> wrote:
-> > On Wed, 19 Feb 2014, Dongsu Park wrote:
-> > Are you able to reproduce it ? Can you tell me the steps to
-> > reproduce this ? The problem is that the extent we're trying to mark
-> > as uninitialized has zero length....
-> >
-> > Ah...I can probably see what is going on. For some inexplicable
-> > reason I am forgetting to take i_data_sem which means that we're
-> > probably racing with truncate or something else.
-> >
-> > Thanks a lot for letting me know and If you can please send me a
-> > reproducer for your case because as I said I have not seen this
-> > before.
+> This sets the appropriate error number on bp->b_error,
+> and then calls xfs_verifier_error() if something went
+> wrong.  That function will issue the appropriate message
+> to the user.
 > 
-> Yes, it's reliably reproducible.
-> What I'm doing for testing is quite simple, just like that:
-> (/dev/vdb is a test block device, 16GiB in size)
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> # mke2fs -t ext4 /dev/vdb
-> # mkdir -p /mnt/test1
-> # mount -t ext4 -o discard /dev/vdb /mnt/test1
-> # dd if=/dev/urandom of=/mnt/test1/file1 bs=2G count=1
-> # fallocate -z -l 2G /mnt/test1/file1
-> 
-> Then kernel crashes immediately.
 
-Oh, now I know where the problem really is. It's not about the
-locking at all. Initialized and Uninitialized extents have different
-maximum size.
+Looks good to me, thanks Eric.
 
-So we can not convert initialized extent of a maximum size to a
-uninitialized extent right away. We have to split.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Thank you, your testing is very useful!
-
--Lukas
-
+> V2: Fix inexplicably lost XFS_*_CRC_OFF macros, and
+> rework xfs_agi_read_verify() to be similar to other
+> verifiers, per Brian's review
 > 
-> Cheers,
-> Dongsu
+> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+> index 9c7cf3d..c1cf6a3 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -474,7 +474,6 @@ xfs_agfl_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+> -	int		agfl_ok = 1;
+>  
+>  	/*
+>  	 * There is no verification of non-crc AGFLs because mkfs does not
+> @@ -485,14 +484,13 @@ xfs_agfl_read_verify(
+>  	if (!xfs_sb_version_hascrc(&mp->m_sb))
+>  		return;
+>  
+> -	agfl_ok = xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF);
+> -
+> -	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
+> -
+> -	if (!agfl_ok) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (!xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_agfl_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -507,8 +505,8 @@ xfs_agfl_write_verify(
+>  		return;
+>  
+>  	if (!xfs_agfl_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> @@ -2236,18 +2234,17 @@ xfs_agf_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+> -	int		agf_ok = 1;
+> -
+> -	if (xfs_sb_version_hascrc(&mp->m_sb))
+> -		agf_ok = xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF);
+>  
+> -	agf_ok = agf_ok && xfs_agf_verify(mp, bp);
+> -
+> -	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
+> -			XFS_RANDOM_ALLOC_READ_AGF))) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	    !xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (XFS_TEST_ERROR(!xfs_agf_verify(mp, bp), mp,
+> +				XFS_ERRTAG_ALLOC_READ_AGF,
+> +				XFS_RANDOM_ALLOC_READ_AGF))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -2258,8 +2255,8 @@ xfs_agf_write_verify(
+>  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	if (!xfs_agf_verify(mp, bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
+> index 144d3b0..cc1eadc 100644
+> --- a/fs/xfs/xfs_alloc_btree.c
+> +++ b/fs/xfs/xfs_alloc_btree.c
+> @@ -355,12 +355,14 @@ static void
+>  xfs_allocbt_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+> -	if (!(xfs_btree_sblock_verify_crc(bp) &&
+> -	      xfs_allocbt_verify(bp))) {
+> -		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     bp->b_target->bt_mount, bp->b_addr);
+> +	if (!xfs_btree_sblock_verify_crc(bp))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_allocbt_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +
+> +	if (bp->b_error) {
+> +		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> +		xfs_verifier_error(bp);
+>  	}
+>  }
+>  
+> @@ -370,9 +372,8 @@ xfs_allocbt_write_verify(
+>  {
+>  	if (!xfs_allocbt_verify(bp)) {
+>  		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     bp->b_target->bt_mount, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  	xfs_btree_sblock_calc_crc(bp);
+> diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+> index b552378..fe9587f 100644
+> --- a/fs/xfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/xfs_attr_leaf.c
+> @@ -213,8 +213,8 @@ xfs_attr3_leaf_write_verify(
+>  	struct xfs_attr3_leaf_hdr *hdr3 = bp->b_addr;
+>  
+>  	if (!xfs_attr3_leaf_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> @@ -239,12 +239,14 @@ xfs_attr3_leaf_read_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	     !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF)) ||
+> -	    !xfs_attr3_leaf_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	     !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_attr3_leaf_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
+> diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+> index 5549d69..6e37823 100644
+> --- a/fs/xfs/xfs_attr_remote.c
+> +++ b/fs/xfs/xfs_attr_remote.c
+> @@ -125,7 +125,6 @@ xfs_attr3_rmt_read_verify(
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+>  	char		*ptr;
+>  	int		len;
+> -	bool		corrupt = false;
+>  	xfs_daddr_t	bno;
+>  
+>  	/* no verification of non-crc buffers */
+> @@ -140,11 +139,11 @@ xfs_attr3_rmt_read_verify(
+>  	while (len > 0) {
+>  		if (!xfs_verify_cksum(ptr, XFS_LBSIZE(mp),
+>  				      XFS_ATTR3_RMT_CRC_OFF)) {
+> -			corrupt = true;
+> +			xfs_buf_ioerror(bp, EFSBADCRC);
+>  			break;
+>  		}
+>  		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
+> -			corrupt = true;
+> +			xfs_buf_ioerror(bp, EFSCORRUPTED);
+>  			break;
+>  		}
+>  		len -= XFS_LBSIZE(mp);
+> @@ -152,10 +151,9 @@ xfs_attr3_rmt_read_verify(
+>  		bno += mp->m_bsize;
+>  	}
+>  
+> -	if (corrupt) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> -		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	} else
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+> +	else
+>  		ASSERT(len == 0);
+>  }
+>  
+> @@ -180,9 +178,8 @@ xfs_attr3_rmt_write_verify(
+>  
+>  	while (len > 0) {
+>  		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
+> -			XFS_CORRUPTION_ERROR(__func__,
+> -					    XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  			xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +			xfs_verifier_error(bp);
+>  			return;
+>  		}
+>  		if (bip) {
+> diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+> index 706bc3f..818d546 100644
+> --- a/fs/xfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/xfs_bmap_btree.c
+> @@ -780,12 +780,14 @@ static void
+>  xfs_bmbt_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+> -	if (!(xfs_btree_lblock_verify_crc(bp) &&
+> -	      xfs_bmbt_verify(bp))) {
+> -		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     bp->b_target->bt_mount, bp->b_addr);
+> +	if (!xfs_btree_lblock_verify_crc(bp))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_bmbt_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +
+> +	if (bp->b_error) {
+> +		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> +		xfs_verifier_error(bp);
+>  	}
+>  }
+>  
+> @@ -794,11 +796,9 @@ xfs_bmbt_write_verify(
+>  	struct xfs_buf	*bp)
+>  {
+>  	if (!xfs_bmbt_verify(bp)) {
+> -		xfs_warn(bp->b_target->bt_mount, "bmbt daddr 0x%llx failed", bp->b_bn);
+>  		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     bp->b_target->bt_mount, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  	xfs_btree_lblock_calc_crc(bp);
+> diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+> index 75ef990..1f5af79 100644
+> --- a/fs/xfs/xfs_da_btree.c
+> +++ b/fs/xfs/xfs_da_btree.c
+> @@ -185,8 +185,8 @@ xfs_da3_node_write_verify(
+>  	struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+>  
+>  	if (!xfs_da3_node_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> @@ -209,17 +209,20 @@ static void
+>  xfs_da3_node_read_verify(
+>  	struct xfs_buf		*bp)
+>  {
+> -	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  	struct xfs_da_blkinfo	*info = bp->b_addr;
+>  
+>  	switch (be16_to_cpu(info->magic)) {
+>  		case XFS_DA3_NODE_MAGIC:
+> -			if (!xfs_buf_verify_cksum(bp, XFS_DA3_NODE_CRC_OFF))
+> +			if (!xfs_buf_verify_cksum(bp, XFS_DA3_NODE_CRC_OFF)) {
+> +				xfs_buf_ioerror(bp, EFSBADCRC);
+>  				break;
+> +			}
+>  			/* fall through */
+>  		case XFS_DA_NODE_MAGIC:
+> -			if (!xfs_da3_node_verify(bp))
+> +			if (!xfs_da3_node_verify(bp)) {
+> +				xfs_buf_ioerror(bp, EFSCORRUPTED);
+>  				break;
+> +			}
+>  			return;
+>  		case XFS_ATTR_LEAF_MAGIC:
+>  		case XFS_ATTR3_LEAF_MAGIC:
+> @@ -236,8 +239,7 @@ xfs_da3_node_read_verify(
+>  	}
+>  
+>  	/* corrupt block */
+> -	XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> -	xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +	xfs_verifier_error(bp);
+>  }
+>  
+>  const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+> diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+> index 724377e..4f6a38c 100644
+> --- a/fs/xfs/xfs_dir2_block.c
+> +++ b/fs/xfs/xfs_dir2_block.c
+> @@ -89,12 +89,14 @@ xfs_dir3_block_read_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF)) ||
+> -	    !xfs_dir3_block_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_dir3_block_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -106,8 +108,8 @@ xfs_dir3_block_write_verify(
+>  	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+>  
+>  	if (!xfs_dir3_block_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+> index 74ae85e..afa4ad5 100644
+> --- a/fs/xfs/xfs_dir2_data.c
+> +++ b/fs/xfs/xfs_dir2_data.c
+> @@ -241,7 +241,6 @@ static void
+>  xfs_dir3_data_reada_verify(
+>  	struct xfs_buf		*bp)
+>  {
+> -	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+>  
+>  	switch (hdr->magic) {
+> @@ -255,8 +254,8 @@ xfs_dir3_data_reada_verify(
+>  		xfs_dir3_data_verify(bp);
+>  		return;
+>  	default:
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		break;
+>  	}
+>  }
+> @@ -267,12 +266,14 @@ xfs_dir3_data_read_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF)) ||
+> -	    !xfs_dir3_data_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF))
+> +		 xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_dir3_data_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -284,8 +285,8 @@ xfs_dir3_data_write_verify(
+>  	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+>  
+>  	if (!xfs_dir3_data_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+> index dffb61b..d36e97d 100644
+> --- a/fs/xfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/xfs_dir2_leaf.c
+> @@ -179,12 +179,14 @@ __read_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF)) ||
+> -	    !xfs_dir3_leaf_verify(bp, magic)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_dir3_leaf_verify(bp, magic))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -197,8 +199,8 @@ __write_verify(
+>  	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
+>  
+>  	if (!xfs_dir3_leaf_verify(bp, magic)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+> index 0904b20..cb434d7 100644
+> --- a/fs/xfs/xfs_dir2_node.c
+> +++ b/fs/xfs/xfs_dir2_node.c
+> @@ -115,12 +115,14 @@ xfs_dir3_free_read_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	     !xfs_buf_verify_cksum(bp, XFS_DIR3_FREE_CRC_OFF)) ||
+> -	    !xfs_dir3_free_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	    !xfs_buf_verify_cksum(bp, XFS_DIR3_FREE_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_dir3_free_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -132,8 +134,8 @@ xfs_dir3_free_write_verify(
+>  	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+>  
+>  	if (!xfs_dir3_free_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_dquot_buf.c b/fs/xfs/xfs_dquot_buf.c
+> index d401457..610da81 100644
+> --- a/fs/xfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/xfs_dquot_buf.c
+> @@ -257,10 +257,13 @@ xfs_dquot_buf_read_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+> -	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (!xfs_dquot_buf_verify_crc(mp, bp))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_dquot_buf_verify(mp, bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  /*
+> @@ -275,8 +278,8 @@ xfs_dquot_buf_write_verify(
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  
+>  	if (!xfs_dquot_buf_verify(mp, bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  }
+> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> index 4657586..5959b3b 100644
+> --- a/fs/xfs/xfs_ialloc.c
+> +++ b/fs/xfs/xfs_ialloc.c
+> @@ -1568,18 +1568,17 @@ xfs_agi_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+> -	int		agi_ok = 1;
+>  
+> -	if (xfs_sb_version_hascrc(&mp->m_sb))
+> -		agi_ok = xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF);
+> -
+> -	agi_ok = agi_ok && xfs_agi_verify(bp);
+> -
+> -	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+> -			XFS_RANDOM_IALLOC_READ_AGI))) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	    !xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (XFS_TEST_ERROR(!xfs_agi_verify(bp), mp,
+> +				XFS_ERRTAG_IALLOC_READ_AGI,
+> +				XFS_RANDOM_IALLOC_READ_AGI))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -1590,8 +1589,8 @@ xfs_agi_write_verify(
+>  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	if (!xfs_agi_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+> index 0028c50..7e309b1 100644
+> --- a/fs/xfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/xfs_ialloc_btree.c
+> @@ -243,12 +243,14 @@ static void
+>  xfs_inobt_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+> -	if (!(xfs_btree_sblock_verify_crc(bp) &&
+> -	      xfs_inobt_verify(bp))) {
+> -		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     bp->b_target->bt_mount, bp->b_addr);
+> +	if (!xfs_btree_sblock_verify_crc(bp))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_inobt_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +
+> +	if (bp->b_error) {
+> +		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> +		xfs_verifier_error(bp);
+>  	}
+>  }
+>  
+> @@ -258,9 +260,8 @@ xfs_inobt_write_verify(
+>  {
+>  	if (!xfs_inobt_verify(bp)) {
+>  		trace_xfs_btree_corrupt(bp, _RET_IP_);
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     bp->b_target->bt_mount, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  	xfs_btree_sblock_calc_crc(bp);
+> diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
+> index 606b43a..24e9939 100644
+> --- a/fs/xfs/xfs_inode_buf.c
+> +++ b/fs/xfs/xfs_inode_buf.c
+> @@ -102,8 +102,7 @@ xfs_inode_buf_verify(
+>  			}
+>  
+>  			xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+> -					     mp, dip);
+> +			xfs_verifier_error(bp);
+>  #ifdef DEBUG
+>  			xfs_alert(mp,
+>  				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+> index 818359f..b134aa8 100644
+> --- a/fs/xfs/xfs_sb.c
+> +++ b/fs/xfs/xfs_sb.c
+> @@ -614,7 +614,7 @@ xfs_sb_read_verify(
+>  			/* Only fail bad secondaries on a known V5 filesystem */
+>  			if (bp->b_bn == XFS_SB_DADDR ||
+>  			    xfs_sb_version_hascrc(&mp->m_sb)) {
+> -				error = EFSCORRUPTED;
+> +				error = EFSBADCRC;
+>  				goto out_error;
+>  			}
+>  		}
+> @@ -623,10 +623,9 @@ xfs_sb_read_verify(
+>  
+>  out_error:
+>  	if (error) {
+> -		if (error == EFSCORRUPTED)
+> -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -					     mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, error);
+> +		if (error == EFSCORRUPTED || error == EFSBADCRC)
+> +			xfs_verifier_error(bp);
+>  	}
+>  }
+>  
+> @@ -661,9 +660,8 @@ xfs_sb_write_verify(
+>  
+>  	error = xfs_sb_verify(bp, false);
+>  	if (error) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+> -				     mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, error);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
+> index defa09f..9b32052 100644
+> --- a/fs/xfs/xfs_symlink_remote.c
+> +++ b/fs/xfs/xfs_symlink_remote.c
+> @@ -133,11 +133,13 @@ xfs_symlink_read_verify(
+>  	if (!xfs_sb_version_hascrc(&mp->m_sb))
+>  		return;
+>  
+> -	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF) ||
+> -	    !xfs_symlink_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF))
+> +		xfs_buf_ioerror(bp, EFSBADCRC);
+> +	else if (!xfs_symlink_verify(bp))
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -	}
+> +
+> +	if (bp->b_error)
+> +		xfs_verifier_error(bp);
+>  }
+>  
+>  static void
+> @@ -152,8 +154,8 @@ xfs_symlink_write_verify(
+>  		return;
+>  
+>  	if (!xfs_symlink_verify(bp)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		xfs_verifier_error(bp);
+>  		return;
+>  	}
+>  
 > 
-> > Thanks!
-> > -Lukas
-> >
-> > >
-> > > ------------[ cut here ]------------
-> > > kernel BUG at fs/ext4/ext4_extents.h:193!
-> > > invalid opcode: 0000 [#1] SMP
-> > > Modules linked in: 9pnet_virtio virtio_net 9pnet virtio_blk virtio_pci
-> > > virtio_ring virtio
-> > > CPU: 2 PID: 2959 Comm: fallocate Not tainted 3.14.0-rc3+ #34
-> > > Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-> > > task: ffff8800da97da10 ti: ffff880119068000 task.ti: ffff880119068000
-> > > RIP: 0010:[<ffffffff813694c9>]  [<ffffffff813694c9>]
-> > > ext4_ext_map_blocks+0x2899/0x2940
-> > > RSP: 0018:ffff880119069c50  EFLAGS: 00010202
-> > > RAX: 0000000000000003 RBX: ffff880036fa8470 RCX: 0000000000000002
-> > > RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffffffff82120e98
-> > > RBP: ffff880119069d30 R08: ffff88011975d900 R09: 011ad15618080000
-> > > R10: fec72ef09c4d8602 R11: 0000000000008000 R12: ffff880119069dd0
-> > > R13: 0000000000000403 R14: 0000000000000001 R15: ffff880118c6700c
-> > > FS:  00007fa54a0ba740(0000) GS:ffff88011fc40000(0000)
-> > > knlGS:0000000000000000
-> > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > CR2: 0000003cdbf6f7e0 CR3: 0000000119077000 CR4: 00000000000006e0
-> > > Stack:
-> > >  0000000000000000 0000000000008000 ffff880036fa86c8 0000000000000000
-> > >  ffff880100000000 0000800081384dee 0000000000000001 ffff880000000000
-> > >  0000000000008800 0000000000000000 ffff880036f6f000 ffff88011975d900
-> > > Call Trace:
-> > >  [<ffffffff81385baa>] ? ext4_es_insert_extent+0x15a/0x240
-> > >  [<ffffffff813669ae>] ? ext4_find_delalloc_range+0x1e/0xb0
-> > >  [<ffffffff81322d3f>] ext4_map_blocks+0x25f/0x830
-> > >  [<ffffffff81369764>] ? ext4_alloc_file_blocks+0xc4/0x1e0
-> > >  [<ffffffff813697da>] ext4_alloc_file_blocks+0x13a/0x1e0
-> > >  [<ffffffff81369e9f>] ext4_zero_range+0x61f/0x870
-> > >  [<ffffffff8136a5d3>] ext4_fallocate+0x4e3/0x6c0
-> > >  [<ffffffff81239675>] ? __sb_start_write+0x145/0x1a0
-> > >  [<ffffffff8120ef00>] ? kmem_cache_free+0x2f0/0x3f0
-> > >  [<ffffffff81246ca0>] ? final_putname+0x30/0x60
-> > >  [<ffffffff812326a7>] do_fallocate+0x1e7/0x290
-> > >  [<ffffffff812327c9>] SyS_fallocate+0x79/0xc0
-> > >  [<ffffffff81ae7de9>] system_call_fastpath+0x16/0x1b
-> > > Code: ba dc 05 00 00 48 c7 c6 b0 91 c7 81 48 89 df 89 04 24 31 c0 e8 99
-> > > 83 fe ff e9 f5 f8 ff ff 48 83 05 34 b3 f5 00 01 e9 0a db ff ff <0f> 0b
-> > > 0f 0b 0f 0b 0f 0b 45 89 d1 49 c7 c0 48 22 e5 81 31
-> > > RIP  [<ffffffff813694c9>] ext4_ext_map_blocks+0x2899/0x2940
-> > >  RSP <ffff880119069c50>
-> > > ---[ end trace ba21204a3a98fbdc ]---
-> > >
-> > > Regards,
-> > > Dongsu
-> > >
-> > > > I'll post the patches after we agree and merge the kernel functionality.
-> > > >
-> > > > I tested this mostly with a subset of xfstests using fsx and fsstress and
-> > > > even with new generic/290 which is just a copy of xfs/290 usinz fzero
-> > > > command for xfs_io instead of zero (which uses ioctl). I was testing on
-> > > > x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
-> > > >
-> > > > ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083 generic/117 generic/068 generic/231 generic/127 generic/091 generic/075 generic/112 generic/263 generic/091 generic/075 generic/256 generic/255 generic/316 generic/300 generic/290;
-> > > >
-> > > > Note that there is a work in progress on FALLOC_FL_COLLAPSE_RANGE which
-> > > > touches the same area as this pach set does, so we should figure out
-> > > > which one should go first and modify the other on top of it.
-> > > >
-> > > > Thanks!
-> > > > -Lukas
-> > > >
-> > > > --
-> > > > [PATCH 1/6] ext4: Update inode i_size after the preallocation
-> > > > [PATCH 2/6] ext4: refactor ext4_fallocate code
-> > > > [PATCH 3/6] ext4: translate fallocate mode bits to strings
-> > > > [PATCH 4/6] fs: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-> > > > [PATCH 5/6] ext4: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-> > > > [PATCH 6/6] xfs: Add support for FALLOC_FL_ZERO_RANGE
-> > > >
-> > > >  fs/ext4/ext4.h              |   3 +
-> > > >  fs/ext4/extents.c           | 430 ++++++++++++++++++++++++++++++++++++++++++++++++++++----------------
-> > > >  fs/ext4/inode.c             |  17 ++-
-> > > >  fs/open.c                   |   7 +-
-> > > >  fs/xfs/xfs_file.c           |  10 +-
-> > > >  include/trace/events/ext4.h |  67 ++++++-----
-> > > >  include/uapi/linux/falloc.h |   1 +
-> > > >  7 files changed, 393 insertions(+), 142 deletions(-)
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >
 > 
---8323328-416043165-1392894989=:2245
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-416043165-1392894989=:2245--
