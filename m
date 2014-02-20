@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 95DD07FA6
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 23:55:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 55FD58F8073
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 21:55:49 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3274A7FA6
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 23:55:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B16E0AC003
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 21:55:46 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	EZaxMbYxPDXTUEeV for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 21:55:47 -0800 (PST)
+	xGjXs9n6JSrVjHkj for <xfs@oss.sgi.com>;
+	Wed, 19 Feb 2014 21:55:41 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1WGMbV-00057H-Ps
+	(envelope-from <dave@fromorbit.com>) id 1WGMbV-00057G-PK
 	for xfs@oss.sgi.com; Thu, 20 Feb 2014 16:55:25 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WGMbV-0001CI-Ot
+	(envelope-from <dave@disappointment.disaster>) id 1WGMbV-0001CD-OK
 	for xfs@oss.sgi.com; Thu, 20 Feb 2014 16:55:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] libxfs: clear stale buffer errors on write
-Date: Thu, 20 Feb 2014 16:55:22 +1100
-Message-Id: <1392875722-4390-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] libxfs: contiguous buffers are not discontigous
+Date: Thu, 20 Feb 2014 16:55:21 +1100
+Message-Id: <1392875722-4390-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1392875722-4390-1-git-send-email-david@fromorbit.com>
 References: <1392875722-4390-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,72 +39,53 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If we've read a buffer and it's had an error (e.g a bad CRC) and the
-caller corrects the problem with the buffer and writes it via
-libxfs_writebuf() without clearing the error on the buffer,
-subsequent reads of the buffer while it is still in cache can see
-that error and fail inappropriately.
+When discontiguous directory buffer support was fixed in xfs_repair,
+(dd9093d xfs_repair: fix discontiguous directory block support)
+it changed to using libxfs_getbuf_map() to support mapping
+discontiguous blocks, and the prefetch code special cased such
+discontiguous buffers.
 
-xfs/033 demonstrates this error, where phase 3 detects the corrupted
-root inode and clears, but doesn't clear the b_error field. Later in
-phase 6, the code that rebuilds the root directory tries to read the
-root inode and sees a buffer with an error on it, thereby triggering
-a fatal repair failure:
+The issue is that libxfs_getbuf_map() marks all buffers, even
+contiguous ones - as LIBXFS_B_DISCONTIG, and so the prefetch code
+was treating every buffer as discontiguous. This causes the prefetch
+code to completely bypass the large IO optimisations for dense areas
+of metadata. Because there was no obvious change in performance or
+IO patterns, this wasn't noticed during performance testing.
 
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-xfs_inode_buf_verify: XFS_CORRUPTION_ERROR
-bad magic number 0x0 on inode 64
-....
-cleared root inode 64
-....
-Phase 6 - check inode connectivity...
-reinitializing root directory
-xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
+However, this change mysteriously fixed a regression in xfs/033 in
+the v3.2.0-alpha release, and this change in behaviour was
+discovered as part of triaging why it "fixed" the regression.
+Anyway, restoring the large IO prefetch optimisation results
+a reapiron a 10 million inode filesystem dropping from 197s to 173s,
+and the peak IOPS rate in phase 3 dropping from 25,000 to roughly
+2,000 by trading off a bandwidth increase of roughly 100% (i.e.
+200MB/s to 400MB/s). Phase 4 saw similar changes in IO profile and
+speed increases.
 
-fatal error -- could not iget root inode -- error - 117
-#
-
-Fix this by assuming buffers that are written are clean and correct
-and hence we can zero the b_error field before retiring the buffer
-to the cache.
+This, however, re-introduces the regression in xfs/033, which will
+now be fixed in a separate patch.
 
 Reported-by: Eric Sandeen <esandeen@redhat.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/rdwr.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ libxfs/rdwr.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 78a9b37..d0ff15b 100644
+index ac7739f..78a9b37 100644
 --- a/libxfs/rdwr.c
 +++ b/libxfs/rdwr.c
-@@ -890,6 +890,11 @@ libxfs_writebufr(xfs_buf_t *bp)
- int
- libxfs_writebuf_int(xfs_buf_t *bp, int flags)
- {
-+	/*
-+	 * Clear any error hanging over from reading the buffer. This prevents
-+	 * subsequent reads after this write from seeing stale errors.
-+	 */
-+	bp->b_error = 0;
- 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
- 	return 0;
- }
-@@ -903,6 +908,11 @@ libxfs_writebuf(xfs_buf_t *bp, int flags)
- 			(long long)LIBXFS_BBTOOFF64(bp->b_bn),
- 			(long long)bp->b_bn);
- #endif
-+	/*
-+	 * Clear any error hanging over from reading the buffer. This prevents
-+	 * subsequent reads after this write from seeing stale errors.
-+	 */
-+	bp->b_error = 0;
- 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
- 	libxfs_putbuf(bp);
- 	return 0;
+@@ -590,6 +590,10 @@ libxfs_getbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map,
+ 	struct xfs_bufkey key = {0};
+ 	int i;
+ 
++	if (nmaps == 1)
++		return libxfs_getbuf_flags(btp, map[0].bm_bn, map[0].bm_len,
++					   flags);
++
+ 	key.buftarg = btp;
+ 	key.blkno = map[0].bm_bn;
+ 	for (i = 0; i < nmaps; i++) {
 -- 
 1.8.4.rc3
 
