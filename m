@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AEEAA7FC0
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 08:51:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8EBFE8F8037
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 06:50:57 -0800 (PST)
-Date: Thu, 20 Feb 2014 06:50:51 -0800
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1EA327FC9
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 08:51:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 93800AC00B
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 06:51:32 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id LxbBFLu3HwvkLXMa (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Feb 2014 06:51:31 -0800 (PST)
+Date: Thu, 20 Feb 2014 06:51:30 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] MAINTAINERS: remove myself from xfs
-Message-ID: <20140220145051.GA8366@infradead.org>
-References: <20140218205911.GL4806@sgi.com>
+Subject: Re: [PATCH 2/3] xfs: fix directory inode iolock lockdep false positive
+Message-ID: <20140220145130.GB8366@infradead.org>
+References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
+	<1392783402-4726-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140218205911.GL4806@sgi.com>
+In-Reply-To: <1392783402-4726-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,16 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Thanks for all the hard work Ben!
+Looks good,
 
-Hope we'll still have you and the others around even without the
-maintainer burden on your shoulders.
-
-We usually add a CREDITS entry for retiring maintainers, feel free to
-add yourself there.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
