@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AFC067F85
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:00:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3C664AC00D
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:00:02 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 1FCYdSAfzt4TtmwI (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Feb 2014 14:00:00 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1WGbey-0004ZG-Fd
-	for xfs@oss.sgi.com; Thu, 20 Feb 2014 22:00:00 +0000
-Date: Thu, 20 Feb 2014 14:00:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs_io: add support for O_TMPFILE opens
-Message-ID: <20140220220000.GA17541@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CDCEA7F99
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:07:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B7945304087
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:07:53 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Lble4W4X6U8PPiCC for <xfs@oss.sgi.com>;
+	Thu, 20 Feb 2014 14:07:51 -0800 (PST)
+Date: Fri, 21 Feb 2014 09:07:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
+Message-ID: <20140220220747.GQ4916@dastard>
+References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
+	<1392783402-4726-2-git-send-email-david@fromorbit.com>
+	<5304F6F6.3070007@redhat.com> <20140220002358.GH4916@dastard>
+	<5306168B.8080209@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <5306168B.8080209@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,143 +32,153 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Add a new -T argument to the open command that supports using the
-O_TMPFILE flag.
+On Thu, Feb 20, 2014 at 08:51:55AM -0600, Mark Tinguely wrote:
+> On 02/19/14 18:23, Dave Chinner wrote:
+> >On Wed, Feb 19, 2014 at 01:24:54PM -0500, Brian Foster wrote:
+> >>On 02/18/2014 11:16 PM, Dave Chinner wrote:
+> >>>From: Dave Chinner<dchinner@redhat.com>
+> >>>
+> >>>Log forces can occur deep in the call chain when we have relatively
+> >>>little stack free. Log forces can also happen at close to the call
+> >>>chain leaves (e.g. xfs_buf_lock()) and hence we can trigger IO from
+> >>>places where we really don't want to add more stack overhead.
+> >>>
+> >>>This stack overhead occurs because log forces do foreground CIL
+> >>>pushes (xlog_cil_push_foreground()) rather than waking the
+> >>>background push wq and waiting for the for the push to complete.
+> >>>This foreground push was done to avoid confusing the CFQ Io
+> >>>scheduler when fsync()s were issued, as it has trouble dealing with
+> >>>dependent IOs being issued from different process contexts.
+> >>>
+> >>>Avoiding blowing the stack is much more critical than performance
+> >>>optimisations for CFQ, especially as we've been recommending against
+> >>>the use of CFQ for XFS since 3.2 kernels were release because of
+> >>>it's problems with multi-threaded IO workloads.
+> >>>
+> >>>Hence convert xlog_cil_push_foreground() to move the push work
+> >>>to the CIL workqueue. We already do the waiting for the push to
+> >>>complete in xlog_cil_force_lsn(), so there's nothing else we need to
+> >>>modify to make this work.
+> >>>
+> >>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
+.....
+> >>>@@ -803,7 +808,6 @@ xlog_cil_force_lsn(
+> >>>  	 * before allowing the force of push_seq to go ahead. Hence block
+> >>>  	 * on commits for those as well.
+> >>>  	 */
+> >>>-restart:
+> >>>  	spin_lock(&cil->xc_push_lock);
+> >>>  	list_for_each_entry(ctx,&cil->xc_committing, committing) {
+> >>>  		if (ctx->sequence>  sequence)
+> >>>@@ -821,6 +825,28 @@ restart:
+> >>>  		/* found it! */
+> >>>  		commit_lsn = ctx->commit_lsn;
+> >>>  	}
+> >>>+
+> >>>+	/*
+> >>>+	 * The call to xlog_cil_push_now() executes the push in the background.
+> >>>+	 * Hence by the time we have got here it our sequence may not have been
+> >>>+	 * pushed yet. This is true if the current sequence still matches the
+> >>>+	 * push sequence after the above wait loop and the CIL still contains
+> >>>+	 * dirty objects.
+> >>>+	 *
+> >>>+	 * When the push occurs, it will empty the CIL and
+> >>>+	 * atomically increment the currect sequence past the push sequence and
+> >>>+	 * move it into the committing list. Of course, if the CIL is clean at
+> >>>+	 * the time of the push, it won't have pushed the CIL at all, so in that
+> >>>+	 * case we should try the push for this sequence again from the start
+> >>>+	 * just in case.
+> >>>+	 */
+> >>>+
+> >>>+	if (sequence == cil->xc_current_sequence&&
+                                             ^^^^^
+FYI, your mailer is still mangling whitespace when quoting code....
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> >>>+	    !list_empty(&cil->xc_cil)) {
+> >>>+		spin_unlock(&cil->xc_push_lock);
+> >>>+		goto restart;
+> >>>+	}
+> >>>+
+> >>
+> >>IIUC, the objective here is to make sure we don't leave this code path
+> >>before the push even starts and the ctx makes it onto the committing
+> >>list, due to xlog_cil_push_now() moving things to a workqueue.
+> >
+> >Right.
+> >
+> >>Given that, what's the purpose of re-executing the background push as
+> >>opposed to restarting the wait sequence (as done previously)? It looks
+> >>like push_now() won't queue the work again due to cil->xc_push_seq, but
+> >>it will flush the queue and I suppose make it more likely the push
+> >>starts. Is that the intent?
+> >
+> >Effectively. But the other thing that it is protecting against is
+> >that foreground push is done without holding the cil->xc_ctx_lock,
+> >and so we can get the situation where we try a foreground push
+> >of the current sequence, see that the CIL is empty and return
+> >without pushing, wait for previous sequences to commit, then find
+> >that the CIL has items on the CIL in the sequence we are supposed to
+> >be committing.
+> >
+> >In this case, we don't know if this occurred because the workqueue
+> >has not started working on our push, or whether we raced on an empty
+> >CIL, and hence we need to make sure that everything in the sequence
+> >we are support to commit is pushed to the log.
+> >
+> >Hence if the current sequence is dirty after we've ensure that all
+> >prior sequences are fully checkpointed, need to go back and
+> >push the CIL again to ensure that when we return to the caller the
+> >CIL is checkpointed up to the point in time of the log force
+> >occurring.
+> 
+> The desired push sequence was taken from an item on the CIL (either
+> when added or from a pinned item). How could the CIL now be empty
+> other than someone else pushed to at least the desire sequence?
 
-diff --git a/io/io.h b/io/io.h
-index 6c3f627..0d2d768 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -35,6 +35,7 @@
- #define IO_TRUNC	(1<<6)
- #define IO_FOREIGN	(1<<7)
- #define IO_NONBLOCK	(1<<8)
-+#define IO_TMPFILE	(1<<9)
- 
- /*
-  * Regular file I/O control
-diff --git a/io/open.c b/io/open.c
-index cc677e6..c97968e 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -22,6 +22,22 @@
- #include "init.h"
- #include "io.h"
- 
-+#ifndef __O_TMPFILE
-+#if defined __alpha__
-+#define __O_TMPFILE	0100000000
-+#elif defined(__hppa__)
-+#define __O_TMPFILE	 040000000
-+#elif defined(__sparc__)
-+#define __O_TMPFILE	 0x2000000
-+#else
-+#define __O_TMPFILE	 020000000
-+#endif
-+#endif /* __O_TMPFILE */
-+
-+#ifndef O_TMPFILE
-+#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
-+#endif
-+
- static cmdinfo_t open_cmd;
- static cmdinfo_t stat_cmd;
- static cmdinfo_t close_cmd;
-@@ -143,10 +159,13 @@ openfile(
- 		oflags |= O_TRUNC;
- 	if (flags & IO_NONBLOCK)
- 		oflags |= O_NONBLOCK;
-+	if (flags & IO_TMPFILE)
-+		oflags |= O_TMPFILE;
- 
- 	fd = open(path, oflags, mode);
- 	if (fd < 0) {
--		if ((errno == EISDIR) && (oflags & O_RDWR)) {
-+		if (errno == EISDIR &&
-+		    ((oflags & (O_RDWR|O_TMPFILE)) == O_RDWR)) {
- 			/* make it as if we asked for O_RDONLY & try again */
- 			oflags &= ~O_RDWR;
- 			oflags |= O_RDONLY;
-@@ -248,6 +267,7 @@ open_help(void)
- " -s -- open with O_SYNC\n"
- " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
- " -R -- mark the file as a realtime XFS file immediately after opening it\n"
-+" -T -- open with O_TMPFILE (create a file not visible in the namespace)\n"
- " Note1: usually read/write direct IO requests must be blocksize aligned;\n"
- "        some kernels, however, allow sectorsize alignment for direct IO.\n"
- " Note2: the bmap for non-regular files can be obtained provided the file\n"
-@@ -272,7 +292,7 @@ open_f(
- 		return 0;
- 	}
- 
--	while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
-+	while ((c = getopt(argc, argv, "FRTacdfm:nrstx")) != EOF) {
- 		switch (c) {
- 		case 'F':
- 			/* Ignored / deprecated now, handled automatically */
-@@ -310,6 +330,9 @@ open_f(
- 		case 'x':	/* backwards compatibility */
- 			flags |= IO_REALTIME;
- 			break;
-+		case 'T':
-+			flags |= IO_TMPFILE;
-+			break;
- 		default:
- 			return command_usage(&open_cmd);
- 		}
-@@ -325,6 +348,11 @@ open_f(
- 	if (!platform_test_xfs_fd(fd))
- 		flags |= IO_FOREIGN;
- 
-+	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
-+		fprintf(stderr, _("-T and -r options are incompatible\n"));
-+		return -1;
-+	}
-+
- 	addfile(argv[optind], fd, &geometry, flags);
- 	return 0;
- }
-@@ -731,7 +759,7 @@ open_init(void)
- 	open_cmd.argmin = 0;
- 	open_cmd.argmax = -1;
- 	open_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
--	open_cmd.args = _("[-acdrstx] [path]");
-+	open_cmd.args = _("[-acdrstxT] [path]");
- 	open_cmd.oneline = _("open the file specified by path");
- 	open_cmd.help = open_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 9543b20..124360d 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -88,7 +88,7 @@ command for more details on any command.
- Display a list of all open files and (optionally) switch to an alternate
- current open file.
- .TP
--.BI "open [[ \-acdfrstR ] " path " ]"
-+.BI "open [[ \-acdfrstRT ] " path " ]"
- Closes the current file, and opens the file specified by
- .I path
- instead. Without any arguments, displays statistics about the current
-@@ -119,6 +119,14 @@ truncates on open (O_TRUNC).
- .B \-n
- opens in non-blocking mode if possible (O_NONBLOCK).
- .TP
-+.B \-T
-+create a temporary file not linked into the filesystem namepspace
-+(O_TMPFILE).  The pathname passed must refer to a directory which
-+is treated as virtual parent for the newly created invisible file.
-+Can not be used together with the
-+.B \-r
-+option.
-+.TP
- .B \-R
- marks the file as a realtime XFS file after
- opening it, if it is not already marked as such.
+The push sequence is only taken from an object on the CIL through
+xfs_log_force_lsn(). For xfs_log_force(), the sequence is taken
+directly from the current CIL context:
+
+static inline void
+xlog_cil_force(struct xlog *log)
+{
+        xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
+}
+
+And that's how you get an empty CIL when entering
+xlog_cil_force_lsn(), and hence how you can get the race condition
+that the code is protecting against.
+
+> A flush_work() should be enough in the case where the ctx of the
+> desire sequence is not on the xc_committing list. The flush_work
+> will wait for the worker to start and place the ctx of the desired
+> sequence into the xc_committing list. This preventing a tight loop
+> waiting for the cil push worker to start.
+
+Yes, that's exactly what the code does.
+
+> Starting the cil push worker for every wakeup of smaller sequence in
+> the list_for_each_entry loop seems wasteful.
+
+As Brian pointed out, it won't restart on every wakeup - the
+cil->xc_push_seq checks prevent that from happening, so a specific
+sequence will only ever be queued for a push once.
+
+> We know the later error paths in xfs_cil_push() will not do a wake,
+> now is a good time to fix that.
+
+I'm not sure what you are talking about here. If there's a problem,
+please send patches.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
