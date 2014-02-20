@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6A25C7F7C
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 03:33:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 530398F807A
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 01:33:39 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B4ABA7F8A
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 03:41:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3ED24AC003
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 01:41:14 -0800 (PST)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 43PrnAbWdaEzqyOx (version=TLSv1
+	cuda.sgi.com with ESMTP id TvhYca4VRF13LU2O (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Feb 2014 01:33:38 -0800 (PST)
-Message-ID: <5305CBE8.7050500@oracle.com>
-Date: Thu, 20 Feb 2014 17:33:28 +0800
+	Thu, 20 Feb 2014 01:41:13 -0800 (PST)
+Message-ID: <5305CDAE.50004@oracle.com>
+Date: Thu, 20 Feb 2014 17:41:02 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH 4/9] xfs: Use defines for CRC offsets in all cases
