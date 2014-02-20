@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 92D707FCD
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:04:31 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 65A0E7FAD
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 12:31:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 82BD7304087
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 08:04:28 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NxufGTtGkPuQBEGC for
-	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 08:04:27 -0800 (PST)
-Message-ID: <53062787.5030507@redhat.com>
-Date: Thu, 20 Feb 2014 11:04:23 -0500
-From: Brian Foster <bfoster@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F32C304053
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:31:31 -0800 (PST)
+Received: from internal-smtp4.wesleyan.edu (internal-smtp4.wesleyan.edu
+	[129.133.6.200]) by cuda.sgi.com with ESMTP id 3RvXpYcdCSqjBLi3
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:31:26 -0800 (PST)
+Received: from localhost (al.wesleyan.edu [129.133.22.76])
+	(authenticated bits=0)
+	by msa.wesleyan.edu (8.14.4/8.14.4) with ESMTP id s1KIVPd9021231
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NOT)
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 13:31:25 -0500
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 04/11] xfs: update inode allocation/free transaction
-	reservations for finobt
-References: <1391536182-9048-1-git-send-email-bfoster@redhat.com>
-	<1391536182-9048-5-git-send-email-bfoster@redhat.com>
-	<20140211064609.GE13647@dastard> <52FA4E61.9040908@redhat.com>
-	<20140220010055.GK4916@dastard>
-In-Reply-To: <20140220010055.GK4916@dastard>
+From: "C. Morgan Hamill" <chamill@wesleyan.edu>
+References: <52E91923.4070706@sandeen.net> <52EB3B96.7000103@hardwarefreak.com>
+	<1391202273-sup-9265@al.wesleyan.edu>
+	<52ED61C9.8060504@hardwarefreak.com>
+	<20140202212152.GP2212@dastard> <1391443675-sup-1730@al.wesleyan.edu>
+	<20140203214128.GR13997@dastard> <52F09E36.8050606@hardwarefreak.com>
+	<1392748390-sup-1943@al.wesleyan.edu>
+	<5303E7AC.50903@hardwarefreak.com>
+In-Reply-To: <5303E7AC.50903@hardwarefreak.com>
+Message-ID: <20140220183125.29149.64880@al.wesleyan.edu>
+Subject: Re: Question regarding XFS on LVM over hardware RAID.
+Date: Thu, 20 Feb 2014 13:31:25 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,177 +39,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 02/19/2014 08:00 PM, Dave Chinner wrote:
-> On Tue, Feb 11, 2014 at 11:22:57AM -0500, Brian Foster wrote:
->> On 02/11/2014 01:46 AM, Dave Chinner wrote:
->>> On Tue, Feb 04, 2014 at 12:49:35PM -0500, Brian Foster wrote:
->>>> Create the xfs_calc_finobt_res() helper to calculate the finobt log
->>>> reservation for inode allocation and free. Update
->>>> XFS_IALLOC_SPACE_RES() to reserve blocks for the additional finobt
->>>> insertion on inode allocation. Create XFS_IFREE_SPACE_RES() to
->>>> reserve blocks for the potential finobt record insertion on inode
->>>> free (i.e., if an inode chunk was previously fully allocated).
-> ....
->>>> + *
->>>> + * the free inode btree: max depth * block size
->>>> + * the free inode btree entry: block size
->>>> + *
->>>> + * TODO: is the modify res really necessary? covered by the merge/split res?
->>>> + * This seems to be the pattern of ifree, but not create_resv_alloc. Why?
->>>
->>> The modify case is for an allocation that only updates an inobt
->>> record (i.e. chunk already allocated, free inodes in it). Because
->>> we can remove a finobt record when "modifying" the last free inode
->>> record in a chunk, "modify" can cause a redcord removal and hence a
->>> tree merge. In which case it's no different of any of the other
->>> finobt reservations....
->>
->> When I made this note, I think I was curious why there was a need to add
->> to the reservation in the modify case. If we always made a reservation
->> for a btree merge, wouldn't that be enough to cover the basic modify
->> case?
-> 
-> The two cases are kept separate because if we ever separate inode
-> chunk allocation from individual inode allocation from an allocated
-> chunk, then we need the different reservations. if you go back to
-> the original RFD series that documented the finobt, it also
-> discusses this separation and the optimisations in inode management
-> that such a separation brings.
-> 
-> Hence we should not assume that an inode chunk allocation
-> reservation covers the reservation of an inode allocation from an
-> allocated chunk.
-> 
+Quoting Stan Hoeppner (2014-02-18 18:07:24)
+> Create each LV starting on a stripe boundary.  There will be some
+> unallocated space between LVs.  Use the mkfs.xfs -d size= option to
+> create your filesystems inside of each LV such that the filesystem total
+> size is evenly divisible by the stripe width.  This results in an
+> additional small amount of unallocated space within, and at the end of,
+> each LV.
 
-Ok.
+Of course, this occurred to me just after sending the message... ;)
 
->> In the code, it looks like we either delete the record or modify
->> it. Is there something in the delete case that I'm missing, or are we
->> just being conservative here? Nonetheless, I modelled this after the
->> ifree requirements, assuming the reservation there was correct.
+> It's nice if you can line everything up, but when using RAID6 and one or
+> two bays for hot spares, one rarely ends up with 8 or 16 data spindles.
 > 
-> But  the ifree requirement changed, didn't they? i.e. Because the
-> first inode freed in a chunk can now trigger allocation.
+> > If not, I'll tweak things to ensure my stripe width is a power of 2.
 > 
-> Basically, we have these cases:
-> 
-> Allocation:
-> 
-> 	- allocate chunk, insert inobt rec, insert finobt rec
-> 	- allocate inode, modify inobt rec, modify finobt rec
-> 	- allocate inode, modify inobt rec, remove finobt rec
-> 
-> The first case is obvious in that it needs to allocate blocks
-> for the inode chunk, but also possibly the inbot and finobt need
-> allocations too (split).
-> 
-> The second case obvious doesn't allocate any blocks at all,
-> and tha tis the existing "modify reservation"
-> 
-> The third case is the new "modify reservation" case, where the
-> removal of a finobt record can cause a merge and hence freeing of a
-> block. That's the case we need to make sure we have the corerct
-> reservation for.
-> 
-> In the case of ifree, it is similar:
-> 
-> 	- free inode, modify inobt rec, insert finobt rec
-> 	- free inode, modify inobt rec, modify finobt rec
-> 	- free chunk, remove inobt rec, remove finobt rec
-> 
-> And so it is clear that the same new case occurs here. however, the
-> ifree transaction reservation is not split up like the create
-> transaction, so it already takes into account allocation/freeing of
-> blocks and hence didn't need updating.
-> 
+> That's not possible with 12 data spindles per RAID, not possible with 42
+> drives in 3 chassis.  Not without a bunch of idle drives.
 
-Ok, I think I see what you're saying here based on this and our previous
-irc conversation. I previously looked at the allocation btrees portion
-of the icreate and ifree reservations as being associated with the
-allocation and free of the inode chunk. Not associated in any way with
-the inobt, because of the reasoning that would have to account for the
-allocation btrees _again_.
+The closest I can come is with 4 RAID 6 arrays of 10 disks each, then
+striped over:
 
-Per our irc conversation, it is not technically required to account for
-the allocation btrees multiple times in the situations where we do
-multiple allocations, i.e.: allocate inode chunks (one alloc. btree
-modification) and then allocate again if we need blocks for the inobt to
-insert the record (a second alloc. btree modification).
+8 * 128k = 1024k
+1024k * 4 = 4096k
 
-Conversely, it is a requirement to account for the allocation btrees at
-least once in any situation where we insert or remove a record from the
-inobt/finobt. The icreate_resv_alloc() calculation already covers any
-subsequent allocation btree modifications on behalf of the finobt by
-virtue of the explicit allocation of the inode chunk. The
-icreate_resv_modify() calculation does not cover allocation btree
-modifications on behalf of the finobt because it made no explicit
-allocations in the first place. It only modified the inobt record, which
-will not allocate/free on behalf of the inobt.
+Which leaves me with 5 disks unused.  I might be able to live with that
+if it makes things work better.  Sounds like I won't have to.
 
->>>> @@ -267,6 +298,7 @@ xfs_calc_remove_reservation(
->>>>   *    the superblock for the nlink flag: sector size
->>>>   *    the directory btree: (max depth + v2) * dir block size
->>>>   *    the directory inode's bmap btree: (max depth + v2) * block size
->>>> + *    the finobt
->>>>   */
->>>>  STATIC uint
->>>>  xfs_calc_create_resv_modify(
->>>> @@ -275,7 +307,8 @@ xfs_calc_create_resv_modify(
->>>>  	return xfs_calc_inode_res(mp, 2) +
->>>>  		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
->>>>  		(uint)XFS_FSB_TO_B(mp, 1) +
->>>> -		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
->>>> +		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1)) +
->>>> +		xfs_calc_finobt_res(mp, 1);
->>>>  }
->>>
->>> And this is where is starts to get complex. The modify operation can
->>> now cause a finobt merge, when means blocks will be allocated/freed.
->>> That means we now need to take into account:
->>>
->>>  *    the allocation btrees: 2 trees * (max depth - 1) * block size
->>>
->>> and anything else freeing an extent requires.
->>>
->>
->> So is the "allocation btrees: 2 trees ..." portion of
->> xfs_calc_create_resv_alloc() associated with the allocation of the
->> actual inode blocks or potential allocations due to inode btree
->> management? I had thought the former, thus didn't include reservations
->> for this in the finobt calculation.
+
+> I still don't understand why you believe you need LVM in the mix, and
+> more than one filesystem.
+
+> Backup software is unaware of mount points.  It uses paths just like
+> every other program.  The number of XFS filesystems is irrelevant to
+> "minimizing the effects of the archive maintenance jobs".  You cannot
+> bog down XFS.  You will bog down the drives no matter how many
+> filesystems when using RAID60.
+
+A limitation of the software in question is that placing multiple
+archive paths onto a single filesystem is a bit ugly: the software does
+not let you specifiy a maximum size for the archive paths, and so will
+think all of them are the size of the filesystem.  This isn't an issue
+in isolation, but we need to make use of a data-balancing feature the
+software has, which will not work if we place multiple archive paths on
+a single filesystem.  It's a stupid issue to have, but it is what it is.
+
+> Here is what you should do:
 > 
-> This is the log space reservation - so it's a reservation for the
-> number of blocks in the btree that can be *modified* by the
-> transaction. So if we have to allocate a block, we can potentially
-> modify leaf-to-root in both free space trees if they both split or
-> merge during the allocation. Hence any transaction that can allocate
-> or free a block needs to reservae this space in the log for the
-> freespace tree modifications.
-> 
-> We have a separate space reservation - as defined in
-> xfs_trans_space.h - which is used to define the worst case metadata
-> block allocation in a given transaction. It is assumed that the log
-> space reservation covers all those blocks being modified, too.
-> 
+> Format the RAID60 directly with XFS.  Create 3 or 4 directories for
+> CrashPlan to use as its "store points".  If you need to expand in the
+> future, as I said previously, simply add another 14 drive RAID6 chassis,
+> format it directly with XFS, mount it at an appropriate place in the
+> directory tree and give that path to CrashPlan.  Does it have a limit on
+> the number of "store points"?
 
-Right, I get that part with regard to the reservation of blocks vs.
-reservation of log space. My question was what we discussed over irc.
-Specifically, the semantics of what the allocation btrees portion of the
-res. calc covers - potentially multiple freespace tree modifications vs.
-one instance per freespace tree modification. Thanks for the
-explanation. I understand now why we need to include the allocation
-btrees due to the finobt under the create_resv_modify() scenario and not
-the others. ;)
+Yes, this is what I *want* to do.  There's a limit to the number of
+store points, but it's large, so this would work fine if not for the
+multiple-stores-on-one-filesystem issue.  Which is frustrating.
 
-Brian
+The *only* reason for LVM in the middle is to allow some flexibility of
+sizing without dealing with the annoyances of the partition table.
+I want to intentionally under-provision to start with because we are
+using a small corner of this storage for a separate purpose but do not
+know precisely how much yet.  LVM lets me leave, say, 10TB empty, until
+I know exactly how big things are going to be.
 
-> Cheers,
-> 
-> Dave.
-> 
+It's a pile of little annoyances, but so it goes with these kinds of things.
+
+It sounds like the little empty spots method will be fine though.
+
+Thanks, yet again, for all your help.
+--
+Morgan Hamill
 
 _______________________________________________
 xfs mailing list
