@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1DCBD7F76
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 09:38:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D6408F8037
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 07:38:29 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id mhZhCYmPFXgQoBZ2 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Feb 2014 07:38:28 -0800 (PST)
-Date: Thu, 20 Feb 2014 07:38:28 -0800
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4E20C7F76
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 09:38:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2017130408E
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 07:38:49 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id ukeGkcVJapMBkVv2 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Feb 2014 07:38:47 -0800 (PST)
+Date: Thu, 20 Feb 2014 07:38:47 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] libxfs: contiguous buffers are not discontigous
-Message-ID: <20140220153828.GA26146@infradead.org>
+Subject: Re: [PATCH 2/2] libxfs: clear stale buffer errors on write
+Message-ID: <20140220153847.GB26146@infradead.org>
 References: <1392875722-4390-1-git-send-email-david@fromorbit.com>
-	<1392875722-4390-2-git-send-email-david@fromorbit.com>
+	<1392875722-4390-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1392875722-4390-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1392875722-4390-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
