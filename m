@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BBF4E800C
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 19:01:01 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2D8E47F58
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 20:01:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 532F9AC003
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 17:01:01 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ED7ED30408C
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:01:07 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9M7wWXKb4nvFtEDM for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 17:00:58 -0800 (PST)
-Date: Thu, 20 Feb 2014 12:00:55 +1100
+	OXfhVNnsjYbliQ0I for <xfs@oss.sgi.com>;
+	Wed, 19 Feb 2014 18:01:05 -0800 (PST)
+Date: Thu, 20 Feb 2014 13:01:01 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH v3 04/11] xfs: update inode allocation/free transaction
 	reservations for finobt
-Message-ID: <20140220010055.GK4916@dastard>
+Message-ID: <20140220020101.GL4916@dastard>
 References: <1391536182-9048-1-git-send-email-bfoster@redhat.com>
 	<1391536182-9048-5-git-send-email-bfoster@redhat.com>
-	<20140211064609.GE13647@dastard> <52FA4E61.9040908@redhat.com>
+	<20140211064609.GE13647@dastard> <530393F8.4070106@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52FA4E61.9040908@redhat.com>
+In-Reply-To: <530393F8.4070106@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,7 +35,9 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Feb 11, 2014 at 11:22:57AM -0500, Brian Foster wrote:
+[patched in the extra case from your subsequent reply]
+
+On Tue, Feb 18, 2014 at 12:10:16PM -0500, Brian Foster wrote:
 > On 02/11/2014 01:46 AM, Dave Chinner wrote:
 > > On Tue, Feb 04, 2014 at 12:49:35PM -0500, Brian Foster wrote:
 > >> Create the xfs_calc_finobt_res() helper to calculate the finobt log
@@ -44,120 +46,156 @@ On Tue, Feb 11, 2014 at 11:22:57AM -0500, Brian Foster wrote:
 > >> insertion on inode allocation. Create XFS_IFREE_SPACE_RES() to
 > >> reserve blocks for the potential finobt record insertion on inode
 > >> free (i.e., if an inode chunk was previously fully allocated).
-....
-> >> + *
-> >> + * the free inode btree: max depth * block size
-> >> + * the free inode btree entry: block size
-> >> + *
-> >> + * TODO: is the modify res really necessary? covered by the merge/split res?
-> >> + * This seems to be the pattern of ifree, but not create_resv_alloc. Why?
+> >>
+> >> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> >> ---
+> >>  fs/xfs/xfs_inode.c       |  4 +++-
+> >>  fs/xfs/xfs_trans_resv.c  | 47 +++++++++++++++++++++++++++++++++++++++++++----
+> >>  fs/xfs/xfs_trans_space.h |  7 ++++++-
+> >>  3 files changed, 52 insertions(+), 6 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> >> index 001aa89..57c77ed 100644
+> >> --- a/fs/xfs/xfs_inode.c
+> >> +++ b/fs/xfs/xfs_inode.c
+> >> @@ -1730,7 +1730,9 @@ xfs_inactive_ifree(
+> >>  	int			error;
+> >>  
+> >>  	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+> >> -	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
+> >> +	tp->t_flags |= XFS_TRANS_RESERVE;
+> >> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree,
+> >> +				  XFS_IFREE_SPACE_RES(mp), 0);
 > > 
-> > The modify case is for an allocation that only updates an inobt
-> > record (i.e. chunk already allocated, free inodes in it). Because
-> > we can remove a finobt record when "modifying" the last free inode
-> > record in a chunk, "modify" can cause a redcord removal and hence a
-> > tree merge. In which case it's no different of any of the other
-> > finobt reservations....
-> 
-> When I made this note, I think I was curious why there was a need to add
-> to the reservation in the modify case. If we always made a reservation
-> for a btree merge, wouldn't that be enough to cover the basic modify
-> case?
-
-The two cases are kept separate because if we ever separate inode
-chunk allocation from individual inode allocation from an allocated
-chunk, then we need the different reservations. if you go back to
-the original RFD series that documented the finobt, it also
-discusses this separation and the optimisations in inode management
-that such a separation brings.
-
-Hence we should not assume that an inode chunk allocation
-reservation covers the reservation of an inode allocation from an
-allocated chunk.
-
-> In the code, it looks like we either delete the record or modify
-> it. Is there something in the delete case that I'm missing, or are we
-> just being conservative here? Nonetheless, I modelled this after the
-> ifree requirements, assuming the reservation there was correct.
-
-But  the ifree requirement changed, didn't they? i.e. Because the
-first inode freed in a chunk can now trigger allocation.
-
-Basically, we have these cases:
-
-Allocation:
-
-	- allocate chunk, insert inobt rec, insert finobt rec
-	- allocate inode, modify inobt rec, modify finobt rec
-	- allocate inode, modify inobt rec, remove finobt rec
-
-The first case is obvious in that it needs to allocate blocks
-for the inode chunk, but also possibly the inbot and finobt need
-allocations too (split).
-
-The second case obvious doesn't allocate any blocks at all,
-and tha tis the existing "modify reservation"
-
-The third case is the new "modify reservation" case, where the
-removal of a finobt record can cause a merge and hence freeing of a
-block. That's the case we need to make sure we have the corerct
-reservation for.
-
-In the case of ifree, it is similar:
-
-	- free inode, modify inobt rec, insert finobt rec
-	- free inode, modify inobt rec, modify finobt rec
-	- free chunk, remove inobt rec, remove finobt rec
-
-And so it is clear that the same new case occurs here. however, the
-ifree transaction reservation is not split up like the create
-transaction, so it already takes into account allocation/freeing of
-blocks and hence didn't need updating.
-
-> >> @@ -267,6 +298,7 @@ xfs_calc_remove_reservation(
-> >>   *    the superblock for the nlink flag: sector size
-> >>   *    the directory btree: (max depth + v2) * dir block size
-> >>   *    the directory inode's bmap btree: (max depth + v2) * block size
-> >> + *    the finobt
-> >>   */
-> >>  STATIC uint
-> >>  xfs_calc_create_resv_modify(
-> >> @@ -275,7 +307,8 @@ xfs_calc_create_resv_modify(
-> >>  	return xfs_calc_inode_res(mp, 2) +
-> >>  		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-> >>  		(uint)XFS_FSB_TO_B(mp, 1) +
-> >> -		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
-> >> +		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1)) +
-> >> +		xfs_calc_finobt_res(mp, 1);
-> >>  }
-> > 
-> > And this is where is starts to get complex. The modify operation can
-> > now cause a finobt merge, when means blocks will be allocated/freed.
-> > That means we now need to take into account:
-> > 
-> >  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-> > 
-> > and anything else freeing an extent requires.
+> > Can you add a comment explaining why the XFS_TRANS_RESERVE flag is
+> > used here, and why it's use won't lead to accelerated reserve pool
+> > depletion?
 > > 
 > 
-> So is the "allocation btrees: 2 trees ..." portion of
-> xfs_calc_create_resv_alloc() associated with the allocation of the
-> actual inode blocks or potential allocations due to inode btree
-> management? I had thought the former, thus didn't include reservations
-> for this in the finobt calculation.
+> So this aspect of things appears to be a bit more interesting than I
+> originally anticipated. I "reserve enabled" this transaction to
+> facilitate the ability to free up inodes under ENOSPC conditions.
+> Without this, the problem of failing out of xfs_inactive_ifree() (and
+> leaving an inode chained on the unlinked list) is easily reproducible
+> with generic/083.
 
-This is the log space reservation - so it's a reservation for the
-number of blocks in the btree that can be *modified* by the
-transaction. So if we have to allocate a block, we can potentially
-modify leaf-to-root in both free space trees if they both split or
-merge during the allocation. Hence any transaction that can allocate
-or free a block needs to reservae this space in the log for the
-freespace tree modifications.
+*nod*
 
-We have a separate space reservation - as defined in
-xfs_trans_space.h - which is used to define the worst case metadata
-block allocation in a given transaction. It is assumed that the log
-space reservation covers all those blocks being modified, too.
+> The basic argument for why this is reasonable is that releasing an inode
+> releases used space (i.e., file blocks and potentially directory blocks
+> and inode chunks over time). That said, I can manufacture situations
+> where this is not the case. E.g., allocate a bunch of 0-sized files,
+> consume remaining free space in some separate file, start removing
+> inodes in a manner that removes a single inode per chunk or so. This
+> creates a scenario where the inobt can be very large and the finobt very
+> small (likely a single record). Removing the inodes in this manner
+> reduces the likelihood of freeing up any space and thus rapidly grows
+> the finobt towards the size of the inobt without any free space
+> available. This might or might not qualify as sane use of the fs, but I
+> don't think the failure scenario is acceptable as things currently stand.
+
+Right, that can happen. But my question is this: how realistic is it
+that we have someone who has ENOSPC because of enough zero length
+files to trigger this? I've never seen an application or user try to
+store any significant number of zero length files, so I suspect this
+is a theoretical problem, not a practical one.
+
+Indeed, the finobt only needs to grow a block for every 250-odd
+records for a 4k block size filesystem. Hence, IMO, the default
+reserve pool size of 8192 filesystem blocks is going be sufficient
+for most users. i.e. the case you are talking about requires
+(ignoring node block usage for simplicity) 250 * 8192 * 64 = 131
+million zero length inodes to be present in the filesystem to have
+this "1 inode per chunk" freeing pattern exhaust the default reserve
+pool with finobt tree allocations....
+
+> I think there are several ways this can go from here. A couple ideas
+> that have crossed my mind:
+> 
+> - Find a way to variably reserve the number of blocks that would be
+> required to grow the finobt to the finobt, based on current state. This
+
+Not sure what "grow the finobt to the finobt" means. There's a typo
+or a key word missing there ;)
+
+> would require the total number of blocks (not just enough for a split),
+> so this could get complex and somewhat overbearing (i.e., a lot of space
+> could be quietly reserved, current tracking might not be sufficient and
+> the allocation paths could get hairy).
+
+Doesn't seem worth the complexity to me.
+
+> - Work to push the ifree transaction allocation and reservation to the
+> unlink codepath rather than the eviction codepath. Under normal
+> circumstances, chain the tp to the xfs_inode such that the eviction code
+> path can grab it and run. This prevents us going into the state where an
+> inode is unlinked without having enough space to free up. On the flip
+> side, ENOSPC on unlink isn't very forgiving behavior to the user.
+
+That's the long term plan anyway - to move to background freeing of
+the inodes once they are on the unlinked list and unreferenced by
+the VFS. But, really, once the inode is on the unlinked list we can
+probably ignore the ENOSPC problem because we know that it is
+unlinked.
+
+Indeed, the long term plan (along with background freeing) is to
+allow inode allocation direct from the unlinked lists, and that
+means we could leave the inodes on the unlinked lists and not
+care about the ENOSPC problem at all ;)
+
+> - Add some state or flags bits to the finobt and the associated
+>   ability to kill/invalidate it at runtime. Print a warning with
+>   regard to the situation that indicates performance might be
+>   affected and a repair is required to re-enable.
+
+We've already got that state through the unlinked lists. Again,
+go back to the RFD series and look through the followup work....
+
+> 
+> I think the former approach is probably overkill for something that
+> might be a pathological situation. The latter approach is more simple,
+> but it feels like a bit of a hack. I've experimented with it a bit, but
+> I'm not quite sure yet if it introduces any transaction issues by
+> allocating the unlink and ifree transactions at the same time.
+> 
+> Perhaps another argument could be made that it's rather unlikely we run
+> into an fs with as many 0-sized (or sub-inode chunk sized) files as
+> required to deplete the reserve pool without freeing any space, and we
+> should just touch up the failure handling. E.g.,
+> 
+> 1.) Continue to reserve enable the ifree transaction. Consider expanding
+> the reserve pool on finobt-enabled fs' if appropriate. Note that this is
+> not guaranteed to provide enough resources to populate the finobt to the
+> level of the inobt without freeing up more space.
+> 2.) Attempt a !XFS_TRANS_RESERVE tp reservation in xfs_inactive_ifree().
+> If fails, xfs_warn()/notice() and enable XFS_TRANS_RESERVE.
+> 3.) Attempt XFS_TRANS_RESERVE reservation. If fails, xfs_notice() and
+> shutdown.
+
+I don't think we ned to shut down. Indeed, there's no point in doing
+an !XFS_TRANS_RESERVE in the first place because a warning will just
+generate unnecessary noise in the logs.
+
+Realistically, we can leave inodes on the unlinked list
+indefinitely without causing any significant problems except for
+there being used space that users can't account for from the
+namespace. Log recovery cleans them up when it runs, or blows away
+the unlinked list when it fails, and that results in leaked inodes.
+If we get to that point, xfs-repair will clean it up just fine
+unless there's still not enough space. At that point, it's not a
+problem we can solve with tools - the user has to free up some space
+in the filesystem....
+
+> And this could probably be made more intelligent to bail out sooner if
+> we repeat XFS_TRANS_RESERVE reservations without freeing up any space,
+> etc. Before going too far in one direction... thoughts?
+
+Right now, I just don't think it is a case we need to be
+pariticularly concerned with. There are plenty of theoretical issues
+that can occur (including data loss) when the reserve pool is
+depleted because of prolonged ENOSPC issues, but the reality is
+that the only place we see this code being exercised is by the tests
+in xfstests that intentionally trigger reserve pool depletion....
 
 Cheers,
 
