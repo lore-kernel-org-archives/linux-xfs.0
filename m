@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D70E57FDB
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:27:18 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 467F98005
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:39:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BC673304081
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 16:27:18 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2C3C430406A
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 16:39:27 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	EwVQL7ZHpyjEah8V for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 16:27:16 -0800 (PST)
-Date: Thu, 20 Feb 2014 11:27:13 +1100
+	A9Dk21C8rjiLNP7L for <xfs@oss.sgi.com>;
+	Wed, 19 Feb 2014 16:39:25 -0800 (PST)
+Date: Thu, 20 Feb 2014 11:38:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/9] xfs: Use defines for CRC offsets in all cases
-Message-ID: <20140220002713.GI4916@dastard>
-References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
-	<1392767549-25574-5-git-send-email-sandeen@redhat.com>
-	<530463C6.6050509@oracle.com>
+Subject: Re: [PATCH v3 06/11] xfs: use and update the finobt on inode
+	allocation
+Message-ID: <20140220003850.GJ4916@dastard>
+References: <1391536182-9048-1-git-send-email-bfoster@redhat.com>
+	<1391536182-9048-7-git-send-email-bfoster@redhat.com>
+	<20140211071703.GG13647@dastard> <52FE7629.9090208@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <530463C6.6050509@oracle.com>
+In-Reply-To: <52FE7629.9090208@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +32,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Feb 19, 2014 at 03:56:54PM +0800, Jeff Liu wrote:
-> Hi Eric,
+On Fri, Feb 14, 2014 at 03:01:45PM -0500, Brian Foster wrote:
+> On 02/11/2014 02:17 AM, Dave Chinner wrote:
+> > On Tue, Feb 04, 2014 at 12:49:37PM -0500, Brian Foster wrote:
+> ...
+> >> +	/*
+> >> +	 * Lookup and modify the equivalent record in the inobt.
+> >> +	 */
+> >> +	tcur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+> > 
+> > In case ou hadn't guessed, I don't like the "tcur/trec" variables
+> > because they make me thing "temporary" which they aren't. In this
+> > case it is the inobt cursor and record....
+> > 
+> > In fact, this whole segment could be factored into a function like
+> > xfs_dialloc_ag_inobt_update(), hence removing the second cursor from
+> > xfs_dialloc_ag() function altogether and that would clean a lot of
+> > the logic up....
+> > 
+> ...
+> >> +	/*
+> >> +	 * Update the perag and superblock.
+> >> +	 */
+> >> +	be32_add_cpu(&agi->agi_freecount, -1);
+> >> +	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
+> >> +	pag->pagi_freecount--;
+> >> +
+> >> +	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
+> > 
+> > This will need to be done before you update the inobt, though, so
+> > you can run the xfs_check_agi_freecount() count in it and it will
+> > come out correct....
+> > 
 > 
-> I read the previous comments from Dave about using defines for CRC offsets,
-> and with a grep search after applying this patch, looks there have another
-> two places maybe we should switch them to the macros as well:
-> 
-> fs/xfs/xfs_log.c:
-> Do we need a log record crc offset macros for offsetof(struct xlog_rec_header, h_crc))?
-> 
-> xfs_dinode.h:
-> we added the XFS_DINODE_CRC_OFF, just use it at below routine?
-> 
-> static inline uint xfs_dinode_size(int version)
-> {
->         if (version == 3)
->                 return sizeof(struct xfs_dinode);
->         return offsetof(struct xfs_dinode, di_crc);
-> }
+> After cleaning up some of this code and taking a closer look, I end up
+> with something just short of complete removal of the inobt cursor in
+> this function. Reason being... the point above with regard to checking
+> the btrees against the agi freecount pre and post modification.
 
-No, that's a different case - it's not being used for determining
-the offset of a CRC varaible - it's being used to calculate the size
-of the version 2 inode core. Hence it should remain open coded like
-because it has a different purpose in life....
+I can't really comment all that well without having seen the
+factored code you've written....
 
 Cheers,
 
