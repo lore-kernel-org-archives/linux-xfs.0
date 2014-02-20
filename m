@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B9C747FB5
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:14:00 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F31F77FDB
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:24:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9755930407F
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 16:13:57 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D57EAC003
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 16:24:26 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	UBwtz3AnwdgFYAJ0 for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 16:13:55 -0800 (PST)
-Date: Thu, 20 Feb 2014 11:13:29 +1100
+	S2q2nBOZE1NQGijp for <xfs@oss.sgi.com>;
+	Wed, 19 Feb 2014 16:24:23 -0800 (PST)
+Date: Thu, 20 Feb 2014 11:23:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: mmap_sem -> isec->lock lockdep issues with shmem (was Re: [PATCH
-	2/3] xfs: fix directory inode iolock lockdep false positive)
-Message-ID: <20140220001329.GG4916@dastard>
+Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
+Message-ID: <20140220002358.GH4916@dastard>
 References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
-	<1392783402-4726-3-git-send-email-david@fromorbit.com>
-	<5304F70C.8070601@redhat.com>
+	<1392783402-4726-2-git-send-email-david@fromorbit.com>
+	<5304F6F6.3070007@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5304F70C.8070601@redhat.com>
+In-Reply-To: <5304F6F6.3070007@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,140 +32,176 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-mm@kvack.org, linux-security-module@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-[cc linux-mm because it shmem craziness that is causing the problem]
-[cc linux-security-module because it is security contexts that need
- lockdep annotations.]
-
-On Wed, Feb 19, 2014 at 01:25:16PM -0500, Brian Foster wrote:
+On Wed, Feb 19, 2014 at 01:24:54PM -0500, Brian Foster wrote:
 > On 02/18/2014 11:16 PM, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > The change to add the IO lock to protect the directory extent map
-> > during readdir operations has cause lockdep to have a heart attack
-> > as it now sees a different locking order on inodes w.r.t. the
-> > mmap_sem because readdir has a different ordering to write().
+> > Log forces can occur deep in the call chain when we have relatively
+> > little stack free. Log forces can also happen at close to the call
+> > chain leaves (e.g. xfs_buf_lock()) and hence we can trigger IO from
+> > places where we really don't want to add more stack overhead.
 > > 
-> > Add a new lockdep class for directory inodes to avoid this false
-> > positive.
+> > This stack overhead occurs because log forces do foreground CIL
+> > pushes (xlog_cil_push_foreground()) rather than waking the
+> > background push wq and waiting for the for the push to complete.
+> > This foreground push was done to avoid confusing the CFQ Io
+> > scheduler when fsync()s were issued, as it has trouble dealing with
+> > dependent IOs being issued from different process contexts.
+> > 
+> > Avoiding blowing the stack is much more critical than performance
+> > optimisations for CFQ, especially as we've been recommending against
+> > the use of CFQ for XFS since 3.2 kernels were release because of
+> > it's problems with multi-threaded IO workloads.
+> > 
+> > Hence convert xlog_cil_push_foreground() to move the push work
+> > to the CIL workqueue. We already do the waiting for the push to
+> > complete in xlog_cil_force_lsn(), so there's nothing else we need to
+> > modify to make this work.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
+> >  fs/xfs/xfs_log_cil.c | 52 +++++++++++++++++++++++++++++++++++++++-------------
+> >  1 file changed, 39 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index b57a8e0..7e54553 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -499,13 +499,6 @@ xlog_cil_push(
+> >  	cil->xc_ctx = new_ctx;
+> >  
+> >  	/*
+> > -	 * mirror the new sequence into the cil structure so that we can do
+> > -	 * unlocked checks against the current sequence in log forces without
+> > -	 * risking deferencing a freed context pointer.
+> > -	 */
+> > -	cil->xc_current_sequence = new_ctx->sequence;
+> > -
+> > -	/*
+> >  	 * The switch is now done, so we can drop the context lock and move out
+> >  	 * of a shared context. We can't just go straight to the commit record,
+> >  	 * though - we need to synchronise with previous and future commits so
+> > @@ -523,8 +516,15 @@ xlog_cil_push(
+> >  	 * Hence we need to add this context to the committing context list so
+> >  	 * that higher sequences will wait for us to write out a commit record
+> >  	 * before they do.
+> > +	 *
+> > +	 * xfs_log_force_lsn requires us to mirror the new sequence into the cil
+> > +	 * structure atomically with the addition of this sequence to the
+> > +	 * committing list. This also ensures that we can do unlocked checks
+> > +	 * against the current sequence in log forces without risking
+> > +	 * deferencing a freed context pointer.
+> >  	 */
+> >  	spin_lock(&cil->xc_push_lock);
+> > +	cil->xc_current_sequence = new_ctx->sequence;
+> >  	list_add(&ctx->committing, &cil->xc_committing);
+> >  	spin_unlock(&cil->xc_push_lock);
+> >  	up_write(&cil->xc_ctx_lock);
+> > @@ -662,8 +662,14 @@ xlog_cil_push_background(
+> >  
+> >  }
+> >  
+> > +/*
+> > + * xlog_cil_push_now() is used to trigger an immediate CIL push to the sequence
+> > + * number that is passed. When it returns, the work will be queued for
+> > + * @push_seq, but it won't be completed. The caller is expected to do any
+> > + * waiting for push_seq to complete if it is required.
+> > + */
+> >  static void
+> > -xlog_cil_push_foreground(
+> > +xlog_cil_push_now(
+> >  	struct xlog	*log,
+> >  	xfs_lsn_t	push_seq)
+> >  {
+> > @@ -688,10 +694,8 @@ xlog_cil_push_foreground(
+> >  	}
+> >  
+> >  	cil->xc_push_seq = push_seq;
+> > +	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+> >  	spin_unlock(&cil->xc_push_lock);
+> > -
+> > -	/* do the push now */
+> > -	xlog_cil_push(log);
+> >  }
+> >  
+> >  bool
+> > @@ -795,7 +799,8 @@ xlog_cil_force_lsn(
+> >  	 * xlog_cil_push() handles racing pushes for the same sequence,
+> >  	 * so no need to deal with it here.
+> >  	 */
+> > -	xlog_cil_push_foreground(log, sequence);
+> > +restart:
+> > +	xlog_cil_push_now(log, sequence);
+> >  
+> >  	/*
+> >  	 * See if we can find a previous sequence still committing.
+> > @@ -803,7 +808,6 @@ xlog_cil_force_lsn(
+> >  	 * before allowing the force of push_seq to go ahead. Hence block
+> >  	 * on commits for those as well.
+> >  	 */
+> > -restart:
+> >  	spin_lock(&cil->xc_push_lock);
+> >  	list_for_each_entry(ctx, &cil->xc_committing, committing) {
+> >  		if (ctx->sequence > sequence)
+> > @@ -821,6 +825,28 @@ restart:
+> >  		/* found it! */
+> >  		commit_lsn = ctx->commit_lsn;
+> >  	}
+> > +
+> > +	/*
+> > +	 * The call to xlog_cil_push_now() executes the push in the background.
+> > +	 * Hence by the time we have got here it our sequence may not have been
+> > +	 * pushed yet. This is true if the current sequence still matches the
+> > +	 * push sequence after the above wait loop and the CIL still contains
+> > +	 * dirty objects.
+> > +	 *
+> > +	 * When the push occurs, it will empty the CIL and
+> > +	 * atomically increment the currect sequence past the push sequence and
+> > +	 * move it into the committing list. Of course, if the CIL is clean at
+> > +	 * the time of the push, it won't have pushed the CIL at all, so in that
+> > +	 * case we should try the push for this sequence again from the start
+> > +	 * just in case.
+> > +	 */
+> > +
+> > +	if (sequence == cil->xc_current_sequence &&
+> > +	    !list_empty(&cil->xc_cil)) {
+> > +		spin_unlock(&cil->xc_push_lock);
+> > +		goto restart;
+> > +	}
+> > +
 > 
-> Hey Dave,
-> 
-> I'm not terribly familiar with lockdep, but I hit the attached "possible
-> circular locking dependency detected" warning when running with this patch.
-> 
-> (Reproduces by running generic/001 after a reboot).
+> IIUC, the objective here is to make sure we don't leave this code path
+> before the push even starts and the ctx makes it onto the committing
+> list, due to xlog_cil_push_now() moving things to a workqueue.
 
-Ok, you're testing on an selinux enabled system, I didn't.
+Right.
 
-> Feb 19 12:22:03 localhost kernel: [  101.487018] 
-> Feb 19 12:22:03 localhost kernel: [  101.487018] -> #2 (&xfs_dir_ilock_class){++++..}:
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff810f3ec2>] lock_acquire+0xa2/0x1d0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff810ed147>] down_read_nested+0x57/0xa0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa05a0022>] xfs_ilock+0x122/0x250 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa05a01af>] xfs_ilock_attr_map_shared+0x1f/0x50 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa0565d50>] xfs_attr_get+0x90/0xe0 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa055b9d7>] xfs_xattr_get+0x37/0x50 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff812483ef>] generic_getxattr+0x4f/0x70
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8133fd5e>] inode_doinit_with_dentry+0x1ae/0x650
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff813402d8>] sb_finish_set_opts+0xd8/0x270
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81340702>] selinux_set_mnt_opts+0x292/0x5f0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81340ac8>] superblock_doinit+0x68/0xd0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81340b8d>] selinux_sb_kern_mount+0x3d/0xa0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81335536>] security_sb_kern_mount+0x16/0x20
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8122333a>] mount_fs+0x8a/0x1b0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8124285b>] vfs_kern_mount+0x6b/0x150
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8124561e>] do_mount+0x23e/0xb90
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff812462a3>] SyS_mount+0x83/0xc0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8178ed69>] system_call_fastpath+0x16/0x1b
+> Given that, what's the purpose of re-executing the background push as
+> opposed to restarting the wait sequence (as done previously)? It looks
+> like push_now() won't queue the work again due to cil->xc_push_seq, but
+> it will flush the queue and I suppose make it more likely the push
+> starts. Is that the intent?
 
-So, we take the ilock on the directory xattr read path during
-security attribute initialisation so we have a inode->i_isec->lock -> ilock
-path, which is normal.
+Effectively. But the other thing that it is protecting against is
+that foreground push is done without holding the cil->xc_ctx_lock,
+and so we can get the situation where we try a foreground push
+of the current sequence, see that the CIL is empty and return
+without pushing, wait for previous sequences to commit, then find
+that the CIL has items on the CIL in the sequence we are supposed to
+be committing.
 
-> Feb 19 12:22:03 localhost kernel: [  101.487018] -> #1 (&isec->lock){+.+.+.}:
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff810f3ec2>] lock_acquire+0xa2/0x1d0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81780d77>] mutex_lock_nested+0x77/0x3f0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8133fc42>] inode_doinit_with_dentry+0x92/0x650
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81340dcc>] selinux_d_instantiate+0x1c/0x20
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8133517b>] security_d_instantiate+0x1b/0x30
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81237d70>] d_instantiate+0x50/0x70
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811bcb70>] __shmem_file_setup+0xe0/0x1d0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811bf988>] shmem_zero_setup+0x28/0x70
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811d8653>] mmap_region+0x543/0x5a0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811d89b1>] do_mmap_pgoff+0x301/0x3c0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811c18f0>] vm_mmap_pgoff+0x90/0xc0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811d6f26>] SyS_mmap_pgoff+0x116/0x270
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8101f9b2>] SyS_mmap+0x22/0x30
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8178ed69>] system_call_fastpath+0x16/0x1b
+In this case, we don't know if this occurred because the workqueue
+has not started working on our push, or whether we raced on an empty
+CIL, and hence we need to make sure that everything in the sequence
+we are support to commit is pushed to the log.
 
-What the hell?  We instantiate an shmem filesystem *inode* under the
-mmap_sem? 
-
-And so we have a mmap_sem -> inode->i_isec->lock path on a *shmem* inode.
-
-
-> Feb 19 12:22:03 localhost kernel: [  101.487018] 
-> Feb 19 12:22:03 localhost kernel: [  101.487018] -> #0 (&mm->mmap_sem){++++++}:
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff810f351c>] __lock_acquire+0x18ec/0x1aa0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff810f3ec2>] lock_acquire+0xa2/0x1d0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff811cc8fc>] might_fault+0x8c/0xb0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff812341c1>] filldir+0x91/0x120
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa053f2f7>] xfs_dir2_sf_getdents+0x317/0x380 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa054001b>] xfs_readdir+0x16b/0x230 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffffa05427fb>] xfs_file_readdir+0x2b/0x40 [xfs]
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff81234008>] iterate_dir+0xa8/0xe0
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff812344b3>] SyS_getdents+0x93/0x120
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        [<ffffffff8178ed69>] system_call_fastpath+0x16/0x1b
-
-And then we have the mmap_sem in readdir, which inode->ilock ->
-mmap_sem.
-
-
-> Feb 19 12:22:03 localhost kernel: [  101.487018] 
-> Feb 19 12:22:03 localhost kernel: [  101.487018] other info that might help us debug this:
-> Feb 19 12:22:03 localhost kernel: [  101.487018] 
-> Feb 19 12:22:03 localhost kernel: [  101.487018] Chain exists of:
-> Feb 19 12:22:03 localhost kernel: [  101.487018]   &mm->mmap_sem --> &isec->lock --> &xfs_dir_ilock_class
-> Feb 19 12:22:03 localhost kernel: [  101.487018] 
-> Feb 19 12:22:03 localhost kernel: [  101.487018]  Possible unsafe locking scenario:
-> Feb 19 12:22:03 localhost kernel: [  101.487018] 
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        CPU0                    CPU1
-> Feb 19 12:22:03 localhost kernel: [  101.487018]        ----                    ----
-> Feb 19 12:22:03 localhost kernel: [  101.487018]   lock(&xfs_dir_ilock_class);
-> Feb 19 12:22:03 localhost kernel: [  101.487018]                                lock(&isec->lock);
-> Feb 19 12:22:03 localhost kernel: [  101.487018]                                lock(&xfs_dir_ilock_class);
-> Feb 19 12:22:03 localhost kernel: [  101.487018]   lock(&mm->mmap_sem);
-
-So that's just another goddamn false positive.
-
-The problem here is that it's many, many layers away from XFS, and
-really doesn't involve XFS at all. It's caused by shmem
-instantiating an inode under the mmap_sem...
-
-Basically, the only way I can see that this is even remotely
-preventable is that inode->isec->ilock needs a per-sb lockdep
-context so that lockdep doesn't confuse the lock heirarchies of
-completely unrelated filesystems when someone does something crazy
-like the page fault path is currently doing.
-
-Fmeh:
-
-struct super_block {
-....
-#ifdef CONFIG_SECURITY
-        void                    *s_security;
-#endif
-
-So I can't even isolate it to the security subsystem pointer in
-the superblock because there isn't a generic structure to abstract
-security specific stuff from the superblock without having to
-implement the same lockdep annotations in every security module
-uses xattrs to store security information.
+Hence if the current sequence is dirty after we've ensure that all
+prior sequences are fully checkpointed, need to go back and
+push the CIL again to ensure that when we return to the caller the
+CIL is checkpointed up to the point in time of the log force
+occurring.
 
 Cheers,
 
