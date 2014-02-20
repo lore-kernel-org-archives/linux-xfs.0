@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CDCEA7F99
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:07:56 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 64C077F99
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:12:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B7945304087
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:07:53 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Lble4W4X6U8PPiCC for <xfs@oss.sgi.com>;
-	Thu, 20 Feb 2014 14:07:51 -0800 (PST)
-Date: Fri, 21 Feb 2014 09:07:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
-Message-ID: <20140220220747.GQ4916@dastard>
-References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
-	<1392783402-4726-2-git-send-email-david@fromorbit.com>
-	<5304F6F6.3070007@redhat.com> <20140220002358.GH4916@dastard>
-	<5306168B.8080209@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E1B5CAC004
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:12:19 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id em0o3a64QzRZjh6u for
+	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:12:18 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1KMCIHq015158
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 17:12:18 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1KMCHNo015063
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 17:12:18 -0500
+Message-ID: <53067DC0.9040800@redhat.com>
+Date: Thu, 20 Feb 2014 16:12:16 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5306168B.8080209@sgi.com>
+Subject: [PATCH] xfs: be honest about used inodes in statfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,153 +36,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Feb 20, 2014 at 08:51:55AM -0600, Mark Tinguely wrote:
-> On 02/19/14 18:23, Dave Chinner wrote:
-> >On Wed, Feb 19, 2014 at 01:24:54PM -0500, Brian Foster wrote:
-> >>On 02/18/2014 11:16 PM, Dave Chinner wrote:
-> >>>From: Dave Chinner<dchinner@redhat.com>
-> >>>
-> >>>Log forces can occur deep in the call chain when we have relatively
-> >>>little stack free. Log forces can also happen at close to the call
-> >>>chain leaves (e.g. xfs_buf_lock()) and hence we can trigger IO from
-> >>>places where we really don't want to add more stack overhead.
-> >>>
-> >>>This stack overhead occurs because log forces do foreground CIL
-> >>>pushes (xlog_cil_push_foreground()) rather than waking the
-> >>>background push wq and waiting for the for the push to complete.
-> >>>This foreground push was done to avoid confusing the CFQ Io
-> >>>scheduler when fsync()s were issued, as it has trouble dealing with
-> >>>dependent IOs being issued from different process contexts.
-> >>>
-> >>>Avoiding blowing the stack is much more critical than performance
-> >>>optimisations for CFQ, especially as we've been recommending against
-> >>>the use of CFQ for XFS since 3.2 kernels were release because of
-> >>>it's problems with multi-threaded IO workloads.
-> >>>
-> >>>Hence convert xlog_cil_push_foreground() to move the push work
-> >>>to the CIL workqueue. We already do the waiting for the push to
-> >>>complete in xlog_cil_force_lsn(), so there's nothing else we need to
-> >>>modify to make this work.
-> >>>
-> >>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
-.....
-> >>>@@ -803,7 +808,6 @@ xlog_cil_force_lsn(
-> >>>  	 * before allowing the force of push_seq to go ahead. Hence block
-> >>>  	 * on commits for those as well.
-> >>>  	 */
-> >>>-restart:
-> >>>  	spin_lock(&cil->xc_push_lock);
-> >>>  	list_for_each_entry(ctx,&cil->xc_committing, committing) {
-> >>>  		if (ctx->sequence>  sequence)
-> >>>@@ -821,6 +825,28 @@ restart:
-> >>>  		/* found it! */
-> >>>  		commit_lsn = ctx->commit_lsn;
-> >>>  	}
-> >>>+
-> >>>+	/*
-> >>>+	 * The call to xlog_cil_push_now() executes the push in the background.
-> >>>+	 * Hence by the time we have got here it our sequence may not have been
-> >>>+	 * pushed yet. This is true if the current sequence still matches the
-> >>>+	 * push sequence after the above wait loop and the CIL still contains
-> >>>+	 * dirty objects.
-> >>>+	 *
-> >>>+	 * When the push occurs, it will empty the CIL and
-> >>>+	 * atomically increment the currect sequence past the push sequence and
-> >>>+	 * move it into the committing list. Of course, if the CIL is clean at
-> >>>+	 * the time of the push, it won't have pushed the CIL at all, so in that
-> >>>+	 * case we should try the push for this sequence again from the start
-> >>>+	 * just in case.
-> >>>+	 */
-> >>>+
-> >>>+	if (sequence == cil->xc_current_sequence&&
-                                             ^^^^^
-FYI, your mailer is still mangling whitespace when quoting code....
+Because we have lazy counters, it's possible that we over-allocate
+inodes past the maxicount (imaxpct) limit.  
 
-> >>>+	    !list_empty(&cil->xc_cil)) {
-> >>>+		spin_unlock(&cil->xc_push_lock);
-> >>>+		goto restart;
-> >>>+	}
-> >>>+
-> >>
-> >>IIUC, the objective here is to make sure we don't leave this code path
-> >>before the push even starts and the ctx makes it onto the committing
-> >>list, due to xlog_cil_push_now() moving things to a workqueue.
-> >
-> >Right.
-> >
-> >>Given that, what's the purpose of re-executing the background push as
-> >>opposed to restarting the wait sequence (as done previously)? It looks
-> >>like push_now() won't queue the work again due to cil->xc_push_seq, but
-> >>it will flush the queue and I suppose make it more likely the push
-> >>starts. Is that the intent?
-> >
-> >Effectively. But the other thing that it is protecting against is
-> >that foreground push is done without holding the cil->xc_ctx_lock,
-> >and so we can get the situation where we try a foreground push
-> >of the current sequence, see that the CIL is empty and return
-> >without pushing, wait for previous sequences to commit, then find
-> >that the CIL has items on the CIL in the sequence we are supposed to
-> >be committing.
-> >
-> >In this case, we don't know if this occurred because the workqueue
-> >has not started working on our push, or whether we raced on an empty
-> >CIL, and hence we need to make sure that everything in the sequence
-> >we are support to commit is pushed to the log.
-> >
-> >Hence if the current sequence is dirty after we've ensure that all
-> >prior sequences are fully checkpointed, need to go back and
-> >push the CIL again to ensure that when we return to the caller the
-> >CIL is checkpointed up to the point in time of the log force
-> >occurring.
-> 
-> The desired push sequence was taken from an item on the CIL (either
-> when added or from a pinned item). How could the CIL now be empty
-> other than someone else pushed to at least the desire sequence?
+A previous commit,
 
-The push sequence is only taken from an object on the CIL through
-xfs_log_force_lsn(). For xfs_log_force(), the sequence is taken
-directly from the current CIL context:
+ 2fe3366 xfs: ensure f_ffree returned by statfs() is non-negative
 
-static inline void
-xlog_cil_force(struct xlog *log)
-{
-        xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
-}
+stopped statfs from underflowing f_ffree in this case, but that
+only happened when we mis-reported f_files, capped at maxicount.
 
-And that's how you get an empty CIL when entering
-xlog_cil_force_lsn(), and hence how you can get the race condition
-that the code is protecting against.
+Change statfs to report the actual number of inodes allocated,
+even if it is greater than maxicount.  It's reality.
+Deal with it.  ;)
 
-> A flush_work() should be enough in the case where the ctx of the
-> desire sequence is not on the xc_committing list. The flush_work
-> will wait for the worker to start and place the ctx of the desired
-> sequence into the xc_committing list. This preventing a tight loop
-> waiting for the cil push worker to start.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Yes, that's exactly what the code does.
-
-> Starting the cil push worker for every wakeup of smaller sequence in
-> the list_for_each_entry loop seems wasteful.
-
-As Brian pointed out, it won't restart on every wakeup - the
-cil->xc_push_seq checks prevent that from happening, so a specific
-sequence will only ever be queued for a push once.
-
-> We know the later error paths in xfs_cil_push() will not do a wake,
-> now is a good time to fix that.
-
-I'm not sure what you are talking about here. If there's a problem,
-please send patches.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f317488..7c7a810 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1083,7 +1083,6 @@ xfs_fs_statfs(
+ 	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
+ 	__uint64_t		fakeinos, id;
+ 	xfs_extlen_t		lsize;
+-	__int64_t		ffree;
+ 
+ 	statp->f_type = XFS_SB_MAGIC;
+ 	statp->f_namelen = MAXNAMELEN - 1;
+@@ -1100,17 +1099,24 @@ xfs_fs_statfs(
+ 	statp->f_blocks = sbp->sb_dblocks - lsize;
+ 	statp->f_bfree = statp->f_bavail =
+ 				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
++
++	/* Potential number of new inodes in free blocks */
+ 	fakeinos = statp->f_bfree << sbp->sb_inopblog;
++	/* Total possible files is current inodes + potential new inodes */
+ 	statp->f_files =
+ 	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
++	/* Unless we have maxicount!  Then cap it at that */
+ 	if (mp->m_maxicount)
+ 		statp->f_files = min_t(typeof(statp->f_files),
+ 					statp->f_files,
+ 					mp->m_maxicount);
+ 
+-	/* make sure statp->f_ffree does not underflow */
+-	ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
+-	statp->f_ffree = max_t(__int64_t, ffree, 0);
++	/* But if we already managed to allocate more, let's be honest */
++	statp->f_files = max_t(typeof(statp->f_files),
++				sbp->sb_icount,
++				statp->f_files);
++
++	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
+ 
+ 	spin_unlock(&mp->m_sb_lock);
+ 
 
 _______________________________________________
 xfs mailing list
