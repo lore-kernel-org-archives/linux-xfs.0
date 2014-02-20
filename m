@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D20F37F99
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:12:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6540AAC004
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:12:47 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id uLN9TF74c6mBApel (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Feb 2014 14:12:46 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1WGbrK-0008Pa-0F
-	for xfs@oss.sgi.com; Thu, 20 Feb 2014 22:12:46 +0000
-Date: Thu, 20 Feb 2014 14:12:45 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: testing flink (aka linkat(..., AT_EMPTY_PATH)
-Message-ID: <20140220221245.GA32288@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 377F87FE5
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:15:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 153558F8039
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 14:15:24 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	1n4Hz5DcLiTEYWz4 for <xfs@oss.sgi.com>;
+	Thu, 20 Feb 2014 14:15:22 -0800 (PST)
+Date: Fri, 21 Feb 2014 09:15:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_io: add support for O_TMPFILE opens
+Message-ID: <20140220221518.GR4916@dastard>
+References: <20140220220000.GA17541@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20140220220000.GA17541@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +29,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Turns out so far we aren't really do metadata operation in xfs_io
-and don't even have link/unlink.  Should we starting adding these or
-where else should I start looking into adding support for exercising
-flink?
+On Thu, Feb 20, 2014 at 02:00:00PM -0800, Christoph Hellwig wrote:
+> Add a new -T argument to the open command that supports using the
+> O_TMPFILE flag.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Can you also push this into the main CLI interface similar to how
+all the other open flags can be specified? i.e.
+
+$ xfs_io -d -c "pwrite 0 4k" foo
+
+will open "foo" with O_DIRECT. Be nice just to be able to do
+
+$ xfs_io -dT -c "pwrite 0 4k" foo/
+
+to be able to test O_TMPFILE functionality
+
+FWIW, any plans to add a "link" command to be able to link the
+tmpfile into the namespace once it is created?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
