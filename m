@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2D8E47F58
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 20:01:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ED7ED30408C
-	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:01:07 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	OXfhVNnsjYbliQ0I for <xfs@oss.sgi.com>;
-	Wed, 19 Feb 2014 18:01:05 -0800 (PST)
-Date: Thu, 20 Feb 2014 13:01:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 04/11] xfs: update inode allocation/free transaction
-	reservations for finobt
-Message-ID: <20140220020101.GL4916@dastard>
-References: <1391536182-9048-1-git-send-email-bfoster@redhat.com>
-	<1391536182-9048-5-git-send-email-bfoster@redhat.com>
-	<20140211064609.GE13647@dastard> <530393F8.4070106@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4B6BF7FE9
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 20:58:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31BB48F8081
+	for <xfs@oss.sgi.com>; Wed, 19 Feb 2014 18:58:19 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id vPlc6ZkriPkSUFgk for <xfs@oss.sgi.com>;
+	Wed, 19 Feb 2014 18:58:12 -0800 (PST)
+Message-ID: <53056F43.7070005@sandeen.net>
+Date: Wed, 19 Feb 2014 20:58:11 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <530393F8.4070106@redhat.com>
+Subject: [PATCH 7/9 V2] xfs: add xfs_verifier_error()
+References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
+	<1392767549-25574-8-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1392767549-25574-8-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,177 +28,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-[patched in the extra case from your subsequent reply]
+We want to distinguish between corruption, CRC errors,
+etc.  In addition, the full stack trace on verifier errors
+seems less than helpful; it looks more like an oops than
+corruption.
 
-On Tue, Feb 18, 2014 at 12:10:16PM -0500, Brian Foster wrote:
-> On 02/11/2014 01:46 AM, Dave Chinner wrote:
-> > On Tue, Feb 04, 2014 at 12:49:35PM -0500, Brian Foster wrote:
-> >> Create the xfs_calc_finobt_res() helper to calculate the finobt log
-> >> reservation for inode allocation and free. Update
-> >> XFS_IALLOC_SPACE_RES() to reserve blocks for the additional finobt
-> >> insertion on inode allocation. Create XFS_IFREE_SPACE_RES() to
-> >> reserve blocks for the potential finobt record insertion on inode
-> >> free (i.e., if an inode chunk was previously fully allocated).
-> >>
-> >> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> >> ---
-> >>  fs/xfs/xfs_inode.c       |  4 +++-
-> >>  fs/xfs/xfs_trans_resv.c  | 47 +++++++++++++++++++++++++++++++++++++++++++----
-> >>  fs/xfs/xfs_trans_space.h |  7 ++++++-
-> >>  3 files changed, 52 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> >> index 001aa89..57c77ed 100644
-> >> --- a/fs/xfs/xfs_inode.c
-> >> +++ b/fs/xfs/xfs_inode.c
-> >> @@ -1730,7 +1730,9 @@ xfs_inactive_ifree(
-> >>  	int			error;
-> >>  
-> >>  	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
-> >> -	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
-> >> +	tp->t_flags |= XFS_TRANS_RESERVE;
-> >> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree,
-> >> +				  XFS_IFREE_SPACE_RES(mp), 0);
-> > 
-> > Can you add a comment explaining why the XFS_TRANS_RESERVE flag is
-> > used here, and why it's use won't lead to accelerated reserve pool
-> > depletion?
-> > 
-> 
-> So this aspect of things appears to be a bit more interesting than I
-> originally anticipated. I "reserve enabled" this transaction to
-> facilitate the ability to free up inodes under ENOSPC conditions.
-> Without this, the problem of failing out of xfs_inactive_ifree() (and
-> leaving an inode chained on the unlinked list) is easily reproducible
-> with generic/083.
+Create a new function to specifically alert the user to
+verifier errors, which can differentiate between
+EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
+unless the xfs error level is turned up high.
 
-*nod*
+Define a new error message (EFSBADCRC) to clearly identify
+CRC errors.  (Defined to EILSEQ, bad byte sequence)
 
-> The basic argument for why this is reasonable is that releasing an inode
-> releases used space (i.e., file blocks and potentially directory blocks
-> and inode chunks over time). That said, I can manufacture situations
-> where this is not the case. E.g., allocate a bunch of 0-sized files,
-> consume remaining free space in some separate file, start removing
-> inodes in a manner that removes a single inode per chunk or so. This
-> creates a scenario where the inobt can be very large and the finobt very
-> small (likely a single record). Removing the inodes in this manner
-> reduces the likelihood of freeing up any space and thus rapidly grows
-> the finobt towards the size of the inobt without any free space
-> available. This might or might not qualify as sane use of the fs, but I
-> don't think the failure scenario is acceptable as things currently stand.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Right, that can happen. But my question is this: how realistic is it
-that we have someone who has ENOSPC because of enough zero length
-files to trigger this? I've never seen an application or user try to
-store any significant number of zero length files, so I suspect this
-is a theoretical problem, not a practical one.
+V2: Switch to EBADMSG, use xfs_buf_offset()
 
-Indeed, the finobt only needs to grow a block for every 250-odd
-records for a 4k block size filesystem. Hence, IMO, the default
-reserve pool size of 8192 filesystem blocks is going be sufficient
-for most users. i.e. the case you are talking about requires
-(ignoring node block usage for simplicity) 250 * 8192 * 64 = 131
-million zero length inodes to be present in the filesystem to have
-this "1 inode per chunk" freeing pattern exhaust the default reserve
-pool with finobt tree allocations....
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 9995b80..a8b2ecb 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -178,3 +178,28 @@ xfs_corruption_error(
+ 	xfs_error_report(tag, level, mp, filename, linenum, ra);
+ 	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
+ }
++
++/*
++ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
++ * values, and omit the stack trace unless the error level is tuned high.
++ */
++void
++xfs_verifier_error(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++
++	xfs_alert(mp, "Metadata %s detected at %pF, block 0x%llx",
++		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
++		  __return_address, bp->b_bn);
++
++	xfs_alert(mp, "Unmount and run xfs_repair");
++
++	if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
++		xfs_alert(mp, "First 64 bytes of corrupted metadata buffer:");
++		xfs_hex_dump(xfs_buf_offset(bp, 0), 64);
++	}
++
++	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
++		xfs_stack_trace();
++}
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 079a367..c1c57d4 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -34,6 +34,7 @@ extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
+ extern void xfs_corruption_error(const char *tag, int level,
+ 			struct xfs_mount *mp, void *p, const char *filename,
+ 			int linenum, inst_t *ra);
++extern void xfs_verifier_error(struct xfs_buf *bp);
+ 
+ #define	XFS_ERROR_REPORT(e, lvl, mp)	\
+ 	xfs_error_report(e, lvl, mp, __FILE__, __LINE__, __return_address)
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index e8fed74..825249d 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -179,6 +179,7 @@ typedef __uint64_t __psunsigned_t;
+ #define ENOATTR		ENODATA		/* Attribute not found */
+ #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
+ #define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
++#define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+ 
+ #define SYNCHRONIZE()	barrier()
+ #define __return_address __builtin_return_address(0)
 
-> I think there are several ways this can go from here. A couple ideas
-> that have crossed my mind:
-> 
-> - Find a way to variably reserve the number of blocks that would be
-> required to grow the finobt to the finobt, based on current state. This
-
-Not sure what "grow the finobt to the finobt" means. There's a typo
-or a key word missing there ;)
-
-> would require the total number of blocks (not just enough for a split),
-> so this could get complex and somewhat overbearing (i.e., a lot of space
-> could be quietly reserved, current tracking might not be sufficient and
-> the allocation paths could get hairy).
-
-Doesn't seem worth the complexity to me.
-
-> - Work to push the ifree transaction allocation and reservation to the
-> unlink codepath rather than the eviction codepath. Under normal
-> circumstances, chain the tp to the xfs_inode such that the eviction code
-> path can grab it and run. This prevents us going into the state where an
-> inode is unlinked without having enough space to free up. On the flip
-> side, ENOSPC on unlink isn't very forgiving behavior to the user.
-
-That's the long term plan anyway - to move to background freeing of
-the inodes once they are on the unlinked list and unreferenced by
-the VFS. But, really, once the inode is on the unlinked list we can
-probably ignore the ENOSPC problem because we know that it is
-unlinked.
-
-Indeed, the long term plan (along with background freeing) is to
-allow inode allocation direct from the unlinked lists, and that
-means we could leave the inodes on the unlinked lists and not
-care about the ENOSPC problem at all ;)
-
-> - Add some state or flags bits to the finobt and the associated
->   ability to kill/invalidate it at runtime. Print a warning with
->   regard to the situation that indicates performance might be
->   affected and a repair is required to re-enable.
-
-We've already got that state through the unlinked lists. Again,
-go back to the RFD series and look through the followup work....
-
-> 
-> I think the former approach is probably overkill for something that
-> might be a pathological situation. The latter approach is more simple,
-> but it feels like a bit of a hack. I've experimented with it a bit, but
-> I'm not quite sure yet if it introduces any transaction issues by
-> allocating the unlink and ifree transactions at the same time.
-> 
-> Perhaps another argument could be made that it's rather unlikely we run
-> into an fs with as many 0-sized (or sub-inode chunk sized) files as
-> required to deplete the reserve pool without freeing any space, and we
-> should just touch up the failure handling. E.g.,
-> 
-> 1.) Continue to reserve enable the ifree transaction. Consider expanding
-> the reserve pool on finobt-enabled fs' if appropriate. Note that this is
-> not guaranteed to provide enough resources to populate the finobt to the
-> level of the inobt without freeing up more space.
-> 2.) Attempt a !XFS_TRANS_RESERVE tp reservation in xfs_inactive_ifree().
-> If fails, xfs_warn()/notice() and enable XFS_TRANS_RESERVE.
-> 3.) Attempt XFS_TRANS_RESERVE reservation. If fails, xfs_notice() and
-> shutdown.
-
-I don't think we ned to shut down. Indeed, there's no point in doing
-an !XFS_TRANS_RESERVE in the first place because a warning will just
-generate unnecessary noise in the logs.
-
-Realistically, we can leave inodes on the unlinked list
-indefinitely without causing any significant problems except for
-there being used space that users can't account for from the
-namespace. Log recovery cleans them up when it runs, or blows away
-the unlinked list when it fails, and that results in leaked inodes.
-If we get to that point, xfs-repair will clean it up just fine
-unless there's still not enough space. At that point, it's not a
-problem we can solve with tools - the user has to free up some space
-in the filesystem....
-
-> And this could probably be made more intelligent to bail out sooner if
-> we repeat XFS_TRANS_RESERVE reservations without freeing up any space,
-> etc. Before going too far in one direction... thoughts?
-
-Right now, I just don't think it is a case we need to be
-pariticularly concerned with. There are plenty of theoretical issues
-that can occur (including data loss) when the reserve pool is
-depleted because of prolonged ENOSPC issues, but the reality is
-that the only place we see this code being exercised is by the tests
-in xfstests that intentionally trigger reserve pool depletion....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
