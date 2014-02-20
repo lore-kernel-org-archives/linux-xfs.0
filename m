@@ -1,32 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 65A0E7FAD
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 12:31:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F32C304053
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:31:31 -0800 (PST)
-Received: from internal-smtp4.wesleyan.edu (internal-smtp4.wesleyan.edu
-	[129.133.6.200]) by cuda.sgi.com with ESMTP id 3RvXpYcdCSqjBLi3
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:31:26 -0800 (PST)
-Received: from localhost (al.wesleyan.edu [129.133.22.76])
-	(authenticated bits=0)
-	by msa.wesleyan.edu (8.14.4/8.14.4) with ESMTP id s1KIVPd9021231
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NOT)
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 13:31:25 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AD6297FB2
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 12:49:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F140AC004
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:49:16 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hOfrFOzg26C3fQSR for
+	<xfs@oss.sgi.com>; Thu, 20 Feb 2014 10:49:15 -0800 (PST)
+Message-ID: <53064E26.2050607@redhat.com>
+Date: Thu, 20 Feb 2014 13:49:10 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-From: "C. Morgan Hamill" <chamill@wesleyan.edu>
-References: <52E91923.4070706@sandeen.net> <52EB3B96.7000103@hardwarefreak.com>
-	<1391202273-sup-9265@al.wesleyan.edu>
-	<52ED61C9.8060504@hardwarefreak.com>
-	<20140202212152.GP2212@dastard> <1391443675-sup-1730@al.wesleyan.edu>
-	<20140203214128.GR13997@dastard> <52F09E36.8050606@hardwarefreak.com>
-	<1392748390-sup-1943@al.wesleyan.edu>
-	<5303E7AC.50903@hardwarefreak.com>
-In-Reply-To: <5303E7AC.50903@hardwarefreak.com>
-Message-ID: <20140220183125.29149.64880@al.wesleyan.edu>
-Subject: Re: Question regarding XFS on LVM over hardware RAID.
-Date: Thu, 20 Feb 2014 13:31:25 -0500
+Subject: Re: [PATCH v3 04/11] xfs: update inode allocation/free transaction
+	reservations for finobt
+References: <1391536182-9048-1-git-send-email-bfoster@redhat.com>
+	<1391536182-9048-5-git-send-email-bfoster@redhat.com>
+	<20140211064609.GE13647@dastard> <530393F8.4070106@redhat.com>
+	<20140220020101.GL4916@dastard>
+In-Reply-To: <20140220020101.GL4916@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,80 +31,224 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Quoting Stan Hoeppner (2014-02-18 18:07:24)
-> Create each LV starting on a stripe boundary.  There will be some
-> unallocated space between LVs.  Use the mkfs.xfs -d size= option to
-> create your filesystems inside of each LV such that the filesystem total
-> size is evenly divisible by the stripe width.  This results in an
-> additional small amount of unallocated space within, and at the end of,
-> each LV.
-
-Of course, this occurred to me just after sending the message... ;)
-
-> It's nice if you can line everything up, but when using RAID6 and one or
-> two bays for hot spares, one rarely ends up with 8 or 16 data spindles.
+On 02/19/2014 09:01 PM, Dave Chinner wrote:
+> [patched in the extra case from your subsequent reply]
 > 
-> > If not, I'll tweak things to ensure my stripe width is a power of 2.
+> On Tue, Feb 18, 2014 at 12:10:16PM -0500, Brian Foster wrote:
+>> On 02/11/2014 01:46 AM, Dave Chinner wrote:
+>>> On Tue, Feb 04, 2014 at 12:49:35PM -0500, Brian Foster wrote:
+>>>> Create the xfs_calc_finobt_res() helper to calculate the finobt log
+>>>> reservation for inode allocation and free. Update
+>>>> XFS_IALLOC_SPACE_RES() to reserve blocks for the additional finobt
+>>>> insertion on inode allocation. Create XFS_IFREE_SPACE_RES() to
+>>>> reserve blocks for the potential finobt record insertion on inode
+>>>> free (i.e., if an inode chunk was previously fully allocated).
+>>>>
+>>>> Signed-off-by: Brian Foster <bfoster@redhat.com>
+>>>> ---
+>>>>  fs/xfs/xfs_inode.c       |  4 +++-
+>>>>  fs/xfs/xfs_trans_resv.c  | 47 +++++++++++++++++++++++++++++++++++++++++++----
+>>>>  fs/xfs/xfs_trans_space.h |  7 ++++++-
+>>>>  3 files changed, 52 insertions(+), 6 deletions(-)
+>>>>
+>>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>>>> index 001aa89..57c77ed 100644
+>>>> --- a/fs/xfs/xfs_inode.c
+>>>> +++ b/fs/xfs/xfs_inode.c
+>>>> @@ -1730,7 +1730,9 @@ xfs_inactive_ifree(
+>>>>  	int			error;
+>>>>  
+>>>>  	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+>>>> -	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree, 0, 0);
+>>>> +	tp->t_flags |= XFS_TRANS_RESERVE;
+>>>> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ifree,
+>>>> +				  XFS_IFREE_SPACE_RES(mp), 0);
+>>>
+>>> Can you add a comment explaining why the XFS_TRANS_RESERVE flag is
+>>> used here, and why it's use won't lead to accelerated reserve pool
+>>> depletion?
+>>>
+>>
+>> So this aspect of things appears to be a bit more interesting than I
+>> originally anticipated. I "reserve enabled" this transaction to
+>> facilitate the ability to free up inodes under ENOSPC conditions.
+>> Without this, the problem of failing out of xfs_inactive_ifree() (and
+>> leaving an inode chained on the unlinked list) is easily reproducible
+>> with generic/083.
 > 
-> That's not possible with 12 data spindles per RAID, not possible with 42
-> drives in 3 chassis.  Not without a bunch of idle drives.
-
-The closest I can come is with 4 RAID 6 arrays of 10 disks each, then
-striped over:
-
-8 * 128k = 1024k
-1024k * 4 = 4096k
-
-Which leaves me with 5 disks unused.  I might be able to live with that
-if it makes things work better.  Sounds like I won't have to.
-
-
-> I still don't understand why you believe you need LVM in the mix, and
-> more than one filesystem.
-
-> Backup software is unaware of mount points.  It uses paths just like
-> every other program.  The number of XFS filesystems is irrelevant to
-> "minimizing the effects of the archive maintenance jobs".  You cannot
-> bog down XFS.  You will bog down the drives no matter how many
-> filesystems when using RAID60.
-
-A limitation of the software in question is that placing multiple
-archive paths onto a single filesystem is a bit ugly: the software does
-not let you specifiy a maximum size for the archive paths, and so will
-think all of them are the size of the filesystem.  This isn't an issue
-in isolation, but we need to make use of a data-balancing feature the
-software has, which will not work if we place multiple archive paths on
-a single filesystem.  It's a stupid issue to have, but it is what it is.
-
-> Here is what you should do:
+> *nod*
 > 
-> Format the RAID60 directly with XFS.  Create 3 or 4 directories for
-> CrashPlan to use as its "store points".  If you need to expand in the
-> future, as I said previously, simply add another 14 drive RAID6 chassis,
-> format it directly with XFS, mount it at an appropriate place in the
-> directory tree and give that path to CrashPlan.  Does it have a limit on
-> the number of "store points"?
+>> The basic argument for why this is reasonable is that releasing an inode
+>> releases used space (i.e., file blocks and potentially directory blocks
+>> and inode chunks over time). That said, I can manufacture situations
+>> where this is not the case. E.g., allocate a bunch of 0-sized files,
+>> consume remaining free space in some separate file, start removing
+>> inodes in a manner that removes a single inode per chunk or so. This
+>> creates a scenario where the inobt can be very large and the finobt very
+>> small (likely a single record). Removing the inodes in this manner
+>> reduces the likelihood of freeing up any space and thus rapidly grows
+>> the finobt towards the size of the inobt without any free space
+>> available. This might or might not qualify as sane use of the fs, but I
+>> don't think the failure scenario is acceptable as things currently stand.
+> 
+> Right, that can happen. But my question is this: how realistic is it
+> that we have someone who has ENOSPC because of enough zero length
+> files to trigger this? I've never seen an application or user try to
+> store any significant number of zero length files, so I suspect this
+> is a theoretical problem, not a practical one.
+> 
 
-Yes, this is what I *want* to do.  There's a limit to the number of
-store points, but it's large, so this would work fine if not for the
-multiple-stores-on-one-filesystem issue.  Which is frustrating.
+Probably not very realistic. ;) The only thing I know that does rely on
+some zero-length files is gluster distribution to represent "link files"
+when one a file that hashes to one server ends up stored on another.
+Even then, I don't see how we would ever have a situation where those
+link files exist in such massive numbers and are removed in bulk. So
+it's likely a pathological scenario.
 
-The *only* reason for LVM in the middle is to allow some flexibility of
-sizing without dealing with the annoyances of the partition table.
-I want to intentionally under-provision to start with because we are
-using a small corner of this storage for a separate purpose but do not
-know precisely how much yet.  LVM lets me leave, say, 10TB empty, until
-I know exactly how big things are going to be.
+> Indeed, the finobt only needs to grow a block for every 250-odd
+> records for a 4k block size filesystem. Hence, IMO, the default
+> reserve pool size of 8192 filesystem blocks is going be sufficient
+> for most users. i.e. the case you are talking about requires
+> (ignoring node block usage for simplicity) 250 * 8192 * 64 = 131
+> million zero length inodes to be present in the filesystem to have
+> this "1 inode per chunk" freeing pattern exhaust the default reserve
+> pool with finobt tree allocations....
+> 
 
-It's a pile of little annoyances, but so it goes with these kinds of things.
+Well, only ~2 million of the ~131 million you happen to free would have
+to be 0-sized and per-chunk, right? ;) I guess sub aligned inode chunk
+sized would be more accurate than 0-sized as well. But regardless, this
+doesn't seem probable.
 
-It sounds like the little empty spots method will be fine though.
+>> I think there are several ways this can go from here. A couple ideas
+>> that have crossed my mind:
+>>
+>> - Find a way to variably reserve the number of blocks that would be
+>> required to grow the finobt to the finobt, based on current state. This
+> 
+> Not sure what "grow the finobt to the finobt" means. There's a typo
+> or a key word missing there ;)
+> 
 
-Thanks, yet again, for all your help.
---
-Morgan Hamill
+That should read "grow the finobt to the inobt," referring to the size
+in terms of number of records in the tree.
+
+>> would require the total number of blocks (not just enough for a split),
+>> so this could get complex and somewhat overbearing (i.e., a lot of space
+>> could be quietly reserved, current tracking might not be sufficient and
+>> the allocation paths could get hairy).
+> 
+> Doesn't seem worth the complexity to me.
+> 
+
+Agreed.
+
+>> - Work to push the ifree transaction allocation and reservation to the
+>> unlink codepath rather than the eviction codepath. Under normal
+>> circumstances, chain the tp to the xfs_inode such that the eviction code
+>> path can grab it and run. This prevents us going into the state where an
+>> inode is unlinked without having enough space to free up. On the flip
+>> side, ENOSPC on unlink isn't very forgiving behavior to the user.
+> 
+> That's the long term plan anyway - to move to background freeing of
+> the inodes once they are on the unlinked list and unreferenced by
+> the VFS. But, really, once the inode is on the unlinked list we can
+> probably ignore the ENOSPC problem because we know that it is
+> unlinked.
+> 
+> Indeed, the long term plan (along with background freeing) is to
+> allow inode allocation direct from the unlinked lists, and that
+> means we could leave the inodes on the unlinked lists and not
+> care about the ENOSPC problem at all ;)
+> 
+
+Ah, ok. I had a similar thought as well about having some kind of
+background scanner for unlinked list inodes that kicks in when we know
+we have evicted inodes on the list...
+
+>> - Add some state or flags bits to the finobt and the associated
+>>   ability to kill/invalidate it at runtime. Print a warning with
+>>   regard to the situation that indicates performance might be
+>>   affected and a repair is required to re-enable.
+> 
+> We've already got that state through the unlinked lists. Again,
+> go back to the RFD series and look through the followup work....
+> 
+
+... and taking a quick look back through that, I see 14/17 refers to
+precisely such a mechanism. I thought that sounded familiar. ;)
+
+>>
+>> I think the former approach is probably overkill for something that
+>> might be a pathological situation. The latter approach is more simple,
+>> but it feels like a bit of a hack. I've experimented with it a bit, but
+>> I'm not quite sure yet if it introduces any transaction issues by
+>> allocating the unlink and ifree transactions at the same time.
+>>
+>> Perhaps another argument could be made that it's rather unlikely we run
+>> into an fs with as many 0-sized (or sub-inode chunk sized) files as
+>> required to deplete the reserve pool without freeing any space, and we
+>> should just touch up the failure handling. E.g.,
+>>
+>> 1.) Continue to reserve enable the ifree transaction. Consider expanding
+>> the reserve pool on finobt-enabled fs' if appropriate. Note that this is
+>> not guaranteed to provide enough resources to populate the finobt to the
+>> level of the inobt without freeing up more space.
+>> 2.) Attempt a !XFS_TRANS_RESERVE tp reservation in xfs_inactive_ifree().
+>> If fails, xfs_warn()/notice() and enable XFS_TRANS_RESERVE.
+>> 3.) Attempt XFS_TRANS_RESERVE reservation. If fails, xfs_notice() and
+>> shutdown.
+> 
+> I don't think we ned to shut down. Indeed, there's no point in doing
+> an !XFS_TRANS_RESERVE in the first place because a warning will just
+> generate unnecessary noise in the logs.
+> 
+> Realistically, we can leave inodes on the unlinked list
+> indefinitely without causing any significant problems except for
+> there being used space that users can't account for from the
+> namespace. Log recovery cleans them up when it runs, or blows away
+> the unlinked list when it fails, and that results in leaked inodes.
+> If we get to that point, xfs-repair will clean it up just fine
+> unless there's still not enough space. At that point, it's not a
+> problem we can solve with tools - the user has to free up some space
+> in the filesystem....
+> 
+
+Ok, the current failure behavior (as unlikely as it seems to hit) seems
+less hasty given the roadmap for improved unlinked list management.
+
+I'm not sure how log recovery plays into things unless there is a crash.
+In my experiments, the inodes are simply never freed and linger on the
+unlinked list until repair. Repair moves everything to lost+found as
+opposed to freeing (I presume since the inodes are still "allocated"
+after all), but repairs the fs nonetheless.
+
+>> And this could probably be made more intelligent to bail out sooner if
+>> we repeat XFS_TRANS_RESERVE reservations without freeing up any space,
+>> etc. Before going too far in one direction... thoughts?
+> 
+> Right now, I just don't think it is a case we need to be
+> pariticularly concerned with. There are plenty of theoretical issues
+> that can occur (including data loss) when the reserve pool is
+> depleted because of prolonged ENOSPC issues, but the reality is
+> that the only place we see this code being exercised is by the tests
+> in xfstests that intentionally trigger reserve pool depletion....
+> 
+
+Fair enough, I'll leave things generally as is apart from the review
+feedback. I might add a warning or ratelimited printk in the inactive
+ENOSPC failure path, just so it's not completely silent if it does
+trigger in the wild. Thanks for the feedback.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
