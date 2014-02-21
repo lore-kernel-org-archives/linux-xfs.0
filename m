@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C04027F9C
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 17:23:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A37748F8040
-	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 15:23:10 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 14A337FC8
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 18:03:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0AE8C8F804B
+	for <xfs@oss.sgi.com>; Thu, 20 Feb 2014 16:03:04 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	liEK5Cepnlx0s6rm for <xfs@oss.sgi.com>;
-	Thu, 20 Feb 2014 15:23:08 -0800 (PST)
-Date: Fri, 21 Feb 2014 10:23:05 +1100
+	1C2wFlhoYJFnNgtV for <xfs@oss.sgi.com>;
+	Thu, 20 Feb 2014 16:03:02 -0800 (PST)
+Date: Fri, 21 Feb 2014 11:02:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: testing flink (aka linkat(..., AT_EMPTY_PATH)
-Message-ID: <20140220232305.GT4916@dastard>
-References: <20140220221245.GA32288@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
+Message-ID: <20140221000257.GU4916@dastard>
+References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
+	<1392783402-4726-2-git-send-email-david@fromorbit.com>
+	<5304F6F6.3070007@redhat.com> <20140220002358.GH4916@dastard>
+	<5306168B.8080209@sgi.com> <20140220220747.GQ4916@dastard>
+	<5306833D.7080600@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140220221245.GA32288@infradead.org>
+In-Reply-To: <5306833D.7080600@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +33,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Feb 20, 2014 at 02:12:45PM -0800, Christoph Hellwig wrote:
-> Turns out so far we aren't really do metadata operation in xfs_io
-> and don't even have link/unlink.  Should we starting adding these or
-> where else should I start looking into adding support for exercising
-> flink?
+On Thu, Feb 20, 2014 at 04:35:41PM -0600, Mark Tinguely wrote:
+> On 02/20/14 16:07, Dave Chinner wrote:
+> >On Thu, Feb 20, 2014 at 08:51:55AM -0600, Mark Tinguely wrote:
+> >>We know the later error paths in xfs_cil_push() will not do a wake,
+> >>now is a good time to fix that.
+> >
+> >I'm not sure what you are talking about here. If there's a problem,
+> >please send patches.
+> 
+> http://oss.sgi.com/archives/xfs/2013-12/msg00870.html
 
-I think we need a tool that aggregates such functionality, otherwise
-we just end up with a prolification of small helper utilities in
-xfstests/src directory.  There's the new renameat2 code that would
-dearly love a helper function, reflink support woul be useful, etc.
-And for O_TMPFILE, is just doesn't make sense to duplicate what
-xfs_io does just so that flinkat() support can be tested.
+Which resulted in a discussion and discovery of more problems
+that also needed fixing, so I'm waiting for patches to be posted
+that fix them.
 
-Hence I'm happy to see such metadata operations added to xfs_io from
-a functionality point of view.  I also can't see any problems with
-being able to integrate them into the command structure or the
-source layout structure that xfs_io uses, so I'm not finding an
-reason why we shouldn't be adding things like this...
+You know what the problems are, you know how they should be fixed
+(it's in the discussion thread), and you are capable of writing
+the fixes and testing them. So, please send patches.
 
 Cheers,
 
