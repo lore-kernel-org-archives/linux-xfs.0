@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F9EF7FAA
-	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 09:00:48 -0600 (CST)
-Message-ID: <53076A24.1080903@sgi.com>
-Date: Fri, 21 Feb 2014 09:00:52 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 102967FAA
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 09:04:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F1F2330408A
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 07:04:42 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id shpwD5D7V0Vp8vHV for
+	<xfs@oss.sgi.com>; Fri, 21 Feb 2014 07:04:42 -0800 (PST)
+Message-ID: <53076B05.8010806@redhat.com>
+Date: Fri, 21 Feb 2014 10:04:37 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: XFS Failed to recover EFIs - XFS_WANT_CORRUPTED_GOTO at line
-	1602 of xfs_alloc.c
-References: <20140221084717.3364a23e@pluto> <53075F34.7010703@sgi.com>
-	<20140221154800.57b88140@pluto>
-In-Reply-To: <20140221154800.57b88140@pluto>
+Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
+References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
+	<1392783402-4726-2-git-send-email-david@fromorbit.com>
+	<5304F6F6.3070007@redhat.com> <20140220002358.GH4916@dastard>
+In-Reply-To: <20140220002358.GH4916@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,70 +25,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?QnJ1bm8gUHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-T24gMDIvMjEvMTQgMDg6NDgsIEJydW5vIFByw6ltb250IHdyb3RlOgo+IE9uIEZyaSwgMjEgRmVi
-IDIwMTQgMDg6MTQ6MTIgLTA2MDAgTWFyayBUaW5ndWVseSB3cm90ZToKPj4gT24gMDIvMjEvMTQg
-MDE6NDcsIEJydW5vIFByw6ltb250IHdyb3RlOgo+Pj4gQSB2aXJ0dWFsIHNlcnZlciBvZiBtaW5l
-IHN0b3BwZWQgd29ya2luZyBwcm9wZXJseSB5ZXN0ZXJkYXkgYmVjYXVzZSBvbmUKPj4+IHBhcnRp
-dGlvbiBiZWNhbWUgY29ycnVwdGVkIChvciBjb3JydXB0aW9uIGhhcyBiZWVuIHN0dW1ibGVkIG92
-ZXIpLgo+Cj4gVGhlIHJ1bm5pbmcga2VybmVsIHdhcyAzLjEyLjYuCj4KPiBJIHdvdWxkIGhhdmUg
-YXBwcmVjaWF0ZWQgaWYgdGhlIFhGUyBmaWxlc3lzdGVtIGhhZCBjb250aW51ZWQgYmVpbmcKPiBh
-Y2Nlc3NpYmxlIGV2ZW4gaWYgb25seSBpbiByZWFkLW9ubHkgbW9kZSBpbnN0ZWFkIG9mIGNvbXBs
-ZXRlbHkgc2h1dHRpbmcKPiBkb3duLiBUaGF0IHdvdWxkIGhhdmUgbWFkZSBpdCBwb3NzaWJsZSB0
-byBnYXRoZXIgbW9yZSBpbmZvcm1hdGlvbiBhbmQKPiBkb2luZyBzbyBtb3JlIGVhc2lseSBhcyB3
-ZWxsLgoKV2VsbCBpdCBhcHBlYXJzIHRoYXQgdGhlIHhsb2dfY2lsX3B1c2ggcHJvYmxlbSBpcyBu
-b3QgZ29pbmcgdG8gYmUgZml4ZWQgCnNvb24sIHNvIEkgd2lsbCByZXBvc3QgdGhlIHBhdGNoIGZv
-ciB0aGUgbG9nIHJlY292ZXJ5IHBvcnRpb24uCgoKPj4+IFJlc3RhcnRpbmcgdGhlIHN5c3RlbSBh
-bnkgYXR0ZW1wdCB0byBtb3VudCB0aGF0IHBhcnRpdGlvbiAod2l0aG91dAo+Pj4gLW8gbm9yZWNv
-dmVyeSxybykgcmVzdWx0cyBpbiB0aGUgZm9sbG93aW5nIHRyYWNlICh0cmFuc2NyaWJlZCk6Cj4+
-PiBYRlMgKHNkYTUpOiBNb3VudGluZyBGaWxlc3lzdGVtCj4+PiBYRlMgKHNkYTUpOiBTdGFydGlu
-ZyByZWNvdmVyeSAobG9nZGV2OiBpbnRlcm5hbCkKPj4+IFhGUzogSW50ZXJuYWwgZXJyb3IgWEZT
-X1dBTlRfQ09SUlVQVEVEX0dPVE8gYXQgbGluZSAxNjAyIG9mIGZpbGUKPj4+ICAgICAgICAvdmFy
-L2NhY2hlL2tlcm5lbC9saW51eC1naXQvZnMveGZzL3hmc19hbGxvYy5jLiBDYWxsZXIKPj4+IDB4
-ZmZmZmZmZmY4MTE2ZDkyNgo+Pj4gQ1BVOiAwIFBJRDogNjA2IENvbW1tOiBtb3VudCBOb3QgdGFp
-bnRlZCAzLjEzLjAtaGV0em5lciAjMQo+Pj4gSGFyZHdhcmUgbmFtZTogQm9jaHMgQm9jaHMsIEJJ
-T1MgQm9jaHMgMDEvMDEvMjAwNwo+Pj4gICAgMDAwMDAwMDAwMDAyZWI4NCBmZmZmODgwMDFkYzUz
-YWI4IGZmZmZmZmZmODEzY2EzMzkgZmZmZjg4MDAxZGM1M2FkOAo+Pj4gICAgZmZmZmZmZmY4MTE1
-NmQ0YSBmZmZmZmZmZjgxMTZkOTI2IDAwMDAwMDAwMDAwMDAyYTggZmZmZjg4MDAxZGM1M2I2OAo+
-Pj4gICAgZmZmZmZmZmY4MTE2YjhkZCBmZmZmODgwMDFkZDdjY2MwIDAwMDAwMDAwMDAwMDAwMDAg
-MDAwMDAwMDAwMDAwMDAwMQo+Pj4gQ2FsbCBUcmFjZToKPj4+ICAgIFs8ZmZmZmZmZmY4MTNjYTMz
-OT5dIGR1bXBfc3RhY2srMHgxOS8weDFiCj4+PiAgICBbPGZmZmZmZmZmODExNTZkNGE+XSB4ZnNf
-ZXJyb3JfcmVwb3J0KzB4M2EweDQwCj4+PiAgICBbPGZmZmZmZmZmODExNmQ5MjY+XSA/IHhmc19m
-cmVlX2V4dGVudCsweGQ2LzB4MTIwCj4+PiAgICBbPGZmZmZmZmZmODExNmI4ZGQ+XSB4ZnNfZnJl
-ZV9hZ19leHRlbnQrMHg0OGQvMHg1YzAKPj4+ICAgIFs8ZmZmZmZmZmY4MTE2ZDkyNj5dIHhmc19m
-cmVlX2V4dGVudCsweGQ2LzB4MTIwCj4+PiAgICBbPGZmZmZmZmZmODEwZDVmYTQ+XSA/IGttZW1f
-Y2FjaGVfYWxsb2MrMHhhNC8weGIwCj4+PiAgICBbPGZmZmZmZmZmODExOWMzOTA+XSB4bG9nX3Jl
-Y292ZXJfcHJvY2Vzc19lZmkrMHgxNzAvMHgxYjAKPj4+ICAgIFs8ZmZmZmZmZmY4MTA3NDcwOT5d
-ID8gd2FrZV91cF9iaXQrMHgyOS8weDQwCj4+PiAgICBbPGZmZmZmZmZmODExOWQxMDY+XSB4bG9n
-X3JlY292ZXJfcHJvY2Vzc19lZmlzLmlzcmEuMjcrMHg0Ni8weDgwCj4+PiAgICBbPGZmZmZmZmZm
-ODExYTE3YzU+XSB4bG9nX3JlY292ZXJfZmluaXNoKzB4MmMvMHg1MAo+Pj4gICAgWzxmZmZmZmZm
-ZjgxMWE1YzRjPl0geGZzX2xvZ19tb3VudF9maW5pc2grMHgyYy8weDUwCj4+PiAgICBbPGZmZmZm
-ZmZmODExOTU4ZWU+XSA/IHhmc19pdW5sb2NrKzB4NmUvMHg5MAo+Pj4gICAgWzxmZmZmZmZmZjgx
-MTY0NzMzPl0geGZzX21vdW50ZnMrMHg0NzMvMHg2OTAKPj4+ICAgIFs8ZmZmZmZmZmY4MTE2NzA3
-Mj5dIHhmc19mc19maWxsX3N1cGVyKzB4MjkyLzB4MzEwCj4+PiAgICBbPGZmZmZmZmZmODEwZTdh
-NjE+XSBtb3VudF9iZGV2KzB4MTkxLzB4MWQwCj4+PiAgICBbPGZmZmZmZmZmODExZTMzN2M+XSA/
-IGlkYV9nZXRfbmV3X2Fib3ZlKzB4MjFjLzB4MjkwCj4+PiAgICBbPGZmZmZmZmZmODExNjZkZTA+
-XSA/IHhmc19wYXJzZWFyZ3MrMHhjMTAvMHhjMTAKPj4+ICAgIFs8ZmZmZmZmZmY4MTE2NTMxMD5d
-IHhmc19mc19tb3VudCsweDEwLzB4MjAKPj4+ICAgIFs8ZmZmZmZmZmY4MTBlN2NhYj5dIG1vdW50
-X2ZzKzB4MWIvMHhkMAo+Pj4gICAgWzxmZmZmZmZmZjgxMTAwMWFkPl0gdmZzX2tlcm5fbW91bnQr
-MHg2ZC8weDEwMAo+Pj4gICAgWzxmZmZmZmZmZjgxMTAxOWJiPl0gZG9fbW91bnQrMHgxZmIvMHg5
-ZDAKPj4+ICAgIFs8ZmZmZmZmZmY4MTBiM2I0Mz5dID8gc3RybmR1cF91c2VyKzB4NTMvMHg3MAo+
-Pj4gICAgWzxmZmZmZmZmZjgxMTAyNDY5Pl0gU3lTX21vdW50KzB4ODkvMHhkMAo+Pj4gICAgWzxm
-ZmZmZmZmZjgzMWNlNGI3Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiCj4+PiBYRlMg
-KHNkYTUpOiBGYWlsZWQgdG8gcmVjb3ZlciBFRklzCj4+PiBYRlMgKHNkYTUpOiBsb2cgbW91bnQg
-ZmluaXNoIGZhaWxlZAo+Pgo+PiBjdXJpb3VzIG9uIHdoaWNoIHZlcnNpb24gb2YgTGludXggaGl0
-IHRoaXMgcHJvYmxlbT8KPgo+IFRoZSB0cmFjZSB3YXMgcHJvZHVjZWQgYnkgMy4xMyBrZXJuZWwg
-ZnJvbSBrZXJuZWwub3JnLgo+Cj4gQSByZWJvb3QgYXR0ZW1wdCB3aXRoIDMuMTIuNiBzaG93ZWQg
-YSBzaW1pbGFyIHRyYWNlIHRob3VnaCBJIGRpZG4ndAo+IHJlY29yZCBpdC4KClRoZSBvcmlnaW5h
-bCBwcm9ibGVtIGlzIGF0dGVtcHRpbmcgdG8gZnJlZSBhIHBhcnRpYWwgZnJlZSBleHRlbnQsCkkg
-d2FzIGN1cmlvdXMgYmVjYXVzZSB0aGF0IHByb2JsZW0gaGFzIGJlZW4gZmxhcmluZyB1cCByZWNl
-bnRseSAKaW50ZXJuYWxseSBhbmQgaW4gdGhlIGNvbW11bml0eS4KClRoYW5rLXlvdSBmb3IgdGhl
-IGluZm9ybWF0aW9uLgoKLS1NYXJrLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On 02/19/2014 07:23 PM, Dave Chinner wrote:
+> On Wed, Feb 19, 2014 at 01:24:54PM -0500, Brian Foster wrote:
+>> On 02/18/2014 11:16 PM, Dave Chinner wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+...
+>>> +
+>>> +	/*
+>>> +	 * The call to xlog_cil_push_now() executes the push in the background.
+>>> +	 * Hence by the time we have got here it our sequence may not have been
+>>> +	 * pushed yet. This is true if the current sequence still matches the
+>>> +	 * push sequence after the above wait loop and the CIL still contains
+>>> +	 * dirty objects.
+>>> +	 *
+>>> +	 * When the push occurs, it will empty the CIL and
+>>> +	 * atomically increment the currect sequence past the push sequence and
+>>> +	 * move it into the committing list. Of course, if the CIL is clean at
+>>> +	 * the time of the push, it won't have pushed the CIL at all, so in that
+>>> +	 * case we should try the push for this sequence again from the start
+>>> +	 * just in case.
+>>> +	 */
+>>> +
+>>> +	if (sequence == cil->xc_current_sequence &&
+>>> +	    !list_empty(&cil->xc_cil)) {
+>>> +		spin_unlock(&cil->xc_push_lock);
+>>> +		goto restart;
+>>> +	}
+>>> +
+>>
+>> IIUC, the objective here is to make sure we don't leave this code path
+>> before the push even starts and the ctx makes it onto the committing
+>> list, due to xlog_cil_push_now() moving things to a workqueue.
+> 
+> Right.
+> 
+>> Given that, what's the purpose of re-executing the background push as
+>> opposed to restarting the wait sequence (as done previously)? It looks
+>> like push_now() won't queue the work again due to cil->xc_push_seq, but
+>> it will flush the queue and I suppose make it more likely the push
+>> starts. Is that the intent?
+> 
+> Effectively. But the other thing that it is protecting against is
+> that foreground push is done without holding the cil->xc_ctx_lock,
+> and so we can get the situation where we try a foreground push
+> of the current sequence, see that the CIL is empty and return
+> without pushing, wait for previous sequences to commit, then find
+> that the CIL has items on the CIL in the sequence we are supposed to
+> be committing.
+> 
+> In this case, we don't know if this occurred because the workqueue
+> has not started working on our push, or whether we raced on an empty
+> CIL, and hence we need to make sure that everything in the sequence
+> we are support to commit is pushed to the log.
+> 
+> Hence if the current sequence is dirty after we've ensure that all
+> prior sequences are fully checkpointed, need to go back and
+> push the CIL again to ensure that when we return to the caller the
+> CIL is checkpointed up to the point in time of the log force
+> occurring.
+> 
+
+Ok, I see. The foreground variant checks the push sequence and xc_cil
+list state without xc_ctx_lock. The background variant (down in
+xlog_cil_push()) will repeat the list check while under xc_ctx_lock.
+
+>From what I can see, this potential behavior of a foreground push seeing
+an empty cil is possible even before this patch. xlog_cil_force_lsn()
+will just wait on all of the previous sequences and return. Another push
+can move things along for that sequence, as xc_push_seq has not been
+updated.
+
+The workqueue pattern opens up potential for the "wait before handler
+runs" race, and the sequence and list check is necessary to detect that.
+Doing the push_now() again seems technically unnecessary, but the flush
+executes and thus should guarantee we iterate this sequence twice at
+most. Seems reasonable.
+
+General follow up question - what makes not taking xc_ctx_lock anywhere
+in here safe in the first place? In the current implementation, if the
+push has already been queued (note that we flush before we take the
+spinlock and check the push sequence) and we get into the ctx wait
+sequence, isn't it possible to see xc_committing before the ctx we're
+pushing is even added?
+
+With this patch, what prevents us from seeing the updated
+xc_current_sequence and thus skipping the restart (xc_current_sequence
+isn't updated under the spinlock) before the pushed ctx has been added
+to xc_committing?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
