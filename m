@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 102967FAA
-	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 09:04:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F1F2330408A
-	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 07:04:42 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0EF437F6F
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 12:47:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CBE598F8052
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 10:47:48 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id shpwD5D7V0Vp8vHV for
-	<xfs@oss.sgi.com>; Fri, 21 Feb 2014 07:04:42 -0800 (PST)
-Message-ID: <53076B05.8010806@redhat.com>
-Date: Fri, 21 Feb 2014 10:04:37 -0500
-From: Brian Foster <bfoster@redhat.com>
+	cuda.sgi.com with ESMTP id 3rU7iqEzStvy8diT for
+	<xfs@oss.sgi.com>; Fri, 21 Feb 2014 10:47:47 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1LIllfV016242
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 13:47:47 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1LIljWv016255
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 13:47:46 -0500
+Message-ID: <53079F51.2050406@redhat.com>
+Date: Fri, 21 Feb 2014 12:47:45 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
-References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
-	<1392783402-4726-2-git-send-email-david@fromorbit.com>
-	<5304F6F6.3070007@redhat.com> <20140220002358.GH4916@dastard>
-In-Reply-To: <20140220002358.GH4916@dastard>
+Subject: [PATCH] xfstests: fix 300.out
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,104 +36,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 02/19/2014 07:23 PM, Dave Chinner wrote:
-> On Wed, Feb 19, 2014 at 01:24:54PM -0500, Brian Foster wrote:
->> On 02/18/2014 11:16 PM, Dave Chinner wrote:
->>> From: Dave Chinner <dchinner@redhat.com>
->>>
-...
->>> +
->>> +	/*
->>> +	 * The call to xlog_cil_push_now() executes the push in the background.
->>> +	 * Hence by the time we have got here it our sequence may not have been
->>> +	 * pushed yet. This is true if the current sequence still matches the
->>> +	 * push sequence after the above wait loop and the CIL still contains
->>> +	 * dirty objects.
->>> +	 *
->>> +	 * When the push occurs, it will empty the CIL and
->>> +	 * atomically increment the currect sequence past the push sequence and
->>> +	 * move it into the committing list. Of course, if the CIL is clean at
->>> +	 * the time of the push, it won't have pushed the CIL at all, so in that
->>> +	 * case we should try the push for this sequence again from the start
->>> +	 * just in case.
->>> +	 */
->>> +
->>> +	if (sequence == cil->xc_current_sequence &&
->>> +	    !list_empty(&cil->xc_cil)) {
->>> +		spin_unlock(&cil->xc_push_lock);
->>> +		goto restart;
->>> +	}
->>> +
->>
->> IIUC, the objective here is to make sure we don't leave this code path
->> before the push even starts and the ctx makes it onto the committing
->> list, due to xlog_cil_push_now() moving things to a workqueue.
-> 
-> Right.
-> 
->> Given that, what's the purpose of re-executing the background push as
->> opposed to restarting the wait sequence (as done previously)? It looks
->> like push_now() won't queue the work again due to cil->xc_push_seq, but
->> it will flush the queue and I suppose make it more likely the push
->> starts. Is that the intent?
-> 
-> Effectively. But the other thing that it is protecting against is
-> that foreground push is done without holding the cil->xc_ctx_lock,
-> and so we can get the situation where we try a foreground push
-> of the current sequence, see that the CIL is empty and return
-> without pushing, wait for previous sequences to commit, then find
-> that the CIL has items on the CIL in the sequence we are supposed to
-> be committing.
-> 
-> In this case, we don't know if this occurred because the workqueue
-> has not started working on our push, or whether we raced on an empty
-> CIL, and hence we need to make sure that everything in the sequence
-> we are support to commit is pushed to the log.
-> 
-> Hence if the current sequence is dirty after we've ensure that all
-> prior sequences are fully checkpointed, need to go back and
-> push the CIL again to ensure that when we return to the caller the
-> CIL is checkpointed up to the point in time of the log force
-> occurring.
-> 
+This test was written before a solution was in place, I think,
+and so the expected output wasn't well tested.
 
-Ok, I see. The foreground variant checks the push sequence and xc_cil
-list state without xc_ctx_lock. The background variant (down in
-xlog_cil_push()) will repeat the list check while under xc_ctx_lock.
+The test does a loop of sparse writes from 6 to 0, but the
+.out file expects 6 (not 7) extents.  Fix it.
 
->From what I can see, this potential behavior of a foreground push seeing
-an empty cil is possible even before this patch. xlog_cil_force_lsn()
-will just wait on all of the previous sequences and return. Another push
-can move things along for that sequence, as xc_push_seq has not been
-updated.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-The workqueue pattern opens up potential for the "wait before handler
-runs" race, and the sequence and list check is necessary to detect that.
-Doing the push_now() again seems technically unnecessary, but the flush
-executes and thus should guarantee we iterate this sequence twice at
-most. Seems reasonable.
-
-General follow up question - what makes not taking xc_ctx_lock anywhere
-in here safe in the first place? In the current implementation, if the
-push has already been queued (note that we flush before we take the
-spinlock and check the push sequence) and we get into the ctx wait
-sequence, isn't it possible to see xc_committing before the ctx we're
-pushing is even added?
-
-With this patch, what prevents us from seeing the updated
-xc_current_sequence and thus skipping the restart (xc_current_sequence
-isn't updated under the spinlock) before the pushed ctx has been added
-to xc_committing?
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> 
+diff --git a/tests/xfs/300.out b/tests/xfs/300.out
+index ac03557..29ed771 100644
+--- a/tests/xfs/300.out
++++ b/tests/xfs/300.out
+@@ -1,3 +1,3 @@
+ QA output created by 300
+ SCRATCH_MNT/300.test
+-extents before:6 after:1 DONE SCRATCH_MNT/300.test
++extents before:7 after:1 DONE SCRATCH_MNT/300.test
 
 _______________________________________________
 xfs mailing list
