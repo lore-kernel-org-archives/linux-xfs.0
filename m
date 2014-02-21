@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 045A47FA7
-	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 08:14:12 -0600 (CST)
-Message-ID: <53075F34.7010703@sgi.com>
-Date: Fri, 21 Feb 2014 08:14:12 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C9A957FA3
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 08:48:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 47197AC006
+	for <xfs@oss.sgi.com>; Fri, 21 Feb 2014 06:48:04 -0800 (PST)
+Received: from smtprelay.restena.lu (smtprelay.restena.lu [158.64.1.62]) by
+	cuda.sgi.com with ESMTP id SrjmjwLadgYAH6Ix for
+	<xfs@oss.sgi.com>; Fri, 21 Feb 2014 06:48:01 -0800 (PST)
+Date: Fri, 21 Feb 2014 15:48:00 +0100
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
 Subject: Re: XFS Failed to recover EFIs - XFS_WANT_CORRUPTED_GOTO at line
 	1602 of xfs_alloc.c
+Message-ID: <20140221154800.57b88140@pluto>
+In-Reply-To: <53075F34.7010703@sgi.com>
 References: <20140221084717.3364a23e@pluto>
-In-Reply-To: <20140221084717.3364a23e@pluto>
+	<53075F34.7010703@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,102 +25,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On 02/21/14 01:47, Bruno Pr=E9mont wrote:
-> Hi,
->
-> A virtual server of mine stopped working properly yesterday because one
-> partition became corrupted (or corruption has been stumbled over).
->
->
-> Restarting the system any attempt to mount that partition (without
-> -o norecovery,ro) results in the following trace (transcribed):
-> XFS (sda5): Mounting Filesystem
-> XFS (sda5): Starting recovery (logdev: internal)
-> XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file
->       /var/cache/kernel/linux-git/fs/xfs/xfs_alloc.c. Caller
-> 0xffffffff8116d926
-> CPU: 0 PID: 606 Commm: mount Not tainted 3.13.0-hetzner #1
-> Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
->   000000000002eb84 ffff88001dc53ab8 ffffffff813ca339 ffff88001dc53ad8
->   ffffffff81156d4a ffffffff8116d926 00000000000002a8 ffff88001dc53b68
->   ffffffff8116b8dd ffff88001dd7ccc0 0000000000000000 0000000000000001
-> Call Trace:
->   [<ffffffff813ca339>] dump_stack+0x19/0x1b
->   [<ffffffff81156d4a>] xfs_error_report+0x3a0x40
->   [<ffffffff8116d926>] ? xfs_free_extent+0xd6/0x120
->   [<ffffffff8116b8dd>] xfs_free_ag_extent+0x48d/0x5c0
->   [<ffffffff8116d926>] xfs_free_extent+0xd6/0x120
->   [<ffffffff810d5fa4>] ? kmem_cache_alloc+0xa4/0xb0
->   [<ffffffff8119c390>] xlog_recover_process_efi+0x170/0x1b0
->   [<ffffffff81074709>] ? wake_up_bit+0x29/0x40
->   [<ffffffff8119d106>] xlog_recover_process_efis.isra.27+0x46/0x80
->   [<ffffffff811a17c5>] xlog_recover_finish+0x2c/0x50
->   [<ffffffff811a5c4c>] xfs_log_mount_finish+0x2c/0x50
->   [<ffffffff811958ee>] ? xfs_iunlock+0x6e/0x90
->   [<ffffffff81164733>] xfs_mountfs+0x473/0x690
->   [<ffffffff81167072>] xfs_fs_fill_super+0x292/0x310
->   [<ffffffff810e7a61>] mount_bdev+0x191/0x1d0
->   [<ffffffff811e337c>] ? ida_get_new_above+0x21c/0x290
->   [<ffffffff81166de0>] ? xfs_parseargs+0xc10/0xc10
->   [<ffffffff81165310>] xfs_fs_mount+0x10/0x20
->   [<ffffffff810e7cab>] mount_fs+0x1b/0xd0
->   [<ffffffff811001ad>] vfs_kern_mount+0x6d/0x100
->   [<ffffffff811019bb>] do_mount+0x1fb/0x9d0
->   [<ffffffff810b3b43>] ? strndup_user+0x53/0x70
->   [<ffffffff81102469>] SyS_mount+0x89/0xd0
->   [<ffffffff831ce4b7>] system_call_fastpath+0x16/0x1b
-> XFS (sda5): Failed to recover EFIs
-> XFS (sda5): log mount finish failed
-
-curious on which version of Linux hit this problem?
-
->
->
-> After that the mount process remains in D state and any attempt to
-> xfs_repair that fileysystem blocks (reboot needed to do anything).
->
-> Is that expected or should the mount either completely fail, returning
-> proper error to mount and leave system in a state as if the mount had
-> never been attempted (except for the log messages)?
-
-The xfs_ail_push_all_sync() is hanging because the EFI was not and will =
-
-not be removed. There is a patch for this problem, but is waiting for a =
-
-similar issue in xlog_cil_push() that would change the recovery patch.
->
->
->> From the cause of this, I guess it's some left-over of "unclean"
-> live migration of the KVM guest this system is running on some longer
-> time ago. After live migration some processes started dying weird
-> deaths. Rebooting the system worked fine by the time though.
->
-> The only major load on that system (not so heavy, about 10-20 IO-ops
-> per second on average, mostly writes) is updating RRD files and
-> running a slave MySQL (InnoDB) database.
->
-> I recovered the filesystem with xfs_repair -L /dev/sda5 though the
-> InnoDB state remaining is rather broken.
-> xfs_repair reported only claimed free space issues (I didn't save its
-> output).
->
-> Bruno
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
---Mark.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCAyMSBGZWIgMjAxNCAwODoxNDoxMiAtMDYwMCBNYXJrIFRpbmd1ZWx5IHdyb3RlOgo+
+IE9uIDAyLzIxLzE0IDAxOjQ3LCBCcnVubyBQcsOpbW9udCB3cm90ZToKPiA+IEEgdmlydHVhbCBz
+ZXJ2ZXIgb2YgbWluZSBzdG9wcGVkIHdvcmtpbmcgcHJvcGVybHkgeWVzdGVyZGF5IGJlY2F1c2Ug
+b25lCj4gPiBwYXJ0aXRpb24gYmVjYW1lIGNvcnJ1cHRlZCAob3IgY29ycnVwdGlvbiBoYXMgYmVl
+biBzdHVtYmxlZCBvdmVyKS4KClRoZSBydW5uaW5nIGtlcm5lbCB3YXMgMy4xMi42LgoKSSB3b3Vs
+ZCBoYXZlIGFwcHJlY2lhdGVkIGlmIHRoZSBYRlMgZmlsZXN5c3RlbSBoYWQgY29udGludWVkIGJl
+aW5nCmFjY2Vzc2libGUgZXZlbiBpZiBvbmx5IGluIHJlYWQtb25seSBtb2RlIGluc3RlYWQgb2Yg
+Y29tcGxldGVseSBzaHV0dGluZwpkb3duLiBUaGF0IHdvdWxkIGhhdmUgbWFkZSBpdCBwb3NzaWJs
+ZSB0byBnYXRoZXIgbW9yZSBpbmZvcm1hdGlvbiBhbmQKZG9pbmcgc28gbW9yZSBlYXNpbHkgYXMg
+d2VsbC4KCj4gPiBSZXN0YXJ0aW5nIHRoZSBzeXN0ZW0gYW55IGF0dGVtcHQgdG8gbW91bnQgdGhh
+dCBwYXJ0aXRpb24gKHdpdGhvdXQKPiA+IC1vIG5vcmVjb3Zlcnkscm8pIHJlc3VsdHMgaW4gdGhl
+IGZvbGxvd2luZyB0cmFjZSAodHJhbnNjcmliZWQpOgo+ID4gWEZTIChzZGE1KTogTW91bnRpbmcg
+RmlsZXN5c3RlbQo+ID4gWEZTIChzZGE1KTogU3RhcnRpbmcgcmVjb3ZlcnkgKGxvZ2RldjogaW50
+ZXJuYWwpCj4gPiBYRlM6IEludGVybmFsIGVycm9yIFhGU19XQU5UX0NPUlJVUFRFRF9HT1RPIGF0
+IGxpbmUgMTYwMiBvZiBmaWxlCj4gPiAgICAgICAvdmFyL2NhY2hlL2tlcm5lbC9saW51eC1naXQv
+ZnMveGZzL3hmc19hbGxvYy5jLiBDYWxsZXIKPiA+IDB4ZmZmZmZmZmY4MTE2ZDkyNgo+ID4gQ1BV
+OiAwIFBJRDogNjA2IENvbW1tOiBtb3VudCBOb3QgdGFpbnRlZCAzLjEzLjAtaGV0em5lciAjMQo+
+ID4gSGFyZHdhcmUgbmFtZTogQm9jaHMgQm9jaHMsIEJJT1MgQm9jaHMgMDEvMDEvMjAwNwo+ID4g
+ICAwMDAwMDAwMDAwMDJlYjg0IGZmZmY4ODAwMWRjNTNhYjggZmZmZmZmZmY4MTNjYTMzOSBmZmZm
+ODgwMDFkYzUzYWQ4Cj4gPiAgIGZmZmZmZmZmODExNTZkNGEgZmZmZmZmZmY4MTE2ZDkyNiAwMDAw
+MDAwMDAwMDAwMmE4IGZmZmY4ODAwMWRjNTNiNjgKPiA+ICAgZmZmZmZmZmY4MTE2YjhkZCBmZmZm
+ODgwMDFkZDdjY2MwIDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDAwMDAwMDAwMQo+ID4gQ2FsbCBU
+cmFjZToKPiA+ICAgWzxmZmZmZmZmZjgxM2NhMzM5Pl0gZHVtcF9zdGFjaysweDE5LzB4MWIKPiA+
+ICAgWzxmZmZmZmZmZjgxMTU2ZDRhPl0geGZzX2Vycm9yX3JlcG9ydCsweDNhMHg0MAo+ID4gICBb
+PGZmZmZmZmZmODExNmQ5MjY+XSA/IHhmc19mcmVlX2V4dGVudCsweGQ2LzB4MTIwCj4gPiAgIFs8
+ZmZmZmZmZmY4MTE2YjhkZD5dIHhmc19mcmVlX2FnX2V4dGVudCsweDQ4ZC8weDVjMAo+ID4gICBb
+PGZmZmZmZmZmODExNmQ5MjY+XSB4ZnNfZnJlZV9leHRlbnQrMHhkNi8weDEyMAo+ID4gICBbPGZm
+ZmZmZmZmODEwZDVmYTQ+XSA/IGttZW1fY2FjaGVfYWxsb2MrMHhhNC8weGIwCj4gPiAgIFs8ZmZm
+ZmZmZmY4MTE5YzM5MD5dIHhsb2dfcmVjb3Zlcl9wcm9jZXNzX2VmaSsweDE3MC8weDFiMAo+ID4g
+ICBbPGZmZmZmZmZmODEwNzQ3MDk+XSA/IHdha2VfdXBfYml0KzB4MjkvMHg0MAo+ID4gICBbPGZm
+ZmZmZmZmODExOWQxMDY+XSB4bG9nX3JlY292ZXJfcHJvY2Vzc19lZmlzLmlzcmEuMjcrMHg0Ni8w
+eDgwCj4gPiAgIFs8ZmZmZmZmZmY4MTFhMTdjNT5dIHhsb2dfcmVjb3Zlcl9maW5pc2grMHgyYy8w
+eDUwCj4gPiAgIFs8ZmZmZmZmZmY4MTFhNWM0Yz5dIHhmc19sb2dfbW91bnRfZmluaXNoKzB4MmMv
+MHg1MAo+ID4gICBbPGZmZmZmZmZmODExOTU4ZWU+XSA/IHhmc19pdW5sb2NrKzB4NmUvMHg5MAo+
+ID4gICBbPGZmZmZmZmZmODExNjQ3MzM+XSB4ZnNfbW91bnRmcysweDQ3My8weDY5MAo+ID4gICBb
+PGZmZmZmZmZmODExNjcwNzI+XSB4ZnNfZnNfZmlsbF9zdXBlcisweDI5Mi8weDMxMAo+ID4gICBb
+PGZmZmZmZmZmODEwZTdhNjE+XSBtb3VudF9iZGV2KzB4MTkxLzB4MWQwCj4gPiAgIFs8ZmZmZmZm
+ZmY4MTFlMzM3Yz5dID8gaWRhX2dldF9uZXdfYWJvdmUrMHgyMWMvMHgyOTAKPiA+ICAgWzxmZmZm
+ZmZmZjgxMTY2ZGUwPl0gPyB4ZnNfcGFyc2VhcmdzKzB4YzEwLzB4YzEwCj4gPiAgIFs8ZmZmZmZm
+ZmY4MTE2NTMxMD5dIHhmc19mc19tb3VudCsweDEwLzB4MjAKPiA+ICAgWzxmZmZmZmZmZjgxMGU3
+Y2FiPl0gbW91bnRfZnMrMHgxYi8weGQwCj4gPiAgIFs8ZmZmZmZmZmY4MTEwMDFhZD5dIHZmc19r
+ZXJuX21vdW50KzB4NmQvMHgxMDAKPiA+ICAgWzxmZmZmZmZmZjgxMTAxOWJiPl0gZG9fbW91bnQr
+MHgxZmIvMHg5ZDAKPiA+ICAgWzxmZmZmZmZmZjgxMGIzYjQzPl0gPyBzdHJuZHVwX3VzZXIrMHg1
+My8weDcwCj4gPiAgIFs8ZmZmZmZmZmY4MTEwMjQ2OT5dIFN5U19tb3VudCsweDg5LzB4ZDAKPiA+
+ICAgWzxmZmZmZmZmZjgzMWNlNGI3Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiCj4g
+PiBYRlMgKHNkYTUpOiBGYWlsZWQgdG8gcmVjb3ZlciBFRklzCj4gPiBYRlMgKHNkYTUpOiBsb2cg
+bW91bnQgZmluaXNoIGZhaWxlZAo+IAo+IGN1cmlvdXMgb24gd2hpY2ggdmVyc2lvbiBvZiBMaW51
+eCBoaXQgdGhpcyBwcm9ibGVtPwoKVGhlIHRyYWNlIHdhcyBwcm9kdWNlZCBieSAzLjEzIGtlcm5l
+bCBmcm9tIGtlcm5lbC5vcmcuCgpBIHJlYm9vdCBhdHRlbXB0IHdpdGggMy4xMi42IHNob3dlZCBh
+IHNpbWlsYXIgdHJhY2UgdGhvdWdoIEkgZGlkbid0CnJlY29yZCBpdC4KCj4gPiBBZnRlciB0aGF0
+IHRoZSBtb3VudCBwcm9jZXNzIHJlbWFpbnMgaW4gRCBzdGF0ZSBhbmQgYW55IGF0dGVtcHQgdG8K
+PiA+IHhmc19yZXBhaXIgdGhhdCBmaWxleXN5c3RlbSBibG9ja3MgKHJlYm9vdCBuZWVkZWQgdG8g
+ZG8gYW55dGhpbmcpLgo+ID4KPiA+IElzIHRoYXQgZXhwZWN0ZWQgb3Igc2hvdWxkIHRoZSBtb3Vu
+dCBlaXRoZXIgY29tcGxldGVseSBmYWlsLCByZXR1cm5pbmcKPiA+IHByb3BlciBlcnJvciB0byBt
+b3VudCBhbmQgbGVhdmUgc3lzdGVtIGluIGEgc3RhdGUgYXMgaWYgdGhlIG1vdW50IGhhZAo+ID4g
+bmV2ZXIgYmVlbiBhdHRlbXB0ZWQgKGV4Y2VwdCBmb3IgdGhlIGxvZyBtZXNzYWdlcyk/Cj4gCj4g
+VGhlIHhmc19haWxfcHVzaF9hbGxfc3luYygpIGlzIGhhbmdpbmcgYmVjYXVzZSB0aGUgRUZJIHdh
+cyBub3QgYW5kIHdpbGwgCj4gbm90IGJlIHJlbW92ZWQuIFRoZXJlIGlzIGEgcGF0Y2ggZm9yIHRo
+aXMgcHJvYmxlbSwgYnV0IGlzIHdhaXRpbmcgZm9yIGEgCj4gc2ltaWxhciBpc3N1ZSBpbiB4bG9n
+X2NpbF9wdXNoKCkgdGhhdCB3b3VsZCBjaGFuZ2UgdGhlIHJlY292ZXJ5IHBhdGNoLgo+Cj4gPj4g
+RnJvbSB0aGUgY2F1c2Ugb2YgdGhpcywgSSBndWVzcyBpdCdzIHNvbWUgbGVmdC1vdmVyIG9mICJ1
+bmNsZWFuIgo+ID4gbGl2ZSBtaWdyYXRpb24gb2YgdGhlIEtWTSBndWVzdCB0aGlzIHN5c3RlbSBp
+cyBydW5uaW5nIG9uIHNvbWUgbG9uZ2VyCj4gPiB0aW1lIGFnby4gQWZ0ZXIgbGl2ZSBtaWdyYXRp
+b24gc29tZSBwcm9jZXNzZXMgc3RhcnRlZCBkeWluZyB3ZWlyZAo+ID4gZGVhdGhzLiBSZWJvb3Rp
+bmcgdGhlIHN5c3RlbSB3b3JrZWQgZmluZSBieSB0aGUgdGltZSB0aG91Z2guCj4gPgo+ID4gVGhl
+IG9ubHkgbWFqb3IgbG9hZCBvbiB0aGF0IHN5c3RlbSAobm90IHNvIGhlYXZ5LCBhYm91dCAxMC0y
+MCBJTy1vcHMKPiA+IHBlciBzZWNvbmQgb24gYXZlcmFnZSwgbW9zdGx5IHdyaXRlcykgaXMgdXBk
+YXRpbmcgUlJEIGZpbGVzIGFuZAo+ID4gcnVubmluZyBhIHNsYXZlIE15U1FMIChJbm5vREIpIGRh
+dGFiYXNlLgo+ID4KPiA+IEkgcmVjb3ZlcmVkIHRoZSBmaWxlc3lzdGVtIHdpdGggeGZzX3JlcGFp
+ciAtTCAvZGV2L3NkYTUgdGhvdWdoIHRoZQo+ID4gSW5ub0RCIHN0YXRlIHJlbWFpbmluZyBpcyBy
+YXRoZXIgYnJva2VuLgo+ID4geGZzX3JlcGFpciByZXBvcnRlZCBvbmx5IGNsYWltZWQgZnJlZSBz
+cGFjZSBpc3N1ZXMgKEkgZGlkbid0IHNhdmUgaXRzCj4gPiBvdXRwdXQpLgoKQnJ1bm8KCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
