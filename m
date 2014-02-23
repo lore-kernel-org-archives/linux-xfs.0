@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1C8937F57
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 15:22:41 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id D94A37F51
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 15:38:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 030F18F8035
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 13:22:40 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BBA268F8033
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 13:38:23 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xFgifmRSqtZIiVs8 for <xfs@oss.sgi.com>;
-	Sun, 23 Feb 2014 13:22:36 -0800 (PST)
-Date: Mon, 24 Feb 2014 08:22:31 +1100
+	WVj6W76tc3CUR6re for <xfs@oss.sgi.com>;
+	Sun, 23 Feb 2014 13:38:21 -0800 (PST)
+Date: Mon, 24 Feb 2014 08:36:06 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 2/10] xfs: Add support FALLOC_FL_COLLAPSE_RANGE for
+Subject: Re: [PATCH v5 1/10] fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for
 	fallocate
-Message-ID: <20140223212231.GD4317@dastard>
-References: <1392741475-20063-1-git-send-email-linkinjeon@gmail.com>
+Message-ID: <20140223213606.GE4317@dastard>
+References: <1392741464-20029-1-git-send-email-linkinjeon@gmail.com>
+	<20140222140625.GD26637@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1392741475-20063-1-git-send-email-linkinjeon@gmail.com>
+In-Reply-To: <20140222140625.GD26637@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +31,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
+To: Theodore Ts'o <tytso@mit.edu>, Namjae Jeon <linkinjeon@gmail.com>, viro@zeniv.linux.org.uk, bpm@sgi.com, adilger.kernel@dilger.ca, jack@suse.cz, mtk.manpages@gmail.com, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Ashish Sangwan <a.sangwan@samsung.com>
 
-On Wed, Feb 19, 2014 at 01:37:55AM +0900, Namjae Jeon wrote:
-> From: Namjae Jeon <namjae.jeon@samsung.com>
+On Sat, Feb 22, 2014 at 09:06:25AM -0500, Theodore Ts'o wrote:
+> On Wed, Feb 19, 2014 at 01:37:43AM +0900, Namjae Jeon wrote:
+> > +	/*
+> > +	 * There is no need to overlap collapse range with EOF, in which case
+> > +	 * it is effectively a truncate operation
+> > +	 */
+> > +	if ((mode & FALLOC_FL_COLLAPSE_RANGE) &&
+> > +	    (offset + len >= i_size_read(inode)))
+> > +		return -EINVAL;
+> > +
 > 
-> This patch implements fallocate's FALLOC_FL_COLLAPSE_RANGE for XFS.
-> 
-> The semantics of this flag are following:
-> 1) It collapses the range lying between offset and length by removing any data
->    blocks which are present in this range and than updates all the logical
->    offsets of extents beyond "offset + len" to nullify the hole created by
->    removing blocks. In short, it does not leave a hole.
-> 2) It should be used exclusively. No other fallocate flag in combination.
-> 3) Offset and length supplied to fallocate should be fs block size aligned
->    in case of xfs and ext4.
-> 4) Collaspe range does not work beyond i_size.
-> 
-> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-.....
-> +	while (!error && !done) {
-> +		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
-> +		tp->t_flags |= XFS_TRANS_RESERVE;
+> I wonder if we should just translate a collapse range that is
+> equivalent to a truncate operation to, in fact, be a truncate
+> operation?
 
-This probably shouldn't use XFS_TRANS_RESERVE. If we are at ENOSPC,
-then the operation simply fails. Yes, we've already punched the
-hole, so we shouldn't get ENOSPC here, but I don't think it's worth
-dipping into the reserve pool as it has much more important uses...
-
-You don' tneed to resent the entire patch for this - I can remove it
-directly myself....
-
-Otherwise it looks good, so consider it
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Trying to collapse a range that extends beyond EOF, IMO, is likely
+to only happen if the DVR/NLE application is buggy. Hence I think
+that telling the application it is doing something that is likely to
+be wrong is better than silently truncating the file....
 
 Cheers,
 
