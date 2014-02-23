@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9D9BA7F57
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 15:06:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7CC968F8033
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 13:06:26 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 1C8937F57
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 15:22:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 030F18F8035
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 13:22:40 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HXMxrtznji1c4b31 for <xfs@oss.sgi.com>;
-	Sun, 23 Feb 2014 13:06:24 -0800 (PST)
-Date: Mon, 24 Feb 2014 08:06:17 +1100
+	xFgifmRSqtZIiVs8 for <xfs@oss.sgi.com>;
+	Sun, 23 Feb 2014 13:22:36 -0800 (PST)
+Date: Mon, 24 Feb 2014 08:22:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_io: add support for flink
-Message-ID: <20140223210617.GC4317@dastard>
-References: <20140220220000.GA17541@infradead.org>
-	<20140221004933.GA9445@infradead.org>
+Subject: Re: [PATCH v5 2/10] xfs: Add support FALLOC_FL_COLLAPSE_RANGE for
+	fallocate
+Message-ID: <20140223212231.GD4317@dastard>
+References: <1392741475-20063-1-git-send-email-linkinjeon@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140221004933.GA9445@infradead.org>
+In-Reply-To: <1392741475-20063-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,58 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
 
-On Thu, Feb 20, 2014 at 04:49:33PM -0800, Christoph Hellwig wrote:
+On Wed, Feb 19, 2014 at 01:37:55AM +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This patch implements fallocate's FALLOC_FL_COLLAPSE_RANGE for XFS.
+> 
+> The semantics of this flag are following:
+> 1) It collapses the range lying between offset and length by removing any data
+>    blocks which are present in this range and than updates all the logical
+>    offsets of extents beyond "offset + len" to nullify the hole created by
+>    removing blocks. In short, it does not leave a hole.
+> 2) It should be used exclusively. No other fallocate flag in combination.
+> 3) Offset and length supplied to fallocate should be fs block size aligned
+>    in case of xfs and ext4.
+> 4) Collaspe range does not work beyond i_size.
+> 
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 .....
-> +static cmdinfo_t flink_cmd;
-> +
-> +static void
-> +flink_help(void)
-> +{
-> +	printf(_(
-> +"\n"
-> +"link the open file descriptor into the filesystem\n"
-> +"\n"
-> +"\n"));
-> +}
+> +	while (!error && !done) {
+> +		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+> +		tp->t_flags |= XFS_TRANS_RESERVE;
 
-"link the open file descriptor to the supplied filename\n"
+This probably shouldn't use XFS_TRANS_RESERVE. If we are at ENOSPC,
+then the operation simply fails. Yes, we've already punched the
+hole, so we shouldn't get ENOSPC here, but I don't think it's worth
+dipping into the reserve pool as it has much more important uses...
 
-?
+You don' tneed to resent the entire patch for this - I can remove it
+directly myself....
 
-> +void
-> +flink_init(void)
-> +{
-> +	flink_cmd.name = "flink";
-> +	flink_cmd.cfunc = flink_f;
-> +	flink_cmd.argmin = 1;
-> +	flink_cmd.argmax = 1;
-> +	flink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> +	flink_cmd.args = _("filename");
-> +	flink_cmd.oneline =
-> +		_("link the open file descriptor into the filesystem");
-> +	flink_cmd.help = flink_help;
-> +
-> +	add_command(&flink_cmd);
-> +}
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 7a92ff6..7d0c792 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -638,6 +638,9 @@ Only available in expert mode and requires privileges.
->  Undo the effects of a filesystem freeze operation.
->  Only available in expert mode and requires privileges.
->  .TP
-> +.B flink		
-> +Link the currently open file descriptor into the filesystem namespace.
-> +.TP
+Otherwise it looks good, so consider it
 
-And that needs to indicate that a filename needs to be provided,
-too.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 Cheers,
 
