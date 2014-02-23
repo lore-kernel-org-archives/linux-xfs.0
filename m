@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7C2847F87
-	for <xfs@oss.sgi.com>; Sat, 22 Feb 2014 11:09:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 682B1304059
-	for <xfs@oss.sgi.com>; Sat, 22 Feb 2014 09:09:42 -0800 (PST)
-Date: Sat, 22 Feb 2014 12:09:30 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH v6] ext4: Add support FALLOC_FL_COLLAPSE_RANGE for
-	fallocate
-Message-ID: <20140222170930.GE26637@thunk.org>
-References: <1392908861-3563-1-git-send-email-linkinjeon@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 2454C7F58
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 03:37:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E8DA3304062
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 01:37:11 -0800 (PST)
+Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
+	with ESMTP id wOTJrX0u6MFcGzUG (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 23 Feb 2014 01:37:09 -0800 (PST)
+Received: from mail.zbfmail.de (localhost [127.0.0.1])
+	by mail.zbfmail.de (Postfix) with ESMTP id 5116A3143A8
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 10:37:03 +0100 (CET)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1392908861-3563-1-git-send-email-linkinjeon@gmail.com>
+Date: Sun, 23 Feb 2014 10:37:03 +0100
+From: Marko Weber|8000 <weber@zbfmail.de>
+Subject: gentoo linux, kernel 3.10.31 mount options =?UTF-8?Q?bug=3F?=
+Message-ID: <9963a76fbd006355c9ffd79f341c9971@zbfmail.de>
+Reply-To: weber@zbfmail.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,90 +26,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: jack@suse.cz, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
-
-On Fri, Feb 21, 2014 at 12:07:41AM +0900, Namjae Jeon wrote:
-> From: Namjae Jeon <namjae.jeon@samsung.com>
-> 
-> This patch implements fallocate's FALLOC_FL_COLLAPSE_RANGE for Ext4.
-> 
-> The semantics of this flag are following:
-> 1) It collapses the range lying between offset and length by removing any data
->    blocks which are present in this range and than updates all the logical
->    offsets of extents beyond "offset + len" to nullify the hole created by
->    removing blocks. In short, it does not leave a hole.
-> 2) It should be used exclusively. No other fallocate flag in combination.
-> 3) Offset and length supplied to fallocate should be fs block size aligned
->    in case of xfs and ext4.
-> 4) Collaspe range does not work beyond i_size.
-> 
-> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-> Tested-by: Dongsu Park <dongsu.park@profitbricks.com>
-
-In terms of how to get this upstream, it looks like if we do something
-like this, we can let this patch go via the ext4 tree and we don't
-need to worry about whether the vfs level changes have gone in our
-not.
-
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index ad13359..d7a78ed 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -46,6 +46,10 @@
- 
- #include <trace/events/ext4.h>
- 
-+#ifndef FALLOC_FL_COLLAPSE_RANGE
-+#define FALLOC_FL_COLLAPSE_RANGE	0x08
-+#endif
-+
- /*
-  * used by extent splitting.
-  */
+To: Xfs <xfs@oss.sgi.com>
 
 
-> +	ret = ext4_es_remove_extent(inode, punch_start,
-> +				    EXT_MAX_BLOCKS - punch_start - 1);
-> +	if (ret) {
-> +		up_write(&EXT4_I(inode)->i_data_sem);
-> +		goto out_stop;
-> +	}
 
-Doing this at first is probably a bad idea; you should do this at the
-end, and then completely invalidate the es cache for that inode.  That
-way, the right thing happens if you get an error in the middle
-releasing the boxes and shifting the extents:
+hello list,
 
-> +
-> +	ret = ext4_ext_remove_space(inode, punch_start, punch_stop - 1);
-> +	if (ret) {
-> +		up_write(&EXT4_I(inode)->i_data_sem);
-> +		goto out_stop;
-> +	}
-> +
-> +	ret = ext4_ext_shift_extents(inode, handle, punch_stop,
-> +				     punch_stop - punch_start);
-> +	if (ret) {
-> +		up_write(&EXT4_I(inode)->i_data_sem);
-> +		goto out_stop;
-> +	}
+i have a question about mount options.
 
-The fact that you are doing these two as two separate steps is
-dangerous; what if you've already released the blocks in
-ext4_ext_remove_space(), and ext4_ext_shift_extents() fails in the
-middle of the processing?  That will leave the file system
-inconsistent, which would be bad.
+at first my fstab:
 
-Making sure that the right happens if there is a failure in the middle
-of the operation is Really Important....
+/dev/md0                /boot           xfs             noauto,noatime  
+1 2
+/dev/md2                /               xfs             
+noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep      
+0 1
+/dev/md1                /tmp            xfs             
+noexec,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep 
+       0 1
+/dev/VolGroup01/var-www /var/www        xfs             
+noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep      
+0 1
+/dev/VolGroup01/var-log /var/log        xfs             
+noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep      
+0 1
+/dev/VolGroup01/var-lib-mysql   /var/lib/mysql  xfs             
+noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep      
+0 1
+/dev/sda5               none            swap            sw,pri=1         
+        0 0
+/dev/sdb5               none            swap            sw,pri=2         
+        0 0
 
-					- Ted
+(YES!, normally i use Label or UUID..... but this is only a test 
+machine.....)
+
+
+AFTER reboot "mount" shows this:
+
+rootfs on / type rootfs (rw)
+/dev/root on / type xfs 
+(rw,noatime,nodiratime,attr2,nobarrier,inode64,noquota)
+/dev/md1 on /tmp type xfs 
+(rw,noexec,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/mapper/VolGroup01-var--www on /var/www type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/mapper/VolGroup01-var--log on /var/log type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/mapper/VolGroup01-var--lib--mysql on /var/lib/mysql type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+
+
+on /dev/root "discrad" and some other are not shown
+
+
+when i do a "mount -o remount /"
+
+"mount" shows this:
+
+
+rootfs on / type rootfs (rw)
+/dev/root on / type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/md1 on /tmp type xfs 
+(rw,noexec,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/mapper/VolGroup01-var--www on /var/www type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/mapper/VolGroup01-var--log on /var/log type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+/dev/mapper/VolGroup01-var--lib--mysql on /var/lib/mysql type xfs 
+(rw,noatime,nodiratime,nobarrier,largeio,discard,logbsize=256k,noikeep)
+
+now,all options from /etc/fstab are listed.
+Is this XFS related?
+
+Kernel 3.10.31
+Grub2
+
+in the /etc/grub.d/40_custom i have set:
+
+
+menuentry "gentoo linux 3.10.31" {
+insmod xfs
+insmod mdraid09
+insmod mdraid1x
+insmod lvm
+set root=(hd0,2)
+linux /bzImage-3.10.31 root=/dev/md2 elevator=cfq clocksource=hpet 
+cgroup_disable=memory
+}
+
+
+If you need any more info, let me know.
+
+thnaks for any tipps or answers
+
+marko
 
 _______________________________________________
 xfs mailing list
