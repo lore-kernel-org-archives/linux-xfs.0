@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CA5557F51
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 15:43:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B0474304043
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 13:43:27 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	K7hTAwinaadB7Bs3 for <xfs@oss.sgi.com>;
-	Sun, 23 Feb 2014 13:43:26 -0800 (PST)
-Date: Mon, 24 Feb 2014 08:43:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v6] ext4: Add support FALLOC_FL_COLLAPSE_RANGE for
-	fallocate
-Message-ID: <20140223214322.GF4317@dastard>
-References: <1392908861-3563-1-git-send-email-linkinjeon@gmail.com>
-	<20140222170930.GE26637@thunk.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 760C27F51
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 16:10:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E2A22AC003
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 14:10:47 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id keFJ7EIaGaj91H05
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 14:10:46 -0800 (PST)
+Message-ID: <530A71E3.9060107@hardwarefreak.com>
+Date: Sun, 23 Feb 2014 16:10:43 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140222170930.GE26637@thunk.org>
+Subject: Re: gentoo linux, kernel 3.10.31 mount options bug?
+References: <9963a76fbd006355c9ffd79f341c9971@zbfmail.de>
+In-Reply-To: <9963a76fbd006355c9ffd79f341c9971@zbfmail.de>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,58 +28,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>, Namjae Jeon <linkinjeon@gmail.com>, viro@zeniv.linux.org.uk, bpm@sgi.com, adilger.kernel@dilger.ca, jack@suse.cz, mtk.manpages@gmail.com, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, Ashish Sangwan <a.sangwan@samsung.com>
+To: weber@zbfmail.de, Xfs <xfs@oss.sgi.com>
 
-On Sat, Feb 22, 2014 at 12:09:30PM -0500, Theodore Ts'o wrote:
-> On Fri, Feb 21, 2014 at 12:07:41AM +0900, Namjae Jeon wrote:
-> > From: Namjae Jeon <namjae.jeon@samsung.com>
-> > 
-> > This patch implements fallocate's FALLOC_FL_COLLAPSE_RANGE for Ext4.
-> > 
-> > The semantics of this flag are following:
-> > 1) It collapses the range lying between offset and length by removing any data
-> >    blocks which are present in this range and than updates all the logical
-> >    offsets of extents beyond "offset + len" to nullify the hole created by
-> >    removing blocks. In short, it does not leave a hole.
-> > 2) It should be used exclusively. No other fallocate flag in combination.
-> > 3) Offset and length supplied to fallocate should be fs block size aligned
-> >    in case of xfs and ext4.
-> > 4) Collaspe range does not work beyond i_size.
-> > 
-> > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-> > Tested-by: Dongsu Park <dongsu.park@profitbricks.com>
-> 
-> In terms of how to get this upstream, it looks like if we do something
-> like this, we can let this patch go via the ext4 tree and we don't
-> need to worry about whether the vfs level changes have gone in our
-> not.
-> 
-> diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-> index ad13359..d7a78ed 100644
-> --- a/fs/ext4/extents.c
-> +++ b/fs/ext4/extents.c
-> @@ -46,6 +46,10 @@
->  
->  #include <trace/events/ext4.h>
->  
-> +#ifndef FALLOC_FL_COLLAPSE_RANGE
-> +#define FALLOC_FL_COLLAPSE_RANGE	0x08
-> +#endif
-> +
->  /*
->   * used by extent splitting.
->   */
+On 2/23/2014 3:37 AM, Marko Weber|8000 wrote:
+...
+> linux /bzImage-3.10.31 root=/dev/md2 elevator=cfq clocksource=hpet
+                                       ^^^^^^^^^^^^
 
-You're more than welcome to do that, Ted. Just wait until we get the
-VFS part into the XFS tree first ;)
+cfq tends to defeat much of the parallelism in XFS, decreasing
+throughput substantially.  This is documented in the XFS FAQ and has
+been discussed here many times in the past.  It has been recommended for
+a few years now that XFS not be used with the cfq elevator.  Use
+deadline with md arrays on plain HBAs and noop on SSDs or any device
+with [F|B]BWC, i.e. RAID HBA or SAN controller.
 
-Cheers,
+If you're using cfq to allow shaping of per process IO with control
+groups, simply using cfq alone may slow down XFS throughput to the point
+that you don't need to bother with control group optimizations.
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
