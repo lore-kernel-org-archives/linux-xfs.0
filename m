@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4247D7F5D
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 00:29:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F37678F8040
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 22:29:41 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C7747F72
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 00:29:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E269FAC005
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 22:29:42 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	GQmR2Gl7C0PxM6WE for <xfs@oss.sgi.com>;
-	Sun, 23 Feb 2014 22:29:39 -0800 (PST)
+	dMETUeFdlf5APox7 for <xfs@oss.sgi.com>;
+	Sun, 23 Feb 2014 22:29:41 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WHp2h-0004ri-Rb
+	(envelope-from <dave@fromorbit.com>) id 1WHp2h-0004rl-TC
 	for xfs@oss.sgi.com; Mon, 24 Feb 2014 17:29:31 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WHp2h-0001L8-Qu
+	(envelope-from <dave@disappointment.disaster>) id 1WHp2h-0001LN-SG
 	for xfs@oss.sgi.com; Mon, 24 Feb 2014 17:29:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/10] repair: translation lookups limit scalability
-Date: Mon, 24 Feb 2014 17:29:20 +1100
-Message-Id: <1393223369-4696-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/10] repair: limit auto-striding concurrency apprpriately
+Date: Mon, 24 Feb 2014 17:29:23 +1100
+Message-Id: <1393223369-4696-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393223369-4696-1-git-send-email-david@fromorbit.com>
 References: <1393223369-4696-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,230 +39,98 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-A bit of perf magic showed that scalability was limits to 3-4
-concurrent threads due to contention on a lock inside in something
-called __dcigettext(). That some library somewhere that repair is
-linked against, and it turns out to be inside the translation
-infrastructure to support the _() string mechanism:
+It's possible to have filesystems with hundreds of AGs on systems
+with little concurrency and resources. In this case, we can easily
+exhaust memory and fail to create threads and have all sorts of
+interesting problems.
 
-# Samples: 34K of event 'cs'
-# Event count (approx.): 495567
-#
-# Overhead        Command      Shared Object          Symbol
-# ........  .............  .................  ..............
-#
-    60.30%     xfs_repair  [kernel.kallsyms]  [k] __schedule
-               |
-               --- 0x63fffff9c
-                   process_bmbt_reclist_int
-                  |
-                  |--39.95%-- __dcigettext
-                  |          __lll_lock_wait
-                  |          system_call_fastpath
-                  |          SyS_futex
-                  |          do_futex
-                  |          futex_wait
-                  |          futex_wait_queue_me
-                  |          schedule
-                  |          __schedule
-                  |
-                  |--8.91%-- __lll_lock_wait
-                  |          system_call_fastpath
-                  |          SyS_futex
-                  |          do_futex
-                  |          futex_wait
-                  |          futex_wait_queue_me
-                  |          schedule
-                  |          __schedule
-                   --51.13%-- [...]
+xfs/250 can cause this to occur, with failures like:
 
-Fix this by initialising global variables that hold the translated
-strings at startup, hence avoiding the need to do repeated runtime
-translation of the same strings.
+        - agno = 707
+        - agno = 692
+fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
 
-Runtime of an unpatched xfs_repair is roughly:
+And this:
 
-        XFS_REPAIR Summary    Fri Dec  6 11:15:50 2013
+        - agno = 484
+        - agno = 782
+failed to create prefetch thread: Resource temporarily unavailable
 
-Phase           Start           End             Duration
-Phase 1:        12/06 10:56:21  12/06 10:56:21
-Phase 2:        12/06 10:56:21  12/06 10:56:23  2 seconds
-Phase 3:        12/06 10:56:23  12/06 11:01:31  5 minutes, 8 seconds
-Phase 4:        12/06 11:01:31  12/06 11:07:08  5 minutes, 37 seconds
-Phase 5:        12/06 11:07:08  12/06 11:07:09  1 second
-Phase 6:        12/06 11:07:09  12/06 11:15:49  8 minutes, 40 seconds
-Phase 7:        12/06 11:15:49  12/06 11:15:50  1 second
+Because it's trying to create more threads than a poor little 512MB
+single CPU ia32 box can handle.
 
-Total run time: 19 minutes, 29 seconds
-
-Patched version:
-
-Phase           Start           End             Duration
-Phase 1:        12/06 10:36:29  12/06 10:36:29
-Phase 2:        12/06 10:36:29  12/06 10:36:31  2 seconds
-Phase 3:        12/06 10:36:31  12/06 10:40:08  3 minutes, 37 seconds
-Phase 4:        12/06 10:40:08  12/06 10:43:42  3 minutes, 34 seconds
-Phase 5:        12/06 10:43:42  12/06 10:43:42
-Phase 6:        12/06 10:43:42  12/06 10:50:28  6 minutes, 46 seconds
-Phase 7:        12/06 10:50:28  12/06 10:50:29  1 second
-
-Total run time: 14 minutes
-
-Big win!
+So, limit concurrency to a maximum of numcpus * 8 to prevent this.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/dinode.c     | 49 +++++++++++++++++++++++++++++++++++--------------
- repair/dinode.h     |  3 +++
- repair/scan.c       |  7 +------
- repair/xfs_repair.c |  2 ++
- 4 files changed, 41 insertions(+), 20 deletions(-)
+ include/libxfs.h    |  1 +
+ libxfs/init.h       |  1 -
+ repair/xfs_repair.c | 21 ++++++++++++++++++++-
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 3115bd0..4953a56 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -32,6 +32,37 @@
- #include "threads.h"
+diff --git a/include/libxfs.h b/include/libxfs.h
+index bb0369f..f688598 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
+ extern int	libxfs_device_alignment (void);
+ extern void	libxfs_report(FILE *);
+ extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
++extern int	platform_nproc(void);
  
- /*
-+ * gettext lookups for translations of strings use mutexes internally to
-+ * the library. Hence when we come through here doing parallel scans in
-+ * multiple AGs, then all do concurrent text conversions and serialise
-+ * on the translation string lookups. Let's avoid doing repeated lookups
-+ * by making them static variables and only assigning the translation
-+ * once.
-+ */
-+static char	*forkname_data;
-+static char	*forkname_attr;
-+static char	*ftype_real_time;
-+static char	*ftype_regular;
-+
-+void
-+dinode_bmbt_translation_init(void)
-+{
-+	forkname_data = _("data");
-+	forkname_attr = _("attr");
-+	ftype_real_time = _("real-time");
-+	ftype_regular = _("regular");
-+}
-+
-+char *
-+get_forkname(int whichfork)
-+{
-+
-+	if (whichfork == XFS_DATA_FORK)
-+		return forkname_data;
-+	return forkname_attr;
-+}
-+
-+/*
-  * inode clearing routines
-  */
+ /* check or write log footer: specify device, log size in blocks & uuid */
+ typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
+diff --git a/libxfs/init.h b/libxfs/init.h
+index f0b8cb6..112febb 100644
+--- a/libxfs/init.h
++++ b/libxfs/init.h
+@@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
+ extern char *platform_findblockpath (char *path);
+ extern int platform_direct_blockdev (void);
+ extern int platform_align_blockdev (void);
+-extern int platform_nproc(void);
+ extern unsigned long platform_physmem(void);	/* in kilobytes */
+ extern int platform_has_uuid;
  
-@@ -542,7 +573,7 @@ process_bmbt_reclist_int(
- 	xfs_dfiloff_t		op = 0;		/* prev offset */
- 	xfs_dfsbno_t		b;
- 	char			*ftype;
--	char			*forkname;
-+	char			*forkname = get_forkname(whichfork);
- 	int			i;
- 	int			state;
- 	xfs_agnumber_t		agno;
-@@ -552,15 +583,10 @@ process_bmbt_reclist_int(
- 	xfs_agnumber_t		locked_agno = -1;
- 	int			error = 1;
- 
--	if (whichfork == XFS_DATA_FORK)
--		forkname = _("data");
--	else
--		forkname = _("attr");
--
- 	if (type == XR_INO_RTDATA)
--		ftype = _("real-time");
-+		ftype = ftype_real_time;
- 	else
--		ftype = _("regular");
-+		ftype = ftype_regular;
- 
- 	for (i = 0; i < *numrecs; i++) {
- 		libxfs_bmbt_disk_get_all(rp + i, &irec);
-@@ -1110,7 +1136,7 @@ process_btinode(
- 	xfs_ino_t		lino;
- 	xfs_bmbt_ptr_t		*pp;
- 	xfs_bmbt_key_t		*pkey;
--	char			*forkname;
-+	char			*forkname = get_forkname(whichfork);
- 	int			i;
- 	int			level;
- 	int			numrecs;
-@@ -1122,11 +1148,6 @@ process_btinode(
- 	*tot = 0;
- 	*nex = 0;
- 
--	if (whichfork == XFS_DATA_FORK)
--		forkname = _("data");
--	else
--		forkname = _("attr");
--
- 	magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_BMAP_CRC_MAGIC
- 						 : XFS_BMAP_MAGIC;
- 
-diff --git a/repair/dinode.h b/repair/dinode.h
-index d9197c1..7521521 100644
---- a/repair/dinode.h
-+++ b/repair/dinode.h
-@@ -127,4 +127,7 @@ get_bmapi(xfs_mount_t		*mp,
- 		xfs_dfiloff_t	bno,
- 		int             whichfork );
- 
-+void dinode_bmbt_translation_init(void);
-+char * get_forkname(int whichfork);
-+
- #endif /* _XR_DINODE_H */
-diff --git a/repair/scan.c b/repair/scan.c
-index 73b4581..b12f48b 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -171,17 +171,12 @@ scan_bmapbt(
- 	xfs_bmbt_rec_t		*rp;
- 	xfs_dfiloff_t		first_key;
- 	xfs_dfiloff_t		last_key;
--	char			*forkname;
-+	char			*forkname = get_forkname(whichfork);
- 	int			numrecs;
- 	xfs_agnumber_t		agno;
- 	xfs_agblock_t		agbno;
- 	int			state;
- 
--	if (whichfork == XFS_DATA_FORK)
--		forkname = _("data");
--	else
--		forkname = _("attr");
--
- 	/*
- 	 * unlike the ag freeblock btrees, if anything looks wrong
- 	 * in an inode bmap tree, just bail.  it's possible that
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 9e0502a..bac334f 100644
+index bac334f..6327076 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -29,6 +29,7 @@
- #include "prefetch.h"
- #include "threads.h"
- #include "progress.h"
-+#include "dinode.h"
+@@ -629,13 +629,32 @@ main(int argc, char **argv)
+ 	 * to target these for an increase in thread count. Hence a stride value
+ 	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
+ 	 * on such filesystems.
++	 *
++	 * Limit the maximum thread count based on the available CPU power that
++	 * is available. If we use too many threads, we might run out of memory
++	 * and CPU power before we run out of IO concurrency. We limit to 8
++	 * threads/CPU as this is enough threads to saturate a CPU on fast
++	 * devices, yet few enough that it will saturate but won't overload slow
++	 * devices.
+ 	 */
+ 	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
+ 		ag_stride = 15;
  
- #define	rounddown(x, y)	(((x)/(y))*(y))
+ 	if (ag_stride) {
++		int max_threads = platform_nproc() * 8;
++
+ 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
+-		thread_init();
++		while (thread_count > max_threads) {
++			ag_stride *= 2;
++			thread_count = (glob_agcount + ag_stride - 1) /
++								ag_stride;
++		}
++		if (thread_count > 0)
++			thread_init();
++		else {
++			thread_count = 1;
++			ag_stride = 0;
++		}
+ 	}
  
-@@ -533,6 +534,7 @@ main(int argc, char **argv)
- 	setlocale(LC_ALL, "");
- 	bindtextdomain(PACKAGE, LOCALEDIR);
- 	textdomain(PACKAGE);
-+	dinode_bmbt_translation_init();
- 
- 	temp_mp = &xfs_m;
- 	setbuf(stdout, NULL);
+ 	if (ag_stride && report_interval) {
 -- 
 1.8.4.rc3
 
