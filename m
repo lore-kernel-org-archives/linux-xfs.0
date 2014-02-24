@@ -1,23 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8E9627F51
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 16:41:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C52CAC004
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 14:41:16 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Bzs1NRa6RWw0OHT1 for <xfs@oss.sgi.com>;
-	Sun, 23 Feb 2014 14:41:14 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1WHhjG-0003mR-O2
-	for xfs@oss.sgi.com; Mon, 24 Feb 2014 09:40:58 +1100
-Date: Mon, 24 Feb 2014 09:40:58 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: master branch updated to da2b3c0
-Message-ID: <20140223224058.GG4317@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, xfs-collapse-range,
+	created. xfs-for-linus-v3.14-rc1-2-12922-ge1d8fb8
+Message-Id: <20140224005334.12FC17F57@oss.sgi.com>
+Date: Sun, 23 Feb 2014 18:53:31 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,47 +12,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-The xfsprogs repository at git://oss.sgi.com/xfs/cmds/xfsprogs has
-just been updated.
+The branch, xfs-collapse-range has been created
+        at  e1d8fb88a64c1f8094b9f6c3b6d2d9e6719c970d (commit)
 
-The new head of the master branch is commit:
+- Log -----------------------------------------------------------------
+commit e1d8fb88a64c1f8094b9f6c3b6d2d9e6719c970d
+Author: Namjae Jeon <namjae.jeon@samsung.com>
+Date:   Mon Feb 24 10:58:19 2014 +1100
 
-da2b3c0 xfs_io: add support for O_TMPFILE opens
+    xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+    
+    This patch implements fallocate's FALLOC_FL_COLLAPSE_RANGE for XFS.
+    
+    The semantics of this flag are following:
+    1) It collapses the range lying between offset and length by removing any data
+       blocks which are present in this range and than updates all the logical
+       offsets of extents beyond "offset + len" to nullify the hole created by
+       removing blocks. In short, it does not leave a hole.
+    2) It should be used exclusively. No other fallocate flag in combination.
+    3) Offset and length supplied to fallocate should be fs block size aligned
+       in case of xfs and ext4.
+    4) Collaspe range does not work beyond i_size.
+    
+    Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+    Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-New Commits:
+commit 00f5e61998dd17f5375d9dfc01331f104b83f841
+Author: Namjae Jeon <namjae.jeon@samsung.com>
+Date:   Mon Feb 24 10:58:15 2014 +1100
 
-Christoph Hellwig (1):
-      [da2b3c0] xfs_io: add support for O_TMPFILE opens
+    fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
+    
+    This patch is in response of the following post:
+    http://lwn.net/Articles/556136/
+    "ext4: introduce two new ioctls"
+    
+    Dave chinner suggested that truncate_block_range
+    (which was one of the ioctls name) should be a fallocate operation
+    and not any fs specific ioctl, hence we add this functionality to new flags of fallocate.
+    
+    This new functionality of collapsing range could be used by media editing tools
+    which does non linear editing to quickly purge and edit parts of a media file.
+    This will immensely improve the performance of these operations.
+    The limitation of fs block size aligned offsets can be easily handled
+    by media codecs which are encapsulated in a conatiner as they have to
+    just change the offset to next keyframe value to match the proper alignment.
+    
+    Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+    Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-Dave Chinner (2):
-      [f388124] libxfs: contiguous buffers are not discontigous
-      [203d38c] libxfs: clear stale buffer errors on write
-
-Eric Sandeen (1):
-      [d586858] xfs_repair: fix sibling pointer tests in verify_dir2_path()
+-----------------------------------------------------------------------
 
 
-Code Diffstat:
-
- io/file.c         |  5 +++--
- io/init.c         |  4 +++-
- io/io.h           |  1 +
- io/open.c         | 39 ++++++++++++++++++++++++++++++++++-----
- libxfs/rdwr.c     | 14 ++++++++++++++
- man/man8/xfs_io.8 | 12 ++++++++++--
- repair/dir2.c     |  2 +-
- 7 files changed, 66 insertions(+), 11 deletions(-)
+hooks/post-receive
 -- 
-Dave Chinner
-david@fromorbit.com
+XFS development tree
 
 _______________________________________________
 xfs mailing list
