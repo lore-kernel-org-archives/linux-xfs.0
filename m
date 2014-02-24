@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 73B7F7F50
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 17:35:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5B638304066
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 15:35:25 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	K1BpnX3zEYdBYDqH for <xfs@oss.sgi.com>;
-	Mon, 24 Feb 2014 15:35:23 -0800 (PST)
-Date: Tue, 25 Feb 2014 10:35:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: add function _require_fssum()
-Message-ID: <20140224233520.GT13647@dastard>
-References: <1393242983-16149-1-git-send-email-fdmanana@gmail.com>
-	<20140224122310.GO4317@dastard>
-	<CAL3q7H5tfnb+uqa-ru5YNcok1n8PQxxai7UfkH-YgCdts84Tew@mail.gmail.com>
-	<20140224222216.GP4317@dastard>
-	<CAL3q7H7N3VVrfoVvNx_4wPsP38FO=sLNCBC-VJ2Tsz4NLqh39A@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1C7877F50
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 17:55:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 11B4B8F8070
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 15:55:16 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9BcnfHjT71SCOf4Q for
+	<xfs@oss.sgi.com>; Mon, 24 Feb 2014 15:55:16 -0800 (PST)
+Date: Mon, 24 Feb 2014 18:55:12 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs: be honest about used inodes in statfs
+Message-ID: <20140224235511.GA9001@bfoster.bfoster>
+References: <53067DC0.9040800@redhat.com>
+ <530BD167.2020600@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAL3q7H7N3VVrfoVvNx_4wPsP38FO=sLNCBC-VJ2Tsz4NLqh39A@mail.gmail.com>
+In-Reply-To: <530BD167.2020600@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,48 +29,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Filipe David Manana <fdmanana@gmail.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Feb 24, 2014 at 11:08:27PM +0000, Filipe David Manana wrote:
-> On Mon, Feb 24, 2014 at 10:22 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Feb 24, 2014 at 01:22:36PM +0000, Filipe David Manana wrote:
-> >> On Mon, Feb 24, 2014 at 12:23 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> >> diff --git a/tests/btrfs/007 b/tests/btrfs/007
-> >> >> index 5df9ccb..5430613 100755
-> >> >> --- a/tests/btrfs/007
-> >> >> +++ b/tests/btrfs/007
-> >> >> @@ -31,7 +31,6 @@ seq=`basename $0`
-> >> >>  seqres=$RESULT_DIR/$seq
-> >> >>  echo "QA output created by $seq"
-> >> >>
-> >> >> -here=`pwd`
-> >> >>  tmp=`mktemp -d`
-> >> >>  status=1
-> >> >
-> >> > Yeah, redefining $here is a bad thing to do :/
-> >
-> > Right, my mistake. It needs to be defined for the entire test, not
-> > in a requires function. Hence I think we should just export it from
-> > check....
+On Mon, Feb 24, 2014 at 05:10:31PM -0600, Eric Sandeen wrote:
+> Because we have lazy counters, it's possible that we over-allocate
+> inodes past the maxicount (imaxpct) limit.  
 > 
-> Hum, ok. So the decision is to let the tests explicitly define the
-> variable "here", and not export "here" from the main check script.
+> A previous commit,
+> 
+>  2fe3366 xfs: ensure f_ffree returned by statfs() is non-negative
+> 
+> stopped statfs from underflowing f_ffree in this case, but that
+> only happened when we mis-reported f_files, capped at maxicount.
+> 
+> Change statfs to report the actual number of inodes allocated,
+> even if it is greater than maxicount.  It's reality.
+> Deal with it.  
+> 
+> (New clearer code flow thanks to Brian!)
+> 
+> Logic-made-readable-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
 
-Well, that's the status quo right now.
+Heh, looks good to me. I don't know if the LMRB tag disqualifies me as a
+reviewer now ;), but feel free to replace it with:
 
-What I'm suggesting is that we should just export it from check and
-get rid of it from each test as a separate cleanup. i.e. It always
-needs to be set to the same value (i.e. the root of the xfstests
-tree) so there is no reason why it should not be set up once in a
-central location.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> V2: Use Brian's suggested logic for working out the numbers
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f317488..0dbcc17 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1083,7 +1083,6 @@ xfs_fs_statfs(
+>  	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
+>  	__uint64_t		fakeinos, id;
+>  	xfs_extlen_t		lsize;
+> -	__int64_t		ffree;
+>  
+>  	statp->f_type = XFS_SB_MAGIC;
+>  	statp->f_namelen = MAXNAMELEN - 1;
+> @@ -1100,17 +1099,19 @@ xfs_fs_statfs(
+>  	statp->f_blocks = sbp->sb_dblocks - lsize;
+>  	statp->f_bfree = statp->f_bavail =
+>  				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
+> +	/*
+> +	 * Potential number of new inodes in free blocks, limited by maxicount.
+> +	 */
+>  	fakeinos = statp->f_bfree << sbp->sb_inopblog;
+> -	statp->f_files =
+> -	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
+>  	if (mp->m_maxicount)
+> -		statp->f_files = min_t(typeof(statp->f_files),
+> -					statp->f_files,
+> -					mp->m_maxicount);
+> +		fakeinos = mp->m_maxicount > sbp->sb_icount ?
+> +			   MIN(mp->m_maxicount - sbp->sb_icount, fakeinos) : 0;
+> +
+> +	/* Total possible files is current inodes + potential new inodes */
+> +	statp->f_files = MIN(sbp->sb_icount + fakeinos,
+> +			     (__uint64_t) XFS_MAXINUMBER);
+>  
+> -	/* make sure statp->f_ffree does not underflow */
+> -	ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
+> -	statp->f_ffree = max_t(__int64_t, ffree, 0);
+> +	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
+>  
+>  	spin_unlock(&mp->m_sb_lock);
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
