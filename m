@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-collapse-range,
-	created. xfs-for-linus-v3.14-rc1-2-12922-ge1d8fb8
-Message-Id: <20140224005334.12FC17F57@oss.sgi.com>
-Date: Sun, 23 Feb 2014 18:53:31 -0600 (CST)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-v3.14-rc1-2-12941-gf137806
+Message-Id: <20140224005350.0EAB47F5A@oss.sgi.com>
+Date: Sun, 23 Feb 2014 18:53:48 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +23,33 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-collapse-range has been created
-        at  e1d8fb88a64c1f8094b9f6c3b6d2d9e6719c970d (commit)
+The branch, for-next has been updated
+  f137806 Merge branch 'xfs-collapse-range' into for-next
+  e1d8fb8 xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
+      from  027f185e66eb24e2ea291ff3b93c1e4bd07b85b4 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
-commit e1d8fb88a64c1f8094b9f6c3b6d2d9e6719c970d
-Author: Namjae Jeon <namjae.jeon@samsung.com>
-Date:   Mon Feb 24 10:58:19 2014 +1100
+commit f13780692e659df3623461ca5398b66739a6c56f
+Merge: 027f185 e1d8fb8
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Mon Feb 24 10:58:55 2014 +1100
 
-    xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
-    
-    This patch implements fallocate's FALLOC_FL_COLLAPSE_RANGE for XFS.
-    
-    The semantics of this flag are following:
-    1) It collapses the range lying between offset and length by removing any data
-       blocks which are present in this range and than updates all the logical
-       offsets of extents beyond "offset + len" to nullify the hole created by
-       removing blocks. In short, it does not leave a hole.
-    2) It should be used exclusively. No other fallocate flag in combination.
-    3) Offset and length supplied to fallocate should be fs block size aligned
-       in case of xfs and ext4.
-    4) Collaspe range does not work beyond i_size.
-    
-    Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-    Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 00f5e61998dd17f5375d9dfc01331f104b83f841
-Author: Namjae Jeon <namjae.jeon@samsung.com>
-Date:   Mon Feb 24 10:58:15 2014 +1100
-
-    fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
-    
-    This patch is in response of the following post:
-    http://lwn.net/Articles/556136/
-    "ext4: introduce two new ioctls"
-    
-    Dave chinner suggested that truncate_block_range
-    (which was one of the ioctls name) should be a fallocate operation
-    and not any fs specific ioctl, hence we add this functionality to new flags of fallocate.
-    
-    This new functionality of collapsing range could be used by media editing tools
-    which does non linear editing to quickly purge and edit parts of a media file.
-    This will immensely improve the performance of these operations.
-    The limitation of fs block size aligned offsets can be easily handled
-    by media codecs which are encapsulated in a conatiner as they have to
-    just change the offset to next keyframe value to match the proper alignment.
-    
-    Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-    Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-collapse-range' into for-next
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_bmap.c      | 193 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap.h      |  15 ++++
+ fs/xfs/xfs_bmap_util.c |  97 ++++++++++++++++++++++++-
+ fs/xfs/xfs_bmap_util.h |   2 +
+ fs/xfs/xfs_file.c      |  19 ++++-
+ fs/xfs/xfs_trace.h     |   1 +
+ 6 files changed, 324 insertions(+), 3 deletions(-)
 
 
 hooks/post-receive
