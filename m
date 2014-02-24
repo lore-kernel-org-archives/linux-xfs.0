@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 34E667F5A
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8C5867F59
 	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 00:29:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AC7C1AC004
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 22:29:39 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5862F8F8037
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 22:29:40 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sLSSCkQVJ2CAtBNm for <xfs@oss.sgi.com>;
+	wMxjKZIYJZc0rUB4 for <xfs@oss.sgi.com>;
 	Sun, 23 Feb 2014 22:29:38 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WHp2h-0004rp-Ve
+	(envelope-from <dave@fromorbit.com>) id 1WHp2i-0004rr-0Z
 	for xfs@oss.sgi.com; Mon, 24 Feb 2014 17:29:32 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WHp2h-0001Lh-UO
+	(envelope-from <dave@disappointment.disaster>) id 1WHp2h-0001Lr-Vr
 	for xfs@oss.sgi.com; Mon, 24 Feb 2014 17:29:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/10] libxfs: remove a couple of locks
-Date: Mon, 24 Feb 2014 17:29:27 +1100
-Message-Id: <1393223369-4696-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/10] repair: BMBT prefetch needs to be CRC aware
+Date: Mon, 24 Feb 2014 17:29:29 +1100
+Message-Id: <1393223369-4696-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393223369-4696-1-git-send-email-david@fromorbit.com>
 References: <1393223369-4696-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,60 +39,67 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-THe libxfs cache has a lot of false scalability about it. I can't
-get lookups to scale past about one and half CPUs, with one of the
-key problems being a preponderance of global locks.
+I'd been trying to track down a behavioural difference between
+non-crc and crc enabled filesystems that was resulting non-crc
+filesystem executing prefetch almost 3x faster than CRC filesystems.
+After amny ratholes, I finally stumbled on the fact that btree
+format directories are not being prefetched due to a missing magic
+number check, and it's rejecting all XFS_BMAP_CRC_MAGIC format BMBT
+buffers. This makes prefetch on CRC enabled filesystems behave the
+same as for non-CRC filesystems.
 
-Like just after doing a hash lookup, that is careful only to take
-the hash chain lock, it takes a global cache lock to update the
-cache hit statistic. Scalable? Not at all.
+The difference a single line of code can make on a 50 million inode
+filesystem with a single threaded prefetch enabled run is pretty
+amazing. It goes from 3,000 iops @ 50MB/s to 2,000 IOPS @ 800MB/s
+and the cache hit rate goes from 3% to 49%. The runtime difference:
 
-The node priority stuff is protected by the object locks (i.e the
-buffer lock) and so it doesn't need locks, either.
+Unpatched:
 
-This doesn't do very much to improve scalability, but it's a small
-start.
+Phase           Start           End             Duration
+Phase 1:        02/21 18:34:12  02/21 18:34:12
+Phase 2:        02/21 18:34:12  02/21 18:34:15  3 seconds
+Phase 3:        02/21 18:34:15  02/21 18:40:09  5 minutes, 54 seconds
+Phase 4:        02/21 18:40:09  02/21 18:46:36  6 minutes, 27 seconds
+Phase 5:        02/21 18:46:36  02/21 18:46:37  1 second
+Phase 6:        02/21 18:46:37  02/21 18:52:51  6 minutes, 14 seconds
+Phase 7:        02/21 18:52:51  02/21 18:52:52  1 second
+
+Total run time: 18 minutes, 40 seconds
+
+Patched:
+
+Phase           Start           End             Duration
+Phase 1:        02/21 19:58:23  02/21 19:58:23
+Phase 2:        02/21 19:58:23  02/21 19:58:27  4 seconds
+Phase 3:        02/21 19:58:27  02/21 19:59:20  53 seconds
+Phase 4:        02/21 19:59:20  02/21 20:00:07  47 seconds
+Phase 5:        02/21 20:00:07  02/21 20:00:08  1 second
+Phase 6:        02/21 20:00:08  02/21 20:00:50  42 seconds
+Phase 7:        02/21 20:00:50  02/21 20:00:50
+
+Total run time: 2 minutes, 27 seconds
+
+Is no less impressive. Shame it's just a regression fix. ;)
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/cache.c | 6 ------
- 1 file changed, 6 deletions(-)
+ repair/prefetch.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/cache.c b/libxfs/cache.c
-index dc69689..9f7f8f4 100644
---- a/libxfs/cache.c
-+++ b/libxfs/cache.c
-@@ -391,9 +391,7 @@ cache_node_get(
- 			pthread_mutex_unlock(&node->cn_mutex);
- 			pthread_mutex_unlock(&hash->ch_mutex);
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 5158863..7e11d1d 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -298,7 +298,8 @@ pf_scanfunc_bmap(
+ 	/*
+ 	 * do some validation on the block contents
+ 	 */
+-	if ((be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) ||
++	if ((block->bb_magic != cpu_to_be32(XFS_BMAP_MAGIC) &&
++	     block->bb_magic != cpu_to_be32(XFS_BMAP_CRC_MAGIC)) ||
+ 			(be16_to_cpu(block->bb_level) != level))
+ 		return 0;
  
--			pthread_mutex_lock(&cache->c_mutex);
- 			cache->c_hits++;
--			pthread_mutex_unlock(&cache->c_mutex);
- 
- 			*nodep = node;
- 			return 0;
-@@ -482,10 +480,8 @@ cache_node_set_priority(
- 	else if (priority > CACHE_MAX_PRIORITY)
- 		priority = CACHE_MAX_PRIORITY;
- 
--	pthread_mutex_lock(&node->cn_mutex);
- 	ASSERT(node->cn_count > 0);
- 	node->cn_priority = priority;
--	pthread_mutex_unlock(&node->cn_mutex);
- }
- 
- int
-@@ -494,9 +490,7 @@ cache_node_get_priority(
- {
- 	int			priority;
- 
--	pthread_mutex_lock(&node->cn_mutex);
- 	priority = node->cn_priority;
--	pthread_mutex_unlock(&node->cn_mutex);
- 
- 	return priority;
- }
 -- 
 1.8.4.rc3
 
