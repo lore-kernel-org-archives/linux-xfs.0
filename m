@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6DEBC7F52
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 07:22:42 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 139DB7F55
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 07:35:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 661D9304059
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 05:22:39 -0800 (PST)
-Received: from mail-bk0-f47.google.com (mail-bk0-f47.google.com
-	[209.85.214.47]) by cuda.sgi.com with ESMTP id HqqpRzv7IvgJDNEr
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 24 Feb 2014 05:22:37 -0800 (PST)
-Received: by mail-bk0-f47.google.com with SMTP id w10so209472bkz.20
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 05:22:36 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F1D63304048
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 05:35:34 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HuUAAKVANcG5ZSEN for
+	<xfs@oss.sgi.com>; Mon, 24 Feb 2014 05:35:34 -0800 (PST)
+Date: Mon, 24 Feb 2014 08:35:00 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: always do log forces via the workqueue
+Message-ID: <20140224133459.GA54199@bfoster.bfoster>
+References: <1392783402-4726-1-git-send-email-david@fromorbit.com>
+	<1392783402-4726-2-git-send-email-david@fromorbit.com>
+	<5304F6F6.3070007@redhat.com> <20140220002358.GH4916@dastard>
+	<53076B05.8010806@redhat.com> <20140221222106.GQ13647@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20140224122310.GO4317@dastard>
-References: <1393242983-16149-1-git-send-email-fdmanana@gmail.com>
-	<20140224122310.GO4317@dastard>
-Date: Mon, 24 Feb 2014 13:22:36 +0000
-Message-ID: <CAL3q7H5tfnb+uqa-ru5YNcok1n8PQxxai7UfkH-YgCdts84Tew@mail.gmail.com>
-Subject: Re: [PATCH] xfstests: add function _require_fssum()
-From: Filipe David Manana <fdmanana@gmail.com>
-Reply-To: fdmanana@gmail.com
+Content-Disposition: inline
+In-Reply-To: <20140221222106.GQ13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,121 +32,72 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 24, 2014 at 12:23 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Feb 24, 2014 at 11:56:23AM +0000, Filipe David Borba Manana wrote:
->> To avoid repeating detection of fssum presence in many btrfs tests, as
->> suggested by Dave Chinner.
->>
->> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
->> ---
->>  common/rc       |    7 +++++++
->>  tests/btrfs/007 |    5 +----
->>  tests/btrfs/016 |    5 +----
->>  tests/btrfs/030 |    5 +----
->>  tests/btrfs/038 |    5 +----
->>  tests/btrfs/039 |    5 +----
->>  tests/btrfs/040 |    5 +----
->>  tests/btrfs/041 |    5 +----
->>  tests/btrfs/042 |    5 +----
->>  9 files changed, 15 insertions(+), 32 deletions(-)
->>  mode change 100644 => 100755 tests/btrfs/016
->>
->> diff --git a/common/rc b/common/rc
->> index 5df504c..cce05cc 100644
->> --- a/common/rc
->> +++ b/common/rc
->> @@ -2144,6 +2144,13 @@ _require_cp_reflink()
->>                 _notrun "This test requires a cp with --reflink support."
->>  }
->>
->> +_require_fssum()
->> +{
->> +     HERE=`pwd`
->> +     FSSUM_PROG=$HERE/src/fssum
->> +     [ -x $FSSUM_PROG ] || _notrun "fssum not built"
->> +}
->
-> $here is defined by check to be the root of the xfstests instance
-> that is running. There's 60+ tests that already us it. Hence:
->
-> _require_fssum()
-> {
->         FSSUM_PROG=$here/src/fssum
->         [ -x $FSSUM_PROG ] || _notrun "fssum not built"
-> }
->
-> Is all you need here.
+On Sat, Feb 22, 2014 at 09:21:06AM +1100, Dave Chinner wrote:
+> On Fri, Feb 21, 2014 at 10:04:37AM -0500, Brian Foster wrote:
+> > On 02/19/2014 07:23 PM, Dave Chinner wrote:
+> > > On Wed, Feb 19, 2014 at 01:24:54PM -0500, Brian Foster wrote:
+> > >> On 02/18/2014 11:16 PM, Dave Chinner wrote:
+> > >>> From: Dave Chinner <dchinner@redhat.com>
+> > >>>
+> > ...
+...
+> > 
+> > General follow up question - what makes not taking xc_ctx_lock anywhere
+> > in here safe in the first place? In the current implementation, if the
+> > push has already been queued (note that we flush before we take the
+> > spinlock and check the push sequence) and we get into the ctx wait
+> > sequence, isn't it possible to see xc_committing before the ctx we're
+> > pushing is even added?
+> 
+> The waiting is serialised on the push lock, not the context lock.
+> 
+> The context lock is used to serialise addition to a CIL context with
+> the against the pushing of that sequence. Triggering a push of a CIL
+> context does not need to be serialised addition to the CIL, nor
+> directly against the push of the CIL. A blocking push needs to be
+> serialised against the checkpoint of a CIL context to the iclog,
+> which is a different thing altogether.
+> 
+> Hence we don't want to use the xc_ctx_lock for this - it is already
+> a contended lock and we don't want to hold off commits into a new
+> sequence while we wait for a previous sequence to finish pushing.
+> 
+> Yes, there are potential races in the exist code. They are fixed by
+> this patch.
+> 
 
-Hum, doesn't work unless the test file defines $here. At least when
-running a single only (.e.g. ./check btrfs/041).
+Ok, thanks.
 
->
->> +
->>  # Given 2 files, verify that they have the same mapping but different
->>  # inodes - i.e. an undisturbed reflink
->>  # Silent if so, make noise if not
->> diff --git a/tests/btrfs/007 b/tests/btrfs/007
->> index 5df9ccb..5430613 100755
->> --- a/tests/btrfs/007
->> +++ b/tests/btrfs/007
->> @@ -31,7 +31,6 @@ seq=`basename $0`
->>  seqres=$RESULT_DIR/$seq
->>  echo "QA output created by $seq"
->>
->> -here=`pwd`
->>  tmp=`mktemp -d`
->>  status=1
->
-> Yeah, redefining $here is a bad thing to do :/
+> > With this patch, what prevents us from seeing the updated
+> > xc_current_sequence and thus skipping the restart (xc_current_sequence
+> > isn't updated under the spinlock) before the pushed ctx has been added
+> > to xc_committing?
+> 
+> The fact that the patch moves the xc_current_sequence update under
+> the the push_lock avoids this. i.e. it is now only updated atomically
+> with adding the context to the committing list. Both are now
+> explicitly updated at the same time, so you can't see a sequence
+> number greater than what you might find on the list...
+> 
 
-See above :)
+Ah, right. I was reading through your patch and the original code to
+understand it better and lost the fact that you moved
+xc_current_sequence under spinlock (e.g., my assumption above about it
+not updated under lock is incorrect). That clears that up. Thanks for the
+explanations.
 
->
-> And I'd missed that this was being done in all the new btrfs tests,
-> otherwise I would have pulled it up earlier.
->
-> It also points out that the btrfs tests are using a non-standard
-> $tmp directory - one that is in the xfstests source directory.
-> That's a bad thing, too - tests should be using:
->
-> tmp=/tmp/$$
->
-> to store small temporary files.
->
-> If /tmp is too small for what a test needs, then the test should be
-> using $TEST_DIR as the store for the temporary files to exercise
-> the filesystem under test as much as possible.  e.g. send image
-> files build form snapshots of SCRATCH_DEV should be stored on TEST_DIR,
-> not in $tmp; filesystem image files that are mounted by loopback
-> should be stored on TEST_DIR or SCRATCH_MNT, not $tmp. And so on.
->
-> i.e. the idea is that you direct as much of the IO to the test_DIR
-> and SCRATCH_MNT as possible, not to the filesystem that is hosting
-> $tmp or the xfstests source directory....
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Right. Sounds like a separate patch (to use TEST_DIR/$$ for e.g. as a
-place to store temporary test data).
+Brian
 
-Thanks Dave
-
->
 > Cheers,
->
+> 
 > Dave.
-> --
+> -- 
 > Dave Chinner
 > david@fromorbit.com
-
-
-
--- 
-Filipe David Manana,
-
-"Reasonable men adapt themselves to the world.
- Unreasonable men adapt the world to themselves.
- That's why all progress depends on unreasonable men."
 
 _______________________________________________
 xfs mailing list
