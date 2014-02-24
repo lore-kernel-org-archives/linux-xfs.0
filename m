@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 852D97F50
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 17:10:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 180B5AC002
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 15:10:33 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KQxwamCCadanEeSb for <xfs@oss.sgi.com>;
-	Mon, 24 Feb 2014 15:10:32 -0800 (PST)
-Message-ID: <530BD167.2020600@sandeen.net>
-Date: Mon, 24 Feb 2014 17:10:31 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4FBAF7F50
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 17:19:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2B79F30406A
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 15:19:04 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	1FEJWiUpeODObCUC for <xfs@oss.sgi.com>;
+	Mon, 24 Feb 2014 15:19:01 -0800 (PST)
+Date: Tue, 25 Feb 2014 10:16:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/10] repair: factor out threading setup code
+Message-ID: <20140224231620.GS13647@dastard>
+References: <1393223369-4696-1-git-send-email-david@fromorbit.com>
+	<1393223369-4696-6-git-send-email-david@fromorbit.com>
+	<20140224204304.GB49654@bfoster.bfoster>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfs: be honest about used inodes in statfs
-References: <53067DC0.9040800@redhat.com>
-In-Reply-To: <53067DC0.9040800@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20140224204304.GB49654@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,70 +31,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Because we have lazy counters, it's possible that we over-allocate
-inodes past the maxicount (imaxpct) limit.  
+On Mon, Feb 24, 2014 at 03:43:05PM -0500, Brian Foster wrote:
+> On Mon, Feb 24, 2014 at 05:29:24PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The same code is repeated in different places to set up
+> > multithreaded prefetching. This can all be factored into a single
+> > implementation.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+....
+> >  static void
+> >  traverse_ags(
+> > -	xfs_mount_t 		*mp)
+> > +	struct xfs_mount	*mp)
+> >  {
+> > -	int			i;
+> > -	work_queue_t		queue;
+> > -	prefetch_args_t		*pf_args[2];
+> > -
+> > -	/*
+> > -	 * we always do prefetch for phase 6 as it will fill in the gaps
+> > -	 * not read during phase 3 prefetch.
+> > -	 */
+> > -	queue.mp = mp;
+> > -	pf_args[0] = start_inode_prefetch(0, 1, NULL);
+> > -	for (i = 0; i < glob_agcount; i++) {
+> > -		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+> > -				pf_args[i & 1]);
+> > -		traverse_function(&queue, i, pf_args[i & 1]);
+> > -	}
+> > +	do_inode_prefetch(mp, 0, traverse_function, true, true);
+> 
+> The cover letter indicates the parallelization of phase 6 was dropped,
+> but this appears to (conditionally) enable it.
 
-A previous commit,
+No, it enables prefetch, it does not enable threading. The second
+parameter is "0" which means that do_inode_prefetch() executes the
+single threaded prefetch walk like the above code. i.e.:
 
- 2fe3366 xfs: ensure f_ffree returned by statfs() is non-negative
+> > + */
+> > +void
+> > +do_inode_prefetch(
+> > +	struct xfs_mount	*mp,
+> > +	int			stride,
 
-stopped statfs from underflowing f_ffree in this case, but that
-only happened when we mis-reported f_files, capped at maxicount.
+stride = 0
 
-Change statfs to report the actual number of inodes allocated,
-even if it is greater than maxicount.  It's reality.
-Deal with it.  
+> > +	void			(*func)(struct work_queue *,
+> > +					xfs_agnumber_t, void *),
+> > +	bool			check_cache,
+> > +	bool			dirs_only)
+> > +{
+> > +	int			i, j;
+> > +	xfs_agnumber_t		agno;
+> > +	struct work_queue	queue;
+> > +	struct work_queue	*queues;
+> > +	struct prefetch_args	*pf_args[2];
+> > +
+> > +	/*
+> > +	 * If the previous phases of repair have not overflowed the buffer
+> > +	 * cache, then we don't need to re-read any of the metadata in the
+> > +	 * filesystem - it's all in the cache. In that case, run a thread per
+> > +	 * CPU to maximise parallelism of the queue to be processed.
+> > +	 */
+> > +	if (check_cache && !libxfs_bcache_overflowed()) {
+> > +		queue.mp = mp;
+> > +		create_work_queue(&queue, mp, libxfs_nproc());
+> > +		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+> > +			queue_work(&queue, func, i, NULL);
+> > +		destroy_work_queue(&queue);
+> > +		return;
+> > +	}
+> > +
+> > +	/*
+> > +	 * single threaded behaviour - single prefetch thread, processed
+> > +	 * directly after each AG is queued.
+> > +	 */
+> > +	if (!stride) {
+> > +		queue.mp = mp;
+> > +		pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
+> > +		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> > +			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+> > +					dirs_only, pf_args[i & 1]);
+> > +			func(&queue, i, pf_args[i & 1]);
+> > +		}
+> > +		return;
+> > +	}
 
-(New clearer code flow thanks to Brian!)
+So we run this "!stride" code. Hmmmm - maybe you are commenting on
+the "check_cache" code? I probably should prevent that from
+triggering, too.
 
-Logic-made-readable-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Cheers,
 
-V2: Use Brian's suggested logic for working out the numbers
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f317488..0dbcc17 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1083,7 +1083,6 @@ xfs_fs_statfs(
- 	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
- 	__uint64_t		fakeinos, id;
- 	xfs_extlen_t		lsize;
--	__int64_t		ffree;
- 
- 	statp->f_type = XFS_SB_MAGIC;
- 	statp->f_namelen = MAXNAMELEN - 1;
-@@ -1100,17 +1099,19 @@ xfs_fs_statfs(
- 	statp->f_blocks = sbp->sb_dblocks - lsize;
- 	statp->f_bfree = statp->f_bavail =
- 				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
-+	/*
-+	 * Potential number of new inodes in free blocks, limited by maxicount.
-+	 */
- 	fakeinos = statp->f_bfree << sbp->sb_inopblog;
--	statp->f_files =
--	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
- 	if (mp->m_maxicount)
--		statp->f_files = min_t(typeof(statp->f_files),
--					statp->f_files,
--					mp->m_maxicount);
-+		fakeinos = mp->m_maxicount > sbp->sb_icount ?
-+			   MIN(mp->m_maxicount - sbp->sb_icount, fakeinos) : 0;
-+
-+	/* Total possible files is current inodes + potential new inodes */
-+	statp->f_files = MIN(sbp->sb_icount + fakeinos,
-+			     (__uint64_t) XFS_MAXINUMBER);
- 
--	/* make sure statp->f_ffree does not underflow */
--	ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
--	statp->f_ffree = max_t(__int64_t, ffree, 0);
-+	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
- 
- 	spin_unlock(&mp->m_sb_lock);
- 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
