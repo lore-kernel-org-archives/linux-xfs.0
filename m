@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6A2447F53
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 23:28:35 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 309DF7F53
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 23:31:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E8566AC004
-	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 21:28:34 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 105548F8035
+	for <xfs@oss.sgi.com>; Sun, 23 Feb 2014 21:31:07 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	m3iwUgQdEPahel11 for <xfs@oss.sgi.com>;
-	Sun, 23 Feb 2014 21:28:33 -0800 (PST)
-Date: Mon, 24 Feb 2014 16:28:30 +1100
+	bvFpGqoY8lr62eh7 for <xfs@oss.sgi.com>;
+	Sun, 23 Feb 2014 21:31:04 -0800 (PST)
+Date: Mon, 24 Feb 2014 16:31:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstest generic/280: use waidpid instead of ugly sleep
-Message-ID: <20140224052830.GL4317@dastard>
-References: <1392972948-2463-1-git-send-email-dmonakhov@openvz.org>
+Subject: Re: [PATCH] xfstests: fix 300.out
+Message-ID: <20140224053102.GM4317@dastard>
+References: <53079F51.2050406@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1392972948-2463-1-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <53079F51.2050406@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Feb 21, 2014 at 12:55:48PM +0400, Dmitry Monakhov wrote:
+On Fri, Feb 21, 2014 at 12:47:45PM -0600, Eric Sandeen wrote:
+> This test was written before a solution was in place, I think,
+> and so the expected output wasn't well tested.
 > 
-> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> The test does a loop of sparse writes from 6 to 0, but the
+> .out file expects 6 (not 7) extents.  Fix it.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  tests/generic/280 |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
 > 
-> diff --git a/tests/generic/280 b/tests/generic/280
-> index 815a2c5..7a2d1d0 100755
-> --- a/tests/generic/280
-> +++ b/tests/generic/280
-> @@ -61,9 +61,10 @@ quotacheck -u -g $SCRATCH_MNT 2>/dev/null
->  quotaon $SCRATCH_MNT 2>/dev/null
->  xfs_freeze -f $SCRATCH_MNT
->  setquota -u root 1 2 3 4 $SCRATCH_MNT &
-> +pid=$!
->  sleep 1
->  xfs_freeze -u $SCRATCH_MNT
-> -sleep 1
-> +wait $pid
->  umount $SCRATCH_DEV
+> diff --git a/tests/xfs/300.out b/tests/xfs/300.out
+> index ac03557..29ed771 100644
+> --- a/tests/xfs/300.out
+> +++ b/tests/xfs/300.out
+> @@ -1,3 +1,3 @@
+>  QA output created by 300
+>  SCRATCH_MNT/300.test
+> -extents before:6 after:1 DONE SCRATCH_MNT/300.test
+> +extents before:7 after:1 DONE SCRATCH_MNT/300.test
 
-Looks fine.
+Looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
