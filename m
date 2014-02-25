@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B82767F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:08:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7D3DE304071
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:08:41 -0800 (PST)
-Received: from mail-bk0-f50.google.com (mail-bk0-f50.google.com
-	[209.85.214.50]) by cuda.sgi.com with ESMTP id FR59rKLxKutSaVTK
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:08:38 -0800 (PST)
-Received: by mail-bk0-f50.google.com with SMTP id w10so385253bkz.37
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:08:37 -0800 (PST)
-From: Dongsu Park <dongsu.park@profitbricks.com>
-Subject: [PATCH] util-linux/fallocate: introduce an option -c to support
-	FALLOC_FL_COLLAPSE_RANGE
-Date: Tue, 25 Feb 2014 20:08:25 +0100
-Message-Id: <1393355305-12009-1-git-send-email-dongsu.park@profitbricks.com>
-In-Reply-To: <alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
-References: <alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
+	by oss.sgi.com (Postfix) with ESMTP id 1E9B97F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:14:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E19E0304075
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:14:54 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zMxH92Kl1umFU7Il for
+	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:14:54 -0800 (PST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 0/6 v2] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+Date: Tue, 25 Feb 2014 20:14:33 +0100
+Message-Id: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,154 +25,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, Dongsu Park <dongsu.park@profitbricks.com>
+To: linux-ext4@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
 
-Introduce a new option -c (or --collapse-range) to support a new flag
-FALLOC_FL_COLLAPSE_RANGE for fallocate(2). It will nullify a particular
-range [offset, offset+len] by shifting extents beyond the range to the
-beginning of the hole.
+Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
+functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
 
-To test that, it's necessary to apply kernel patches in the patchset
-"fs: Introduce new flag (FALLOC_FL_COLLAPSE_RANGE) for fallocate" [1],
-as well as "[PATCH v6] ext4: Add support FALLOC_FL_COLLAPSE_RANGE for
-fallocate". [2]
+It can be used to convert a range of file to zeros preferably without
+issuing data IO. Blocks should be preallocated for the regions that span
+holes in the file, and the entire range is preferable converted to
+unwritten extents - even though file system may choose to zero out the
+extent or do whatever which will result in reading zeros from the range
+while the range remains allocated for the file.
 
-As discussed in the thread "[PATCH RESEND 3/10] ext4: Add support
-FALLOC_FL_COLLAPSE_RANGE for fallocate", [3] this patch to util-linux
-will be useful for testing collapse-range inside xfstests.
+This can be also used to preallocate blocks past EOF in the same way as
+with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
+size to remain the same.
 
-[1] https://lkml.org/lkml/2014/2/18/374
-[2] https://lkml.org/lkml/2014/2/20/318
-[3] https://lkml.org/lkml/2014/2/18/83
+You can test this feature yourself using xfstests, of fallocate(1) however
+you'll need patches for util_linux, xfsprogs and xfstests which are going to
+follow soon.
 
-Cc: Lukas Czerner <lczerner@redhat.com>
-Cc: Namjae Jeon <namjae.jeon@samsung.com>
-Cc: Ashish Sangwan <a.sangwan@samsung.com>
-Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
----
- sys-utils/fallocate.1 |  7 +++++++
- sys-utils/fallocate.c | 45 ++++++++++++++++++++++++++++-----------------
- 2 files changed, 35 insertions(+), 17 deletions(-)
+I tested this mostly with a subset of xfstests using fsx and fsstress and
+even with new generic/290 which is just a copy of xfs/290 using fzero
+command for xfs_io instead of zero (which uses ioctl). I was testing on
+x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
 
-diff --git a/sys-utils/fallocate.1 b/sys-utils/fallocate.1
-index 8a3aa4f..634c595 100644
---- a/sys-utils/fallocate.1
-+++ b/sys-utils/fallocate.1
-@@ -6,6 +6,7 @@ fallocate \- preallocate or deallocate space to a file
- .B fallocate
- .RB [ \-n ]
- .RB [ \-p ]
-+.RB [ \-c ]
- .RB [ \-o
- .IR offset ]
- .B \-l
-@@ -54,6 +55,12 @@ implied.
- .IP
- You can think of this as doing a "\fBcp --sparse\fP" and
- renaming the dest file as the original, without the need for extra disk space.
-+.IP "\fB\-c, \-\-collapse-range\fP"
-+Collapse a particular file range to nullify the hole. Extents beyond the range
-+[offset, offset+length] will be shifted to the beginning of hole. Hence this
-+command does not leave a hole, while \fI\-\-punch-hole\fP leaves a hole
-+instead of shifting extents. Both offset and length should be aligned to
-+the block size of filesystem.
- .IP "\fB\-o, \-\-offset\fP \fIoffset\fP
- Specifies the beginning offset of the allocation, in bytes.
- .IP "\fB\-l, \-\-length\fP \fIlength\fP
-diff --git a/sys-utils/fallocate.c b/sys-utils/fallocate.c
-index d8a74bf..3c8a8d2 100644
---- a/sys-utils/fallocate.c
-+++ b/sys-utils/fallocate.c
-@@ -39,7 +39,8 @@
- #endif
- 
- #if defined(HAVE_LINUX_FALLOC_H) && \
--    (!defined(FALLOC_FL_KEEP_SIZE) || !defined(FALLOC_FL_PUNCH_HOLE))
-+    (!defined(FALLOC_FL_KEEP_SIZE) || !defined(FALLOC_FL_PUNCH_HOLE) || \
-+     !defined(FALLOC_FL_COLLAPSE_RANGE))
- # include <linux/falloc.h>	/* non-libc fallback for FALLOC_FL_* flags */
- #endif
- 
-@@ -51,6 +52,10 @@
- # define FALLOC_FL_PUNCH_HOLE 2
- #endif
- 
-+#ifndef FALLOC_FL_COLLAPSE_RANGE
-+# define FALLOC_FL_COLLAPSE_RANGE 8
-+#endif
-+
- #include "nls.h"
- #include "strutils.h"
- #include "c.h"
-@@ -66,12 +71,13 @@ static void __attribute__((__noreturn__)) usage(FILE *out)
- 	fprintf(out,
- 	      _(" %s [options] <filename>\n"), program_invocation_short_name);
- 	fputs(USAGE_OPTIONS, out);
--	fputs(_(" -d, --dig-holes     detect and dig holes\n"), out);
--	fputs(_(" -l, --length <num>  length of the (de)allocation, in bytes\n"), out);
--	fputs(_(" -n, --keep-size     don't modify the length of the file\n"), out);
--	fputs(_(" -o, --offset <num>  offset of the (de)allocation, in bytes\n"), out);
--	fputs(_(" -p, --punch-hole    punch holes in the file\n"), out);
--	fputs(_(" -v, --verbose       verbose mode\n"), out);
-+	fputs(_(" -c, --collapse-range collapse a hole in the file\n"), out);
-+	fputs(_(" -d, --dig-holes      detect and dig holes\n"), out);
-+	fputs(_(" -l, --length <num>   length of the (de)allocation, in bytes\n"), out);
-+	fputs(_(" -n, --keep-size      don't modify the length of the file\n"), out);
-+	fputs(_(" -o, --offset <num>   offset of the (de)allocation, in bytes\n"), out);
-+	fputs(_(" -p, --punch-hole     punch holes in the file\n"), out);
-+	fputs(_(" -v, --verbose        verbose mode\n"), out);
- 
- 	fputs(USAGE_SEPARATOR, out);
- 	fputs(USAGE_HELP, out);
-@@ -258,15 +264,16 @@ int main(int argc, char **argv)
- 	loff_t	offset = 0;
- 
- 	static const struct option longopts[] = {
--	    { "help",       0, 0, 'h' },
--	    { "version",    0, 0, 'V' },
--	    { "keep-size",  0, 0, 'n' },
--	    { "punch-hole", 0, 0, 'p' },
--	    { "dig-holes",  0, 0, 'd' },
--	    { "offset",     1, 0, 'o' },
--	    { "length",     1, 0, 'l' },
--	    { "verbose",    0, 0, 'v' },
--	    { NULL,         0, 0, 0 }
-+	    { "help",           0, 0, 'h' },
-+	    { "version",        0, 0, 'V' },
-+	    { "keep-size",      0, 0, 'n' },
-+	    { "punch-hole",     0, 0, 'p' },
-+	    { "collapse-range", 0, 0, 'c' },
-+	    { "dig-holes",      0, 0, 'd' },
-+	    { "offset",         1, 0, 'o' },
-+	    { "length",         1, 0, 'l' },
-+	    { "verbose",        0, 0, 'v' },
-+	    { NULL,             0, 0, 0 }
- 	};
- 
- 	setlocale(LC_ALL, "");
-@@ -274,7 +281,8 @@ int main(int argc, char **argv)
- 	textdomain(PACKAGE);
- 	atexit(close_stdout);
- 
--	while ((c = getopt_long(argc, argv, "hvVnpdl:o:", longopts, NULL)) != -1) {
-+	while ((c = getopt_long(argc, argv, "hvVncpdl:o:", longopts, NULL))
-+			!= -1) {
- 		switch(c) {
- 		case 'h':
- 			usage(stdout);
-@@ -282,6 +290,9 @@ int main(int argc, char **argv)
- 		case 'V':
- 			printf(UTIL_LINUX_VERSION);
- 			return EXIT_SUCCESS;
-+		case 'c':
-+			mode |= FALLOC_FL_COLLAPSE_RANGE;
-+			break;
- 		case 'p':
- 			mode |= FALLOC_FL_PUNCH_HOLE;
- 			/* fall through */
+./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083
+generic/117 generic/068 generic/231 generic/127 generic/091 generic/075
+generic/112 generic/263 generic/091 generic/075 generic/256 generic/255
+generic/316 generic/300 generic/290 ext4/242;
+
+Note that there is a work in progress on FALLOC_FL_COLLAPSE_RANGE which
+touches the same area as this pach set does, so we should figure out
+which one should go first and modify the other on top of it.
+
+This has been based on top of xfs-collapse-range so it does not contain ext4
+collapse range changes.
+
+Thanks!
+-Lukas
+
+Changelog:
+
+v2:
+ - rebased on top of collapse_range changes
+ - make varisou ext4 functions static
+ - flag testing changes in do_fallocate
+
 -- 
-1.8.5.3
+[PATCH 1/6] ext4: Update inode i_size after the preallocation
+[PATCH 2/6] ext4: refactor ext4_fallocate code
+[PATCH 3/6] ext4: translate fallocate mode bits to strings
+[PATCH 4/6] fs: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+[PATCH 5/6] ext4: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+[PATCH 6/6] xfs: Add support for FALLOC_FL_ZERO_RANGE
 
 _______________________________________________
 xfs mailing list
