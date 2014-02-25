@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 903847F50
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 22:14:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 82721304048
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 20:14:04 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	4dvpvvFKvxVyeMJz for <xfs@oss.sgi.com>;
-	Mon, 24 Feb 2014 20:14:02 -0800 (PST)
-Date: Tue, 25 Feb 2014 15:13:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
-	for fallocate
-Message-ID: <20140225041346.GA29907@dastard>
-References: <1392741436-19995-1-git-send-email-linkinjeon@gmail.com>
-	<20140224005710.GH4317@dastard>
-	<20140225141601.358f6e3df2660d4af44da876@canb.auug.org.au>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 65AB97F50
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 23:27:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5BCB78F806F
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 21:27:41 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 3ehHn1wDJsxD6CdV for
+	<xfs@oss.sgi.com>; Mon, 24 Feb 2014 21:27:37 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1P5RauD021493
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 00:27:37 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1P5RZmn011020
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 00:27:36 -0500
+Message-ID: <530C29C7.90001@redhat.com>
+Date: Mon, 24 Feb 2014 23:27:35 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140225141601.358f6e3df2660d4af44da876@canb.auug.org.au>
+Subject: [PATCH] xfs: clean up xfs_set_maxicount & use in growfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +36,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Namjae Jeon <linkinjeon@gmail.com>, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Feb 25, 2014 at 02:16:01PM +1100, Stephen Rothwell wrote:
-> Hi Dave,
-> 
-> On Mon, 24 Feb 2014 11:57:10 +1100 Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > > Namjae Jeon (10):
-> > >   fs: Add new flag(FALLOC_FL_COLLAPSE_RANGE) for fallocate
-> > >   xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
-> > 
-> > I've pushed these to the following branch:
-> > 
-> > 	git://oss.sgi.com/xfs/xfs.git xfs-collapse-range
-> > 
-> > And so they'll be in tomorrow's linux-next tree.
-> > 
-> > >   ext4: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
-> > 
-> > I've left this one alone for the ext4 guys to sort out.
-> 
-> So presumably that xfs tree branch is now completely stable and so Ted
-> could just merge that branch into the ext4 tree as well and put the ext4
-> part on top of that in his tree.
+xfs_set_maxicount() overflowed fairly easily for large filesystems
+and large maxicount; we started out by multiplying dblocks by
+the percentage, *then* dividing by 100, and never checked for
+an overflow.  The calculations were also, IMHO, a little hard
+to follow.
 
-Well, for some definition of stable. Right now it's just a topic
-branch that is merged into the for-next branch, so in theory it is
-still just a set of pending changes in a branch in a repo that has
-been pushed to linux-next for testing.
+I rewrote it using mult_frac (so handy!) and rounddown, to
+do a nice no-overflow, no-precision-loss multiplication by
+(%/100), then round down to the inode allocation unit.
+Then check to see if we've overflowed the u64, and set to
+XFS_MAXINUMBER if so.
 
-That said, I don't see that branch changing unless we find bugs in
-the code or a problem with the API needs fixing, at which point I
-would add more commits to it and rebase the for-next branch that you
-are pulling into the linux-next tree.
+Also, growfs open-coded the setting of maxicount; call the
+handy helper instead.
 
-Realistically, I'm waiting for Lukas to repost his other pending
-fallocate changes (the zero range changes) so I can pull the VFS and
-XFS bits of that into the XFS tree and I can test them together
-before I'll call the xfs-collapse-range stable and ready to be
-merged into some other tree...
+This slightly changes growfs behavior, because we weren't
+rounding to the allocation multiple in that code.  I checked
+that we get the same answers for non-growfs cases by running
+100 mkfs.xfs's with imaxpct from 1 to 100, and it gives the
+same inode count in all cases.
 
-Cheers,
+Thanks to dchinner for pointing out that this could use fixing.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+Ok Brian, have at it.  ;)
+
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 02fb943..867e476 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -471,12 +471,7 @@ xfs_growfs_data_private(
+ 	/* New allocation groups fully initialized, so update mount struct */
+ 	if (nagimax)
+ 		mp->m_maxagi = nagimax;
+-	if (mp->m_sb.sb_imax_pct) {
+-		__uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
+-		do_div(icount, 100);
+-		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
+-	} else
+-		mp->m_maxicount = 0;
++	xfs_set_maxicount(mp);
+ 	xfs_set_low_space_thresholds(mp);
+ 
+ 	/* update secondary superblocks. */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 02df7b4..0ec2b19 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -419,24 +419,24 @@ xfs_update_alignment(xfs_mount_t *mp)
+ }
+ 
+ /*
+- * Set the maximum inode count for this filesystem
++ * Set the maximum inode count for this filesystem based on sb_imax_pct
+  */
+-STATIC void
++void
+ xfs_set_maxicount(xfs_mount_t *mp)
+ {
+ 	xfs_sb_t	*sbp = &(mp->m_sb);
+-	__uint64_t	icount;
++	__uint64_t	iblocks;
+ 
+ 	if (sbp->sb_imax_pct) {
+ 		/*
+ 		 * Make sure the maximum inode count is a multiple
+ 		 * of the units we allocate inodes in.
+ 		 */
+-		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
+-		do_div(icount, 100);
+-		do_div(icount, mp->m_ialloc_blks);
+-		mp->m_maxicount = (icount * mp->m_ialloc_blks)  <<
+-				   sbp->sb_inopblog;
++		iblocks = mult_frac(sbp->sb_dblocks, sbp->sb_imax_pct, 100);
++		iblocks = rounddown(iblocks, mp->m_ialloc_blks);
++		mp->m_maxicount = iblocks << sbp->sb_inopblog;
++		if (mp->m_maxicount < iblocks)
++			mp->m_maxicount = XFS_MAXINUMBER;
+ 	} else {
+ 		mp->m_maxicount = 0;
+ 	}
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index a466c5e..6288a56 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -388,6 +388,7 @@ extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
+ extern int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
+ extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
+ extern int	xfs_readsb(xfs_mount_t *, int);
++void		xfs_set_maxicount(xfs_mount_t *mp);
+ extern void	xfs_freesb(xfs_mount_t *);
+ extern int	xfs_fs_writable(xfs_mount_t *);
+ extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
 
 _______________________________________________
 xfs mailing list
