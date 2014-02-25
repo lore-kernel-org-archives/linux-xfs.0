@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FFD97F56
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 14:11:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DB802AC003
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:11:42 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1AB027F56
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 14:11:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F22EC304071
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:11:43 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id b8Ib9uvgeOLKDk2r for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:11:41 -0800 (PST)
+	cuda.sgi.com with ESMTP id eyN8gsL2VEUEV3l0 for
+	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:11:43 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 4/6] xfstests: Add fallocate zero range operation to fsx
-Date: Tue, 25 Feb 2014 20:15:26 +0100
-Message-Id: <1393355728-12056-4-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero range
+Date: Tue, 25 Feb 2014 20:15:28 +0100
+Message-Id: <1393355728-12056-6-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
 References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,209 +30,191 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
+This is copy of xfs/242. However it's better to make it file system
+specific because the range can be zeroes either directly by writing
+zeroes, or converting to unwritten extent, so the actual result might
+differ from file system to file system.
+
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- ltp/fsx.c | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 107 insertions(+), 3 deletions(-)
+ tests/ext4/242     | 63 ++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/242.out | 84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/group   |  1 +
+ 3 files changed, 148 insertions(+)
+ create mode 100755 tests/ext4/242
+ create mode 100644 tests/ext4/242.out
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 2f1e3e8..b3c30db 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -72,6 +72,7 @@ int			logcount = 0;	/* total ops */
-  * TRUNCATE:	-	4
-  * FALLOCATE:	-	5
-  * PUNCH HOLE:	-	6
-+ * ZERO RANGE:	-	7
-  *
-  * When mapped read/writes are disabled, they are simply converted to normal
-  * reads and writes. When fallocate/fpunch calls are disabled, they are
-@@ -95,7 +96,8 @@ int			logcount = 0;	/* total ops */
- #define OP_TRUNCATE	4
- #define OP_FALLOCATE	5
- #define OP_PUNCH_HOLE	6
--#define OP_MAX_FULL	7
-+#define OP_ZERO_RANGE	7
-+#define OP_MAX_FULL	8
- 
- /* operation modifiers */
- #define OP_CLOSEOPEN	100
-@@ -142,6 +144,7 @@ int	seed = 1;			/* -S flag */
- int     mapped_writes = 1;              /* -W flag disables */
- int     fallocate_calls = 1;            /* -F flag disables */
- int     punch_hole_calls = 1;           /* -H flag disables */
-+int     zero_range_calls = 1;           /* -E flag disables */
- int 	mapped_reads = 1;		/* -R flag disables it */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -320,6 +323,14 @@ logdump(void)
- 						     lp->args[0] + lp->args[1])
- 				prt("\t******PPPP");
- 			break;
-+		case OP_ZERO_RANGE:
-+			prt("ZERO    0x%x thru 0x%x\t(0x%x bytes)",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1]);
-+			if (badoff >= lp->args[0] && badoff <
-+						     lp->args[0] + lp->args[1])
-+				prt("\t******ZZZZ");
-+			break;
- 		case OP_SKIPPED:
- 			prt("SKIPPED (no operation)");
- 			break;
-@@ -882,6 +893,64 @@ do_punch_hole(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FALLOC_FL_ZERO_RANGE
-+void
-+do_zero_range(unsigned offset, unsigned length)
+diff --git a/tests/ext4/242 b/tests/ext4/242
+new file mode 100755
+index 0000000..f34036c
+--- /dev/null
++++ b/tests/ext4/242
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# FS QA Test No. 242
++#
++# Test fallocate FALLOC_FL_ZERO_RANGE
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Red Hat.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
 +{
-+	unsigned end_offset;
-+	int max_offset = 0;
-+	int max_len = 0;
-+	int mode = FALLOC_FL_ZERO_RANGE;
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length zero range\n");
-+			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, length);
-+		return;
-+	}
-+
-+	if (file_size <= (loff_t)offset) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero range off the end of the file\n");
-+			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, length);
-+		return;
-+	}
-+
-+	end_offset = offset + length;
-+
-+	log4(OP_ZERO_RANGE, offset, length, 0);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		      end_offset <= monitorend))) {
-+		prt("%lu zero\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-+			offset, offset+length, length);
-+	}
-+	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-+		prt("%pzero range: %x to %x\n", offset, length);
-+		prterr("do_zero_range: fallocate");
-+		report_failure(161);
-+	}
-+
-+
-+	max_offset = offset < file_size ? offset : file_size;
-+	max_len = max_offset + length <= file_size ? length :
-+			file_size - max_offset;
-+	memset(good_buf + max_offset, '\0', max_len);
++    rm -f $tmp.*
 +}
 +
-+#else
-+void
-+do_zero_range(unsigned offset, unsigned length)
-+{
-+	return;
-+}
-+#endif
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
 +
- #ifdef FALLOCATE
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1050,6 +1119,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_ZERO_RANGE:
-+		if (!zero_range_calls) {
-+			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, size);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1088,6 +1163,10 @@ test(void)
- 		TRIM_OFF_LEN(offset, size, file_size);
- 		do_punch_hole(offset, size);
- 		break;
-+	case OP_ZERO_RANGE:
-+		TRIM_OFF_LEN(offset, size, file_size);
-+		do_zero_range(offset, size);
-+		break;
- 	default:
- 		prterr("test: unknown operation");
- 		report_failure(42);
-@@ -1143,7 +1222,10 @@ usage(void)
- "	-F: Do not use fallocate (preallocation) calls\n"
- #endif
- #ifdef FALLOC_FL_PUNCH_HOLE
--"       -H: Do not use punch hole calls\n"
-+"	-H: Do not use punch hole calls\n"
-+#endif
-+#ifdef FALLOC_FL_ZERO_RANGE
-+"	-E: Do not use zero range calls\n"
- #endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
-@@ -1330,6 +1412,24 @@ test_punch_hole()
- #endif
- }
- 
-+void
-+test_zero_range()
++# real QA test starts here
++_supported_fs ext4
++_supported_os Linux
++_require_xfs_io_falloc_zero
++
++_test_io_zero()
 +{
-+#ifdef FALLOC_FL_ZERO_RANGE
-+	if (!lite && zero_range_calls) {
-+		if (fallocate(fd, FALLOC_FL_ZERO_RANGE,
-+				0, 1) && errno == EOPNOTSUPP) {
-+			if(!quiet)
-+				warn("main: filesystem does not support fallocate zero range, disabling");
-+			zero_range_calls = 0;
-+		} else
-+			ftruncate(fd, 0);
-+	}
-+#else /* ! ZERO RANGE */
-+	zero_range_calls = 0;
-+#endif
++	$XFS_IO_PROG -c "fzero help" 2>&1 | \
++			grep 'command "zero" not found' > /dev/null
++	echo $?
 +}
 +
- int
- main(int argc, char **argv)
- {
-@@ -1348,7 +1448,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHELN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1448,6 +1548,9 @@ main(int argc, char **argv)
- 		case 'H':
- 			punch_hole_calls = 0;
- 			break;
-+		case 'E':
-+			zero_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			break;
-@@ -1595,6 +1698,7 @@ main(int argc, char **argv)
- 
- 	test_fallocate();
- 	test_punch_hole();
-+	test_zero_range();
- 
- 	while (numops == -1 || numops--)
- 		test();
++[ $(_test_io_zero) -eq 0 ] && _notrun "fzero command not supported"
++
++testfile=$TEST_DIR/242.$$
++
++_test_generic_punch falloc fzero fzero fiemap _filter_fiemap $testfile
++
++status=0 ; exit
+diff --git a/tests/ext4/242.out b/tests/ext4/242.out
+new file mode 100644
+index 0000000..3b80b4d
+--- /dev/null
++++ b/tests/ext4/242.out
+@@ -0,0 +1,84 @@
++QA output created by 242
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	4. hole -> data
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..31]: data
++3: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: hole
++1b3779878366498b28c702ef88c4a773
++	8. unwritten -> hole
++0: [0..23]: unwritten
++1: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	9. unwritten -> data
++0: [0..23]: unwritten
++1: [24..31]: data
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++daa100df6e6711906b61c9ab5aa16032
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 7e1a68b..c8b47cc 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -3,6 +3,7 @@
+ # - do not start group names with a digit
+ # - comment line before each group is "new" description
+ #
++242 auto prealloc quick
+ 271 auto rw quick
+ 301 aio dangerous ioctl rw stress
+ 302 aio dangerous ioctl rw stress
 -- 
 1.8.3.1
 
