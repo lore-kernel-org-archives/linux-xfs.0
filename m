@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 93F057F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 15:56:24 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C62DD7F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 16:03:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BF9CAC004
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:56:24 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AA92E304071
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 14:03:30 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id n27fzuh13NvvWQo4 (version=TLSv1 cipher=AES256-SHA
+	ESMTP id 9Kf85StrONazFZbo (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 13:56:19 -0800 (PST)
-Date: Tue, 25 Feb 2014 13:56:16 -0800
+	Tue, 25 Feb 2014 14:03:29 -0800 (PST)
+Date: Tue, 25 Feb 2014 14:03:28 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] xfstests: Define fallocate flags locally in fsx
-Message-ID: <20140225215616.GA29752@infradead.org>
-References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
-	<1393355728-12056-5-git-send-email-lczerner@redhat.com>
-	<20140225203922.GC13647@dastard>
+Subject: Re: [PATCH] xfs_metadump: include F in getopts string
+Message-ID: <20140225220328.GA5450@infradead.org>
+References: <530CC371.8030005@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140225203922.GC13647@dastard>
+In-Reply-To: <530CC371.8030005@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +29,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Feb 26, 2014 at 07:39:22AM +1100, Dave Chinner wrote:
-> > index b3c30db..331257e 100644
-> > --- a/ltp/fsx.c
-> > +++ b/ltp/fsx.c
-> > @@ -35,8 +35,13 @@
-> >  #endif
-> >  #ifdef FALLOCATE
-> >  #include <linux/falloc.h>
-> > +#ifndef FALLOC_FL_PUNCH_HOLE
-> > +#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
-> > +#endif
-> > +#ifndef FALLOC_FL_ZERO_RANGE
-> > +#define FALLOC_FL_ZERO_RANGE    0x10 /* zeroes range */
-> > +#endif
-> >  #endif
+On Tue, Feb 25, 2014 at 10:23:13AM -0600, Eric Sandeen wrote:
+> I added an F case, but didn't add it to the bash
+> getopts string last go-round.
 > 
-> This pattern is appearing all over the place in xfstests now.  I'd
-> suggest that this should really be handled by autoconf,
-> include/config.h and src/globals.h....
+> /usr/sbin/xfs_metadump: illegal option -- F
+> 
+> I sure thought I tested this, I'm not sure how it got lost.
 
-Can we handle this nicely using autoconf, especially in the case of O_
-flags that might be different for different architectures?
+Well, better write a test for xfstests so that we can test it as part of
+the regression test run.
 
-Either way having a single header for the various flags that might not
-be present in the system headers sounds like a good plan.
+Otherwise:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
