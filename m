@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 717287F56
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:15:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17DAF8F8064
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:15:14 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 676B57F72
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:15:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4AAE6304075
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:15:40 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iEuYGiCXjr4zNWGf for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:15:12 -0800 (PST)
+	cuda.sgi.com with ESMTP id XPwrOTtG4O2IgRW2 for
+	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:15:39 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 5/6 v2] ext4: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-Date: Tue, 25 Feb 2014 20:14:38 +0100
-Message-Id: <1393355679-11160-6-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
-References: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 1/6] generic/290: Add test for fallocate zero range
+Date: Tue, 25 Feb 2014 20:15:23 +0100
+Message-Id: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,582 +26,268 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, tytso@mit.edu, xfs@oss.sgi.com
-
-Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
-
-It can be used to convert a range of file to zeros preferably without
-issuing data IO. Blocks should be preallocated for the regions that span
-holes in the file, and the entire range is preferable converted to
-unwritten extents
-
-This can be also used to preallocate blocks past EOF in the same way as
-with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-size to remain the same.
-
-Also add appropriate tracepoints.
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- fs/ext4/ext4.h              |   2 +
- fs/ext4/extents.c           | 270 +++++++++++++++++++++++++++++++++++++++++---
- fs/ext4/inode.c             |  17 ++-
- include/trace/events/ext4.h |  64 +++++------
- 4 files changed, 300 insertions(+), 53 deletions(-)
+ common/rc             |  14 +++++++
+ tests/generic/290     |  92 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/290.out | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/group   |   1 +
+ 4 files changed, 216 insertions(+)
+ create mode 100755 tests/generic/290
+ create mode 100644 tests/generic/290.out
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 3b9601c..a649abe 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -568,6 +568,8 @@ enum {
- #define EXT4_GET_BLOCKS_NO_LOCK			0x0100
- 	/* Do not put hole in extent cache */
- #define EXT4_GET_BLOCKS_NO_PUT_HOLE		0x0200
-+	/* Convert written extents to unwritten */
-+#define EXT4_GET_BLOCKS_CONVERT_UNWRITTEN	0x0400
- 
- /*
-  * The bit position of these flags must not overlap with any of the
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index e5485eb..017b4fb 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -3568,6 +3568,8 @@ out:
-  *   b> Splits in two extents: Write is happening at either end of the extent
-  *   c> Splits in three extents: Somone is writing in middle of the extent
-  *
-+ * This works the same way in the case of initialized -> unwritten conversion.
-+ *
-  * One of more index blocks maybe needed if the extent tree grow after
-  * the uninitialized extent split. To prevent ENOSPC occur at the IO
-  * complete, we need to split the uninitialized extent before DIO submit
-@@ -3578,7 +3580,7 @@ out:
-  *
-  * Returns the size of uninitialized extent to be written on success.
-  */
--static int ext4_split_unwritten_extents(handle_t *handle,
-+static int ext4_split_convert_extents(handle_t *handle,
- 					struct inode *inode,
- 					struct ext4_map_blocks *map,
- 					struct ext4_ext_path *path,
-@@ -3590,9 +3592,9 @@ static int ext4_split_unwritten_extents(handle_t *handle,
- 	unsigned int ee_len;
- 	int split_flag = 0, depth;
- 
--	ext_debug("ext4_split_unwritten_extents: inode %lu, logical"
--		"block %llu, max_blocks %u\n", inode->i_ino,
--		(unsigned long long)map->m_lblk, map->m_len);
-+	ext_debug("%s: inode %lu, logical block %llu, max_blocks %u\n",
-+		  __func__, inode->i_ino,
-+		  (unsigned long long)map->m_lblk, map->m_len);
- 
- 	eof_block = (inode->i_size + inode->i_sb->s_blocksize - 1) >>
- 		inode->i_sb->s_blocksize_bits;
-@@ -3607,14 +3609,73 @@ static int ext4_split_unwritten_extents(handle_t *handle,
- 	ee_block = le32_to_cpu(ex->ee_block);
- 	ee_len = ext4_ext_get_actual_len(ex);
- 
--	split_flag |= ee_block + ee_len <= eof_block ? EXT4_EXT_MAY_ZEROOUT : 0;
--	split_flag |= EXT4_EXT_MARK_UNINIT2;
--	if (flags & EXT4_GET_BLOCKS_CONVERT)
--		split_flag |= EXT4_EXT_DATA_VALID2;
-+	/* Convert to unwritten */
-+	if (flags | EXT4_GET_BLOCKS_CONVERT_UNWRITTEN) {
-+		split_flag |= EXT4_EXT_DATA_VALID1;
-+	/* Convert to initialized */
-+	} else if (flags | EXT4_GET_BLOCKS_CONVERT) {
-+		split_flag |= ee_block + ee_len <= eof_block ?
-+			      EXT4_EXT_MAY_ZEROOUT : 0;
-+		split_flag |= (EXT4_EXT_MARK_UNINIT2 & EXT4_EXT_DATA_VALID2);
-+	}
- 	flags |= EXT4_GET_BLOCKS_PRE_IO;
- 	return ext4_split_extent(handle, inode, path, map, split_flag, flags);
+diff --git a/common/rc b/common/rc
+index f2c3c3a..d3ec4db 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1359,6 +1359,20 @@ _require_xfs_io_fiemap()
+ 		_notrun "xfs_io fiemap command failed (no fs support?)"
  }
  
-+static int ext4_convert_initialized_extents(handle_t *handle,
-+					    struct inode *inode,
-+					    struct ext4_map_blocks *map,
-+					    struct ext4_ext_path *path)
++# check that xfs_io, kernel and filesystem all support fallocate with zero
++# range
++_require_xfs_io_falloc_zero()
 +{
-+	struct ext4_extent *ex;
-+	ext4_lblk_t ee_block;
-+	unsigned int ee_len;
-+	int depth;
-+	int err = 0;
-+
-+	depth = ext_depth(inode);
-+	ex = path[depth].p_ext;
-+	ee_block = le32_to_cpu(ex->ee_block);
-+	ee_len = ext4_ext_get_actual_len(ex);
-+
-+	ext_debug("%s: inode %lu, logical"
-+		"block %llu, max_blocks %u\n", __func__, inode->i_ino,
-+		  (unsigned long long)ee_block, ee_len);
-+
-+	if (ee_block != map->m_lblk || ee_len > map->m_len) {
-+		err = ext4_split_convert_extents(handle, inode, map, path,
-+				EXT4_GET_BLOCKS_CONVERT_UNWRITTEN);
-+		if (err < 0)
-+			goto out;
-+		ext4_ext_drop_refs(path);
-+		path = ext4_ext_find_extent(inode, map->m_lblk, path, 0);
-+		if (IS_ERR(path)) {
-+			err = PTR_ERR(path);
-+			goto out;
-+		}
-+		depth = ext_depth(inode);
-+		ex = path[depth].p_ext;
-+	}
-+
-+	err = ext4_ext_get_access(handle, inode, path + depth);
-+	if (err)
-+		goto out;
-+	/* first mark the extent as uninitialized */
-+	ext4_ext_mark_uninitialized(ex);
-+
-+	/* note: ext4_ext_correct_indexes() isn't needed here because
-+	 * borders are not changed
-+	 */
-+	ext4_ext_try_to_merge(handle, inode, path, ex);
-+
-+	/* Mark modified extent as dirty */
-+	err = ext4_ext_dirty(handle, inode, path + path->p_depth);
-+out:
-+	ext4_ext_show_leaf(inode, path);
-+	return err;
++	testfile=$TEST_DIR/$$.falloc
++	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
++		-c "fzero 4k 8k" $testfile 2>&1`
++	rm -f $testfile 2>&1 > /dev/null
++	echo $testio | grep -q "not found" && \
++		_notrun "xfs_io fallocate zero range support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "xfs_io fallocate fzero command failed (no fs support?)"
 +}
 +
+ # Check that a fs has enough free space (in 1024b blocks)
+ #
+ _require_fs_space()
+diff --git a/tests/generic/290 b/tests/generic/290
+new file mode 100755
+index 0000000..90f560a
+--- /dev/null
++++ b/tests/generic/290
+@@ -0,0 +1,92 @@
++#! /bin/bash
++# FS QA Test No. 290
++#
++# Makes calls to fallocate zero range and checks tossed ranges
++#
++# Nothing should be tossed unless the range includes a page boundry
++#
++# Primarily tests page boundries and boundries that are
++#  off-by-one to ensure we're only tossing what's expected
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
- static int ext4_convert_unwritten_extents_endio(handle_t *handle,
- 						struct inode *inode,
- 						struct ext4_map_blocks *map,
-@@ -3648,8 +3709,8 @@ static int ext4_convert_unwritten_extents_endio(handle_t *handle,
- 			     inode->i_ino, (unsigned long long)ee_block, ee_len,
- 			     (unsigned long long)map->m_lblk, map->m_len);
- #endif
--		err = ext4_split_unwritten_extents(handle, inode, map, path,
--						   EXT4_GET_BLOCKS_CONVERT);
-+		err = ext4_split_convert_extents(handle, inode, map, path,
-+						 EXT4_GET_BLOCKS_CONVERT);
- 		if (err < 0)
- 			goto out;
- 		ext4_ext_drop_refs(path);
-@@ -3850,6 +3911,42 @@ get_reserved_cluster_alloc(struct inode *inode, ext4_lblk_t lblk_start,
- }
- 
- static int
-+ext4_ext_convert_initialized_extent(handle_t *handle, struct inode *inode,
-+			struct ext4_map_blocks *map,
-+			struct ext4_ext_path *path, int flags,
-+			unsigned int allocated, ext4_fsblk_t newblock)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_os Linux
++
++_require_xfs_io_falloc_zero
++
++testfile=$TEST_DIR/290.$$
++
++test_zero()
 +{
-+	int ret = 0;
-+	int err = 0;
++	zero_start=$1
++	zero_len=$2
 +
-+	/*
-+	 * Make sure that the extent is no bigger than we support with
-+	 * uninitialized extent
-+	 */
-+	if (map->m_len > EXT_UNINIT_MAX_LEN)
-+		map->m_len = EXT_UNINIT_MAX_LEN / 2;
-+
-+	ret = ext4_convert_initialized_extents(handle, inode, map,
-+						path);
-+	if (ret >= 0) {
-+		ext4_update_inode_fsync_trans(handle, inode, 1);
-+		err = check_eofblocks_fl(handle, inode, map->m_lblk,
-+					 path, map->m_len);
-+	} else
-+		err = ret;
-+	map->m_flags |= EXT4_MAP_UNWRITTEN;
-+	if (allocated > map->m_len)
-+		allocated = map->m_len;
-+	map->m_len = allocated;
-+
-+	if (path) {
-+		ext4_ext_drop_refs(path);
-+		kfree(path);
-+	}
-+	return err ? err : allocated;
++	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 4096" \
++                      -c "pwrite -S 0x42 4096 4096" \
++                      -c "fzero $zero_start $zero_len" \
++                      -c "pread -v 0 8192" \
++                      $testfile | _filter_xfs_io_unique
 +}
 +
-+static int
- ext4_ext_handle_uninitialized_extents(handle_t *handle, struct inode *inode,
- 			struct ext4_map_blocks *map,
- 			struct ext4_ext_path *path, int flags,
-@@ -3876,8 +3973,8 @@ ext4_ext_handle_uninitialized_extents(handle_t *handle, struct inode *inode,
- 
- 	/* get_block() before submit the IO, split the extent */
- 	if ((flags & EXT4_GET_BLOCKS_PRE_IO)) {
--		ret = ext4_split_unwritten_extents(handle, inode, map,
--						   path, flags);
-+		ret = ext4_split_convert_extents(handle, inode, map,
-+					 path, flags | EXT4_GET_BLOCKS_CONVERT);
- 		if (ret <= 0)
- 			goto out;
- 		/*
-@@ -4168,6 +4265,7 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
- 		ext4_fsblk_t ee_start = ext4_ext_pblock(ex);
- 		unsigned short ee_len;
- 
++echo "[0,1] -- Shouldn't toss anything"
++test_zero    0    1
 +
- 		/*
- 		 * Uninitialized extents are treated as holes, except that
- 		 * we split out initialized portions during a write.
-@@ -4184,7 +4282,17 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
- 			ext_debug("%u fit into %u:%d -> %llu\n", map->m_lblk,
- 				  ee_block, ee_len, newblock);
- 
--			if (!ext4_ext_is_uninitialized(ex))
-+			/*
-+			 * If the extent is initialized check whether the
-+			 * caller wants to convert it to unwritten.
-+			 */
-+			if ((!ext4_ext_is_uninitialized(ex)) &&
-+			    (flags & EXT4_GET_BLOCKS_CONVERT_UNWRITTEN)) {
-+				allocated = ext4_ext_convert_initialized_extent(
-+						handle, inode, map, path, flags,
-+						allocated, newblock);
-+				goto out3;
-+			} else if (!ext4_ext_is_uninitialized(ex))
- 				goto out;
- 
- 			allocated = ext4_ext_handle_uninitialized_extents(
-@@ -4570,6 +4678,136 @@ retry:
- 	return ret > 0 ? ret2 : ret;
- }
- 
-+static long ext4_zero_range(struct file *file, loff_t offset,
-+			    loff_t len, int mode)
-+{
-+	struct inode *inode = file_inode(file);
-+	handle_t *handle = NULL;
-+	unsigned int max_blocks;
-+	loff_t new_size = 0;
-+	int ret = 0;
-+	int flags;
-+	int partial;
-+	loff_t start, end;
-+	ext4_lblk_t lblk;
-+	struct address_space *mapping = inode->i_mapping;
-+	unsigned int blkbits = inode->i_blkbits;
++echo "[0,4095] -- Shouldn't toss anything"
++test_zero    0 4095
 +
-+	trace_ext4_zero_range(inode, offset, len, mode);
++echo "[0,4096] -- Should toss first page"
++test_zero    0 4096
 +
-+	/*
-+	 * Write out all dirty pages to avoid race conditions
-+	 * Then release them.
-+	 */
-+	if (mapping->nrpages && mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
-+		ret = filemap_write_and_wait_range(mapping, offset,
-+						   offset + len - 1);
-+		if (ret)
-+			return ret;
-+	}
++echo "[0,4097] -- Should toss first page"
++test_zero    0 4097
 +
-+	/*
-+	 * Round up offset. This is not fallocate, we neet to zero out
-+	 * blocks, so convert interior block aligned part of the range to
-+	 * unwritten and possibly manually zero out unaligned parts of the
-+	 * range.
-+	 */
-+	start = round_up(offset, 1 << blkbits);
-+	end = round_down((offset + len), 1 << blkbits);
++echo "[4095,8191] -- Should toss last byte of first page"
++test_zero 4095 4096
 +
-+	if (start < offset || end > offset + len)
-+		return -EINVAL;
-+	partial = (offset + len) & ((1 << blkbits) - 1);
++echo "[4095,8192] -- Should toss second page & last byte of first page"
++test_zero 4095 4097
 +
-+	lblk = start >> blkbits;
-+	max_blocks = (end >> blkbits);
-+	if (max_blocks < lblk)
-+		max_blocks = 0;
-+	else
-+		max_blocks -= lblk;
++echo "[4095,8193] -- Should toss second page & last byte of first page"
++test_zero 4095 4098
 +
-+	flags = EXT4_GET_BLOCKS_CREATE_UNINIT_EXT |
-+		EXT4_GET_BLOCKS_CONVERT_UNWRITTEN;
-+	if (mode & FALLOC_FL_KEEP_SIZE)
-+		flags |= EXT4_GET_BLOCKS_KEEP_SIZE;
++echo "[4096,8192] -- Should toss second page"
++test_zero 4096 4096
 +
-+	mutex_lock(&inode->i_mutex);
++echo "[1024,5120] -- Should toss from 1024 to end of first page"
++test_zero 1024 4096
 +
-+	/*
-+	 * Indirect files do not support unwritten extnets
-+	 */
-+	if (!(ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS))) {
-+		ret = -EOPNOTSUPP;
-+		goto out_mutex;
-+	}
-+
-+	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
-+	     offset + len > i_size_read(inode)) {
-+		new_size = offset + len;
-+		ret = inode_newsize_ok(inode, new_size);
-+		if (ret)
-+			goto out_mutex;
-+		/*
-+		 * If we have a partial block after EOF we have to allocate
-+		 * the entire block.
-+		 */
-+		if (partial)
-+			max_blocks += 1;
-+	}
-+
-+	if (max_blocks > 0) {
-+
-+		/* Now release the pages and zero block aligned part of pages*/
-+		truncate_pagecache_range(inode, start, end - 1);
-+
-+		/* Wait all existing dio workers, newcomers will block on i_mutex */
-+		ext4_inode_block_unlocked_dio(inode);
-+		inode_dio_wait(inode);
-+
-+		/*
-+		 * Remove entire range from the extent status tree.
-+		 */
-+		ret = ext4_es_remove_extent(inode, lblk, max_blocks);
-+		if (ret)
-+			goto out_dio;
-+
-+		ret = ext4_alloc_file_blocks(file, lblk, max_blocks, flags,
-+					     mode);
-+		if (ret)
-+			goto out_dio;
-+	}
-+
-+	handle = ext4_journal_start(inode, EXT4_HT_MISC, 4);
-+	if (IS_ERR(handle)) {
-+		ret = PTR_ERR(handle);
-+		ext4_std_error(inode->i_sb, ret);
-+		goto out_dio;
-+	}
-+
-+	inode->i_mtime = inode->i_ctime = ext4_current_time(inode);
-+
-+	if (!ret && new_size) {
-+		if (new_size > i_size_read(inode))
-+			i_size_write(inode, new_size);
-+		if (new_size > EXT4_I(inode)->i_disksize)
-+			ext4_update_i_disksize(inode, new_size);
-+	}
-+	ext4_mark_inode_dirty(handle, inode);
-+
-+	/* Zero out partial block at the edges of the range */
-+	ret = ext4_zero_partial_blocks(handle, inode, offset, len);
-+
-+	if (file->f_flags & O_SYNC)
-+		ext4_handle_sync(handle);
-+
-+	ext4_journal_stop(handle);
-+out_dio:
-+	ext4_inode_resume_unlocked_dio(inode);
-+out_mutex:
-+	mutex_unlock(&inode->i_mutex);
-+	return ret;
-+}
-+
- /*
-  * preallocate space for a file. This implements ext4's fallocate file
-  * operation, which gets called from sys_fallocate system call.
-@@ -4590,7 +4828,8 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	unsigned int blkbits = inode->i_blkbits;
- 
- 	/* Return error if mode is not supported */
--	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
-+	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
-+		     FALLOC_FL_ZERO_RANGE))
- 		return -EOPNOTSUPP;
- 
- 	if (mode & FALLOC_FL_PUNCH_HOLE)
-@@ -4607,6 +4846,9 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	if (!(ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS)))
- 		return -EOPNOTSUPP;
- 
-+	if (mode & FALLOC_FL_ZERO_RANGE)
-+		return ext4_zero_range(file, offset, len, mode);
-+
- 	trace_ext4_fallocate_enter(inode, offset, len, mode);
- 	lblk = offset >> blkbits;
- 	/*
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 6e39895..e64807f 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -503,6 +503,7 @@ int ext4_map_blocks(handle_t *handle, struct inode *inode,
- {
- 	struct extent_status es;
- 	int retval;
-+	int ret = 0;
- #ifdef ES_AGGRESSIVE_TEST
- 	struct ext4_map_blocks orig_map;
- 
-@@ -552,7 +553,6 @@ int ext4_map_blocks(handle_t *handle, struct inode *inode,
- 					     EXT4_GET_BLOCKS_KEEP_SIZE);
- 	}
- 	if (retval > 0) {
--		int ret;
- 		unsigned int status;
- 
- 		if (unlikely(retval != map->m_len)) {
-@@ -579,7 +579,7 @@ int ext4_map_blocks(handle_t *handle, struct inode *inode,
- 
- found:
- 	if (retval > 0 && map->m_flags & EXT4_MAP_MAPPED) {
--		int ret = check_block_validity(inode, map);
-+		ret = check_block_validity(inode, map);
- 		if (ret != 0)
- 			return ret;
- 	}
-@@ -596,7 +596,13 @@ found:
- 	 * with buffer head unmapped.
- 	 */
- 	if (retval > 0 && map->m_flags & EXT4_MAP_MAPPED)
--		return retval;
-+		/*
-+		 * If we need to convert extent to unwritten
-+		 * we continue and do the actual work in
-+		 * ext4_ext_map_blocks()
-+		 */
-+		if (!(flags & EXT4_GET_BLOCKS_CONVERT_UNWRITTEN))
-+			return retval;
- 
- 	/*
- 	 * Here we clear m_flags because after allocating an new extent,
-@@ -652,7 +658,6 @@ found:
- 		ext4_clear_inode_state(inode, EXT4_STATE_DELALLOC_RESERVED);
- 
- 	if (retval > 0) {
--		int ret;
- 		unsigned int status;
- 
- 		if (unlikely(retval != map->m_len)) {
-@@ -687,7 +692,7 @@ found:
- has_zeroout:
- 	up_write((&EXT4_I(inode)->i_data_sem));
- 	if (retval > 0 && map->m_flags & EXT4_MAP_MAPPED) {
--		int ret = check_block_validity(inode, map);
-+		ret = check_block_validity(inode, map);
- 		if (ret != 0)
- 			return ret;
- 	}
-@@ -3501,7 +3506,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
- 	if (!S_ISREG(inode->i_mode))
- 		return -EOPNOTSUPP;
- 
--	trace_ext4_punch_hole(inode, offset, length);
-+	trace_ext4_punch_hole(inode, offset, length, 0);
- 
- 	/*
- 	 * Write out all dirty pages to avoid race conditions
-diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
-index 451e020..7bb26aa 100644
---- a/include/trace/events/ext4.h
-+++ b/include/trace/events/ext4.h
-@@ -71,7 +71,8 @@ struct extent_status;
- #define show_falloc_mode(mode) __print_flags(mode, "|",		\
- 	{ FALLOC_FL_KEEP_SIZE,		"KEEP_SIZE"},		\
- 	{ FALLOC_FL_PUNCH_HOLE,		"PUNCH_HOLE"},		\
--	{ FALLOC_FL_NO_HIDE_STALE,	"NO_HIDE_STALE"})
-+	{ FALLOC_FL_NO_HIDE_STALE,	"NO_HIDE_STALE"},	\
-+	{ FALLOC_FL_ZERO_RANGE,		"ZERO_RANGE"})
- 
- 
- TRACE_EVENT(ext4_free_inode,
-@@ -1333,7 +1334,7 @@ TRACE_EVENT(ext4_direct_IO_exit,
- 		  __entry->rw, __entry->ret)
- );
- 
--TRACE_EVENT(ext4_fallocate_enter,
-+DECLARE_EVENT_CLASS(ext4__fallocate_mode,
- 	TP_PROTO(struct inode *inode, loff_t offset, loff_t len, int mode),
- 
- 	TP_ARGS(inode, offset, len, mode),
-@@ -1341,23 +1342,45 @@ TRACE_EVENT(ext4_fallocate_enter,
- 	TP_STRUCT__entry(
- 		__field(	dev_t,	dev			)
- 		__field(	ino_t,	ino			)
--		__field(	loff_t,	pos			)
--		__field(	loff_t,	len			)
-+		__field(	loff_t,	offset			)
-+		__field(	loff_t, len			)
- 		__field(	int,	mode			)
- 	),
- 
- 	TP_fast_assign(
- 		__entry->dev	= inode->i_sb->s_dev;
- 		__entry->ino	= inode->i_ino;
--		__entry->pos	= offset;
-+		__entry->offset	= offset;
- 		__entry->len	= len;
- 		__entry->mode	= mode;
- 	),
- 
--	TP_printk("dev %d,%d ino %lu pos %lld len %lld mode %s",
-+	TP_printk("dev %d,%d ino %lu offset %lld len %lld mode %s",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  (unsigned long) __entry->ino, __entry->pos,
--		  __entry->len, show_falloc_mode(__entry->mode))
-+		  (unsigned long) __entry->ino,
-+		  __entry->offset, __entry->len,
-+		  show_falloc_mode(__entry->mode))
-+);
-+
-+DEFINE_EVENT(ext4__fallocate_mode, ext4_fallocate_enter,
-+
-+	TP_PROTO(struct inode *inode, loff_t offset, loff_t len, int mode),
-+
-+	TP_ARGS(inode, offset, len, mode)
-+);
-+
-+DEFINE_EVENT(ext4__fallocate_mode, ext4_punch_hole,
-+
-+	TP_PROTO(struct inode *inode, loff_t offset, loff_t len, int mode),
-+
-+	TP_ARGS(inode, offset, len, mode)
-+);
-+
-+DEFINE_EVENT(ext4__fallocate_mode, ext4_zero_range,
-+
-+	TP_PROTO(struct inode *inode, loff_t offset, loff_t len, int mode),
-+
-+	TP_ARGS(inode, offset, len, mode)
- );
- 
- TRACE_EVENT(ext4_fallocate_exit,
-@@ -1389,31 +1412,6 @@ TRACE_EVENT(ext4_fallocate_exit,
- 		  __entry->ret)
- );
- 
--TRACE_EVENT(ext4_punch_hole,
--	TP_PROTO(struct inode *inode, loff_t offset, loff_t len),
--
--	TP_ARGS(inode, offset, len),
--
--	TP_STRUCT__entry(
--		__field(	dev_t,	dev			)
--		__field(	ino_t,	ino			)
--		__field(	loff_t,	offset			)
--		__field(	loff_t, len			)
--	),
--
--	TP_fast_assign(
--		__entry->dev	= inode->i_sb->s_dev;
--		__entry->ino	= inode->i_ino;
--		__entry->offset	= offset;
--		__entry->len	= len;
--	),
--
--	TP_printk("dev %d,%d ino %lu offset %lld len %lld",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  (unsigned long) __entry->ino,
--		  __entry->offset, __entry->len)
--);
--
- TRACE_EVENT(ext4_unlink_enter,
- 	TP_PROTO(struct inode *parent, struct dentry *dentry),
- 
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/290.out b/tests/generic/290.out
+new file mode 100644
+index 0000000..4614540
+--- /dev/null
++++ b/tests/generic/290.out
+@@ -0,0 +1,109 @@
++QA output created by 290
++[0,1] -- Shouldn't toss anything
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  .AAAAAAAAAAAAAAA
++00000010:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[0,4095] -- Shouldn't toss anything
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00000ff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 41  ...............A
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[0,4096] -- Should toss first page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[0,4097] -- Should toss first page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001000:  00 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  .BBBBBBBBBBBBBBB
++00001010:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[4095,8191] -- Should toss last byte of first page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001ff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42  ...............B
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[4095,8192] -- Should toss second page & last byte of first page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[4095,8193] -- Should toss second page & last byte of first page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[4096,8192] -- Should toss second page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++[1024,5120] -- Should toss from 1024 to end of first page
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001400:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/generic/group b/tests/generic/group
+index 34bd118..f3b2dc7 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -106,6 +106,7 @@
+ 285 auto rw
+ 286 auto quick other
+ 288 auto quick ioctl trim
++290 auto quick prealloc
+ 294 auto quick
+ 299 auto aio enospc rw stress
+ 300 auto aio enospc preallocrw stress
 -- 
 1.8.3.1
 
