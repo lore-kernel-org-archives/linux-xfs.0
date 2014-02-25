@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6B1347F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 15:50:21 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 93F057F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 15:56:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F56E304066
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:50:18 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	wGCrmKzz3HNtDC63 for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 13:50:16 -0800 (PST)
-Date: Wed, 26 Feb 2014 08:50:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
-	range
-Message-ID: <20140225215011.GF13647@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BF9CAC004
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:56:24 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id n27fzuh13NvvWQo4 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 13:56:19 -0800 (PST)
+Date: Tue, 25 Feb 2014 13:56:16 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/6] xfstests: Define fallocate flags locally in fsx
+Message-ID: <20140225215616.GA29752@infradead.org>
 References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
-	<1393355728-12056-6-git-send-email-lczerner@redhat.com>
-	<20140225205349.GD13647@dastard>
-	<alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
+	<1393355728-12056-5-git-send-email-lczerner@redhat.com>
+	<20140225203922.GC13647@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
+In-Reply-To: <20140225203922.GC13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,81 +27,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVHVlLCBGZWIgMjUsIDIwMTQgYXQgMTA6MDE6MDZQTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
-IHdyb3RlOgo+IE9uIFdlZCwgMjYgRmViIDIwMTQsIERhdmUgQ2hpbm5lciB3cm90ZToKPiAKPiA+
-IERhdGU6IFdlZCwgMjYgRmViIDIwMTQgMDc6NTM6NDkgKzExMDAKPiA+IEZyb206IERhdmUgQ2hp
-bm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiA+IFRvOiBMdWthcyBDemVybmVyIDxsY3plcm5l
-ckByZWRoYXQuY29tPgo+ID4gQ2M6IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwub3JnLCBsaW51eC1m
-c2RldmVsQHZnZXIua2VybmVsLm9yZywgeGZzQG9zcy5zZ2kuY29tCj4gPiBTdWJqZWN0OiBSZTog
-W1BBVENIIDYvNl0gZXh0NC8yNDI6IEFkZCBleHQ0IHNwZWNpZmljIHRlc3QgZm9yIGZhbGxvY2F0
-ZSB6ZXJvCj4gPiAgICAgcmFuZ2UKPiA+IAo+ID4gT24gVHVlLCBGZWIgMjUsIDIwMTQgYXQgMDg6
-MTU6MjhQTSArMDEwMCwgTHVrYXMgQ3plcm5lciB3cm90ZToKPiA+ID4gVGhpcyBpcyBjb3B5IG9m
-IHhmcy8yNDIuIEhvd2V2ZXIgaXQncyBiZXR0ZXIgdG8gbWFrZSBpdCBmaWxlIHN5c3RlbQo+ID4g
-PiBzcGVjaWZpYyBiZWNhdXNlIHRoZSByYW5nZSBjYW4gYmUgemVyb2VzIGVpdGhlciBkaXJlY3Rs
-eSBieSB3cml0aW5nCj4gPiA+IHplcm9lcywgb3IgY29udmVydGluZyB0byB1bndyaXR0ZW4gZXh0
-ZW50LCBzbyB0aGUgYWN0dWFsIHJlc3VsdCBtaWdodAo+ID4gPiBkaWZmZXIgZnJvbSBmaWxlIHN5
-c3RlbSB0byBmaWxlIHN5c3RlbS4KPiA+IAo+ID4gWW91IGNvdWxkIHNheSB0aGUgc2FtZSB0aGlu
-ZyBhYm91dCBwcmVhbGxvY2F0aW9uIHVzaW5nIHVud3JpdHRlbgo+ID4gZXh0ZW50cy4gWWV0LCBm
-dW5uaWx5IGVub3VnaCwgd2UgaGF2ZSBnZW5lcmljIHRlc3RzIGZvciB0aGVtIGJlY2F1c2UKPiA+
-IGFsbCBmaWxlc3lzdGVtcyBjdXJyZW50bHkgdXNlIHVud3JpdHRlbiBleHRlbnRzIGZvciBwcmVh
-bGxvY2F0aW9uCj4gPiBhbmQgYmVoYXZlIGlkZW50aWNhbGx5Li4uLgo+ID4gCj4gPiBUaGlzIHRl
-c3QgaXMgbm8gZGlmZmVyZW50IC0gYWxsIGZpbGVzeXN0ZW1zIGN1cnJlbnRseSB1c2UgdW53cml0
-dGVuCj4gPiBleHRlbnRzLCBhbmQgc28gdGhpcyB0ZXN0IHNob3VsZCBiZSBnZW5lcmljIGJlY2F1
-c2UgYWxsIGV4aXN0aW5nCj4gPiBmaWxlc3lzdGVtcyAqc2hvdWxkKiBiZWhhdmUgdGhlIHNhbWUu
-Cj4gPiAKPiA+IFdoZW4gd2UgZ2V0IGEgZmlsZXN5c3RlbSB0aGF0IHplcm9zIHJhdGhlciB1c2Vz
-IHVud3JpdHRlbiBleHRlbnRzLAo+ID4gd2UgY2FuIGFkZCBhIG5ldyAqZ2VuZXJpYyogdGVzdCB0
-aGF0IHRlc3RzIGZvciB6ZXJvZWQgZGF0YSBleHRlbnRzCj4gPiByYXRoZXIgdGhhbiB1bndyaXR0
-ZW4gZXh0ZW50cy4gQWxsIHRoYXQgd2Ugd2lsbCBuZWVkIGlzIGEgbWV0aG9kIG9mCj4gPiBjaGVj
-a2luZyB3aGF0IGJlaGF2aW91ciB0aGUgZmlsZXN5c3RlbSBoYXMgYW5kIGFkZGluZyB0aGF0IHRv
-IGEKPiA+IF9yZXF1aXJlcyBkaXJlY3RpdmUgdG8gZW5zdXJlIHRoZSBjb3JyZWN0IGdlbmVyaWMg
-ZmFsbG9jYXRlIHRlc3RzCj4gPiBhcmUgcnVuLi4uCj4gCj4gQ3VycmVudGx5IHhmcy8yNDIgZmFp
-bHMgb24geGZzIGZvciBtZQoKUmVhbGx5PyBXaGVyZSdzIHRoZSBidWcgcmVwb3J0PyBJIGhhdmVu
-J3Qgc2VlbiBhIGZhaWx1cmUgb24geGZzLzI0MgpvbiBhbnkgb2YgbXkgdGVzdCBtYWNoaW5lcyBm
-b3IgYXQgbGVhc3QgYSB5ZWFyLCBldmVuIG9uIDFrIGJsb2NrCnNpemUgZmlsZXN5c3RlbXMuLi4K
-CiQgc3VkbyAuL2NoZWNrIHhmcy8yNDIKRlNUWVAgICAgICAgICAtLSB4ZnMgKGRlYnVnKQpQTEFU
-Rk9STSAgICAgIC0tIExpbnV4L3g4Nl82NCB0ZXN0MiAzLjE0LjAtcmMzLWRnYysKTUtGU19PUFRJ
-T05TICAtLSAtZiAtYnNpemU9NDA5NiAvZGV2L3ZkYgpNT1VOVF9PUFRJT05TIC0tIC9kZXYvdmRi
-IC9tbnQvc2NyYXRjaAoKeGZzLzI0MiAxcyAuLi4gMHMKUmFuOiB4ZnMvMjQyClBhc3NlZCBhbGwg
-MSB0ZXN0cwokCgoKPiBhbmQgaXQgZG9lcyBiZWhhdmUgZGlmZmVyZW50bHkgdGhhbiBleHQ0LgoK
-SW4gd2hhdCB3YXk/IERvZXMgRkFMTE9DX0ZMX1pFUk9fUkFOR0Ugb24gWEZTIGJlaGF2ZSBpZGVu
-dGljYWxseSB0bwpYRlNfSU9DX1pFUk9fUkFOR0UsIG9yIGlzIHRoYXQgZGlmZmVyZW50IHRvbz8g
-T3IgeW91IGhhdmVuJ3QgdGVzdGVkCml0IGJlY2F1c2UgeW91IHdyb3RlIHRoaXMgdGVzdCBhcyBh
-biBleHQ0IHNwZWNpZmljIHRlc3QgYW5kIHNvCmhhdmVuJ3QgcnVuIHRoaXMgc3BlY2lmaWMgdGVz
-dCBleGVyY2lzaW5nIHRoZSBGQUxMT0NfRkxfWkVST19SQU5HRQpwYXRoIGluIFhGUz8KCklPV3Ms
-IGhvdyBkbyB5b3Uga25vdyB0aGF0IHdoYXQgeW91IGFyZSBzZWVpbmcgaXMgbm90IGEgYnVnIGlu
-IHRoZQpleHQ0IChvciBYRlMgZm9yIHRoYXQgbWF0dGVyKSBpbXBsZW1lbnRhdGlvbj8KCj4gQWxz
-byBJIGhhZCB0byBjaGFuZ2UgdG8gMjQyLm91dCBhIGJpdCBiZWNhdXNlIGV4dDQgd2FzCj4gYSBs
-aXR0bGUgZGlmZmVyZW50LiBJdCBzZWVtcyB0byBtZSB0aGF0IGl0IHdhcyBleHBlY3RlZCB0aGF0
-IHdoZW4KPiB0aGUgZXh0ZW50IGlzIHNtYWxsIGVub3VnaCBpdCB3b3VsZCBiZSBvdmVyd3JpdHRl
-biBieSB6ZXJvZXMgcmF0aGVyCj4gdGhhbiBjb252ZXJ0ZWQgdG8gdW53cml0dGVuLCBidXQgSSBo
-YXZlIG5vdCBsb29rZWQgaW50bwo+IGltcGxlbWVudGF0aW9uLgoKVGhlIHRlc3QgYXNzdW1lcyB0
-aGF0IHN1Yi1ibG9jayBoZWFkIGFuZCB0YWlsIHJhbmdlcyB3aWxsIGJlIHplcm9lZCwKYW5kIGV2
-ZXJ5dGhpbmcgZWxzZSB3aWxsIGJlIGNvbnZlcnRlZCB0byB1bndyaXR0ZW4gZXh0ZW50cy4gaS5l
-LiBhCnNpbmdsZSBibG9jayBhbGlnbmVkIHJhbmdlIHdpbGwgZ2V0IGNvbnZlcnRlZCB0byB1bndy
-aXR0ZW4sIGJ1dCBhCnNpbmdsZSB1bmFsaWduZWQgYmxvY2sgcmFuZ2Ugd2lsbCByZXN1bHQgaW4g
-dGhlIHR3byBvdmVybGFwcGluZwpibG9ja3MgYmVpbmcgemVyb2VkIChiZWNhdXNlIHRoZXkgc3Rp
-bGwgY29udGFpbiB2YWxpZCBkYXRhKS4KClRoaXMgaXMgdGhlIHNhbWUgc3ViLWJsb2NrIHplcm9p
-bmcgYmVoYXZpb3VyIGFzIGlzIGRvbmUgZm9yCmhvbGUgcHVuY2hpbmcgLSB0aGUgb25seSBkaWZm
-ZXJlbmNlIGJldHdlZW4gYSBob2xlIHB1bmNoIGFuZCBhIHplcm8KcmFuZ2Ugb24gZmlsZXN5c3Rl
-bXMgdGhhdCB1c2UgdW53cml0dGVuIGV4dGVudHMgc2hvdWxkIGJlIHRoYXQgdGhlCnJhbmdlIGJl
-aW5nIG9wZXJhdGVkIG9uIGhhcyB1bndyaXR0ZW4gZXh0ZW50cyByYXRoZXIgYSBob2xlLi4uLi4K
-Cj4gQnR3IHRoaXMga2luZCBvZiBvcHRpbWl6YXRpb24gaXMgYWN0dWFsbHkgc29tZXRoaW5nIEkn
-dmUgYmVlbgo+IHRoaW5raW5nIG9mIGFzIHdlbGwgZm9yIGV4dDQuIFJhdGhlciB0aGFuIGdvaW5n
-IHRob3VnaCB0aGUgaGFzc2xlIG9mCj4gY2hhbmdpbmcgZXh0ZW50cyBhcm91bmQgaXQgbWlnaHQg
-YmUgd29ydGggaW4gc29tZSBzaXR1YXRpb24gdG8gemVybwo+IG91dC4gQnV0IHRoYXQncyBhbiBv
-cHRpbWl6YXRpb24gSSBoYXZlIG5vdCBpbXBsZW1lbnRlZCB5ZXQuCgpFeGFjdGx5IG15IHBvaW50
-IC0gdW50aWwgc3VjaCBvcHRpbWlzYXRpb25zIGFyZSBpbXBsZW1lbnRlZCwgYWxsIHRoZQpmaWxl
-c3lzdGVtcyBzaG91bGQgYmUgYmVoYXZpbmcgdGhlIHNhbWUgd2F5IHVzaW5nIHVud3JpdHRlbiBl
-eHRlbnRzLApqdXN0IGxpa2UgZm9yIGhvbGUgcHVuY2hpbmcuIEhlbmNlIHRoZSB0ZXN0cyBzaG91
-bGQgYmUgY2hlY2tpbmcgdGhhdAp0aGUgYmVoYXZpb3VyIGlzIHRoZSBzYW1lIGFjcm9zcyBmaWxl
-c3lzdGVtcywganVzdCBsaWtlIHdlIGRvIGZvcgpob2xlIHB1bmNoaW5nLgoKQ2hlZXJzLAoKRGF2
-ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Feb 26, 2014 at 07:39:22AM +1100, Dave Chinner wrote:
+> > index b3c30db..331257e 100644
+> > --- a/ltp/fsx.c
+> > +++ b/ltp/fsx.c
+> > @@ -35,8 +35,13 @@
+> >  #endif
+> >  #ifdef FALLOCATE
+> >  #include <linux/falloc.h>
+> > +#ifndef FALLOC_FL_PUNCH_HOLE
+> > +#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
+> > +#endif
+> > +#ifndef FALLOC_FL_ZERO_RANGE
+> > +#define FALLOC_FL_ZERO_RANGE    0x10 /* zeroes range */
+> > +#endif
+> >  #endif
+> 
+> This pattern is appearing all over the place in xfstests now.  I'd
+> suggest that this should really be handled by autoconf,
+> include/config.h and src/globals.h....
+
+Can we handle this nicely using autoconf, especially in the case of O_
+flags that might be different for different architectures?
+
+Either way having a single header for the various flags that might not
+be present in the system headers sounds like a good plan.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
