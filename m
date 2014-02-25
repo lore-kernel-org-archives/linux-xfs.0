@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EAD507F50
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 18:27:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 636D1AC003
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 16:27:38 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id IOc2QlpLw33XqhpX for <xfs@oss.sgi.com>;
-	Mon, 24 Feb 2014 16:27:37 -0800 (PST)
-Message-ID: <530BE377.3050808@sandeen.net>
-Date: Mon, 24 Feb 2014 18:27:35 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH V4] xfs: be honest about used inodes in statfs
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EDE1B7F50
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 18:52:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E221B8F8065
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 16:52:37 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	nglQLs1hVqZhZ9kI for <xfs@oss.sgi.com>;
+	Mon, 24 Feb 2014 16:52:36 -0800 (PST)
+Date: Tue, 25 Feb 2014 11:52:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V4] xfs: be honest about used inodes in statfs
+Message-ID: <20140225005232.GV13647@dastard>
 References: <53067DC0.9040800@redhat.com>
-In-Reply-To: <53067DC0.9040800@redhat.com>
+ <530BE377.3050808@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <530BE377.3050808@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Because we have lazy counters, it's possible that we over-allocate
-inodes past the maxicount (imaxpct) limit.  
+On Mon, Feb 24, 2014 at 06:27:35PM -0600, Eric Sandeen wrote:
+> Because we have lazy counters, it's possible that we over-allocate
+> inodes past the maxicount (imaxpct) limit.  
+> 
+> A previous commit,
+> 
+>  2fe3366 xfs: ensure f_ffree returned by statfs() is non-negative
+> 
+> stopped statfs from underflowing f_ffree in this case, but that
+> only happened when we mis-reported f_files, capped at maxicount.
+> 
+> Change statfs to report the actual number of inodes allocated,
+> even if it is greater than maxicount.  It's reality.
+> Deal with it.  
+> 
+> Also rework code & rename vars for clarity after input from
+> dchinner & bfoster.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> V2: code cleanup thanks to Brian
+> V3: more cleanup thanks to Dave
+> V4: Oh for crying out loud... (add maxicount test in else)
 
-A previous commit,
+Looks good now!
 
- 2fe3366 xfs: ensure f_ffree returned by statfs() is non-negative
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-stopped statfs from underflowing f_ffree in this case, but that
-only happened when we mis-reported f_files, capped at maxicount.
-
-Change statfs to report the actual number of inodes allocated,
-even if it is greater than maxicount.  It's reality.
-Deal with it.  
-
-Also rework code & rename vars for clarity after input from
-dchinner & bfoster.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: code cleanup thanks to Brian
-V3: more cleanup thanks to Dave
-V4: Oh for crying out loud... (add maxicount test in else)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f317488..02537f4 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1081,9 +1081,8 @@ xfs_fs_statfs(
- 	struct xfs_mount	*mp = XFS_M(dentry->d_sb);
- 	xfs_sb_t		*sbp = &mp->m_sb;
- 	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
--	__uint64_t		fakeinos, id;
-+	__uint64_t		potential, id;
- 	xfs_extlen_t		lsize;
--	__int64_t		ffree;
- 
- 	statp->f_type = XFS_SB_MAGIC;
- 	statp->f_namelen = MAXNAMELEN - 1;
-@@ -1100,17 +1099,17 @@ xfs_fs_statfs(
- 	statp->f_blocks = sbp->sb_dblocks - lsize;
- 	statp->f_bfree = statp->f_bavail =
- 				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
--	fakeinos = statp->f_bfree << sbp->sb_inopblog;
--	statp->f_files =
--	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
--	if (mp->m_maxicount)
--		statp->f_files = min_t(typeof(statp->f_files),
--					statp->f_files,
--					mp->m_maxicount);
--
--	/* make sure statp->f_ffree does not underflow */
--	ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
--	statp->f_ffree = max_t(__int64_t, ffree, 0);
-+
-+	/* Potential new inodes in free blocks, limited by maxicount */
-+	potential = statp->f_bfree << sbp->sb_inopblog;
-+	if (mp->m_maxicount > sbp->sb_icount)
-+		potential = min(mp->m_maxicount - sbp->sb_icount, potential);
-+	else if (mp->m_maxicount)
-+		potential = 0;
-+
-+	/* Total possible files is current inodes + potential new inodes */
-+	statp->f_files = min_t(u64, sbp->sb_icount + potential, XFS_MAXINUMBER);
-+	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
- 
- 	spin_unlock(&mp->m_sb_lock);
- 
-
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
