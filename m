@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 72EE67F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:27:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5848D304048
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 10:27:09 -0800 (PST)
-Received: from mail-wg0-f46.google.com (mail-wg0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id vk7vxa2jW86sOLXn
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5BB3E7F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:44:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CDAB9AC003
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 10:44:17 -0800 (PST)
+Received: from mail-wg0-f48.google.com (mail-wg0-f48.google.com
+	[74.125.82.48]) by cuda.sgi.com with ESMTP id uyiCnYlOkQlOxGBd
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 10:27:07 -0800 (PST)
-Received: by mail-wg0-f46.google.com with SMTP id z12so766383wgg.5
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 10:27:06 -0800 (PST)
+	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 10:44:16 -0800 (PST)
+Received: by mail-wg0-f48.google.com with SMTP id b13so760609wgh.31
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 10:44:15 -0800 (PST)
 From: Filipe David Borba Manana <fdmanana@gmail.com>
-Subject: [PATCH] xfstests: add test for btrfs-progs restore feature
-Date: Tue, 25 Feb 2014 18:26:56 +0000
-Message-Id: <1393352816-26065-1-git-send-email-fdmanana@gmail.com>
+Subject: [PATCH v2] xfstests: add test for btrfs-progs restore feature
+Date: Tue, 25 Feb 2014 18:44:08 +0000
+Message-Id: <1393353848-26790-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1393352816-26065-1-git-send-email-fdmanana@gmail.com>
+References: <1393352816-26065-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,10 +39,13 @@ the respective file extent items have a non-zero data offset field.
 
 This issue is fixed by the following btrfs-progs patch:
 
-    Btrfs-progs: fix restore dealing with compressed extents
+    Btrfs-progs: fix restore of files with compressed extents
 
 Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 ---
+
+V2: Fixed title of btrfs-progs patch in the comment and commit message.
+
  tests/btrfs/043     |  105 +++++++++++++++++++++++++++++++++++++++++++++++++++
  tests/btrfs/043.out |   40 ++++++++++++++++++++
  tests/btrfs/group   |    1 +
@@ -50,7 +55,7 @@ Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 
 diff --git a/tests/btrfs/043 b/tests/btrfs/043
 new file mode 100755
-index 0000000..7a15aeb
+index 0000000..7590dd9
 --- /dev/null
 +++ b/tests/btrfs/043
 @@ -0,0 +1,105 @@
@@ -63,7 +68,7 @@ index 0000000..7a15aeb
 +#
 +# This issue is fixed by the following btrfs-progs patch:
 +#
-+#    Btrfs-progs: fix restore dealing with compressed extents
++#    Btrfs-progs: fix restore of files with compressed extents
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
