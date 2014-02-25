@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C7A007F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 15:02:49 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6B1347F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 15:50:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 51A75AC001
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:02:46 -0800 (PST)
-Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id Al8Veig88CEoNYs4
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:02:44 -0800 (PST)
-Received: by mail-bk0-f53.google.com with SMTP id my13so430923bkb.40
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:02:43 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F56E304066
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:50:18 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	wGCrmKzz3HNtDC63 for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 13:50:16 -0800 (PST)
+Date: Wed, 26 Feb 2014 08:50:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
+	range
+Message-ID: <20140225215011.GF13647@dastard>
+References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
+	<1393355728-12056-6-git-send-email-lczerner@redhat.com>
+	<20140225205349.GD13647@dastard>
+	<alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20140225195420.GX13647@dastard>
-References: <1393352816-26065-1-git-send-email-fdmanana@gmail.com>
-	<1393353848-26790-1-git-send-email-fdmanana@gmail.com>
-	<20140225195420.GX13647@dastard>
-Date: Tue, 25 Feb 2014 21:02:43 +0000
-Message-ID: <CAL3q7H5U2uQyN=z4kjD-fiMk+854URUuf_=0NqUYj4KG4eNsNA@mail.gmail.com>
-Subject: Re: [PATCH v2] xfstests: add test for btrfs-progs restore feature
-From: Filipe David Manana <fdmanana@gmail.com>
-Reply-To: fdmanana@gmail.com
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,179 +29,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 25, 2014 at 7:54 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Feb 25, 2014 at 06:44:08PM +0000, Filipe David Borba Manana wrote:
->> This is a regression test to verify that the restore feature of btrfs-progs
->> is able to correctly recover files that have compressed extents, specially when
->> the respective file extent items have a non-zero data offset field.
->>
->> This issue is fixed by the following btrfs-progs patch:
->>
->>     Btrfs-progs: fix restore of files with compressed extents
->>
->> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
-> ....
->> +seq=`basename $0`
->> +seqres=$RESULT_DIR/$seq
->> +echo "QA output created by $seq"
->> +
->> +tmp=/tmp/$$
->> +status=1     # failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->
-> here=`pwd`
-
-Didn't we agree before, for a previous path, to export "here" from the
-main control skip and then cleanup tests to not redefine it?
-I am confused now :)
-
->
->> +
->> +_cleanup()
->> +{
->> +    rm -fr $tmp
->> +}
->> +
->> +# get standard environment, filters and checks
->> +. ./common/rc
->> +. ./common/filter
->> +
->> +# real QA test starts here
->> +_supported_fs btrfs
->> +_supported_os Linux
->> +_require_scratch
->> +_need_to_be_root
->> +
->> +rm -f $seqres.full
->> +
->> +test_btrfs_restore()
->> +{
->> +     if [ -z $1 ]
->> +     then
->> +             OPTIONS=""
->> +     else
->> +             OPTIONS="-o compress-force=$1"
->> +     fi
->> +     _scratch_mkfs >/dev/null 2>&1
->> +     _scratch_mount $OPTIONS
->> +
->> +     $XFS_IO_PROG -f -c "pwrite -S 0xff -b 100000 0 100000" \
->> +             $SCRATCH_MNT/foo | _filter_xfs_io
->> +
->> +     # Ensure a single file extent item is persisted.
->> +     _run_btrfs_util_prog filesystem sync $SCRATCH_MNT
->
-> What's the difference here between "sync" and the command run above?
-> Unless there's some specific reason for using the above command (and
-> that needs to be commented), I think that sync(1) should be used
-> instead in all tests.
-
-I want to force a btrfs transaction commit. Plain old 'sync' would do
-it as well for sure, but that applies against all mounted FSs, while
-btrfs filesystem sync is applied against a single fs.
-Plus, since this is a btrfs specific test, is it non sense to exercise
-commands from btrfs-progs?
-
->
-> Indeed, why a separate command - just adding a "-c fsync" to the
-> xfs_io command, or even -s to make it open the file O_SYNC should do
-> what you need without needing a specific sync command....
->
->
->> +
->> +     $XFS_IO_PROG -c "pwrite -S 0xaa -b 100000 100000 100000" \
->> +             $SCRATCH_MNT/foo | _filter_xfs_io
->> +
->> +     # Now ensure a second one is created (and not merged with previous one).
->> +     _run_btrfs_util_prog filesystem sync $SCRATCH_MNT
->> +
->> +     # Make the extent item be split into several ones, each with a data
->> +     # offset field != 0
->> +     $XFS_IO_PROG -c "pwrite -S 0x1e -b 2 10000 2" $SCRATCH_MNT/foo \
->> +             | _filter_xfs_io
->> +     $XFS_IO_PROG -c "pwrite -S 0xd0 -b 11 33000 11" $SCRATCH_MNT/foo \
->> +             | _filter_xfs_io
->> +     $XFS_IO_PROG -c "pwrite -S 0xbc -b 100 99000 100" $SCRATCH_MNT/foo \
->> +             | _filter_xfs_io
->> +
->> +     md5sum $SCRATCH_MNT/foo | _filter_scratch
->
-> So you are doing this with first having "persisted" the new extents.
-> Seems kind of strange that you need to persist some and not
-> others...
-
-I need to make sure there's fragmentation (i.e. several file extent
-items in the fs btree with data offset fields > 0).
-
->
->> +     _scratch_unmount
->> +     _check_scratch_fs
->
-> _check_scratch_fs should be unmounting the SCRATCH_DEV itself
-> internally. If it's not doing that for btrfs, then the btrfs check
-> code needs fixing. ;)
-
-No it doesn't unmount.
-
->
->> +
->> +     _run_btrfs_util_prog restore $SCRATCH_DEV $tmp
->> +     md5sum $tmp/foo | cut -d ' ' -f 1
->
-> What, exactly, are you restoring to /tmp/$$? Does this assume that
-> /tmp is a btrfs filesystem? If so, that is an invalid assumption -
-> /tmp can be any type of filesystem at all.
-
-The restore command allows you to grab files from a (potentially
-damaged) btrfs filesystem and save them to a destination path, no
-matter what its filesystem is (btrfs, extN, xfs, etc)
-
->
-> It's also wrong to use $tmp like this....
->
->> +}
->> +
->> +mkdir $tmp
->> +echo "Testing restore of file compressed with lzo"
->> +test_btrfs_restore "lzo"
->> +echo "Testing restore of file compressed with zlib"
->> +test_btrfs_restore "zlib"
->> +echo "Testing restore of file without any compression"
->> +test_btrfs_restore
->
-> Yup, using $tmp like this is definitely wrong. $tmp is really for test
-> harness files and test logs, not for *test data*. TEST_DIR is what you
-> should be using here, not $tmp.
-
-Alright... Many other existing tests do things like this.
-
-Thanks Dave
-
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-
-
-
--- 
-Filipe David Manana,
-
-"Reasonable men adapt themselves to the world.
- Unreasonable men adapt the world to themselves.
- That's why all progress depends on unreasonable men."
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBGZWIgMjUsIDIwMTQgYXQgMTA6MDE6MDZQTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIFdlZCwgMjYgRmViIDIwMTQsIERhdmUgQ2hpbm5lciB3cm90ZToKPiAKPiA+
+IERhdGU6IFdlZCwgMjYgRmViIDIwMTQgMDc6NTM6NDkgKzExMDAKPiA+IEZyb206IERhdmUgQ2hp
+bm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiA+IFRvOiBMdWthcyBDemVybmVyIDxsY3plcm5l
+ckByZWRoYXQuY29tPgo+ID4gQ2M6IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwub3JnLCBsaW51eC1m
+c2RldmVsQHZnZXIua2VybmVsLm9yZywgeGZzQG9zcy5zZ2kuY29tCj4gPiBTdWJqZWN0OiBSZTog
+W1BBVENIIDYvNl0gZXh0NC8yNDI6IEFkZCBleHQ0IHNwZWNpZmljIHRlc3QgZm9yIGZhbGxvY2F0
+ZSB6ZXJvCj4gPiAgICAgcmFuZ2UKPiA+IAo+ID4gT24gVHVlLCBGZWIgMjUsIDIwMTQgYXQgMDg6
+MTU6MjhQTSArMDEwMCwgTHVrYXMgQ3plcm5lciB3cm90ZToKPiA+ID4gVGhpcyBpcyBjb3B5IG9m
+IHhmcy8yNDIuIEhvd2V2ZXIgaXQncyBiZXR0ZXIgdG8gbWFrZSBpdCBmaWxlIHN5c3RlbQo+ID4g
+PiBzcGVjaWZpYyBiZWNhdXNlIHRoZSByYW5nZSBjYW4gYmUgemVyb2VzIGVpdGhlciBkaXJlY3Rs
+eSBieSB3cml0aW5nCj4gPiA+IHplcm9lcywgb3IgY29udmVydGluZyB0byB1bndyaXR0ZW4gZXh0
+ZW50LCBzbyB0aGUgYWN0dWFsIHJlc3VsdCBtaWdodAo+ID4gPiBkaWZmZXIgZnJvbSBmaWxlIHN5
+c3RlbSB0byBmaWxlIHN5c3RlbS4KPiA+IAo+ID4gWW91IGNvdWxkIHNheSB0aGUgc2FtZSB0aGlu
+ZyBhYm91dCBwcmVhbGxvY2F0aW9uIHVzaW5nIHVud3JpdHRlbgo+ID4gZXh0ZW50cy4gWWV0LCBm
+dW5uaWx5IGVub3VnaCwgd2UgaGF2ZSBnZW5lcmljIHRlc3RzIGZvciB0aGVtIGJlY2F1c2UKPiA+
+IGFsbCBmaWxlc3lzdGVtcyBjdXJyZW50bHkgdXNlIHVud3JpdHRlbiBleHRlbnRzIGZvciBwcmVh
+bGxvY2F0aW9uCj4gPiBhbmQgYmVoYXZlIGlkZW50aWNhbGx5Li4uLgo+ID4gCj4gPiBUaGlzIHRl
+c3QgaXMgbm8gZGlmZmVyZW50IC0gYWxsIGZpbGVzeXN0ZW1zIGN1cnJlbnRseSB1c2UgdW53cml0
+dGVuCj4gPiBleHRlbnRzLCBhbmQgc28gdGhpcyB0ZXN0IHNob3VsZCBiZSBnZW5lcmljIGJlY2F1
+c2UgYWxsIGV4aXN0aW5nCj4gPiBmaWxlc3lzdGVtcyAqc2hvdWxkKiBiZWhhdmUgdGhlIHNhbWUu
+Cj4gPiAKPiA+IFdoZW4gd2UgZ2V0IGEgZmlsZXN5c3RlbSB0aGF0IHplcm9zIHJhdGhlciB1c2Vz
+IHVud3JpdHRlbiBleHRlbnRzLAo+ID4gd2UgY2FuIGFkZCBhIG5ldyAqZ2VuZXJpYyogdGVzdCB0
+aGF0IHRlc3RzIGZvciB6ZXJvZWQgZGF0YSBleHRlbnRzCj4gPiByYXRoZXIgdGhhbiB1bndyaXR0
+ZW4gZXh0ZW50cy4gQWxsIHRoYXQgd2Ugd2lsbCBuZWVkIGlzIGEgbWV0aG9kIG9mCj4gPiBjaGVj
+a2luZyB3aGF0IGJlaGF2aW91ciB0aGUgZmlsZXN5c3RlbSBoYXMgYW5kIGFkZGluZyB0aGF0IHRv
+IGEKPiA+IF9yZXF1aXJlcyBkaXJlY3RpdmUgdG8gZW5zdXJlIHRoZSBjb3JyZWN0IGdlbmVyaWMg
+ZmFsbG9jYXRlIHRlc3RzCj4gPiBhcmUgcnVuLi4uCj4gCj4gQ3VycmVudGx5IHhmcy8yNDIgZmFp
+bHMgb24geGZzIGZvciBtZQoKUmVhbGx5PyBXaGVyZSdzIHRoZSBidWcgcmVwb3J0PyBJIGhhdmVu
+J3Qgc2VlbiBhIGZhaWx1cmUgb24geGZzLzI0MgpvbiBhbnkgb2YgbXkgdGVzdCBtYWNoaW5lcyBm
+b3IgYXQgbGVhc3QgYSB5ZWFyLCBldmVuIG9uIDFrIGJsb2NrCnNpemUgZmlsZXN5c3RlbXMuLi4K
+CiQgc3VkbyAuL2NoZWNrIHhmcy8yNDIKRlNUWVAgICAgICAgICAtLSB4ZnMgKGRlYnVnKQpQTEFU
+Rk9STSAgICAgIC0tIExpbnV4L3g4Nl82NCB0ZXN0MiAzLjE0LjAtcmMzLWRnYysKTUtGU19PUFRJ
+T05TICAtLSAtZiAtYnNpemU9NDA5NiAvZGV2L3ZkYgpNT1VOVF9PUFRJT05TIC0tIC9kZXYvdmRi
+IC9tbnQvc2NyYXRjaAoKeGZzLzI0MiAxcyAuLi4gMHMKUmFuOiB4ZnMvMjQyClBhc3NlZCBhbGwg
+MSB0ZXN0cwokCgoKPiBhbmQgaXQgZG9lcyBiZWhhdmUgZGlmZmVyZW50bHkgdGhhbiBleHQ0LgoK
+SW4gd2hhdCB3YXk/IERvZXMgRkFMTE9DX0ZMX1pFUk9fUkFOR0Ugb24gWEZTIGJlaGF2ZSBpZGVu
+dGljYWxseSB0bwpYRlNfSU9DX1pFUk9fUkFOR0UsIG9yIGlzIHRoYXQgZGlmZmVyZW50IHRvbz8g
+T3IgeW91IGhhdmVuJ3QgdGVzdGVkCml0IGJlY2F1c2UgeW91IHdyb3RlIHRoaXMgdGVzdCBhcyBh
+biBleHQ0IHNwZWNpZmljIHRlc3QgYW5kIHNvCmhhdmVuJ3QgcnVuIHRoaXMgc3BlY2lmaWMgdGVz
+dCBleGVyY2lzaW5nIHRoZSBGQUxMT0NfRkxfWkVST19SQU5HRQpwYXRoIGluIFhGUz8KCklPV3Ms
+IGhvdyBkbyB5b3Uga25vdyB0aGF0IHdoYXQgeW91IGFyZSBzZWVpbmcgaXMgbm90IGEgYnVnIGlu
+IHRoZQpleHQ0IChvciBYRlMgZm9yIHRoYXQgbWF0dGVyKSBpbXBsZW1lbnRhdGlvbj8KCj4gQWxz
+byBJIGhhZCB0byBjaGFuZ2UgdG8gMjQyLm91dCBhIGJpdCBiZWNhdXNlIGV4dDQgd2FzCj4gYSBs
+aXR0bGUgZGlmZmVyZW50LiBJdCBzZWVtcyB0byBtZSB0aGF0IGl0IHdhcyBleHBlY3RlZCB0aGF0
+IHdoZW4KPiB0aGUgZXh0ZW50IGlzIHNtYWxsIGVub3VnaCBpdCB3b3VsZCBiZSBvdmVyd3JpdHRl
+biBieSB6ZXJvZXMgcmF0aGVyCj4gdGhhbiBjb252ZXJ0ZWQgdG8gdW53cml0dGVuLCBidXQgSSBo
+YXZlIG5vdCBsb29rZWQgaW50bwo+IGltcGxlbWVudGF0aW9uLgoKVGhlIHRlc3QgYXNzdW1lcyB0
+aGF0IHN1Yi1ibG9jayBoZWFkIGFuZCB0YWlsIHJhbmdlcyB3aWxsIGJlIHplcm9lZCwKYW5kIGV2
+ZXJ5dGhpbmcgZWxzZSB3aWxsIGJlIGNvbnZlcnRlZCB0byB1bndyaXR0ZW4gZXh0ZW50cy4gaS5l
+LiBhCnNpbmdsZSBibG9jayBhbGlnbmVkIHJhbmdlIHdpbGwgZ2V0IGNvbnZlcnRlZCB0byB1bndy
+aXR0ZW4sIGJ1dCBhCnNpbmdsZSB1bmFsaWduZWQgYmxvY2sgcmFuZ2Ugd2lsbCByZXN1bHQgaW4g
+dGhlIHR3byBvdmVybGFwcGluZwpibG9ja3MgYmVpbmcgemVyb2VkIChiZWNhdXNlIHRoZXkgc3Rp
+bGwgY29udGFpbiB2YWxpZCBkYXRhKS4KClRoaXMgaXMgdGhlIHNhbWUgc3ViLWJsb2NrIHplcm9p
+bmcgYmVoYXZpb3VyIGFzIGlzIGRvbmUgZm9yCmhvbGUgcHVuY2hpbmcgLSB0aGUgb25seSBkaWZm
+ZXJlbmNlIGJldHdlZW4gYSBob2xlIHB1bmNoIGFuZCBhIHplcm8KcmFuZ2Ugb24gZmlsZXN5c3Rl
+bXMgdGhhdCB1c2UgdW53cml0dGVuIGV4dGVudHMgc2hvdWxkIGJlIHRoYXQgdGhlCnJhbmdlIGJl
+aW5nIG9wZXJhdGVkIG9uIGhhcyB1bndyaXR0ZW4gZXh0ZW50cyByYXRoZXIgYSBob2xlLi4uLi4K
+Cj4gQnR3IHRoaXMga2luZCBvZiBvcHRpbWl6YXRpb24gaXMgYWN0dWFsbHkgc29tZXRoaW5nIEkn
+dmUgYmVlbgo+IHRoaW5raW5nIG9mIGFzIHdlbGwgZm9yIGV4dDQuIFJhdGhlciB0aGFuIGdvaW5n
+IHRob3VnaCB0aGUgaGFzc2xlIG9mCj4gY2hhbmdpbmcgZXh0ZW50cyBhcm91bmQgaXQgbWlnaHQg
+YmUgd29ydGggaW4gc29tZSBzaXR1YXRpb24gdG8gemVybwo+IG91dC4gQnV0IHRoYXQncyBhbiBv
+cHRpbWl6YXRpb24gSSBoYXZlIG5vdCBpbXBsZW1lbnRlZCB5ZXQuCgpFeGFjdGx5IG15IHBvaW50
+IC0gdW50aWwgc3VjaCBvcHRpbWlzYXRpb25zIGFyZSBpbXBsZW1lbnRlZCwgYWxsIHRoZQpmaWxl
+c3lzdGVtcyBzaG91bGQgYmUgYmVoYXZpbmcgdGhlIHNhbWUgd2F5IHVzaW5nIHVud3JpdHRlbiBl
+eHRlbnRzLApqdXN0IGxpa2UgZm9yIGhvbGUgcHVuY2hpbmcuIEhlbmNlIHRoZSB0ZXN0cyBzaG91
+bGQgYmUgY2hlY2tpbmcgdGhhdAp0aGUgYmVoYXZpb3VyIGlzIHRoZSBzYW1lIGFjcm9zcyBmaWxl
+c3lzdGVtcywganVzdCBsaWtlIHdlIGRvIGZvcgpob2xlIHB1bmNoaW5nLgoKQ2hlZXJzLAoKRGF2
+ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
