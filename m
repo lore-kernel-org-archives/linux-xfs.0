@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E645C7F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 06:04:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5842DB4397
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 04:04:22 -0800 (PST)
-Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id oGTV12xkC1Opdaww (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 04:04:19 -0800 (PST)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH] xfstests: ltp/fsstress add verifiable logging mode
-Date: Tue, 25 Feb 2014 16:04:11 +0400
-Message-Id: <1393329851-10138-1-git-send-email-dmonakhov@openvz.org>
+	by oss.sgi.com (Postfix) with ESMTP id AC4F07F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 07:46:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 28D2BB4898
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 05:46:48 -0800 (PST)
+Received: from mail-wg0-f43.google.com (mail-wg0-f43.google.com
+	[74.125.82.43]) by cuda.sgi.com with ESMTP id GJzfYlCiWOXqknZh
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 05:46:31 -0800 (PST)
+Received: by mail-wg0-f43.google.com with SMTP id k14so408908wgh.2
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 05:46:30 -0800 (PST)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH v2] xfstests: add function _require_fssum()
+Date: Tue, 25 Feb 2014 13:46:20 +0000
+Message-Id: <1393335980-446-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1393242983-16149-1-git-send-email-fdmanana@gmail.com>
+References: <1393242983-16149-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,92 +31,268 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-- It would be useful to have verifiable logging mode which will contain
-  only deterministic information which allow to compare two logs files
-  generated from two runs with same seed.
-- Also add missed help for '-o logfile' option
+To avoid repeating detection of fssum presence in many btrfs tests, as
+suggested by Dave Chinner.
 
-Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+Also exported the variable "here" from the main control script, to avoid
+repeating its declaration in every single testcase file. Also removed the
+declaration of "here" from btrfs test cases that require the fssum program
+only. Removing it from all other test cases will be a separate change.
+
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 ---
- ltp/fsstress.c |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index c56f168..7f91c04 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -246,6 +246,7 @@ int		rtpct;
- unsigned long	seed = 0;
- ino_t		top_ino;
- int		verbose = 0;
-+int		verifiable_log = 0;
- sig_atomic_t	should_stop = 0;
- char		*execute_cmd = NULL;
- int		execute_freq = 1;
-@@ -315,7 +316,7 @@ int main(int argc, char **argv)
- 	int             nousage = 0;
- 	xfs_error_injection_t	        err_inj;
- 	struct sigaction action;
--	const char	*allopts = "d:e:f:i:m:M:n:o:p:rs:S:vwx:X:zH";
-+	const char	*allopts = "d:e:f:i:m:M:n:o:p:rs:S:vVwx:X:zH";
+V2: Exported the variable "here" from the main control file, as suggested by
+    Dave Chinner. Like this we avoid declaring it again in the new function
+    and in many other places.
+
+ check           |    2 +-
+ common/rc       |    6 ++++++
+ tests/btrfs/007 |    5 +----
+ tests/btrfs/016 |    5 +----
+ tests/btrfs/030 |    5 +----
+ tests/btrfs/038 |    5 +----
+ tests/btrfs/039 |    5 +----
+ tests/btrfs/040 |    5 +----
+ tests/btrfs/041 |    5 +----
+ tests/btrfs/042 |    5 +----
+ 10 files changed, 15 insertions(+), 33 deletions(-)
+ mode change 100644 => 100755 tests/btrfs/016
+
+diff --git a/check b/check
+index 268417c..b619f6d 100755
+--- a/check
++++ b/check
+@@ -32,7 +32,7 @@ diff="diff -u"
+ showme=false
+ have_test_arg=false
+ randomize=false
+-here=`pwd`
++export here=`pwd`
+ xfile=""
  
- 	errrange = errtag = 0;
- 	umask(0);
-@@ -396,6 +397,10 @@ int main(int argc, char **argv)
- 			printf("\n");
-                         nousage=1;
- 			break;
-+		case 'V':
-+			verifiable_log = 1;
-+			break;
+ # start the initialisation work now
+diff --git a/common/rc b/common/rc
+index 5df504c..0f50f49 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2144,6 +2144,12 @@ _require_cp_reflink()
+                _notrun "This test requires a cp with --reflink support."
+ }
+ 
++_require_fssum()
++{
++	FSSUM_PROG=$here/src/fssum
++	[ -x $FSSUM_PROG ] || _notrun "fssum not built"
++}
 +
- 		case 'X':
- 			execute_freq = strtoul(optarg, NULL, 0);
- 			break;
-@@ -1498,6 +1503,7 @@ usage(void)
- 	printf("   -i filenum       get verbose output for this nth file object\n");
- 	printf("   -m modulo        uid/gid modulo for chown/chgrp (default 32)\n");
- 	printf("   -n nops          specifies the no. of operations per process (default 1)\n");
-+	printf("   -o logfile       specifies logfile name\n");
- 	printf("   -p nproc         specifies the no. of processes (default 1)\n");
- 	printf("   -r               specifies random name padding\n");
- 	printf("   -s seed          specifies the seed for the random generator (default random)\n");
-@@ -1506,6 +1512,7 @@ usage(void)
- 	printf("   -x cmd           execute command in the middle of operations\n");
- 	printf("   -z               zeros frequencies of all operations\n");
- 	printf("   -S [c,t]         prints the list of operations (omitting zero frequency) in command line or table style\n");
-+	printf("   -V               specifies verifiable logging mode (omitting inode numbers)\n");
- 	printf("   -X ncmd          number of calls to the -x command (default 1)\n");
- 	printf("   -H               prints usage and exits\n");
- }
-@@ -1533,7 +1540,8 @@ zero_freq(void)
- void inode_info(char *str, size_t sz, struct stat64 *s, int verbose)
- {
- 	if (verbose)
--		snprintf(str, sz, "[%ld %ld %d %d %lld %lld]", (long)s->st_ino,
-+		snprintf(str, sz, "[%ld %ld %d %d %lld %lld]",
-+			 verifiable_log ? -1: (long)s->st_ino,
- 			 (long)s->st_nlink,  s->st_uid, s->st_gid,
- 			 (long long) s->st_blocks, (long long) s->st_size);
- }
-@@ -1773,11 +1781,11 @@ bulkstat1_f(int opno, long r)
-         bsr.icount=1;
-         bsr.ubuffer=&t;
-         bsr.ocount=NULL;
--        
- 	e = xfsctl(".", fd, XFS_IOC_FSBULKSTAT_SINGLE, &bsr) < 0 ? errno : 0;
- 	if (v)
- 		printf("%d/%d: bulkstat1 %s ino %lld %d\n", 
--                    procid, opno, good?"real":"random", (long long)ino, e);
-+		       procid, opno, good?"real":"random",
-+		       verifiable_log ? -1LL : (long long)ino, e);
- 	close(fd);
- }
+ # Given 2 files, verify that they have the same mapping but different
+ # inodes - i.e. an undisturbed reflink
+ # Silent if so, make noise if not
+diff --git a/tests/btrfs/007 b/tests/btrfs/007
+index 5df9ccb..5430613 100755
+--- a/tests/btrfs/007
++++ b/tests/btrfs/007
+@@ -31,7 +31,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
  
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1
+ 
+@@ -52,11 +51,9 @@ _need_to_be_root
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _require_seek_data_hole
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ workout()
+diff --git a/tests/btrfs/016 b/tests/btrfs/016
+old mode 100644
+new mode 100755
+index 6faead1..d04c21a
+--- a/tests/btrfs/016
++++ b/tests/btrfs/016
+@@ -26,7 +26,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ tmp_dir=send_temp_$seq
+ 
+@@ -51,9 +50,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
+-
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
++_require_fssum
+ 
+ _scratch_mkfs > /dev/null 2>&1
+ 
+diff --git a/tests/btrfs/030 b/tests/btrfs/030
+index a9f5fb4..a76a410 100755
+--- a/tests/btrfs/030
++++ b/tests/btrfs/030
+@@ -36,7 +36,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+@@ -54,11 +53,9 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _need_to_be_root
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ _scratch_mkfs >/dev/null 2>&1
+diff --git a/tests/btrfs/038 b/tests/btrfs/038
+index 8893696..4941d3e 100755
+--- a/tests/btrfs/038
++++ b/tests/btrfs/038
+@@ -32,7 +32,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+@@ -50,11 +49,9 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _need_to_be_root
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ _scratch_mkfs >/dev/null 2>&1
+diff --git a/tests/btrfs/039 b/tests/btrfs/039
+index 41e09be..758b23c 100755
+--- a/tests/btrfs/039
++++ b/tests/btrfs/039
+@@ -35,7 +35,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+@@ -53,11 +52,9 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _need_to_be_root
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ _scratch_mkfs >/dev/null 2>&1
+diff --git a/tests/btrfs/040 b/tests/btrfs/040
+index 77c4a84..dfd495c 100755
+--- a/tests/btrfs/040
++++ b/tests/btrfs/040
+@@ -35,7 +35,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+@@ -53,11 +52,9 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _need_to_be_root
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ _scratch_mkfs >/dev/null 2>&1
+diff --git a/tests/btrfs/041 b/tests/btrfs/041
+index bfc0e4b..a960001 100755
+--- a/tests/btrfs/041
++++ b/tests/btrfs/041
+@@ -31,7 +31,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+@@ -49,11 +48,9 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _need_to_be_root
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ _scratch_mkfs >/dev/null 2>&1
+diff --git a/tests/btrfs/042 b/tests/btrfs/042
+index 2bd5147..9aa8967 100755
+--- a/tests/btrfs/042
++++ b/tests/btrfs/042
+@@ -36,7 +36,6 @@ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+ 
+-here=`pwd`
+ tmp=`mktemp -d`
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+@@ -54,11 +53,9 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ _require_scratch
++_require_fssum
+ _need_to_be_root
+ 
+-FSSUM_PROG=$here/src/fssum
+-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
+-
+ rm -f $seqres.full
+ 
+ _scratch_mkfs >/dev/null 2>&1
 -- 
-1.7.1
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
