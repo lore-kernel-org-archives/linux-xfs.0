@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0E4817F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 14:06:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A3153AC001
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:05:59 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id LXZuOgmv2yttrQ6m (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 12:05:58 -0800 (PST)
-Date: Tue, 25 Feb 2014 12:05:58 -0800
+	by oss.sgi.com (Postfix) with ESMTP id 7F7CC7F50
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 14:08:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 20EEEAC001
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 12:08:07 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id g6llnBa8YC56bhHq (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 12:08:05 -0800 (PST)
+Date: Tue, 25 Feb 2014 12:08:05 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/10] libxfs: remove a couple of locks
-Message-ID: <20140225200558.GC22351@infradead.org>
+Subject: Re: [PATCH 09/10] repair: fix prefetch queue limiting
+Message-ID: <20140225200805.GD22351@infradead.org>
 References: <1393223369-4696-1-git-send-email-david@fromorbit.com>
-	<1393223369-4696-9-git-send-email-david@fromorbit.com>
+	<1393223369-4696-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1393223369-4696-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393223369-4696-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,10 +33,14 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-So what's protecting the cache hits statistics now?
+Great, most other posix realtime functions actually do return the
+errno, but this one doesn't.  This would really be a useful check for
+some sort of semantic checker tool in userspace.
 
-Longer term it might make sense to just port the XFS buffercache from
-the kernel to libxfs..
+This bug has been there since day 1 of the sem_trywait call btw, so it
+never really worked.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
