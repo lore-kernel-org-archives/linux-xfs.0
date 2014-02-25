@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ACE817F50
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 18:16:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 918B3304039
-	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 16:15:57 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EAD507F50
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 18:27:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 636D1AC003
+	for <xfs@oss.sgi.com>; Mon, 24 Feb 2014 16:27:38 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id CCCqsCsXYsuKL5tK for <xfs@oss.sgi.com>;
-	Mon, 24 Feb 2014 16:15:56 -0800 (PST)
-Message-ID: <530BE0BA.6070202@sandeen.net>
-Date: Mon, 24 Feb 2014 18:15:54 -0600
+	ESMTP id IOc2QlpLw33XqhpX for <xfs@oss.sgi.com>;
+	Mon, 24 Feb 2014 16:27:37 -0800 (PST)
+Message-ID: <530BE377.3050808@sandeen.net>
+Date: Mon, 24 Feb 2014 18:27:35 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V3] xfs: be honest about used inodes in statfs
+Subject: [PATCH V4] xfs: be honest about used inodes in statfs
 References: <53067DC0.9040800@redhat.com>
 In-Reply-To: <53067DC0.9040800@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -51,9 +51,10 @@ Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
 V2: code cleanup thanks to Brian
 V3: more cleanup thanks to Dave
+V4: Oh for crying out loud... (add maxicount test in else)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f317488..2f80923 100644
+index f317488..02537f4 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
 @@ -1081,9 +1081,8 @@ xfs_fs_statfs(
@@ -87,7 +88,7 @@ index f317488..2f80923 100644
 +	potential = statp->f_bfree << sbp->sb_inopblog;
 +	if (mp->m_maxicount > sbp->sb_icount)
 +		potential = min(mp->m_maxicount - sbp->sb_icount, potential);
-+	else
++	else if (mp->m_maxicount)
 +		potential = 0;
 +
 +	/* Total possible files is current inodes + potential new inodes */
@@ -96,6 +97,7 @@ index f317488..2f80923 100644
  
  	spin_unlock(&mp->m_sb_lock);
  
+
 
 _______________________________________________
 xfs mailing list
