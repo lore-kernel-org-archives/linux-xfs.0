@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E9B97F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:14:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E19E0304075
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:14:54 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 619D27F56
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 13:14:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 269058F8073
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:14:56 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zMxH92Kl1umFU7Il for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:14:54 -0800 (PST)
+	cuda.sgi.com with ESMTP id 4N0YvyUE60RdCrTx for
+	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 11:14:55 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 0/6 v2] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-Date: Tue, 25 Feb 2014 20:14:33 +0100
-Message-Id: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 1/6 v2] ext4: Update inode i_size after the preallocation
+Date: Tue, 25 Feb 2014 20:14:34 +0100
+Message-Id: <1393355679-11160-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
+References: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,60 +28,175 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, tytso@mit.edu, xfs@oss.sgi.com
 
-Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
+Currently in ext4_fallocate we would update inode size, c_time and sync
+the file with every partial allocation which is entirely unnecessary. It
+is true that if the crash happens in the middle of truncate we might end
+up with unchanged i size, or c_time which I do not think is really a
+problem - it does not mean file system corruption in any way. Note that
+xfs is doing things the same way e.g. update all of the mentioned after
+the allocation is done.
 
-It can be used to convert a range of file to zeros preferably without
-issuing data IO. Blocks should be preallocated for the regions that span
-holes in the file, and the entire range is preferable converted to
-unwritten extents - even though file system may choose to zero out the
-extent or do whatever which will result in reading zeros from the range
-while the range remains allocated for the file.
+This commit moves all the updates after the allocation is done. In
+addition we also need to change m_time as not only inode has been change
+bot also data regions might have changed (unwritten extents). However
+m_time will be only updated when i_size changed.
 
-This can be also used to preallocate blocks past EOF in the same way as
-with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-size to remain the same.
+Also we do not need to be paranoid about changing the c_time only if the
+actual allocation have happened, we can change it even if we try to
+allocate only to find out that there are already block allocated. It's
+not really a big deal and it will save us some additional complexity.
 
-You can test this feature yourself using xfstests, of fallocate(1) however
-you'll need patches for util_linux, xfsprogs and xfstests which are going to
-follow soon.
+Also use ext4_debug, instead of ext4_warning in #ifdef EXT4FS_DEBUG
+section.
 
-I tested this mostly with a subset of xfstests using fsx and fsstress and
-even with new generic/290 which is just a copy of xfs/290 using fzero
-command for xfs_io instead of zero (which uses ioctl). I was testing on
-x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ fs/ext4/extents.c | 89 ++++++++++++++++++++++---------------------------------
+ 1 file changed, 35 insertions(+), 54 deletions(-)
 
-./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083
-generic/117 generic/068 generic/231 generic/127 generic/091 generic/075
-generic/112 generic/263 generic/091 generic/075 generic/256 generic/255
-generic/316 generic/300 generic/290 ext4/242;
-
-Note that there is a work in progress on FALLOC_FL_COLLAPSE_RANGE which
-touches the same area as this pach set does, so we should figure out
-which one should go first and modify the other on top of it.
-
-This has been based on top of xfs-collapse-range so it does not contain ext4
-collapse range changes.
-
-Thanks!
--Lukas
-
-Changelog:
-
-v2:
- - rebased on top of collapse_range changes
- - make varisou ext4 functions static
- - flag testing changes in do_fallocate
-
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 10cff47..67c7917 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -4513,36 +4513,6 @@ retry:
+ 	ext4_std_error(inode->i_sb, err);
+ }
+ 
+-static void ext4_falloc_update_inode(struct inode *inode,
+-				int mode, loff_t new_size, int update_ctime)
+-{
+-	struct timespec now;
+-
+-	if (update_ctime) {
+-		now = current_fs_time(inode->i_sb);
+-		if (!timespec_equal(&inode->i_ctime, &now))
+-			inode->i_ctime = now;
+-	}
+-	/*
+-	 * Update only when preallocation was requested beyond
+-	 * the file size.
+-	 */
+-	if (!(mode & FALLOC_FL_KEEP_SIZE)) {
+-		if (new_size > i_size_read(inode))
+-			i_size_write(inode, new_size);
+-		if (new_size > EXT4_I(inode)->i_disksize)
+-			ext4_update_i_disksize(inode, new_size);
+-	} else {
+-		/*
+-		 * Mark that we allocate beyond EOF so the subsequent truncate
+-		 * can proceed even if the new size is the same as i_size.
+-		 */
+-		if (new_size > i_size_read(inode))
+-			ext4_set_inode_flag(inode, EXT4_INODE_EOFBLOCKS);
+-	}
+-
+-}
+-
+ /*
+  * preallocate space for a file. This implements ext4's fallocate file
+  * operation, which gets called from sys_fallocate system call.
+@@ -4554,13 +4524,14 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ {
+ 	struct inode *inode = file_inode(file);
+ 	handle_t *handle;
+-	loff_t new_size;
++	loff_t new_size = 0;
+ 	unsigned int max_blocks;
+ 	int ret = 0;
+ 	int ret2 = 0;
+ 	int retries = 0;
+ 	int flags;
+ 	struct ext4_map_blocks map;
++	struct timespec tv;
+ 	unsigned int credits, blkbits = inode->i_blkbits;
+ 
+ 	/* Return error if mode is not supported */
+@@ -4594,12 +4565,15 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	 */
+ 	credits = ext4_chunk_trans_blocks(inode, max_blocks);
+ 	mutex_lock(&inode->i_mutex);
+-	ret = inode_newsize_ok(inode, (len + offset));
+-	if (ret) {
+-		mutex_unlock(&inode->i_mutex);
+-		trace_ext4_fallocate_exit(inode, offset, max_blocks, ret);
+-		return ret;
++
++	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
++	     offset + len > i_size_read(inode)) {
++		new_size = offset + len;
++		ret = inode_newsize_ok(inode, new_size);
++		if (ret)
++			goto out;
+ 	}
++
+ 	flags = EXT4_GET_BLOCKS_CREATE_UNINIT_EXT;
+ 	if (mode & FALLOC_FL_KEEP_SIZE)
+ 		flags |= EXT4_GET_BLOCKS_KEEP_SIZE;
+@@ -4623,28 +4597,14 @@ retry:
+ 		}
+ 		ret = ext4_map_blocks(handle, inode, &map, flags);
+ 		if (ret <= 0) {
+-#ifdef EXT4FS_DEBUG
+-			ext4_warning(inode->i_sb,
+-				     "inode #%lu: block %u: len %u: "
+-				     "ext4_ext_map_blocks returned %d",
+-				     inode->i_ino, map.m_lblk,
+-				     map.m_len, ret);
+-#endif
++			ext4_debug("inode #%lu: block %u: len %u: "
++				   "ext4_ext_map_blocks returned %d",
++				   inode->i_ino, map.m_lblk,
++				   map.m_len, ret);
+ 			ext4_mark_inode_dirty(handle, inode);
+ 			ret2 = ext4_journal_stop(handle);
+ 			break;
+ 		}
+-		if ((map.m_lblk + ret) >= (EXT4_BLOCK_ALIGN(offset + len,
+-						blkbits) >> blkbits))
+-			new_size = offset + len;
+-		else
+-			new_size = ((loff_t) map.m_lblk + ret) << blkbits;
+-
+-		ext4_falloc_update_inode(inode, mode, new_size,
+-					 (map.m_flags & EXT4_MAP_NEW));
+-		ext4_mark_inode_dirty(handle, inode);
+-		if ((file->f_flags & O_SYNC) && ret >= max_blocks)
+-			ext4_handle_sync(handle);
+ 		ret2 = ext4_journal_stop(handle);
+ 		if (ret2)
+ 			break;
+@@ -4654,6 +4614,27 @@ retry:
+ 		ret = 0;
+ 		goto retry;
+ 	}
++
++	handle = ext4_journal_start(inode, EXT4_HT_INODE, 2);
++	if (IS_ERR(handle))
++		goto out;
++
++	tv = inode->i_ctime = ext4_current_time(inode);
++
++	if (ret > 0 && new_size) {
++		if (new_size > i_size_read(inode)) {
++			i_size_write(inode, new_size);
++			inode->i_mtime = tv;
++		}
++		if (new_size > EXT4_I(inode)->i_disksize)
++			ext4_update_i_disksize(inode, new_size);
++	}
++	ext4_mark_inode_dirty(handle, inode);
++	if (file->f_flags & O_SYNC)
++		ext4_handle_sync(handle);
++
++	ext4_journal_stop(handle);
++out:
+ 	mutex_unlock(&inode->i_mutex);
+ 	trace_ext4_fallocate_exit(inode, offset, max_blocks,
+ 				ret > 0 ? ret2 : ret);
 -- 
-[PATCH 1/6] ext4: Update inode i_size after the preallocation
-[PATCH 2/6] ext4: refactor ext4_fallocate code
-[PATCH 3/6] ext4: translate fallocate mode bits to strings
-[PATCH 4/6] fs: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-[PATCH 5/6] ext4: Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-[PATCH 6/6] xfs: Add support for FALLOC_FL_ZERO_RANGE
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
