@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5D7497F3F
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 16:18:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41903304051
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 14:18:03 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	zoj8Mo1nsNlx3B0a for <xfs@oss.sgi.com>;
-	Wed, 26 Feb 2014 14:18:00 -0800 (PST)
-Date: Thu, 27 Feb 2014 09:17:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
-	range
-Message-ID: <20140226221757.GD29907@dastard>
-References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
-	<1393355728-12056-6-git-send-email-lczerner@redhat.com>
-	<20140225205349.GD13647@dastard>
-	<alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
-	<20140225215011.GF13647@dastard>
-	<alpine.LFD.2.00.1402261537040.2243@localhost.localdomain>
+	by oss.sgi.com (Postfix) with ESMTP id B23F27F3F
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 17:09:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9AAD6304071
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 15:09:55 -0800 (PST)
+Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
+	[209.85.220.43]) by cuda.sgi.com with ESMTP id GGb0tTkSB0Oo3b3A
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 26 Feb 2014 15:09:54 -0800 (PST)
+Received: by mail-pa0-f43.google.com with SMTP id rd3so1631806pab.16
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 15:09:53 -0800 (PST)
+Date: Wed, 26 Feb 2014 15:08:58 -0800 (PST)
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH v5 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
+	for fallocate
+In-Reply-To: <20140226064224.GU13647@dastard>
+Message-ID: <alpine.LSU.2.11.1402261454270.2808@eggly.anvils>
+References: <1392741436-19995-1-git-send-email-linkinjeon@gmail.com>
+	<20140224005710.GH4317@dastard>
+	<20140225141601.358f6e3df2660d4af44da876@canb.auug.org.au>
+	<20140225041346.GA29907@dastard>
+	<alpine.LSU.2.11.1402251217030.2380@eggly.anvils>
+	<20140226011347.GL13647@dastard>
+	<alpine.LSU.2.11.1402251856060.1114@eggly.anvils>
+	<20140226064224.GU13647@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1402261537040.2243@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,83 +34,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Namjae Jeon <linkinjeon@gmail.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <matthew@wil.cx>, Namjae Jeon <namjae.jeon@samsung.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
 
-T24gV2VkLCBGZWIgMjYsIDIwMTQgYXQgMDM6NTg6MzZQTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
-IHdyb3RlOgo+IE9uIFdlZCwgMjYgRmViIDIwMTQsIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+ID4g
-Q3VycmVudGx5IHhmcy8yNDIgZmFpbHMgb24geGZzIGZvciBtZQo+ID4gCj4gPiBSZWFsbHk/IFdo
-ZXJlJ3MgdGhlIGJ1ZyByZXBvcnQ/IEkgaGF2ZW4ndCBzZWVuIGEgZmFpbHVyZSBvbiB4ZnMvMjQy
-Cj4gPiBvbiBhbnkgb2YgbXkgdGVzdCBtYWNoaW5lcyBmb3IgYXQgbGVhc3QgYSB5ZWFyLCBldmVu
-IG9uIDFrIGJsb2NrCj4gPiBzaXplIGZpbGVzeXN0ZW1zLi4uCj4gPiAKPiA+ICQgc3VkbyAuL2No
-ZWNrIHhmcy8yNDIKPiA+IEZTVFlQICAgICAgICAgLS0geGZzIChkZWJ1ZykKPiA+IFBMQVRGT1JN
-ICAgICAgLS0gTGludXgveDg2XzY0IHRlc3QyIDMuMTQuMC1yYzMtZGdjKwo+ID4gTUtGU19PUFRJ
-T05TICAtLSAtZiAtYnNpemU9NDA5NiAvZGV2L3ZkYgo+ID4gTU9VTlRfT1BUSU9OUyAtLSAvZGV2
-L3ZkYiAvbW50L3NjcmF0Y2gKPiA+IAo+ID4geGZzLzI0MiAxcyAuLi4gMHMKPiA+IFJhbjogeGZz
-LzI0Mgo+ID4gUGFzc2VkIGFsbCAxIHRlc3RzCj4gPiAkCj4gCj4gT2sgc28gb25jZSBhZ2Fpbi4g
-WWVzdGVyZGF5IHdhcyByYWxseSB0b28gbGF0ZSBhbmQgSSd2ZQo+IG1pc2ludGVycHJldGVkIHRo
-ZSBkaWZmLiBJdCdzIG5vdCB0aGF0IHhmcyBiZWhhdmVzIGRpZmZlcmVudGx5LCBidXQKPiByYXRo
-ZXIgZXh0NCBiZWhhdmVzIGRpZmZlcmVudGx5IGJlY2F1c2Ugd2UgaW4gZmFjdCBoYXZlIGEgY29k
-ZSB0aGF0Cj4gd2lsbCB6ZXJvIG91dCBlbnRpcmUgdW53cml0dGVuIGV4dGVudCBpZiBpdCdzIHNt
-YWxsIGVub3VnaCByYXRoZXIKPiB0aGFuIHNwbGl0IGl0IGludG8gdW53cml0dGVuIGFuZCB3cml0
-dGVuLgoKWWVzLCB3ZSd2ZSBjb21lIGFjcm9zcyB0aGlzIGJlZm9yZSwgYW5kIHRoZXJlIGFyZSBz
-ZXZlcmFsIHNvbHV0aW9ucy4KdGhpcyBvbmUgaXMgdXNlZCBpbiB0ZXN0cy9nZW5lcmljLzI4NToK
-CiMgRGlzYWJsZSBleHRlbnQgemVyb2luZyBmb3IgZXh0NCBhcyB0aGF0IGNoYW5nZSB3aGVyZSBo
-b2xlcyBhciBjcmVhdGVkCmlmIFsgIiRGU1RZUCIgPSAiZXh0NCIgXTsgdGhlbgoJREVWPWBiYXNl
-bmFtZSAkVEVTVF9ERVZgCgllY2hvIDAgPi9zeXMvZnMvZXh0NC8kREVWL2V4dGVudF9tYXhfemVy
-b291dF9rYgpmaQoKPiA+ID4gYW5kIGl0IGRvZXMgYmVoYXZlIGRpZmZlcmVudGx5IHRoYW4gZXh0
-NC4KPiA+IAo+ID4gSW4gd2hhdCB3YXk/IERvZXMgRkFMTE9DX0ZMX1pFUk9fUkFOR0Ugb24gWEZT
-IGJlaGF2ZSBpZGVudGljYWxseSB0bwo+ID4gWEZTX0lPQ19aRVJPX1JBTkdFLCBvciBpcyB0aGF0
-IGRpZmZlcmVudCB0b28/IE9yIHlvdSBoYXZlbid0IHRlc3RlZAo+ID4gaXQgYmVjYXVzZSB5b3Ug
-d3JvdGUgdGhpcyB0ZXN0IGFzIGFuIGV4dDQgc3BlY2lmaWMgdGVzdCBhbmQgc28KPiA+IGhhdmVu
-J3QgcnVuIHRoaXMgc3BlY2lmaWMgdGVzdCBleGVyY2lzaW5nIHRoZSBGQUxMT0NfRkxfWkVST19S
-QU5HRQo+ID4gcGF0aCBpbiBYRlM/Cj4gCj4gSXQgZG9lcyBiZWhhdmUgZGlmZmVyZW50bHksIGJ1
-dCBub3QgYmVjYXVzZSBvZiB6ZXJvX3JhbmdlIGNvZGUsIGJ1dAo+IHJhdGhlciB3aGVuIHdyaXRp
-bmcgaW50byB1bmluaXRpYWxpemVkIGV4dGVudCB3aGljaCBpcyBzbWFsbCBlbm91Z2guCj4gVGhl
-IGV4dGVudCB3aWxsIG5vdCBiZSBzcGxpdCBidXQgcmF0aGVyIGNvbnZlcnRlZCB0byBpbml0aWFs
-aXplZCBhbmQKPiByZXNwZWN0aXZlIHBhcnRzIHdpbGwgYmUgemVyb2VkIG91dC4KPiAKPiBCdHcg
-dGhhdCdzIGFjdHVhbGx5IHRoZSByZWFzb24gd2h5IHdlIHVzZQo+IAo+IF9maWx0ZXJfaG9sZV9m
-aWVtYXAKPiAKPiBmaWx0ZXMgaW5zdGVhZCBvZgo+IAo+IF9maWx0ZXJfZmllbWFwCj4gCj4gSSd2
-ZSB1c2VkIGluIGV4dDQvMjQyLgoKU3VyZSwgYnV0IGV2ZW4gc28gSSB0aGluayB3ZSBtaWdodCBk
-byBiZXR0ZXIganVzdCB0byB1c2UgdGhlIGFib3ZlCnplcm9vdXQgdHVuZSBhbmQgYmUgZXhwbGlj
-aXQgaW4gd2hhdCB3ZSBleHBlY3QgdG8gaGFwcGVuIHcuci50LiBkYXRhCnZzIGhvbGVzLi4uCgo+
-IAo+IFRoYXQgc2FpZCBJIHRoaW5rIHRoYXQgYm90aCB0ZXN0cyBmcyBzcGVjaWZpYyBhbmQgZnMg
-aW5kZXBlbmRlbnQKPiBoYXZlIGl0J3MgdmFsdWUgc28gSSdsbCBjcmVhdGUgZ2VuZXJpYy8yNDIg
-YXMgd2VsbCBieSB1c2luZwo+IF9maWx0ZXJfaG9sZV9maWVtYXAuCgpKdXN0IHVzZSB0aGUgZmly
-c3QgdW51c2VkIGdlbmVyaWMgdGVzdCBudW1iZXIgLSB0cnlpbmcgdG8ga2VlcCB0ZXN0Cm51bWJl
-cnMgdGhlIHNhbWUgYWNyb3NzIGRpZmZlcmVudCBzdWJkaXJzIGlzIGp1c3QgZ29pbmcgdG8gY2F1
-c2UKY29uZnVzaW9uLi4uLgoKPiA+IGhvbGUgcHVuY2hpbmcgLSB0aGUgb25seSBkaWZmZXJlbmNl
-IGJldHdlZW4gYSBob2xlIHB1bmNoIGFuZCBhIHplcm8KPiA+IHJhbmdlIG9uIGZpbGVzeXN0ZW1z
-IHRoYXQgdXNlIHVud3JpdHRlbiBleHRlbnRzIHNob3VsZCBiZSB0aGF0IHRoZQo+ID4gcmFuZ2Ug
-YmVpbmcgb3BlcmF0ZWQgb24gaGFzIHVud3JpdHRlbiBleHRlbnRzIHJhdGhlciBhIGhvbGUuLi4u
-Lgo+ID4gCj4gPiA+IEJ0dyB0aGlzIGtpbmQgb2Ygb3B0aW1pemF0aW9uIGlzIGFjdHVhbGx5IHNv
-bWV0aGluZyBJJ3ZlIGJlZW4KPiA+ID4gdGhpbmtpbmcgb2YgYXMgd2VsbCBmb3IgZXh0NC4gUmF0
-aGVyIHRoYW4gZ29pbmcgdGhvdWdoIHRoZSBoYXNzbGUgb2YKPiA+ID4gY2hhbmdpbmcgZXh0ZW50
-cyBhcm91bmQgaXQgbWlnaHQgYmUgd29ydGggaW4gc29tZSBzaXR1YXRpb24gdG8gemVybwo+ID4g
-PiBvdXQuIEJ1dCB0aGF0J3MgYW4gb3B0aW1pemF0aW9uIEkgaGF2ZSBub3QgaW1wbGVtZW50ZWQg
-eWV0Lgo+ID4gCj4gPiBFeGFjdGx5IG15IHBvaW50IC0gdW50aWwgc3VjaCBvcHRpbWlzYXRpb25z
-IGFyZSBpbXBsZW1lbnRlZCwgYWxsIHRoZQo+ID4gZmlsZXN5c3RlbXMgc2hvdWxkIGJlIGJlaGF2
-aW5nIHRoZSBzYW1lIHdheSB1c2luZyB1bndyaXR0ZW4gZXh0ZW50cywKPiA+IGp1c3QgbGlrZSBm
-b3IgaG9sZSBwdW5jaGluZy4gSGVuY2UgdGhlIHRlc3RzIHNob3VsZCBiZSBjaGVja2luZyB0aGF0
-Cj4gPiB0aGUgYmVoYXZpb3VyIGlzIHRoZSBzYW1lIGFjcm9zcyBmaWxlc3lzdGVtcywganVzdCBs
-aWtlIHdlIGRvIGZvcgo+ID4gaG9sZSBwdW5jaGluZy4KPiAKPiBVc2luZyBfZmlsdGVyX2hvbGVf
-ZmllbWFwIGZpbHRlciBpbiBzdWNoIHRlc3Qgd2Ugd291bGQgbm90IG1ha2UgYQo+IGRpZmZlcmVu
-Y2UgYmV0d2VlbiB1bndyaXR0ZW4gYW5kIHdyaXR0ZW4gZXh0ZW50LiBIb3dldmVyIGluIHRoZSBj
-YXNlCj4gb2YgemVyb19yYW5nZSB0aGlzIHNvbWV3aGF0IG1ha2UgdGhlIHRlc3QgbXVjaCBsZXNz
-IGVmZmVjdGl2ZSBzbwo+IGl0J2xsIGJlIHdvcnRoIGhhdmluZyBmcyBzcGVjaWZpYyB0ZXN0IGFz
-IHdlbGwgYXMgZ2VuZXJpYyB0ZXN0IEkKPiBzYWlkIGFib3ZlLgo+IAo+IE9yIHdlIGNvdWxkIGFj
-dHVhbGx5IGRpcmVjdGx5IGluc3BlY3QgdGhlIGRhdGEgYXMgd2UgZG8gaW4geGZzLzI5MCwgb3IK
-PiBnZW5lcmljLzI5MCByZXNwZWN0aXZlbHkuCgpUaGUgbWQ1c3VtIGRvZXMgdGhlIGRhdGEgaW5z
-cGVjdGlvbiBmb3IgdXMuIFRoZSB3aG9sZSBwb2ludCBvZgpob2xlIHB1bmNoIGFuZCB6ZXJvIHJh
-bmdlIGFuZCBzbyBvbmUgaXMgdGhhdCB0aGV5IGFyZSBleHRlbnQKbWFuaXB1bGF0aW9uIG9wZXJh
-dGlvbnMuIElmIHdlIGRvbid0IGNoZWNrIHRoYXQgZXh0ZW50cyBoYXZlIGJlZW4KbWFuaXB1bGF0
-ZWQgY29ycmVjdGx5LCB0aGVuIHdlIGFyZW4ndCB0ZXN0aW5nIHRoYXQgdGhlIGtleSBiZWhhdmlv
-dXIKdGhlIGZpbGVzeXN0ZW1zIGFyZSBzdXBwb3NlZCB0byBkaXNwbGF5IGZvciB0aG9zZSBvcGVy
-YXRpb25zLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3Ji
-aXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+On Wed, 26 Feb 2014, Dave Chinner wrote:
+> On Tue, Feb 25, 2014 at 08:45:15PM -0800, Hugh Dickins wrote:
+> > On Wed, 26 Feb 2014, Dave Chinner wrote:
+> > > On Tue, Feb 25, 2014 at 03:23:35PM -0800, Hugh Dickins wrote:
+> > > 
+> > > > I should mention that when "we" implemented this thirty years ago,
+> > > > we had a strong conviction that the system call should be idempotent:
+> > > > that is, the len argument should indicate the final i_size, not the
+> > > > amount being removed from it.  Now, I don't remember the grounds for
+> > > > that conviction: maybe it was just an idealistic preference for how
+> > > > to design a good system call.  I can certainly see that defining it
+> > > > that way round would surprise many app programmers.  Just mentioning
+> > > > this in case anyone on these lists sees a practical advantage to
+> > > > doing it that way instead.
+> > > 
+> > > I don't see how specifying the end file size as an improvement. What
+> > > happens if you are collapse a range in a file that is still being
+> > > appended to by the application and so you race with a file size
+> > > update? IOWs, with such an API the range to be collapsed is
+> > > completely unpredictable, and IMO that's a fundamentally broken API.
+> > 
+> > That's fine if you don't see the idempotent API as an improvement,
+> > I just wanted to put it on the table in case someone does see an
+> > advantage to it.  But I think I'm missing something in your race
+> > example: I don't see a difference between the two APIs there.
+> 
+> 
+> Userspace can't sample the inode size via stat(2) and then use the value for a
+> syscall atomically. i.e. if you specify the offset you want to
+> collapse at, and the file size you want to have to define the region
+> to collapse, then the length you need to collapse is (current inode
+> size - end file size). If "current inode size" can change between
+> the stat(2) and fallocate() call (and it can), then the length being
+> collapsed is indeterminate....
+
+Thanks for explaining more, I was just about to acknowledge what a good
+example that is.  Indeed, it seems not unreasonable to be editing the
+earlier part of a file while the later part of it is still streaming in.
+
+But damn, it now occurs to me that there's still a problem at the
+streaming end: its file write offset won't be updated to reflect
+the collapse, so there would be a sparse hole at that end.  And
+collapse returns -EPERM if IS_APPEND(inode).
+
+Never mind, I'm not campaigning for a change of interface anyway.
+
+Hugh
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
