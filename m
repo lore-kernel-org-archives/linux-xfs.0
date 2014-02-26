@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4D1F17F50
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 20:18:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2810830406A
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 18:18:35 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AAA6Lvsg4EGNwSr8 for
-	<xfs@oss.sgi.com>; Tue, 25 Feb 2014 18:18:34 -0800 (PST)
-Message-ID: <530D4EE1.6040601@redhat.com>
-Date: Tue, 25 Feb 2014 20:18:09 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BF40F7F37
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 21:42:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A3A0B8F8073
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 19:42:37 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	tDjG7XAeONlrR7C8 for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 19:42:35 -0800 (PST)
+Date: Wed, 26 Feb 2014 14:42:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v5 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
+	for fallocate
+Message-ID: <20140226034230.GO13647@dastard>
+References: <1392741436-19995-1-git-send-email-linkinjeon@gmail.com>
+	<20140224005710.GH4317@dastard>
+	<20140225141601.358f6e3df2660d4af44da876@canb.auug.org.au>
+	<20140225041346.GA29907@dastard>
+	<alpine.LSU.2.11.1402251217030.2380@eggly.anvils>
+	<20140225154128.947a2de83a2d0dc21763ccf9@linux-foundation.org>
+	<20140226013426.GM13647@dastard>
+	<20140225175216.0f0c10f9.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: clean up xfs_set_maxicount & use in growfs
-References: <530C29C7.90001@redhat.com> <20140226021114.GA26022@infradead.org>
-In-Reply-To: <20140226021114.GA26022@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20140225175216.0f0c10f9.akpm@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,50 +37,152 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Namjae Jeon <linkinjeon@gmail.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <matthew@wil.cx>, Namjae Jeon <namjae.jeon@samsung.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
 
-On 2/25/14, 8:11 PM, Christoph Hellwig wrote:
-> On Mon, Feb 24, 2014 at 11:27:35PM -0600, Eric Sandeen wrote:
->> xfs_set_maxicount() overflowed fairly easily for large filesystems
->> and large maxicount; we started out by multiplying dblocks by
->> the percentage, *then* dividing by 100, and never checked for
->> an overflow.  The calculations were also, IMHO, a little hard
->> to follow.
+On Tue, Feb 25, 2014 at 05:52:16PM -0800, Andrew Morton wrote:
+> On Wed, 26 Feb 2014 12:34:26 +1100 Dave Chinner <david@fromorbit.com> wrote:
 > 
-> Would be useful to get this test case into xfstests..
-
-Your'e bot, aren't you.  ;)
-
-yeah you're right.  I went down this path by starting a testcase
-for 3-patches-ago, and got here.  That one can be sent soon, and
-sure, it'd be worth doing this too.
-
->> -STATIC void
->> +void
->>  xfs_set_maxicount(xfs_mount_t *mp)
->>  {
->>  	xfs_sb_t	*sbp = &(mp->m_sb);
->> -	__uint64_t	icount;
->> +	__uint64_t	iblocks;
+> > On Tue, Feb 25, 2014 at 03:41:28PM -0800, Andrew Morton wrote:
+> > > On Tue, 25 Feb 2014 15:23:35 -0800 (PST) Hugh Dickins <hughd@google.com> wrote:
+> > > > On Tue, 25 Feb 2014, Dave Chinner wrote:
+> > > > > On Tue, Feb 25, 2014 at 02:16:01PM +1100, Stephen Rothwell wrote:
+> > > > > > On Mon, 24 Feb 2014 11:57:10 +1100 Dave Chinner <david@fromorbit.com> wrote:
+> > > > FALLOC_FL_COLLAPSE_RANGE: I'm a little sad at the name COLLAPSE,
+> > > > but probably seven months too late to object.  It surprises me that
+> > > > you're doing all this work to deflate a part of the file, without
+> > > > the obvious complementary work to inflate it - presumably all those
+> > > > advertisers whose ads you're cutting out, will come back to us soon
+> > > > to ask for inflation, so that they have somewhere to reinsert them ;)
+> > > 
+> > > Yes, I was wondering that.  Why not simply "move these blocks from here
+> > > to there".
+> > 
+> > And open a completely unnecessary can of worms to do with
+> > behavioural and implementation corner cases?
 > 
-> Seems like this could move into the if clause below.
-> 
->> @@ -388,6 +388,7 @@ extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
->>  extern int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
->>  extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
->>  extern int	xfs_readsb(xfs_mount_t *, int);
->> +void		xfs_set_maxicount(xfs_mount_t *mp);
->>  extern void	xfs_freesb(xfs_mount_t *);
->>  extern int	xfs_fs_writable(xfs_mount_t *);
->>  extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
-> 
-> A missing extern while all other prototypes around it have one seems
-> rather odd.
+> But it's general.
 
-Sure does!
+Exactly. And because it's general, you can't make arbitrary
+decisions about the behaviour.
 
--Eric
+> > Do you allow it to destroy data by default? Or only allow moves into
+> > holes?
+> 
+> Overwrite.
+
+Application dev says: "I don't want it to overwrite data - I only
+want to it succeed if it's moving into a hole that I've already
+prepared".
+
+> > What do you do with range the data is moved out of? Does it just
+> > become a hole? What happens if the range overlaps EOF - does that
+> > change the file size?
+> 
+> Truncate.
+
+A.D. says: "But I need FALLOC_FL_KEEP_SIZE semantics"
+
+> > What if you want to move the range beyond EOF?
+> 
+> Extend.
+
+Filesystem developer says: "Ok, so what happens to the range between
+the old EOF and destintation offset? What do you do with blocks
+beyond EOF that fall within that range? punch, zero, preallocate the
+entire range? Do users need to be able to specify this behaviour?
+Hell, do we even know of an application that requires this
+behaviour?"
+
+> > What if the source and destination ranges overlap?
+> 
+> Don't screw it up.
+
+Exactly my point - it's a complex behaviour that is difficult to
+verify that it is correct.
+
+> > What happens when you move the block at EOF into the middle of a
+> > file - do you end up with zeros padding the block and the file size
+> > having to be adjusted accordingly? Or do we have to *copy* all the
+> > data in high blocks down to fill the hole in the block?
+> 
+> I don't understand that.  Move the block(s) and truncate to the new
+> length.
+
+So, you are saying this (move from s to d):
+
+     +-----------------------------------------------------+
+                                             +sssssssssssss+
+              +ddddddddddddd+
+
+should result in:
+
+     +--------+ddddddddddddd+
+
+
+A.D. says: "That's not what I asked for! What happened to all the
+rest of my data in the file between d and s? I didn't ask for them
+to be removed. And I want a hole where the source was!"
+
+> > What behaviour should we expect if the filesystem can't implement
+> > the entire move atomically and we crash in the middle of the move?
+> 
+> What does collapse_range do now?
+> 
+> If it's a journaled filesystem, it shouldn't screw up.  If it isn't, fsck.
+
+Define "screw up". For journalled filesystems "don't screw up" means
+the filesystem will be consistent after a crash, not that a change
+made in a syscall is completed atomicly.
+
+Indeed, collapse range isn't implemented atomically in XFS, and I
+doubt it is in ext4. Why? Because the extent tree being manipulated
+can be *much* larger than the journal and so the changes can't
+easily be done atomically from a crash recovery perspective. The
+result is that collapse range will end up with a hole somewhere in
+the file the size of the range being collapsed. This was pointed out
+during review some time in the past 6 months and, IIRC, the response
+was "that's fine, just so long as the filesystem is not corrupted".
+I have plans to fix this issue in XFS, but it isn't critical to the
+correct functioning of devices using collapse range.
+
+This just illustrates my point is that behaviour needs to be
+specified so that we can get all filesystems with the same minimum
+crash guarantees....
+
+> > I can keep going, but I'll stop here - you get the idea.
+> 
+> None of this seems like rocket science.
+
+It's not rocket science, but the devil is in the details. There's no
+requirements or specification to work from, let alone an application
+that needs such generic functionality. Until these exist and there's
+someone willing to put the effort into specifying, implementing and
+testing such an interface, it's just not going to happen.
+
+> > In comparison, collapse range as a file data manipulation has very
+> > specific requirements and from that we can define a simple, specific
+> > API that allows filesystems to accelerate that operation by extent
+> > manipulation rather than read/memcpy/write that the applications are
+> > currently doing for this operation....  IOWs, collapse range is a
+> > simple operation, "move arbitrary blocks from here to there" is a
+> > nightmare both from the specification and the implementation points
+> > of view.
+> 
+> collapse_range seems weird, arbitrary and half-assed.  "Why didn't they
+> go all the way and do it properly".
+
+Yup, I can apply exactly the same argument to FALLOC_FL_PREALLOC and
+FALLOC_FL_PUNCH_HOLE. We should have done them as part of a generic
+block movement API as they are simply degenerate cases of NULL
+source/destination targets for the block movement API....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
