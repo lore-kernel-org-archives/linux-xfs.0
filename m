@@ -1,30 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BF40F7F37
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 21:42:37 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 48A1F7F37
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 22:39:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A3A0B8F8073
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 19:42:37 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	tDjG7XAeONlrR7C8 for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 19:42:35 -0800 (PST)
-Date: Wed, 26 Feb 2014 14:42:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
-	for fallocate
-Message-ID: <20140226034230.GO13647@dastard>
-References: <1392741436-19995-1-git-send-email-linkinjeon@gmail.com>
-	<20140224005710.GH4317@dastard>
-	<20140225141601.358f6e3df2660d4af44da876@canb.auug.org.au>
-	<20140225041346.GA29907@dastard>
-	<alpine.LSU.2.11.1402251217030.2380@eggly.anvils>
-	<20140225154128.947a2de83a2d0dc21763ccf9@linux-foundation.org>
-	<20140226013426.GM13647@dastard>
-	<20140225175216.0f0c10f9.akpm@linux-foundation.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BABE0AC002
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 20:39:12 -0800 (PST)
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id R4BHGCxwMju4CiSt (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 20:39:10 -0800 (PST)
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id B1BFB3EE0B6
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 13:39:08 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id A406E45DE4D
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 13:39:08 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.nic.fujitsu.com [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 8CAF145DE3E
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 13:39:08 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 808C1E08002
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 13:39:08 +0900 (JST)
+Received: from g01jpfmpwkw01.exch.g01.fujitsu.local
+	(g01jpfmpwkw01.exch.g01.fujitsu.local [10.0.193.38])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 3615B1DB802C
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 13:39:08 +0900 (JST)
+Message-ID: <530D6FE3.2040406@jp.fujitsu.com>
+Date: Wed, 26 Feb 2014 13:38:59 +0900
+From: sat <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140225175216.0f0c10f9.akpm@linux-foundation.org>
+Subject: Re: [PATCH] XFS: fix the description of 'allocsize=' mount option
+References: <530AE0E5.1090707@jp.fujitsu.com> <20140224120629.GN4317@dastard>
+In-Reply-To: <20140224120629.GN4317@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,156 +40,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Namjae Jeon <linkinjeon@gmail.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <matthew@wil.cx>, Namjae Jeon <namjae.jeon@samsung.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Rob Landley <rob@landley.net>, xfs@oss.sgi.com
 
-On Tue, Feb 25, 2014 at 05:52:16PM -0800, Andrew Morton wrote:
-> On Wed, 26 Feb 2014 12:34:26 +1100 Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > On Tue, Feb 25, 2014 at 03:41:28PM -0800, Andrew Morton wrote:
-> > > On Tue, 25 Feb 2014 15:23:35 -0800 (PST) Hugh Dickins <hughd@google.com> wrote:
-> > > > On Tue, 25 Feb 2014, Dave Chinner wrote:
-> > > > > On Tue, Feb 25, 2014 at 02:16:01PM +1100, Stephen Rothwell wrote:
-> > > > > > On Mon, 24 Feb 2014 11:57:10 +1100 Dave Chinner <david@fromorbit.com> wrote:
-> > > > FALLOC_FL_COLLAPSE_RANGE: I'm a little sad at the name COLLAPSE,
-> > > > but probably seven months too late to object.  It surprises me that
-> > > > you're doing all this work to deflate a part of the file, without
-> > > > the obvious complementary work to inflate it - presumably all those
-> > > > advertisers whose ads you're cutting out, will come back to us soon
-> > > > to ask for inflation, so that they have somewhere to reinsert them ;)
-> > > 
-> > > Yes, I was wondering that.  Why not simply "move these blocks from here
-> > > to there".
-> > 
-> > And open a completely unnecessary can of worms to do with
-> > behavioural and implementation corner cases?
-> 
-> But it's general.
+Hi Dave,
 
-Exactly. And because it's general, you can't make arbitrary
-decisions about the behaviour.
+> Actually, it isn't. The initial size of dynamic prealloc is
+> determined by a set of heuristics based on file size, filesystem
+> geometry and the existing extents on the file. It uses a default
+> of 64k if no optimisation heuristics trigger.
 
-> > Do you allow it to destroy data by default? Or only allow moves into
-> > holes?
-> 
-> Overwrite.
+I see. I should have read the code more carefully.
 
-Application dev says: "I don't want it to overwrite data - I only
-want to it succeed if it's moving into a hole that I've already
-prepared".
+---
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+Subject: [PATCH] XFS: remove the description about the default value of "allocsize=" mount option
 
-> > What do you do with range the data is moved out of? Does it just
-> > become a hole? What happens if the range overlaps EOF - does that
-> > change the file size?
-> 
-> Truncate.
+The end-of-file preallocation size is dynamic by default.
+So there is no static default size specified by "allocsize="
+mount option and the description about the default size
+should be removed.
 
-A.D. says: "But I need FALLOC_FL_KEEP_SIZE semantics"
+Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Rob Landley <rob@landley.net>
+---
+  Documentation/filesystems/xfs.txt |    6 +++---
+  1 files changed, 3 insertions(+), 3 deletions(-)
 
-> > What if you want to move the range beyond EOF?
-> 
-> Extend.
-
-Filesystem developer says: "Ok, so what happens to the range between
-the old EOF and destintation offset? What do you do with blocks
-beyond EOF that fall within that range? punch, zero, preallocate the
-entire range? Do users need to be able to specify this behaviour?
-Hell, do we even know of an application that requires this
-behaviour?"
-
-> > What if the source and destination ranges overlap?
-> 
-> Don't screw it up.
-
-Exactly my point - it's a complex behaviour that is difficult to
-verify that it is correct.
-
-> > What happens when you move the block at EOF into the middle of a
-> > file - do you end up with zeros padding the block and the file size
-> > having to be adjusted accordingly? Or do we have to *copy* all the
-> > data in high blocks down to fill the hole in the block?
-> 
-> I don't understand that.  Move the block(s) and truncate to the new
-> length.
-
-So, you are saying this (move from s to d):
-
-     +-----------------------------------------------------+
-                                             +sssssssssssss+
-              +ddddddddddddd+
-
-should result in:
-
-     +--------+ddddddddddddd+
-
-
-A.D. says: "That's not what I asked for! What happened to all the
-rest of my data in the file between d and s? I didn't ask for them
-to be removed. And I want a hole where the source was!"
-
-> > What behaviour should we expect if the filesystem can't implement
-> > the entire move atomically and we crash in the middle of the move?
-> 
-> What does collapse_range do now?
-> 
-> If it's a journaled filesystem, it shouldn't screw up.  If it isn't, fsck.
-
-Define "screw up". For journalled filesystems "don't screw up" means
-the filesystem will be consistent after a crash, not that a change
-made in a syscall is completed atomicly.
-
-Indeed, collapse range isn't implemented atomically in XFS, and I
-doubt it is in ext4. Why? Because the extent tree being manipulated
-can be *much* larger than the journal and so the changes can't
-easily be done atomically from a crash recovery perspective. The
-result is that collapse range will end up with a hole somewhere in
-the file the size of the range being collapsed. This was pointed out
-during review some time in the past 6 months and, IIRC, the response
-was "that's fine, just so long as the filesystem is not corrupted".
-I have plans to fix this issue in XFS, but it isn't critical to the
-correct functioning of devices using collapse range.
-
-This just illustrates my point is that behaviour needs to be
-specified so that we can get all filesystems with the same minimum
-crash guarantees....
-
-> > I can keep going, but I'll stop here - you get the idea.
-> 
-> None of this seems like rocket science.
-
-It's not rocket science, but the devil is in the details. There's no
-requirements or specification to work from, let alone an application
-that needs such generic functionality. Until these exist and there's
-someone willing to put the effort into specifying, implementing and
-testing such an interface, it's just not going to happen.
-
-> > In comparison, collapse range as a file data manipulation has very
-> > specific requirements and from that we can define a simple, specific
-> > API that allows filesystems to accelerate that operation by extent
-> > manipulation rather than read/memcpy/write that the applications are
-> > currently doing for this operation....  IOWs, collapse range is a
-> > simple operation, "move arbitrary blocks from here to there" is a
-> > nightmare both from the specification and the implementation points
-> > of view.
-> 
-> collapse_range seems weird, arbitrary and half-assed.  "Why didn't they
-> go all the way and do it properly".
-
-Yup, I can apply exactly the same argument to FALLOC_FL_PREALLOC and
-FALLOC_FL_PUNCH_HOLE. We should have done them as part of a generic
-block movement API as they are simply degenerate cases of NULL
-source/destination targets for the block movement API....
-
-Cheers,
-
-Dave.
+diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+index 5be51fd..5837f0a 100644
+--- a/Documentation/filesystems/xfs.txt
++++ b/Documentation/filesystems/xfs.txt
+@@ -23,9 +23,9 @@ default behaviour.
+  
+    allocsize=size
+      Sets the buffered I/O end-of-file preallocation size when
+-    doing delayed allocation writeout (default size is 64KiB).
+-    Valid values for this option are page size (typically 4KiB)
+-    through to 1GiB, inclusive, in power-of-2 increments.
++    doing delayed allocation writeout. Valid values for this
++    option are page size (typically 4KiB) through to 1GiB,
++    inclusive, in power-of-2 increments.
+  
+      The default behaviour is for dynamic end-of-file
+      preallocation size, which uses a set of heuristics to
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.1
+
+
 
 _______________________________________________
 xfs mailing list
