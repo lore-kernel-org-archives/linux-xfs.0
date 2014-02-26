@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5107C7F37
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 19:34:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CF03EAC004
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 17:34:31 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	qGYOwqQChDOwmlPK for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 17:34:29 -0800 (PST)
-Date: Wed, 26 Feb 2014 12:34:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 0/10] fs: Introduce new flag(FALLOC_FL_COLLAPSE_RANGE)
-	for fallocate
-Message-ID: <20140226013426.GM13647@dastard>
-References: <1392741436-19995-1-git-send-email-linkinjeon@gmail.com>
-	<20140224005710.GH4317@dastard>
-	<20140225141601.358f6e3df2660d4af44da876@canb.auug.org.au>
-	<20140225041346.GA29907@dastard>
-	<alpine.LSU.2.11.1402251217030.2380@eggly.anvils>
-	<20140225154128.947a2de83a2d0dc21763ccf9@linux-foundation.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 51DF27F37
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 19:40:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 34210304075
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 17:40:54 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id iSIfRen0qPSsRp6i (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 17:40:53 -0800 (PST)
+Date: Tue, 25 Feb 2014 17:40:52 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/10] repair: BMBT prefetch needs to be CRC aware
+Message-ID: <20140226014052.GA31905@infradead.org>
+References: <1393223369-4696-1-git-send-email-david@fromorbit.com>
+	<1393223369-4696-11-git-send-email-david@fromorbit.com>
+	<20140225172518.GA12871@infradead.org>
+	<20140225235112.GK13647@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140225154128.947a2de83a2d0dc21763ccf9@linux-foundation.org>
+In-Reply-To: <20140225235112.GK13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,63 +32,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Namjae Jeon <linkinjeon@gmail.com>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <matthew@wil.cx>, Namjae Jeon <namjae.jeon@samsung.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, bpm@sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, mtk.manpages@gmail.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Feb 25, 2014 at 03:41:28PM -0800, Andrew Morton wrote:
-> On Tue, 25 Feb 2014 15:23:35 -0800 (PST) Hugh Dickins <hughd@google.com> wrote:
-> > On Tue, 25 Feb 2014, Dave Chinner wrote:
-> > > On Tue, Feb 25, 2014 at 02:16:01PM +1100, Stephen Rothwell wrote:
-> > > > On Mon, 24 Feb 2014 11:57:10 +1100 Dave Chinner <david@fromorbit.com> wrote:
-> > FALLOC_FL_COLLAPSE_RANGE: I'm a little sad at the name COLLAPSE,
-> > but probably seven months too late to object.  It surprises me that
-> > you're doing all this work to deflate a part of the file, without
-> > the obvious complementary work to inflate it - presumably all those
-> > advertisers whose ads you're cutting out, will come back to us soon
-> > to ask for inflation, so that they have somewhere to reinsert them ;)
-> 
-> Yes, I was wondering that.  Why not simply "move these blocks from here
-> to there".
+On Wed, Feb 26, 2014 at 10:51:12AM +1100, Dave Chinner wrote:
+> Sure, but it's way outside the scope of fixing this bug.
+> We'd need to start with the kernel code, then port it is userspace
+> and propagate it into all the utilities. Patches welcome ;)
 
-And open a completely unnecessary can of worms to do with
-behavioural and implementation corner cases?
-
-Do you allow it to destroy data by default? Or only allow moves into
-holes?
-
-What do you do with range the data is moved out of? Does it just
-become a hole? What happens if the range overlaps EOF - does that
-change the file size?
-
-What if you want to move the range beyond EOF?
-
-What if the source and destination ranges overlap?
-
-What happens when you move the block at EOF into the middle of a
-file - do you end up with zeros padding the block and the file size
-having to be adjusted accordingly? Or do we have to *copy* all the
-data in high blocks down to fill the hole in the block?
-
-What behaviour should we expect if the filesystem can't implement
-the entire move atomically and we crash in the middle of the move?
-
-I can keep going, but I'll stop here - you get the idea.
-
-In comparison, collapse range as a file data manipulation has very
-specific requirements and from that we can define a simple, specific
-API that allows filesystems to accelerate that operation by extent
-manipulation rather than read/memcpy/write that the applications are
-currently doing for this operation....  IOWs, collapse range is a
-simple operation, "move arbitrary blocks from here to there" is a
-nightmare both from the specification and the implementation points
-of view.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Just doing that repair-local would be a start.
 
 _______________________________________________
 xfs mailing list
