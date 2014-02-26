@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DD6F77F37
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 23:44:16 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A71247F37
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 23:51:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 78089AC002
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 21:44:13 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 32C63AC004
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 21:51:14 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	bkhH576ZPRxXuM1P for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 21:44:11 -0800 (PST)
-Date: Wed, 26 Feb 2014 16:44:06 +1100
+	BioalTP0ZLg6XECD for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 21:51:12 -0800 (PST)
+Date: Wed, 26 Feb 2014 16:51:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: byte range buffer dirty region tracking
-Message-ID: <20140226054406.GP13647@dastard>
-References: <1393194354-12780-1-git-send-email-david@fromorbit.com>
-	<20140226021525.GB26022@infradead.org>
+Subject: Re: [PATCH 07/10] repair: prefetch runs too far ahead
+Message-ID: <20140226055109.GQ13647@dastard>
+References: <1393223369-4696-1-git-send-email-david@fromorbit.com>
+	<1393223369-4696-8-git-send-email-david@fromorbit.com>
+	<20140226015250.GB3616@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140226021525.GB26022@infradead.org>
+In-Reply-To: <20140226015250.GB3616@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,42 +34,67 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Feb 25, 2014 at 06:15:25PM -0800, Christoph Hellwig wrote:
-> Interesting.  I had a prototype of this supporting just a single
-> region a while ago, but never managed to get it to pass all recovery
-> tests.  That was before I separated the in-core from the on-disk
-> log items, though.
-
-Yeah, that makes it much easier to deal with. It's still a bit
-messy though, and it still panics every so often under heavy load.
-IOWs I still don't quite have the range-to-bitmap accounting
-correct.
-
-> > Hence if we just track a signle region, it will almost always cover
-> > the entire directory buffer - if we only modify a single entry in
-> > the buffer, then that's a fairly large cost in terms of log space
-> > and CPU overhead for random individual operations. If we decide that
-> > we are going to use a single range, then we may as well just use the
-> > dirty flag and log the entire buffer every time.
+On Tue, Feb 25, 2014 at 05:52:50PM -0800, Christoph Hellwig wrote:
+> On Mon, Feb 24, 2014 at 05:29:26PM +1100, Dave Chinner wrote:
+> > @@ -842,7 +842,7 @@ start_inode_prefetch(
+> >  	 * and not any other associated metadata like directories
+> >  	 */
+> >  
+> > -	max_queue = libxfs_bcache->c_maxcount / thread_count / 8;
+> > +	max_queue = libxfs_bcache->c_maxcount / thread_count / 32;
 > 
-> Which might not be an all that bad idea given how much log bandwith
-> we have available.  Defintively would be interesting to instrument
-> and benchmark it vs the 4 regions version.
+> I can't correlate this to anything mentioned in the changelog.
+> Also if you're touching it anyway it might be a good idea to document
+> the magic number here.
 
-Well, for v4 filesystems under create workloads the increase is
-definitely noticable - I haven't got measurements to hand, though it
-was somethign in the order 30% or so for 256 byte inodes due to the
-increase in size of the inode cluster buffers being logged. For
-larger inodes that's going to be even worse. We don't have to worry
-on v5 filesystems, though, so only btree blocks are the main
-concern....
+I was fiddling with the magic number to see if it affected the
+readahead behaviour (it didn't) and forgot to set it back to the
+original value. Will fix.
 
-> Note that we probably should also introduce a log incompat feature to
-> just log the range instead of converting it to the old bitmap for v5
-> filesystems.
+> 
+> > +void
+> > +prefetch_ag_range(
+> > +	struct work_queue	*work,
+> > +	xfs_agnumber_t		start_ag,
+> > +	xfs_agnumber_t		end_ag,
+> > +	bool			dirs_only,
+> > +	void			(*func)(struct work_queue *,
+> > +					xfs_agnumber_t, void *))
+> > +{
+> > +	int			i;
+> > +	struct prefetch_args	*pf_args[2];
+> > +
+> > +	pf_args[start_ag & 1] = start_inode_prefetch(start_ag, dirs_only, NULL);
+> > +	for (i = start_ag; i < end_ag; i++) {
+> > +		/* Don't prefetch end_ag */
+> > +		if (i + 1 < end_ag)
+> > +			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+> > +						dirs_only, pf_args[i & 1]);
+> > +		func(work, i, pf_args[i & 1]);
+> > +	}
+> > +}
+> 
+> This seems to largely duplicate the common code added in patch 5.
+> Having _range variants of those that the non-range ones wrap with 0 and
+> mp->m_sb.sb_agcount as default parameters would avoid that duplication.
 
-Yup, that's easy enough to do, and should make the v5 code even
-simpler and faster....
+Actually, that's pretty much what this patch does in this hunk:
+
+@@ -905,12 +945,8 @@ do_inode_prefetch(
+         */
+        if (!stride) {
+                queue.mp = mp;
+-               pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
+-               for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+-                       pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+-                                       dirs_only, pf_args[i & 1]);
+-                       func(&queue, i, pf_args[i & 1]);
+-               }
++               prefetch_ag_range(&queue, 0, mp->m_sb.sb_agcount,
++                                 dirs_only, func);
+                return;
+        }
+
 
 Cheers,
 
