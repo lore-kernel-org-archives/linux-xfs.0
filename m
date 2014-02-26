@@ -1,25 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A35EF7F50
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 08:13:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 22387AC009
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 06:13:31 -0800 (PST)
-Received: from mail-lb0-f177.google.com (mail-lb0-f177.google.com
-	[209.85.217.177]) by cuda.sgi.com with ESMTP id
-	h6DrD5GEBNE00D5a (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Feb 2014 06:13:29 -0800 (PST)
-Received: by mail-lb0-f177.google.com with SMTP id z11so651059lbi.22
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 06:13:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAAxjCEx0c1nWkZDmKfud2cNnpVKVshvjxnJvfRc7Eht4S48_Ew@mail.gmail.com>
-References: <CA+qeAOqP4veJp-SyRVC5HvwN+sw8zuqC6Fdi49MV+g0ugP_y_w@mail.gmail.com>
-	<CAAxjCEx0c1nWkZDmKfud2cNnpVKVshvjxnJvfRc7Eht4S48_Ew@mail.gmail.com>
-Date: Wed, 26 Feb 2014 22:13:27 +0800
-Message-ID: <CA+qeAOoX4J66Q_T8dYoGoLhPuKaa2qTRw6mqb2fFXh5bn7kA9g@mail.gmail.com>
-Subject: Re: Is the xfsprogs community still developing??
-From: Dongsheng Yang <dongsheng081251@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 299D57F52
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 08:20:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C1941AC008
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 06:20:02 -0800 (PST)
+Received: from internal-smtp3.wesleyan.edu (internal-smtp3.wesleyan.edu
+	[129.133.6.182]) by cuda.sgi.com with ESMTP id 0emthquhRSYX02nP
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 26 Feb 2014 06:20:00 -0800 (PST)
+From: "C. Morgan Hamill" <chamill@wesleyan.edu>
+In-reply-to: <530CF84C.2080200@hardwarefreak.com>
+Subject: Re: Question regarding XFS on LVM over hardware RAID.
+References: <52E91923.4070706@sandeen.net> <52EB3B96.7000103@hardwarefreak.com>
+	<1391202273-sup-9265@al.wesleyan.edu>
+	<52ED61C9.8060504@hardwarefreak.com>
+	<20140202212152.GP2212@dastard>
+	<1391443675-sup-1730@al.wesleyan.edu>
+	<20140203214128.GR13997@dastard>
+	<52F09E36.8050606@hardwarefreak.com>
+	<1392748390-sup-1943@al.wesleyan.edu>
+	<5303E7AC.50903@hardwarefreak.com>
+	<20140220183125.29149.64880@al.wesleyan.edu>
+	<5306C90B.1000904@hardwarefreak.com>
+	<20140221095742.0ca161b0@galadriel.home>
+	<530809A7.70900@hardwarefreak.com>
+	<1393347755-sup-205@al.wesleyan.edu>
+	<530CF84C.2080200@hardwarefreak.com>
+Date: Wed, 26 Feb 2014 09:19:54 -0500
+Message-Id: <1393423550-sup-1535@al.wesleyan.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,87 +37,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3619760113459001759=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: stan <stan@hardwarefreak.com>
+Cc: xfs <xfs@oss.sgi.com>
 
---===============3619760113459001759==
-Content-Type: multipart/alternative; boundary=001a113371b60042bb04f34fcf7c
+Excerpts from Stan Hoeppner's message of 2014-02-25 15:08:44 -0500:
+> Only enough to recommend you to replace it immediately with an LSI or
+> Adaptec.  Areca is an absolutely tiny Taiwanese company with inferior
+> product and, from what I gather, horrible support for North American
+> customers, and Linux customers in general.  The vast majority of their
+> customers seem to be SOHOs and individuals using the boards in MS
+> Windows servers, with very few running more than a handful of drives,
+> and few running lots of drives doing serious work.
 
---001a113371b60042bb04f34fcf7c
-Content-Type: text/plain; charset=ISO-8859-1
+Noted.
 
-Hi Stefan,
+> If you run into any kind of performance issue with their board, and
+> explain to them your number of drives and arrays, OS platform and
+> workload, they'll be baffled like a 3rd grader and have no idea how to
+> respond.
 
-On Wed, Feb 26, 2014 at 10:04 PM, Stefan Ring <stefanrin@gmail.com> wrote:
+For better or worse, this will be in line with the "support" I've
+experienced from the vast majority of vendors I've had to deal with.
 
-> >      I am not sure is here the correct place to post this question. But
-> I do
-> > not know
-> > mail list for xfsprogs.
->
-> I think that this one is the correct place.
->
-> >      It seems it has been a looooooooog time since the last commit for
-> > xfsprogs, about
-> > 19 months. http://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/
-> >      Could anybody help to tell me where or who I can send my patch about
-> > xfsprogs
-> > to?
->
-> Seems to have moved:
-> http://xfs.org/index.php/Getting_the_latest_source_code
->
+> The Areca uses inferior older technology, has inferior performance,
+> limited firmware feature set which doesn't support spans
+> (concatenation), near non-existent US support especially for advanced
+> Linux workloads/users, only offers battery cache backup, and is all of ...
+> 
+> $10 USD cheaper than the category equivalent yet vastly superior LSI.
 
-Oh, yes!!! Thanx for your help. Have a good day. :)
+Does seem to be the case.
 
---001a113371b60042bb04f34fcf7c
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+> By some off chance you don't already know, LSI is the industry gold
+> standard RAID HBA.  They are the sole RAID HBA OEM board supplier to
+> Dell, IBM, Intel, Lenovo, Fujitsu/Siemens, etc, and their ASICs are used
+> by many others on their in house designs.  LSI's ASICs and firmware have
+> seen more Linux workloads of all shapes and sizes than all other
+> vendors' RAID HBAs combined.
 
-<div dir=3D"ltr"><div class=3D"gmail_extra">Hi Stefan,<br></div><div class=
-=3D"gmail_extra"><br><div class=3D"gmail_quote">On Wed, Feb 26, 2014 at 10:=
-04 PM, Stefan Ring <span dir=3D"ltr">&lt;<a href=3D"mailto:stefanrin@gmail.=
-com" target=3D"_blank">stefanrin@gmail.com</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"">&gt; =A0 =A0 =A0I am not sur=
-e is here the correct place to post this question. But I do<br>
-&gt; not know<br>
-&gt; mail list for xfsprogs.<br>
-<br>
-</div>I think that this one is the correct place.<br>
-<div class=3D""><br>
-&gt; =A0 =A0 =A0It seems it has been a looooooooog time since the last comm=
-it for<br>
-&gt; xfsprogs, about<br>
-&gt; 19 months. <a href=3D"http://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.g=
-it/" target=3D"_blank">http://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/<=
-/a><br>
-&gt; =A0 =A0 =A0Could anybody help to tell me where or who I can send my pa=
-tch about<br>
-&gt; xfsprogs<br>
-&gt; to?<br>
-<br>
-</div>Seems to have moved: <a href=3D"http://xfs.org/index.php/Getting_the_=
-latest_source_code" target=3D"_blank">http://xfs.org/index.php/Getting_the_=
-latest_source_code</a><br>
-</blockquote></div><br></div><div class=3D"gmail_extra">Oh, yes!!! Thanx fo=
-r your help. Have a good day. :)<br></div></div>
+I am aware; all our servers have LSI in them for boot arrays and
+whatnot.
 
---001a113371b60042bb04f34fcf7c--
+> Given all of the above, and that there are at least 3 other LSI boards
+> of superior performance, in the same price range for the past year, why
+> did you go with Areca?
 
+For better or worse, they're what we were able to get from our white box
+vendor.  It will, unfortunately, have to do for now.  I'll be sure to
+make a note for future expansion.
 
---===============3619760113459001759==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Until then, we'll just have to tread carefully.
+
+Thanks again for all of your help.
+--
+Morgan Hamill
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3619760113459001759==--
