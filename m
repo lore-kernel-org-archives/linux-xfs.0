@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 76A1F7F3F
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 10:22:52 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8ED107F3F
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 10:48:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4D3E8304043
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 08:22:48 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id d9gbkNs8QrACm1C4 for <xfs@oss.sgi.com>;
-	Wed, 26 Feb 2014 08:22:46 -0800 (PST)
-Message-ID: <530E14D4.9050601@sandeen.net>
-Date: Wed, 26 Feb 2014 10:22:44 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 571D08F8052
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 08:48:38 -0800 (PST)
+Date: Wed, 26 Feb 2014 11:48:28 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH v6] ext4: Add support FALLOC_FL_COLLAPSE_RANGE for
+	fallocate
+Message-ID: <20140226164827.GB11452@thunk.org>
+References: <1392908861-3563-1-git-send-email-linkinjeon@gmail.com>
+	<20140222170930.GE26637@thunk.org>
+	<CAKYAXd9vTbjTnJOQ1Y=pi4QJSYj41fWsQgRD3Fkufskez2W-YA@mail.gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfs_copy: band-aids for CRC filesystems
-References: <530D4B68.9090905@redhat.com>
-In-Reply-To: <530D4B68.9090905@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAKYAXd9vTbjTnJOQ1Y=pi4QJSYj41fWsQgRD3Fkufskez2W-YA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +28,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: jack@suse.cz, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, adilger.kernel@dilger.ca, mtk.manpages@gmail.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, viro@zeniv.linux.org.uk
 
-xfs_copy needs a fair bit of work for CRCs because it rewrites
-UUIDs by default, but this change will get it working properly
-with the "-d" (duplicate) option which keeps the same UUID.
+On Mon, Feb 24, 2014 at 10:22:10AM +0900, Namjae Jeon wrote:
+> >> +	ret = ext4_es_remove_extent(inode, punch_start,
+> >> +				    EXT_MAX_BLOCKS - punch_start - 1);
+> >> +	if (ret) {
+> >> +		up_write(&EXT4_I(inode)->i_data_sem);
+> >> +		goto out_stop;
+> >> +	}
+> >
+> > Doing this at first is probably a bad idea; you should do this at the
+> > end, and then completely invalidate the es cache for that inode.  That
+> > way, the right thing happens if you get an error in the middle
+> > releasing the boxes and shifting the extents:
+> Okay, I see.
 
-Accept the the CRC magic valid, change the ASSERT() to an error
-message and exit more gracefully, and don't
-even get started if we don't have the '-d' option.
+Actually, thinking about this some more, we do want to do this first,
+since if we error out, we do need to make sure the extent cache is
+flushed.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> If there is error in the middle of extent shifting, the hole will
+> present between the last shifted extent and the extent at which error
+> happen so this will be consistent state.
+> IMHO even if there is error in between the shift, filesystem will be
+> in consistent state.
+> Am I missing something?
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 9986fbf..f443568 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -684,6 +684,16 @@ main(int argc, char **argv)
- 	sb = &mbuf.m_sb;
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
- 
-+	/*
-+	 * For now, V5 superblock filesystems are not supported without -d;
-+	 * we do not have the infrastructure yet to fix CRCs when a new UUID
-+	 * is generated.
-+	 */
-+	if (xfs_sb_version_hascrc(sb) && !duplicate) {
-+		do_log(_("%s: Cannot yet copy V5 fs without '-d'\n"), progname);
-+		exit(1);
-+	}
-+
- 	mp = libxfs_mount(&mbuf, sb, xargs.ddev, xargs.logdev, xargs.rtdev, 0);
- 	if (mp == NULL) {
- 		do_log(_("%s: %s filesystem failed to initialize\n"
-@@ -957,7 +967,13 @@ main(int argc, char **argv)
- 				 ((char *)btree_buf.data +
- 				  pos - btree_buf.position);
- 
--			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
-+			if (be32_to_cpu(block->bb_magic) !=
-+			    (xfs_sb_version_hascrc(&mp->m_sb) ?
-+			     XFS_ABTB_CRC_MAGIC : XFS_ABTB_MAGIC)) {
-+				do_log(_("Bad btree magic 0x%x\n"),
-+				        be32_to_cpu(block->bb_magic));
-+				exit(1);
-+			}
- 
- 			if (be16_to_cpu(block->bb_level) == 0)
- 				break;
+No, I was wrong about that; you're right.  The file will be in an
+inconsistent statement, which will probably be highly confusing for
+the application, but the file system will be fine.
 
+So I withdraw my complaints.  I'll do a bit more testing, but so far
+the patch looks fine to me.  Thanks for your reply and your work!
+
+					- Ted
 
 _______________________________________________
 xfs mailing list
