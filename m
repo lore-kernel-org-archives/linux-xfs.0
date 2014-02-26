@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 511177F37
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 00:02:35 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id B256B7F37
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 00:07:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 34ED3304089
-	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 22:02:32 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9041E304075
+	for <xfs@oss.sgi.com>; Tue, 25 Feb 2014 22:07:38 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	l1iJbL0BSfnFhfxG for <xfs@oss.sgi.com>;
-	Tue, 25 Feb 2014 22:02:30 -0800 (PST)
-Date: Wed, 26 Feb 2014 17:02:26 +1100
+	Y3fdGfns61MNmT8U for <xfs@oss.sgi.com>;
+	Tue, 25 Feb 2014 22:07:36 -0800 (PST)
+Date: Wed, 26 Feb 2014 17:07:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_copy: accept XFS_ABTB_CRC_MAGIC
-Message-ID: <20140226060226.GS13647@dastard>
-References: <530D4B68.9090905@redhat.com>
-	<20140226020737.GA21877@infradead.org>
+Subject: Re: [PATCH 5/6] xfstests: Define fallocate flags locally in fsx
+Message-ID: <20140226060733.GT13647@dastard>
+References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
+	<1393355728-12056-5-git-send-email-lczerner@redhat.com>
+	<20140225203922.GC13647@dastard>
+	<20140225215616.GA29752@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140226020737.GA21877@infradead.org>
+In-Reply-To: <20140225215616.GA29752@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,32 +33,53 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 25, 2014 at 06:07:37PM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 25, 2014 at 08:03:20PM -0600, Eric Sandeen wrote:
-> > xfs_copy needs a fair bit of work for CRCs because it rewrites
-> > UUIDs by default, but this change will get it working properly
-> > with the "-d" (duplicate) option which keeps the same UUID.
+On Tue, Feb 25, 2014 at 01:56:16PM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 26, 2014 at 07:39:22AM +1100, Dave Chinner wrote:
+> > > index b3c30db..331257e 100644
+> > > --- a/ltp/fsx.c
+> > > +++ b/ltp/fsx.c
+> > > @@ -35,8 +35,13 @@
+> > >  #endif
+> > >  #ifdef FALLOCATE
+> > >  #include <linux/falloc.h>
+> > > +#ifndef FALLOC_FL_PUNCH_HOLE
+> > > +#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
+> > > +#endif
+> > > +#ifndef FALLOC_FL_ZERO_RANGE
+> > > +#define FALLOC_FL_ZERO_RANGE    0x10 /* zeroes range */
+> > > +#endif
+> > >  #endif
+> > 
+> > This pattern is appearing all over the place in xfstests now.  I'd
+> > suggest that this should really be handled by autoconf,
+> > include/config.h and src/globals.h....
 > 
-> I don't think ASSERTs for user supplied data are a good idea, this
-> should be some real error handling.
-> 
-> > However, I wonder if we should fail CRC filesystems outright
-> > for now if -d isn't specified, because it will invalidate every
-> > CRC and generally make a mess of things...
-> 
-> Yeah, for now it probably should be rejected.
-> 
-> It would also be useful to have a list of such issues in an README.v5
-> or TODO.v5 file in the xfsprogs tree.
+> Can we handle this nicely using autoconf, especially in the case of O_
+> flags that might be different for different architectures?
 
-Well, I thought we had just about got everything except for the
-remaining repair cleanups and the logprint failure in xfs/295 up
-until Eric mentioned UUIDs and xfs_copy/xfs_admin yesterday on IIRC.
-I can't think of anything else that is needs to be finished for a
-userspace release - I think that covers all the remaining xfstests
-failures I'm seeing on crc enabled filesystems....
+I think so, because config.h is generated from config.h.in and
+ends up looking like:
+
+#define HAVE_SOME_FUNCTION 1
+
+src/globals.h is controlled directly by us, and ends up looking
+like:
+
+#ifdef HAVE_SOME_FUNCTION
+#include <header_for_some_function.h>
+#endif
+
+If we add all the defines that may be missing that same ifdef
+section, and make sure that all code includes globals.h, then
+all the code will have the "HAVE_SOME_FUNCTION" defines and the
+appropriate header files and definitions included.
+
+> Either way having a single header for the various flags that might not
+> be present in the system headers sounds like a good plan.
+
+*nod*
 
 Cheers,
 
