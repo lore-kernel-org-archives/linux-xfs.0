@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D59387F56
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:51:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 529A1AC008
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9FE157F56
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:51:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 629088F8039
 	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:51:39 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	B1HqnOByetyYYBYw for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 01:51:37 -0800 (PST)
+	AMl4EmNMVR9LFQ8e for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 01:51:36 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WIxcb-0007by-CW
+	(envelope-from <dave@fromorbit.com>) id 1WIxcb-0007bv-Bz
 	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:51:17 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WIxcb-0007sW-BY
+	(envelope-from <dave@disappointment.disaster>) id 1WIxcb-0007sR-Ay
 	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:51:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/10] repair: prefetch runs too far ahead
-Date: Thu, 27 Feb 2014 20:51:14 +1100
-Message-Id: <1393494675-30194-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/10] repair: factor out threading setup code
+Date: Thu, 27 Feb 2014 20:51:13 +1100
+Message-Id: <1393494675-30194-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393494675-30194-1-git-send-email-david@fromorbit.com>
 References: <1393494675-30194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,158 +39,353 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When trying to work out why a non-crc filesystem took 1m57 to repair
-and the same CRC enabled filesystem took 11m35 to repair, I noticed
-that the was way to much CRC checking going on. Prefetched buffers
-should not be being CRCed, yet shortly after the starting this began
-to happen. perf profiling also showed up an awful lot of time doing
-buffer cache lookups, and the cache profile output indicated that
-the hit rate was way below 3%. IOWs, the readahead was getting so
-far ahead of the processing that it was thrashing the cache.
-
-That there is a difference in processing rate between CRC and
-non-CRC filesystems is not surprising. What is surprising is the
-readahead behaviour - it basically just keeps reading ahead until it
-has read everything on an AG, and then it goes on to the next AG,
-and reads everything on it, and then goes on to the next AG,....
-
-This goes on until it pushes all the buffers the processing threads
-need out of the cache, and suddening they start re-reading from disk
-with the various CRC checking verifiers enabled, and we end up going
--really- slow. Yes, threading made up for it a bit, but it's just
-wrong.
-
-Basically, the code assumes that IO is going to be slower than
-processing, so it doesn't throttle prefetch across AGs to slow
-down prefetch to match the processing rate.
-
-So, to fix this, don't let a prefetch thread get more than a single
-AG ahead of it's processing thread, just like occurs for single
-threaded (i.e. -o ag_stride=-1) operation.
+The same code is repeated in different places to set up
+multithreaded prefetching. This can all be factored into a single
+implementation.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/prefetch.c | 79 ++++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 61 insertions(+), 18 deletions(-)
+ repair/dinode.h   | 15 ++++++------
+ repair/phase3.c   | 40 +++----------------------------
+ repair/phase4.c   | 48 +++----------------------------------
+ repair/phase6.c   | 22 ++++-------------
+ repair/prefetch.c | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/prefetch.h | 10 ++++++++
+ 6 files changed, 98 insertions(+), 108 deletions(-)
 
+diff --git a/repair/dinode.h b/repair/dinode.h
+index 7521521..5ee51ca 100644
+--- a/repair/dinode.h
++++ b/repair/dinode.h
+@@ -18,9 +18,8 @@
+ #ifndef _XR_DINODE_H
+ #define _XR_DINODE_H
+ 
+-#include "prefetch.h"
+-
+ struct blkmap;
++struct prefetch_args;
+ 
+ int
+ verify_agbno(xfs_mount_t	*mp,
+@@ -103,12 +102,12 @@ int
+ process_uncertain_aginodes(xfs_mount_t		*mp,
+ 				xfs_agnumber_t	agno);
+ void
+-process_aginodes(xfs_mount_t	*mp,
+-		prefetch_args_t	*pf_args,
+-		xfs_agnumber_t	agno,
+-		int		check_dirs,
+-		int		check_dups,
+-		int		extra_attr_check);
++process_aginodes(xfs_mount_t		*mp,
++		struct prefetch_args	*pf_args,
++		xfs_agnumber_t		agno,
++		int			check_dirs,
++		int			check_dups,
++		int			extra_attr_check);
+ 
+ void
+ check_uncertain_aginodes(xfs_mount_t	*mp,
+diff --git a/repair/phase3.c b/repair/phase3.c
+index 3e43938..213d368 100644
+--- a/repair/phase3.c
++++ b/repair/phase3.c
+@@ -17,6 +17,8 @@
+  */
+ 
+ #include <libxfs.h>
++#include "threads.h"
++#include "prefetch.h"
+ #include "avl.h"
+ #include "globals.h"
+ #include "agheader.h"
+@@ -24,9 +26,7 @@
+ #include "protos.h"
+ #include "err_protos.h"
+ #include "dinode.h"
+-#include "threads.h"
+ #include "progress.h"
+-#include "prefetch.h"
+ 
+ static void
+ process_agi_unlinked(
+@@ -82,41 +82,7 @@ static void
+ process_ags(
+ 	xfs_mount_t		*mp)
+ {
+-	int 			i, j;
+-	xfs_agnumber_t 		agno;
+-	work_queue_t		*queues;
+-	prefetch_args_t		*pf_args[2];
+-
+-	queues = malloc(thread_count * sizeof(work_queue_t));
+-
+-	if (ag_stride) {
+-		/*
+-		 * create one worker thread for each segment of the volume
+-		 */
+-		for (i = 0, agno = 0; i < thread_count; i++) {
+-			create_work_queue(&queues[i], mp, 1);
+-			pf_args[0] = NULL;
+-			for (j = 0; j < ag_stride && agno < mp->m_sb.sb_agcount;
+-					j++, agno++) {
+-				pf_args[0] = start_inode_prefetch(agno, 0, pf_args[0]);
+-				queue_work(&queues[i], process_ag_func, agno, pf_args[0]);
+-			}
+-		}
+-		/*
+-		 * wait for workers to complete
+-		 */
+-		for (i = 0; i < thread_count; i++)
+-			destroy_work_queue(&queues[i]);
+-	} else {
+-		queues[0].mp = mp;
+-		pf_args[0] = start_inode_prefetch(0, 0, NULL);
+-		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+-			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 0,
+-					pf_args[i & 1]);
+-			process_ag_func(&queues[0], i, pf_args[i & 1]);
+-		}
+-	}
+-	free(queues);
++	do_inode_prefetch(mp, ag_stride, process_ag_func, false, false);
+ }
+ 
+ void
+diff --git a/repair/phase4.c b/repair/phase4.c
+index a822aaa..189eeb9 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -17,6 +17,8 @@
+  */
+ 
+ #include <libxfs.h>
++#include "threads.h"
++#include "prefetch.h"
+ #include "avl.h"
+ #include "globals.h"
+ #include "agheader.h"
+@@ -27,9 +29,7 @@
+ #include "bmap.h"
+ #include "versions.h"
+ #include "dir2.h"
+-#include "threads.h"
+ #include "progress.h"
+-#include "prefetch.h"
+ 
+ 
+ /*
+@@ -150,49 +150,7 @@ static void
+ process_ags(
+ 	xfs_mount_t		*mp)
+ {
+-	int 			i, j;
+-	xfs_agnumber_t 		agno;
+-	work_queue_t		*queues;
+-	prefetch_args_t		*pf_args[2];
+-
+-	queues = malloc(thread_count * sizeof(work_queue_t));
+-
+-	if (!libxfs_bcache_overflowed()) {
+-		queues[0].mp = mp;
+-		create_work_queue(&queues[0], mp, libxfs_nproc());
+-		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+-			queue_work(&queues[0], process_ag_func, i, NULL);
+-		destroy_work_queue(&queues[0]);
+-	} else {
+-		if (ag_stride) {
+-			/*
+-			 * create one worker thread for each segment of the volume
+-			 */
+-			for (i = 0, agno = 0; i < thread_count; i++) {
+-				create_work_queue(&queues[i], mp, 1);
+-				pf_args[0] = NULL;
+-				for (j = 0; j < ag_stride && agno < mp->m_sb.sb_agcount;
+-						j++, agno++) {
+-					pf_args[0] = start_inode_prefetch(agno, 0, pf_args[0]);
+-					queue_work(&queues[i], process_ag_func, agno, pf_args[0]);
+-				}
+-			}
+-			/*
+-			 * wait for workers to complete
+-			 */
+-			for (i = 0; i < thread_count; i++)
+-				destroy_work_queue(&queues[i]);
+-		} else {
+-			queues[0].mp = mp;
+-			pf_args[0] = start_inode_prefetch(0, 0, NULL);
+-			for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+-				pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+-						0, pf_args[i & 1]);
+-				process_ag_func(&queues[0], i, pf_args[i & 1]);
+-			}
+-		}
+-	}
+-	free(queues);
++	do_inode_prefetch(mp, ag_stride, process_ag_func, true, false);
+ }
+ 
+ 
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 63359d1..446f3ee 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -17,6 +17,8 @@
+  */
+ 
+ #include <libxfs.h>
++#include "threads.h"
++#include "prefetch.h"
+ #include "avl.h"
+ #include "globals.h"
+ #include "agheader.h"
+@@ -25,9 +27,7 @@
+ #include "protos.h"
+ #include "err_protos.h"
+ #include "dinode.h"
+-#include "prefetch.h"
+ #include "progress.h"
+-#include "threads.h"
+ #include "versions.h"
+ 
+ static struct cred		zerocr;
+@@ -3039,23 +3039,9 @@ update_missing_dotdot_entries(
+ 
+ static void
+ traverse_ags(
+-	xfs_mount_t 		*mp)
++	struct xfs_mount	*mp)
+ {
+-	int			i;
+-	work_queue_t		queue;
+-	prefetch_args_t		*pf_args[2];
+-
+-	/*
+-	 * we always do prefetch for phase 6 as it will fill in the gaps
+-	 * not read during phase 3 prefetch.
+-	 */
+-	queue.mp = mp;
+-	pf_args[0] = start_inode_prefetch(0, 1, NULL);
+-	for (i = 0; i < glob_agcount; i++) {
+-		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+-				pf_args[i & 1]);
+-		traverse_function(&queue, i, pf_args[i & 1]);
+-	}
++	do_inode_prefetch(mp, 0, traverse_function, false, true);
+ }
+ 
+ void
 diff --git a/repair/prefetch.c b/repair/prefetch.c
-index aee6342..7d3efde 100644
+index 946e822..aee6342 100644
 --- a/repair/prefetch.c
 +++ b/repair/prefetch.c
-@@ -866,6 +866,48 @@ start_inode_prefetch(
+@@ -866,6 +866,77 @@ start_inode_prefetch(
  	return args;
  }
  
++/*
++ * Do inode prefetch in the most optimal way for the context under which repair
++ * has been run.
++ */
 +void
-+prefetch_ag_range(
-+	struct work_queue	*work,
-+	xfs_agnumber_t		start_ag,
-+	xfs_agnumber_t		end_ag,
-+	bool			dirs_only,
++do_inode_prefetch(
++	struct xfs_mount	*mp,
++	int			stride,
 +	void			(*func)(struct work_queue *,
-+					xfs_agnumber_t, void *))
++					xfs_agnumber_t, void *),
++	bool			check_cache,
++	bool			dirs_only)
 +{
-+	int			i;
++	int			i, j;
++	xfs_agnumber_t		agno;
++	struct work_queue	queue;
++	struct work_queue	*queues;
 +	struct prefetch_args	*pf_args[2];
 +
-+	pf_args[start_ag & 1] = start_inode_prefetch(start_ag, dirs_only, NULL);
-+	for (i = start_ag; i < end_ag; i++) {
-+		/* Don't prefetch end_ag */
-+		if (i + 1 < end_ag)
-+			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
-+						dirs_only, pf_args[i & 1]);
-+		func(work, i, pf_args[i & 1]);
++	/*
++	 * If the previous phases of repair have not overflowed the buffer
++	 * cache, then we don't need to re-read any of the metadata in the
++	 * filesystem - it's all in the cache. In that case, run a thread per
++	 * CPU to maximise parallelism of the queue to be processed.
++	 */
++	if (check_cache && !libxfs_bcache_overflowed()) {
++		queue.mp = mp;
++		create_work_queue(&queue, mp, libxfs_nproc());
++		for (i = 0; i < mp->m_sb.sb_agcount; i++)
++			queue_work(&queue, func, i, NULL);
++		destroy_work_queue(&queue);
++		return;
 +	}
++
++	/*
++	 * single threaded behaviour - single prefetch thread, processed
++	 * directly after each AG is queued.
++	 */
++	if (!stride) {
++		queue.mp = mp;
++		pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
++		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
++					dirs_only, pf_args[i & 1]);
++			func(&queue, i, pf_args[i & 1]);
++		}
++		return;
++	}
++
++	/*
++	 * create one worker thread for each segment of the volume
++	 */
++	queues = malloc(thread_count * sizeof(work_queue_t));
++	for (i = 0, agno = 0; i < thread_count; i++) {
++		create_work_queue(&queues[i], mp, 1);
++		pf_args[0] = NULL;
++		for (j = 0; j < stride && agno < mp->m_sb.sb_agcount;
++				j++, agno++) {
++			pf_args[0] = start_inode_prefetch(agno, dirs_only,
++							  pf_args[0]);
++			queue_work(&queues[i], func, agno, pf_args[0]);
++		}
++	}
++	/*
++	 * wait for workers to complete
++	 */
++	for (i = 0; i < thread_count; i++)
++		destroy_work_queue(&queues[i]);
++	free(queues);
 +}
 +
-+struct pf_work_args {
-+	xfs_agnumber_t	start_ag;
-+	xfs_agnumber_t	end_ag;
-+	bool		dirs_only;
-+	void		(*func)(struct work_queue *, xfs_agnumber_t, void *);
-+};
-+
-+static void
-+prefetch_ag_range_work(
-+	struct work_queue	*work,
-+	xfs_agnumber_t		unused,
-+	void			*args)
-+{
-+	struct pf_work_args *wargs = args;
-+
-+	prefetch_ag_range(work, wargs->start_ag, wargs->end_ag, 
-+			  wargs->dirs_only, wargs->func);
-+	free(args);
-+}
-+
- /*
-  * Do inode prefetch in the most optimal way for the context under which repair
-  * has been run.
-@@ -879,11 +921,9 @@ do_inode_prefetch(
- 	bool			check_cache,
- 	bool			dirs_only)
- {
--	int			i, j;
--	xfs_agnumber_t		agno;
-+	int			i;
- 	struct work_queue	queue;
- 	struct work_queue	*queues;
--	struct prefetch_args	*pf_args[2];
+ void
+ wait_for_inode_prefetch(
+ 	prefetch_args_t		*args)
+diff --git a/repair/prefetch.h b/repair/prefetch.h
+index 44a406c..b837752 100644
+--- a/repair/prefetch.h
++++ b/repair/prefetch.h
+@@ -4,6 +4,7 @@
+ #include <semaphore.h>
+ #include "incore.h"
  
- 	/*
- 	 * If the previous phases of repair have not overflowed the buffer
-@@ -906,12 +946,8 @@ do_inode_prefetch(
- 	 */
- 	if (!stride) {
- 		queue.mp = mp;
--		pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
--		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
--			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
--					dirs_only, pf_args[i & 1]);
--			func(&queue, i, pf_args[i & 1]);
--		}
-+		prefetch_ag_range(&queue, 0, mp->m_sb.sb_agcount,
-+				  dirs_only, func);
- 		return;
- 	}
++struct work_queue;
  
-@@ -919,20 +955,27 @@ do_inode_prefetch(
- 	 * create one worker thread for each segment of the volume
- 	 */
- 	queues = malloc(thread_count * sizeof(work_queue_t));
--	for (i = 0, agno = 0; i < thread_count; i++) {
-+	for (i = 0; i < thread_count; i++) {
-+		struct pf_work_args *wargs;
+ extern int 	do_prefetch;
+ 
+@@ -41,6 +42,15 @@ start_inode_prefetch(
+ 	prefetch_args_t		*prev_args);
+ 
+ void
++do_inode_prefetch(
++	struct xfs_mount	*mp,
++	int			stride,
++	void			(*func)(struct work_queue *,
++					xfs_agnumber_t, void *),
++	bool			check_cache,
++	bool			dirs_only);
 +
-+		wargs = malloc(sizeof(struct pf_work_args));
-+		wargs->start_ag = i * stride;
-+		wargs->end_ag = min((i + 1) * stride,
-+				    mp->m_sb.sb_agcount);
-+		wargs->dirs_only = dirs_only;
-+		wargs->func = func;
-+
- 		create_work_queue(&queues[i], mp, 1);
--		pf_args[0] = NULL;
--		for (j = 0; j < stride && agno < mp->m_sb.sb_agcount;
--				j++, agno++) {
--			pf_args[0] = start_inode_prefetch(agno, dirs_only,
--							  pf_args[0]);
--			queue_work(&queues[i], func, agno, pf_args[0]);
--		}
-+		queue_work(&queues[i], prefetch_ag_range_work, 0, wargs);
-+
-+		if (wargs->end_ag >= mp->m_sb.sb_agcount)
-+			break;
- 	}
-+
- 	/*
- 	 * wait for workers to complete
- 	 */
--	for (i = 0; i < thread_count; i++)
-+	for (; i >= 0; i--)
- 		destroy_work_queue(&queues[i]);
- 	free(queues);
- }
++void
+ wait_for_inode_prefetch(
+ 	prefetch_args_t		*args);
+ 
 -- 
 1.8.4.rc3
 
