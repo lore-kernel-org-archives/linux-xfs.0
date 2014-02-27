@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A07BB7F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 13:38:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CB61304053
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 11:38:44 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id BC7jBc4XwxY98oRp
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 11:38:42 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: XFS on Fedora i686, armv7hl
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <530F548C.9060302@sandeen.net>
-Date: Thu, 27 Feb 2014 12:38:39 -0700
-Message-Id: <DEA54534-9D7E-4957-9DB6-A402C077C00C@colorremedies.com>
-References: <8A28EF88-012E-4036-BDB6-E76B1CC569A7@colorremedies.com>
-	<530F548C.9060302@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BEB6C7F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 13:40:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9F67C8F8052
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 11:40:41 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	41n0jOPoVsh9lXkm for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 11:40:39 -0800 (PST)
+Date: Fri, 28 Feb 2014 06:40:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] mkfs: proto file creation does not set ftype correctly
+Message-ID: <20140227194037.GC30131@dastard>
+References: <1393494344-30056-1-git-send-email-david@fromorbit.com>
+	<1393494344-30056-3-git-send-email-david@fromorbit.com>
+	<530F4907.5010808@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <530F4907.5010808@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +32,51 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: arm@lists.fedoraproject.org, Test Fedora <test@lists.fedoraproject.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-
-On Feb 27, 2014, at 8:06 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
-
-> On 2/26/14, 11:37 PM, Chris Murphy wrote:
->> Hi,
->> 
->> Fedora is considering XFS as their default file system. They support
->> three primary architectures: x86_64, i686, and armv7hl.  Do XFS devs
->> have any reservations about XFS as a default file system on either
->> i686, or arm?
+On Thu, Feb 27, 2014 at 08:17:43AM -0600, Eric Sandeen wrote:
+> On 2/27/14, 3:45 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Hence running xfs_repair on a ftype enable filesystem that has
+> > contents created by a proto file will throw warnings on mismatched
+> > ftype entries and correct them. xfs/031 fails due to this problem.
+> > 
+> > Fix it by settin gup the xname structure with the correct type
 > 
-> As Dave said, we rely on others to do ARM testing for the most part,
-> though I've certainly jumped in and debugged some issues from time
-> to time.
+> "setting up"
 > 
-> It'd be super if Fedora could run the xfstests test suite on arm
-> as part of QE.  I'd be more than happy to help get that started
-> if people are interested.
+> > fields.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> huh, surprised that hung out there for so long ;)
 
-I don't know that Fedora QA has the resources to do this, but I'll cc the Fedora test@ (QA) arm@ lists. If these are highly automatable tests it might be possible, if they have the hardware. More likely I think it's that we need some ARM community folks to look at splitting up some of this work.
+Just shows how long it took my backlog down far enough to deal with
+non-critical xfstests failures on CRC enabled filesystems...
 
-I'm not sure yet what concerns the ARM group might have with XFS either as this hasn't been decided, but the Fedora Server product working group is slightly leaning toward XFS by default. Performance and CPU hit wise on x86_64, XFS seems to match up well with ext4 and maybe even a bit better ratio of throughput/CPUtime for booting workload (systemd is parallel!) so if were the same on ARM XFS could work out slightly better for them.
+> I guess the root inode is handled by core mkfs code, right?
+> (around line 544)
 
+Yes - and the root inode is indexed in a directory (it's indexed by
+the superblock), so there's not ftype entry to be set up.
 
-Chris Murphy
+> And I notice that "r" filetypes aren't documented in the
+> manpage but that's a different issue.
+
+Patch? ;)
+
+> As long as I'm right about the root inode,
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
