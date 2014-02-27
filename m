@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7F37929DF7
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 05:57:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2569530408B
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:57:01 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 56F1829DF7
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 06:03:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C370304043
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 04:03:16 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XGlPqUsCuwRoow46 for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:57:00 -0800 (PST)
-Date: Thu, 27 Feb 2014 12:56:54 +0100 (CET)
+	cuda.sgi.com with ESMTP id j8H7kS9zkvrzjTNs for
+	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 04:03:15 -0800 (PST)
+Date: Thu, 27 Feb 2014 13:03:09 +0100 (CET)
 From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 5/6 v2] ext4: Introduce FALLOC_FL_ZERO_RANGE flag for
-	fallocate
-In-Reply-To: <CAGW2f1FcoMJpFv=7xqPB4+R3-yOqmn89CnAZAJKif_3a3ETcPg@mail.gmail.com>
-Message-ID: <alpine.LFD.2.00.1402271249570.2247@localhost.localdomain>
-References: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
-	<1393355679-11160-6-git-send-email-lczerner@redhat.com>
-	<CAGW2f1G_HjhVXc9jyNEAaX8VUaZov7qaRVuj+KvnbbqvtL0k3g@mail.gmail.com>
-	<CAGW2f1FcoMJpFv=7xqPB4+R3-yOqmn89CnAZAJKif_3a3ETcPg@mail.gmail.com>
+Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
+	range
+In-Reply-To: <20140226220106.GC29907@dastard>
+Message-ID: <alpine.LFD.2.00.1402271257590.2247@localhost.localdomain>
+References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
+	<1393355728-12056-6-git-send-email-lczerner@redhat.com>
+	<20140225205349.GD13647@dastard>
+	<alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
+	<20140225215011.GF13647@dastard>
+	<alpine.LFD.2.00.1402261520070.2243@localhost.localdomain>
+	<20140226220106.GC29907@dastard>
 MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-458918293-1393502592=:2247"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,90 +31,172 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: jon ernst <jonernst07@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, "linux-ext4@vger.kernel.org List" <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, 26 Feb 2014, jon ernst wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> Date: Wed, 26 Feb 2014 23:41:15 -0500
-> From: jon ernst <jonernst07@gmail.com>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: "linux-ext4@vger.kernel.org List" <linux-ext4@vger.kernel.org>,
->     Theodore Ts'o <tytso@mit.edu>, linux-fsdevel@vger.kernel.org,
->     xfs@oss.sgi.com
-> Subject: Re: [PATCH 5/6 v2] ext4: Introduce FALLOC_FL_ZERO_RANGE flag for
->     fallocate
+--8323328-458918293-1393502592=:2247
+Content-Type: TEXT/PLAIN; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+
+On Thu, 27 Feb 2014, Dave Chinner wrote:
+
+> Date: Thu, 27 Feb 2014 09:01:06 +1100
+> From: Dave Chinner <david@fromorbit.com>
+> To: Lukáš Czerner <lczerner@redhat.com>
+> Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+> Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
+>     range
 > 
-> On Wed, Feb 26, 2014 at 1:00 AM, jon ernst <jonernst07@gmail.com> wrote:
-> > On Tue, Feb 25, 2014 at 2:14 PM, Lukas Czerner <lczerner@redhat.com> wrote:
-> >> Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-> >> functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
-> >>
-> >> It can be used to convert a range of file to zeros preferably without
-> >> issuing data IO. Blocks should be preallocated for the regions that span
-> >> holes in the file, and the entire range is preferable converted to
-> >> unwritten extents
-> >>
-> >> This can be also used to preallocate blocks past EOF in the same way as
-> >> with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-> >> size to remain the same.
-> >>
-> >> Also add appropriate tracepoints.
-> >>
-> >> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> >> ---
-> >>  fs/ext4/ext4.h              |   2 +
-> >>  fs/ext4/extents.c           | 270 +++++++++++++++++++++++++++++++++++++++++---
-> >>  fs/ext4/inode.c             |  17 ++-
-> >>  include/trace/events/ext4.h |  64 +++++------
+> On Wed, Feb 26, 2014 at 03:24:18PM +0100, Lukáš Czerner wrote:
+> > On Wed, 26 Feb 2014, Dave Chinner wrote:
+> > 
+> > > Date: Wed, 26 Feb 2014 08:50:11 +1100
+> > > From: Dave Chinner <david@fromorbit.com>
+> > > To: Lukáš Czerner <lczerner@redhat.com>
+> > > Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+> > > Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
+> > >     range
+> > > 
+> > > On Tue, Feb 25, 2014 at 10:01:06PM +0100, Lukáš Czerner wrote:
+> > > > On Wed, 26 Feb 2014, Dave Chinner wrote:
+> > > > 
+> > > > > Date: Wed, 26 Feb 2014 07:53:49 +1100
+> > > > > From: Dave Chinner <david@fromorbit.com>
+> > > > > To: Lukas Czerner <lczerner@redhat.com>
+> > > > > Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+> > > > > Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
+> > > > >     range
+> > > > > 
+> > > > > On Tue, Feb 25, 2014 at 08:15:28PM +0100, Lukas Czerner wrote:
+> > > > > > This is copy of xfs/242. However it's better to make it file system
+> > > > > > specific because the range can be zeroes either directly by writing
+> > > > > > zeroes, or converting to unwritten extent, so the actual result might
+> > > > > > differ from file system to file system.
+> > > > > 
+> > > > > You could say the same thing about preallocation using unwritten
+> > > > > extents. Yet, funnily enough, we have generic tests for them because
+> > > > > all filesystems currently use unwritten extents for preallocation
+> > > > > and behave identically....
+> > > > > 
+> > > > > This test is no different - all filesystems currently use unwritten
+> > > > > extents, and so this test should be generic because all existing
+> > > > > filesystems *should* behave the same.
+> > > > > 
+> > > > > When we get a filesystem that zeros rather uses unwritten extents,
+> > > > > we can add a new *generic* test that tests for zeroed data extents
+> > > > > rather than unwritten extents. All that we will need is a method of
+> > > > > checking what behaviour the filesystem has and adding that to a
+> > > > > _requires directive to ensure the correct generic fallocate tests
+> > > > > are run...
+> > > > 
+> > > > Currently xfs/242 fails on xfs for me
+> > > 
+> > > Really? Where's the bug report? I haven't seen a failure on xfs/242
+> > > on any of my test machines for at least a year, even on 1k block
+> > > size filesystems...
+> > > 
+> > > $ sudo ./check xfs/242
+> > > FSTYP         -- xfs (debug)
+> > > PLATFORM      -- Linux/x86_64 test2 3.14.0-rc3-dgc+
+> > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
+> > > MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+> > > 
+> > > xfs/242 1s ... 0s
+> > > Ran: xfs/242
+> > > Passed all 1 tests
+> > > $
+> > 
+> > Here it is.
+> > 
+> > xfs/242 fails on ppc64 with latest linus tree
 > 
-> >>  static int
-> >> +ext4_ext_convert_initialized_extent(handle_t *handle, struct inode *inode,
-> >> +                       struct ext4_map_blocks *map,
-> >> +                       struct ext4_ext_path *path, int flags,
-> >> +                       unsigned int allocated, ext4_fsblk_t newblock)
-> >> +{
-> >> +       int ret = 0;
-> >> +       int err = 0;
-> >> +
-> >> +       /*
-> >> +        * Make sure that the extent is no bigger than we support with
-> >> +        * uninitialized extent
-> >> +        */
-> >> +       if (map->m_len > EXT_UNINIT_MAX_LEN)
-> >> +               map->m_len = EXT_UNINIT_MAX_LEN / 2;
-> >
->  Pardon my possible dumb question. Why do you use
-> "EXT_UNINIT_MAX_LEN/ 2;" here instead of "EXT_UNINIT_MAX_LEN"
->  I don't see the reason why we can't use EXT_UNINIT_MAX_LEN here.
+> OK, that's a different kettle of fish. It's using 64k pages, right?
+
+64k pages, yes.
+
 > 
+> > # uname -a
+> > Linux ibm-p740-01-lp4.rhts.eng.bos.redhat.com 3.14.0-rc4+ #1 SMP Wed
+> > Feb 26 08:59:48 EST 2014 ppc64 ppc64 ppc64 GNU/Linux
+> > 
+> > # ./check xfs/242
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/ppc64 ibm-p740-01-lp4 3.14.0-rc4+
+> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/loop1 /mnt/test2
+> > 
+> > xfs/242  - output mismatch (see /root/xfstests/results//xfs/242.out.bad)
+> >     --- tests/xfs/242.out       2014-02-26 05:51:16.602579462 -0500
+> >     +++ /root/xfstests/results//xfs/242.out.bad 2014-02-26 09:20:55.585396040 -0500
+> >     @@ -1,76 +1,71 @@
+> >      QA output created by 242
+> >         1. into a hole
+> >      0: [0..7]: hole
+> >     -1: [8..23]: unwritten
+> >     +1: [8..23]: data
+> >      2: [24..39]: hole
+> >      daa100df6e6711906b61c9ab5aa16032
 > 
-> (resend, Ping on this question, thank you!)
+> So the data is correct, but the range got zeroes written to it
+> rather than an unwritten extent.
+> 
+> >     (Run 'diff -u tests/xfs/242.out /root/xfstests/results//xfs/242.out.bad'  to see the entire diff)
+> > Ran: xfs/242
+> > Failures: xfs/242
+> > Failed 1 of 1 tests
+> > 
+> > 
+> > Here is 242.out.bad
+> 
+> The diff would have been better.
+> 
+> /me goes off to diff the output
+> 
+> Yeah, ok, the data in all the files is correct - the md5sums all
+> match. What's different? Just about all unwritten extents are now
+> written (i.e. data) or contain some portion of written extents.
+> 
+> So, ZERO_RANGE has the following size threshold for converting
+> blocks to unwritten extents vs just zeroing them:
+> 
+> 	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+> 
+> So if this is a 64k page size machine, it's going to have different
+> extent layout compared to a 4k page size machine. The file data will
+> still be the same, the difference will be zeroed blocks instead of
+> unwritten blocks, and that's exactly what we see.
+> 
+> IOWs, the result in terms of data the application sees is correct,
+> just the extent layout representing that zeroed data is different.
 
-Wow, that's an early ping :) I am sorry to disappoint you, my answer
-is not going to be that exciting :)
-
-
-Yes, we can just use EXT_UNINIT_MAX_LEN here. But
-EXT_UNINIT_MAX_LEN/2 would make it much more evenly spread out.
-
-I do not think there is any real world advantage to this and the
-behaviour should be the same in both cases.
+Ok, so that's yet another difference between xfs and ext4 code which
+makes having generic test even more complicated. So as I said before
+I'll make the generic test (using _filter_hole_fiemap) and then ext4
+specific test as well to really make sure that the extent
+manipulation is right.
 
 Thanks!
 -Lukas
 
-
 > 
-> Thanks!
->  Jon
+> Cheers,
 > 
+> Dave.
+> 
+--8323328-458918293-1393502592=:2247
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--8323328-458918293-1393502592=:2247--
