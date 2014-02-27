@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CC7E529DF8
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 23:38:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 57F3DAC003
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 21:38:08 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id LTTl46Ip2VtqTw2U
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 26 Feb 2014 21:38:00 -0800 (PST)
-Received: from c-50-183-15-223.hsd1.co.comcast.net ([50.183.15.223]:60389
-	helo=[192.168.1.145])
-	by slmp-550-94.slc.westdc.net with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.82) (envelope-from <lists@colorremedies.com>)
-	id 1WItfU-003zNR-G4
-	for xfs@oss.sgi.com; Wed, 26 Feb 2014 22:38:00 -0700
-From: Chris Murphy <lists@colorremedies.com>
-Subject: XFS on Fedora i686, armv7hl
-Message-Id: <8A28EF88-012E-4036-BDB6-E76B1CC569A7@colorremedies.com>
-Date: Wed, 26 Feb 2014 22:37:59 -0700
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 837E47F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 00:42:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6B4148F8037
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 22:42:37 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	675238xQEACfvQCs for <xfs@oss.sgi.com>;
+	Wed, 26 Feb 2014 22:42:35 -0800 (PST)
+Date: Thu, 27 Feb 2014 17:42:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] XFS: fix the description of 'allocsize=' mount option
+Message-ID: <20140227064221.GJ29907@dastard>
+References: <530AE0E5.1090707@jp.fujitsu.com> <20140224120629.GN4317@dastard>
+	<530D6FE3.2040406@jp.fujitsu.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <530D6FE3.2040406@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: sat <takeuchi_satoru@jp.fujitsu.com>
+Cc: Rob Landley <rob@landley.net>, xfs@oss.sgi.com
 
-Hi,
+On Wed, Feb 26, 2014 at 01:38:59PM +0900, sat wrote:
+> Hi Dave,
+> 
+> >Actually, it isn't. The initial size of dynamic prealloc is
+> >determined by a set of heuristics based on file size, filesystem
+> >geometry and the existing extents on the file. It uses a default
+> >of 64k if no optimisation heuristics trigger.
+> 
+> I see. I should have read the code more carefully.
+> 
+> ---
+> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+> Subject: [PATCH] XFS: remove the description about the default value of "allocsize=" mount option
+> 
+> The end-of-file preallocation size is dynamic by default.
+> So there is no static default size specified by "allocsize="
+> mount option and the description about the default size
+> should be removed.
+> 
+> Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Rob Landley <rob@landley.net>
 
-Fedora is considering XFS as their default file system. They support three primary architectures: x86_64, i686, and armv7hl.  Do XFS devs have any reservations about XFS as a default file system on either i686, or arm?
+Looks good.
 
-So far the only thing I've run into with kernel 3.13.4-200.fc20.i686+PAE will not mount an XFS volume larger than 16TB. But I haven't tried filling a < 16TB volume with a significant amount of data while running 32bit, and anyway it's just easier to ask if there are other gotchas, or reservations about this combination.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-XFS (sdc): file system too large to be mounted on this system.
-[snip]
-XFS (sdc): Internal error xfs_sb_read_verify at line 630 of file fs/xfs/xfs_sb.c.  Caller 0xf8b19e1c
-[1]
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-Thanks,
-
-
-Chris Murphy
-
-
-[1] The too large warning happens with ext4 at mount time also. A Btrfs volume mounts OK, although I don't know if it actually withstands significant use.
-http://paste.fedoraproject.org/80784/93470280/
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
