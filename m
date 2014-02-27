@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 837E47F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 00:42:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6B4148F8037
-	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 22:42:37 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 934857F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:12:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D4D6AC003
+	for <xfs@oss.sgi.com>; Wed, 26 Feb 2014 23:12:13 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	675238xQEACfvQCs for <xfs@oss.sgi.com>;
-	Wed, 26 Feb 2014 22:42:35 -0800 (PST)
-Date: Thu, 27 Feb 2014 17:42:21 +1100
+	6UvsOeqk6Y1Xqcmm for <xfs@oss.sgi.com>;
+	Wed, 26 Feb 2014 23:12:08 -0800 (PST)
+Date: Thu, 27 Feb 2014 18:11:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] XFS: fix the description of 'allocsize=' mount option
-Message-ID: <20140227064221.GJ29907@dastard>
-References: <530AE0E5.1090707@jp.fujitsu.com> <20140224120629.GN4317@dastard>
-	<530D6FE3.2040406@jp.fujitsu.com>
+Subject: Re: [PATCH] xfs: clean up xfs_set_maxicount & use in growfs
+Message-ID: <20140227071154.GK29907@dastard>
+References: <530C29C7.90001@redhat.com> <20140226021114.GA26022@infradead.org>
+	<530E3282.7000703@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <530D6FE3.2040406@jp.fujitsu.com>
+In-Reply-To: <530E3282.7000703@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: sat <takeuchi_satoru@jp.fujitsu.com>
-Cc: Rob Landley <rob@landley.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Feb 26, 2014 at 01:38:59PM +0900, sat wrote:
-> Hi Dave,
+On Wed, Feb 26, 2014 at 12:29:22PM -0600, Eric Sandeen wrote:
+> On 2/25/14, 8:11 PM, Christoph Hellwig wrote:
+> > On Mon, Feb 24, 2014 at 11:27:35PM -0600, Eric Sandeen wrote:
+> >> xfs_set_maxicount() overflowed fairly easily for large filesystems
+> >> and large maxicount; we started out by multiplying dblocks by
+> >> the percentage, *then* dividing by 100, and never checked for
+> >> an overflow.  The calculations were also, IMHO, a little hard
+> >> to follow.
+> > 
+> > Would be useful to get this test case into xfstests..
 > 
-> >Actually, it isn't. The initial size of dynamic prealloc is
-> >determined by a set of heuristics based on file size, filesystem
-> >geometry and the existing extents on the file. It uses a default
-> >of 64k if no optimisation heuristics trigger.
+> Ok so I was going on Dave's assertion about that.  ;)
 > 
-> I see. I should have read the code more carefully.
+> To overflow, we'd need dblocks * 100 to be > 2^64-1:
 > 
-> ---
-> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-> Subject: [PATCH] XFS: remove the description about the default value of "allocsize=" mount option
+> so dblocks would need to be > (2^64-1)/100
 > 
-> The end-of-file preallocation size is dynamic by default.
-> So there is no static default size specified by "allocsize="
-> mount option and the description about the default size
-> should be removed.
-> 
-> Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: Rob Landley <rob@landley.net>
+> for 4k blocks that's 655 exabytes.  Maybe not so possible after all ;)
 
-Looks good.
+Until the block count is corrupted by fsfuzzer? ;)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Dave, maybe just removing the open-code is enough here.
+
+Sure, but I still like the conversion to use mult_frac....
 
 Cheers,
 
