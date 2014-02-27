@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 56F1829DF7
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 06:03:19 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id C8B6F29DF7
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 08:06:08 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C370304043
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 04:03:16 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D2D530408A
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 06:06:05 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id j8H7kS9zkvrzjTNs for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 04:03:15 -0800 (PST)
-Date: Thu, 27 Feb 2014 13:03:09 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
-	range
-In-Reply-To: <20140226220106.GC29907@dastard>
-Message-ID: <alpine.LFD.2.00.1402271257590.2247@localhost.localdomain>
-References: <1393355728-12056-1-git-send-email-lczerner@redhat.com>
-	<1393355728-12056-6-git-send-email-lczerner@redhat.com>
-	<20140225205349.GD13647@dastard>
-	<alpine.LFD.2.00.1402252156290.12444@localhost.localdomain>
-	<20140225215011.GF13647@dastard>
-	<alpine.LFD.2.00.1402261520070.2243@localhost.localdomain>
-	<20140226220106.GC29907@dastard>
+	cuda.sgi.com with ESMTP id uYNdwTk7vUK3Kqtz for
+	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 06:06:01 -0800 (PST)
+Date: Thu, 27 Feb 2014 09:05:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 08/10] repair: factor out threading setup code
+Message-ID: <20140227140555.GA62463@bfoster.bfoster>
+References: <1393494675-30194-1-git-send-email-david@fromorbit.com>
+	<1393494675-30194-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-458918293-1393502592=:2247"
+Content-Disposition: inline
+In-Reply-To: <1393494675-30194-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,172 +25,375 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, Feb 27, 2014 at 08:51:13PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The same code is repeated in different places to set up
+> multithreaded prefetching. This can all be factored into a single
+> implementation.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
---8323328-458918293-1393502592=:2247
-Content-Type: TEXT/PLAIN; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-On Thu, 27 Feb 2014, Dave Chinner wrote:
-
-> Date: Thu, 27 Feb 2014 09:01:06 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukáš Czerner <lczerner@redhat.com>
-> Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-> Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
->     range
+>  repair/dinode.h   | 15 ++++++------
+>  repair/phase3.c   | 40 +++----------------------------
+>  repair/phase4.c   | 48 +++----------------------------------
+>  repair/phase6.c   | 22 ++++-------------
+>  repair/prefetch.c | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  repair/prefetch.h | 10 ++++++++
+>  6 files changed, 98 insertions(+), 108 deletions(-)
 > 
-> On Wed, Feb 26, 2014 at 03:24:18PM +0100, Lukáš Czerner wrote:
-> > On Wed, 26 Feb 2014, Dave Chinner wrote:
-> > 
-> > > Date: Wed, 26 Feb 2014 08:50:11 +1100
-> > > From: Dave Chinner <david@fromorbit.com>
-> > > To: Lukáš Czerner <lczerner@redhat.com>
-> > > Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-> > > Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
-> > >     range
-> > > 
-> > > On Tue, Feb 25, 2014 at 10:01:06PM +0100, Lukáš Czerner wrote:
-> > > > On Wed, 26 Feb 2014, Dave Chinner wrote:
-> > > > 
-> > > > > Date: Wed, 26 Feb 2014 07:53:49 +1100
-> > > > > From: Dave Chinner <david@fromorbit.com>
-> > > > > To: Lukas Czerner <lczerner@redhat.com>
-> > > > > Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-> > > > > Subject: Re: [PATCH 6/6] ext4/242: Add ext4 specific test for fallocate zero
-> > > > >     range
-> > > > > 
-> > > > > On Tue, Feb 25, 2014 at 08:15:28PM +0100, Lukas Czerner wrote:
-> > > > > > This is copy of xfs/242. However it's better to make it file system
-> > > > > > specific because the range can be zeroes either directly by writing
-> > > > > > zeroes, or converting to unwritten extent, so the actual result might
-> > > > > > differ from file system to file system.
-> > > > > 
-> > > > > You could say the same thing about preallocation using unwritten
-> > > > > extents. Yet, funnily enough, we have generic tests for them because
-> > > > > all filesystems currently use unwritten extents for preallocation
-> > > > > and behave identically....
-> > > > > 
-> > > > > This test is no different - all filesystems currently use unwritten
-> > > > > extents, and so this test should be generic because all existing
-> > > > > filesystems *should* behave the same.
-> > > > > 
-> > > > > When we get a filesystem that zeros rather uses unwritten extents,
-> > > > > we can add a new *generic* test that tests for zeroed data extents
-> > > > > rather than unwritten extents. All that we will need is a method of
-> > > > > checking what behaviour the filesystem has and adding that to a
-> > > > > _requires directive to ensure the correct generic fallocate tests
-> > > > > are run...
-> > > > 
-> > > > Currently xfs/242 fails on xfs for me
-> > > 
-> > > Really? Where's the bug report? I haven't seen a failure on xfs/242
-> > > on any of my test machines for at least a year, even on 1k block
-> > > size filesystems...
-> > > 
-> > > $ sudo ./check xfs/242
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 test2 3.14.0-rc3-dgc+
-> > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-> > > MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
-> > > 
-> > > xfs/242 1s ... 0s
-> > > Ran: xfs/242
-> > > Passed all 1 tests
-> > > $
-> > 
-> > Here it is.
-> > 
-> > xfs/242 fails on ppc64 with latest linus tree
+> diff --git a/repair/dinode.h b/repair/dinode.h
+> index 7521521..5ee51ca 100644
+> --- a/repair/dinode.h
+> +++ b/repair/dinode.h
+> @@ -18,9 +18,8 @@
+>  #ifndef _XR_DINODE_H
+>  #define _XR_DINODE_H
+>  
+> -#include "prefetch.h"
+> -
+>  struct blkmap;
+> +struct prefetch_args;
+>  
+>  int
+>  verify_agbno(xfs_mount_t	*mp,
+> @@ -103,12 +102,12 @@ int
+>  process_uncertain_aginodes(xfs_mount_t		*mp,
+>  				xfs_agnumber_t	agno);
+>  void
+> -process_aginodes(xfs_mount_t	*mp,
+> -		prefetch_args_t	*pf_args,
+> -		xfs_agnumber_t	agno,
+> -		int		check_dirs,
+> -		int		check_dups,
+> -		int		extra_attr_check);
+> +process_aginodes(xfs_mount_t		*mp,
+> +		struct prefetch_args	*pf_args,
+> +		xfs_agnumber_t		agno,
+> +		int			check_dirs,
+> +		int			check_dups,
+> +		int			extra_attr_check);
+>  
+>  void
+>  check_uncertain_aginodes(xfs_mount_t	*mp,
+> diff --git a/repair/phase3.c b/repair/phase3.c
+> index 3e43938..213d368 100644
+> --- a/repair/phase3.c
+> +++ b/repair/phase3.c
+> @@ -17,6 +17,8 @@
+>   */
+>  
+>  #include <libxfs.h>
+> +#include "threads.h"
+> +#include "prefetch.h"
+>  #include "avl.h"
+>  #include "globals.h"
+>  #include "agheader.h"
+> @@ -24,9 +26,7 @@
+>  #include "protos.h"
+>  #include "err_protos.h"
+>  #include "dinode.h"
+> -#include "threads.h"
+>  #include "progress.h"
+> -#include "prefetch.h"
+>  
+>  static void
+>  process_agi_unlinked(
+> @@ -82,41 +82,7 @@ static void
+>  process_ags(
+>  	xfs_mount_t		*mp)
+>  {
+> -	int 			i, j;
+> -	xfs_agnumber_t 		agno;
+> -	work_queue_t		*queues;
+> -	prefetch_args_t		*pf_args[2];
+> -
+> -	queues = malloc(thread_count * sizeof(work_queue_t));
+> -
+> -	if (ag_stride) {
+> -		/*
+> -		 * create one worker thread for each segment of the volume
+> -		 */
+> -		for (i = 0, agno = 0; i < thread_count; i++) {
+> -			create_work_queue(&queues[i], mp, 1);
+> -			pf_args[0] = NULL;
+> -			for (j = 0; j < ag_stride && agno < mp->m_sb.sb_agcount;
+> -					j++, agno++) {
+> -				pf_args[0] = start_inode_prefetch(agno, 0, pf_args[0]);
+> -				queue_work(&queues[i], process_ag_func, agno, pf_args[0]);
+> -			}
+> -		}
+> -		/*
+> -		 * wait for workers to complete
+> -		 */
+> -		for (i = 0; i < thread_count; i++)
+> -			destroy_work_queue(&queues[i]);
+> -	} else {
+> -		queues[0].mp = mp;
+> -		pf_args[0] = start_inode_prefetch(0, 0, NULL);
+> -		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> -			pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 0,
+> -					pf_args[i & 1]);
+> -			process_ag_func(&queues[0], i, pf_args[i & 1]);
+> -		}
+> -	}
+> -	free(queues);
+> +	do_inode_prefetch(mp, ag_stride, process_ag_func, false, false);
+>  }
+>  
+>  void
+> diff --git a/repair/phase4.c b/repair/phase4.c
+> index a822aaa..189eeb9 100644
+> --- a/repair/phase4.c
+> +++ b/repair/phase4.c
+> @@ -17,6 +17,8 @@
+>   */
+>  
+>  #include <libxfs.h>
+> +#include "threads.h"
+> +#include "prefetch.h"
+>  #include "avl.h"
+>  #include "globals.h"
+>  #include "agheader.h"
+> @@ -27,9 +29,7 @@
+>  #include "bmap.h"
+>  #include "versions.h"
+>  #include "dir2.h"
+> -#include "threads.h"
+>  #include "progress.h"
+> -#include "prefetch.h"
+>  
+>  
+>  /*
+> @@ -150,49 +150,7 @@ static void
+>  process_ags(
+>  	xfs_mount_t		*mp)
+>  {
+> -	int 			i, j;
+> -	xfs_agnumber_t 		agno;
+> -	work_queue_t		*queues;
+> -	prefetch_args_t		*pf_args[2];
+> -
+> -	queues = malloc(thread_count * sizeof(work_queue_t));
+> -
+> -	if (!libxfs_bcache_overflowed()) {
+> -		queues[0].mp = mp;
+> -		create_work_queue(&queues[0], mp, libxfs_nproc());
+> -		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+> -			queue_work(&queues[0], process_ag_func, i, NULL);
+> -		destroy_work_queue(&queues[0]);
+> -	} else {
+> -		if (ag_stride) {
+> -			/*
+> -			 * create one worker thread for each segment of the volume
+> -			 */
+> -			for (i = 0, agno = 0; i < thread_count; i++) {
+> -				create_work_queue(&queues[i], mp, 1);
+> -				pf_args[0] = NULL;
+> -				for (j = 0; j < ag_stride && agno < mp->m_sb.sb_agcount;
+> -						j++, agno++) {
+> -					pf_args[0] = start_inode_prefetch(agno, 0, pf_args[0]);
+> -					queue_work(&queues[i], process_ag_func, agno, pf_args[0]);
+> -				}
+> -			}
+> -			/*
+> -			 * wait for workers to complete
+> -			 */
+> -			for (i = 0; i < thread_count; i++)
+> -				destroy_work_queue(&queues[i]);
+> -		} else {
+> -			queues[0].mp = mp;
+> -			pf_args[0] = start_inode_prefetch(0, 0, NULL);
+> -			for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> -				pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+> -						0, pf_args[i & 1]);
+> -				process_ag_func(&queues[0], i, pf_args[i & 1]);
+> -			}
+> -		}
+> -	}
+> -	free(queues);
+> +	do_inode_prefetch(mp, ag_stride, process_ag_func, true, false);
+>  }
+>  
+>  
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 63359d1..446f3ee 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -17,6 +17,8 @@
+>   */
+>  
+>  #include <libxfs.h>
+> +#include "threads.h"
+> +#include "prefetch.h"
+>  #include "avl.h"
+>  #include "globals.h"
+>  #include "agheader.h"
+> @@ -25,9 +27,7 @@
+>  #include "protos.h"
+>  #include "err_protos.h"
+>  #include "dinode.h"
+> -#include "prefetch.h"
+>  #include "progress.h"
+> -#include "threads.h"
+>  #include "versions.h"
+>  
+>  static struct cred		zerocr;
+> @@ -3039,23 +3039,9 @@ update_missing_dotdot_entries(
+>  
+>  static void
+>  traverse_ags(
+> -	xfs_mount_t 		*mp)
+> +	struct xfs_mount	*mp)
+>  {
+> -	int			i;
+> -	work_queue_t		queue;
+> -	prefetch_args_t		*pf_args[2];
+> -
+> -	/*
+> -	 * we always do prefetch for phase 6 as it will fill in the gaps
+> -	 * not read during phase 3 prefetch.
+> -	 */
+> -	queue.mp = mp;
+> -	pf_args[0] = start_inode_prefetch(0, 1, NULL);
+> -	for (i = 0; i < glob_agcount; i++) {
+> -		pf_args[(~i) & 1] = start_inode_prefetch(i + 1, 1,
+> -				pf_args[i & 1]);
+> -		traverse_function(&queue, i, pf_args[i & 1]);
+> -	}
+> +	do_inode_prefetch(mp, 0, traverse_function, false, true);
+>  }
+>  
+>  void
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index 946e822..aee6342 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -866,6 +866,77 @@ start_inode_prefetch(
+>  	return args;
+>  }
+>  
+> +/*
+> + * Do inode prefetch in the most optimal way for the context under which repair
+> + * has been run.
+> + */
+> +void
+> +do_inode_prefetch(
+> +	struct xfs_mount	*mp,
+> +	int			stride,
+> +	void			(*func)(struct work_queue *,
+> +					xfs_agnumber_t, void *),
+> +	bool			check_cache,
+> +	bool			dirs_only)
+> +{
+> +	int			i, j;
+> +	xfs_agnumber_t		agno;
+> +	struct work_queue	queue;
+> +	struct work_queue	*queues;
+> +	struct prefetch_args	*pf_args[2];
+> +
+> +	/*
+> +	 * If the previous phases of repair have not overflowed the buffer
+> +	 * cache, then we don't need to re-read any of the metadata in the
+> +	 * filesystem - it's all in the cache. In that case, run a thread per
+> +	 * CPU to maximise parallelism of the queue to be processed.
+> +	 */
+> +	if (check_cache && !libxfs_bcache_overflowed()) {
+> +		queue.mp = mp;
+> +		create_work_queue(&queue, mp, libxfs_nproc());
+> +		for (i = 0; i < mp->m_sb.sb_agcount; i++)
+> +			queue_work(&queue, func, i, NULL);
+> +		destroy_work_queue(&queue);
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * single threaded behaviour - single prefetch thread, processed
+> +	 * directly after each AG is queued.
+> +	 */
+> +	if (!stride) {
+> +		queue.mp = mp;
+> +		pf_args[0] = start_inode_prefetch(0, dirs_only, NULL);
+> +		for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+> +			pf_args[(~i) & 1] = start_inode_prefetch(i + 1,
+> +					dirs_only, pf_args[i & 1]);
+> +			func(&queue, i, pf_args[i & 1]);
+> +		}
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * create one worker thread for each segment of the volume
+> +	 */
+> +	queues = malloc(thread_count * sizeof(work_queue_t));
+> +	for (i = 0, agno = 0; i < thread_count; i++) {
+> +		create_work_queue(&queues[i], mp, 1);
+> +		pf_args[0] = NULL;
+> +		for (j = 0; j < stride && agno < mp->m_sb.sb_agcount;
+> +				j++, agno++) {
+> +			pf_args[0] = start_inode_prefetch(agno, dirs_only,
+> +							  pf_args[0]);
+> +			queue_work(&queues[i], func, agno, pf_args[0]);
+> +		}
+> +	}
+> +	/*
+> +	 * wait for workers to complete
+> +	 */
+> +	for (i = 0; i < thread_count; i++)
+> +		destroy_work_queue(&queues[i]);
+> +	free(queues);
+> +}
+> +
+>  void
+>  wait_for_inode_prefetch(
+>  	prefetch_args_t		*args)
+> diff --git a/repair/prefetch.h b/repair/prefetch.h
+> index 44a406c..b837752 100644
+> --- a/repair/prefetch.h
+> +++ b/repair/prefetch.h
+> @@ -4,6 +4,7 @@
+>  #include <semaphore.h>
+>  #include "incore.h"
+>  
+> +struct work_queue;
+>  
+>  extern int 	do_prefetch;
+>  
+> @@ -41,6 +42,15 @@ start_inode_prefetch(
+>  	prefetch_args_t		*prev_args);
+>  
+>  void
+> +do_inode_prefetch(
+> +	struct xfs_mount	*mp,
+> +	int			stride,
+> +	void			(*func)(struct work_queue *,
+> +					xfs_agnumber_t, void *),
+> +	bool			check_cache,
+> +	bool			dirs_only);
+> +
+> +void
+>  wait_for_inode_prefetch(
+>  	prefetch_args_t		*args);
+>  
+> -- 
+> 1.8.4.rc3
 > 
-> OK, that's a different kettle of fish. It's using 64k pages, right?
-
-64k pages, yes.
-
-> 
-> > # uname -a
-> > Linux ibm-p740-01-lp4.rhts.eng.bos.redhat.com 3.14.0-rc4+ #1 SMP Wed
-> > Feb 26 08:59:48 EST 2014 ppc64 ppc64 ppc64 GNU/Linux
-> > 
-> > # ./check xfs/242
-> > FSTYP         -- xfs (non-debug)
-> > PLATFORM      -- Linux/ppc64 ibm-p740-01-lp4 3.14.0-rc4+
-> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/loop1 /mnt/test2
-> > 
-> > xfs/242  - output mismatch (see /root/xfstests/results//xfs/242.out.bad)
-> >     --- tests/xfs/242.out       2014-02-26 05:51:16.602579462 -0500
-> >     +++ /root/xfstests/results//xfs/242.out.bad 2014-02-26 09:20:55.585396040 -0500
-> >     @@ -1,76 +1,71 @@
-> >      QA output created by 242
-> >         1. into a hole
-> >      0: [0..7]: hole
-> >     -1: [8..23]: unwritten
-> >     +1: [8..23]: data
-> >      2: [24..39]: hole
-> >      daa100df6e6711906b61c9ab5aa16032
-> 
-> So the data is correct, but the range got zeroes written to it
-> rather than an unwritten extent.
-> 
-> >     (Run 'diff -u tests/xfs/242.out /root/xfstests/results//xfs/242.out.bad'  to see the entire diff)
-> > Ran: xfs/242
-> > Failures: xfs/242
-> > Failed 1 of 1 tests
-> > 
-> > 
-> > Here is 242.out.bad
-> 
-> The diff would have been better.
-> 
-> /me goes off to diff the output
-> 
-> Yeah, ok, the data in all the files is correct - the md5sums all
-> match. What's different? Just about all unwritten extents are now
-> written (i.e. data) or contain some portion of written extents.
-> 
-> So, ZERO_RANGE has the following size threshold for converting
-> blocks to unwritten extents vs just zeroing them:
-> 
-> 	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
-> 
-> So if this is a 64k page size machine, it's going to have different
-> extent layout compared to a 4k page size machine. The file data will
-> still be the same, the difference will be zeroed blocks instead of
-> unwritten blocks, and that's exactly what we see.
-> 
-> IOWs, the result in terms of data the application sees is correct,
-> just the extent layout representing that zeroed data is different.
-
-Ok, so that's yet another difference between xfs and ext4 code which
-makes having generic test even more complicated. So as I said before
-I'll make the generic test (using _filter_hole_fiemap) and then ext4
-specific test as well to really make sure that the extent
-manipulation is right.
-
-Thanks!
--Lukas
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
---8323328-458918293-1393502592=:2247
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-458918293-1393502592=:2247--
