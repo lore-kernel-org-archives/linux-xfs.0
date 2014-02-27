@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4825A7F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:24:10 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 9ACF17F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:25:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 251308F8052
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:24:10 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	dEfHVGKDem1Dn8mC for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 12:24:08 -0800 (PST)
-Date: Fri, 28 Feb 2014 07:24:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/10] repair: prefetch runs too far ahead
-Message-ID: <20140227202405.GE30131@dastard>
-References: <1393494675-30194-1-git-send-email-david@fromorbit.com>
-	<1393494675-30194-10-git-send-email-david@fromorbit.com>
-	<20140227140846.GB62463@bfoster.bfoster>
-	<20140227200150.GD30131@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 863A78F8059
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:25:30 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qUFvivJTeLJylutg for
+	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:25:29 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1RKPS96018254
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:25:28 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s1RKPRH1009056
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:25:28 -0500
+Message-ID: <530F9F37.8020408@redhat.com>
+Date: Thu, 27 Feb 2014 14:25:27 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140227200150.GD30131@dastard>
+Subject: [PATCH] xfs_io: don't leak fd in open -Tr failure case
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,69 +36,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Feb 28, 2014 at 07:01:50AM +1100, Dave Chinner wrote:
-> On Thu, Feb 27, 2014 at 09:08:46AM -0500, Brian Foster wrote:
-> > On Thu, Feb 27, 2014 at 08:51:14PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > 
-> > Hmm, I replied to this one in the previous thread, but now I notice that
-> > it apparently never made it to the list. Dave, did you happen to see
-> > that in your inbox? Anyways, I had a couple minor comments/questions
-> > that I'll duplicate here (which probably don't require another
-> > repost)...
-> 
-> No, I didn't.
-> 
-> [snip typos that need fixing]
-> 
-> > > diff --git a/repair/prefetch.c b/repair/prefetch.c
-> > > index aee6342..7d3efde 100644
-> > > --- a/repair/prefetch.c
-> > > +++ b/repair/prefetch.c
-> > > @@ -866,6 +866,48 @@ start_inode_prefetch(
-> > >  	return args;
-> > >  }
-> > >  
-> > 
-> > A brief comment before the prefetch_ag_range bits that explain the
-> > implicit design constraints (e.g., throttle prefetch based on
-> > processing) would be nice. :)
-> 
-> Can do.
+Coverity spotted this.
 
-Added this:
+It complained that we didn't close the fd before returning in
+this case of incompatible options, but it seems like we should
+just test for the incompatible flags before even trying to open
+the file, no?
 
-/*
- * prefetch_ag_range runs a prefetch-and-process loop across a range of AGs. It
- * begins with @start+ag, and finishes with @end_ag - 1 (i.e. does not prefetch
- * or process @end_ag). The function starts prefetch on the first AG, then loops
- * starting prefetch on the next AG and then blocks processing the current AG as
- * the prefetch queue brings inodes into the processing queue.
- *
- * There is only one prefetch taking place at a time, so the prefetch on the
- * next AG only starts once the current AG has been completely prefetched. Hence
- * the prefetch of the next AG will start some time before the processing of the
- * current AG finishes, ensuring that when we iterate an start processing the
- * next AG there is already a significant queue of inodes to process.
- *
- * Prefetch is done this way to prevent it from running too far ahead of the
- * processing. Allowing it to do so can cause cache thrashing, where new
- * prefetch causes previously prefetched buffers to be reclaimed before the
- * processing thread uses them. This results in reading all the inodes and
- * metadata twice per phase and it greatly slows down the processing. Hence we
- * have to carefully control how far ahead we prefetch...
- */
+(The open would have failed in any case, but with a somewhat
+cryptic "Invalid argument" - so it's probably better to state
+it plainly and bail immediately.)
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/io/open.c b/io/open.c
+index 6bb0d46..c106fa7 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -342,6 +342,11 @@ open_f(
+ 	if (optind != argc - 1)
+ 		return command_usage(&open_cmd);
+ 
++	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
++		fprintf(stderr, _("-T and -r options are incompatible\n"));
++		return -1;
++	}
++
+ 	fd = openfile(argv[optind], &geometry, flags, mode);
+ 	if (fd < 0)
+ 		return 0;
+@@ -349,11 +354,6 @@ open_f(
+ 	if (!platform_test_xfs_fd(fd))
+ 		flags |= IO_FOREIGN;
+ 
+-	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
+-		fprintf(stderr, _("-T and -r options are incompatible\n"));
+-		return -1;
+-	}
+-
+ 	addfile(argv[optind], fd, &geometry, flags);
+ 	return 0;
+ }
 
 _______________________________________________
 xfs mailing list
