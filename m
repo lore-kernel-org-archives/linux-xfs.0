@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E53957F56
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:51:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C563AC004
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:51:36 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 792D87F57
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:51:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 64AFA304051
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:51:37 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qY1yy4DrpBCuCkch for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 01:51:34 -0800 (PST)
+	uPGJhCx8PW7yF0G1 for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 01:51:35 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WIxcb-0007bt-BQ
+	(envelope-from <dave@fromorbit.com>) id 1WIxcb-0007bl-9K
 	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:51:17 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WIxcb-0007sM-A9
+	(envelope-from <dave@disappointment.disaster>) id 1WIxcb-0007s7-8H
 	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:51:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/10] repair: BMBT prefetch needs to be CRC aware
-Date: Thu, 27 Feb 2014 20:51:12 +1100
-Message-Id: <1393494675-30194-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/10] repair: limit auto-striding concurrency apprpriately
+Date: Thu, 27 Feb 2014 20:51:09 +1100
+Message-Id: <1393494675-30194-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393494675-30194-1-git-send-email-david@fromorbit.com>
 References: <1393494675-30194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,68 +39,98 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-I'd been trying to track down a behavioural difference between
-non-crc and crc enabled filesystems that was resulting non-crc
-filesystem executing prefetch almost 3x faster than CRC filesystems.
-After amny ratholes, I finally stumbled on the fact that btree
-format directories are not being prefetched due to a missing magic
-number check, and it's rejecting all XFS_BMAP_CRC_MAGIC format BMBT
-buffers. This makes prefetch on CRC enabled filesystems behave the
-same as for non-CRC filesystems.
+It's possible to have filesystems with hundreds of AGs on systems
+with little concurrency and resources. In this case, we can easily
+exhaust memory and fail to create threads and have all sorts of
+interesting problems.
 
-The difference a single line of code can make on a 50 million inode
-filesystem with a single threaded prefetch enabled run is pretty
-amazing. It goes from 3,000 iops @ 50MB/s to 2,000 IOPS @ 800MB/s
-and the cache hit rate goes from 3% to 49%. The runtime difference:
+xfs/250 can cause this to occur, with failures like:
 
-Unpatched:
+        - agno = 707
+        - agno = 692
+fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
 
-Phase           Start           End             Duration
-Phase 1:        02/21 18:34:12  02/21 18:34:12
-Phase 2:        02/21 18:34:12  02/21 18:34:15  3 seconds
-Phase 3:        02/21 18:34:15  02/21 18:40:09  5 minutes, 54 seconds
-Phase 4:        02/21 18:40:09  02/21 18:46:36  6 minutes, 27 seconds
-Phase 5:        02/21 18:46:36  02/21 18:46:37  1 second
-Phase 6:        02/21 18:46:37  02/21 18:52:51  6 minutes, 14 seconds
-Phase 7:        02/21 18:52:51  02/21 18:52:52  1 second
+And this:
 
-Total run time: 18 minutes, 40 seconds
+        - agno = 484
+        - agno = 782
+failed to create prefetch thread: Resource temporarily unavailable
 
-Patched:
+Because it's trying to create more threads than a poor little 512MB
+single CPU ia32 box can handle.
 
-Phase           Start           End             Duration
-Phase 1:        02/21 19:58:23  02/21 19:58:23
-Phase 2:        02/21 19:58:23  02/21 19:58:27  4 seconds
-Phase 3:        02/21 19:58:27  02/21 19:59:20  53 seconds
-Phase 4:        02/21 19:59:20  02/21 20:00:07  47 seconds
-Phase 5:        02/21 20:00:07  02/21 20:00:08  1 second
-Phase 6:        02/21 20:00:08  02/21 20:00:50  42 seconds
-Phase 7:        02/21 20:00:50  02/21 20:00:50
-
-Total run time: 2 minutes, 27 seconds
-
-Is no less impressive. Shame it's just a regression fix. ;)
+So, limit concurrency to a maximum of numcpus * 8 to prevent this.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/prefetch.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/libxfs.h    |  1 +
+ libxfs/init.h       |  1 -
+ repair/xfs_repair.c | 21 ++++++++++++++++++++-
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index f4f3d71..946e822 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -298,7 +298,8 @@ pf_scanfunc_bmap(
- 	/*
- 	 * do some validation on the block contents
- 	 */
--	if ((be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) ||
-+	if ((block->bb_magic != cpu_to_be32(XFS_BMAP_MAGIC) &&
-+	     block->bb_magic != cpu_to_be32(XFS_BMAP_CRC_MAGIC)) ||
- 			(be16_to_cpu(block->bb_level) != level))
- 		return 0;
+diff --git a/include/libxfs.h b/include/libxfs.h
+index bb0369f..f688598 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
+ extern int	libxfs_device_alignment (void);
+ extern void	libxfs_report(FILE *);
+ extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
++extern int	platform_nproc(void);
  
+ /* check or write log footer: specify device, log size in blocks & uuid */
+ typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
+diff --git a/libxfs/init.h b/libxfs/init.h
+index f0b8cb6..112febb 100644
+--- a/libxfs/init.h
++++ b/libxfs/init.h
+@@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
+ extern char *platform_findblockpath (char *path);
+ extern int platform_direct_blockdev (void);
+ extern int platform_align_blockdev (void);
+-extern int platform_nproc(void);
+ extern unsigned long platform_physmem(void);	/* in kilobytes */
+ extern int platform_has_uuid;
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index bac334f..6327076 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -629,13 +629,32 @@ main(int argc, char **argv)
+ 	 * to target these for an increase in thread count. Hence a stride value
+ 	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
+ 	 * on such filesystems.
++	 *
++	 * Limit the maximum thread count based on the available CPU power that
++	 * is available. If we use too many threads, we might run out of memory
++	 * and CPU power before we run out of IO concurrency. We limit to 8
++	 * threads/CPU as this is enough threads to saturate a CPU on fast
++	 * devices, yet few enough that it will saturate but won't overload slow
++	 * devices.
+ 	 */
+ 	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
+ 		ag_stride = 15;
+ 
+ 	if (ag_stride) {
++		int max_threads = platform_nproc() * 8;
++
+ 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
+-		thread_init();
++		while (thread_count > max_threads) {
++			ag_stride *= 2;
++			thread_count = (glob_agcount + ag_stride - 1) /
++								ag_stride;
++		}
++		if (thread_count > 0)
++			thread_init();
++		else {
++			thread_count = 1;
++			ag_stride = 0;
++		}
+ 	}
+ 
+ 	if (ag_stride && report_interval) {
 -- 
 1.8.4.rc3
 
