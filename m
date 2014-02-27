@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8CE177F4E
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:19:21 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 64AE57F4E
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 16:29:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 322EEAC003
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 13:19:18 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id KG7k3M2UJh8EPOAu
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 13:19:16 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: XFS on Fedora i686, armv7hl
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <20140227072122.GL29907@dastard>
-Date: Thu, 27 Feb 2014 14:19:12 -0700
-Message-Id: <E67AB61C-9A3C-49AF-A9DC-4576F1CB5449@colorremedies.com>
-References: <8A28EF88-012E-4036-BDB6-E76B1CC569A7@colorremedies.com>
-	<20140227072122.GL29907@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3DBA98F8037
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:29:09 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id EKLCdgHQ7zadfEHU for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 14:29:05 -0800 (PST)
+Message-ID: <530FBC2F.4070301@sandeen.net>
+Date: Thu, 27 Feb 2014 16:29:03 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] mkfs: default log size for small filesystems too large
+References: <1393494344-30056-1-git-send-email-david@fromorbit.com>
+	<1393494344-30056-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393494344-30056-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +24,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
+On 2/27/14, 3:45 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Recent changes to the log size scaling have resulted in using the
+> default size multiplier for the log size even on small filesystems.
+> Commit 88cd79b ("xfs: Add xfs_log_rlimit.c") changed the calculation
+> of the maximum transaction size that the kernel would issues and
+> that significantly increased the minimum size of the default log.
+> As such the size of the log on small filesystems was typically
+> larger than the prefious default, even though the previous default
+> was still larger than the minimum needed.
+> 
+> Rework the default log size calculation such that it will use the
+> original log size default if it is larger than the minimum log size
+> required, and only use a larger log if the configuration of the
+> filesystem requires it.
+> 
+> This is especially obvious in xfs/216, where the default log size is
+> 10MB all the way up to 16GB filesystems. The current mkfs selects a
+> log size of 50MB for the same size filesystems and this is
+> unnecessarily large.
+> 
+> Return the scaling of the log size for small filesystems to
+> something similar to what xfs/216 expects.
 
-On Feb 27, 2014, at 12:21 AM, Dave Chinner <david@fromorbit.com> wrote:
+I can confirm that this fixes xfs/216, but I've lost the thread on
+why log size scaling was changed at all in 88cd79b, and why we now
+end up with something different in mkfs.xfs than what we originally
+had....  Are there resulting functional changes?  Cosmetic?  What's
+going on with log scaling, and who moved my cheese?  :)
 
-> On Wed, Feb 26, 2014 at 10:37:59PM -0700, Chris Murphy wrote:
-> =
+-Eric
 
->> Btrfs volume mounts OK, although I don't know if it actually
->> withstands significant use.
->> http://paste.fedoraproject.org/80784/93470280/
-> =
-
-> I bet that's because nobody has filled a btrfs filesystem past the
-> point where it tries to access beyond 16TB on a 32 bit system and so
-> it's never been reported as a bug=85 :/
-
-Guess what? Someone just ran into what sounded like this very problem today=
- on the Btrfs list [1]. So I reported it and referenced this thread, and it=
- looks like you were correct. Josef is on it [2].
-
-
-Chris Murphy
-
-[1] http://www.mail-archive.com/linux-btrfs@vger.kernel.org/msg31856.html
-[2] http://www.mail-archive.com/linux-btrfs@vger.kernel.org/msg31862.html
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 48 ++++++++++++++++++++++++++++--------------------
+>  1 file changed, 28 insertions(+), 20 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d82128c..f7cf394 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2366,32 +2366,40 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+>  	} else if (!loginternal && !xi.logdev) {
+>  		logblocks = 0;
+>  	} else if (loginternal && !logsize) {
+> -		/*
+> -		 * With a 2GB max log size, default to maximum size
+> -		 * at 4TB. This keeps the same ratio from the older
+> -		 * max log size of 128M at 256GB fs size. IOWs,
+> -		 * the ratio of fs size to log size is 2048:1.
+> -		 */
+> -		logblocks = (dblocks << blocklog) / 2048;
+> -		logblocks = logblocks >> blocklog;
+> -		logblocks = MAX(min_logblocks, logblocks);
+>  
+> -		/*
+> -		 * If the default log size doesn't fit in the AG size, use the
+> -		 * minimum log size instead. This ensures small filesystems
+> -		 * don't use excessive amounts of space for the log.
+> -		 */
+> -		if (min_logblocks * XFS_DFL_LOG_FACTOR >= agsize) {
+> +		if (dblocks < GIGABYTES(1, blocklog)) {
+> +			/* tiny filesystems get minimum sized logs. */
+>  			logblocks = min_logblocks;
+> +		} else if (dblocks < GIGABYTES(16, blocklog)) {
+> +
+> +			/*
+> +			 * For small filesystems, we want to use the
+> +			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
+> +			 * at all possible, ramping up to 128MB at 256GB.
+> +			 */
+> +			logblocks = MIN(XFS_MIN_LOG_BYTES >> blocklog,
+> +					min_logblocks * XFS_DFL_LOG_FACTOR);
+>  		} else {
+> -			logblocks = MAX(logblocks,
+> -				MAX(XFS_DFL_LOG_SIZE,
+> -					min_logblocks * XFS_DFL_LOG_FACTOR));
+> +			/*
+> +			 * With a 2GB max log size, default to maximum size
+> +			 * at 4TB. This keeps the same ratio from the older
+> +			 * max log size of 128M at 256GB fs size. IOWs,
+> +			 * the ratio of fs size to log size is 2048:1.
+> +			 */
+> +			logblocks = (dblocks << blocklog) / 2048;
+> +			logblocks = logblocks >> blocklog;
+> +			logblocks = MAX(min_logblocks, logblocks);
+>  		}
+> +
+> +		/* make sure the log fits wholly within an AG */
+> +		if (logblocks >= agsize)
+> +			logblocks = min_logblocks;
+> +
+> +		/* and now clamp the size to the maximum supported size */
+>  		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
+> -		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
+> +		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES)
+>  			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
+> -		}
+> +
+>  	}
+>  	validate_log_size(logblocks, blocklog, min_logblocks);
+>  
+> 
 
 _______________________________________________
 xfs mailing list
