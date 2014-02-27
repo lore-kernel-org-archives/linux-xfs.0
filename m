@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 558E27F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:45:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C6333AC003
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:45:47 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XW4zBoBPqiOrIrii for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:45:46 -0800 (PST)
-Date: Thu, 27 Feb 2014 15:45:40 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/10] repair: prefetch runs too far ahead
-Message-ID: <20140227204539.GA27267@bfoster.bfoster>
-References: <1393494675-30194-1-git-send-email-david@fromorbit.com>
-	<1393494675-30194-10-git-send-email-david@fromorbit.com>
-	<20140227140846.GB62463@bfoster.bfoster>
-	<20140227200150.GD30131@dastard> <20140227202405.GE30131@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CCA087F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:50:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AA8718F8059
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:50:33 -0800 (PST)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id VoB4hxGMGPciXPeB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 12:50:32 -0800 (PST)
+Date: Thu, 27 Feb 2014 21:50:29 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: xfstests with NFS
+Message-ID: <20140227205029.GA29741@lst.de>
+References: <27AB99CF-CEF3-4AC5-AFBD-6648F3B3BED2@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140227202405.GE30131@dastard>
+In-Reply-To: <27AB99CF-CEF3-4AC5-AFBD-6648F3B3BED2@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,82 +25,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Chuck Lever <chuck.lever@oracle.com>
+Cc: Linux NFS Mailing List <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Feb 28, 2014 at 07:24:05AM +1100, Dave Chinner wrote:
-> On Fri, Feb 28, 2014 at 07:01:50AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 27, 2014 at 09:08:46AM -0500, Brian Foster wrote:
-> > > On Thu, Feb 27, 2014 at 08:51:14PM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > 
-> > > Hmm, I replied to this one in the previous thread, but now I notice that
-> > > it apparently never made it to the list. Dave, did you happen to see
-> > > that in your inbox? Anyways, I had a couple minor comments/questions
-> > > that I'll duplicate here (which probably don't require another
-> > > repost)...
-> > 
-> > No, I didn't.
-> > 
-> > [snip typos that need fixing]
-> > 
-> > > > diff --git a/repair/prefetch.c b/repair/prefetch.c
-> > > > index aee6342..7d3efde 100644
-> > > > --- a/repair/prefetch.c
-> > > > +++ b/repair/prefetch.c
-> > > > @@ -866,6 +866,48 @@ start_inode_prefetch(
-> > > >  	return args;
-> > > >  }
-> > > >  
-> > > 
-> > > A brief comment before the prefetch_ag_range bits that explain the
-> > > implicit design constraints (e.g., throttle prefetch based on
-> > > processing) would be nice. :)
-> > 
-> > Can do.
-> 
-> Added this:
-> 
-> /*
->  * prefetch_ag_range runs a prefetch-and-process loop across a range of AGs. It
->  * begins with @start+ag, and finishes with @end_ag - 1 (i.e. does not prefetch
->  * or process @end_ag). The function starts prefetch on the first AG, then loops
->  * starting prefetch on the next AG and then blocks processing the current AG as
->  * the prefetch queue brings inodes into the processing queue.
->  *
->  * There is only one prefetch taking place at a time, so the prefetch on the
->  * next AG only starts once the current AG has been completely prefetched. Hence
->  * the prefetch of the next AG will start some time before the processing of the
->  * current AG finishes, ensuring that when we iterate an start processing the
-							and
->  * next AG there is already a significant queue of inodes to process.
->  *
->  * Prefetch is done this way to prevent it from running too far ahead of the
->  * processing. Allowing it to do so can cause cache thrashing, where new
->  * prefetch causes previously prefetched buffers to be reclaimed before the
->  * processing thread uses them. This results in reading all the inodes and
->  * metadata twice per phase and it greatly slows down the processing. Hence we
->  * have to carefully control how far ahead we prefetch...
->  */
-> 
-
-Looks good, thanks!
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBGZWIgMjcsIDIwMTQgYXQgMTA6MzI6NTFBTSAtMDgwMCwgQ2h1Y2sgTGV2ZXIgd3Jv
+dGU6Cj4gCj4gSeKAmW0gcnVubmluZyB4ZnN0ZXN0cyB0byB2YWxpZGF0ZSBmdW5jdGlvbmFsaXR5
+IG9mIGEgcGFydGljdWxhcgo+IE5GUyBjbGllbnQvdHJhbnNwb3J0L3NlcnZlciBzZXQgdXAuCj4g
+Cj4gVGhlcmUgYXJlIGEgY291cGxlIG9mIHRlc3RzIHRoYXQgbWF5IG5vdCBhbHdheXMgYmUgYXBw
+cm9wcmlhdGUgZm9yCj4gRlNUWVA9bmZzLiAgV2Ugd2VyZW7igJl0IGFibGUgdG8gaWRlbnRpZnkg
+YSBidWd6aWxsYSB3aGVyZSB3ZSBjYW4gcmVwb3J0Cj4gdGhlc2UgaXNzdWVzLgoKSnVzdCBzZW5k
+IHRoZSB0byB0aGUgeGZzIGxpc3QuICAoYW5kIGNhcCBsaW5lcyBhZnRlciA3NSBjaGFycyBsaWtl
+IGZvciBhbGwKTGludXggbGlzdHMuLikKCj4gZ2VuZXJpYy8xOTIgdGVzdHMgYXRpbWUgY2hhbmdl
+cy4gIFRoZSBMaW51eCBORlMgY2xpZW50IChhbmQgcHJvYmFibHkKPiBvdGhlcnMpIHR5cGljYWxs
+eSBvcHRpbWl6ZXMgYXdheSBhdGltZSBjaGFuZ2VzLiAgVGh1cyB0aGlzIHRlc3QgZmFpbHMKPiBm
+b3IgTkZTIG1vdW50cyBvbiBMaW51eC4gIEnigJltIHdvbmRlcmluZyBpZiB3ZSBjYW4gdHJlYXQg
+TkZTIGFzIGFsd2F5cwo+IGEgbm9hdGltZSBmaWxlc3lzdGVtLgoKSSBndWVzcyB0aGVyZSdzIHR3
+byBjb21wb25lbnRzIHRvIHRoaXMgaWYgd2Ugd2FudCB0byBkbyBpdCBwcm9wZXJseToKCiAtIG1h
+a2Ugc3VyZSBuZnMgYWx3YXlzIHJlcG9ydHMgbm9hdGltZSBpbiAvcHJvYy9zZWxmL21vdW50cyBp
+bnN0ZWFkCiAgIG9mIGluY29ycmVjdGx5IGNsYWltaW5nIGl0IHN1cHBvcnRzIHJlbGF0aW1lIGJ5
+IGRlZmF1bHQKIC0gX25vdHJ1biAxOTIgaWYgaXQgZGV0ZWN0cyB0aGUgZmlsZXN5c3RlbXMgcmVw
+b3J0cyBub2F0aW1lLgoKPiBnZW5lcmljLzIzNyB0cmllcyBzZXRmYWNsLiAgT24gTkZTIG1vdW50
+cywgdGhlIG9wZXJhdGlvbiBhbHdheXMgcmV0dXJucwo+IOKAnE9wZXJhdGlvbiBub3Qgc3VwcG9y
+dGVkLOKAnSBidXQgdGhlIHRlc3QgaXMgbG9va2luZyBmb3Ig4oCcT3BlcmF0aW9uIG5vdAo+IHBl
+cm1pdHRlZC7igJ0gIFRoZSBmb3JtZXIgaXMgYW4gYWNjZXB0YWJsZSBwYXNzLCBJTU8uICBJIGNv
+bnNpZGVyZWQKPiBkaXNhYmxpbmcgdGhpcyB0ZXN0IGZvciBORlMsIGJ1dCBJIHdvdWxkIGJldCBz
+b21lIE5GUyBjbGllbnQKPiBpbXBsZW1lbnRhdGlvbnMgYWN0dWFsbHkgZG8gc3VwcG9ydCBzZXRm
+YWNsKCkuCgpUaGUgTkZTdjMgY2xpZW50IHN1cHBvcnQgQUNMcyBwZXJmZWN0bHksIGl0J3MganVz
+dCBORlN2NCB0aGF0J3MgbWVzc2VkIHVwLgoKMjM3IGRvZXMgYSBfcmVxdWlyZV9hY2xzIGJlZm9y
+ZSBkaW5nIHRow6YgdGVzdCwgd2hpY2ggY2hlY2tzIGZvcgpFTk9TWVMgb3IgRU9QTk9UU1VQUCwg
+d2hpY2ggaW4gdGhlb3J5IHNob3VsZCBjYXRjaCBORlN2NCBpbiB0aGVvcnksIGJ1dAppZiB0aGlz
+IGRvZXNuJ3QgaGFwcGVuIHRyeSB0byBkZWJ1ZyBpdCBieSBsb29raW5nIGF0IHRoZSBfcmVxdWly
+ZV9hY2xzIHNoZWxsCmZ1bmN0aW9uLCB0aGUgY2hhY2wgaW1wbGVtZW50YXRpb24sIHRoZSBORlN2
+NCBBQ0wgc3R1YnMgYW5kIGFueXRoaW5nIGVsc2UKcmVsYXRlZC4KCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
