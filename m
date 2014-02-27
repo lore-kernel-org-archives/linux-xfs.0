@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3541C7F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 02:37:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25DAB30406A
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 00:37:07 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Ggcv28TJ2CU5h73t for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 00:37:06 -0800 (PST)
-Date: Thu, 27 Feb 2014 19:36:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS on Fedora i686, armv7hl
-Message-ID: <20140227083650.GM29907@dastard>
-References: <8A28EF88-012E-4036-BDB6-E76B1CC569A7@colorremedies.com>
-	<20140227072122.GL29907@dastard>
-	<E9A85068-46AF-496E-A997-7AFCB32F067C@colorremedies.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E5C3E7F4E
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:00:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C73858F8073
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:00:37 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kKuJ3j7Ksius3TUs for
+	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:00:36 -0800 (PST)
+Date: Thu, 27 Feb 2014 10:00:05 +0100
+From: Karel Zak <kzak@redhat.com>
+Subject: Re: [PATCH] util-linux/fallocate: introduce an option -c to support
+	FALLOC_FL_COLLAPSE_RANGE
+Message-ID: <20140227090005.GH32036@x2.net.home>
+References: <alpine.LFD.2.00.1402181001530.2216@localhost.localdomain>
+	<1393355305-12009-1-git-send-email-dongsu.park@profitbricks.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <E9A85068-46AF-496E-A997-7AFCB32F067C@colorremedies.com>
+In-Reply-To: <1393355305-12009-1-git-send-email-dongsu.park@profitbricks.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +26,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dongsu Park <dongsu.park@profitbricks.com>
+Cc: Namjae Jeon <linkinjeon@gmail.com>, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-T24gVGh1LCBGZWIgMjcsIDIwMTQgYXQgMDE6MTI6MjhBTSAtMDcwMCwgQ2hyaXMgTXVycGh5IHdy
-b3RlOgo+IE9uIEZlYiAyNywgMjAxNCwgYXQgMTI6MjEgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
-ZnJvbW9yYml0LmNvbT4KPiB3cm90ZToKPiA+IE9uIFdlZCwgRmViIDI2LCAyMDE0IGF0IDEwOjM3
-OjU5UE0gLTA3MDAsIENocmlzIE11cnBoeSB3cm90ZToKPiA+PiBIaSwKPiA+PiAKPiA+PiBGZWRv
-cmEgaXMgY29uc2lkZXJpbmcgWEZTIGFzIHRoZWlyIGRlZmF1bHQgZmlsZSBzeXN0ZW0uIFRoZXkK
-PiA+PiBzdXBwb3J0IHRocmVlIHByaW1hcnkgYXJjaGl0ZWN0dXJlczogeDg2XzY0LCBpNjg2LCBh
-bmQgYXJtdjdobC4KPiA+PiBEbyBYRlMgZGV2cyBoYXZlIGFueSByZXNlcnZhdGlvbnMgYWJvdXQg
-WEZTIGFzIGEgZGVmYXVsdCBmaWxlCj4gPj4gc3lzdGVtIG9uIGVpdGhlciBpNjg2LCBvciBhcm0/
-Cj4gPiAKPiA+IGk2ODYgaXMgcmVndWxhcmx5IHRlc3RlZCBvbiB1cHN0cmVhbSBkZXYga2VybmVs
-cy4gQVJNIGlzIGxlc3MKPiA+IHRlc3RlZCBhcyBpdCdzIG5vdCB0aGUgcHJpbWFyeSBkZXZlbG9w
-bWVudCBwbGF0Zm9ybSBmb3IgYW55b25lIC0KPiA+IHdlIHRlbmQgdG8gcmVseSBvbiBjb21tdW5p
-dHkgZmVlZGJhY2sgZm9yIGFybSBiZWNhdXNlIHRoZQo+ID4gaGFyZHdhcmUgaXMgc28gd2lkZSBh
-bmQgdmFyaWVkIGFuZCB0aGVyZSBhcmUgc29tZSBjcmFja3BvdCBDUFUKPiA+IGNhY2hlIGFyY2hp
-dGVjdHVyZXMgb3V0IHRoZXJlIGluIEFSTSBsYW5kIHRoYXQgd2Ugc2ltcGx5IGNhbid0Cj4gPiB0
-ZXN0IGFnYWluc3TigKYuCj4gCj4gT0sgZ29vZCwgSSdsbCBwb3N0IHRoZSBVUkwgZm9yIHlvdXIg
-cmVzcG9uc2UgdG8gdGhlIHJlbGV2YW50Cj4gRmVkb3JhIGxpc3RzLgo+IAo+ID4gCj4gPj4gU28g
-ZmFyIHRoZSBvbmx5IHRoaW5nIEkndmUgcnVuIGludG8gd2l0aCBrZXJuZWwKPiA+PiAzLjEzLjQt
-MjAwLmZjMjAuaTY4NitQQUUgd2lsbCBub3QgbW91bnQgYW4gWEZTIHZvbHVtZSBsYXJnZXIKPiA+
-PiB0aGFuIDE2VEIuCj4gPiAKPiA+IFRoYXQncyBub3QgYW4gWEZTIGxpbWl0IC0gdGhhdCdzIGEg
-bGltaXQgb2YgdGhlIGJsb2NrIGRldmljZQo+ID4gY2F1c2VkIGJ5IHRoZSBwYWdlIGNhY2hlIGFk
-ZHJlc3Mgc3BhY2UgYmVpbmcgbGltaXRlZCB0byAxNlRCLgo+ID4gVGVjaGluaWNhbGx5IHRoZSBY
-RlMga2VybmVsIGRvZXNuJ3QgaGF2ZSBzdWNoIGEgbGltaXQgYmVjYXVzZSBpdAo+ID4gZG9lc24n
-dCB1c2UgdGhlIGJsb2NrIGRldmljZSBhZGRyZXNzIHNwYWNlIHRvIGluZGV4IG9yIGNhY2hlCj4g
-PiBtZXRhZGF0YSwgYnV0IHRoYXQgZG9lc24ndCBoZWxwIGFueW9uZSBpZiB0aGUgdXNlcnNwYWNl
-IHRvb2xzCj4gPiBkb24ndCB3b3JrIG9uIGFueXRoaW5nIGxhcmdlciB0aGFuIGEgMTZUQiBibG9j
-ayBkZXZpY2UuCj4gCj4gQXJlIHRoZSBrZXJuZWwgbWVzc2FnZXMgcmVnYXJkaW5nIGNvcnJ1cHRp
-b24gc2xpZ2h0bHkgbWlzbGVhZGluZz8KClllcy4KCj4gaS5lLiB0aGUgZmlsZSBzeXN0ZW0gb24t
-ZGlzayBpc24ndCBjb3JydXB0LCBidXQgdGhlIGtlcm5lbCdzIHZpZXcKPiBvZiBpdCBpcyBkaXN0
-b3J0ZWQgYmVjYXVzZSBvZiB0aGUgcGFnZSBjYWNoZSBsaW1pdD8gU29tZW9uZSBoYXMgYQo+IHdl
-aXJkIGRydW5rZW4gYmV0LCBiZWNhdXNlIEkgY2FuJ3QgdGhpbmsgb2YgYSBnb29kIHJlYXNvbiB3
-aHksIGFuZAo+IHRoZXkgbW91bnQgYSB2YWx1ZWQgMTYrVEIgWEZTIHZvbHVtZSBmcm9tIGEgNjQt
-Yml0IHN5c3RlbSBvbiBhCj4gMzItYml0IHN5c3RlbSwgdGhleSBkb24ndCByZWFsbHkgaGF2ZSB0
-byBydW4geGZzX3JlcGFpciBvbmNlCj4gcHV0dGluZyBpdCBiYWNrIG9uIHRoZSA2NC1iaXQgc3lz
-dGVtLCBkbyB0aGV5PwoKTm8sIGl0J3Mgbm90IGNvcnJ1cHQuIFRoZSB2ZXJpZmllciBvbiB0aGUg
-c3VwZXJibG9jayBoYXMgYmVlbiBhIGJpdApoZWF2eS1oYW5kZWQgaW4gY29uc2lkZXJpbmcgIGJh
-ZCBjb25maWd1cmF0aW9ucyBzdWNoIGFzIHRoaXMgYXMKY29ycnVwdGlvbi4gaS5lLiBpdCdzIG91
-dCBvZiByYW5nZSwgaXQgbXVzdCBiZSBjb3JydXB0ISBIb3dldmVyLCB0aGUKZmFpbHVyZSB3ZSBh
-cmUgcmV0dXJuaW5nIGlzIG5vdCBjb3JydXB0aW9uLCBidXQgRUZCSUcsIGFuZCBoZW5jZQp0aGlz
-IHBhdGNoIGp1c3Qgd2VudCBpbnRvIDMuMTQtcmMzOgoKaHR0cDovL29zcy5zZ2kuY29tL2NnaS1i
-aW4vZ2l0d2ViLmNnaT9wPXhmcy94ZnMuZ2l0O2E9Y29tbWl0ZGlmZjtoPTVlZjExZWIwNzAwZjgw
-NmM0NjcxYmEzM2U1YmVmYTc4NGEyZjcwZWYKCnRvIGZpeCB0aGF0IGNsYXNzaWZpY2F0aW9uIHBy
-b2JsZW0gLSB0aGUgc3VwZXJibG9jayB2ZXJpZmllciBzaG91bGQKbm93IG9ubHkgYmUgbm9pc3kg
-aWYgYWN0dWFsIGNvcnJ1cHRpb24gaXMgZGV0ZWN0ZWQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2
-ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Tue, Feb 25, 2014 at 08:08:25PM +0100, Dongsu Park wrote:
+> Introduce a new option -c (or --collapse-range) to support a new flag
+> FALLOC_FL_COLLAPSE_RANGE for fallocate(2). It will nullify a particular
+> range [offset, offset+len] by shifting extents beyond the range to the
+> beginning of the hole.
+ 
+ Thanks!
+
+> To test that, it's necessary to apply kernel patches in the patchset
+ 
+ We (util-linux) always waiting for new stuff in Linus tree :-)
+
+    Karel
+
+-- 
+ Karel Zak  <kzak@redhat.com>
+ http://karelzak.blogspot.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
