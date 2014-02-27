@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 967F07F4E
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:12:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E6ACAC003
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:12:28 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7344E7F50
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:46:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3889E304081
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:46:22 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FucruGpAN3YdnfCH for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 01:12:26 -0800 (PST)
-Date: Thu, 27 Feb 2014 20:12:11 +1100
+	wnqvfoKHR9CAag2A for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 01:46:19 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WIxXH-0007av-6s
+	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:45:47 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1WIxXH-0007pf-5v
+	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:45:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/9] current series for verifier error differentiation
-Message-ID: <20140227091211.GZ13647@dastard>
-References: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1392767549-25574-1-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 2/2] mkfs: proto file creation does not set ftype correctly
+Date: Thu, 27 Feb 2014 20:45:44 +1100
+Message-Id: <1393494344-30056-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393494344-30056-1-git-send-email-david@fromorbit.com>
+References: <1393494344-30056-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,64 +30,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 18, 2014 at 05:52:20PM -0600, Eric Sandeen wrote:
-> This is the current series I have leading up to verifier error differentiation,
-> just resending them all.
-> 
-> As I send this, I remember that EILSEQ is giving us an unusual perror()
-> output, so the last patch which uses it may need to pick some (?)
-> other error code...
+From: Dave Chinner <dchinner@redhat.com>
 
-Eric, this leaks EBADMSG to userspace in xfs/005 with a corrupted
-superblock:
+Hence running xfs_repair on a ftype enable filesystem that has
+contents created by a proto file will throw warnings on mismatched
+ftype entries and correct them. xfs/031 fails due to this problem.
 
-$ diff -u tests/xfs/005.out /home/dave/src/xfstests-dev/results//xfs/005.out.bad
---- tests/xfs/005.out   2014-02-24 09:58:09.000000000 +1100
-+++ /home/dave/src/xfstests-dev/results//xfs/005.out.bad
-2014-02-27 19:40:56.000000000 +1100
-@@ -1,4 +1,4 @@
- QA output created by 005
- wrote 4/4 bytes at offset 224
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--mount: Structure needs cleaning
-+mount: Bad message
+Fix it by settin gup the xname structure with the correct type
+fields.
 
-Dmesg contains this:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ mkfs/proto.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-[ 8790.946956] XFS (vdb): Metadata CRC error detected at xfs_sb_read_verify+0x10c/0x140, block 0x0
-[ 8790.949984] XFS (vdb): Unmount and run xfs_repair
-[ 8790.951725] XFS (vdb): First 64 bytes of corrupted metadata buffer:
-[ 8790.953883] ffff880003eea000: 58 46 53 42 00 00 10 00 00 00 00 00 00 2c 00 00  XFSB.........,..
-[ 8790.956452] ffff880003eea010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[ 8790.958518] ffff880003eea020: 0b 21 13 2a 5b 00 40 59 bd 7c 2b d4 5b 6c a4 0a  .!.*[.@Y.|+.[l..
-[ 8790.960487] ffff880003eea030: 00 00 00 00 00 20 00 04 00 00 00 00 00 00 00 40  ..... .........@
-
-So that part is good. However, I suspect we should still be
-returning EFSCORRUPTED to userspace. Most metadata buffer reads go
-through xfs_trans_read_buf_map(), so there only a couple of places
-we need to catch and convert the error being returned. The other two
-I notice that are need conversion are xfs_buf_read() in
-xfs_readlink_bmap(), and the cause of this regression which is
-xfs_buf_read_uncached() in xfs_readsb()....
-
-Can you look into writing up a followup patch that does this
-catch-and-convert? It will also mean all the higher layers will
-treat a CRC error as corrupt metadata, which is exactly what we want
-it to do. :)
-
-Cheers,
-
-Dave.
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 4cc0df6..4d3680d 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -438,6 +438,7 @@ parseproto(
+ 	creds.cr_gid = (int)getnum(pp);
+ 	xname.name = (uchar_t *)name;
+ 	xname.len = name ? strlen(name) : 0;
++	xname.type = 0;
+ 	tp = libxfs_trans_alloc(mp, 0);
+ 	flags = XFS_ILOG_CORE;
+ 	xfs_bmap_init(&flist, &first);
+@@ -453,6 +454,7 @@ parseproto(
+ 		if (buf)
+ 			free(buf);
+ 		libxfs_trans_ijoin(tp, pip, 0);
++		xname.type = XFS_DIR3_FT_REG_FILE;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_ihold(tp, pip);
+ 		break;
+@@ -469,6 +471,7 @@ parseproto(
+ 
+ 		libxfs_trans_ijoin(tp, pip, 0);
+ 
++		xname.type = XFS_DIR3_FT_REG_FILE;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_ihold(tp, pip);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+@@ -490,6 +493,7 @@ parseproto(
+ 			fail(_("Inode allocation failed"), error);
+ 		}
+ 		libxfs_trans_ijoin(tp, pip, 0);
++		xname.type = XFS_DIR3_FT_BLKDEV;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_ihold(tp, pip);
+ 		flags |= XFS_ILOG_DEV;
+@@ -504,6 +508,7 @@ parseproto(
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+ 		libxfs_trans_ijoin(tp, pip, 0);
++		xname.type = XFS_DIR3_FT_CHRDEV;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_ihold(tp, pip);
+ 		flags |= XFS_ILOG_DEV;
+@@ -516,6 +521,7 @@ parseproto(
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+ 		libxfs_trans_ijoin(tp, pip, 0);
++		xname.type = XFS_DIR3_FT_FIFO;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_ihold(tp, pip);
+ 		break;
+@@ -529,6 +535,7 @@ parseproto(
+ 			fail(_("Inode allocation failed"), error);
+ 		flags |= newfile(tp, ip, &flist, &first, 1, 1, buf, len);
+ 		libxfs_trans_ijoin(tp, pip, 0);
++		xname.type = XFS_DIR3_FT_SYMLINK;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
+ 		libxfs_trans_ihold(tp, pip);
+ 		break;
+@@ -546,6 +553,7 @@ parseproto(
+ 			isroot = 1;
+ 		} else {
+ 			libxfs_trans_ijoin(tp, pip, 0);
++			xname.type = XFS_DIR3_FT_DIR;
+ 			newdirent(mp, tp, pip, &xname, ip->i_ino,
+ 				  &first, &flist);
+ 			pip->i_d.di_nlink++;
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.4.rc3
 
 _______________________________________________
 xfs mailing list
