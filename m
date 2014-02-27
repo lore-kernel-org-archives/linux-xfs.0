@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 792D87F57
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 903807F58
 	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 03:51:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 64AFA304051
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 29EA5AC003
 	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 01:51:37 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	uPGJhCx8PW7yF0G1 for <xfs@oss.sgi.com>;
+	DcZ9OdoEiA0ZX97Q for <xfs@oss.sgi.com>;
 	Thu, 27 Feb 2014 01:51:35 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WIxcb-0007bl-9K
+	(envelope-from <dave@fromorbit.com>) id 1WIxcb-0007bm-9t
 	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:51:17 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1WIxcb-0007s7-8H
+	(envelope-from <dave@disappointment.disaster>) id 1WIxcb-0007sC-8u
 	for xfs@oss.sgi.com; Thu, 27 Feb 2014 20:51:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/10] repair: limit auto-striding concurrency apprpriately
-Date: Thu, 27 Feb 2014 20:51:09 +1100
-Message-Id: <1393494675-30194-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/10] repair: use a listhead for the dotdot list
+Date: Thu, 27 Feb 2014 20:51:10 +1100
+Message-Id: <1393494675-30194-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393494675-30194-1-git-send-email-david@fromorbit.com>
 References: <1393494675-30194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,98 +39,64 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It's possible to have filesystems with hundreds of AGs on systems
-with little concurrency and resources. In this case, we can easily
-exhaust memory and fail to create threads and have all sorts of
-interesting problems.
-
-xfs/250 can cause this to occur, with failures like:
-
-        - agno = 707
-        - agno = 692
-fatal error -- cannot create worker threads, error = [11] Resource temporarily unavailable
-
-And this:
-
-        - agno = 484
-        - agno = 782
-failed to create prefetch thread: Resource temporarily unavailable
-
-Because it's trying to create more threads than a poor little 512MB
-single CPU ia32 box can handle.
-
-So, limit concurrency to a maximum of numcpus * 8 to prevent this.
+Cleanup suggested by Christoph Hellwig - removes another open coded
+list implementation.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/libxfs.h    |  1 +
- libxfs/init.h       |  1 -
- repair/xfs_repair.c | 21 ++++++++++++++++++++-
- 3 files changed, 21 insertions(+), 2 deletions(-)
+ repair/phase6.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index bb0369f..f688598 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -144,6 +144,7 @@ extern void	libxfs_device_close (dev_t);
- extern int	libxfs_device_alignment (void);
- extern void	libxfs_report(FILE *);
- extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
-+extern int	platform_nproc(void);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index cdbf4db..7be68b3 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -43,13 +43,13 @@ static struct xfs_name		xfs_name_dot = {(unsigned char *)".",
+  * entries are updated. These must be rebuilt after the initial pass
+  */
+ typedef struct dotdot_update {
+-	struct dotdot_update	*next;
++	struct list_head	list;
+ 	ino_tree_node_t		*irec;
+ 	xfs_agnumber_t		agno;
+ 	int			ino_offset;
+ } dotdot_update_t;
  
- /* check or write log footer: specify device, log size in blocks & uuid */
- typedef xfs_caddr_t (libxfs_get_block_t)(xfs_caddr_t, int, void *);
-diff --git a/libxfs/init.h b/libxfs/init.h
-index f0b8cb6..112febb 100644
---- a/libxfs/init.h
-+++ b/libxfs/init.h
-@@ -31,7 +31,6 @@ extern char *platform_findrawpath (char *path);
- extern char *platform_findblockpath (char *path);
- extern int platform_direct_blockdev (void);
- extern int platform_align_blockdev (void);
--extern int platform_nproc(void);
- extern unsigned long platform_physmem(void);	/* in kilobytes */
- extern int platform_has_uuid;
+-static dotdot_update_t		*dotdot_update_list;
++static LIST_HEAD(dotdot_update_list);
+ static int			dotdot_update;
  
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index bac334f..6327076 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -629,13 +629,32 @@ main(int argc, char **argv)
- 	 * to target these for an increase in thread count. Hence a stride value
- 	 * of 15 is chosen to ensure we get at least 2 AGs being scanned at once
- 	 * on such filesystems.
-+	 *
-+	 * Limit the maximum thread count based on the available CPU power that
-+	 * is available. If we use too many threads, we might run out of memory
-+	 * and CPU power before we run out of IO concurrency. We limit to 8
-+	 * threads/CPU as this is enough threads to saturate a CPU on fast
-+	 * devices, yet few enough that it will saturate but won't overload slow
-+	 * devices.
+ static void
+@@ -64,12 +64,12 @@ add_dotdot_update(
+ 		do_error(_("malloc failed add_dotdot_update (%zu bytes)\n"),
+ 			sizeof(dotdot_update_t));
+ 
+-	dir->next = dotdot_update_list;
++	INIT_LIST_HEAD(&dir->list);
+ 	dir->irec = irec;
+ 	dir->agno = agno;
+ 	dir->ino_offset = ino_offset;
+ 
+-	dotdot_update_list = dir;
++	list_add(&dir->list, &dotdot_update_list);
+ }
+ 
+ /*
+@@ -3021,9 +3021,10 @@ update_missing_dotdot_entries(
+ 	 * set dotdot_update flag so processing routines do not count links
  	 */
- 	if (!ag_stride && glob_agcount >= 16 && do_prefetch)
- 		ag_stride = 15;
- 
- 	if (ag_stride) {
-+		int max_threads = platform_nproc() * 8;
-+
- 		thread_count = (glob_agcount + ag_stride - 1) / ag_stride;
--		thread_init();
-+		while (thread_count > max_threads) {
-+			ag_stride *= 2;
-+			thread_count = (glob_agcount + ag_stride - 1) /
-+								ag_stride;
-+		}
-+		if (thread_count > 0)
-+			thread_init();
-+		else {
-+			thread_count = 1;
-+			ag_stride = 0;
-+		}
+ 	dotdot_update = 1;
+-	while (dotdot_update_list) {
+-		dir = dotdot_update_list;
+-		dotdot_update_list = dir->next;
++	while (!list_empty(&dotdot_update_list)) {
++		dir = list_entry(dotdot_update_list.prev, struct dotdot_update,
++				 list);
++		list_del(&dir->list);
+ 		process_dir_inode(mp, dir->agno, dir->irec, dir->ino_offset);
+ 		free(dir);
  	}
- 
- 	if (ag_stride && report_interval) {
 -- 
 1.8.4.rc3
 
