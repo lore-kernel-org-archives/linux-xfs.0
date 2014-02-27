@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9ACF17F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:25:30 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 927FF7F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:25:52 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 863A78F8059
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:25:30 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qUFvivJTeLJylutg for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:25:29 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1RKPS96018254
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:25:28 -0500
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s1RKPRH1009056
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:25:28 -0500
-Message-ID: <530F9F37.8020408@redhat.com>
-Date: Thu, 27 Feb 2014 14:25:27 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8288030406B
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:25:49 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	psDSlm9iKIBSWshQ for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 12:25:46 -0800 (PST)
+Date: Fri, 28 Feb 2014 07:25:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_io: add missing break in O_TMPFILE case
+Message-ID: <20140227202544.GF30131@dastard>
+References: <530F9D31.5070103@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_io: don't leak fd in open -Tr failure case
+Content-Disposition: inline
+In-Reply-To: <530F9D31.5070103@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,50 +29,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Coverity spotted this.
+On Thu, Feb 27, 2014 at 02:16:49PM -0600, Eric Sandeen wrote:
+> Coverity spotted this.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> (I assume that -T isn't supposed to imply -x?)
+> 
+> diff --git a/io/init.c b/io/init.c
+> index fd1a52f..1e2690e 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -181,6 +181,7 @@ init(
+>  			break;
+>  		case 'T':
+>  			flags |= IO_TMPFILE;
+> +			break;
+>  		case 'x':
+>  			expert = 1;
+>  			break;
 
-It complained that we didn't close the fd before returning in
-this case of incompatible options, but it seems like we should
-just test for the incompatible flags before even trying to open
-the file, no?
+Looks good.
 
-(The open would have failed in any case, but with a somewhat
-cryptic "Invalid argument" - so it's probably better to state
-it plainly and bail immediately.)
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/io/open.c b/io/open.c
-index 6bb0d46..c106fa7 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -342,6 +342,11 @@ open_f(
- 	if (optind != argc - 1)
- 		return command_usage(&open_cmd);
- 
-+	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
-+		fprintf(stderr, _("-T and -r options are incompatible\n"));
-+		return -1;
-+	}
-+
- 	fd = openfile(argv[optind], &geometry, flags, mode);
- 	if (fd < 0)
- 		return 0;
-@@ -349,11 +354,6 @@ open_f(
- 	if (!platform_test_xfs_fd(fd))
- 		flags |= IO_FOREIGN;
- 
--	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
--		fprintf(stderr, _("-T and -r options are incompatible\n"));
--		return -1;
--	}
--
- 	addfile(argv[optind], fd, &geometry, flags);
- 	return 0;
- }
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
