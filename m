@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 927FF7F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:25:52 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E4CC7F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 14:32:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8288030406B
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:25:49 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	psDSlm9iKIBSWshQ for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 12:25:46 -0800 (PST)
-Date: Fri, 28 Feb 2014 07:25:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_io: add missing break in O_TMPFILE case
-Message-ID: <20140227202544.GF30131@dastard>
-References: <530F9D31.5070103@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C5476AC008
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 12:32:50 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id rcKhGguSNEIRWFoO for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 12:32:48 -0800 (PST)
+Message-ID: <530FA0EF.50301@sandeen.net>
+Date: Thu, 27 Feb 2014 14:32:47 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <530F9D31.5070103@redhat.com>
+Subject: Re: [PATCH] xfs_io: don't leak fd in open -Tr failure case
+References: <530F9F37.8020408@redhat.com>
+In-Reply-To: <530F9F37.8020408@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +27,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Feb 27, 2014 at 02:16:49PM -0600, Eric Sandeen wrote:
+On 2/27/14, 2:25 PM, Eric Sandeen wrote:
 > Coverity spotted this.
 > 
+> It complained that we didn't close the fd before returning in
+> this case of incompatible options, but it seems like we should
+> just test for the incompatible flags before even trying to open
+> the file, no?
+> 
+> (The open would have failed in any case, but with a somewhat
+> cryptic "Invalid argument" - so it's probably better to state
+> it plainly and bail immediately.)
+
+So actually, we wouldn't leak, because the open would fail.
+So I guess it's not the best subject & description...
+
+-Eric
+
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> (I assume that -T isn't supposed to imply -x?)
+> diff --git a/io/open.c b/io/open.c
+> index 6bb0d46..c106fa7 100644
+> --- a/io/open.c
+> +++ b/io/open.c
+> @@ -342,6 +342,11 @@ open_f(
+>  	if (optind != argc - 1)
+>  		return command_usage(&open_cmd);
+>  
+> +	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
+> +		fprintf(stderr, _("-T and -r options are incompatible\n"));
+> +		return -1;
+> +	}
+> +
+>  	fd = openfile(argv[optind], &geometry, flags, mode);
+>  	if (fd < 0)
+>  		return 0;
+> @@ -349,11 +354,6 @@ open_f(
+>  	if (!platform_test_xfs_fd(fd))
+>  		flags |= IO_FOREIGN;
+>  
+> -	if ((flags & (IO_READONLY|IO_TMPFILE)) == (IO_READONLY|IO_TMPFILE)) {
+> -		fprintf(stderr, _("-T and -r options are incompatible\n"));
+> -		return -1;
+> -	}
+> -
+>  	addfile(argv[optind], fd, &geometry, flags);
+>  	return 0;
+>  }
 > 
-> diff --git a/io/init.c b/io/init.c
-> index fd1a52f..1e2690e 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -181,6 +181,7 @@ init(
->  			break;
->  		case 'T':
->  			flags |= IO_TMPFILE;
-> +			break;
->  		case 'x':
->  			expert = 1;
->  			break;
-
-Looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
