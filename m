@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 405437F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 21AA2304059
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8620A7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EB393AC008
 	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:18 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1JZZ4wOwTyxUpmaQ for
-	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:14 -0800 (PST)
+	cuda.sgi.com with ESMTP id 6LoZrEagSNKqWkJ2 for
+	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:17 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 2/8] xfstests: create _test_block_boundaries in common/punch
-Date: Fri, 28 Feb 2014 17:10:59 +0100
-Message-Id: <1393603865-26198-2-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 5/8] xfstests: Add fallocate zero range operation to fsstress
+Date: Fri, 28 Feb 2014 17:11:02 +0100
+Message-Id: <1393603865-26198-5-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
 References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,278 +30,281 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-Create new function _test_block_boundaries() which is testing content of
-the blocks after the operation such as zero, or punch hole. The test is
-doing the operation around block boundaries to assure correct behaviour
-of the operation on block unaligned ranges.
+This commit adds fzero operation support for fsstress, which is meant to
+exercise fallocate FALLOC_FL_ZERO_RANGE support.
 
-This has been based on test xfs/290 which has been changed to use this
-new function. A small change to the output file was required.
+Also reorganise the common fallocate code into a single do_fallocate()
+function and use flags use the right mode.
+
+Also in order to make more obvious which fallocate mode fsstress is
+testing translate fallocate flags into human readable strings.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- common/punch      | 106 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/290     |  40 ++-------------------
- tests/xfs/290.out |  13 +++++--
- 3 files changed, 119 insertions(+), 40 deletions(-)
+ ltp/fsstress.c | 164 +++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 106 insertions(+), 58 deletions(-)
 
-diff --git a/common/punch b/common/punch
-index 9340d3b..f2d538c 100644
---- a/common/punch
-+++ b/common/punch
-@@ -566,3 +566,109 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
- 	od -x $testfile | head -n -1
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 7dec7c6..24864db 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -70,6 +70,7 @@ typedef enum {
+ 	OP_MKDIR,
+ 	OP_MKNOD,
+ 	OP_PUNCH,
++	OP_ZERO,
+ 	OP_READ,
+ 	OP_READLINK,
+ 	OP_RENAME,
+@@ -114,6 +115,17 @@ typedef struct pathname {
+ 	char	*path;
+ } pathname_t;
+ 
++struct print_flags {
++	unsigned long mask;
++	const char *name;
++};
++
++struct print_string {
++	char *buffer;
++	int len;
++	int max;
++};
++
+ #define	FT_DIR	0
+ #define	FT_DIRm	(1 << FT_DIR)
+ #define	FT_REG	1
+@@ -155,6 +167,7 @@ void	link_f(int, long);
+ void	mkdir_f(int, long);
+ void	mknod_f(int, long);
+ void	punch_f(int, long);
++void	zero_f(int, long);
+ void	read_f(int, long);
+ void	readlink_f(int, long);
+ void	rename_f(int, long);
+@@ -192,6 +205,7 @@ opdesc_t	ops[] = {
+ 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
+ 	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
+ 	{ OP_PUNCH, "punch", punch_f, 1, 1 },
++	{ OP_ZERO, "zero", zero_f, 1, 1 },
+ 	{ OP_READ, "read", read_f, 1, 0 },
+ 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+ 	{ OP_RENAME, "rename", rename_f, 2, 1 },
+@@ -242,6 +256,7 @@ int		verbose = 0;
+ sig_atomic_t	should_stop = 0;
+ char		*execute_cmd = NULL;
+ int		execute_freq = 1;
++struct print_string	flag_str = {0};
+ 
+ void	add_to_flist(int, int, int);
+ void	append_pathname(pathname_t *, char *);
+@@ -543,6 +558,59 @@ int main(int argc, char **argv)
+ 	return 0;
  }
-+
-+_test_block_boundaries()
+ 
++int
++add_string(struct print_string *str, const char *add)
 +{
++	int len = strlen(add);
 +
-+	remove_testfile=1
-+	sync_cmd="-c fsync"
-+	unwritten_tests=1
-+	OPTIND=1
-+	while getopts 'dk' OPTION
-+	do
-+		case $OPTION in
-+		k)	remove_testfile=
-+		;;
-+		d)	sync_cmd=
-+		;;
-+		?)	echo Invalid flag
-+		exit 1
-+		;;
-+		esac
-+	done
-+	shift $(($OPTIND - 1))
++	if (len <= 0)
++		return 0;
 +
-+	bs=$1
-+	zero_cmd=$2
-+	filter_cmd=$3
-+	testfile=$4
++	if (len > (str->max - 1) - str->len) {
++		str->len = str->max - 1;
++		return 0;
++	}
 +
-+	# Block size plus 1
-+	bs_p1=$(($bs + 1))
-+	# Block size plus 2
-+	bs_p2=$(($bs + 2))
++	memcpy(str->buffer + str->len, add, len);
++	str->len += len;
++	str->buffer[str->len] = '\0';
 +
-+	# Block size minus 1
-+	bs_m1=$(($bs - 1))
-+
-+	# Block size multiplied by 2
-+	bs_t2=$(($bs * 2))
-+
-+	# Block size divided by 2
-+	bs_d2=$(($bs / 2))
-+
-+	echo "zero 0, 1"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd 0 1" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+	echo "zero 0, $bs_m1"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd 0 $bs_m1" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+	echo "zero 0, $bs"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd 0 $bs" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+	echo "zero 0, $bs_p1"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd 0 $bs_p1" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+	echo "zero $bs_m1, $bs"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd $bs_m1 $bs" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+	echo "zero $bs_m1, $bs_p1"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd $bs_m1 $bs_p1" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+	echo "zero $bs_m1, $bs_p2"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd $bs_m1 $bs_p2" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+
-+	echo "zero $bs, $bs"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd $bs $bs" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
-+
-+
-+	echo "zero $bs_d2 , $bs"
-+	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 $bs" \
-+			   -c "pwrite -S 0x42 $bs $bs" \
-+			   -c "$zero_cmd $bs_d2 $bs" \
-+			   -c "pread -v 0 $bs_t2" \
-+			   $testfile | $filter_cmd
++	return len;
 +}
-diff --git a/tests/xfs/290 b/tests/xfs/290
-index 547a0ba..cbe7108 100755
---- a/tests/xfs/290
-+++ b/tests/xfs/290
-@@ -38,6 +38,7 @@ trap "exit \$status" 0 1 2 3 15
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/punch
++
++char *
++translate_flags(int flags, const char *delim,
++		const struct print_flags *flag_array)
++{
++	int i, mask, first = 1;
++	const char *add;
++
++	if (!flag_str.buffer) {
++		flag_str.buffer = malloc(4096);
++		flag_str.max = 4096;
++		flag_str.len = 0;
++	}
++	if (!flag_str.buffer)
++		return NULL;
++	flag_str.len = 0;
++	flag_str.buffer[0] = '\0';
++
++	for (i = 0;  flag_array[i].name && flags; i++) {
++		mask = flag_array[i].mask;
++		if ((flags & mask) != mask)
++			continue;
++
++		add = flag_array[i].name;
++		flags &= ~mask;
++		if (!first && delim)
++			add_string(&flag_str, delim);
++		else
++			first = 0;
++		add_string(&flag_str, add);
++	}
++	return flag_str.buffer;
++}
++
+ void
+ add_to_flist(int ft, int id, int parent)
+ {
+@@ -2075,8 +2143,23 @@ dwrite_f(int opno, long r)
+ 	close(fd);
+ }
  
- # real QA test starts here
++
++#ifdef HAVE_LINUX_FALLOC_H
++struct print_flags falloc_flags [] = {
++	{ FALLOC_FL_KEEP_SIZE, "KEEP_SIZE"},
++	{ FALLOC_FL_PUNCH_HOLE, "PUNCH_HOLE"},
++	{ FALLOC_FL_NO_HIDE_STALE, "NO_HIDE_STALE"},
++	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
++	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
++	{ -1, NULL}
++};
++
++#define translate_falloc_flags(mode)	\
++	({translate_flags(mode, "|", falloc_flags);})
++#endif
++
+ void
+-fallocate_f(int opno, long r)
++do_fallocate(int opno, long r, int mode)
+ {
+ #ifdef HAVE_LINUX_FALLOC_H
+ 	int		e;
+@@ -2088,28 +2171,26 @@ fallocate_f(int opno, long r)
+ 	struct stat64	stb;
+ 	int		v;
+ 	char		st[1024];
+-	int mode = 0;
  
-@@ -49,44 +50,7 @@ _require_xfs_io_zero
+ 	init_pathname(&f);
+ 	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
+ 		if (v)
+-			printf("%d/%d: fallocate - no filename\n", procid, opno);
++			printf("%d/%d: do_fallocate - no filename\n", procid, opno);
+ 		free_pathname(&f);
+ 		return;
+ 	}
+ 	fd = open_path(&f, O_RDWR);
+-	e = fd < 0 ? errno : 0;
+-	check_cwd();
+ 	if (fd < 0) {
+ 		if (v)
+-			printf("%d/%d: fallocate - open %s failed %d\n",
+-				procid, opno, f.path, e);
++			printf("%d/%d: do_fallocate - open %s failed %d\n",
++				procid, opno, f.path, errno);
+ 		free_pathname(&f);
+ 		return;
+ 	}
++	check_cwd();
+ 	if (fstat64(fd, &stb) < 0) {
+ 		if (v)
+-			printf("%d/%d: fallocate - fstat64 %s failed %d\n",
++			printf("%d/%d: do_fallocate - fstat64 %s failed %d\n",
+ 				procid, opno, f.path, errno);
+ 		free_pathname(&f);
+ 		close(fd);
+@@ -2123,14 +2204,21 @@ fallocate_f(int opno, long r)
+ 	mode |= FALLOC_FL_KEEP_SIZE & random();
+ 	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
+ 	if (v)
+-		printf("%d/%d: fallocate(%d) %s %st %lld %lld %d\n",
+-		       procid, opno, mode,
++		printf("%d/%d: fallocate(%s) %s %st %lld %lld %d\n",
++		       procid, opno, translate_falloc_flags(mode),
+ 		       f.path, st, (long long)off, (long long)len, e);
+ 	free_pathname(&f);
+ 	close(fd);
+ #endif
+ }
  
- testfile=$TEST_DIR/290.$$
++void
++fallocate_f(int opno, long r)
++{
++#ifdef HAVE_LINUX_FALLOC_H
++	do_fallocate(opno, r, 0);
++#endif
++}
  
--test_zero()
--{
--	zero_start=$1
--	zero_len=$2
--
--	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 4096" \
--                      -c "pwrite -S 0x42 4096 4096" \
--                      -c "zero $zero_start $zero_len" \
--                      -c "pread -v 0 8192" \
--                      $testfile | _filter_xfs_io_unique
--}
--
--# [0,1] -- Shouldn't toss anything
--test_zero    0    1
--
--#[0,4095] -- Shouldn't toss anything
--test_zero    0 4095
--
--#[0,4096] -- Should toss first page
--test_zero    0 4096
--
--#[0,4097] -- Should toss first page
--test_zero    0 4097
--
--#[4095,8191] -- Should toss last byte of first page
--test_zero 4095 4096
--
--#[4095,8192] -- Should toss second page & last byte of first page
--test_zero 4095 4097
--
--#[4095,8193] -- Should toss second page & last byte of first page
--test_zero 4095 4098
--
--#[4096,8192] -- Should toss second page
--test_zero 4096 4096
--
--#[1024,5120] -- Should toss from 1024 to end of first page
--test_zero 1024 4096
-+_test_block_boundaries 4096 zero _filter_xfs_io_unique $testfile
+ void
+ fdatasync_f(int opno, long r)
+@@ -2501,55 +2589,15 @@ void
+ punch_f(int opno, long r)
+ {
+ #ifdef HAVE_LINUX_FALLOC_H
+-	int		e;
+-	pathname_t	f;
+-	int		fd;
+-	__int64_t	lr;
+-	off64_t		off;
+-	off64_t		len;
+-	struct stat64	stb;
+-	int		v;
+-	char		st[1024];
+-	int mode = FALLOC_FL_PUNCH_HOLE;
++	do_fallocate(opno, r, FALLOC_FL_PUNCH_HOLE);
++#endif
++}
  
- # success, all done
- status=0
-diff --git a/tests/xfs/290.out b/tests/xfs/290.out
-index 229c2b3..2487a93 100644
---- a/tests/xfs/290.out
-+++ b/tests/xfs/290.out
-@@ -1,4 +1,5 @@
- QA output created by 290
-+zero 0, 1
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -10,6 +11,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 4095
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -21,6 +23,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 4096
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -31,6 +34,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 4097
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -42,6 +46,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4095, 4096
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -54,6 +59,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- 00001ff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42  ...............B
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4095, 4097
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -65,6 +71,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4095, 4098
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -76,6 +83,7 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4096, 4096
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
-@@ -86,15 +94,16 @@ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 2048 , 4096
- wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- wrote 4096/4096 bytes at offset 4096
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- 00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
- *
--00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+00000800:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- *
--00001400:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+00001800:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
- *
- read 8192/8192 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-	init_pathname(&f);
+-	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
+-		if (v)
+-			printf("%d/%d: punch hole - no filename\n", procid, opno);
+-		free_pathname(&f);
+-		return;
+-	}
+-	fd = open_path(&f, O_RDWR);
+-	e = fd < 0 ? errno : 0;
+-	check_cwd();
+-	if (fd < 0) {
+-		if (v)
+-			printf("%d/%d: punch hole - open %s failed %d\n",
+-				procid, opno, f.path, e);
+-		free_pathname(&f);
+-		return;
+-	}
+-	if (fstat64(fd, &stb) < 0) {
+-		if (v)
+-			printf("%d/%d: punch hole - fstat64 %s failed %d\n",
+-				procid, opno, f.path, errno);
+-		free_pathname(&f);
+-		close(fd);
+-		return;
+-	}
+-	inode_info(st, sizeof(st), &stb, v);
+-	lr = ((__int64_t)random() << 32) + random();
+-	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
+-	off %= maxfsize;
+-	len = (off64_t)(random() % (1024 * 1024));
+-	mode |= FALLOC_FL_KEEP_SIZE & random();
+-	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
+-	if (v)
+-		printf("%d/%d: punch hole(%d) %s %s %lld %lld %d\n",
+-		       procid, opno, mode,
+-		       f.path, st, (long long)off, (long long)len, e);
+-	free_pathname(&f);
+-	close(fd);
++void
++zero_f(int opno, long r)
++{
++#ifdef HAVE_LINUX_FALLOC_H
++	do_fallocate(opno, r, FALLOC_FL_ZERO_RANGE);
+ #endif
+ }
+ 
 -- 
 1.8.3.1
 
