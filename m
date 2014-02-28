@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 554167F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 21:12:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 282908F8037
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 19:12:50 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5DE7E7F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 22:06:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 41EF8304070
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 20:06:07 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id rhS4ngSqAkhF4vce for <xfs@oss.sgi.com>;
-	Thu, 27 Feb 2014 19:12:45 -0800 (PST)
-Message-ID: <530FFEAC.6040802@sandeen.net>
-Date: Thu, 27 Feb 2014 21:12:44 -0600
+	ESMTP id XsB8VPMueMhwnbCI for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 20:06:06 -0800 (PST)
+Message-ID: <53100B2D.8000509@sandeen.net>
+Date: Thu, 27 Feb 2014 22:06:05 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] mkfs: default log size for small filesystems too large
-References: <1393494344-30056-1-git-send-email-david@fromorbit.com>
-	<1393494344-30056-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1393494344-30056-2-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH, V2] metadump: don't verify metadata being dumped
+References: <1393548825-16499-1-git-send-email-david@fromorbit.com>
+	<20140228025138.GJ30131@dastard>
+In-Reply-To: <20140228025138.GJ30131@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,106 +30,221 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On 2/27/14, 3:45 AM, Dave Chinner wrote:
+On 2/27/14, 8:51 PM, Dave Chinner wrote:
+> metadump: don't verify metadata being dumped
+
+Not a complete summary anymore...
+
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Recent changes to the log size scaling have resulted in using the
-> default size multiplier for the log size even on small filesystems.
-> Commit 88cd79b ("xfs: Add xfs_log_rlimit.c") changed the calculation
-> of the maximum transaction size that the kernel would issues and
-> that significantly increased the minimum size of the default log.
-> As such the size of the log on small filesystems was typically
-> larger than the prefious default, even though the previous default
-> was still larger than the minimum needed.
+> The discontiguous buffer support series added a verifier check on
+> the metadata buffers before they go written to the metadump image.
+> If this failed, it returned an error, and the restul woul dbe that
+
+wheny ou type too fasty ou end up with thes ame sort of typosa sIdo. ;)
+
+> we stopped processing the metadata and exited, resulting in a
+> truncated dump.
 > 
-> Rework the default log size calculation such that it will use the
-> original log size default if it is larger than the minimum log size
-> required, and only use a larger log if the configuration of the
-> filesystem requires it.
+> xfs_metadump is supposed to dump the metadata in the filesystem for
+> forensic analysis purposes, which means we actually want it to
+> retain any corruptions it finds in the filesystem. Hence running the
+> verifier - even to recalculate CRCs - when the metadata is
+> unmodified is the wrong thing to be doing. And stopping the dump
+> when we come across an error is even worse.
 > 
-> This is especially obvious in xfs/216, where the default log size is
-> 10MB all the way up to 16GB filesystems. The current mkfs selects a
-> log size of 50MB for the same size filesystems and this is
-> unnecessarily large.
+> We still need to do CRC recalculation when obfuscating names and
+> attributes. Hence we need to make running the verifier conditional
+> on the buffer or inode:
+> 	a) being uncorrupted when read, and
+> 	b) modified by the obfuscation code.
 > 
-> Return the scaling of the log size for small filesystems to
-> something similar to what xfs/216 expects.
-> 
+> If either of these conditions is not true, then we don't run the
+> verifier or recalculate the CRCs.
+
+I think this looks mostly ok; small questions & nitpicks below.
+
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Looks good.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
->  mkfs/xfs_mkfs.c | 48 ++++++++++++++++++++++++++++--------------------
->  1 file changed, 28 insertions(+), 20 deletions(-)
+> V2: run verifiers on buffers and inodes modified by obfuscation, but
+> only if they are not corrupt before obfuscation. Thanks, Eric!
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index d82128c..f7cf394 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2366,32 +2366,40 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
->  	} else if (!loginternal && !xi.logdev) {
->  		logblocks = 0;
->  	} else if (loginternal && !logsize) {
-> -		/*
-> -		 * With a 2GB max log size, default to maximum size
-> -		 * at 4TB. This keeps the same ratio from the older
-> -		 * max log size of 128M at 256GB fs size. IOWs,
-> -		 * the ratio of fs size to log size is 2048:1.
-> -		 */
-> -		logblocks = (dblocks << blocklog) / 2048;
-> -		logblocks = logblocks >> blocklog;
-> -		logblocks = MAX(min_logblocks, logblocks);
+>  db/io.h       |  1 +
+>  db/metadump.c | 57 ++++++++++++++++++++++++++++++++++++++++++++-------------
+>  2 files changed, 45 insertions(+), 13 deletions(-)
+> 
+> diff --git a/db/io.h b/db/io.h
+> index 4f24c83..d8cf383 100644
+> --- a/db/io.h
+> +++ b/db/io.h
+> @@ -41,6 +41,7 @@ typedef struct iocur {
+>  	int			ino_crc_ok:1;
+>  	int			ino_buf:1;
+>  	int			dquot_buf:1;
+> +	int			need_crc:1;
+>  } iocur_t;
 >  
-> -		/*
-> -		 * If the default log size doesn't fit in the AG size, use the
-> -		 * minimum log size instead. This ensures small filesystems
-> -		 * don't use excessive amounts of space for the log.
-> -		 */
-> -		if (min_logblocks * XFS_DFL_LOG_FACTOR >= agsize) {
-> +		if (dblocks < GIGABYTES(1, blocklog)) {
-> +			/* tiny filesystems get minimum sized logs. */
->  			logblocks = min_logblocks;
-> +		} else if (dblocks < GIGABYTES(16, blocklog)) {
-> +
-> +			/*
-> +			 * For small filesystems, we want to use the
-> +			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
-> +			 * at all possible, ramping up to 128MB at 256GB.
-> +			 */
-> +			logblocks = MIN(XFS_MIN_LOG_BYTES >> blocklog,
-> +					min_logblocks * XFS_DFL_LOG_FACTOR);
->  		} else {
-> -			logblocks = MAX(logblocks,
-> -				MAX(XFS_DFL_LOG_SIZE,
-> -					min_logblocks * XFS_DFL_LOG_FACTOR));
-> +			/*
-> +			 * With a 2GB max log size, default to maximum size
-> +			 * at 4TB. This keeps the same ratio from the older
-> +			 * max log size of 128M at 256GB fs size. IOWs,
-> +			 * the ratio of fs size to log size is 2048:1.
-> +			 */
-> +			logblocks = (dblocks << blocklog) / 2048;
-> +			logblocks = logblocks >> blocklog;
-> +			logblocks = MAX(min_logblocks, logblocks);
+>  #define DB_RING_ADD 1                   /* add to ring on set_cur */
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 5baf83d..c829726 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -190,26 +190,36 @@ write_buf_segment(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * we want to preserve the state of the metadata in the dump - whether it is
+> + * intact or corrupt, so even if the buffer has a verifier attached to it we
+> + * don't want to run it prior to writing the buffer to the metadump image.
+> + *
+> + * The only reason for running the verifier is to recalculate the CRCs on a
+> + * buffer that has been obfuscated. i.e. a buffer than metadump modified itself.
+> + * In this case, we only run the verifier if the buffer was not corrupt to begin
+> + * with so that we don't accidentally correct buffers with CRC or errors in them
+> + * when we are obfuscating them.
+> + */
+>  static int
+>  write_buf(
+>  	iocur_t		*buf)
+>  {
+> +	struct xfs_buf	*bp = buf->bp;
+>  	int		i;
+>  	int		ret;
+>  
+>  	/*
+>  	 * Run the write verifier to recalculate the buffer CRCs and check
+> -	 * we are writing something valid to disk
+> +	 * metadump didn't introduce a new corruption. Warn if the verifier
+> +	 * failed, but still continue to dump it into the output file.
+>  	 */
+> -	if (buf->bp && buf->bp->b_ops) {
+> -		buf->bp->b_error = 0;
+> -		buf->bp->b_ops->verify_write(buf->bp);
+> -		if (buf->bp->b_error) {
+> -			fprintf(stderr,
+> -	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+> -				__func__, (long long)buf->bp->b_bn,
+> -				buf->bp->b_bcount);
+> -			return -buf->bp->b_error;
+> +	if (buf->need_crc && bp && bp->b_ops && !bp->b_error) {
+> +		bp->b_ops->verify_write(bp);
+> +		if (bp->b_error) {
+> +			print_warning(
+> +				"obfuscation corrupted block at bno 0x%llx/0x%x",
+> +				(long long)bp->b_bn, bp->b_bcount);
 >  		}
-> +
-> +		/* make sure the log fits wholly within an AG */
-> +		if (logblocks >= agsize)
-> +			logblocks = min_logblocks;
-> +
-> +		/* and now clamp the size to the maximum supported size */
->  		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
-> -		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
-> +		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES)
->  			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
-> -		}
-> +
 >  	}
->  	validate_log_size(logblocks, blocklog, min_logblocks);
 >  
+> @@ -1374,6 +1384,7 @@ process_single_fsb_objects(
+>  		o++;
+>  		dp += mp->m_sb.sb_blocksize;
+>  	}
+> +	iocur_top->need_crc = 1;
+
+in the 
+
+default:
+
+case we don't obfuscate.  Should it still get need_crc?
+
+>  	ret = write_buf(iocur_top);
+>  
+>  out_pop:
+> @@ -1442,6 +1453,7 @@ process_multi_fsb_objects(
+>  
+>  			obfuscate_dir_data_block(iocur_top->data, o,
+>  						  last == mp->m_dirblkfsbs);
+> +			iocur_top->need_crc = 1;
+>  			ret = write_buf(iocur_top);
+>  out_pop:
+>  			pop_cur();
+> @@ -1722,6 +1734,13 @@ process_inode_data(
+>  	return 1;
+>  }
+>  
+> +/*
+> + * when we process the inode, we may change the data in the data and/or
+> + * attribute fork if they are in short form and we are obfuscating names.
+> + * In this case we need to recalculate the CRC of the inode, but we should
+> + * only do that if the CRC in the inode is good to begin with. If the crc
+> + * is not ok, we just leave it alone.
+> + */
+>  static int
+>  process_inode(
+>  	xfs_agnumber_t		agno,
+> @@ -1729,17 +1748,28 @@ process_inode(
+>  	xfs_dinode_t 		*dip)
+>  {
+>  	int			success;
+> +	bool			crc_ok = false; /* don't recalc by default */
+> +	bool			need_crc = false;
+
+I might do
+
++	bool			crc_was_ok = false; /* don't recalc by default */
++	bool			need_new_crc = false;
+
+for clarity...? 
+
+>  	success = 1;
+>  	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
+>  
+> +	/* we only care about crc recalculation if we are obfuscating names. */
+> +	if (!dont_obfuscate)
+> +		crc_ok = xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+> +					  offsetof(struct xfs_dinode, di_crc));
+> +
+>  	/* copy appropriate data fork metadata */
+>  	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+>  		case S_IFDIR:
+>  			success = process_inode_data(dip, TYP_DIR2);
+> +			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+> +				need_crc = 1;
+
+I wish this were closer to the point of obfuscation, but oh well.
+
+>  			break;
+>  		case S_IFLNK:
+>  			success = process_inode_data(dip, TYP_SYMLINK);
+> +			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
+> +				need_crc = 1;
+>  			break;
+>  		case S_IFREG:
+>  			success = process_inode_data(dip, TYP_DATA);
+> @@ -1754,6 +1784,7 @@ process_inode(
+>  		attr_data.remote_val_count = 0;
+>  		switch (dip->di_aformat) {
+>  			case XFS_DINODE_FMT_LOCAL:
+> +				need_crc = 1;
+>  				if (!dont_obfuscate)
+>  					obfuscate_sf_attr(dip);
+>  				break;
+> @@ -1768,6 +1799,9 @@ process_inode(
+>  		}
+>  		nametable_clear();
+>  	}
+> +
+> +	if (crc_ok && need_crc)
+> +		xfs_dinode_calc_crc(mp, dip);
+>  	return success;
+>  }
+>  
+> @@ -1838,9 +1872,6 @@ copy_inode_chunk(
+>  
+>  		if (!process_inode(agno, agino + i, dip))
+>  			goto pop_out;
+> -
+> -		/* calculate the new CRC for the inode */
+> -		xfs_dinode_calc_crc(mp, dip);
+>  	}
+>  skip_processing:
+>  	if (write_buf(iocur_top))
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
 
 _______________________________________________
