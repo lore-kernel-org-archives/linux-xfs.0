@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 151F37F5A
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:22 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2DDE87F5A
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A919AC009
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:21 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 14DDC8F8052
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:23 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4DHy1UUhm70LeWx0 for
-	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:20 -0800 (PST)
+	cuda.sgi.com with ESMTP id StjXGRf6pMH7QzK5 for
+	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:22 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 7/8] xfstests: Add fallocate zero range operation to fsx
-Date: Fri, 28 Feb 2014 17:11:04 +0100
-Message-Id: <1393603865-26198-7-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 8/8] ext4/001: Add ext4 specific test for fallocate zero range
+Date: Fri, 28 Feb 2014 17:11:05 +0100
+Message-Id: <1393603865-26198-8-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
 References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,238 +30,446 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-This commit adds fallocate FALLOC_FL_ZERO_RANGE support for fsx.
+This is based on xfs/242. However it's better to make it file system
+specific because the range can be zeroes either directly by writing
+zeroes, or converting to unwritten extent, so the actual result might
+differ from file system to file system. Also xfs results differ
+depending on the page size which is not the case for ext4.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- ltp/fsx.c | 128 +++++++++++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 98 insertions(+), 30 deletions(-)
+ tests/ext4/001     |  64 ++++++++++
+ tests/ext4/001.out | 337 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/group   |   1 +
+ 3 files changed, 402 insertions(+)
+ create mode 100755 tests/ext4/001
+ create mode 100644 tests/ext4/001.out
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index c36a038..5d6d198 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -69,6 +69,7 @@ int			logcount = 0;	/* total ops */
-  * TRUNCATE:	-	4
-  * FALLOCATE:	-	5
-  * PUNCH HOLE:	-	6
-+ * ZERO RANGE:	-	7
-  *
-  * When mapped read/writes are disabled, they are simply converted to normal
-  * reads and writes. When fallocate/fpunch calls are disabled, they are
-@@ -92,7 +93,8 @@ int			logcount = 0;	/* total ops */
- #define OP_TRUNCATE	4
- #define OP_FALLOCATE	5
- #define OP_PUNCH_HOLE	6
--#define OP_MAX_FULL	7
-+#define OP_ZERO_RANGE	7
-+#define OP_MAX_FULL	8
- 
- /* operation modifiers */
- #define OP_CLOSEOPEN	100
-@@ -139,6 +141,7 @@ int	seed = 1;			/* -S flag */
- int     mapped_writes = 1;              /* -W flag disables */
- int     fallocate_calls = 1;            /* -F flag disables */
- int     punch_hole_calls = 1;           /* -H flag disables */
-+int     zero_range_calls = 1;           /* -z flag disables */
- int 	mapped_reads = 1;		/* -R flag disables it */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -317,6 +320,14 @@ logdump(void)
- 						     lp->args[0] + lp->args[1])
- 				prt("\t******PPPP");
- 			break;
-+		case OP_ZERO_RANGE:
-+			prt("ZERO    0x%x thru 0x%x\t(0x%x bytes)",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1]);
-+			if (badoff >= lp->args[0] && badoff <
-+						     lp->args[0] + lp->args[1])
-+				prt("\t******ZZZZ");
-+			break;
- 		case OP_SKIPPED:
- 			prt("SKIPPED (no operation)");
- 			break;
-@@ -879,6 +890,65 @@ do_punch_hole(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FALLOC_FL_ZERO_RANGE
-+void
-+do_zero_range(unsigned offset, unsigned length)
+diff --git a/tests/ext4/001 b/tests/ext4/001
+new file mode 100755
+index 0000000..d575d9a
+--- /dev/null
++++ b/tests/ext4/001
+@@ -0,0 +1,64 @@
++#! /bin/bash
++# FS QA Test No. 001
++#
++# Test fallocate FALLOC_FL_ZERO_RANGE
++#
++#-----------------------------------------------------------------------
++# Copyright 2014 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
 +{
-+	unsigned end_offset;
-+	int mode = FALLOC_FL_ZERO_RANGE;
-+	int keep_size;
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length zero range\n");
-+			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, length);
-+		return;
-+	}
-+
-+	keep_size = random() % 2;
-+
-+	end_offset = keep_size ? 0 : offset + length;
-+
-+	if (end_offset > biggest) {
-+		biggest = end_offset;
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("zero_range to largest ever: 0x%x\n", end_offset);
-+	}
-+
-+	/*
-+	 * last arg matches fallocate string array index in logdump:
-+	 * 	0: allocate past EOF
-+	 * 	1: extending prealloc
-+	 * 	2: interior prealloc
-+	 */
-+	log4(OP_ZERO_RANGE, offset, length, (end_offset > file_size) ? (keep_size ? 0 : 1) : 2);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		      end_offset <= monitorend))) {
-+		prt("%lu zero\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-+			offset, offset+length, length);
-+	}
-+	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-+		prt("%pzero range: %x to %x\n", offset, length);
-+		prterr("do_zero_range: fallocate");
-+		report_failure(161);
-+	}
-+
-+	memset(good_buf + offset, '\0', length);
++    rm -f $tmp.*
 +}
 +
-+#else
-+void
-+do_zero_range(unsigned offset, unsigned length)
-+{
-+	return;
-+}
-+#endif
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1047,6 +1117,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_ZERO_RANGE:
-+		if (!zero_range_calls) {
-+			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, size);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1085,6 +1161,10 @@ test(void)
- 		TRIM_OFF_LEN(offset, size, file_size);
- 		do_punch_hole(offset, size);
- 		break;
-+	case OP_ZERO_RANGE:
-+		TRIM_OFF_LEN(offset, size, file_size);
-+		do_zero_range(offset, size);
-+		break;
- 	default:
- 		prterr("test: unknown operation");
- 		report_failure(42);
-@@ -1140,7 +1220,10 @@ usage(void)
- "	-F: Do not use fallocate (preallocation) calls\n"
- #endif
- #ifdef FALLOC_FL_PUNCH_HOLE
--"       -H: Do not use punch hole calls\n"
-+"	-H: Do not use punch hole calls\n"
-+#endif
-+#ifdef FALLOC_FL_ZERO_RANGE
-+"	-E: Do not use zero range calls\n"
- #endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
-@@ -1290,40 +1373,21 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
- 
- #endif
- 
--void
--test_fallocate()
-+int
-+test_fallocate(int mode)
- {
- #ifdef HAVE_LINUX_FALLOC_H
-+	int ret = 0;
- 	if (!lite && fallocate_calls) {
--		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
-+		if (fallocate(fd, mode, 0, 1) && errno == EOPNOTSUPP) {
- 			if(!quiet)
- 				warn("main: filesystem does not support fallocate, disabling\n");
--			fallocate_calls = 0;
- 		} else {
-+			ret = 1;
- 			ftruncate(fd, 0);
- 		}
- 	}
--#else /* ! HAVE_LINUX_FALLOC_H */
--	fallocate_calls = 0;
--#endif
--
--}
--
--void
--test_punch_hole()
--{
--#ifdef FALLOC_FL_PUNCH_HOLE
--	if (!lite && punch_hole_calls) {
--		if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
--				0, 1) && errno == EOPNOTSUPP) {
--			if(!quiet)
--				warn("main: filesystem does not support fallocate punch hole, disabling");
--			punch_hole_calls = 0;
--		} else
--			ftruncate(fd, 0);
--	}
--#else /* ! PUNCH HOLE */
--	punch_hole_calls = 0;
-+	return ret;
- #endif
- }
- 
-@@ -1345,7 +1409,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzLN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1445,6 +1509,9 @@ main(int argc, char **argv)
- 		case 'H':
- 			punch_hole_calls = 0;
- 			break;
-+		case 'z':
-+			zero_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			break;
-@@ -1590,8 +1657,9 @@ main(int argc, char **argv)
- 	} else 
- 		check_trunc_hack();
- 
--	test_fallocate();
--	test_punch_hole();
-+	fallocate_calls = test_fallocate(0);
-+	punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE);
-+	zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
- 
- 	while (numops == -1 || numops--)
- 		test();
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_fs ext4
++_supported_os Linux
++_require_xfs_io_falloc "fzero"
++
++testfile=$TEST_DIR/001.$$
++
++# Standard zero range tests
++_test_generic_punch falloc fzero fzero fiemap _filter_fiemap $testfile
++
++# Delayed allocation zero range tests
++_test_generic_punch -d falloc fzero fzero fiemap _filter_fiemap $testfile
++
++# Multi zero range tests
++_test_generic_punch -k falloc fzero fzero fiemap _filter_fiemap $testfile
++
++# Delayed allocation multi zero range tests
++_test_generic_punch -d -k falloc fzero fzero fiemap _filter_fiemap $testfile
++
++status=0 ; exit
+diff --git a/tests/ext4/001.out b/tests/ext4/001.out
+new file mode 100644
+index 0000000..212c247
+--- /dev/null
++++ b/tests/ext4/001.out
+@@ -0,0 +1,337 @@
++QA output created by 001
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	4. hole -> data
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..31]: data
++3: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: hole
++1b3779878366498b28c702ef88c4a773
++	8. unwritten -> hole
++0: [0..23]: unwritten
++1: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	9. unwritten -> data
++0: [0..23]: unwritten
++1: [24..31]: data
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++daa100df6e6711906b61c9ab5aa16032
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	4. hole -> data
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..31]: data
++3: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: hole
++1b3779878366498b28c702ef88c4a773
++	8. unwritten -> hole
++0: [0..23]: unwritten
++1: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	9. unwritten -> data
++0: [0..23]: unwritten
++1: [24..31]: data
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++daa100df6e6711906b61c9ab5aa16032
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	5. hole -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	8. unwritten -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	9. unwritten -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	5. hole -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	8. unwritten -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	9. unwritten -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 7e1a68b..dd2841e 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -3,6 +3,7 @@
+ # - do not start group names with a digit
+ # - comment line before each group is "new" description
+ #
++001 auto prealloc quick
+ 271 auto rw quick
+ 301 aio dangerous ioctl rw stress
+ 302 aio dangerous ioctl rw stress
 -- 
 1.8.3.1
 
