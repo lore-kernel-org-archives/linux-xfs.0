@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A0C57F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 15:32:58 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 32D397F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 15:34:05 -0600 (CST)
 From: Shaun Gosse <sgosse@sgi.com>
 Subject: RE: [PATCH] xfs: check all buffers in xfs_check_page_type()
-Date: Fri, 28 Feb 2014 21:32:53 +0000
-Message-ID: <8D3FA7645C1CFC4E9E783D22B4C708647305CBB3@P-EXMB2-DC21.corp.sgi.com>
+Date: Fri, 28 Feb 2014 21:34:03 +0000
+Message-ID: <8D3FA7645C1CFC4E9E783D22B4C708647305CBC8@P-EXMB2-DC21.corp.sgi.com>
 References: <1393615369-41882-1-git-send-email-bfoster@redhat.com>
 	<5310EB67.5050404@sgi.com>
-In-Reply-To: <5310EB67.5050404@sgi.com>
+	<8D3FA7645C1CFC4E9E783D22B4C708647305CBB3@P-EXMB2-DC21.corp.sgi.com>
+In-Reply-To: <8D3FA7645C1CFC4E9E783D22B4C708647305CBB3@P-EXMB2-DC21.corp.sgi.com>
 Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,8 +24,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>, Brian Foster <bfoster@redhat.com>
+To: Shaun Gosse <sgosse@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Brian
+	Foster <bfoster@redhat.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+
+Ha, disregard, caught up to read the other email and I see everyone else got there too. I would've been in the thread an hour ago, but unfortunately timed call back from Microsoft support, much to my dismay.
+
+Carry on then...
+
+-----Original Message-----
+From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of Shaun Gosse
+Sent: Friday, February 28, 2014 3:33 PM
+To: Mark Tinguely; Brian Foster
+Cc: xfs@oss.sgi.com
+Subject: RE: [PATCH] xfs: check all buffers in xfs_check_page_type()
 
 > Is there any reason to scan all the buffers when we all we want is an indication that at least one is acceptable?
 > Maybe there are generally not may buffers to a page to make it worthwhile.
@@ -52,6 +65,11 @@ With an annotation something like "/** Optimization: Quit when acceptable has be
 
 Cheers,
 -Shaun
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
