@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9F5F07F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 11:58:34 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AD0F27F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 12:11:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 865D08F8039
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 09:58:34 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id oD97hLhie6GG40Yr for <xfs@oss.sgi.com>;
-	Fri, 28 Feb 2014 09:58:33 -0800 (PST)
-Message-ID: <5310CE48.8060009@sandeen.net>
-Date: Fri, 28 Feb 2014 11:58:32 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A1EA304032
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:54 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id heV6yH1fJK8V3IhB for
+	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:50 -0800 (PST)
+Message-ID: <5310D163.2010203@redhat.com>
+Date: Fri, 28 Feb 2014 12:11:47 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] metadump: Only verify obfuscated metadata being dumped
-References: <1393568723-982-1-git-send-email-david@fromorbit.com>
-	<1393568723-982-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1393568723-982-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 7/8] xfstests: Add fallocate zero range operation to fsx
+References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
+	<1393603865-26198-7-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1393603865-26198-7-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,202 +28,263 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On 2/28/14, 12:25 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The discontiguous buffer support series added a verifier check on
-> the metadata buffers before they go written to the metadump image.
-> If this failed, it returned an error, and the result would be that
-> we stopped processing the metadata and exited, truncating the dump.
-> 
-> xfs_metadump is supposed to dump the metadata in the filesystem for
-> forensic analysis purposes, which means we actually want it to
-> retain any corruptions it finds in the filesystem. Hence running the
-> verifier - even to recalculate CRCs - when the metadata is
-> unmodified is the wrong thing to be doing. And stopping the dump
-> when we come across an error is even worse.
-> 
-> We still need to do CRC recalculation when obfuscating names and
-> attributes. Hence we need to make running the verifier conditional
-> on the buffer or inode:
-> 	a) being uncorrupted when read, and
-> 	b) modified by the obfuscation code.
-> 
-> If either of these conditions is not true, then we don't run the
-> verifier or recalculate the CRCs.
+On 2/28/14, 10:11 AM, Lukas Czerner wrote:
+> This commit adds fallocate FALLOC_FL_ZERO_RANGE support for fsx.
 
-Lord how I hate "if (!dont_obfuscate)" but that's not your fault.  ;)
+and reworks/consolidates testing of which fallocate ops are available.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Couple things below
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 > ---
->  db/io.h       |  1 +
->  db/metadump.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++-------------
->  2 files changed, 49 insertions(+), 13 deletions(-)
+>  ltp/fsx.c | 128 +++++++++++++++++++++++++++++++++++++++++++++++---------------
+>  1 file changed, 98 insertions(+), 30 deletions(-)
 > 
-> diff --git a/db/io.h b/db/io.h
-> index 4f24c83..d8cf383 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -41,6 +41,7 @@ typedef struct iocur {
->  	int			ino_crc_ok:1;
->  	int			ino_buf:1;
->  	int			dquot_buf:1;
-> +	int			need_crc:1;
->  } iocur_t;
+> diff --git a/ltp/fsx.c b/ltp/fsx.c
+> index c36a038..5d6d198 100644
+> --- a/ltp/fsx.c
+> +++ b/ltp/fsx.c
+> @@ -69,6 +69,7 @@ int			logcount = 0;	/* total ops */
+>   * TRUNCATE:	-	4
+>   * FALLOCATE:	-	5
+>   * PUNCH HOLE:	-	6
+> + * ZERO RANGE:	-	7
+>   *
+>   * When mapped read/writes are disabled, they are simply converted to normal
+>   * reads and writes. When fallocate/fpunch calls are disabled, they are
+> @@ -92,7 +93,8 @@ int			logcount = 0;	/* total ops */
+>  #define OP_TRUNCATE	4
+>  #define OP_FALLOCATE	5
+>  #define OP_PUNCH_HOLE	6
+> -#define OP_MAX_FULL	7
+> +#define OP_ZERO_RANGE	7
+> +#define OP_MAX_FULL	8
 >  
->  #define DB_RING_ADD 1                   /* add to ring on set_cur */
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 14902a7..3248009 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -190,26 +190,36 @@ write_buf_segment(
->  	return 0;
+>  /* operation modifiers */
+>  #define OP_CLOSEOPEN	100
+> @@ -139,6 +141,7 @@ int	seed = 1;			/* -S flag */
+>  int     mapped_writes = 1;              /* -W flag disables */
+>  int     fallocate_calls = 1;            /* -F flag disables */
+>  int     punch_hole_calls = 1;           /* -H flag disables */
+> +int     zero_range_calls = 1;           /* -z flag disables */
+>  int 	mapped_reads = 1;		/* -R flag disables it */
+>  int	fsxgoodfd = 0;
+>  int	o_direct;			/* -Z */
+> @@ -317,6 +320,14 @@ logdump(void)
+>  						     lp->args[0] + lp->args[1])
+>  				prt("\t******PPPP");
+>  			break;
+> +		case OP_ZERO_RANGE:
+> +			prt("ZERO    0x%x thru 0x%x\t(0x%x bytes)",
+> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
+> +			    lp->args[1]);
+> +			if (badoff >= lp->args[0] && badoff <
+> +						     lp->args[0] + lp->args[1])
+> +				prt("\t******ZZZZ");
+> +			break;
+>  		case OP_SKIPPED:
+>  			prt("SKIPPED (no operation)");
+>  			break;
+> @@ -879,6 +890,65 @@ do_punch_hole(unsigned offset, unsigned length)
 >  }
+>  #endif
 >  
-> +/*
-> + * we want to preserve the state of the metadata in the dump - whether it is
-> + * intact or corrupt, so even if the buffer has a verifier attached to it we
-> + * don't want to run it prior to writing the buffer to the metadump image.
-> + *
-> + * The only reason for running the verifier is to recalculate the CRCs on a
-> + * buffer that has been obfuscated. i.e. a buffer than metadump modified itself.
-> + * In this case, we only run the verifier if the buffer was not corrupt to begin
-> + * with so that we don't accidentally correct buffers with CRC or errors in them
-> + * when we are obfuscating them.
-> + */
->  static int
->  write_buf(
->  	iocur_t		*buf)
->  {
-> +	struct xfs_buf	*bp = buf->bp;
->  	int		i;
->  	int		ret;
->  
->  	/*
->  	 * Run the write verifier to recalculate the buffer CRCs and check
-> -	 * we are writing something valid to disk
-> +	 * metadump didn't introduce a new corruption. Warn if the verifier
-> +	 * failed, but still continue to dump it into the output file.
->  	 */
-> -	if (buf->bp && buf->bp->b_ops) {
-> -		buf->bp->b_error = 0;
-> -		buf->bp->b_ops->verify_write(buf->bp);
-> -		if (buf->bp->b_error) {
-> -			fprintf(stderr,
-> -	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
-> -				__func__, (long long)buf->bp->b_bn,
-> -				buf->bp->b_bcount);
-> -			return -buf->bp->b_error;
-> +	if (buf->need_crc && bp && bp->b_ops && !bp->b_error) {
-> +		bp->b_ops->verify_write(bp);
-> +		if (bp->b_error) {
-> +			print_warning(
-> +				"obfuscation corrupted block at bno 0x%llx/0x%x",
-> +				(long long)bp->b_bn, bp->b_bcount);
->  		}
->  	}
->  
-> @@ -1359,12 +1369,15 @@ process_single_fsb_objects(
->  
->  			obfuscate_dir_data_block(dp, o,
->  						 last == mp->m_dirblkfsbs);
-> +			iocur_top->need_crc = 1;
->  			break;
->  		case TYP_SYMLINK:
->  			obfuscate_symlink_block(dp);
-> +			iocur_top->need_crc = 1;
->  			break;
->  		case TYP_ATTR:
->  			obfuscate_attr_block(dp, o);
-> +			iocur_top->need_crc = 1;
->  			break;
->  		default:
->  			break;
-> @@ -1444,6 +1457,7 @@ process_multi_fsb_objects(
->  
->  			obfuscate_dir_data_block(iocur_top->data, o,
->  						  last == mp->m_dirblkfsbs);
-> +			iocur_top->need_crc = 1;
->  			ret = write_buf(iocur_top);
->  out_pop:
->  			pop_cur();
-> @@ -1724,6 +1738,13 @@ process_inode_data(
->  	return 1;
->  }
->  
-> +/*
-> + * when we process the inode, we may change the data in the data and/or
-> + * attribute fork if they are in short form and we are obfuscating names.
-> + * In this case we need to recalculate the CRC of the inode, but we should
-> + * only do that if the CRC in the inode is good to begin with. If the crc
-> + * is not ok, we just leave it alone.
-> + */
->  static int
->  process_inode(
->  	xfs_agnumber_t		agno,
-> @@ -1731,17 +1752,30 @@ process_inode(
->  	xfs_dinode_t 		*dip)
->  {
->  	int			success;
-> +	bool			crc_was_ok = false; /* no recalc by default */
-> +	bool			need_new_crc = false;
->  
->  	success = 1;
->  	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
->  
-> +	/* we only care about crc recalculation if we are obfuscating names. */
-> +	if (!dont_obfuscate) {
-> +		crc_was_ok = xfs_verify_cksum((char *)dip,
-> +					mp->m_sb.sb_inodesize,
-> +					offsetof(struct xfs_dinode, di_crc));
+> +#ifdef FALLOC_FL_ZERO_RANGE
+> +void
+> +do_zero_range(unsigned offset, unsigned length)
+> +{
+> +	unsigned end_offset;
+> +	int mode = FALLOC_FL_ZERO_RANGE;
+> +	int keep_size;
+> +
+> +	if (length == 0) {
+> +		if (!quiet && testcalls > simulatedopcount)
+> +			prt("skipping zero length zero range\n");
+> +			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, length);
+> +		return;
 > +	}
 > +
->  	/* copy appropriate data fork metadata */
->  	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
->  		case S_IFDIR:
->  			success = process_inode_data(dip, TYP_DIR2);
-> +			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
-> +				need_new_crc = 1;
->  			break;
->  		case S_IFLNK:
->  			success = process_inode_data(dip, TYP_SYMLINK);
-> +			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
-> +				need_new_crc = 1;
->  			break;
->  		case S_IFREG:
->  			success = process_inode_data(dip, TYP_DATA);
-> @@ -1756,6 +1790,7 @@ process_inode(
->  		attr_data.remote_val_count = 0;
->  		switch (dip->di_aformat) {
->  			case XFS_DINODE_FMT_LOCAL:
-> +				need_new_crc = 1;
->  				if (!dont_obfuscate)
->  					obfuscate_sf_attr(dip);
->  				break;
-> @@ -1770,6 +1805,9 @@ process_inode(
->  		}
->  		nametable_clear();
->  	}
+> +	keep_size = random() % 2;
 > +
-> +	if (crc_was_ok && need_new_crc)
-> +		xfs_dinode_calc_crc(mp, dip);
->  	return success;
+> +	end_offset = keep_size ? 0 : offset + length;
+> +
+> +	if (end_offset > biggest) {
+> +		biggest = end_offset;
+> +		if (!quiet && testcalls > simulatedopcount)
+> +			prt("zero_range to largest ever: 0x%x\n", end_offset);
+> +	}
+> +
+> +	/*
+> +	 * last arg matches fallocate string array index in logdump:
+> +	 * 	0: allocate past EOF
+> +	 * 	1: extending prealloc
+> +	 * 	2: interior prealloc
+> +	 */
+> +	log4(OP_ZERO_RANGE, offset, length, (end_offset > file_size) ? (keep_size ? 0 : 1) : 2);
+> +
+> +	if (testcalls <= simulatedopcount)
+> +		return;
+> +
+> +	if ((progressinterval && testcalls % progressinterval == 0) ||
+> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
+> +		      end_offset <= monitorend))) {
+> +		prt("%lu zero\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
+> +			offset, offset+length, length);
+> +	}
+> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
+> +		prt("%pzero range: %x to %x\n", offset, length);
+> +		prterr("do_zero_range: fallocate");
+> +		report_failure(161);
+
+This "161" isn't unique; do_punch_hole and do_preallocate both use the same number.
+Is that ok?  I guess there are other dups too, different bug (which probably
+nobody cares much about) ;)
+
+
+> +	}
+> +
+> +	memset(good_buf + offset, '\0', length);
+> +}
+> +
+> +#else
+> +void
+> +do_zero_range(unsigned offset, unsigned length)
+> +{
+> +	return;
+> +}
+> +#endif
+> +
+>  #ifdef HAVE_LINUX_FALLOC_H
+>  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+>  void
+> @@ -1047,6 +1117,12 @@ test(void)
+>  			goto out;
+>  		}
+>  		break;
+> +	case OP_ZERO_RANGE:
+> +		if (!zero_range_calls) {
+> +			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, size);
+> +			goto out;
+> +		}
+> +		break;
+>  	}
+>  
+>  	switch (op) {
+> @@ -1085,6 +1161,10 @@ test(void)
+>  		TRIM_OFF_LEN(offset, size, file_size);
+>  		do_punch_hole(offset, size);
+>  		break;
+> +	case OP_ZERO_RANGE:
+> +		TRIM_OFF_LEN(offset, size, file_size);
+> +		do_zero_range(offset, size);
+> +		break;
+>  	default:
+>  		prterr("test: unknown operation");
+>  		report_failure(42);
+> @@ -1140,7 +1220,10 @@ usage(void)
+>  "	-F: Do not use fallocate (preallocation) calls\n"
+>  #endif
+>  #ifdef FALLOC_FL_PUNCH_HOLE
+> -"       -H: Do not use punch hole calls\n"
+> +"	-H: Do not use punch hole calls\n"
+> +#endif
+> +#ifdef FALLOC_FL_ZERO_RANGE
+> +"	-E: Do not use zero range calls\n"
+>  #endif
+>  "	-L: fsxLite - no file creations & no file size changes\n\
+>  	-N numops: total # operations to do (default infinity)\n\
+> @@ -1290,40 +1373,21 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
+>  
+>  #endif
+>  
+> -void
+> -test_fallocate()
+> +int
+> +test_fallocate(int mode)
+>  {
+>  #ifdef HAVE_LINUX_FALLOC_H
+> +	int ret = 0;
+>  	if (!lite && fallocate_calls) {
+> -		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+> +		if (fallocate(fd, mode, 0, 1) && errno == EOPNOTSUPP) {
+>  			if(!quiet)
+>  				warn("main: filesystem does not support fallocate, disabling\n");
+
+we've lost which mode isn't supported, now.  Maybe you should print the
+flags which didn't pass?  Too bad your fancy flag stuff is in fsstress.c.  ;)
+or do ("does not support fallocate mode 0x%x", mode) ?
+
+
+> -			fallocate_calls = 0;
+>  		} else {
+> +			ret = 1;
+>  			ftruncate(fd, 0);
+>  		}
+>  	}
+> -#else /* ! HAVE_LINUX_FALLOC_H */
+> -	fallocate_calls = 0;
+> -#endif
+> -
+> -}
+> -
+> -void
+> -test_punch_hole()
+> -{
+> -#ifdef FALLOC_FL_PUNCH_HOLE
+> -	if (!lite && punch_hole_calls) {
+> -		if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
+> -				0, 1) && errno == EOPNOTSUPP) {
+> -			if(!quiet)
+> -				warn("main: filesystem does not support fallocate punch hole, disabling");
+> -			punch_hole_calls = 0;
+> -		} else
+> -			ftruncate(fd, 0);
+> -	}
+> -#else /* ! PUNCH HOLE */
+> -	punch_hole_calls = 0;
+> +	return ret;
+>  #endif
 >  }
 >  
-> @@ -1840,9 +1878,6 @@ copy_inode_chunk(
+> @@ -1345,7 +1409,7 @@ main(int argc, char **argv)
 >  
->  		if (!process_inode(agno, agino + i, dip))
->  			goto pop_out;
-> -
-> -		/* calculate the new CRC for the inode */
-> -		xfs_dinode_calc_crc(mp, dip);
->  	}
->  skip_processing:
->  	if (write_buf(iocur_top))
+>  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+>  
+> -	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
+> +	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzLN:OP:RS:WZ"))
+>  	       != EOF)
+>  		switch (ch) {
+>  		case 'b':
+> @@ -1445,6 +1509,9 @@ main(int argc, char **argv)
+>  		case 'H':
+>  			punch_hole_calls = 0;
+>  			break;
+> +		case 'z':
+> +			zero_range_calls = 0;
+> +			break;
+>  		case 'L':
+>  		        lite = 1;
+>  			break;
+> @@ -1590,8 +1657,9 @@ main(int argc, char **argv)
+>  	} else 
+>  		check_trunc_hack();
+>  
+> -	test_fallocate();
+> -	test_punch_hole();
+> +	fallocate_calls = test_fallocate(0);
+> +	punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE);
+> +	zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
+
+Could probably add the do_warn() stuff here, explicitly stating what got disabled.
+
+-Eric
+
+>  
+>  	while (numops == -1 || numops--)
+>  		test();
 > 
 
 _______________________________________________
