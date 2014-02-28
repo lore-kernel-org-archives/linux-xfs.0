@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 524897F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 17:28:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 45C31304032
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:28:55 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2yqk8xlWfWvYmUeU for
-	<xfs@oss.sgi.com>; Thu, 27 Feb 2014 15:28:45 -0800 (PST)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s1RNSjZd024914
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 18:28:45 -0500
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s1RNSiG1013289
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 18:28:44 -0500
-Message-ID: <530FCA2C.8090204@redhat.com>
-Date: Thu, 27 Feb 2014 17:28:44 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs_growfs: don't grow data if only -m is specified
+	by oss.sgi.com (Postfix) with ESMTP id AD1D27F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 18:54:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 808BE304059
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 16:54:05 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	OQmy07w35hCfBuw7 for <xfs@oss.sgi.com>;
+	Thu, 27 Feb 2014 16:53:59 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WJBhx-0001eZ-QE
+	for xfs@oss.sgi.com; Fri, 28 Feb 2014 11:53:45 +1100
+Received: from dave by disappointment with local (Exim 4.82)
+	(envelope-from <dave@disappointment.disaster>) id 1WJBhx-0004Ij-Ow
+	for xfs@oss.sgi.com; Fri, 28 Feb 2014 11:53:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] metadump: don't verify metadata being dumped
+Date: Fri, 28 Feb 2014 11:53:45 +1100
+Message-Id: <1393548825-16499-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,57 +28,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-While writing an xfstest to check imaxpct behavior, I realized
-that xfs_growfs -m XXX /mnt/point will not only change
-imaxpct, but also grow the filesystem if it's not currently
-occupying the entire block device.  This doesn't seem like
-the expected behavior, so split it out such that if only
--m, and not -d, is specified, only the imaxpct will be
-changed.
+From: Dave Chinner <dchinner@redhat.com>
 
-This is a change from previous behavior, but I think it
-satisfies the principle of least surprise...
+The discontiguous buffer support series added a verifier check on
+the metadata buffers before they go written to the metadump image.
+If this failed, it returned an error, and the restul woul dbe that
+we stopped processing the metadata and exited, resulting in a
+truncated dump.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+xfs_metadump is supposed to dump the metadata in the filesystem
+for forensic analysis purposes, which means we actually want it to
+retain any corruptions it finds in the filesystem. Hence running the
+verifier - even to recalculate CRCs - is the wrong thing to be
+doing. And stopping the dum pwhen we come across an error is even
+worse.
+
+Therefore remove the code tha truns the verifier and causes all
+these problems and replace it with a comment explaining why we don't
+want to run verifiers in the metadump process.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
+ db/metadump.c | 23 +++++++----------------
+ 1 file changed, 7 insertions(+), 16 deletions(-)
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 2df68fb..fb7eda8 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -189,7 +189,7 @@ main(int argc, char **argv)
- 		usage();
- 	if (iflag && xflag)
- 		usage();
--	if (dflag + lflag + rflag == 0)
-+	if (dflag + lflag + rflag + mflag == 0)
- 		aflag = 1;
+diff --git a/db/metadump.c b/db/metadump.c
+index 5baf83d..c10e76a 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -190,6 +190,13 @@ write_buf_segment(
+ 	return 0;
+ }
  
- 	fs_table_initialise(0, NULL, 0, NULL);
-@@ -305,12 +305,15 @@ main(int argc, char **argv)
- 	drsize -= (drsize % 2);
++/*
++ * we want to preserve the state of the metadata in the dump - whether it is
++ * intact or corrupt, so even if the buffer has a verifier attached to it we
++ * don't want to run it prior to writing the buffer to the metadump image.
++ * Even just recalculating the CRCs is the wrong thing to do here as it can
++ * hide errors that only the CRCs were detecting.
++ */
+ static int
+ write_buf(
+ 	iocur_t		*buf)
+@@ -197,22 +204,6 @@ write_buf(
+ 	int		i;
+ 	int		ret;
  
- 	error = 0;
--	if (dflag | aflag) {
-+
-+	if (dflag | mflag | aflag) {
- 		xfs_growfs_data_t	in;
- 
- 		if (!mflag)
- 			maxpct = geo.imaxpct;
--		if (!dsize)
-+		if (!dflag && !aflag)	/* Only mflag, no data size change */
-+			dsize = geo.datablocks;
-+		else if (!dsize)
- 			dsize = ddsize / (geo.blocksize / BBSIZE);
- 		else if (dsize > ddsize / (geo.blocksize / BBSIZE)) {
- 			fprintf(stderr, _(
+-	/*
+-	 * Run the write verifier to recalculate the buffer CRCs and check
+-	 * we are writing something valid to disk
+-	 */
+-	if (buf->bp && buf->bp->b_ops) {
+-		buf->bp->b_error = 0;
+-		buf->bp->b_ops->verify_write(buf->bp);
+-		if (buf->bp->b_error) {
+-			fprintf(stderr,
+-	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+-				__func__, (long long)buf->bp->b_bn,
+-				buf->bp->b_bcount);
+-			return -buf->bp->b_error;
+-		}
+-	}
+-
+ 	/* handle discontiguous buffers */
+ 	if (!buf->bbmap) {
+ 		ret = write_buf_segment(buf->data, buf->bb, buf->blen);
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
