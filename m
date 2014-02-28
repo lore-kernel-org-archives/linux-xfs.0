@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C9A877F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 00:26:27 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id B8BD67F51
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 00:26:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C0B098F8037
-	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 22:26:27 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8540C8F8037
+	for <xfs@oss.sgi.com>; Thu, 27 Feb 2014 22:26:28 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	1ppZi7xLKGMB8sEE for <xfs@oss.sgi.com>;
+	jIRHpMdjsEwBE9o6 for <xfs@oss.sgi.com>;
 	Thu, 27 Feb 2014 22:26:26 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WJGsv-0002RC-1Z
+	(envelope-from <dave@fromorbit.com>) id 1WJGsv-0002RB-1C
 	for xfs@oss.sgi.com; Fri, 28 Feb 2014 17:25:25 +1100
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WJGsv-0000Nh-0z
+	(envelope-from <dave@disappointment.disaster>) id 1WJGsv-0000Nc-0X
 	for xfs@oss.sgi.com; Fri, 28 Feb 2014 17:25:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] metadump: pathname obfuscation overruns symlink buffer
-Date: Fri, 28 Feb 2014 17:25:23 +1100
-Message-Id: <1393568723-982-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] metadump: Only verify obfuscated metadata being dumped
+Date: Fri, 28 Feb 2014 17:25:22 +1100
+Message-Id: <1393568723-982-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393568723-982-1-git-send-email-david@fromorbit.com>
 References: <1393568723-982-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,108 +39,193 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-In testing the previous metadump changes, fsstress generated an
-inline symlink of 336 bytes in length. This caused corruption of the
-restored filesystem that wasn't present in the original filesystem -
-it corrupted the magic number of the next inode in the chunk. The
-reason being that the symlink data is not null terminated in the
-inode literal area, and hence when the symlink consumes the entire
-literal area like so:
+The discontiguous buffer support series added a verifier check on
+the metadata buffers before they go written to the metadump image.
+If this failed, it returned an error, and the result would be that
+we stopped processing the metadata and exited, truncating the dump.
 
-xfs_db> daddr 0x42679
-xfs_db> p
-000: 494ea1ff 03010000 00000000 00000000 00000001 00000000 00000000 00000000
-020: 53101af9 1678d2a8 53101af9 15fec0a8 53101af9 15fec0a8 00000000 00000150
-040: 00000000 00000000 00000000 00000000 00000002 00000000 00000000 d868b52d
-060: ffffffff 0ce5477a 00000000 00000002 00000002 0000041c 00000000 00000000
-080: 00000000 00000000 00000000 00000000 53101af9 15fec0a8 00000000 00042679
-0a0: 6c4e9d4e 84944986 a074cffd 0ea042a8 78787878 78787878 78782f78 78787878
-0c0: 78787878 2f787878 78787878 78782f78 78787878 78787878 2f787878 78787878
-0e0: 78782f78 78787878 78787878 2f787878 78787878 78782f78 78787878 78787878
-100: 2f787878 78787878 78782f78 78787878 78787878 2f787878 78787878 78782f78
-120: 78787878 78787878 2f787878 78787878 78782f78 78787878 78787878 2f787878
-140: 78787878 78782f78 78787878 78787878 2f787878 78787878 78782f78 78787878
-160: 78787878 2f787878 78787878 78782f78 78787878 78787878 2f787878 78787878
-180: 78782f78 78787878 78787878 2f787878 78787878 78782f78 78787878 78787878
-1a0: 2f787878 78787878 78782f78 78787878 78787878 2f787878 78787878 78782f78
-1c0: 78787878 78787878 2f787878 78787878 78782f78 78787878 78787878 2f787878
-1e0: 78787878 78782f78 78787878 78787878 2f787878 78787878 78782f78 78787878
+xfs_metadump is supposed to dump the metadata in the filesystem for
+forensic analysis purposes, which means we actually want it to
+retain any corruptions it finds in the filesystem. Hence running the
+verifier - even to recalculate CRCs - when the metadata is
+unmodified is the wrong thing to be doing. And stopping the dump
+when we come across an error is even worse.
 
-the symlink data butts right up agains the magic number of the next
-inode in the chunk. And then, when obfuscation gets to the final
-pathname component, it gets it's length via:
+We still need to do CRC recalculation when obfuscating names and
+attributes. Hence we need to make running the verifier conditional
+on the buffer or inode:
+	a) being uncorrupted when read, and
+	b) modified by the obfuscation code.
 
-		/* last (or single) component */
-		namelen = strlen((char *)comp);
-		hash = libxfs_da_hashname(comp, namelen);
-		obfuscate_name(hash, namelen, comp);
-
-strlen(), which looks for a null terminator and finds it several
-bytes into the next inode. It then proceeds to obfuscate that
-length, including the inode magic number of the next inode....
-
-Fix this by ensuring we can't overrun the symlink buffer length
-by assuming that the symlink is not null terminated.
+If either of these conditions is not true, then we don't run the
+verifier or recalculate the CRCs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/metadump.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ db/io.h       |  1 +
+ db/metadump.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 49 insertions(+), 13 deletions(-)
 
+diff --git a/db/io.h b/db/io.h
+index 4f24c83..d8cf383 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -41,6 +41,7 @@ typedef struct iocur {
+ 	int			ino_crc_ok:1;
+ 	int			ino_buf:1;
+ 	int			dquot_buf:1;
++	int			need_crc:1;
+ } iocur_t;
+ 
+ #define DB_RING_ADD 1                   /* add to ring on set_cur */
 diff --git a/db/metadump.c b/db/metadump.c
-index 3248009..cd489a6 100644
+index 14902a7..3248009 100644
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -1015,16 +1015,23 @@ obfuscate_sf_dir(
- 	}
+@@ -190,26 +190,36 @@ write_buf_segment(
+ 	return 0;
  }
  
 +/*
-+ * The pathname may not be null terminated. It name be terminated by the end of
-+ * a buffer or inode literal area, and the start of the next region may contain
-+ * any data at all. Hence when we get to the last component of the symlink, we
-+ * cannot assume that strlen() will give us the right result. Hence we need to
-+ * track the remaining pathname length and use that instead.
++ * we want to preserve the state of the metadata in the dump - whether it is
++ * intact or corrupt, so even if the buffer has a verifier attached to it we
++ * don't want to run it prior to writing the buffer to the metadump image.
++ *
++ * The only reason for running the verifier is to recalculate the CRCs on a
++ * buffer that has been obfuscated. i.e. a buffer than metadump modified itself.
++ * In this case, we only run the verifier if the buffer was not corrupt to begin
++ * with so that we don't accidentally correct buffers with CRC or errors in them
++ * when we are obfuscating them.
 + */
- static void
- obfuscate_path_components(
- 	char			*buf,
- 	__uint64_t		len)
+ static int
+ write_buf(
+ 	iocur_t		*buf)
  {
--	uchar_t			*comp;
-+	uchar_t			*comp = (uchar_t *)buf;
-+	uchar_t			*end = comp + len;
- 	xfs_dahash_t		hash;
++	struct xfs_buf	*bp = buf->bp;
+ 	int		i;
+ 	int		ret;
  
--	comp = (uchar_t *)buf;
--	while (comp < (uchar_t *)buf + len) {
-+	while (comp < end) {
- 		char	*slash;
- 		int	namelen;
- 
-@@ -1032,7 +1039,7 @@ obfuscate_path_components(
- 		slash = strchr((char *)comp, '/');
- 		if (!slash) {
- 			/* last (or single) component */
--			namelen = strlen((char *)comp);
-+			namelen = strnlen((char *)comp, len);
- 			hash = libxfs_da_hashname(comp, namelen);
- 			obfuscate_name(hash, namelen, comp);
- 			break;
-@@ -1041,11 +1048,13 @@ obfuscate_path_components(
- 		/* handle leading or consecutive slashes */
- 		if (!namelen) {
- 			comp++;
-+			len--;
- 			continue;
+ 	/*
+ 	 * Run the write verifier to recalculate the buffer CRCs and check
+-	 * we are writing something valid to disk
++	 * metadump didn't introduce a new corruption. Warn if the verifier
++	 * failed, but still continue to dump it into the output file.
+ 	 */
+-	if (buf->bp && buf->bp->b_ops) {
+-		buf->bp->b_error = 0;
+-		buf->bp->b_ops->verify_write(buf->bp);
+-		if (buf->bp->b_error) {
+-			fprintf(stderr,
+-	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+-				__func__, (long long)buf->bp->b_bn,
+-				buf->bp->b_bcount);
+-			return -buf->bp->b_error;
++	if (buf->need_crc && bp && bp->b_ops && !bp->b_error) {
++		bp->b_ops->verify_write(bp);
++		if (bp->b_error) {
++			print_warning(
++				"obfuscation corrupted block at bno 0x%llx/0x%x",
++				(long long)bp->b_bn, bp->b_bcount);
  		}
- 		hash = libxfs_da_hashname(comp, namelen);
- 		obfuscate_name(hash, namelen, comp);
- 		comp += namelen + 1;
-+		len -= namelen + 1;
  	}
+ 
+@@ -1359,12 +1369,15 @@ process_single_fsb_objects(
+ 
+ 			obfuscate_dir_data_block(dp, o,
+ 						 last == mp->m_dirblkfsbs);
++			iocur_top->need_crc = 1;
+ 			break;
+ 		case TYP_SYMLINK:
+ 			obfuscate_symlink_block(dp);
++			iocur_top->need_crc = 1;
+ 			break;
+ 		case TYP_ATTR:
+ 			obfuscate_attr_block(dp, o);
++			iocur_top->need_crc = 1;
+ 			break;
+ 		default:
+ 			break;
+@@ -1444,6 +1457,7 @@ process_multi_fsb_objects(
+ 
+ 			obfuscate_dir_data_block(iocur_top->data, o,
+ 						  last == mp->m_dirblkfsbs);
++			iocur_top->need_crc = 1;
+ 			ret = write_buf(iocur_top);
+ out_pop:
+ 			pop_cur();
+@@ -1724,6 +1738,13 @@ process_inode_data(
+ 	return 1;
  }
  
++/*
++ * when we process the inode, we may change the data in the data and/or
++ * attribute fork if they are in short form and we are obfuscating names.
++ * In this case we need to recalculate the CRC of the inode, but we should
++ * only do that if the CRC in the inode is good to begin with. If the crc
++ * is not ok, we just leave it alone.
++ */
+ static int
+ process_inode(
+ 	xfs_agnumber_t		agno,
+@@ -1731,17 +1752,30 @@ process_inode(
+ 	xfs_dinode_t 		*dip)
+ {
+ 	int			success;
++	bool			crc_was_ok = false; /* no recalc by default */
++	bool			need_new_crc = false;
+ 
+ 	success = 1;
+ 	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
+ 
++	/* we only care about crc recalculation if we are obfuscating names. */
++	if (!dont_obfuscate) {
++		crc_was_ok = xfs_verify_cksum((char *)dip,
++					mp->m_sb.sb_inodesize,
++					offsetof(struct xfs_dinode, di_crc));
++	}
++
+ 	/* copy appropriate data fork metadata */
+ 	switch (be16_to_cpu(dip->di_mode) & S_IFMT) {
+ 		case S_IFDIR:
+ 			success = process_inode_data(dip, TYP_DIR2);
++			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
++				need_new_crc = 1;
+ 			break;
+ 		case S_IFLNK:
+ 			success = process_inode_data(dip, TYP_SYMLINK);
++			if (dip->di_format == XFS_DINODE_FMT_LOCAL)
++				need_new_crc = 1;
+ 			break;
+ 		case S_IFREG:
+ 			success = process_inode_data(dip, TYP_DATA);
+@@ -1756,6 +1790,7 @@ process_inode(
+ 		attr_data.remote_val_count = 0;
+ 		switch (dip->di_aformat) {
+ 			case XFS_DINODE_FMT_LOCAL:
++				need_new_crc = 1;
+ 				if (!dont_obfuscate)
+ 					obfuscate_sf_attr(dip);
+ 				break;
+@@ -1770,6 +1805,9 @@ process_inode(
+ 		}
+ 		nametable_clear();
+ 	}
++
++	if (crc_was_ok && need_new_crc)
++		xfs_dinode_calc_crc(mp, dip);
+ 	return success;
+ }
+ 
+@@ -1840,9 +1878,6 @@ copy_inode_chunk(
+ 
+ 		if (!process_inode(agno, agino + i, dip))
+ 			goto pop_out;
+-
+-		/* calculate the new CRC for the inode */
+-		xfs_dinode_calc_crc(mp, dip);
+ 	}
+ skip_processing:
+ 	if (write_buf(iocur_top))
 -- 
 1.9.0
 
