@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 35C0E7F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 16:23:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BFF0FAC009
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 14:23:51 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 6AEDF7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 16:31:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D100DAC009
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 14:31:09 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	rV0GlaoNC76yzAAu for <xfs@oss.sgi.com>;
-	Fri, 28 Feb 2014 14:23:49 -0800 (PST)
-Date: Sat, 1 Mar 2014 09:20:48 +1100
+	0moiEjeIyD3WKQM2 for <xfs@oss.sgi.com>;
+	Fri, 28 Feb 2014 14:31:07 -0800 (PST)
+Date: Sat, 1 Mar 2014 09:31:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: avoid AGI/AGF deadlock scenario for inode chunk
-	allocation
-Message-ID: <20140228222048.GD13647@dastard>
-References: <1392142066-16174-1-git-send-email-bfoster@redhat.com>
-	<20140228192418.GB15562@laptop.bfoster>
+Subject: Re: [PATCH 4/8] xfstests: Move fallocate include into global.h
+Message-ID: <20140228223105.GE13647@dastard>
+References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
+	<1393603865-26198-4-git-send-email-lczerner@redhat.com>
+	<5310C4B5.9010901@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140228192418.GB15562@laptop.bfoster>
+In-Reply-To: <5310C4B5.9010901@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,66 +31,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Feb 28, 2014 at 02:24:18PM -0500, Brian Foster wrote:
-> On Tue, Feb 11, 2014 at 01:07:46PM -0500, Brian Foster wrote:
-> > The inode chunk allocation path can lead to deadlock conditions if
-> > a transaction is dirtied with an AGF (to fix up the freelist) for
-> > an AG that cannot satisfy the actual allocation request. This code
-> > path is written to try and avoid this scenario, but it can be
-> > reproduced by running xfstests generic/270 in a loop on a 512b fs.
+On Fri, Feb 28, 2014 at 11:17:41AM -0600, Eric Sandeen wrote:
+> On 2/28/14, 10:11 AM, Lukas Czerner wrote:
+> > Move the inclusion of falloc.h with all it's possible defines for the
+> > fallocate mode into global.h header file so we do not have to include
+> > and define it manually in every tool using fallocate.
 > > 
-> > An example situation is:
-> > - process A attempts an inode allocation on AG 3, modifies
-> >   the freelist, fails the allocation and ultimately moves on to
-> >   AG 0 with the AG 3 AGF held
-> > - process B is doing a free space operation (i.e., truncate) and
-> >   acquires the AG 0 AGF, waits on the AG 3 AGF
-> > - process A acquires the AG 0 AGI, waits on the AG 0 AGF (deadlock)
-> > 
-> > The problem here is that process A acquired the AG 3 AGF while
-> > moving on to AG 0 (and releasing the AG 3 AGI with the AG 3 AGF
-> > held). xfs_dialloc() makes one pass through each of the AGs when
-> > attempting to allocate an inode chunk. The expectation is a clean
-> > transaction if a particular AG cannot satisfy the allocation
-> > request. xfs_ialloc_ag_alloc() is written to support this through
-> > use of the minalignslop allocation args field.
-> > 
-> > When using the agi->agi_newino optimization, we attempt an exact
-> > bno allocation request based on the location of the previously
-> > allocated chunk. minalignslop is set to inform the allocator that
-> > we will require alignment on this chunk, and thus to not allow the
-> > request for this AG if the extra space is not available. Suppose
-> > that the AG in question has just enough space for this request, but
-> > not at the requested bno. xfs_alloc_fix_freelist() will proceed as
-> > normal as it determines the request should succeed, and thus it is
-> > allowed to modify the agf. xfs_alloc_ag_vextent() ultimately fails
-> > because the requested bno is not available. In response, the caller
-> > moves on to a NEAR_BNO allocation request for the same AG. The
-> > alignment is set, but the minalignslop field is never reset. This
-> > increases the overall requirement of the request from the first
-> > attempt. If this delta is the difference between allocation success
-> > and failure for the AG, xfs_alloc_fix_freelist() rejects this
-> > request outright the second time around and causes the allocation
-> > request to unnecessarily fail for this AG.
-> > 
-> > To address this situation, reset the minalignslop field immediately
-> > after use and prevent it from leaking into subsequent requests.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > v2:
-> > - Reset minalignslop immediately after use rather than prior to the
-> >   subsequent request and add a comment. [dchinner]
-> > 
+> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 > 
-> ping? Any chance to get this committed?
+> I like the direction, but I think this changes behavior a little bit.
+> 
+> #ifdef FALLOCATE came from an autoconf macro:
+> 
+> AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
+>   [ AC_MSG_CHECKING([for fallocate])
+>     AC_TRY_LINK([
+> #define _GNU_SOURCE
+> #define _FILE_OFFSET_BITS 64
+> #include <fcntl.h>
+> #include <linux/falloc.h> ],
+>       [ fallocate(0, 0, 0, 0); ],
+>       [ have_fallocate=true; AC_MSG_RESULT(yes) ],
+>       [ have_fallocate=false; AC_MSG_RESULT(no) ])
+>     AC_SUBST(have_fallocate)
+>   ])
+> 
+> (at least I think so?)
 
-I'm sorry, Brian, I thought I had committed it - I'll get it in the
-next round.
+Not quite. autoconf defines "have_fallocate" to match the variable
+name in the AC_SUBST() macro above. The makefiles do this:
+
+include/builddefs.in:HAVE_FALLOCATE = @have_fallocate@               
+include/builddefs.in:HAVE_FALLOCATE = @have_fallocate@               
+
+to define HAVE_FALLOCATE at the makefile level, and then they do
+this to pass it into the C source:
+
+ltp/Makefile:ifeq ($(HAVE_FALLOCATE), true)
+ltp/Makefile:LCFLAGS += -DFALLOCATE
+
+src/Makefile:ifeq ($(HAVE_FALLOCATE), true)
+src/Makefile:LCFLAGS += -DHAVE_FALLOCATE
+
+> and so #ifdef FALLOCATE meant that
+> an fallocate syscall actually exists.  With your changes,
+> the test is now whether the fallocate *header* exists.
+
+It actually tests both, because if header doesn't exist, the compile
+of the test stub will fail in the macro will fail. So, no change
+there, really.
+
+> falloc.h is part of kernel-headers, not glibc.  So it's
+> possible that there's a divergence between the two.
+
+Right, which is why we need to test both ;)
+
+> I think it's probably ok.  Build-time checks should
+> determine whether we are able to _build_ and yours do that.
+> Each caller of fallocate (or each test using it) then probably
+> needs to ensure that the functionality it wants is actually
+> available at runtime and handle it if not.
+> 
+> So I'll give this a 
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> but maybe the above rambling will ring alarm bells for
+> someone else... ;)
+
+I need to look at it all in more detail. I thought I'd just explain
+exactly what was happening with autoconf here...
 
 Cheers,
 
