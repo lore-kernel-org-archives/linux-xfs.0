@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 938907F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 15:21:16 -0600 (CST)
-Message-ID: <5310FDCA.70909@sgi.com>
-Date: Fri, 28 Feb 2014 15:21:14 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: check all buffers in xfs_check_page_type()
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A0C57F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 15:32:58 -0600 (CST)
+From: Shaun Gosse <sgosse@sgi.com>
+Subject: RE: [PATCH] xfs: check all buffers in xfs_check_page_type()
+Date: Fri, 28 Feb 2014 21:32:53 +0000
+Message-ID: <8D3FA7645C1CFC4E9E783D22B4C708647305CBB3@P-EXMB2-DC21.corp.sgi.com>
 References: <1393615369-41882-1-git-send-email-bfoster@redhat.com>
-	<5310EB67.5050404@sgi.com> <20140228203648.GC15562@laptop.bfoster>
-In-Reply-To: <20140228203648.GC15562@laptop.bfoster>
+	<5310EB67.5050404@sgi.com>
+In-Reply-To: <5310EB67.5050404@sgi.com>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,94 +19,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>, Brian Foster <bfoster@redhat.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 02/28/14 14:36, Brian Foster wrote:
-> On Fri, Feb 28, 2014 at 02:02:47PM -0600, Mark Tinguely wrote:
->> On 02/28/14 13:22, Brian Foster wrote:
->>> xfs_aops_discard_page() was introduced in the following commit:
->>>
->>>    xfs: truncate delalloc extents when IO fails in writeback
->>>
->>> ... to clean up left over delalloc ranges after I/O failure in
->>> ->writepage(). generic/224 tests for this scenario and occasionally
->>> reproduces panics on sub-4k blocksize filesystems.
->>>
->>> The cause of this is failure to clean up the delalloc range on a
->>> page where the first buffer does not match one of the expected
->>> states of xfs_check_page_type(). If a buffer is not unwritten,
->>> delayed or dirty&mapped, xfs_check_page_type() stops and
->>> immediately returns 0.
->>>
->>> The stress test of generic/224 creates a scenario where the first
->>> several buffers of a page with delayed buffers are mapped&uptodate
->>> and some subsequent buffer is delayed. If the ->writepage() happens
->>> to fail for this page, xfs_aops_discard_page() incorrectly skips
->>> the entire page.
->>>
->>> Modify xfs_aops_discard_page() to iterate all of the page buffers
->>> to ensure a delayed buffer does not go undetected.
->>>
->>> Signed-off-by: Brian Foster<bfoster@redhat.com>
->>> ---
->>>
->>> The only other caller to xfs_check_page_type() is xfs_convert_page(). I
->>> think this is safe with respect to that codepath, given the additional
->>> imap checks therein and whatnot, but thoughts appreciated.
->>>
->>> Brian
->>>
->>>   fs/xfs/xfs_aops.c | 2 --
->>>   1 file changed, 2 deletions(-)
->>>
->>> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
->>> index db2cfb0..5962a9f 100644
->>> --- a/fs/xfs/xfs_aops.c
->>> +++ b/fs/xfs/xfs_aops.c
->>> @@ -655,8 +655,6 @@ xfs_check_page_type(
->>>   				acceptable += (type == XFS_IO_DELALLOC);
->>>   			else if (buffer_dirty(bh)&&  buffer_mapped(bh))
->>>   				acceptable += (type == XFS_IO_OVERWRITE);
->>> -			else
->>> -				break;
->>>   		} while ((bh = bh->b_this_page) != head);
->>>
->>>   		if (acceptable)
->>
->> Is there any reason to scan all the buffers when we all we want is
->> an indication that at least one is acceptable? Maybe there are
->> generally not may buffers to a page to make it worthwhile.
->>
+> Is there any reason to scan all the buffers when we all we want is an indication that at least one is acceptable?
+> Maybe there are generally not may buffers to a page to make it worthwhile.
 >
-> Hi Mark,
->
-> Good point. We could pull the 'if (acceptable)' check up into the loop
-> and exit as soon as we find something writeable.
->
-> Alternatively, we could do something like the following and get rid of
-> 'acceptable' entirely (or continue to nest the type checks if there's a
-> performance concern):
->
-> 	...
-> 	if (buffer_unwritten(bh) && type == XFS_IO_UNWRITTEN)
-> 		return 1;
-> 	else if (buffer_delay(bh) && type == XFS_IO_DELALLOC)
-> 		return 1;
-> 	else if (buffer_dirty(bh) && buffer_mapped(bh)&&
-> 		type == XFS_IO_OVERWRITE)
-> 		return 1;
-> 	...
->
-> Brian
 
-Good catch BTW. Yes that is what I was thinking.
+The problem is the else doesn't check if acceptable is set before breaking. So it can quit early, not having found what it was looking for even though it was in one of the later buffers. Pre-mature optimization...
 
---Mark.
+So the patch is good as is. It improves correctness.
+
+If the optimization were desired, though, it could be:
+
++ else if (acceptable)
++   break 
+
+In addition to the remove already posted, and with proper whitespace.
+
+Fair warning: this is without looking at the code, just inferring from what's been written in those two emails. I'm hearing my CS101 professor in my head and thinking may not be worth a couple cycles at the risk of correctness or clarity (and suggesting code blind seems risky).
+
+Actually, this could be the first condition. If the whole point of that loop is just to make sure to set acceptable if it can be set according to the rules on the basis of at least one of the buffers, then a starting:
+
++ if (acceptable)
++    break
+
+With an annotation something like "/** Optimization: Quit when acceptable has been set. Loop has no other side-effects to worry about.*/" seems reasonable (and hopefully is true). And then it's clear from the code that's the point of the loop and how it works.
+
+Cheers,
+-Shaun
 
 _______________________________________________
 xfs mailing list
