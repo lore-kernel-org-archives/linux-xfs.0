@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4C0D47F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 07:10:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 477AD8F8037
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 05:10:00 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 413297F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C68D3AC008
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:12 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6Bc0ILa5JBPqzfyg for
-	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 05:09:56 -0800 (PST)
-Date: Fri, 28 Feb 2014 08:09:53 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] mkfs: default log size for small filesystems too large
-Message-ID: <20140228130951.GA21674@bfoster.bfoster>
-References: <1393494344-30056-1-git-send-email-david@fromorbit.com>
-	<1393494344-30056-2-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1393494344-30056-2-git-send-email-david@fromorbit.com>
+	cuda.sgi.com with ESMTP id MEpWcD6z8UbUsoih for
+	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:11:11 -0800 (PST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 1/8] xfstests: Create single function for testing xfs_io
+	commands
+Date: Fri, 28 Feb 2014 17:10:58 +0100
+Message-Id: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,123 +21,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: linux-ext4@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Feb 27, 2014 at 08:45:43PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Recent changes to the log size scaling have resulted in using the
-> default size multiplier for the log size even on small filesystems.
-> Commit 88cd79b ("xfs: Add xfs_log_rlimit.c") changed the calculation
-> of the maximum transaction size that the kernel would issues and
-> that significantly increased the minimum size of the default log.
-> As such the size of the log on small filesystems was typically
-> larger than the prefious default, even though the previous default
-> was still larger than the minimum needed.
-> 
-> Rework the default log size calculation such that it will use the
-> original log size default if it is larger than the minimum log size
-> required, and only use a larger log if the configuration of the
-> filesystem requires it.
-> 
-> This is especially obvious in xfs/216, where the default log size is
-> 10MB all the way up to 16GB filesystems. The current mkfs selects a
-> log size of 50MB for the same size filesystems and this is
-> unnecessarily large.
-> 
-> Return the scaling of the log size for small filesystems to
-> something similar to what xfs/216 expects.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+Currently there are several function testing various xfs_io commands.
+This commit creates _require_xfs_io_command() to test any xfs_command.
 
-The code for the <16GB case still looks funny to me, but we beat that
-horse to death on irc. ;) I do like the breakdown of logic to select the
-log size calculation based on the particular situation, and the end
-result seems to be what we want. The additional comments help too. :)
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ common/rc | 72 +++++++++++++++++++++++++++++++++------------------------------
+ 1 file changed, 38 insertions(+), 34 deletions(-)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  mkfs/xfs_mkfs.c | 48 ++++++++++++++++++++++++++++--------------------
->  1 file changed, 28 insertions(+), 20 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index d82128c..f7cf394 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2366,32 +2366,40 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
->  	} else if (!loginternal && !xi.logdev) {
->  		logblocks = 0;
->  	} else if (loginternal && !logsize) {
-> -		/*
-> -		 * With a 2GB max log size, default to maximum size
-> -		 * at 4TB. This keeps the same ratio from the older
-> -		 * max log size of 128M at 256GB fs size. IOWs,
-> -		 * the ratio of fs size to log size is 2048:1.
-> -		 */
-> -		logblocks = (dblocks << blocklog) / 2048;
-> -		logblocks = logblocks >> blocklog;
-> -		logblocks = MAX(min_logblocks, logblocks);
->  
-> -		/*
-> -		 * If the default log size doesn't fit in the AG size, use the
-> -		 * minimum log size instead. This ensures small filesystems
-> -		 * don't use excessive amounts of space for the log.
-> -		 */
-> -		if (min_logblocks * XFS_DFL_LOG_FACTOR >= agsize) {
-> +		if (dblocks < GIGABYTES(1, blocklog)) {
-> +			/* tiny filesystems get minimum sized logs. */
->  			logblocks = min_logblocks;
-> +		} else if (dblocks < GIGABYTES(16, blocklog)) {
-> +
-> +			/*
-> +			 * For small filesystems, we want to use the
-> +			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
-> +			 * at all possible, ramping up to 128MB at 256GB.
-> +			 */
-> +			logblocks = MIN(XFS_MIN_LOG_BYTES >> blocklog,
-> +					min_logblocks * XFS_DFL_LOG_FACTOR);
->  		} else {
-> -			logblocks = MAX(logblocks,
-> -				MAX(XFS_DFL_LOG_SIZE,
-> -					min_logblocks * XFS_DFL_LOG_FACTOR));
-> +			/*
-> +			 * With a 2GB max log size, default to maximum size
-> +			 * at 4TB. This keeps the same ratio from the older
-> +			 * max log size of 128M at 256GB fs size. IOWs,
-> +			 * the ratio of fs size to log size is 2048:1.
-> +			 */
-> +			logblocks = (dblocks << blocklog) / 2048;
-> +			logblocks = logblocks >> blocklog;
-> +			logblocks = MAX(min_logblocks, logblocks);
->  		}
-> +
-> +		/* make sure the log fits wholly within an AG */
-> +		if (logblocks >= agsize)
-> +			logblocks = min_logblocks;
-> +
-> +		/* and now clamp the size to the maximum supported size */
->  		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
-> -		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES) {
-> +		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES)
->  			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
-> -		}
-> +
->  	}
->  	validate_log_size(logblocks, blocklog, min_logblocks);
->  
-> -- 
-> 1.8.4.rc3
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/common/rc b/common/rc
+index f2c3c3a..7f530d0 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1296,12 +1296,43 @@ _user_do()
+     fi
+ }
+ 
++_require_xfs_io_command()
++{
++	if [ $# -ne 1 ]
++	then
++		echo "Usage: _require_xfs_io_command command" 1>&2
++		exit 1
++	fi
++	command=$1
++
++	testfile=$TEST_DIR/$$.xfs_io
++	case $command in
++	"falloc" )
++		testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
++		;;
++	"fpunch" | "fcollapse" | "zero" )
++		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
++			-c "$command 4k 8k" $testfile 2>&1`
++		;;
++	"fiemap")
++		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
++			-c "fiemap -v" $testfile 2>&1`
++		;;
++	*)
++		testio=`$XFS_IO_PROG -c "$command help" 2>&1`
++	esac
++
++	rm -f $testfile 2>&1 > /dev/null
++	echo $testio | grep -q "not found" && \
++		_notrun "xfs_io $command support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
++}
++
+ # check that xfs_io, kernel, and filesystem all support zero
+ _require_xfs_io_zero()
+ {
+-	testio=`$XFS_IO_PROG -c "zero help" 2>&1`
+-	echo $testio | grep -q 'command "zero" not found' && \
+-		_notrun "zero command not supported"
++	_require_xfs_io_command "zero"
+ }
+ 
+ # check that xfs_io, glibc, kernel, and filesystem all (!) support
+@@ -1309,54 +1340,27 @@ _require_xfs_io_zero()
+ #
+ _require_xfs_io_falloc()
+ {
+-	testfile=$TEST_DIR/$$.falloc
+-	testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
+-	rm -f $testfile 2>&1 > /dev/null
+-	echo $testio | grep -q "not found" && \
+-		_notrun "xfs_io fallocate support is missing"
+-	echo $testio | grep -q "Operation not supported" && \
+-		_notrun "xfs_io fallocate command failed (old kernel/wrong fs?)"
++	_require_xfs_io_command "falloc"
+ }
+ 
+ # check that xfs_io, kernel and filesystem all support fallocate with hole
+ # punching
+ _require_xfs_io_falloc_punch()
+ {
+-	testfile=$TEST_DIR/$$.falloc
+-	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+-		-c "fpunch 4k 8k" $testfile 2>&1`
+-	rm -f $testfile 2>&1 > /dev/null
+-	echo $testio | grep -q "not found" && \
+-		_notrun "xfs_io fallocate punch support is missing"
+-	echo $testio | grep -q "Operation not supported" && \
+-		_notrun "xfs_io fallocate punch command failed (no fs support?)"
++	_require_xfs_io_command "fpunch"
+ }
+ 
+ # check that xfs_io, kernel and filesystem all support fallocate with collapse
+ # range
+ _require_xfs_io_falloc_collapse()
+ {
+-	testfile=$TEST_DIR/$$.falloc
+-	testio=`$XFS_IO_PROG -f -c "pwrite 0 20k" -c "fsync" \
+-		-c "fcollapse 4k 8k" $testfile 2>&1`
+-	rm -f $testfile 2>&1 > /dev/null
+-	echo $testio | grep -q "not found" && \
+-		_notrun "xfs_io fallocate collapse range support is missing"
+-	echo $testio | grep -q "Operation not supported" && \
+-		_notrun "xfs_io fallocate collapse range failed (no fs support?)"
++	_require_xfs_io_command "fcollapse"
+ }
+ 
+ # check that xfs_io, kernel and filesystem support fiemap
+ _require_xfs_io_fiemap()
+ {
+-	testfile=$TEST_DIR/$$.fiemap
+-	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+-		-c "fiemap -v" $testfile 2>&1`
+-	rm -f $testfile 2>&1 > /dev/null
+-	echo $testio | grep -q "not found" && \
+-		_notrun "xfs_io fiemap support is missing"
+-	echo $testio | grep -q "Operation not supported" && \
+-		_notrun "xfs_io fiemap command failed (no fs support?)"
++	_require_xfs_io_command "fiemap"
+ }
+ 
+ # Check that a fs has enough free space (in 1024b blocks)
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
