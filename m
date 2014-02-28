@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AD0F27F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 12:11:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A1EA304032
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:54 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id heV6yH1fJK8V3IhB for
-	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:11:50 -0800 (PST)
-Message-ID: <5310D163.2010203@redhat.com>
-Date: Fri, 28 Feb 2014 12:11:47 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 59F7B7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 13:09:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 19B638F804C
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 11:09:12 -0800 (PST)
+Received: from mail-pa0-f51.google.com (mail-pa0-f51.google.com
+	[209.85.220.51]) by cuda.sgi.com with ESMTP id boNC0mwGQqzXzBNK
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 11:09:11 -0800 (PST)
+Received: by mail-pa0-f51.google.com with SMTP id kq14so1142463pab.24
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 11:09:11 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
 Subject: Re: [PATCH 7/8] xfstests: Add fallocate zero range operation to fsx
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <1393603865-26198-7-git-send-email-lczerner@redhat.com>
+Date: Fri, 28 Feb 2014 12:08:47 -0700
+Message-Id: <CB2787E8-CE9B-46BE-B649-4E38ABE27C2B@dilger.ca>
 References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
 	<1393603865-26198-7-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1393603865-26198-7-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,270 +27,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6913547480573046926=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 2/28/14, 10:11 AM, Lukas Czerner wrote:
+
+--===============6913547480573046926==
+Content-Type: multipart/signed; boundary="Apple-Mail=_184D3A06-C043-4EEB-A918-C4941EF7584D"; protocol="application/pgp-signature"; micalg=pgp-sha1
+
+
+--Apple-Mail=_184D3A06-C043-4EEB-A918-C4941EF7584D
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
+
+On Feb 28, 2014, at 9:11 AM, Lukas Czerner <lczerner@redhat.com> wrote:
 > This commit adds fallocate FALLOC_FL_ZERO_RANGE support for fsx.
 
-and reworks/consolidates testing of which fallocate ops are available.
+It looks like this patch breaks the option handling for these
+fallocate features.
 
-Couple things below
+>  int     fallocate_calls =3D 1;            /* -F flag disables */
+>  int     punch_hole_calls =3D 1;           /* -H flag disables */
+> +int     zero_range_calls =3D 1;           /* -z flag disables */
 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->  ltp/fsx.c | 128 +++++++++++++++++++++++++++++++++++++++++++++++---------------
->  1 file changed, 98 insertions(+), 30 deletions(-)
-> 
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index c36a038..5d6d198 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -69,6 +69,7 @@ int			logcount = 0;	/* total ops */
->   * TRUNCATE:	-	4
->   * FALLOCATE:	-	5
->   * PUNCH HOLE:	-	6
-> + * ZERO RANGE:	-	7
->   *
->   * When mapped read/writes are disabled, they are simply converted to normal
->   * reads and writes. When fallocate/fpunch calls are disabled, they are
-> @@ -92,7 +93,8 @@ int			logcount = 0;	/* total ops */
->  #define OP_TRUNCATE	4
->  #define OP_FALLOCATE	5
->  #define OP_PUNCH_HOLE	6
-> -#define OP_MAX_FULL	7
-> +#define OP_ZERO_RANGE	7
-> +#define OP_MAX_FULL	8
->  
->  /* operation modifiers */
->  #define OP_CLOSEOPEN	100
-> @@ -139,6 +141,7 @@ int	seed = 1;			/* -S flag */
->  int     mapped_writes = 1;              /* -W flag disables */
->  int     fallocate_calls = 1;            /* -F flag disables */
->  int     punch_hole_calls = 1;           /* -H flag disables */
-> +int     zero_range_calls = 1;           /* -z flag disables */
->  int 	mapped_reads = 1;		/* -R flag disables it */
->  int	fsxgoodfd = 0;
->  int	o_direct;			/* -Z */
-> @@ -317,6 +320,14 @@ logdump(void)
->  						     lp->args[0] + lp->args[1])
->  				prt("\t******PPPP");
->  			break;
-> +		case OP_ZERO_RANGE:
-> +			prt("ZERO    0x%x thru 0x%x\t(0x%x bytes)",
-> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-> +			    lp->args[1]);
-> +			if (badoff >= lp->args[0] && badoff <
-> +						     lp->args[0] + lp->args[1])
-> +				prt("\t******ZZZZ");
-> +			break;
->  		case OP_SKIPPED:
->  			prt("SKIPPED (no operation)");
->  			break;
-> @@ -879,6 +890,65 @@ do_punch_hole(unsigned offset, unsigned length)
->  }
->  #endif
->  
-> +#ifdef FALLOC_FL_ZERO_RANGE
-> +void
-> +do_zero_range(unsigned offset, unsigned length)
-> +{
-> +	unsigned end_offset;
-> +	int mode = FALLOC_FL_ZERO_RANGE;
-> +	int keep_size;
-> +
-> +	if (length == 0) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping zero length zero range\n");
-> +			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, length);
-> +		return;
-> +	}
-> +
-> +	keep_size = random() % 2;
-> +
-> +	end_offset = keep_size ? 0 : offset + length;
-> +
-> +	if (end_offset > biggest) {
-> +		biggest = end_offset;
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("zero_range to largest ever: 0x%x\n", end_offset);
-> +	}
-> +
-> +	/*
-> +	 * last arg matches fallocate string array index in logdump:
-> +	 * 	0: allocate past EOF
-> +	 * 	1: extending prealloc
-> +	 * 	2: interior prealloc
-> +	 */
-> +	log4(OP_ZERO_RANGE, offset, length, (end_offset > file_size) ? (keep_size ? 0 : 1) : 2);
-> +
-> +	if (testcalls <= simulatedopcount)
-> +		return;
-> +
-> +	if ((progressinterval && testcalls % progressinterval == 0) ||
-> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
-> +		      end_offset <= monitorend))) {
-> +		prt("%lu zero\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-> +			offset, offset+length, length);
-> +	}
-> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-> +		prt("%pzero range: %x to %x\n", offset, length);
-> +		prterr("do_zero_range: fallocate");
-> +		report_failure(161);
+So these fallocate tests are on by default...
 
-This "161" isn't unique; do_punch_hole and do_preallocate both use the same number.
-Is that ok?  I guess there are other dups too, different bug (which probably
-nobody cares much about) ;)
-
-
-> +	}
-> +
-> +	memset(good_buf + offset, '\0', length);
-> +}
-> +
-> +#else
-> +void
-> +do_zero_range(unsigned offset, unsigned length)
-> +{
-> +	return;
-> +}
-> +#endif
-> +
->  #ifdef HAVE_LINUX_FALLOC_H
->  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
->  void
-> @@ -1047,6 +1117,12 @@ test(void)
->  			goto out;
->  		}
->  		break;
-> +	case OP_ZERO_RANGE:
-> +		if (!zero_range_calls) {
-> +			log4(OP_SKIPPED, OP_ZERO_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		break;
->  	}
->  
->  	switch (op) {
-> @@ -1085,6 +1161,10 @@ test(void)
->  		TRIM_OFF_LEN(offset, size, file_size);
->  		do_punch_hole(offset, size);
->  		break;
-> +	case OP_ZERO_RANGE:
-> +		TRIM_OFF_LEN(offset, size, file_size);
-> +		do_zero_range(offset, size);
-> +		break;
->  	default:
->  		prterr("test: unknown operation");
->  		report_failure(42);
-> @@ -1140,7 +1220,10 @@ usage(void)
->  "	-F: Do not use fallocate (preallocation) calls\n"
->  #endif
->  #ifdef FALLOC_FL_PUNCH_HOLE
-> -"       -H: Do not use punch hole calls\n"
-> +"	-H: Do not use punch hole calls\n"
-> +#endif
-> +#ifdef FALLOC_FL_ZERO_RANGE
-> +"	-E: Do not use zero range calls\n"
->  #endif
->  "	-L: fsxLite - no file creations & no file size changes\n\
->  	-N numops: total # operations to do (default infinity)\n\
-> @@ -1290,40 +1373,21 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
->  
->  #endif
->  
-> -void
-> -test_fallocate()
-> +int
+> =08+int
 > +test_fallocate(int mode)
 >  {
 >  #ifdef HAVE_LINUX_FALLOC_H
-> +	int ret = 0;
->  	if (!lite && fallocate_calls) {
-> -		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
-> +		if (fallocate(fd, mode, 0, 1) && errno == EOPNOTSUPP) {
->  			if(!quiet)
->  				warn("main: filesystem does not support fallocate, disabling\n");
+> +	int ret =3D 0;
+> 	if (!lite && fallocate_calls) {
+> +		if (fallocate(fd, mode, 0, 1) && errno =3D=3D =
+EOPNOTSUPP) {
+> 			if(!quiet)
+> 				warn("main: filesystem does not support =
+fallocate, disabling\n");
+> 		} else {
+> +			ret =3D 1;
+> 			ftruncate(fd, 0);
+> 		}
+> 	}
+> #endif
+> }
 
-we've lost which mode isn't supported, now.  Maybe you should print the
-flags which didn't pass?  Too bad your fancy flag stuff is in fsstress.c.  ;)
-or do ("does not support fallocate mode 0x%x", mode) ?
+And this returns 1 or 0 depending if they are supported or not...
 
-
-> -			fallocate_calls = 0;
->  		} else {
-> +			ret = 1;
->  			ftruncate(fd, 0);
->  		}
->  	}
-> -#else /* ! HAVE_LINUX_FALLOC_H */
-> -	fallocate_calls = 0;
-> -#endif
-> -
-> -}
-> -
-> -void
-> -test_punch_hole()
-> -{
-> -#ifdef FALLOC_FL_PUNCH_HOLE
-> -	if (!lite && punch_hole_calls) {
-> -		if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
-> -				0, 1) && errno == EOPNOTSUPP) {
-> -			if(!quiet)
-> -				warn("main: filesystem does not support fallocate punch hole, disabling");
-> -			punch_hole_calls = 0;
-> -		} else
-> -			ftruncate(fd, 0);
-> -	}
-> -#else /* ! PUNCH HOLE */
-> -	punch_hole_calls = 0;
-> +	return ret;
->  #endif
->  }
->  
-> @@ -1345,7 +1409,7 @@ main(int argc, char **argv)
->  
->  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
->  
-> -	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
-> +	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzLN:OP:RS:WZ"))
->  	       != EOF)
->  		switch (ch) {
->  		case 'b':
-> @@ -1445,6 +1509,9 @@ main(int argc, char **argv)
->  		case 'H':
->  			punch_hole_calls = 0;
->  			break;
+> +	while ((ch =3D getopt(argc, argv, =
+"b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzLN:OP:RS:WZ"))
+> 	       !=3D EOF)
+> 		switch (ch) {
+> 		case 'H':
+> 			punch_hole_calls =3D 0;
+> 			break;
 > +		case 'z':
-> +			zero_range_calls = 0;
+> +			zero_range_calls =3D 0;
 > +			break;
->  		case 'L':
->  		        lite = 1;
->  			break;
-> @@ -1590,8 +1657,9 @@ main(int argc, char **argv)
->  	} else 
->  		check_trunc_hack();
->  
-> -	test_fallocate();
-> -	test_punch_hole();
-> +	fallocate_calls = test_fallocate(0);
-> +	punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE);
-> +	zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
 
-Could probably add the do_warn() stuff here, explicitly stating what got disabled.
+And the option parsing sets the values to zero if they are disabled,
+so far, so good...
 
--Eric
+> +	fallocate_calls =3D test_fallocate(0);
+> +	punch_hole_calls =3D test_fallocate(FALLOC_FL_PUNCH_HOLE | =
+FALLOC_FL_KEEP_SIZE);
+> +	zero_range_calls =3D test_fallocate(FALLOC_FL_ZERO_RANGE);
 
->  
->  	while (numops == -1 || numops--)
->  		test();
-> 
+But here, the values set by option parsing are clobbered and the
+tests are only enabled or disabled depending on whether the kernel
+supports that feature or not.  I think you need something like:
+
+        if (fallocate_calls)
+                fallocate_calls =3D test_fallocate(0);
+        if (punch_hole_calls)
+                punch_hole_calls =3D test_fallocate(FALLOC_FL_PUNCH_HOLE =
+|
+                                                  FALLOC_FL_KEEP_SIZE);
+        if (zero_range_calls)
+                zero_range_calls =3D =
+test_fallocate(FALLOC_FL_ZERO_RANGE);
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_184D3A06-C043-4EEB-A918-C4941EF7584D
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIVAwUBUxDewHKl2rkXzB/gAQI2Uw//f2roFEJGCHU3cO625PeeOYrLgD2j5j7Y
+MV/ygwjDWl8H/tDhzMIijTW40X59SNDh+xj3ZnLOGokd7QDQToifTt9Jumpbek5T
+sCRsxU96yysrZXOf59nDvPj1HsEXn/GeXCcDBqz5D0sq0sC8+WspY77xvjtY0M08
+9RH0tHtTbPzH5uw/Fja4UINBvXMjlnrc2p9jAYZGKUv7PqrnANS19QCPVuetn9Qk
+EHnn6pIRe746j13kdCdgvp7Nk6vR9bM6Vc6N2C613MGXt5vmathwD6fj5gFzUjC/
+x538x+Rh/Uhh34TaMP8P6gxN+41SGqv3cNU89xzzZQD1YyBUYzf+9AZT+O7zL1iU
+xTQrivY8HNp+rdp9vAxaiZnmcQlxU7ZOYqpKZXjiQIlRKNV99iutwBITP6jiurtL
+Gdt0K/YwQQE7om1UXm2gw29Y/LYuHrES+6I3kuuJ7oMJefM/RxfVZ9//YFoQhyMV
+nSEQsHHIJhhDRTjXExutiH9GhsLGQjyuTYIBfNYMyJjyKasDhFca5VY0EjDMUIkO
+kR4Bv6aRFwqNvekekBVrQHp2QZ+8M9oGPHSWr6yjqijlOPS0mJDROdyJmM59Va2m
+2CU47YXNj4qvVQiKdZgn+N0+jlh925zVrtwBSNOsGeAthWeS4rmUR4SW2Cfw7oaU
+x46Ftn3PJkU=
+=0yxr
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_184D3A06-C043-4EEB-A918-C4941EF7584D--
+
+
+--===============6913547480573046926==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6913547480573046926==--
