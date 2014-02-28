@@ -1,14 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 52A5E7F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 14:02:49 -0600 (CST)
-Message-ID: <5310EB67.5050404@sgi.com>
-Date: Fri, 28 Feb 2014 14:02:47 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 81D5E7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 14:36:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A58F8F8037
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 12:36:53 -0800 (PST)
+Date: Fri, 28 Feb 2014 15:36:48 -0500
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH] xfs: check all buffers in xfs_check_page_type()
+Message-ID: <20140228203648.GC15562@laptop.bfoster>
 References: <1393615369-41882-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1393615369-41882-1-git-send-email-bfoster@redhat.com>
+	<5310EB67.5050404@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5310EB67.5050404@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,68 +22,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 02/28/14 13:22, Brian Foster wrote:
-> xfs_aops_discard_page() was introduced in the following commit:
->
->    xfs: truncate delalloc extents when IO fails in writeback
->
-> ... to clean up left over delalloc ranges after I/O failure in
-> ->writepage(). generic/224 tests for this scenario and occasionally
-> reproduces panics on sub-4k blocksize filesystems.
->
-> The cause of this is failure to clean up the delalloc range on a
-> page where the first buffer does not match one of the expected
-> states of xfs_check_page_type(). If a buffer is not unwritten,
-> delayed or dirty&mapped, xfs_check_page_type() stops and
-> immediately returns 0.
->
-> The stress test of generic/224 creates a scenario where the first
-> several buffers of a page with delayed buffers are mapped&uptodate
-> and some subsequent buffer is delayed. If the ->writepage() happens
-> to fail for this page, xfs_aops_discard_page() incorrectly skips
-> the entire page.
->
-> Modify xfs_aops_discard_page() to iterate all of the page buffers
-> to ensure a delayed buffer does not go undetected.
->
-> Signed-off-by: Brian Foster<bfoster@redhat.com>
-> ---
->
-> The only other caller to xfs_check_page_type() is xfs_convert_page(). I
-> think this is safe with respect to that codepath, given the additional
-> imap checks therein and whatnot, but thoughts appreciated.
->
-> Brian
->
->   fs/xfs/xfs_aops.c | 2 --
->   1 file changed, 2 deletions(-)
->
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index db2cfb0..5962a9f 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -655,8 +655,6 @@ xfs_check_page_type(
->   				acceptable += (type == XFS_IO_DELALLOC);
->   			else if (buffer_dirty(bh) && buffer_mapped(bh))
->   				acceptable += (type == XFS_IO_OVERWRITE);
-> -			else
-> -				break;
->   		} while ((bh = bh->b_this_page) != head);
->
->   		if (acceptable)
+On Fri, Feb 28, 2014 at 02:02:47PM -0600, Mark Tinguely wrote:
+> On 02/28/14 13:22, Brian Foster wrote:
+> >xfs_aops_discard_page() was introduced in the following commit:
+> >
+> >   xfs: truncate delalloc extents when IO fails in writeback
+> >
+> >... to clean up left over delalloc ranges after I/O failure in
+> >->writepage(). generic/224 tests for this scenario and occasionally
+> >reproduces panics on sub-4k blocksize filesystems.
+> >
+> >The cause of this is failure to clean up the delalloc range on a
+> >page where the first buffer does not match one of the expected
+> >states of xfs_check_page_type(). If a buffer is not unwritten,
+> >delayed or dirty&mapped, xfs_check_page_type() stops and
+> >immediately returns 0.
+> >
+> >The stress test of generic/224 creates a scenario where the first
+> >several buffers of a page with delayed buffers are mapped&uptodate
+> >and some subsequent buffer is delayed. If the ->writepage() happens
+> >to fail for this page, xfs_aops_discard_page() incorrectly skips
+> >the entire page.
+> >
+> >Modify xfs_aops_discard_page() to iterate all of the page buffers
+> >to ensure a delayed buffer does not go undetected.
+> >
+> >Signed-off-by: Brian Foster<bfoster@redhat.com>
+> >---
+> >
+> >The only other caller to xfs_check_page_type() is xfs_convert_page(). I
+> >think this is safe with respect to that codepath, given the additional
+> >imap checks therein and whatnot, but thoughts appreciated.
+> >
+> >Brian
+> >
+> >  fs/xfs/xfs_aops.c | 2 --
+> >  1 file changed, 2 deletions(-)
+> >
+> >diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> >index db2cfb0..5962a9f 100644
+> >--- a/fs/xfs/xfs_aops.c
+> >+++ b/fs/xfs/xfs_aops.c
+> >@@ -655,8 +655,6 @@ xfs_check_page_type(
+> >  				acceptable += (type == XFS_IO_DELALLOC);
+> >  			else if (buffer_dirty(bh) && buffer_mapped(bh))
+> >  				acceptable += (type == XFS_IO_OVERWRITE);
+> >-			else
+> >-				break;
+> >  		} while ((bh = bh->b_this_page) != head);
+> >
+> >  		if (acceptable)
+> 
+> Is there any reason to scan all the buffers when we all we want is
+> an indication that at least one is acceptable? Maybe there are
+> generally not may buffers to a page to make it worthwhile.
+> 
 
-Is there any reason to scan all the buffers when we all we want is an 
-indication that at least one is acceptable? Maybe there are generally 
-not may buffers to a page to make it worthwhile.
+Hi Mark,
 
---Mark.
+Good point. We could pull the 'if (acceptable)' check up into the loop
+and exit as soon as we find something writeable.
+
+Alternatively, we could do something like the following and get rid of
+'acceptable' entirely (or continue to nest the type checks if there's a
+performance concern):
+
+	...
+	if (buffer_unwritten(bh) && type == XFS_IO_UNWRITTEN)
+		return 1;
+	else if (buffer_delay(bh) && type == XFS_IO_DELALLOC)
+		return 1;
+	else if (buffer_dirty(bh) && buffer_mapped(bh) &&
+		 type == XFS_IO_OVERWRITE)
+		return 1;
+	...
+
+Brian
+
+> --Mark.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
