@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B7B7A7F4E
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 10:52:03 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 691687F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 11:17:48 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9042730406B
-	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:52:03 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id P3qTRfSJCfFLnjss for
-	<xfs@oss.sgi.com>; Fri, 28 Feb 2014 08:52:02 -0800 (PST)
-Date: Fri, 28 Feb 2014 17:51:57 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 1/8] xfstests: Create single function for testing xfs_io
-	commands
-In-Reply-To: <5310BC1B.4010700@sandeen.net>
-Message-ID: <alpine.LFD.2.00.1402281750520.2231@localhost.localdomain>
-References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
-	<5310BC1B.4010700@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 57684304039
+	for <xfs@oss.sgi.com>; Fri, 28 Feb 2014 09:17:44 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 04PAuDjoHLsuaNqS for <xfs@oss.sgi.com>;
+	Fri, 28 Feb 2014 09:17:43 -0800 (PST)
+Message-ID: <5310C4B5.9010901@sandeen.net>
+Date: Fri, 28 Feb 2014 11:17:41 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH 4/8] xfstests: Move fallocate include into global.h
+References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
+	<1393603865-26198-4-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1393603865-26198-4-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,163 +28,196 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, 28 Feb 2014, Eric Sandeen wrote:
+On 2/28/14, 10:11 AM, Lukas Czerner wrote:
+> Move the inclusion of falloc.h with all it's possible defines for the
+> fallocate mode into global.h header file so we do not have to include
+> and define it manually in every tool using fallocate.
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 
-> Date: Fri, 28 Feb 2014 10:40:59 -0600
-> From: Eric Sandeen <sandeen@sandeen.net>
-> To: Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
-> Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-> Subject: Re: [PATCH 1/8] xfstests: Create single function for testing xfs_io
->     commands
-> 
-> On 2/28/14, 10:10 AM, Lukas Czerner wrote:
-> > Currently there are several function testing various xfs_io commands.
-> > This commit creates _require_xfs_io_command() to test any xfs_command.
-> > 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> 
-> Nice, 
-> 
-> So to be clear, is the difference here that the explicitly listed commands
-> also ensure that the running kernel supports it, whereas the default simply
-> makes sure that xfs_io accepts it?  I suppose it's self-explanatory.
+I like the direction, but I think this changes behavior a little bit.
 
-The only command where we only tested xfs_io support was zero. Now
-we test both xfs_io and kernel support with every command.
+#ifdef FALLOCATE came from an autoconf macro:
 
+AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
+  [ AC_MSG_CHECKING([for fallocate])
+    AC_TRY_LINK([
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <fcntl.h>
+#include <linux/falloc.h> ],
+      [ fallocate(0, 0, 0, 0); ],
+      [ have_fallocate=true; AC_MSG_RESULT(yes) ],
+      [ have_fallocate=false; AC_MSG_RESULT(no) ])
+    AC_SUBST(have_fallocate)
+  ])
 
-> 
-> Looks good to me,
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+(at least I think so?) and so #ifdef FALLOCATE meant that
+an fallocate syscall actually exists.  With your changes,
+the test is now whether the fallocate *header* exists.
 
-Thanks!
--Lukas
+falloc.h is part of kernel-headers, not glibc.  So it's
+possible that there's a divergence between the two.
 
+I think it's probably ok.  Build-time checks should
+determine whether we are able to _build_ and yours do that.
+Each caller of fallocate (or each test using it) then probably
+needs to ensure that the functionality it wants is actually
+available at runtime and handle it if not.
+
+So I'll give this a 
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+but maybe the above rambling will ring alarm bells for
+someone else... ;)
+
+-Eric
+
+> ---
+>  configure.ac   |  3 ++-
+>  ltp/fsstress.c | 11 ++---------
+>  ltp/fsx.c      | 11 ++++-------
+>  src/global.h   | 25 +++++++++++++++++++++++++
+>  4 files changed, 33 insertions(+), 17 deletions(-)
 > 
-> 
-> 
-> > ---
-> >  common/rc | 72 +++++++++++++++++++++++++++++++++------------------------------
-> >  1 file changed, 38 insertions(+), 34 deletions(-)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index f2c3c3a..7f530d0 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -1296,12 +1296,43 @@ _user_do()
-> >      fi
-> >  }
-> >  
-> > +_require_xfs_io_command()
-> > +{
-> > +	if [ $# -ne 1 ]
-> > +	then
-> > +		echo "Usage: _require_xfs_io_command command" 1>&2
-> > +		exit 1
-> > +	fi
-> > +	command=$1
-> > +
-> > +	testfile=$TEST_DIR/$$.xfs_io
-> > +	case $command in
-> > +	"falloc" )
-> > +		testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
-> > +		;;
-> > +	"fpunch" | "fcollapse" | "zero" )
-> > +		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-> > +			-c "$command 4k 8k" $testfile 2>&1`
-> > +		;;
-> > +	"fiemap")
-> > +		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-> > +			-c "fiemap -v" $testfile 2>&1`
-> > +		;;
-> > +	*)
-> > +		testio=`$XFS_IO_PROG -c "$command help" 2>&1`
-> > +	esac
-> > +
-> > +	rm -f $testfile 2>&1 > /dev/null
-> > +	echo $testio | grep -q "not found" && \
-> > +		_notrun "xfs_io $command support is missing"
-> > +	echo $testio | grep -q "Operation not supported" && \
-> > +		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
-> > +}
-> > +
-> >  # check that xfs_io, kernel, and filesystem all support zero
-> >  _require_xfs_io_zero()
-> >  {
-> > -	testio=`$XFS_IO_PROG -c "zero help" 2>&1`
-> > -	echo $testio | grep -q 'command "zero" not found' && \
-> > -		_notrun "zero command not supported"
-> > +	_require_xfs_io_command "zero"
-> >  }
-> 
-> Nice, so now this actually *does* test the 2nd and 3rd items.  :)
-> 
-> >  # check that xfs_io, glibc, kernel, and filesystem all (!) support
-> > @@ -1309,54 +1340,27 @@ _require_xfs_io_zero()
-> >  #
-> >  _require_xfs_io_falloc()
-> >  {
-> > -	testfile=$TEST_DIR/$$.falloc
-> > -	testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
-> > -	rm -f $testfile 2>&1 > /dev/null
-> > -	echo $testio | grep -q "not found" && \
-> > -		_notrun "xfs_io fallocate support is missing"
-> > -	echo $testio | grep -q "Operation not supported" && \
-> > -		_notrun "xfs_io fallocate command failed (old kernel/wrong fs?)"
-> > +	_require_xfs_io_command "falloc"
-> >  }
-> >  
-> >  # check that xfs_io, kernel and filesystem all support fallocate with hole
-> >  # punching
-> >  _require_xfs_io_falloc_punch()
-> >  {
-> > -	testfile=$TEST_DIR/$$.falloc
-> > -	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-> > -		-c "fpunch 4k 8k" $testfile 2>&1`
-> > -	rm -f $testfile 2>&1 > /dev/null
-> > -	echo $testio | grep -q "not found" && \
-> > -		_notrun "xfs_io fallocate punch support is missing"
-> > -	echo $testio | grep -q "Operation not supported" && \
-> > -		_notrun "xfs_io fallocate punch command failed (no fs support?)"
-> > +	_require_xfs_io_command "fpunch"
-> >  }
-> >  
-> >  # check that xfs_io, kernel and filesystem all support fallocate with collapse
-> >  # range
-> >  _require_xfs_io_falloc_collapse()
-> >  {
-> > -	testfile=$TEST_DIR/$$.falloc
-> > -	testio=`$XFS_IO_PROG -f -c "pwrite 0 20k" -c "fsync" \
-> > -		-c "fcollapse 4k 8k" $testfile 2>&1`
-> > -	rm -f $testfile 2>&1 > /dev/null
-> > -	echo $testio | grep -q "not found" && \
-> > -		_notrun "xfs_io fallocate collapse range support is missing"
-> > -	echo $testio | grep -q "Operation not supported" && \
-> > -		_notrun "xfs_io fallocate collapse range failed (no fs support?)"
-> > +	_require_xfs_io_command "fcollapse"
-> >  }
-> >  
-> >  # check that xfs_io, kernel and filesystem support fiemap
-> >  _require_xfs_io_fiemap()
-> >  {
-> > -	testfile=$TEST_DIR/$$.fiemap
-> > -	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
-> > -		-c "fiemap -v" $testfile 2>&1`
-> > -	rm -f $testfile 2>&1 > /dev/null
-> > -	echo $testio | grep -q "not found" && \
-> > -		_notrun "xfs_io fiemap support is missing"
-> > -	echo $testio | grep -q "Operation not supported" && \
-> > -		_notrun "xfs_io fiemap command failed (no fs support?)"
-> > +	_require_xfs_io_command "fiemap"
-> >  }
-> >  
-> >  # Check that a fs has enough free space (in 1024b blocks)
-> > 
-> 
+> diff --git a/configure.ac b/configure.ac
+> index 6fba3ad..2f95c4c 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -25,7 +25,8 @@ AC_HEADER_STDC
+>  			sys/wait.h		\
+>  			sys/types.h		\
+>  			strings.h		\
+> -			err.h
+> +			err.h			\
+> +			linux/falloc.h
+>      ])
+>      AC_CHECK_HEADERS([	sys/fs/xfs_fsops.h	\
+>  			sys/fs/xfs_itable.h	\
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index c56f168..7dec7c6 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -27,13 +27,6 @@
+>  #ifdef HAVE_LINUX_FIEMAP_H
+>  #include <linux/fiemap.h>
+>  #endif
+> -#ifdef FALLOCATE
+> -#include <linux/falloc.h>
+> -#ifndef FALLOC_FL_PUNCH_HOLE
+> -/* Copy-paste from linux/falloc.h */
+> -#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
+> -#endif
+> -#endif
+>  #ifndef HAVE_ATTR_LIST
+>  #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
+>  #endif
+> @@ -2085,7 +2078,7 @@ dwrite_f(int opno, long r)
+>  void
+>  fallocate_f(int opno, long r)
+>  {
+> -#ifdef FALLOCATE
+> +#ifdef HAVE_LINUX_FALLOC_H
+>  	int		e;
+>  	pathname_t	f;
+>  	int		fd;
+> @@ -2507,7 +2500,7 @@ mknod_f(int opno, long r)
+>  void
+>  punch_f(int opno, long r)
+>  {
+> -#ifdef FALLOCATE
+> +#ifdef HAVE_LINUX_FALLOC_H
+>  	int		e;
+>  	pathname_t	f;
+>  	int		fd;
+> diff --git a/ltp/fsx.c b/ltp/fsx.c
+> index 2f1e3e8..c36a038 100644
+> --- a/ltp/fsx.c
+> +++ b/ltp/fsx.c
+> @@ -33,9 +33,6 @@
+>  #ifdef AIO
+>  #include <libaio.h>
+>  #endif
+> -#ifdef FALLOCATE
+> -#include <linux/falloc.h>
+> -#endif
+>  
+>  #ifndef MAP_FILE
+>  # define MAP_FILE 0
+> @@ -882,7 +879,7 @@ do_punch_hole(unsigned offset, unsigned length)
+>  }
+>  #endif
+>  
+> -#ifdef FALLOCATE
+> +#ifdef HAVE_LINUX_FALLOC_H
+>  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+>  void
+>  do_preallocate(unsigned offset, unsigned length)
+> @@ -1139,7 +1136,7 @@ usage(void)
+>  "	-A: Use the AIO system calls\n"
+>  #endif
+>  "	-D startingop: debug output starting at specified operation\n"
+> -#ifdef FALLOCATE
+> +#ifdef HAVE_LINUX_FALLOC_H
+>  "	-F: Do not use fallocate (preallocation) calls\n"
+>  #endif
+>  #ifdef FALLOC_FL_PUNCH_HOLE
+> @@ -1296,7 +1293,7 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
+>  void
+>  test_fallocate()
+>  {
+> -#ifdef FALLOCATE
+> +#ifdef HAVE_LINUX_FALLOC_H
+>  	if (!lite && fallocate_calls) {
+>  		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+>  			if(!quiet)
+> @@ -1306,7 +1303,7 @@ test_fallocate()
+>  			ftruncate(fd, 0);
+>  		}
+>  	}
+> -#else /* ! FALLOCATE */
+> +#else /* ! HAVE_LINUX_FALLOC_H */
+>  	fallocate_calls = 0;
+>  #endif
+>  
+> diff --git a/src/global.h b/src/global.h
+> index e6a2c2b..8180f66 100644
+> --- a/src/global.h
+> +++ b/src/global.h
+> @@ -149,4 +149,29 @@
+>  #include <sys/param.h>
+>  #endif
+>  
+> +#ifdef HAVE_LINUX_FALLOC_H
+> +#include <linux/falloc.h>
+> +
+> +#ifndef FALLOC_FL_KEEP_SIZE
+> +#define FALLOC_FL_KEEP_SIZE		0x01
+> +#endif
+> +
+> +#ifndef FALLOC_FL_PUNCH_HOLE
+> +#define FALLOC_FL_PUNCH_HOLE		0x02
+>  #endif
+> +
+> +#ifndef FALLOC_FL_NO_HIDE_STALE
+> +#define FALLOC_FL_NO_HIDE_STALE		0x04
+> +#endif
+> +
+> +#ifndef FALLOC_FL_COLLAPSE_RANGE
+> +#define FALLOC_FL_COLLAPSE_RANGE	0x08
+> +#endif
+> +
+> +#ifndef FALLOC_FL_ZERO_RANGE
+> +#define FALLOC_FL_ZERO_RANGE		0x10
+> +#endif
+> +
+> +#endif /* HAVE_LINUX_FALLOC_H */
+> +
+> +#endif /* GLOBAL_H */
 > 
 
 _______________________________________________
