@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E55777F51
-	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 13:14:05 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C4DF27F4E
+	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 14:42:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BE8408F8065
-	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 11:14:01 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AE1A7304043
+	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 12:41:58 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cHBeGXgijvdegkrU for
-	<xfs@oss.sgi.com>; Mon, 03 Mar 2014 11:14:00 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s23JDxYw028404
+	cuda.sgi.com with ESMTP id LEomC50CBcxFx1IM for
+	<xfs@oss.sgi.com>; Mon, 03 Mar 2014 12:41:57 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s23KfuaY008248
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 3 Mar 2014 14:14:00 -0500
+	for <xfs@oss.sgi.com>; Mon, 3 Mar 2014 15:41:56 -0500
 Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
 	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s23JDwLI004584
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id s23Kftmj010282
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 3 Mar 2014 14:13:59 -0500
-Message-ID: <5314D476.7030503@redhat.com>
-Date: Mon, 03 Mar 2014 13:13:58 -0600
+	for <xfs@oss.sgi.com>; Mon, 3 Mar 2014 15:41:55 -0500
+Message-ID: <5314E912.9080708@redhat.com>
+Date: Mon, 03 Mar 2014 14:41:54 -0600
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: fix array overrun in do_inode_prefetch
+Subject: [PATCH] xfsprogs: fix use after free in inode_item_done()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,40 +38,45 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Coverity spotted this:
+Commit "3a19fb7 libxfs: stop caching inode structures"
+introduced a use after free.
 
-do_inode_prefetch() does a while loop, creating queues:
+libxfs_iput() already does the check for ip->i_itemp, and a
+kmem_zone_free() if it's present, and then frees the ip pointer.
+Re-checking ip->i_itemp after the libxfs_iput call will access
+the freed ip pointer, as will setting ip_>i_itemp to NULL.
 
-        for (i = 0; i < thread_count; i++) {
-		...
-		create_work_queue(&queues[i], mp, 1);
-		...
-	}
-
-and then does this to wait for them all to complete:
-
-	for (; i >= 0; i--)
- 		destroy_work_queue(&queues[i]);
-
-But we leave the first for loop with (i == thread_coun)t, and
-the second one will try to index queues[] one past the end.
+Simply remove the offending code to fix this up.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 0f9e3fe..e47a48e 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -995,7 +995,7 @@ do_inode_prefetch(
- 	/*
- 	 * wait for workers to complete
- 	 */
--	for (; i >= 0; i--)
-+	while (i--)
- 		destroy_work_queue(&queues[i]);
- 	free(queues);
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 6c9d202..2e6720e 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -694,7 +694,6 @@ inode_item_done(
+ 	xfs_mount_t		*mp;
+ 	xfs_buf_t		*bp;
+ 	int			error;
+-	extern kmem_zone_t	*xfs_ili_zone;
+ 
+ 	ip = iip->ili_inode;
+ 	mp = iip->ili_item.li_mountp;
+@@ -739,12 +738,6 @@ ili_done:
+ 	} else {
+ 		libxfs_iput(ip, 0);
+ 	}
+-
+-	if (ip->i_itemp)
+-		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
+-	else
+-		ASSERT(0);
+-	ip->i_itemp = NULL;
  }
+ 
+ static void
+
 
 _______________________________________________
 xfs mailing list
