@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA9CD7F4E
-	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 06:21:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 808DB8F8033
-	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 04:21:10 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cAQjq2OfUfPWIH3A for
-	<xfs@oss.sgi.com>; Mon, 03 Mar 2014 04:21:09 -0800 (PST)
-Date: Mon, 3 Mar 2014 13:21:03 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 7/8] xfstests: Add fallocate zero range operation to
- fsx
-In-Reply-To: <CB2787E8-CE9B-46BE-B649-4E38ABE27C2B@dilger.ca>
-Message-ID: <alpine.LFD.2.00.1403031317310.2258@localhost.localdomain>
-References: <1393603865-26198-1-git-send-email-lczerner@redhat.com>
-	<1393603865-26198-7-git-send-email-lczerner@redhat.com>
-	<CB2787E8-CE9B-46BE-B649-4E38ABE27C2B@dilger.ca>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A02277F4E
+	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 11:34:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 887C0304032
+	for <xfs@oss.sgi.com>; Mon,  3 Mar 2014 09:34:41 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id tkkKWnl9PlN37cNP for <xfs@oss.sgi.com>;
+	Mon, 03 Mar 2014 09:34:36 -0800 (PST)
+Message-ID: <5314BD2B.1010904@sandeen.net>
+Date: Mon, 03 Mar 2014 11:34:35 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] xfs: don't leak EFSBADCRC to userspace
+References: <1393825194-1719-1-git-send-email-david@fromorbit.com>
+	<1393825194-1719-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393825194-1719-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,95 +28,112 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Fri, 28 Feb 2014, Andreas Dilger wrote:
+On 3/2/14, 11:39 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> While the verifier reoutines may return EFSBADCRC when a buffer ahs
+> a bad CRC, we need to translate that to EFSCORRUPTED so that the
+> higher layers treat the error appropriately and so we return a
+> consistent error to userspace. This fixes a xfs/005 regression.
 
-> Date: Fri, 28 Feb 2014 12:08:47 -0700
-> From: Andreas Dilger <adilger@dilger.ca>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
-> Subject: Re: [PATCH 7/8] xfstests: Add fallocate zero range operation to fsx
-> 
-> On Feb 28, 2014, at 9:11 AM, Lukas Czerner <lczerner@redhat.com> wrote:
-> > This commit adds fallocate FALLOC_FL_ZERO_RANGE support for fsx.
-> 
-> It looks like this patch breaks the option handling for these
-> fallocate features.
-> 
-> >  int     fallocate_calls = 1;            /* -F flag disables */
-> >  int     punch_hole_calls = 1;           /* -H flag disables */
-> > +int     zero_range_calls = 1;           /* -z flag disables */
-> 
-> So these fallocate tests are on by default...
-> 
-> > +int
-> > +test_fallocate(int mode)
-> >  {
-> >  #ifdef HAVE_LINUX_FALLOC_H
-> > +	int ret = 0;
-> > 	if (!lite && fallocate_calls) {
-                     ^^^^^^^^^^^^^^^
+Can you say a little more about the philosophy here?
 
-Right, I forgot about this.
+xfs/005 regresses because it expects "structure needs cleaning"
 
+So if we instead return our (icky) CRC error code, we get something else.
 
-> > +		if (fallocate(fd, mode, 0, 1) && errno == EOPNOTSUPP) {
-> > 			if(!quiet)
-> > 				warn("main: filesystem does not support fallocate, disabling\n");
-> > 		} else {
-> > +			ret = 1;
-> > 			ftruncate(fd, 0);
-> > 		}
-> > 	}
-> > #endif
-> > }
-> 
-> And this returns 1 or 0 depending if they are supported or not...
-> 
-> > +	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzLN:OP:RS:WZ"))
-> > 	       != EOF)
-> > 		switch (ch) {
-> > 		case 'H':
-> > 			punch_hole_calls = 0;
-> > 			break;
-> > +		case 'z':
-> > +			zero_range_calls = 0;
-> > +			break;
-> 
-> And the option parsing sets the values to zero if they are disabled,
-> so far, so good...
-> 
-> > +	fallocate_calls = test_fallocate(0);
-> > +	punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE);
-> > +	zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
-> 
-> But here, the values set by option parsing are clobbered and the
-> tests are only enabled or disabled depending on whether the kernel
-> supports that feature or not.  I think you need something like:
+But it is truly a different root cause.
 
-Right, and the 'fallocate_calls' test needs to disappear from
-test_fallocate().
+So the goal is to NEVER leak EFSBADCRC to userspace?  Maybe a comment
+above that error definition would help document that.
 
-Thanks!
--Lukas
+And I'm bit worried that we'll leak more in the future if things changed,
+or if things got missed here.  Everything you have here looks fine, but
+it's not obvious that every path has been caught; it seems a bit random.
 
+I know we _just_ merged my "differentiator" patches, but I wonder if
+it would be better to add XFS_BSTATE_BADCRC to b_state or some other 
+field, and go back to always assigning EFSCORRUPTED.  What do you think?
+
+When I wrote those I wasn't thinking about keeping it all internal
+to the filesystem.
+
+-Eric
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_mount.c     |  3 +++
+>  fs/xfs/xfs_symlink.c   |  4 ++++
+>  fs/xfs/xfs_trans_buf.c | 11 +++++++++++
+>  3 files changed, 18 insertions(+)
 > 
->         if (fallocate_calls)
->                 fallocate_calls = test_fallocate(0);
->         if (punch_hole_calls)
->                 punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE |
->                                                   FALLOC_FL_KEEP_SIZE);
->         if (zero_range_calls)
->                 zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
-> 
-> Cheers, Andreas
-> 
-> 
-> 
-> 
-> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index f96c056..993cb19 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -314,6 +314,9 @@ reread:
+>  		error = bp->b_error;
+>  		if (loud)
+>  			xfs_warn(mp, "SB validate failed with error %d.", error);
+> +		/* bad CRC means corrupted metadata */
+> +		if (error == EFSBADCRC)
+> +			error = EFSCORRUPTED;
+>  		goto release_buf;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 14e58f2..5fda189 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -80,6 +80,10 @@ xfs_readlink_bmap(
+>  		if (error) {
+>  			xfs_buf_ioerror_alert(bp, __func__);
+>  			xfs_buf_relse(bp);
+> +
+> +			/* bad CRC means corrupted metadata */
+> +			if (error == EFSBADCRC)
+> +				error = EFSCORRUPTED;
+>  			goto out;
+>  		}
+>  		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 647b6f1..b8eef05 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -275,6 +275,10 @@ xfs_trans_read_buf_map(
+>  			XFS_BUF_UNDONE(bp);
+>  			xfs_buf_stale(bp);
+>  			xfs_buf_relse(bp);
+> +
+> +			/* bad CRC means corrupted metadata */
+> +			if (error == EFSBADCRC)
+> +				error = EFSCORRUPTED;
+>  			return error;
+>  		}
+>  #ifdef DEBUG
+> @@ -338,6 +342,9 @@ xfs_trans_read_buf_map(
+>  				if (tp->t_flags & XFS_TRANS_DIRTY)
+>  					xfs_force_shutdown(tp->t_mountp,
+>  							SHUTDOWN_META_IO_ERROR);
+> +				/* bad CRC means corrupted metadata */
+> +				if (error == EFSBADCRC)
+> +					error = EFSCORRUPTED;
+>  				return error;
+>  			}
+>  		}
+> @@ -375,6 +382,10 @@ xfs_trans_read_buf_map(
+>  		if (tp->t_flags & XFS_TRANS_DIRTY)
+>  			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
+>  		xfs_buf_relse(bp);
+> +
+> +		/* bad CRC means corrupted metadata */
+> +		if (error == EFSBADCRC)
+> +			error = EFSCORRUPTED;
+>  		return error;
+>  	}
+>  #ifdef DEBUG
 > 
 
 _______________________________________________
