@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 475A27F58
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 02:52:19 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 088DC7F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 02:52:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DD1D38F8065
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 00:52:18 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D77148F8065
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 00:52:19 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	9eLmmP7pUhmD4jRm for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 00:52:17 -0800 (PST)
+	0s3pZI2YlncfEtL4 for <xfs@oss.sgi.com>;
+	Tue, 04 Mar 2014 00:52:18 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WKl4w-0006HX-LR
+	(envelope-from <dave@fromorbit.com>) id 1WKl4w-0006HW-L7
 	for xfs@oss.sgi.com; Tue, 04 Mar 2014 19:51:58 +1100
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WKl4w-0006ye-Ke
+	(envelope-from <dave@disappointment.disaster>) id 1WKl4w-0006yW-KD
 	for xfs@oss.sgi.com; Tue, 04 Mar 2014 19:51:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/13] libxfs: skip verification on initial "guess" superblock
-	read
-Date: Tue,  4 Mar 2014 19:51:48 +1100
-Message-Id: <1393923117-9559-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/13] libxfs: xfs_sb_read_verify() doesn't flag bad crcs on
+	primary sb
+Date: Tue,  4 Mar 2014 19:51:47 +1100
+Message-Id: <1393923117-9559-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,55 +42,32 @@ From: Dave Chinner <dchinner@redhat.com>
 
 [userspace port]
 
-When xfs_readsb() does the very first read of the superblock,
-it makes a guess at the length of the buffer, based on the
-sector size of the underlying storage.  This may or may
-not match the filesystem sector size in sb_sectsize, so
-we can't i.e. do a CRC check on it; it might be too short.
+My earlier commit 10e6e65 deserves a layer or two of brown paper
+bags.  The logic in that commit means that a CRC failure on the
+primary superblock will *never* result in an error return.
 
-In fact, mounting a filesystem with sb_sectsize larger
-than the device sector size will cause a mount failure
-if CRCs are enabled, because we are checksumming a length
-which exceeds the buffer passed to it.
-
-So always read twice; the first time we read with NULL
-buffer ops to skip verification; then set the proper
-read length, hook up the proper verifier, and give it
-another go.
-
-Once we are sure that we've got the right buffer length,
-we can also use bp->b_length in the xfs_sb_read_verify,
-rather than the less-trusted on-disk sectorsize for
-secondary superblocks.  Before this we ran the risk of
-passing junk to the crc32c routines, which didn't always
-handle extreme values.
+Hopefully this fixes it, so that we always return the error
+if it's a primary superblock, otherwise only if the filesystem
+has CRCs enabled.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_sb.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ libxfs/xfs_sb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 5c10c97..6ad99a5 100644
+index 4be7366..5c10c97 100644
 --- a/libxfs/xfs_sb.c
 +++ b/libxfs/xfs_sb.c
-@@ -566,7 +566,7 @@ xfs_sb_read_verify(
- 						XFS_SB_VERSION_5) ||
- 	     dsb->sb_crc != 0)) {
- 
--		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
-+		if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+@@ -569,7 +569,7 @@ xfs_sb_read_verify(
+ 		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
  				      offsetof(struct xfs_sb, sb_crc))) {
  			/* Only fail bad secondaries on a known V5 filesystem */
- 			if (bp->b_bn == XFS_SB_DADDR ||
-@@ -599,7 +599,6 @@ xfs_sb_quiet_read_verify(
- {
- 	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
- 
--
- 	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
- 		/* XFS filesystem, verify noisily! */
- 		xfs_sb_read_verify(bp);
+-			if (bp->b_bn != XFS_SB_DADDR &&
++			if (bp->b_bn == XFS_SB_DADDR ||
+ 			    xfs_sb_version_hascrc(&mp->m_sb)) {
+ 				error = EFSCORRUPTED;
+ 				goto out_error;
 -- 
 1.9.0
 
