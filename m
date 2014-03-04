@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1E5BA7F7B
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 02:52:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 08CA88F8065
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 00:52:21 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 4FEDF7F83
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 02:52:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E2F2D8F8071
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 00:52:22 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dj4TfaK7YYJ7JwSY for <xfs@oss.sgi.com>;
+	7IWnv2sGozF4uIGT for <xfs@oss.sgi.com>;
 	Tue, 04 Mar 2014 00:52:20 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WKl4w-0006Hg-Pc
+	(envelope-from <dave@fromorbit.com>) id 1WKl4w-0006He-Os
 	for xfs@oss.sgi.com; Tue, 04 Mar 2014 19:51:58 +1100
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WKl4w-00070J-On
+	(envelope-from <dave@disappointment.disaster>) id 1WKl4w-0006zt-O3
 	for xfs@oss.sgi.com; Tue, 04 Mar 2014 19:51:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/13] repair: phase 1 does not handle superblock CRCs
-Date: Tue,  4 Mar 2014 19:51:57 +1100
-Message-Id: <1393923117-9559-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/13] libxfs: modify verifiers to differentiate CRC from
+	other errors
+Date: Tue,  4 Mar 2014 19:51:55 +1100
+Message-Id: <1393923117-9559-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,304 +40,684 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Phase 1 of xfs_repair verifies and corrects the primary
-superblock of the filesystem. It does not verify that the CRC of the
-superblock that is found is correct, nor does it recalculate the CRC
-of the superblock it rewrites.
+[userspace port]
 
-This happens because phase1 does not use the libxfs buffer cache -
-it just uses pread/pwrite on a memory buffer, and works directly
-from that buffer. Hence we need to add CRC verification to
-verify_sb(), and CRC recalculation to write_primary_sb() so that it
-works correctly.
+Modify all read & write verifiers to differentiate
+between CRC errors and other inconsistencies.
 
-This also enables us to use get_sb() as the method of fetching the
-superblock from disk after phase 1 without needing to use the libxfs
-buffer cache and guessing at the sector size. This prevents a
-verifier error because it attempts to CRC a superblock buffer that
-is much longer than the usual sector sizes.
+This sets the appropriate error number on bp->b_error,
+and then calls xfs_verifier_error() if something went
+wrong.  That function will issue the appropriate message
+to the user.
+
+Also, fix the silly bug in xfs_buf_ioerror() that this patch
+exposes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/agheader.c   |  2 +-
- repair/globals.h    |  3 ++-
- repair/phase1.c     |  5 ++--
- repair/protos.h     |  3 ++-
- repair/sb.c         | 71 +++++++++++++++++++++++++++++------------------------
- repair/xfs_repair.c | 26 +++++++++++---------
- 6 files changed, 62 insertions(+), 48 deletions(-)
+ include/libxfs.h            |  2 +-
+ libxfs/xfs_alloc.c          | 37 +++++++++++++++++--------------------
+ libxfs/xfs_alloc_btree.c    | 15 ++++++++-------
+ libxfs/xfs_attr_leaf.c      | 14 ++++++++------
+ libxfs/xfs_attr_remote.c    | 15 ++++++---------
+ libxfs/xfs_bmap_btree.c     | 16 ++++++++--------
+ libxfs/xfs_da_btree.c       | 14 ++++++++------
+ libxfs/xfs_dir2_block.c     | 14 ++++++++------
+ libxfs/xfs_dir2_data.c      | 17 +++++++++--------
+ libxfs/xfs_dir2_leaf.c      | 14 ++++++++------
+ libxfs/xfs_dir2_node.c      | 14 ++++++++------
+ libxfs/xfs_dquot_buf.c      | 11 +++++++----
+ libxfs/xfs_ialloc.c         | 21 ++++++++++-----------
+ libxfs/xfs_ialloc_btree.c   | 15 ++++++++-------
+ libxfs/xfs_inode_buf.c      |  3 +--
+ libxfs/xfs_sb.c             | 10 ++++------
+ libxfs/xfs_symlink_remote.c | 12 +++++++-----
+ 17 files changed, 126 insertions(+), 118 deletions(-)
 
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 53e47b6..fc5dac9 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -472,7 +472,7 @@ verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
- 	int status = XR_OK;
- 	int status_sb = XR_OK;
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 7500903..6bc6c94 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -365,7 +365,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ #define XFS_BUF_PRIORITY(bp)		(cache_node_get_priority( \
+ 						(struct cache_node *)(bp)))
+ #define xfs_buf_set_ref(bp,ref)		((void) 0)
+-#define xfs_buf_ioerror(bp,err)		(bp)->b_error = (err);
++#define xfs_buf_ioerror(bp,err)		((bp)->b_error = (err))
  
--	status = verify_sb(sb, (i == 0));
-+	status = verify_sb(sbuf->b_addr, sb, (i == 0));
- 
- 	if (status != XR_OK)  {
- 		do_warn(_("bad on-disk superblock %d - %s\n"),
-diff --git a/repair/globals.h b/repair/globals.h
-index cbb2ce7..f6e0a22 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -49,7 +49,8 @@
- #define XR_BAD_SB_UNIT		17	/* bad stripe unit */
- #define XR_BAD_SB_WIDTH		18	/* bad stripe width */
- #define XR_BAD_SVN		19	/* bad shared version number */
--#define XR_BAD_ERR_CODE		20	/* Bad error code */
-+#define XR_BAD_CRC		20	/* Bad CRC */
-+#define XR_BAD_ERR_CODE		21	/* Bad error code */
- 
- /* XFS filesystem (il)legal values */
- 
-diff --git a/repair/phase1.c b/repair/phase1.c
-index 62de211..ec75ada 100644
---- a/repair/phase1.c
-+++ b/repair/phase1.c
-@@ -70,13 +70,14 @@ phase1(xfs_mount_t *mp)
- 	ag_bp = alloc_ag_buf(MAX_SECTSIZE);
- 	sb = (xfs_sb_t *) ag_bp;
- 
--	if (get_sb(sb, 0LL, MAX_SECTSIZE, 0) == XR_EOF)
-+	rval = get_sb(sb, 0LL, MAX_SECTSIZE, 0);
-+	if (rval == XR_EOF)
- 		do_error(_("error reading primary superblock\n"));
+ #define xfs_daddr_to_agno(mp,d) \
+ 	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index dca612b..6c82be0 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -452,7 +452,6 @@ xfs_agfl_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	int		agfl_ok = 1;
  
  	/*
- 	 * is this really an sb, verify internal consistency
- 	 */
--	if ((rval = verify_sb(sb, 1)) != XR_OK)  {
-+	if (rval != XR_OK)  {
- 		do_warn(_("bad primary superblock - %s !!!\n"),
- 			err_string(rval));
- 		if (!find_secondary_sb(sb))
-diff --git a/repair/protos.h b/repair/protos.h
-index 601f2a9..ff42fa7 100644
---- a/repair/protos.h
-+++ b/repair/protos.h
-@@ -18,7 +18,8 @@
+ 	 * There is no verification of non-crc AGFLs because mkfs does not
+@@ -463,14 +462,13 @@ xfs_agfl_read_verify(
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return;
  
- void	xfs_init(libxfs_init_t *args);
- 
--int	verify_sb(xfs_sb_t		*sb,
-+int	verify_sb(char			*sb_buf,
-+		xfs_sb_t		*sb,
- 		int			is_primary_sb);
- int	verify_set_primary_sb(xfs_sb_t	*root_sb,
- 			int		sb_index,
-diff --git a/repair/sb.c b/repair/sb.c
-index c54d89b..b111aca 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -139,7 +139,7 @@ find_secondary_sb(xfs_sb_t *rsb)
- 			c_bufsb = (char *)sb + i;
- 			libxfs_sb_from_disk(&bufsb, (xfs_dsb_t *)c_bufsb);
- 
--			if (verify_sb(&bufsb, 0) != XR_OK)
-+			if (verify_sb(c_bufsb, &bufsb, 0) != XR_OK)
- 				continue;
- 
- 			do_warn(_("found candidate secondary superblock...\n"));
-@@ -245,7 +245,7 @@ sb_validate_ino_align(struct xfs_sb *sb)
-  */
- 
- int
--verify_sb(xfs_sb_t *sb, int is_primary_sb)
-+verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- {
- 	__uint32_t	bsize;
- 	int		i;
-@@ -263,8 +263,34 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
- 	if (is_primary_sb && sb->sb_inprogress == 1)
- 		return(XR_BAD_INPROGRESS);
- 
--	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
-+	/*
-+	 * before going *any further*, validate the sector size and if the
-+	 * version says we should have CRCs enabled, validate that.
-+	 */
-+
-+	/* check to make sure sectorsize is legal 2^N, 9 <= N <= 15 */
-+	if (sb->sb_sectsize == 0)
-+		return(XR_BAD_SECT_SIZE_DATA);
-+
-+	bsize = 1;
-+	for (i = 0; bsize < sb->sb_sectsize &&
-+		i < sizeof(sb->sb_sectsize) * NBBY; i++)  {
-+		bsize <<= 1;
-+	}
-+
-+	if (i < XFS_MIN_SECTORSIZE_LOG || i > XFS_MAX_SECTORSIZE_LOG)
-+		return(XR_BAD_SECT_SIZE_DATA);
-+
-+	/* check sb sectorsize field against sb sectlog field */
-+	if (i != sb->sb_sectlog)
-+		return(XR_BAD_SECT_SIZE_DATA);
-+
-+	/* sector size in range - CRC check time */
-+	if (xfs_sb_version_hascrc(sb) &&
-+	    !xfs_verify_cksum(sb_buf, sb->sb_sectsize, XFS_SB_CRC_OFF))
-+		return XR_BAD_CRC;
- 
-+	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
- 	if (sb->sb_blocksize == 0)
- 		return(XR_BAD_BLOCKSIZE);
- 
-@@ -300,26 +326,6 @@ verify_sb(xfs_sb_t *sb, int is_primary_sb)
- 		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
- 		return(XR_BAD_INO_SIZE_DATA);
- 
--	/* check to make sure sectorsize is legal 2^N, 9 <= N <= 15 */
+-	agfl_ok = xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF);
 -
--	if (sb->sb_sectsize == 0)
--		return(XR_BAD_SECT_SIZE_DATA);
+-	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
 -
--	bsize = 1;
--
--	for (i = 0; bsize < sb->sb_sectsize &&
--		i < sizeof(sb->sb_sectsize) * NBBY; i++)  {
--		bsize <<= 1;
+-	if (!agfl_ok) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (!xfs_buf_verify_cksum(bp, XFS_AGFL_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_agfl_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
 -	}
--
--	if (i < XFS_MIN_SECTORSIZE_LOG || i > XFS_MAX_SECTORSIZE_LOG)
--		return(XR_BAD_SECT_SIZE_DATA);
--
--	/* check sb sectorsize field against sb sectlog field */
--
--	if (i != sb->sb_sectlog)
--		return(XR_BAD_SECT_SIZE_DATA);
--
- 	if (xfs_sb_version_hassector(sb))  {
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
  
- 		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
-@@ -482,9 +488,11 @@ write_primary_sb(xfs_sb_t *sbp, int size)
- 		do_error(_("couldn't seek to offset 0 in filesystem\n"));
+ static void
+@@ -485,8 +483,8 @@ xfs_agfl_write_verify(
+ 		return;
+ 
+ 	if (!xfs_agfl_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
  	}
  
--	
- 	libxfs_sb_to_disk(buf, sbp, XFS_SB_ALL_BITS);
+@@ -2216,18 +2214,17 @@ xfs_agf_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	int		agf_ok = 1;
+-
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		agf_ok = xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF);
  
-+	if (xfs_sb_version_hascrc(sbp))
-+		xfs_update_cksum((char *)buf, size, XFS_SB_CRC_OFF);
+-	agf_ok = agf_ok && xfs_agf_verify(mp, bp);
+-
+-	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
+-			XFS_RANDOM_ALLOC_READ_AGF))) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	    !xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (XFS_TEST_ERROR(!xfs_agf_verify(mp, bp), mp,
++				XFS_ERRTAG_ALLOC_READ_AGF,
++				XFS_RANDOM_ALLOC_READ_AGF))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
 +
- 	if (write(x.dfd, buf, size) != size) {
- 		free(buf);
- 		do_error(_("primary superblock write failed!\n"));
-@@ -494,7 +502,7 @@ write_primary_sb(xfs_sb_t *sbp, int size)
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
+ 
+ static void
+@@ -2238,8 +2235,8 @@ xfs_agf_write_verify(
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	if (!xfs_agf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index 5b38c24..215be7e 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -337,12 +337,14 @@ static void
+ xfs_allocbt_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	if (!(xfs_btree_sblock_verify_crc(bp) &&
+-	      xfs_allocbt_verify(bp))) {
+-		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     bp->b_target->bt_mount, bp->b_addr);
++	if (!xfs_btree_sblock_verify_crc(bp))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_allocbt_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++
++	if (bp->b_error) {
++		trace_xfs_btree_corrupt(bp, _RET_IP_);
++		xfs_verifier_error(bp);
+ 	}
+ }
+ 
+@@ -352,9 +354,8 @@ xfs_allocbt_write_verify(
+ {
+ 	if (!xfs_allocbt_verify(bp)) {
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     bp->b_target->bt_mount, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 	xfs_btree_sblock_calc_crc(bp);
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 90937d6..f7f02ae 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -187,8 +187,8 @@ xfs_attr3_leaf_write_verify(
+ 	struct xfs_attr3_leaf_hdr *hdr3 = bp->b_addr;
+ 
+ 	if (!xfs_attr3_leaf_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+@@ -213,12 +213,14 @@ xfs_attr3_leaf_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF)) ||
+-	    !xfs_attr3_leaf_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	     !xfs_buf_verify_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_attr3_leaf_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
+ 
+ const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 59bb12d..5cf5c73 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -100,7 +100,6 @@ xfs_attr3_rmt_read_verify(
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	char		*ptr;
+ 	int		len;
+-	bool		corrupt = false;
+ 	xfs_daddr_t	bno;
+ 
+ 	/* no verification of non-crc buffers */
+@@ -115,11 +114,11 @@ xfs_attr3_rmt_read_verify(
+ 	while (len > 0) {
+ 		if (!xfs_verify_cksum(ptr, XFS_LBSIZE(mp),
+ 				      XFS_ATTR3_RMT_CRC_OFF)) {
+-			corrupt = true;
++			xfs_buf_ioerror(bp, EFSBADCRC);
+ 			break;
+ 		}
+ 		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
+-			corrupt = true;
++			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			break;
+ 		}
+ 		len -= XFS_LBSIZE(mp);
+@@ -127,10 +126,9 @@ xfs_attr3_rmt_read_verify(
+ 		bno += mp->m_bsize;
+ 	}
+ 
+-	if (corrupt) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	} else
++	if (bp->b_error)
++		xfs_verifier_error(bp);
++	else
+ 		ASSERT(len == 0);
+ }
+ 
+@@ -155,9 +153,8 @@ xfs_attr3_rmt_write_verify(
+ 
+ 	while (len > 0) {
+ 		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
+-			XFS_CORRUPTION_ERROR(__func__,
+-					    XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
++			xfs_verifier_error(bp);
+ 			return;
+ 		}
+ 		if (bip) {
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 3136e4f..a4bd69d 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -759,12 +759,14 @@ static void
+ xfs_bmbt_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	if (!(xfs_btree_lblock_verify_crc(bp) &&
+-	      xfs_bmbt_verify(bp))) {
+-		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     bp->b_target->bt_mount, bp->b_addr);
++	if (!xfs_btree_lblock_verify_crc(bp))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_bmbt_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++
++	if (bp->b_error) {
++		trace_xfs_btree_corrupt(bp, _RET_IP_);
++		xfs_verifier_error(bp);
+ 	}
+ }
+ 
+@@ -773,11 +775,9 @@ xfs_bmbt_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	if (!xfs_bmbt_verify(bp)) {
+-		xfs_warn(bp->b_target->bt_mount, "bmbt daddr 0x%llx failed", bp->b_bn);
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     bp->b_target->bt_mount, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 	xfs_btree_lblock_calc_crc(bp);
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index 0c0c5e0..154adb1 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -209,8 +209,8 @@ xfs_da3_node_write_verify(
+ 	struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+ 
+ 	if (!xfs_da3_node_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+@@ -233,17 +233,20 @@ static void
+ xfs_da3_node_read_verify(
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_da_blkinfo	*info = bp->b_addr;
+ 
+ 	switch (be16_to_cpu(info->magic)) {
+ 		case XFS_DA3_NODE_MAGIC:
+-			if (!xfs_buf_verify_cksum(bp, XFS_DA3_NODE_CRC_OFF))
++			if (!xfs_buf_verify_cksum(bp, XFS_DA3_NODE_CRC_OFF)) {
++				xfs_buf_ioerror(bp, EFSBADCRC);
+ 				break;
++			}
+ 			/* fall through */
+ 		case XFS_DA_NODE_MAGIC:
+-			if (!xfs_da3_node_verify(bp))
++			if (!xfs_da3_node_verify(bp)) {
++				xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 				break;
++			}
+ 			return;
+ 		case XFS_ATTR_LEAF_MAGIC:
+ 		case XFS_ATTR3_LEAF_MAGIC:
+@@ -260,8 +263,7 @@ xfs_da3_node_read_verify(
+ 	}
+ 
+ 	/* corrupt block */
+-	XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-	xfs_buf_ioerror(bp, EFSCORRUPTED);
++	xfs_verifier_error(bp);
+ }
+ 
+ const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index 3fe10ea..cede01f 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -70,12 +70,14 @@ xfs_dir3_block_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF)) ||
+-	    !xfs_dir3_block_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_dir3_block_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
+ 
+ static void
+@@ -87,8 +89,8 @@ xfs_dir3_block_write_verify(
+ 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+ 
+ 	if (!xfs_dir3_block_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index bcb4c7f..dc9df4d 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -208,7 +208,6 @@ static void
+ xfs_dir3_data_reada_verify(
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+ 
+ 	switch (hdr->magic) {
+@@ -222,8 +221,8 @@ xfs_dir3_data_reada_verify(
+ 		xfs_dir3_data_verify(bp);
+ 		return;
+ 	default:
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		break;
+ 	}
+ }
+@@ -234,12 +233,14 @@ xfs_dir3_data_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF)) ||
+-	    !xfs_dir3_data_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	     !xfs_buf_verify_cksum(bp, XFS_DIR3_DATA_CRC_OFF))
++		 xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_dir3_data_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
+ 
+ static void
+@@ -251,8 +252,8 @@ xfs_dir3_data_write_verify(
+ 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+ 
+ 	if (!xfs_dir3_data_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 710f005..8e0cbc9 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -206,12 +206,14 @@ __read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF)) ||
+-	    !xfs_dir3_leaf_verify(bp, magic)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_dir3_leaf_verify(bp, magic))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
+ 
+ static void
+@@ -224,8 +226,8 @@ __write_verify(
+ 	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
+ 
+ 	if (!xfs_dir3_leaf_verify(bp, magic)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index f4260ea..3256756 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -98,12 +98,14 @@ xfs_dir3_free_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(bp, XFS_DIR3_FREE_CRC_OFF)) ||
+-	    !xfs_dir3_free_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	    !xfs_buf_verify_cksum(bp, XFS_DIR3_FREE_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_dir3_free_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
+ 
+ static void
+@@ -115,8 +117,8 @@ xfs_dir3_free_write_verify(
+ 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
+ 
+ 	if (!xfs_dir3_free_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
+index 6bbb0ff..e089ec8 100644
+--- a/libxfs/xfs_dquot_buf.c
++++ b/libxfs/xfs_dquot_buf.c
+@@ -237,10 +237,13 @@ xfs_dquot_buf_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (!xfs_dquot_buf_verify_crc(mp, bp))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_dquot_buf_verify(mp, bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
  }
  
  /*
-- * get a possible superblock -- don't check for internal consistency
-+ * get a possible superblock -- checks for internal consistency
-  */
- int
- get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
-@@ -529,9 +537,10 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
- 		do_error("%s\n", strerror(error));
- 	}
- 	libxfs_sb_from_disk(sbp, buf);
--	free(buf);
+@@ -255,8 +258,8 @@ xfs_dquot_buf_write_verify(
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
  
--	return (verify_sb(sbp, 0));
-+	rval = verify_sb((char *)buf, sbp, agno == 0);
-+	free(buf);
-+	return rval;
+ 	if (!xfs_dquot_buf_verify(mp, bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ }
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index b1382d6..c19d84a 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1551,18 +1551,17 @@ xfs_agi_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	int		agi_ok = 1;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		agi_ok = xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF);
+-
+-	agi_ok = agi_ok && xfs_agi_verify(bp);
+-
+-	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+-			XFS_RANDOM_IALLOC_READ_AGI))) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	    !xfs_buf_verify_cksum(bp, XFS_AGI_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (XFS_TEST_ERROR(!xfs_agi_verify(bp), mp,
++				XFS_ERRTAG_IALLOC_READ_AGI,
++				XFS_RANDOM_IALLOC_READ_AGI))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
++
++	if (bp->b_error)
++		xfs_verifier_error(bp);
  }
  
- /* returns element on list with highest reference count */
-@@ -745,13 +754,11 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 			off = (xfs_off_t)agno * rsb->sb_agblocks << rsb->sb_blocklog;
+ static void
+@@ -1573,8 +1572,8 @@ xfs_agi_write_verify(
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
  
- 			checked[agno] = 1;
--
--			if (get_sb(sb, off, size, agno) == XR_EOF)  {
--				retval = XR_EOF;
-+			retval = get_sb(sb, off, size, agno);
-+			if (retval == XR_EOF)
- 				goto out_free_list;
--			}
- 
--			if (verify_sb(sb, 0) == XR_OK)  {
-+			if (retval == XR_OK) {
- 				/*
- 				 * save away geometry info.
- 				 * don't bother checking the sb
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 6327076..08b25f0 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -137,6 +137,8 @@ err_string(int err_code)
- 			_("bad stripe width in superblock");
- 		err_message[XR_BAD_SVN] =
- 			_("bad shared version number in superblock");
-+		err_message[XR_BAD_CRC] =
-+			_("bad CRC in superblock");
- 		done = 1;
+ 	if (!xfs_agi_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
  	}
  
-@@ -529,6 +531,8 @@ main(int argc, char **argv)
- 	xfs_buf_t	*sbp;
- 	xfs_mount_t	xfs_m;
- 	char		*msgbuf;
-+	struct xfs_sb	psb;
-+	int		rval;
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -558,13 +562,12 @@ main(int argc, char **argv)
- 		exit(1);
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index d9589b7..0a29d73 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -224,12 +224,14 @@ static void
+ xfs_inobt_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	if (!(xfs_btree_sblock_verify_crc(bp) &&
+-	      xfs_inobt_verify(bp))) {
+-		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     bp->b_target->bt_mount, bp->b_addr);
++	if (!xfs_btree_sblock_verify_crc(bp))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_inobt_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++
++	if (bp->b_error) {
++		trace_xfs_btree_corrupt(bp, _RET_IP_);
++		xfs_verifier_error(bp);
  	}
+ }
  
--	/* prepare the mount structure */
--	memset(&xfs_m, 0, sizeof(xfs_mount_t));
--	libxfs_buftarg_init(&xfs_m, x.ddev, x.logdev, x.rtdev);
--	sbp = libxfs_readbuf(xfs_m.m_ddev_targp, XFS_SB_DADDR,
--				1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0,
--				&xfs_sb_buf_ops);
--	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
-+	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
-+	if (rval != XR_OK) {
-+		do_warn(_("Primary superblock bad after phase 1!\n"
-+			  "Exiting now.\n"));
-+		exit(1);
-+	}
+@@ -239,9 +241,8 @@ xfs_inobt_write_verify(
+ {
+ 	if (!xfs_inobt_verify(bp)) {
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     bp->b_target->bt_mount, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 	xfs_btree_sblock_calc_crc(bp);
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 4f29033..de16ed9 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -88,8 +88,7 @@ xfs_inode_buf_verify(
+ 			}
  
- 	/*
- 	 * if the sector size of the filesystem we are trying to repair is
-@@ -583,7 +586,7 @@ main(int argc, char **argv)
- 			geom.sectsize = BBSIZE;
- 		}
- 
--		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
-+		if (psb.sb_sectsize < geom.sectsize) {
- 			long	old_flags;
- 
- 			old_flags = fcntl(fd, F_GETFL, 0);
-@@ -595,7 +598,10 @@ main(int argc, char **argv)
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
+-			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+-					     mp, dip);
++			xfs_verifier_error(bp);
+ #ifdef DEBUG
+ 			xfs_alert(mp,
+ 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index db267c2..7ee4612 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -569,7 +569,7 @@ xfs_sb_read_verify(
+ 			/* Only fail bad secondaries on a known V5 filesystem */
+ 			if (bp->b_bn == XFS_SB_DADDR ||
+ 			    xfs_sb_version_hascrc(&mp->m_sb)) {
+-				error = EFSCORRUPTED;
++				error = EFSBADCRC;
+ 				goto out_error;
  			}
  		}
+@@ -578,10 +578,9 @@ xfs_sb_read_verify(
+ 
+ out_error:
+ 	if (error) {
+-		if (error == EFSCORRUPTED)
+-			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-					     mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, error);
++		if (error == EFSCORRUPTED || error == EFSBADCRC)
++			xfs_verifier_error(bp);
  	}
--	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
+ }
+ 
+@@ -616,9 +615,8 @@ xfs_sb_write_verify(
+ 
+ 	error = xfs_sb_verify(bp, false);
+ 	if (error) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
+-				     mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, error);
++		xfs_verifier_error(bp);
+ 		return;
+ 	}
+ 
+diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
+index b59bf14..ebf60ac 100644
+--- a/libxfs/xfs_symlink_remote.c
++++ b/libxfs/xfs_symlink_remote.c
+@@ -116,11 +116,13 @@ xfs_symlink_read_verify(
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return;
+ 
+-	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF) ||
+-	    !xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++	if (!xfs_buf_verify_cksum(bp, XFS_SYMLINK_CRC_OFF))
++		xfs_buf_ioerror(bp, EFSBADCRC);
++	else if (!xfs_symlink_verify(bp))
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
 +
-+	/* prepare the mount structure */
-+	memset(&xfs_m, 0, sizeof(xfs_mount_t));
-+	mp = libxfs_mount(&xfs_m, &psb, x.ddev, x.logdev, x.rtdev, 0);
++	if (bp->b_error)
++		xfs_verifier_error(bp);
+ }
  
- 	if (!mp)  {
- 		fprintf(stderr,
-@@ -603,8 +609,6 @@ main(int argc, char **argv)
- 			progname);
- 		exit(1);
+ static void
+@@ -135,8 +137,8 @@ xfs_symlink_write_verify(
+ 		return;
+ 
+ 	if (!xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		xfs_verifier_error(bp);
+ 		return;
  	}
--	libxfs_putbuf(sbp);
--	libxfs_purgebuf(sbp);
  
- 	/*
- 	 * set XFS-independent status vars from the mount/sb structure
 -- 
 1.9.0
 
