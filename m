@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2A9987F4E
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 14:37:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A6CD3AC001
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 12:37:23 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id UpZFmC0NMMeVHYPw (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 12:37:22 -0800 (PST)
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id CE201ACC8
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 20:37:20 +0000 (UTC)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH xfstests] generic/300: Add missing requirements for fallocate
-	& punch hole
-Date: Tue,  4 Mar 2014 21:37:17 +0100
-Message-Id: <1393965437-28787-1-git-send-email-jack@suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id EA6E87F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 14:39:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CFF0AC001
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 12:39:45 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	o6oUNHGYBMLjzlQc for <xfs@oss.sgi.com>;
+	Tue, 04 Mar 2014 12:39:42 -0800 (PST)
+Date: Wed, 5 Mar 2014 07:39:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: add a test for unlinked inodes due to O_TMPFILE
+Message-ID: <20140304203927.GG6851@dastard>
+References: <20140304172103.GA24528@infradead.org>
+	<20140304172148.GC24528@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140304172148.GC24528@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +26,176 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, xfs@oss.sgi.com
 
-Test 300 requires support for fallocate and punch hole from the
-filesystem. Add proper require checks.
+On Tue, Mar 04, 2014 at 09:21:48AM -0800, Christoph Hellwig wrote:
+> Make sure that we see unlinked inodes when shutting a filesystem
+> down that has an open O_TMPFILE descriptor, and make sure that it
+> has been deleted after a mount/umount cycle.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> diff --git a/tests/xfs/006 b/tests/xfs/006
+> new file mode 100755
+> index 0000000..6be8418
+> --- /dev/null
+> +++ b/tests/xfs/006
+> @@ -0,0 +1,86 @@
+> +#! /bin/bash
+> +# XFS QA Test No. 006
+> +#
+> +# Test O_TMPFILE interaction with log recovery and repair.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2014 Christoph Hellwig.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +    rm -f ${testfile}
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/repair
+> +
+> +# real QA test starts here
+> +_supported_fs generic
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- tests/generic/300 | 2 ++
- 1 file changed, 2 insertions(+)
+XFS only.
 
-diff --git a/tests/generic/300 b/tests/generic/300
-index 7c6072815b40..8b80c14c6f4e 100755
---- a/tests/generic/300
-+++ b/tests/generic/300
-@@ -43,6 +43,8 @@ _supported_fs generic
- _supported_os Linux
- _need_to_be_root
- _require_scratch
-+_require_xfs_io_falloc
-+_require_xfs_io_falloc_punch
- 
- NUM_JOBS=$((4*LOAD_FACTOR))
- BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +#_require_xfs_io_falloc_flink
+> +
+> +testfile="${SCRATCH_MNT}/tst-tmpfile-flink"
+> +
+> +_scratch_mount
+> +
+> +# test creating a r/w tmpfile, do I/O and link it into the namespace
+> +$XFS_IO_PROG -x -T \
+> +	-c "pwrite 0 4096" \
+> +	-c "pread 0 4096" \
+> +	-c "freeze" \
+> +	-c "thaw" \
+> +	-c "shutdown" \
+> +	${SCRATCH_MNT} | _filter_xfs_io
+
+$testfile?
+
+Also, I don't see the file being linked into the namespace, so the
+comment is probably wrong. Also, please add a comment as to
+why the freeze/thaw is necessary.
+
+> +# repair should find an unlinked inode and an incorrect icount
+> +_scratch_xfs_repair -n 2>&1 | \
+> +	_filter_repair > $tmp.repair
+> +
+> +ino=`grep 'disconnected inode ' $tmp.repair | \
+> +	head -1 | \
+> +	awk '{print $3}' | \
+> +	sed 's/,//'`
+> +
+> +cat $tmp.repair | sed "s/$ino/XXX/g"
+
+Ok, so we should see that line in the golden output...
+
+....
+> diff --git a/tests/xfs/006.out b/tests/xfs/006.out
+> new file mode 100644
+> index 0000000..46f3b73
+> --- /dev/null
+> +++ b/tests/xfs/006.out
+> @@ -0,0 +1,43 @@
+> +QA output created by 006
+> +wrote 4096/4096 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +read 4096/4096 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +Phase 1 - find and verify superblock...
+> +Phase 2 - using <TYPEOF> log
+> +        - scan filesystem freespace and inode maps...
+> +        - found root inode chunk
+> +Phase 3 - for each AG...
+> +        - scan (but don't clear) agi unlinked lists...
+> +        - process known inodes and perform inode discovery...
+> +        - process newly discovered inodes...
+> +Phase 4 - check for duplicate blocks...
+> +        - setting up duplicate extent list...
+> +        - check for inodes claiming duplicate blocks...
+> +No modify flag set, skipping phase 5
+> +Phase 6 - check inode connectivity...
+> +        - traversing filesystem ...
+> +        - traversal finished ...
+> +        - moving disconnected inodes to lost+found ...
+> +disconnected inode XXX, would move to lost+found
+
+There it is, but is moving it to lost+found the right thing to do,
+given that it was on the unlinked list and should have had a zero
+link count? i.e. aren't we supposed to free unlinked inodes with a
+zero link count, not recover them to lost+found?
+
+
+> +Phase 7 - verify link counts...
+> +would have reset inode XXX nlinks from 0 to 1
+
+Yeah, that seems like the wrong behaviour to have for an anonymous
+O_TMPFILE file - it's making it visible because we moved it to
+lost+found in phase 6....
+
+Also, I don't see any icount mismatch, so the comment above in the
+test is probably wrong.
+
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index ba34650..2f896e1 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -3,6 +3,7 @@
+>  003 db auto quick
+>  004 db auto quick
+>  005 auto quick
+> +006 auto quick
+
+and repair.
+
+Cheers,
+
+Dave.
 -- 
-1.8.1.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
