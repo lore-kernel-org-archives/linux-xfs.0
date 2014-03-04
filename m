@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EEA417F66
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 02:52:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8EE3DAC002
+	by oss.sgi.com (Postfix) with ESMTP id 354017F6B
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 02:52:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 98558AC004
 	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 00:52:20 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	u5o1YDYhCt0wpZ4d for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 00:52:19 -0800 (PST)
+	XadoHnSj8UdJbxPB for <xfs@oss.sgi.com>;
+	Tue, 04 Mar 2014 00:52:18 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WKl4w-0006Hd-OQ
+	(envelope-from <dave@fromorbit.com>) id 1WKl4w-0006Hc-Nb
 	for xfs@oss.sgi.com; Tue, 04 Mar 2014 19:51:58 +1100
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WKl4w-0006zj-NB
+	(envelope-from <dave@disappointment.disaster>) id 1WKl4w-0006zd-Mp
 	for xfs@oss.sgi.com; Tue, 04 Mar 2014 19:51:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/13] libxfs: add xfs_verifier_error()
-Date: Tue,  4 Mar 2014 19:51:54 +1100
-Message-Id: <1393923117-9559-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/13] libxfs: add helper for updating checksums on xfs_bufs
+Date: Tue,  4 Mar 2014 19:51:53 +1100
+Message-Id: <1393923117-9559-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -41,121 +41,208 @@ From: Dave Chinner <dchinner@redhat.com>
 
 [userspace port]
 
-We want to distinguish between corruption, CRC errors,
-etc.  In addition, the full stack trace on verifier errors
-seems less than helpful; it looks more like an oops than
-corruption.
-
-Create a new function to specifically alert the user to
-verifier errors, which can differentiate between
-EFSCORRUPTED and CRC mismatches.  It doesn't dump stack
-unless the xfs error level is turned up high.
-
-Define a new error message (EFSBADCRC) to clearly identify
-CRC errors.  (Defined to EBADMSG, bad message)
+Many/most callers of xfs_update_cksum() pass bp->b_addr and
+BBTOB(bp->b_length) as the first 2 args.  Add a helper
+which can just accept the bp and the crc offset, and work
+it out on its own, for brevity.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/darwin.h      |  1 +
- include/freebsd.h     |  1 +
- include/gnukfreebsd.h |  1 +
- include/irix.h        |  2 ++
- include/linux.h       |  1 +
- libxfs/util.c         | 13 +++++++++++++
- libxfs/xfs.h          |  1 +
- 7 files changed, 20 insertions(+)
+ include/libxfs.h            | 7 +++++++
+ libxfs/xfs_alloc.c          | 4 ++--
+ libxfs/xfs_attr_leaf.c      | 2 +-
+ libxfs/xfs_btree.c          | 6 ++----
+ libxfs/xfs_da_btree.c       | 2 +-
+ libxfs/xfs_dir2_block.c     | 2 +-
+ libxfs/xfs_dir2_data.c      | 2 +-
+ libxfs/xfs_dir2_leaf.c      | 2 +-
+ libxfs/xfs_dir2_node.c      | 2 +-
+ libxfs/xfs_ialloc.c         | 2 +-
+ libxfs/xfs_sb.c             | 2 +-
+ libxfs/xfs_symlink_remote.c | 2 +-
+ 12 files changed, 20 insertions(+), 15 deletions(-)
 
-diff --git a/include/darwin.h b/include/darwin.h
-index 97b8990..95f865b 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -150,6 +150,7 @@ typedef unsigned char	uchar_t;
- 
- #define ENOATTR		989     /* Attribute not found */
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
-+#define EFSBADCRC	991	/* Bad CRC detected */
- #define constpp		char * const *
- 
- #define HAVE_FID	1
-diff --git a/include/freebsd.h b/include/freebsd.h
-index 2e1ae49..b51688b 100644
---- a/include/freebsd.h
-+++ b/include/freebsd.h
-@@ -45,6 +45,7 @@
- #define constpp	char * const *
- 
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
-+#define EFSBADCRC	991	/* Bad CRC detected */
- 
- typedef off_t		xfs_off_t;
- typedef off_t		off64_t;
-diff --git a/include/gnukfreebsd.h b/include/gnukfreebsd.h
-index 1ec291f..2140acd 100644
---- a/include/gnukfreebsd.h
-+++ b/include/gnukfreebsd.h
-@@ -36,6 +36,7 @@
- #define constpp	char * const *
- 
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
-+#define EFSBADCRC	991	/* Bad CRC detected */
- 
- typedef off_t		xfs_off_t;
- typedef __uint64_t	xfs_ino_t;
-diff --git a/include/irix.h b/include/irix.h
-index a450684..5040451 100644
---- a/include/irix.h
-+++ b/include/irix.h
-@@ -52,6 +52,8 @@ typedef char*		xfs_caddr_t;
- #define xfs_flock64	flock64
- #define xfs_flock64_t	struct flock64
- 
-+#define EFSBADCRC	991	/* Bad CRC detected */
-+
- typedef struct xfs_error_injection {
- 	__int32_t	fd;
- 	__int32_t	errtag;
-diff --git a/include/linux.h b/include/linux.h
-index 502fd1f..5586290 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -136,6 +136,7 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- 
- #define ENOATTR		ENODATA	/* Attribute not found */
- #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
-+#define EFSBADCRC	EBADMSG	/* Bad CRC detected */
- 
- typedef loff_t		xfs_off_t;
- typedef __uint64_t	xfs_ino_t;
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 8109ab3..1b05540 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -730,3 +730,16 @@ cmn_err(int level, char *fmt, ...)
- 	fputs("\n", stderr);
- 	va_end(ap);
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 610e7d5..7500903 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -786,6 +786,13 @@ xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+ 				cksum_offset);
  }
-+
-+/*
-+ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
-+ * values, and omit the stack trace unless the error level is tuned high.
-+ */
-+void
-+xfs_verifier_error(
-+	struct xfs_buf		*bp)
+ 
++static inline void
++xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
 +{
-+	xfs_alert(NULL, "Metadata %s detected at block 0x%llx/0x%x",
-+		  bp->b_error == EFSBADCRC ? "CRC error" : "corruption",
-+		  bp->b_bn, BBTOB(bp->b_length));
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 cksum_offset);
 +}
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 364fd83..5a21590 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -449,3 +449,4 @@ int  xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
- void xfs_trans_mod_sb(xfs_trans_t *, uint, long);
- void xfs_trans_init(struct xfs_mount *);
- int  xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
-+void xfs_verifier_error(struct xfs_buf *bp);
++
+ #define xfs_notice(mp,fmt,args...)		cmn_err(CE_NOTE,fmt, ## args)
+ #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
+ #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 2f6a241..dca612b 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -493,7 +493,7 @@ xfs_agfl_write_verify(
+ 	if (bip)
+ 		XFS_BUF_TO_AGFL(bp)->agfl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_AGFL_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_AGFL_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_agfl_buf_ops = {
+@@ -2249,7 +2249,7 @@ xfs_agf_write_verify(
+ 	if (bip)
+ 		XFS_BUF_TO_AGF(bp)->agf_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_AGF_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_AGF_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_agf_buf_ops = {
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 0bd3169..90937d6 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -198,7 +198,7 @@ xfs_attr3_leaf_write_verify(
+ 	if (bip)
+ 		hdr3->info.lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_ATTR3_LEAF_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
+ }
+ 
+ /*
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index fffed0a..9be4abd 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -218,8 +218,7 @@ xfs_btree_lblock_calc_crc(
+ 		return;
+ 	if (bip)
+ 		block->bb_u.l.bb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 XFS_BTREE_LBLOCK_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_BTREE_LBLOCK_CRC_OFF);
+ }
+ 
+ bool
+@@ -251,8 +250,7 @@ xfs_btree_sblock_calc_crc(
+ 		return;
+ 	if (bip)
+ 		block->bb_u.s.bb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 XFS_BTREE_SBLOCK_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
+ }
+ 
+ bool
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index 4e8b41a..0c0c5e0 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -220,7 +220,7 @@ xfs_da3_node_write_verify(
+ 	if (bip)
+ 		hdr3->info.lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DA3_NODE_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
+ }
+ 
+ /*
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index 13561c3..3fe10ea 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -98,7 +98,7 @@ xfs_dir3_block_write_verify(
+ 	if (bip)
+ 		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_DATA_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index 2a0de28..bcb4c7f 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -262,7 +262,7 @@ xfs_dir3_data_write_verify(
+ 	if (bip)
+ 		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_DATA_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_dir3_data_buf_ops = {
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 0fa147f..710f005 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -235,7 +235,7 @@ __write_verify(
+ 	if (bip)
+ 		hdr3->info.lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_LEAF_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
+ }
+ 
+ static void
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 78c77ed..f4260ea 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -126,7 +126,7 @@ xfs_dir3_free_write_verify(
+ 	if (bip)
+ 		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_FREE_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_DIR3_FREE_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 21683b5..b1382d6 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1583,7 +1583,7 @@ xfs_agi_write_verify(
+ 
+ 	if (bip)
+ 		XFS_BUF_TO_AGI(bp)->agi_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_AGI_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_AGI_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_agi_buf_ops = {
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 43fdb59..db267c2 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -628,7 +628,7 @@ xfs_sb_write_verify(
+ 	if (bip)
+ 		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_SB_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_sb_buf_ops = {
+diff --git a/libxfs/xfs_symlink_remote.c b/libxfs/xfs_symlink_remote.c
+index 716f8a3..b59bf14 100644
+--- a/libxfs/xfs_symlink_remote.c
++++ b/libxfs/xfs_symlink_remote.c
+@@ -144,7 +144,7 @@ xfs_symlink_write_verify(
+ 		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+ 		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_SYMLINK_CRC_OFF);
++	xfs_buf_update_cksum(bp, XFS_SYMLINK_CRC_OFF);
+ }
+ 
+ const struct xfs_buf_ops xfs_symlink_buf_ops = {
 -- 
 1.9.0
 
