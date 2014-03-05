@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B5D797F53
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 21:33:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A105304048
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 19:33:28 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id L9pL2LBp1Fa0VvF5 for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 19:33:23 -0800 (PST)
-Message-ID: <53169B02.1030709@sandeen.net>
-Date: Tue, 04 Mar 2014 21:33:22 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5AD307F3F
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 09:49:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31FAD8F8078
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 07:49:05 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7RsYFSOw0nz0FnSa for
+	<xfs@oss.sgi.com>; Wed, 05 Mar 2014 07:49:01 -0800 (PST)
+Date: Wed, 5 Mar 2014 10:48:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: don't leak EFSBADCRC to userspace
+Message-ID: <20140305154855.GA55736@bfoster.bfoster>
+References: <1393825194-1719-1-git-send-email-david@fromorbit.com>
+	<1393825194-1719-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfs: inode log reservations are still too small
-References: <1393981893-2497-1-git-send-email-david@fromorbit.com>
-	<1393981893-2497-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1393981893-2497-3-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1393825194-1719-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,85 +29,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 3/4/14, 7:11 PM, Dave Chinner wrote:
+On Mon, Mar 03, 2014 at 04:39:53PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Back in commit 23956703 ("xfs: inode log reservations are too
-> small"), the reservation size was increased to take into account the
-> difference in size between the in-memory BMBT block headers and the
-> on-disk BMDR headers. This solved a transaction overrun when logging
-> the inode size.
-> 
-> Recently, however, we've seen a number of these same overruns on
-> kernels with the above fix in it. All of them have been by 4 bytes,
-> so we must still not be accounting for something correctly.
-> 
-> Through inspection it turns out the above commit didn't take into
-> account everything it should have. That is, it only accounts for a
-> single log op_hdr structure, when it can actually require up to four
-> op_hdrs - one for each region (log iovec) that is formatted. These
-> regions are the inode log format header, the inode core, and the two
-> forks that can be held in the literal area of the inode.
-> 
-> This means we are not accounting for 36 bytes of log space that the
-> transaction can use, and hence when we get inodes in certain formats
-> with particular fragmentation patterns we can overrun the
-> transaction. Fix this by adding the correct accounting for log
-> op_headers in the transaction.
+> While the verifier reoutines may return EFSBADCRC when a buffer ahs
+> a bad CRC, we need to translate that to EFSCORRUPTED so that the
+> higher layers treat the error appropriately and so we return a
+> consistent error to userspace. This fixes a xfs/005 regression.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Makes sense to me; 
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
->  fs/xfs/xfs_trans_resv.c | 22 +++++++++++++++-------
->  1 file changed, 15 insertions(+), 7 deletions(-)
+
+Looking through again, I don't see any obvious cases where EFSBADCRC
+could slip through. The verifier users mostly call
+xfs_trans_read_buf_map(). The readahead case looks like it should be
+handled by the xfs_buf_iowait() checks therein.
+
+The one case I came across that looked suspicious is the readahead/read
+cycle for inode log recovery in xlog_recover_commit_trans(). This calls
+into xfs_buf_read() and ultimately uses bp->b_error directly in
+xlog_recover_inode_pass2(). That said, I don't see any crc checking in
+these verifiers and thus they don't source EFSBADCRC. Looks good to
+me...
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_mount.c     |  3 +++
+>  fs/xfs/xfs_symlink.c   |  4 ++++
+>  fs/xfs/xfs_trans_buf.c | 11 +++++++++++
+>  3 files changed, 18 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-> index 8515b04..d2c8e4a 100644
-> --- a/fs/xfs/xfs_trans_resv.c
-> +++ b/fs/xfs/xfs_trans_resv.c
-> @@ -81,20 +81,28 @@ xfs_calc_buf_res(
->   * on disk. Hence we need an inode reservation function that calculates all this
->   * correctly. So, we log:
->   *
-> - * - log op headers for object
-> + * - 4 log op headers for object
-> + *	- for the ilf, the inode core and 2 forks
->   * - inode log format object
-> - * - the entire inode contents (core + 2 forks)
-> - * - two bmap btree block headers
-> + * - the inode core
-> + * - two inode forks containing bmap btree root blocks.
-> + *	- the btree data contained by both forks will fit into the inode size,
-> + *	  hence when combined with the inode core above, we have a total of the
-> + *	  actual inode size.
-> + *	- the BMBT headers need to be accounted separately, as they are
-> + *	  additional to the records and pointers that fit inside the inode
-> + *	  forks.
->   */
->  STATIC uint
->  xfs_calc_inode_res(
->  	struct xfs_mount	*mp,
->  	uint			ninodes)
->  {
-> -	return ninodes * (sizeof(struct xlog_op_header) +
-> -			  sizeof(struct xfs_inode_log_format) +
-> -			  mp->m_sb.sb_inodesize +
-> -			  2 * XFS_BMBT_BLOCK_LEN(mp));
-> +	return ninodes *
-> +		(4 * sizeof(struct xlog_op_header) +
-> +		 sizeof(struct xfs_inode_log_format) +
-> +		 mp->m_sb.sb_inodesize +
-> +		 2 * XFS_BMBT_BLOCK_LEN(mp));
->  }
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index f96c056..993cb19 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -314,6 +314,9 @@ reread:
+>  		error = bp->b_error;
+>  		if (loud)
+>  			xfs_warn(mp, "SB validate failed with error %d.", error);
+> +		/* bad CRC means corrupted metadata */
+> +		if (error == EFSBADCRC)
+> +			error = EFSCORRUPTED;
+>  		goto release_buf;
+>  	}
 >  
->  /*
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 14e58f2..5fda189 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -80,6 +80,10 @@ xfs_readlink_bmap(
+>  		if (error) {
+>  			xfs_buf_ioerror_alert(bp, __func__);
+>  			xfs_buf_relse(bp);
+> +
+> +			/* bad CRC means corrupted metadata */
+> +			if (error == EFSBADCRC)
+> +				error = EFSCORRUPTED;
+>  			goto out;
+>  		}
+>  		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 647b6f1..b8eef05 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -275,6 +275,10 @@ xfs_trans_read_buf_map(
+>  			XFS_BUF_UNDONE(bp);
+>  			xfs_buf_stale(bp);
+>  			xfs_buf_relse(bp);
+> +
+> +			/* bad CRC means corrupted metadata */
+> +			if (error == EFSBADCRC)
+> +				error = EFSCORRUPTED;
+>  			return error;
+>  		}
+>  #ifdef DEBUG
+> @@ -338,6 +342,9 @@ xfs_trans_read_buf_map(
+>  				if (tp->t_flags & XFS_TRANS_DIRTY)
+>  					xfs_force_shutdown(tp->t_mountp,
+>  							SHUTDOWN_META_IO_ERROR);
+> +				/* bad CRC means corrupted metadata */
+> +				if (error == EFSBADCRC)
+> +					error = EFSCORRUPTED;
+>  				return error;
+>  			}
+>  		}
+> @@ -375,6 +382,10 @@ xfs_trans_read_buf_map(
+>  		if (tp->t_flags & XFS_TRANS_DIRTY)
+>  			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
+>  		xfs_buf_relse(bp);
+> +
+> +		/* bad CRC means corrupted metadata */
+> +		if (error == EFSBADCRC)
+> +			error = EFSCORRUPTED;
+>  		return error;
+>  	}
+>  #ifdef DEBUG
+> -- 
+> 1.9.0
 > 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
