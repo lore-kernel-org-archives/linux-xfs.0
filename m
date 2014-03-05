@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E521A7F5F
-	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 09:51:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBAD38F8078
-	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 07:51:59 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C3DD17F5F
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 09:52:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 71867AC007
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 07:52:01 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xuQLM7mGqGvy43ZE for
-	<xfs@oss.sgi.com>; Wed, 05 Mar 2014 07:51:58 -0800 (PST)
+	cuda.sgi.com with ESMTP id lquyMoilus7fptzy for
+	<xfs@oss.sgi.com>; Wed, 05 Mar 2014 07:52:00 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH v2 3/8] generic/008: Add test for fallocate zero range at
-	block boundary
-Date: Wed,  5 Mar 2014 16:51:34 +0100
-Message-Id: <1394034699-21187-4-git-send-email-lczerner@redhat.com>
+Subject: [PATCH v2 4/8] xfstests: Move fallocate include into global.h
+Date: Wed,  5 Mar 2014 16:51:35 +0100
+Message-Id: <1394034699-21187-5-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1394034699-21187-1-git-send-email-lczerner@redhat.com>
 References: <1394034699-21187-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,549 +30,153 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, lczerner@redhat.com, xfs@oss.sgi.com
 
-Add test for fallocate zero range at block boundary. This is similar to
-the test xfs/290 however this one is generic and we're testing different
-block sizes as well - namely 1k, 2k, 4k and 64k. Note that we're not
-creating file systems with given block size buy rather test all 4
-options.
+Move the inclusion of falloc.h with all it's possible defines for the
+fallocate mode into global.h header file so we do not have to include
+and define it manually in every tool using fallocate.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- common/rc             |   2 +-
- tests/generic/008     |  57 +++++++
- tests/generic/008.out | 433 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/group   |   1 +
- 4 files changed, 492 insertions(+), 1 deletion(-)
- create mode 100755 tests/generic/008
- create mode 100644 tests/generic/008.out
+ configure.ac   |  3 ++-
+ ltp/fsstress.c | 11 ++---------
+ ltp/fsx.c      | 11 ++++-------
+ src/global.h   | 25 +++++++++++++++++++++++++
+ 4 files changed, 33 insertions(+), 17 deletions(-)
 
-diff --git a/common/rc b/common/rc
-index 7f530d0..70b8ff5 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1310,7 +1310,7 @@ _require_xfs_io_command()
- 	"falloc" )
- 		testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
- 		;;
--	"fpunch" | "fcollapse" | "zero" )
-+	"fpunch" | "fcollapse" | "zero" | "fzero" )
- 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
- 			-c "$command 4k 8k" $testfile 2>&1`
- 		;;
-diff --git a/tests/generic/008 b/tests/generic/008
-new file mode 100755
-index 0000000..65e1661
---- /dev/null
-+++ b/tests/generic/008
-@@ -0,0 +1,57 @@
-+#! /bin/bash
-+# FS QA Test No. 008
-+#
-+# Makes calls to fallocate zero range and checks tossed ranges
-+#
-+# Primarily tests page boundries and boundries that are
-+#  off-by-one to ensure we're only tossing what's expected
-+#
-+#-----------------------------------------------------------------------
-+# Copyright 2014 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
+diff --git a/configure.ac b/configure.ac
+index 6fba3ad..2f95c4c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -25,7 +25,8 @@ AC_HEADER_STDC
+ 			sys/wait.h		\
+ 			sys/types.h		\
+ 			strings.h		\
+-			err.h
++			err.h			\
++			linux/falloc.h
+     ])
+     AC_CHECK_HEADERS([	sys/fs/xfs_fsops.h	\
+ 			sys/fs/xfs_itable.h	\
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index c56f168..7dec7c6 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -27,13 +27,6 @@
+ #ifdef HAVE_LINUX_FIEMAP_H
+ #include <linux/fiemap.h>
+ #endif
+-#ifdef FALLOCATE
+-#include <linux/falloc.h>
+-#ifndef FALLOC_FL_PUNCH_HOLE
+-/* Copy-paste from linux/falloc.h */
+-#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
+-#endif
+-#endif
+ #ifndef HAVE_ATTR_LIST
+ #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
+ #endif
+@@ -2085,7 +2078,7 @@ dwrite_f(int opno, long r)
+ void
+ fallocate_f(int opno, long r)
+ {
+-#ifdef FALLOCATE
++#ifdef HAVE_LINUX_FALLOC_H
+ 	int		e;
+ 	pathname_t	f;
+ 	int		fd;
+@@ -2507,7 +2500,7 @@ mknod_f(int opno, long r)
+ void
+ punch_f(int opno, long r)
+ {
+-#ifdef FALLOCATE
++#ifdef HAVE_LINUX_FALLOC_H
+ 	int		e;
+ 	pathname_t	f;
+ 	int		fd;
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 2f1e3e8..c36a038 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -33,9 +33,6 @@
+ #ifdef AIO
+ #include <libaio.h>
+ #endif
+-#ifdef FALLOCATE
+-#include <linux/falloc.h>
+-#endif
+ 
+ #ifndef MAP_FILE
+ # define MAP_FILE 0
+@@ -882,7 +879,7 @@ do_punch_hole(unsigned offset, unsigned length)
+ }
+ #endif
+ 
+-#ifdef FALLOCATE
++#ifdef HAVE_LINUX_FALLOC_H
+ /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ void
+ do_preallocate(unsigned offset, unsigned length)
+@@ -1139,7 +1136,7 @@ usage(void)
+ "	-A: Use the AIO system calls\n"
+ #endif
+ "	-D startingop: debug output starting at specified operation\n"
+-#ifdef FALLOCATE
++#ifdef HAVE_LINUX_FALLOC_H
+ "	-F: Do not use fallocate (preallocation) calls\n"
+ #endif
+ #ifdef FALLOC_FL_PUNCH_HOLE
+@@ -1296,7 +1293,7 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
+ void
+ test_fallocate()
+ {
+-#ifdef FALLOCATE
++#ifdef HAVE_LINUX_FALLOC_H
+ 	if (!lite && fallocate_calls) {
+ 		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+ 			if(!quiet)
+@@ -1306,7 +1303,7 @@ test_fallocate()
+ 			ftruncate(fd, 0);
+ 		}
+ 	}
+-#else /* ! FALLOCATE */
++#else /* ! HAVE_LINUX_FALLOC_H */
+ 	fallocate_calls = 0;
+ #endif
+ 
+diff --git a/src/global.h b/src/global.h
+index e6a2c2b..8180f66 100644
+--- a/src/global.h
++++ b/src/global.h
+@@ -149,4 +149,29 @@
+ #include <sys/param.h>
+ #endif
+ 
++#ifdef HAVE_LINUX_FALLOC_H
++#include <linux/falloc.h>
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++#ifndef FALLOC_FL_KEEP_SIZE
++#define FALLOC_FL_KEEP_SIZE		0x01
++#endif
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "exit \$status" 0 1 2 3 15
++#ifndef FALLOC_FL_PUNCH_HOLE
++#define FALLOC_FL_PUNCH_HOLE		0x02
+ #endif
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/punch
++#ifndef FALLOC_FL_NO_HIDE_STALE
++#define FALLOC_FL_NO_HIDE_STALE		0x04
++#endif
 +
-+# real QA test starts here
++#ifndef FALLOC_FL_COLLAPSE_RANGE
++#define FALLOC_FL_COLLAPSE_RANGE	0x08
++#endif
 +
-+# Modify as appropriate.
-+_supported_os Linux
++#ifndef FALLOC_FL_ZERO_RANGE
++#define FALLOC_FL_ZERO_RANGE		0x10
++#endif
 +
-+_require_xfs_io_command "fzero"
++#endif /* HAVE_LINUX_FALLOC_H */
 +
-+testfile=$TEST_DIR/008.$$
-+
-+_test_block_boundaries 1024 fzero _filter_xfs_io_unique $testfile
-+_test_block_boundaries 2048 fzero _filter_xfs_io_unique $testfile
-+_test_block_boundaries 4096 fzero _filter_xfs_io_unique $testfile
-+_test_block_boundaries 65536 fzero _filter_xfs_io_unique $testfile
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/008.out b/tests/generic/008.out
-new file mode 100644
-index 0000000..0c3fb53
---- /dev/null
-+++ b/tests/generic/008.out
-@@ -0,0 +1,433 @@
-+QA output created by 008
-+zero 0, 1
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  .AAAAAAAAAAAAAAA
-+00000010:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000400:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 1023
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+000003f0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 41  ...............A
-+00000400:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 1024
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000400:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 1025
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000400:  00 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  .BBBBBBBBBBBBBBB
-+00000410:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 1023, 1024
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+000003f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+000007f0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42  ...............B
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 1023, 1025
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+000003f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 1023, 1026
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+000003f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 1024, 1024
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 512 , 1024
-+wrote 1024/1024 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 1024/1024 bytes at offset 1024
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000200:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000600:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 1
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  .AAAAAAAAAAAAAAA
-+00000010:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000800:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 2047
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+000007f0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 41  ...............A
-+00000800:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 2048
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000800:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 2049
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000800:  00 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  .BBBBBBBBBBBBBBB
-+00000810:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 2047, 2048
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+000007f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00000800:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000ff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42  ...............B
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 2047, 2049
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+000007f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00000800:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 2047, 2050
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+000007f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00000800:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 2048, 2048
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000800:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 1024 , 2048
-+wrote 2048/2048 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 2048/2048 bytes at offset 2048
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000c00:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 1
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  .AAAAAAAAAAAAAAA
-+00000010:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 4095
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00000ff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 41  ...............A
-+00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 4096
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 4097
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00001000:  00 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  .BBBBBBBBBBBBBBB
-+00001010:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4095, 4096
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00001ff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42  ...............B
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4095, 4097
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4095, 4098
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 4096, 4096
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 2048 , 4096
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 4096/4096 bytes at offset 4096
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00000800:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00001800:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 1
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  .AAAAAAAAAAAAAAA
-+00000010:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00010000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 65535
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+0000fff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 41  ...............A
-+00010000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 65536
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00010000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 0, 65537
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00010000:  00 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  .BBBBBBBBBBBBBBB
-+00010010:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 65535, 65536
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+0000fff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00010000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+0001fff0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 42  ...............B
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 65535, 65537
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+0000fff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00010000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 65535, 65538
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+0000fff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
-+00010000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 65536, 65536
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00010000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+zero 32768 , 65536
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 65536/65536 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
-+*
-+00008000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-+*
-+00018000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
-+*
-+read 131072/131072 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-diff --git a/tests/generic/group b/tests/generic/group
-index 34bd118..a99b6a1 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -9,6 +9,7 @@
- 005 dir udf auto quick
- 006 dir udf auto quick
- 007 dir udf auto quick
-+008 auto quick prealloc
- 010 other udf auto
- 011 dir udf auto quick
- 013 other ioctl udf auto quick
++#endif /* GLOBAL_H */
 -- 
 1.8.3.1
 
