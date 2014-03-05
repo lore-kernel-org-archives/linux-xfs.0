@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F145F7F4E
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 15:04:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C13FAC001
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 13:04:25 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 9KbK3Kq1RQnnXk8f (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 13:04:20 -0800 (PST)
-Date: Tue, 4 Mar 2014 13:04:17 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: add a test for unlinked inodes due to O_TMPFILE
-Message-ID: <20140304210417.GA10628@infradead.org>
-References: <20140304172103.GA24528@infradead.org>
-	<20140304172148.GC24528@infradead.org>
-	<20140304203927.GG6851@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 563087F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 18:04:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0DE7FAC006
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 16:04:52 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id S4kHTymz6sMNBkE5 for <xfs@oss.sgi.com>;
+	Tue, 04 Mar 2014 16:04:50 -0800 (PST)
+Message-ID: <53166A20.4040109@sandeen.net>
+Date: Tue, 04 Mar 2014 18:04:48 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140304203927.GG6851@dastard>
+Subject: Re: [PATCH 00/13] xfsprogs: initial EFSBADCRC support
+References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393923117-9559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,58 +27,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Zhi Yong Wu <zwu.kernel@gmail.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Wed, Mar 05, 2014 at 07:39:27AM +1100, Dave Chinner wrote:
-> > +_supported_fs generic
+On 3/4/14, 2:51 AM, Dave Chinner wrote:
+> Hi Folks,
 > 
-> XFS only.
-
-Hmm.  I remember fixing this up, but for some reason it didn't make it
-into the final patch.
-
-> > +# test creating a r/w tmpfile, do I/O and link it into the namespace
-> > +$XFS_IO_PROG -x -T \
-> > +	-c "pwrite 0 4096" \
-> > +	-c "pread 0 4096" \
-> > +	-c "freeze" \
-> > +	-c "thaw" \
-> > +	-c "shutdown" \
-> > +	${SCRATCH_MNT} | _filter_xfs_io
+> This series is a userspace port of Eric's EFSBADCRC verifier error
+> discrimination patch set. It brings across all the relevant pathes
+> form the kernel code and shoe-horns them into the libxfs codebase.
+> There are two extra patches on the end of the series - one to make
+> xfs_db use EFSBADCRC for it's CRC validity indication, and the other
+> to make xfs_repair detect and handle primary superblock CRC failures
+> and recalculation when the primary superblock is rebuilt and
+> rewritten.
 > 
-> $testfile?
+> This is the first step in bring full awareness of CRC errors into
+> xfs_repair. More patches will follow as I make more repair code
+> aware that EFSBADCRC means that the object that was just read
+> needs repair.
 
-No, O_TMPFILE doesn't take an actual file name but a "virtual" parent
-directory.  It's a reall creative abuse of the open ABI..
+You can slap:
 
-> Also, I don't see the file being linked into the namespace, so the
-> comment is probably wrong. Also, please add a comment as to
-> why the freeze/thaw is necessary.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Yes, we don't want to link it so that we have it on the unlinke dinode
-list.  The freeze/thaw is to make sure the log has been cleaned, I'll
-add a comment explaining it.
+on the first 11 of these anyway.
 
-> There it is, but is moving it to lost+found the right thing to do,
-> given that it was on the unlinked list and should have had a zero
-> link count? i.e. aren't we supposed to free unlinked inodes with a
-> zero link count, not recover them to lost+found?
+(or maybe we should swap SOB/RB, and add a new Userspace-ported-by ;))
 
-> Yeah, that seems like the wrong behaviour to have for an anonymous
-> O_TMPFILE file - it's making it visible because we moved it to
-> lost+found in phase 6....
-
-Good question.  I thought about this a little and decided that it wasn't
-worth special casing O_TMPFILE inodes in repair, but thinking about it a
-bit more this also happens for normal unlinked but open files.  I can
-look into this if you want, and would create another test for that case.
-
-> 
-> Also, I don't see any icount mismatch, so the comment above in the
-> test is probably wrong.
-
-We do have an icount mismatch, but _filter_repair filters it away.
+-Eric
 
 _______________________________________________
 xfs mailing list
