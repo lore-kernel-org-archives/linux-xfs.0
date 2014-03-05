@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 838907F3F
-	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 14:12:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 51133304032
-	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 12:12:22 -0800 (PST)
-Received: from mail-ea0-f175.google.com (mail-ea0-f175.google.com
-	[209.85.215.175]) by cuda.sgi.com with ESMTP id
-	HeEUCm2yylwSS7Sv (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 05 Mar 2014 12:12:17 -0800 (PST)
-Received: by mail-ea0-f175.google.com with SMTP id d10so1263618eaj.6
-	for <xfs@oss.sgi.com>; Wed, 05 Mar 2014 12:12:16 -0800 (PST)
-From: Boris Ranto <ranto.boris@gmail.com>
-Subject: [PATCH] xfsdump: Fix memory leak in invutil/stobj.c
-Date: Wed,  5 Mar 2014 21:11:51 +0100
-Message-Id: <1394050311-17965-1-git-send-email-ranto.boris@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id F344F7F3F
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 15:40:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DC6C2304032
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2014 13:40:09 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	weBA1Blyzj8AGa32 for <xfs@oss.sgi.com>;
+	Wed, 05 Mar 2014 13:40:08 -0800 (PST)
+Date: Thu, 6 Mar 2014 08:40:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: inode log reservations are still too small
+Message-ID: <20140305214002.GI6851@dastard>
+References: <1393981893-2497-1-git-send-email-david@fromorbit.com>
+	<1393981893-2497-3-git-send-email-david@fromorbit.com>
+	<20140305171441.GD11667@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140305171441.GD11667@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,57 +27,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Boris Ranto <ranto.boris@gmail.com>, branto@redhat.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The function open_stobj duplicates its argument, upon successful
-duplication, the fstat is called. If the fstat command fails then
-the memory for the duplicated string is leaked. Fix this by moving
-the string duplication after the fstat call. This is ok because
-the fstat call does not use the duplicated string.
+On Wed, Mar 05, 2014 at 09:14:41AM -0800, Christoph Hellwig wrote:
+> The fix looks correct, but care to remind me where we account for the
+> xlog_op_header for all non-buf, non-inode transaction?
 
-Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
----
- invutil/stobj.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+We don't. We need to, I just haven't had the time to audit the rest
+of the reservations to fix them all up yet. AFAIA, only the quota
+off transactions don't have any slack in them for xlog_op_header
+space - all the others that are incorrect probably have enough
+overhead from the buffer overhead roundup to cover the lack ophdr
+accounting on things like dquots.
 
-diff --git a/invutil/stobj.c b/invutil/stobj.c
-index 428b419..55abe63 100644
---- a/invutil/stobj.c
-+++ b/invutil/stobj.c
-@@ -578,12 +578,6 @@ open_stobj(char *StObjFileName)
- 	return fd;
-     }
- 
--    name = strdup(StObjFileName);
--    if(name == NULL) {
--	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
--	exit(1);
--    }
--
-     read_n_bytes(fd, &cnt, sizeof(invt_sescounter_t), StObjFileName);
-     lseek( fd, 0, SEEK_SET );
-     errno = 0;
-@@ -595,6 +589,12 @@ open_stobj(char *StObjFileName)
-     size = sb.st_size;
-     mapaddr = mmap_n_bytes(fd, size, BOOL_FALSE, StObjFileName);
- 
-+    name = strdup(StObjFileName);
-+    if(name == NULL) {
-+	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-+	exit(1);
-+    }
-+
-     return add_stobj(name, fd, size, mapaddr, (invt_sescounter_t *)mapaddr);
- }
- 
+Cheers,
+
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
