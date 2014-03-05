@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FC177F4E
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 18:12:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A9A70AC004
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 16:12:37 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id pCqEdE7FXw5yTjs7 for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 16:12:35 -0800 (PST)
-Message-ID: <53166BF1.6010507@sandeen.net>
-Date: Tue, 04 Mar 2014 18:12:33 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 12/13] xfs_db: Use EFSBADCRC for CRC validity indication
-References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
-	<1393923117-9559-13-git-send-email-david@fromorbit.com>
-In-Reply-To: <1393923117-9559-13-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5997B7F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 19:12:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3EBA58F8089
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 17:12:01 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	2r90VfDZ9LgPZUtQ for <xfs@oss.sgi.com>;
+	Tue, 04 Mar 2014 17:11:59 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WL0My-0000ec-7G
+	for xfs@oss.sgi.com; Wed, 05 Mar 2014 12:11:36 +1100
+Received: from dave by disappointment with local (Exim 4.82)
+	(envelope-from <dave@disappointment.disaster>) id 1WL0My-0000ST-6K
+	for xfs@oss.sgi.com; Wed, 05 Mar 2014 12:11:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: inode log reservations are still too small
+Date: Wed,  5 Mar 2014 12:11:33 +1100
+Message-Id: <1393981893-2497-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393981893-2497-1-git-send-email-david@fromorbit.com>
+References: <1393981893-2497-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,64 +30,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 3/4/14, 2:51 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs_db currently gives indication as to whether a buffer CRC is ok
-> or not. Currently it does this by checking for EFSCORRUPTED in the
-> b_error field of the buffer. Not that we have EFSBADCRC to indicate
+From: Dave Chinner <dchinner@redhat.com>
 
-Now that...
+Back in commit 23956703 ("xfs: inode log reservations are too
+small"), the reservation size was increased to take into account the
+difference in size between the in-memory BMBT block headers and the
+on-disk BMDR headers. This solved a transaction overrun when logging
+the inode size.
 
-> a bad CRC independently of structure corruption, use that instead to
-> drive the CRC correct/incorrect indication in the structured output.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Recently, however, we've seen a number of these same overruns on
+kernels with the above fix in it. All of them have been by 4 bytes,
+so we must still not be accounting for something correctly.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Through inspection it turns out the above commit didn't take into
+account everything it should have. That is, it only accounts for a
+single log op_hdr structure, when it can actually require up to four
+op_hdrs - one for each region (log iovec) that is formatted. These
+regions are the inode log format header, the inode core, and the two
+forks that can be held in the literal area of the inode.
 
-> ---
->  db/io.c | 5 +++--
->  db/io.h | 2 +-
->  2 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/db/io.c b/db/io.c
-> index d29816c..9a787c8 100644
-> --- a/db/io.c
-> +++ b/db/io.c
-> @@ -521,10 +521,11 @@ set_cur(
->  	}
->  
->  	/*
-> -	 * keep the buffer even if the verifier says it is corrupted.
-> +	 * Keep the buffer even if the verifier says it is corrupted.
->  	 * We're a diagnostic tool, after all.
->  	 */
-> -	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
-> +	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED &&
-> +				   bp->b_error != EFSBADCRC))
->  		return;
->  	iocur_top->buf = bp->b_addr;
->  	iocur_top->bp = bp;
-> diff --git a/db/io.h b/db/io.h
-> index d8cf383..ad39bee 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -67,6 +67,6 @@ static inline bool
->  iocur_crc_valid()
->  {
->  	return (iocur_top->bp &&
-> -		iocur_top->bp->b_error != EFSCORRUPTED &&
-> +		iocur_top->bp->b_error != EFSBADCRC &&
->  		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
->  }
-> 
+This means we are not accounting for 36 bytes of log space that the
+transaction can use, and hence when we get inodes in certain formats
+with particular fragmentation patterns we can overrun the
+transaction. Fix this by adding the correct accounting for log
+op_headers in the transaction.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans_resv.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index 8515b04..d2c8e4a 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -81,20 +81,28 @@ xfs_calc_buf_res(
+  * on disk. Hence we need an inode reservation function that calculates all this
+  * correctly. So, we log:
+  *
+- * - log op headers for object
++ * - 4 log op headers for object
++ *	- for the ilf, the inode core and 2 forks
+  * - inode log format object
+- * - the entire inode contents (core + 2 forks)
+- * - two bmap btree block headers
++ * - the inode core
++ * - two inode forks containing bmap btree root blocks.
++ *	- the btree data contained by both forks will fit into the inode size,
++ *	  hence when combined with the inode core above, we have a total of the
++ *	  actual inode size.
++ *	- the BMBT headers need to be accounted separately, as they are
++ *	  additional to the records and pointers that fit inside the inode
++ *	  forks.
+  */
+ STATIC uint
+ xfs_calc_inode_res(
+ 	struct xfs_mount	*mp,
+ 	uint			ninodes)
+ {
+-	return ninodes * (sizeof(struct xlog_op_header) +
+-			  sizeof(struct xfs_inode_log_format) +
+-			  mp->m_sb.sb_inodesize +
+-			  2 * XFS_BMBT_BLOCK_LEN(mp));
++	return ninodes *
++		(4 * sizeof(struct xlog_op_header) +
++		 sizeof(struct xfs_inode_log_format) +
++		 mp->m_sb.sb_inodesize +
++		 2 * XFS_BMBT_BLOCK_LEN(mp));
+ }
+ 
+ /*
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
