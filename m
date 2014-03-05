@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 563087F4E
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 18:04:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0DE7FAC006
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 16:04:52 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 0FC177F4E
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 18:12:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9A70AC004
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2014 16:12:37 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id S4kHTymz6sMNBkE5 for <xfs@oss.sgi.com>;
-	Tue, 04 Mar 2014 16:04:50 -0800 (PST)
-Message-ID: <53166A20.4040109@sandeen.net>
-Date: Tue, 04 Mar 2014 18:04:48 -0600
+	ESMTP id pCqEdE7FXw5yTjs7 for <xfs@oss.sgi.com>;
+	Tue, 04 Mar 2014 16:12:35 -0800 (PST)
+Message-ID: <53166BF1.6010507@sandeen.net>
+Date: Tue, 04 Mar 2014 18:12:33 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 00/13] xfsprogs: initial EFSBADCRC support
+Subject: Re: [PATCH 12/13] xfs_db: Use EFSBADCRC for CRC validity indication
 References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1393923117-9559-1-git-send-email-david@fromorbit.com>
+	<1393923117-9559-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <1393923117-9559-13-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +31,57 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
 On 3/4/14, 2:51 AM, Dave Chinner wrote:
-> Hi Folks,
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This series is a userspace port of Eric's EFSBADCRC verifier error
-> discrimination patch set. It brings across all the relevant pathes
-> form the kernel code and shoe-horns them into the libxfs codebase.
-> There are two extra patches on the end of the series - one to make
-> xfs_db use EFSBADCRC for it's CRC validity indication, and the other
-> to make xfs_repair detect and handle primary superblock CRC failures
-> and recalculation when the primary superblock is rebuilt and
-> rewritten.
-> 
-> This is the first step in bring full awareness of CRC errors into
-> xfs_repair. More patches will follow as I make more repair code
-> aware that EFSBADCRC means that the object that was just read
-> needs repair.
+> xfs_db currently gives indication as to whether a buffer CRC is ok
+> or not. Currently it does this by checking for EFSCORRUPTED in the
+> b_error field of the buffer. Not that we have EFSBADCRC to indicate
 
-You can slap:
+Now that...
+
+> a bad CRC independently of structure corruption, use that instead to
+> drive the CRC correct/incorrect indication in the structured output.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-on the first 11 of these anyway.
-
-(or maybe we should swap SOB/RB, and add a new Userspace-ported-by ;))
-
--Eric
+> ---
+>  db/io.c | 5 +++--
+>  db/io.h | 2 +-
+>  2 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/db/io.c b/db/io.c
+> index d29816c..9a787c8 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -521,10 +521,11 @@ set_cur(
+>  	}
+>  
+>  	/*
+> -	 * keep the buffer even if the verifier says it is corrupted.
+> +	 * Keep the buffer even if the verifier says it is corrupted.
+>  	 * We're a diagnostic tool, after all.
+>  	 */
+> -	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED))
+> +	if (!bp || (bp->b_error && bp->b_error != EFSCORRUPTED &&
+> +				   bp->b_error != EFSBADCRC))
+>  		return;
+>  	iocur_top->buf = bp->b_addr;
+>  	iocur_top->bp = bp;
+> diff --git a/db/io.h b/db/io.h
+> index d8cf383..ad39bee 100644
+> --- a/db/io.h
+> +++ b/db/io.h
+> @@ -67,6 +67,6 @@ static inline bool
+>  iocur_crc_valid()
+>  {
+>  	return (iocur_top->bp &&
+> -		iocur_top->bp->b_error != EFSCORRUPTED &&
+> +		iocur_top->bp->b_error != EFSBADCRC &&
+>  		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
+>  }
+> 
 
 _______________________________________________
 xfs mailing list
