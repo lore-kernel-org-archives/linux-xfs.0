@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6942E7F50
-	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 12:13:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 58ED48F8035
-	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 10:13:03 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ekpznmNIs2pKP67v for
-	<xfs@oss.sgi.com>; Thu, 06 Mar 2014 10:12:59 -0800 (PST)
-Date: Thu, 6 Mar 2014 19:02:16 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH v2 6/8] fsstress: translate flags in fiemap_f
-In-Reply-To: <20140306174813.GE28297@infradead.org>
-Message-ID: <alpine.LFD.2.00.1403061900300.2249@localhost.localdomain>
-References: <1394034699-21187-1-git-send-email-lczerner@redhat.com>
-	<1394034699-21187-7-git-send-email-lczerner@redhat.com>
-	<20140306174813.GE28297@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 1C9527F50
+	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 14:31:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 01EEB8F806F
+	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 12:30:58 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id esHFUkqWcPN2TfOj
+	for <xfs@oss.sgi.com>; Thu, 06 Mar 2014 12:30:54 -0800 (PST)
+Message-ID: <5318DB01.2040102@hardwarefreak.com>
+Date: Thu, 06 Mar 2014 14:30:57 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: Re: Hello, I have a question about XFS File System
+References: <195DE8C60CE24A62A71911FDE0B0DC97@gmail.com>
+In-Reply-To: <195DE8C60CE24A62A71911FDE0B0DC97@gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,51 +28,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Yongmin <dev.yongmin@gmail.com>, xfs@oss.sgi.com
 
-On Thu, 6 Mar 2014, Christoph Hellwig wrote:
-
-> Date: Thu, 6 Mar 2014 09:48:13 -0800
-> From: Christoph Hellwig <hch@infradead.org>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-> Subject: Re: [PATCH v2 6/8] fsstress: translate flags in fiemap_f
+On 3/6/2014 3:15 AM, Yongmin wrote:
 > 
-> > +#ifdef HAVE_LINUX_FIEMAP_H
-> > +struct print_flags fiemap_flags[] = {
-> > +	{ FIEMAP_FLAG_SYNC, "SYNC"},
-> > +	{ FIEMAP_FLAG_XATTR, "XATTR"},
-> > +	{ -1, NULL}
-> > +};
+> Hello.
 > 
-> Can be static.
-
-Right. The same applies to falloc_flags
-
+> My name is Yongmin Park and I am a graduated student in Ajou
+> University (Korea). My research area is Digital Forensics. And this
+> time i tried to understand the structure of XFS file system, because
+> XFS is one of the famous huge file system in these days.
 > 
-> > +
-> > +#define translate_fiemap_flags(mode)	\
-> > +	({translate_flags(mode, "|", fiemap_flags);})
-> > +#endif
+> I already founded and read 'XFS Filesystem Structure 2nd Edition
+> Revision 1' on the Internet, which was written by Silicon Graphics
+> Inc in 2006 and it is really well written to understand.
 > 
-> Any reason to not have these two inside fiemap_f?
-
-Not really, other than I think it's ugly.
-
+> But the concentrated part of mine is "Deleted File Recovery", so the
+> Journaling part is really important for me,, but regretfully there
+> are no specific guide line about Journaling part... Also next
+> version(maybe the 3re Edition) is not exsist for more than a 5
+> years.
 > 
-> Otherwise:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> So is there no guide line for journaling part in XFS? How can i get
+> them,, have I to buy them? or Is Analysing Source Cord only way to
+> study?
 
-Thanks!
--Lukas
+The journal only contains in flight transactional metadata for recovery
+purposes after a system crash or power loss, to prevent filesystem, i.e.
+metadata, corruption.  The journal does not contain file data.  During
+normal operation, once the metadata has been written into an allocation
+group the transactional entry in the journal is removed.  Thus,
+recovering deleted files has nothing to do with the journal.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+This may be helpful:
+http://xfs.org/index.php/XFS_FAQ#Q:_Does_the_filesystem_have_an_undelete_capability.3F
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
