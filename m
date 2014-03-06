@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A39547F50
-	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 11:24:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 950A38F8068
-	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 09:24:02 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BTwd3PzrNpp1RwAS for
-	<xfs@oss.sgi.com>; Thu, 06 Mar 2014 09:24:01 -0800 (PST)
-Date: Thu, 6 Mar 2014 12:23:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfsdump: Fix memory leak in invutil/stobj.c
-Message-ID: <20140306172356.GB11842@laptop.bfoster>
-References: <1394050311-17965-1-git-send-email-ranto.boris@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AADF97F50
+	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 11:44:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 88A28304070
+	for <xfs@oss.sgi.com>; Thu,  6 Mar 2014 09:44:23 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 5jo91GfINk6pS1uJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 06 Mar 2014 09:44:21 -0800 (PST)
+Date: Thu, 6 Mar 2014 09:44:20 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 1/8] xfstests: Create single function for testing
+	xfs_io commands
+Message-ID: <20140306174420.GA28297@infradead.org>
+References: <1394034699-21187-1-git-send-email-lczerner@redhat.com>
+	<1394034699-21187-2-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1394050311-17965-1-git-send-email-ranto.boris@gmail.com>
+In-Reply-To: <1394034699-21187-2-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,64 +31,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boris Ranto <ranto.boris@gmail.com>
-Cc: branto@redhat.com, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 05, 2014 at 09:11:51PM +0100, Boris Ranto wrote:
-> The function open_stobj duplicates its argument, upon successful
-> duplication, the fstat is called. If the fstat command fails then
-> the memory for the duplicated string is leaked. Fix this by moving
-> the string duplication after the fstat call. This is ok because
-> the fstat call does not use the duplicated string.
-> 
-> Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
-> ---
+On Wed, Mar 05, 2014 at 04:51:32PM +0100, Lukas Czerner wrote:
+> Currently there are several function testing various xfs_io commands.
+> This commit creates _require_xfs_io_command() to test any xfs_command.
 
-The fix looks fine to me, but in the same scenario it looks like we also
-leak the fd. Care to clean that up in this patch as well? :)
+Looks good.  Do you plan to keep the wrappers around
+_require_xfs_io_command in the long run or just for a transitional
+period?
 
-Brian
-
->  invutil/stobj.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/invutil/stobj.c b/invutil/stobj.c
-> index 428b419..55abe63 100644
-> --- a/invutil/stobj.c
-> +++ b/invutil/stobj.c
-> @@ -578,12 +578,6 @@ open_stobj(char *StObjFileName)
->  	return fd;
->      }
->  
-> -    name = strdup(StObjFileName);
-> -    if(name == NULL) {
-> -	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-> -	exit(1);
-> -    }
-> -
->      read_n_bytes(fd, &cnt, sizeof(invt_sescounter_t), StObjFileName);
->      lseek( fd, 0, SEEK_SET );
->      errno = 0;
-> @@ -595,6 +589,12 @@ open_stobj(char *StObjFileName)
->      size = sb.st_size;
->      mapaddr = mmap_n_bytes(fd, size, BOOL_FALSE, StObjFileName);
->  
-> +    name = strdup(StObjFileName);
-> +    if(name == NULL) {
-> +	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-> +	exit(1);
-> +    }
-> +
->      return add_stobj(name, fd, size, mapaddr, (invt_sescounter_t *)mapaddr);
->  }
->  
-> -- 
-> 1.7.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
