@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D1AE57F56
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 16:40:36 -0600 (CST)
-From: Shaun Gosse <sgosse@sgi.com>
-Subject: RE: Hello, I have a question about XFS File System
-Date: Fri, 7 Mar 2014 22:40:31 +0000
-Message-ID: <8D3FA7645C1CFC4E9E783D22B4C708647305E1F5@P-EXMB2-DC21.corp.sgi.com>
-References: <195DE8C60CE24A62A71911FDE0B0DC97@gmail.com>
-	<5318DB01.2040102@hardwarefreak.com>
-	<279D0A265E5D4AF5B099BFAD4E8B1700@gmail.com>
-	<531A4600.7050906@hardwarefreak.com>
-In-Reply-To: <531A4600.7050906@hardwarefreak.com>
-Content-Language: en-US
+	by oss.sgi.com (Postfix) with ESMTP id CE5287F56
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 16:50:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DB11AC004
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 14:50:51 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	ytzdz5zD84L3A9EJ for <xfs@oss.sgi.com>;
+	Fri, 07 Mar 2014 14:50:48 -0800 (PST)
+Date: Sat, 8 Mar 2014 09:50:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/13] xfsprogs: initial EFSBADCRC support
+Message-ID: <20140307225044.GR6851@dastard>
+References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
+	<20140307104604.GA32753@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140307104604.GA32753@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,88 +26,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "stan@hardwarefreak.com" <stan@hardwarefreak.com>, Yongmin <dev.yongmin@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-U3RhbiwNCg0KSWYgSSB1bmRlcnN0YW5kIHdoYXQgeW91J3JlIHNheWluZyBoZXJlIGNvcnJlY3Rs
-eSwgaXQgc291bmRzIGxpa2UgdGhlcmUgd291bGQgc3RpbGwgYmUgYSB2ZXJ5IHRpbnkgd2luZG93
-IHdoZXJlIHRoZSBqb3VybmFsIGNvdWxkIGJlIHJlbGV2YW50LCB0aG9zZSAiZmV3IHNlY29uZHMi
-IGJlZm9yZSBpdCdzIGNvbW1pdHRlZCBhcyB5b3Ugc2FpZC4gU28gaXQgd291bGQgYmUgYSByYXRo
-ZXIgc21hbGwgY29ybmVyIGNhc2UsIGJ1dCB0aGVyZSBtaWdodCBiZSBzb21lIHVzZS4gQW5kIEkg
-dGhpbmsgaXQgd2FzIGFscmVhZHkgc3RhdGVkIHRvIGJlIGFuIGFjYWRlbWljIHByb2plY3QuLi4N
-Cg0KVGhpcyBkb2VzIG1ha2VzIG1lIGN1cmlvdXMgaW4gdHVybiBhYm91dCBob3cgZGlmZmljdWx0
-IGl0IHdvdWxkIGJlIHRvIHJlY292ZXIgam91cm5hbCBlbnRyaWVzLiBBdCBhIGd1ZXNzLCBpZiBh
-IHBlcnNvbiBrbm93cyB0aGUgc3RydWN0dXJlIGFuZCBpdCBoYXNuJ3QgYmVlbiBvdmVyd3JpdHRl
-biwgaXQnbGwgc3RpbGwgYmUgdGhlcmU/IE9yIGlzIGl0IGF1dG9tYXRpY2FsbHkgb3ZlcndyaXR0
-ZW4vemVybydkIHdoZW4gdGhlIGVudHJ5IGlzIHJlbW92ZWQgZnJvbSB0aGUgam91cm5hbCwgcGVy
-aGFwcyBhcyB0aGUgdmVyeSBtZWNoYW5pc20gb2YgcmVtb3ZhbD8gQW5kIHByZXN1bWFibHkgdGhp
-cyB3aW5kb3csIGlmIGFueSwgd291bGQgYWxzbyBiZSByYXRoZXIgc21hbGwgYXNzdW1pbmcgYW4g
-YWN0aXZlIGZpbGVzeXN0ZW0gKGFuZCBhbiBpbmFjdGl2ZSBvbmUgcHJlc3VtYWJseSBpcnJlbGV2
-YW50Li4udW5sZXNzLCBwZXJoYXBzLCBpdCB3YXMgb25lIHdoZXJlIHRoZSBsYXN0IGFjdGlvbiwg
-YXJiaXRyYXJpbHkgbG9uZyBhZ28sIHdhcyBhIGNyaXRpY2FsIGRlbGV0ZSBvcGVyYXRpb24uLi4p
-Lg0KDQpDaGVlcnMsDQotU2hhdW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
-IHhmcy1ib3VuY2VzQG9zcy5zZ2kuY29tIFttYWlsdG86eGZzLWJvdW5jZXNAb3NzLnNnaS5jb21d
-IE9uIEJlaGFsZiBPZiBTdGFuIEhvZXBwbmVyDQpTZW50OiBGcmlkYXksIE1hcmNoIDA3LCAyMDE0
-IDQ6MjAgUE0NClRvOiBZb25nbWluOyB4ZnNAb3NzLnNnaS5jb20NClN1YmplY3Q6IFJlOiBIZWxs
-bywgSSBoYXZlIGEgcXVlc3Rpb24gYWJvdXQgWEZTIEZpbGUgU3lzdGVtDQoNClBsZWFzZSByZXBs
-eSB0byB0aGUgbWFpbGluZyBsaXN0IGFzIHdlbGwgYXMgdGhlIGluZGl2aWR1YWwuDQoNCk5vdGUg
-dGhhdCB5b3Ugc3RhdGVkOg0KDQonLi4udGhlIGNvbmNlbnRyYXRlZCBwYXJ0IG9mIG1pbmUgaXMg
-IkRlbGV0ZWQgRmlsZSBSZWNvdmVyeSInDQoNCk9uIDMvNi8yMDE0IDEwOjAyIFBNLCBZb25nbWlu
-IHdyb3RlOg0KPiANCj4gWWVzISB0aGVyZSBhcmUgbm8gYWN0dWFsIGZpbGUgZGF0YSBpbiBqb3Vy
-bmFsaW5nIHBhcnQuDQo+IA0KPiBCVVQsIGJ5IGFuYWx5emluZyBqb3VybmFsaW5nIHBhcnQsIHdl
-IGNhbiBnZXQgYSBJbm9kZSBDb3JlIEluZm9ybWF0aW9uIHdoaWNoIHdhcyBkZWxldGVkLg0KPiBJ
-biBJbm9kZSBDb3JlLCB0aGVyZSBhcmUgbWFueSBpbmZvcm1hdGlvbiBhYm91dCB0aGUgYWN0dWFs
-IGRhdGEsIGkuZS4gc3RhcnQgYWRkcmVzcywgZmlsZSBsZW5ndGggZXRjLg0KDQpBbmFseXppbmcg
-dGhlIGpvdXJuYWwgY29kZSBtYXkgaW5mb3JtIHlvdSBhYm91dCBzdHJ1Y3R1cmVzLCBidXQgaXQg
-d29uJ3QgaW5mb3JtIHlvdSBhYm91dCBvbiBkaXNrIGxvY2F0aW9ucyBvZiB0aGUgc3RydWN0dXJl
-cyBhbmQgaG93IHRvIGZpbmQgdGhlbS4gIElmIGEgZmlsZSBoYXMgYmVlbiBkZWxldGVkLCBubyBp
-bmZvcm1hdGlvbiBhYm91dCB0aGF0IGlzIGdvaW5nIHRvIGV4aXN0IGluIHRoZSBqb3VybmFsIGZv
-ciBtb3JlIHRoYW4gYSBmZXcgc2Vjb25kcyBiZWZvcmUgdGhlIHRyYW5zYWN0aW9uIGlzIGNvbW1p
-dHRlZCBhbmQgdGhlIGVudHJ5IHJlbW92ZWQgZnJvbSB0aGUgam91cm5hbC4NCg0KPiBCeSB1c2lu
-ZyB0aG9zZSBpbmZvcm1hdGlvbiwgUmVjb3ZlcmluZyBkZWxldGUgZmlsZSBjYW4gYmUgZG9uZS4N
-Cj4gDQo+IFNvIHRoZSBhbmFseXNpcyBvZiBKb3VybmFsaW5nIHBhcnQgaXMgYWJzb2x1dGVseSBu
-ZWVkZWQuICANCg0KSSBkaXNhZ3JlZS4gIEFnYWluLCB0aGUgam91cm5hbCBsb2cgaXMgdW5yZWxh
-dGVkIHRvICJkZWxldGVkIGZpbGUgcmVjb3ZlcnkiIGluIGEgZm9yZW5zaWNzIHNjZW5hcmlvLg0K
-DQpJIHRoaW5rIERhdmUgYW5kIEplZmYgYm90aCBtaXNzZWQgdGhlIGZhY3QgdGhhdCB5b3UncmUg
-aW50ZXJlc3RlZCBvbmx5IGluIGRlbGV0ZWQgZmlsZSByZWNvdmVyeSwgbm90IGluIGxlYXJuaW5n
-IGhvdyB0aGUgam91cm5hbCB3b3JrcyBmb3IgdGhlIHNha2Ugb2YgbGVhcm5pbmcgaG93IHRoZSBq
-b3VybmFsIHdvcmtzLg0KDQoNCj4gPT09PT09PT09PT09PT09PT09PT09PT0NCj4gICAgICAgICBm
-cm9tIFlvbmdtaW4gUGFyaw0KPiA9PT09PT09PT09PT09PT09PT09PT09PQ0KPiANCj4gDQo+IE9u
-IDIwMTTrhYQgM+yblCA37J28IEZyaWRheSBhdCDsmKTsoIQgNTozMCwgU3RhbiBIb2VwcG5lciB3
-cm90ZToNCj4gDQo+PiBPbiAzLzYvMjAxNCAzOjE1IEFNLCBZb25nbWluIHdyb3RlOg0KPj4+ICAN
-Cj4+PiBIZWxsby4NCj4+PiAgDQo+Pj4gTXkgbmFtZSBpcyBZb25nbWluIFBhcmsgYW5kIEkgYW0g
-YSBncmFkdWF0ZWQgc3R1ZGVudCBpbiBBam91IA0KPj4+IFVuaXZlcnNpdHkgKEtvcmVhKS4gTXkg
-cmVzZWFyY2ggYXJlYSBpcyBEaWdpdGFsIEZvcmVuc2ljcy4gQW5kIHRoaXMgDQo+Pj4gdGltZSBp
-IHRyaWVkIHRvIHVuZGVyc3RhbmQgdGhlIHN0cnVjdHVyZSBvZiBYRlMgZmlsZSBzeXN0ZW0sIGJl
-Y2F1c2UgDQo+Pj4gWEZTIGlzIG9uZSBvZiB0aGUgZmFtb3VzIGh1Z2UgZmlsZSBzeXN0ZW0gaW4g
-dGhlc2UgZGF5cy4NCj4+PiAgDQo+Pj4gSSBhbHJlYWR5IGZvdW5kZWQgYW5kIHJlYWQgJ1hGUyBG
-aWxlc3lzdGVtIFN0cnVjdHVyZSAybmQgRWRpdGlvbiANCj4+PiBSZXZpc2lvbiAxJyBvbiB0aGUg
-SW50ZXJuZXQsIHdoaWNoIHdhcyB3cml0dGVuIGJ5IFNpbGljb24gR3JhcGhpY3MgDQo+Pj4gSW5j
-IGluIDIwMDYgYW5kIGl0IGlzIHJlYWxseSB3ZWxsIHdyaXR0ZW4gdG8gdW5kZXJzdGFuZC4NCj4+
-PiAgDQo+Pj4gQnV0IHRoZSBjb25jZW50cmF0ZWQgcGFydCBvZiBtaW5lIGlzICJEZWxldGVkIEZp
-bGUgUmVjb3ZlcnkiLCBzbyB0aGUgDQo+Pj4gSm91cm5hbGluZyBwYXJ0IGlzIHJlYWxseSBpbXBv
-cnRhbnQgZm9yIG1lLCwgYnV0IHJlZ3JldGZ1bGx5IHRoZXJlIA0KPj4+IGFyZSBubyBzcGVjaWZp
-YyBndWlkZSBsaW5lIGFib3V0IEpvdXJuYWxpbmcgcGFydC4uLiBBbHNvIG5leHQgDQo+Pj4gdmVy
-c2lvbihtYXliZSB0aGUgM3JlIEVkaXRpb24pIGlzIG5vdCBleHNpc3QgZm9yIG1vcmUgdGhhbiBh
-IDUgDQo+Pj4geWVhcnMuDQo+Pj4gIA0KPj4+IFNvIGlzIHRoZXJlIG5vIGd1aWRlIGxpbmUgZm9y
-IGpvdXJuYWxpbmcgcGFydCBpbiBYRlM/IEhvdyBjYW4gaSBnZXQgDQo+Pj4gdGhlbSwsIGhhdmUg
-SSB0byBidXkgdGhlbT8gb3IgSXMgQW5hbHlzaW5nIFNvdXJjZSBDb3JkIG9ubHkgd2F5IHRvIA0K
-Pj4+IHN0dWR5Pw0KPj4+ICANCj4+ICANCj4+ICANCj4+IFRoZSBqb3VybmFsIG9ubHkgY29udGFp
-bnMgaW4gZmxpZ2h0IHRyYW5zYWN0aW9uYWwgbWV0YWRhdGEgZm9yIA0KPj4gcmVjb3ZlcnkgcHVy
-cG9zZXMgYWZ0ZXIgYSBzeXN0ZW0gY3Jhc2ggb3IgcG93ZXIgbG9zcywgdG8gcHJldmVudCBmaWxl
-c3lzdGVtLCBpLmUuDQo+PiBtZXRhZGF0YSwgY29ycnVwdGlvbi4gVGhlIGpvdXJuYWwgZG9lcyBu
-b3QgY29udGFpbiBmaWxlIGRhdGEuIER1cmluZyANCj4+IG5vcm1hbCBvcGVyYXRpb24sIG9uY2Ug
-dGhlIG1ldGFkYXRhIGhhcyBiZWVuIHdyaXR0ZW4gaW50byBhbiANCj4+IGFsbG9jYXRpb24gZ3Jv
-dXAgdGhlIHRyYW5zYWN0aW9uYWwgZW50cnkgaW4gdGhlIGpvdXJuYWwgaXMgcmVtb3ZlZC4gDQo+
-PiBUaHVzLCByZWNvdmVyaW5nIGRlbGV0ZWQgZmlsZXMgaGFzIG5vdGhpbmcgdG8gZG8gd2l0aCB0
-aGUgam91cm5hbC4NCj4+ICANCj4+IFRoaXMgbWF5IGJlIGhlbHBmdWw6DQo+PiBodHRwOi8veGZz
-Lm9yZy9pbmRleC5waHAvWEZTX0ZBUSNROl9Eb2VzX3RoZV9maWxlc3lzdGVtX2hhdmVfYW5fdW5k
-ZWwNCj4+IGV0ZV9jYXBhYmlsaXR5LjNGDQoNCg0KLS0NClN0YW4NCg0KX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCnhmcyBtYWlsaW5nIGxpc3QNCnhmc0Bv
-c3Muc2dpLmNvbQ0KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzDQpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+On Fri, Mar 07, 2014 at 02:46:04AM -0800, Christoph Hellwig wrote:
+> Seems like xfstests will need some updates after this series to
+> ignore
+> 
+> Metadata corruption detected at block XXX/XXX
+
+Yes, I'm seeing that from 2 tests - xfs/030 and xfs/033. I've got a
+patch in my local xfstests tree that handles this.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
