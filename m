@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E23FA7F50
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 08:53:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7A6DEAC003
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 06:53:13 -0800 (PST)
-Received: from mail-qa0-f53.google.com (mail-qa0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id GbyDpaO9O9jxJTI2
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 07 Mar 2014 06:53:12 -0800 (PST)
-Received: by mail-qa0-f53.google.com with SMTP id w8so4129641qac.12
-	for <xfs@oss.sgi.com>; Fri, 07 Mar 2014 06:53:11 -0800 (PST)
-From: Boris Ranto <ranto.boris@gmail.com>
-Subject: [PATCH v2] xfsdump: Fix memory and fd leak in invutil/stobj.c
-Date: Fri,  7 Mar 2014 15:52:42 +0100
-Message-Id: <1394203962-17080-1-git-send-email-ranto.boris@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1B54E7F51
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 12:22:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E0E2E8F804B
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 10:22:25 -0800 (PST)
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
+	[67.231.145.42]) by cuda.sgi.com with ESMTP id NCtyTGuyXSHQwzDh
+	for <xfs@oss.sgi.com>; Fri, 07 Mar 2014 10:22:24 -0800 (PST)
+Message-ID: <531A0E5B.108@fb.com>
+Date: Fri, 7 Mar 2014 13:22:19 -0500
+From: Josef Bacik <jbacik@fb.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2] xfstests: add test for btrfs send issuing premature
+	rmdir operations
+References: <1392820352-8550-1-git-send-email-fdmanana@gmail.com>
+	<1393242878-16039-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1393242878-16039-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,65 +25,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Boris Ranto <ranto.boris@gmail.com>, branto@redhat.com
+To: Filipe David Borba Manana <fdmanana@gmail.com>, xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-The function open_stobj duplicates its argument, upon successful
-duplication, the fstat is called. If the fstat command fails then
-the memory for the duplicated string is leaked. Fix this by moving
-the string duplication after the fstat call. This is ok because
-the fstat call does not use the duplicated string.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Brian Foster noticed that the function also leaks a file descriptor
-in case the file cannot be fstated. Fixing that, too.
+On 02/24/2014 06:54 AM, Filipe David Borba Manana wrote:
+> Regression test for btrfs incremental send issue where a rmdir
+> instruction is sent against an orphan directory inode which is not
+> empty yet, causing btrfs receive to fail when it attempts to remove
+> the directory.
+> 
+> This issue is fixed by the following linux kernel btrfs patch:
+> 
+> Btrfs: fix send attempting to rmdir non-empty directories
+> 
+> Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com> ---
 
-Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
----
- invutil/stobj.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+Looks good to me,
 
-diff --git a/invutil/stobj.c b/invutil/stobj.c
-index 428b419..a74ba0f 100644
---- a/invutil/stobj.c
-+++ b/invutil/stobj.c
-@@ -578,23 +578,24 @@ open_stobj(char *StObjFileName)
- 	return fd;
-     }
- 
--    name = strdup(StObjFileName);
--    if(name == NULL) {
--	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
--	exit(1);
--    }
--
-     read_n_bytes(fd, &cnt, sizeof(invt_sescounter_t), StObjFileName);
-     lseek( fd, 0, SEEK_SET );
-     errno = 0;
-     if (fstat(fd, &sb) < 0) {
- 	fprintf(stderr, "Could not get stat info on %s\n", StObjFileName);
- 	perror("fstat");
-+	close(fd);
- 	return -1;
-     }
-     size = sb.st_size;
-     mapaddr = mmap_n_bytes(fd, size, BOOL_FALSE, StObjFileName);
- 
-+    name = strdup(StObjFileName);
-+    if(name == NULL) {
-+	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-+	exit(1);
-+    }
-+
-     return add_stobj(name, fd, size, mapaddr, (invt_sescounter_t *)mapaddr);
- }
- 
--- 
-1.9.0
+Reviewed-by: Josef Bacik <jbacik@fb.com>
+
+Thanks,
+
+Josef
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTGg5bAAoJEANb+wAKly3BFtMQAMDITxFeFKRw5o5g88NUJT+n
+/AQp584QUb+sBhJnyYVET98S47R4C9d7jAu8fUxUJd2FaZ0UPR+rl/LnpdYXy8oJ
+29A2tvbSiOZGQp+kWlGpLqKmmEj/3R/0QZwTrB1jsxKwVsH+OGK1fazOwhkahloL
+8R6xBtcvMzkBFEQ08T0dmodDaWKPp8dgztcScrVt+RGkePPVoKE9X4hwTwAl8muk
+nPv9TvRULOs2emvxuTnEVqZfou0HcOTuKWXAOXN2peXBe324SjfQ0JmAMjtG1Ukw
+nAs5wu8eII1k9/rjGLarNhpuSuMaM5tth0tIb2ebYwxwpYpY6o4eNN2RR6vWlCEz
+vULou68VKdOG6/c6uO6cXuI8zOwScWuYyYFXFLTFpAhjdKwY1HaCwSanvnamdYy8
+kNITDGkYSqs0Abj9wzQDcJcTrjpHDDe/3olb5LMJjrdTneMyDVXc+Ym+FbBhmQUX
+d7vC+a7sRVWwN4xGoqxDgZZQLpGBEO60FhA5kIO9lgis2LdG8SXE0ch4sQuWZ8iC
+S9Aw46dssmiY+d3BkugCOPW/7IlID/obLGUF+CWcWMkxSMbwaPn6RfNJmW+9k+rv
+fkUVj+U75pBtnuwW3LxV7gUq8HwTz8G1fh+96o41yKXpayBQUoIA47AHCUZtP9Fi
+RemqwFmZxhi7ztZYfni2
+=8Kl8
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
