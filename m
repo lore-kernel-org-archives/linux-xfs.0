@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B1CB77F50
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 02:34:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A88EB8F8070
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 00:34:38 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	EccMcJGZVpBY6N9S for <xfs@oss.sgi.com>;
-	Fri, 07 Mar 2014 00:34:33 -0800 (PST)
-Date: Fri, 7 Mar 2014 19:34:30 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 000647F50
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 04:15:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D5D76304066
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 02:15:33 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id z2nIPeVL7y8lbmas (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 07 Mar 2014 02:15:29 -0800 (PST)
+Date: Fri, 7 Mar 2014 02:15:27 -0800
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [RFC, PATCH] xfs: make superblock version checks reflect reality
-Message-ID: <20140307083430.GQ6851@dastard>
+Message-ID: <20140307101527.GC32333@infradead.org>
 References: <1394088890-10713-1-git-send-email-david@fromorbit.com>
 	<20140306180534.GA305@infradead.org>
 	<20140306225541.GL6851@dastard>
@@ -31,68 +31,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Fri, Mar 07, 2014 at 09:55:41AM +1100, Dave Chinner wrote:
-> On Thu, Mar 06, 2014 at 10:05:34AM -0800, Christoph Hellwig wrote:
-> > On Thu, Mar 06, 2014 at 05:54:50PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > We only support filesystems that have v2 directory support, and than
-> > > means all the checking and handling of superblock versions prior to
-> > > this support being added is completely unnecessary overhead.
-> > > 
-> > > Strip out all the version 1-3 support, sanitise the good version
-> > > checking to reflect the supported versions, update all the feature
-> > > supported functions and clean up all the support bit definitions to
-> > > reflect the fact that we no longer care about Irix bootloader flag
-> > > regions for v4 feature bits.
-> > 
-> > Good idea in general, I like it.
-.....
-> > >  static inline int xfs_sb_version_hasnlink(xfs_sb_t *sbp)
-> > >  {
-> > > -	return sbp->sb_versionnum == XFS_SB_VERSION_3 ||
-> > > -		 (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
-> > > -		  (sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
-> > > +	return !!(sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT);
-> > >  }
-> > 
-> > As we reject filesystems without the nlink bit we should just be able
-> > to kill all code protected by xfs_sb_version_hasnlink checks, shouldn't
-> > we?
-> > Same for addnlink.
-> > dirv2 is another candidate.
+> > I'd vote to kill XFS_SB_NEEDED_FEATURES and just check the dirv2 bit
+> > explicitly.
 > 
-> Yes, that's true - but I think those are good candidates for
-> separate patches that follow up on this one.
+> Ok. The only real reason I did this was in case there's a single bit
+> error that clears the dirv2 bit, but it still contains other bits
+> that indicate that the superblock is recent enough that we
+> understand it's contents and what should bein the fs.  e.g. for
+> db/repair purposes - if the dir2 bit is not set, but any of the
+> above bits are set and the m_dirblklog is and it is sane, we can
+> assume that we've lost the feature bit and repair it.
 
-Ok, we don't reject filesystems that don't have the NLINK bit set.
-Older filesystems that have only v1 inodes won't have that bit
-set, and we didn't set NLINK by default in mkfs until late 2007.
-Hence we need to keep some form of NLINK support around.
+Seems like we should just special case that in repair instead of
+allowing a filesystem to go through in the kernel that is guaranteed to
+be corrupted.
 
-The alternative is to simply set the bit in the superblock if it is
-not set, and then just assume everywhere that it is set and we are
-using v2 inodes. That will get rid of the hasnlink/addnlink code
-needed to modify the superblock when the link count goes above
-MAX_NLINK_1, and will result in filesystems always converting v1
-inodes to v2 inodes on writeback of dirty inodes. I don't see a
-problem with taking this approach, bt maybe I'm missing something?
+> Should I just drop it out of the supported feature matrix and drop
+> all other checks on that field? That way we can then remove all the
+> the crap that tries to validate it from xfs_repair, too. I have no
+> idea what is actually valid for this field, so I think we should
+> simply drop support of it from everything.
 
-For the dirv2 function, it's only used for checking at mount time,
-so if that is handled bu xfs_sb_good_version() we no longer need
-it....
-
-Your thoughts?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think we should pretending we know anything about the shared mount
+support.  Everytime it came up I failed to find any hint on how it was
+supposed to work.
 
 _______________________________________________
 xfs mailing list
