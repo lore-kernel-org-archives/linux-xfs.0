@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 987D97F52
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 12:48:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7CCA38F804C
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 10:48:18 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GAShSi0GK5BrCcel for
-	<xfs@oss.sgi.com>; Fri, 07 Mar 2014 10:48:17 -0800 (PST)
-Date: Fri, 7 Mar 2014 13:48:12 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfsdump: Fix memory and fd leak in invutil/stobj.c
-Message-ID: <20140307184812.GA19284@laptop.bfoster>
-References: <1394203962-17080-1-git-send-email-ranto.boris@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 75A8D7F54
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 16:19:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 694728F8037
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 14:19:41 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id PAaX8wCfYwrAu82q
+	for <xfs@oss.sgi.com>; Fri, 07 Mar 2014 14:19:40 -0800 (PST)
+Message-ID: <531A4600.7050906@hardwarefreak.com>
+Date: Fri, 07 Mar 2014 16:19:44 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1394203962-17080-1-git-send-email-ranto.boris@gmail.com>
+Subject: Re: Hello, I have a question about XFS File System
+References: <195DE8C60CE24A62A71911FDE0B0DC97@gmail.com>
+	<5318DB01.2040102@hardwarefreak.com>
+	<279D0A265E5D4AF5B099BFAD4E8B1700@gmail.com>
+In-Reply-To: <279D0A265E5D4AF5B099BFAD4E8B1700@gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,78 +26,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boris Ranto <ranto.boris@gmail.com>
-Cc: branto@redhat.com, xfs@oss.sgi.com
+To: Yongmin <dev.yongmin@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Mar 07, 2014 at 03:52:42PM +0100, Boris Ranto wrote:
-> The function open_stobj duplicates its argument, upon successful
-> duplication, the fstat is called. If the fstat command fails then
-> the memory for the duplicated string is leaked. Fix this by moving
-> the string duplication after the fstat call. This is ok because
-> the fstat call does not use the duplicated string.
-> 
-> Brian Foster noticed that the function also leaks a file descriptor
-> in case the file cannot be fstated. Fixing that, too.
-> 
-> Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
-> ---
->  invutil/stobj.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/invutil/stobj.c b/invutil/stobj.c
-> index 428b419..a74ba0f 100644
-> --- a/invutil/stobj.c
-> +++ b/invutil/stobj.c
-> @@ -578,23 +578,24 @@ open_stobj(char *StObjFileName)
->  	return fd;
->      }
->  
-> -    name = strdup(StObjFileName);
-> -    if(name == NULL) {
-> -	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-> -	exit(1);
-> -    }
-> -
->      read_n_bytes(fd, &cnt, sizeof(invt_sescounter_t), StObjFileName);
->      lseek( fd, 0, SEEK_SET );
->      errno = 0;
->      if (fstat(fd, &sb) < 0) {
->  	fprintf(stderr, "Could not get stat info on %s\n", StObjFileName);
->  	perror("fstat");
-> +	close(fd);
->  	return -1;
->      }
->      size = sb.st_size;
->      mapaddr = mmap_n_bytes(fd, size, BOOL_FALSE, StObjFileName);
->  
-> +    name = strdup(StObjFileName);
-> +    if(name == NULL) {
-> +	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
-> +	exit(1);
-> +    }
-> +
->      return add_stobj(name, fd, size, mapaddr, (invt_sescounter_t *)mapaddr);
->  }
->  
-
-The remaining failure cases all appear to exit(), including those in
-add_stobj(). Looks good to me, thanks for making that fix...
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> -- 
-> 1.9.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+UGxlYXNlIHJlcGx5IHRvIHRoZSBtYWlsaW5nIGxpc3QgYXMgd2VsbCBhcyB0aGUgaW5kaXZpZHVh
+bC4KCk5vdGUgdGhhdCB5b3Ugc3RhdGVkOgoKJy4uLnRoZSBjb25jZW50cmF0ZWQgcGFydCBvZiBt
+aW5lIGlzICJEZWxldGVkIEZpbGUgUmVjb3ZlcnkiJwoKT24gMy82LzIwMTQgMTA6MDIgUE0sIFlv
+bmdtaW4gd3JvdGU6Cj4gCj4gWWVzISB0aGVyZSBhcmUgbm8gYWN0dWFsIGZpbGUgZGF0YSBpbiBq
+b3VybmFsaW5nIHBhcnQuCj4gCj4gQlVULCBieSBhbmFseXppbmcgam91cm5hbGluZyBwYXJ0LCB3
+ZSBjYW4gZ2V0IGEgSW5vZGUgQ29yZSBJbmZvcm1hdGlvbiB3aGljaCB3YXMgZGVsZXRlZC4KPiBJ
+biBJbm9kZSBDb3JlLCB0aGVyZSBhcmUgbWFueSBpbmZvcm1hdGlvbiBhYm91dCB0aGUgYWN0dWFs
+IGRhdGEsIGkuZS4gc3RhcnQgYWRkcmVzcywgZmlsZSBsZW5ndGggZXRjLgoKQW5hbHl6aW5nIHRo
+ZSBqb3VybmFsIGNvZGUgbWF5IGluZm9ybSB5b3UgYWJvdXQgc3RydWN0dXJlcywgYnV0IGl0IHdv
+bid0CmluZm9ybSB5b3UgYWJvdXQgb24gZGlzayBsb2NhdGlvbnMgb2YgdGhlIHN0cnVjdHVyZXMg
+YW5kIGhvdyB0byBmaW5kCnRoZW0uICBJZiBhIGZpbGUgaGFzIGJlZW4gZGVsZXRlZCwgbm8gaW5m
+b3JtYXRpb24gYWJvdXQgdGhhdCBpcyBnb2luZyB0bwpleGlzdCBpbiB0aGUgam91cm5hbCBmb3Ig
+bW9yZSB0aGFuIGEgZmV3IHNlY29uZHMgYmVmb3JlIHRoZSB0cmFuc2FjdGlvbgppcyBjb21taXR0
+ZWQgYW5kIHRoZSBlbnRyeSByZW1vdmVkIGZyb20gdGhlIGpvdXJuYWwuCgo+IEJ5IHVzaW5nIHRo
+b3NlIGluZm9ybWF0aW9uLCBSZWNvdmVyaW5nIGRlbGV0ZSBmaWxlIGNhbiBiZSBkb25lLgo+IAo+
+IFNvIHRoZSBhbmFseXNpcyBvZiBKb3VybmFsaW5nIHBhcnQgaXMgYWJzb2x1dGVseSBuZWVkZWQu
+ICAKCkkgZGlzYWdyZWUuICBBZ2FpbiwgdGhlIGpvdXJuYWwgbG9nIGlzIHVucmVsYXRlZCB0byAi
+ZGVsZXRlZCBmaWxlCnJlY292ZXJ5IiBpbiBhIGZvcmVuc2ljcyBzY2VuYXJpby4KCkkgdGhpbmsg
+RGF2ZSBhbmQgSmVmZiBib3RoIG1pc3NlZCB0aGUgZmFjdCB0aGF0IHlvdSdyZSBpbnRlcmVzdGVk
+IG9ubHkKaW4gZGVsZXRlZCBmaWxlIHJlY292ZXJ5LCBub3QgaW4gbGVhcm5pbmcgaG93IHRoZSBq
+b3VybmFsIHdvcmtzIGZvciB0aGUKc2FrZSBvZiBsZWFybmluZyBob3cgdGhlIGpvdXJuYWwgd29y
+a3MuCgoKPiA9PT09PT09PT09PT09PT09PT09PT09PQo+ICAgICAgICAgZnJvbSBZb25nbWluIFBh
+cmsgIAo+ID09PT09PT09PT09PT09PT09PT09PT09Cj4gCj4gCj4gT24gMjAxNOuFhCAz7JuUIDfs
+nbwgRnJpZGF5IGF0IOyYpOyghCA1OjMwLCBTdGFuIEhvZXBwbmVyIHdyb3RlOgo+IAo+PiBPbiAz
+LzYvMjAxNCAzOjE1IEFNLCBZb25nbWluIHdyb3RlOgo+Pj4gIAo+Pj4gSGVsbG8uCj4+PiAgCj4+
+PiBNeSBuYW1lIGlzIFlvbmdtaW4gUGFyayBhbmQgSSBhbSBhIGdyYWR1YXRlZCBzdHVkZW50IGlu
+IEFqb3UKPj4+IFVuaXZlcnNpdHkgKEtvcmVhKS4gTXkgcmVzZWFyY2ggYXJlYSBpcyBEaWdpdGFs
+IEZvcmVuc2ljcy4gQW5kIHRoaXMKPj4+IHRpbWUgaSB0cmllZCB0byB1bmRlcnN0YW5kIHRoZSBz
+dHJ1Y3R1cmUgb2YgWEZTIGZpbGUgc3lzdGVtLCBiZWNhdXNlCj4+PiBYRlMgaXMgb25lIG9mIHRo
+ZSBmYW1vdXMgaHVnZSBmaWxlIHN5c3RlbSBpbiB0aGVzZSBkYXlzLgo+Pj4gIAo+Pj4gSSBhbHJl
+YWR5IGZvdW5kZWQgYW5kIHJlYWQgJ1hGUyBGaWxlc3lzdGVtIFN0cnVjdHVyZSAybmQgRWRpdGlv
+bgo+Pj4gUmV2aXNpb24gMScgb24gdGhlIEludGVybmV0LCB3aGljaCB3YXMgd3JpdHRlbiBieSBT
+aWxpY29uIEdyYXBoaWNzCj4+PiBJbmMgaW4gMjAwNiBhbmQgaXQgaXMgcmVhbGx5IHdlbGwgd3Jp
+dHRlbiB0byB1bmRlcnN0YW5kLgo+Pj4gIAo+Pj4gQnV0IHRoZSBjb25jZW50cmF0ZWQgcGFydCBv
+ZiBtaW5lIGlzICJEZWxldGVkIEZpbGUgUmVjb3ZlcnkiLCBzbyB0aGUKPj4+IEpvdXJuYWxpbmcg
+cGFydCBpcyByZWFsbHkgaW1wb3J0YW50IGZvciBtZSwsIGJ1dCByZWdyZXRmdWxseSB0aGVyZQo+
+Pj4gYXJlIG5vIHNwZWNpZmljIGd1aWRlIGxpbmUgYWJvdXQgSm91cm5hbGluZyBwYXJ0Li4uIEFs
+c28gbmV4dAo+Pj4gdmVyc2lvbihtYXliZSB0aGUgM3JlIEVkaXRpb24pIGlzIG5vdCBleHNpc3Qg
+Zm9yIG1vcmUgdGhhbiBhIDUKPj4+IHllYXJzLgo+Pj4gIAo+Pj4gU28gaXMgdGhlcmUgbm8gZ3Vp
+ZGUgbGluZSBmb3Igam91cm5hbGluZyBwYXJ0IGluIFhGUz8gSG93IGNhbiBpIGdldAo+Pj4gdGhl
+bSwsIGhhdmUgSSB0byBidXkgdGhlbT8gb3IgSXMgQW5hbHlzaW5nIFNvdXJjZSBDb3JkIG9ubHkg
+d2F5IHRvCj4+PiBzdHVkeT8KPj4+ICAKPj4gIAo+PiAgCj4+IFRoZSBqb3VybmFsIG9ubHkgY29u
+dGFpbnMgaW4gZmxpZ2h0IHRyYW5zYWN0aW9uYWwgbWV0YWRhdGEgZm9yIHJlY292ZXJ5Cj4+IHB1
+cnBvc2VzIGFmdGVyIGEgc3lzdGVtIGNyYXNoIG9yIHBvd2VyIGxvc3MsIHRvIHByZXZlbnQgZmls
+ZXN5c3RlbSwgaS5lLgo+PiBtZXRhZGF0YSwgY29ycnVwdGlvbi4gVGhlIGpvdXJuYWwgZG9lcyBu
+b3QgY29udGFpbiBmaWxlIGRhdGEuIER1cmluZwo+PiBub3JtYWwgb3BlcmF0aW9uLCBvbmNlIHRo
+ZSBtZXRhZGF0YSBoYXMgYmVlbiB3cml0dGVuIGludG8gYW4gYWxsb2NhdGlvbgo+PiBncm91cCB0
+aGUgdHJhbnNhY3Rpb25hbCBlbnRyeSBpbiB0aGUgam91cm5hbCBpcyByZW1vdmVkLiBUaHVzLAo+
+PiByZWNvdmVyaW5nIGRlbGV0ZWQgZmlsZXMgaGFzIG5vdGhpbmcgdG8gZG8gd2l0aCB0aGUgam91
+cm5hbC4KPj4gIAo+PiBUaGlzIG1heSBiZSBoZWxwZnVsOgo+PiBodHRwOi8veGZzLm9yZy9pbmRl
+eC5waHAvWEZTX0ZBUSNROl9Eb2VzX3RoZV9maWxlc3lzdGVtX2hhdmVfYW5fdW5kZWxldGVfY2Fw
+YWJpbGl0eS4zRgoKCi0tIApTdGFuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
+LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
