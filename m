@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CE5287F56
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 16:50:54 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BF3607F5A
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 17:09:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DB11AC004
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 14:50:51 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ACA37304043
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2014 15:09:20 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ytzdz5zD84L3A9EJ for <xfs@oss.sgi.com>;
-	Fri, 07 Mar 2014 14:50:48 -0800 (PST)
-Date: Sat, 8 Mar 2014 09:50:44 +1100
+	k3W83ELTpX15N3mD for <xfs@oss.sgi.com>;
+	Fri, 07 Mar 2014 15:09:18 -0800 (PST)
+Date: Sat, 8 Mar 2014 10:09:15 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/13] xfsprogs: initial EFSBADCRC support
-Message-ID: <20140307225044.GR6851@dastard>
-References: <1393923117-9559-1-git-send-email-david@fromorbit.com>
-	<20140307104604.GA32753@infradead.org>
+Subject: Re: Hello, I have a question about XFS File System
+Message-ID: <20140307230915.GS6851@dastard>
+References: <195DE8C60CE24A62A71911FDE0B0DC97@gmail.com>
+	<5318DB01.2040102@hardwarefreak.com>
+	<279D0A265E5D4AF5B099BFAD4E8B1700@gmail.com>
+	<531A4600.7050906@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140307104604.GA32753@infradead.org>
+In-Reply-To: <531A4600.7050906@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +32,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Yongmin <dev.yongmin@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Mar 07, 2014 at 02:46:04AM -0800, Christoph Hellwig wrote:
-> Seems like xfstests will need some updates after this series to
-> ignore
+On Fri, Mar 07, 2014 at 04:19:44PM -0600, Stan Hoeppner wrote:
+> Please reply to the mailing list as well as the individual.
 > 
-> Metadata corruption detected at block XXX/XXX
+> Note that you stated:
+> 
+> '...the concentrated part of mine is "Deleted File Recovery"'
+> 
+> On 3/6/2014 10:02 PM, Yongmin wrote:
+> > 
+> > Yes! there are no actual file data in journaling part.
+> > 
+> > BUT, by analyzing journaling part, we can get a Inode Core Information which was deleted.
+> > In Inode Core, there are many information about the actual data, i.e. start address, file length etc.
+> 
+> Analyzing the journal code may inform you about structures, but it won't
+> inform you about on disk locations of the structures and how to find
+> them.  If a file has been deleted, no information about that is going to
+> exist in the journal for more than a few seconds before the transaction
+> is committed and the entry removed from the journal.
 
-Yes, I'm seeing that from 2 tests - xfs/030 and xfs/033. I've got a
-patch in my local xfstests tree that handles this.
+Well, we don't actually "remove" information from the log. We update
+pointers that indicate what the active region is, but we never
+physically "remove" anything from it. IOWs, the information is in
+the journal until it wraps around and is over written by new
+checkpoints....
+
+> > By using those information, Recovering delete file can be done.
+> > 
+> > So the analysis of Journaling part is absolutely needed.  
+> 
+> I disagree.  Again, the journal log is unrelated to "deleted file
+> recovery" in a forensics scenario.
+> 
+> I think Dave and Jeff both missed the fact that you're interested only
+> in deleted file recovery, not in learning how the journal works for the
+> sake of learning how the journal works.
+
+Oh, no, I saw it and didn't think it was worth commenting on. I
+think it's a brain-dead concept trying to do undelete in the
+filesystem. "recoverable delete" was a problem solved 30 years ago -
+it's commonly known as a trash bin and you do it in userspace with a
+wrapper around unlink that calls rename(2) instead. And then "empty
+trashbin" is what does the unlink and permanently deletes the files.
+
+Besides, from a conceptual point of view after-the-fact filesystem
+based undelete is fundamentally flawed. i.e.  the journal is a
+write-ahead logging journal and so can only be used to roll the
+filesystem state forwardi in time. Undelete requires having state
+and data in the journal that allows the filesystem to be rolled
+*backwards in time*. XFS simply does not record such information in
+the log and so parsing the log to "undelete files by transaction
+rollback" just doesn't work.
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
