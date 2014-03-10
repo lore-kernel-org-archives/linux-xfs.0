@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6CB887F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 16:17:02 -0500 (CDT)
-Date: Mon, 10 Mar 2014 16:16:58 -0500
-From: Ben Myers <bpm@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3B9227F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 16:20:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 29FE08F804B
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 14:20:36 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	wM0QtOcWBdVEuE6Q for <xfs@oss.sgi.com>;
+	Mon, 10 Mar 2014 14:20:32 -0700 (PDT)
+Date: Tue, 11 Mar 2014 08:20:27 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Multi-CPU harmless lockdep on x86 while copying data
-Message-ID: <20140310211658.GT1935@sgi.com>
+Message-ID: <20140310212027.GA6851@dastard>
 References: <531BD8B9.1090400@gmail.com> <20140310025523.GV6851@dastard>
-	<20140310103716.GA1431@infradead.org>
-	<20140310204647.GW6851@dastard>
+	<20140310205249.GS1935@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140310204647.GW6851@dastard>
+In-Reply-To: <20140310205249.GS1935@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,98 +30,136 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Michael L. Semon" <mlsemon35@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs-oss <xfs@oss.sgi.com>
 
-Hi,
-
-On Tue, Mar 11, 2014 at 07:46:47AM +1100, Dave Chinner wrote:
-> On Mon, Mar 10, 2014 at 03:37:16AM -0700, Christoph Hellwig wrote:
-> > On Mon, Mar 10, 2014 at 01:55:23PM +1100, Dave Chinner wrote:
-> > > Changing the directory code to handle this sort of locking is going
-> > > to require a bit of surgery. However, I can see advantages to moving
-> > > directory data to the same locking strategy as regular file data -
-> > > locking heirarchies are identical, directory ilock hold times are
-> > > much reduced, we don't get lockdep whining about taking page faults
-> > > with the ilock held, etc.
+On Mon, Mar 10, 2014 at 03:52:49PM -0500, Ben Myers wrote:
+> Hi Dave,
+> 
+> On Mon, Mar 10, 2014 at 01:55:23PM +1100, Dave Chinner wrote:
+> > On Sat, Mar 08, 2014 at 09:58:01PM -0500, Michael L. Semon wrote:
+> > > Hi!  I was playing a shell game with some precious backup data.  It 
+> > > went like this:
 > > > 
-> > > A quick hack at to demonstrate the high level, initial step of using
-> > > the IOLOCK for readdir serialisation. I've done a little smoke
-> > > testing on it, so it won't die immediately. It should get rid of all
-> > > the nasty lockdep issues, but it doesn't start to address the deeper
-> > > restructing that is needed.
+> > > open a 36-GB source partition (DM linear, partitions from 2 drives, 
+> > >    v5-superblock XFS)
+> > > 
+> > > open a 32-GB aes-xts crypt (v4-superblock XFS)
+> > > 
+> > > `cp -av` from holding partition to crypt
+> > > 
+> > > It was during the cp operation that I got this multi-CPU version of 
+> > > the harmless lockdep:
+> > > 
+> > > =========================================================
+> > > [ INFO: possible irq lock inversion dependency detected ]
+> > > 3.14.0-rc5+ #6 Not tainted
+> > > ---------------------------------------------------------
+> > > kswapd0/25 just changed the state of lock:
+> > >  (&xfs_dir_ilock_class){++++-.}, at: [<791c09fa>] xfs_ilock+0xff/0x16c
+> > > but this lock took another, RECLAIM_FS-unsafe lock in the past:
+> > >  (&mm->mmap_sem){++++++}
+> > > 
+> > > and interrupts could create inverse lock ordering between them.
+> > > 
+> > > 
+> > > other info that might help us debug this:
+> > >  Possible interrupt unsafe locking scenario:
+> > > 
+> > >        CPU0                    CPU1
+> > >        ----                    ----
+> > >   lock(&mm->mmap_sem);
+> > >                                local_irq_disable();
+> > >                                lock(&xfs_dir_ilock_class);
+> > >                                lock(&mm->mmap_sem);
+> > >   <Interrupt>
+> > >     lock(&xfs_dir_ilock_class);
 > > 
-> > What synchronization do we actually need from the iolock?  Pushing the
-> > ilock down to where it's actually needed is a good idea either way,
-> > though.
-> 
-> The issue is that if we push the ilock down to the just the block
-> mapping routines, the directory can be modified while the readdir is
-> in progress. That's the root problem that adding the ilock solved.
-> Now, just pushing the ilock down to protect the bmbt lookups might
-> result in a consistent lookup, but it won't serialise sanely against
-> modifications.
-> 
-> i.e. readdir only walks one dir block at a time but
-> it maps multiple blocks for readahead and keeps them in a local
-> array and doesn't validate them again before issuing read o nthose
-> buffers. Hence at a high level we currently have to serialise
-> readdir against all directory modifications.
-> 
-> The only other option we might have is to completely rewrite the
-> directory readahead code not to cache mappings. If we use the ilock
-> purely for bmbt lookup and buffer read, then the ilock will
-> serialise against modification, and the buffer lock will stabilise
-> the buffer until the readdir moves to the next buffer and picks the
-> ilock up again to read it.
-> 
-> That would avoid the need for high level serialisation, but it's a
-> lot more work than using the iolock to provide the high level
-> serialisation and i'm still not sure it's 100% safe. And I've got no
-> idea if it would work for CXFS. Hopefully someone from SGI will
-> chime in here....
-
-Also in leaf and node formats a single modification can change multiple
-buffers, so I suspect the buffer lock isn't enough serialization to maintain a
-consistent directory in the face of multiple readers and writers.  The iolock
-does resolve that issue.
-
-> > > This would be a straight forward change, except for two things:
-> > > filestreams and lockdep. The filestream allocator takes the
-> > > directory iolock and makes assumptions about parent->child locking
-> > > order of the iolock which will now be invalidated. Hence some
-> > > changes to the filestreams code is needed to ensure that it never
-> > > blocks on directory iolocks and deadlocks. instead it needs to fail
-> > > stream associations when such problems occur.
+> > Well, that's rather interesting. I'd love to know where we take the
+> > directory ilock with interupts disabled - and then take a page
+> > fault...  :/
+.....
+> > Realistically, I think that the readdir locking change was
+> > fundamentally broken. Why? Because taking page faults while holding
+> > the ilock violates the lock order we have for inodes.  For regular
+> > files, the lock heirarchy is iolock -> page fault -> ilock, and we
+> > got rid of the need for the iolock in the inode reclaim path because
+> > of all the problems it caused lockdep. Now we've gone and
+> > reintroduced that same set of problems - only worse - by allowing
+> > the readdir code to take page faults while holding the ilock....
 > > 
-> > I think the right fix is to stop abusing the iolock in filestreams.
-> > To me it seems like a look inside fstrm_item_t should be fine
-> > for what the filestreams code wants if I understand it correctly.
+> > I'd like to revert the change that introduced the ilock into the
+> > readdir path, but I suspect that woul dbe an unpopular direction to
+> > take. However, we need a solution that doesn't drive us insane with
+> > lockdep false positives.
 > > 
-> > From looking over some of the filestreams code just for a few minutes
-> > I get an urge to redo lots of it right now..
-> 
-> I get that urge from time to time, too. So far I've managed to avoid
-> it.
-> 
-> > > @@ -1228,7 +1244,7 @@ xfs_create(
-> > >  	 * the transaction cancel unlocking dp so don't do it explicitly in the
-> > >  	 * error path.
-> > >  	 */
-> > > -	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-> > > +	xfs_trans_ijoin(tp, dp, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
+> > IOWs, we need to do this differently - readdir needs to be protected
+> > by the iolock, not the ilock, and only the block mapping routines in
+> > the readdir code should be protected by the ilock. i.e.  the same
+> > locking strategy that is used for regular files: iolock protects the
+> > contents of the file, the ilock protects the inode metadata.
 > > 
-> > What do we need the iolock on these operations for?
+> > What I think we really need to do is drive the ilock all the way
+> > into the block mapping functions of the directory code and to the
+> > places where the inode metadata is actually going to be modified.
+> > The iolock protects access to the directory data, and logging of
+> > changes to those blocks is serialised by the buffer locks, so we
+> > don't actually need the inode ilock to serialise access to the
+> > directory data - we only need the ilock for modifications to the
+> > inode and it's blockmaps itself, same as for regular files.
+> > 
+> > Changing the directory code to handle this sort of locking is going
+> > to require a bit of surgery. However, I can see advantages to moving
+> > directory data to the same locking strategy as regular file data -
+> > locking heirarchies are identical, directory ilock hold times are
+> > much reduced, we don't get lockdep whining about taking page faults
+> > with the ilock held, etc.
+> > 
+> > A quick hack at to demonstrate the high level, initial step of using
+> > the IOLOCK for readdir serialisation. I've done a little smoke
+> > testing on it, so it won't die immediately. It should get rid of all
+> > the nasty lockdep issues, but it doesn't start to address the deeper
+> > restructing that is needed.
+> > 
+> > Thoughts, comments? I'm especially interested in what SGI people
+> > have to say here because this locking change was needed for CXFS,
+> > and changing the directory locking iheirarchy is probably going to
+> > upset CXFS a lot...
 > 
-> These are providing the high level readdir vs modification
-> serialisation protection. And we have to unlock it on transaction
-> commit, which is why it needs to be added to the xfs_trans_ijoin()
-> calls...
+> Protecting directory contents with the iolock and pushing the ilock down
+> to protect the directory block mapping functions seems like a good
+> strategy to me. 
 
-Makes sense, I think.  I'm not sure what the changes to the directory code
-would look like.
+Ok, it seems like a good strategy, but does it work for CXFS? What
+about the other option of a combination of ilock for mapping and
+read, and buffer locks for stabilisation?
 
--Ben
+> In this area I think it's good to treat directories the
+> same as regular files.  I have not had a very close look yet... and
+> couldn't find where we take a fault with irqs disabled.  Maybe something
+> out of a workqueue?
+
+Workqueues don't run with interrupts disabled. Yes, we take inode
+locks in workqueue context (e.g. AIL tail pushing), but that's not
+what is being warned about here. And the page fault only comes from
+the filldir callback which runs copy_to_user(), and that most
+definitely does not occur in interrupt context.
+
+FWIW, it's invalid to take the ilock in interrupt context because
+it's a sleeping lock without using trylock semantics. If you use
+"trylock" semantics, then lockdep doesn't complain about that
+because it can't deadlock. I *think* that lockdep is complaining
+about reclaim contexts, not interrupts, and it's issuing this
+"interrupts disabled" deadlocks because the memory reclaim state
+code is piggy-backed on the interrupt state tracking within lockdep.
+Either way, though, lockdep is wrong.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
