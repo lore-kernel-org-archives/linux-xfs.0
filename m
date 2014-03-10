@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 22E587F52
-	for <xfs@oss.sgi.com>; Sun,  9 Mar 2014 22:46:42 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CDDF67F56
+	for <xfs@oss.sgi.com>; Sun,  9 Mar 2014 22:46:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 06F45304051
-	for <xfs@oss.sgi.com>; Sun,  9 Mar 2014 20:46:42 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4ADA4AC004
+	for <xfs@oss.sgi.com>; Sun,  9 Mar 2014 20:46:43 -0700 (PDT)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id Kgva8iOnGFlSbaKl for
-	<xfs@oss.sgi.com>; Sun, 09 Mar 2014 20:46:39 -0700 (PDT)
+	cuda.sgi.com with ESMTP id gGAZXHo8GEf9S8wh for
+	<xfs@oss.sgi.com>; Sun, 09 Mar 2014 20:46:40 -0700 (PDT)
 From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
-Subject: [PATCH v2 2/3] xfstests/btrfs: add basic functional test for btrfs
-	quota groups
-Date: Mon, 10 Mar 2014 11:44:10 +0800
-Message-Id: <1394423051-17356-2-git-send-email-wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH v2 3/3] xfstests/btrfs: add stress test for btrfs quota
+	operations
+Date: Mon, 10 Mar 2014 11:44:11 +0800
+Message-Id: <1394423051-17356-3-git-send-email-wangsl.fnst@cn.fujitsu.com>
 In-Reply-To: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 References: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,34 +31,34 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-btrfs@vger.kernel.org
 
-Add missing test for btrfs quota groups feature,test idea is to create
-a parent qgroup that groups some subvolume groups, we try to write
-some data into every subvolume and then check if we exceed parent
-qgroup's limit size.
+So this is a stress test for btrfs quota operations. it can also
+detect the following commit fixed problem:
+
+4082bd3d73(Btrfs: fix oops when writting dirty qgroups to disk)
 
 Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 ---
 v1->v2:
 	switch into new helper _run_btrfs_util_prog()
-	use 'XFS_IO_PROG' instead of 'dd'
 ---
- tests/btrfs/042     | 95 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/042.out |  2 ++
+ tests/btrfs/043     | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/043.out |  2 ++
  tests/btrfs/group   |  1 +
- 3 files changed, 98 insertions(+)
- create mode 100755 tests/btrfs/042
- create mode 100644 tests/btrfs/042.out
+ 3 files changed, 79 insertions(+)
+ create mode 100755 tests/btrfs/043
+ create mode 100644 tests/btrfs/043.out
 
-diff --git a/tests/btrfs/042 b/tests/btrfs/042
+diff --git a/tests/btrfs/043 b/tests/btrfs/043
 new file mode 100755
-index 0000000..498ccc9
+index 0000000..d6c4bf3
 --- /dev/null
-+++ b/tests/btrfs/042
-@@ -0,0 +1,95 @@
++++ b/tests/btrfs/043
+@@ -0,0 +1,76 @@
 +#! /bin/bash
-+# FS QA Test No. 042
++# FS QA Test No. 043
 +#
-+# Test the basic functionality of Quota groups
++# stresstest for btrfs quota operations. we run fsstress and quota
++# operations concurrently.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
@@ -103,70 +103,50 @@ index 0000000..498ccc9
 +
 +rm -f $seqres.full
 +
-+run_check _scratch_mkfs
++_quota_enabled_background()
++{
++	i=1
++	while [ $i -le 5 ]
++	do
++		_run_btrfs_util_prog quota enable $SCRATCH_MNT
++		_run_btrfs_util_prog quota disable $SCRATCH_MNT
++		i=$(($i+1))
++		sleep 1
++	done
++}
++
++MKFS_SIZE=$((1024 * 1024 * 1024))
++run_check _scratch_mkfs_sized $MKFS_SIZE
 +run_check _scratch_mount
 +
-+LIMIT_SIZE=$((10 * 1024 * 1024))
++_quota_enabled_background &
++run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p 5 -n 1000 \
++	$FSSTRESS_AVOID
 +
-+_run_btrfs_util_prog quota enable $SCRATCH_MNT
-+_run_btrfs_util_prog qgroup create 1/1 $SCRATCH_MNT
-+_run_btrfs_util_prog qgroup limit $LIMIT_SIZE 1/1 $SCRATCH_MNT
-+
-+for i in `seq 10 -1 1`; do
-+	#add newly created subvolume qgroup to it's parent qgroup
-+	_run_btrfs_util_prog subvolume create -i 1/1 \
-+		$SCRATCH_MNT/subv_$i
-+done
-+
-+#try to write data into every subvolume
-+for i in `seq 10 -1 1`; do
-+	$XFS_IO_PROG -f -d -c 'pwrite -b 4k 0 10m' $SCRATCH_MNT/subv_$i/data \
-+		>> /dev/null 2>&1 &
-+done
-+
-+wait
-+_run_btrfs_util_prog filesystem sync $SCRATCH_MNT \
-+	>>$seqres.full 2>&1
-+
-+total_written=0
-+#calculate every subvolume's data.
-+for i in `seq 10 -1 1`; do
-+	#we may fail to create the file, skip this subvolume
-+	test -f $SCRATCH_MNT/subv_$i || continue
-+
-+	filesize=`du -b $SCRATCH_MNT/subv_$i/data | $AWK_PROG '{print $1}'`
-+	if [ $filesize -gt $LIMIT_SIZE ];then
-+		_fail "subv_$i/data size should be less than $LIMIT_SIZE"
-+	fi
-+	total_written=$(($total_written+$filesize))
-+done
-+
-+#check if total written exceeds limit
-+if [ $total_written -gt $LIMIT_SIZE ];then
-+	_fail "total written should be less than $LIMIT_SIZE"
-+fi
++run_check _scratch_unmount
++_check_scratch_fs
 +
 +# success, all done
 +echo "Silence is golden"
 +status=0
 +exit
-diff --git a/tests/btrfs/042.out b/tests/btrfs/042.out
+diff --git a/tests/btrfs/043.out b/tests/btrfs/043.out
 new file mode 100644
-index 0000000..85eac7a
+index 0000000..f90f0a5
 --- /dev/null
-+++ b/tests/btrfs/042.out
++++ b/tests/btrfs/043.out
 @@ -0,0 +1,2 @@
-+QA output created by 042
++QA output created by 043
 +Silence is golden
 diff --git a/tests/btrfs/group b/tests/btrfs/group
-index fd0193c..1037761 100644
+index 1037761..fabe3b5 100644
 --- a/tests/btrfs/group
 +++ b/tests/btrfs/group
-@@ -44,3 +44,4 @@
- 039 auto quick
+@@ -45,3 +45,4 @@
  040 auto quick
  041 auto quick
-+042 auto quick
+ 042 auto quick
++043 auto quick
 -- 
 1.9.0
 
