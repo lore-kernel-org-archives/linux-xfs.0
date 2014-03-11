@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 74B4E7F3F
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 17:10:06 -0500 (CDT)
-Date: Mon, 10 Mar 2014 17:10:02 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Multi-CPU harmless lockdep on x86 while copying data
-Message-ID: <20140310221002.GE26064@sgi.com>
-References: <531BD8B9.1090400@gmail.com> <20140310025523.GV6851@dastard>
-	<20140310103716.GA1431@infradead.org>
-	<20140310204647.GW6851@dastard> <20140310211658.GT1935@sgi.com>
-	<20140310212430.GB6851@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 3059A7F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 20:21:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C1A8FAC004
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 18:21:54 -0700 (PDT)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id khWj2x4NHYn9sDdh for
+	<xfs@oss.sgi.com>; Mon, 10 Mar 2014 18:21:52 -0700 (PDT)
+Message-ID: <531E64AB.60204@cn.fujitsu.com>
+Date: Tue, 11 Mar 2014 09:19:39 +0800
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140310212430.GB6851@dastard>
+Subject: Re: [PATCH v2 1/3] xfstests/btrfs: add qgroup rescan stress test
+References: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+	<531E15EA.9020903@fb.com>
+In-Reply-To: <531E15EA.9020903@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,81 +24,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Michael L. Semon" <mlsemon35@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: Josef Bacik <jbacik@fb.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Mar 11, 2014 at 08:24:30AM +1100, Dave Chinner wrote:
-> On Mon, Mar 10, 2014 at 04:16:58PM -0500, Ben Myers wrote:
-> > Hi,
-> > 
-> > On Tue, Mar 11, 2014 at 07:46:47AM +1100, Dave Chinner wrote:
-> > > On Mon, Mar 10, 2014 at 03:37:16AM -0700, Christoph Hellwig wrote:
-> > > > On Mon, Mar 10, 2014 at 01:55:23PM +1100, Dave Chinner wrote:
-> > > > > Changing the directory code to handle this sort of locking is going
-> > > > > to require a bit of surgery. However, I can see advantages to moving
-> > > > > directory data to the same locking strategy as regular file data -
-> > > > > locking heirarchies are identical, directory ilock hold times are
-> > > > > much reduced, we don't get lockdep whining about taking page faults
-> > > > > with the ilock held, etc.
-> > > > > 
-> > > > > A quick hack at to demonstrate the high level, initial step of using
-> > > > > the IOLOCK for readdir serialisation. I've done a little smoke
-> > > > > testing on it, so it won't die immediately. It should get rid of all
-> > > > > the nasty lockdep issues, but it doesn't start to address the deeper
-> > > > > restructing that is needed.
-> > > > 
-> > > > What synchronization do we actually need from the iolock?  Pushing the
-> > > > ilock down to where it's actually needed is a good idea either way,
-> > > > though.
-> > > 
-> > > The issue is that if we push the ilock down to the just the block
-> > > mapping routines, the directory can be modified while the readdir is
-> > > in progress. That's the root problem that adding the ilock solved.
-> > > Now, just pushing the ilock down to protect the bmbt lookups might
-> > > result in a consistent lookup, but it won't serialise sanely against
-> > > modifications.
-> > > 
-> > > i.e. readdir only walks one dir block at a time but
-> > > it maps multiple blocks for readahead and keeps them in a local
-> > > array and doesn't validate them again before issuing read o nthose
-> > > buffers. Hence at a high level we currently have to serialise
-> > > readdir against all directory modifications.
-> > > 
-> > > The only other option we might have is to completely rewrite the
-> > > directory readahead code not to cache mappings. If we use the ilock
-> > > purely for bmbt lookup and buffer read, then the ilock will
-> > > serialise against modification, and the buffer lock will stabilise
-> > > the buffer until the readdir moves to the next buffer and picks the
-> > > ilock up again to read it.
-> > > 
-> > > That would avoid the need for high level serialisation, but it's a
-> > > lot more work than using the iolock to provide the high level
-> > > serialisation and i'm still not sure it's 100% safe. And I've got no
-> > > idea if it would work for CXFS. Hopefully someone from SGI will
-> > > chime in here....
-> > 
-> > Also in leaf and node formats a single modification can change multiple
-> > buffers, so I suspect the buffer lock isn't enough serialization to maintain a
-> > consistent directory in the face of multiple readers and writers.  The iolock
-> > does resolve that issue.
-> 
-> Right, but we don't care about anything other than the leaf block
-> that we are currently reading is consistent when the read starts and
-> is consistent across the entire processing. i.e. if the leaf is locked by
-> readdir, then the modification is completely stalled until the
-> readdir lets it go. And readdir then can't get the next buffer until
-> the modification is complete because it blocks on the ilock to get
-> the next mapping and buffer....
+On 03/11/2014 03:43 AM, Josef Bacik wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 03/09/2014 11:44 PM, Wang Shilong wrote:
+>> Test flow is to run fsstress after triggering quota rescan. the
+>> ruler is simple, we just remove all files and directories, sync
+>> filesystem and see if qgroup's ref and excl are nodesize.
+>>
+>> Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com> ---
+>> v1->v2: switch into new helper _run_btrfs_util_prog() ---
+>> tests/btrfs/041     | 76
+>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>> tests/btrfs/041.out |  3 +++ tests/btrfs/group   |  1 + 3 files
+>> changed, 80 insertions(+) create mode 100644 tests/btrfs/041 create
+>> mode 100644 tests/btrfs/041.out
+>>
+> So this doesn't pass for me but it's not because we're broken, it's
+> because the test is broken.  What you should do is run sync after you
+> do the rm, and then capture the output of btrfs qgroup show, and then
+> do the rescan and redo qgroup show and make sure the numbers match.  I
+> did this in my qgroup test, you can look there as an example.  Thanks,
+Let's take a look at my test flows:
 
-As long as [you pointed out above] the readahead buffers aren't cached, and all
-of the callers who do require that data/freeindex/node/leaf blocks be
-consistent continue to take the ilock...  Yeah, I think that might work.
+step1: write some random data to fs tree and then create a snapshot of 
+fs tree.
 
--Ben
+step2: also try to write some random data to newly created snapshot.
+
+step3: enable quota and wait quota rescan finished.(btrfs quota rescan -w)
+
+step4: remove all files and sync btrfs filesystem.
+
+So i did a simple test that if we don't create snapshot here, i get 
+qgroup accounting
+right here, so i think it is realted to qgroup accounting that differs 
+'refer' and 'excl'.
+
+Thanks,
+Wang
+>
+> Josef
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1
+> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+>
+> iQIcBAEBAgAGBQJTHhXkAAoJEANb+wAKly3BQI8QAIEFXMPrFEJxj9uKuwnBZSSC
+> r4g7pHyac82EJA3T/jx+KIzH3aeUz0r1mEg8sYXXACAW5BZguyhe1LR0rU2ZBDaP
+> 9ilgWwCVm3d3EhiDmZJDCZueB7IXqE4/GX6D1zyF9OxVNk3Ng9gOY0/3G7Rb52FI
+> UTT/UhA8f3mFHQq4DbOebfacu8wbMH9rjHucxgin63UQLx9J9k+3lv5Y7AHihSrX
+> 3ly+B9+wqu9zl8gQGhxyvdayWeka6Hr43lkniaOehuW118WjjwIivE/CbTkla/3f
+> P3hoJSbUiqlCPONKkfGExYsIny0y9I3igMnLqs58RLeyd4+iSF1O4wFyFGn6hnDy
+> sazS8mz4V3PqnfHAj0D3scSYVyYvcrHcUU5WGs+0JiyExfQPFSrbybfwncIgbBg6
+> +63iqd7qHwwjClSVNckFurU4B+lj1aVyyk/S1/Z2jN/9s3nrM3/WAR3cqJGIuNyT
+> RPT9mzmkc1OICO0+dvwHMol894CCVh9b0iQ6e2NBWYmEfv3BIj9tZNjUZ/ySJdQC
+> h2f00uLovRPazI/X/gKVraHj13Go3giL5LCIbnUso/B18iA2V3qyyXGPMBTB1Rws
+> wzaxlXsC8cZsMUgFkg7z6Q1Kc9hyUj4AF3Vg/qZze4F216LLAOa9Bni5CxKOVytk
+> MPlXItpXYAEX8orapQdO
+> =/ZGH
+> -----END PGP SIGNATURE-----
+>
 
 _______________________________________________
 xfs mailing list
