@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 31EB07F3F
-	for <xfs@oss.sgi.com>; Tue, 11 Mar 2014 11:04:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CE1BFAC001
-	for <xfs@oss.sgi.com>; Tue, 11 Mar 2014 09:04:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 7FhIwAzAFT7intLV for <xfs@oss.sgi.com>;
-	Tue, 11 Mar 2014 09:04:08 -0700 (PDT)
-Received: from Liberator-2.local (nat-pool-rdu-u.redhat.com [66.187.233.203])
-	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 19E1B60F22FE
-	for <xfs@oss.sgi.com>; Tue, 11 Mar 2014 11:04:06 -0500 (CDT)
-Message-ID: <531F33F4.40707@sandeen.net>
-Date: Tue, 11 Mar 2014 11:04:04 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 616EB7F3F
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2014 11:48:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 56DE88F807A
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2014 09:48:22 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id WyL0D1yb6wrx3YwT (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Mar 2014 09:48:20 -0700 (PDT)
+Date: Tue, 11 Mar 2014 09:48:16 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Multi-CPU harmless lockdep on x86 while copying data
+Message-ID: <20140311164816.GA15676@infradead.org>
+References: <531BD8B9.1090400@gmail.com> <20140310025523.GV6851@dastard>
+	<20140310103716.GA1431@infradead.org>
+	<20140310111253.GA4801@infradead.org>
+	<20140310205118.GX6851@dastard>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_db: hide debug bbmap output
+Content-Disposition: inline
+In-Reply-To: <20140310205118.GX6851@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +32,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs-oss <xfs@oss.sgi.com>
 
-Most of xfsprogs building with DEBUG enables extra
-checks, asserts, etc, but this bunch of printfs was
-extra output that's not generally helpful for most
-people's runtime experience - and it breaks xfs/290
-with all the noise.
+On Tue, Mar 11, 2014 at 07:51:18AM +1100, Dave Chinner wrote:
+> Yeah, b) seems like the way to simplify it - the filestreams code
+> really only needs to track the parent/ag relationship rather than
+> the child/parent relationship if there is a reliable way of
+> determining the parent from the child.
+> 
+> What do we do with hardlinked files in this case? I'm happy to say
+> "too bad" for these files mainly because the filestream allocator is
+> aimed at associating multiple file creations together, so hard links
+> really don't matter AFAICT...
 
-I assume it's for actual debugging use, and not
-generally useful, so bury it a bit deeper under
-it's own #ifdef.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/db/io.c b/db/io.c
-index 9a787c8..89e6030 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -500,7 +500,7 @@ set_cur(
- 	push_cur();
- 
- 	if (bbmap) {
--#ifdef DEBUG
-+#ifdef DEBUG_BBMAP
- 		int i;
- 		printf(_("xfs_db got a bbmap for %lld\n"), (long long)d);
- 		printf(_("\tblock map"));
+We could flatly refuse filesystems for files with i_nlink > 1, or just
+grab the first parent we get at.  Refusing seems like the better
+alternative to me.
 
 _______________________________________________
 xfs mailing list
