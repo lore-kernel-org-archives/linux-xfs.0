@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A2FF07F4E
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 20:52:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 71109304043
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 18:52:21 -0700 (PDT)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id ohIjmKdOS1QzuRJL for
-	<xfs@oss.sgi.com>; Mon, 10 Mar 2014 18:52:19 -0700 (PDT)
-From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
-Subject: [PATCH v3 3/3] xfstests/btrfs: add stress test for btrfs quota
-	operations
-Date: Tue, 11 Mar 2014 09:42:35 +0800
-Message-Id: <1394502155-12763-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C9F2E7F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 23:56:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B22468F8037
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 21:56:41 -0700 (PDT)
+Received: from bash.esri.com (Redlands.esri.com [198.102.62.250]) by
+	cuda.sgi.com with ESMTP id G7xIhM5GEKFbjE42 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 10 Mar 2014 21:56:40 -0700 (PDT)
+Received: from bash.esri.com (localhost [127.0.0.1])
+	by bash.esri.com (8.14.4/8.14.4) with ESMTP id s2B4udHC018269
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2014 21:56:39 -0700
+Received: (from ray5147@localhost)
+	by bash.esri.com (8.14.4/8.14.4/Submit) id s2B4udd5018267
+	for xfs@oss.sgi.com; Mon, 10 Mar 2014 21:56:39 -0700
+Date: Mon, 10 Mar 2014 21:56:39 -0700
+From: Ray Van Dolson <rvandolson@esri.com>
+Subject: sw and su for hardware RAID10 (w/ LVM)
+Message-ID: <20140311045639.GA18159@esri.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,135 +29,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
 
-So this is a stress test for btrfs quota operations. it can also
-detect the following commit fixed problem:
+RHEL6.x + XFS that comes w/ Red Hat's scalable file system add on.  We
+have two PowerVault MD3260e's each configured with a 30 disk RAID10 (15
+RAID groups) exposed to our server.  Segment size is 128K (in Dell's
+world I'm not sure if this means my stripe width is 128K*15?)
 
-4082bd3d73(Btrfs: fix oops when writting dirty qgroups to disk)
+Have set up a concatenated LVM volume on top of these two "virtual
+disks" (with lvcreate -i 2).
 
-Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
----
-v2->v3:
-	wait background thread finished before umounting.(Thanks to Josef)
-v1->v2:
-	switch into new helper _run_btrfs_util_prog().(Pointed by Dave Chinner)
----
- tests/btrfs/043     | 77 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/043.out |  2 ++
- tests/btrfs/group   |  1 +
- 3 files changed, 80 insertions(+)
- create mode 100644 tests/btrfs/043
- create mode 100644 tests/btrfs/043.out
+By default LVM says it's used a stripe width of 64K.
 
-diff --git a/tests/btrfs/043 b/tests/btrfs/043
-new file mode 100644
-index 0000000..fe38e3e
---- /dev/null
-+++ b/tests/btrfs/043
-@@ -0,0 +1,77 @@
-+#! /bin/bash
-+# FS QA Test No. 043
-+#
-+# stresstest for btrfs quota operations. we run fsstress and quota
-+# operations concurrently.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+
-+rm -f $seqres.full
-+
-+_quota_enabled_background()
-+{
-+	i=1
-+	while [ $i -le 5 ]
-+	do
-+		_run_btrfs_util_prog quota enable $SCRATCH_MNT
-+		_run_btrfs_util_prog quota disable $SCRATCH_MNT
-+		i=$(($i+1))
-+		sleep 1
-+	done
-+}
-+
-+MKFS_SIZE=$((1024 * 1024 * 1024))
-+run_check _scratch_mkfs_sized $MKFS_SIZE
-+run_check _scratch_mount
-+
-+_quota_enabled_background &
-+run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p 5 -n 1000 \
-+	$FSSTRESS_AVOID
-+
-+wait
-+run_check _scratch_unmount
-+_check_scratch_fs
-+
-+# success, all done
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/btrfs/043.out b/tests/btrfs/043.out
-new file mode 100644
-index 0000000..f90f0a5
---- /dev/null
-+++ b/tests/btrfs/043.out
-@@ -0,0 +1,2 @@
-+QA output created by 043
-+Silence is golden
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 1037761..fabe3b5 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -45,3 +45,4 @@
- 040 auto quick
- 041 auto quick
- 042 auto quick
-+043 auto quick
--- 
-1.9.0
+# lvs -o path,size,stripes,stripe_size
+  Path                           LSize   #Str Stripe
+  /dev/agsfac_vg00/lv00          100.00t    2 64.00k
+
+Unsure if these defaults should be adjusted.
+
+I'm trying to figure out the appropriate sw/su values to use per:
+
+  http://xfs.org/index.php/XFS_FAQ#Q:_How_to_calculate_the_correct_sunit.2Cswidth_values_for_optimal_performance
+
+Am considering either just going with defaults (XFS should pull from
+LVM I think) or doing something like sw=2,su=128K.  However, maybe I
+should be doing sw=2,su=1920K?  And perhaps my LVM stripe width should
+be adjusted?
+
+Thanks,
+Ray
 
 _______________________________________________
 xfs mailing list
