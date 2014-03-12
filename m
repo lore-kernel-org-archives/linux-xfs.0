@@ -1,13 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 148D37F56
-	for <xfs@oss.sgi.com>; Wed, 12 Mar 2014 16:43:31 -0500 (CDT)
-Message-ID: <5320D4FE.3070002@sgi.com>
-Date: Wed, 12 Mar 2014 16:43:26 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 4FE8D7F59
+	for <xfs@oss.sgi.com>; Wed, 12 Mar 2014 18:02:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 504108F8081
+	for <xfs@oss.sgi.com>; Wed, 12 Mar 2014 16:02:52 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	5q94YVdRnadCs1PP for <xfs@oss.sgi.com>;
+	Wed, 12 Mar 2014 16:02:46 -0700 (PDT)
+Date: Thu, 13 Mar 2014 10:02:41 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Possible XFS bug encountered in 3.14.0-rc3+
+Message-ID: <20140312230241.GE6851@dastard>
 References: <33A0129EBFD46748804DE81B354CA1B21C0DC77A@SACEXCMBX06-PRD.hq.netapp.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <33A0129EBFD46748804DE81B354CA1B21C0DC77A@SACEXCMBX06-PRD.hq.netapp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -17,23 +25,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Mears, Morgan" <Morgan.Mears@netapp.com>
-Cc: Jie Liu <jeff.liu@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 03/12/14 15:14, Mears, Morgan wrote:
+On Wed, Mar 12, 2014 at 08:14:32PM +0000, Mears, Morgan wrote:
 > Hi,
->
+> 
 > Please CC me on any responses; I don't subscribe to this list.
->
+> 
 > I ran into a possible XFS bug while doing some Oracle benchmarking.  My test
 > system is running a 3.14.0-rc3+ kernel built from the for-next branch of
 > git://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git
 > on 2014-02-19 (last commit 1342f11e713792e53e4b7aa21167fe9caca81c4a).
->
+> 
 > The XFS instance in question is 200 GB and should have all default
 > parameters (mkfs.xfs /dev/mapper/<my_lun_partition>).  It contains Oracle
 > binaries and trace files.  At the time the issue occurred I had been
@@ -42,131 +50,228 @@ On 03/12/14 15:14, Mears, Morgan wrote:
 > executing rm -f * in the trace file directory, which would reduce the
 > file system occupancy from 100% to 3%.  I had an Oracle load generating
 > tool running, so new log files were being created with some frequency.
->
+> 
 > The issue occurred during one of my rm -f * executions; afterwards the
 > file system would only produce errors.  Here is the traceback:
->
+> 
 > [1552067.297192] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffffa04c4905
-> [1552067.297203] CPU: 13 PID: 699 Comm: rm Not tainted 3.14.0-rc3+ #1
-> [1552067.297206] Hardware name: FUJITSU PRIMERGY RX300 S7/D2939-A1, BIOS V4.6.5.3 R1.19.0 for D2939-A1x 12/06/2012
-> [1552067.297210]  0000000000069ff9 ffff8817740e1b88 ffffffff815f1eb5 0000000000000001
-> [1552067.297222]  ffff8817740e1ba0 ffffffffa04aac7b ffffffffa04c4905 ffff8817740e1c38
-> [1552067.297229]  ffffffffa04c3399 ffff882022dae000 ffff8810247d2d00 ffff8810239c4840
-> [1552067.297236] Call Trace:
-> [1552067.297248]  [<ffffffff815f1eb5>] dump_stack+0x45/0x56
-> [1552067.297311]  [<ffffffffa04aac7b>] xfs_error_report+0x3b/0x40 [xfs]
-> [1552067.297344]  [<ffffffffa04c4905>] ? xfs_free_extent+0xc5/0xf0 [xfs]
-> [1552067.297373]  [<ffffffffa04c3399>] xfs_free_ag_extent+0x1e9/0x710 [xfs]
-> [1552067.297401]  [<ffffffffa04c4905>] xfs_free_extent+0xc5/0xf0 [xfs]
-> [1552067.297425]  [<ffffffffa04a4b0f>] xfs_bmap_finish+0x13f/0x190 [xfs]
-> [1552067.297461]  [<ffffffffa04f281d>] xfs_itruncate_extents+0x16d/0x2a0 [xfs]
-> [1552067.297503]  [<ffffffffa04f29dd>] xfs_inactive_truncate+0x8d/0x120 [xfs]
-> [1552067.297534]  [<ffffffffa04f3188>] xfs_inactive+0x138/0x160 [xfs]
-> [1552067.297562]  [<ffffffffa04bbed0>] xfs_fs_evict_inode+0x80/0xc0 [xfs]
-> [1552067.297570]  [<ffffffff811dc0f3>] evict+0xa3/0x1a0
-> [1552067.297575]  [<ffffffff811dc925>] iput+0xf5/0x180
-> [1552067.297582]  [<ffffffff811cf4fe>] do_unlinkat+0x18e/0x2a0
-> [1552067.297590]  [<ffffffff811c6ba5>] ? SYSC_newfstatat+0x25/0x30
-> [1552067.297596]  [<ffffffff811d28eb>] SyS_unlinkat+0x1b/0x40
-> [1552067.297602]  [<ffffffff816024a9>] system_call_fastpath+0x16/0x1b
-> [1552067.297610] XFS (dm-7): xfs_do_force_shutdown(0x8) called from line 138 of file fs/xfs/xfs_bmap_util.c.  Return address = 0xffffffffa04a4b48
-> [1552067.298378] XFS (dm-7): Corruption of in-memory data detected.  Shutting down filesystem
-> [1552067.298385] XFS (dm-7): Please umount the filesystem and rectify the problem(s)
 
-Partial free extent. Lots of unused sequential blocks listed in 
-sequential inodes. Are you sure there are no errors in the device mapper 
-layer?
+So, freeing a range that is already partially free. The problem
+appears to be in AG 15, according to the repair output.
 
-
-> I was unable to umount, even with -f; failed with EBUSY and couldn't unbusy
-> as the fs was unresponsive (and happens to contain the Oracle management
-> tools necessary to close all open descriptors).  Accordingly I rebooted.
-
-You are the second person in 2-3 weeks to hit this unmount issue.
-Unmatched EFI in the AIL keeps the unmount from completing.
-
-Jeff are you still looking at this?
-
-Here and in xlog_recover_process_efi(), the EFD will never happened 
-because of the xfs_free_extent error. A manual removal of the EFI from 
-the AIL in these cases has to be done. Christoph's proposed EFI/EFD 
-recovery changed will not change the need to remove the EFI from the AIL 
-in recovery because at this point he does put the EFI on the AIL.
-
-Case 2 is a bit trickier. The EFI has a matching EFD. The EFI makes it 
-to AIL but the EFD is on the CIL when there is a forced shutdown. The 
-EFD will not remove the EFI in this case. We cannot check if the EFI on 
-the AIL in the iop_{committed | unlink} for EFI/EFD pairs that on the 
-CIL at forced shutdown because the check would be a use after free on 
-the EFI.
-
-The EFD being aborted on a bad xlog buffer write is another path, but 
-that is pretty much the same as the case #2.
-
-> I captured a post-reboot xfs_metadump before attempting any other operations
-> on the partition.  It is here:
->
 > https://dl.dropboxusercontent.com/u/31522929/xfs-double-free-xfs_metadump-before-repair.gz
->
-> Attempting to mount in order to replay the log resulted in mount hanging,
-> and another traceback, as follows:
->
-> [  921.672867] XFS (dm-9): Mounting Filesystem
-> [  921.707326] XFS (dm-9): Starting recovery (logdev: internal)
-> [  921.721596] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffffa035d905
-> [  921.721607] CPU: 3 PID: 8569 Comm: mount Not tainted 3.14.0-rc3+ #1
-> [  921.721610] Hardware name: FUJITSU PRIMERGY RX300 S7/D2939-A1, BIOS V4.6.5.3 R1.19.0 for D2939-A1x 12/06/2012
-> [  921.721614]  0000000000069ff9 ffff88102698fb30 ffffffff815f1eb5 0000000000000001
-> [  921.721625]  ffff88102698fb48 ffffffffa0343c7b ffffffffa035d905 ffff88102698fbe0
-> [  921.721632]  ffffffffa035c399 ffff881021928800 ffff881017847900 ffff881029304f00
-> [  921.721639] Call Trace:
-> [  921.721650]  [<ffffffff815f1eb5>] dump_stack+0x45/0x56
-> [  921.721713]  [<ffffffffa0343c7b>] xfs_error_report+0x3b/0x40 [xfs]
-> [  921.721746]  [<ffffffffa035d905>] ? xfs_free_extent+0xc5/0xf0 [xfs]
-> [  921.721820]  [<ffffffffa035c399>] xfs_free_ag_extent+0x1e9/0x710 [xfs]
-> [  921.721877]  [<ffffffffa035d905>] xfs_free_extent+0xc5/0xf0 [xfs]
-> [  921.721912]  [<ffffffffa0390f50>] xlog_recover_process_efi+0x170/0x1b0 [xfs]
-> [  921.721948]  [<ffffffffa03a0434>] ? xfs_trans_ail_cursor_init+0x24/0x30 [xfs]
-> [  921.721981]  [<ffffffffa0392e84>] xlog_recover_process_efis.isra.27+0x64/0xb0 [xfs]
-> [  921.722023]  [<ffffffffa0396041>] xlog_recover_finish+0x21/0xb0 [xfs]
-> [  921.722055]  [<ffffffffa039aa34>] xfs_log_mount_finish+0x34/0x50 [xfs]
-> [  921.722082]  [<ffffffffa035327d>] xfs_mountfs+0x47d/0x710 [xfs]
-> [  921.722109]  [<ffffffffa03565c2>] xfs_fs_fill_super+0x2b2/0x330 [xfs]
-> [  921.722121]  [<ffffffff811c4db4>] mount_bdev+0x194/0x1d0
-> [  921.722161]  [<ffffffffa0356310>] ? xfs_parseargs+0xbd0/0xbd0 [xfs]
-> [  921.722190]  [<ffffffffa0354605>] xfs_fs_mount+0x15/0x20 [xfs]
-> [  921.722200]  [<ffffffff811c57d9>] mount_fs+0x39/0x1b0
-> [  921.722208]  [<ffffffff81172090>] ? __alloc_percpu+0x10/0x20
-> [  921.722219]  [<ffffffff811dfe67>] vfs_kern_mount+0x67/0x100
-> [  921.722226]  [<ffffffff811e24be>] do_mount+0x23e/0xad0
-> [  921.722233]  [<ffffffff8116c2fb>] ? strndup_user+0x4b/0xf0
-> [  921.722240]  [<ffffffff811e3073>] SyS_mount+0x83/0xc0
-> [  921.722248]  [<ffffffff816024a9>] system_call_fastpath+0x16/0x1b
-> [  921.722262] XFS (dm-9): Failed to recover EFIs
-> [  921.722266] XFS (dm-9): log mount finish failed
 
-The unmount from this failed recovery could hang also see case #1 above.
+AGF 15 is full:
 
->
-> I ran xfs_repair -n; the output is here:
->
-> https://dl.dropboxusercontent.com/u/31522929/xfs_repair-n-output
->
-> xfs_repair with no args failed because there was still content in the logs.
->
-> xfs_repair -L succeeded; the output is here:
->
-> https://dl.dropboxusercontent.com/u/31522929/xfs_repair-L-output
->
-> Afterwards I was able to mount the file system and start Oracle from it.
->
+xfs_db> agf 15
+xfs_db> p
+magicnum = 0x58414746
+versionnum = 1
+seqno = 15
+length = 3276783
+bnoroot = 1
+cntroot = 2
+bnolevel = 1
+cntlevel = 1
+flfirst = 0
+fllast = 3
+flcount = 4
+freeblks = 1
+longest = 1
+btreeblks = 0
+uuid = 00000000-0000-0000-0000-000000000000
+lsn = 0
+crc = 0
 
-Interesting.
+And the one free block (other than the minimum 4 on teh AGFL) is:
 
-> Regards,
-> Morgan Mears
+xfs_db> p
+magic = 0x41425442
+level = 0
+numrecs = 1
+leftsib = null
+rightsib = null
+recs[1] = [startblock,blockcount] 1:[3119876,1]
 
---Mark.
+But:
+
+data fork in ino 940862056 claims dup extent, off - 11, start - 58836692, cnt 1
+correcting nextents for inode 940862056
+bad data fork in inode 940862056
+would have cleared inode 940862056
+
+the block number here is in AG 14, which has much more free space:
+
+xfs_db> p
+magicnum = 0x58414746
+versionnum = 1
+seqno = 14
+length = 3276783
+bnoroot = 1
+cntroot = 2
+bnolevel = 1
+cntlevel = 1
+flfirst = 42
+fllast = 45
+flcount = 4
+freeblks = 2092022
+longest = 2078090
+btreeblks = 0
+
+which is in 2 extents:
+
+xfs_db> a bnoroot
+xfs_db> p
+magic = 0x41425442
+level = 0
+numrecs = 2
+leftsib = null
+rightsib = null
+recs[1-2] = [startblock,blockcount] 1:[102466,13932] 2:[116476,2078090]
+xfs_db> convert agno 14 agbno 102466 fsb
+0x3819042 (58822722)
+xfs_db> convert agno 14 agbno 116476 fsb
+0x381c6fc (58836732)
+
+and so 58836692 is just short of the second free space. Looking at
+all the other dup extent claims, they a remostly adjacent to the
+left edge of these two free spaces. No surprise - that's the way
+allocation occurs.
+
+So, we've got a state where the allocation btree contains a
+corruption, so a shutdown occurs. The log has captured that
+corruption when it was made, so log recovery reintroduces that
+corruption. And so when the extent is freed after log recovery, the
+corruption is tripped over again.
+
+There's two checkpoints in the log, both very small. The last
+modification to AGI 14 is there before it:
+
+BUF: cnt:2 total:2 a:0x669350 len:24 a:0x6693d0 len:128 
+        BUF:  #regs:2   start blkno:0x15dff891   len:1   bmap size:1   flags:0x2800
+        AGF Buffer: (XAGF)
+            ver:1  seq#:14  len:3276783  
+            root BNO:1  CNT:2
+            level BNO:1  CNT:1
+            1st:42  last:45  cnt:4  freeblks:2092020  longest:2078090
+
+As is the freespace btree buffer modification:
+
+BUF: cnt:2 total:2 a:0x669460 len:24 a:0x6694e0 len:128 
+        BUF:  #regs:2   start blkno:0x15dff898   len:8   bmap size:1   flags:0x2000
+        BUF DATA
+ 0 42544241  4000000 ffffffff ffffffff cb620100  1000000 fc7c0100  2000000 
+   magic = BTBA
+   level = 0
+   numrecs = 4
+   leftsib = NULLFSBLOCK
+   rightsib = NULLFSBLOCK
+   rec[0] = 0x162cb, 1 (90827,1)
+   rec[1] = 0x17cfc, 2 (97532,1)
+ 8 47900100 67360000 fcc60100 8ab51f00 71ff3100  5000000 71ff3100  5000000 
+   rec[2] = 0x19047, 0x3667 (102471,13927)
+   rec[3] = 0x1c6fc, 0x1fb58a (116476,2078090)
+
+so, from the pre-recovery case above, we've got two new freespaces
+in rec[0-1], rec[2] has 5 blocks removed from the left edge, and
+rec[3] is unchanged.
+
+Confirming the ABTC buffer contains the same extents:
+
+BUF: cnt:2 total:2 a:0x669570 len:24 a:0x6695f0 len:128 
+        BUF:  #regs:2   start blkno:0x15dff8a0   len:8   bmap size:1   flags:0x2000
+        BUF DATA
+ 0 43544241  4000000 ffffffff ffffffff cb620100  1000000 fc7c0100  2000000 
+   magic = CTBA
+   level = 0
+   numrecs = 4
+   leftsib = NULLFSBLOCK
+   rightsib = NULLFSBLOCK
+   rec[0] = 0x162cb, 1 (90827,1)
+   rec[1] = 0x17cfc, 2 (97532,1)
+ 8 47900100 67360000 fcc60100 8ab51f00 71ff3100  5000000 71ff3100  5000000 
+   rec[2] = 0x19047, 0x3667 (102471,13927)
+   rec[3] = 0x1c6fc, 0x1fb58a (116476,2078090)
+10  8ca0100  8000000 71ff3100  5000000 71ff3100  5000000 71ff3100  5000000 
+18 71ff3100  5000000 71ff3100  5000000 71ff3100  5000000 71ff3100  5000000 
+
+It does. So the btrees contain consistent information, and so it's
+unlikely that we have a free space btree corruption in the log. So
+let's look at what was freed:
+
+The EFI/EFDs in the log are:
+
+EFI: cnt:1 total:1 a:0x668670 len:32 
+        EFI:  #regs:1    num_extents:1  id:0xffff881496024af0
+        (s: 0x38162cb, l: 1) 
+EFD: cnt:1 total:1 a:0x6684d0 len:32 
+        EFD:  #regs: 1    num_extents: 1  id: 0xffff881496024af0
+....
+EFI: cnt:1 total:1 a:0x667da0 len:32 
+        EFI:  #regs:1    num_extents:1  id:0xffff8814960244b0
+        (s: 0x3817cfc, l: 1) 
+EFD: cnt:1 total:1 a:0x65fbd0 len:32 
+        EFD:  #regs: 1    num_extents: 1  id: 0xffff8814960244b0
+....
+EFI: cnt:1 total:1 a:0x669250 len:32 
+        EFI:  #regs:1    num_extents:1  id:0xffff881496024000
+        (s: 0x3817cfd, l: 1) 
+EFD: cnt:1 total:1 a:0x6692d0 len:32 
+        EFD:  #regs: 1    num_extents: 1  id: 0xffff881496024000
+
+These are all in ag#14, and have agbnos of 0x162cb, 0x17cfc and
+0x17cfd. This corresponds exactly to the two new records in the AG
+btree. The one remaining EFI doesn't have an EFD in th elog, so this
+is what is being replayed:
+
+EFI: cnt:1 total:1 a:0x669f40 len:32 
+        EFI:  #regs:1    num_extents:1  id:0xffff881496024640
+	(s: 0x3869ff9, l: 1) 
+
+Which is at agbno 0x69ff9 (434169). That's off to the right of the
+start of the last freespace range in rec[3]. rec[3] starts at
+0x1c6fc and ends at 0x1fb58a. That means this efi clearly lands
+inside that freespace range - it's not an edge case, it's deep in
+the interior of the freespace range.
+
+The inode logged just before the EFI - likely it's owner:
+
+INO: cnt:2 total:2 a:0x668040 len:56 a:0x667fb0 len:96 
+        INODE: #regs:2   ino:0x3862d698  flags:0x1   dsize:0
+        CORE inode:
+            magic:IN  mode:0x81b0  ver:2  format:2  onlink:0
+            uid:1001  gid:1001  nlink:0 projid:0
+            atime:1394495104  mtime:1394495104  ctime:1394554526
+            flushiter:1
+            size:0x0  nblks:0x0  exsize:0  nextents:0  anextents:0
+            forkoff:13  dmevmask:0x0  dmstate:0  flags:0x0  gen:-121998876
+
+Is an unlinked inode that has had all it's block removed. Yup - it's
+on the unlinked list:
+
+agi unlinked bucket 24 is 6477464 in ag 14 (inode=946001560)
+
+So, prior to recovery, what did it contain? it's got 287 bytes of
+date, and a single extent:
+
+u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,59154425,1,0]
+
+xfs_db> convert fsb 59154425 agno
+0xe (14)
+xfs_db> convert fsb 59154425 agbno
+0x69ff9 (434169)
+
+Ok, so the corruption, whatever it was, happened a long time ago,
+and it's only when removing the file that it was tripped over.
+There's nothing more I can really get from this - the root cause of
+the corruption is long gone.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
