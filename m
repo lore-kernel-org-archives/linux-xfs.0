@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 33BE87F7B
-	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 03:49:59 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 238A57F81
+	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 05:09:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 07CC38F8040
-	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 01:49:58 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	mSwKqDOH2kIHtiFH for <xfs@oss.sgi.com>;
-	Thu, 13 Mar 2014 01:49:38 -0700 (PDT)
-Date: Thu, 13 Mar 2014 19:49:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6 v2] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
-Message-ID: <20140313084936.GF4263@dastard>
-References: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D679304043
+	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 03:09:39 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id V6KocPpFgBSD0hxM (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Mar 2014 03:09:33 -0700 (PDT)
+Date: Thu, 13 Mar 2014 03:09:33 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs_io: add support for flink
+Message-ID: <20140313100933.GA25703@infradead.org>
+References: <20140220220000.GA17541@infradead.org>
+	<20140221004933.GA9445@infradead.org>
+	<20140225195218.GA14110@infradead.org>
+	<20140225233556.GI13647@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <20140225233556.GI13647@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +32,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 25, 2014 at 08:14:33PM +0100, Lukas Czerner wrote:
-> Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
-> functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
+On Wed, Feb 26, 2014 at 10:35:57AM +1100, Dave Chinner wrote:
+> Looks like some noise got into that hunk. Other than that:
 > 
-> It can be used to convert a range of file to zeros preferably without
-> issuing data IO. Blocks should be preallocated for the regions that span
-> holes in the file, and the entire range is preferable converted to
-> unwritten extents - even though file system may choose to zero out the
-> extent or do whatever which will result in reading zeros from the range
-> while the range remains allocated for the file.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> This can be also used to preallocate blocks past EOF in the same way as
-> with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
-> size to remain the same.
-> 
-> You can test this feature yourself using xfstests, of fallocate(1) however
-> you'll need patches for util_linux, xfsprogs and xfstests which are going to
-> follow soon.
-> 
-> I tested this mostly with a subset of xfstests using fsx and fsstress and
-> even with new generic/290 which is just a copy of xfs/290 using fzero
-> command for xfs_io instead of zero (which uses ioctl). I was testing on
-> x86_64 and ppc64 with block sizes of 1024, 2048 and 4096.
-> 
-> ./check generic/076 generic/232 generic/013 generic/070 generic/269 generic/083
-> generic/117 generic/068 generic/231 generic/127 generic/091 generic/075
-> generic/112 generic/263 generic/091 generic/075 generic/256 generic/255
-> generic/316 generic/300 generic/290 ext4/242;
-> 
-> Note that there is a work in progress on FALLOC_FL_COLLAPSE_RANGE which
-> touches the same area as this pach set does, so we should figure out
-> which one should go first and modify the other on top of it.
-> 
-> This has been based on top of xfs-collapse-range so it does not contain ext4
-> collapse range changes.
+> I'll remove that extra line when I commit it.
 
-Lukas, I have merged patches 4 and 6 into the xfs-collapse-branch.
-That branch should now remain stable, so you can rebase all the ext4
-collapse range and zero range bits on top of tha branch and Ted can
-pull it into the ext4 tree if he wants to pull it in.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ping?
 
 _______________________________________________
 xfs mailing list
