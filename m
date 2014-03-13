@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E570A7F83
-	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 05:14:35 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1F0C67F88
+	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 05:14:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C063C304053
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B6E3BAC002
 	for <xfs@oss.sgi.com>; Thu, 13 Mar 2014 03:14:35 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id UOMj0ZN5SWKckUZQ (version=TLSv1
+	by cuda.sgi.com with ESMTP id JDAICjMezX281TzA (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 13 Mar 2014 03:14:33 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1WO2en-00084F-NT
+	Hat Linux)) id 1WO2en-00083g-IE
 	for xfs@oss.sgi.com; Thu, 13 Mar 2014 10:14:33 +0000
-Message-Id: <20140313101433.608283621@bombadil.infradead.org>
-Date: Thu, 13 Mar 2014 03:13:05 -0700
+Message-Id: <20140313101433.445012299@bombadil.infradead.org>
+Date: Thu, 13 Mar 2014 03:13:04 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfs: add a test for unlinked inodes due to O_TMPFILE
+Subject: [PATCH 2/3] generic: add a basic O_TMPFILE test
 References: <20140313101302.996355155@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0003-xfs-add-a-test-for-unlinked-inodes-due-to-O_TMPFILE.patch
+	filename=0002-generic-add-a-basic-O_TMPFILE-test.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +34,25 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Make sure that we see unlinked inodes when shutting a filesystem
-down that has an open O_TMPFILE descriptor, and make sure that it
-has been deleted after a mount/umount cycle.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/006     |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/006.out |   43 ++++++++++++++++++++++++++
- tests/xfs/group   |    1 +
- 3 files changed, 133 insertions(+)
- create mode 100755 tests/xfs/006
- create mode 100644 tests/xfs/006.out
+ tests/generic/004     |   70 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/004.out |    6 +++++
+ tests/generic/group   |    1 +
+ 3 files changed, 77 insertions(+)
+ create mode 100755 tests/generic/004
+ create mode 100644 tests/generic/004.out
 
-diff --git a/tests/xfs/006 b/tests/xfs/006
+diff --git a/tests/generic/004 b/tests/generic/004
 new file mode 100755
-index 0000000..7dae43d
+index 0000000..c653530
 --- /dev/null
-+++ b/tests/xfs/006
-@@ -0,0 +1,89 @@
++++ b/tests/generic/004
+@@ -0,0 +1,70 @@
 +#! /bin/bash
-+# XFS QA Test No. 006
++# FS QA Test No. 004
 +#
-+# Test O_TMPFILE interaction with log recovery and repair.
++# Test O_TMPFILE opens
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014 Christoph Hellwig.  All Rights Reserved.
@@ -88,121 +84,65 @@ index 0000000..7dae43d
 +_cleanup()
 +{
 +    cd /
-+    rm -f $tmp.*
 +    rm -f ${testfile}
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
-+. ./common/repair
 +
 +# real QA test starts here
-+_supported_fs xfs
++_supported_fs generic
 +_supported_os Linux
 +
-+_require_scratch
 +_require_xfs_io_command "flink"
 +
-+testfile="${SCRATCH_MNT}/tst-tmpfile-flink"
++testfile="${TEST_DIR}/tst-tmpfile-flink"
 +
-+_scratch_mount
-+
-+#
-+# Test creating a r/w tmpfile, make sure it goes out to disk while still
-+# open using a freeze/thaw, and then shut down the filesystem.
-+#
-+$XFS_IO_PROG -x -T \
++# test creating a r/w tmpfile, do I/O and link it into the namespace
++$XFS_IO_PROG -T \
 +	-c "pwrite 0 4096" \
 +	-c "pread 0 4096" \
-+	-c "freeze" \
-+	-c "thaw" \
-+	-c "shutdown" \
-+	${SCRATCH_MNT} | _filter_xfs_io
++	-c "flink ${testfile}" \
++	${TEST_DIR} | _filter_xfs_io
 +
-+_scratch_unmount
++if [ ! -f "${testfile}" ]; then
++    echo "failed to link testfile into place"
++    exit 1
++fi
 +
-+# repair should find an unlinked inode now
-+_scratch_xfs_repair -n 2>&1 | \
-+	_filter_repair > $tmp.repair
++rm -f ${tmpfile}
 +
-+ino=`grep 'disconnected inode ' $tmp.repair | \
-+	head -1 | \
-+	awk '{print $3}' | \
-+	sed 's/,//'`
-+
-+cat $tmp.repair | sed "s/$ino/XXX/g"
-+
-+# filesystem should be clean after an unmount/mount cycle
-+_scratch_mount
-+_scratch_unmount
-+
-+_scratch_xfs_repair -n 2>&1 | _filter_repair
++# test creating a r/o tmpfile.  Should fail
++$XFS_IO_PROG -Tr ${TEST_DIR} -c "close" | _filter_test_dir
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/006.out b/tests/xfs/006.out
+diff --git a/tests/generic/004.out b/tests/generic/004.out
 new file mode 100644
-index 0000000..46f3b73
+index 0000000..b85c11c
 --- /dev/null
-+++ b/tests/xfs/006.out
-@@ -0,0 +1,43 @@
-+QA output created by 006
++++ b/tests/generic/004.out
+@@ -0,0 +1,6 @@
++QA output created by 004
 +wrote 4096/4096 bytes at offset 0
 +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
 +read 4096/4096 bytes at offset 0
 +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+Phase 1 - find and verify superblock...
-+Phase 2 - using <TYPEOF> log
-+        - scan filesystem freespace and inode maps...
-+        - found root inode chunk
-+Phase 3 - for each AG...
-+        - scan (but don't clear) agi unlinked lists...
-+        - process known inodes and perform inode discovery...
-+        - process newly discovered inodes...
-+Phase 4 - check for duplicate blocks...
-+        - setting up duplicate extent list...
-+        - check for inodes claiming duplicate blocks...
-+No modify flag set, skipping phase 5
-+Phase 6 - check inode connectivity...
-+        - traversing filesystem ...
-+        - traversal finished ...
-+        - moving disconnected inodes to lost+found ...
-+disconnected inode XXX, would move to lost+found
-+Phase 7 - verify link counts...
-+would have reset inode XXX nlinks from 0 to 1
-+No modify flag set, skipping filesystem flush and exiting.
-+Phase 1 - find and verify superblock...
-+Phase 2 - using <TYPEOF> log
-+        - scan filesystem freespace and inode maps...
-+        - found root inode chunk
-+Phase 3 - for each AG...
-+        - scan (but don't clear) agi unlinked lists...
-+        - process known inodes and perform inode discovery...
-+        - process newly discovered inodes...
-+Phase 4 - check for duplicate blocks...
-+        - setting up duplicate extent list...
-+        - check for inodes claiming duplicate blocks...
-+No modify flag set, skipping phase 5
-+Phase 6 - check inode connectivity...
-+        - traversing filesystem ...
-+        - traversal finished ...
-+        - moving disconnected inodes to lost+found ...
-+Phase 7 - verify link counts...
-+No modify flag set, skipping filesystem flush and exiting.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index ba34650..2f896e1 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -3,6 +3,7 @@
- 003 db auto quick
- 004 db auto quick
- 005 auto quick
-+006 auto quick
- 008 rw ioctl auto quick
- 009 rw ioctl auto prealloc quick
- 012 rw auto quick
++/mnt/test: Invalid argument
+diff --git a/tests/generic/group b/tests/generic/group
+index a99b6a1..ad86d11 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -6,6 +6,7 @@
+ 001 rw dir udf auto quick
+ 002 metadata udf auto quick
+ 003 atime auto quick
++004 auto quick
+ 005 dir udf auto quick
+ 006 dir udf auto quick
+ 007 dir udf auto quick
 -- 
 1.7.10.4
 
