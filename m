@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3A8A829DF7
-	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 21:39:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1573E304032
-	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 19:39:35 -0700 (PDT)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id B858Ta5RSGip5qdY (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 15 Mar 2014 19:39:33 -0700 (PDT)
-Date: Sun, 16 Mar 2014 02:39:31 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: fs corruption exposed by "xfs: increase prealloc size to double
-	that of the previous extent"
-Message-ID: <20140316023931.GR18016@ZenIV.linux.org.uk>
-References: <20140315210216.GP18016@ZenIV.linux.org.uk>
-	<20140316022105.GQ18016@ZenIV.linux.org.uk>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 232D429DF7
+	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 22:28:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0C03C8F8039
+	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 20:28:05 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id Z8DQD2EeHDPaSjKS (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 15 Mar 2014 20:28:01 -0700 (PDT)
+Date: Sat, 15 Mar 2014 23:27:56 -0400
+From: tytso@mit.edu
+Subject: Re: [PATCH 1/6 v2] ext4: Update inode i_size after the preallocation
+Message-ID: <20140316032756.GA31988@thunk.org>
+References: <1393355679-11160-1-git-send-email-lczerner@redhat.com>
+	<1393355679-11160-2-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140316022105.GQ18016@ZenIV.linux.org.uk>
+In-Reply-To: <1393355679-11160-2-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,32 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Mar 16, 2014 at 02:21:05AM +0000, Al Viro wrote:
-> On Sat, Mar 15, 2014 at 09:02:16PM +0000, Al Viro wrote:
+On Tue, Feb 25, 2014 at 08:14:34PM +0100, Lukas Czerner wrote:
+> Currently in ext4_fallocate we would update inode size, c_time and sync
+> the file with every partial allocation which is entirely unnecessary. It
+> is true that if the crash happens in the middle of truncate we might end
+> up with unchanged i size, or c_time which I do not think is really a
+> problem - it does not mean file system corruption in any way. Note that
+> xfs is doing things the same way e.g. update all of the mentioned after
+> the allocation is done.
 > 
-> > And that's essentially what makes generic/263 complain.  Note, BTW, that
-> > fallocate and hole-punching is irrelevant - test in generic/263 steps into
-> > those, but the same thing happens with these operations disabled (by -F -H).
-> > 
-> > I've found the thread from last June where you've mentioned generic/263
-> > regression; AFAICS, Dave's comments there had been wrong...
+> This commit moves all the updates after the allocation is done. In
+> addition we also need to change m_time as not only inode has been change
+> bot also data regions might have changed (unwritten extents). However
+> m_time will be only updated when i_size changed.
 > 
-> BTW, experimenting with that thing shows that junk in the tail of the page
-> actually comes from some unused sectors on the same device.  So it's an
-> information leak at the very least - I have seen it pick bits and pieces of
-> previously removed files that way.
+> Also we do not need to be paranoid about changing the c_time only if the
+> actual allocation have happened, we can change it even if we try to
+> allocate only to find out that there are already block allocated. It's
+> not really a big deal and it will save us some additional complexity.
+> 
+> Also use ext4_debug, instead of ext4_warning in #ifdef EXT4FS_DEBUG
+> section.
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 
-Hrm...  s/unused/not zeroed out/, actually - block size is 4K.  So we have
-an empty file extended by ftruncate(), then mmap+msync+munmap in its tail,
-then O_DIRECT write starting from a couple of blocks prior to EOF and
-extending it by ~15 blocks.  New EOF is 2.5Kb off the beginning of the
-(new) last block.  Then it's closed.  Remaining 1.5Kb of that last
-block is _not_ zeroed out; moreover, pagefault on that page ends up
-reading the entire block, the junk in the tail not getting zeroed out
-in in-core copy either.  Interesting...
+Thanks, applied.
+
+					- Ted
 
 _______________________________________________
 xfs mailing list
