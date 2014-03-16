@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F37C329DF7
-	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 16:02:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E4E208F8039
-	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 14:02:20 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D3B8D29DF7
+	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 21:21:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 659ADAC001
+	for <xfs@oss.sgi.com>; Sat, 15 Mar 2014 19:21:12 -0700 (PDT)
 Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id qgry2VnyRdEHz8D6 (version=TLSv1
+	cuda.sgi.com with ESMTP id jqMW65hKUP3kmVIB (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 15 Mar 2014 14:02:19 -0700 (PDT)
-Date: Sat, 15 Mar 2014 21:02:16 +0000
+	Sat, 15 Mar 2014 19:21:07 -0700 (PDT)
+Date: Sun, 16 Mar 2014 02:21:05 +0000
 From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: fs corruption exposed by "xfs: increase prealloc size to double that
-	of the previous extent"
-Message-ID: <20140315210216.GP18016@ZenIV.linux.org.uk>
+Subject: Re: fs corruption exposed by "xfs: increase prealloc size to double
+	that of the previous extent"
+Message-ID: <20140316022105.GQ18016@ZenIV.linux.org.uk>
+References: <20140315210216.GP18016@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20140315210216.GP18016@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +33,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-	Regression in xfstests generic/263 is quite real - what happens is
-that e.g.
-ltp/fsx -F -H -N 10000  -o 128000 -l 500000 -r 4096 -t 512 -w 512 -Z /mnt/junk
-where /mnt is on xfs ends up with a very odd file.  mmap() of its last
-page has garbage in the page tail when observed on *any* kernel.  Copying
-that file (with cp -a) yields a copy that doesn't trigger that behaviour.
-What's more, xfs_repair doesn't notice anything fishy with that sucker.
+On Sat, Mar 15, 2014 at 09:02:16PM +0000, Al Viro wrote:
 
-This had been introduced (or, more likely, exposed) by the commit in
-question.  As far as I can see, it's an on-disk corruption of some sort;
-it *might* be triggered by some kind of dio-related race, but I would be
-rather surprised if that had been the case - fsx is single-threaded,
-after all, and making it fsync() *and* mmap/msync/munmap after each write
-still produces such a file.  The file contents per se is fine, it's the
-page tail on mmap() that is bogus.
+> And that's essentially what makes generic/263 complain.  Note, BTW, that
+> fallocate and hole-punching is irrelevant - test in generic/263 steps into
+> those, but the same thing happens with these operations disabled (by -F -H).
+> 
+> I've found the thread from last June where you've mentioned generic/263
+> regression; AFAICS, Dave's comments there had been wrong...
 
-Filesystem image after that crap is on ftp.linux.org.uk/pub/people/viro/img.bz2;
-with that image mounted on /mnt we have
-; ls -l /mnt/junk
--rw-r--r-- 1 root root 444928 Mar 15 16:26 /mnt/junk
-; echo $((0x6ca00))
-444928
-; cat >foo.c <<'EOF'
+BTW, experimenting with that thing shows that junk in the tail of the page
+actually comes from some unused sectors on the same device.  So it's an
+information leak at the very least - I have seen it pick bits and pieces of
+previously removed files that way.
+
+While we are at it, the following creates such a buggered file in about
+a half of runs:
+
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/mman.h>
-main(int argc, char **argv)
+#define O_DIRECT 00040000
+
+main()
 {
-        int fd = open(argv[1], 0);
-        char *p = (char *)mmap(0, 0xa00, PROT_READ, MAP_SHARED, fd, (off_t)0x6c000);
-        if (p != (char *)-1)
-                write(1, p + 0xa00, 4096 - 0xa00);
+        int n = 0x5cf2e - 0x47000;
+        int fd = open("/mnt/junk", O_RDWR|O_CREAT|O_TRUNC|O_DIRECT, 0666);
+        char *p;
+        ftruncate(fd, 0x5cf2e);
+        p = mmap(NULL, n, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x47000);
+        memset(p, 'x', n);
+        msync(p, n, MS_SYNC);
+        munmap(p, n);
+        lseek(fd, 0x59000, SEEK_SET);
+        p = malloc(0x13a00 + 512);
+        memset(p, 'z', 0x13a00 + 512);
+        write(fd, p + 512 - ((unsigned long)p & 511), 0x13a00);
 }
-EOF
-; gcc foo.c
-; ./a.out /mnt/junk | od -c
-<lots of garbage>
-; cp -a /mnt/junk /mnt/junk1
-; ./a.out /mnt/junk1 | od -c
-0000000  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
-*
-0003000
 
-And that's essentially what makes generic/263 complain.  Note, BTW, that
-fallocate and hole-punching is irrelevant - test in generic/263 steps into
-those, but the same thing happens with these operations disabled (by -F -H).
-
-I've found the thread from last June where you've mentioned generic/263
-regression; AFAICS, Dave's comments there had been wrong...
+The frequency depends on the fraction of unused sectors with non-zero
+contents - for all I know it might hit that bug in 100% of runs, but
+I can only detect that if the junk it picks contains non-zero data.
 
 _______________________________________________
 xfs mailing list
