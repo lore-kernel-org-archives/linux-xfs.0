@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E96367F4E
-	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 15:56:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BF8078F8033
-	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 13:56:28 -0700 (PDT)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id qEVJ1gyr34BY8PrJ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 16 Mar 2014 13:56:26 -0700 (PDT)
-Date: Sun, 16 Mar 2014 20:56:24 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1B9E67F57
+	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 19:11:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 92F13AC002
+	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 17:11:50 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	pwErjPRnQXAsD289 for <xfs@oss.sgi.com>;
+	Sun, 16 Mar 2014 17:11:44 -0700 (PDT)
+Date: Mon, 17 Mar 2014 11:11:30 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: fs corruption exposed by "xfs: increase prealloc size to double
 	that of the previous extent"
-Message-ID: <20140316205624.GS18016@ZenIV.linux.org.uk>
+Message-ID: <20140317001130.GA7072@dastard>
 References: <20140315210216.GP18016@ZenIV.linux.org.uk>
-	<20140316022105.GQ18016@ZenIV.linux.org.uk>
-	<20140316023931.GR18016@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140316023931.GR18016@ZenIV.linux.org.uk>
+In-Reply-To: <20140315210216.GP18016@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,57 +30,168 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-On Sun, Mar 16, 2014 at 02:39:31AM +0000, Al Viro wrote:
+On Sat, Mar 15, 2014 at 09:02:16PM +0000, Al Viro wrote:
+> 	Regression in xfstests generic/263 is quite real - what happens is
+> that e.g.
+> ltp/fsx -F -H -N 10000  -o 128000 -l 500000 -r 4096 -t 512 -w 512 -Z /mnt/junk
+> where /mnt is on xfs ends up with a very odd file.  mmap() of its last
+> page has garbage in the page tail when observed on *any* kernel.
 
-> Hrm...  s/unused/not zeroed out/, actually - block size is 4K.  So we have
-> an empty file extended by ftruncate(), then mmap+msync+munmap in its tail,
-> then O_DIRECT write starting from a couple of blocks prior to EOF and
-> extending it by ~15 blocks.  New EOF is 2.5Kb off the beginning of the
-> (new) last block.  Then it's closed.  Remaining 1.5Kb of that last
-> block is _not_ zeroed out; moreover, pagefault on that page ends up
-> reading the entire block, the junk in the tail not getting zeroed out
-> in in-core copy either.  Interesting...
+Yes, we've known about this since 2011.  Right - that's a long
+standing problem, and one I've never been able to isolate and so
+reproduce with any luck. It can only be reproduced when you use mmap
+and direct IO on the same file, and every time I've added debug to
+find out where the tail block corruption was being introduced, the
+data corruption goes away. It behaves just like a race condition....
 
-AFAICS, what happens is that we hit this
-        /*
-         * If this is O_DIRECT or the mpage code calling tell them how large
-         * the mapping is, so that we can avoid repeated get_blocks calls.
-         */
-        if (direct || size > (1 << inode->i_blkbits)) {
-                xfs_off_t               mapping_size;
+>
+> Copying
+> that file (with cp -a) yields a copy that doesn't trigger that behaviour.
+> What's more, xfs_repair doesn't notice anything fishy with that sucker.
 
-                mapping_size = imap.br_startoff + imap.br_blockcount - iblock;
-                mapping_size <<= inode->i_blkbits;
+xfs_repair does detect data corruption - it does not care what is in
+the data blocks and it shouldn't need to care because the kernel code
+should never, ever expose stale data beyond EOF....
 
-                ASSERT(mapping_size > 0);
-                if (mapping_size > size)
-                        mapping_size = size;
-                if (mapping_size > LONG_MAX)
-                        mapping_size = LONG_MAX;
+> This had been introduced (or, more likely, exposed) by the commit in
+> question.  As far as I can see, it's an on-disk corruption of some sort;
+> it *might* be triggered by some kind of dio-related race, but I would be
+> rather surprised if that had been the case - fsx is single-threaded,
+> after all, and making it fsync() *and* mmap/msync/munmap after each write
+> still produces such a file.  The file contents per se is fine, it's the
+> page tail on mmap() that is bogus.
 
-                bh_result->b_size = mapping_size;
-        }
-and while the caller (do_direct_IO()) is quite happy to skip subsequent calls
-of get_block, buffer_new() is *NOT* set by that one.  Fair enough, since the
-_first_ block of that run (the one we'd called __xfs_get_blocks() for) isn't
-new, but dio_zero_block() for the partial block in the end of the area gets
-confused by that.
+Right.....
 
-Basically, with direct-io.c as it is, get_block may report more than one
-block if they are contiguous on disk *AND* are all old or all new.  Returning
-several old blocks + several freshly allocated is broken, and "preallocated"
-is the same as "freshly allocated" in that respect - they need to be zeroed.
 
-Looks like __xfs_get_blocks() is broken in that respect - I'm definitely
-seeing O_DIRECT write() crossing the EOF calling it *once*, getting
-->b_size set to a lot more than what remains until EOF and buffer_head
-not getting BH_New on it.  And once that has happened, we are SOL - the
-tail of the last block isn't zeroed.  Increase of prealloc size made that
-more likely to happen (unsurprisingly, since it can only happen when blocks
-adjacent to the last block of file are not taken by anything else).
+> Filesystem image after that crap is on ftp.linux.org.uk/pub/people/viro/img.bz2;
+> with that image mounted on /mnt we have
+> ; ls -l /mnt/junk
+> -rw-r--r-- 1 root root 444928 Mar 15 16:26 /mnt/junk
+> ; echo $((0x6ca00))
+> 444928
+> ; cat >foo.c <<'EOF'
+> #include <unistd.h>
+> #include <sys/mman.h>
+> main(int argc, char **argv)
+> {
+>         int fd = open(argv[1], 0);
+>         char *p = (char *)mmap(0, 0xa00, PROT_READ, MAP_SHARED, fd, (off_t)0x6c000);
+>         if (p != (char *)-1)
+>                 write(1, p + 0xa00, 4096 - 0xa00);
+> }
+
+... you're reading data beyond EOF from a page faulted page that
+spans EOF. That page is filled by mpage_readpages(), not XFS. And
+mpage_readpages() does not zero the region beyond EOF which means if
+there is some issue where a filesystem doesn't zero a tail block
+properly it will expose stale data to userspace....
+
+> EOF
+> ; gcc foo.c
+> ; ./a.out /mnt/junk | od -c
+> <lots of garbage>
+
+Right, but the file is already bad, so this tells us nothing as to
+how the problem arose in the first place. Indeed, create the partial
+tail block with truncate:
+
+$ rm /mnt/test/foo
+$ xfs_io -f -c "truncate 0x6ca00" /mnt/test/foo
+$ sudo umount /mnt/test
+$ sudo mount /dev/vdb /mnt/test
+$ ls -l /mnt/test/foo
+-rw------- 1 root root 444928 Mar 17 09:45 /mnt/test/foo
+$ ./mmap-eof-test /mnt/test/foo |od -c
+0000000  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
+*
+0003000
+$
+
+With buffered IO:
+
+$ rm /mnt/test/foo
+$ xfs_io -f -c "pwrite 0x6c9ff 1" -c fsync /mnt/test/foo
+wrote 1/1 bytes at offset 444927
+1.000000 bytes, 1 ops; 0.0000 sec (75.120 KiB/sec and 76923.0769 ops/sec)
+$ sudo umount /mnt/test
+$ sudo mount /dev/vdb /mnt/test
+$ ls -l /mnt/test/foo
+-rw------- 1 root root 444928 Mar 17 10:23 /mnt/test/foo
+$ ./mmap-eof-test /mnt/test/foo |od -c
+0000000  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
+*
+0003000
+
+Or with direct IO:
+
+$ rm /mnt/test/foo
+$ xfs_io -fd -c "pwrite 0x6c800 0x200" /mnt/test/foo
+wrote 512/512 bytes at offset 444416
+512.000000 bytes, 1 ops; 0.0000 sec (410.509 KiB/sec and 821.0181 ops/sec)
+$ sudo umount /mnt/test
+$ sudo mount /dev/vdb /mnt/test
+$ ls -l /mnt/test/foo
+-rw------- 1 root root 444928 Mar 17 10:25 /mnt/test/foo
+$ ./mmap-eof-test /mnt/test/foo |od -c
+write returned 1536/0
+0000000  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
+*
+0003000
+
+And you don't see a failure from your test program because the
+partial tail block is correctly zeroed on disk.  So there's
+something else going on here - the write paths XFS do zero the tail
+of the block on disk, and so mmap should not *ever* exposing stale
+data.
+
+AFAICT, the only way we can get garbage beyond EOF is to have
+application mmap() map the page covering EOF, write beyond EOF, then
+have it written back. However, we actually handle that case in
+xfs_vm_writepage() by calling zero_user_segment() on the range of
+the page beyond EOF. So we can't get garbage written beyond EOF that
+way, either.
+
+So I've got no real idea of how we are getting garbage on disk, what
+role DIO plays in it, or even how to reproduce it reliably in a
+manner that doesn't result in instrumentation causing the data
+corruption to magically disappearing...
+
+> ; cp -a /mnt/junk /mnt/junk1
+> ; ./a.out /mnt/junk1 | od -c
+> 0000000  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
+> *
+> 0003000
+
+cp is showing the correct data because the __block_write_begin()
+path zeroes the bytes beyond EOF in the tail page - it doesn't copy
+them from the source....
+
+> And that's essentially what makes generic/263 complain.
+
+Yup, but it is merely the messenger....
+
+> I've found the thread from last June where you've mentioned generic/263
+> regression; AFAICS, Dave's comments there had been wrong...
+
+generic/263 has failed since it was first split out of generic/091
+in commit 0d69e10ed15b01397e8c6fd7833fa3c2970ec024 back in 2011. We
+discovered this problem by accident when we busted fsx option
+parsing and it ran the wrong options resulting in a mmap+dio being
+run. We fixed that up and added the workload to generic/091 (commit
+c00bad1c4c348e45d00982d06fc40522fb8cb035), then split it to a
+separate test to isolate the failure case and leave generic/091 as a
+reliable regression test.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
