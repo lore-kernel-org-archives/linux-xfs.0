@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0C8E87F7B
-	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 21:17:42 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 26FED7F80
+	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 21:43:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69BFDAC002
-	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 19:17:41 -0700 (PDT)
-Received: from mail-wg0-f47.google.com (mail-wg0-f47.google.com
-	[74.125.82.47]) by cuda.sgi.com with ESMTP id pauE9HMm6Otk2pfS
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 16 Mar 2014 19:17:11 -0700 (PDT)
-Received: by mail-wg0-f47.google.com with SMTP id x12so4104641wgg.30
-	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 19:17:10 -0700 (PDT)
-From: Filipe David Borba Manana <fdmanana@gmail.com>
-Subject: [PATCH v2] xfstests: add test for btrfs send regarding directory
-	moves/renames
-Date: Mon, 17 Mar 2014 02:16:16 +0000
-Message-Id: <1395022576-17367-1-git-send-email-fdmanana@gmail.com>
-In-Reply-To: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
-References: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D62C8F8035
+	for <xfs@oss.sgi.com>; Sun, 16 Mar 2014 19:43:11 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	ZskJZFOE81GHF6H8 for <xfs@oss.sgi.com>;
+	Sun, 16 Mar 2014 19:43:09 -0700 (PDT)
+Date: Mon, 17 Mar 2014 13:43:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: fs corruption exposed by "xfs: increase prealloc size to double
+	that of the previous extent"
+Message-ID: <20140317024305.GD7072@dastard>
+References: <20140315210216.GP18016@ZenIV.linux.org.uk>
+	<20140316022105.GQ18016@ZenIV.linux.org.uk>
+	<20140316023931.GR18016@ZenIV.linux.org.uk>
+	<20140316205624.GS18016@ZenIV.linux.org.uk>
+	<20140317013638.GB7072@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140317013638.GB7072@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,244 +30,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jbacik@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-Regression test for a btrfs incremental send issue where the kernel entered
-an infinite loop building a path string. This happened when either of the 2
-following cases happened:
+On Mon, Mar 17, 2014 at 12:36:39PM +1100, Dave Chinner wrote:
+> On Sun, Mar 16, 2014 at 08:56:24PM +0000, Al Viro wrote:
+> > On Sun, Mar 16, 2014 at 02:39:31AM +0000, Al Viro wrote:
+> > 
+> > > Hrm...  s/unused/not zeroed out/, actually - block size is 4K.  So we have
+> > > an empty file extended by ftruncate(), then mmap+msync+munmap in its tail,
+> > > then O_DIRECT write starting from a couple of blocks prior to EOF and
+> > > extending it by ~15 blocks.  New EOF is 2.5Kb off the beginning of the
+> > > (new) last block.  Then it's closed.  Remaining 1.5Kb of that last
+> > > block is _not_ zeroed out; moreover, pagefault on that page ends up
+> > > reading the entire block, the junk in the tail not getting zeroed out
+> > > in in-core copy either.  Interesting...
+> > 
+> > AFAICS, what happens is that we hit this
+> >         /*
+> >          * If this is O_DIRECT or the mpage code calling tell them how large
+> >          * the mapping is, so that we can avoid repeated get_blocks calls.
+> >          */
+> >         if (direct || size > (1 << inode->i_blkbits)) {
+> >                 xfs_off_t               mapping_size;
+> > 
+> >                 mapping_size = imap.br_startoff + imap.br_blockcount - iblock;
+> >                 mapping_size <<= inode->i_blkbits;
+> > 
+> >                 ASSERT(mapping_size > 0);
+> >                 if (mapping_size > size)
+> >                         mapping_size = size;
+> >                 if (mapping_size > LONG_MAX)
+> >                         mapping_size = LONG_MAX;
+> > 
+> >                 bh_result->b_size = mapping_size;
+> >         }
+> > and while the caller (do_direct_IO()) is quite happy to skip subsequent calls
+> > of get_block, buffer_new() is *NOT* set by that one.  Fair enough, since the
+> > _first_ block of that run (the one we'd called __xfs_get_blocks() for) isn't
+> > new, but dio_zero_block() for the partial block in the end of the area gets
+> > confused by that.
+> 
+> It's not obvious from your description what the issue is here. If
+> i run the obvious reproducer from your description:
+> 
+> $ xfs_io -fd -c "truncate $((262144 - 1536))" \
+> > -c "mmap 0 260k" -c "mwrite 253k 1k" -c msync -c munmap \
+> > -c "pwrite -b 32k $((262144 - 8192 - 2560)) 32k" \
+> > -c "mmap 276k 4k" -c "mread -v 276k 4k" /mnt/test/blah
 
-1) A directory was made a child of another directory which has a lower inode
-   number and has a pending move/rename operation;
+OK, so there's a precondition required here - it's definitely not an
+empty file - there has to be an active delayed allocation mapping
+beyond EOF for this test case to cause trouble.  So, here's the
+precondition:
 
-2) A directory was made a child of another directory which has a higher inode
-   number, but the new parent wasn't moved nor renamed. Instead some other
-   ancestor higher in the hierarchy, with an higher inode number too, was
-   moved/renamed too.
+$ rm -rf /mnt/test/blah
+$ xfs_io -f -c "pwrite 0 32k" /mnt/test/blah
+$ xfs_io -f -c "pwrite -b 64k 0 240k" /mnt/test/blah
 
-This issue is fixed by the following linux kernel btrfs patch:
+The first write sets the I_DIRTY_RELEASE flag on close, then second
+sees that flag and does not remove the delayed allocation beyond EOF
+on the second close. So now there's a delalloc extent out to roughly
+450k (block 112). Then run the above test case, and the msync causes
+writeback to occur and hence that turns the entire delalloc extent
+into allocated blocks - a single extent that extends beyond EOF.
 
-   Btrfs: fix incremental send's decision to delay a dir move/rename
-   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
+> > Looks like __xfs_get_blocks() is broken in that respect - I'm definitely
+> > seeing O_DIRECT write() crossing the EOF calling it *once*, getting
+> > ->b_size set to a lot more than what remains until EOF and buffer_head
+> > not getting BH_New on it.
+> 
+> XFS should never do that. It does not mix existing block mappings
+> with newly allocated mappings, and so the newly allocated region
+> beyond EOF should always give a "xfs_get_blocks_alloc" trace, and
+> when that is emitted we always set buffer_new()....
 
-Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
----
+And so XFS is not mixing extent types, nor is it seeing newly
+allocated blocks beyond EOF, and so it sees it as a single
+extent full of valid data....
 
-V2: Added more tests.
+OK, now I understand where the bad mapping problem is coming from,
+and why a changing in speculative prealloc size might be seen as the
+"cause" by a bisect. And it is a pre-existing condition that has
+been there for years - I'd think that testing with
+allocsize=<something large> would expose it easily on old kernels.
 
- tests/btrfs/045     |  177 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/045.out |    1 +
- tests/btrfs/group   |    1 +
- 3 files changed, 179 insertions(+)
- create mode 100755 tests/btrfs/045
- create mode 100644 tests/btrfs/045.out
+Al, you're right that the code that calculates the mapping size
+needs to split mappings that extend across EOF for direct IO.  I'll
+cook up a patch to fix it after lunch.
 
-diff --git a/tests/btrfs/045 b/tests/btrfs/045
-new file mode 100755
-index 0000000..ee91240
---- /dev/null
-+++ b/tests/btrfs/045
-@@ -0,0 +1,177 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/045
-+#
-+# Regression test for a btrfs incremental send issue where the kernel entered
-+# an infinite loop building a path string. This happened when either of the
-+# 2 following cases happened:
-+#
-+# 1) A directory was made a child of another directory which has a lower inode
-+#    number and has a pending move/rename operation;
-+#
-+# 2) A directory was made a child of another directory which has a higher inode
-+#    number, but the new parent wasn't moved nor renamed. Instead some other
-+#    ancestor higher in the hierarchy, with an higher inode number too, was
-+#    moved/renamed too.
-+#
-+# This issue is fixed by the following linux kernel btrfs patch:
-+#
-+#   Btrfs: fix incremental send's decision to delay a dir move/rename
-+#   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+tmp=`mktemp -d`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    rm -fr $tmp
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+_require_fssum
-+_need_to_be_root
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+mkdir -p $SCRATCH_MNT/a/b
-+mkdir $SCRATCH_MNT/a/c
-+mkdir $SCRATCH_MNT/a/b/d
-+touch $SCRATCH_MNT/a/file1
-+touch $SCRATCH_MNT/a/b/file2
-+mv $SCRATCH_MNT/a/file1 $SCRATCH_MNT/a/b/d/file3
-+ln $SCRATCH_MNT/a/b/d/file3 $SCRATCH_MNT/a/b/file4
-+mkdir $SCRATCH_MNT/a/b/f
-+mv $SCRATCH_MNT/a/b $SCRATCH_MNT/a/c/b2
-+touch $SCRATCH_MNT/a/c/b2/d/file5
-+
-+mkdir -p $SCRATCH_MNT/a/x1/x2
-+mkdir $SCRATCH_MNT/a/Z
-+mkdir -p $SCRATCH_MNT/a/x1/x2/x3/x4/x5
-+
-+# Filesystem looks like:
-+#
-+# .                               (ino 256)
-+# |-- a/                          (ino 257)
-+#     |-- c/                      (ino 259)
-+#     |   |-- b2/                 (ino 258)
-+#     |       |-- d/              (ino 260)
-+#     |       |   |-- file3       (ino 261)
-+#     |       |   |-- file5       (ino 264)
-+#     |       |
-+#     |       |-- file2           (ino 262)
-+#     |       |-- file4           (ino 261)
-+#     |       |-- f/              (ino 263)
-+#     |
-+#     |-- x1/                     (ino 265)
-+#     |   |-- x2/                 (ino 266)
-+#     |       |-- x3/             (ino 268)
-+#     |           |-- x4/         (ino 269)
-+#     |               |-- x5/     (ino 270)
-+#     |
-+#     |-- Z/                      (ino 267)
-+
-+_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1
-+
-+ln $SCRATCH_MNT/a/c/b2/file4 $SCRATCH_MNT/a/c/b2/f/file6
-+mv $SCRATCH_MNT/a/c/b2/d/file5 $SCRATCH_MNT/a/c/file7
-+touch $SCRATCH_MNT/a/c/b2/d/file8
-+touch $SCRATCH_MNT/a/c/b2/file9
-+ln $SCRATCH_MNT/a/c/b2/file9 $SCRATCH_MNT/a/c/b2/file10
-+mv $SCRATCH_MNT/a/c/b2/f $SCRATCH_MNT/a/f2
-+mv $SCRATCH_MNT/a/c $SCRATCH_MNT/a/c2
-+mv $SCRATCH_MNT/a/c2/b2 $SCRATCH_MNT/a/f2/b3
-+mv $SCRATCH_MNT/a/c2 $SCRATCH_MNT/a/f2/b3/c3
-+touch $SCRATCH_MNT/a/f2/b3/c3/file11
-+mv $SCRATCH_MNT/a $SCRATCH_MNT/a2
-+
-+mv $SCRATCH_MNT/a2/x1/x2/x3 $SCRATCH_MNT/a2/Z/X33
-+mv $SCRATCH_MNT/a2/x1/x2 $SCRATCH_MNT/a2/Z/X33/x4/x5/X22
-+
-+# Filesystem now looks like:
-+#
-+# .                               (ino 256)
-+# |-- a2/                         (ino 257)
-+#     |
-+#     |-- f2/                     (ino 263)
-+#     |   |-- file6               (ino 261)
-+#     |   |-- b3/                 (ino 258)
-+#     |       |-- d/              (ino 260)
-+#     |       |   |-- file3       (ino 261)
-+#     |       |   |-- file8       (ino 270)
-+#     |       |
-+#     |       |-- file2           (ino 262)
-+#     |       |-- file4           (ino 261)
-+#     |       |-- file9           (ino 271)
-+#     |       |-- file10          (ino 271)
-+#     |       |
-+#     |       |-- c3/             (ino 259)
-+#     |           |-- file7       (ino 264)
-+#     |           |-- file11      (ino 272)
-+#     |
-+#     |-- x1/                     (ino 265)
-+#     |-- Z/                      (ino 267)
-+#         |-- X33/                (ino 268)
-+#              |-- x4/            (ino 269)
-+#                  |-- x5/        (ino 270)
-+#                      |-- X22/   (ino 266)
-+#
-+
-+_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2
-+
-+run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
-+run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
-+	$SCRATCH_MNT/mysnap2
-+
-+_run_btrfs_util_prog send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
-+
-+_run_btrfs_util_prog send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
-+	-f $tmp/2.snap
-+
-+_check_scratch_fs
-+
-+_scratch_unmount
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/1.snap
-+run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
-+
-+_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
-+run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
-+
-+_check_scratch_fs
-+
-+status=0
-+exit
-diff --git a/tests/btrfs/045.out b/tests/btrfs/045.out
-new file mode 100644
-index 0000000..5b0d489
---- /dev/null
-+++ b/tests/btrfs/045.out
-@@ -0,0 +1 @@
-+QA output created by 045
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 4589043..9b41895 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -47,3 +47,4 @@
- 042 auto quick
- 043 auto quick
- 044 auto quick
-+045 auto quick
+Thanks for digging in to this and finding what I couldn't.
+
+Cheers,
+
+Dave.
 -- 
-1.7.10.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
