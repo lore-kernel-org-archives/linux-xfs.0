@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D14D57F80
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 08:56:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1CB597F76
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 11:39:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B9331304043
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 06:56:07 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id UVVXB7am4QHQ8fRD for
-	<xfs@oss.sgi.com>; Tue, 18 Mar 2014 06:56:06 -0700 (PDT)
-Date: Tue, 18 Mar 2014 14:56:05 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: elevator question
-Message-ID: <20140318145605.6d7172ee@harpe.intellique.com>
-In-Reply-To: <ac1d082430f0dfa45709ef3c7912a53f@zbfmail.de>
-References: <ea0e10e64a65dbd39cd71a826e18985e@zbfmail.de>
-	<53277C56.7000002@hardwarefreak.com>
-	<20140318102657.2ba68f00@galadriel.home>
-	<ac1d082430f0dfa45709ef3c7912a53f@zbfmail.de>
-Mime-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F3A97304039
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 09:39:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ZFVBTx3fT2BUenP3 for
+	<xfs@oss.sgi.com>; Tue, 18 Mar 2014 09:39:31 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2IGdQ8T009647
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 12:39:28 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs_quota: avoid segfault when report -h on non-existent path
+Date: Wed, 19 Mar 2014 00:39:06 +0800
+Message-Id: <1395160746-26654-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +25,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: weber@zbfmail.de
-Cc: Xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>, Eric Sandeen <esandeen@redhat.com>
 
-Le Tue, 18 Mar 2014 11:18:04 +0100
-Marko Weber|8000 <weber@zbfmail.de> =E9crivait:
+Command xfs_quota -xc "report -h" /nosuchdir would get segfault, fix
+that by checking fs_path first before dereferencing it.
 
-> i am barely new to this issue. What would you xfs guys recommend me?
-> i prefer things i can do with kernel, so its dm-cache? bcache?
+Cc: Eric Sandeen <esandeen@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ quota/report.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The easier will be bcache because it comes included with the kernel.
-
-> the raid is an raid5 with 3 disks at moment. xfs filesystem.
-> do i have to format it again and set special things?
-
-No, only the cache itself must be reformatted.
-
-> i use nobarrier at moment,
-
-if you're not using a hardware RAID controller with a battery-backed or
-flash-based cache, it may be risky. Depends mostly on your write
-activity and power supply stability, though.
-
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+diff --git a/quota/report.c b/quota/report.c
+index 70894a2..d486524 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -624,7 +624,7 @@ report_f(
+ 		if (flags & ALL_MOUNTS_FLAG)
+ 			report_any_type(fp, form, type, NULL,
+ 					lower, upper, flags);
+-		else if (fs_path->fs_flags & FS_MOUNT_POINT)
++		else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
+ 			report_any_type(fp, form, type, fs_path->fs_dir,
+ 					lower, upper, flags);
+ 	} else while (argc > optind) {
+-- 
+1.8.5.3
 
 _______________________________________________
 xfs mailing list
