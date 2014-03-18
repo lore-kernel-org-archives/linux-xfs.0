@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B93927F72
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2014 20:16:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7944B304039
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2014 18:16:40 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sckFabuZIPeMmtBF for <xfs@oss.sgi.com>;
-	Mon, 17 Mar 2014 18:16:37 -0700 (PDT)
-Date: Tue, 18 Mar 2014 12:16:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fs corruption exposed by "xfs: increase prealloc size to double
-	that of the previous extent"
-Message-ID: <20140318011632.GA9192@dastard>
-References: <20140315210216.GP18016@ZenIV.linux.org.uk>
-	<20140316022105.GQ18016@ZenIV.linux.org.uk>
-	<20140316023931.GR18016@ZenIV.linux.org.uk>
-	<20140316205624.GS18016@ZenIV.linux.org.uk>
-	<20140317013638.GB7072@dastard> <20140317024305.GD7072@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140317024305.GD7072@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 25A9B7F76
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 04:27:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5E29AC004
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 02:27:14 -0700 (PDT)
+Received: from smtp6-g21.free.fr (smtp6-g21.free.fr [212.27.42.6]) by
+	cuda.sgi.com with ESMTP id MybBehm3Ho5Ag3jo for
+	<xfs@oss.sgi.com>; Tue, 18 Mar 2014 02:27:11 -0700 (PDT)
+Date: Tue, 18 Mar 2014 10:26:57 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: elevator question
+Message-ID: <20140318102657.2ba68f00@galadriel.home>
+In-Reply-To: <53277C56.7000002@hardwarefreak.com>
+References: <ea0e10e64a65dbd39cd71a826e18985e@zbfmail.de>
+	<53277C56.7000002@hardwarefreak.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +24,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: Xfs <xfs@oss.sgi.com>, weber@zbfmail.de
 
-On Mon, Mar 17, 2014 at 01:43:05PM +1100, Dave Chinner wrote:
-> On Mon, Mar 17, 2014 at 12:36:39PM +1100, Dave Chinner wrote:
-> > On Sun, Mar 16, 2014 at 08:56:24PM +0000, Al Viro wrote:
-> > > Looks like __xfs_get_blocks() is broken in that respect - I'm definitely
-> > > seeing O_DIRECT write() crossing the EOF calling it *once*, getting
-> > > ->b_size set to a lot more than what remains until EOF and buffer_head
-> > > not getting BH_New on it.
-> > 
-> > XFS should never do that. It does not mix existing block mappings
-> > with newly allocated mappings, and so the newly allocated region
-> > beyond EOF should always give a "xfs_get_blocks_alloc" trace, and
-> > when that is emitted we always set buffer_new()....
-> 
-> And so XFS is not mixing extent types, nor is it seeing newly
-> allocated blocks beyond EOF, and so it sees it as a single
-> extent full of valid data....
-> 
-> OK, now I understand where the bad mapping problem is coming from,
-> and why a changing in speculative prealloc size might be seen as the
-> "cause" by a bisect. And it is a pre-existing condition that has
-> been there for years - I'd think that testing with
-> allocsize=<something large> would expose it easily on old kernels.
-> 
-> Al, you're right that the code that calculates the mapping size
-> needs to split mappings that extend across EOF for direct IO.  I'll
-> cook up a patch to fix it after lunch.
-
-Except that this now leaves stale, unreferenced delalloc extents on
-the inode, so there's some other problem being masked by this
-behaviour and so generic/270 now assert fails. I'll have to look
-further.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgTW9uLCAxNyBNYXIgMjAxNCAxNzo1MTowMiAtMDUwMCB2b3VzIMOpY3JpdmllejoKCj4gTm93
+IGNvbmZpZ3VyZSB0aGUgU1NEIHBhcnRpdGlvbiBhcyBiY2FjaGUgYW5kIGVuYWJsZSB3cml0ZWJh
+Y2sgcG9saWN5Lgo+IFRoaXMgd2lsbCBpbmNyZWFzZSB0aGUgcGVyZm9ybWFuY2Ugb2YgdGhlIHJ1
+c3QgYXJyYXkgdG8gU1NEIGxldmVsIGZvcgo+IHdyaXRlcywgYW5kIGZvciByZWFkcyBhZnRlciBm
+cmVxdWVudGx5IGFjY2Vzc2VkIGRhdGEgaXMgY2FjaGVkIGluCj4geW91ciBTU0QuCgorMSA6KSB5
+b3UgbWF5IGFsc28gdHJ5IGVuaGFuY2VJTywgZmxhc2hjYWNoZS4uLgoKLS0gCi0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAg
+ICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFj
+QGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAw
+MgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
