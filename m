@@ -1,27 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DDDDC7F83
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 12:06:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AE3C5304051
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 10:06:43 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C08EF7F86
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 12:46:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A089030407A
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 10:46:38 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yFqVVIQpuhvJCrqj for
-	<xfs@oss.sgi.com>; Tue, 18 Mar 2014 10:06:43 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2IH6d20013681
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2014 13:06:40 -0400
-Message-ID: <53287D1E.2010409@redhat.com>
-Date: Tue, 18 Mar 2014 12:06:38 -0500
-From: Eric Sandeen <esandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_quota: avoid segfault when report -h on non-existent
-	path
-References: <1395160746-26654-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1395160746-26654-1-git-send-email-eguan@redhat.com>
-Reply-To: sandeen@redhat.com
+	cuda.sgi.com with ESMTP id YtMOmSk7qqNSIuUh for
+	<xfs@oss.sgi.com>; Tue, 18 Mar 2014 10:46:37 -0700 (PDT)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] [PATCH] generic/009: add generic test for fallocate zero range
+Date: Tue, 18 Mar 2014 18:46:27 +0100
+Message-Id: <1395164788-19779-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,46 +20,468 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-On 3/18/14, 11:39 AM, Eryu Guan wrote:
-> Command xfs_quota -xc "report -h" /nosuchdir would get segfault, fix
-> that by checking fs_path first before dereferencing it.
-> 
-> Cc: Eric Sandeen <esandeen@redhat.com>
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->  quota/report.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/quota/report.c b/quota/report.c
-> index 70894a2..d486524 100644
-> --- a/quota/report.c
-> +++ b/quota/report.c
-> @@ -624,7 +624,7 @@ report_f(
->  		if (flags & ALL_MOUNTS_FLAG)
->  			report_any_type(fp, form, type, NULL,
->  					lower, upper, flags);
-> -		else if (fs_path->fs_flags & FS_MOUNT_POINT)
-> +		else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
->  			report_any_type(fp, form, type, fs_path->fs_dir,
->  					lower, upper, flags);
->  	} else while (argc > optind) {
-> 
+This is based on xfs/242. This is very similar to ext4/001 however this
+test has some tweaks to make it work test zero range on generic file
+system. This includes turning off ext4 extents zeroout and disabling
+the test for xfs on systems where PAGE_SIZE > 4096.
 
-I think this is ok; state_f does the same thing.
+It is testing extent tree manipulation with fallocate zero range
+operation.
 
-but others don't; enable_f, disable_f, off_f etc.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ tests/generic/009     |  78 ++++++++++++
+ tests/generic/009.out | 333 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/group   |   1 +
+ 3 files changed, 412 insertions(+)
+ create mode 100644 tests/generic/009
+ create mode 100644 tests/generic/009.out
 
-Also this seems to be a slight regression since v3.1.8 or so, let me double
-check that and see if we need to fix something more general.
-
-Thanks!
--Eric
+diff --git a/tests/generic/009 b/tests/generic/009
+new file mode 100644
+index 0000000..b7b0b3f
+--- /dev/null
++++ b/tests/generic/009
+@@ -0,0 +1,78 @@
++#! /bin/bash
++# FS QA Test No. 009
++#
++# Test fallocate FALLOC_FL_ZERO_RANGE
++#
++#-----------------------------------------------------------------------
++# Copyright 2014 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_os Linux
++_require_xfs_io_falloc "fzero"
++
++testfile=$TEST_DIR/009.$$
++
++# Disable extent zeroing for ext4 as that change where holes are created
++if [ "$FSTYP" = "ext4" ]; then
++	DEV=`basename $TEST_DEV`
++	echo 0 >/sys/fs/ext4/$DEV/extent_max_zeroout_kb
++fi
++
++# When PAGE_SIZE > 4096 xfs extent layout is different so it would not match
++# the output.
++if [ "$FSTYP" = "xfs" ]; then
++	PAGE_SIZE=`getconf PAGE_SIZE`
++	if [ $PAGE_SIZE -gt 4096 ]; then
++		_notrun "Not supported on xfs with page size > 4096"
++	fi
++fi
++
++# Standard zero range tests
++_test_generic_punch falloc fzero fzero fiemap _filter_fiemap $testfile
++
++# Delayed allocation zero range tests
++_test_generic_punch -d falloc fzero fzero fiemap _filter_fiemap $testfile
++
++# Multi zero range tests
++_test_generic_punch -k falloc fzero fzero fiemap _filter_fiemap $testfile
++
++# Delayed allocation multi zero range tests
++_test_generic_punch -d -k falloc fzero fzero fiemap _filter_fiemap $testfile
++
++status=0 ; exit
+diff --git a/tests/generic/009.out b/tests/generic/009.out
+new file mode 100644
+index 0000000..4b451ba
+--- /dev/null
++++ b/tests/generic/009.out
+@@ -0,0 +1,333 @@
++QA output created by 009
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	4. hole -> data
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..31]: data
++3: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: hole
++1b3779878366498b28c702ef88c4a773
++	8. unwritten -> hole
++0: [0..23]: unwritten
++1: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	9. unwritten -> data
++0: [0..23]: unwritten
++1: [24..31]: data
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	4. hole -> data
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..31]: data
++3: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: hole
++1b3779878366498b28c702ef88c4a773
++	8. unwritten -> hole
++0: [0..23]: unwritten
++1: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	9. unwritten -> data
++0: [0..23]: unwritten
++1: [24..31]: data
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..31]: unwritten
++2: [32..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..39]: unwritten
++daa100df6e6711906b61c9ab5aa16032
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	5. hole -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	8. unwritten -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	9. unwritten -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: unwritten
++2: [24..39]: hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	5. hole -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	8. unwritten -> hole
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	9. unwritten -> data
++0: [0..7]: data
++1: [8..23]: unwritten
++2: [24..39]: data
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: unwritten
++2: [32..39]: data
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: data
++1: [24..39]: unwritten
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: unwritten
++1: [16..39]: data
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: data
++0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0000200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0000400 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
+diff --git a/tests/generic/group b/tests/generic/group
+index a99b6a1..71bde41 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -10,6 +10,7 @@
+ 006 dir udf auto quick
+ 007 dir udf auto quick
+ 008 auto quick prealloc
++009 auto quick prealloc
+ 010 other udf auto
+ 011 dir udf auto quick
+ 013 other ioctl udf auto quick
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
