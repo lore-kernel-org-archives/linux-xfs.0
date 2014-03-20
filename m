@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 30CDD7F81
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2014 23:05:35 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D3ECB7F8B
+	for <xfs@oss.sgi.com>; Wed, 19 Mar 2014 23:17:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E5E428F8073
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2014 21:05:34 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 987B830407F
+	for <xfs@oss.sgi.com>; Wed, 19 Mar 2014 21:17:15 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FlbLTFYAeiBPqGhi for
-	<xfs@oss.sgi.com>; Wed, 19 Mar 2014 21:05:30 -0700 (PDT)
-Date: Thu, 20 Mar 2014 12:05:25 +0800
+	cuda.sgi.com with ESMTP id GhJA4CSSWORA6VXS for
+	<xfs@oss.sgi.com>; Wed, 19 Mar 2014 21:17:14 -0700 (PDT)
+Date: Thu, 20 Mar 2014 12:17:11 +0800
 From: Eryu Guan <eguan@redhat.com>
 Subject: Re: [PATCH] shared: new test to use up free inodes
-Message-ID: <20140320040525.GX8312@dhcp-13-216.nay.redhat.com>
+Message-ID: <20140320041711.GY8312@dhcp-13-216.nay.redhat.com>
 References: <1395221269-11085-1-git-send-email-eguan@redhat.com>
-	<20140320001429.GI7072@dastard>
+	<532A34D3.8060805@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140320001429.GI7072@dastard>
+In-Reply-To: <532A34D3.8060805@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Thu, Mar 20, 2014 at 11:14:29AM +1100, Dave Chinner wrote:
-> On Wed, Mar 19, 2014 at 05:27:49PM +0800, Eryu Guan wrote:
+On Wed, Mar 19, 2014 at 07:22:43PM -0500, Eric Sandeen wrote:
+> On 3/19/14, 4:27 AM, Eryu Guan wrote:
 > > Stress test fs by using up all inodes and check fs.
 > > 
 > > Also a regression test for xfsprogs commit
 > > d586858 xfs_repair: fix sibling pointer tests in verify_dir2_path()
-> > 
+> 
+> Thanks Eryu.  I had started to write this test but ran into another bug
+> (where xfs blows past the maximum inode space %) so got distracted.
+
+I didn't notice this. Do I need to add extra check to detect this in
+my test? I want to cover this in one test case if possible.
+
+> 
+> I see Dave's already picked apart the patch so I won't comment specifically
+> on it, but you might be aware of the possibility that xfs won't stop when
+> we hit the default imaxpct, and may actually fill the entire fs.  That's
+> not necessarily a problem but it may take longer than you expect.
+
+Yes, I noticed that testing on xfs didn't give ENOSPC error as testing
+on ext4 do. The number of extra files created is less than 1000, so I
+think that's fine.
+
+> 
+> I also wonder what's necessary to actually test the sibling pointer problem;
+> on xfs, it's probably just a sufficiently large directory, not necessarily
+> a full fs?
+
+I've seen list corruption and then xfs force shutdown by running the
+same test(at the time removing all created files) on earlier RHEL7
+test kernels, then the bug was fixed by xfs update. So I'm not sure
+it's large directory or taking all free inode trigger the bug, I think
+I'd better still to fulfill the fs.
+
+Thanks,
+Eryu
+> 
+> -Eric
+> 
+> 
 > > Signed-off-by: Eryu Guan <eguan@redhat.com>
 > > ---
 > >  tests/shared/006     | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -104,16 +137,6 @@ On Thu, Mar 20, 2014 at 11:14:29AM +1100, Dave Chinner wrote:
 > > +
 > > +	while [ $i -lt $nr_file ]; do
 > > +		touch $dir/${prefix}_${i}
-> 
-> echo -n > $dir/${prefix}_${i}
-> 
-> will create a zero length file without needing to fork/exec and so
-> will have much lower overhead and create the files significantly
-> faster.
-
-This is better.
-
-> 
 > > +		let i=$i+1
 > > +	done
 > > +}
@@ -133,27 +156,10 @@ This is better.
 > > +
 > > +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >>$seqres.full 2>&1
 > > +_scratch_mount
-> 
-> If this is going to be a stress test, you should add a scale factor
-> into this.
-
-I don't have strong feeling to make it a stress test, I'd like to
-remove the stress group to make the test a simple regression test.
-
-> 
 > > +
 > > +i=0
 > > +free_inode=`df -iP $SCRATCH_MNT | tail -1 | awk '{print $2}'`
-> 
-> $DF_PROG
-
-OK.
-
-> 
 > > +loop=$((free_inode / 1000 + 1))
-> 
-> And probably a LOAD_FACTOR into this to scale parallelism.
-> 
 > > +mkdir -p $SCRATCH_MNT/testdir
 > > +
 > > +echo "Create $((loop * 1000)) files in $SCRATCH_MNT/testdir" >>$seqres.full
@@ -162,32 +168,7 @@ OK.
 > > +	let i=$i+1
 > > +done
 > > +wait
-> 
-> On XFS, that will create at least 500 threads creating 1000 inodes each
-> all in the same directory. This doesn't give you any extra
-> parallelism at all over just creating $free_inode files in a single
-> directory with a single thread. Indeed, it will probably be slower
-> due to the contention on the directory mutex.
-> 
-> If you want to scale this in terms of parallelism to keep the
-> creation time down, each loop needs to write into a different
-> directory. i.e. something like:
-> 
-> 
-> echo "Create $((loop * 1000)) files in $SCRATCH_MNT/testdir" >>$seqres.full
-> while [ $i -lt $loop ]; do
-> 	mkdir -p $SCRATCH_MNT/testdir/$i
-> 	create_file $SCRATCH_MNT/testdir/$i 1000 $i >>$seqres.full 2>&1 &
-> 	let i=$i+1
-> done
-> wait
-> 
-> And even then I'd suggest that you'd be much better off with 10,000
-> files to a sub-directory....
-
-Will do.
-
-> 
+> > +
 > > +# log inode status in $seqres.full for debug purpose
 > > +echo "Inode status after taking all inodes" >>$seqres.full
 > > +df -i $SCRATCH_MNT >>$seqres.full
@@ -196,26 +177,34 @@ Will do.
 > > +
 > > +# Check again after removing all the files
 > > +rm -rf $SCRATCH_MNT/testdir
+> > +echo "Inode status after deleting all test files" >>$seqres.full
+> > +df -i $SCRATCH_MNT >>$seqres.full
+> > +_check_scratch_fs
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/shared/006.out b/tests/shared/006.out
+> > new file mode 100644
+> > index 0000000..675c1b7
+> > --- /dev/null
+> > +++ b/tests/shared/006.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 006
+> > +Silence is golden
+> > diff --git a/tests/shared/group b/tests/shared/group
+> > index 29f17b0..230e560 100644
+> > --- a/tests/shared/group
+> > +++ b/tests/shared/group
+> > @@ -8,6 +8,7 @@
+> >  003 auto quick prealloc
+> >  004 auto quick prealloc
+> >  005 auto prealloc
+> > +006 auto stress enospc
+> >  032 mkfs auto quick
+> >  051 acl udf auto quick
+> >  218 auto fsr quick
+> > 
 > 
-> That can be parallelised as well when you have multiple subdirs:
-> 
-> for d in $SCRATCH_MNT/testdir/*; do
-> 	rm -rf $d &
-> done
-> wait
-
-Will do.
-
-Thanks for the detailed review (as always)!
-
-Eryu
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
