@@ -1,23 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 972A47F69
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 07:51:01 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 03C467F67
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 11:29:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4706E8F8064
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:50:58 -0700 (PDT)
-Received: from mail-wg0-f42.google.com (mail-wg0-f42.google.com
-	[74.125.82.42]) by cuda.sgi.com with ESMTP id M3kN2PjuWJScd9G6
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:50:56 -0700 (PDT)
-Received: by mail-wg0-f42.google.com with SMTP id y10so1557051wgg.25
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:50:54 -0700 (PDT)
-From: Filipe David Borba Manana <fdmanana@gmail.com>
-Subject: [PATCH v4] xfstests: add test for btrfs send regarding directory
-	moves/renames
-Date: Fri, 21 Mar 2014 12:50:41 +0000
-Message-Id: <1395406241-8624-1-git-send-email-fdmanana@gmail.com>
-In-Reply-To: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
-References: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9333CAC007
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 09:29:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id utCRvWzKxP0ugqRD for
+	<xfs@oss.sgi.com>; Fri, 21 Mar 2014 09:29:24 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2LGTNTF019534
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 12:29:23 -0400
+Received: from laptop.bfoster (vpn-60-19.rdu2.redhat.com [10.10.60.19])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s2LGTMRk027370
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 12:29:23 -0400
+Received: from laptop.bfoster (localhost.localdomain [127.0.0.1])
+	by laptop.bfoster (Postfix) with ESMTP id 55825120AF8
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 12:29:22 -0400 (EDT)
+Received: (from bfoster@localhost)
+	by laptop.bfoster (8.14.7/8.14.7/Submit) id s2LGTLpB007876
+	for xfs@oss.sgi.com; Fri, 21 Mar 2014 12:29:21 -0400
+Date: Fri, 21 Mar 2014 12:29:20 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [FAQ] XFS speculative preallocation
+Message-ID: <20140321162920.GA3087@laptop.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,332 +37,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: jbacik@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-Regression test for a btrfs incremental send issue where the kernel failed
-to build paths strings. This resulted either in sending a wrong path string
-to the send stream or entering an infinite loop when building it.
-This happened in the following scenarios:
+Hi all,
 
-1) A directory was made a child of another directory which has a lower inode
-   number and has a pending move/rename operation. This made the incremental
-   send code go into an infinite loop when building a path string;
+Eric had suggested we add an FAQ entry for speculative preallocation
+since it seems to be a common question, so I offered to write something
+up. I started with a single entry but split it into a couple Q's when it
+turned into TL;DR fodder. ;)
 
-2) A directory was made a child of another directory which has a higher inode
-   number, but the new parent wasn't moved nor renamed. Instead some other
-   ancestor higher in the hierarchy, with an higher inode number too, was
-   moved/renamed too. This made the incremental send code go into an infinite
-   loop when building a path string;
+The text is embedded below for review. Thoughts on the questions or
+content is appreciated. Also, once folks are Ok with this... how does
+one gain edit access to the wiki?
 
-3) An orphan directory is created and at least one of its non-immediate
-   descendent directories have a pending move/rename operation. This made
-   an incremental send issue to the send stream an invalid path string that
-   didn't account for the orphan ancestor directory.
+Brian
 
-This issue is fixed by the following linux kernel btrfs patches:
-
-   Btrfs: fix incremental send's decision to delay a dir move/rename
-   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
-   Btrfs: send, account for orphan directories when building path strings
-
-Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 ---
 
-V2: Added more tests.
-V3: Added more tests for more complex cases.
-V4: Added more tests, related to case 3) mentioned above.
+Q: Why do files on XFS use more data blocks than expected?
 
- tests/btrfs/045     |  254 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/045.out |    1 +
- tests/btrfs/group   |    1 +
- 3 files changed, 256 insertions(+)
- create mode 100755 tests/btrfs/045
- create mode 100644 tests/btrfs/045.out
+A:
 
-diff --git a/tests/btrfs/045 b/tests/btrfs/045
-new file mode 100755
-index 0000000..d95c493
---- /dev/null
-+++ b/tests/btrfs/045
-@@ -0,0 +1,254 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/045
-+#
-+# Regression test for a btrfs incremental send issue where the kernel failed
-+# to build paths strings. This resulted either in sending a wrong path string
-+# to the send stream or entering an infinite loop when building it.
-+# This happened in the following scenarios:
-+#
-+# 1) A directory was made a child of another directory which has a lower inode
-+#    number and has a pending move/rename operation. This made the incremental
-+#    send code go into an infinite loop when building a path string;
-+#
-+# 2) A directory was made a child of another directory which has a higher inode
-+#    number, but the new parent wasn't moved nor renamed. Instead some other
-+#    ancestor higher in the hierarchy, with an higher inode number too, was
-+#    moved/renamed too. This made the incremental send code go into an infinite
-+#    loop when building a path string;
-+#
-+# 3) An orphan directory is created and at least one of its non-immediate
-+#    descendent directories have a pending move/rename operation. This made
-+#    an incremental send issue to the send stream an invalid path string that
-+#    didn't account for the orphan ancestor directory.
-+#
-+# This issue is fixed by the following linux kernel btrfs patches:
-+#
-+#   Btrfs: fix incremental send's decision to delay a dir move/rename
-+#   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
-+#   Btrfs: send, account for orphan directories when building path strings
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+tmp=`mktemp -d`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    rm -fr $tmp
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+_require_fssum
-+_need_to_be_root
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# case 1), mentioned above
-+mkdir -p $SCRATCH_MNT/a/b
-+mkdir $SCRATCH_MNT/a/c
-+mkdir $SCRATCH_MNT/a/b/d
-+touch $SCRATCH_MNT/a/file1
-+touch $SCRATCH_MNT/a/b/file2
-+mv $SCRATCH_MNT/a/file1 $SCRATCH_MNT/a/b/d/file3
-+ln $SCRATCH_MNT/a/b/d/file3 $SCRATCH_MNT/a/b/file4
-+mkdir $SCRATCH_MNT/a/b/f
-+mv $SCRATCH_MNT/a/b $SCRATCH_MNT/a/c/b2
-+touch $SCRATCH_MNT/a/c/b2/d/file5
-+
-+# case 2), mentioned above
-+mkdir -p $SCRATCH_MNT/a/x1/x2
-+mkdir $SCRATCH_MNT/a/Z
-+mkdir -p $SCRATCH_MNT/a/x1/x2/x3/x4/x5
-+
-+# case 2) again, but a more complex scenario
-+mkdir -p $SCRATCH_MNT/_a/_b/_c/_d
-+mkdir $SCRATCH_MNT/_a/_b/_c/_d/_e
-+mkdir $SCRATCH_MNT/_a/_b/_c/_d/_f
-+mv $SCRATCH_MNT/_a/_b/_c/_d/_e $SCRATCH_MNT/_a/_b/_c/_d/_f/_E2
-+mkdir $SCRATCH_MNT/_a/_b/_c/_g
-+mv $SCRATCH_MNT/_a/_b/_c/_d $SCRATCH_MNT/_a/_b/_D2
-+
-+# case 3), mentioned above
-+mkdir -p $SCRATCH_MNT/za/zb/zc/zd
-+mkdir $SCRATCH_MNT/za/zb/ze
-+mv $SCRATCH_MNT/za/zb/zc $SCRATCH_MNT/za/zb/ze/zCC
-+mkdir $SCRATCH_MNT/za/zb/ze/zCC/zd/zf
-+mkdir $SCRATCH_MNT/za/zg
-+
-+# Filesystem looks like:
-+#
-+# .                               (ino 256)
-+# |-- a/                          (ino 257)
-+# |   |-- c/                      (ino 259)
-+# |   |   |-- b2/                 (ino 258)
-+# |   |       |-- d/              (ino 260)
-+# |   |       |   |-- file3       (ino 261)
-+# |   |       |   |-- file5       (ino 264)
-+# |   |       |
-+# |   |       |-- file2           (ino 262)
-+# |   |       |-- file4           (ino 261)
-+# |   |       |-- f/              (ino 263)
-+# |   |
-+# |   |-- x1/                     (ino 265)
-+# |   |   |-- x2/                 (ino 266)
-+# |   |       |-- x3/             (ino 268)
-+# |   |           |-- x4/         (ino 269)
-+# |   |               |-- x5/     (ino 270)
-+# |   |
-+# |   |-- Z/                      (ino 267)
-+# |
-+# |-- _a/                         (ino 271)
-+# |    |-- _b/                    (ino 272)
-+# |         |-- _c/               (ino 273)
-+# |         |    |-- _g/          (ino 277)
-+# |         |
-+# |         |-- _D2/              (ino 274)
-+# |              |-- _f/          (ino 276)
-+# |                   |-- _E2/    (ino 275)
-+# |
-+# |-- za/                         (ino 278)
-+#     |-- zb/                     (ino 279)
-+#     |   |-- ze/                 (ino 282)
-+#     |       |-- zCC/            (ino 280)
-+#     |            |-- zd/        (ino 281)
-+#     |                |-- zf/    (ino 283)
-+#     |
-+#     |-- zg/                     (ino 284)
-+
-+_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1
-+
-+# case 1), mentioned above
-+ln $SCRATCH_MNT/a/c/b2/file4 $SCRATCH_MNT/a/c/b2/f/file6
-+mv $SCRATCH_MNT/a/c/b2/d/file5 $SCRATCH_MNT/a/c/file7
-+touch $SCRATCH_MNT/a/c/b2/d/file8
-+touch $SCRATCH_MNT/a/c/b2/file9
-+ln $SCRATCH_MNT/a/c/b2/file9 $SCRATCH_MNT/a/c/b2/file10
-+mv $SCRATCH_MNT/a/c/b2/f $SCRATCH_MNT/a/f2
-+mv $SCRATCH_MNT/a/c $SCRATCH_MNT/a/c2
-+mv $SCRATCH_MNT/a/c2/b2 $SCRATCH_MNT/a/f2/b3
-+mv $SCRATCH_MNT/a/c2 $SCRATCH_MNT/a/f2/b3/c3
-+touch $SCRATCH_MNT/a/f2/b3/c3/file11
-+mv $SCRATCH_MNT/a $SCRATCH_MNT/a2
-+
-+# case 2), mentioned above
-+mv $SCRATCH_MNT/a2/x1/x2/x3 $SCRATCH_MNT/a2/Z/X33
-+mv $SCRATCH_MNT/a2/x1/x2 $SCRATCH_MNT/a2/Z/X33/x4/x5/X22
-+
-+# case 2) again, but a more complex scenario
-+mkdir $SCRATCH_MNT/_a/_o
-+mv $SCRATCH_MNT/_a/_b/_c/_g $SCRATCH_MNT/_a/_b/_D2/_f/_G2
-+mv $SCRATCH_MNT/_a/_b/_D2 $SCRATCH_MNT/_a/_b/_dd
-+mv $SCRATCH_MNT/_a/_b/_c $SCRATCH_MNT/_a/_C2
-+mv $SCRATCH_MNT/_a/_b/_dd/_f $SCRATCH_MNT/_a/_o/_FF
-+mv $SCRATCH_MNT/_a/_b $SCRATCH_MNT/_a/_o/_FF/_E2/_BB
-+
-+# case 3), mentioned above
-+mkdir $SCRATCH_MNT/za/zg/zh
-+mv $SCRATCH_MNT/za/zb/ze $SCRATCH_MNT/za/zg/zh/zEE
-+mv $SCRATCH_MNT/za/zg/zh/zEE/zCC/zd $SCRATCH_MNT/za/zg/zh/zEE/zDD
-+mv $SCRATCH_MNT/za/zg/zh/zEE/zDD/zf $SCRATCH_MNT/za/zg/zh/zEE/zDD/zFF
-+
-+# Filesystem now looks like:
-+#
-+# .                                 (ino 256)
-+# |-- a2/                           (ino 257)
-+# |   |-- f2/                       (ino 263)
-+# |   |   |-- file6                 (ino 261)
-+# |   |   |-- b3/                   (ino 258)
-+# |   |       |-- d/                (ino 260)
-+# |   |       |   |-- file3         (ino 261)
-+# |   |       |   |-- file8         (ino 285)
-+# |   |       |
-+# |   |       |-- file2             (ino 262)
-+# |   |       |-- file4             (ino 261)
-+# |   |       |-- file9             (ino 286)
-+# |   |       |-- file10            (ino 286)
-+# |   |       |
-+# |   |       |-- c3/               (ino 259)
-+# |   |           |-- file7         (ino 264)
-+# |   |           |-- file11        (ino 287)
-+# |   |
-+# |   |-- x1/                       (ino 265)
-+# |   |-- Z/                        (ino 267)
-+# |       |-- X33/                  (ino 268)
-+# |            |-- x4/              (ino 269)
-+# |                |-- x5/          (ino 270)
-+# |                    |-- X22/     (ino 266)
-+# |
-+# |-- _a/                           (ino 271)
-+# |    |-- _o/                      (ino 288)
-+# |    |    |-- _FF/                (ino 276)
-+# |    |         |-- _E2/           (ino 275)
-+# |    |         |    |-- _BB/      (ino 272)
-+# |    |         |         |-- dd/  (ino 274)
-+# |    |         |
-+# |    |         |-- G2/            (ino 277)
-+# |    |-- C2/                      (ino 273)
-+# |
-+# |-- za/                           (ino 278)
-+#     |-- zb/                       (ino 279)
-+#     |-- zg/                       (ino 284)
-+#         |-- zh/                   (ino 289)
-+#             |-- zEE/              (ino 282)
-+#                  |-- zCC/         (ino 280)
-+#                  |-- zDD/         (ino 281)
-+#                       |-- zFF/    (ino 283)
-+
-+_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2
-+
-+run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
-+run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
-+	$SCRATCH_MNT/mysnap2
-+
-+_run_btrfs_util_prog send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
-+
-+_run_btrfs_util_prog send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
-+	-f $tmp/2.snap
-+
-+_check_scratch_fs
-+
-+_scratch_unmount
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/1.snap
-+run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
-+
-+_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
-+run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
-+
-+_check_scratch_fs
-+
-+status=0
-+exit
-diff --git a/tests/btrfs/045.out b/tests/btrfs/045.out
-new file mode 100644
-index 0000000..5b0d489
---- /dev/null
-+++ b/tests/btrfs/045.out
-@@ -0,0 +1 @@
-+QA output created by 045
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 4589043..9b41895 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -47,3 +47,4 @@
- 042 auto quick
- 043 auto quick
- 044 auto quick
-+045 auto quick
--- 
-1.7.10.4
+The XFS speculative preallocation algorithm allocates extra blocks
+beyond end of file (EOF) to combat fragmentation under parallel
+sequential write workloads. This post-EOF block allocation is included
+in 'st_blocks' counts via stat() system calls and is accounted as
+globally allocated space by the filesystem. This is reported by various
+userspace utilities (stat, du, df, ls) and thus provides a common source
+of confusion for administrators. Post-EOF blocks are temporary in most
+situations and are usually reclaimed via several possible mechanisms in
+XFS.
+
+See the FAQ entry on speculative preallocation for details.
+
+Q: What is speculative preallocation? How can I manage it?
+
+A:
+
+XFS speculatively preallocates post-EOF blocks on file extending writes
+in anticipation of future extending writes. The size of a preallocation
+is dynamic and depends on the size of the previous extent in the file
+(starting from 0 again if the write extends past a hole). As files grow
+larger, so do the size of preallocations. Speculative preallocation is
+not enabled for files smaller than a minimum size (64k by default, but
+can vary depending on filesystem geometry and/or mount options).
+Preallocations are capped at a maximum of 8GB on 4k block filesystems.
+Preallocation is throttled automatically as the filesystem approaches
+low free space conditions or other allocation limits on a file (such as
+a quota).
+ 
+In most cases, speculative preallocation is automatically reclaimed when
+a file is closed. The preallocation may persist after file close if an
+open, write, close pattern is repeated on a file. In this scenario,
+post-EOF preallocation is trimmed once the inode is reclaimed from cache
+or the filesystem unmounted.
+
+Linux 3.8 (and later) includes a scanner to perform background trimming
+of files with lingering post-EOF preallocations. The scanner bypasses
+files that have been recently modified to not interfere with ongoing
+writes. A 5 minute scan interval is used by default and can be adjusted
+via the following file (value in seconds):
+
+	/proc/sys/fs/xfs/speculative_prealloc_lifetime
+
+Although speculative preallocation can lead to reports of excess space
+usage, the preallocated space is not permanent unless explicitly made so
+via fallocate or a similar interface. Preallocated space can also be
+encoded permanently in situations where file size is extended beyond a
+range of post-EOF blocks (i.e., via truncate). Otherwise, preallocated
+blocks are reclaimed on file close, inode reclaim, unmount or in the
+background once file write activity subsides.
+
+Finally, the XFS block allocation algorithm can be configured to use a
+fixed allocation size with the 'allocsize=' mount option. Note that
+speculative preallocation does not occur when a fixed allocation size is
+set and thus increases the potential for fragmentation via parallel
+writes.
 
 _______________________________________________
 xfs mailing list
