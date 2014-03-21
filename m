@@ -1,15 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9B6F17F76
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 11:54:34 -0500 (CDT)
-From: Shaun Gosse <sgosse@sgi.com>
-Subject: RE: [FAQ] XFS speculative preallocation
-Date: Fri, 21 Mar 2014 16:54:32 +0000
-Message-ID: <8D3FA7645C1CFC4E9E783D22B4C708647306CBB9@P-EXMB2-DC21.corp.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 03F697F7B
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 12:09:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E80718F8039
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 10:09:09 -0700 (PDT)
+Received: from mail-ee0-f48.google.com (mail-ee0-f48.google.com
+	[74.125.83.48]) by cuda.sgi.com with ESMTP id 2We07Ozdkcq5NtaZ
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 21 Mar 2014 10:09:07 -0700 (PDT)
+Received: by mail-ee0-f48.google.com with SMTP id b57so2043766eek.7
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 10:09:06 -0700 (PDT)
+Received: from t400.localnet (89-65-189-48.dynamic.chello.pl. [89.65.189.48])
+	by mx.google.com with ESMTPSA id
+	o4sm12825343eef.20.2014.03.21.10.09.04 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Fri, 21 Mar 2014 10:09:05 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [FAQ] XFS speculative preallocation
+Date: Fri, 21 Mar 2014 18:09:03 +0100
 References: <20140321162920.GA3087@laptop.bfoster>
 In-Reply-To: <20140321162920.GA3087@laptop.bfoster>
-Content-Language: en-US
 MIME-Version: 1.0
+Message-Id: <201403211809.03683.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,69 +31,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-
-Brian,
-
-FWIW, from my perspective as a newcomer to XFS that is quite clear and understandable and informative. Looks like a valuable addition.
-
-I've got no idea how to get write access on the wiki personally, but hopefully that answer will arrive for you 'soon(tm)'.
-
-Cheers,
--Shaun
-
------Original Message-----
-From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of Brian Foster
-Sent: Friday, March 21, 2014 11:29 AM
 To: xfs@oss.sgi.com
-Subject: [FAQ] XFS speculative preallocation
 
-Hi all,
-
-Eric had suggested we add an FAQ entry for speculative preallocation since it seems to be a common question, so I offered to write something up. I started with a single entry but split it into a couple Q's when it turned into TL;DR fodder. ;)
-
-The text is embedded below for review. Thoughts on the questions or content is appreciated. Also, once folks are Ok with this... how does one gain edit access to the wiki?
-
-Brian
-
----
-
-Q: Why do files on XFS use more data blocks than expected?
-
-A:
-
-The XFS speculative preallocation algorithm allocates extra blocks beyond end of file (EOF) to combat fragmentation under parallel sequential write workloads. This post-EOF block allocation is included in 'st_blocks' counts via stat() system calls and is accounted as globally allocated space by the filesystem. This is reported by various userspace utilities (stat, du, df, ls) and thus provides a common source of confusion for administrators. Post-EOF blocks are temporary in most situations and are usually reclaimed via several possible mechanisms in XFS.
-
-See the FAQ entry on speculative preallocation for details.
-
-Q: What is speculative preallocation? How can I manage it?
-
-A:
-
-XFS speculatively preallocates post-EOF blocks on file extending writes in anticipation of future extending writes. The size of a preallocation is dynamic and depends on the size of the previous extent in the file (starting from 0 again if the write extends past a hole). As files grow larger, so do the size of preallocations. Speculative preallocation is not enabled for files smaller than a minimum size (64k by default, but can vary depending on filesystem geometry and/or mount options).
-Preallocations are capped at a maximum of 8GB on 4k block filesystems.
-Preallocation is throttled automatically as the filesystem approaches low free space conditions or other allocation limits on a file (such as a quota).
- 
-In most cases, speculative preallocation is automatically reclaimed when a file is closed. The preallocation may persist after file close if an open, write, close pattern is repeated on a file. In this scenario, post-EOF preallocation is trimmed once the inode is reclaimed from cache or the filesystem unmounted.
-
-Linux 3.8 (and later) includes a scanner to perform background trimming of files with lingering post-EOF preallocations. The scanner bypasses files that have been recently modified to not interfere with ongoing writes. A 5 minute scan interval is used by default and can be adjusted via the following file (value in seconds):
-
-	/proc/sys/fs/xfs/speculative_prealloc_lifetime
-
-Although speculative preallocation can lead to reports of excess space usage, the preallocated space is not permanent unless explicitly made so via fallocate or a similar interface. Preallocated space can also be encoded permanently in situations where file size is extended beyond a range of post-EOF blocks (i.e., via truncate). Otherwise, preallocated blocks are reclaimed on file close, inode reclaim, unmount or in the background once file write activity subsides.
-
-Finally, the XFS block allocation algorithm can be configured to use a fixed allocation size with the 'allocsize=' mount option. Note that speculative preallocation does not occur when a fixed allocation size is set and thus increases the potential for fragmentation via parallel writes.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpZGF5IDIxIG9mIE1hcmNoIDIwMTQsIEJyaWFuIEZvc3RlciB3cm90ZToKPiBIaSBhbGws
+Cj4gCj4gRXJpYyBoYWQgc3VnZ2VzdGVkIHdlIGFkZCBhbiBGQVEgZW50cnkgZm9yIHNwZWN1bGF0
+aXZlIHByZWFsbG9jYXRpb24KPiBzaW5jZSBpdCBzZWVtcyB0byBiZSBhIGNvbW1vbiBxdWVzdGlv
+biwgc28gSSBvZmZlcmVkIHRvIHdyaXRlIHNvbWV0aGluZwo+IHVwLiBJIHN0YXJ0ZWQgd2l0aCBh
+IHNpbmdsZSBlbnRyeSBidXQgc3BsaXQgaXQgaW50byBhIGNvdXBsZSBRJ3Mgd2hlbiBpdAo+IHR1
+cm5lZCBpbnRvIFRMO0RSIGZvZGRlci4gOykKPiAKPiBUaGUgdGV4dCBpcyBlbWJlZGRlZCBiZWxv
+dyBmb3IgcmV2aWV3LiBUaG91Z2h0cyBvbiB0aGUgcXVlc3Rpb25zIG9yCj4gY29udGVudCBpcyBh
+cHByZWNpYXRlZC4gQWxzbywgb25jZSBmb2xrcyBhcmUgT2sgd2l0aCB0aGlzLi4uIGhvdyBkb2Vz
+Cj4gb25lIGdhaW4gZWRpdCBhY2Nlc3MgdG8gdGhlIHdpa2k/CgpNb3JlIHF1ZXN0aW9ucyBvciB0
+b3BpY3MgdGhhdCBjYW4gYmUgY29udmVydGVkIHRvIHF1ZXN0aW9ucyBmcm9tIG1lOgoKMSkgQmVm
+b3JlIHByZWFsbG9jYXRpb24ga2VybmVsIGRpZCB0aGluZ3MgZGlmZmVyZW50bHkuIEFGQUlLIGl0
+IHdhc24ndCB0aGUgCnNhbWUgYXMgYWxsb2NzaXplPTY0aywgd2FzIGl0PyBJcyB0aGVyZSBhIHdh
+eSB0byBnZXQgb2xkIGJlaGF2aW91ciBvciAKc29tZXRoaW5nIHNpbWlsYXIgdG8gb2xkIGJlaGF2
+aW91cj8KCjIpIElzIHRoZXJlIGEgd2F5IHRvIHNlZSB3aGljaCBmaWxlIGdvdCBzb21lIHByZWFs
+bG9jYXRpb24gYW5kIGhvdyBiaWcgdGhhdCAKcHJlYWxsb2NhdGlvbiBpcz8gU2NlbmFyaW8gLSBz
+b21ldGhpbmcgYXRlIGZyZWUgc3BhY2UgZHVlIHRvIHByZWFsbG9jYXRpb24gYW5kIApmcm9tIGFk
+bWluIHBvaW50IG9mIHZpZXcgaXQgd291bGQgYmUgdXNlZnVsbCB0byBrbm93IHdoaWNoIGFwcCBk
+aWQgdGhhdCBhbmQgCmhvdyBtYW55IE1CIHdhcyBkdWUgdG8gcHJlYWxsb2NhdGlvbiAodnMgcmVh
+bCwgd3JpdHRlbiBkYXRhKS4KCj4gTGludXggMy44IChhbmQgbGF0ZXIpIGluY2x1ZGVzIGEgc2Nh
+bm5lciB0byBwZXJmb3JtIGJhY2tncm91bmQgdHJpbW1pbmcKPiBvZiBmaWxlcyB3aXRoIGxpbmdl
+cmluZyBwb3N0LUVPRiBwcmVhbGxvY2F0aW9ucy4gVGhlIHNjYW5uZXIgYnlwYXNzZXMKPiBmaWxl
+cyB0aGF0IGhhdmUgYmVlbiByZWNlbnRseSAKCldoYXQgdGltZSBpcyAicmVjZW50bHkiID8gSXMg
+Im1vZGlmaWVkIiBlcXVhbCB0byAiZmlsZSBkYXRhIG1vZGlmaWVkIiBvciAiZmlsZSAKZGF0YSBv
+ciBtZXRhZGF0YSBtb2RpZmllZCIgPwoKPiBtb2RpZmllZCB0byBub3QgaW50ZXJmZXJlIHdpdGgg
+b25nb2luZwo+IHdyaXRlcy4KCkluIGNhc2Ugb2Ygc29tZSBhcHAgdGhhdCBjb25zdGFudGx5IHdy
+aXRlcyB0byBmaWxlcyAoYXBhY2hlIHdlYiBzZXJ2ZXIgCndyaXR0aW5nIHRvIGl0cyBsb2dzIGZv
+ciBleGFtcGxlKSB0aGF0IGJhY2tncm91bmQgdHJpbW1pbmcgd2lsbCBuZXZlciBkbyAKYW55dGhp
+bmcgZm9yIHRoZXNlIGZpbGVzLCByaWdodD8KCj4gQSA1IG1pbnV0ZSBzY2FuIGludGVydmFsIGlz
+IHVzZWQgYnkgZGVmYXVsdCBhbmQgY2FuIGJlIGFkanVzdGVkCj4gdmlhIHRoZSBmb2xsb3dpbmcg
+ZmlsZSAodmFsdWUgaW4gc2Vjb25kcyk6Cj4gCj4gCS9wcm9jL3N5cy9mcy94ZnMvc3BlY3VsYXRp
+dmVfcHJlYWxsb2NfbGlmZXRpbWUKPiAKPiBBbHRob3VnaCBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0
+aW9uIGNhbiBsZWFkIHRvIHJlcG9ydHMgb2YgZXhjZXNzIHNwYWNlCj4gdXNhZ2UsIHRoZSBwcmVh
+bGxvY2F0ZWQgc3BhY2UgaXMgbm90IHBlcm1hbmVudCB1bmxlc3MgZXhwbGljaXRseSBtYWRlIHNv
+Cj4gdmlhIGZhbGxvY2F0ZSBvciBhIHNpbWlsYXIgaW50ZXJmYWNlLiBQcmVhbGxvY2F0ZWQgc3Bh
+Y2UgY2FuIGFsc28gYmUKPiBlbmNvZGVkIHBlcm1hbmVudGx5IGluIHNpdHVhdGlvbnMgd2hlcmUg
+ZmlsZSBzaXplIGlzIGV4dGVuZGVkIGJleW9uZCBhCj4gcmFuZ2Ugb2YgcG9zdC1FT0YgYmxvY2tz
+IChpLmUuLCB2aWEgdHJ1bmNhdGUpLiBPdGhlcndpc2UsIHByZWFsbG9jYXRlZAo+IGJsb2NrcyBh
+cmUgcmVjbGFpbWVkIG9uIGZpbGUgY2xvc2UsIGlub2RlIHJlY2xhaW0sIHVubW91bnQgb3IgaW4g
+dGhlCj4gYmFja2dyb3VuZCBvbmNlIGZpbGUgd3JpdGUgYWN0aXZpdHkgc3Vic2lkZXMuCgpTbyB0
+aGVyZSBpcyBubyBtZWNoYW5pc20gdGhhdCB3b3VsZCBzaGlybmsgcHJlYWxsb2NhdGlvbnMgaW4g
+Y2FzZSB3aGVuIGZyZWUgCnNwYWNlIGlzIChhbG1vc3Qgb3IpIGdvbmUgb24gYSBmcz8gQ2FzZTog
+YXBhY2hlIGNhdXNlcyB4ZnMgdG8gcHJlYWxsb2NhdGUgCnNldmVyYWwgR0IgZm9yIGl0cyAvdmFy
+Ly4uLi4ve2FjY2VzcyxlcnJvcn1fbG9nIChjb21tb24gcHJvYmxlbSBoZXJlKSBhbmQgdGhlbiAK
+ZnJlZSBzcGFjZSBlbmRzIG9uIHRoYXQgZnMgY2F1c2luZyBwcm9ibGVtcyBmb3IgZXZlcnkgYXBw
+IHRoYXQgd3JpdGVzIHRvIC92YXIuCgpUaGFua3MhCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6
+LCBhcmVrbSAvIG1hdmVuLnBsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
