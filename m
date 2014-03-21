@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B4237F83
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 18:13:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D4B4AC001
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 16:13:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TBFoEYn9FZAcTzEY for <xfs@oss.sgi.com>;
-	Fri, 21 Mar 2014 16:13:31 -0700 (PDT)
-Message-ID: <532CC79A.8050908@sandeen.net>
-Date: Fri, 21 Mar 2014 18:13:30 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id A75E47F83
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 18:16:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2DCAAAC005
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 16:16:35 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	aOmCMreAEtpwqGcu for <xfs@oss.sgi.com>;
+	Fri, 21 Mar 2014 16:16:32 -0700 (PDT)
+Date: Sat, 22 Mar 2014 10:16:17 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [FAQ] XFS speculative preallocation
-References: <20140321162920.GA3087@laptop.bfoster>	<87eh1vuxam.fsf@mid.deneb.enyo.de>
-	<20140321231032.GC1389@dastard>
-In-Reply-To: <20140321231032.GC1389@dastard>
+Message-ID: <20140321231617.GD1389@dastard>
+References: <20140321162920.GA3087@laptop.bfoster>
+	<201403211809.03683.arekm@maven.pl>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201403211809.03683.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,53 +26,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Florian Weimer <fw@deneb.enyo.de>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On 3/21/14, 6:10 PM, Dave Chinner wrote:
-> On Fri, Mar 21, 2014 at 09:11:29PM +0100, Florian Weimer wrote:
->> * Brian Foster:
->>
->>> Although speculative preallocation can lead to reports of excess space
->>> usage, the preallocated space is not permanent unless explicitly made so
->>> via fallocate or a similar interface.
->>
->> How does an explicit allocation with posix_fallocate interact with
->> speculative preallocation?  Does it disable it?
-> 
-> fallocate is permanent preallocation using unwritten extents.
-> Speculative preallocation is an extension of delayed allocation that
-> is done when extending the file and the EOF falls into a hole. If
-> there is unwritten extents beyond EOF, speulative preallocation is
-> not performed.
-> 
->> I see rather dramatic fragmentation of the systemd journal when it is
->> stored on XFS, and it calls posix_fallocate before writing data to the
->> file.
-> 
-> There's your problem - systemd is preventing delayed allocation, and
-> so it fragmenting the file itself with it's write pattern.
-> Basically, that's a bug in systemd, and not something the filesystem
-> can avoid because userspace is directly controlling block
-> allocation.
-
-hohum, I guess we should look into this.
-
-OTOH: nothing wrong with calling posix_fallocate() if you need the space
-guarantees it provides for proper operation...
-
--Eric
-
-> Cheers,
-> 
-> Dave.
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBNYXIgMjEsIDIwMTQgYXQgMDY6MDk6MDNQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIEZyaWRheSAyMSBvZiBNYXJjaCAyMDE0LCBCcmlhbiBGb3N0ZXIg
+d3JvdGU6Cj4gPiBIaSBhbGwsCj4gPiAKPiA+IEVyaWMgaGFkIHN1Z2dlc3RlZCB3ZSBhZGQgYW4g
+RkFRIGVudHJ5IGZvciBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0aW9uCj4gPiBzaW5jZSBpdCBzZWVt
+cyB0byBiZSBhIGNvbW1vbiBxdWVzdGlvbiwgc28gSSBvZmZlcmVkIHRvIHdyaXRlIHNvbWV0aGlu
+Zwo+ID4gdXAuIEkgc3RhcnRlZCB3aXRoIGEgc2luZ2xlIGVudHJ5IGJ1dCBzcGxpdCBpdCBpbnRv
+IGEgY291cGxlIFEncyB3aGVuIGl0Cj4gPiB0dXJuZWQgaW50byBUTDtEUiBmb2RkZXIuIDspCj4g
+PiAKPiA+IFRoZSB0ZXh0IGlzIGVtYmVkZGVkIGJlbG93IGZvciByZXZpZXcuIFRob3VnaHRzIG9u
+IHRoZSBxdWVzdGlvbnMgb3IKPiA+IGNvbnRlbnQgaXMgYXBwcmVjaWF0ZWQuIEFsc28sIG9uY2Ug
+Zm9sa3MgYXJlIE9rIHdpdGggdGhpcy4uLiBob3cgZG9lcwo+ID4gb25lIGdhaW4gZWRpdCBhY2Nl
+c3MgdG8gdGhlIHdpa2k/Cj4gCj4gTW9yZSBxdWVzdGlvbnMgb3IgdG9waWNzIHRoYXQgY2FuIGJl
+IGNvbnZlcnRlZCB0byBxdWVzdGlvbnMgZnJvbSBtZToKPiAKPiAxKSBCZWZvcmUgcHJlYWxsb2Nh
+dGlvbiBrZXJuZWwgZGlkIHRoaW5ncyBkaWZmZXJlbnRseS4gQUZBSUsgaXQgd2Fzbid0IHRoZSAK
+PiBzYW1lIGFzIGFsbG9jc2l6ZT02NGssIHdhcyBpdD8gSXMgdGhlcmUgYSB3YXkgdG8gZ2V0IG9s
+ZCBiZWhhdmlvdXIgb3IgCj4gc29tZXRoaW5nIHNpbWlsYXIgdG8gb2xkIGJlaGF2aW91cj8KClRo
+ZSBvbGQgYmVoYXZpb3VyIGlzIGV4YWN0bHkgdGhhdCBvZiBhbGxvY3NpemU9NjRrLgoKPiA+IG1v
+ZGlmaWVkIHRvIG5vdCBpbnRlcmZlcmUgd2l0aCBvbmdvaW5nCj4gPiB3cml0ZXMuCj4gCj4gSW4g
+Y2FzZSBvZiBzb21lIGFwcCB0aGF0IGNvbnN0YW50bHkgd3JpdGVzIHRvIGZpbGVzIChhcGFjaGUg
+d2ViIHNlcnZlciAKPiB3cml0dGluZyB0byBpdHMgbG9ncyBmb3IgZXhhbXBsZSkgdGhhdCBiYWNr
+Z3JvdW5kIHRyaW1taW5nIHdpbGwgbmV2ZXIgZG8gCj4gYW55dGhpbmcgZm9yIHRoZXNlIGZpbGVz
+LCByaWdodD8KCklmIHRoZSBpbm9kZSBpcyBiZWluZyBjb25zdGFudGx5IGRpcnRpZWQsIHRoZW4g
+dGhlIHNwZWN1bGF0aXZlCnByZWFsbG9jIHdpbGwgbm90IGJlIHJlbW92ZWQgYnkgdGhlIGJhY2tn
+cm91bmQgc2Nhbm5lci4gSXQgb25seQpyZW1vdmVzIHByZWFsbG9jIGZyb20gY2xlYW4gaW5vZGVz
+LgoKPiA+IEEgNSBtaW51dGUgc2NhbiBpbnRlcnZhbCBpcyB1c2VkIGJ5IGRlZmF1bHQgYW5kIGNh
+biBiZSBhZGp1c3RlZAo+ID4gdmlhIHRoZSBmb2xsb3dpbmcgZmlsZSAodmFsdWUgaW4gc2Vjb25k
+cyk6Cj4gPiAKPiA+IAkvcHJvYy9zeXMvZnMveGZzL3NwZWN1bGF0aXZlX3ByZWFsbG9jX2xpZmV0
+aW1lCj4gPiAKPiA+IEFsdGhvdWdoIHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb24gY2FuIGxlYWQg
+dG8gcmVwb3J0cyBvZiBleGNlc3Mgc3BhY2UKPiA+IHVzYWdlLCB0aGUgcHJlYWxsb2NhdGVkIHNw
+YWNlIGlzIG5vdCBwZXJtYW5lbnQgdW5sZXNzIGV4cGxpY2l0bHkgbWFkZSBzbwo+ID4gdmlhIGZh
+bGxvY2F0ZSBvciBhIHNpbWlsYXIgaW50ZXJmYWNlLiBQcmVhbGxvY2F0ZWQgc3BhY2UgY2FuIGFs
+c28gYmUKPiA+IGVuY29kZWQgcGVybWFuZW50bHkgaW4gc2l0dWF0aW9ucyB3aGVyZSBmaWxlIHNp
+emUgaXMgZXh0ZW5kZWQgYmV5b25kIGEKPiA+IHJhbmdlIG9mIHBvc3QtRU9GIGJsb2NrcyAoaS5l
+LiwgdmlhIHRydW5jYXRlKS4gT3RoZXJ3aXNlLCBwcmVhbGxvY2F0ZWQKPiA+IGJsb2NrcyBhcmUg
+cmVjbGFpbWVkIG9uIGZpbGUgY2xvc2UsIGlub2RlIHJlY2xhaW0sIHVubW91bnQgb3IgaW4gdGhl
+Cj4gPiBiYWNrZ3JvdW5kIG9uY2UgZmlsZSB3cml0ZSBhY3Rpdml0eSBzdWJzaWRlcy4KPiAKPiBT
+byB0aGVyZSBpcyBubyBtZWNoYW5pc20gdGhhdCB3b3VsZCBzaGlybmsgcHJlYWxsb2NhdGlvbnMg
+aW4gY2FzZSB3aGVuIGZyZWUgCj4gc3BhY2UgaXMgKGFsbW9zdCBvcikgZ29uZSBvbiBhIGZzPwoK
+QmFja2dyb3VuZCBzcGFjZSB0cmltbWVyIHRha2VzIGNhcmUgb2YgdGhhdC4gV2UgY291bGQgcHJv
+YmFibHkgYWxzbwp0cmlnZ2VyIGl0IG9uIEVOT1NQQywgYnV0IG9uY2UgeW91IGFyZSBhbHJlYWR5
+IGF0IEVOT1NQQyBpdCdzIHRvbwpsYXRlLi4uLgoKPiBDYXNlOiBhcGFjaGUgY2F1c2VzIHhmcyB0
+byBwcmVhbGxvY2F0ZSAKPiBzZXZlcmFsIEdCIGZvciBpdHMgL3Zhci8uLi4uL3thY2Nlc3MsZXJy
+b3J9X2xvZyAoY29tbW9uIHByb2JsZW0gaGVyZSkgYW5kIHRoZW4gCj4gZnJlZSBzcGFjZSBlbmRz
+IG9uIHRoYXQgZnMgY2F1c2luZyBwcm9ibGVtcyBmb3IgZXZlcnkgYXBwIHRoYXQgd3JpdGVzIHRv
+IC92YXIuCgpZb3VyIGxvZyBmaWxlcyB3b3VsZCBoYXZlIHRvIGFscmVhZHkgYmUgR0IgaW4gc2l6
+ZSBmb3IgdGhhdCB5b3VyCmFwYWNoZSBsb2dzIHRvIHByZWFsbG9jYXRlIHRoYXQgbXVjaC4gSWYg
+eW91ciBsb2cgZmlsZXMgYXJlIHRoYXQKYmlnLCB0aGVuIC92YXIgbmVlZHMgdG8gYmUgbXVjaCwg
+bXVjaCBsYXJnZXIgdGhhbiB3aGF0IHRoZQpzcGVjdWxhdGl2ZSBwcmVhbGxvYyBmb3IgYSBoYW5k
+ZnVsIG9mIGZpbGVzIGNvdWxkIGVhc2lseSBleGhhdXN0LgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRh
+dmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
