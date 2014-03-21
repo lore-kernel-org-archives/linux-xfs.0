@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 41B9C7F3F
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:12:55 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E9CA47F3F
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:12:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 30B638F8068
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 03:12:55 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C76D3304051
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 03:12:51 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	N5kSLZa36bB9A70i for <xfs@oss.sgi.com>;
-	Fri, 21 Mar 2014 03:12:53 -0700 (PDT)
+	krChu7duFPlScGqy for <xfs@oss.sgi.com>;
+	Fri, 21 Mar 2014 03:12:50 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs: xfs_vm_write_end truncates too much on failure
-Date: Fri, 21 Mar 2014 21:11:47 +1100
-Message-Id: <1395396710-3824-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/6] xfs: write failure beyond EOF truncates too much data
+Date: Fri, 21 Mar 2014 21:11:46 +1100
+Message-Id: <1395396710-3824-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1395396710-3824-1-git-send-email-david@fromorbit.com>
 References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,49 +33,52 @@ Cc: Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, Al@disappointment.dis
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Similar to the write_begin problem, xfs-vm_write_end will truncate
-back to the old EOF, potentially removing page cache from over the
-top of delalloc blocks with valid data in them. Fix this by
-truncating back to just the start of the failed write.
+If we fail a write beyond EOF and have to handle it in
+xfs_vm_write_begin(), we truncate the inode back to the current inode
+size. This doesn't take into account the fact that we may have
+already made successful writes to the same page (in the case of block
+size < page size) and hence we can truncate the page cache away from
+blocks with valid data in them. If these blocks are delayed
+allocation blocks, we now have a mismatch between the page cache and
+the extent tree, and this will trigger - at minimum - a delayed
+block count mismatch assert when the inode is evicted from the cache.
+We can also trip over it when block mapping for direct IO - this is
+the most common symptom seen from fsx and fsstress when run from
+xfstests.
+
+Fix it by only truncating away the exact range we are updating state
+for in this write_begin call.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_aops.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_aops.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6b4ecc8..8bbd8ba 100644
+index e810243..6b4ecc8 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -1631,9 +1631,12 @@ xfs_vm_write_begin(
- }
+@@ -1609,12 +1609,18 @@ xfs_vm_write_begin(
+ 	status = __block_write_begin(page, pos, len, xfs_get_blocks);
+ 	if (unlikely(status)) {
+ 		struct inode	*inode = mapping->host;
++		size_t		isize = i_size_read(inode);
  
- /*
-- * On failure, we only need to kill delalloc blocks beyond EOF because they
-- * will never be written. For blocks within EOF, generic_write_end() zeros them
-- * so they are safe to leave alone and be written with all the other valid data.
-+ * On failure, we only need to kill delalloc blocks beyond EOF in the range of
-+ * this specific write because they will never be written. Previous writes
-+ * beyond EOF where block allocation succeeded do not need to be trashed, so
-+ * only new blocks from this write should be trashed. For blocks within
-+ * EOF, generic_write_end() zeros them so they are safe to leave alone and be
-+ * written with all the other valid data.
-  */
- STATIC int
- xfs_vm_write_end(
-@@ -1656,8 +1659,11 @@ xfs_vm_write_end(
- 		loff_t		to = pos + len;
+ 		xfs_vm_write_failed(inode, page, pos, len);
+ 		unlock_page(page);
  
- 		if (to > isize) {
--			truncate_pagecache(inode, isize);
-+			/* only kill blocks in this write beyond EOF */
-+			if (pos > isize)
-+				isize = pos;
- 			xfs_vm_kill_delalloc_range(inode, isize, to);
-+			truncate_pagecache_range(inode, isize, to);
- 		}
- 	}
- 	return ret;
+-		if (pos + len > i_size_read(inode))
+-			truncate_pagecache(inode, i_size_read(inode));
++		/*
++		 * If the write is beyond EOF, we only want to kill blocks
++		 * allocated in this write, not blocks that were previously
++		 * written successfully.
++		 */
++		if (pos + len > isize)
++			truncate_pagecache_range(inode, pos, pos + len);
+ 
+ 		page_cache_release(page);
+ 		page = NULL;
 -- 
 1.9.0
 
