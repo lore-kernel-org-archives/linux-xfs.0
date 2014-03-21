@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B4C0B7F63
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:12:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A26918F8068
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 03:12:53 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	slOwUeTaR3w9Sm8H for <xfs@oss.sgi.com>;
-	Fri, 21 Mar 2014 03:12:51 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: splitting delalloc extents can run out of reservation
-Date: Fri, 21 Mar 2014 21:11:49 +1100
-Message-Id: <1395396710-3824-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1395396710-3824-1-git-send-email-david@fromorbit.com>
-References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 972A47F69
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 07:51:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4706E8F8064
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:50:58 -0700 (PDT)
+Received: from mail-wg0-f42.google.com (mail-wg0-f42.google.com
+	[74.125.82.42]) by cuda.sgi.com with ESMTP id M3kN2PjuWJScd9G6
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:50:56 -0700 (PDT)
+Received: by mail-wg0-f42.google.com with SMTP id y10so1557051wgg.25
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:50:54 -0700 (PDT)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH v4] xfstests: add test for btrfs send regarding directory
+	moves/renames
+Date: Fri, 21 Mar 2014 12:50:41 +0000
+Message-Id: <1395406241-8624-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
+References: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,132 +32,326 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, Al@disappointment.disaster
+Cc: jbacik@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Regression test for a btrfs incremental send issue where the kernel failed
+to build paths strings. This resulted either in sending a wrong path string
+to the send stream or entering an infinite loop when building it.
+This happened in the following scenarios:
 
-When we punch a hole in a delalloc extent, we split the indirect
-block reservation between the two new extents. If we repeatedly
-punch holes in a large delalloc extent, that reservation will
-eventually run out and we'll assert fail in xfs_bunmapi() because
-the indirect block reservation for the delalloc extent is zero. This
-is caused by doing a large delalloc write, then zeroing multiple
-ranges of that write using fallocate to punch lots of holes in the
-delayed allocation range.
+1) A directory was made a child of another directory which has a lower inode
+   number and has a pending move/rename operation. This made the incremental
+   send code go into an infinite loop when building a path string;
 
-To avoid this problem, if we split the reservation and require more
-indirect blocks for the two new extents than we had for the old
-reservation, steal the additional blocks from the hole we punched in
-the extent. In most cases we only need a single extra block, so even
-if we punch only single block holes we can still retain sufficient
-indirect block reservations to avoid problems.
+2) A directory was made a child of another directory which has a higher inode
+   number, but the new parent wasn't moved nor renamed. Instead some other
+   ancestor higher in the hierarchy, with an higher inode number too, was
+   moved/renamed too. This made the incremental send code go into an infinite
+   loop when building a path string;
 
-In doing this "stealing", we need to change where we account for the
-delalloc blocks being freed. The block count held on the inode does
-not take into account the indirect block reservation, so we still
-need to do that before we free the extent. However, the accounting
-ofr free space in the superblock need to be done after we've stolen
-the blocks fro the freed extent so that they are accounted for
-correctly.
+3) An orphan directory is created and at least one of its non-immediate
+   descendent directories have a pending move/rename operation. This made
+   an incremental send issue to the send stream an invalid path string that
+   didn't account for the orphan ancestor directory.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+This issue is fixed by the following linux kernel btrfs patches:
+
+   Btrfs: fix incremental send's decision to delay a dir move/rename
+   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
+   Btrfs: send, account for orphan directories when building path strings
+
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
 ---
- fs/xfs/xfs_bmap.c | 65 ++++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 47 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 5b6092e..4bf6a0e 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4945,7 +4945,27 @@ xfs_bmap_del_extent(
- 			temp2 = xfs_bmap_worst_indlen(ip, temp2);
- 			new.br_startblock = nullstartblock((int)temp2);
- 			da_new = temp + temp2;
+V2: Added more tests.
+V3: Added more tests for more complex cases.
+V4: Added more tests, related to case 3) mentioned above.
+
+ tests/btrfs/045     |  254 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/045.out |    1 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 256 insertions(+)
+ create mode 100755 tests/btrfs/045
+ create mode 100644 tests/btrfs/045.out
+
+diff --git a/tests/btrfs/045 b/tests/btrfs/045
+new file mode 100755
+index 0000000..d95c493
+--- /dev/null
++++ b/tests/btrfs/045
+@@ -0,0 +1,254 @@
++#! /bin/bash
++# FS QA Test No. btrfs/045
++#
++# Regression test for a btrfs incremental send issue where the kernel failed
++# to build paths strings. This resulted either in sending a wrong path string
++# to the send stream or entering an infinite loop when building it.
++# This happened in the following scenarios:
++#
++# 1) A directory was made a child of another directory which has a lower inode
++#    number and has a pending move/rename operation. This made the incremental
++#    send code go into an infinite loop when building a path string;
++#
++# 2) A directory was made a child of another directory which has a higher inode
++#    number, but the new parent wasn't moved nor renamed. Instead some other
++#    ancestor higher in the hierarchy, with an higher inode number too, was
++#    moved/renamed too. This made the incremental send code go into an infinite
++#    loop when building a path string;
++#
++# 3) An orphan directory is created and at least one of its non-immediate
++#    descendent directories have a pending move/rename operation. This made
++#    an incremental send issue to the send stream an invalid path string that
++#    didn't account for the orphan ancestor directory.
++#
++# This issue is fixed by the following linux kernel btrfs patches:
++#
++#   Btrfs: fix incremental send's decision to delay a dir move/rename
++#   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
++#   Btrfs: send, account for orphan directories when building path strings
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+			/*
-+			 * Note: if we have an odd number of blocks reserved,
-+			 * then if we keep splitting the delalloc extent like
-+			 * this we end up with a delalloc indlen reservation of
-+			 * zero for one of the two extents. Hence if we end
-+			 * up with the new indlen reservations being larger than
-+			 * the old one, steal blocks from the data reservation
-+			 * we just punched out. Otherwise, just reduce the
-+			 * remaining indlen reservations alternately and hope
-+			 * next time we come here the range getting removed is
-+			 * large enough to fix this all up.
-+			 */
- 			while (da_new > da_old) {
-+				if (del->br_blockcount) {
-+					/* steal a block */
-+					da_new--;
-+					del->br_blockcount--;
-+					continue;
-+				}
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
- 				if (temp) {
- 					temp--;
- 					da_new--;
-@@ -5255,24 +5275,6 @@ xfs_bunmapi(
- 		}
- 		if (wasdel) {
- 			ASSERT(startblockval(del.br_startblock) > 0);
--			/* Update realtime/data freespace, unreserve quota */
--			if (isrt) {
--				xfs_filblks_t rtexts;
--
--				rtexts = XFS_FSB_TO_B(mp, del.br_blockcount);
--				do_div(rtexts, mp->m_sb.sb_rextsize);
--				xfs_mod_incore_sb(mp, XFS_SBS_FREXTENTS,
--						(int64_t)rtexts, 0);
--				(void)xfs_trans_reserve_quota_nblks(NULL,
--					ip, -((long)del.br_blockcount), 0,
--					XFS_QMOPT_RES_RTBLKS);
--			} else {
--				xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
--						(int64_t)del.br_blockcount, 0);
--				(void)xfs_trans_reserve_quota_nblks(NULL,
--					ip, -((long)del.br_blockcount), 0,
--					XFS_QMOPT_RES_REGBLKS);
--			}
- 			ip->i_delayed_blks -= del.br_blockcount;
- 			if (cur)
- 				cur->bc_private.b.flags |=
-@@ -5302,6 +5304,33 @@ xfs_bunmapi(
- 		}
- 		error = xfs_bmap_del_extent(ip, tp, &lastx, flist, cur, &del,
- 				&tmp_logflags, whichfork);
-+		/*
-+		 * xfs_bmap_del_extent may hand delayed alloc blocks back to the
-+		 * indirect block reservations to keep extent split reservations
-+		 * sane. Hence we should only decrement the delayed block count
-+		 * on the inode once we know exactly the amount of delalloc
-+		 * space we actually removed from the inode.
-+		 */
-+		if (wasdel && del.br_blockcount) {
-+			/* Update realtime/data freespace, unreserve quota */
-+			if (isrt) {
-+				xfs_filblks_t rtexts;
++tmp=`mktemp -d`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+				rtexts = XFS_FSB_TO_B(mp, del.br_blockcount);
-+				do_div(rtexts, mp->m_sb.sb_rextsize);
-+				xfs_mod_incore_sb(mp, XFS_SBS_FREXTENTS,
-+						(int64_t)rtexts, 0);
-+				(void)xfs_trans_reserve_quota_nblks(NULL,
-+					ip, -((long)del.br_blockcount), 0,
-+					XFS_QMOPT_RES_RTBLKS);
-+			} else {
-+				xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
-+						(int64_t)del.br_blockcount, 0);
-+				(void)xfs_trans_reserve_quota_nblks(NULL,
-+					ip, -((long)del.br_blockcount), 0,
-+					XFS_QMOPT_RES_REGBLKS);
-+			}
-+		}
- 		logflags |= tmp_logflags;
- 		if (error)
- 			goto error0;
++_cleanup()
++{
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_require_fssum
++_need_to_be_root
++
++rm -f $seqres.full
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# case 1), mentioned above
++mkdir -p $SCRATCH_MNT/a/b
++mkdir $SCRATCH_MNT/a/c
++mkdir $SCRATCH_MNT/a/b/d
++touch $SCRATCH_MNT/a/file1
++touch $SCRATCH_MNT/a/b/file2
++mv $SCRATCH_MNT/a/file1 $SCRATCH_MNT/a/b/d/file3
++ln $SCRATCH_MNT/a/b/d/file3 $SCRATCH_MNT/a/b/file4
++mkdir $SCRATCH_MNT/a/b/f
++mv $SCRATCH_MNT/a/b $SCRATCH_MNT/a/c/b2
++touch $SCRATCH_MNT/a/c/b2/d/file5
++
++# case 2), mentioned above
++mkdir -p $SCRATCH_MNT/a/x1/x2
++mkdir $SCRATCH_MNT/a/Z
++mkdir -p $SCRATCH_MNT/a/x1/x2/x3/x4/x5
++
++# case 2) again, but a more complex scenario
++mkdir -p $SCRATCH_MNT/_a/_b/_c/_d
++mkdir $SCRATCH_MNT/_a/_b/_c/_d/_e
++mkdir $SCRATCH_MNT/_a/_b/_c/_d/_f
++mv $SCRATCH_MNT/_a/_b/_c/_d/_e $SCRATCH_MNT/_a/_b/_c/_d/_f/_E2
++mkdir $SCRATCH_MNT/_a/_b/_c/_g
++mv $SCRATCH_MNT/_a/_b/_c/_d $SCRATCH_MNT/_a/_b/_D2
++
++# case 3), mentioned above
++mkdir -p $SCRATCH_MNT/za/zb/zc/zd
++mkdir $SCRATCH_MNT/za/zb/ze
++mv $SCRATCH_MNT/za/zb/zc $SCRATCH_MNT/za/zb/ze/zCC
++mkdir $SCRATCH_MNT/za/zb/ze/zCC/zd/zf
++mkdir $SCRATCH_MNT/za/zg
++
++# Filesystem looks like:
++#
++# .                               (ino 256)
++# |-- a/                          (ino 257)
++# |   |-- c/                      (ino 259)
++# |   |   |-- b2/                 (ino 258)
++# |   |       |-- d/              (ino 260)
++# |   |       |   |-- file3       (ino 261)
++# |   |       |   |-- file5       (ino 264)
++# |   |       |
++# |   |       |-- file2           (ino 262)
++# |   |       |-- file4           (ino 261)
++# |   |       |-- f/              (ino 263)
++# |   |
++# |   |-- x1/                     (ino 265)
++# |   |   |-- x2/                 (ino 266)
++# |   |       |-- x3/             (ino 268)
++# |   |           |-- x4/         (ino 269)
++# |   |               |-- x5/     (ino 270)
++# |   |
++# |   |-- Z/                      (ino 267)
++# |
++# |-- _a/                         (ino 271)
++# |    |-- _b/                    (ino 272)
++# |         |-- _c/               (ino 273)
++# |         |    |-- _g/          (ino 277)
++# |         |
++# |         |-- _D2/              (ino 274)
++# |              |-- _f/          (ino 276)
++# |                   |-- _E2/    (ino 275)
++# |
++# |-- za/                         (ino 278)
++#     |-- zb/                     (ino 279)
++#     |   |-- ze/                 (ino 282)
++#     |       |-- zCC/            (ino 280)
++#     |            |-- zd/        (ino 281)
++#     |                |-- zf/    (ino 283)
++#     |
++#     |-- zg/                     (ino 284)
++
++_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1
++
++# case 1), mentioned above
++ln $SCRATCH_MNT/a/c/b2/file4 $SCRATCH_MNT/a/c/b2/f/file6
++mv $SCRATCH_MNT/a/c/b2/d/file5 $SCRATCH_MNT/a/c/file7
++touch $SCRATCH_MNT/a/c/b2/d/file8
++touch $SCRATCH_MNT/a/c/b2/file9
++ln $SCRATCH_MNT/a/c/b2/file9 $SCRATCH_MNT/a/c/b2/file10
++mv $SCRATCH_MNT/a/c/b2/f $SCRATCH_MNT/a/f2
++mv $SCRATCH_MNT/a/c $SCRATCH_MNT/a/c2
++mv $SCRATCH_MNT/a/c2/b2 $SCRATCH_MNT/a/f2/b3
++mv $SCRATCH_MNT/a/c2 $SCRATCH_MNT/a/f2/b3/c3
++touch $SCRATCH_MNT/a/f2/b3/c3/file11
++mv $SCRATCH_MNT/a $SCRATCH_MNT/a2
++
++# case 2), mentioned above
++mv $SCRATCH_MNT/a2/x1/x2/x3 $SCRATCH_MNT/a2/Z/X33
++mv $SCRATCH_MNT/a2/x1/x2 $SCRATCH_MNT/a2/Z/X33/x4/x5/X22
++
++# case 2) again, but a more complex scenario
++mkdir $SCRATCH_MNT/_a/_o
++mv $SCRATCH_MNT/_a/_b/_c/_g $SCRATCH_MNT/_a/_b/_D2/_f/_G2
++mv $SCRATCH_MNT/_a/_b/_D2 $SCRATCH_MNT/_a/_b/_dd
++mv $SCRATCH_MNT/_a/_b/_c $SCRATCH_MNT/_a/_C2
++mv $SCRATCH_MNT/_a/_b/_dd/_f $SCRATCH_MNT/_a/_o/_FF
++mv $SCRATCH_MNT/_a/_b $SCRATCH_MNT/_a/_o/_FF/_E2/_BB
++
++# case 3), mentioned above
++mkdir $SCRATCH_MNT/za/zg/zh
++mv $SCRATCH_MNT/za/zb/ze $SCRATCH_MNT/za/zg/zh/zEE
++mv $SCRATCH_MNT/za/zg/zh/zEE/zCC/zd $SCRATCH_MNT/za/zg/zh/zEE/zDD
++mv $SCRATCH_MNT/za/zg/zh/zEE/zDD/zf $SCRATCH_MNT/za/zg/zh/zEE/zDD/zFF
++
++# Filesystem now looks like:
++#
++# .                                 (ino 256)
++# |-- a2/                           (ino 257)
++# |   |-- f2/                       (ino 263)
++# |   |   |-- file6                 (ino 261)
++# |   |   |-- b3/                   (ino 258)
++# |   |       |-- d/                (ino 260)
++# |   |       |   |-- file3         (ino 261)
++# |   |       |   |-- file8         (ino 285)
++# |   |       |
++# |   |       |-- file2             (ino 262)
++# |   |       |-- file4             (ino 261)
++# |   |       |-- file9             (ino 286)
++# |   |       |-- file10            (ino 286)
++# |   |       |
++# |   |       |-- c3/               (ino 259)
++# |   |           |-- file7         (ino 264)
++# |   |           |-- file11        (ino 287)
++# |   |
++# |   |-- x1/                       (ino 265)
++# |   |-- Z/                        (ino 267)
++# |       |-- X33/                  (ino 268)
++# |            |-- x4/              (ino 269)
++# |                |-- x5/          (ino 270)
++# |                    |-- X22/     (ino 266)
++# |
++# |-- _a/                           (ino 271)
++# |    |-- _o/                      (ino 288)
++# |    |    |-- _FF/                (ino 276)
++# |    |         |-- _E2/           (ino 275)
++# |    |         |    |-- _BB/      (ino 272)
++# |    |         |         |-- dd/  (ino 274)
++# |    |         |
++# |    |         |-- G2/            (ino 277)
++# |    |-- C2/                      (ino 273)
++# |
++# |-- za/                           (ino 278)
++#     |-- zb/                       (ino 279)
++#     |-- zg/                       (ino 284)
++#         |-- zh/                   (ino 289)
++#             |-- zEE/              (ino 282)
++#                  |-- zCC/         (ino 280)
++#                  |-- zDD/         (ino 281)
++#                       |-- zFF/    (ino 283)
++
++_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2
++
++run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
++run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
++	$SCRATCH_MNT/mysnap2
++
++_run_btrfs_util_prog send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
++
++_run_btrfs_util_prog send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++	-f $tmp/2.snap
++
++_check_scratch_fs
++
++_scratch_unmount
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/1.snap
++run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
++
++_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
++run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
++
++_check_scratch_fs
++
++status=0
++exit
+diff --git a/tests/btrfs/045.out b/tests/btrfs/045.out
+new file mode 100644
+index 0000000..5b0d489
+--- /dev/null
++++ b/tests/btrfs/045.out
+@@ -0,0 +1 @@
++QA output created by 045
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 4589043..9b41895 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -47,3 +47,4 @@
+ 042 auto quick
+ 043 auto quick
+ 044 auto quick
++045 auto quick
 -- 
-1.9.0
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
