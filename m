@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F23027F50
-	for <xfs@oss.sgi.com>; Sat, 29 Mar 2014 10:14:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E5EFE8F8074
-	for <xfs@oss.sgi.com>; Sat, 29 Mar 2014 08:14:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kqEkSu1rR9qeKLji for
-	<xfs@oss.sgi.com>; Sat, 29 Mar 2014 08:14:23 -0700 (PDT)
-Date: Sat, 29 Mar 2014 11:14:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/6] xfs: write failure beyond EOF truncates too much data
-Message-ID: <20140329151419.GA33827@bfoster.bfoster>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2F75C7F4E
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:12:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1B298304051
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 03:12:54 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	16rCtE4ce2Zv6yij for <xfs@oss.sgi.com>;
+	Fri, 21 Mar 2014 03:12:53 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/6] xfs: zeroing space needs to punch delalloc blocks
+Date: Fri, 21 Mar 2014 21:11:48 +1100
+Message-Id: <1395396710-3824-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1395396710-3824-1-git-send-email-david@fromorbit.com>
 References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
-	<1395396710-3824-3-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1395396710-3824-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,87 +23,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Al@disappointment.disaster, Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, Al@disappointment.disaster
 
-On Fri, Mar 21, 2014 at 09:11:46PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> If we fail a write beyond EOF and have to handle it in
-> xfs_vm_write_begin(), we truncate the inode back to the current inode
-> size. This doesn't take into account the fact that we may have
-> already made successful writes to the same page (in the case of block
-> size < page size) and hence we can truncate the page cache away from
-> blocks with valid data in them. If these blocks are delayed
-> allocation blocks, we now have a mismatch between the page cache and
-> the extent tree, and this will trigger - at minimum - a delayed
-> block count mismatch assert when the inode is evicted from the cache.
-> We can also trip over it when block mapping for direct IO - this is
-> the most common symptom seen from fsx and fsstress when run from
-> xfstests.
-> 
-> Fix it by only truncating away the exact range we are updating state
-> for in this write_begin call.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_aops.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index e810243..6b4ecc8 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1609,12 +1609,18 @@ xfs_vm_write_begin(
->  	status = __block_write_begin(page, pos, len, xfs_get_blocks);
->  	if (unlikely(status)) {
->  		struct inode	*inode = mapping->host;
-> +		size_t		isize = i_size_read(inode);
->  
->  		xfs_vm_write_failed(inode, page, pos, len);
->  		unlock_page(page);
->  
-> -		if (pos + len > i_size_read(inode))
-> -			truncate_pagecache(inode, i_size_read(inode));
+From: Dave Chinner <dchinner@redhat.com>
 
->From what I can see, we have a write_begin/copy/write_end sequence per
-page and the inode size is updated down in the write_end path. If the
-write fails at write_begin time, then we haven't copied any data and the
-inode size hasn't changed.
+When we are zeroing space andit is covered by a delalloc range, we
+need to punch the delalloc range out before we truncate the page
+cache. Failing to do so leaves and inconsistency between the page
+cache and the extent tree, which we later trip over when doing
+direct IO over the same range.
 
-The intent of the original code looks like it wants to break off any
-blocks that might have been set up beyond EOF before the write happened
-to fail. Could you elaborate on how this can kill blocks that might have
-been written successfully? Doesn't this only affect post-EOF metadata?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c | 13 ++++++++++++-
+ fs/xfs/xfs_trace.h     |  1 +
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-> +		/*
-> +		 * If the write is beyond EOF, we only want to kill blocks
-> +		 * allocated in this write, not blocks that were previously
-> +		 * written successfully.
-> +		 */
-> +		if (pos + len > isize)
-> +			truncate_pagecache_range(inode, pos, pos + len);
-
-So the cache truncate now covers the range of the write. What happens if
-the part of the write is an overwrite? This seems similar to the problem
-you've described above... should the truncate start at isize instead?
-
-Brian
-
->  
->  		page_cache_release(page);
->  		page = NULL;
-> -- 
-> 1.9.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 01f6a64..3235b74 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1418,6 +1418,8 @@ xfs_zero_file_space(
+ 	xfs_off_t		end_boundary;
+ 	int			error;
+ 
++	trace_xfs_zero_file_space(ip);
++
+ 	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+ 
+ 	/*
+@@ -1432,9 +1434,18 @@ xfs_zero_file_space(
+ 	ASSERT(end_boundary <= offset + len);
+ 
+ 	if (start_boundary < end_boundary - 1) {
+-		/* punch out the page cache over the conversion range */
++		/*
++		 * punch out delayed allocation blocks and the page cache over
++		 * the conversion range
++		 */
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		error = xfs_bmap_punch_delalloc_range(ip,
++				XFS_B_TO_FSB(mp, start_boundary),
++				XFS_B_TO_FSB(mp, end_boundary - start_boundary));
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		truncate_pagecache_range(VFS_I(ip), start_boundary,
+ 					 end_boundary - 1);
++
+ 		/* convert the blocks */
+ 		error = xfs_alloc_file_space(ip, start_boundary,
+ 					end_boundary - start_boundary - 1,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index a4ae41c..65d8c79 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -603,6 +603,7 @@ DEFINE_INODE_EVENT(xfs_readlink);
+ DEFINE_INODE_EVENT(xfs_inactive_symlink);
+ DEFINE_INODE_EVENT(xfs_alloc_file_space);
+ DEFINE_INODE_EVENT(xfs_free_file_space);
++DEFINE_INODE_EVENT(xfs_zero_file_space);
+ DEFINE_INODE_EVENT(xfs_collapse_file_space);
+ DEFINE_INODE_EVENT(xfs_readdir);
+ #ifdef CONFIG_XFS_POSIX_ACL
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
