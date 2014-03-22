@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6EFC47F83
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2014 03:53:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C82537F83
+	for <xfs@oss.sgi.com>; Sat, 22 Mar 2014 08:33:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EBA78AC001
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2014 01:53:29 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	QBeoMARfOtmAHEOZ for <xfs@oss.sgi.com>;
-	Sat, 22 Mar 2014 01:53:28 -0700 (PDT)
-Date: Sat, 22 Mar 2014 19:53:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsdump: don't assume getdents exists
-Message-ID: <20140322085323.GC18572@destitution>
-References: <20131106213635.GC24712@redacted.bos.redhat.com>
-	<52A72930.4020404@sandeen.net>
-	<20140322051205.GB8095@redacted.bos.redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A47A38F8059
+	for <xfs@oss.sgi.com>; Sat, 22 Mar 2014 06:33:02 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id jRhnskmRn7ZaAa45 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 22 Mar 2014 06:32:57 -0700 (PDT)
+Date: Sat, 22 Mar 2014 06:32:52 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [FAQ] XFS speculative preallocation
+Message-ID: <20140322133252.GA20779@infradead.org>
+References: <20140321162920.GA3087@laptop.bfoster>
+	<87eh1vuxam.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140322051205.GB8095@redacted.bos.redhat.com>
+In-Reply-To: <87eh1vuxam.fsf@mid.deneb.enyo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kyle McMartin <kmcmarti@redhat.com>
-Cc: sandeen@redhat.com, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Florian Weimer <fw@deneb.enyo.de>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Sat, Mar 22, 2014 at 01:12:05AM -0400, Kyle McMartin wrote:
-> On Tue, Dec 10, 2013 at 08:46:08AM -0600, Eric Sandeen wrote:
-> > Hey Kyle - were you going to do a V2 of this one?
-> > 
-> > Just checking, thanks - 
-> 
-> i've got a pair of somewhat more substantial patches to fix the ifdef
-> hell in this file, clean things up so it works on both getdents64 only
-> and not, and then rips out the pre-2.4.1 getdents code.
-> 
-> https://github.com/jkkm/xfsdump/commit/e156bcf06effbf5f2e26c53efb0ce028c4281f9e
-> https://github.com/jkkm/xfsdump/commit/fff56b471220a8fa305b9158c4f8f0c7344c8fe6
-> 
-> the latter looks quite a bit better... care to take a quick look and if
-> they're decent, i'll submit them both.
+On Fri, Mar 21, 2014 at 09:11:29PM +0100, Florian Weimer wrote:
+> I see rather dramatic fragmentation of the systemd journal when it is
+> stored on XFS, and it calls posix_fallocate before writing data to the
+> file.
 
-Please just post the patches. People will comment on them on them
-once you post them to the list...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+You mean it calls fallocate before each write?  That's not very useful
+behaviour and should be fixed.  If it calls fallocate for the whole
+expeted file size (or large increments) it should not fragment the file,
+and if it does there's a bug we'd need to look into.
 
 _______________________________________________
 xfs mailing list
