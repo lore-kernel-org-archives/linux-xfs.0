@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D3D6229DFE
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 15:12:05 -0500 (CDT)
-Received: from eagdhcp-232-205.americas.sgi.com
-	(eagdhcp-232-205.americas.sgi.com [128.162.232.205])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D2B7B8F8049
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 13:12:02 -0700 (PDT)
-Received: from eagdhcp-232-205.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-205.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s2PKC30I003851
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 15:12:03 -0500 (CDT)
-	(envelope-from tinguely@eagdhcp-232-205.americas.sgi.com)
-Message-Id: <20140325195819.740387237@sgi.com>
-Date: Tue, 25 Mar 2014 15:06:35 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH 2/2] xfs: free the EFI entries from AIL on forced shutdown
-References: <20140325195733.510384972@sgi.com>
-Content-Disposition: inline; filename=xfs-fix-efi-xfs_bmapi_finish-error.patch
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2F7087F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 16:12:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BA17FAC001
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 14:12:01 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4h34LEcw2IPvyy8i for
+	<xfs@oss.sgi.com>; Tue, 25 Mar 2014 14:12:00 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2PLBxbD024979
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 17:11:59 -0400
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 2/2] xfstests: Make shared/243 ext4 specific
+Date: Tue, 25 Mar 2014 22:11:51 +0100
+Message-Id: <1395781911-13084-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1395781911-13084-1-git-send-email-lczerner@redhat.com>
+References: <1395781911-13084-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,235 +33,464 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>
 
-The extent free intention (EFI) and extent free done (EFD)
-log items are in separate transactions. It is possible that
-the EFI can be pushed to the AIL before a forced shutdown
-where it gets stuck for following reasons:
+The test shared/243 really is ext4 specific even though currently we
+would run it on other file systems as well, it would not actually do any
+testing.
 
- No complete EFD in the transaction. This can happen if the
- transaction fails to reserve space or the freeing the extent
- fails in xfs_bmap_finish().
+So move it to ext4 specific directory and rename it to 002.
 
- EFD IOP Abort processing. If xfs_trans_cancel() is called with
- an abort flag, or if the xfs_trans_commit() is called when the
- file system is in forced shutdown or if the log buffer write fails,
- then the EFD iop commands will not remove the EFI from the AIL.
-
-If the EFI entry is left on the AIL, xfs_ail_push all_sync() will
-fail to complete, the unmount will hang, and a reboot is required
-to get the complete the unmount.
-
-Do not free the EFI structure immediately on forced shutdowns, but
-instead use the IOP calls to match the EFI/EFD entries. A small
-wrinkle in the mix is the EFI is not automatically placed on the
-AIL by the IOP routines in the cases but may have made it to the
-AIL before the abort. We now have to check if the EFI is on the AIL
-in the abort IOP cases.
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
-Dave, as I tried to explain, if the error in extent free happen early
-enough, the EFD is not usable and is not in the transaction to cause
-IOP commands to clean up the EFI. It too must be done manually.
+ tests/ext4/002       | 180 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/002.out   |  13 ++++
+ tests/ext4/group     |   1 +
+ tests/shared/243     | 180 ---------------------------------------------------
+ tests/shared/243.out |  13 ----
+ tests/shared/group   |   1 -
+ 6 files changed, 194 insertions(+), 194 deletions(-)
+ create mode 100755 tests/ext4/002
+ create mode 100644 tests/ext4/002.out
+ delete mode 100755 tests/shared/243
+ delete mode 100644 tests/shared/243.out
 
-The "in the AIL" test must be done in the abort IOP commands.
-
- fs/xfs/xfs_bmap_util.c    |   21 +++++++++++++++----
- fs/xfs/xfs_extfree_item.c |   49 +++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_log_recover.c  |    3 +-
- fs/xfs/xfs_trans.h        |    2 -
- 4 files changed, 56 insertions(+), 19 deletions(-)
-
-Index: b/fs/xfs/xfs_bmap_util.c
-===================================================================
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -116,12 +116,14 @@ xfs_bmap_finish(
- 
- 	error = xfs_trans_reserve(ntp, &tres, 0, 0);
- 	if (error)
--		return error;
-+		goto error_return;
+diff --git a/tests/ext4/002 b/tests/ext4/002
+new file mode 100755
+index 0000000..12be253
+--- /dev/null
++++ b/tests/ext4/002
+@@ -0,0 +1,180 @@
++#! /bin/bash
++# FS QA Test No. ext4/002
++#
++# Test to ensure that the EOFBLOCK_FL gets set/unset correctly.
++#
++# As found by Theodore Ts'o:
++# If a 128K file is falloc'ed using the KEEP_SIZE flag, and then
++# write exactly 128K, the EOFBLOCK_FL doesn't get cleared correctly.
++# This is bad since it forces e2fsck to complain about that inode.
++# If you have a large number of inodes that are written with fallocate
++# using KEEP_SIZE, and then fill them up to their expected size,
++# e2fsck will potentially complain about a _huge_ number of inodes.
++# This would also cause a huge increase in the time taken by e2fsck
++# to complete its check.
++#
++# Test scenarios covered:
++# 1. Fallocating X bytes and writing Y (Y<X) (buffered and direct io)
++# 2. Fallocating X bytes and writing Y (Y=X) (buffered and direct io)
++# 3. Fallocating X bytes and writing Y (Y>X) (buffered and direct io)
++#
++# These test cases exercise the normal and edge case conditions using
++# falloc (and KEEP_SIZE).
++#
++# Ref: http://thread.gmane.org/gmane.comp.file-systems.ext4/20682
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Google, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
- 	efd = xfs_trans_get_efd(ntp, efi, flist->xbf_count);
- 	for (free = flist->xbf_first; free != NULL; free = next) {
- 		next = free->xbfi_next;
--		if ((error = xfs_free_extent(ntp, free->xbfi_startblock,
--				free->xbfi_blockcount))) {
-+		error = xfs_free_extent(ntp, free->xbfi_startblock,
-+				free->xbfi_blockcount);
-+		if (error) {
- 			/*
- 			 * The bmap free list will be cleaned up at a
- 			 * higher level.  The EFI will be canceled when
-@@ -136,13 +138,24 @@ xfs_bmap_finish(
- 						   (error == EFSCORRUPTED) ?
- 						   SHUTDOWN_CORRUPT_INCORE :
- 						   SHUTDOWN_META_IO_ERROR);
--			return error;
-+			goto error_return;
- 		}
- 		xfs_trans_log_efd_extent(ntp, efd, free->xbfi_startblock,
- 			free->xbfi_blockcount);
- 		xfs_bmap_del_free(flist, NULL, free);
- 	}
- 	return 0;
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+ error_return:
-+	/*
-+	 * No EFD in the transaction matching the EFI can be used at this
-+	 * point Manually release the EFI and remove from AIL if necessary.
-+	 * If the EFI did not make it into the AIL, then the transaction
-+	 * cancel of the EFI will decrement the EFI/EFD counter and will not
-+	 * attempt to remove itself from the AIL.
-+	 */
-+	xfs_efi_release(efi, efi->efi_format.efi_nextents, 0);
-+	return error;
- }
- 
- int
-Index: b/fs/xfs/xfs_extfree_item.c
-===================================================================
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -56,15 +56,22 @@ xfs_efi_item_free(
-  */
- STATIC void
- __xfs_efi_release(
--	struct xfs_efi_log_item	*efip)
-+	struct xfs_efi_log_item	*efip,
-+	int			abort)
- {
- 	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
- 
- 	if (atomic_dec_and_test(&efip->efi_refcount)) {
- 		spin_lock(&ailp->xa_lock);
--		/* xfs_trans_ail_delete() drops the AIL lock. */
--		xfs_trans_ail_delete(ailp, &efip->efi_item,
--				     SHUTDOWN_LOG_IO_ERROR);
-+		/*
-+		 * The EFI may not be on the AIL on abort.
-+		 * xfs_trans_ail_delete() drops the AIL lock.
-+		 */
-+		if (abort)
-+			spin_unlock(&ailp->xa_lock);
-+		else
-+			xfs_trans_ail_delete(ailp, &efip->efi_item,
-+					     SHUTDOWN_LOG_IO_ERROR);
- 		xfs_efi_item_free(efip);
- 	}
- }
-@@ -148,10 +155,10 @@ xfs_efi_item_unpin(
- 		ASSERT(!(lip->li_flags & XFS_LI_IN_AIL));
- 		if (lip->li_desc)
- 			xfs_trans_del_item(lip);
--		xfs_efi_item_free(efip);
-+		__xfs_efi_release(efip, 1);
- 		return;
- 	}
--	__xfs_efi_release(efip);
-+	__xfs_efi_release(efip, 0);
- }
- 
- /*
-@@ -173,8 +180,9 @@ STATIC void
- xfs_efi_item_unlock(
- 	struct xfs_log_item	*lip)
- {
-+	/* EFI will not be on the AIL if called on abort */
- 	if (lip->li_flags & XFS_LI_ABORTED)
--		xfs_efi_item_free(EFI_ITEM(lip));
-+		__xfs_efi_release(EFI_ITEM(lip), 1);
- }
- 
- /*
-@@ -310,11 +318,12 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf
-  */
- void
- xfs_efi_release(xfs_efi_log_item_t	*efip,
--		uint			nextents)
-+		uint			nextents,
-+		int			abort)
- {
- 	ASSERT(atomic_read(&efip->efi_next_extent) >= nextents);
- 	if (atomic_sub_and_test(nextents, &efip->efi_next_extent)) {
--		__xfs_efi_release(efip);
-+		__xfs_efi_release(efip, abort);
- 		/* efip may now have been freed, do not reference it again. */
- 	}
- }
-@@ -417,8 +426,19 @@ STATIC void
- xfs_efd_item_unlock(
- 	struct xfs_log_item	*lip)
- {
--	if (lip->li_flags & XFS_LI_ABORTED)
--		xfs_efd_item_free(EFD_ITEM(lip));
-+	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
++here=`pwd`
++tmp=/tmp/$$
++status=1        # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+	if (!(lip->li_flags & XFS_LI_ABORTED))
-+		return;
++# Test specific macros.
++BIT_NOT_SET=0   # inode flag - 0x400000 bit is not set.
++BIT_SET=1       # inode flag - 0x400000 bit is set.
 +
-+	/* Free the EFI when aborting a commit. The EFI will be either
-+	 * added to the AIL in a CIL push before this abort or unlocked
-+	 * before the EFD unlock. In either case we can check the AIL
-+	 * status now.
-+	 */
-+	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents,
-+			!(efdp->efd_efip->efi_item.li_flags & XFS_LI_IN_AIL));
-+	xfs_efd_item_free(efdp);
- }
- 
- /*
-@@ -434,14 +454,17 @@ xfs_efd_item_committed(
- 	xfs_lsn_t		lsn)
- {
- 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
-+	int abort = 0;
- 
- 	/*
- 	 * If we got a log I/O error, it's always the case that the LR with the
- 	 * EFI got unpinned and freed before the EFD got aborted.
- 	 */
--	if (!(lip->li_flags & XFS_LI_ABORTED))
--		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
-+	if (lip->li_flags & XFS_LI_ABORTED &&
-+	    !(efdp->efd_efip->efi_item.li_flags & XFS_LI_IN_AIL))
-+		abort = 1;
- 
-+	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents, abort);
- 	xfs_efd_item_free(efdp);
- 	return (xfs_lsn_t)-1;
- }
-Index: b/fs/xfs/xfs_log_recover.c
-===================================================================
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3754,8 +3754,9 @@ xlog_recover_process_efis(
- 		/* Skip all EFIs after first EFI in error. */
- 		if (!error)
- 			error = xlog_recover_process_efi(log->l_mp, efip);
-+		/* EFI will be on the AIL, so abort == 0 */
- 		if (error)
--			xfs_efi_release(efip, efip->efi_format.efi_nextents);
-+			xfs_efi_release(efip, efip->efi_format.efi_nextents, 0);
- 		spin_lock(&ailp->xa_lock);
- 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
- 	}
-Index: b/fs/xfs/xfs_trans.h
-===================================================================
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -217,7 +217,7 @@ void		xfs_trans_log_buf(xfs_trans_t *, s
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- struct xfs_efi_log_item	*xfs_trans_get_efi(xfs_trans_t *, uint);
- void		xfs_efi_item_unpin(struct xfs_log_item *, int);
--void		xfs_efi_release(struct xfs_efi_log_item *, uint);
-+void		xfs_efi_release(struct xfs_efi_log_item *, uint, int);
- void		xfs_trans_log_efi_extent(xfs_trans_t *,
- 					 struct xfs_efi_log_item *,
- 					 xfs_fsblock_t,
-
++# Generic test cleanup function.
++_cleanup()
++{
++  cd /
++  rm -f $tmp.*
++}
++
++# Ext4 uses the EOFBLOCKS_FL bit when fallocating blocks with KEEP_SIZE
++# enabled. The only time this bit should be set is when extending the allocated
++# blocks further than what the i_size represents. In the situations wherein the
++# i_size covers all allocated blocks, this bit should be cleared.
++
++# Checks the state of the sample file in the filesystem and returns whether
++# the inode flag 0x400000 is set or not.
++_check_ext4_eof_flag()
++{
++  # Check whether EOFBLOCK_FL is set.
++  # For ext4 filesystems: use debugfs to check if EOFBLOCKS_FL is set.
++  # Other filesystems: do nothing. The default fsck at the end of the test
++  # should catch any potential errors.
++  if [ "${FSTYP}" == "ext4" ]; then
++    bit_set=1
++
++    # Unmount the ${TEST_DEV}
++    umount ${TEST_DEV}
++
++    # Run debugfs to gather file_parameters - specifically iflags.
++    file_params=`debugfs ${TEST_DEV} -R "stat ${1}" 2>&1 | grep -e Flags:`
++    iflags=${file_params#*Flags: }
++
++    # Ensure that the iflags value was parsed correctly.
++    if [ -z ${iflags} ]; then
++      echo "iFlags value was not parsed successfully." >> $seqres.full
++      status=1
++      exit ${status}
++    fi
++
++    # Check if EOFBLOCKS_FL is set.
++    if ((${iflags} & 0x400000)); then
++      echo "EOFBLOCK_FL bit is set." >> $seqres.full
++      bit_set=1
++    else
++      echo "EOFBLOCK_FL bit is not set." >> $seqres.full
++      bit_set=0
++    fi
++
++    # Check current bit state to expected value.
++    if [ ${bit_set} -ne ${2} ]; then
++      echo "Error: Current bit state incorrect." >> $seqres.full
++      status=1
++      exit ${status}
++    fi
++
++    # Mount the ${TEST_DEV}
++    mount ${TEST_DEV} -t ${FSTYP} ${TEST_DIR}
++  fi
++}
++
++# Get standard environment, filters and checks.
++. ./common/rc
++. ./common/filter
++
++# Prerequisites for the test run.
++_supported_fs ext4
++_supported_os Linux
++_require_xfs_io_falloc
++
++# Real QA test starts here.
++rm -f $seqres.full
++
++# Remove any leftover files from last run.
++rm -f ${TEST_DIR}/test_?
++
++# Begin test cases.
++echo "Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io)." \
++    >> $seqres.full
++${XFS_IO_PROG} -f                       \
++    -c 'falloc -k 0 40960'              \
++    -c 'pwrite 0 4096'                  \
++    ${TEST_DIR}/test_1 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_1 ${BIT_SET}
++
++echo "Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io)." \
++    >> $seqres.full
++${XFS_IO_PROG} -f -d                    \
++    -c 'falloc -k 0 40960'              \
++    -c 'pwrite 0 4096'                  \
++    ${TEST_DIR}/test_2 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_2 ${BIT_SET}
++
++echo "Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io)." \
++    >> $seqres.full
++${XFS_IO_PROG} -f                       \
++    -c 'falloc -k 0 40960'              \
++    -c 'pwrite 0 40960'                 \
++    ${TEST_DIR}/test_3 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_3 ${BIT_NOT_SET}
++
++echo "Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io)." \
++    >> $seqres.full
++${XFS_IO_PROG} -f -d                    \
++    -c 'falloc -k 0 40960'              \
++    -c 'pwrite 0 40960'                 \
++    ${TEST_DIR}/test_4 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_4 ${BIT_NOT_SET}
++
++echo "Test 5: Fallocate 128k, seek 256k and write 4k block (buffered io)." \
++    >> $seqres.full
++${XFS_IO_PROG} -f                       \
++    -c 'falloc -k 0 128k'               \
++    -c 'pwrite 256k 4k'                 \
++    ${TEST_DIR}/test_5 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_5 ${BIT_NOT_SET}
++
++echo "Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io)." \
++    >> $seqres.full
++${XFS_IO_PROG} -f -d                    \
++    -c 'falloc -k 0 128k'               \
++    -c 'pwrite 256k 4k'                 \
++    ${TEST_DIR}/test_6 | _filter_xfs_io_unique
++_check_ext4_eof_flag test_6 ${BIT_NOT_SET}
++
++status=0
++exit ${status}
+diff --git a/tests/ext4/002.out b/tests/ext4/002.out
+new file mode 100644
+index 0000000..3dcca87
+--- /dev/null
++++ b/tests/ext4/002.out
+@@ -0,0 +1,13 @@
++QA output created by 002
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 40960/40960 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 40960/40960 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 262144
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 262144
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/ext4/group b/tests/ext4/group
+index dd2841e..7e66035 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -4,6 +4,7 @@
+ # - comment line before each group is "new" description
+ #
+ 001 auto prealloc quick
++002 auto quick prealloc
+ 271 auto rw quick
+ 301 aio dangerous ioctl rw stress
+ 302 aio dangerous ioctl rw stress
+diff --git a/tests/shared/243 b/tests/shared/243
+deleted file mode 100755
+index e0f2db2..0000000
+--- a/tests/shared/243
++++ /dev/null
+@@ -1,180 +0,0 @@
+-#! /bin/bash
+-# FS QA Test No. 243
+-#
+-# Test to ensure that the EOFBLOCK_FL gets set/unset correctly.
+-#
+-# As found by Theodore Ts'o:
+-# If a 128K file is falloc'ed using the KEEP_SIZE flag, and then
+-# write exactly 128K, the EOFBLOCK_FL doesn't get cleared correctly.
+-# This is bad since it forces e2fsck to complain about that inode.
+-# If you have a large number of inodes that are written with fallocate
+-# using KEEP_SIZE, and then fill them up to their expected size,
+-# e2fsck will potentially complain about a _huge_ number of inodes.
+-# This would also cause a huge increase in the time taken by e2fsck
+-# to complete its check.
+-#
+-# Test scenarios covered:
+-# 1. Fallocating X bytes and writing Y (Y<X) (buffered and direct io)
+-# 2. Fallocating X bytes and writing Y (Y=X) (buffered and direct io)
+-# 3. Fallocating X bytes and writing Y (Y>X) (buffered and direct io)
+-#
+-# These test cases exercise the normal and edge case conditions using
+-# falloc (and KEEP_SIZE).
+-#
+-# Ref: http://thread.gmane.org/gmane.comp.file-systems.ext4/20682
+-#
+-#-----------------------------------------------------------------------
+-# Copyright (c) 2010 Google, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#-----------------------------------------------------------------------
+-#
+-
+-seq=`basename $0`
+-seqres=$RESULT_DIR/$seq
+-echo "QA output created by $seq"
+-
+-here=`pwd`
+-tmp=/tmp/$$
+-status=1        # failure is the default!
+-trap "_cleanup; exit \$status" 0 1 2 3 15
+-
+-# Test specific macros.
+-BIT_NOT_SET=0   # inode flag - 0x400000 bit is not set.
+-BIT_SET=1       # inode flag - 0x400000 bit is set.
+-
+-# Generic test cleanup function.
+-_cleanup()
+-{
+-  cd /
+-  rm -f $tmp.*
+-}
+-
+-# Ext4 uses the EOFBLOCKS_FL bit when fallocating blocks with KEEP_SIZE
+-# enabled. The only time this bit should be set is when extending the allocated
+-# blocks further than what the i_size represents. In the situations wherein the
+-# i_size covers all allocated blocks, this bit should be cleared.
+-
+-# Checks the state of the sample file in the filesystem and returns whether
+-# the inode flag 0x400000 is set or not.
+-_check_ext4_eof_flag()
+-{
+-  # Check whether EOFBLOCK_FL is set.
+-  # For ext4 filesystems: use debugfs to check if EOFBLOCKS_FL is set.
+-  # Other filesystems: do nothing. The default fsck at the end of the test
+-  # should catch any potential errors.
+-  if [ "${FSTYP}" == "ext4" ]; then
+-    bit_set=1
+-
+-    # Unmount the ${TEST_DEV}
+-    umount ${TEST_DEV}
+-
+-    # Run debugfs to gather file_parameters - specifically iflags.
+-    file_params=`debugfs ${TEST_DEV} -R "stat ${1}" 2>&1 | grep -e Flags:`
+-    iflags=${file_params#*Flags: }
+-
+-    # Ensure that the iflags value was parsed correctly.
+-    if [ -z ${iflags} ]; then
+-      echo "iFlags value was not parsed successfully." >> $seqres.full
+-      status=1
+-      exit ${status}
+-    fi
+-
+-    # Check if EOFBLOCKS_FL is set.
+-    if ((${iflags} & 0x400000)); then
+-      echo "EOFBLOCK_FL bit is set." >> $seqres.full
+-      bit_set=1
+-    else
+-      echo "EOFBLOCK_FL bit is not set." >> $seqres.full
+-      bit_set=0
+-    fi
+-
+-    # Check current bit state to expected value.
+-    if [ ${bit_set} -ne ${2} ]; then
+-      echo "Error: Current bit state incorrect." >> $seqres.full
+-      status=1
+-      exit ${status}
+-    fi
+-
+-    # Mount the ${TEST_DEV}
+-    mount ${TEST_DEV} -t ${FSTYP} ${TEST_DIR}
+-  fi
+-}
+-
+-# Get standard environment, filters and checks.
+-. ./common/rc
+-. ./common/filter
+-
+-# Prerequisites for the test run.
+-_supported_fs ext4 xfs btrfs gfs2
+-_supported_os Linux
+-_require_xfs_io_falloc
+-
+-# Real QA test starts here.
+-rm -f $seqres.full
+-
+-# Remove any leftover files from last run.
+-rm -f ${TEST_DIR}/test_?
+-
+-# Begin test cases.
+-echo "Test 1: Fallocate 40960 bytes and write 4096 bytes (buffered io)." \
+-    >> $seqres.full
+-${XFS_IO_PROG} -f                       \
+-    -c 'falloc -k 0 40960'              \
+-    -c 'pwrite 0 4096'                  \
+-    ${TEST_DIR}/test_1 | _filter_xfs_io_unique
+-_check_ext4_eof_flag test_1 ${BIT_SET}
+-
+-echo "Test 2: Fallocate 40960 bytes and write 4096 bytes (direct io)." \
+-    >> $seqres.full
+-${XFS_IO_PROG} -f -d                    \
+-    -c 'falloc -k 0 40960'              \
+-    -c 'pwrite 0 4096'                  \
+-    ${TEST_DIR}/test_2 | _filter_xfs_io_unique
+-_check_ext4_eof_flag test_2 ${BIT_SET}
+-
+-echo "Test 3: Fallocate 40960 bytes and write 40960 bytes (buffered io)." \
+-    >> $seqres.full
+-${XFS_IO_PROG} -f                       \
+-    -c 'falloc -k 0 40960'              \
+-    -c 'pwrite 0 40960'                 \
+-    ${TEST_DIR}/test_3 | _filter_xfs_io_unique
+-_check_ext4_eof_flag test_3 ${BIT_NOT_SET}
+-
+-echo "Test 4: Fallocate 40960 bytes and write 40960 bytes (direct io)." \
+-    >> $seqres.full
+-${XFS_IO_PROG} -f -d                    \
+-    -c 'falloc -k 0 40960'              \
+-    -c 'pwrite 0 40960'                 \
+-    ${TEST_DIR}/test_4 | _filter_xfs_io_unique
+-_check_ext4_eof_flag test_4 ${BIT_NOT_SET}
+-
+-echo "Test 5: Fallocate 128k, seek 256k and write 4k block (buffered io)." \
+-    >> $seqres.full
+-${XFS_IO_PROG} -f                       \
+-    -c 'falloc -k 0 128k'               \
+-    -c 'pwrite 256k 4k'                 \
+-    ${TEST_DIR}/test_5 | _filter_xfs_io_unique
+-_check_ext4_eof_flag test_5 ${BIT_NOT_SET}
+-
+-echo "Test 6: Fallocate 128k, seek to 256k and write a 4k block (direct io)." \
+-    >> $seqres.full
+-${XFS_IO_PROG} -f -d                    \
+-    -c 'falloc -k 0 128k'               \
+-    -c 'pwrite 256k 4k'                 \
+-    ${TEST_DIR}/test_6 | _filter_xfs_io_unique
+-_check_ext4_eof_flag test_6 ${BIT_NOT_SET}
+-
+-status=0
+-exit ${status}
+diff --git a/tests/shared/243.out b/tests/shared/243.out
+deleted file mode 100644
+index 290a005..0000000
+--- a/tests/shared/243.out
++++ /dev/null
+@@ -1,13 +0,0 @@
+-QA output created by 243
+-wrote 4096/4096 bytes at offset 0
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 4096/4096 bytes at offset 0
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 40960/40960 bytes at offset 0
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 40960/40960 bytes at offset 0
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 4096/4096 bytes at offset 262144
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 4096/4096 bytes at offset 262144
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+diff --git a/tests/shared/group b/tests/shared/group
+index 1c6fffb..2165aac 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -5,7 +5,6 @@
+ #
+ 032 mkfs auto quick
+ 051 acl udf auto quick
+-243 auto quick prealloc
+ 272 auto enospc rw
+ 289 auto quick
+ 298 auto trim
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
