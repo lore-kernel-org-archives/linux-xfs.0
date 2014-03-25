@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1349E29DF7
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 12:44:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F21278F8035
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 10:44:21 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id QTFMoUQPSuyI7gN5 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Mar 2014 10:44:19 -0700 (PDT)
-Date: Tue, 25 Mar 2014 10:44:17 -0700
-From: Christoph Hellwig <hch@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 99E157F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 13:08:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 76FB6304070
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 11:08:28 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	bqUcIOfkT5WFk1qn for <xfs@oss.sgi.com>;
+	Tue, 25 Mar 2014 11:08:23 -0700 (PDT)
+Date: Wed, 26 Mar 2014 05:08:14 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: fix buffer use after free on IO error
-Message-ID: <20140325174417.GA23300@infradead.org>
+Message-ID: <20140325180814.GF18572@destitution>
 References: <532CFA12.4040104@redhat.com>
 	<20140325125754.GA18691@bfoster.bfoster>
 	<20140325131705.GB25392@infradead.org>
-	<5331A930.9030402@sandeen.net>
-	<20140325172508.GA4446@infradead.org> <5331BF53.6000300@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5331BF53.6000300@redhat.com>
+In-Reply-To: <20140325131705.GB25392@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,22 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, Brian Foster <bfoster@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Mar 25, 2014 at 10:39:31AM -0700, Eric Sandeen wrote:
-> so only _xfs_buf_ioend *might* pass something other than 0, and:
+On Tue, Mar 25, 2014 at 06:17:05AM -0700, Christoph Hellwig wrote:
+> > On Fri, Mar 21, 2014 at 09:48:50PM -0500, Eric Sandeen wrote:
+> > > +	/*
+> > > +	 * If _xfs_buf_ioapply failed, we'll get back here with
+> > > +	 * only the reference we took above.  _xfs_buf_ioend will
+> > > +	 * drop it to zero, so we'd better not queue it for later,
+> > > +	 * or we'll free it before it's done.
+> > > +	 */
+> > > +	_xfs_buf_ioend(bp, bp->b_error ? 0 : 1);
+> > >  
+> > 
+> > Out of curiosity, is there any major reason we don't use 0 here
+> > unconditionally? Are we worried about I/O completing before we have a
+> > chance to decrement the reference?
 > 
->   File      Function           Line
-> 0 xfs_buf.c xfs_buf_bio_end_io 1197 _xfs_buf_ioend(bp, 1);
-> 1 xfs_buf.c xfs_buf_iorequest  1377 _xfs_buf_ioend(bp, bp->b_error ? 0 : 1);
-> 
-> At least up until now that was always called with "1"
+> I think this should unconditionally avoid the schedule, and while we're
+> at it we should kill _xfs_buf_ioend and opencode it here and at the
+> other callsite.
 
-Right, _was_.  But that changes to one always passing 1, and one passing
-0 or one with your patch.  Or one passing always 1 and one always
-passing 0 with the suggestion from Brian and me.  Either way we'd still
-have versions passing 1.
+I thought we schduled here because we can issue IO from IO
+completion and so we need to requeue the IO completion rather than
+run it inline in the current IO completion that hasn't fully
+completed it's processing yet..
+
+> Also atomic_dec_and_test really just returns true/false - there should
+> ne no need for the explicit == 1 in the conditional.
+
+Right, there's several other cleanups around this code that can be
+done as Eric has mentioned...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
