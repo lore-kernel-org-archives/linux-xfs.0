@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5C00129DF7
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D411829DF9
 	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 18:38:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 48D32304077
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 16:38:27 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 83D90AC001
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 16:38:28 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id c3fE1Gw1UOv1SYAg for
-	<xfs@oss.sgi.com>; Tue, 25 Mar 2014 16:38:27 -0700 (PDT)
+	cuda.sgi.com with ESMTP id k2DAqEjNgDvpmWpu for
+	<xfs@oss.sgi.com>; Tue, 25 Mar 2014 16:38:24 -0700 (PDT)
 Received: from int-mx01.intmail.prod.int.phx2.redhat.com
 	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2PNcPv7005334
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2PNcNoB007537
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 19:38:26 -0400
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 19:38:23 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 2/5] xfstests: Add support for sections in config file
-Date: Wed, 26 Mar 2014 00:38:08 +0100
-Message-Id: <1395790691-21161-2-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1395790691-21161-1-git-send-email-lczerner@redhat.com>
-References: <1395790691-21161-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 1/5] xfstests: Prepare for config section
+Date: Wed, 26 Mar 2014 00:38:07 +0100
+Message-Id: <1395790691-21161-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,344 +33,374 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Lukas Czerner <lczerner@redhat.com>
 
-This patch add support for sections in the config file. Each section can
-contain configuration options in the format
-
-OPTION=value
-
-when one section is processed xfstests will proceed to next section
-until all secitons are processed, or an error occur.
-
-The name of the section can consist of alphanumeric characters + '_',
-nothing else is allowed. Name of the section is also used to create
-results subdirectory for each section. After all the sections are
-processed summary of all runs is printed out.
-
-If the config file does not contain sections, or we're not using config
-file at all, nothing is changed and xfstests will work the same way as
-it used to.
-
-This is very useful for testing file system with different options. Here
-is an example of the config file with sections:
-
-[ext4_4k_block_size]
-TEST_DEV=/dev/sda
-TEST_DIR=/mnt/test
-SCRATCH_DEV=/dev/sdb
-SCRATCH_MNT=/mnt/test1
-MKFS_OPTIONS="-q -F -b4096"
-FSTYP=ext4
-
-[ext4_1k_block_size]
-MKFS_OPTIONS="-q -F -b1024"
-
-[ext4_nojournal]
-MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
-
-[ext4_discard_ssd]
-MKFS_OPTIONS="-q -F -b4096"
-TEST_DEV=/dev/sdc
-SCRATCH_DEV=/dev/sdd
-MOUNT_OPTIONS="-o discard"
-
-Note that once the variable is set it remains set across the sections, so
-you do not have to specify all the options in all sections. However one
-have to make sure that unwanted options are not set from previous
-sections.
+This stupid patch only put the indentation in place so we will be able
+to clearly see and review changes made in the second patch which will
+add a loop (instead of allways-true condition introduced in this patch)
+adding support for config sections. There are no changes in the logic,
+only indentation changes.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- README.config-sections | 50 ++++++++++++++++++++++++++++++++++++
- check                  | 70 ++++++++++++++++++++++++++++++++++++++++++--------
- common/config          | 49 +++++++++++++++++++++++++++++++++--
- 3 files changed, 157 insertions(+), 12 deletions(-)
- create mode 100644 README.config-sections
+ check | 322 +++++++++++++++++++++++++++++++++---------------------------------
+ 1 file changed, 162 insertions(+), 160 deletions(-)
 
-diff --git a/README.config-sections b/README.config-sections
-new file mode 100644
-index 0000000..6d88a6f
---- /dev/null
-+++ b/README.config-sections
-@@ -0,0 +1,50 @@
-+Configuration file with sections
-+================================
-+
-+Configuration file with sections is useful for running xfstests on multiple
-+file systems, or multiple file system setups in a single run without any
-+help of external scripts.
-+
-+Syntax for defining a section is the following:
-+
-+[section_name]
-+
-+Section name should consist of alphanumeric characters and '_'. Anything
-+else is forbidden and the section will not be recognised.
-+
-+Each section in the configuration file should contain options in the format
-+
-+OPTION=value
-+
-+'OPTION' must not contain any white space characters. 'value' can contain
-+any character you want with one simple limitation - characters ' and " can
-+only appear at the start and end of the 'value', however it is not required.
-+
-+Note that options are carried between sections so the same options does not
-+have to be specified in each and every sections. However caution should be
-+exercised not to leave unwanted options set from previous sections.
-+
-+For every section xfstests will run with specified options and will produce
-+separate results in the '$RESULT_BASE/$section_name' directory.
-+
-+Here is an example of config file with sections:
-+
-+[ext4_4k_block_size]
-+TEST_DEV=/dev/sda
-+TEST_DIR=/mnt/test
-+SCRATCH_DEV=/dev/sdb
-+SCRATCH_MNT=/mnt/test1
-+MKFS_OPTIONS="-q -F -b4096"
-+FSTYP=ext4
-+
-+[ext4_1k_block_size]
-+MKFS_OPTIONS="-q -F -b1024"
-+
-+[ext4_nojournal]
-+MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
-+
-+[ext4_discard_ssd]
-+MKFS_OPTIONS="-q -F -b4096"
-+TEST_DEV=/dev/sdc
-+SCRATCH_DEV=/dev/sdd
-+MOUNT_OPTIONS="-o discard"
 diff --git a/check b/check
-index b33643c..928c5f4 100755
+index b619f6d..b33643c 100755
 --- a/check
 +++ b/check
-@@ -22,9 +22,11 @@
- tmp=/tmp/$$
- status=0
- needwrap=true
-+needsum=true
- n_try=0
- try=""
- n_bad=0
-+sum_bad=0
- bad=""
- notrun=""
- interrupt=true
-@@ -296,7 +298,12 @@ then
-     exit 1
- fi
+@@ -356,190 +356,192 @@ END	{ if (NR > 0) {
  
--# Ok, time to start running...
-+_wipe_counters()
-+{
-+	n_try="0"
-+	n_bad="0"
-+	unset try notrun bad
-+}
+ trap "_wrapup; exit \$status" 0 1 2 3 15
  
- _wrapup()
- {
-@@ -325,16 +332,20 @@ END	{ if (NR > 0) {
- 	date >>$check.log
- 	echo $list | fmt | sed -e 's/^/    /' -e "s;$SRC_DIR/;;g" >>$check.log
- 	$interrupt && echo "Interrupted!" >>$check.log
--        
-+
-+	echo "SECTION       -- $section" >>$tmp.summary
-+	echo "=========================" >>$tmp.summary
-         if [ ! -z "$n_try" -a $n_try != 0 ]
- 	then
- 	    echo "Ran:$try"
-+	    echo "Ran:$try" >>$tmp.summary
- 	fi
- 
- 	if [ ! -z "$notrun" ]
- 	then
- 	    echo "Not run:$notrun"
- 	    echo "Not run:$notrun" >>$check.log
-+	    echo "Not run:$notrun" >>$tmp.summary
- 	fi
- 
-         if [ ! -z "$n_bad" -a $n_bad != 0 ]
-@@ -343,20 +354,48 @@ END	{ if (NR > 0) {
- 	    echo "Failed $n_bad of $n_try tests"
- 	    echo "Failures:$bad" | fmt >>$check.log
- 	    echo "Failed $n_bad of $n_try tests" >>$check.log
-+	    echo "Failures:$bad" >>$tmp.summary
-+	    echo "Failed $n_bad of $n_try tests" >>$tmp.summary
- 	else
- 	    echo "Passed all $n_try tests"
- 	    echo "Passed all $n_try tests" >>$check.log
-+	    echo "Passed all $n_try tests" >>$tmp.summary
- 	fi
-+	echo "" >>$tmp.summary
- 	needwrap=false
-     fi
- 
-+    sum_bad=`expr $sum_bad + $n_bad`
-+    _wipe_counters
-     rm -f /tmp/*.rawout /tmp/*.out /tmp/*.err /tmp/*.time
--    rm -f $tmp.*
-+    if ! $OPTIONS_HAVE_SECTIONS; then
-+        rm -f $tmp.*
-+    fi
- }
- 
--trap "_wrapup; exit \$status" 0 1 2 3 15
-+_summary()
-+{
-+	_wrapup
-+	if $showme; then
-+		:
-+	elif $needsum; then
-+		count=`wc -L $tmp.summary | cut -f1 -d" "`
-+		cat $tmp.summary
-+		needsum=false
-+	fi
-+	rm -f $tmp.*
-+}
-+
-+if $OPTIONS_HAVE_SECTIONS; then
-+	trap "_summary; exit \$status" 0 1 2 3 15
-+else
-+	trap "_wrapup; exit \$status" 0 1 2 3 15
-+fi
-+
-+for section in $HOST_OPTIONS_SECTIONS; do
-+	get_next_config $section
-+	init_rc
- 
--if true; then
- 	mkdir -p $RESULT_BASE
- 	if [ ! -d $RESULT_BASE ]; then
- 		echo "failed to create results directory $RESULTS_BASE"
-@@ -372,6 +411,9 @@ if true; then
- 	[ -f $check.time ] || touch $check.time
- 
- 	# print out our test configuration
-+	if $OPTIONS_HAVE_SECTIONS; then
-+		echo "SECTION       -- $section"
-+	fi
- 	echo "FSTYP         -- `_full_fstyp_details`"
- 	echo "PLATFORM      -- `_full_platform_details`"
- 	if [ ! -z "$SCRATCH_DEV" ]; then
-@@ -379,7 +421,7 @@ if true; then
- 	  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
- 	fi
- 	echo
--
-+	needwrap=true
- 
- 	if [ ! -z "$SCRATCH_DEV" ]; then
- 	  umount $SCRATCH_DEV 2>/dev/null
-@@ -419,9 +461,15 @@ if true; then
- 	    # Similarly, the result directory needs to replace the tests/
- 	    # part of the test location.
- 	    group=`dirname $seq`
--	    export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
-+	    if $OPTIONS_HAVE_SECTIONS; then
-+		export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;${RESULT_BASE}/$section;"`
-+		seqres="$RESULT_BASE/$section/$seqnum"
-+	    else
-+		export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
-+		seqres="$RESULT_BASE/$seqnum"
-+	    fi
-+
- 	    mkdir -p $RESULT_DIR
--	    seqres="$RESULT_BASE/$seqnum"
- 
- 	    echo -n "$seqnum"
- 
-@@ -541,8 +589,10 @@ if true; then
- 
- 	    seq="after_$seqnum"
- 	done
+-mkdir -p $RESULT_BASE
+-if [ ! -d $RESULT_BASE ]; then
+-	echo "failed to create results directory $RESULTS_BASE"
+-	exit 1;
 -fi
-+	_wrapup
+-
+-seq="check"
+-check="$RESULT_BASE/check"
+-
+-# don't leave old full output behind on a clean run
+-rm -f $check.full
+-
+-[ -f $check.time ] || touch $check.time
+-
+-# print out our test configuration
+-echo "FSTYP         -- `_full_fstyp_details`"
+-echo "PLATFORM      -- `_full_platform_details`"
+-if [ ! -z "$SCRATCH_DEV" ]; then
+-  echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
+-  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
+-fi
+-echo
+-
+-
+-if [ ! -z "$SCRATCH_DEV" ]; then
+-  umount $SCRATCH_DEV 2>/dev/null
+-  # call the overridden mkfs - make sure the FS is built
+-  # the same as we'll create it later.
+-
+-  if ! _scratch_mkfs $flag >$tmp.err 2>&1
+-  then
+-      echo "our local _scratch_mkfs routine ..."
+-      cat $tmp.err
+-      echo "check: failed to mkfs \$SCRATCH_DEV using specified options"
+-      exit 1
+-  fi
+-
+-  # call the overridden mount - make sure the FS mounts with
+-  # the same options that we'll mount with later.
+-  if ! _scratch_mount >$tmp.err 2>&1
+-  then
+-      echo "our local mount routine ..."
+-      cat $tmp.err
+-      echo "check: failed to mount \$SCRATCH_DEV using specified options"
+-      exit 1
+-  fi
+-fi
++if true; then
++	mkdir -p $RESULT_BASE
++	if [ ! -d $RESULT_BASE ]; then
++		echo "failed to create results directory $RESULTS_BASE"
++		exit 1;
++	fi
+ 
+-seqres="$check"
+-_check_test_fs
++	seq="check"
++	check="$RESULT_BASE/check"
+ 
+-for seq in $list
+-do
+-    err=false
++	# don't leave old full output behind on a clean run
++	rm -f $check.full
+ 
+-    # the filename for the test and the name output are different.
+-    # we don't include the tests/ directory in the name output.
+-    seqnum=`echo $seq | sed -e "s;$SRC_DIR/;;"`
++	[ -f $check.time ] || touch $check.time
+ 
+-    # Similarly, the result directory needs to replace the tests/
+-    # part of the test location.
+-    group=`dirname $seq`
+-    export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
+-    mkdir -p $RESULT_DIR
+-    seqres="$RESULT_BASE/$seqnum"
++	# print out our test configuration
++	echo "FSTYP         -- `_full_fstyp_details`"
++	echo "PLATFORM      -- `_full_platform_details`"
++	if [ ! -z "$SCRATCH_DEV" ]; then
++	  echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
++	  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
++	fi
 +	echo
-+done
+ 
+-    echo -n "$seqnum"
+ 
+-    if $showme
+-    then
+-	echo
+-	continue
+-    elif [ ! -f $seq ]
+-    then
+-	echo " - no such test?"
+-    else
+-	# really going to try and run this one
+-	#
+-	rm -f $seqres.out.bad
+-
+-	# check if we really should run it
+-	if [ -s $tmp.xlist ]; then
+-		if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
+-			echo "       [expunged]"
+-			continue
+-		fi
++	if [ ! -z "$SCRATCH_DEV" ]; then
++	  umount $SCRATCH_DEV 2>/dev/null
++	  # call the overridden mkfs - make sure the FS is built
++	  # the same as we'll create it later.
++
++	  if ! _scratch_mkfs $flag >$tmp.err 2>&1
++	  then
++	      echo "our local _scratch_mkfs routine ..."
++	      cat $tmp.err
++	      echo "check: failed to mkfs \$SCRATCH_DEV using specified options"
++	      exit 1
++	  fi
++
++	  # call the overridden mount - make sure the FS mounts with
++	  # the same options that we'll mount with later.
++	  if ! _scratch_mount >$tmp.err 2>&1
++	  then
++	      echo "our local mount routine ..."
++	      cat $tmp.err
++	      echo "check: failed to mount \$SCRATCH_DEV using specified options"
++	      exit 1
++	  fi
+ 	fi
+ 
+-	# slashes now in names, sed barfs on them so use grep
+-	lasttime=`grep -w ^$seqnum $check.time | awk '// {print $2}'`
+-	if [ "X$lasttime" != X ]; then
+-		echo -n " ${lasttime}s ..."
+-	else
+-		echo -n "	"	# prettier output with timestamps.
+-	fi
+-	rm -f core $seqres.notrun
++	seqres="$check"
++	_check_test_fs
+ 
+-	start=`_wallclock`
+-	$timestamp && echo -n "	["`date "+%T"`"]"
+-	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+-	$LOGGER_PROG "run xfstest $seqnum"
+-	./$seq >$tmp.rawout 2>&1
+-	sts=$?
+-	$timestamp && _timestamp
+-	stop=`_wallclock`
++	for seq in $list
++	do
++	    err=false
+ 
+-	_fix_malloc <$tmp.rawout >$tmp.out
+-	rm -f $tmp.rawout
++	    # the filename for the test and the name output are different.
++	    # we don't include the tests/ directory in the name output.
++	    seqnum=`echo $seq | sed -e "s;$SRC_DIR/;;"`
+ 
+-	if [ -f core ]
+-	then
+-	    echo -n " [dumped core]"
+-	    mv core $RESULT_BASE/$seqnum.core
+-	    err=true
+-	fi
++	    # Similarly, the result directory needs to replace the tests/
++	    # part of the test location.
++	    group=`dirname $seq`
++	    export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
++	    mkdir -p $RESULT_DIR
++	    seqres="$RESULT_BASE/$seqnum"
+ 
+-	if [ -f $seqres.notrun ]
+-	then
+-	    $timestamp || echo -n " [not run] "
+-	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
+-	    cat $seqres.notrun
+-	    notrun="$notrun $seqnum"
+-	else
+-	    if [ $sts -ne 0 ]
++	    echo -n "$seqnum"
++
++	    if $showme
+ 	    then
+-		echo -n " [failed, exit status $sts]"
+-		err=true
+-	    fi
+-	    if [ ! -f $seq.out ]
++		echo
++		continue
++	    elif [ ! -f $seq ]
+ 	    then
+-		echo " - no qualified output"
+-		err=true
++		echo " - no such test?"
+ 	    else
++		# really going to try and run this one
++		#
++		rm -f $seqres.out.bad
++
++		# check if we really should run it
++		if [ -s $tmp.xlist ]; then
++			if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
++				echo "       [expunged]"
++				continue
++			fi
++		fi
++
++		# slashes now in names, sed barfs on them so use grep
++		lasttime=`grep -w ^$seqnum $check.time | awk '// {print $2}'`
++		if [ "X$lasttime" != X ]; then
++			echo -n " ${lasttime}s ..."
++		else
++			echo -n "	"	# prettier output with timestamps.
++		fi
++		rm -f core $seqres.notrun
++
++		start=`_wallclock`
++		$timestamp && echo -n "	["`date "+%T"`"]"
++		[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
++		$LOGGER_PROG "run xfstest $seqnum"
++		./$seq >$tmp.rawout 2>&1
++		sts=$?
++		$timestamp && _timestamp
++		stop=`_wallclock`
+ 
+-		# coreutils 8.16+ changed quote formats in error messages from
+-		# `foo' to 'foo'. Filter old versions to match the new version.
+-		sed -i "s/\`/\'/g" $tmp.out
+-		if diff $seq.out $tmp.out >/dev/null 2>&1
++		_fix_malloc <$tmp.rawout >$tmp.out
++		rm -f $tmp.rawout
++
++		if [ -f core ]
++		then
++		    echo -n " [dumped core]"
++		    mv core $RESULT_BASE/$seqnum.core
++		    err=true
++		fi
++
++		if [ -f $seqres.notrun ]
+ 		then
+-		    if $err
++		    $timestamp || echo -n " [not run] "
++		    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
++		    cat $seqres.notrun
++		    notrun="$notrun $seqnum"
++		else
++		    if [ $sts -ne 0 ]
+ 		    then
+-			:
+-		    else
+-			echo "$seqnum `expr $stop - $start`" >>$tmp.time
+-			echo -n " `expr $stop - $start`s"
++			echo -n " [failed, exit status $sts]"
++			err=true
+ 		    fi
+-		    echo ""
+-		else
+-		    echo " - output mismatch (see $seqres.out.bad)"
+-		    mv $tmp.out $seqres.out.bad
+-		    $diff $seq.out $seqres.out.bad | {
+-		        if test "$DIFF_LENGTH" -le 0; then
+-				cat
++		    if [ ! -f $seq.out ]
++		    then
++			echo " - no qualified output"
++			err=true
++		    else
++
++			# coreutils 8.16+ changed quote formats in error messages from
++			# `foo' to 'foo'. Filter old versions to match the new version.
++			sed -i "s/\`/\'/g" $tmp.out
++			if diff $seq.out $tmp.out >/dev/null 2>&1
++			then
++			    if $err
++			    then
++				:
++			    else
++				echo "$seqnum `expr $stop - $start`" >>$tmp.time
++				echo -n " `expr $stop - $start`s"
++			    fi
++			    echo ""
+ 			else
+-				head -n "$DIFF_LENGTH"
+-				echo "..."
+-				echo "(Run '$diff $seq.out $seqres.out.bad'" \
+-					" to see the entire diff)"
+-			fi; } | \
+-			sed -e 's/^\(.\)/    \1/'
+-		    err=true
++			    echo " - output mismatch (see $seqres.out.bad)"
++			    mv $tmp.out $seqres.out.bad
++			    $diff $seq.out $seqres.out.bad | {
++				if test "$DIFF_LENGTH" -le 0; then
++					cat
++				else
++					head -n "$DIFF_LENGTH"
++					echo "..."
++					echo "(Run '$diff $seq.out $seqres.out.bad'" \
++						" to see the entire diff)"
++				fi; } | \
++				sed -e 's/^\(.\)/    \1/'
++			    err=true
++			fi
++		    fi
+ 		fi
+-	    fi
+-	fi
+ 
+-    fi
++	    fi
+ 
+-    # come here for each test, except when $showme is true
+-    #
+-    if $err
+-    then
+-	bad="$bad $seqnum"
+-	n_bad=`expr $n_bad + 1`
+-	quick=false
+-    fi
+-    if [ ! -f $seqres.notrun ]
+-    then
+-	try="$try $seqnum"
+-	n_try=`expr $n_try + 1`
+-        _check_test_fs
+-    fi
++	    # come here for each test, except when $showme is true
++	    #
++	    if $err
++	    then
++		bad="$bad $seqnum"
++		n_bad=`expr $n_bad + 1`
++		quick=false
++	    fi
++	    if [ ! -f $seqres.notrun ]
++	    then
++		try="$try $seqnum"
++		n_try=`expr $n_try + 1`
++		_check_test_fs
++	    fi
+ 
+-    seq="after_$seqnum"
+-done
++	    seq="after_$seqnum"
++	done
++fi
  
  interrupt=false
--status=`expr $n_bad`
-+status=`expr $sum_bad`
- exit
-diff --git a/common/config b/common/config
-index 3a0208a..5438ecf 100644
---- a/common/config
-+++ b/common/config
-@@ -224,15 +224,57 @@ known_hosts()
- 	[ -f $HOST_CONFIG_DIR/$HOST.config ] && export HOST_OPTIONS=$HOST_CONFIG_DIR/$HOST.config
- }
- 
-+# Returns a list of sections in config file
-+# Each section starts with the section name in the format
-+# [section_name1]. Only alphanumeric characters and '_' is allowed
-+# in the section name otherwise the section will not be resognised.
-+# Section name must be contained between square brackets.
-+get_config_sections() {
-+	sed -n -e "s/^\[\([[:alnum:]_]*\)\]/\1/p" < $1
-+}
-+
- if [ ! -f "$HOST_OPTIONS" ]; then
- 	known_hosts
- fi
- 
-+export HOST_OPTIONS_SECTIONS="-no-sections-"
-+export OPTIONS_HAVE_SECTIONS=false
- if [ -f "$HOST_OPTIONS" ]; then
--	. $HOST_OPTIONS
-+	export HOST_OPTIONS_SECTIONS=`get_config_sections $HOST_OPTIONS`
-+	if [ -z "$HOST_OPTIONS_SECTIONS" ]; then
-+		. $HOST_OPTIONS
-+		export HOST_OPTIONS_SECTIONS="-no-sections-"
-+	else
-+		export OPTIONS_HAVE_SECTIONS=true
-+	fi
- fi
- 
-+# Parse config section options. This function will parse all the configuration
-+# within a single section which name is passed as an argument. For section
-+# name format see comments in get_config_sections().
-+# Empty lines and everything after '#' will be ignored.
-+# Configuration options should be defined in the format
-+#
-+# CONFIG_OPTION=value
-+#
-+# This 'CONFIG_OPTION' variable and will be exported as an environment variable.
-+parse_config_section() {
-+	SECTION=$1
-+	if ! $OPTIONS_HAVE_SECTIONS; then
-+		return 0
-+	fi
-+	eval `sed -e 's/[[:space:]]*\=[[:space:]]*/=/g' \
-+		-e 's/#.*$//' \
-+		-e 's/[[:space:]]*$//' \
-+		-e 's/^[[:space:]]*//' \
-+		-e "s/^\(.*\)=\"\?'\?\([^\"']*\)\"\?'\?$/export \1=\"\2\"/" \
-+		< $HOST_OPTIONS \
-+		| sed -n -e "/^\[$SECTION\]/,/^\s*\[/{/^[^#].*\=.*/p;}"`
-+}
-+
- get_next_config() {
-+	parse_config_section $1
-+
- 	# set default RESULT_BASE
- 	if [ -z "$RESULT_BASE" ]; then
- 		export RESULT_BASE="$here/results/"
-@@ -284,7 +326,10 @@ get_next_config() {
- 	fi
- }
- 
--get_next_config
-+if [ -z "$CONFIG_INCLUDED" ]; then
-+	get_next_config `echo $HOST_OPTIONS_SECTIONS | cut -f1 -d" "`
-+	export CONFIG_INCLUDED=true
-+fi
- 
- # make sure this script returns success
- /bin/true
+ status=`expr $n_bad`
 -- 
 1.8.3.1
 
