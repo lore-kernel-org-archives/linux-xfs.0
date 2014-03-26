@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3F4727F3F
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 19:02:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F122304075
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 17:02:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5AWGyBJcL8uW8yhh for
-	<xfs@oss.sgi.com>; Tue, 25 Mar 2014 17:02:01 -0700 (PDT)
-Date: Wed, 26 Mar 2014 01:01:53 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 1/2] xfstests: Make some shared tests generic
-In-Reply-To: <20140325224546.GI18572@destitution>
-Message-ID: <alpine.LFD.2.00.1403260101360.22556@localhost.localdomain>
-References: <1395781911-13084-1-git-send-email-lczerner@redhat.com>
-	<20140325224546.GI18572@destitution>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5E5357F3F
+	for <xfs@oss.sgi.com>; Wed, 26 Mar 2014 00:48:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DF6CDAC002
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 22:48:15 -0700 (PDT)
+Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
+	cuda.sgi.com with ESMTP id wKQqSEIIIfDW1r19 for
+	<xfs@oss.sgi.com>; Tue, 25 Mar 2014 22:48:10 -0700 (PDT)
+Received: from cobra.newdream.net (localhost [127.0.0.1])
+	by cobra.newdream.net (Postfix) with ESMTP id 024FE8002D
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 22:48:09 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by cobra.newdream.net (Postfix) with ESMTP id B19FC8002D
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2014 22:48:08 -0700 (PDT)
+Date: Tue, 25 Mar 2014 22:48:08 -0700 (PDT)
+From: Sage Weil <sage@inktank.com>
+Subject: E2BIG from listxattr
+Message-ID: <alpine.DEB.2.00.1403252242220.893@cobra.newdream.net>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,63 +31,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 26 Mar 2014, Dave Chinner wrote:
+Hi,
 
-> Date: Wed, 26 Mar 2014 09:45:46 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: xfs@oss.sgi.com
-> Subject: Re: [PATCH 1/2] xfstests: Make some shared tests generic
-> 
-> On Tue, Mar 25, 2014 at 10:11:50PM +0100, Lukas Czerner wrote:
-> > There are couple of tests in shared directory which really should be
-> > made generic, so move it. It is mostly collapse range tests, which
-> > really can be generic to make super we test every file system which adds
-> > collapse range support.
-> > 
-> > Here is what we're moving in this commit.
-> > 
-> > shared/001 -> generic/004
-> > shared/002 -> generic/009
-> > shared/003 -> generic/012
-> > shared/004 -> generic/016
-> > shared/005 -> generic/017
-> > shared/218 -> generic/018
-> > shared/305 -> generic/019
-> > 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > ---
-> ....
-> >  tests/shared/group    |   8 ---
-> >  30 files changed, 865 insertions(+), 866 deletions(-)
-> >  create mode 100755 tests/generic/004
-> >  create mode 100644 tests/generic/004.out
-> >  create mode 100644 tests/generic/009
-> >  create mode 100644 tests/generic/009.out
-> >  create mode 100644 tests/generic/012
-> >  create mode 100644 tests/generic/012.out
-> >  create mode 100644 tests/generic/016
-> >  create mode 100644 tests/generic/016.out
-> >  create mode 100644 tests/generic/017
-> >  create mode 100644 tests/generic/017.out
-> 
-> Looks fine at a quick glance, but can you fix the modes on these
-> test files (009,012...) while you are moving them?
+If you create a bunch of xattrs on an inode, you can get into a sitation 
+where you can no longer list them.  The reproducer below just does 
+setxattr until it gets an error or listxattr starts returning E2BIG.  Once 
+you're in this state you can getxattr attrs you know the name of, but you 
+can't list them, which is a bit inconvenient.
 
-Already sent.
+Presumably the fix is for setxattr to verify that the list of all xattr 
+names will fit into a 64K buffer or else return ENOSPC...
 
-Thanks!
--Lukas
+sage
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> 
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+#include <string.h>
+#include <errno.h>
+
+int main(int argc, char **argv)
+{
+	char *fn = argv[1];
+	char buf[655360];
+	int buflen = sizeof(buf);
+	int i;
+
+	for (i = 0; i < 10000; ++i) {
+		int r = listxattr(fn, buf, buflen);
+		if (r < 0) {
+			perror("listxattr");
+			return 1;
+		}
+		char n[100];
+		sprintf(n, "user.foooooooooooooooooooooooooooooooooooooo%d", i);
+		r = setxattr(fn, n, "", 0, 0);
+		if (r < 0) {
+			perror("setxattr");
+			return 1;
+		}
+		printf("set %d\n", i);
+	}
+	return 0;
+}
 
 _______________________________________________
 xfs mailing list
