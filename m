@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 12DB57F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Mar 2014 15:18:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 05BD0304070
-	for <xfs@oss.sgi.com>; Thu, 27 Mar 2014 13:18:55 -0700 (PDT)
-Received: from mail-we0-f179.google.com (mail-we0-f179.google.com
-	[74.125.82.179]) by cuda.sgi.com with ESMTP id bBgkovKcOASkzhLv
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 27 Mar 2014 13:18:53 -0700 (PDT)
-Received: by mail-we0-f179.google.com with SMTP id x48so2110062wes.38
-	for <xfs@oss.sgi.com>; Thu, 27 Mar 2014 13:18:52 -0700 (PDT)
-From: Filipe David Borba Manana <fdmanana@gmail.com>
-Subject: [PATCH v5] xfstests: add test for btrfs send regarding directory
-	moves/renames
-Date: Thu, 27 Mar 2014 20:18:37 +0000
-Message-Id: <1395951517-20525-1-git-send-email-fdmanana@gmail.com>
-In-Reply-To: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
-References: <1394983466-20497-1-git-send-email-fdmanana@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E6C517F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Mar 2014 15:36:50 -0500 (CDT)
+Message-ID: <53348BE0.7000606@sgi.com>
+Date: Thu, 27 Mar 2014 15:36:48 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: xfs errors while unlinking filenames with hash collisions
+References: <20140327074156.GJ29498@order.stressinduktion.org>
+	<5334241E.9060708@sgi.com>
+	<20140327132354.GU29498@order.stressinduktion.org>
+	<533428D6.507@sgi.com>
+	<20140327140556.GW29498@order.stressinduktion.org>
+	<53344075.8050607@sgi.com>
+	<20140327152448.GE29498@order.stressinduktion.org>
+In-Reply-To: <20140327152448.GE29498@order.stressinduktion.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,453 +23,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jbacik@fb.com, Filipe Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
+To: Hannes Frederic Sowa <hannes@stressinduktion.org>
+Cc: xfs@oss.sgi.com
 
-From: Filipe Manana <fdmanana@gmail.com>
+On 03/27/14 10:24, Hannes Frederic Sowa wrote:
+> On Thu, Mar 27, 2014 at 10:15:01AM -0500, Mark Tinguely wrote:
+>> On 03/27/14 09:05, Hannes Frederic Sowa wrote:
+>>> On Thu, Mar 27, 2014 at 08:34:14AM -0500, Mark Tinguely wrote:
+>>>> On 03/27/14 08:23, Hannes Frederic Sowa wrote:
+>>>>> On Thu, Mar 27, 2014 at 08:14:06AM -0500, Mark Tinguely wrote:
+>>>>>> Have you tried to run a xfs_repair on the filesystem after the reboot?
+>>>>>
+>>>>> Yes, I did. I still use the filesystem and it works. As soon as I try to
+>>>>> remove the directory again the same splash from above happens again.
+>>>>
+>>>> Is it the latest xfsprogs' repair?
+>>>>
+>>>> Do you have the output from the repair still?
+>>>
+>>> I can easily test this here, so you can throw any commands and tests at
+>>> me. ;)
+>>>
+>>> This is the output:
+>>>
+>>> (I replayed the journal before that)
+>>>
+>>> pre-mount:/# xfs_repair -V
+>>> xfs_repair version 3.1.11
+>>> pre-mount:/# xfs_repair -v /dev/vda1
+>>> Phase 1 - find and verify superblock...
+>>>          - block cache size set to 372848 entries
+>>> Phase 2 - using internal log
+>>>          - zero log...
+>>> zero_log: head block 5071 tail block 5071
+>>>          - scan filesystem freespace and inode maps...
+>>>          - found root inode chunk
+>>> Phase 3 - for each AG...
+>>>          - scan and clear agi unlinked lists...
+>>>          - process known inodes and perform inode discovery...
+>>>          - agno = 0
+>>> bad hash ordering in block 8388739 of directory inode 3543184
+>>
+>> interesting. I will see if I can recreate it.
+>>
+>> Are you open to making it an xfstest?
+>
+> Sure, I'll put it on my todo list for the weekend.
+>
+> Thanks,
+>
+>    Hannes
 
-Regression test for a btrfs incremental send issue where the kernel failed
-to build paths strings. This resulted either in sending a wrong path string
-to the send stream or entering an infinite loop when building it.
-This happened in the following scenarios:
 
-1) A directory was made a child of another directory which has a lower inode
-   number and has a pending move/rename operation or there's some non-direct
-   ancestor directory with a higher inode number that was renamed/moved too.
-   This made the incremental send code go into an infinite loop when building
-   a path string;
+I will bisect where this started to happen. It appears to be around 
+Linux 3.10.
 
-2) A directory was made a child of another directory which has a higher inode
-   number, but the new parent wasn't moved nor renamed. Instead some other
-   ancestor higher in the hierarchy, with an higher inode number too, was
-   moved/renamed too. This made the incremental send code go into an infinite
-   loop when building a path string;
-
-3) An orphan directory is created and at least one of its non-immediate
-   descendent directories have a pending move/rename operation. This made
-   an incremental send issue to the send stream an invalid path string that
-   didn't account for the orphan ancestor directory.
-
-Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
----
-
-V2: Added more tests.
-V3: Added more tests for more complex cases.
-V4: Added more tests, related to case 3) mentioned above.
-V5: Added more tests, related to case 1) mentioned above.
-
- tests/btrfs/045     |  376 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/045.out |    1 +
- tests/btrfs/group   |    1 +
- 3 files changed, 378 insertions(+)
- create mode 100755 tests/btrfs/045
- create mode 100644 tests/btrfs/045.out
-
-diff --git a/tests/btrfs/045 b/tests/btrfs/045
-new file mode 100755
-index 0000000..4567a3f
---- /dev/null
-+++ b/tests/btrfs/045
-@@ -0,0 +1,376 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/045
-+#
-+# Regression test for a btrfs incremental send issue where the kernel failed
-+# to build paths strings. This resulted either in sending a wrong path string
-+# to the send stream or entering an infinite loop when building it.
-+# This happened in the following scenarios:
-+#
-+# 1) A directory was made a child of another directory which has a lower inode
-+#    number and has a pending move/rename operation or there's some non-direct
-+#    ancestor directory with a higher inode number that was renamed/moved too.
-+#    This made the incremental send code go into an infinite loop when building
-+#    a path string;
-+#
-+# 2) A directory was made a child of another directory which has a higher inode
-+#    number, but the new parent wasn't moved nor renamed. Instead some other
-+#    ancestor higher in the hierarchy, with an higher inode number too, was
-+#    moved/renamed too. This made the incremental send code go into an infinite
-+#    loop when building a path string;
-+#
-+# 3) An orphan directory is created and at least one of its non-immediate
-+#    descendent directories have a pending move/rename operation. This made
-+#    an incremental send issue to the send stream an invalid path string that
-+#    didn't account for the orphan ancestor directory.
-+#
-+# These issues are fixed by the following linux kernel btrfs patches:
-+#
-+#   Btrfs: fix incremental send's decision to delay a dir move/rename
-+#   Btrfs: part 2, fix incremental send's decision to delay a dir move/rename
-+#   Btrfs: send, fix more issues related to directory renames
-+#   Btrfs: send, account for orphan directories when building path strings
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+tmp=`mktemp -d`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    rm -fr $tmp
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+_require_fssum
-+_need_to_be_root
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# case 1), mentioned above
-+mkdir -p $SCRATCH_MNT/a/b
-+mkdir $SCRATCH_MNT/a/c
-+mkdir $SCRATCH_MNT/a/b/d
-+touch $SCRATCH_MNT/a/file1
-+touch $SCRATCH_MNT/a/b/file2
-+mv $SCRATCH_MNT/a/file1 $SCRATCH_MNT/a/b/d/file3
-+ln $SCRATCH_MNT/a/b/d/file3 $SCRATCH_MNT/a/b/file4
-+mkdir $SCRATCH_MNT/a/b/f
-+mv $SCRATCH_MNT/a/b $SCRATCH_MNT/a/c/b2
-+touch $SCRATCH_MNT/a/c/b2/d/file5
-+
-+# case 2), mentioned above
-+mkdir -p $SCRATCH_MNT/a/x1/x2
-+mkdir $SCRATCH_MNT/a/Z
-+mkdir -p $SCRATCH_MNT/a/x1/x2/x3/x4/x5
-+
-+# case 2) again, but a more complex scenario
-+mkdir -p $SCRATCH_MNT/_a/_b/_c/_d
-+mkdir $SCRATCH_MNT/_a/_b/_c/_d/_e
-+mkdir $SCRATCH_MNT/_a/_b/_c/_d/_f
-+mv $SCRATCH_MNT/_a/_b/_c/_d/_e $SCRATCH_MNT/_a/_b/_c/_d/_f/_E2
-+mkdir $SCRATCH_MNT/_a/_b/_c/_g
-+mv $SCRATCH_MNT/_a/_b/_c/_d $SCRATCH_MNT/_a/_b/_D2
-+
-+# case 3), mentioned above
-+mkdir -p $SCRATCH_MNT/za/zb/zc/zd
-+mkdir $SCRATCH_MNT/za/zb/ze
-+mv $SCRATCH_MNT/za/zb/zc $SCRATCH_MNT/za/zb/ze/zCC
-+mkdir $SCRATCH_MNT/za/zb/ze/zCC/zd/zf
-+mkdir $SCRATCH_MNT/za/zg
-+
-+# case 1), more complex scenario
-+mkdir -p $SCRATCH_MNT/y_a/y_b
-+mkdir -p $SCRATCH_MNT/y_a/y_c/y_d
-+mkdir $SCRATCH_MNT/y_a/y_b/y_e
-+mkdir $SCRATCH_MNT/y_a/y_c/y_d/y_f
-+mv $SCRATCH_MNT/y_a/y_b  $SCRATCH_MNT/y_a/y_c/y_d/y_2b
-+mkdir $SCRATCH_MNT/y_a/y_x
-+mkdir $SCRATCH_MNT/y_a/y_y
-+
-+# case 1), variation of previous scenario with a subtree is moved into
-+# a directory created after creating the parent snapshot
-+mkdir -p $SCRATCH_MNT/w_a/w_b
-+mkdir -p $SCRATCH_MNT/w_a/w_c/w_d
-+mkdir $SCRATCH_MNT/w_a/w_b/w_e
-+mkdir $SCRATCH_MNT/w_a/w_c/w_d/w_f
-+mv $SCRATCH_MNT/w_a/w_b  $SCRATCH_MNT/w_a/w_c/w_d/w_2b
-+
-+mkdir -p $SCRATCH_MNT/xa/xb
-+mkdir $SCRATCH_MNT/xa/xc
-+mv $SCRATCH_MNT/xa/xb $SCRATCH_MNT/xa/xc/xb2
-+mkdir $SCRATCH_MNT/xa/xe
-+
-+mkdir -p $SCRATCH_MNT/%a/%b
-+mkdir $SCRATCH_MNT/%a/%c
-+mkdir $SCRATCH_MNT/%a/%b/%d
-+mkdir $SCRATCH_MNT/%a/%c/%e
-+
-+# Filesystem looks like:
-+#
-+# .                               (ino 256)
-+# |-- a/                          (ino 257)
-+# |   |-- c/                      (ino 259)
-+# |   |   |-- b2/                 (ino 258)
-+# |   |       |-- d/              (ino 260)
-+# |   |       |   |-- file3       (ino 261)
-+# |   |       |   |-- file5       (ino 264)
-+# |   |       |
-+# |   |       |-- file2           (ino 262)
-+# |   |       |-- file4           (ino 261)
-+# |   |       |-- f/              (ino 263)
-+# |   |
-+# |   |-- x1/                     (ino 265)
-+# |   |   |-- x2/                 (ino 266)
-+# |   |       |-- x3/             (ino 268)
-+# |   |           |-- x4/         (ino 269)
-+# |   |               |-- x5/     (ino 270)
-+# |   |
-+# |   |-- Z/                      (ino 267)
-+# |
-+# |-- _a/                         (ino 271)
-+# |    |-- _b/                    (ino 272)
-+# |         |-- _c/               (ino 273)
-+# |         |    |-- _g/          (ino 277)
-+# |         |
-+# |         |-- _D2/              (ino 274)
-+# |              |-- _f/          (ino 276)
-+# |                   |-- _E2/    (ino 275)
-+# |
-+# |-- za/                         (ino 278)
-+# |   |-- zb/                     (ino 279)
-+# |   |   |-- ze/                 (ino 282)
-+# |   |       |-- zCC/            (ino 280)
-+# |   |            |-- zd/        (ino 281)
-+# |   |                |-- zf/    (ino 283)
-+# |   |
-+# |   |-- zg/                     (ino 284)
-+# |
-+# |-- y_a/                        (ino 285)
-+# |    |-- y_c/                   (ino 287)
-+# |    |    |-- y_d/              (ino 288)
-+# |    |         |-- y_2b/        (ino 286)
-+# |    |         |    |-- y_e/    (ino 289)
-+# |    |         |
-+# |    |         |-- y_f/         (ino 290)
-+# |    |
-+# |    |-- y_x/                   (ino 291)
-+# |    |-- y_y/                   (ino 292)
-+# |
-+# |-- w_a/                        (ino 293)
-+# |    |-- w_c/                   (ino 295)
-+# |         |-- w_d/              (ino 296)
-+# |              |-- w_2b/        (ino 294)
-+# |              |    |-- w_e/    (ino 297)
-+# |              |
-+# |              |-- w_f/         (ino 298)
-+# |
-+# |-- xa/                         (ino 299)
-+# |   |-- xc/                     (ino 301)
-+# |   |   |-- xb2/                (ino 300)
-+# |   |
-+# |   |-- xe/                     (ino 302)
-+# |
-+# |-- %a/                         (ino 303)
-+#     |-- %b/                     (ino 304)
-+#     |   |-- %d/                 (ino 306)
-+#     |
-+#     |-- %c/                     (ino 305)
-+#         |-- %e/                 (ino 307)
-+
-+_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1
-+
-+# case 1), mentioned above
-+ln $SCRATCH_MNT/a/c/b2/file4 $SCRATCH_MNT/a/c/b2/f/file6
-+mv $SCRATCH_MNT/a/c/b2/d/file5 $SCRATCH_MNT/a/c/file7
-+touch $SCRATCH_MNT/a/c/b2/d/file8
-+touch $SCRATCH_MNT/a/c/b2/file9
-+ln $SCRATCH_MNT/a/c/b2/file9 $SCRATCH_MNT/a/c/b2/file10
-+mv $SCRATCH_MNT/a/c/b2/f $SCRATCH_MNT/a/f2
-+mv $SCRATCH_MNT/a/c $SCRATCH_MNT/a/c2
-+mv $SCRATCH_MNT/a/c2/b2 $SCRATCH_MNT/a/f2/b3
-+mv $SCRATCH_MNT/a/c2 $SCRATCH_MNT/a/f2/b3/c3
-+touch $SCRATCH_MNT/a/f2/b3/c3/file11
-+mv $SCRATCH_MNT/a $SCRATCH_MNT/a2
-+
-+# case 2), mentioned above
-+mv $SCRATCH_MNT/a2/x1/x2/x3 $SCRATCH_MNT/a2/Z/X33
-+mv $SCRATCH_MNT/a2/x1/x2 $SCRATCH_MNT/a2/Z/X33/x4/x5/X22
-+
-+# case 2) again, but a more complex scenario
-+mkdir $SCRATCH_MNT/_a/_o
-+mv $SCRATCH_MNT/_a/_b/_c/_g $SCRATCH_MNT/_a/_b/_D2/_f/_G2
-+mv $SCRATCH_MNT/_a/_b/_D2 $SCRATCH_MNT/_a/_b/_dd
-+mv $SCRATCH_MNT/_a/_b/_c $SCRATCH_MNT/_a/_C2
-+mv $SCRATCH_MNT/_a/_b/_dd/_f $SCRATCH_MNT/_a/_o/_FF
-+mv $SCRATCH_MNT/_a/_b $SCRATCH_MNT/_a/_o/_FF/_E2/_BB
-+
-+# case 3), mentioned above
-+mkdir $SCRATCH_MNT/za/zg/zh
-+mv $SCRATCH_MNT/za/zb/ze $SCRATCH_MNT/za/zg/zh/zEE
-+mv $SCRATCH_MNT/za/zg/zh/zEE/zCC/zd $SCRATCH_MNT/za/zg/zh/zEE/zDD
-+mv $SCRATCH_MNT/za/zg/zh/zEE/zDD/zf $SCRATCH_MNT/za/zg/zh/zEE/zDD/zFF
-+
-+# case 1), more complex scenario
-+mv $SCRATCH_MNT/y_a/y_x $SCRATCH_MNT/y_a/y_y
-+mv $SCRATCH_MNT/y_a/y_c/y_d/y_2b/y_e $SCRATCH_MNT/y_a/y_c/y_d/y_2b/y_2e
-+mv $SCRATCH_MNT/y_a/y_c/y_d $SCRATCH_MNT/y_a/y_y/y_x/y_2d
-+mv $SCRATCH_MNT/y_a/y_c $SCRATCH_MNT/y_a/y_y/y_x/y_2d/y_2b/y_2c
-+
-+# case 1), variation of previous scenario with a subtree is moved into
-+# a directory created after creating the parent snapshot
-+mv $SCRATCH_MNT/w_a/w_c/w_d/w_2b/w_e $SCRATCH_MNT/w_a/w_c/w_d/w_2b/w_2e
-+mkdir $SCRATCH_MNT/w_a/w_h
-+mv $SCRATCH_MNT/w_a/w_c/w_d $SCRATCH_MNT/w_a/w_h/w_2d
-+mv $SCRATCH_MNT/w_a/w_c $SCRATCH_MNT/w_a/w_h/w_2d/w_2b/w_2c
-+
-+mv $SCRATCH_MNT/xa/xc/xb2 $SCRATCH_MNT/xa/xe/xb3
-+mkdir $SCRATCH_MNT/xa/xe/xb3/xf
-+mkdir $SCRATCH_MNT/xa/xh
-+mv $SCRATCH_MNT/xa/xc $SCRATCH_MNT/xa/xe/xb3/xf/xc2
-+mv $SCRATCH_MNT/xa/xe $SCRATCH_MNT/xa/xh/xe2
-+
-+echo "hello" > $SCRATCH_MNT/%a/foo
-+mkdir $SCRATCH_MNT/%a/%b/%d/%f
-+mkdir $SCRATCH_MNT/%a/%b/%g
-+mv $SCRATCH_MNT/%a/%c/%e $SCRATCH_MNT/%a/%b/%g/%e2
-+mv $SCRATCH_MNT/%a/%c $SCRATCH_MNT/%a/%b/%d/%f/%c2
-+mv $SCRATCH_MNT/%a/%b/%d/%f $SCRATCH_MNT/%a/%b/%g/%e2/%f2
-+mv $SCRATCH_MNT/%a/foo $SCRATCH_MNT/%a/%b/%g/%e2/%f2
-+
-+# Filesystem now looks like:
-+#
-+# .                                    (ino 256)
-+# |-- a2/                              (ino 257)
-+# |   |-- f2/                          (ino 263)
-+# |   |   |-- file6                    (ino 261)
-+# |   |   |-- b3/                      (ino 258)
-+# |   |       |-- d/                   (ino 260)
-+# |   |       |   |-- file3            (ino 261)
-+# |   |       |   |-- file8            (ino 308)
-+# |   |       |
-+# |   |       |-- file2                (ino 262)
-+# |   |       |-- file4                (ino 261)
-+# |   |       |-- file9                (ino 309)
-+# |   |       |-- file10               (ino 309)
-+# |   |       |
-+# |   |       |-- c3/                  (ino 259)
-+# |   |           |-- file7            (ino 264)
-+# |   |           |-- file11           (ino 310)
-+# |   |
-+# |   |-- x1/                          (ino 265)
-+# |   |-- Z/                           (ino 267)
-+# |       |-- X33/                     (ino 268)
-+# |            |-- x4/                 (ino 269)
-+# |                |-- x5/             (ino 270)
-+# |                    |-- X22/        (ino 266)
-+# |
-+# |-- _a/                              (ino 271)
-+# |    |-- _o/                         (ino 311)
-+# |    |    |-- _FF/                   (ino 276)
-+# |    |         |-- _E2/              (ino 275)
-+# |    |         |    |-- _BB/         (ino 272)
-+# |    |         |         |-- dd/     (ino 274)
-+# |    |         |
-+# |    |         |-- G2/               (ino 277)
-+# |    |-- C2/                         (ino 273)
-+# |
-+# |-- za/                              (ino 278)
-+# |   |-- zb/                          (ino 279)
-+# |   |-- zg/                          (ino 284)
-+# |       |-- zh/                      (ino 312)
-+# |           |-- zEE/                 (ino 282)
-+# |                |-- zCC/            (ino 280)
-+# |                |-- zDD/            (ino 281)
-+# |                     |-- zFF/       (ino 283)
-+# |
-+# |-- y_a/                             (ino 285)
-+# |    |-- y_y/                        (ino 292)
-+# |         |-- y_x/                   (ino 291)
-+# |              |-- y_2d/             (ino 288)
-+# |                   |-- y_2b/        (ino 286)
-+# |                   |    |-- y_2c/   (ino 287)
-+# |                   |    |-- y_2e/   (ino 289)
-+# |                   |-- y_f/         (ino 290)
-+# |
-+# |-- w_a/                             (ino 293)
-+# |    |-- w_h/                        (ino 313)
-+# |         |-- w_2d/                  (ino 296)
-+# |              |-- w_2b/             (ino 294)
-+# |              |    |-- w_2c/        (ino 295)
-+# |              |    |-- w_2e/        (ino 297)
-+# |              |-- w_f/              (ino 298)
-+# |
-+# |-- xa/                              (ino 299)
-+# |    |-- xh/                         (ino 315)
-+# |        |-- xe2                     (ino 302)
-+# |            |-- xb3/                (ino 300)
-+# |                 |-- xf/            (ino 314)
-+# |                     |-- xc2/       (ino 301)
-+# |
-+# |-- %a/                              (ino 303)
-+#     |-- %b/                          (ino 304)
-+#         |-- %d/                      (ino 306)
-+#         |-- %g/                      (ino 318)
-+#             |-- %e2/                 (ino 307)
-+#                  |-- %f2             (ino 317)
-+#                       |-- %c2/       (ino 305)
-+#                            |-- foo   (ino 316)
-+
-+_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2
-+
-+run_check $FSSUM_PROG -A -f -w $tmp/1.fssum $SCRATCH_MNT/mysnap1
-+run_check $FSSUM_PROG -A -f -w $tmp/2.fssum -x $SCRATCH_MNT/mysnap2/mysnap1 \
-+	$SCRATCH_MNT/mysnap2
-+
-+_run_btrfs_util_prog send $SCRATCH_MNT/mysnap1 -f $tmp/1.snap
-+
-+_run_btrfs_util_prog send -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
-+	-f $tmp/2.snap
-+
-+_check_scratch_fs
-+
-+_scratch_unmount
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/1.snap
-+run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
-+
-+_run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
-+run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
-+
-+_check_scratch_fs
-+
-+status=0
-+exit
-diff --git a/tests/btrfs/045.out b/tests/btrfs/045.out
-new file mode 100644
-index 0000000..5b0d489
---- /dev/null
-+++ b/tests/btrfs/045.out
-@@ -0,0 +1 @@
-+QA output created by 045
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index 4589043..9b41895 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -47,3 +47,4 @@
- 042 auto quick
- 043 auto quick
- 044 auto quick
-+045 auto quick
--- 
-1.7.10.4
+--Mark.
 
 _______________________________________________
 xfs mailing list
