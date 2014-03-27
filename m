@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E6C517F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Mar 2014 15:36:50 -0500 (CDT)
-Message-ID: <53348BE0.7000606@sgi.com>
-Date: Thu, 27 Mar 2014 15:36:48 -0500
+	by oss.sgi.com (Postfix) with ESMTP id ED3CE7F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Mar 2014 15:57:44 -0500 (CDT)
+Message-ID: <533490C9.3010703@sgi.com>
+Date: Thu, 27 Mar 2014 15:57:45 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: xfs errors while unlinking filenames with hash collisions
@@ -78,9 +78,8 @@ On 03/27/14 10:24, Hannes Frederic Sowa wrote:
 >
 >    Hannes
 
-
-I will bisect where this started to happen. It appears to be around 
-Linux 3.10.
+I will bisect to find the introduction. It appears be somewhere between 
+Linux 3.9 and 3.10.
 
 --Mark.
 
