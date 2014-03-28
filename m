@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4B7AA7F59
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B06A27F59
 	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 08:16:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 22D1B304075
-	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 06:16:10 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 41F2FAC002
+	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 06:16:07 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ON5pVOi2CxChe61z for
-	<xfs@oss.sgi.com>; Fri, 28 Mar 2014 06:16:05 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2SDG5X4009888
+	cuda.sgi.com with ESMTP id 7tbTkBbTBbQdE43W for
+	<xfs@oss.sgi.com>; Fri, 28 Mar 2014 06:16:06 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s2SDG5D5011937
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 09:16:05 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s2SDG5IY013038
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id s2SDG5Oq015431
 	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 09:16:05 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/5] xfs: add flush flag to xfs_eofblocks
-Date: Fri, 28 Mar 2014 09:16:00 -0400
-Message-Id: <1396012563-60973-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 3/5] xfs: add scan owner field to xfs_eofblocks
+Date: Fri, 28 Mar 2014 09:16:01 -0400
+Message-Id: <1396012563-60973-4-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
 References: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,50 +38,74 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The flush flag allows the caller to issue a flush for scanned inodes. In
-ENOSPC conditions caused by project quotas, a flush is required to free
-up reserved metadata allocations.
+The scan owner field represents an optional inode number that is
+responsible for the current scan. The purpose is to identify that an
+inode is under iolock and as such, the iolock shouldn't be attempted
+when trimming eofblocks. This is an internal only field.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_fs.h     | 4 +++-
- fs/xfs/xfs_icache.c | 3 +++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_icache.c | 12 +++++++++++-
+ fs/xfs/xfs_icache.h |  2 ++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index c5fc116..fa3a58e 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -374,12 +374,14 @@ struct xfs_fs_eofblocks {
- #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
- #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
- #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
-+#define XFS_EOF_FLAGS_FLUSH		(1 << 5) /* issue a flush */
- #define XFS_EOF_FLAGS_VALID	\
- 	(XFS_EOF_FLAGS_SYNC |	\
- 	 XFS_EOF_FLAGS_UID |	\
- 	 XFS_EOF_FLAGS_GID |	\
- 	 XFS_EOF_FLAGS_PRID |	\
--	 XFS_EOF_FLAGS_MINFILESIZE)
-+	 XFS_EOF_FLAGS_MINFILESIZE | \
-+	 XFS_EOF_FLAGS_FLUSH)
- 
- 
- /*
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 7ff59c9..d4e15db 100644
+index d4e15db..bd0ab7d 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1231,6 +1231,9 @@ xfs_inode_free_eofblocks(
- 		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
- 		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
- 			return 0;
+@@ -1215,6 +1215,7 @@ xfs_inode_free_eofblocks(
+ {
+ 	int ret;
+ 	struct xfs_eofblocks *eofb = args;
++	bool need_iolock = true;
+ 
+ 	if (!xfs_can_free_eofblocks(ip, false)) {
+ 		/* inode could be preallocated or append-only */
+@@ -1234,6 +1235,15 @@ xfs_inode_free_eofblocks(
+ 
+ 		if (eofb->eof_flags & XFS_EOF_FLAGS_FLUSH)
+ 			filemap_flush(VFS_I(ip)->i_mapping);
 +
-+		if (eofb->eof_flags & XFS_EOF_FLAGS_FLUSH)
-+			filemap_flush(VFS_I(ip)->i_mapping);
++		/*
++		 * A scan owner implies we already hold the iolock. Skip it in
++		 * xfs_free_eofblocks() to avoid deadlock. This also eliminates
++		 * the possibility of EAGAIN being returned.
++		 */
++		if (eofb->eof_scan_owner != NULLFSINO &&
++		    eofb->eof_scan_owner == ip->i_ino)
++			need_iolock = false;
  	}
  
  	/*
+@@ -1244,7 +1254,7 @@ xfs_inode_free_eofblocks(
+ 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
+ 		return 0;
+ 
+-	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
++	ret = xfs_free_eofblocks(ip->i_mount, ip, need_iolock);
+ 
+ 	/* don't revisit the inode if we're not waiting */
+ 	if (ret == EAGAIN && !(flags & SYNC_WAIT))
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 9ed68bb..4387b1d 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -27,6 +27,7 @@ struct xfs_eofblocks {
+ 	kgid_t		eof_gid;
+ 	prid_t		eof_prid;
+ 	__u64		eof_min_file_size;
++	xfs_ino_t	eof_scan_owner;
+ };
+ 
+ #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
+@@ -86,6 +87,7 @@ xfs_fs_eofblocks_from_user(
+ 	dst->eof_flags = src->eof_flags;
+ 	dst->eof_prid = src->eof_prid;
+ 	dst->eof_min_file_size = src->eof_min_file_size;
++	dst->eof_scan_owner = NULLFSINO;
+ 
+ 	dst->eof_uid = INVALID_UID;
+ 	if (src->eof_flags & XFS_EOF_FLAGS_UID) {
 -- 
 1.8.3.1
 
