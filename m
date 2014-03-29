@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E23717F3F
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 05:12:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C043C8F8068
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2014 03:12:53 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	nAdQPE3W1GMnFLo6 for <xfs@oss.sgi.com>;
-	Fri, 21 Mar 2014 03:12:52 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: kill buffers over failed write ranges properly
-Date: Fri, 21 Mar 2014 21:11:45 +1100
-Message-Id: <1395396710-3824-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1395396710-3824-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id F23027F50
+	for <xfs@oss.sgi.com>; Sat, 29 Mar 2014 10:14:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5EFE8F8074
+	for <xfs@oss.sgi.com>; Sat, 29 Mar 2014 08:14:27 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kqEkSu1rR9qeKLji for
+	<xfs@oss.sgi.com>; Sat, 29 Mar 2014 08:14:23 -0700 (PDT)
+Date: Sat, 29 Mar 2014 11:14:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/6] xfs: write failure beyond EOF truncates too much data
+Message-ID: <20140329151419.GA33827@bfoster.bfoster>
 References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
+	<1395396710-3824-3-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1395396710-3824-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,62 +25,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, Al@disappointment.disaster
+To: Dave Chinner <david@fromorbit.com>
+Cc: Al@disappointment.disaster, Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Mar 21, 2014 at 09:11:46PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> If we fail a write beyond EOF and have to handle it in
+> xfs_vm_write_begin(), we truncate the inode back to the current inode
+> size. This doesn't take into account the fact that we may have
+> already made successful writes to the same page (in the case of block
+> size < page size) and hence we can truncate the page cache away from
+> blocks with valid data in them. If these blocks are delayed
+> allocation blocks, we now have a mismatch between the page cache and
+> the extent tree, and this will trigger - at minimum - a delayed
+> block count mismatch assert when the inode is evicted from the cache.
+> We can also trip over it when block mapping for direct IO - this is
+> the most common symptom seen from fsx and fsstress when run from
+> xfstests.
+> 
+> Fix it by only truncating away the exact range we are updating state
+> for in this write_begin call.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_aops.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index e810243..6b4ecc8 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1609,12 +1609,18 @@ xfs_vm_write_begin(
+>  	status = __block_write_begin(page, pos, len, xfs_get_blocks);
+>  	if (unlikely(status)) {
+>  		struct inode	*inode = mapping->host;
+> +		size_t		isize = i_size_read(inode);
+>  
+>  		xfs_vm_write_failed(inode, page, pos, len);
+>  		unlock_page(page);
+>  
+> -		if (pos + len > i_size_read(inode))
+> -			truncate_pagecache(inode, i_size_read(inode));
 
-When a write fails, if we don't clear the delalloc flags from the
-buffers over the failed range, they can persist beyond EOF and cause
-problems. writeback will see the pages int eh page cache, see they
-are dirty and continually retry the write, assuming that the page
-beyond EOF is just racing with a truncate. The page will eventually
-be released due to some other operation (e.g. direct IO), and it
-will not pass through invalidation because it is dirty. Hence it
-will be released with buffer_delay set on it, and trigger warnings
-in xfs_vm_releasepage() and assert fail in xfs_file_aio_write_direct
-because invalidation failed and we didn't write the corect amount.
+>From what I can see, we have a write_begin/copy/write_end sequence per
+page and the inode size is updated down in the write_end path. If the
+write fails at write_begin time, then we haven't copied any data and the
+inode size hasn't changed.
 
-This causes failures on block size < page size filesystems in fsx
-and fsstress workloads run by xfstests.
+The intent of the original code looks like it wants to break off any
+blocks that might have been set up beyond EOF before the write happened
+to fail. Could you elaborate on how this can kill blocks that might have
+been written successfully? Doesn't this only affect post-EOF metadata?
 
-Fix it by completely trashing any state on the buffer that could be
-used to imply that it contains valid data when the delalloc range
-over the buffer is punched out during the failed write handling.
+> +		/*
+> +		 * If the write is beyond EOF, we only want to kill blocks
+> +		 * allocated in this write, not blocks that were previously
+> +		 * written successfully.
+> +		 */
+> +		if (pos + len > isize)
+> +			truncate_pagecache_range(inode, pos, pos + len);
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+So the cache truncate now covers the range of the write. What happens if
+the part of the write is an overwrite? This seems similar to the problem
+you've described above... should the truncate start at isize instead?
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 98016b3..e810243 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1566,6 +1566,16 @@ xfs_vm_write_failed(
- 
- 		xfs_vm_kill_delalloc_range(inode, block_offset,
- 					   block_offset + bh->b_size);
-+
-+		/*
-+		 * This buffer does not contain data anymore. make sure anyone
-+		 * who finds it knows that for certain.
-+		 */
-+		clear_buffer_delay(bh);
-+		clear_buffer_uptodate(bh);
-+		clear_buffer_mapped(bh);
-+		clear_buffer_new(bh);
-+		clear_buffer_dirty(bh);
- 	}
- 
- }
--- 
-1.9.0
+Brian
+
+>  
+>  		page_cache_release(page);
+>  		page = NULL;
+> -- 
+> 1.9.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
