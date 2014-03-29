@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 689357F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 20:56:08 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3CBAA7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 21:01:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3094D8F8074
-	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 18:56:07 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F066C30406A
+	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 19:01:28 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id H23UyamW7S8leGoK for <xfs@oss.sgi.com>;
-	Fri, 28 Mar 2014 18:56:05 -0700 (PDT)
-Message-ID: <53362834.7090900@sandeen.net>
-Date: Fri, 28 Mar 2014 20:56:04 -0500
+	ESMTP id fYLOTeHfAabd7EfD for <xfs@oss.sgi.com>;
+	Fri, 28 Mar 2014 19:01:27 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id ED28663C77A3
+	for <xfs@oss.sgi.com>; Fri, 28 Mar 2014 21:01:26 -0500 (CDT)
+Message-ID: <53362976.3060101@sandeen.net>
+Date: Fri, 28 Mar 2014 21:01:26 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [patch] xfs: extra semi-colon breaks a condition
-References: <20140328080313.GA25192@mwanda>
-In-Reply-To: <20140328080313.GA25192@mwanda>
+Subject: [PATCH] xfs: remove unused transaction pointer args
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,44 +30,217 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Carpenter <dan.carpenter@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: kernel-janitors@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 3/28/14, 3:03 AM, Dan Carpenter wrote:
-> There were some extra semi-colons here which mean that we return true
-> unintentionally.
-> 
-> Fixes: a49935f200e2 ('xfs: xfs_check_page_type buffer checks need help')
+Several functions pass a transaction pointer around,
+but it's never used in those callchains.  Remove it.
 
-that's terrifying.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 152543c..b308097 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -1675,7 +1675,6 @@ xfs_bmap_isaeof(
+  */
+ int
+ xfs_bmap_last_offset(
+-	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	xfs_fileoff_t		*last_block,
+ 	int			whichfork)
+diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+index 33b41f3..52ad38d 100644
+--- a/fs/xfs/xfs_bmap.h
++++ b/fs/xfs/xfs_bmap.h
+@@ -146,8 +146,8 @@ int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
+ int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t *last_block, int whichfork);
+-int	xfs_bmap_last_offset(struct xfs_trans *tp, struct xfs_inode *ip,
+-		xfs_fileoff_t *unused, int whichfork);
++int	xfs_bmap_last_offset(struct xfs_inode *ip, xfs_fileoff_t *unused,
++		int whichfork);
+ int	xfs_bmap_one_block(struct xfs_inode *ip, int whichfork);
+ int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		int whichfork);
+diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+index ce16ef0..7575a3b 100644
+--- a/fs/xfs/xfs_dir2.c
++++ b/fs/xfs/xfs_dir2.c
+@@ -230,11 +230,11 @@ xfs_dir_createname(
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_addname(&args);
+-	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isblock(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_block_addname(&args);
+-	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_leaf_addname(&args);
+@@ -303,11 +303,11 @@ xfs_dir_lookup(
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_lookup(&args);
+-	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isblock(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_block_lookup(&args);
+-	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_leaf_lookup(&args);
+@@ -360,11 +360,11 @@ xfs_dir_removename(
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_removename(&args);
+-	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isblock(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_block_removename(&args);
+-	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_leaf_removename(&args);
+@@ -410,11 +410,11 @@ xfs_dir_replace(
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_replace(&args);
+-	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isblock(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_block_replace(&args);
+-	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_leaf_replace(&args);
+@@ -456,11 +456,11 @@ xfs_dir_canenter(
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_addname(&args);
+-	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isblock(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_block_addname(&args);
+-	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
++	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+ 		return rval;
+ 	else if (v)
+ 		rval = xfs_dir2_leaf_addname(&args);
+@@ -525,7 +525,6 @@ xfs_dir2_grow_inode(
+  */
+ int
+ xfs_dir2_isblock(
+-	xfs_trans_t	*tp,
+ 	xfs_inode_t	*dp,
+ 	int		*vp)		/* out: 1 is block, 0 is not block */
+ {
+@@ -534,7 +533,7 @@ xfs_dir2_isblock(
+ 	int		rval;
+ 
+ 	mp = dp->i_mount;
+-	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)))
++	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
+ 		return rval;
+ 	rval = XFS_FSB_TO_B(mp, last) == mp->m_dirblksize;
+ 	ASSERT(rval == 0 || dp->i_d.di_size == mp->m_dirblksize);
+@@ -547,7 +546,6 @@ xfs_dir2_isblock(
+  */
+ int
+ xfs_dir2_isleaf(
+-	xfs_trans_t	*tp,
+ 	xfs_inode_t	*dp,
+ 	int		*vp)		/* out: 1 is leaf, 0 is not leaf */
+ {
+@@ -556,7 +554,7 @@ xfs_dir2_isleaf(
+ 	int		rval;
+ 
+ 	mp = dp->i_mount;
+-	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)))
++	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
+ 		return rval;
+ 	*vp = last == mp->m_dirleafblk + (1 << mp->m_sb.sb_dirblklog);
+ 	return 0;
+diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
+index cec70e0..64a6b19 100644
+--- a/fs/xfs/xfs_dir2.h
++++ b/fs/xfs/xfs_dir2.h
+@@ -142,8 +142,8 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
+ /*
+  * Interface routines used by userspace utilities
+  */
+-extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+-extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
++extern int xfs_dir2_isblock(struct xfs_inode *dp, int *r);
++extern int xfs_dir2_isleaf(struct xfs_inode *dp, int *r);
+ extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+ 				struct xfs_buf *bp);
+ 
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index ae47ec6..f8170bc 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -1707,7 +1707,7 @@ xfs_dir2_node_to_leaf(
+ 	/*
+ 	 * Get the last offset in the file.
+ 	 */
+-	if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK))) {
++	if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK))) {
+ 		return error;
+ 	}
+ 	fo -= mp->m_dirblkfsbs;
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 48c7d18..807946d 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1726,7 +1726,7 @@ xfs_dir2_node_addname_int(
+ 	if (dbno == -1) {
+ 		xfs_fileoff_t	fo;		/* freespace block number */
+ 
+-		if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK)))
++		if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK)))
+ 			return error;
+ 		lastfbno = xfs_dir2_da_to_db(mp, (xfs_dablk_t)fo);
+ 		fbno = ifbno;
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index aead369..a18000f 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -687,7 +687,7 @@ xfs_readdir(
+ 	lock_mode = xfs_ilock_data_map_shared(dp);
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_getdents(dp, ctx);
+-	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
++	else if ((rval = xfs_dir2_isblock(dp, &v)))
+ 		;
+ 	else if (v)
+ 		rval = xfs_dir2_block_getdents(dp, ctx);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 22d1cbe..2b2739c 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -734,7 +734,7 @@ xfs_iomap_write_allocate(
+ 			 */
+ 			nimaps = 1;
+ 			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+-			error = xfs_bmap_last_offset(NULL, ip, &last_block,
++			error = xfs_bmap_last_offset(ip, &last_block,
+ 							XFS_DATA_FORK);
+ 			if (error)
+ 				goto trans_cancel;
 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 98016b3..75df77d 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -659,10 +659,10 @@ xfs_check_page_type(
->  			if (type == XFS_IO_UNWRITTEN)
->  				return true;
->  		} else if (buffer_delay(bh)) {
-> -			if (type == XFS_IO_DELALLOC);
-> +			if (type == XFS_IO_DELALLOC)
->  				return true;
->  		} else if (buffer_dirty(bh) && buffer_mapped(bh)) {
-> -			if (type == XFS_IO_OVERWRITE);
-> +			if (type == XFS_IO_OVERWRITE)
->  				return true;
->  		}
->  
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
