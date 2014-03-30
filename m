@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 644957F37
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 02:12:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3BC4230404E
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 00:12:27 -0700 (PDT)
-Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
-	with ESMTP id IeM7j9ybLZT1jHbn (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 30 Mar 2014 00:12:22 -0700 (PDT)
-Received: from mail.zbfmail.de (localhost [127.0.0.1])
-	by mail.zbfmail.de (Postfix) with ESMTP id 3DB681E54DE
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 09:12:20 +0200 (CEST)
-MIME-Version: 1.0
-Date: Sun, 30 Mar 2014 09:12:20 +0200
-From: Marko Weber|8000 <weber@zbfmail.de>
-Subject: xfs help question
-Message-ID: <6997ecc6ee5c7096ded12e8ad3d77d12@zbfmail.de>
-Reply-To: weber@zbfmail.de
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 862827F53
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 15:22:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1223BAC002
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 13:22:26 -0700 (PDT)
+Received: from smtp6-g21.free.fr (smtp6-g21.free.fr [212.27.42.6]) by
+	cuda.sgi.com with ESMTP id IEj587Dx6zEETY8N for
+	<xfs@oss.sgi.com>; Sun, 30 Mar 2014 13:22:23 -0700 (PDT)
+Date: Sun, 30 Mar 2014 22:22:14 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs help question
+Message-ID: <20140330222214.4901d7ff@galadriel.home>
+In-Reply-To: <6997ecc6ee5c7096ded12e8ad3d77d12@zbfmail.de>
+References: <6997ecc6ee5c7096ded12e8ad3d77d12@zbfmail.de>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,47 +23,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xfs <xfs@oss.sgi.com>
+To: weber@zbfmail.de
+Cc: Xfs <xfs@oss.sgi.com>
 
-
-hello again me ;-),
-i thought best place to ask this is here.
-i read the faq alot last days but have still questions:
-
-i got a server now with 4 Disks,
-i plan to do an raid5 with linux soft raid.
-On the server is planed to store 'larger' from 1GB up to 60GB.
-
-what would be best settings when formatting with xfs?
-is it better to use '-b size=4096' or the '512'?
-should i manipulate the '-i size=' to 2048? or use the default?
-
-i also dont get it with the write-disk cache at all,
-its an linux softraid, is the best then to use 'nobarrier' and let the
-'disk write cache on'?
-
-or is best solution on linux softraid 'disk write cache' on with xfs 
-barrier on?
-
-also, should i tweak with sunit,swidth? and how do i calculate best 
-setting?
-
-thanks for any tipps n hints
-
-marko
-
--- 
-zbfmail - Mittendrin statt nur Datei!
-
-OpenDKIM, SPF, DSPAM, Greylisting, POSTSCREEN, AMAVIS, Mailgateways
-Mailfiltering, SMTP Service, Spam Abwehr, MX-Backup, Mailserver Backup
-Redundante Mailgateways, HA Mailserver, Secure Mailserver
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgU3VuLCAzMCBNYXIgMjAxNCAwOToxMjoyMCArMDIwMCB2b3VzIMOpY3JpdmllejoKCj4gaSBh
+bHNvIGRvbnQgZ2V0IGl0IHdpdGggdGhlIHdyaXRlLWRpc2sgY2FjaGUgYXQgYWxsLAo+IGl0cyBh
+biBsaW51eCBzb2Z0cmFpZCwgaXMgdGhlIGJlc3QgdGhlbiB0byB1c2UgJ25vYmFycmllcicgYW5k
+IGxldCB0aGUKPiAnZGlzayB3cml0ZSBjYWNoZSBvbic/Cj4gCj4gb3IgaXMgYmVzdCBzb2x1dGlv
+biBvbiBsaW51eCBzb2Z0cmFpZCAnZGlzayB3cml0ZSBjYWNoZScgb24gd2l0aCB4ZnMgCj4gYmFy
+cmllciBvbj8KCkl0IGRlcGVuZHMuIHdyaXRlIGNhY2hlIHdpdGhvdXQgYW4gVVBTIGlzIGEgdmVy
+eSBlZmZpY2llbnQgd2F5IHRvIGxvc2UKZGF0YS4gSG93ZXZlciAgaWYgeW91IG9ubHkgY2FyZSBh
+Ym91dCBwZXJmb3JtYW5jZSwgbGV0IHdyaXRlIGNhY2hlIG9uCmFuZCBiYXJyaWVycyBvZmYuCgo+
+IGFsc28sIHNob3VsZCBpIHR3ZWFrIHdpdGggc3VuaXQsc3dpZHRoPyBhbmQgaG93IGRvIGkgY2Fs
+Y3VsYXRlIGJlc3QgCj4gc2V0dGluZz8KCldpdGggYSByZWNlbnQga2VybmVsLCBta2ZzLnhmcyBz
+aG91bGQgZGV0ZXJtaW5lIGF1dG9tYXRpY2FsbHkgdGhlIG1kCmdlb21ldHJ5LCBzbyBubywgZG9u
+J3QgdHJ5IHRvIHR3ZWFrIHN1IGFuZCBzdy4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwg
+RmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwg
+ICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNv
+bT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
