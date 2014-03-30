@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C94BC29DF9
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 18:44:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ABA1E8F8033
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 16:44:27 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C957129DFE
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 18:46:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B72DF304039
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 16:46:28 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	yaCCDO6yyP7BfRJ3 for <xfs@oss.sgi.com>;
-	Sun, 30 Mar 2014 16:44:22 -0700 (PDT)
-Date: Mon, 31 Mar 2014 10:43:35 +1100
+	Q6zQuZBsylzIYXrn for <xfs@oss.sgi.com>;
+	Sun, 30 Mar 2014 16:46:26 -0700 (PDT)
+Date: Mon, 31 Mar 2014 10:46:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs i_lock vs mmap_sem lockdep trace.
-Message-ID: <20140330234335.GB16336@dastard>
-References: <20140329223109.GA24098@redhat.com>
+Subject: Re: xfs help question
+Message-ID: <20140330234623.GC16336@dastard>
+References: <6997ecc6ee5c7096ded12e8ad3d77d12@zbfmail.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140329223109.GA24098@redhat.com>
+In-Reply-To: <6997ecc6ee5c7096ded12e8ad3d77d12@zbfmail.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: weber@zbfmail.de
+Cc: Xfs <xfs@oss.sgi.com>
 
-On Sat, Mar 29, 2014 at 06:31:09PM -0400, Dave Jones wrote:
-> Not sure if I've reported this already (it looks familiar, though I've not managed
-> to find it in my sent mail folder).  This is rc8 + a diff to fix the stack usage reports
-> I was seeing (diff at http://paste.fedoraproject.org/89854/13210913/raw)
+On Sun, Mar 30, 2014 at 09:12:20AM +0200, Marko Weber|8000 wrote:
 > 
->  ======================================================
->  [ INFO: possible circular locking dependency detected ]
->  3.14.0-rc8+ #153 Not tainted
->  -------------------------------------------------------
->  git/32710 is trying to acquire lock:
->   (&(&ip->i_lock)->mr_lock){++++.+}, at: [<ffffffffc03bd782>] xfs_ilock+0x122/0x250 [xfs]
->  
-> but task is already holding lock:
->   (&mm->mmap_sem){++++++}, at: [<ffffffffae7b816a>] __do_page_fault+0x14a/0x610
+> hello again me ;-),
+> i thought best place to ask this is here.
+> i read the faq alot last days but have still questions:
 > 
-> which lock already depends on the new lock.
+> i got a server now with 4 Disks,
+> i plan to do an raid5 with linux soft raid.
+> On the server is planed to store 'larger' from 1GB up to 60GB.
+> 
+> what would be best settings when formatting with xfs?
+> is it better to use '-b size=4096' or the '512'?
+> should i manipulate the '-i size=' to 2048? or use the default?
 
-filldir on a directory inode vs page fault on regular file. Known
-issue, definitely a false positive. We have to change locking
-algorithms to avoid such deficiencies of lockdep (a case of "lockdep
-considered harmful", perhaps?) so it's not something I'm about to
-rush...
+Use the defaults.  The defaults on md/dm raid will do the right
+things to configure the filesystem and handle crash safety properly.
+
+Unless you have experience with XFS and the storage stack and know
+exactly what you *need to do*, tweaking knobs will only cause bad
+things to happen to you and your data.
 
 Cheers,
 
