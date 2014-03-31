@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 839EB7F61
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 19:43:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C79BAC002
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 17:42:58 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F34317F6A
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 21:51:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E46FE8F8033
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 19:51:55 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	XZ6WumlCW7KGHBdi for <xfs@oss.sgi.com>;
-	Sun, 30 Mar 2014 17:42:56 -0700 (PDT)
-Date: Mon, 31 Mar 2014 11:42:54 +1100
+	meFrZ3q02wfFBJzH for <xfs@oss.sgi.com>;
+	Sun, 30 Mar 2014 19:51:53 -0700 (PDT)
+Date: Mon, 31 Mar 2014 13:51:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs i_lock vs mmap_sem lockdep trace.
-Message-ID: <20140331004254.GB17603@dastard>
-References: <20140329223109.GA24098@redhat.com>
-	<20140330234335.GB16336@dastard>
-	<20140331002030.GA19391@redhat.com>
+Subject: Re: [Lsf] [PATCH] xfstests-bld: Simplify determination of number of
+	CPUs in build-all
+Message-ID: <20140331025148.GF16336@dastard>
+References: <1395997399-3000-1-git-send-email-sedat.dilek@gmail.com>
+	<20140328161806.GA31772@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140331002030.GA19391@redhat.com>
+In-Reply-To: <20140328161806.GA31772@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,45 +31,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: tytso@mit.edu
+Cc: Sedat Dilek <sedat.dilek@gmail.com>, lsf@lists.linux-foundation.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Mar 30, 2014 at 08:20:30PM -0400, Dave Jones wrote:
-> On Mon, Mar 31, 2014 at 10:43:35AM +1100, Dave Chinner wrote:
->  > On Sat, Mar 29, 2014 at 06:31:09PM -0400, Dave Jones wrote:
->  > > Not sure if I've reported this already (it looks familiar, though I've not managed
->  > > to find it in my sent mail folder).  This is rc8 + a diff to fix the stack usage reports
->  > > I was seeing (diff at http://paste.fedoraproject.org/89854/13210913/raw)
->  > > 
->  > >  ======================================================
->  > >  [ INFO: possible circular locking dependency detected ]
->  > >  3.14.0-rc8+ #153 Not tainted
->  > >  -------------------------------------------------------
->  > >  git/32710 is trying to acquire lock:
->  > >   (&(&ip->i_lock)->mr_lock){++++.+}, at: [<ffffffffc03bd782>] xfs_ilock+0x122/0x250 [xfs]
->  > >  
->  > > but task is already holding lock:
->  > >   (&mm->mmap_sem){++++++}, at: [<ffffffffae7b816a>] __do_page_fault+0x14a/0x610
->  > > 
->  > > which lock already depends on the new lock.
->  > 
->  > filldir on a directory inode vs page fault on regular file. Known
->  > issue, definitely a false positive.
-> 
-> ah yeah, thought it looked familiar. I think I reported this last summer.
-> 
->  > We have to change locking
->  > algorithms to avoid such deficiencies of lockdep (a case of "lockdep
->  > considered harmful", perhaps?) so it's not something I'm about to
->  > rush...
-> 
-> Bummer, as it makes lockdep useless on my test box using xfs because it
-> disables itself after hitting this very quickly.
-> (I re-enabled it a couple days ago wondering why I'd left it turned off,
->  chances are it was because of this)
+[cc'ing the xfstests list: xfs@oss.sgi.com]
 
-Yup, and seeing as SGI haven't shown any indication that they are
-going to help fix it any time soon, it won't get fixed until I get
-to it (hopefully) sometime soon.
+On Fri, Mar 28, 2014 at 12:18:06PM -0400, tytso@mit.edu wrote:
+> If we start getting a huge number of patches to xfstests-bld, and
+> people start getting confused/annoyed about how xfstests-bld issues
+> get discussed on linux-ext4@vger.kernel.org, while xfstests patches
+> and discussion happen on xfs@oss.sgi.com, we could consider creating a
+> new mailing list ---
+
+/me puts on his xfstests Maintainer Hat
+
+That's a problem of your own making, Ted: please don't speak on
+behalf of what the upstream xfstests developers might or might not
+do just because of what you do with it as a user. The existance of
+many different environments people have built up around it is one of
+the strengths of xfstests. Hence the very act of considering
+enforcing One True Way of running xfstests is, IMO, harmful
+to the wider filesystem and xfstests community.
+
+You're also being rather presumptive that the existence of
+xfstests-bld requires us to change anything about the way xfstests
+is run.  Your xfstests environment - while interesting and
+potentially useful to others - is not unique and is not the only way
+of doing in-place testing.
+
+> especially given that based on a challenge which
+> Greg K-H gave us at the kernel pannel at Collab Summit,
+               ^^^^
+
+Hmmmm. Not the way I remember it. Perhaps I should go look at the
+video and check that Greg was addressing me directly as the xfstests
+maintainer with those comments. After all, those lights on stage can
+be blinding.....
+
+> we'll at least
+> be looking at cleaning up and then trying to get into the linux kernel
+> mainline sources some combination of xfstests plus some infrastructure
+> automation (perhaps strongly based on what I've been working here in
+> the xfstests-bld tree) to run xfstests.
+
+Now you're pre-empting the discussions we need to have about
+xfstests and what best serves it's user community. xfstests is
+consumed by many end-users that are not kernel developers (e.g.
+distro QA departments, storage product vendors, etc), so anything we
+decide needs to work not only for kernel developers but also benefit
+the wider community of xfstests users.
+
+There are many advantages even to filesystem developers to
+staying outside the kernel tree. Think about this for a moment: to
+update xfstests to pick up a new regression test to test a
+regression, you need to update the kernel tree. That will also pull
+in the fix for the regression. To revert the kernel tree to before
+the fix came in so that you can run before/after fix comfirmation,
+it also removes the new regression test from xfstests harness and so
+you can't run the regression test in place.
+
+IOWs, bisects based on regression tests become rather difficult
+because of this - bisects require the test not to change from
+bisection point to bisection point, and running xfstests directly out
+of the kernel tree that you are building kernels from during the
+bisect is going to have this exact problem.
+
+Therefore, *if* we move xfstests to the kernel tree we will still
+need to maintain that flexibility and configurability of the current
+code so that developers and external users can continue to package
+the tests up into their own QA environment. That implies we need to
+work out packaging and distribution issues that we don't currently
+care about, as well as some method of in-place test execution for
+people like Greg doing -stable kernel testing.
+
+So, rather than going off half-cocked about some random build
+environment for xfstests defining the future of filesystem testing,
+we need to step back and think about what Greg actually wants. That
+is, "make tests" in the kernel tests/ tree to be able to run
+xfstests. That's the problem Greg wanted solved, and that does not
+necessarily mean wholesale changes to xfstests or it's development
+model. And one possible solution to this is simply making the kernel
+tests/ directory just another downstream consumer of the upstream
+xfstests project....
 
 Cheers,
 
