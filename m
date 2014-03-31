@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F34317F6A
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 21:51:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E46FE8F8033
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2014 19:51:55 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	meFrZ3q02wfFBJzH for <xfs@oss.sgi.com>;
-	Sun, 30 Mar 2014 19:51:53 -0700 (PDT)
-Date: Mon, 31 Mar 2014 13:51:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Lsf] [PATCH] xfstests-bld: Simplify determination of number of
-	CPUs in build-all
-Message-ID: <20140331025148.GF16336@dastard>
-References: <1395997399-3000-1-git-send-email-sedat.dilek@gmail.com>
-	<20140328161806.GA31772@thunk.org>
+	by oss.sgi.com (Postfix) with ESMTP id 1F43E7F63
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 08:09:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 016448F8037
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 06:09:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ATIL4hWIQaWblfMh for
+	<xfs@oss.sgi.com>; Mon, 31 Mar 2014 06:09:35 -0700 (PDT)
+Date: Mon, 31 Mar 2014 09:09:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: remove unused transaction pointer args
+Message-ID: <20140331130932.GA63718@bfoster.bfoster>
+References: <53362976.3060101@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140328161806.GA31772@thunk.org>
+In-Reply-To: <53362976.3060101@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,95 +28,230 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: tytso@mit.edu
-Cc: Sedat Dilek <sedat.dilek@gmail.com>, lsf@lists.linux-foundation.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-[cc'ing the xfstests list: xfs@oss.sgi.com]
+On Fri, Mar 28, 2014 at 09:01:26PM -0500, Eric Sandeen wrote:
+> Several functions pass a transaction pointer around,
+> but it's never used in those callchains.  Remove it.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 152543c..b308097 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+> @@ -1675,7 +1675,6 @@ xfs_bmap_isaeof(
+>   */
+>  int
+>  xfs_bmap_last_offset(
+> -	struct xfs_trans	*tp,
+>  	struct xfs_inode	*ip,
+>  	xfs_fileoff_t		*last_block,
+>  	int			whichfork)
 
-On Fri, Mar 28, 2014 at 12:18:06PM -0400, tytso@mit.edu wrote:
-> If we start getting a huge number of patches to xfstests-bld, and
-> people start getting confused/annoyed about how xfstests-bld issues
-> get discussed on linux-ext4@vger.kernel.org, while xfstests patches
-> and discussion happen on xfs@oss.sgi.com, we could consider creating a
-> new mailing list ---
+Seems Ok to me, but it looks like you could also kill the tp param for
+xfs_bmap_last_extent(). I don't see any callers that don't pass NULL...
 
-/me puts on his xfstests Maintainer Hat
+Brian
 
-That's a problem of your own making, Ted: please don't speak on
-behalf of what the upstream xfstests developers might or might not
-do just because of what you do with it as a user. The existance of
-many different environments people have built up around it is one of
-the strengths of xfstests. Hence the very act of considering
-enforcing One True Way of running xfstests is, IMO, harmful
-to the wider filesystem and xfstests community.
-
-You're also being rather presumptive that the existence of
-xfstests-bld requires us to change anything about the way xfstests
-is run.  Your xfstests environment - while interesting and
-potentially useful to others - is not unique and is not the only way
-of doing in-place testing.
-
-> especially given that based on a challenge which
-> Greg K-H gave us at the kernel pannel at Collab Summit,
-               ^^^^
-
-Hmmmm. Not the way I remember it. Perhaps I should go look at the
-video and check that Greg was addressing me directly as the xfstests
-maintainer with those comments. After all, those lights on stage can
-be blinding.....
-
-> we'll at least
-> be looking at cleaning up and then trying to get into the linux kernel
-> mainline sources some combination of xfstests plus some infrastructure
-> automation (perhaps strongly based on what I've been working here in
-> the xfstests-bld tree) to run xfstests.
-
-Now you're pre-empting the discussions we need to have about
-xfstests and what best serves it's user community. xfstests is
-consumed by many end-users that are not kernel developers (e.g.
-distro QA departments, storage product vendors, etc), so anything we
-decide needs to work not only for kernel developers but also benefit
-the wider community of xfstests users.
-
-There are many advantages even to filesystem developers to
-staying outside the kernel tree. Think about this for a moment: to
-update xfstests to pick up a new regression test to test a
-regression, you need to update the kernel tree. That will also pull
-in the fix for the regression. To revert the kernel tree to before
-the fix came in so that you can run before/after fix comfirmation,
-it also removes the new regression test from xfstests harness and so
-you can't run the regression test in place.
-
-IOWs, bisects based on regression tests become rather difficult
-because of this - bisects require the test not to change from
-bisection point to bisection point, and running xfstests directly out
-of the kernel tree that you are building kernels from during the
-bisect is going to have this exact problem.
-
-Therefore, *if* we move xfstests to the kernel tree we will still
-need to maintain that flexibility and configurability of the current
-code so that developers and external users can continue to package
-the tests up into their own QA environment. That implies we need to
-work out packaging and distribution issues that we don't currently
-care about, as well as some method of in-place test execution for
-people like Greg doing -stable kernel testing.
-
-So, rather than going off half-cocked about some random build
-environment for xfstests defining the future of filesystem testing,
-we need to step back and think about what Greg actually wants. That
-is, "make tests" in the kernel tests/ tree to be able to run
-xfstests. That's the problem Greg wanted solved, and that does not
-necessarily mean wholesale changes to xfstests or it's development
-model. And one possible solution to this is simply making the kernel
-tests/ directory just another downstream consumer of the upstream
-xfstests project....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+> index 33b41f3..52ad38d 100644
+> --- a/fs/xfs/xfs_bmap.h
+> +++ b/fs/xfs/xfs_bmap.h
+> @@ -146,8 +146,8 @@ int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
+>  int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t *last_block, int whichfork);
+> -int	xfs_bmap_last_offset(struct xfs_trans *tp, struct xfs_inode *ip,
+> -		xfs_fileoff_t *unused, int whichfork);
+> +int	xfs_bmap_last_offset(struct xfs_inode *ip, xfs_fileoff_t *unused,
+> +		int whichfork);
+>  int	xfs_bmap_one_block(struct xfs_inode *ip, int whichfork);
+>  int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		int whichfork);
+> diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+> index ce16ef0..7575a3b 100644
+> --- a/fs/xfs/xfs_dir2.c
+> +++ b/fs/xfs/xfs_dir2.c
+> @@ -230,11 +230,11 @@ xfs_dir_createname(
+>  
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+>  		rval = xfs_dir2_sf_addname(&args);
+> -	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isblock(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_block_addname(&args);
+> -	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_leaf_addname(&args);
+> @@ -303,11 +303,11 @@ xfs_dir_lookup(
+>  
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+>  		rval = xfs_dir2_sf_lookup(&args);
+> -	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isblock(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_block_lookup(&args);
+> -	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_leaf_lookup(&args);
+> @@ -360,11 +360,11 @@ xfs_dir_removename(
+>  
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+>  		rval = xfs_dir2_sf_removename(&args);
+> -	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isblock(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_block_removename(&args);
+> -	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_leaf_removename(&args);
+> @@ -410,11 +410,11 @@ xfs_dir_replace(
+>  
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+>  		rval = xfs_dir2_sf_replace(&args);
+> -	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isblock(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_block_replace(&args);
+> -	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_leaf_replace(&args);
+> @@ -456,11 +456,11 @@ xfs_dir_canenter(
+>  
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+>  		rval = xfs_dir2_sf_addname(&args);
+> -	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isblock(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_block_addname(&args);
+> -	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
+> +	else if ((rval = xfs_dir2_isleaf(dp, &v)))
+>  		return rval;
+>  	else if (v)
+>  		rval = xfs_dir2_leaf_addname(&args);
+> @@ -525,7 +525,6 @@ xfs_dir2_grow_inode(
+>   */
+>  int
+>  xfs_dir2_isblock(
+> -	xfs_trans_t	*tp,
+>  	xfs_inode_t	*dp,
+>  	int		*vp)		/* out: 1 is block, 0 is not block */
+>  {
+> @@ -534,7 +533,7 @@ xfs_dir2_isblock(
+>  	int		rval;
+>  
+>  	mp = dp->i_mount;
+> -	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)))
+> +	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
+>  		return rval;
+>  	rval = XFS_FSB_TO_B(mp, last) == mp->m_dirblksize;
+>  	ASSERT(rval == 0 || dp->i_d.di_size == mp->m_dirblksize);
+> @@ -547,7 +546,6 @@ xfs_dir2_isblock(
+>   */
+>  int
+>  xfs_dir2_isleaf(
+> -	xfs_trans_t	*tp,
+>  	xfs_inode_t	*dp,
+>  	int		*vp)		/* out: 1 is leaf, 0 is not leaf */
+>  {
+> @@ -556,7 +554,7 @@ xfs_dir2_isleaf(
+>  	int		rval;
+>  
+>  	mp = dp->i_mount;
+> -	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)))
+> +	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
+>  		return rval;
+>  	*vp = last == mp->m_dirleafblk + (1 << mp->m_sb.sb_dirblklog);
+>  	return 0;
+> diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
+> index cec70e0..64a6b19 100644
+> --- a/fs/xfs/xfs_dir2.h
+> +++ b/fs/xfs/xfs_dir2.h
+> @@ -142,8 +142,8 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
+>  /*
+>   * Interface routines used by userspace utilities
+>   */
+> -extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+> -extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+> +extern int xfs_dir2_isblock(struct xfs_inode *dp, int *r);
+> +extern int xfs_dir2_isleaf(struct xfs_inode *dp, int *r);
+>  extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+>  				struct xfs_buf *bp);
+>  
+> diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+> index ae47ec6..f8170bc 100644
+> --- a/fs/xfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/xfs_dir2_leaf.c
+> @@ -1707,7 +1707,7 @@ xfs_dir2_node_to_leaf(
+>  	/*
+>  	 * Get the last offset in the file.
+>  	 */
+> -	if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK))) {
+> +	if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK))) {
+>  		return error;
+>  	}
+>  	fo -= mp->m_dirblkfsbs;
+> diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+> index 48c7d18..807946d 100644
+> --- a/fs/xfs/xfs_dir2_node.c
+> +++ b/fs/xfs/xfs_dir2_node.c
+> @@ -1726,7 +1726,7 @@ xfs_dir2_node_addname_int(
+>  	if (dbno == -1) {
+>  		xfs_fileoff_t	fo;		/* freespace block number */
+>  
+> -		if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK)))
+> +		if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK)))
+>  			return error;
+>  		lastfbno = xfs_dir2_da_to_db(mp, (xfs_dablk_t)fo);
+>  		fbno = ifbno;
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index aead369..a18000f 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -687,7 +687,7 @@ xfs_readdir(
+>  	lock_mode = xfs_ilock_data_map_shared(dp);
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+>  		rval = xfs_dir2_sf_getdents(dp, ctx);
+> -	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
+> +	else if ((rval = xfs_dir2_isblock(dp, &v)))
+>  		;
+>  	else if (v)
+>  		rval = xfs_dir2_block_getdents(dp, ctx);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 22d1cbe..2b2739c 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -734,7 +734,7 @@ xfs_iomap_write_allocate(
+>  			 */
+>  			nimaps = 1;
+>  			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> -			error = xfs_bmap_last_offset(NULL, ip, &last_block,
+> +			error = xfs_bmap_last_offset(ip, &last_block,
+>  							XFS_DATA_FORK);
+>  			if (error)
+>  				goto trans_cancel;
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
