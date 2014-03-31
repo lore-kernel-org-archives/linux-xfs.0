@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 91A827F53
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 16:40:32 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2C2AE7F55
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 16:48:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 80E738F8033
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 14:40:29 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0A91A304059
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 14:47:57 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	3suv6fZ8hjM309lr for <xfs@oss.sgi.com>;
-	Mon, 31 Mar 2014 14:40:27 -0700 (PDT)
-Date: Tue, 1 Apr 2014 08:40:16 +1100
+	JwsBe3g1CH85gh1p for <xfs@oss.sgi.com>;
+	Mon, 31 Mar 2014 14:47:56 -0700 (PDT)
+Date: Tue, 1 Apr 2014 08:47:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix bad hash ordering
-Message-ID: <20140331214016.GD17603@dastard>
-References: <20140328173430.622616177@sgi.com> <20140331001055.GD16336@dastard>
-	<53399B06.5010400@sgi.com>
+Subject: Re: [PATCH 2/5] xfs: add flush flag to xfs_eofblocks
+Message-ID: <20140331214754.GE17603@dastard>
+References: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
+	<1396012563-60973-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53399B06.5010400@sgi.com>
+In-Reply-To: <1396012563-60973-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +30,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Mar 31, 2014 at 11:42:46AM -0500, Mark Tinguely wrote:
-> On 03/30/14 19:10, Dave Chinner wrote:
-> >On Fri, Mar 28, 2014 at 12:33:34PM -0500, Mark Tinguely wrote:
-> >>Fix the fix directory "bad hash ordering" bug introduced in
-> >>commit f5ea1100.
-> >
+On Fri, Mar 28, 2014 at 09:16:00AM -0400, Brian Foster wrote:
+> The flush flag allows the caller to issue a flush for scanned inodes. In
+> ENOSPC conditions caused by project quotas, a flush is required to free
+> up reserved metadata allocations.
 > 
-> ...
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_fs.h     | 4 +++-
+>  fs/xfs/xfs_icache.c | 3 +++
+>  2 files changed, 6 insertions(+), 1 deletion(-)
 > 
-> >
-> >>---
-> >>A C program that generates this problem can be found at:
-> >>  http://oss.sgi.com/archives/xfs/2014-03/msg00373.html
-> >>
-> >>A xfstest for this bug is coming from Hannes Frederic Sowa.
-> >
-> >Can you convert this program to an xfstest yourself so that I can
-> >commit the regression test at the same time I commit an updated
-> >fix?
-> 
-> We narrowed the iterations down to make it a quick test.
-> I have every confidence that Hannes can generate the test in a timely
-> manner and I will help in any way possible.
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index c5fc116..fa3a58e 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -374,12 +374,14 @@ struct xfs_fs_eofblocks {
+>  #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
+>  #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
+>  #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
+> +#define XFS_EOF_FLAGS_FLUSH		(1 << 5) /* issue a flush */
+>  #define XFS_EOF_FLAGS_VALID	\
+>  	(XFS_EOF_FLAGS_SYNC |	\
+>  	 XFS_EOF_FLAGS_UID |	\
+>  	 XFS_EOF_FLAGS_GID |	\
+>  	 XFS_EOF_FLAGS_PRID |	\
+> -	 XFS_EOF_FLAGS_MINFILESIZE)
+> +	 XFS_EOF_FLAGS_MINFILESIZE | \
+> +	 XFS_EOF_FLAGS_FLUSH)
+>  
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 7ff59c9..d4e15db 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1231,6 +1231,9 @@ xfs_inode_free_eofblocks(
+>  		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+>  		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+>  			return 0;
+> +
+> +		if (eofb->eof_flags & XFS_EOF_FLAGS_FLUSH)
+> +			filemap_flush(VFS_I(ip)->i_mapping);
 
-Well, it's been over a week now and you're asking me to trust that
-someone I don't know and who has never submitted an xfstests before
-to do something in a timely manner so we can test a critical bug fix
-during a merge window. I'm willing to be pleasently surprised, but
-history tells me that people that report bugs rarely follow up with
-xfstest cases and it's usually the developer that fixes the bug that
-generates the xfstests patch.
-
-So if the xfstests patch doesn't arrive in the next few hours, can
-you please do that for us so I can get this sorted out for the merge
-window?
+So this does WB_SYNC_NONE writeback, which means the filesystem is
+free to ignore it when we get to .writepage. Given that we are are
+ENOSPC here, wouldn't it be better to guarantee that writeback will
+occur (i.e. use filemap_fdatawrite())?
 
 Cheers,
 
