@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 020977F51
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 15:18:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D454AC003
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 13:18:02 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	5O1hkRDMKzfQdCON for <xfs@oss.sgi.com>;
-	Mon, 31 Mar 2014 13:18:00 -0700 (PDT)
-Date: Tue, 1 Apr 2014 07:17:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC, PATCH 0/6] xfs: delalloc, DIO and corruption....
-Message-ID: <20140331201757.GC17603@dastard>
-References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
-	<20140331172243.GB63718@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140331172243.GB63718@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id 53C767F53
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 15:30:42 -0500 (CDT)
+Received: from eagdhcp-232-178.americas.sgi.com
+	(eagdhcp-232-178.americas.sgi.com [128.162.232.178])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C4597AC002
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 13:30:41 -0700 (PDT)
+Received: from eagdhcp-232-178.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-178.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	s2VKUfW9002497
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 15:30:41 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-178.americas.sgi.com)
+Message-Id: <20140331202615.264666182@sgi.com>
+Date: Mon, 31 Mar 2014 15:25:56 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v2 1/2] xfs: remove efi from AIL in log recovery
+References: <20140325195819.638326569@sgi.com>
+Content-Disposition: inline; filename=xfs-fix-efi-in-log-recovery-error.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,69 +25,172 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Al@disappointment.disaster, Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Mar 31, 2014 at 01:22:43PM -0400, Brian Foster wrote:
-> On Fri, Mar 21, 2014 at 09:11:44PM +1100, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > This patch series mostly shuts a can of worms that Al opened when he
-> > found the cause of the generic/263 fsx failures. The fix for that is
-> > patch 6 of this series, but, well, there are a bunch of other
-> > problems that need to be fixed before making that change.
-> > 
-> > Basically, the direct Io block mapping behaviour was covering up a
-> > bunch of other bugs in the delayed allocation extent/page cache
-> > state coherency mappings. Essentially, we punch out the page cache
-> > in quite a few places without first cleaning up delayed allocation
-> > extents over that range and that exposes all sorts of nasty issues
-> > once the direct IO mapping changes are made.  All of these are
-> > existing problems, most of them are very unlikely to be seen in the
-> > wild.
-> > 
-> > This patch set passes xfstests on a 4k block size/4k page size
-> > config with out problems. However, there is still a fsx failure in
-> > generic/127 on 1k block size/4k page size configurations that I
-> > haven't yet tracked down. That test was failing occasionally before
-> > this patch set as well, so it may be a completely unrelated problem.
-> > 
-> > The sad fact of this patchset is it is mostly playing whack-a-mole
-> > with visible symptoms of bugs.  It drives home the fact that
-> > bufferheads and the keeping of internal filesystem state attached to
-> > the page cache simply isn't a verifiable architecture.  After
-> > spending several days of doing nothing else but tracking down these
-> > inconsistencies i can only conclude that the code is complex,
-> > fragile and extremely difficult to verify that behaviour is correct.
-> > As such, I doubt that the fixes are entirely correct, so I'm left
-> > with using fsx and fsstress to tell me if I've broken anything.
-> > 
-> > Eyeballs appreciated, as is test results.
-> > 
-> 
-> I had an xfstests running against this (on for-next) over the weekend
-> and it hit the following bug on xfs/297:
-> 
-> [ 6408.168767] kernel BUG at fs/xfs/xfs_aops.c:1336!
-> [ 6408.169542] invalid opcode: 0000 [#1] SMP 
+xlog_recover_process_efi{s}() functions are completing the
+second half of xfs_bmap_finish() which frees extents. If this
+operation fails, the EFI will stay on the AIL and prevents
+the xfs_ail_push all_sync() from completing and the mount will
+fail to unmount.
 
-Ok, so that's found another stale delalloc range where there
-shouldn't be. I know there were still problems when I left because
-generic/127 was failing on 1k block size filesystems, but I haven't
-yet had a chance to get back to determine if the bug was the broken
-code in xfs_check_page_types() that Dan Carpenter noticed. Were you
-running with that fix?
+Rather than have a special log recovery flag XFS_EFI_RECOVERED
+to decrement the EFI/EFD counter, call the same decrement function
+from the log recovery routine that is called then the EFI is added
+to the AIL from a log write.
 
-Cheers,
+Remove all other unprocessed EFIs from the log recovery AIL
+when one is discovered in error.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+v2 per Brian's feedback:
+  decrement the EFI counter again when removing EFI entries after the
+  entry with the error.
+
+  add comment in xlog_recover_process_efis() where we delete the EFIs.
+
+v1:
+Rewritten with suggestions from Dave.
+Note: calling xfs_efi_item_unpin() seemed more explainatory than calling
+      the helper __xfs_efi_release().
+
+ fs/xfs/xfs_extfree_item.c |    9 +++------
+ fs/xfs/xfs_log_recover.c  |   37 ++++++++++++++++++++++++-------------
+ fs/xfs/xfs_trans.h        |    1 +
+ 3 files changed, 28 insertions(+), 19 deletions(-)
+
+Index: b/fs/xfs/xfs_extfree_item.c
+===================================================================
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -134,9 +134,10 @@ xfs_efi_item_pin(
+  * remove the EFI it's because the transaction has been cancelled and by
+  * definition that means the EFI cannot be in the AIL so remove it from the
+  * transaction and free it.  Otherwise coordinate with xfs_efi_release()
+- * to determine who gets to free the EFI.
++ * to determine who gets to free the EFI. Call from log recovery of EFI
++ * entries so the EFD or error handling will remove the entry.
+  */
+-STATIC void
++void
+ xfs_efi_item_unpin(
+ 	struct xfs_log_item	*lip,
+ 	int			remove)
+@@ -313,10 +314,6 @@ xfs_efi_release(xfs_efi_log_item_t	*efip
+ {
+ 	ASSERT(atomic_read(&efip->efi_next_extent) >= nextents);
+ 	if (atomic_sub_and_test(nextents, &efip->efi_next_extent)) {
+-		/* recovery needs us to drop the EFI reference, too */
+-		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+-			__xfs_efi_release(efip);
+-
+ 		__xfs_efi_release(efip);
+ 		/* efip may now have been freed, do not reference it again. */
+ 	}
+Index: b/fs/xfs/xfs_log_recover.c
+===================================================================
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3634,6 +3634,7 @@ xlog_recover_process_data(
+ /*
+  * Process an extent free intent item that was recovered from
+  * the log.  We need to free the extents that it describes.
++ * The caller will release this and any following EFIs upon error.
+  */
+ STATIC int
+ xlog_recover_process_efi(
+@@ -3648,6 +3649,13 @@ xlog_recover_process_efi(
+ 	xfs_fsblock_t		startblock_fsb;
+ 
+ 	ASSERT(!test_bit(XFS_EFI_RECOVERED, &efip->efi_flags));
++	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
++
++	/*
++	 * Decrement the EFI/EFD counter so the EFI is removed after
++	 * processing the EFD or error handling in the caller.
++	 */
++	xfs_efi_item_unpin(&efip->efi_item, 0);
+ 
+ 	/*
+ 	 * First check the validity of the extents described by the
+@@ -3662,12 +3670,6 @@ xlog_recover_process_efi(
+ 		    (extp->ext_len == 0) ||
+ 		    (startblock_fsb >= mp->m_sb.sb_dblocks) ||
+ 		    (extp->ext_len >= mp->m_sb.sb_agblocks)) {
+-			/*
+-			 * This will pull the EFI from the AIL and
+-			 * free the memory associated with it.
+-			 */
+-			set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+-			xfs_efi_release(efip, efip->efi_format.efi_nextents);
+ 			return XFS_ERROR(EIO);
+ 		}
+ 	}
+@@ -3687,7 +3689,6 @@ xlog_recover_process_efi(
+ 					 extp->ext_len);
+ 	}
+ 
+-	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+ 	error = xfs_trans_commit(tp, 0);
+ 	return error;
+ 
+@@ -3718,8 +3719,8 @@ STATIC int
+ xlog_recover_process_efis(
+ 	struct xlog	*log)
+ {
+-	xfs_log_item_t		*lip;
+-	xfs_efi_log_item_t	*efip;
++	struct xfs_log_item	*lip;
++	struct xfs_efi_log_item	*efip;
+ 	int			error = 0;
+ 	struct xfs_ail_cursor	cur;
+ 	struct xfs_ail		*ailp;
+@@ -3750,13 +3751,23 @@ xlog_recover_process_efis(
+ 		}
+ 
+ 		spin_unlock(&ailp->xa_lock);
+-		error = xlog_recover_process_efi(log->l_mp, efip);
+-		spin_lock(&ailp->xa_lock);
++		if (error) {
++			/*
++			 * An error happened while processing a previous
++			 * EFI entry. Since the extents are freed in order,
++			 * skip the remaining unprocessed EFIs. To do this
++			 * the EFI entry counter must be decremented once
++			 * here and the entry will be decremented and removed
++			 * with the following xfs_efi_release().
++			 */
++			xfs_efi_item_unpin(&efip->efi_item, 0);
++		} else
++			error = xlog_recover_process_efi(log->l_mp, efip);
+ 		if (error)
+-			goto out;
++			xfs_efi_release(efip, efip->efi_format.efi_nextents);
++		spin_lock(&ailp->xa_lock);
+ 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+ 	}
+-out:
+ 	xfs_trans_ail_cursor_done(ailp, &cur);
+ 	spin_unlock(&ailp->xa_lock);
+ 	return error;
+Index: b/fs/xfs/xfs_trans.h
+===================================================================
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -216,6 +216,7 @@ void		xfs_trans_ijoin(struct xfs_trans *
+ void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ struct xfs_efi_log_item	*xfs_trans_get_efi(xfs_trans_t *, uint);
++void		xfs_efi_item_unpin(struct xfs_log_item *, int);
+ void		xfs_efi_release(struct xfs_efi_log_item *, uint);
+ void		xfs_trans_log_efi_extent(xfs_trans_t *,
+ 					 struct xfs_efi_log_item *,
+
 
 _______________________________________________
 xfs mailing list
