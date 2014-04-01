@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 757007F58
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 16:19:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8AAB37F54
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 17:04:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E6A6BAC005
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 14:19:46 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 316D930405F
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 15:04:02 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	gvuutkTXVtbGz10S for <xfs@oss.sgi.com>;
-	Tue, 01 Apr 2014 14:19:40 -0700 (PDT)
-Date: Wed, 2 Apr 2014 08:19:26 +1100
+	xGFikzPXs7kJPQbS for <xfs@oss.sgi.com>;
+	Tue, 01 Apr 2014 15:03:57 -0700 (PDT)
+Date: Wed, 2 Apr 2014 09:03:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs: run an eofblocks scan on ENOSPC/EDQUOT
-Message-ID: <20140401211926.GH17603@dastard>
-References: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
-	<1396012563-60973-5-git-send-email-bfoster@redhat.com>
-	<20140331222246.GF17603@dastard>
-	<20140401135518.GC21540@bfoster.bfoster>
+Subject: Re: [PATCH] xfs: fix bad hash ordering
+Message-ID: <20140401220343.GI17603@dastard>
+References: <20140328173430.622616177@sgi.com> <20140331001055.GD16336@dastard>
+	<53399B06.5010400@sgi.com> <20140331214016.GD17603@dastard>
+	<533A22DB.2030608@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140401135518.GC21540@bfoster.bfoster>
+In-Reply-To: <533A22DB.2030608@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,216 +31,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Tue, Apr 01, 2014 at 09:55:18AM -0400, Brian Foster wrote:
-> On Tue, Apr 01, 2014 at 09:22:47AM +1100, Dave Chinner wrote:
-> > On Fri, Mar 28, 2014 at 09:16:02AM -0400, Brian Foster wrote:
-> ...
-> > >  	/*
-> > > -	 * If we just got an ENOSPC, try to write back all dirty inodes to
-> > > -	 * convert delalloc space to free up some of the excess reserved
-> > > -	 * metadata space.
-> > > +	 * If we hit ENOSPC or a quota limit, use the selective nature of the
-> > > +	 * eofblocks scan to try and free up some lingering speculative
-> > > +	 * preallocation delalloc blocks.
-> > > +	 *
-> > > +	 * If we hit a quota limit, only scan for files covered by the quota. We
-> > > +	 * also consider ENOSPC here because project quota failure can return
-> > > +	 * ENOSPC instead of EDQUOT. The quota scanning only sets 'scanned' if
-> > > +	 * the inode is covered by a quota with low free space. This should
-> > > +	 * minimize interference with global ENOSPC handling.
-> > > +	 *
-> > > +	 * If a scan does not free enough space, resort to the inode flush big
-> > > +	 * hammer to convert delalloc space to free up some of the excess
-> > > +	 * reserved metadata space.
-> > >  	 */
-> > > +	if ((ret == -EDQUOT || ret == -ENOSPC) && !scanned) {
-> > > +		scanned = xfs_inode_free_quota_eofblocks(ip);
-> > > +		if (scanned)
-> > > +			goto write_retry;
-> > > +	}
-> > > +	if (ret == -ENOSPC && !scanned) {
-> > > +		struct xfs_eofblocks eofb = {0,};
-> > 
-> > IIRC, you can just use "{ 0 }" for initialisation, no "," needed.
-> > 
-> > > +
-> > > +		eofb.eof_scan_owner = ip->i_ino; /* for locking */
-> > > +		eofb.eof_flags = XFS_EOF_FLAGS_SYNC | XFS_EOF_FLAGS_FLUSH;
-> > > +		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-> > > +		scanned = 1;
-> > > +		goto write_retry;
-> > > +	}
-> > >  	if (ret == -ENOSPC && !enospc) {
-> > >  		enospc = 1;
-> > >  		xfs_flush_inodes(ip->i_mount);
-> > 
-> > This seems overly complex and fragile. I'd much prefer that we don't
-> > bury data writeback deep in the EOF block freeing code - we've done
-> > a lot of work in the past to remove exactly that sort of behaviour
-> > from XFS inode scanners.
+On Mon, Mar 31, 2014 at 09:22:19PM -0500, Mark Tinguely wrote:
+> >Well, it's been over a week now and you're asking me to trust that
+> >someone I don't know and who has never submitted an xfstests before
+> >to do something in a timely manner so we can test a critical bug fix
+> >during a merge window. I'm willing to be pleasently surprised, but
+> >history tells me that people that report bugs rarely follow up with
+> >xfstest cases and it's usually the developer that fixes the bug that
+> >generates the xfstests patch.
+> >
+> >So if the xfstests patch doesn't arrive in the next few hours, can
+> >you please do that for us so I can get this sorted out for the merge
+> >window?
+> >
+> >Cheers,
+> >
+> >Dave.
 > 
-> I think the fragility comes from the fact that we can't detect a
-> particular quota failure or a project quota failure from a global
-> failure. IIRC from looking at this way back when, there wasn't a clear
-> solution to that problem. It didn't seem worth getting too far into for
-> the purpose of this little bit of functionality. In that sense, the
-> fragility will be there regardless.
+> Dave,
 > 
-> It would be nice to simplify this, however. It took a little bit of
-> staring at this to try and make it effective and somewhat succinct.
+> I think we need to take a step back and clear a little confusion here.
+> There are 2 different directory bugs.
 > 
-> > I'd prefer to see something like this:
-> > 
-> > 	if (ret == -EDQUOT && !enospc) {
-> > 		enospc = 1;
-> > 		xfs_inode_free_quota_eofblocks(ip);
-> > 		goto retry;
-> > 	else if (ret == -ENOSPC && !enospc) {
-> > 		enospc = 1;
-> > 		xfs_flush_inodes(ip->i_mount);
-> > 		....
-> > 		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-> > 		goto retry;
-> > 	}
-> > 
+> 1) Freeing of a already free extent. It presents with the error:
+> 	XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 16XX of file
+> 	 fs/xfs/xfs_alloc.c.
+>    Could be a right or a left edge (or both) that is free.
 > 
-> What I don't like about this, in particular, is xfs_flush_inodes() could
-> be unnecessary. We have a max preallocation size of 8GB, so the
-> eofblocks scan alone can free up gigabytes of space. Now that I think of
-> it, this is kind of a flaw in the proposed logic as well.
+>    Morgan Meyers <Morgan.Mears@netapp.com> sent the latest occurrence on
+>    March 12, but others have been seeing it in the community code in the
+>    last few mounts. SGI has been seeing it lately with big customers and
+>    it has occurred off and on for 7-8  years according to our bug
+>    database.
 
-The issue is that an eofblock scan is expensive, and there's no
-limiting on how many inodes can have the EOF tag set and there's no
-limiting on the number of concurrent scans that can be run. i.e.
-when an active project that has many processes writing to it runs
-out of space, every process will enter xfs_icache_free_eofblocks()
-function and start issuing data flush requests on dirty inodes. It
-causes unbound writeback concurrency, and we know that this is a bad
-thing to do to your storage...
+I fail to see what this has to do with someone providing an xfstests
+case for the directory hash regression that was under discussion.
 
-xfs_flush_inodes() only runs one scan of the currently dirty
-inodes at a time because it serialises on the flusher thread. We get
-optimised writeback patterns rather than random data writeback from
-as many threads hitting the eofblocks scanner at once. History has
-shown that this is the most efficient way to clean dirty data -
-optimise once and in the correct place, then use it everywhere.
+Regardless, I'll take issue with your sweeping generalisation: not
+every XFS_WANT_CORRUPTED_GOTO error has the same cause. Indeed, most
+of the ones we've seen in the past 7-8 years we've found some kind
+of problem with hardware or fixed other bugs that have made it go
+away.
 
-Yes, it means that there is a global flush when a project quota runs
-out of space, but it means that we only do it once and we don't burn
-excessive CPU walking radix trees scanning inodes needlessly every
-time we get a storm of processes hammering project quota ENOSPC.
+The above issue that was reported is - so far - a one of a kind. I
+haven't seen any other reports that are even vaguely similar. If SGI
+has more customers hitting this problem, then it would be really
+nice if SGI could provide that information to the community rather
+than complain that they've been seeing it for 8 years. All that
+tells us in the community is that you aren't fixing bugs your
+customers are hitting and youren't passing them on to people who
+might be able to help...
 
-FWIW, if we want to filter the list of dirty inodes to writeback, we
-should look at providing a filter callback to the generic inode code
-that gets called on each dirty inode. That way we can use the
-optimised writeback code to quickly find and dispatch only the dirty
-inodes that match the quota id we are having problems with....
+IOWs, if a vendor doesn't have the expertise to find the underlying
+problem and they need help tracking down such problems, then they
+should report the bugs to the list like end users do.
 
-> > This way has specific behaviours for EDQUOT vs ENOSPC, and we treat
-> > them appropriately with a minimum of differences. And ENOSPC is
-> > global, because we can't tell the difference here between a project
-> > quota ENOSPC and a global ENOSPC at this point.
-> > 
+> 2) Hannes Frederic Sowa found a different directory bug on Thursday,
+>    March 27. He included a replicator. I bisected the source of the this
+>    bug on Thursday. Walked the bisected patch on Friday and posted the
+>    patch. The idea to make a xfstest from the replicator was also made
+>    on March 28.
 > 
-> The main difference I see is that the original logic is centered around
-> figuring out how to do an eofblocks scan vs. xfs_flush_inodes() only
-> when necessary. In other words, we always attempt to do an eofblocks
-> scan first then fall back to the inode flush. Where it gets a bit ugly
-> is where we try to determine what kind of scan to run due to lack of
-> information. The flush aspect of things is a little confused as well I
-> suppose.
-> 
-> Alternatively, the logic above is designed around categorization of the
-> possible error conditions. I agree that it is more simple, but not quite
-> as effective as noted above. We would continue to run a global inode
-> flush when eofblocks can clean up effectively for the time being or due
-> to a project quota failure that should ideally not impact the wider fs.
+>    This bug has been only known for 3 business days. I already promised
+>    that a xfstest will be made. If you need to verify the problem and
+>    the patch, there already is a replicator.
 
-Sure, but we've found in the past that just issuing a global flush
-is far better from both the CPU and IO efficiency POV than
-concurrent inode cache scans to find matching dirty inodes and
-flushing them.
+The xfstest is *not for me* - it's for every distro and vendor out
+there that ships XFS in their product to realise that there's a
+serious bug they need fixing, and for them to be able to confirm
+that they've fixed it.  I don't ask people to do stuff for my
+benefit - I'm perfectly capable of doing random special stuff for
+myself - but I will ask for things that are needed for the greater
+community.
 
-> I wonder if something like the following would simplify this enough, yet
-> still provide nicer behavior:
-> 
-> 	/*
-> 	 * If this is an allocation failure, attempt an eofblocks scan
-> 	 * before we resort to an inode flush...
-> 	 */
-> 	if ((ret == -EDQUOT || ret == -ENOSPC) && !scanned) {
-> 		scanned = xfs_inode_enospc_eofblocks(ip);
-> 		if (scanned)
-> 			goto retry;
-> 		scanned = 1;	/* try this once */
-> 	}
-> 	if (ret == -ENOSPC && !enospc) {
-> 		enospc = 1;
-> 		xfs_flush_inodes();
-> 		goto retry;
-> 	}
-> 
-> This consolidates the eofblocks scan logic to a separate helper to
-> simplify things. The helper can run the quota scan and/or the global
-> scan based on the data regarding the situation (i.e., the inode and
-> associated quota characteristics). This allows us to preserve the notion
-> of attempting a lightweight recovery first and a heavyweight recovery
-> second, reserving the inode flush for when space is truly tight.
-> Thoughts?
+That's why I asked you to rewrite the commit message to explain what
+the cause and impact of problem being fixed was, and why I'm asking
+for the regression test to be provided quickly. Both of these things
+greatly benefit downstream users of XFS and xfstests, so upstream
+processes need to reflect this. Fixing the bug in the upstream tree
+is only half the job we need to do...
 
-It's still damn clunky, IMO. It's still trying to work around the
-fact that project quotas use ENOSPC rather than EDQUOT, and that
-makes the logic rather twisted. And it still has that hidden data
-flush in it so it can't really be called lightweight...
-
-
-> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > index bd0ab7d..471ccfa 100644
-> > > --- a/fs/xfs/xfs_icache.c
-> > > +++ b/fs/xfs/xfs_icache.c
-> > > @@ -33,6 +33,9 @@
-> ...
-> > > +
-> > > +	if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount)) {
-> > > +		dq = xfs_inode_dquot(ip, XFS_DQ_PROJ);
-> > > +		if (dq && xfs_dquot_lowsp(dq)) {
-> > > +			eofb.eof_prid = xfs_get_projid(ip);
-> > > +			eofb.eof_flags = XFS_EOF_FLAGS_SYNC|
-> > > +					 XFS_EOF_FLAGS_PRID|
-> > > +					 XFS_EOF_FLAGS_FLUSH;
-> > > +			xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-> > > +			scanned = 1;
-> > > +		}
-> > > +	}
-> > 
-> > I really don't like the fact that project quota is hiding a data
-> > flush in the "free_quota_eofblocks" logic. It just strikes me a the
-> > wrong thing to do because if it's a real ENOSPC we're just going to
-> > have to do this anyway...
-> > 
-> 
-> I was under the impression that a flush was important for project quotas
-> based on freeing up reserved metadata space (from our past discussions
-> on the original eofblocks work). I could have just misunderstood the
-> point at the time.
-
-It is important - I'm not saying that we should not flush dirty
-data. What I am disagreeing with is the implementation of data
-flushing in the patch....
-
-> If so, I can just remove the flush flag on the
-> eofblocks scan in the logic proposed above and let the inode flush
-> handle this for both cases.
-> 
-> If we go that route, any preference as to whether to keep the support
-> for doing a flush in eofblocks at all? I included it primarily for the
-> project quota case. With that dropped, I could just drop the first
-> couple of patches here.
-
-Yes, you could do that.
+It's a moot discussion now that the xfstest case has been posted....
 
 Cheers,
 
