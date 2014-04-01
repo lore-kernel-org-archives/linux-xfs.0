@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7E11D7F56
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 21:22:22 -0500 (CDT)
-Message-ID: <533A22DB.2030608@sgi.com>
-Date: Mon, 31 Mar 2014 21:22:19 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5CBD87F58
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 21:37:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 26103304053
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 19:37:21 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id VJEh5NksCH9ZcRNR (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 31 Mar 2014 19:37:19 -0700 (PDT)
+Date: Mon, 31 Mar 2014 22:37:11 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [Lsf] [PATCH] xfstests-bld: Simplify determination of number of
+	CPUs in build-all
+Message-ID: <20140401023711.GE4911@thunk.org>
+References: <1395997399-3000-1-git-send-email-sedat.dilek@gmail.com>
+	<20140328161806.GA31772@thunk.org> <20140331025148.GF16336@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix bad hash ordering
-References: <20140328173430.622616177@sgi.com>
-	<20140331001055.GD16336@dastard> <53399B06.5010400@sgi.com>
-	<20140331214016.GD17603@dastard>
-In-Reply-To: <20140331214016.GD17603@dastard>
+Content-Disposition: inline
+In-Reply-To: <20140331025148.GF16336@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,89 +27,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: Sedat Dilek <sedat.dilek@gmail.com>, lsf@lists.linux-foundation.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On 03/31/14 16:40, Dave Chinner wrote:
-> On Mon, Mar 31, 2014 at 11:42:46AM -0500, Mark Tinguely wrote:
->> On 03/30/14 19:10, Dave Chinner wrote:
->>> On Fri, Mar 28, 2014 at 12:33:34PM -0500, Mark Tinguely wrote:
->>>> Fix the fix directory "bad hash ordering" bug introduced in
->>>> commit f5ea1100.
->>>
->>
->> ...
->>
->>>
->>>> ---
->>>> A C program that generates this problem can be found at:
->>>>   http://oss.sgi.com/archives/xfs/2014-03/msg00373.html
->>>>
->>>> A xfstest for this bug is coming from Hannes Frederic Sowa.
->>>
->>> Can you convert this program to an xfstest yourself so that I can
->>> commit the regression test at the same time I commit an updated
->>> fix?
->>
->> We narrowed the iterations down to make it a quick test.
->> I have every confidence that Hannes can generate the test in a timely
->> manner and I will help in any way possible.
->
-> Well, it's been over a week now and you're asking me to trust that
-> someone I don't know and who has never submitted an xfstests before
-> to do something in a timely manner so we can test a critical bug fix
-> during a merge window. I'm willing to be pleasently surprised, but
-> history tells me that people that report bugs rarely follow up with
-> xfstest cases and it's usually the developer that fixes the bug that
-> generates the xfstests patch.
->
-> So if the xfstests patch doesn't arrive in the next few hours, can
-> you please do that for us so I can get this sorted out for the merge
-> window?
->
-> Cheers,
->
-> Dave.
+On Mon, Mar 31, 2014 at 01:51:48PM +1100, Dave Chinner wrote:
+> /me puts on his xfstests Maintainer Hat
+> 
+> That's a problem of your own making, Ted: please don't speak on
+> behalf of what the upstream xfstests developers might or might not
+> do just because of what you do with it as a user. The existance of
+> many different environments people have built up around it is one of
+> the strengths of xfstests. Hence the very act of considering
+> enforcing One True Way of running xfstests is, IMO, harmful
+> to the wider filesystem and xfstests community.
 
-Dave,
+I wasn't presuming to do so.
 
-I think we need to take a step back and clear a little confusion here.
-There are 2 different directory bugs.
+I am merely pushing xfstests-bld because it's better that more people
+run tests.  And if it makes it easier for people to run tests because
+there is a turn-key way to run them, so much the better.  Having a
+diversity of ways of running xfstests is good.  Having lots of people
+run xfstests, even if many of them run it the same way, is better.
 
-1) Freeing of a already free extent. It presents with the error:
-	XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 16XX of file
-	 fs/xfs/xfs_alloc.c.
-    Could be a right or a left edge (or both) that is free.
+> You're also being rather presumptive that the existence of
+> xfstests-bld requires us to change anything about the way xfstests
+> is run.
 
-    Morgan Meyers <Morgan.Mears@netapp.com> sent the latest occurrence on
-    March 12, but others have been seeing it in the community code in the
-    last few mounts. SGI has been seeing it lately with big customers and
-    it has occurred off and on for 7-8  years according to our bug
-    database.
+I never said that any changes was needed to xfstests repository, or
+how anyone else might choose to run xfstests.
 
-    It is a nasty bug that can can cause corruption. As I mentioned last
-    week in the analysis of Morgan's metadata dump, XFS can allocate the
-    same buffer multiple times. In his metadata dump there is a directory
-    block and inode clusters that also allocated as user blocks. These
-    duplicate allocated blocks are land mines waiting to go off either
-    when written to by one owner or when when both allocations are
-    removed which causes the XFS_WANT_CORRUPTED_GOTO forced shutdown.
+> > especially given that based on a challenge which
+> > Greg K-H gave us at the kernel pannel at Collab Summit,
+>                ^^^^
+> 
+> Hmmmm. Not the way I remember it. Perhaps I should go look at the
+> video and check that Greg was addressing me directly as the xfstests
+> maintainer with those comments. After all, those lights on stage can
+> be blinding.....
 
-2) Hannes Frederic Sowa found a different directory bug on Thursday,
-    March 27. He included a replicator. I bisected the source of the this
-    bug on Thursday. Walked the bisected patch on Friday and posted the
-    patch. The idea to make a xfstest from the replicator was also made
-    on March 28.
+Sorry, I thought in the discussions we had afterwards you agreed with
+me that *some* way of running xfststs easily was going to be a
+requirement, as it is somewhat doubtful that most non-file system
+developers will have the patience to deal with the "some assembly
+required" in order to actually run xfstests, and actually putting
+xfstests into the kernel sources wasn't going to be particularly
+useful unless we have some way of making it possible to run the tests
+in a semi-automated fashion.
 
-    This bug has been only known for 3 business days. I already promised
-    that a xfstest will be made. If you need to verify the problem and
-    the patch, there already is a replicator.
+Whether that method is based on what I have in xfstests-bld, or some
+other way is I agree certainly up for discussion.  At the moment the
+system I have is only set up for ext4, although I will happily accept
+patches and work with other file system developers to enhance it so it
+can work with other file systems.
 
---Mark.
+And of course, whether changes in the mainline kernel tree are
+manually propagated changes from the xfstests.git tree, or whether
+primary development happens in the kernel tree, is ultimately going to
+be up to you and the XFS developers who have stewardship of xfstests.
+I'm not sure I would be that excited about manual propagation of
+changes from one git tree to another, but that is of course, up to
+you.
+
+Cheers,
+
+						- Ted
 
 _______________________________________________
 xfs mailing list
