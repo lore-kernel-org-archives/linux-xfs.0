@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4A1AD7F53
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 19:19:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A77B304062
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 17:19:15 -0700 (PDT)
-Received: from mail-qg0-f50.google.com (mail-qg0-f50.google.com
-	[209.85.192.50]) by cuda.sgi.com with ESMTP id YYNYZSifPDJGGq7j
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 31 Mar 2014 17:19:12 -0700 (PDT)
-Received: by mail-qg0-f50.google.com with SMTP id q108so8137281qgd.37
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 17:19:12 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7E11D7F56
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2014 21:22:22 -0500 (CDT)
+Message-ID: <533A22DB.2030608@sgi.com>
+Date: Mon, 31 Mar 2014 21:22:19 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <20140331145625.GA10791@infradead.org>
-References: <1396277611-10759-1-git-send-email-linkinjeon@gmail.com>
-	<20140331145625.GA10791@infradead.org>
-Date: Tue, 1 Apr 2014 09:19:12 +0900
-Message-ID: <CAKYAXd8adbqepWeDADDtbzk7bTrhXK0CccgewNDsqu0u+HnC4g@mail.gmail.com>
-Subject: Re: [PATCH 0/3] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
-From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Re: [PATCH] xfs: fix bad hash ordering
+References: <20140328173430.622616177@sgi.com>
+	<20140331001055.GD16336@dastard> <53399B06.5010400@sgi.com>
+	<20140331214016.GD17603@dastard>
+In-Reply-To: <20140331214016.GD17603@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,31 +19,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, Namjae Jeon <namjae.jeon@samsung.com>, Jan Kara <jack@suse.cz>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-2014-03-31 23:56 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
-> On Mon, Mar 31, 2014 at 11:53:31PM +0900, Namjae Jeon wrote:
->> This flag will work opposite to the newly added FALLOC_FL_COLLAPSE_RANGE flag.
->> As such, specifying FALLOC_FL_INSERT_RANGE flag will insert zeroed-out space
->> in between the file within the range specified by offset and len. User can
->> write new data in this space. e.g. ads.
->> Like collapse range, currently we have the limitation that offset and len
->> should be block size aligned for both XFS and Ext4.
+On 03/31/14 16:40, Dave Chinner wrote:
+> On Mon, Mar 31, 2014 at 11:42:46AM -0500, Mark Tinguely wrote:
+>> On 03/30/14 19:10, Dave Chinner wrote:
+>>> On Fri, Mar 28, 2014 at 12:33:34PM -0500, Mark Tinguely wrote:
+>>>> Fix the fix directory "bad hash ordering" bug introduced in
+>>>> commit f5ea1100.
+>>>
+>>
+>> ...
+>>
+>>>
+>>>> ---
+>>>> A C program that generates this problem can be found at:
+>>>>   http://oss.sgi.com/archives/xfs/2014-03/msg00373.html
+>>>>
+>>>> A xfstest for this bug is coming from Hannes Frederic Sowa.
+>>>
+>>> Can you convert this program to an xfstest yourself so that I can
+>>> commit the regression test at the same time I commit an updated
+>>> fix?
+>>
+>> We narrowed the iterations down to make it a quick test.
+>> I have every confidence that Hannes can generate the test in a timely
+>> manner and I will help in any way possible.
 >
-> Btw, I remember Samsung also had an ioctl for XFS to split a file into
-> two without moving the data, do you plan to submit that one as well?
+> Well, it's been over a week now and you're asking me to trust that
+> someone I don't know and who has never submitted an xfstests before
+> to do something in a timely manner so we can test a critical bug fix
+> during a merge window. I'm willing to be pleasently surprised, but
+> history tells me that people that report bugs rarely follow up with
+> xfstest cases and it's usually the developer that fixes the bug that
+> generates the xfstests patch.
 >
-Hi Christoph.
-Sure, I'm planning to introduce FS_IOC_MOVE_DATA ioctl that can split
-file as well as merging for xfs and ext4.
-I already started to implement it. and will post it soon.
+> So if the xfstests patch doesn't arrive in the next few hours, can
+> you please do that for us so I can get this sorted out for the merge
+> window?
+>
+> Cheers,
+>
+> Dave.
 
-Thanks.
+Dave,
+
+I think we need to take a step back and clear a little confusion here.
+There are 2 different directory bugs.
+
+1) Freeing of a already free extent. It presents with the error:
+	XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 16XX of file
+	 fs/xfs/xfs_alloc.c.
+    Could be a right or a left edge (or both) that is free.
+
+    Morgan Meyers <Morgan.Mears@netapp.com> sent the latest occurrence on
+    March 12, but others have been seeing it in the community code in the
+    last few mounts. SGI has been seeing it lately with big customers and
+    it has occurred off and on for 7-8  years according to our bug
+    database.
+
+    It is a nasty bug that can can cause corruption. As I mentioned last
+    week in the analysis of Morgan's metadata dump, XFS can allocate the
+    same buffer multiple times. In his metadata dump there is a directory
+    block and inode clusters that also allocated as user blocks. These
+    duplicate allocated blocks are land mines waiting to go off either
+    when written to by one owner or when when both allocations are
+    removed which causes the XFS_WANT_CORRUPTED_GOTO forced shutdown.
+
+2) Hannes Frederic Sowa found a different directory bug on Thursday,
+    March 27. He included a replicator. I bisected the source of the this
+    bug on Thursday. Walked the bisected patch on Friday and posted the
+    patch. The idea to make a xfstest from the replicator was also made
+    on March 28.
+
+    This bug has been only known for 3 business days. I already promised
+    that a xfstest will be made. If you need to verify the problem and
+    the patch, there already is a replicator.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
