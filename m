@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7DD2B7F56
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 08:48:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 614AF30405F
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 06:48:19 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 571967F59
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 08:55:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27547304043
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 06:55:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iEvLtgWBshbsZ8E6 for
-	<xfs@oss.sgi.com>; Tue, 01 Apr 2014 06:48:15 -0700 (PDT)
-Date: Tue, 1 Apr 2014 09:48:12 -0400
+	cuda.sgi.com with ESMTP id wQH91d0smKo7BoDr for
+	<xfs@oss.sgi.com>; Tue, 01 Apr 2014 06:55:21 -0700 (PDT)
+Date: Tue, 1 Apr 2014 09:55:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] xfs: add flush flag to xfs_eofblocks
-Message-ID: <20140401134810.GB21540@bfoster.bfoster>
+Subject: Re: [PATCH 4/5] xfs: run an eofblocks scan on ENOSPC/EDQUOT
+Message-ID: <20140401135518.GC21540@bfoster.bfoster>
 References: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
-	<1396012563-60973-3-git-send-email-bfoster@redhat.com>
-	<20140331214754.GE17603@dastard>
+	<1396012563-60973-5-git-send-email-bfoster@redhat.com>
+	<20140331222246.GF17603@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140331214754.GE17603@dastard>
+In-Reply-To: <20140331222246.GF17603@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,57 +33,169 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 01, 2014 at 08:47:54AM +1100, Dave Chinner wrote:
-> On Fri, Mar 28, 2014 at 09:16:00AM -0400, Brian Foster wrote:
-> > The flush flag allows the caller to issue a flush for scanned inodes. In
-> > ENOSPC conditions caused by project quotas, a flush is required to free
-> > up reserved metadata allocations.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_fs.h     | 4 +++-
-> >  fs/xfs/xfs_icache.c | 3 +++
-> >  2 files changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> > index c5fc116..fa3a58e 100644
-> > --- a/fs/xfs/xfs_fs.h
-> > +++ b/fs/xfs/xfs_fs.h
-> > @@ -374,12 +374,14 @@ struct xfs_fs_eofblocks {
-> >  #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
-> >  #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
-> >  #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
-> > +#define XFS_EOF_FLAGS_FLUSH		(1 << 5) /* issue a flush */
-> >  #define XFS_EOF_FLAGS_VALID	\
-> >  	(XFS_EOF_FLAGS_SYNC |	\
-> >  	 XFS_EOF_FLAGS_UID |	\
-> >  	 XFS_EOF_FLAGS_GID |	\
-> >  	 XFS_EOF_FLAGS_PRID |	\
-> > -	 XFS_EOF_FLAGS_MINFILESIZE)
-> > +	 XFS_EOF_FLAGS_MINFILESIZE | \
-> > +	 XFS_EOF_FLAGS_FLUSH)
-> >  
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 7ff59c9..d4e15db 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1231,6 +1231,9 @@ xfs_inode_free_eofblocks(
-> >  		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
-> >  		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
-> >  			return 0;
-> > +
-> > +		if (eofb->eof_flags & XFS_EOF_FLAGS_FLUSH)
-> > +			filemap_flush(VFS_I(ip)->i_mapping);
+On Tue, Apr 01, 2014 at 09:22:47AM +1100, Dave Chinner wrote:
+> On Fri, Mar 28, 2014 at 09:16:02AM -0400, Brian Foster wrote:
+...
+> >  	/*
+> > -	 * If we just got an ENOSPC, try to write back all dirty inodes to
+> > -	 * convert delalloc space to free up some of the excess reserved
+> > -	 * metadata space.
+> > +	 * If we hit ENOSPC or a quota limit, use the selective nature of the
+> > +	 * eofblocks scan to try and free up some lingering speculative
+> > +	 * preallocation delalloc blocks.
+> > +	 *
+> > +	 * If we hit a quota limit, only scan for files covered by the quota. We
+> > +	 * also consider ENOSPC here because project quota failure can return
+> > +	 * ENOSPC instead of EDQUOT. The quota scanning only sets 'scanned' if
+> > +	 * the inode is covered by a quota with low free space. This should
+> > +	 * minimize interference with global ENOSPC handling.
+> > +	 *
+> > +	 * If a scan does not free enough space, resort to the inode flush big
+> > +	 * hammer to convert delalloc space to free up some of the excess
+> > +	 * reserved metadata space.
+> >  	 */
+> > +	if ((ret == -EDQUOT || ret == -ENOSPC) && !scanned) {
+> > +		scanned = xfs_inode_free_quota_eofblocks(ip);
+> > +		if (scanned)
+> > +			goto write_retry;
+> > +	}
+> > +	if (ret == -ENOSPC && !scanned) {
+> > +		struct xfs_eofblocks eofb = {0,};
 > 
-> So this does WB_SYNC_NONE writeback, which means the filesystem is
-> free to ignore it when we get to .writepage. Given that we are are
-> ENOSPC here, wouldn't it be better to guarantee that writeback will
-> occur (i.e. use filemap_fdatawrite())?
+> IIRC, you can just use "{ 0 }" for initialisation, no "," needed.
+> 
+> > +
+> > +		eofb.eof_scan_owner = ip->i_ino; /* for locking */
+> > +		eofb.eof_flags = XFS_EOF_FLAGS_SYNC | XFS_EOF_FLAGS_FLUSH;
+> > +		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+> > +		scanned = 1;
+> > +		goto write_retry;
+> > +	}
+> >  	if (ret == -ENOSPC && !enospc) {
+> >  		enospc = 1;
+> >  		xfs_flush_inodes(ip->i_mount);
+> 
+> This seems overly complex and fragile. I'd much prefer that we don't
+> bury data writeback deep in the EOF block freeing code - we've done
+> a lot of work in the past to remove exactly that sort of behaviour
+> from XFS inode scanners.
 > 
 
-Yeah, I didn't catch that. That makes sense, thanks.
+I think the fragility comes from the fact that we can't detect a
+particular quota failure or a project quota failure from a global
+failure. IIRC from looking at this way back when, there wasn't a clear
+solution to that problem. It didn't seem worth getting too far into for
+the purpose of this little bit of functionality. In that sense, the
+fragility will be there regardless.
+
+It would be nice to simplify this, however. It took a little bit of
+staring at this to try and make it effective and somewhat succinct.
+
+> I'd prefer to see something like this:
+> 
+> 	if (ret == -EDQUOT && !enospc) {
+> 		enospc = 1;
+> 		xfs_inode_free_quota_eofblocks(ip);
+> 		goto retry;
+> 	else if (ret == -ENOSPC && !enospc) {
+> 		enospc = 1;
+> 		xfs_flush_inodes(ip->i_mount);
+> 		....
+> 		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+> 		goto retry;
+> 	}
+> 
+
+What I don't like about this, in particular, is xfs_flush_inodes() could
+be unnecessary. We have a max preallocation size of 8GB, so the
+eofblocks scan alone can free up gigabytes of space. Now that I think of
+it, this is kind of a flaw in the proposed logic as well.
+
+> This way has specific behaviours for EDQUOT vs ENOSPC, and we treat
+> them appropriately with a minimum of differences. And ENOSPC is
+> global, because we can't tell the difference here between a project
+> quota ENOSPC and a global ENOSPC at this point.
+> 
+
+The main difference I see is that the original logic is centered around
+figuring out how to do an eofblocks scan vs. xfs_flush_inodes() only
+when necessary. In other words, we always attempt to do an eofblocks
+scan first then fall back to the inode flush. Where it gets a bit ugly
+is where we try to determine what kind of scan to run due to lack of
+information. The flush aspect of things is a little confused as well I
+suppose.
+
+Alternatively, the logic above is designed around categorization of the
+possible error conditions. I agree that it is more simple, but not quite
+as effective as noted above. We would continue to run a global inode
+flush when eofblocks can clean up effectively for the time being or due
+to a project quota failure that should ideally not impact the wider fs.
+
+I wonder if something like the following would simplify this enough, yet
+still provide nicer behavior:
+
+	/*
+	 * If this is an allocation failure, attempt an eofblocks scan
+	 * before we resort to an inode flush...
+	 */
+	if ((ret == -EDQUOT || ret == -ENOSPC) && !scanned) {
+		scanned = xfs_inode_enospc_eofblocks(ip);
+		if (scanned)
+			goto retry;
+		scanned = 1;	/* try this once */
+	}
+	if (ret == -ENOSPC && !enospc) {
+		enospc = 1;
+		xfs_flush_inodes();
+		goto retry;
+	}
+
+This consolidates the eofblocks scan logic to a separate helper to
+simplify things. The helper can run the quota scan and/or the global
+scan based on the data regarding the situation (i.e., the inode and
+associated quota characteristics). This allows us to preserve the notion
+of attempting a lightweight recovery first and a heavyweight recovery
+second, reserving the inode flush for when space is truly tight.
+Thoughts?
+
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index bd0ab7d..471ccfa 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -33,6 +33,9 @@
+...
+> > +
+> > +	if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount)) {
+> > +		dq = xfs_inode_dquot(ip, XFS_DQ_PROJ);
+> > +		if (dq && xfs_dquot_lowsp(dq)) {
+> > +			eofb.eof_prid = xfs_get_projid(ip);
+> > +			eofb.eof_flags = XFS_EOF_FLAGS_SYNC|
+> > +					 XFS_EOF_FLAGS_PRID|
+> > +					 XFS_EOF_FLAGS_FLUSH;
+> > +			xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+> > +			scanned = 1;
+> > +		}
+> > +	}
+> 
+> I really don't like the fact that project quota is hiding a data
+> flush in the "free_quota_eofblocks" logic. It just strikes me a the
+> wrong thing to do because if it's a real ENOSPC we're just going to
+> have to do this anyway...
+> 
+
+I was under the impression that a flush was important for project quotas
+based on freeing up reserved metadata space (from our past discussions
+on the original eofblocks work). I could have just misunderstood the
+point at the time. If so, I can just remove the flush flag on the
+eofblocks scan in the logic proposed above and let the inode flush
+handle this for both cases.
+
+If we go that route, any preference as to whether to keep the support
+for doing a flush in eofblocks at all? I included it primarily for the
+project quota case. With that dropped, I could just drop the first
+couple of patches here.
+
+Thanks for the review.
 
 Brian
 
