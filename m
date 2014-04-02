@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E2B8F7F63
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 19:02:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9010B8F8065
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 17:02:54 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Dh2y2E3O7YzZrWs4 for
-	<xfs@oss.sgi.com>; Tue, 01 Apr 2014 17:02:52 -0700 (PDT)
-Date: Tue, 1 Apr 2014 19:20:23 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/5] xfs: run an eofblocks scan on ENOSPC/EDQUOT
-Message-ID: <20140401232022.GA15934@bfoster.bfoster>
-References: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
-	<1396012563-60973-5-git-send-email-bfoster@redhat.com>
-	<20140331222246.GF17603@dastard>
-	<20140401135518.GC21540@bfoster.bfoster>
-	<20140401211926.GH17603@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E0C947F54
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 23:47:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CA1DE304053
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2014 21:47:55 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	yDHoowRxwBcDz03l for <xfs@oss.sgi.com>;
+	Tue, 01 Apr 2014 21:47:52 -0700 (PDT)
+Date: Wed, 2 Apr 2014 15:47:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: invalid requests to request_fn from xfs_repair
+Message-ID: <20140402044749.GK17603@dastard>
+References: <CABHf-sxmxmM0+WVzvGGJqKrrGngm0qrGTsYDnEmUEf+GJ_pK8A@mail.gmail.com>
+	<20140401204215.GG17603@dastard>
+	<CABHf-sxeACnsSoJszM8Xan-VcXLkLdrY7cBM9=FCAxdMBaQohA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140401211926.GH17603@dastard>
+In-Reply-To: <CABHf-sxeACnsSoJszM8Xan-VcXLkLdrY7cBM9=FCAxdMBaQohA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,277 +31,130 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Jamie Pocas <pocas.jamie@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Apr 02, 2014 at 08:19:26AM +1100, Dave Chinner wrote:
-> On Tue, Apr 01, 2014 at 09:55:18AM -0400, Brian Foster wrote:
-> > On Tue, Apr 01, 2014 at 09:22:47AM +1100, Dave Chinner wrote:
-> > > On Fri, Mar 28, 2014 at 09:16:02AM -0400, Brian Foster wrote:
-> > ...
-> > > >  	/*
-> > > > -	 * If we just got an ENOSPC, try to write back all dirty inodes to
-> > > > -	 * convert delalloc space to free up some of the excess reserved
-> > > > -	 * metadata space.
-> > > > +	 * If we hit ENOSPC or a quota limit, use the selective nature of the
-> > > > +	 * eofblocks scan to try and free up some lingering speculative
-> > > > +	 * preallocation delalloc blocks.
-> > > > +	 *
-> > > > +	 * If we hit a quota limit, only scan for files covered by the quota. We
-> > > > +	 * also consider ENOSPC here because project quota failure can return
-> > > > +	 * ENOSPC instead of EDQUOT. The quota scanning only sets 'scanned' if
-> > > > +	 * the inode is covered by a quota with low free space. This should
-> > > > +	 * minimize interference with global ENOSPC handling.
-> > > > +	 *
-> > > > +	 * If a scan does not free enough space, resort to the inode flush big
-> > > > +	 * hammer to convert delalloc space to free up some of the excess
-> > > > +	 * reserved metadata space.
-> > > >  	 */
-> > > > +	if ((ret == -EDQUOT || ret == -ENOSPC) && !scanned) {
-> > > > +		scanned = xfs_inode_free_quota_eofblocks(ip);
-> > > > +		if (scanned)
-> > > > +			goto write_retry;
-> > > > +	}
-> > > > +	if (ret == -ENOSPC && !scanned) {
-> > > > +		struct xfs_eofblocks eofb = {0,};
-> > > 
-> > > IIRC, you can just use "{ 0 }" for initialisation, no "," needed.
-> > > 
-> > > > +
-> > > > +		eofb.eof_scan_owner = ip->i_ino; /* for locking */
-> > > > +		eofb.eof_flags = XFS_EOF_FLAGS_SYNC | XFS_EOF_FLAGS_FLUSH;
-> > > > +		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-> > > > +		scanned = 1;
-> > > > +		goto write_retry;
-> > > > +	}
-> > > >  	if (ret == -ENOSPC && !enospc) {
-> > > >  		enospc = 1;
-> > > >  		xfs_flush_inodes(ip->i_mount);
-> > > 
-> > > This seems overly complex and fragile. I'd much prefer that we don't
-> > > bury data writeback deep in the EOF block freeing code - we've done
-> > > a lot of work in the past to remove exactly that sort of behaviour
-> > > from XFS inode scanners.
-> > 
-> > I think the fragility comes from the fact that we can't detect a
-> > particular quota failure or a project quota failure from a global
-> > failure. IIRC from looking at this way back when, there wasn't a clear
-> > solution to that problem. It didn't seem worth getting too far into for
-> > the purpose of this little bit of functionality. In that sense, the
-> > fragility will be there regardless.
-> > 
-> > It would be nice to simplify this, however. It took a little bit of
-> > staring at this to try and make it effective and somewhat succinct.
-> > 
-> > > I'd prefer to see something like this:
-> > > 
-> > > 	if (ret == -EDQUOT && !enospc) {
-> > > 		enospc = 1;
-> > > 		xfs_inode_free_quota_eofblocks(ip);
-> > > 		goto retry;
-> > > 	else if (ret == -ENOSPC && !enospc) {
-> > > 		enospc = 1;
-> > > 		xfs_flush_inodes(ip->i_mount);
-> > > 		....
-> > > 		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-> > > 		goto retry;
-> > > 	}
-> > > 
-> > 
-> > What I don't like about this, in particular, is xfs_flush_inodes() could
-> > be unnecessary. We have a max preallocation size of 8GB, so the
-> > eofblocks scan alone can free up gigabytes of space. Now that I think of
-> > it, this is kind of a flaw in the proposed logic as well.
+On Tue, Apr 01, 2014 at 06:28:19PM -0400, Jamie Pocas wrote:
+> I have to say, thanks very much for the lightning fast response. Comments
+> are inline. I think the punchline is going to end up being that I probably
+> need to learn some more about the effects of O_DIRECT on the I/O path and
+> how it ends up in the request_queue. It's tempting now to regress back to a
+> bio-handling function, do my own merging, and see if I can avoid the
+> problem, but I am stubborn so I will probably stick it out for as long as I
+> can.
 > 
-> The issue is that an eofblock scan is expensive, and there's no
-> limiting on how many inodes can have the EOF tag set and there's no
-> limiting on the number of concurrent scans that can be run. i.e.
-> when an active project that has many processes writing to it runs
-> out of space, every process will enter xfs_icache_free_eofblocks()
-> function and start issuing data flush requests on dirty inodes. It
-> causes unbound writeback concurrency, and we know that this is a bad
-> thing to do to your storage...
+> On Tue, Apr 1, 2014 at 4:42 PM, Dave Chinner <david@fromorbit.com> wrote:
 > 
-> xfs_flush_inodes() only runs one scan of the currently dirty
-> inodes at a time because it serialises on the flusher thread. We get
-> optimised writeback patterns rather than random data writeback from
-> as many threads hitting the eofblocks scanner at once. History has
-> shown that this is the most efficient way to clean dirty data -
-> optimise once and in the correct place, then use it everywhere.
+> > On Tue, Apr 01, 2014 at 04:16:39PM -0400, Jamie Pocas wrote:
+> > > blk_queue_physical_block_size(q, 512) // should be no surprise
+> > > blk_queue_logical_block_size(q, 512) // should be no surprise
+> >
+> > 512 byte sectors.
+> >
+> > > blk_queue_max_segments(q, 128); /* 128 memory segments (page +
+> > > offset/length pairs) per request! */
+> > > blk_queue_max_hw_sectors(q, CA_MAX_REQUEST_SECTORS); /* Up to 1024
+> > sectors
+> > > (512k) per request hard limit in the kernel */
+> > > blk_queue_max_segment_size(q, CA_MAX_REQUEST_BYTES); /* 512k (1024
+> > sectors)
+> > > is the hard limit in the kernel */
+> >
+> > And up to 512KB per IO.
+> >
+> > > While iterating through segments in rq_for_each_segment(), for some
+> > > requests I am seeing some odd behavior.
+> > >
+> > > segment 0: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 903   // Ok,
+> > > this looks normal
+> > > segment 1: iter.bio->bi_sector = 1023, blk_rq_cur_sectors(rq) = 7 //
+> > > Whoah... this doesn't look right to me
+> >
+> > Seems fine to me. There's absolutely no reason two separate IOs
+> > can't be sub-page sector aligned or discontiguous given the above
+> > configuration. If that's what the getblocks callback returned to the
+> > DIO layer, then that's what you're going to see in the bios...
+> >
+> >
+> I guess my assumption that sectors would be adjacent was invalid, but this
+> is what I have read in ldd3 and other books and seen in some driver
+> examples. So I apologize for my folly and it's another lesson in not
+> believing everything you see on the net. The back half of my driver is
+> really optimized for transferring a single contiguous lba & transfer length
+> pair (ala SCSI WRITE 16 for example). However in desperation, I had changed
+> the driver to support requests like this (with disjoint sector ranges) but
+> it still seemed odd to me that occasionally some requests would even have
+> multiple segments that would *write* the same sectors/lengths. For example
+> I also see requests like the following.
 > 
+> Given: rq_data_dir(rq) == 1 (i.e. a write)
+> segment   0: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    // Ok
+> segment   1: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
+> Again?
+> segment   2: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    // Yet
+> again?
+> segment   3: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
+> Really?
+> ...
+> segment 126: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
+> What's going on?
+> // Reminder: segment limit is 128
+> segment 127: iter.bio->bi_sector = 1023, blk_rq_cur_sectors(rq) = 1 //
+> Haha, bet you though I was going to say sector = 0!
 
-Ok. I've been waffling on whether the eofblocks scan does/needs to do
-the flush, including whether there is any value of it being "selective."
-This suggests otherwise. In particular, that one big flush is better
-than many smaller/selective flushes. So we can just toss the project
-quota eofblocks flush. I'll drop the first couple patches for the flush
-mechanism.
+That really looks to me like a bug in whatever is building that iter
+structure. It looks like there's an off-by-one on each page (should
+be 8 sectors not 7) and the bi_sector is not being set correctly to
+the sector offset of the bio within the IO. i.e. for a contiguous
+IO it should look something like:
 
-> Yes, it means that there is a global flush when a project quota runs
-> out of space, but it means that we only do it once and we don't burn
-> excessive CPU walking radix trees scanning inodes needlessly every
-> time we get a storm of processes hammering project quota ENOSPC.
-> 
+segment   0: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 8
+segment   1: iter.bio->bi_sector = 8, blk_rq_cur_sectors(rq) = 8
+segment   2: iter.bio->bi_sector = 16, blk_rq_cur_sectors(rq) = 8
+....
+segment 127: iter.bio->bi_sector = 1016, blk_rq_cur_sectors(rq) = 8
 
-It's not clear to me that excess scanning is an issue, but it seems
-orthogonal to how we organize the enospc logic (at least once the flush
-is out of the equation). IOW, we'll invoke the scanner with the same
-frequency either way. Or maybe you are just referring to scanning
-specifically for the purpose of doing flushes as a waste..?
+I highly doubt the direct IO code is doing something wrong, because
+a mapping bug like that would show up everywhere and not just in your
+special driver....
 
-That said, I'll do some testing in this area to try and detect any
-potential issues.
+> > The read syscall is for a byte offset (from the fd, set by lseek)
+> > and a length, not a range of contiguous sectors on the device. That
+> > off/len tuple gets mapped by the underlying filesystem or device
+> > into an sector/len via a getblocks callback in the dio code and the
+> > bios are then built according to the mappings that are returned. So
+> > in many cases the IO that hits the block device looks nothing at all
+> > like the IO that came from userspace.
+> >
+> >
+> In general if I were reading a file I agree 100%, but this was the read
+> call issued by xfs_repair to read the superblock directly from a block
+> device. So I, perhaps wrongly, anticipated straightforward requests or
+> maybe even a single 512k request coming down to the request_fn. I should
+> have mentioned that this was observed while using xfs_repair earlier in the
+> email though, so no offense intended. There's more of the xfs_repair strace
+> in my response to your next comment below. It fails very early as you can
+> imagine when xfs_repair can't read the superblock.
 
-> FWIW, if we want to filter the list of dirty inodes to writeback, we
-> should look at providing a filter callback to the generic inode code
-> that gets called on each dirty inode. That way we can use the
-> optimised writeback code to quickly find and dispatch only the dirty
-> inodes that match the quota id we are having problems with....
-> 
-> > > This way has specific behaviours for EDQUOT vs ENOSPC, and we treat
-> > > them appropriately with a minimum of differences. And ENOSPC is
-> > > global, because we can't tell the difference here between a project
-> > > quota ENOSPC and a global ENOSPC at this point.
-> > > 
-> > 
-> > The main difference I see is that the original logic is centered around
-> > figuring out how to do an eofblocks scan vs. xfs_flush_inodes() only
-> > when necessary. In other words, we always attempt to do an eofblocks
-> > scan first then fall back to the inode flush. Where it gets a bit ugly
-> > is where we try to determine what kind of scan to run due to lack of
-> > information. The flush aspect of things is a little confused as well I
-> > suppose.
-> > 
-> > Alternatively, the logic above is designed around categorization of the
-> > possible error conditions. I agree that it is more simple, but not quite
-> > as effective as noted above. We would continue to run a global inode
-> > flush when eofblocks can clean up effectively for the time being or due
-> > to a project quota failure that should ideally not impact the wider fs.
-> 
-> Sure, but we've found in the past that just issuing a global flush
-> is far better from both the CPU and IO efficiency POV than
-> concurrent inode cache scans to find matching dirty inodes and
-> flushing them.
-> 
+I figured that this is what you were talking about, but remember
+that the block device also does it's own offset->sector mapping in
+the direct IO layer. So it's entirely possible that the mapping
+function (i.e the getblocks callback) is broken and that is why you
+are seeing weird mappings in the bios being built by the direct Io
+code.
 
-Makes sense...
+> and post more of the strace below. I *do* see the O_DIRECT flag as
+> expected. Here's the block device being opened. All I did was "xfs_repair
+> -n /dev/tsca0", hence the O_RDONLY flag.
 
-> > I wonder if something like the following would simplify this enough, yet
-> > still provide nicer behavior:
-> > 
-> > 	/*
-> > 	 * If this is an allocation failure, attempt an eofblocks scan
-> > 	 * before we resort to an inode flush...
-> > 	 */
-> > 	if ((ret == -EDQUOT || ret == -ENOSPC) && !scanned) {
-> > 		scanned = xfs_inode_enospc_eofblocks(ip);
-> > 		if (scanned)
-> > 			goto retry;
-> > 		scanned = 1;	/* try this once */
-> > 	}
-> > 	if (ret == -ENOSPC && !enospc) {
-> > 		enospc = 1;
-> > 		xfs_flush_inodes();
-> > 		goto retry;
-> > 	}
-> > 
-> > This consolidates the eofblocks scan logic to a separate helper to
-> > simplify things. The helper can run the quota scan and/or the global
-> > scan based on the data regarding the situation (i.e., the inode and
-> > associated quota characteristics). This allows us to preserve the notion
-> > of attempting a lightweight recovery first and a heavyweight recovery
-> > second, reserving the inode flush for when space is truly tight.
-> > Thoughts?
-> 
-> It's still damn clunky, IMO. It's still trying to work around the
-> fact that project quotas use ENOSPC rather than EDQUOT, and that
-> makes the logic rather twisted. And it still has that hidden data
-> flush in it so it can't really be called lightweight...
-> 
+That all seems ok from what I'd expect from xfsrepair....
 
-Ok. Well if the high level logic is the issue, we could still turn that
-inside out a bit to use your EDQUOT/ENOSPC logic, yet still preserve the
-standalone eofblocks scan. It might be a few more lines, but perhaps
-more clear. E.g.:
+Cheers,
 
-	if (ret == -EDQUOT && !enospc) {
-		enospc = 1;
-		xfs_inode_free_quota_eofblocks(ip);
-		goto retry;
-	else if (ret == -ENOSPC && !enospc) {
-		if (!scanned) {
-			struct xfs_eofblocks eofb = {0};
-			...
-			scanned = 1;
-			xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-			goto retry;
-		}
-
-		enospc = 1;
-		xfs_flush_inodes(ip->i_mount);
-		goto retry;
-	}
-
-Thoughts on that? We'll handle project quota ENOSPC just as we handle
-global ENOSPC with respect to the scan and the flush, but we'll still
-have the opportunity to free up a decent amount of space without
-initiating I/O. The project quota scan down in free_quota_eofblocks()
-might be rendered pointless as well.
-
-Brian
-
-> 
-> > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > index bd0ab7d..471ccfa 100644
-> > > > --- a/fs/xfs/xfs_icache.c
-> > > > +++ b/fs/xfs/xfs_icache.c
-> > > > @@ -33,6 +33,9 @@
-> > ...
-> > > > +
-> > > > +	if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount)) {
-> > > > +		dq = xfs_inode_dquot(ip, XFS_DQ_PROJ);
-> > > > +		if (dq && xfs_dquot_lowsp(dq)) {
-> > > > +			eofb.eof_prid = xfs_get_projid(ip);
-> > > > +			eofb.eof_flags = XFS_EOF_FLAGS_SYNC|
-> > > > +					 XFS_EOF_FLAGS_PRID|
-> > > > +					 XFS_EOF_FLAGS_FLUSH;
-> > > > +			xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-> > > > +			scanned = 1;
-> > > > +		}
-> > > > +	}
-> > > 
-> > > I really don't like the fact that project quota is hiding a data
-> > > flush in the "free_quota_eofblocks" logic. It just strikes me a the
-> > > wrong thing to do because if it's a real ENOSPC we're just going to
-> > > have to do this anyway...
-> > > 
-> > 
-> > I was under the impression that a flush was important for project quotas
-> > based on freeing up reserved metadata space (from our past discussions
-> > on the original eofblocks work). I could have just misunderstood the
-> > point at the time.
-> 
-> It is important - I'm not saying that we should not flush dirty
-> data. What I am disagreeing with is the implementation of data
-> flushing in the patch....
-> 
-> > If so, I can just remove the flush flag on the
-> > eofblocks scan in the logic proposed above and let the inode flush
-> > handle this for both cases.
-> > 
-> > If we go that route, any preference as to whether to keep the support
-> > for doing a flush in eofblocks at all? I included it primarily for the
-> > project quota case. With that dropped, I could just drop the first
-> > couple of patches here.
-> 
-> Yes, you could do that.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
