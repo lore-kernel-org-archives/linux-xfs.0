@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 54B5229DF7
-	for <xfs@oss.sgi.com>; Wed,  2 Apr 2014 10:55:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 486FA8F8066
-	for <xfs@oss.sgi.com>; Wed,  2 Apr 2014 08:55:12 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0657B7F78
+	for <xfs@oss.sgi.com>; Wed,  2 Apr 2014 15:11:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DC0F7304053
+	for <xfs@oss.sgi.com>; Wed,  2 Apr 2014 13:11:18 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cJ0QTG1CdHJTpxl2 for
-	<xfs@oss.sgi.com>; Wed, 02 Apr 2014 08:55:12 -0700 (PDT)
-Date: Wed, 2 Apr 2014 17:55:07 +0200 (CEST)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 1/2] fsx: Add fallocate collapse range operation
-In-Reply-To: <1396452800-25775-1-git-send-email-lczerner@redhat.com>
-Message-ID: <alpine.LFD.2.00.1404021752340.2169@localhost.localdomain>
-References: <1396452800-25775-1-git-send-email-lczerner@redhat.com>
+	cuda.sgi.com with ESMTP id CFrj8aCIjpaa2rJ4 for
+	<xfs@oss.sgi.com>; Wed, 02 Apr 2014 13:11:17 -0700 (PDT)
+Date: Wed, 2 Apr 2014 16:11:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/5] xfs: run an eofblocks scan on ENOSPC/EDQUOT
+Message-ID: <20140402201110.GC3043@laptop.bfoster>
+References: <1396012563-60973-1-git-send-email-bfoster@redhat.com>
+	<1396012563-60973-5-git-send-email-bfoster@redhat.com>
+	<20140331222246.GF17603@dastard>
+	<20140401135518.GC21540@bfoster.bfoster>
+	<20140401211926.GH17603@dastard>
+	<20140401232022.GA15934@bfoster.bfoster>
+	<20140402051103.GL17603@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140402051103.GL17603@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,243 +34,166 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, 2 Apr 2014, Lukas Czerner wrote:
-
-> Date: Wed,  2 Apr 2014 17:33:19 +0200
-> From: Lukas Czerner <lczerner@redhat.com>
-> To: xfs@oss.sgi.com
-> Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
->     Lukas Czerner <lczerner@redhat.com>
-> Subject: [PATCH 1/2] fsx: Add fallocate collapse range operation
+On Wed, Apr 02, 2014 at 04:11:03PM +1100, Dave Chinner wrote:
+> On Tue, Apr 01, 2014 at 07:20:23PM -0400, Brian Foster wrote:
+> > On Wed, Apr 02, 2014 at 08:19:26AM +1100, Dave Chinner wrote:
+> > > On Tue, Apr 01, 2014 at 09:55:18AM -0400, Brian Foster wrote:
+> > > Yes, it means that there is a global flush when a project quota runs
+> > > out of space, but it means that we only do it once and we don't burn
+> > > excessive CPU walking radix trees scanning inodes needlessly every
+> > > time we get a storm of processes hammering project quota ENOSPC.
+> > > 
+> > 
+> > It's not clear to me that excess scanning is an issue, but it seems
 > 
-> This commit adds fallocate FALLOC_FL_COLLAPSE_RANGE support for fsx.
-
-Btw, this actually makes the fsx fail on ext4 and xfs after a while.
-I was trying to find a problem in fsx itself but I think it is
-actually ok. That means that we could possibly have bugs in ext4 and
-xfs collapse range implementation. More eyes are needed on this!
-
-Thanks!
--Lukas
-
+> Have 100 threads hit ENOSPC on the same project quota at the same
+> time on a filesystem with a couple of thousand AGs with a few
+> million cached inode, and then you'll see the problem....
 > 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->  ltp/fsx.c | 107 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 100 insertions(+), 7 deletions(-)
+
+Right, that certainly sounds like a mess if we kicked off a bunch of the
+mini-flush scans. I'm curious how much overhead there would be with the
+flush out of the picture and a scan can actually go ahead and free up
+some space (hopefully) quickly. That's something I'll have to test.
+
+> > orthogonal to how we organize the enospc logic (at least once the flush
+> > is out of the equation). IOW, we'll invoke the scanner with the same
+> > frequency either way. Or maybe you are just referring to scanning
+> > specifically for the purpose of doing flushes as a waste..?
 > 
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index bd1ed76..47d3ee8 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -90,11 +90,12 @@ int			logcount = 0;	/* total ops */
->  #define OP_MAX_LITE	4
->  
->  /* !lite operations */
-> -#define OP_TRUNCATE	4
-> -#define OP_FALLOCATE	5
-> -#define OP_PUNCH_HOLE	6
-> -#define OP_ZERO_RANGE	7
-> -#define OP_MAX_FULL	8
-> +#define OP_TRUNCATE		4
-> +#define OP_FALLOCATE		5
-> +#define OP_PUNCH_HOLE		6
-> +#define OP_ZERO_RANGE		7
-> +#define OP_COLLAPSE_RANGE	8
-> +#define OP_MAX_FULL		9
->  
->  /* operation modifiers */
->  #define OP_CLOSEOPEN	100
-> @@ -111,6 +112,7 @@ char	*temp_buf;			/* a pointer to the current data */
->  char	*fname;				/* name of our test file */
->  int	fd;				/* fd for our test file */
->  
-> +blksize_t	block_size = 0;
->  off_t		file_size = 0;
->  off_t		biggest = 0;
->  char		state[256];
-> @@ -142,6 +144,7 @@ int     mapped_writes = 1;              /* -W flag disables */
->  int     fallocate_calls = 1;            /* -F flag disables */
->  int     punch_hole_calls = 1;           /* -H flag disables */
->  int     zero_range_calls = 1;           /* -z flag disables */
-> +int	collapse_range_calls = 1;	/* -C flag disables */
->  int 	mapped_reads = 1;		/* -R flag disables it */
->  int	fsxgoodfd = 0;
->  int	o_direct;			/* -Z */
-> @@ -321,13 +324,21 @@ logdump(void)
->  				prt("\t******PPPP");
->  			break;
->  		case OP_ZERO_RANGE:
-> -			prt("ZERO    0x%x thru 0x%x\t(0x%x bytes)",
-> +			prt("ZERO     0x%x thru 0x%x\t(0x%x bytes)",
->  			    lp->args[0], lp->args[0] + lp->args[1] - 1,
->  			    lp->args[1]);
->  			if (badoff >= lp->args[0] && badoff <
->  						     lp->args[0] + lp->args[1])
->  				prt("\t******ZZZZ");
->  			break;
-> +		case OP_COLLAPSE_RANGE:
-> +			prt("COLLAPSE 0x%x thru 0x%x\t(0x%x bytes)",
-> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-> +			    lp->args[1]);
-> +			if (badoff >= lp->args[0] && badoff <
-> +						     lp->args[0] + lp->args[1])
-> +				prt("\t******CCCC");
-> +			break;
->  		case OP_SKIPPED:
->  			prt("SKIPPED (no operation)");
->  			break;
-> @@ -949,6 +960,58 @@ do_zero_range(unsigned offset, unsigned length)
->  }
->  #endif
->  
-> +#ifdef FALLOC_FL_COLLAPSE_RANGE
-> +void
-> +do_collapse_range(unsigned offset, unsigned length)
-> +{
-> +	unsigned end_offset;
-> +	int mode = FALLOC_FL_COLLAPSE_RANGE;
-> +
-> +	if (length == 0) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping zero length collapse range\n");
-> +		log4(OP_SKIPPED, OP_COLLAPSE_RANGE, offset, length);
-> +		return;
-> +	}
-> +
-> +	end_offset = offset + length;
-> +	if ((loff_t)end_offset >= file_size) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping collapse range behind EOF\n");
-> +		log4(OP_SKIPPED, OP_COLLAPSE_RANGE, offset, length);
-> +		return;
-> +	}
-> +
-> +	log4(OP_COLLAPSE_RANGE, offset, length, 0);
-> +
-> +	if (testcalls <= simulatedopcount)
-> +		return;
-> +
-> +	if ((progressinterval && testcalls % progressinterval == 0) ||
-> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
-> +		      end_offset <= monitorend))) {
-> +		prt("%lu collapse\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-> +			offset, offset+length, length);
-> +	}
-> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-> +		prt("collapse range: %x to %x\n", offset, length);
-> +		prterr("do_collapse_range: fallocate");
-> +		report_failure(161);
-> +	}
-> +
-> +	memmove(good_buf + offset, good_buf + end_offset,
-> +		file_size - end_offset);
-> +	file_size -= length;
-> +}
-> +
-> +#else
-> +void
-> +do_collapse_range(unsigned offset, unsigned length)
-> +{
-> +	return;
-> +}
-> +#endif
-> +
->  #ifdef HAVE_LINUX_FALLOC_H
->  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
->  void
-> @@ -1123,6 +1186,12 @@ test(void)
->  			goto out;
->  		}
->  		break;
-> +	case OP_COLLAPSE_RANGE:
-> +		if (!collapse_range_calls) {
-> +			log4(OP_SKIPPED, OP_COLLAPSE_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		break;
->  	}
->  
->  	switch (op) {
-> @@ -1165,6 +1234,16 @@ test(void)
->  		TRIM_OFF_LEN(offset, size, file_size);
->  		do_zero_range(offset, size);
->  		break;
-> +	case OP_COLLAPSE_RANGE:
-> +		TRIM_OFF_LEN(offset, size, file_size - 1);
-> +		offset = offset & ~(block_size - 1);
-> +		size = size & ~(block_size - 1);
-> +		if (size == 0) {
-> +			log4(OP_SKIPPED, OP_COLLAPSE_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		do_collapse_range(offset, size);
-> +		break;
->  	default:
->  		prterr("test: unknown operation");
->  		report_failure(42);
-> @@ -1225,6 +1304,9 @@ usage(void)
->  #ifdef FALLOC_FL_ZERO_RANGE
->  "	-z: Do not use zero range calls\n"
->  #endif
-> +#ifdef FALLOC_FL_COLLAPSE_RANGE
-> +"	-C: Do not use collapse range calls\n"
-> +#endif
->  "	-L: fsxLite - no file creations & no file size changes\n\
->  	-N numops: total # operations to do (default infinity)\n\
->  	-O: use oplen (see -o flag) for every op (default random)\n\
-> @@ -1399,6 +1481,7 @@ main(int argc, char **argv)
->  	char	*endp;
->  	char goodfile[1024];
->  	char logfile[1024];
-> +	struct stat statbuf;
->  
->  	goodfile[0] = 0;
->  	logfile[0] = 0;
-> @@ -1410,7 +1493,7 @@ main(int argc, char **argv)
->  
->  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
->  
-> -	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzLN:OP:RS:WZ"))
-> +	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
->  	       != EOF)
->  		switch (ch) {
->  		case 'b':
-> @@ -1513,6 +1596,9 @@ main(int argc, char **argv)
->  		case 'z':
->  			zero_range_calls = 0;
->  			break;
-> +		case 'C':
-> +			collapse_range_calls = 0;
-> +			break;
->  		case 'L':
->  		        lite = 1;
->  			break;
-> @@ -1579,6 +1665,11 @@ main(int argc, char **argv)
->  		prterr(fname);
->  		exit(91);
->  	}
-> +	if (fstat(fd, &statbuf)) {
-> +		prterr("check_size: fstat");
-> +		exit(91);
-> +	}
-> +	block_size = statbuf.st_blksize;
->  #ifdef XFS
->  	if (prealloc) {
->  		xfs_flock64_t	resv = { 0 };
-> @@ -1665,6 +1756,8 @@ main(int argc, char **argv)
->  						  FALLOC_FL_KEEP_SIZE);
->  	if (zero_range_calls)
->  		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
-> +	if (collapse_range_calls)
-> +		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
->  
->  	while (numops == -1 || numops--)
->  		test();
+> Well, lots of concurrent scanning for the same purpose is highly
+> inefficient - look at the amount of additional serialisation in the
+> inode recalim walker that is aimed at reducing concurrency to one
+> reclaim thread per AG at a time...
 > 
+
+Interesting, and I think this touches a bit on what I mean by the
+scanning being somewhat orthogonal to the purpose of this patch. If the
+scanning does turn out to be a real problem in this particular context,
+why not try to improve the efficiency of the scan? We could include this
+kind of per-ag locking for internal scans, or perhaps create a new scan
+mode that exits after freeing a specified amount of space, etc. 
+
+> I expect that if the serialisation on xfs_flush_inodes() isn't
+> sufficient to throttle eofblock scanning concurrency in case like
+> the above then we'll know about it pretty quickly.
+> 
+
+How much space should we expect xfs_flush_inodes() to free up? Using
+your example of the unconditional flush followed by the global scan - it
+seems like it could throttle things temporarily by allowing some set of
+writers to serialize on a flush and hopefully soon after that other
+writers can allocate space again. Once we're past that, those flushing
+threads head into the scan just the same.
+
+So I guess the question is, will the flush satisfy concurrent writers
+long enough for one of the flush inducing threads to get into the scan
+and prevent others from queuing further? If so, it seems like a
+potential positive if the overhead of the flush is less than the
+overhead of the "unbounded" scan in the same scenario. If not, it seems
+like it could also be a potential net negative because we'll effectively
+queue more threads on the flush that could have avoided allocation
+failure were a scan already running and freeing space. I guess that all
+depends on how long the flush takes, how much data is in cache, storage
+hardware, etc. Something else I'll have to experiment with a little
+more I suppose... :)
+
+> > > > simplify things. The helper can run the quota scan and/or the global
+> > > > scan based on the data regarding the situation (i.e., the inode and
+> > > > associated quota characteristics). This allows us to preserve the notion
+> > > > of attempting a lightweight recovery first and a heavyweight recovery
+> > > > second, reserving the inode flush for when space is truly tight.
+> > > > Thoughts?
+> > > 
+> > > It's still damn clunky, IMO. It's still trying to work around the
+> > > fact that project quotas use ENOSPC rather than EDQUOT, and that
+> > > makes the logic rather twisted. And it still has that hidden data
+> > > flush in it so it can't really be called lightweight...
+> > > 
+> > 
+> > Ok. Well if the high level logic is the issue, we could still turn that
+> > inside out a bit to use your EDQUOT/ENOSPC logic, yet still preserve the
+> > standalone eofblocks scan. It might be a few more lines, but perhaps
+> > more clear. E.g.:
+> > 
+> > 	if (ret == -EDQUOT && !enospc) {
+> > 		enospc = 1;
+> > 		xfs_inode_free_quota_eofblocks(ip);
+> > 		goto retry;
+> > 	else if (ret == -ENOSPC && !enospc) {
+> > 		if (!scanned) {
+> > 			struct xfs_eofblocks eofb = {0};
+> > 			...
+> > 			scanned = 1;
+> > 			xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+> > 			goto retry;
+> > 		}
+> > 
+> > 		enospc = 1;
+> > 		xfs_flush_inodes(ip->i_mount);
+> > 		goto retry;
+> > 	}
+> > 
+> > Thoughts on that?
+> 
+> Even more convoluted. :/
+> 
+
+That's pretty close to your example with the exception of adding the
+retry after the scan and the scan/flush order. It loses the EDQUT/ENOSPC
+confusion.
+
+> Look at it this way - I've never been a fan of this "retry write on
+> enospc once" code. It's a necessary evil due to the reality of
+> locking orders and having to back out of the write far enough to
+> safely trigger dirty inode writeback so we *might* be able to write
+> this data. Making this code more finicky and tricky is the last
+> thing I think we should be doing.
+> 
+> I don't have any better ideas at this point - I'm still tired and
+> jetlagged and need to sort out everything for a merge window pull of
+> the current tree, so time for me to think up a creative solution is
+> limited. I'm hoping that you might be able to think of a different
+> way entirely of doing this "write retry on ENOSPC" that dolves all
+> these problems simply and easily ;)
+> 
+
+Fair enough, that's certainly more helpful. ;) We're probably closer on
+this than I thought. I'm not arguing because I think this code is great,
+but rather because the behavior we have seems kind of obtuse in
+particular situations and can be improved with some reasonably small
+changes.
+
+> > We'll handle project quota ENOSPC just as we handle
+> > global ENOSPC with respect to the scan and the flush, but we'll still
+> > have the opportunity to free up a decent amount of space without
+> > initiating I/O. The project quota scan down in free_quota_eofblocks()
+> > might be rendered pointless as well.
+> 
+> Well, therein lies an avenue of investigation: for EOF block
+> trimming, why would we need to do a flush first, even for project
+> quotas? And if we aren't going to flush data, why does it need to be
+> done at this level? Can it be done deep in the quota code where we
+> know exactly what quota ran out of space?
+> 
+
+This is something I considered way back when first looking at this
+(http://oss.sgi.com/archives/xfs/2012-12/msg00112.html). I don't recall
+specifically what made that difficult, perhaps lack of enough
+information to run a scan in a single context. I'll reset and have
+another look at it.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
