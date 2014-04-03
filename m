@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FE7A7F9F
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 14:07:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C7BACAC001
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 12:07:06 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	gUWlUHo42bywGNAU for <xfs@oss.sgi.com>;
-	Thu, 03 Apr 2014 12:07:04 -0700 (PDT)
-Date: Fri, 4 Apr 2014 06:07:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 1/2] xfs: remove efi from AIL in log recovery
-Message-ID: <20140403190700.GM16336@dastard>
-References: <20140325195819.638326569@sgi.com>
-	<20140331202615.264666182@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DF5C17F9C
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 14:21:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CC75A8F8039
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 12:21:47 -0700 (PDT)
+Received: from mail-qa0-f45.google.com (mail-qa0-f45.google.com
+	[209.85.216.45]) by cuda.sgi.com with ESMTP id 6wNgWKH6tdvKVFf0
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 03 Apr 2014 12:21:46 -0700 (PDT)
+Received: by mail-qa0-f45.google.com with SMTP id cm18so683758qab.32
+	for <xfs@oss.sgi.com>; Thu, 03 Apr 2014 12:21:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140331202615.264666182@sgi.com>
+In-Reply-To: <533DB140.8010103@redhat.com>
+References: <1395997399-3000-1-git-send-email-sedat.dilek@gmail.com>
+	<20140328161806.GA31772@thunk.org> <20140331025148.GF16336@dastard>
+	<20140401023711.GE4911@thunk.org> <20140401222823.GJ17603@dastard>
+	<20140402142620.GA6901@thunk.org> <20140403011411.GL16336@dastard>
+	<alpine.LFD.2.00.1404031102310.2124@localhost.localdomain>
+	<CALCETrU=JWigDSv6ymepS2tjL+EkO98VDC03-RSPuhQVk3yvZA@mail.gmail.com>
+	<20140403173504.GB23737@thunk.org> <533DB140.8010103@redhat.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 3 Apr 2014 12:21:25 -0700
+Message-ID: <CALCETrVq1DfpyhThajc9FYA7NLWYt9oX4vadCDcqn+d26aALGA@mail.gmail.com>
+Subject: Re: [Lsf] [PATCH] xfstests-bld: Simplify determination of number of
+	CPUs in build-all
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,102 +37,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, lsf@lists.linux-foundation.org, Sedat Dilek <sedat.dilek@gmail.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, =?ISO-8859-2?Q?Luk=E1=B9_Czerner?= <lczerner@redhat.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-On Mon, Mar 31, 2014 at 03:25:56PM -0500, Mark Tinguely wrote:
-> xlog_recover_process_efi{s}() functions are completing the
-> second half of xfs_bmap_finish() which frees extents. If this
-> operation fails, the EFI will stay on the AIL and prevents
-> the xfs_ail_push all_sync() from completing and the mount will
-> fail to unmount.
-> 
-> Rather than have a special log recovery flag XFS_EFI_RECOVERED
-> to decrement the EFI/EFD counter, call the same decrement function
-> from the log recovery routine that is called then the EFI is added
-> to the AIL from a log write.
-....
-> ===================================================================
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3634,6 +3634,7 @@ xlog_recover_process_data(
->  /*
->   * Process an extent free intent item that was recovered from
->   * the log.  We need to free the extents that it describes.
-> + * The caller will release this and any following EFIs upon error.
->   */
->  STATIC int
->  xlog_recover_process_efi(
-> @@ -3648,6 +3649,13 @@ xlog_recover_process_efi(
->  	xfs_fsblock_t		startblock_fsb;
->  
->  	ASSERT(!test_bit(XFS_EFI_RECOVERED, &efip->efi_flags));
-> +	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
-> +
-> +	/*
-> +	 * Decrement the EFI/EFD counter so the EFI is removed after
-> +	 * processing the EFD or error handling in the caller.
-> +	 */
-> +	xfs_efi_item_unpin(&efip->efi_item, 0);
+On Thu, Apr 3, 2014 at 12:06 PM, Eric Sandeen <sandeen@redhat.com> wrote:
+> On 4/3/14, 11:35 AM, Theodore Ts'o wrote:
+>
+>>>  - There's an undocumented way to write results outside the source
+>>> tree called RESULT_BASE.  It would be great if it were documented and
+>>> spelled consistently.
+>
+> I'm not actually certain that it was intended to be used this way.
+> See 1686f9ab "xfstests: Introduce a results directory"
+> which explains just where this variable came from and what it's
+> for...
 
-This should be done where the EFI is inserted into the AIL during
-recovery, not where it is removed. That means "committed" EFIs in
-the AIL have the same reference count values for both the normal
-transaction case and the log recovery case. Brian already caught a
-bug in your original patch because of this, so lets not leave
-landmines if we can avoid it.
+Yeah.  A real solution should just create and overmount results.
 
-Also, the comment needs to explain why we don't need the reference
-count (i.e. because it's a committed EFI and hence only the active
-EFD can hold a reference against it now) and that on error the
-caller is responsible for removing the EFI from the AIL and freeing
-it.
+Unfortunately, AFAICT it's currently impossible to create a mountpoint
+with no underlying dentry or to overmount a symlink, so this can be a
+bit awkward.
 
-Finally, I don't think there's any need for the XFS_EFI_RECOVERED
-bit anymore, because we either process it (and remove it from the
-AIL) or free it after removing it from the AIL on error and so it
-won't ever get found in the AIL with that flag set....
+>>>  - SCRATCH_MNT needs to be in /etc/fstab.  I think that this should be
+>>> changed or documented.  If the latter, then SCRATCH_DEV seems
+>>> redundant.
+>
+> Hm, I've never needed SCRATCH_MNT in /etc/fstab...
+>
+>> The various test scripts do need to be able to find the device where
+>> the file system lives, and parsing /etc/fstab would be awkward.  So if
+>> your comment is that either the /etc/fstab entry shouldn't be
+>> required, or the xfstests runtime environment should be able to derive
+>> $SCRATCH_DEV automatically from $SCRATCH_MNT, or vice versa, instead
+>
+> I guess I don't know why you'd expect to derive one from the other...
 
-> @@ -3750,13 +3751,23 @@ xlog_recover_process_efis(
->  		}
->  
->  		spin_unlock(&ailp->xa_lock);
-> -		error = xlog_recover_process_efi(log->l_mp, efip);
-> -		spin_lock(&ailp->xa_lock);
-> +		if (error) {
-> +			/*
-> +			 * An error happened while processing a previous
-> +			 * EFI entry. Since the extents are freed in order,
-> +			 * skip the remaining unprocessed EFIs. To do this
-> +			 * the EFI entry counter must be decremented once
-> +			 * here and the entry will be decremented and removed
-> +			 * with the following xfs_efi_release().
-> +			 */
-> +			xfs_efi_item_unpin(&efip->efi_item, 0);
-> +		} else
-> +			error = xlog_recover_process_efi(log->l_mp, efip);
->  		if (error)
-> -			goto out;
-> +			xfs_efi_release(efip, efip->efi_format.efi_nextents);
-> +		spin_lock(&ailp->xa_lock);
->  		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+Sigh.
 
-OK, so this now relies on xfs_efi_release() to remove the EFI from
-the AIL. But the reason the unpin ugliness needs to be done here is
-that we left a stale AIL reference on the EFI when we inserted it
-into the AIL. That's another reason for moving that
-xfs_efi_item_unpin() to the insert code.
+If $SCRATCH_MNT is specified, then the line in /etc/fstab is
+unnecessary.  If $SCRATCH_MNT is not specified, then /etc/fstab will
+do the trick.
 
-Also, I'd prefer the large comment decribing the logic flow goes at
-the head of the function (i.e. describing the overall logic flow of
-the function) and that call should clean up this logic a lot.
+What does not work is specifying $SCRATCH_DIR [sic] but not adding an
+fstab entry.  Oops.
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Andy
 
 _______________________________________________
 xfs mailing list
