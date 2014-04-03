@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 37CB37F81
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 12:05:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0436F304067
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 10:05:52 -0700 (PDT)
-Received: from mail-qc0-f182.google.com (mail-qc0-f182.google.com
-	[209.85.216.182]) by cuda.sgi.com with ESMTP id
-	SX62ZZGDbvxmJHfH (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 Apr 2014 10:05:47 -0700 (PDT)
-Received: by mail-qc0-f182.google.com with SMTP id e16so2217941qcx.27
-	for <xfs@oss.sgi.com>; Thu, 03 Apr 2014 10:05:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.00.1404031102310.2124@localhost.localdomain>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DA3D97F7E
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 12:35:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 57ADDAC001
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 10:35:22 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id T35sdehIfetv4Gyq (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 Apr 2014 10:35:20 -0700 (PDT)
+Date: Thu, 3 Apr 2014 13:35:04 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [Lsf] [PATCH] xfstests-bld: Simplify determination of number of
+	CPUs in build-all
+Message-ID: <20140403173504.GB23737@thunk.org>
 References: <1395997399-3000-1-git-send-email-sedat.dilek@gmail.com>
 	<20140328161806.GA31772@thunk.org> <20140331025148.GF16336@dastard>
 	<20140401023711.GE4911@thunk.org> <20140401222823.GJ17603@dastard>
 	<20140402142620.GA6901@thunk.org> <20140403011411.GL16336@dastard>
 	<alpine.LFD.2.00.1404031102310.2124@localhost.localdomain>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Thu, 3 Apr 2014 10:05:26 -0700
-Message-ID: <CALCETrU=JWigDSv6ymepS2tjL+EkO98VDC03-RSPuhQVk3yvZA@mail.gmail.com>
-Subject: Re: [Lsf] [PATCH] xfstests-bld: Simplify determination of number of
-	CPUs in build-all
+	<CALCETrU=JWigDSv6ymepS2tjL+EkO98VDC03-RSPuhQVk3yvZA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CALCETrU=JWigDSv6ymepS2tjL+EkO98VDC03-RSPuhQVk3yvZA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,103 +31,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-2?Q?Luk=E1=B9_Czerner?= <lczerner@redhat.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, lsf@lists.linux-foundation.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Sedat Dilek <sedat.dilek@gmail.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: xfs@oss.sgi.com, lsf@lists.linux-foundation.org, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Sedat Dilek <sedat.dilek@gmail.com>, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-T24gVGh1LCBBcHIgMywgMjAxNCBhdCAzOjI2IEFNLCBMdWvDocWhIEN6ZXJuZXIgPGxjemVybmVy
-QHJlZGhhdC5jb20+IHdyb3RlOgo+IE9uIFRodSwgMyBBcHIgMjAxNCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+Cj4+IERhdGU6IFRodSwgMyBBcHIgMjAxNCAxMjoxNDoxMSArMTEwMAo+PiBGcm9tOiBE
-YXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+Cj4+IFRvOiBUaGVvZG9yZSBUcydvIDx0
-eXRzb0BtaXQuZWR1Pgo+PiBDYzogU2VkYXQgRGlsZWsgPHNlZGF0LmRpbGVrQGdtYWlsLmNvbT4s
-IGxzZkBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZywKPj4gICAgIGxpbnV4LWV4dDRAdmdlci5r
-ZXJuZWwub3JnLCBsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZywgeGZzQG9zcy5zZ2kuY29t
-Cj4+IFN1YmplY3Q6IFJlOiBbTHNmXSBbUEFUQ0hdIHhmc3Rlc3RzLWJsZDogU2ltcGxpZnkgZGV0
-ZXJtaW5hdGlvbiBvZiBudW1iZXIgb2YKPj4gICAgIENQVXMgaW4gYnVpbGQtYWxsCj4+Cj4+IE9u
-IFdlZCwgQXByIDAyLCAyMDE0IGF0IDEwOjI2OjIwQU0gLTA0MDAsIFRoZW9kb3JlIFRzJ28gd3Jv
-dGU6Cj4+ID4gT24gV2VkLCBBcHIgMDIsIDIwMTQgYXQgMDk6Mjg6MjNBTSArMTEwMCwgRGF2ZSBD
-aGlubmVyIHdyb3RlOgo+PiA+ID4gPiBBbmQgb2YgY291cnNlLCB3aGV0aGVyIGNoYW5nZXMgaW4g
-dGhlIG1haW5saW5lIGtlcm5lbCB0cmVlIGFyZQo+PiA+ID4gPiBtYW51YWxseSBwcm9wYWdhdGVk
-IGNoYW5nZXMgZnJvbSB0aGUgeGZzdGVzdHMuZ2l0IHRyZWUsIG9yIHdoZXRoZXIKPj4gPiA+ID4g
-cHJpbWFyeSBkZXZlbG9wbWVudCBoYXBwZW5zIGluIHRoZSBrZXJuZWwgdHJlZSwgaXMgdWx0aW1h
-dGVseSBnb2luZyB0bwo+PiA+ID4gPiBiZSB1cCB0byB5b3UgYW5kIHRoZSBYRlMgZGV2ZWxvcGVy
-cyB3aG8gaGF2ZSBzdGV3YXJkc2hpcCBvZiB4ZnN0ZXN0cy4KPj4gPiA+ID4gSSdtIG5vdCBzdXJl
-IEkgd291bGQgYmUgdGhhdCBleGNpdGVkIGFib3V0IG1hbnVhbCBwcm9wYWdhdGlvbiBvZgo+PiA+
-ID4gPiBjaGFuZ2VzIGZyb20gb25lIGdpdCB0cmVlIHRvIGFub3RoZXIsIGJ1dCB0aGF0IGlzIG9m
-IGNvdXJzZSwgdXAgdG8KPj4gPiA+ID4geW91Lgo+PiA+ID4KPj4gPiA+IEFuZCB0aGlzIGlzIGV4
-YWN0bHkgbXkgcG9pbnQsIFRlZC4gQWdhaW4sIHlvdSBhcmUgcHJlc3VtaW5nIHRoYXQgdGhlCj4+
-ID4gPiBpbXBsZW1lbnRhdGlvbiBpcyBnb2luZyB0byByZXF1aXJlIHN5bmNpbmcgY29tbWl0cyBh
-Y3Jvc3MgZGlzcGFyYXRlCj4+ID4gPiBnaXQgdHJlZXMgYW5kIG90aGVyIHN1Y2ggZ2FtZXMgd2ls
-bCBiZSBuZWVkZWQgdG8gbWFpbnRhaW4gc2VwYXJhdGUKPj4gPiA+IHBhY2thZ2VzLiBOb3RoaW5n
-IGNvdWxkIGJlIGZ1cnRoZXIgZnJvbSB0aGUgdHJ1dGg6IHdlIGFscmVhZHkgaGF2ZQo+PiA+ID4g
-dGhpcyBwcm9ibGVtIHdpdGggdGhlIHNoYXJlZCBYRlMga2VybmVsL3VzZXJzcGFjZSBjb2RlIGFu
-ZCBpdCdzIGEKPj4gPiA+IHJveWFsIFBJVEEga2VlcGluZyB0aGVtIGluIHN5bmMuIEhlbmNlIGlu
-dHJvZHVjaW5nIHRoZSBzYW1lCj4+ID4gPiBtYWludGVuYW5jZSBwcm9ibGVtIHdpdGggbmV3IGNv
-ZGUgYW5kIGluZnJhc3RydWN0dXJlIGlzIGhpZ2hseQo+PiA+ID4gdW5kZXNpcmFibGUgYW5kIHNv
-bWV0aGluZyB3ZSdsbCB0cnkgdG8gYXZvaWQgYXQgYWxsIGNvc3RzLgo+PiA+Cj4+ID4gQWN0dWFs
-bHksIEkgd2FzIHByZXN1bWluZyB0aGF0IHRoZSB0aGluZyB0aGF0IG1ha2VzIHRoZSBtb3N0IHNl
-bnNlIHdhcwo+PiA+IHRvIG1vdmUgYWxsIG9yIG1vc3Qgb2YgdGhlIHRlc3RzIGluIHhmc3Rlc3Rz
-IGludG8gdGhlIGtlcm5lbCB0ZXN0cwo+PiA+IHRyZWUuICBBbmQgdGhlbiB5b3UgY29tcGxhaW5l
-ZCB0aGF0IEkgd2FzIG1ha2luZyBhIHByZXN1bXB0aW9uIHRoYXQKPj4gPiB0aGlzIHdhcyB0aGUg
-b25seSBzYW5lIHRoaW5nIHRvIGRvLiAgVGhhdCdzIHdoeSBJIHNhaWQsICJpZiB5b3Ugd2FudAo+
-PiA+IHRvIGRvIHNvbWV0aGluZyBpbnNhbmUsIGJlIG15IGd1ZXN0Ii4KPj4KPj4gU28sIHlvdSB0
-aGluayB0aGVyZSdzIG9ubHkgb25lICJzYW5lIiBzb2x1dGlvbi4gVGhhdCdzIGEgbWFzc2l2ZQo+
-PiBhc3N1bXB0aW9uLCBhbmQgdGhhdCdzIHdoYXQgSSdtIHBvaW50aW5nIG91dC4KPj4KPj4gSXQn
-cyBwZXJmZWN0bHkgc2FuZSB0byB0cmVhdCB0aGUga2VybmVsIHRyZWUgYXMganVzdCBhbm90aGVy
-Cj4+IGRvd25zdHJlYW0gY29uc3VtZXIgb2YgeGZzdGVzdHMsIGFuZCBzaW1wbGUgYWRkIGluZnJh
-c3RydWN0dXJlIHRvCj4+IHRoZSBrZXJuZWwgdHJlZSB0byBzb3VyY2UgYW5kIGJ1aWxkIHhmc3Rl
-c3RzIGZyb20gdGhlIHVwc3RyZWFtIHJlcG8uCj4KPiBUaGF0J3Mgd2hhdCBJIHRoaW5rIGlzIHRo
-ZSBiZXN0IGFwcHJvYWNoIGFzIHdlbGwuIFdlJ2xsIHN0aWxsIGhhdmUKPiBzZXBhcmF0ZSB0cmVl
-IGZvciB0aGUgeGZzdGVzdHMgd2hpY2ggd29ya3MgZm9yIGV2ZXJ5b25lIGFuZAo+IGluZnJhc3Ry
-dWN0dXJlIGluIGtlcm5lbCB0cmVlIHdoaWNoIHdpbGwgc2ltcGx5IHVzZSBpdC4KPgo+IExvb2tp
-bmcgYXQgcmN1dG9ydHVyZSB0ZXN0cyBpbiBrZXJuZWwgdHJlZSwgdGhleSBhcmUgaW5kZWVkIHVz
-aW5nCj4gcWVtdSBhbmQgaXQgbG9va3MgbGlrZSB0aGF0IHRoZXkgYXJlIHJ1bm5pbmcgdGhvc2Ug
-dGVzdHMgZGlyZWN0bHkKPiBmcm9tIGluaXQgc2NyaXB0IC0gd2UgcmVhbGx5IG5lZWQgYW4gaW1h
-Z2UgdG8gYm9vdCBmcm9tLgo+Cj4gV2UgY291bGQgdXNlIHZpcnRtZQo+Cj4gaHR0cHM6Ly9naXQu
-a2VybmVsLm9yZy9jZ2l0L3V0aWxzL2tlcm5lbC92aXJ0bWUvdmlydG1lLmdpdC8KCnZpcnRtZSB3
-aWxsIGV2ZW50dWFsbHkgYmUgYWJsZSB0byB1c2UgYSBzZXBhcmF0ZSBPUyBpbWFnZSwgcHJvYmFi
-bHkgaW4KdGhlIGZvcm0gb2YgYSBkaXJlY3Rvcnkgd2l0aCBhcHByb3ByaWF0ZSB4YXR0cnMgc2V0
-LiAgSSBjb3VsZCBzdXBwb3J0CmltYWdlcyBvbiBhIGJsb2NrIGRldmljZSB0b28sIGJ1dCB0aGF0
-J3MgYm9yaW5nIDopCgo+Cj4gd2hpY2ggc2VlbXMgbGlrZSBhIGJlc3Qgb3B0aW9uLiBBbHRlcm5h
-dGl2ZWx5IHdlIGNvdWxkIGFsbG93IHVzZXJzCj4gcGFzc2luZyB0aGVpciBvd24gaW1hZ2UgYXMg
-d2VsbC4KPgo+IFRoZW4gd2Ugd291bGQgbmVlZCBpbml0IHNjcmlwdCB3aGljaCB3b3VsZCBkb3du
-bG9hZCBhbmQgYnVpbGQKPiB4ZnN0ZXN0cywgeGZzcHJvZ3MgYW5kIHBvc3NpYmxlIG90aGVyIGRl
-cGVuZGVuY2llcyAoc3VjaCBhcyBmaW8pCj4gYW5kIGZpbmFsbHkgcnVuIHhmc3Rlc3RzIGl0c2Vs
-Zi4gQ29sbnNvbGUgb3V0cHV0IGZyb20gdGhlIHFlbXUgY2FuCj4gYmUgcmVkaXJlY3RlZCB0byB0
-aGUgZmlsZSBpbiB0aGUgaG9zdCwgc28gdGhhdCdzIG9rLCBidXQgd2Ugc3RpbGwKPiBuZWVkIGEg
-d2F5IHRvIHJldHJpZXZlICdyZXR1bHRzJyBkaXJlY3RvcnkgZnJvbSB0aGUgdGVzdC4KPgo+IFdl
-J2QgYWxzbyBuZWVkIGEgZGV2aWNlcyB0byB0ZXN0IG9uIChhdCBsZWFzdCBURVNUX0RFViBhbmQK
-PiBTQ1JBVENIX0RFVikuIFRob3NlIGNvdWxkIGJlIGZpbGVzIGEgb2Ygc2V0IHNpemUgZXhwb3J0
-ZWQgdG8gcWVtdSBhcwo+IGJsb2NrIGRldmljZXMuCgpJIGp1c3QgcHVzaGVkIGEgcGFpciBvZiBz
-YW1wbGUgc2NyaXB0cyB0aGF0IGludm9rZXMgeGZzdGVzdHMgaW5zaWRlCnZpcnRtZS4gIFRoZXkn
-cmUgYSB0b3RhbCBvZiA0MiBsaW5lcywgaW5jbHVkaW5nIGNvbW1lbnRzIGFuZAppbnN0cnVjdGlv
-bnMuICBZb3UgY2FuIG5vdyBkbzoKClBBVEg9LjokUEFUSCBzYW1wbGVzL3hmc3Rlc3RzIHRlc3Qu
-aW1nIHNjcmF0Y2guaW1nIH4vYXBwcy94ZnN0ZXN0cy8KCmZyb20gaW5zaWRlIGEgdmlydG1lIGNo
-ZWNrb3V0LiAgWW91J2xsIGhhdmUgdG8gY29tcGlsZSB4ZnN0ZXN0cyBmaXJzdCwgdGhvdWdoLgoK
-VGhleSB3aWxsIGJlIGNvbnNpZGVyYWJseSBtb3JlIHVzZWZ1bCBvbmNlIEkgYWRkIHJlYWQtd3Jp
-dGUgaG9zdAp3aW5kb3dzIHRvIHZpcnRtZS4KCklmIGFueW9uZSB3YW50cyB0byB1c2UgdmlydG1l
-IGZvciBzb21ldGhpbmcgb3RoZXIgdGhhbgpleHBlcmltZW50YXRpb24sIGxldCBtZSBrbm93IGFu
-ZCB3ZSBjYW4gdGFsayBhYm91dCBpbnRlcmZhY2UKc3RhYmlsaXR5LgoKU29tZSB4ZnN0ZXN0cyB0
-aG91Z2h0czoKCiAtIFRoZXJlJ3MgYW4gdW5kb2N1bWVudGVkIHdheSB0byB3cml0ZSByZXN1bHRz
-IG91dHNpZGUgdGhlIHNvdXJjZQp0cmVlIGNhbGxlZCBSRVNVTFRfQkFTRS4gIEl0IHdvdWxkIGJl
-IGdyZWF0IGlmIGl0IHdlcmUgZG9jdW1lbnRlZCBhbmQKc3BlbGxlZCBjb25zaXN0ZW50bHkuCgog
-LSB4ZnN0ZXN0cyBkb2VzIG5vdCBhcHByZWNpYXRlIHVzaW5nIHN5bWxpbmtzIHRvIGRldmljZSBu
-b2Rlcy4KCiAtIFNDUkFUQ0hfTU5UIG5lZWRzIHRvIGJlIGluIC9ldGMvZnN0YWIuICBJIHRoaW5r
-IHRoYXQgdGhpcyBzaG91bGQgYmUKY2hhbmdlZCBvciBkb2N1bWVudGVkLiAgSWYgdGhlIGxhdHRl
-ciwgdGhlbiBTQ1JBVENIX0RFViBzZWVtcwpyZWR1bmRhbnQuCgpTb21lIHZpcnRtZSB0aG91Z2h0
-czoKCi0gLS1zY3JpcHQtc2ggaXMgYXdrd2FyZC4gIFN1Z2dlc3Rpb25zIGZvciBhIGJldHRlciBp
-bnRlcmZhY2UgYXJlIHdlbGNvbWUuCgogLSAgSXQgd291bGQgYmUgZ3JlYXQgaWYgdGhlIHZpcnRj
-b25zb2xlIGRyaXZlciB3ZXJlIGxlc3MgYnVnZ3kuICBFdmVuCnRoZSB2aXJ0dWFsaXplZCB0dHlT
-MCBpcyBzbG93IGVub3VnaCB0byBhY2NvdW50IGZvciBhIHNpZ25pZmljYW50CmZyYWN0aW9uIG9m
-IGJvb3QgdGltZS4gIEl0IHdvdWxkIGFsc28gYmUgZ3JlYXQgaWYgdGhlIGNvbm5lY3Rpb24KYmV0
-d2VlbiB2aXJ0aW8gcG9ydHMgYW5kIGh2YyBkZXZpY2VzIHdlcmUgZXhwb3NlZCBpbiBzeXNmcyBh
-bmQgdGhyb3VnaAovZGV2IHN5bWxpbmtzLgoKIC0gZWFybHlwcmludGs9dmlydGNvbnNvbGUgd291
-bGQgYmUgYXdlc29tZS4gIFRoaXMgbWlnaHQgbmVlZCBoZWxwCmZyb20gcWVtdSwgdGhvdWdoLiAg
-T3IgbWF5YmUgdGhlcmUncyBhIHdheSB0byBnZXQgdGhlIGRlYnVnIHBvcnQgdG8Kd29yayBmb3Ig
-dGhhdC4KCiAtIEkgc2hvdWxkIHByb2JhYmx5IGFkZCBzaW1wbGUgd2F5IHRvIHVzZSBmb3JjaWJs
-eSBjYWNoZWQgZGlza3MuCgotLUFuZHkKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
-c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Apr 03, 2014 at 10:05:26AM -0700, Andy Lutomirski wrote:
+> 
+> virtme will eventually be able to use a separate OS image, probably in
+> the form of a directory with appropriate xattrs set.  I could support
+> images on a block device too, but that's boring :)
+
+When you say OS image, you mean "root file system, right"?  One of the
+reasons why I'm actually build an actual root-file system image, and
+didn't try the virtme approach was that I wanted to boot 32-bit
+kernels on my development machine, which is 64-bit.
+
+Having a 32-bit chroot environment would certainly work, though, and
+would save the effort of creating the root file system image....  (and
+of course having a 32-bit userspace also is a great way of exercising
+the ioctl compatibility code paths :-).
+
+> from inside a virtme checkout.  You'll have to compile xfstests first, though.
+
+Fortunately, xfstests-bld will handle do this for you, since it grabs
+and builds all of the depedencies automatically.  More importantly, it
+allows the dependencies to be saved as part of the test output since
+that's important when trying to have other people understand how to
+reproduce a particular test result (since sometimes the latest
+xfstests requires the latest xfs_io from xfsprogs, so it's a bad idea
+to depend on the version of xfsprogs shipped by your distribution).
+For example, for this merge window, I've been using the following to
+do my tests:
+
+fio		fio-2.1-19-g0b14f0a (Thu, 23 May 2013 21:27:54 +0200)
+quota		0d0a674 (Tue, 26 Mar 2013 17:13:33 +0100)
+xfsprogs	v3.2.0-alpha2-60-gaa210c4 (Thu, 13 Mar 2014 21:23:50 +1100)
+xfstests-bld	1efde7a (Tue, 1 Apr 2014 14:42:07 -0400)
+xfstests	linux-v3.8-336-g3948694 (Thu, 13 Mar 2014 15:20:54 +1100)
+
+> They will be considerably more useful once I add read-write host
+> windows to virtme.
+
+Yes, you definitely want that for the results directories.
+
+>  - There's an undocumented way to write results outside the source
+> tree called RESULT_BASE.  It would be great if it were documented and
+> spelled consistently.
+
+There are a bunch of inconsistencies, which I've chalked up to
+historical accidents and a desire to not break compatibility with
+developers' test runners.  You mount the $SCRATCH_DIR on SCRATCH_MNT
+but you mount $TEST_DEV on $TEST_DIR, for example.  I've just learned
+to live with it....
+
+>  - SCRATCH_MNT needs to be in /etc/fstab.  I think that this should be
+> changed or documented.  If the latter, then SCRATCH_DEV seems
+> redundant.
+
+The various test scripts do need to be able to find the device where
+the file system lives, and parsing /etc/fstab would be awkward.  So if
+your comment is that either the /etc/fstab entry shouldn't be
+required, or the xfstests runtime environment should be able to derive
+$SCRATCH_DEV automatically from $SCRATCH_MNT, or vice versa, instead
+of having the user specify both, I'd agree that would be nice, but
+that's why I put together scripts like the ones I have in xfstests-bld
+--- to make life easier.  :-)
+
+Cheers,
+
+						- Ted
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
