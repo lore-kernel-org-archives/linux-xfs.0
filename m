@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 268F47FB6
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 16:23:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0AEFC8F80B5
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 14:23:26 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 64DB87FB4
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 16:26:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5643F304066
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 14:26:45 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	p3lD35eSLc4wMleS for <xfs@oss.sgi.com>;
-	Thu, 03 Apr 2014 14:23:24 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1WVp6Y-0002uH-L0
-	for xfs@oss.sgi.com; Fri, 04 Apr 2014 08:23:22 +1100
-Date: Fri, 4 Apr 2014 08:23:22 +1100
+	tcKFnmEnxTCxsHiU for <xfs@oss.sgi.com>;
+	Thu, 03 Apr 2014 14:26:39 -0700 (PDT)
+Date: Fri, 4 Apr 2014 08:26:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS updates] XFS development tree branch, for-next, updated.
-	xfs-for-linus-v3.14-rc1-2-12968-ga6cf33b
-Message-ID: <20140403212322.GO17603@dastard>
-References: <20140403211643.00BE629DF9@oss.sgi.com>
+Subject: Re: [PATCH 1/2] fsx: Add fallocate collapse range operation
+Message-ID: <20140403212637.GP17603@dastard>
+References: <1396452800-25775-1-git-send-email-lczerner@redhat.com>
+	<alpine.LFD.2.00.1404021752340.2169@localhost.localdomain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140403211643.00BE629DF9@oss.sgi.com>
+In-Reply-To: <alpine.LFD.2.00.1404021752340.2169@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,43 +26,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Apr 03, 2014 at 04:16:41PM -0500, xfs@oss.sgi.com wrote:
-> This is an automated email from the git hooks/post-receive script. It was
-> generated because a ref change was pushed to the repository containing
-> the project "XFS development tree".
-> 
-> The branch, for-next has been updated
->   a6cf33b Merge branch 'xfs-bug-fixes-for-3.15-3' into for-next
->   c88547a xfs: fix directory hash ordering bug
->   805eeb8 xfs: extra semi-colon breaks a condition
->       from  fe986f9d88ab8079c91669b7f175081f15491a80 (commit)
-> 
-> Those revisions listed above that are new to this repository have
-> not appeared on any other notification email; so we list those
-> revisions in full, below.
-
-Folks, this is the branch I plan to tag and send to Linus to pull
-tomorrow morning. It would be appreciated if people can run eyes
-over it and test it before I do that.
-
-FWIW, I plan to get all the other DIO/getblocks data corruption
-issues sorted out and send them as a separate pull request (possibly
-for -rc2) once they have had further testing.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBBcHIgMDIsIDIwMTQgYXQgMDU6NTU6MDdQTSArMDIwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIFdlZCwgMiBBcHIgMjAxNCwgTHVrYXMgQ3plcm5lciB3cm90ZToKPiAKPiA+
+IERhdGU6IFdlZCwgIDIgQXByIDIwMTQgMTc6MzM6MTkgKzAyMDAKPiA+IEZyb206IEx1a2FzIEN6
+ZXJuZXIgPGxjemVybmVyQHJlZGhhdC5jb20+Cj4gPiBUbzogeGZzQG9zcy5zZ2kuY29tCj4gPiBD
+YzogbGludXgtZXh0NEB2Z2VyLmtlcm5lbC5vcmcsIGxpbnV4LWZzZGV2ZWxAdmdlci5rZXJuZWwu
+b3JnLAo+ID4gICAgIEx1a2FzIEN6ZXJuZXIgPGxjemVybmVyQHJlZGhhdC5jb20+Cj4gPiBTdWJq
+ZWN0OiBbUEFUQ0ggMS8yXSBmc3g6IEFkZCBmYWxsb2NhdGUgY29sbGFwc2UgcmFuZ2Ugb3BlcmF0
+aW9uCj4gPiAKPiA+IFRoaXMgY29tbWl0IGFkZHMgZmFsbG9jYXRlIEZBTExPQ19GTF9DT0xMQVBT
+RV9SQU5HRSBzdXBwb3J0IGZvciBmc3guCj4gCj4gQnR3LCB0aGlzIGFjdHVhbGx5IG1ha2VzIHRo
+ZSBmc3ggZmFpbCBvbiBleHQ0IGFuZCB4ZnMgYWZ0ZXIgYSB3aGlsZS4KPiBJIHdhcyB0cnlpbmcg
+dG8gZmluZCBhIHByb2JsZW0gaW4gZnN4IGl0c2VsZiBidXQgSSB0aGluayBpdCBpcwo+IGFjdHVh
+bGx5IG9rLiBUaGF0IG1lYW5zIHRoYXQgd2UgY291bGQgcG9zc2libHkgaGF2ZSBidWdzIGluIGV4
+dDQgYW5kCj4geGZzIGNvbGxhcHNlIHJhbmdlIGltcGxlbWVudGF0aW9uLiBNb3JlIGV5ZXMgYXJl
+IG5lZWRlZCBvbiB0aGlzIQoKTm8gc3VycHJpc2UsIHJlYWxseS4gQXMgaXQgaXMsIHlvdXIgcHJl
+dmlvdXMgWkVST19SQU5HRSBhZGRpdGlvbnMKY2F1c2VkIHByb2JsZW1zIGZvciBYRlMsIGFuZCB0
+aG9zZSBhcmUgbW9zdGx5IGZpeGVkIGluIHRoZSA2IHBhdGNoCnNlcmllcyBJIHNlbnQgYmVmb3Jl
+IExTRk1NLiAgSGVuY2UgSSB3b3VsZG4ndCBiZSBzdXJwcmlzZWQgaWYgdGhhdCdzCndoYXQgeW91
+IGFyZSBzZWVpbmcgKG9uIFhGcywgYXQgbGVhc3QpIGFuZCBpdCdzIG5vdCBhY3R1YWxseQpDT0xM
+QVBTRV9SQU5HRSB0aGF0IGlzIGNhdXNpbmcgcHJvYmxlbXMuLi4KCkNoZWVycywKCkRhdmUuCi0t
+IApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5j
+b20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
