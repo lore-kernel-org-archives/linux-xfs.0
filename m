@@ -1,15 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8E4E47F93
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2014 15:48:41 -0500 (CDT)
-Message-ID: <533DC928.7080306@sgi.com>
-Date: Thu, 03 Apr 2014 15:48:40 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfs: free the EFI entries from AIL on forced shutdown
-References: <20140325195733.510384972@sgi.com>
-	<20140325195819.740387237@sgi.com> <20140403193414.GN16336@dastard>
-In-Reply-To: <20140403193414.GN16336@dastard>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, xfs-bug-fixes-for-3.15-3,
+	created. xfs-for-linus-v3.14-rc1-2-12927-gc88547a
+Message-Id: <20140403211618.B49477FB3@oss.sgi.com>
+Date: Thu,  3 Apr 2014 16:16:17 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,303 +12,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 04/03/14 14:34, Dave Chinner wrote:
-> On Tue, Mar 25, 2014 at 03:06:35PM -0500, Mark Tinguely wrote:
->> The extent free intention (EFI) and extent free done (EFD)
->> log items are in separate transactions. It is possible that
->> the EFI can be pushed to the AIL before a forced shutdown
->> where it gets stuck for following reasons:
->>
->>   No complete EFD in the transaction. This can happen if the
->>   transaction fails to reserve space or the freeing the extent
->>   fails in xfs_bmap_finish().
->>
->>   EFD IOP Abort processing. If xfs_trans_cancel() is called with
->>   an abort flag, or if the xfs_trans_commit() is called when the
->>   file system is in forced shutdown or if the log buffer write fails,
->>   then the EFD iop commands will not remove the EFI from the AIL.
->>
->> If the EFI entry is left on the AIL, xfs_ail_push all_sync() will
->> fail to complete, the unmount will hang, and a reboot is required
->> to get the complete the unmount.
->>
->> Do not free the EFI structure immediately on forced shutdowns, but
->> instead use the IOP calls to match the EFI/EFD entries. A small
->> wrinkle in the mix is the EFI is not automatically placed on the
->> AIL by the IOP routines in the cases but may have made it to the
->> AIL before the abort. We now have to check if the EFI is on the AIL
->> in the abort IOP cases.
->>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->> ---
->> Dave, as I tried to explain, if the error in extent free happen early
->> enough, the EFD is not usable and is not in the transaction to cause
->> IOP commands to clean up the EFI. It too must be done manually.
->>
->> The "in the AIL" test must be done in the abort IOP commands.
->
-> I still don't see the reason behind these assertions. It just
-> doesn't make any sense to me that it can't be handled once the EFI
-> has been attached to the EFD, nor why checking AIL status in
-> __xfs_efi_release() does not work correctly...
->
->>   fs/xfs/xfs_bmap_util.c    |   21 +++++++++++++++----
->>   fs/xfs/xfs_extfree_item.c |   49 +++++++++++++++++++++++++++++++++-------------
->>   fs/xfs/xfs_log_recover.c  |    3 +-
->>   fs/xfs/xfs_trans.h        |    2 -
->>   4 files changed, 56 insertions(+), 19 deletions(-)
->>
->> Index: b/fs/xfs/xfs_bmap_util.c
->> ===================================================================
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -116,12 +116,14 @@ xfs_bmap_finish(
->>
->>   	error = xfs_trans_reserve(ntp,&tres, 0, 0);
->>   	if (error)
->> -		return error;
->> +		goto error_return;
->> +
->>   	efd = xfs_trans_get_efd(ntp, efi, flist->xbf_count);
->>   	for (free = flist->xbf_first; free != NULL; free = next) {
->>   		next = free->xbfi_next;
->> -		if ((error = xfs_free_extent(ntp, free->xbfi_startblock,
->> -				free->xbfi_blockcount))) {
->> +		error = xfs_free_extent(ntp, free->xbfi_startblock,
->> +				free->xbfi_blockcount);
->> +		if (error) {
->>   			/*
->>   			 * The bmap free list will be cleaned up at a
->>   			 * higher level.  The EFI will be canceled when
->> @@ -136,13 +138,24 @@ xfs_bmap_finish(
->>   						   (error == EFSCORRUPTED) ?
->>   						   SHUTDOWN_CORRUPT_INCORE :
->>   						   SHUTDOWN_META_IO_ERROR);
->> -			return error;
->> +			goto error_return;
->>   		}
->>   		xfs_trans_log_efd_extent(ntp, efd, free->xbfi_startblock,
->>   			free->xbfi_blockcount);
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-^^^^^^
-  here is where the EFD is placed in the transaction. It cannot be placed
-  in the transaction earlier because it is not complete.
+The branch, xfs-bug-fixes-for-3.15-3 has been created
+        at  c88547a8119e3b581318ab65e9b72f27f23e641d (commit)
 
->>   		xfs_bmap_del_free(flist, NULL, free);
->>   	}
->>   	return 0;
->> +
->> + error_return:
->> +	/*
->> +	 * No EFD in the transaction matching the EFI can be used at this
->> +	 * point Manually release the EFI and remove from AIL if necessary.
->> +	 * If the EFI did not make it into the AIL, then the transaction
->> +	 * cancel of the EFI will decrement the EFI/EFD counter and will not
->> +	 * attempt to remove itself from the AIL.
->> +	 */
->> +	xfs_efi_release(efi, efi->efi_format.efi_nextents, 0);
->> +	return error;
->
-> This is inconsistent from a high level logic point of view. The EFI
-> is attached to the EFD after a call to xfs_trans_get_efd() and so
-> cleanup on failure should always occur through the IOP* interfaces
-> (specifically xfs_efd_item_unlock() with an aborted log item).
->
-> The only case where a xfs_efi_release() call is required is the
-> xfs_trans_reserve() failure case, where nothing in the current
-> transaction context owns the reference on the EFI we are going to
-> pass to the EFD.
+- Log -----------------------------------------------------------------
+commit c88547a8119e3b581318ab65e9b72f27f23e641d
+Author: Mark Tinguely <tinguely@sgi.com>
+Date:   Fri Apr 4 07:10:49 2014 +1100
 
-The EFD is not in the transaction in the failed xfs_extent_free failure 
-case and there is not efd IOP call.
+    xfs: fix directory hash ordering bug
+    
+    Commit f5ea1100 ("xfs: add CRCs to dir2/da node blocks") introduced
+    in 3.10 incorrectly converted the btree hash index array pointer in
+    xfs_da3_fixhashpath(). It resulted in the the current hash always
+    being compared against the first entry in the btree rather than the
+    current block index into the btree block's hash entry array. As a
+    result, it was comparing the wrong hashes, and so could misorder the
+    entries in the btree.
+    
+    For most cases, this doesn't cause any problems as it requires hash
+    collisions to expose the ordering problem. However, when there are
+    hash collisions within a directory there is a very good probability
+    that the entries will be ordered incorrectly and that actually
+    matters when duplicate hashes are placed into or removed from the
+    btree block hash entry array.
+    
+    This bug results in an on-disk directory corruption and that results
+    in directory verifier functions throwing corruption warnings into
+    the logs. While no data or directory entries are lost, access to
+    them may be compromised, and attempts to remove entries from a
+    directory that has suffered from this corruption may result in a
+    filesystem shutdown.  xfs_repair will fix the directory hash
+    ordering without data loss occuring.
+    
+    [dchinner: wrote useful a commit message]
+    
+    cc: <stable@vger.kernel.org>
+    Reported-by: Hannes Frederic Sowa <hannes@stressinduktion.org>
+    Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+    Reviewed-by: Ben Myers <bpm@sgi.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 805eeb8e04706a16cb0b23fd4c4abbb0bc7df82d
+Author: Dan Carpenter <dan.carpenter@oracle.com>
+Date:   Fri Apr 4 06:56:30 2014 +1100
+
+    xfs: extra semi-colon breaks a condition
+    
+    There were some extra semi-colons here which mean that we return true
+    unintentionally.
+    
+    Fixes: a49935f200e2 ('xfs: xfs_check_page_type buffer checks need help')
+    Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+-----------------------------------------------------------------------
 
 
->
->>   }
->>
->>   int
->> Index: b/fs/xfs/xfs_extfree_item.c
->> ===================================================================
->> --- a/fs/xfs/xfs_extfree_item.c
->> +++ b/fs/xfs/xfs_extfree_item.c
->> @@ -56,15 +56,22 @@ xfs_efi_item_free(
->>    */
->>   STATIC void
->>   __xfs_efi_release(
->> -	struct xfs_efi_log_item	*efip)
->> +	struct xfs_efi_log_item	*efip,
->> +	int			abort)
->>   {
->>   	struct xfs_ail		*ailp = efip->efi_item.li_ailp;
->>
->>   	if (atomic_dec_and_test(&efip->efi_refcount)) {
->>   		spin_lock(&ailp->xa_lock);
->> -		/* xfs_trans_ail_delete() drops the AIL lock. */
->> -		xfs_trans_ail_delete(ailp,&efip->efi_item,
->> -				     SHUTDOWN_LOG_IO_ERROR);
->> +		/*
->> +		 * The EFI may not be on the AIL on abort.
->> +		 * xfs_trans_ail_delete() drops the AIL lock.
->> +		 */
->> +		if (abort)
->> +			spin_unlock(&ailp->xa_lock);
->> +		else
->> +			xfs_trans_ail_delete(ailp,&efip->efi_item,
->> +					     SHUTDOWN_LOG_IO_ERROR);
->>   		xfs_efi_item_free(efip);
->>   	}
->>   }
->
-> "Abort" is not necessary. If it's the last reference, and the EFI is
-> in the AIL, then it needs to be removed. i.e. the check shoul dbe
-> against XFS_LI_IN_AIL, not against a flag passed in by the caller.
-
-You are mistaken. It may or may not be in the AIL.
-
->
->> @@ -148,10 +155,10 @@ xfs_efi_item_unpin(
->>   		ASSERT(!(lip->li_flags&  XFS_LI_IN_AIL));
->>   		if (lip->li_desc)
->>   			xfs_trans_del_item(lip);
->> -		xfs_efi_item_free(efip);
->> +		__xfs_efi_release(efip, 1);
->>   		return;
->>   	}
->> -	__xfs_efi_release(efip);
->> +	__xfs_efi_release(efip, 0);
->>   }
->>
->>   /*
->> @@ -173,8 +180,9 @@ STATIC void
->>   xfs_efi_item_unlock(
->>   	struct xfs_log_item	*lip)
->>   {
->> +	/* EFI will not be on the AIL if called on abort */
->
-> If that is true, then ASSERT() it rather than comment about it.
->
->>   	if (lip->li_flags&  XFS_LI_ABORTED)
->> -		xfs_efi_item_free(EFI_ITEM(lip));
->> +		__xfs_efi_release(EFI_ITEM(lip), 1);
->>   }
->>
->>   /*
->> @@ -310,11 +318,12 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf
->>    */
->>   void
->>   xfs_efi_release(xfs_efi_log_item_t	*efip,
->> -		uint			nextents)
->> +		uint			nextents,
->> +		int			abort)
->>   {
->>   	ASSERT(atomic_read(&efip->efi_next_extent)>= nextents);
->>   	if (atomic_sub_and_test(nextents,&efip->efi_next_extent)) {
->> -		__xfs_efi_release(efip);
->> +		__xfs_efi_release(efip, abort);
->>   		/* efip may now have been freed, do not reference it again. */
->>   	}
->>   }
->> @@ -417,8 +426,19 @@ STATIC void
->>   xfs_efd_item_unlock(
->>   	struct xfs_log_item	*lip)
->>   {
->> -	if (lip->li_flags&  XFS_LI_ABORTED)
->> -		xfs_efd_item_free(EFD_ITEM(lip));
->> +	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
->> +
->> +	if (!(lip->li_flags&  XFS_LI_ABORTED))
->> +		return;
->> +
->> +	/* Free the EFI when aborting a commit. The EFI will be either
->> +	 * added to the AIL in a CIL push before this abort or unlocked
->> +	 * before the EFD unlock. In either case we can check the AIL
->> +	 * status now.
->> +	 */
->
-> We are not freeing the EFI here - we are simply releasing the
-> reference the EFD holds on it because we are about to free the EFD.
-> Nothing else actually matters here - we don't care whether the EFI
-> is in the AIL or not, because that can be handled internally to
-> the xfs_efi_release() code....
-
-Again. The EFI is in the previous commit. It could have made it to the 
-AIL or is in the same abort.
-
-
->
->> +	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents,
->> +			!(efdp->efd_efip->efi_item.li_flags&  XFS_LI_IN_AIL));
->> +	xfs_efd_item_free(efdp);
->>   }
->>   /*
->> @@ -434,14 +454,17 @@ xfs_efd_item_committed(
->>   	xfs_lsn_t		lsn)
->>   {
->>   	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
->> +	int abort = 0;
->>
->>   	/*
->>   	 * If we got a log I/O error, it's always the case that the LR with the
->>   	 * EFI got unpinned and freed before the EFD got aborted.
->>   	 */
->> -	if (!(lip->li_flags&  XFS_LI_ABORTED))
->> -		xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
->> +	if (lip->li_flags & XFS_LI_ABORTED &&
->> +	    !(efdp->efd_efip->efi_item.li_flags&  XFS_LI_IN_AIL))
->> +		abort = 1;
->>
->> +	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents, abort);
->
-> All this abort logic can go away if __xfs_efi_release()
-> handles the AIL state internally and all the EFD does is drop the
-> reference to the EFI it owns. This function simply becomes:
-
-The EFI in the previous commit could have made it to the AIL or not.
-
-
-> {
-> 	struct xfs_efd_log_item *efdp = EFD_ITEM(lip);
->
-> 	xfs_efi_release(efdp->efd_efip, efdp->efd_format.efd_nextents);
-> 	xfs_efd_item_free(efdp);
-> 	return (xfs_lsn_t)-1;
-> }
->
-> No conditional behaviour, always does the same thing regardless of
-> caller context.
-
-I disagree. It may or may not be in the AIL at this point.
-
-
->
->>   }
->> Index: b/fs/xfs/xfs_log_recover.c
->> ===================================================================
->> --- a/fs/xfs/xfs_log_recover.c
->> +++ b/fs/xfs/xfs_log_recover.c
->> @@ -3754,8 +3754,9 @@ xlog_recover_process_efis(
->>   		/* Skip all EFIs after first EFI in error. */
->>   		if (!error)
->>   			error = xlog_recover_process_efi(log->l_mp, efip);
->> +		/* EFI will be on the AIL, so abort == 0 */
->>   		if (error)
->> -			xfs_efi_release(efip, efip->efi_format.efi_nextents);
->> +			xfs_efi_release(efip, efip->efi_format.efi_nextents, 0);
->
-> Yet another place that has to know what the state of the EFI is to
-> handle it correctly....
-
-We know the EFI is in the AIL here.
-
-
---Mark.
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
