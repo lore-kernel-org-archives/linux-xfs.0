@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C0C317FCD
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 08:07:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 699B7AC00E
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 06:07:20 -0700 (PDT)
-Received: from mail-lb0-f169.google.com (mail-lb0-f169.google.com
-	[209.85.217.169]) by cuda.sgi.com with ESMTP id
-	f9nx9KQzZnPMWQet (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 04 Apr 2014 06:07:18 -0700 (PDT)
-Received: by mail-lb0-f169.google.com with SMTP id q8so2488313lbi.0
-	for <xfs@oss.sgi.com>; Fri, 04 Apr 2014 06:07:16 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D25D67FE0
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 08:37:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BE1D7304064
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 06:37:12 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id fSf42GDEUHeo7kTG for
+	<xfs@oss.sgi.com>; Fri, 04 Apr 2014 06:37:11 -0700 (PDT)
+Date: Fri, 4 Apr 2014 09:37:01 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/6] xfs: splitting delalloc extents can run out of
+	reservation
+Message-ID: <20140404133700.GA12961@laptop.bfoster>
+References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
+	<1395396710-3824-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20140404090357.GW17603@dastard>
-References: <20140404090357.GW17603@dastard>
-Date: Fri, 4 Apr 2014 14:07:16 +0100
-Message-ID: <CAL3q7H6q7M-hrvniaVkAm_L6aSHANmnfdTKGEHHLFqXUhWfY5w@mail.gmail.com>
-Subject: Re: [ANNOUNCE] xfstests: updated to cf1ed54
-From: Filipe David Manana <fdmanana@gmail.com>
-Reply-To: fdmanana@gmail.com
+Content-Disposition: inline
+In-Reply-To: <1395396710-3824-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,195 +31,162 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-ext4@vger.kernel.org, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Al@disappointment.disaster, Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, xfs@oss.sgi.com
 
-On Fri, Apr 4, 2014 at 10:03 AM, Dave Chinner <david@fromorbit.com> wrote:
-> Hi folks,
->
-> The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-> just been updated. Patches often get missed, so please check if your
-> outstanding patches were in this update. If they have not been in
-> this update, please resubmit them to xfs@oss.sgi.com so they can be
-> picked up in the next update.
->
-> The new head of the master branch is commit:
->
-> cf1ed54 check: fix RESULT_BASE typo in check script
->
-> The major new functionality worth mentioning in this update is the
-> new config file format from Lukas. The existing format config files
-> should continue to work without change, but the new format is much
-> richer and allows specification of multiple different configurations
-> to run test under. Hence testing multiple mount an dmkfs
-> configurations becomes as simple as iterating the configurations
-> in the config file.
+On Fri, Mar 21, 2014 at 09:11:49PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When we punch a hole in a delalloc extent, we split the indirect
+> block reservation between the two new extents. If we repeatedly
+> punch holes in a large delalloc extent, that reservation will
+> eventually run out and we'll assert fail in xfs_bunmapi() because
+> the indirect block reservation for the delalloc extent is zero. This
+> is caused by doing a large delalloc write, then zeroing multiple
+> ranges of that write using fallocate to punch lots of holes in the
+> delayed allocation range.
+> 
+> To avoid this problem, if we split the reservation and require more
+> indirect blocks for the two new extents than we had for the old
+> reservation, steal the additional blocks from the hole we punched in
+> the extent. In most cases we only need a single extra block, so even
+> if we punch only single block holes we can still retain sufficient
+> indirect block reservations to avoid problems.
+> 
+> In doing this "stealing", we need to change where we account for the
+> delalloc blocks being freed. The block count held on the inode does
+> not take into account the indirect block reservation, so we still
+> need to do that before we free the extent. However, the accounting
+> ofr free space in the superblock need to be done after we've stolen
+> the blocks fro the freed extent so that they are accounted for
+> correctly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap.c | 65 ++++++++++++++++++++++++++++++++++++++++---------------
+>  1 file changed, 47 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 5b6092e..4bf6a0e 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+> @@ -4945,7 +4945,27 @@ xfs_bmap_del_extent(
+>  			temp2 = xfs_bmap_worst_indlen(ip, temp2);
+>  			new.br_startblock = nullstartblock((int)temp2);
+>  			da_new = temp + temp2;
+> +
+> +			/*
+> +			 * Note: if we have an odd number of blocks reserved,
+> +			 * then if we keep splitting the delalloc extent like
+> +			 * this we end up with a delalloc indlen reservation of
+> +			 * zero for one of the two extents. Hence if we end
+> +			 * up with the new indlen reservations being larger than
+> +			 * the old one, steal blocks from the data reservation
+> +			 * we just punched out. Otherwise, just reduce the
+> +			 * remaining indlen reservations alternately and hope
+> +			 * next time we come here the range getting removed is
+> +			 * large enough to fix this all up.
+> +			 */
+>  			while (da_new > da_old) {
+> +				if (del->br_blockcount) {
+> +					/* steal a block */
+> +					da_new--;
+> +					del->br_blockcount--;
+> +					continue;
+> +				}
+> +
+>  				if (temp) {
+>  					temp--;
+>  					da_new--;
+> @@ -5255,24 +5275,6 @@ xfs_bunmapi(
+>  		}
+>  		if (wasdel) {
+>  			ASSERT(startblockval(del.br_startblock) > 0);
+> -			/* Update realtime/data freespace, unreserve quota */
+> -			if (isrt) {
+> -				xfs_filblks_t rtexts;
+> -
+> -				rtexts = XFS_FSB_TO_B(mp, del.br_blockcount);
+> -				do_div(rtexts, mp->m_sb.sb_rextsize);
+> -				xfs_mod_incore_sb(mp, XFS_SBS_FREXTENTS,
+> -						(int64_t)rtexts, 0);
+> -				(void)xfs_trans_reserve_quota_nblks(NULL,
+> -					ip, -((long)del.br_blockcount), 0,
+> -					XFS_QMOPT_RES_RTBLKS);
+> -			} else {
+> -				xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
+> -						(int64_t)del.br_blockcount, 0);
+> -				(void)xfs_trans_reserve_quota_nblks(NULL,
+> -					ip, -((long)del.br_blockcount), 0,
+> -					XFS_QMOPT_RES_REGBLKS);
+> -			}
+>  			ip->i_delayed_blks -= del.br_blockcount;
+>  			if (cur)
+>  				cur->bc_private.b.flags |=
+> @@ -5302,6 +5304,33 @@ xfs_bunmapi(
+>  		}
+>  		error = xfs_bmap_del_extent(ip, tp, &lastx, flist, cur, &del,
+>  				&tmp_logflags, whichfork);
+> +		/*
+> +		 * xfs_bmap_del_extent may hand delayed alloc blocks back to the
+> +		 * indirect block reservations to keep extent split reservations
+> +		 * sane. Hence we should only decrement the delayed block count
+> +		 * on the inode once we know exactly the amount of delalloc
+> +		 * space we actually removed from the inode.
+> +		 */
+> +		if (wasdel && del.br_blockcount) {
+> +			/* Update realtime/data freespace, unreserve quota */
+> +			if (isrt) {
+> +				xfs_filblks_t rtexts;
+> +
+> +				rtexts = XFS_FSB_TO_B(mp, del.br_blockcount);
+> +				do_div(rtexts, mp->m_sb.sb_rextsize);
+> +				xfs_mod_incore_sb(mp, XFS_SBS_FREXTENTS,
+> +						(int64_t)rtexts, 0);
+> +				(void)xfs_trans_reserve_quota_nblks(NULL,
+> +					ip, -((long)del.br_blockcount), 0,
+> +					XFS_QMOPT_RES_RTBLKS);
+> +			} else {
+> +				xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
+> +						(int64_t)del.br_blockcount, 0);
+> +				(void)xfs_trans_reserve_quota_nblks(NULL,
+> +					ip, -((long)del.br_blockcount), 0,
+> +					XFS_QMOPT_RES_REGBLKS);
+> +			}
+> +		}
 
-Hi,
+In xfs_bmapi_reserve_delalloc(), we account alen against the quota,
+calculate indlen, account both against the sb counters, add alen to
+i_delayed_blks and continue on...
 
-I might be missing something, but after checking out these changes, I
-am no longer able to run btrfs tests. Example:
+In xfs_bunmap(), we remove br_blockcount from the sb counters and
+unreserve from the quota then call into xfs_bmap_del_extent(). The
+latter takes care of removing the indlen blocks from the sb counters if
+necessary.
 
-$ ./check btrfs/041
-common/config: Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
-Passed all 0 tests
+With these changes, we move the accounting after the del_extent() call
+and allow the latter to steal from br_blockcount for indlen. This seems
+like it works for the sb counters. We also adjust i_delayed_blks against
+the original extent length before it can be modified. The quota
+reservation looks like it could become inconsistent, however. E.g., some
+blocks previously accounted against the quota (alen) are now moved over
+to indlen. If those indlen blocks happen to be cleaned up through
+del_extent(), they'd only be replenished to the sb counters (near the
+end of del_extent()). Perhaps we should leave the quota unreserve prior
+to the del_extent() call or sample the original br_blockcount and use it
+post del_extent()..?
 
-$ cat local.config
-export TEST_DEV=/dev/sdb
-export TEST_DIR=/home/fdmanana/btrfs-tests/dev
-export SCRATCH_MNT="/home/fdmanana/btrfs-tests/scratch_1"
-export SCRATCH_DEV_POOL="/dev/sdc /dev/sdd"
+Brian
 
-I did check too that my shell environment didn't define/export SCRATCH_DEV.
-Going back to revision 3948694eb12e9699f558fab5e8169a8b090780d1, using
-the same exact config, it works.
-
-Do I need to adjust something in my config or is it a regression?
-
-thanks
-
-
->
-> New Commits:
->
-> Christoph Hellwig (2):
->       [feb7da1] common: add flink support to _require_xfs_io_command
->       [3bbbc25] generic: add a basic O_TMPFILE test
->
-> Eric Sandeen (1):
->       [cf1ed54] check: fix RESULT_BASE typo in check script
->
-> Eryu Guan (1):
->       [dadfd3c] shared: new test to use up free inodes
->
-> Filipe David Borba Manana (3):
->       [bb2499e] btrfs: add test for btrfs send issuing premature rmdir operations
->       [c99c847] btrfs: add test for btrfs incremental send
->       [e0ff31a] btrfs: add test for btrfs incremental send data corruption
->
-> Filipe Manana (1):
->       [1a87439] btrfs: add test for btrfs send directory moves/renames
->
-> Hannes Frederic Sowa (1):
->       [947ee8b] fs: add directories hash collision test
->
-> Lukas Czerner (10):
->       [4d18f5a] generic: add generic test for fallocate zero range
->       [bf44459] check: Prepare for config section
->       [667308d] check: Add support for sections in config file
->       [f8e4f53] check: Allow to recreate TEST_DEV
->       [b1ffb05] check: Remount file system if MOUNT_OPTIONS changed
->       [7baa3e2] check: unmount TEST_DEV and SCRATCH_DEV after test run
->       [21723cd] generic: Make some shared tests generic
->       [259d680] ext4: Make shared/243 ext4 specific
->       [5f8c711] fsx: Add fallocate collapse range operation
->       [f98d930] fsstress: Add fallocate collapse range operation
->
->
-> Code Diffstat:
->
->  .gitignore                                |   1 +
->  README.config-sections                    |  87 +++++++
->  check                                     | 404 ++++++++++++++++++------------
->  common/config                             | 155 +++++++++++-
->  common/rc                                 |  30 ++-
->  ltp/fsstress.c                            |  20 ++
->  ltp/fsx.c                                 | 107 +++++++-
->  src/Makefile                              |   2 +-
->  src/dirhash_collide.c                     | 223 +++++++++++++++++
->  tests/btrfs/043                           | 149 +++++++++++
->  tests/btrfs/043.out                       |   1 +
->  tests/btrfs/044                           | 129 ++++++++++
->  tests/btrfs/044.out                       |   1 +
->  tests/btrfs/045                           | 376 +++++++++++++++++++++++++++
->  tests/btrfs/045.out                       |   1 +
->  tests/btrfs/046                           | 304 ++++++++++++++++++++++
->  tests/btrfs/046.out                       | 213 ++++++++++++++++
->  tests/btrfs/group                         |   4 +
->  tests/{shared/243 => ext4/002}            |   4 +-
->  tests/{shared/243.out => ext4/002.out}    |   2 +-
->  tests/ext4/group                          |   1 +
->  tests/generic/004                         |  65 +++++
->  tests/generic/004.out                     |   6 +
->  tests/generic/009                         |  78 ++++++
->  tests/generic/009.out                     | 333 ++++++++++++++++++++++++
->  tests/{shared/003 => generic/012}         |   6 +-
->  tests/{shared/003.out => generic/012.out} |   2 +-
->  tests/{shared/004 => generic/016}         |   6 +-
->  tests/{shared/004.out => generic/016.out} |   2 +-
->  tests/{shared/005 => generic/017}         |   4 +-
->  tests/generic/017.out                     |   4 +
->  tests/{shared/218 => generic/018}         |   4 +-
->  tests/{shared/218.out => generic/018.out} |   2 +-
->  tests/{shared/305 => generic/019}         |   4 +-
->  tests/{shared/305.out => generic/019.out} |   2 +-
->  tests/{shared/001 => generic/021}         |   6 +-
->  tests/{shared/001.out => generic/021.out} |   2 +-
->  tests/{shared/002 => generic/022}         |   6 +-
->  tests/{shared/002.out => generic/022.out} |   2 +-
->  tests/generic/group                       |   9 +
->  tests/shared/005.out                      |   4 -
->  tests/shared/006                          |  97 +++++++
->  tests/shared/006.out                      |   2 +
->  tests/shared/group                        |  10 +-
->  tests/xfs/006                             |  63 +++++
->  tests/xfs/006.out                         |  28 +++
->  tests/xfs/group                           |   1 +
->  47 files changed, 2746 insertions(+), 216 deletions(-)
->  create mode 100644 README.config-sections
->  create mode 100644 src/dirhash_collide.c
->  create mode 100644 tests/btrfs/043
->  create mode 100644 tests/btrfs/043.out
->  create mode 100644 tests/btrfs/044
->  create mode 100644 tests/btrfs/044.out
->  create mode 100755 tests/btrfs/045
->  create mode 100644 tests/btrfs/045.out
->  create mode 100644 tests/btrfs/046
->  create mode 100644 tests/btrfs/046.out
->  rename tests/{shared/243 => ext4/002} (99%)
->  rename tests/{shared/243.out => ext4/002.out} (95%)
->  create mode 100755 tests/generic/004
->  create mode 100644 tests/generic/004.out
->  create mode 100644 tests/generic/009
->  create mode 100644 tests/generic/009.out
->  rename tests/{shared/003 => generic/012} (93%)
->  mode change 100644 => 100755
->  rename tests/{shared/003.out => generic/012.out} (97%)
->  rename tests/{shared/004 => generic/016} (93%)
->  mode change 100644 => 100755
->  rename tests/{shared/004.out => generic/016.out} (97%)
->  rename tests/{shared/005 => generic/017} (97%)
->  mode change 100644 => 100755
->  create mode 100644 tests/generic/017.out
->  rename tests/{shared/218 => generic/018} (98%)
->  rename tests/{shared/218.out => generic/018.out} (93%)
->  rename tests/{shared/305 => generic/019} (98%)
->  rename tests/{shared/305.out => generic/019.out} (88%)
->  rename tests/{shared/001 => generic/021} (93%)
->  rename tests/{shared/001.out => generic/021.out} (97%)
->  rename tests/{shared/002 => generic/022} (93%)
->  mode change 100644 => 100755
->  rename tests/{shared/002.out => generic/022.out} (97%)
->  delete mode 100644 tests/shared/005.out
->  create mode 100755 tests/shared/006
->  create mode 100644 tests/shared/006.out
->  create mode 100755 tests/xfs/006
->  create mode 100644 tests/xfs/006.out
-> --
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Filipe David Manana,
-
-"Reasonable men adapt themselves to the world.
- Unreasonable men adapt the world to themselves.
- That's why all progress depends on unreasonable men."
+>  		logflags |= tmp_logflags;
+>  		if (error)
+>  			goto error0;
+> -- 
+> 1.9.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
