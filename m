@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 234637FF0
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 13:50:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BC2D87FF8
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 14:47:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B0D00AC003
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 11:50:51 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id j0gWP50KiAaVlCxb
-	for <xfs@oss.sgi.com>; Fri, 04 Apr 2014 11:50:50 -0700 (PDT)
-Message-ID: <533EFF07.6050308@hardwarefreak.com>
-Date: Fri, 04 Apr 2014 13:50:47 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51700AC012
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 12:47:32 -0700 (PDT)
+Received: from mail-vc0-f175.google.com (mail-vc0-f175.google.com
+	[209.85.220.175]) by cuda.sgi.com with ESMTP id
+	esplIrFApjn4o1VQ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 04 Apr 2014 12:47:30 -0700 (PDT)
+Received: by mail-vc0-f175.google.com with SMTP id lh14so3455567vcb.6
+	for <xfs@oss.sgi.com>; Fri, 04 Apr 2014 12:47:29 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs umount with i/o error hang/memory corruption
+In-Reply-To: <533EFF07.6050308@hardwarefreak.com>
 References: <CALjwKZAJ-R8dS13Rsj3+K3hM9p0z08qvi4ZVTYbDWKT1Biu=-Q@mail.gmail.com>
-In-Reply-To: <CALjwKZAJ-R8dS13Rsj3+K3hM9p0z08qvi4ZVTYbDWKT1Biu=-Q@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+	<533EFF07.6050308@hardwarefreak.com>
+Date: Fri, 4 Apr 2014 13:47:28 -0600
+Message-ID: <CALjwKZD-ccdjE7cRbQoEaLzcwPmXr9MBhB2dKsjUX9MGAaoc3Q@mail.gmail.com>
+Subject: Re: xfs umount with i/o error hang/memory corruption
+From: Bob Mastors <bob.mastors@solidfire.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,47 +28,202 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============7902778682393266114=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bob Mastors <bob.mastors@solidfire.com>, xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: xfs@oss.sgi.com
 
-T24gNC80LzIwMTQgMToxNSBQTSwgQm9iIE1hc3RvcnMgd3JvdGU6Cj4gR3JlZXRpbmdzLAo+IAo+
-IEkgYW0gbmV3IHRvIHhmcyBhbmQgYW0gcnVubmluZyBpbnRvIGEgcHJvYmxlbQo+IGFuZCB3b3Vs
-ZCBhcHByZWNpYXRlIGFueSBndWlkYW5jZSBvbiBob3cgdG8gcHJvY2VlZC4KPiAKPiBBZnRlciBh
-biBpL28gZXJyb3IgZnJvbSB0aGUgYmxvY2sgZGV2aWNlIHRoYXQgeGZzIGlzIHVzaW5nLAo+IGFu
-IHVtb3VudCByZXN1bHRzIGluIGEgbWVzc2FnZSBsaWtlOgo+IFsgIDM3MC42MzY0NzNdIFhGUyAo
-c2R4KTogTG9nIEkvTyBFcnJvciBEZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQo+
-IFsgIDM3MC42NDQwNzNdIFhGUyAoaCAgICAgICAgICAg77+977+977+9aCJoICAgICAgICAgIO+/
-ve+/ve+/vUgjaCAgICAgICAgICDvv73vv73vv71ic2cpOgo+IFBsZWFzZSB1bW91bnQgdGhlIGZp
-bGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiBOb3RlIHRoZSBnYXJiYWdlIG9u
-IHRoZSBwcmV2aW91cyBsaW5lIHdoaWNoIHN1Z2dlc3RzIG1lbW9yeSBjb3JydXB0aW9uLgo+IEFi
-b3V0IGhhbGYgdGhlIHRpbWUgSSBnZXQgdGhlIGdhcmJsZWQgbG9nIG1lc3NhZ2UuIEFib3V0IGhh
-bGYgdGhlIHRpbWUKPiB1bW91bnQgaGFuZ3MuCj4gCj4gQW5kIHRoZW4gSSBnZXQgdGhpcyBraW5k
-IG9mIGVycm9yIGFuZCB0aGUgc3lzdGVtIGlzIHVucmVzcG9uc2l2ZToKPiBNZXNzYWdlIGZyb20g
-c3lzbG9nZEBkZWJpYW4gYXQgQXByICA0IDA5OjI3OjQwIC4uLgo+ICBrZXJuZWw6WyAgNjgwLjA4
-MDAyMl0gQlVHOiBzb2Z0IGxvY2t1cCAtIENQVSMyIHN0dWNrIGZvciAyMnMhIFt1bW91bnQ6Mjg0
-OV0KPiAKPiBUaGUgcHJvYmxlbSBhcHBlYXJzIHRvIGJlIHNpbWlsYXIgdG8gdGhpcyBpc3N1ZToK
-PiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXhmcy9tc2cwMDA2MS5odG1sCj4g
-Cj4gSSBjYW4gcmVwcm9kdWNlIHRoZSBwcm9ibGVtIGVhc2lseSB1c2luZyBvcGVuLWlzY3NpIHRv
-IGNyZWF0ZQo+IHRoZSBibG9jayBkZXZpY2Ugd2l0aCBhbiBpc2NzaSBpbml0aWF0b3IuCj4gSSB1
-c2UgbGlvIHRvIGNyZWF0ZSBhbiBpc2NzaSB0YXJnZXQuCj4gCj4gVGhlIHByb2JsZW0gaXMgdHJp
-Z2dlcmVkIGJ5IGRvaW5nIGFuIGlzY3NpIGxvZ291dCB3aGljaCBjYXVzZXMKPiB0aGUgYmxvY2sg
-ZGV2aWNlIHRvIHJldHVybiBpL28gZXJyb3JzIHRvIHhmcy4KPiBTdGVwcyB0byByZXByb2R1Y2Ug
-dGhlIHByb2JsZW0gYXJlIGJlbG93LgoKVGhpcyBpcyBub3QgYSBwcm9ibGVtIGJ1dCB0aGUgZXhw
-ZWN0ZWQgYmVoYXZpb3IuICBYRlMgaXMgZGVzaWduZWQgdG8gZG8KdGhpcyB0byBwcmV2ZW50IGZp
-bGVzeXN0ZW0gY29ycnVwdGlvbi4gIExvZ2dpbmcgb3V0IG9mIGEgTFVOIGlzIG5vCmRpZmZlcmVu
-dCB0aGFuIHB1bGxpbmcgdGhlIHBvd2VyIHBsdWcgb24gYSBkaXJlY3QgYXR0YWNoZWQgZGlzayBk
-cml2ZS4KU3VyZWx5IHlvdSB3b3VsZCBub3QgZG8gdGhhdCB0byBhIHJ1bm5pbmcgZmlsZXN5c3Rl
-bS4KCj4gVXNpbmcgVmlydHVhbEJveCwgSSBjYW4gcmVwcm9kdWNlIGl0IHdpdGggdHdvIHByb2Nl
-c3NvcnMgYnV0IG5vdCBvbmUuCj4gSSBmaXJzdCBzYXcgdGhpcyBvbiBhIDMuOCBrZXJuZWwgYW5k
-IG1vc3QgcmVjZW50bHkgcmVwcm9kdWNlZCBpdCB3aXRoIDMuMTQrLgouLi4KClRoZSBvbmx5IHBy
-b2JsZW0gSSBzZWUgaGVyZSBpcyB0aGF0IFhGUyBzaG91bGQgYmUgc2h1dHRpbmcgZG93biBldmVy
-eQp0aW1lIHRoZSBkaXNrIGRldmljZSBkaXNhcHBlYXJzLiAgV2hpY2ggbWVhbnMgaW4geW91ciB0
-ZXN0IGNhc2VzIHdoZXJlCml0IGRvZXMgbm90LCB5b3VyIFZNIGVudmlyb25tZW50IGlzbid0IHBh
-c3NpbmcgdGhlIElPIGVycm9ycyB1cCB0aGUKc3RhY2ssIGFuZCBpdCBzaG91bGQgYmUuICBXaGlj
-aCBtZWFucyB5b3VyIFZNIGVudmlyb25tZW50IGlzIGJyb2tlbi4KCkNoZWVycywKClN0YW4KCgpf
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
-ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
-by94ZnMK
+--===============7902778682393266114==
+Content-Type: multipart/alternative; boundary=047d7b6783ceae22de04f63cc9de
+
+--047d7b6783ceae22de04f63cc9de
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Apr 4, 2014 at 12:50 PM, Stan Hoeppner <stan@hardwarefreak.com>wrot=
+e:
+
+> On 4/4/2014 1:15 PM, Bob Mastors wrote:
+> > Greetings,
+> >
+> > I am new to xfs and am running into a problem
+> > and would appreciate any guidance on how to proceed.
+> >
+> > After an i/o error from the block device that xfs is using,
+> > an umount results in a message like:
+> > [  370.636473] XFS (sdx): Log I/O Error Detected.  Shutting down
+> filesystem
+> > [  370.644073] XFS (h           =EF=BF=BD=EF=BF=BD=EF=BF=BDh"h         =
+ =EF=BF=BD=EF=BF=BD=EF=BF=BDH#h          =EF=BF=BD=EF=BF=BD=EF=BF=BDbsg):
+> > Please umount the filesystem and rectify the problem(s)
+> > Note the garbage on the previous line which suggests memory corruption.
+> > About half the time I get the garbled log message. About half the time
+> > umount hangs.
+> >
+> > And then I get this kind of error and the system is unresponsive:
+> > Message from syslogd@debian at Apr  4 09:27:40 ...
+> >  kernel:[  680.080022] BUG: soft lockup - CPU#2 stuck for 22s!
+> [umount:2849]
+> >
+> > The problem appears to be similar to this issue:
+> > http://www.spinics.net/lists/linux-xfs/msg00061.html
+> >
+> > I can reproduce the problem easily using open-iscsi to create
+> > the block device with an iscsi initiator.
+> > I use lio to create an iscsi target.
+> >
+> > The problem is triggered by doing an iscsi logout which causes
+> > the block device to return i/o errors to xfs.
+> > Steps to reproduce the problem are below.
+>
+> This is not a problem but the expected behavior.  XFS is designed to do
+> this to prevent filesystem corruption.  Logging out of a LUN is no
+> different than pulling the power plug on a direct attached disk drive.
+> Surely you would not do that to a running filesystem.
+>
+Sorry, I don't think I was clear on the nature of the problem and it's wide
+ranging effects.
+Using iscsi to access block storage on another server is the goal.
+A failure on the other server is possible which could result in the iscsi
+initiator returning i/o errors to xfs.
+
+The behavior that I would like from xfs is to put the filesystem in some
+kind of offline state
+on an i/o error from the block device. Today xfs usually has this desirable
+behavior.
+But there is a corner case were instead xfs hangs the entire server,
+forcing a hard reboot.
+
+On a large file server with many filesystems using iscsi to talk to block
+storage on multiple
+block servers, I would like the failure of a single block server to only
+impact the filesystems
+that are dependent on the block server, and to not impact the other
+filesystems.
+
+Bob
+
+> Using VirtualBox, I can reproduce it with two processors but not one.
+> > I first saw this on a 3.8 kernel and most recently reproduced it with
+> 3.14+.
+> ...
+>
+> The only problem I see here is that XFS should be shutting down every
+> time the disk device disappears.  Which means in your test cases where
+> it does not, your VM environment isn't passing the IO errors up the
+> stack, and it should be.  Which means your VM environment is broken.
+>
+> Cheers,
+>
+> Stan
+>
+>
+>
+
+--047d7b6783ceae22de04f63cc9de
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_extra"><div class=3D"gmail_quote">On F=
+ri, Apr 4, 2014 at 12:50 PM, Stan Hoeppner <span dir=3D"ltr">&lt;<a href=3D=
+"mailto:stan@hardwarefreak.com" target=3D"_blank">stan@hardwarefreak.com</a=
+>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"">On 4/4/2014 1:15 PM, Bob Mas=
+tors wrote:<br>
+&gt; Greetings,<br>
+&gt;<br>
+&gt; I am new to xfs and am running into a problem<br>
+&gt; and would appreciate any guidance on how to proceed.<br>
+&gt;<br>
+&gt; After an i/o error from the block device that xfs is using,<br>
+&gt; an umount results in a message like:<br>
+&gt; [ =C2=A0370.636473] XFS (sdx): Log I/O Error Detected. =C2=A0Shutting =
+down filesystem<br>
+&gt; [ =C2=A0370.644073] XFS (h =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =EF=BF=
+=BD=EF=BF=BD=EF=BF=BDh&quot;h =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=EF=BF=BD=
+=EF=BF=BD=EF=BF=BDH#h =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDbsg):<br>
+&gt; Please umount the filesystem and rectify the problem(s)<br>
+&gt; Note the garbage on the previous line which suggests memory corruption=
+.<br>
+&gt; About half the time I get the garbled log message. About half the time=
+<br>
+&gt; umount hangs.<br>
+&gt;<br>
+&gt; And then I get this kind of error and the system is unresponsive:<br>
+&gt; Message from syslogd@debian at Apr =C2=A04 09:27:40 ...<br>
+&gt; =C2=A0kernel:[ =C2=A0680.080022] BUG: soft lockup - CPU#2 stuck for 22=
+s! [umount:2849]<br>
+&gt;<br>
+&gt; The problem appears to be similar to this issue:<br>
+&gt; <a href=3D"http://www.spinics.net/lists/linux-xfs/msg00061.html" targe=
+t=3D"_blank">http://www.spinics.net/lists/linux-xfs/msg00061.html</a><br>
+&gt;<br>
+&gt; I can reproduce the problem easily using open-iscsi to create<br>
+&gt; the block device with an iscsi initiator.<br>
+&gt; I use lio to create an iscsi target.<br>
+&gt;<br>
+&gt; The problem is triggered by doing an iscsi logout which causes<br>
+&gt; the block device to return i/o errors to xfs.<br>
+&gt; Steps to reproduce the problem are below.<br>
+<br>
+</div>This is not a problem but the expected behavior. =C2=A0XFS is designe=
+d to do<br>
+this to prevent filesystem corruption. =C2=A0Logging out of a LUN is no<br>
+different than pulling the power plug on a direct attached disk drive.<br>
+Surely you would not do that to a running filesystem.<br></blockquote><div>=
+Sorry, I don&#39;t think I was clear on the nature of the problem and it&#3=
+9;s wide ranging effects.</div><div>Using iscsi to access block storage on =
+another server is the goal.</div>
+<div>A failure on the other server is possible which could result in the is=
+csi initiator returning i/o errors to xfs.</div><div><br></div><div>The beh=
+avior that I would like from xfs is to put the filesystem in some kind of o=
+ffline state</div>
+<div>on an i/o error from the block device. Today xfs usually has this desi=
+rable behavior.</div><div>But there is a corner case were instead xfs hangs=
+ the entire server, forcing a hard reboot.</div><div><br></div><div>On a la=
+rge file server with many filesystems using iscsi to talk to block storage =
+on multiple</div>
+<div>block servers, I would like the failure of a single block server to on=
+ly impact the filesystems</div><div>that are dependent on the block server,=
+ and to not impact the other filesystems.</div><div><br></div><div>Bob</div=
+>
+<div><br></div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex=
+;border-left:1px #ccc solid;padding-left:1ex"><div class=3D"">
+&gt; Using VirtualBox, I can reproduce it with two processors but not one.<=
+br>
+&gt; I first saw this on a 3.8 kernel and most recently reproduced it with =
+3.14+.<br>
+</div>...<br>
+<br>
+The only problem I see here is that XFS should be shutting down every<br>
+time the disk device disappears. =C2=A0Which means in your test cases where=
+<br>
+it does not, your VM environment isn&#39;t passing the IO errors up the<br>
+stack, and it should be. =C2=A0Which means your VM environment is broken.<b=
+r>
+<br>
+Cheers,<br>
+<br>
+Stan<br>
+<br>
+<br>
+</blockquote></div><br></div></div>
+
+--047d7b6783ceae22de04f63cc9de--
+
+
+--===============7902778682393266114==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7902778682393266114==--
