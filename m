@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C24D48007
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 16:26:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 88D868F8035
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 14:26:56 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	uizSvD7GGsgf8mA1 for <xfs@oss.sgi.com>;
-	Fri, 04 Apr 2014 14:26:54 -0700 (PDT)
-Date: Sat, 5 Apr 2014 08:26:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfs: write failure beyond EOF truncates too much data
-Message-ID: <20140404212640.GZ17603@dastard>
-References: <1395396710-3824-1-git-send-email-david@fromorbit.com>
-	<1395396710-3824-3-git-send-email-david@fromorbit.com>
-	<20140329151419.GA33827@bfoster.bfoster>
-	<20140404152636.GA40629@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id 2A11E7FDA
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 13:15:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0F3BD8F8054
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 11:15:25 -0700 (PDT)
+Received: from mail-vc0-f169.google.com (mail-vc0-f169.google.com
+	[209.85.220.169]) by cuda.sgi.com with ESMTP id
+	AisVtTE6qQrJnW6Z (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 04 Apr 2014 11:15:24 -0700 (PDT)
+Received: by mail-vc0-f169.google.com with SMTP id ik5so3523362vcb.28
+	for <xfs@oss.sgi.com>; Fri, 04 Apr 2014 11:15:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140404152636.GA40629@bfoster.bfoster>
+Date: Fri, 4 Apr 2014 12:15:23 -0600
+Message-ID: <CALjwKZAJ-R8dS13Rsj3+K3hM9p0z08qvi4ZVTYbDWKT1Biu=-Q@mail.gmail.com>
+Subject: xfs umount with i/o error hang/memory corruption
+From: Bob Mastors <bob.mastors@solidfire.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,133 +25,191 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7415202437080686219=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com, Viro@disappointment.disaster, viro@ZenIV.linux.org.uk, Al@disappointment.disaster
+To: xfs@oss.sgi.com
 
-On Fri, Apr 04, 2014 at 11:26:36AM -0400, Brian Foster wrote:
-> On Sat, Mar 29, 2014 at 11:14:19AM -0400, Brian Foster wrote:
-> > On Fri, Mar 21, 2014 at 09:11:46PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > If we fail a write beyond EOF and have to handle it in
-> > > xfs_vm_write_begin(), we truncate the inode back to the current inode
-> > > size. This doesn't take into account the fact that we may have
-> > > already made successful writes to the same page (in the case of block
-> > > size < page size) and hence we can truncate the page cache away from
-> > > blocks with valid data in them. If these blocks are delayed
-> > > allocation blocks, we now have a mismatch between the page cache and
-> > > the extent tree, and this will trigger - at minimum - a delayed
-> > > block count mismatch assert when the inode is evicted from the cache.
-> > > We can also trip over it when block mapping for direct IO - this is
-> > > the most common symptom seen from fsx and fsstress when run from
-> > > xfstests.
-> > > 
-> > > Fix it by only truncating away the exact range we are updating state
-> > > for in this write_begin call.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_aops.c | 10 ++++++++--
-> > >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > index e810243..6b4ecc8 100644
-> > > --- a/fs/xfs/xfs_aops.c
-> > > +++ b/fs/xfs/xfs_aops.c
-> > > @@ -1609,12 +1609,18 @@ xfs_vm_write_begin(
-> > >  	status = __block_write_begin(page, pos, len, xfs_get_blocks);
-> > >  	if (unlikely(status)) {
-> > >  		struct inode	*inode = mapping->host;
-> > > +		size_t		isize = i_size_read(inode);
-> > >  
-> > >  		xfs_vm_write_failed(inode, page, pos, len);
-> > >  		unlock_page(page);
-> > >  
-> > > -		if (pos + len > i_size_read(inode))
-> > > -			truncate_pagecache(inode, i_size_read(inode));
-> > 
-> > From what I can see, we have a write_begin/copy/write_end sequence per
-> > page and the inode size is updated down in the write_end path. If the
-> > write fails at write_begin time, then we haven't copied any data and the
-> > inode size hasn't changed.
-> > 
-> > The intent of the original code looks like it wants to break off any
-> > blocks that might have been set up beyond EOF before the write happened
-> > to fail. Could you elaborate on how this can kill blocks that might have
-> > been written successfully? Doesn't this only affect post-EOF metadata?
-> > 
-> > > +		/*
-> > > +		 * If the write is beyond EOF, we only want to kill blocks
-> > > +		 * allocated in this write, not blocks that were previously
-> > > +		 * written successfully.
-> > > +		 */
-> > > +		if (pos + len > isize)
-> > > +			truncate_pagecache_range(inode, pos, pos + len);
-> > 
-> > So the cache truncate now covers the range of the write. What happens if
-> > the part of the write is an overwrite? This seems similar to the problem
-> > you've described above... should the truncate start at isize instead?
-> > 
-> 
-> I ran an experiment on this to confirm my suspicion here. I added a
-> quick little hack to fail any write_begin (set status=-1) for which pos
-> != 0. With that in place:
-> 
-> xfs_io -fc "pwrite -b 2k 0 2k" /mnt/file
-> 
-> # hexdump /mnt/file 
-> 0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> *
-> 0000800
-> 
-> xfs_io -c "pwrite -b 2k 1k 2k" /mnt/file
-> (fails)
-> 
-> # hexdump /mnt/file 
-> 0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> *
-> 0000400 0000 0000 0000 0000 0000 0000 0000 0000
-> *
-> 0000800
-> 
-> The failed extending write trashes the data over the previously valid
-> region.
+--===============7415202437080686219==
+Content-Type: multipart/alternative; boundary=001a11c20232530cc004f63b809f
 
-Good catch, Brian! That is indeed a problem with the fix I made. Not
-intentional, as the comment probably lead you to beleive. I did say
-I wasn't entirely sure all the fixes were correct, and I greatly
-appreciate your diligence here.
+--001a11c20232530cc004f63b809f
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-The fix should probably be:
+Greetings,
 
-		/*
-		 * If the write is beyond EOF, we only want to kill blocks
-		 * allocated in this write, not blocks that were previously
-		 * written successfully.
-		 */
-		if (pos + len > isize) {
-			ssize_t		start = max_t(ssize_t, pos, isize);
+I am new to xfs and am running into a problem
+and would appreciate any guidance on how to proceed.
 
-			truncate_pagecache_range(inode, start, pos + len);
-		}
+After an i/o error from the block device that xfs is using,
+an umount results in a message like:
+[  370.636473] XFS (sdx): Log I/O Error Detected.  Shutting down filesystem
+[  370.644073] XFS (h           =EF=BF=BD=EF=BF=BD=EF=BF=BDh"h          =EF=
+=BF=BD=EF=BF=BD=EF=BF=BDH#h          =EF=BF=BD=EF=BF=BD=EF=BF=BDbsg):
+Please umount the filesystem and rectify the problem(s)
+Note the garbage on the previous line which suggests memory corruption.
+About half the time I get the garbled log message. About half the time
+umount hangs.
 
-So if the write overlaps EOF we don't truncate away data from before
-EOF. It also has the effect of not truncating data in previous
-writes between isize and pos, which was the bug I was trying to
-fix...
+And then I get this kind of error and the system is unresponsive:
+Message from syslogd@debian at Apr  4 09:27:40 ...
+ kernel:[  680.080022] BUG: soft lockup - CPU#2 stuck for 22s! [umount:2849=
+]
 
-Cheers,
+The problem appears to be similar to this issue:
+http://www.spinics.net/lists/linux-xfs/msg00061.html
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I can reproduce the problem easily using open-iscsi to create
+the block device with an iscsi initiator.
+I use lio to create an iscsi target.
+
+The problem is triggered by doing an iscsi logout which causes
+the block device to return i/o errors to xfs.
+Steps to reproduce the problem are below.
+
+Using VirtualBox, I can reproduce it with two processors but not one.
+I first saw this on a 3.8 kernel and most recently reproduced it with 3.14+=
+.
+
+Thanks,
+Bob
+
+virtual box setup
+-----------------
+1 GB ram
+8 GB disk
+2 processors
+Operating System: Linux
+Version: Debian (64 bit)
+Bridged networking
+iso: debian-7.4.0-amd64-netinst.iso
+Software selection
+    select SSH server
+    select Standard system utilities
+    deselect everything else
+
+dhcp ip address: 172.17.5.129
+
+upgrade linux to 3.14.0+
+------------------------
+ssh 172.17.5.129
+su
+cd /mnt/ksrc/linux
+make modules_install
+make install
+reboot
+
+install tools
+-------------
+ssh 172.17.5.129
+su
+apt-get install xfsprogs
+apt-get install open-iscsi
+apt-get install --no-install-recommends targetcli python-urwid
+reboot
+
+reproduce bug
+-------------
+ssh 172.17.5.129
+su
+targetcli
+    cd backstores
+    fileio/ create name=3Dfile_backend file_or_dev=3Dmy_disk size=3D100M
+    /iscsi create
+    portals/ create 172.17.5.129
+    cd <
+    luns/ create /backstores/fileio/file_backend
+    cd <
+    set attribute authentication=3D0 demo_mode_write_protect=3D0
+generate_node_acls=3D1 cache_dynamic_acls=3D1
+    exit
+
+iscsiadm -m discovery -t sendtargets -p 172.17.5.129
+iscsiadm -m node --login --target iqn.from_previous_iscsiadm_cmd_output
+fdisk -l
+mkfs -t xfs -f /dev/sdXX
+mkdir /mnt/vola
+mount -t xfs /dev/sdXX /mnt/vola
+iscsiadm -m node -U all
+umount /mnt/vola
+
+--001a11c20232530cc004f63b809f
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div>Greetings,</div><div><br></div><div>I am new to xfs a=
+nd am running into a problem</div><div>and would appreciate any guidance on=
+ how to proceed.</div><div><br></div><div>After an i/o error from the block=
+ device that xfs is using,</div>
+<div>an umount results in a message like:</div><div>[ =C2=A0370.636473] XFS=
+ (sdx): Log I/O Error Detected. =C2=A0Shutting down filesystem</div><div>[ =
+=C2=A0370.644073] XFS (h =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =EF=BF=BD=EF=BF=
+=BD=EF=BF=BDh&quot;h =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDH#h =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=EF=BF=BD=EF=BF=BD=EF=BF=BDb=
+sg): Please umount the filesystem and rectify the problem(s)</div>
+<div>Note the garbage on the previous line which suggests memory corruption=
+.</div><div>About half the time I get the garbled log message. About half t=
+he time umount hangs.</div><div><br></div><div>And then I get this kind of =
+error and the system is unresponsive:</div>
+<div>Message from syslogd@debian at Apr =C2=A04 09:27:40 ...</div><div>=C2=
+=A0kernel:[ =C2=A0680.080022] BUG: soft lockup - CPU#2 stuck for 22s! [umou=
+nt:2849]</div><div><br></div><div>The problem appears to be similar to this=
+ issue:</div>
+<div><a href=3D"http://www.spinics.net/lists/linux-xfs/msg00061.html">http:=
+//www.spinics.net/lists/linux-xfs/msg00061.html</a></div><div><br></div><di=
+v>I can reproduce the problem easily using open-iscsi to create</div><div>
+the block device with an iscsi initiator.</div><div>I use lio to create an =
+iscsi target.</div><div><br></div><div>The problem is triggered by doing an=
+ iscsi logout which causes</div><div>the block device to return i/o errors =
+to xfs.</div>
+<div>Steps to reproduce the problem are below.</div><div><br></div><div>Usi=
+ng VirtualBox, I can reproduce it with two processors but not one.</div><di=
+v>I first saw this on a 3.8 kernel and most recently reproduced it with 3.1=
+4+.</div>
+<div><br></div><div>Thanks,</div><div>Bob</div><div><br></div><div><div>vir=
+tual box setup</div><div>-----------------</div><div>1 GB ram</div><div>8 G=
+B disk</div><div>2 processors</div><div>Operating System: Linux</div><div>
+Version: Debian (64 bit)</div><div>Bridged networking</div><div>iso: debian=
+-7.4.0-amd64-netinst.iso</div><div>Software selection</div><div>=C2=A0 =C2=
+=A0 select SSH server</div><div>=C2=A0 =C2=A0 select Standard system utilit=
+ies</div><div>=C2=A0 =C2=A0 deselect everything else</div>
+<div>=C2=A0 =C2=A0=C2=A0</div><div>dhcp ip address: 172.17.5.129</div><div>=
+<br></div><div>upgrade linux to 3.14.0+</div><div>------------------------<=
+/div><div>ssh 172.17.5.129</div><div>su</div><div>cd /mnt/ksrc/linux</div><=
+div>make modules_install</div>
+<div>make install</div><div>reboot</div><div><br></div><div>install tools</=
+div><div>-------------</div><div>ssh 172.17.5.129</div><div>su</div><div>ap=
+t-get install xfsprogs</div><div>apt-get install open-iscsi</div><div>apt-g=
+et install --no-install-recommends targetcli python-urwid</div>
+<div>reboot</div><div><br></div><div>reproduce bug</div><div>-------------<=
+/div><div>ssh 172.17.5.129</div><div>su</div><div>targetcli</div><div>=C2=
+=A0 =C2=A0 cd backstores</div><div>=C2=A0 =C2=A0 fileio/ create name=3Dfile=
+_backend file_or_dev=3Dmy_disk size=3D100M</div>
+<div>=C2=A0 =C2=A0 /iscsi create</div><div>=C2=A0 =C2=A0 portals/ create 17=
+2.17.5.129</div><div>=C2=A0 =C2=A0 cd &lt;</div><div>=C2=A0 =C2=A0 luns/ cr=
+eate /backstores/fileio/file_backend</div><div>=C2=A0 =C2=A0 cd &lt;</div><=
+div>=C2=A0 =C2=A0 set attribute authentication=3D0 demo_mode_write_protect=
+=3D0 generate_node_acls=3D1 cache_dynamic_acls=3D1</div>
+<div>=C2=A0 =C2=A0 exit</div><div><br></div><div>iscsiadm -m discovery -t s=
+endtargets -p 172.17.5.129</div><div>iscsiadm -m node --login --target iqn.=
+from_previous_iscsiadm_cmd_output</div><div>fdisk -l</div><div>mkfs -t xfs =
+-f /dev/sdXX</div>
+<div>mkdir /mnt/vola</div><div>mount -t xfs /dev/sdXX /mnt/vola</div><div>i=
+scsiadm -m node -U all</div><div>umount /mnt/vola</div></div></div>
+
+--001a11c20232530cc004f63b809f--
+
+
+--===============7415202437080686219==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7415202437080686219==--
