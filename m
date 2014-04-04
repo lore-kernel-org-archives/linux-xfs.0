@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 17FF77FB8
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 16:12:45 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A1E517F78
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 16:20:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0863C304062
-	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 14:12:41 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1CAC8AC003
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2014 14:20:31 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	8iBCHPl8ZFhZtzMO for <xfs@oss.sgi.com>;
-	Fri, 04 Apr 2014 14:12:40 -0700 (PDT)
-Date: Sat, 5 Apr 2014 08:12:25 +1100
+	rhSLx9pIsC6MVEs4 for <xfs@oss.sgi.com>;
+	Fri, 04 Apr 2014 14:20:29 -0700 (PDT)
+Date: Sat, 5 Apr 2014 08:20:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] xfstests: updated to cf1ed54
-Message-ID: <20140404211224.GX17603@dastard>
-References: <20140404090357.GW17603@dastard>
-	<CAL3q7H6q7M-hrvniaVkAm_L6aSHANmnfdTKGEHHLFqXUhWfY5w@mail.gmail.com>
+Subject: Re: xfs umount with i/o error hang/memory corruption
+Message-ID: <20140404212016.GY17603@dastard>
+References: <CALjwKZAJ-R8dS13Rsj3+K3hM9p0z08qvi4ZVTYbDWKT1Biu=-Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAL3q7H6q7M-hrvniaVkAm_L6aSHANmnfdTKGEHHLFqXUhWfY5w@mail.gmail.com>
+In-Reply-To: <CALjwKZAJ-R8dS13Rsj3+K3hM9p0z08qvi4ZVTYbDWKT1Biu=-Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +25,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Filipe David Manana <fdmanana@gmail.com>
-Cc: lczerner@redhat.com, linux-ext4@vger.kernel.org, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Bob Mastors <bob.mastors@solidfire.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 04, 2014 at 02:07:16PM +0100, Filipe David Manana wrote:
-> On Fri, Apr 4, 2014 at 10:03 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > Hi folks,
-> >
-> > The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-> > just been updated. Patches often get missed, so please check if your
-> > outstanding patches were in this update. If they have not been in
-> > this update, please resubmit them to xfs@oss.sgi.com so they can be
-> > picked up in the next update.
-> >
-> > The new head of the master branch is commit:
-> >
-> > cf1ed54 check: fix RESULT_BASE typo in check script
-> >
-> > The major new functionality worth mentioning in this update is the
-> > new config file format from Lukas. The existing format config files
-> > should continue to work without change, but the new format is much
-> > richer and allows specification of multiple different configurations
-> > to run test under. Hence testing multiple mount an dmkfs
-> > configurations becomes as simple as iterating the configurations
-> > in the config file.
-> 
-> Hi,
-> 
-> I might be missing something, but after checking out these changes, I
-> am no longer able to run btrfs tests. Example:
-> 
-> $ ./check btrfs/041
-> common/config: Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
-> Passed all 0 tests
-> 
-> $ cat local.config
-> export TEST_DEV=/dev/sdb
-> export TEST_DIR=/home/fdmanana/btrfs-tests/dev
-> export SCRATCH_MNT="/home/fdmanana/btrfs-tests/scratch_1"
-> export SCRATCH_DEV_POOL="/dev/sdc /dev/sdd"
-
-OK, that'll be a bug in the new config file parsing code. Lukas,
-can you have a look at this?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBBcHIgMDQsIDIwMTQgYXQgMTI6MTU6MjNQTSAtMDYwMCwgQm9iIE1hc3RvcnMgd3Jv
+dGU6Cj4gR3JlZXRpbmdzLAo+IAo+IEkgYW0gbmV3IHRvIHhmcyBhbmQgYW0gcnVubmluZyBpbnRv
+IGEgcHJvYmxlbQo+IGFuZCB3b3VsZCBhcHByZWNpYXRlIGFueSBndWlkYW5jZSBvbiBob3cgdG8g
+cHJvY2VlZC4KPiAKPiBBZnRlciBhbiBpL28gZXJyb3IgZnJvbSB0aGUgYmxvY2sgZGV2aWNlIHRo
+YXQgeGZzIGlzIHVzaW5nLAo+IGFuIHVtb3VudCByZXN1bHRzIGluIGEgbWVzc2FnZSBsaWtlOgo+
+IFsgIDM3MC42MzY0NzNdIFhGUyAoc2R4KTogTG9nIEkvTyBFcnJvciBEZXRlY3RlZC4gIFNodXR0
+aW5nIGRvd24gZmlsZXN5c3RlbQo+IFsgIDM3MC42NDQwNzNdIFhGUyAoaCAgICAgICAgICAg77+9
+77+977+9aCJoICAgICAgICAgIO+/ve+/ve+/vUgjaCAgICAgICAgICDvv73vv73vv71ic2cpOgo+
+IFBsZWFzZSB1bW91bnQgdGhlIGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykK
+PiBOb3RlIHRoZSBnYXJiYWdlIG9uIHRoZSBwcmV2aW91cyBsaW5lIHdoaWNoIHN1Z2dlc3RzIG1l
+bW9yeSBjb3JydXB0aW9uLgo+IEFib3V0IGhhbGYgdGhlIHRpbWUgSSBnZXQgdGhlIGdhcmJsZWQg
+bG9nIG1lc3NhZ2UuIEFib3V0IGhhbGYgdGhlIHRpbWUKPiB1bW91bnQgaGFuZ3MuCgpJIGdvdCBh
+biBlbWFpbCBhYm91dCB0aGlzIGxhc3QgbmlnaHQgd2l0aCBhIGRpZmZlcmVudCB0cmlnZ2VyIC0g
+dGhpbgpwcm92aXNpb25pbmcgZmFpbGluZyBsb2cgSU8gaW4gdGhlIHVubW91bnQgcGF0aC4gSSBr
+bm93IHdoYXQgdGhlCnByb2JsZW0gaXMsIEkganVzdCBkb24ndCBoYXZlIGEgZml4IGZvciBpdCB5
+ZXQuCgpUbyBjb25maXJtIGl0J3MgdGhlIHNhbWUgcHJvYmxlbSwgY2FuIHlvdSBwb3N0IHRoZSBl
+bnRpcml0eSBvZiB0aGUKZG1lc2cgd2hlcmUgdGhlIGVycm9yIG9jY3Vycz8KCkluIGVzc2VuY2Us
+IHRoZSBsb2cgSU8gZmFpbHVyZSBpcyB0cmlnZ2VyaW5nIGEgc2h1dGRvd24sIGFuZCBhcyBwYXJ0
+Cm9mIHRoZSBzaHV0ZG93biBwcm9jZXNzIGl0IHdha2VzIGFueW9uZSB3YWl0aW5nIG9uIGEgbG9n
+IGZvcmNlLgpUaGUgbG9nIHF1aWVzY2UgY29kZSB0aGF0IHdhaXRzIGZvciBsb2cgY29tcGxldGlv
+biBkdXJpbmcgdW5tb3VudAp1c2VzIGEgbG9nIGZvcmNlIHRvIGVuc3VyZSB0aGUgbG9nIGlzIGlk
+bGUgYmVmb3JlIHRlYXJpbmcgZG93biBhbGwKdGhlIGxvZyBzdHJ1Y3R1cmVzIGFuZCBmaW5pc2hp
+bmcgdGhlIHVubW91bnQuIFVuZm9ydHVuYXRleSwgdGhlIGxvZwpmb3JjZSB0aGUgdW5tb3VudCBi
+bG9ja3Mgb24gaXMgd29rZW4gcHJlbWF0dXJlbHkgYnkgdGhlIHNodXRkb3duLAphbmQgaGVuY2Ug
+aXQgcnVucyBiZWZvcmUgdGhlIGxvZyBJTyBwcm9jZXNzaW5nIGlzIGNvbXBsZXRlZC4gSGVuY2UK
+dGhlIHVzZSBhZnRlciBmcmVlLgoKPiBBbmQgdGhlbiBJIGdldCB0aGlzIGtpbmQgb2YgZXJyb3Ig
+YW5kIHRoZSBzeXN0ZW0gaXMgdW5yZXNwb25zaXZlOgo+IE1lc3NhZ2UgZnJvbSBzeXNsb2dkQGRl
+YmlhbiBhdCBBcHIgIDQgMDk6Mjc6NDAgLi4uCj4gIGtlcm5lbDpbICA2ODAuMDgwMDIyXSBCVUc6
+IHNvZnQgbG9ja3VwIC0gQ1BVIzIgc3R1Y2sgZm9yIDIycyEgW3Vtb3VudDoyODQ5XQo+IAo+IFRo
+ZSBwcm9ibGVtIGFwcGVhcnMgdG8gYmUgc2ltaWxhciB0byB0aGlzIGlzc3VlOgo+IGh0dHA6Ly93
+d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgteGZzL21zZzAwMDYxLmh0bWwKClNpbWlsYXIgc3lt
+cHRvbXMsIGJ1dCBub3QgdGhlIHNhbWUgYnVnLgoKPiBUaGUgcHJvYmxlbSBpcyB0cmlnZ2VyZWQg
+YnkgZG9pbmcgYW4gaXNjc2kgbG9nb3V0IHdoaWNoIGNhdXNlcwo+IHRoZSBibG9jayBkZXZpY2Ug
+dG8gcmV0dXJuIGkvbyBlcnJvcnMgdG8geGZzLgo+IFN0ZXBzIHRvIHJlcHJvZHVjZSB0aGUgcHJv
+YmxlbSBhcmUgYmVsb3cuCgpTZWVtcyBzaW1pbGFyIHRvIHRoZSB0aGlucCBFTk9TUEMgaXNzdWUg
+SSBtZW50aW9uZWQgYWJvdmUgLSBkYXRhIElPCmVycm9ycyBvY2N1ciwgdGhlbiB5b3UgZG8gYW4g
+dW5tb3VudCwgd2hpY2ggY2F1c2VzIGEgbG9nIElPIGVycm9yCndyaXRpbmcgdGhlIHN1cGVyYmxv
+Y2ssIGFuZCB0aGVuIHRoaXMgaGFwcGVucy4uLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENo
+aW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
