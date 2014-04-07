@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C83077F9C
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:59:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 422CDAC013
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:10 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id LSLu4LFcDbhOCs4H for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 12:59:09 -0700 (PDT)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 12/19] xfs: remove unused mp arg from
-	xfs_calc_dquots_per_chunk()
-Date: Mon,  7 Apr 2014 14:58:59 -0500
-Message-Id: <1396900746-22201-13-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
-References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 475D47FC6
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 16:45:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 33EF68F804B
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:45:34 -0700 (PDT)
+Date: Mon, 7 Apr 2014 17:45:27 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [FAQ v2] XFS speculative preallocation
+Message-ID: <20140407214527.GA43531@bfoster.bfoster>
+References: <20140407153906.GC48184@bfoster.bfoster> <53430375.3060203@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <53430375.3060203@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,81 +21,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-And because this gets passed to xfs_bmap_local_to_extents()
-as *init_fn(), change that prototype too.
+On Mon, Apr 07, 2014 at 02:58:45PM -0500, Mark Tinguely wrote:
+> On 04/07/14 10:39, Brian Foster wrote:
+> >Hi all,
+> >
+> >This is v2 of the speculative preallocation FAQ bits. The initial
+> >proposal was here:
+> >
+> >http://oss.sgi.com/archives/xfs/2014-03/msg00316.html
+> >
+> >This version includes some updates based on review from arekm and
+> >dchinner. Most notably, the content has been broken down into a few more
+> >questions. Unless there are further major changes required, I'll plan to
+> >post something along these lines to the wiki when my account is
+> >approved. Thanks for the feedback!
+> >
+> >Brian
+> >
+> >---
+> >
+> >Q: Why do files on XFS use more data blocks than expected?
+> >
+> >A:
+> >
+> >The XFS speculative preallocation algorithm allocates extra blocks
+> >beyond end of file (EOF) to minimise file fragmentation during buffered
+>   ^^^ beyond here and then later adopt post-EOF phrasing.
+> 
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/xfs_dquot_buf.c  |    5 ++---
- fs/xfs/xfs_qm.c         |    3 +--
- fs/xfs/xfs_quota_defs.h |    2 +-
- 3 files changed, 4 insertions(+), 6 deletions(-)
+I think you're suggesting a broader terminology change, but I'm not
+quite following. Could you be specific about what "later" bits should
+change? What phrasing in particular..?
 
-diff --git a/fs/xfs/xfs_dquot_buf.c b/fs/xfs/xfs_dquot_buf.c
-index d401457..a470668 100644
---- a/fs/xfs/xfs_dquot_buf.c
-+++ b/fs/xfs/xfs_dquot_buf.c
-@@ -35,7 +35,6 @@
- 
- int
- xfs_calc_dquots_per_chunk(
--	struct xfs_mount	*mp,
- 	unsigned int		nbblks)	/* basic block units */
- {
- 	unsigned int	ndquots;
-@@ -194,7 +193,7 @@ xfs_dquot_buf_verify_crc(
- 	if (mp->m_quotainfo)
- 		ndquots = mp->m_quotainfo->qi_dqperchunk;
- 	else
--		ndquots = xfs_calc_dquots_per_chunk(mp,
-+		ndquots = xfs_calc_dquots_per_chunk(
- 					XFS_BB_TO_FSB(mp, bp->b_length));
- 
- 	for (i = 0; i < ndquots; i++, d++) {
-@@ -225,7 +224,7 @@ xfs_dquot_buf_verify(
- 	if (mp->m_quotainfo)
- 		ndquots = mp->m_quotainfo->qi_dqperchunk;
- 	else
--		ndquots = xfs_calc_dquots_per_chunk(mp, bp->b_length);
-+		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
- 
- 	/*
- 	 * On the first read of the buffer, verify that each dquot is valid.
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 348e4d2..23cc8dc 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -870,8 +870,7 @@ xfs_qm_init_quotainfo(
- 
- 	/* Precalc some constants */
- 	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
--	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(mp,
--							qinf->qi_dqchunklen);
-+	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(qinf->qi_dqchunklen);
- 
- 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
- 
-diff --git a/fs/xfs/xfs_quota_defs.h b/fs/xfs/xfs_quota_defs.h
-index b3b2b10..137e209 100644
---- a/fs/xfs/xfs_quota_defs.h
-+++ b/fs/xfs/xfs_quota_defs.h
-@@ -156,6 +156,6 @@ typedef __uint16_t	xfs_qwarncnt_t;
- 
- extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
- 		       xfs_dqid_t id, uint type, uint flags, char *str);
--extern int xfs_calc_dquots_per_chunk(struct xfs_mount *mp, unsigned int nbblks);
-+extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
- 
- #endif	/* __XFS_QUOTA_H__ */
--- 
-1.7.1
+> ...
+> 
+> >See the FAQ entry on speculative preallocation for details.
+> >
+> >Q: What is speculative preallocation?
+> >
+> >A:
+> >
+> >XFS speculatively preallocates post-EOF blocks on file extending writes
+> >in anticipation of future extending writes. The size of a preallocation
+> >is dynamic and depends on the runtime state of the file and fs.
+> >Generally speaking, preallocation is disabled for very small files and
+> 			    vague what is very small?   ^^^
+> ...
+
+I originally pointed out 64k, but that and other heuristic details that
+are subject to change were purged in v2. I'm personally not against
+including something that indicates the default and the notion that it's
+subject to change. I don't feel too strongly about it either way.
+Thoughts appreciated.
+
+> 
+> 
+> >Q: Is speculative preallocation permanent?
+> >
+> >A:
+> >
+> >Although speculative preallocation can lead to reports of excess space
+> >usage, the preallocated space is not permanent unless explicitly made so
+> >via fallocate or a similar interface. Preallocated space can also be
+> >encoded permanently in situations where file size is extended beyond a
+> >range of post-EOF blocks (i.e., via truncate). Otherwise, preallocated
+> >blocks are reclaimed on file close, inode reclaim, unmount or in the
+> >background once file write activity subsides.
+> 
+> Switch order?
+> 
+> Normally, preallocated
+> blocks are reclaimed on file close, inode reclaim, unmount or in the
+> background once file write activity subsides. They can be explictly
+> made permanent .
+> 
+
+Thoughts on the following?
+
+"Preallocated blocks are normally reclaimed on file close, inode
+reclaim, unmount or in the background once file write activity subsides.
+They can be explicitly made permanent via fallocate or a similar
+interface. They can be implicitly made permanent in situations where
+file size is extended beyond a range of post-EOF blocks (i.e., via an
+extending truncate)."
+
+> >
+> >Q: My workload has known characteristics - can I tune speculative
+> >preallocation to an optimal fixed size?
+> >
+> >A:
+> >
+> >The 'allocsize=' mount option configures the XFS block allocation
+> >algorithm to use a fixed allocation size. Speculative preallocation is
+> >not dynamically resized when the allocsize mount option is set and thus
+> >the potential for fragmentation is increased. XFS historically set
+> 
+> sets the
+> 
+> >allocsize to 64k by default.
+> >
+> 
+> 
+> Q: Can I disable S-P-A ?
+> 
+
+A: No..? ;)
+
+Are you proposing this with the similar intent to the previous Q (i.e.,
+"what's the alternative to the default behavior?"), or with the notion
+that Dave pointed out how technically preallocation is not really "off?"
+Or something else? If the former, we could modify the question:
+
+"My workload has known characteristics - can I disable speculative
+preallocation or tune it to an optimal fixed size?"
+
+Or something along those lines. Would anybody object to also pointing
+out that 'allocsize=4k' (or allocsize=<blocksize>?) could be considered
+"speculative preallocation == off" from the user's perspective?
+
+Thanks for the feedback.
+
+Brian
+
+> -Mark.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
