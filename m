@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E98E77FFC
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:23:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C364E304059
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 16:23:13 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5FC5F8004
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:29:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F0ED2AC012
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 16:29:01 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	gcPoGQ2WzQQGgi9C for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 16:23:12 -0700 (PDT)
-Date: Tue, 8 Apr 2014 09:23:10 +1000
+	MgfFZNFMMMbuyWTs for <xfs@oss.sgi.com>;
+	Mon, 07 Apr 2014 16:28:49 -0700 (PDT)
+Date: Tue, 8 Apr 2014 09:28:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 16/19] xfs: remove unused tp arg from
-	xfs_symlink_local_to_remote()
-Message-ID: <20140407232310.GD27017@dastard>
+Subject: Re: [PATCH 00/19] xfs: remove a bunch of unused function args
+Message-ID: <20140407232846.GE27017@dastard>
 References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
-	<1396900746-22201-17-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1396900746-22201-17-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,39 +32,23 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Apr 07, 2014 at 02:59:03PM -0500, Eric Sandeen wrote:
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  fs/xfs/xfs_bmap.c           |    5 ++---
->  fs/xfs/xfs_shared.h         |    2 +-
->  fs/xfs/xfs_symlink_remote.c |    1 -
->  3 files changed, 3 insertions(+), 5 deletions(-)
+On Mon, Apr 07, 2014 at 02:58:47PM -0500, Eric Sandeen wrote:
+> I did some mindless work during a plane ride.  ;)
 > 
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 03b6ff2..6a1e702 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -919,8 +919,7 @@ xfs_bmap_local_to_extents(
->  	xfs_extlen_t	total,		/* total blocks needed by transaction */
->  	int		*logflagsp,	/* inode logging flags */
->  	int		whichfork,
-> -	void		(*init_fn)(struct xfs_trans *tp,
-> -				   struct xfs_buf *bp,
-> +	void		(*init_fn)(struct xfs_buf *bp,
->  				   struct xfs_inode *ip,
->  				   struct xfs_ifork *ifp))
->  {
+> If the granularity of these patches is just too much, I could certainly
+> collapse them into fewer, bigger patches, but I figured that this would
+> make them super-trivial to review.
+> 
+> Most have no interesting commit messages aside from the subject, because
+> the subject says it all.
+> 
+> Compile-tested only, TBH.
 
-This one I disagree with - this local-to-remote change is only done
-within a transaction context. The existing conversions don't require
-any special operations that require logging different objects, but
-the possibility exists and so we really do need to pass the
-transaction structure through this API.
+Looks good, except for the patch I specifically commented on.
 
-e.g. we really should convert the directory code over to use the
-generic xfs_bmap_local_to_extents() function rather than rolling
-it's own version of essentially the same thing, and that requires
-passing the transaction structure through the init_fn interface.
+FWIW, this sort of cleanup will help reduce some of the register
+pressure these code paths have, and that in turn will help reduce
+stack usage, so if you can find more...
 
 Cheers,
 
