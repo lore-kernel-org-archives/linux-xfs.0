@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7AA2B7F98
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8475C7F99
 	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:59:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6302F8F8039
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:10 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0EBA5AC016
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:09 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zJvnWcVWdMQrUIrm for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 12:59:09 -0700 (PDT)
+	ESMTP id XvA4DzCc5lowaVxl for <xfs@oss.sgi.com>;
+	Mon, 07 Apr 2014 12:59:08 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 15/19] xfs: remove unused bp arg from xfs_iflush_fork()
-Date: Mon,  7 Apr 2014 14:59:02 -0500
-Message-Id: <1396900746-22201-16-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 06/19] xfs: remove unused blocksize arg from
+	xfs_setsize_buftarg()
+Date: Mon,  7 Apr 2014 14:58:53 -0500
+Message-Id: <1396900746-22201-7-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,55 +32,75 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_inode.c      |    4 ++--
- fs/xfs/xfs_inode_fork.c |    3 +--
- fs/xfs/xfs_inode_fork.h |    3 +--
- 3 files changed, 4 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_buf.c   |    4 +---
+ fs/xfs/xfs_buf.h   |    2 +-
+ fs/xfs/xfs_super.c |    5 +----
+ 3 files changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3a137e9..be29b80 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3260,9 +3260,9 @@ xfs_iflush_int(
- 		}
- 	}
- 
--	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK, bp);
-+	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
- 	if (XFS_IFORK_Q(ip))
--		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK, bp);
-+		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
- 	xfs_inobp_check(mp, bp);
- 
- 	/*
-diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-index 73514c0..b031e8d 100644
---- a/fs/xfs/xfs_inode_fork.c
-+++ b/fs/xfs/xfs_inode_fork.c
-@@ -798,8 +798,7 @@ xfs_iflush_fork(
- 	xfs_inode_t		*ip,
- 	xfs_dinode_t		*dip,
- 	xfs_inode_log_item_t	*iip,
--	int			whichfork,
--	xfs_buf_t		*bp)
-+	int			whichfork)
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9c061ef..03742ea 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1596,7 +1596,6 @@ xfs_free_buftarg(
+ int
+ xfs_setsize_buftarg(
+ 	xfs_buftarg_t		*btp,
+-	unsigned int		blocksize,
+ 	unsigned int		sectorsize)
  {
- 	char			*cp;
- 	xfs_ifork_t		*ifp;
-diff --git a/fs/xfs/xfs_inode_fork.h b/fs/xfs/xfs_inode_fork.h
-index eb329a1..7d3b1ed 100644
---- a/fs/xfs/xfs_inode_fork.h
-+++ b/fs/xfs/xfs_inode_fork.h
-@@ -127,8 +127,7 @@ typedef struct xfs_ifork {
+ 	/* Set up metadata sector size info */
+@@ -1631,8 +1630,7 @@ xfs_setsize_buftarg_early(
+ 	xfs_buftarg_t		*btp,
+ 	struct block_device	*bdev)
+ {
+-	return xfs_setsize_buftarg(btp, PAGE_SIZE,
+-				   bdev_logical_block_size(bdev));
++	return xfs_setsize_buftarg(btp, bdev_logical_block_size(bdev));
+ }
  
- int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
- void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
--				struct xfs_inode_log_item *, int,
--				struct xfs_buf *);
-+				struct xfs_inode_log_item *, int);
- void		xfs_idestroy_fork(struct xfs_inode *, int);
- void		xfs_idata_realloc(struct xfs_inode *, int, int);
- void		xfs_iroot_realloc(struct xfs_inode *, int, int);
+ xfs_buftarg_t *
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 9953395..0aee9b8 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -376,7 +376,7 @@ extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
+ 			struct block_device *, int, const char *);
+ extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
+ extern void xfs_wait_buftarg(xfs_buftarg_t *);
+-extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
++extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+ 
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d971f49..c10197e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -811,8 +811,7 @@ xfs_setup_devices(
+ {
+ 	int			error;
+ 
+-	error = xfs_setsize_buftarg(mp->m_ddev_targp, mp->m_sb.sb_blocksize,
+-				    mp->m_sb.sb_sectsize);
++	error = xfs_setsize_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize);
+ 	if (error)
+ 		return error;
+ 
+@@ -822,14 +821,12 @@ xfs_setup_devices(
+ 		if (xfs_sb_version_hassector(&mp->m_sb))
+ 			log_sector_size = mp->m_sb.sb_logsectsize;
+ 		error = xfs_setsize_buftarg(mp->m_logdev_targp,
+-					    mp->m_sb.sb_blocksize,
+ 					    log_sector_size);
+ 		if (error)
+ 			return error;
+ 	}
+ 	if (mp->m_rtdev_targp) {
+ 		error = xfs_setsize_buftarg(mp->m_rtdev_targp,
+-					    mp->m_sb.sb_blocksize,
+ 					    mp->m_sb.sb_sectsize);
+ 		if (error)
+ 			return error;
 -- 
 1.7.1
 
