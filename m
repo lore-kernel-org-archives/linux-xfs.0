@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BD0127FC8
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 17:57:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E116304039
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 15:57:15 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E98E77FFC
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:23:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C364E304059
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 16:23:13 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Fmtm3vRS4bBWwPM9 for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 15:57:12 -0700 (PDT)
-Date: Tue, 8 Apr 2014 08:57:10 +1000
+	gcPoGQ2WzQQGgi9C for <xfs@oss.sgi.com>;
+	Mon, 07 Apr 2014 16:23:12 -0700 (PDT)
+Date: Tue, 8 Apr 2014 09:23:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [FAQ v2] XFS speculative preallocation
-Message-ID: <20140407225710.GC27017@dastard>
-References: <20140407153906.GC48184@bfoster.bfoster> <53430375.3060203@sgi.com>
-	<20140407214527.GA43531@bfoster.bfoster> <534324D0.3080701@sgi.com>
+Subject: Re: [PATCH 16/19] xfs: remove unused tp arg from
+	xfs_symlink_local_to_remote()
+Message-ID: <20140407232310.GD27017@dastard>
+References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
+	<1396900746-22201-17-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <534324D0.3080701@sgi.com>
+In-Reply-To: <1396900746-22201-17-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,36 +31,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 07, 2014 at 05:21:04PM -0500, Mark Tinguely wrote:
-> On 04/07/14 16:45, Brian Foster wrote:
-> >On Mon, Apr 07, 2014 at 02:58:45PM -0500, Mark Tinguely wrote:
-> >>On 04/07/14 10:39, Brian Foster wrote:
-> >>>XFS speculatively preallocates post-EOF blocks on file extending writes
-> >>>in anticipation of future extending writes. The size of a preallocation
-> >>>is dynamic and depends on the runtime state of the file and fs.
-> >>>Generally speaking, preallocation is disabled for very small files and
-> >>			vague what is very small?   ^^^
-> >>...
-> >
-> >I originally pointed out 64k, but that and other heuristic details that
-> >are subject to change were purged in v2. I'm personally not against
-> >including something that indicates the default and the notion that it's
-> >subject to change. I don't feel too strongly about it either way.
-> >Thoughts appreciated.
+On Mon, Apr 07, 2014 at 02:59:03PM -0500, Eric Sandeen wrote:
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap.c           |    5 ++---
+>  fs/xfs/xfs_shared.h         |    2 +-
+>  fs/xfs/xfs_symlink_remote.c |    1 -
+>  3 files changed, 3 insertions(+), 5 deletions(-)
 > 
-> 
-> I think the details are good since everyone has a different idea on
-> "very small". The FAQ can be changed with the code. You can expect
-> the TOT FAQ to represent Linux 3.0-stable.
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 03b6ff2..6a1e702 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+> @@ -919,8 +919,7 @@ xfs_bmap_local_to_extents(
+>  	xfs_extlen_t	total,		/* total blocks needed by transaction */
+>  	int		*logflagsp,	/* inode logging flags */
+>  	int		whichfork,
+> -	void		(*init_fn)(struct xfs_trans *tp,
+> -				   struct xfs_buf *bp,
+> +	void		(*init_fn)(struct xfs_buf *bp,
+>  				   struct xfs_inode *ip,
+>  				   struct xfs_ifork *ifp))
+>  {
 
-What's that supposed to mean? The FAQ on the xfs.org website does
-not represent a specific release. It is supposed to contain the most
-up-to-date information we have about various topics. If there's
-something specific to a kernel version we need to mention, then
-that's explicitly stated in the FAQ entry....
+This one I disagree with - this local-to-remote change is only done
+within a transaction context. The existing conversions don't require
+any special operations that require logging different objects, but
+the possibility exists and so we really do need to pass the
+transaction structure through this API.
+
+e.g. we really should convert the directory code over to use the
+generic xfs_bmap_local_to_extents() function rather than rolling
+it's own version of essentially the same thing, and that requires
+passing the transaction structure through the init_fn interface.
 
 Cheers,
 
