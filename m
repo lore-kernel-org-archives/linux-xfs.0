@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B09867F90
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:59:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D7A3304039
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 60A177FA2
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:59:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 39D068F8059
 	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:09 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id iOlqQkUxvGmqnYjy for <xfs@oss.sgi.com>;
+	ESMTP id 4zDJkkz7wpKjho72 for <xfs@oss.sgi.com>;
 	Mon, 07 Apr 2014 12:59:08 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 02/19] xfs: remove unused mp arg from xfs_attr3_rmt_hdr_ok()
-Date: Mon,  7 Apr 2014 14:58:49 -0500
-Message-Id: <1396900746-22201-3-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 04/19] xfs: remove unused mp arg from xfs_bmap_forkoff_reset()
+Date: Mon,  7 Apr 2014 14:58:51 -0500
+Message-Id: <1396900746-22201-5-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,30 +31,30 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_attr_remote.c |    3 +--
+ fs/xfs/xfs_bmap.c |    3 +--
  1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-index 5549d69..90b2b58 100644
---- a/fs/xfs/xfs_attr_remote.c
-+++ b/fs/xfs/xfs_attr_remote.c
-@@ -68,7 +68,6 @@ xfs_attr3_rmt_blocks(
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index eeb673b..03b6ff2 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -233,7 +233,6 @@ xfs_default_attroffset(
   */
- static bool
- xfs_attr3_rmt_hdr_ok(
--	struct xfs_mount	*mp,
- 	void			*ptr,
- 	xfs_ino_t		ino,
- 	uint32_t		offset,
-@@ -254,7 +253,7 @@ xfs_attr_rmtval_copyout(
- 		byte_cnt = min(*valuelen, byte_cnt);
+ STATIC void
+ xfs_bmap_forkoff_reset(
+-	xfs_mount_t	*mp,
+ 	xfs_inode_t	*ip,
+ 	int		whichfork)
+ {
+@@ -905,7 +904,7 @@ xfs_bmap_local_to_extents_empty(
+ 	ASSERT(ifp->if_bytes == 0);
+ 	ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
  
- 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
--			if (!xfs_attr3_rmt_hdr_ok(mp, src, ino, *offset,
-+			if (!xfs_attr3_rmt_hdr_ok(src, ino, *offset,
- 						  byte_cnt, bno)) {
- 				xfs_alert(mp,
- "remote attribute header mismatch bno/off/len/owner (0x%llx/0x%x/Ox%x/0x%llx)",
+-	xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
++	xfs_bmap_forkoff_reset(ip, whichfork);
+ 	ifp->if_flags &= ~XFS_IFINLINE;
+ 	ifp->if_flags |= XFS_IFEXTENTS;
+ 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
 -- 
 1.7.1
 
