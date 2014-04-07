@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A643B7FA0
+	by oss.sgi.com (Postfix) with ESMTP id 30AB27F9E
 	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:59:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 22361AC019
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:11 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B376EAC018
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:10 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id CVioAj1A5Do9GpjL for <xfs@oss.sgi.com>;
+	ESMTP id nONW2juHsNzMjA2m for <xfs@oss.sgi.com>;
 	Mon, 07 Apr 2014 12:59:09 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 16/19] xfs: remove unused tp arg from
-	xfs_symlink_local_to_remote()
-Date: Mon,  7 Apr 2014 14:59:03 -0500
-Message-Id: <1396900746-22201-17-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 14/19] xfs: remove unused pag ptr arg from iterator execute
+	functions
+Date: Mon,  7 Apr 2014 14:59:01 -0500
+Message-Id: <1396900746-22201-15-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,59 +32,93 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_bmap.c           |    5 ++---
- fs/xfs/xfs_shared.h         |    2 +-
- fs/xfs/xfs_symlink_remote.c |    1 -
- 3 files changed, 3 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_icache.c      |   12 ++++--------
+ fs/xfs/xfs_icache.h      |    6 ++----
+ fs/xfs/xfs_qm_syscalls.c |    1 -
+ 3 files changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 03b6ff2..6a1e702 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -919,8 +919,7 @@ xfs_bmap_local_to_extents(
- 	xfs_extlen_t	total,		/* total blocks needed by transaction */
- 	int		*logflagsp,	/* inode logging flags */
- 	int		whichfork,
--	void		(*init_fn)(struct xfs_trans *tp,
--				   struct xfs_buf *bp,
-+	void		(*init_fn)(struct xfs_buf *bp,
- 				   struct xfs_inode *ip,
- 				   struct xfs_ifork *ifp))
- {
-@@ -977,7 +976,7 @@ xfs_bmap_local_to_extents(
- 	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
- 
- 	/* initialise the block and copy the data */
--	init_fn(tp, bp, ip, ifp);
-+	init_fn(bp, ip, ifp);
- 
- 	/* account for the change in fork size and log everything */
- 	xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
-diff --git a/fs/xfs/xfs_shared.h b/fs/xfs/xfs_shared.h
-index 8c5035a..18dca8c 100644
---- a/fs/xfs/xfs_shared.h
-+++ b/fs/xfs/xfs_shared.h
-@@ -238,7 +238,7 @@ int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
- 			uint32_t size, struct xfs_buf *bp);
- bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
- 			uint32_t size, struct xfs_buf *bp);
--void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
-+void xfs_symlink_local_to_remote(struct xfs_buf *bp,
- 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
- 
- #endif /* __XFS_SHARED_H__ */
-diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
-index bf59a2b..8e3045e 100644
---- a/fs/xfs/xfs_symlink_remote.c
-+++ b/fs/xfs/xfs_symlink_remote.c
-@@ -173,7 +173,6 @@ const struct xfs_buf_ops xfs_symlink_buf_ops = {
- 
- void
- xfs_symlink_local_to_remote(
--	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp,
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 98d3524..c48df5f 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -507,8 +507,7 @@ STATIC int
+ xfs_inode_ag_walk(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_perag	*pag,
+-	int			(*execute)(struct xfs_inode *ip,
+-					   struct xfs_perag *pag, int flags,
++	int			(*execute)(struct xfs_inode *ip, int flags,
+ 					   void *args),
+ 	int			flags,
+ 	void			*args,
+@@ -582,7 +581,7 @@ restart:
+ 		for (i = 0; i < nr_found; i++) {
+ 			if (!batch[i])
+ 				continue;
+-			error = execute(batch[i], pag, flags, args);
++			error = execute(batch[i], flags, args);
+ 			IRELE(batch[i]);
+ 			if (error == EAGAIN) {
+ 				skipped++;
+@@ -636,8 +635,7 @@ xfs_eofblocks_worker(
+ int
+ xfs_inode_ag_iterator(
+ 	struct xfs_mount	*mp,
+-	int			(*execute)(struct xfs_inode *ip,
+-					   struct xfs_perag *pag, int flags,
++	int			(*execute)(struct xfs_inode *ip, int flags,
+ 					   void *args),
+ 	int			flags,
+ 	void			*args)
+@@ -664,8 +662,7 @@ xfs_inode_ag_iterator(
+ int
+ xfs_inode_ag_iterator_tag(
+ 	struct xfs_mount	*mp,
+-	int			(*execute)(struct xfs_inode *ip,
+-					   struct xfs_perag *pag, int flags,
++	int			(*execute)(struct xfs_inode *ip, int flags,
+ 					   void *args),
+ 	int			flags,
+ 	void			*args,
+@@ -1209,7 +1206,6 @@ xfs_inode_match_id(
+ STATIC int
+ xfs_inode_free_eofblocks(
  	struct xfs_inode	*ip,
- 	struct xfs_ifork	*ifp)
+-	struct xfs_perag	*pag,
+ 	int			flags,
+ 	void			*args)
+ {
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 9ed68bb..9cf017b 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -60,12 +60,10 @@ int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
+ void xfs_eofblocks_worker(struct work_struct *);
+ 
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+-	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
+-		int flags, void *args),
++	int (*execute)(struct xfs_inode *ip, int flags, void *args),
+ 	int flags, void *args);
+ int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
+-	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
+-		int flags, void *args),
++	int (*execute)(struct xfs_inode *ip, int flags, void *args),
+ 	int flags, void *args, int tag);
+ 
+ static inline int
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 3daf5ea..72cbe65 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -959,7 +959,6 @@ xfs_qm_export_flags(
+ STATIC int
+ xfs_dqrele_inode(
+ 	struct xfs_inode	*ip,
+-	struct xfs_perag	*pag,
+ 	int			flags,
+ 	void			*args)
+ {
 -- 
 1.7.1
 
