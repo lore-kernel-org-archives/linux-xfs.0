@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 48A437F8E
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 514E67F93
 	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 14:59:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 053E430404E
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E2108F8039
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 12:59:10 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id QDH1PXbbo1Cs7lwf for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 12:59:08 -0700 (PDT)
+	ESMTP id EjuojFhKYweGUbvb for <xfs@oss.sgi.com>;
+	Mon, 07 Apr 2014 12:59:09 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 01/19] xfs: remove unused tp arg from xfs_bmap_last_offset()
-	and callers
-Date: Mon,  7 Apr 2014 14:58:48 -0500
-Message-Id: <1396900746-22201-2-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 11/19] xfs: remove unused mp arg from xfs_dir2 dataptr/byte
+	functions
+Date: Mon,  7 Apr 2014 14:58:58 -0500
+Message-Id: <1396900746-22201-12-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 References: <1396900746-22201-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,223 +30,137 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-remove unused transaction pointer from various
-callchains leading to xfs_bmap_last_offset().
-
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_bmap.c         |    1 -
- fs/xfs/xfs_bmap.h         |    4 ++--
- fs/xfs/xfs_dir2.c         |   26 ++++++++++++--------------
- fs/xfs/xfs_dir2.h         |    4 ++--
- fs/xfs/xfs_dir2_leaf.c    |    2 +-
- fs/xfs/xfs_dir2_node.c    |    2 +-
- fs/xfs/xfs_dir2_readdir.c |    2 +-
- fs/xfs/xfs_iomap.c        |    2 +-
- 8 files changed, 20 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_da_format.h    |   10 +++++-----
+ fs/xfs/xfs_dir2_block.c   |    8 ++++----
+ fs/xfs/xfs_dir2_readdir.c |    8 ++++----
+ 3 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 152543c..b308097 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -1675,7 +1675,6 @@ xfs_bmap_isaeof(
+diff --git a/fs/xfs/xfs_da_format.h b/fs/xfs/xfs_da_format.h
+index a19d3f8..1432b57 100644
+--- a/fs/xfs/xfs_da_format.h
++++ b/fs/xfs/xfs_da_format.h
+@@ -541,7 +541,7 @@ xfs_dir2_leaf_bests_p(struct xfs_dir2_leaf_tail *ltp)
+  * Convert dataptr to byte in file space
   */
- int
- xfs_bmap_last_offset(
--	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		*last_block,
- 	int			whichfork)
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 33b41f3..52ad38d 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -146,8 +146,8 @@ int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
- int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *last_block, int whichfork);
--int	xfs_bmap_last_offset(struct xfs_trans *tp, struct xfs_inode *ip,
--		xfs_fileoff_t *unused, int whichfork);
-+int	xfs_bmap_last_offset(struct xfs_inode *ip, xfs_fileoff_t *unused,
-+		int whichfork);
- int	xfs_bmap_one_block(struct xfs_inode *ip, int whichfork);
- int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		int whichfork);
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index ce16ef0..7575a3b 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -230,11 +230,11 @@ xfs_dir_createname(
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_addname(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isblock(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_block_addname(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isleaf(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_leaf_addname(&args);
-@@ -303,11 +303,11 @@ xfs_dir_lookup(
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_lookup(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isblock(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_block_lookup(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isleaf(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_leaf_lookup(&args);
-@@ -360,11 +360,11 @@ xfs_dir_removename(
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_removename(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isblock(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_block_removename(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isleaf(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_leaf_removename(&args);
-@@ -410,11 +410,11 @@ xfs_dir_replace(
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_replace(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isblock(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_block_replace(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isleaf(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_leaf_replace(&args);
-@@ -456,11 +456,11 @@ xfs_dir_canenter(
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_addname(&args);
--	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isblock(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_block_addname(&args);
--	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-+	else if ((rval = xfs_dir2_isleaf(dp, &v)))
- 		return rval;
- 	else if (v)
- 		rval = xfs_dir2_leaf_addname(&args);
-@@ -525,7 +525,6 @@ xfs_dir2_grow_inode(
-  */
- int
- xfs_dir2_isblock(
--	xfs_trans_t	*tp,
- 	xfs_inode_t	*dp,
- 	int		*vp)		/* out: 1 is block, 0 is not block */
+ static inline xfs_dir2_off_t
+-xfs_dir2_dataptr_to_byte(struct xfs_mount *mp, xfs_dir2_dataptr_t dp)
++xfs_dir2_dataptr_to_byte(xfs_dir2_dataptr_t dp)
  {
-@@ -534,7 +533,7 @@ xfs_dir2_isblock(
- 	int		rval;
- 
- 	mp = dp->i_mount;
--	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)))
-+	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
- 		return rval;
- 	rval = XFS_FSB_TO_B(mp, last) == mp->m_dirblksize;
- 	ASSERT(rval == 0 || dp->i_d.di_size == mp->m_dirblksize);
-@@ -547,7 +546,6 @@ xfs_dir2_isblock(
+ 	return (xfs_dir2_off_t)dp << XFS_DIR2_DATA_ALIGN_LOG;
+ }
+@@ -550,7 +550,7 @@ xfs_dir2_dataptr_to_byte(struct xfs_mount *mp, xfs_dir2_dataptr_t dp)
+  * Convert byte in file space to dataptr.  It had better be aligned.
   */
- int
- xfs_dir2_isleaf(
--	xfs_trans_t	*tp,
- 	xfs_inode_t	*dp,
- 	int		*vp)		/* out: 1 is leaf, 0 is not leaf */
+ static inline xfs_dir2_dataptr_t
+-xfs_dir2_byte_to_dataptr(struct xfs_mount *mp, xfs_dir2_off_t by)
++xfs_dir2_byte_to_dataptr(xfs_dir2_off_t by)
  {
-@@ -556,7 +554,7 @@ xfs_dir2_isleaf(
- 	int		rval;
+ 	return (xfs_dir2_dataptr_t)(by >> XFS_DIR2_DATA_ALIGN_LOG);
+ }
+@@ -571,7 +571,7 @@ xfs_dir2_byte_to_db(struct xfs_mount *mp, xfs_dir2_off_t by)
+ static inline xfs_dir2_db_t
+ xfs_dir2_dataptr_to_db(struct xfs_mount *mp, xfs_dir2_dataptr_t dp)
+ {
+-	return xfs_dir2_byte_to_db(mp, xfs_dir2_dataptr_to_byte(mp, dp));
++	return xfs_dir2_byte_to_db(mp, xfs_dir2_dataptr_to_byte(dp));
+ }
  
- 	mp = dp->i_mount;
--	if ((rval = xfs_bmap_last_offset(tp, dp, &last, XFS_DATA_FORK)))
-+	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
- 		return rval;
- 	*vp = last == mp->m_dirleafblk + (1 << mp->m_sb.sb_dirblklog);
- 	return 0;
-diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-index cec70e0..64a6b19 100644
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -142,8 +142,8 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
  /*
-  * Interface routines used by userspace utilities
-  */
--extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
--extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
-+extern int xfs_dir2_isblock(struct xfs_inode *dp, int *r);
-+extern int xfs_dir2_isleaf(struct xfs_inode *dp, int *r);
- extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
- 				struct xfs_buf *bp);
+@@ -590,7 +590,7 @@ xfs_dir2_byte_to_off(struct xfs_mount *mp, xfs_dir2_off_t by)
+ static inline xfs_dir2_data_aoff_t
+ xfs_dir2_dataptr_to_off(struct xfs_mount *mp, xfs_dir2_dataptr_t dp)
+ {
+-	return xfs_dir2_byte_to_off(mp, xfs_dir2_dataptr_to_byte(mp, dp));
++	return xfs_dir2_byte_to_off(mp, xfs_dir2_dataptr_to_byte(dp));
+ }
  
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index ae47ec6..f8170bc 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -1707,7 +1707,7 @@ xfs_dir2_node_to_leaf(
- 	/*
- 	 * Get the last offset in the file.
+ /*
+@@ -629,7 +629,7 @@ static inline xfs_dir2_dataptr_t
+ xfs_dir2_db_off_to_dataptr(struct xfs_mount *mp, xfs_dir2_db_t db,
+ 			   xfs_dir2_data_aoff_t o)
+ {
+-	return xfs_dir2_byte_to_dataptr(mp, xfs_dir2_db_off_to_byte(mp, db, o));
++	return xfs_dir2_byte_to_dataptr(xfs_dir2_db_off_to_byte(mp, db, o));
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 90cdbf4..976842e 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -536,7 +536,7 @@ xfs_dir2_block_addname(
+ 	 * Fill in the leaf entry.
  	 */
--	if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK))) {
-+	if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK))) {
- 		return error;
- 	}
- 	fo -= mp->m_dirblkfsbs;
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 48c7d18..807946d 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1726,7 +1726,7 @@ xfs_dir2_node_addname_int(
- 	if (dbno == -1) {
- 		xfs_fileoff_t	fo;		/* freespace block number */
- 
--		if ((error = xfs_bmap_last_offset(tp, dp, &fo, XFS_DATA_FORK)))
-+		if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK)))
- 			return error;
- 		lastfbno = xfs_dir2_da_to_db(mp, (xfs_dablk_t)fo);
- 		fbno = ifbno;
+ 	blp[mid].hashval = cpu_to_be32(args->hashval);
+-	blp[mid].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
++	blp[mid].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(
+ 				(char *)dep - (char *)hdr));
+ 	xfs_dir2_block_log_leaf(tp, bp, lfloglow, lfloghigh);
+ 	/*
+@@ -1169,7 +1169,7 @@ xfs_dir2_sf_to_block(
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(tp, dp, bp, dep);
+ 	blp[0].hashval = cpu_to_be32(xfs_dir_hash_dot);
+-	blp[0].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
++	blp[0].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(
+ 				(char *)dep - (char *)hdr));
+ 	/*
+ 	 * Create entry for ..
+@@ -1183,7 +1183,7 @@ xfs_dir2_sf_to_block(
+ 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(tp, dp, bp, dep);
+ 	blp[1].hashval = cpu_to_be32(xfs_dir_hash_dotdot);
+-	blp[1].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
++	blp[1].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(
+ 				(char *)dep - (char *)hdr));
+ 	offset = dp->d_ops->data_first_offset;
+ 	/*
+@@ -1237,7 +1237,7 @@ xfs_dir2_sf_to_block(
+ 		name.len = sfep->namelen;
+ 		blp[2 + i].hashval = cpu_to_be32(mp->m_dirnameops->
+ 							hashname(&name));
+-		blp[2 + i].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
++		blp[2 + i].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(
+ 						 (char *)dep - (char *)hdr));
+ 		offset = (int)((char *)(tagp + 1) - (char *)hdr);
+ 		if (++i == sfp->count)
 diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index aead369..a18000f 100644
+index a99967b..50b72f7 100644
 --- a/fs/xfs/xfs_dir2_readdir.c
 +++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -687,7 +687,7 @@ xfs_readdir(
- 	lock_mode = xfs_ilock_data_map_shared(dp);
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_getdents(dp, ctx);
--	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
-+	else if ((rval = xfs_dir2_isblock(dp, &v)))
- 		;
- 	else if (v)
- 		rval = xfs_dir2_block_getdents(dp, ctx);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 22d1cbe..2b2739c 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -734,7 +734,7 @@ xfs_iomap_write_allocate(
- 			 */
- 			nimaps = 1;
- 			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
--			error = xfs_bmap_last_offset(NULL, ip, &last_block,
-+			error = xfs_bmap_last_offset(ip, &last_block,
- 							XFS_DATA_FORK);
- 			if (error)
- 				goto trans_cancel;
+@@ -531,7 +531,7 @@ xfs_dir2_leaf_getdents(
+ 	 * Inside the loop we keep the main offset value as a byte offset
+ 	 * in the directory file.
+ 	 */
+-	curoff = xfs_dir2_dataptr_to_byte(mp, ctx->pos);
++	curoff = xfs_dir2_dataptr_to_byte(ctx->pos);
+ 
+ 	/*
+ 	 * Force this conversion through db so we truncate the offset
+@@ -635,7 +635,7 @@ xfs_dir2_leaf_getdents(
+ 		length = dp->d_ops->data_entsize(dep->namelen);
+ 		filetype = dp->d_ops->data_get_ftype(dep);
+ 
+-		ctx->pos = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
++		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+ 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
+ 			    be64_to_cpu(dep->inumber),
+ 			    xfs_dir3_get_dtype(mp, filetype)))
+@@ -653,10 +653,10 @@ xfs_dir2_leaf_getdents(
+ 	/*
+ 	 * All done.  Set output offset value to current offset.
+ 	 */
+-	if (curoff > xfs_dir2_dataptr_to_byte(mp, XFS_DIR2_MAX_DATAPTR))
++	if (curoff > xfs_dir2_dataptr_to_byte(XFS_DIR2_MAX_DATAPTR))
+ 		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
+ 	else
+-		ctx->pos = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
++		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+ 	kmem_free(map_info);
+ 	if (bp)
+ 		xfs_trans_brelse(NULL, bp);
 -- 
 1.7.1
 
