@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BBC867F87
-	for <xfs@oss.sgi.com>; Sat,  5 Apr 2014 13:20:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7CE758F804C
-	for <xfs@oss.sgi.com>; Sat,  5 Apr 2014 11:19:57 -0700 (PDT)
-Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
-	[209.85.217.181]) by cuda.sgi.com with ESMTP id
-	LnSDGo0S4hBtjKUw (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 05 Apr 2014 11:19:54 -0700 (PDT)
-Received: by mail-lb0-f181.google.com with SMTP id c11so3400599lbj.26
-	for <xfs@oss.sgi.com>; Sat, 05 Apr 2014 11:19:53 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C33FE7F4E
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 09:11:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 27E88AC009
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 07:11:52 -0700 (PDT)
+Received: from mail-qg0-f47.google.com (mail-qg0-f47.google.com
+	[209.85.192.47]) by cuda.sgi.com with ESMTP id LYFCE4QBXm4sJ50w
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 07 Apr 2014 07:11:50 -0700 (PDT)
+Received: by mail-qg0-f47.google.com with SMTP id i50so758139qgf.6
+	for <xfs@oss.sgi.com>; Mon, 07 Apr 2014 07:11:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140402044749.GK17603@dastard>
-References: <CABHf-sxmxmM0+WVzvGGJqKrrGngm0qrGTsYDnEmUEf+GJ_pK8A@mail.gmail.com>
-	<20140401204215.GG17603@dastard>
-	<CABHf-sxeACnsSoJszM8Xan-VcXLkLdrY7cBM9=FCAxdMBaQohA@mail.gmail.com>
-	<20140402044749.GK17603@dastard>
-Date: Sat, 5 Apr 2014 14:19:53 -0400
-Message-ID: <CABHf-sx3H2=R72gFZik3QhygiF4VhUMXGt1VPw2AaXoXMcz8OQ@mail.gmail.com>
-Subject: Re: xfs: invalid requests to request_fn from xfs_repair
-From: Jamie Pocas <pocas.jamie@gmail.com>
+In-Reply-To: <20140404203521.GA15122@laptop.bfoster>
+References: <1396277668-10861-1-git-send-email-linkinjeon@gmail.com>
+	<20140404203521.GA15122@laptop.bfoster>
+Date: Mon, 7 Apr 2014 23:11:49 +0900
+Message-ID: <CAKYAXd_e1vDhEe+svh1ycfWOcNvZZVPT634AGeNSfJfPwkq-xQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+From: Namjae Jeon <linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,298 +27,509 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6135353133968266277=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, Ashish Sangwan <a.sangwan@samsung.com>, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
 
---===============6135353133968266277==
-Content-Type: multipart/alternative; boundary=001a113437fc42962b04f64fae87
-
---001a113437fc42962b04f64fae87
-Content-Type: text/plain; charset=ISO-8859-1
-
-On Wed, Apr 2, 2014 at 12:47 AM, Dave Chinner <david@fromorbit.com> wrote:
-
-> > > > While iterating through segments in rq_for_each_segment(), for some
-> > > > requests I am seeing some odd behavior.
-> > > >
-> > > > segment 0: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 903
-> // Ok,
-> > > > this looks normal
-> > > > segment 1: iter.bio->bi_sector = 1023, blk_rq_cur_sectors(rq) = 7 //
-> > > > Whoah... this doesn't look right to me
-> > >
-> > > Seems fine to me. There's absolutely no reason two separate IOs
-> > > can't be sub-page sector aligned or discontiguous given the above
-> > > configuration. If that's what the getblocks callback returned to the
-> > > DIO layer, then that's what you're going to see in the bios...
-> > >
-> > >
-> > I guess my assumption that sectors would be adjacent was invalid, but
-> this
-> > is what I have read in ldd3 and other books and seen in some driver
-> > examples. So I apologize for my folly and it's another lesson in not
-> > believing everything you see on the net. The back half of my driver is
-> > really optimized for transferring a single contiguous lba & transfer
-> length
-> > pair (ala SCSI WRITE 16 for example). However in desperation, I had
-> changed
-> > the driver to support requests like this (with disjoint sector ranges)
-> but
-> > it still seemed odd to me that occasionally some requests would even have
-> > multiple segments that would *write* the same sectors/lengths. For
-> example
-> > I also see requests like the following.
-> >
-> > Given: rq_data_dir(rq) == 1 (i.e. a write)
-> > segment   0: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    // Ok
-> > segment   1: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
-> > Again?
-> > segment   2: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
-> Yet
-> > again?
-> > segment   3: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
-> > Really?
-> > ...
-> > segment 126: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 7    //
-> > What's going on?
-> > // Reminder: segment limit is 128
-> > segment 127: iter.bio->bi_sector = 1023, blk_rq_cur_sectors(rq) = 1 //
-> > Haha, bet you though I was going to say sector = 0!
+>> +
+>> +int
+>> +xfs_bmap_split_extent(
+>> +	struct xfs_inode	*ip,
+>> +	xfs_fileoff_t		split_fsb,
+>> +	xfs_extnum_t		*split_ext)
+>> +{
+>> +	struct xfs_mount        *mp = ip->i_mount;
+>> +	struct xfs_trans	*tp;
+>> +	struct xfs_bmap_free	free_list;
+>> +	xfs_fsblock_t		firstfsb;
+>> +	int			committed;
+>> +	int			error;
+>> +
+>> +	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+>> +	tp->t_flags |= XFS_TRANS_RESERVE;
 >
-> That really looks to me like a bug in whatever is building that iter
-> structure. It looks like there's an off-by-one on each page (should
-> be 8 sectors not 7) and the bi_sector is not being set correctly to
-> the sector offset of the bio within the IO. i.e. for a contiguous
-> IO it should look something like:
+> Any reason this (or the other cases) has to be reserve enabled?
+Hi Brian.
+No Particular reason apart from following the same pattern we used
+in collapse range patches.
+During Collapse range review, Dave Chinner also suggested that
+we should not use reserved pool:
+"This probably shouldn't use XFS_TRANS_RESERVE. If we are at ENOSPC,
+then the operation simply fails. Yes, we've already punched the
+hole, so we shouldn't get ENOSPC here, but I don't think it's worth
+dipping into the reserve pool as it has much more important uses..."
+
+I will remove this and from other places in next version.
+(and probably the same need to be done for collapse range)
+
 >
-> segment   0: iter.bio->bi_sector = 0, blk_rq_cur_sectors(rq) = 8
-> segment   1: iter.bio->bi_sector = 8, blk_rq_cur_sectors(rq) = 8
-> segment   2: iter.bio->bi_sector = 16, blk_rq_cur_sectors(rq) = 8
-> ....
-> segment 127: iter.bio->bi_sector = 1016, blk_rq_cur_sectors(rq) = 8
+>> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
+>> +			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
+>> +
+>> +	/*
+>> +	 * check for running out of space
+>> +	 */
+>> +	if (error) {
+>> +		/*
+>> +		 * Free the transaction structure.
+>> +		 */
+>> +		ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+>> +		xfs_trans_cancel(tp, 0);
+>> +		return error;
+>> +	}
+>> +
+>> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>> +	error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+>> +			ip->i_gdquot, ip->i_pdquot,
+>> +			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+>> +			XFS_QMOPT_RES_REGBLKS);
+>> +	if (error)
+>> +		goto error1;
 >
-> I highly doubt the direct IO code is doing something wrong, because
-> a mapping bug like that would show up everywhere and not just in your
-> special driver....
+> We should probably have an xfs_qm_dqattach() call before we get here. As
+> it is, it looks like the first one is in xfs_alloc_file_space().
+Okay, I will check about this point.
 >
+
+>> +
+>> +/*
+>> + * Shift extent records to the right to make a hole.
+>> + * The maximum number of extents to be shifted in a single operation
+>> + * is @num_exts, and @current_ext keeps track of the current extent
+>> + * index we have shifted. @offset_shift_fsb is the length by which each
+>> + * extent is shifted. @end_ext is the last extent to be shifted.
+>> + */
+>> +int
+>> +xfs_bmap_shift_extents_right(
+>> +	struct xfs_trans	*tp,
+>> +	struct xfs_inode	*ip,
+>> +	int			*done,
+>> +	xfs_fileoff_t		offset_shift_fsb,
+>> +	xfs_extnum_t		*current_ext,
+>> +	xfs_extnum_t		end_ext,
+>> +	xfs_fsblock_t		*firstblock,
+>> +	struct xfs_bmap_free	*flist,
+>> +	int			num_exts)
+>> +{
+>> +	struct xfs_mount		*mp = ip->i_mount;
+>> +	struct xfs_btree_cur		*cur;
+>> +	struct xfs_bmbt_rec_host	*gotp;
+>> +	struct xfs_bmbt_irec		got;
+>> +	struct xfs_bmbt_irec            right;
+>> +	xfs_ifork_t			*ifp;
+>> +	xfs_fileoff_t			startoff;
+>> +	xfs_filblks_t			blockcount = 0;
+>> +	int				error = 0;
+>> +	int				i;
+>> +	int				whichfork = XFS_DATA_FORK;
+>> +	int				logflags;
+>> +
+>> +	if (unlikely(XFS_TEST_ERROR(
+>> +	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+>> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+>> +	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+>> +		XFS_ERROR_REPORT("xfs_bmap_shift_extents_right",
+>> +				 XFS_ERRLEVEL_LOW, mp);
+>> +		return XFS_ERROR(EFSCORRUPTED);
+>> +	}
+>> +
+>> +	if (XFS_FORCED_SHUTDOWN(mp))
+>> +		return XFS_ERROR(EIO);
+>> +
+>> +	ASSERT(current_ext != NULL);
+>> +
+>> +	/* We are going to change core inode */
+>> +	logflags = XFS_ILOG_CORE;
+>> +	ifp = XFS_IFORK_PTR(ip, whichfork);
+>> +
+>> +	if (ifp->if_flags & XFS_IFBROOT) {
+>> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+>> +		cur->bc_private.b.firstblock = *firstblock;
+>> +		cur->bc_private.b.flist = flist;
+>> +		cur->bc_private.b.flags = 0;
+>> +	} else {
+>> +		cur = NULL;
+>> +		logflags |= XFS_ILOG_DEXT;
+>> +	}
+>> +
+>> +	/* start shifting extents to right */
+>> +	while (num_exts-- > 0) {
+>> +		if (*current_ext < end_ext) {
+>> +			*done = 1;
+>> +			break;
+>> +		}
+>> +
+>> +		gotp = xfs_iext_get_ext(ifp, *current_ext);
+>> +		xfs_bmbt_get_all(gotp, &got);
+>> +		startoff = got.br_startoff + offset_shift_fsb;
+>> +
+>> +		/*
+>> +		 * Before shifting extent into hole, make sure that the hole
+>> +		 * is large enough to accomodate the shift. This checking has
+>> +		 * to be performed for all except the last extent.
+>> +		 */
+>> +		if ((XFS_IFORK_NEXTENTS(ip, whichfork) - 1) != *current_ext) {
+>> +			xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
+>> +						*current_ext + 1), &right);
+>> +			if (startoff + got.br_blockcount > right.br_startoff) {
+>> +				error = XFS_ERROR(EINVAL);
+>> +				if (error)
+>> +					goto del_cursor;
+>> +			}
+>> +		}
+>> +
+>> +		/* Check if we can merge 2 adjacent extents */
+>> +		if ((XFS_IFORK_NEXTENTS(ip, whichfork) - 1) != *current_ext &&
+>> +		    right.br_startoff == startoff + got.br_blockcount &&
+>> +		    right.br_startblock ==
+>> +				got.br_startblock + got.br_blockcount &&
+>> +		    right.br_state == got.br_state &&
+>> +		    right.br_blockcount + got.br_blockcount <= MAXEXTLEN) {
+>> +			blockcount = right.br_blockcount + got.br_blockcount;
+>> +
+>> +			/* Make cursor point to the extent we will update */
+>> +			if (cur) {
+>> +				error = xfs_bmbt_lookup_eq(cur,
+>> +							   right.br_startoff,
+>> +							   right.br_startblock,
+>> +							   right.br_blockcount,
+>> +							   &i);
+>> +				if (error)
+>> +					goto del_cursor;
+>> +				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+>> +			}
+>> +
+>> +			xfs_iext_remove(ip, *current_ext + 1, 1, 0);
+>> +			if (cur) {
+>> +				error = xfs_btree_delete(cur, &i);
+>> +				if (error)
+>> +					goto del_cursor;
+>> +				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+>> +			}
+>> +			XFS_IFORK_NEXT_SET(ip, whichfork,
+>> +					XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+>> +
+>> +		}
+>> +
+>> +		if (cur) {
+>> +			error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+>> +						   got.br_startblock,
+>> +						   got.br_blockcount,
+>> +						   &i);
+>> +			if (error)
+>> +				goto del_cursor;
+>> +			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+>> +		}
+>> +
+>> +		if (got.br_blockcount < blockcount) {
+>> +			xfs_bmbt_set_blockcount(gotp, blockcount);
+>> +			got.br_blockcount = blockcount;
+>> +		}
 >
-I agree that the iterator *looks* wrong, Like I said earlier, I am just
-using the rq_for_each_segment() macro (defined in include/linux/blkdev.h
-and expands to a few dozen lines of code). This is the recommended way of
-iterating requests instead of using the lower level bio iterating functions
-or going it yourself which is why it's recommended to use that instead of
-going deeper and breaking compatibility when the kernel changes. I suspect
-it's the request itself which was constructed incorrectly, or contains bios
-that should not have been grouped into the same request, or contains bios
-that have their bi_sector set incorrectly.
-
-
-> > > The read syscall is for a byte offset (from the fd, set by lseek)
-> > > and a length, not a range of contiguous sectors on the device. That
-> > > off/len tuple gets mapped by the underlying filesystem or device
-> > > into an sector/len via a getblocks callback in the dio code and the
-> > > bios are then built according to the mappings that are returned. So
-> > > in many cases the IO that hits the block device looks nothing at all
-> > > like the IO that came from userspace.
-> > >
-> > >
-> > In general if I were reading a file I agree 100%, but this was the read
-> > call issued by xfs_repair to read the superblock directly from a block
-> > device. So I, perhaps wrongly, anticipated straightforward requests or
-> > maybe even a single 512k request coming down to the request_fn. I should
-> > have mentioned that this was observed while using xfs_repair earlier in
-> the
-> > email though, so no offense intended. There's more of the xfs_repair
-> strace
-> > in my response to your next comment below. It fails very early as you can
-> > imagine when xfs_repair can't read the superblock.
+> A comment would be nice here for this bit that fixes up the blockcount
+> in the extent merge case. You also probably want to reset blockcount. ;)
+Right. Blockcount needs to be reset. Although we are shifting just a single
+extent, It does not matter in current situation.
+But as a generic API for shifting extents, It is better to reset the blockcount.
 >
-> I figured that this is what you were talking about, but remember
-> that the block device also does it's own offset->sector mapping in
-> the direct IO layer. So it's entirely possible that the mapping
-> function (i.e the getblocks callback) is broken and that is why you
-> are seeing weird mappings in the bios being built by the direct Io
-> code.
+>> +
+>> +
+>> +		xfs_bmbt_set_startoff(gotp, startoff);
+>> +		got.br_startoff = startoff;
+>> +
+>> +		if (cur) {
+>> +			error = xfs_bmbt_update(cur, got.br_startoff,
+>> +						got.br_startblock,
+>> +						got.br_blockcount,
+>> +						got.br_state);
+>> +			if (error)
+>> +				goto del_cursor;
+>> +		}
+>> +
+>> +		(*current_ext)--;
+>> +	}
+>> +
+>> +del_cursor:
+>> +	if (cur)
+>> +		xfs_btree_del_cursor(cur,
+>> +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+>> +	xfs_trans_log_inode(tp, ip, logflags);
+>> +	return error;
+>> +}
+>> diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+>> index f84bd7a..91ca1a7 100644
+>> --- a/fs/xfs/xfs_bmap.h
+>> +++ b/fs/xfs/xfs_bmap.h
+>> @@ -179,10 +179,17 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct
+>> xfs_inode *ip,
+>>  int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+>>  		xfs_extnum_t num);
+>>  uint	xfs_default_attroffset(struct xfs_inode *ip);
+>> -int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>> +int	xfs_bmap_shift_extents_left(struct xfs_trans *tp, struct xfs_inode
+>> *ip,
+>>  		int *done, xfs_fileoff_t start_fsb,
+>>  		xfs_fileoff_t offset_shift_fsb, xfs_extnum_t *current_ext,
+>>  		xfs_fsblock_t *firstblock, struct xfs_bmap_free	*flist,
+>>  		int num_exts);
+>> +int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t
+>> split_offset,
+>> +		xfs_extnum_t *split_ext);
+>> +int	xfs_bmap_shift_extents_right(struct xfs_trans *tp, struct xfs_inode
+>> *ip,
+>> +		int *done, xfs_fsblock_t offset_shift_fsb,
+>> +		xfs_extnum_t *current_ext, xfs_extnum_t end_ext,
+>> +		xfs_fsblock_t *firstblock, struct xfs_bmap_free *flist,
+>> +		int num_exts);
+>>
+>>  #endif	/* __XFS_BMAP_H__ */
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index 01f6a64..8b10d6d 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -1539,7 +1539,7 @@ xfs_collapse_file_space(
+>>  		 * We are using the write transaction in which max 2 bmbt
+>>  		 * updates are allowed
+>>  		 */
+>> -		error = xfs_bmap_shift_extents(tp, ip, &done, start_fsb,
+>> +		error = xfs_bmap_shift_extents_left(tp, ip, &done, start_fsb,
+>>  					       shift_fsb, &current_ext,
+>>  					       &first_block, &free_list,
+>>  					       XFS_BMAP_MAX_SHIFT_EXTENTS);
+>> @@ -1563,6 +1563,127 @@ out:
+>>  }
+>>
+>>  /*
+>> + * xfs_insert_file_space()
+>> + *	This routine allocate disk space and shift extent for the given file.
+>> + *	The first thing we do is to sync dirty data and invalidate page cache
+>> + *	over the region on which insert range is working. And split an extent
+>> + *	to two extents at given offset by calling xfs_bmap_split_extent.
+>> + *	And shift all extent records which are laying between [offset,
+>> + *	last allocated extent] to the right to reserve hole range. Lastly
+>> + *	allocate an unwritten extent in hole range created by shifting
+>> extents.
+>> + *
+>> + * RETURNS:
+>> + *	0 on success
+>> + *	errno on error
+>> + *
+>> + */
+>> +int
+>> +xfs_insert_file_space(
+>> +	struct xfs_inode	*ip,
+>> +	loff_t			offset,
+>> +	loff_t			len)
+>> +{
+>> +	struct xfs_mount	*mp = ip->i_mount;
+>> +	struct xfs_trans	*tp;
+>> +	struct xfs_bmap_free	free_list;
+>> +	xfs_fsblock_t		first_block;
+>> +	int			done = 0;
+>> +	int			committed;
+>> +	int			error;
+>> +	uint			rounding;
+>> +	xfs_fileoff_t		start_fsb;
+>> +	xfs_fileoff_t		shift_fsb;
+>> +	xfs_extnum_t		split_ext;
+>> +	xfs_extnum_t		current_ext = 0;
+>> +	xfs_off_t		ioffset;
+>> +
+>> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+>> +	trace_xfs_insert_file_space(ip);
+>> +
+>> +	/* wait for the completion of any pending DIOs */
+>> +	inode_dio_wait(VFS_I(ip));
+>> +
+>> +	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+>> +	ioffset = offset & ~(rounding - 1);
+>> +	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+>> +			ioffset, -1);
+>> +	if (error)
+>> +		return error;
+>> +	truncate_pagecache_range(VFS_I(ip), ioffset, -1);
+>> +
+>> +	start_fsb = XFS_B_TO_FSB(mp, offset);
+>> +	shift_fsb = XFS_B_TO_FSB(mp, len);
+>> +
+>> +	error = xfs_bmap_split_extent(ip, start_fsb, &split_ext);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	current_ext = XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) - 1;
+>> +	while (!error && !done) {
+>> +		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+>> +		tp->t_flags |= XFS_TRANS_RESERVE;
+>> +		/*
+>> +		 * We would need to reserve permanent block for transaction.
+>> +		 * This will come into picture when after shifting extent into
+>> +		 * hole we found that adjacent extents can be merged which
+>> +		 * may lead to freeing of a block during record update.
+>> +		 */
+>> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
+>> +				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
+>> +		if (error) {
+>> +			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+>> +			xfs_trans_cancel(tp, 0);
+>> +			break;
+>> +		}
+>> +
+>> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>> +		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+>> +				ip->i_gdquot, ip->i_pdquot,
+>> +				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+>> +				XFS_QMOPT_RES_REGBLKS);
+>> +		if (error)
+>> +			goto error1;
+>> +
+>> +		xfs_trans_ijoin(tp, ip, 0);
+>> +
+>> +		xfs_bmap_init(&free_list, &first_block);
+>> +
+>> +		/*
+>> +		 * We are using the write transaction in which max 2 bmbt
+>> +		 * updates are allowed
+>> +		 */
+>> +		error = xfs_bmap_shift_extents_right(tp, ip, &done, shift_fsb,
+>> +						&current_ext, split_ext,
+>> +						&first_block, &free_list,
+>> +						XFS_BMAP_MAX_SHIFT_EXTENTS);
+>> +		if (error)
+>> +			goto error0;
+>> +
+>> +		error = xfs_bmap_finish(&tp, &free_list, &committed);
+>> +		if (error)
+>> +			goto error0;
+>> +
+>> +		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+>> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>> +		if (error)
+>> +			goto out;
+>> +	}
+>> +
+>> +	/* make unwritten extent in a hole range. */
+>> +	error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_PREALLOC);
 >
+> There is potential for this to fail with ENOSPC or due to quota after
+> we've already inserted the address range in the file and moved the
+> extent over. Are we Ok with that behavior?
 >
-This is the xfs_repair tool being run directly against a block device, so
-if I am reading the fs/direct-io.c code correctly this means that the
-mapping function (get_block_t) is using fs/block_dev.c:blkdev_get_block().
-Is that correct? That function is very short and simple, so I can't imagine
-how there would be a bug in there. If it were a file on an xfs filesystem,
-the get_block_t callback would be xfs_get_blocks or xfs_get_blocks_direct
-(which both internally call __xfs_get_blocks). Is my understanding correct?
+> Even if so, what is the caller left with? Even though I think it would
+> be nicer if we were to fail in that scenario sooner, I could understand
+> if we completed the extent shift and just left a hole in the inserted
+> region. As it is, it looks like the caller will skip updating the file
+> size and thus some file data might fall after EOF, which is probably not
+> what we want. I don't know if it's worth worrying about the same thing
+> if we happen to fail earlier in the middle of shifting extents over..?
+Good point. We should not skip updating the file size even if we fail after
+shifting a single extent. i.e. even if there is a single successful shift, there
+has to be inode size update otherwise the user will loose data.
 
---001a113437fc42962b04f64fae87
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Failing in between the extent shifting will have the same effect as with
+collapse range. We will end up with a hole somewhere between the EOF
+and the shift start point. This is the limitation with journal filesystem where
+we have to reserve journal blocks in advance and commit transactions in
+between the shifting operation. If a user is well equipped with xfs_bmap,
+He can still reissue insert range commands after checking
+the files's extent tree.
 
-<div dir=3D"ltr"><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quo=
-te">On Wed, Apr 2, 2014 at 12:47 AM, Dave Chinner <span dir=3D"ltr">&lt;<a =
-href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</=
-a>&gt;</span> wrote:<br>
-
-<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-=
-left-width:1px;border-left-color:rgb(204,204,204);border-left-style:solid;p=
-adding-left:1ex"><div><div>&gt; &gt; &gt; While iterating through segments =
-in rq_for_each_segment(), for some<br>
-
-&gt; &gt; &gt; requests I am seeing some odd behavior.<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; segment 0: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(=
-rq) =3D 903 =A0 // Ok,<br>
-&gt; &gt; &gt; this looks normal<br>
-&gt; &gt; &gt; segment 1: iter.bio-&gt;bi_sector =3D 1023, blk_rq_cur_secto=
-rs(rq) =3D 7 //<br>
-&gt; &gt; &gt; Whoah... this doesn&#39;t look right to me<br>
-&gt; &gt;<br>
-&gt; &gt; Seems fine to me. There&#39;s absolutely no reason two separate I=
-Os<br>
-&gt; &gt; can&#39;t be sub-page sector aligned or discontiguous given the a=
-bove<br>
-&gt; &gt; configuration. If that&#39;s what the getblocks callback returned=
- to the<br>
-&gt; &gt; DIO layer, then that&#39;s what you&#39;re going to see in the bi=
-os...<br>
-&gt; &gt;<br>
-&gt; &gt;<br>
-&gt; I guess my assumption that sectors would be adjacent was invalid, but =
-this<br>
-&gt; is what I have read in ldd3 and other books and seen in some driver<br=
+Thanks for review!
 >
-&gt; examples. So I apologize for my folly and it&#39;s another lesson in n=
-ot<br>
-&gt; believing everything you see on the net. The back half of my driver is=
-<br>
-&gt; really optimized for transferring a single contiguous lba &amp; transf=
-er length<br>
-&gt; pair (ala SCSI WRITE 16 for example). However in desperation, I had ch=
-anged<br>
-&gt; the driver to support requests like this (with disjoint sector ranges)=
- but<br>
-&gt; it still seemed odd to me that occasionally some requests would even h=
-ave<br>
-&gt; multiple segments that would *write* the same sectors/lengths. For exa=
-mple<br>
-&gt; I also see requests like the following.<br>
-&gt;<br>
-&gt; Given: rq_data_dir(rq) =3D=3D 1 (i.e. a write)<br>
-&gt; segment =A0 0: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(rq) =
-=3D 7 =A0 =A0// Ok<br>
-&gt; segment =A0 1: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(rq) =
-=3D 7 =A0 =A0//<br>
-&gt; Again?<br>
-&gt; segment =A0 2: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(rq) =
-=3D 7 =A0 =A0// Yet<br>
-&gt; again?<br>
-&gt; segment =A0 3: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(rq) =
-=3D 7 =A0 =A0//<br>
-&gt; Really?<br>
-&gt; ...<br>
-&gt; segment 126: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(rq) =3D =
-7 =A0 =A0//<br>
-&gt; What&#39;s going on?<br>
-&gt; // Reminder: segment limit is 128<br>
-&gt; segment 127: iter.bio-&gt;bi_sector =3D 1023, blk_rq_cur_sectors(rq) =
-=3D 1 //<br>
-&gt; Haha, bet you though I was going to say sector =3D 0!<br>
-<br>
-</div></div>That really looks to me like a bug in whatever is building that=
- iter<br>
-structure. It looks like there&#39;s an off-by-one on each page (should<br>
-be 8 sectors not 7) and the bi_sector is not being set correctly to<br>
-the sector offset of the bio within the IO. i.e. for a contiguous<br>
-IO it should look something like:<br>
-<br>
-segment =A0 0: iter.bio-&gt;bi_sector =3D 0, blk_rq_cur_sectors(rq) =3D 8<b=
-r>
-segment =A0 1: iter.bio-&gt;bi_sector =3D 8, blk_rq_cur_sectors(rq) =3D 8<b=
-r>
-segment =A0 2: iter.bio-&gt;bi_sector =3D 16, blk_rq_cur_sectors(rq) =3D 8<=
-br>
-....<br>
-segment 127: iter.bio-&gt;bi_sector =3D 1016, blk_rq_cur_sectors(rq) =3D 8<=
-br>
-<br>
-I highly doubt the direct IO code is doing something wrong, because<br>
-a mapping bug like that would show up everywhere and not just in your<br>
-special driver....<br>
-<div><br></div></blockquote><div><br></div><div>I agree that the iterator *=
-looks* wrong, Like I said earlier, I am just using the rq_for_each_segment(=
-) macro (defined in include/linux/blkdev.h and expands to a few dozen lines=
- of code). This is the recommended way of iterating requests instead of usi=
-ng the lower level bio iterating functions or going it yourself which is wh=
-y it&#39;s recommended to use that instead of going deeper and breaking com=
-patibility when the kernel changes. I suspect it&#39;s the request itself w=
-hich was constructed incorrectly, or contains bios that should not have bee=
-n grouped into the same request, or contains bios that have their bi_sector=
- set incorrectly.</div>
-<div>=A0</div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px=
- 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);border-left=
--style:solid;padding-left:1ex"><div>
-&gt; &gt; The read syscall is for a byte offset (from the fd, set by lseek)=
-<br>
-&gt; &gt; and a length, not a range of contiguous sectors on the device. Th=
-at<br>
-&gt; &gt; off/len tuple gets mapped by the underlying filesystem or device<=
-br>
-&gt; &gt; into an sector/len via a getblocks callback in the dio code and t=
-he<br>
-&gt; &gt; bios are then built according to the mappings that are returned. =
-So<br>
-&gt; &gt; in many cases the IO that hits the block device looks nothing at =
-all<br>
-&gt; &gt; like the IO that came from userspace.<br>
-&gt; &gt;<br>
-&gt; &gt;<br>
-&gt; In general if I were reading a file I agree 100%, but this was the rea=
-d<br>
-&gt; call issued by xfs_repair to read the superblock directly from a block=
-<br>
-&gt; device. So I, perhaps wrongly, anticipated straightforward requests or=
-<br>
-&gt; maybe even a single 512k request coming down to the request_fn. I shou=
-ld<br>
-&gt; have mentioned that this was observed while using xfs_repair earlier i=
-n the<br>
-&gt; email though, so no offense intended. There&#39;s more of the xfs_repa=
-ir strace<br>
-&gt; in my response to your next comment below. It fails very early as you =
-can<br>
-&gt; imagine when xfs_repair can&#39;t read the superblock.<br>
-<br>
-</div>I figured that this is what you were talking about, but remember<br>
-that the block device also does it&#39;s own offset-&gt;sector mapping in<b=
-r>
-the direct IO layer. So it&#39;s entirely possible that the mapping<br>
-function (i.e the getblocks callback) is broken and that is why you<br>
-are seeing weird mappings in the bios being built by the direct Io<br>
-code.<br>
-<div><br></div></blockquote><div><br></div><div>This is the xfs_repair tool=
- being run directly against a block device, so if I am reading the fs/direc=
-t-io.c code correctly this means that the mapping function (get_block_t) is=
- using fs/block_dev.c:blkdev_get_block(). Is that correct? That function is=
- very short and simple, so I can&#39;t imagine how there would be a bug in =
-there. If it were a file on an xfs filesystem, the get_block_t callback wou=
-ld be xfs_get_blocks or xfs_get_blocks_direct (which both internally call _=
-_xfs_get_blocks). Is my understanding correct?</div>
-<div><br></div></div></div></div>
-
---001a113437fc42962b04f64fae87--
-
-
---===============6135353133968266277==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> Brian
+>
+>> +
+>> +out:
+>> +	return error;
+>> +
+>> +error0:
+>> +	xfs_bmap_cancel(&free_list);
+>> +error1:
+>> +	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+>> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>> +	return error;
+>> +}
+>> +
+>> +/*
+>>   * We need to check that the format of the data fork in the temporary
+>> inode is
+>>   * valid for the target inode before doing the swap. This is not a
+>> problem with
+>>   * attr1 because of the fixed fork offset, but attr2 has a dynamically
+>> sized
+>> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+>> index 935ed2b..d62ab4b 100644
+>> --- a/fs/xfs/xfs_bmap_util.h
+>> +++ b/fs/xfs/xfs_bmap_util.h
+>> @@ -101,6 +101,8 @@ int	xfs_zero_file_space(struct xfs_inode *ip,
+>> xfs_off_t offset,
+>>  			    xfs_off_t len);
+>>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+>>  				xfs_off_t len);
+>> +int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
+>> +				xfs_off_t len);
+>>
+>>  /* EOF block manipulation functions */
+>>  bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index 003c005..6603b36 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -824,7 +824,8 @@ xfs_file_fallocate(
+>>  	if (!S_ISREG(inode->i_mode))
+>>  		return -EINVAL;
+>>  	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
+>> -		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
+>> +		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |
+>> +		     FALLOC_FL_INSERT_RANGE))
+>>  		return -EOPNOTSUPP;
+>>
+>>  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+>> @@ -846,6 +847,20 @@ xfs_file_fallocate(
+>>  		error = xfs_collapse_file_space(ip, offset, len);
+>>  		if (error)
+>>  			goto out_unlock;
+>> +	} else if (mode & FALLOC_FL_INSERT_RANGE) {
+>> +		unsigned blksize_mask = (1 << inode->i_blkbits) - 1;
+>> +
+>> +		if (offset & blksize_mask || len & blksize_mask) {
+>> +			error = -EINVAL;
+>> +			goto out_unlock;
+>> +		}
+>> +
+>> +		ASSERT(offset < i_size_read(inode));
+>> +		new_size = i_size_read(inode) + len;
+>> +
+>> +		error = xfs_insert_file_space(ip, offset, len);
+>> +		if (error)
+>> +			goto out_unlock;
+>>  	} else {
+>>  		if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+>>  		    offset + len > i_size_read(inode)) {
+>> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+>> index a4ae41c..c870288 100644
+>> --- a/fs/xfs/xfs_trace.h
+>> +++ b/fs/xfs/xfs_trace.h
+>> @@ -604,6 +604,7 @@ DEFINE_INODE_EVENT(xfs_inactive_symlink);
+>>  DEFINE_INODE_EVENT(xfs_alloc_file_space);
+>>  DEFINE_INODE_EVENT(xfs_free_file_space);
+>>  DEFINE_INODE_EVENT(xfs_collapse_file_space);
+>> +DEFINE_INODE_EVENT(xfs_insert_file_space);
+>>  DEFINE_INODE_EVENT(xfs_readdir);
+>>  #ifdef CONFIG_XFS_POSIX_ACL
+>>  DEFINE_INODE_EVENT(xfs_get_acl);
+>> --
+>> 1.7.11-rc0
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6135353133968266277==--
