@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 260D5808E
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 09:28:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0DD0F8F8052
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 07:28:18 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Mv2LOo6AwxSWUqaG for
-	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 07:28:17 -0700 (PDT)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [Bug] XFS: DIO random write + BufferIO read
-References: <CAEH94LiJ6PBRRdFc4aZapLEPT7B7==0dUKQZqzQ6+vQpGpxHLg@mail.gmail.com>
-Date: Tue, 08 Apr 2014 10:28:10 -0400
-In-Reply-To: <CAEH94LiJ6PBRRdFc4aZapLEPT7B7==0dUKQZqzQ6+vQpGpxHLg@mail.gmail.com>
-	(Zhi Yong Wu's message of "Fri, 4 Apr 2014 23:09:10 +0800")
-Message-ID: <x49bnwbyjyd.fsf@segfault.boston.devel.redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id D82967F69
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 09:42:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B9B778F8054
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 07:42:49 -0700 (PDT)
+Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
+	[209.85.216.46]) by cuda.sgi.com with ESMTP id zdC10qFUNDOAGiyJ
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 07:42:48 -0700 (PDT)
+Received: by mail-qa0-f46.google.com with SMTP id i13so937310qae.19
+	for <xfs@oss.sgi.com>; Tue, 08 Apr 2014 07:42:48 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20140408005417.GI27017@dastard>
+References: <1396277611-10759-1-git-send-email-linkinjeon@gmail.com>
+	<20140408005417.GI27017@dastard>
+Date: Tue, 8 Apr 2014 23:42:47 +0900
+Message-ID: <CAKYAXd_egdR5997MPgd5eRuYRsYFFbMvYEaYsD6Dsnp=YLVHPw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
+From: Namjae Jeon <linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +31,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, jack@suse.cz, Theodore Ts'o <tytso@mit.edu>, xfstests <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: jack@suse.cz, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
 
-Zhi Yong Wu <zwu.kernel@gmail.com> writes:
-
-> HI
+2014-04-08 9:54 GMT+09:00, Dave Chinner <david@fromorbit.com>:
+> On Mon, Mar 31, 2014 at 11:53:31PM +0900, Namjae Jeon wrote:
+>> From: Namjae Jeon <namjae.jeon@samsung.com>
+>>
+>> FALLOC_FL_INSERT_RANGE was mentioned as the opposite command of collapse
+>> range from discussion between Hugh Dickins and Dave Chinner.
+>>
+>> In continuation of the work of making the process of non linear editing
+>> of
+>> media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
+>> for fallocate.
+>>
+>> This flag will work opposite to the newly added FALLOC_FL_COLLAPSE_RANGE
+>> flag.
+>> As such, specifying FALLOC_FL_INSERT_RANGE flag will insert zeroed-out
+>> space
+>> in between the file within the range specified by offset and len. User
+>> can
+>> write new data in this space. e.g. ads.
+>> Like collapse range, currently we have the limitation that offset and len
+>> should be block size aligned for both XFS and Ext4.
+>>
+>> The semantics of the flag are :
+>> 1) It allocates new zeroed out on disk space of len bytes starting
+>>    at offset byte without overwriting any existing data. All the data
+>> blocks
+>>    from offset to EOF are shifted towards right to make space for
+>> inserting
+>>    new blocks
+>> 2) It should be used exclusively. No other fallocate flag in combination.
+>> 3) Offset and length supplied to fallocate should be fs block size
+>> aligned
+>>    in case of xfs and ext4.
+>> 4) Insert range does not work for the case when offset is
+>> overlapping/beyond
+>>    i_size. If the user wants to allocate space at the end of file they
+>> are
+>>    advised to use either ftruncate(2) or fallocate(2) with mode 0.
+>> 5) It increses the size of file by len bytes.
+>>
+>> Namjae Jeon (3):
+>>  fs: Add FALLOC_FL_INSERT_RANGE flags for fallocate
+>>  xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>>  ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>>  TODO : xfsprog: xfsio: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>>  TODO : xfstests: Add insert range testcase
 >
-> When i try something on XFS filesytem, i hit one issue as below:
+> Namjae, what's your proposed timeframe on getting the xfs_io and tes
+> cases sorted out? I'm just trying to plan ahead for the next couple
+> of months (i.e. the 3.16 merge cycle), so some indication of whether
+> I can expect this to be complete and ready for merge within that
+> timeframe would be helpful to me.
+Hi. Dave.
+I will post the next version's patch-set with xfs_io and xfstests next week.
+Yes, I think that it can be complete before opening 3.6 merge window.
+And sorry for late response and work... Currently I can not do it full time.
+But will do the best for the aim that insert range would be merged in 3.6.
 >
-> One main task create multiple threads at first, Then it will dio
-> random write some files with random offset and length for each thread.
-> When those files get ready, those multiple threads will bufferio read
-> them and check if the data are same as their corresponding buffer. In
-> theory, they should be same, but the actual result isn't what we
-> expect
+> FWIW, it would be really nice if you could add support for fsx and
+> fsstress for this as well as adding corner case tests. :)
+I can, I will include these jobs on next version. :)
+
+Thanks!
 >
-> By the way, i did the same try on ext3 filesystem, but didn't get any
-> such issue.
-
-What kernel version?
-
-Cheers,
-Jeff
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
 _______________________________________________
 xfs mailing list
