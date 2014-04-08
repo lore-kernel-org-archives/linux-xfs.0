@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A111A7FD1
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 11:52:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D1F830406B
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 09:52:04 -0700 (PDT)
-Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id u2LYoL4IboLUbMqX
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9126229E23
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 11:52:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19031AC012
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 09:52:26 -0700 (PDT)
+Received: from mail-bk0-f45.google.com (mail-bk0-f45.google.com
+	[209.85.214.45]) by cuda.sgi.com with ESMTP id F3Cfy2W3bv7Wzxhs
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 09:52:03 -0700 (PDT)
-Received: by mail-bk0-f53.google.com with SMTP id r7so776557bkg.26
-	for <xfs@oss.sgi.com>; Tue, 08 Apr 2014 09:52:01 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 09:52:23 -0700 (PDT)
+Received: by mail-bk0-f45.google.com with SMTP id na10so782804bkb.18
+	for <xfs@oss.sgi.com>; Tue, 08 Apr 2014 09:52:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1396971770-23553-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1396971770-23553-3-git-send-email-lczerner@redhat.com>
 References: <20140404211224.GX17603@dastard>
 	<1396971770-23553-1-git-send-email-lczerner@redhat.com>
-	<1396971770-23553-2-git-send-email-lczerner@redhat.com>
-Date: Tue, 8 Apr 2014 17:52:01 +0100
-Message-ID: <CAL3q7H6eLTiWYHwAXpV6Vx77PcZaGo1cSHYqC0u=w-fywsLpVw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] xfstests: Unset SCRATCH_DEV when deduced from
-	SCRATCH_DEV_POOL
+	<1396971770-23553-3-git-send-email-lczerner@redhat.com>
+Date: Tue, 8 Apr 2014 17:52:21 +0100
+Message-ID: <CAL3q7H4=qTzrayoeMpWagt44Br6zJ+fQvZk5OpYMXrWU=MWVpg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] xfstests: Fix setting FSTYP automatically
 From: Filipe David Manana <fdmanana@gmail.com>
 Reply-To: fdmanana@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,10 +37,13 @@ To: Lukas Czerner <lczerner@redhat.com>
 Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 On Tue, Apr 8, 2014 at 4:42 PM, Lukas Czerner <lczerner@redhat.com> wrote:
-> In the case that we already have sections in the config file we
-> have to make sure that we unset SCRATCH_DEV if it has been deduced from
-> the SCRATCH_DEV_POOL so that it does not complain about SCRATCH_DEV in
-> this case.
+> Currently if the FSTYP is not set, the code to get FSTYP using blikd
+> would not work. This is because we're using HOSTOS environment variable
+> which might not be set (at least not on my system) and because it's
+> already late in the code path.
+>
+> Fix this by using OSTYP environment variable as a fallback in the case
+> that HOSTOS does not work and move the check to common/config.
 >
 > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 
@@ -51,38 +53,65 @@ Tests working for btrfs now.
 Thanks Lukas.
 
 > ---
->  common/config | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
+>  check         |  8 --------
+>  common/config | 18 +++++++++++++-----
+>  2 files changed, 13 insertions(+), 13 deletions(-)
 >
+> diff --git a/check b/check
+> index 8f1a6e1..ed1834d 100755
+> --- a/check
+> +++ b/check
+> @@ -58,14 +58,6 @@ then
+>      exit 1
+>  fi
+>
+> -# Autodetect fs type based on what's on $TEST_DEV unless it's been set
+> -# externally
+> -if [ -z "$FSTYP" -a "$HOSTOS" == "Linux" ]; then
+> -    FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
+> -fi
+> -FSTYP=${FSTYP:=xfs}
+> -export FSTYP
+> -
+>  SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
+>  SRC_GROUPS="generic shared"
+>  export SRC_DIR="tests"
 > diff --git a/common/config b/common/config
-> index 6fa18e2..3163801 100644
+> index 3163801..00249e6 100644
 > --- a/common/config
 > +++ b/common/config
-> @@ -372,10 +372,15 @@ get_next_config() {
->         unset MOUNT_OPTIONS
->         unset MKFS_OPTIONS
->         unset FSCK_OPTIONS
-> +       # We might have deduced SCRATCH_DEV from the SCRATCH_DEV_POOL in the previous
-> +       # run, so we have to unset it now.
-> +       if [ "$SCRATCH_DEV_NOT_SET" == "true" ]; then
-> +               unset SCRATCH_DEV
+> @@ -297,11 +297,6 @@ _fsck_opts()
+>         esac
+>  }
+>
+> -[ -z "$FSTYP" ] && export FSTYP=xfs
+> -[ -z "$MOUNT_OPTIONS" ] && _mount_opts
+> -[ -z "$MKFS_OPTIONS" ] && _mkfs_opts
+> -[ -z "$FSCK_OPTIONS" ] && _fsck_opts
+> -
+>  known_hosts()
+>  {
+>         [ "$HOST_CONFIG_DIR" ] || HOST_CONFIG_DIR=`pwd`/configs
+> @@ -446,6 +441,19 @@ get_next_config() {
+>  if [ -z "$CONFIG_INCLUDED" ]; then
+>         get_next_config `echo $HOST_OPTIONS_SECTIONS | cut -f1 -d" "`
+>         export CONFIG_INCLUDED=true
+> +
+> +       # Autodetect fs type based on what's on $TEST_DEV unless it's been set
+> +       # externally
+> +       if [ -z "$FSTYP" ] && \
+> +          [ "$HOSTOS" == "Linux" -o "$OSTYPE" == "linux-gnu" ] && \
+> +          [ ! -z "$TEST_DEV" ]; then
+> +               FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
 > +       fi
+> +       FSTYP=${FSTYP:=xfs}
+> +       export FSTYP
+> +       [ -z "$MOUNT_OPTIONS" ] && _mount_opts
+> +       [ -z "$MKFS_OPTIONS" ] && _mkfs_opts
+> +       [ -z "$FSCK_OPTIONS" ] && _fsck_opts
+>  fi
 >
->         parse_config_section $1
->
-> -       if [ -n "$OLD_FSTYP" ] && [ $OLD_FSTYP != $FSTYP ]; then
-> +       if [ ! -z "$OLD_FSTYP" ] && [ $OLD_FSTYP != $FSTYP ]; then
->                 [ -z "$MOUNT_OPTIONS" ] && _mount_opts
->                 [ -z "$MKFS_OPTIONS" ] && _mkfs_opts
->                 [ -z "$FSCK_OPTIONS" ] && _fsck_opts
-> @@ -423,6 +428,7 @@ get_next_config() {
->                 fi
->                 SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
->                 export SCRATCH_DEV
-> +               export SCRATCH_DEV_NOT_SET=true
->         fi
->
->         echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
+>  # make sure this script returns success
 > --
 > 1.8.3.1
 >
