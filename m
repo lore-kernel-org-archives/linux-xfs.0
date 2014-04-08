@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EEBE7FD8
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 19:55:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E4460304059
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 17:55:26 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6AED78028
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 20:50:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3564AC012
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:50:27 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	hl1EidHuyPNvRNHc for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 17:55:25 -0700 (PDT)
-Date: Tue, 8 Apr 2014 10:54:17 +1000
+	tmtEJzI2ZGPwNDVU for <xfs@oss.sgi.com>;
+	Mon, 07 Apr 2014 18:50:25 -0700 (PDT)
+Date: Tue, 8 Apr 2014 11:50:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/3] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
-Message-ID: <20140408005417.GI27017@dastard>
-References: <1396277611-10759-1-git-send-email-linkinjeon@gmail.com>
+Subject: Re: XFS fragmentation on file append
+Message-ID: <20140408015012.GB22917@dastard>
+References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1396277611-10759-1-git-send-email-linkinjeon@gmail.com>
+In-Reply-To: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +29,102 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: jack@suse.cz, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
+To: Keyur Govande <keyurgovande@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Mar 31, 2014 at 11:53:31PM +0900, Namjae Jeon wrote:
-> From: Namjae Jeon <namjae.jeon@samsung.com>
-> 
-> FALLOC_FL_INSERT_RANGE was mentioned as the opposite command of collapse
-> range from discussion between Hugh Dickins and Dave Chinner.
-> 
-> In continuation of the work of making the process of non linear editing of
-> media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
-> for fallocate.
-> 
-> This flag will work opposite to the newly added FALLOC_FL_COLLAPSE_RANGE flag.
-> As such, specifying FALLOC_FL_INSERT_RANGE flag will insert zeroed-out space
-> in between the file within the range specified by offset and len. User can
-> write new data in this space. e.g. ads.
-> Like collapse range, currently we have the limitation that offset and len
-> should be block size aligned for both XFS and Ext4.
-> 
-> The semantics of the flag are :
-> 1) It allocates new zeroed out on disk space of len bytes starting
->    at offset byte without overwriting any existing data. All the data blocks
->    from offset to EOF are shifted towards right to make space for inserting
->    new blocks
-> 2) It should be used exclusively. No other fallocate flag in combination.
-> 3) Offset and length supplied to fallocate should be fs block size aligned
->    in case of xfs and ext4.
-> 4) Insert range does not work for the case when offset is overlapping/beyond
->    i_size. If the user wants to allocate space at the end of file they are
->    advised to use either ftruncate(2) or fallocate(2) with mode 0.
-> 5) It increses the size of file by len bytes.
-> 
-> Namjae Jeon (3):
->  fs: Add FALLOC_FL_INSERT_RANGE flags for fallocate
->  xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
->  ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
->  TODO : xfsprog: xfsio: Add support FALLOC_FL_INSERT_RANGE for fallocate
->  TODO : xfstests: Add insert range testcase
+[cc the XFS mailing list <xfs@oss.sgi.com>]
 
-Namjae, what's your proposed timeframe on getting the xfs_io and tes
-cases sorted out? I'm just trying to plan ahead for the next couple
-of months (i.e. the 3.16 merge cycle), so some indication of whether
-I can expect this to be complete and ready for merge within that
-timeframe would be helpful to me.
+On Mon, Apr 07, 2014 at 06:53:46PM -0400, Keyur Govande wrote:
+> Hello,
+> 
+> I'm currently investigating a MySQL performance degradation on XFS due
+> to file fragmentation.
+> 
+> The box has a 16 drive RAID 10 array with a 1GB battery backed cache
+> running on a 12 core box.
+> 
+> xfs_info shows:
+> meta-data=/dev/sda4    isize=256    agcount=24, agsize=24024992 blks
+>                =                 sectsz=512   attr=2, projid32bit=0
+> data         =                 bsize=4096   blocks=576599552, imaxpct=5
+>                =                 sunit=16     swidth=512 blks
+> naming   = version 2     bsize=4096   ascii-ci=0
+> log         = internal       bsize=4096   blocks=281552, version=2
+>              =                   sectsz=512   sunit=16 blks, lazy-count=1
+> realtime = none            extsz=4096   blocks=0, rtextents=0
+> 
+> The kernel version is: 3.14.0-1.el6.elrepo.x86_64 and the XFS
+> partition is mounted with: rw,noatime,allocsize=128m,inode64,swalloc.
+> The partition is 2TB in size and 40% full to simulate production.
+> 
+> Here's a test program that appends 512KB like MySQL does (write and
+> then fsync). To exacerbate the issue, it loops a bunch of times:
+> https://gist.github.com/keyurdg/961c19175b81c73fdaa3
+> 
+> When run, this creates ~9500 extents most of length 1024.
 
-FWIW, it would be really nice if you could add support for fsx and
-fsstress for this as well as adding corner case tests. :)
+1024 of what? Most likely it is 1024 basic blocks, which is 512KB,
+the size of your writes.
+
+Could you post the output of the xfs_bmap commands you are using to
+get this information?
+
+> cat'ing the
+> file to /dev/null after dropping the caches reads at an average of 75
+> MBps, way less than the hardware is capable of.
+
+What you are doing is "open-seekend-write-fsync-close".  You haven't
+told the filesystem you are doing append writes (O_APPEND, or the
+append inode flag) so it can't optimise for them.
+
+You are also cleaning the file before closing it, so you are
+defeating the current heuristics that XFS uses to determine whether
+to remove speculative preallocation on close() - if the inode is
+dirty at close(), then it won't be removed. Hence speculative
+preallocation does nothing for your IO pattern (i.e. the allocsize
+mount option is completely useless). Remove the fsync and you'll
+see your fragmentation problem go away completely.
+
+> When I add a posix_fallocate before calling pwrite() as shown here
+> https://gist.github.com/keyurdg/eb504864d27ebfe7b40a the file
+> fragments an order of magnitude less (~30 extents), and cat'ing to
+> /dev/null proceeds at ~1GBps.
+
+That should make no difference on XFS as you are only preallocating
+the 512KB region beyond EOF that you are about to write into and
+hence both delayed allocation and preallocation have the same
+allocation target (the current EOF block). Hence in both cases the
+allocation patterns should be identical if the freespace extent they
+are being allocated out of are identical.
+
+Did you remove the previous test files and sync the filesystem
+between test runs so that the available freespace was identical for
+the different test runs? If you didn't then the filesystem allocated
+the files out of different free space extents and hence you'll get
+different allocation patterns...
+
+> The same behavior is seen even when the allocsize option is removed
+> and the partition remounted.
+
+See above.
+
+> This is somewhat unexpected and I'm working on a patch to add
+> fallocate to MySQL, wanted to check in here if I'm missing anything
+> obvious here.
+
+fallocate() of 512KB sized regions will not prevent fragmentation
+into 512KB sized extents with the write pattern you are using.
+
+If you use the inode APPEND attribute for your log files, this lets
+the filesystem optimise it's block management for append IO. In the
+case of XFS, it then will not remove preallocation beyond EOF when
+the fd is closed because the next write will be at EOF where the
+speculative preallocation already exists. Then allocsize=128M will
+actually work for your log files....
+
+Alternatively, set an extent size hint on the log files to define
+the minimum sized allocation (e.g. 32MB) and this will limit
+fragmentation without you having to modify the MySQL code at all...
 
 Cheers,
 
