@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D29EF7FD5
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 19:33:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B532A30405F
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 17:33:15 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0EEBE7FD8
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 19:55:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E4460304059
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 17:55:26 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	LmvljrYbeVpr5ax5 for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 17:33:13 -0700 (PDT)
-Date: Tue, 8 Apr 2014 10:33:11 +1000
+	hl1EidHuyPNvRNHc for <xfs@oss.sgi.com>;
+	Mon, 07 Apr 2014 17:55:25 -0700 (PDT)
+Date: Tue, 8 Apr 2014 10:54:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfsdump: getdents.c: clean up ifdef-hell around
-	sys_getdents
-Message-ID: <20140408003311.GH27017@dastard>
-References: <20140324181907.GF23291@redacted.bos.redhat.com>
+Subject: Re: [PATCH 0/3] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
+Message-ID: <20140408005417.GI27017@dastard>
+References: <1396277611-10759-1-git-send-email-linkinjeon@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140324181907.GF23291@redacted.bos.redhat.com>
+In-Reply-To: <1396277611-10759-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kyle McMartin <kmcmarti@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: jack@suse.cz, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, lczerner@redhat.com, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
 
-On Mon, Mar 24, 2014 at 02:19:07PM -0400, Kyle McMartin wrote:
-> Remove the ifdef-hell imported from glibc around getdents64. Everything
-> since 2.4.1 supports things properly and this seems like a sensible
-> clean up, so lets just assume it exists and handle it by falling back
-> if not.
+On Mon, Mar 31, 2014 at 11:53:31PM +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
 > 
-> Additionally, if the old getdents syscall doesn't exist, just stub out
-> the actual syscall and return ENOSYS.
+> FALLOC_FL_INSERT_RANGE was mentioned as the opposite command of collapse
+> range from discussion between Hugh Dickins and Dave Chinner.
 > 
-> ---
+> In continuation of the work of making the process of non linear editing of
+> media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
+> for fallocate.
+> 
+> This flag will work opposite to the newly added FALLOC_FL_COLLAPSE_RANGE flag.
+> As such, specifying FALLOC_FL_INSERT_RANGE flag will insert zeroed-out space
+> in between the file within the range specified by offset and len. User can
+> write new data in this space. e.g. ads.
+> Like collapse range, currently we have the limitation that offset and len
+> should be block size aligned for both XFS and Ext4.
+> 
+> The semantics of the flag are :
+> 1) It allocates new zeroed out on disk space of len bytes starting
+>    at offset byte without overwriting any existing data. All the data blocks
+>    from offset to EOF are shifted towards right to make space for inserting
+>    new blocks
+> 2) It should be used exclusively. No other fallocate flag in combination.
+> 3) Offset and length supplied to fallocate should be fs block size aligned
+>    in case of xfs and ext4.
+> 4) Insert range does not work for the case when offset is overlapping/beyond
+>    i_size. If the user wants to allocate space at the end of file they are
+>    advised to use either ftruncate(2) or fallocate(2) with mode 0.
+> 5) It increses the size of file by len bytes.
+> 
+> Namjae Jeon (3):
+>  fs: Add FALLOC_FL_INSERT_RANGE flags for fallocate
+>  xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>  ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>  TODO : xfsprog: xfsio: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>  TODO : xfstests: Add insert range testcase
 
-Kyle, these two patches are missing your SOB. I'm going to assume
-you wrote this yourself (given the history, it's a fair bet :)
-and add them in - let me know if then assumption is wrong so I can
-correct it.
+Namjae, what's your proposed timeframe on getting the xfs_io and tes
+cases sorted out? I'm just trying to plan ahead for the next couple
+of months (i.e. the 3.16 merge cycle), so some indication of whether
+I can expect this to be complete and ready for merge within that
+timeframe would be helpful to me.
+
+FWIW, it would be really nice if you could add support for fsx and
+fsstress for this as well as adding corner case tests. :)
 
 Cheers,
 
