@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0DD77802E
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 20:59:09 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A68157FE7
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 22:27:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D0E3C304059
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:59:05 -0700 (PDT)
-Received: from mail-yh0-f53.google.com (mail-yh0-f53.google.com
-	[209.85.213.53]) by cuda.sgi.com with ESMTP id 80AVtV8HUvbuBOTK
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 07 Apr 2014 18:59:03 -0700 (PDT)
-Received: by mail-yh0-f53.google.com with SMTP id v1so264935yhn.40
-	for <xfs@oss.sgi.com>; Mon, 07 Apr 2014 18:59:03 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 37EEBAC017
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 20:27:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id N9h6HQ7qnyDsEU9a for
+	<xfs@oss.sgi.com>; Mon, 07 Apr 2014 20:27:30 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s383RTWj007772
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 7 Apr 2014 23:27:29 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s383RSio014984
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 7 Apr 2014 23:27:29 -0400
+Message-ID: <53436CA0.1090106@redhat.com>
+Date: Mon, 07 Apr 2014 22:27:28 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEH94LiJ6PBRRdFc4aZapLEPT7B7==0dUKQZqzQ6+vQpGpxHLg@mail.gmail.com>
-References: <CAEH94LiJ6PBRRdFc4aZapLEPT7B7==0dUKQZqzQ6+vQpGpxHLg@mail.gmail.com>
-Date: Tue, 8 Apr 2014 09:59:02 +0800
-Message-ID: <CAEH94Lj8Q9247c=zrkJHyzFmGYGzK-DL9nvX2tkcxkJ=EkJcAA@mail.gmail.com>
-Subject: Re: [Bug] XFS: DIO random write + BufferIO read
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Subject: [PATCH] xfs_repair: fix prefetch queue waiting
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,227 +36,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfstests <xfs@oss.sgi.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: xfs-oss <xfs@oss.sgi.com>
 
-any comments?
+This fixes a regression caused by:
 
-On Fri, Apr 4, 2014 at 11:09 PM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
-> HI
->
-> When i try something on XFS filesytem, i hit one issue as below:
->
-> One main task create multiple threads at first, Then it will dio
-> random write some files with random offset and length for each thread.
-> When those files get ready, those multiple threads will bufferio read
-> them and check if the data are same as their corresponding buffer. In
-> theory, they should be same, but the actual result isn't what we
-> expect
->
-> By the way, i did the same try on ext3 filesystem, but didn't get any
-> such issue.
->
-> Below is the test code:
->
-> #include <errno.h>
-> #include <string.h>
-> #include <time.h>
-> #include <pthread.h>
-> #include <assert.h>
-> #include <stdlib.h>
-> #include <stdio.h>
-> #include <libaio.h>
-> #include <sys/stat.h>
-> #include <sys/types.h>
-> #include <syscall.h>
-> #include <fcntl.h>
-> #include <libaio.h>
-> #include <string>
-> #include <vector>
->
-> using namespace std;
->
-> #define AIO_BLKSIZE  4096
-> #define AIO_MAXIO 64
->
-> static long gettid()
-> {
->     return static_cast<long>(pthread_self());
-> }
->
-> static void* aioThreadWrapper(void* arg);
->
-> class DioTest;
-> struct cbParam {
->     cbParam(DioTest* p, int fileseq) :p_(p), fileseq_(fileseq) {}
->
->     DioTest* p_;
->     int fileseq_;
-> };
->
->
-> class DioTest
-> {
->     public:
->         DioTest(const char* name) {
->             filename = name;
->             memset(&myctx, 0, sizeof(myctx));
->             io_queue_init(AIO_MAXIO, &myctx);
->             pthread_t tid;
->             pthread_create(&tid, NULL, aioThreadWrapper, this);
->         }
->
->         void wr_done(int fileseq, struct iocb *iocb, long res, long res2) {
->             close(iocb->aio_fildes);
->
->             if (res2 != 0) {
->                 printf("aio write error n");
->                 abort();
->             }
->             if (res != iocb->u.c.nbytes) {
->                 printf("write missed bytes expect %ld got %ld n",
->                         iocb->u.c.nbytes, res);
->                 abort();
->             }
->             size_t length = iocb->u.c.nbytes;
->             size_t offset = iocb->u.c.offset;
->             char path[1024];
->             snprintf(path, sizeof(path), "%s%d", filename, fileseq);
->             int fd = open(path, O_RDONLY);
->             assert(fd >= 0);
->             char* readbuf = (char*)malloc(length);
->             assert(readbuf);
->
->             memset(readbuf, 0, length);
->             ssize_t ret = pread(fd, readbuf, length, offset);
->             assert (ret == length);
->             close(fd);
->
->             int cmp = memcmp(readbuf, iocb->u.c.buf, length);
->             if (cmp != 0)
->             {
->                 printf("tid=%ld data dismatch.cmp=%d file=%s
-> offset=%lu length=%lu!\n",
->                         gettid(), cmp, path, offset, length);
->                 abort();
->             }
->             printf("tid=%ld check=success file=%s offset=%lu length=%lu\n",
->                     gettid(), path, offset, length);
->
->             free(iocb->u.c.buf);
->             free(iocb);
->             free(readbuf);
->         }
->
->         bool writeRequest(int fileseq, size_t offset, size_t length) {
->             struct iocb *io = (struct iocb *)malloc(sizeof(struct iocb));
->             assert (io);
->             char path[1024];
->             snprintf(path, sizeof(path), "%s%d", filename, fileseq);
->             int fd  = open(path, O_RDWR|O_DIRECT|O_CREAT, S_IWUSR | S_IRUSR);
->             assert (fd >= 0);
->             void* buf=NULL;
->             int ret = posix_memalign(&buf, getpagesize(), length);
->             assert(ret == 0);
->             memset(buf, 'a', length);
->             io_prep_pwrite(io, fd, buf, length, offset);
->             io->data = new cbParam(this, fileseq);
->
->             int rc = io_submit(myctx, 1, &io);
->             if (rc < 0){
->                 printf("tid=%ld io_submit fail.file=%s offset=%lu
-> length=%lu ret=%d errno=%s\n",
->                         gettid(), path, offset, length, ret, strerror(errno));
->                 close(fd);
->                 free(buf);
->                 delete (cbParam*)(io->data);
->                 free(io);
->                 return false;
->             }
->             assert (rc != 0);
->             printf("tid=%ld file=%s offset=%lu length=%lu\n",gettid(),
-> path, offset, length);
->             return true;
->         }
->
->         void aioThread() {
->             while (true)
->             {
->                 struct io_event events[AIO_MAXIO];
->                 io_callback_t cb;
->                 int ret = io_getevents(myctx, 1, AIO_MAXIO, events, NULL);
->                 printf("tid=%ld %d io_request completed \n", gettid(), ret);
->
->                 for (int i = 0; i < ret; i++) {
->                     struct iocb *io = events[i].obj;
->                     printf("tid=%ld events[%d]res = %ld, res2 = %ld\n",
->                             gettid(), i, events[i].res, events[i].res2);
->
->                     cbParam* param = (cbParam*)io->data;
->                     DioTest* p = param->p_;
->                     p->wr_done(param->fileseq_, io, events[i].res,
-> events[i].res2);
->                     delete param;
->                 }
->             }
->         }
->     private:
->         io_context_t myctx;
->         const char* filename;
-> };
->
-> static void* aioThreadWrapper(void* arg)
-> {
->     DioTest* p = (DioTest*)arg;
->     p->aioThread();
->     return NULL;
-> }
->
-> int main(int args, char *argv[])
-> {
->     if (args < 2) {
->         printf("./%s filename", argv[0]);
->         exit(1);
->     }
->     const char* filename = argv[1];
->     srand(time(NULL));
->     vector<DioTest*> dioTests;
->     const int threadNumber = 9;
->
->     for (int i = 0; i < threadNumber; ++i) {
->         dioTests.push_back(new DioTest(filename));
->     }
->
->     while (true) {
->         size_t offset = (rand() % (64*1024*1024/AIO_BLKSIZE)) * AIO_BLKSIZE;
->         size_t length = 0;
->         while (length == 0) {
->             length = abs(static_cast<int>(rand()*1.0/RAND_MAX*16))*AIO_BLKSIZE;
->         }
->
->         int seq = rand() % 100;
->         DioTest* p = dioTests[rand() % threadNumber];
->         for (int i = 0; i < 4; ++i){
->             p->writeRequest(seq, offset, length);
->             offset += (length + 4096);
->         }
->         usleep(rand() % 10000);
->     }
->     return 0;
-> }
->
->
-> --
-> Regards,
->
-> Zhi Yong Wu
+97b1fcf xfs_repair: fix array overrun in do_inode_prefetch
 
+The thread creation loop has 2 ways to exit; either via
+the loop counter based on thread_count, or the break statement
+if we've started enough workers to cover all AGs.
 
+Whether or not the loop counter "i" reflects the number of
+threads started depends on whether or not we exited via the
+break.
 
--- 
-Regards,
+The above commit prevented us from indexing off the end
+of the queues[] array if we actually advanced "i" all the
+way to thread_count, but in the case where we break, "i"
+is one *less* than the nr of threads started, so we don't
+wait for completion of all threads, and all hell breaks
+loose in phase 5.
 
-Zhi Yong Wu
+Just stop with the cleverness of re-using the loop counter -
+instead, explicitly count threads that we start, and then use
+that counter to wait for each worker to complete.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+I have one fs which demonstrates the problem, and have verified
+the regression & tested the fix against that.
+
+I'll run this over xfstests overnight, but it seems obvious
+from here (OTOH the other fix seemed obvious too) :(
+
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index e47a48e..4c32395 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -944,6 +944,7 @@ do_inode_prefetch(
+ 	int			i;
+ 	struct work_queue	queue;
+ 	struct work_queue	*queues;
++	int			queues_started = 0;
+ 
+ 	/*
+ 	 * If the previous phases of repair have not overflowed the buffer
+@@ -987,6 +988,7 @@ do_inode_prefetch(
+ 
+ 		create_work_queue(&queues[i], mp, 1);
+ 		queue_work(&queues[i], prefetch_ag_range_work, 0, wargs);
++		queues_started++;
+ 
+ 		if (wargs->end_ag >= mp->m_sb.sb_agcount)
+ 			break;
+@@ -995,7 +997,7 @@ do_inode_prefetch(
+ 	/*
+ 	 * wait for workers to complete
+ 	 */
+-	while (i--)
++	for (i = 0; i < queues_started; i++)
+ 		destroy_work_queue(&queues[i]);
+ 	free(queues);
+ }
 
 _______________________________________________
 xfs mailing list
