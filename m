@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4FA4280EE
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 18:25:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 491D28F8087
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 16:25:49 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6CC1A8110
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 18:26:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 964508F8065
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 16:26:43 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id af072kPwL2yXZ68g for <xfs@oss.sgi.com>;
-	Tue, 08 Apr 2014 16:25:21 -0700 (PDT)
+	ESMTP id zCLgijN3R4LMr12E for <xfs@oss.sgi.com>;
+	Tue, 08 Apr 2014 16:26:36 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 13/14] mkfs: catch unknown format in protofile parsing
-Date: Tue,  8 Apr 2014 18:25:03 -0500
-Message-Id: <1396999504-13769-14-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 12/14] xfs_repair: address never-true tests in repair/bmap.c
+	on 64 bit
+Date: Tue,  8 Apr 2014 18:25:02 -0500
+Message-Id: <1396999504-13769-13-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1396999504-13769-1-git-send-email-sandeen@redhat.com>
 References: <1396999504-13769-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,32 +30,56 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-As the code stands today we can't get an unknown format in the
-last case statement, but Coverity warns that if we ever do, we'll
-use an uninitialized "ip" in the call to libxfs_trans_log_inode().
-
-Adding a default: case to catch unknown formats is defensive and
-makes the checker happy.
+The test "if (new_naexts > BLKMAP_NEXTS_MAX)" is never true
+on a 64-bit platform; new_naexts is an int, and BLKMAP_NEXTS_MAX
+is INT_MAX.  So just wrap the whole thing in the #ifdef.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- mkfs/proto.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ repair/bmap.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 95583c9..308325b 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -591,6 +591,9 @@ parseproto(
- 		}
- 		libxfs_iput(ip, 0);
- 		return;
-+	default:
-+		ASSERT(0);
-+		fail(_("Unknown format"), EINVAL);
+diff --git a/repair/bmap.c b/repair/bmap.c
+index 85d66dc..b81efb9 100644
+--- a/repair/bmap.c
++++ b/repair/bmap.c
+@@ -47,16 +47,16 @@ blkmap_alloc(
+ 	if (nex < 1)
+ 		nex = 1;
+ 
++#if (BITS_PER_LONG == 32)	/* on 64-bit platformsethis is never true */
+ 	if (nex > BLKMAP_NEXTS_MAX) {
+-#if (BITS_PER_LONG == 32)
+ 		do_warn(
+ 	_("Number of extents requested in blkmap_alloc (%d) overflows 32 bits.\n"
+ 	  "If this is not a corruption, then you will need a 64 bit system\n"
+ 	  "to repair this filesystem.\n"),
+ 			nex);
+-#endif
+ 		return NULL;
  	}
- 	libxfs_trans_log_inode(tp, ip, flags);
- 	error = libxfs_bmap_finish(&tp, &flist, &committed);
++#endif
+ 
+ 	key = whichfork ? ablkmap_key : dblkmap_key;
+ 	blkmap = pthread_getspecific(key);
+@@ -267,15 +267,15 @@ blkmap_grow(
+ 		ASSERT(pthread_getspecific(key) == blkmap);
+ 	}
+ 
++#if (BITS_PER_LONG == 32)	/* on 64-bit platforms this is never true */
+ 	if (new_naexts > BLKMAP_NEXTS_MAX) {
+-#if (BITS_PER_LONG == 32)
+ 		do_error(
+ 	_("Number of extents requested in blkmap_grow (%d) overflows 32 bits.\n"
+ 	  "You need a 64 bit system to repair this filesystem.\n"),
+ 			new_naexts);
+-#endif
+ 		return NULL;
+ 	}
++#endif
+ 	if (new_naexts <= 0) {
+ 		do_error(
+ 	_("Number of extents requested in blkmap_grow (%d) overflowed the\n"
 -- 
 1.7.1
 
