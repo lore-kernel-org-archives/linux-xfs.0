@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6AED78028
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 20:50:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3564AC012
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:50:27 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	tmtEJzI2ZGPwNDVU for <xfs@oss.sgi.com>;
-	Mon, 07 Apr 2014 18:50:25 -0700 (PDT)
-Date: Tue, 8 Apr 2014 11:50:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS fragmentation on file append
-Message-ID: <20140408015012.GB22917@dastard>
-References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0DD77802E
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 20:59:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D0E3C304059
+	for <xfs@oss.sgi.com>; Mon,  7 Apr 2014 18:59:05 -0700 (PDT)
+Received: from mail-yh0-f53.google.com (mail-yh0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id 80AVtV8HUvbuBOTK
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 07 Apr 2014 18:59:03 -0700 (PDT)
+Received: by mail-yh0-f53.google.com with SMTP id v1so264935yhn.40
+	for <xfs@oss.sgi.com>; Mon, 07 Apr 2014 18:59:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
+In-Reply-To: <CAEH94LiJ6PBRRdFc4aZapLEPT7B7==0dUKQZqzQ6+vQpGpxHLg@mail.gmail.com>
+References: <CAEH94LiJ6PBRRdFc4aZapLEPT7B7==0dUKQZqzQ6+vQpGpxHLg@mail.gmail.com>
+Date: Tue, 8 Apr 2014 09:59:02 +0800
+Message-ID: <CAEH94Lj8Q9247c=zrkJHyzFmGYGzK-DL9nvX2tkcxkJ=EkJcAA@mail.gmail.com>
+Subject: Re: [Bug] XFS: DIO random write + BufferIO read
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,109 +30,227 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Keyur Govande <keyurgovande@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xfstests <xfs@oss.sgi.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-[cc the XFS mailing list <xfs@oss.sgi.com>]
+any comments?
 
-On Mon, Apr 07, 2014 at 06:53:46PM -0400, Keyur Govande wrote:
-> Hello,
-> 
-> I'm currently investigating a MySQL performance degradation on XFS due
-> to file fragmentation.
-> 
-> The box has a 16 drive RAID 10 array with a 1GB battery backed cache
-> running on a 12 core box.
-> 
-> xfs_info shows:
-> meta-data=/dev/sda4    isize=256    agcount=24, agsize=24024992 blks
->                =                 sectsz=512   attr=2, projid32bit=0
-> data         =                 bsize=4096   blocks=576599552, imaxpct=5
->                =                 sunit=16     swidth=512 blks
-> naming   = version 2     bsize=4096   ascii-ci=0
-> log         = internal       bsize=4096   blocks=281552, version=2
->              =                   sectsz=512   sunit=16 blks, lazy-count=1
-> realtime = none            extsz=4096   blocks=0, rtextents=0
-> 
-> The kernel version is: 3.14.0-1.el6.elrepo.x86_64 and the XFS
-> partition is mounted with: rw,noatime,allocsize=128m,inode64,swalloc.
-> The partition is 2TB in size and 40% full to simulate production.
-> 
-> Here's a test program that appends 512KB like MySQL does (write and
-> then fsync). To exacerbate the issue, it loops a bunch of times:
-> https://gist.github.com/keyurdg/961c19175b81c73fdaa3
-> 
-> When run, this creates ~9500 extents most of length 1024.
+On Fri, Apr 4, 2014 at 11:09 PM, Zhi Yong Wu <zwu.kernel@gmail.com> wrote:
+> HI
+>
+> When i try something on XFS filesytem, i hit one issue as below:
+>
+> One main task create multiple threads at first, Then it will dio
+> random write some files with random offset and length for each thread.
+> When those files get ready, those multiple threads will bufferio read
+> them and check if the data are same as their corresponding buffer. In
+> theory, they should be same, but the actual result isn't what we
+> expect
+>
+> By the way, i did the same try on ext3 filesystem, but didn't get any
+> such issue.
+>
+> Below is the test code:
+>
+> #include <errno.h>
+> #include <string.h>
+> #include <time.h>
+> #include <pthread.h>
+> #include <assert.h>
+> #include <stdlib.h>
+> #include <stdio.h>
+> #include <libaio.h>
+> #include <sys/stat.h>
+> #include <sys/types.h>
+> #include <syscall.h>
+> #include <fcntl.h>
+> #include <libaio.h>
+> #include <string>
+> #include <vector>
+>
+> using namespace std;
+>
+> #define AIO_BLKSIZE  4096
+> #define AIO_MAXIO 64
+>
+> static long gettid()
+> {
+>     return static_cast<long>(pthread_self());
+> }
+>
+> static void* aioThreadWrapper(void* arg);
+>
+> class DioTest;
+> struct cbParam {
+>     cbParam(DioTest* p, int fileseq) :p_(p), fileseq_(fileseq) {}
+>
+>     DioTest* p_;
+>     int fileseq_;
+> };
+>
+>
+> class DioTest
+> {
+>     public:
+>         DioTest(const char* name) {
+>             filename = name;
+>             memset(&myctx, 0, sizeof(myctx));
+>             io_queue_init(AIO_MAXIO, &myctx);
+>             pthread_t tid;
+>             pthread_create(&tid, NULL, aioThreadWrapper, this);
+>         }
+>
+>         void wr_done(int fileseq, struct iocb *iocb, long res, long res2) {
+>             close(iocb->aio_fildes);
+>
+>             if (res2 != 0) {
+>                 printf("aio write error n");
+>                 abort();
+>             }
+>             if (res != iocb->u.c.nbytes) {
+>                 printf("write missed bytes expect %ld got %ld n",
+>                         iocb->u.c.nbytes, res);
+>                 abort();
+>             }
+>             size_t length = iocb->u.c.nbytes;
+>             size_t offset = iocb->u.c.offset;
+>             char path[1024];
+>             snprintf(path, sizeof(path), "%s%d", filename, fileseq);
+>             int fd = open(path, O_RDONLY);
+>             assert(fd >= 0);
+>             char* readbuf = (char*)malloc(length);
+>             assert(readbuf);
+>
+>             memset(readbuf, 0, length);
+>             ssize_t ret = pread(fd, readbuf, length, offset);
+>             assert (ret == length);
+>             close(fd);
+>
+>             int cmp = memcmp(readbuf, iocb->u.c.buf, length);
+>             if (cmp != 0)
+>             {
+>                 printf("tid=%ld data dismatch.cmp=%d file=%s
+> offset=%lu length=%lu!\n",
+>                         gettid(), cmp, path, offset, length);
+>                 abort();
+>             }
+>             printf("tid=%ld check=success file=%s offset=%lu length=%lu\n",
+>                     gettid(), path, offset, length);
+>
+>             free(iocb->u.c.buf);
+>             free(iocb);
+>             free(readbuf);
+>         }
+>
+>         bool writeRequest(int fileseq, size_t offset, size_t length) {
+>             struct iocb *io = (struct iocb *)malloc(sizeof(struct iocb));
+>             assert (io);
+>             char path[1024];
+>             snprintf(path, sizeof(path), "%s%d", filename, fileseq);
+>             int fd  = open(path, O_RDWR|O_DIRECT|O_CREAT, S_IWUSR | S_IRUSR);
+>             assert (fd >= 0);
+>             void* buf=NULL;
+>             int ret = posix_memalign(&buf, getpagesize(), length);
+>             assert(ret == 0);
+>             memset(buf, 'a', length);
+>             io_prep_pwrite(io, fd, buf, length, offset);
+>             io->data = new cbParam(this, fileseq);
+>
+>             int rc = io_submit(myctx, 1, &io);
+>             if (rc < 0){
+>                 printf("tid=%ld io_submit fail.file=%s offset=%lu
+> length=%lu ret=%d errno=%s\n",
+>                         gettid(), path, offset, length, ret, strerror(errno));
+>                 close(fd);
+>                 free(buf);
+>                 delete (cbParam*)(io->data);
+>                 free(io);
+>                 return false;
+>             }
+>             assert (rc != 0);
+>             printf("tid=%ld file=%s offset=%lu length=%lu\n",gettid(),
+> path, offset, length);
+>             return true;
+>         }
+>
+>         void aioThread() {
+>             while (true)
+>             {
+>                 struct io_event events[AIO_MAXIO];
+>                 io_callback_t cb;
+>                 int ret = io_getevents(myctx, 1, AIO_MAXIO, events, NULL);
+>                 printf("tid=%ld %d io_request completed \n", gettid(), ret);
+>
+>                 for (int i = 0; i < ret; i++) {
+>                     struct iocb *io = events[i].obj;
+>                     printf("tid=%ld events[%d]res = %ld, res2 = %ld\n",
+>                             gettid(), i, events[i].res, events[i].res2);
+>
+>                     cbParam* param = (cbParam*)io->data;
+>                     DioTest* p = param->p_;
+>                     p->wr_done(param->fileseq_, io, events[i].res,
+> events[i].res2);
+>                     delete param;
+>                 }
+>             }
+>         }
+>     private:
+>         io_context_t myctx;
+>         const char* filename;
+> };
+>
+> static void* aioThreadWrapper(void* arg)
+> {
+>     DioTest* p = (DioTest*)arg;
+>     p->aioThread();
+>     return NULL;
+> }
+>
+> int main(int args, char *argv[])
+> {
+>     if (args < 2) {
+>         printf("./%s filename", argv[0]);
+>         exit(1);
+>     }
+>     const char* filename = argv[1];
+>     srand(time(NULL));
+>     vector<DioTest*> dioTests;
+>     const int threadNumber = 9;
+>
+>     for (int i = 0; i < threadNumber; ++i) {
+>         dioTests.push_back(new DioTest(filename));
+>     }
+>
+>     while (true) {
+>         size_t offset = (rand() % (64*1024*1024/AIO_BLKSIZE)) * AIO_BLKSIZE;
+>         size_t length = 0;
+>         while (length == 0) {
+>             length = abs(static_cast<int>(rand()*1.0/RAND_MAX*16))*AIO_BLKSIZE;
+>         }
+>
+>         int seq = rand() % 100;
+>         DioTest* p = dioTests[rand() % threadNumber];
+>         for (int i = 0; i < 4; ++i){
+>             p->writeRequest(seq, offset, length);
+>             offset += (length + 4096);
+>         }
+>         usleep(rand() % 10000);
+>     }
+>     return 0;
+> }
+>
+>
+> --
+> Regards,
+>
+> Zhi Yong Wu
 
-1024 of what? Most likely it is 1024 basic blocks, which is 512KB,
-the size of your writes.
 
-Could you post the output of the xfs_bmap commands you are using to
-get this information?
 
-> cat'ing the
-> file to /dev/null after dropping the caches reads at an average of 75
-> MBps, way less than the hardware is capable of.
-
-What you are doing is "open-seekend-write-fsync-close".  You haven't
-told the filesystem you are doing append writes (O_APPEND, or the
-append inode flag) so it can't optimise for them.
-
-You are also cleaning the file before closing it, so you are
-defeating the current heuristics that XFS uses to determine whether
-to remove speculative preallocation on close() - if the inode is
-dirty at close(), then it won't be removed. Hence speculative
-preallocation does nothing for your IO pattern (i.e. the allocsize
-mount option is completely useless). Remove the fsync and you'll
-see your fragmentation problem go away completely.
-
-> When I add a posix_fallocate before calling pwrite() as shown here
-> https://gist.github.com/keyurdg/eb504864d27ebfe7b40a the file
-> fragments an order of magnitude less (~30 extents), and cat'ing to
-> /dev/null proceeds at ~1GBps.
-
-That should make no difference on XFS as you are only preallocating
-the 512KB region beyond EOF that you are about to write into and
-hence both delayed allocation and preallocation have the same
-allocation target (the current EOF block). Hence in both cases the
-allocation patterns should be identical if the freespace extent they
-are being allocated out of are identical.
-
-Did you remove the previous test files and sync the filesystem
-between test runs so that the available freespace was identical for
-the different test runs? If you didn't then the filesystem allocated
-the files out of different free space extents and hence you'll get
-different allocation patterns...
-
-> The same behavior is seen even when the allocsize option is removed
-> and the partition remounted.
-
-See above.
-
-> This is somewhat unexpected and I'm working on a patch to add
-> fallocate to MySQL, wanted to check in here if I'm missing anything
-> obvious here.
-
-fallocate() of 512KB sized regions will not prevent fragmentation
-into 512KB sized extents with the write pattern you are using.
-
-If you use the inode APPEND attribute for your log files, this lets
-the filesystem optimise it's block management for append IO. In the
-case of XFS, it then will not remove preallocation beyond EOF when
-the fd is closed because the next write will be at EOF where the
-speculative preallocation already exists. Then allocsize=128M will
-actually work for your log files....
-
-Alternatively, set an extent size hint on the log files to define
-the minimum sized allocation (e.g. 32MB) and this will limit
-fragmentation without you having to modify the MySQL code at all...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
