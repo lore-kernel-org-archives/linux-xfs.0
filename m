@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2DE2D801C
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 05:07:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0633E304043
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 03:07:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3ZQmD2bPGYWtZmvv for
-	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 03:07:52 -0700 (PDT)
-Date: Tue, 8 Apr 2014 12:07:39 +0200 (CEST)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [ANNOUNCE] xfstests: updated to cf1ed54
-In-Reply-To: <20140404211224.GX17603@dastard>
-Message-ID: <alpine.LFD.2.00.1404081206190.2152@localhost.localdomain>
-References: <20140404090357.GW17603@dastard>
-	<CAL3q7H6q7M-hrvniaVkAm_L6aSHANmnfdTKGEHHLFqXUhWfY5w@mail.gmail.com>
-	<20140404211224.GX17603@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id DA671806C
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 07:04:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB478304064
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 05:04:08 -0700 (PDT)
+Date: Tue, 8 Apr 2014 08:04:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [FAQ v2] XFS speculative preallocation
+Message-ID: <20140408120405.GA19662@bfoster.bfoster>
+References: <20140407153906.GC48184@bfoster.bfoster> <53430375.3060203@sgi.com>
+	<20140407214527.GA43531@bfoster.bfoster> <534324D0.3080701@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <534324D0.3080701@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,69 +26,162 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-ext4@vger.kernel.org, Filipe David Manana <fdmanana@gmail.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, 5 Apr 2014, Dave Chinner wrote:
-
-> Date: Sat, 5 Apr 2014 08:12:25 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Filipe David Manana <fdmanana@gmail.com>
-> Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>,
->     "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
->     linux-ext4@vger.kernel.org, lczerner@redhat.com
-> Subject: Re: [ANNOUNCE] xfstests: updated to cf1ed54
+On Mon, Apr 07, 2014 at 05:21:04PM -0500, Mark Tinguely wrote:
+> On 04/07/14 16:45, Brian Foster wrote:
+> >On Mon, Apr 07, 2014 at 02:58:45PM -0500, Mark Tinguely wrote:
+> >>On 04/07/14 10:39, Brian Foster wrote:
+> >>>Hi all,
+> >>>
+> >>>This is v2 of the speculative preallocation FAQ bits. The initial
+> >>>proposal was here:
+> >>>
+> >>>http://oss.sgi.com/archives/xfs/2014-03/msg00316.html
+> >>>
+> >>>This version includes some updates based on review from arekm and
+> >>>dchinner. Most notably, the content has been broken down into a few more
+> >>>questions. Unless there are further major changes required, I'll plan to
+> >>>post something along these lines to the wiki when my account is
+> >>>approved. Thanks for the feedback!
+> >>>
+> >>>Brian
+> >>>
+> >>>---
+> >>>
+> >>>Q: Why do files on XFS use more data blocks than expected?
+> >>>
+> >>>A:
+> >>>
+> >>>The XFS speculative preallocation algorithm allocates extra blocks
+> >>>beyond end of file (EOF) to minimise file fragmentation during buffered
+> >>   ^^^ beyond here and then later adopt post-EOF phrasing.
+> >>
+> >
+> >I think you're suggesting a broader terminology change, but I'm not
+> >quite following. Could you be specific about what "later" bits should
+> >change? What phrasing in particular..?
 > 
-> On Fri, Apr 04, 2014 at 02:07:16PM +0100, Filipe David Manana wrote:
-> > On Fri, Apr 4, 2014 at 10:03 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > > Hi folks,
-> > >
-> > > The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-> > > just been updated. Patches often get missed, so please check if your
-> > > outstanding patches were in this update. If they have not been in
-> > > this update, please resubmit them to xfs@oss.sgi.com so they can be
-> > > picked up in the next update.
-> > >
-> > > The new head of the master branch is commit:
-> > >
-> > > cf1ed54 check: fix RESULT_BASE typo in check script
-> > >
-> > > The major new functionality worth mentioning in this update is the
-> > > new config file format from Lukas. The existing format config files
-> > > should continue to work without change, but the new format is much
-> > > richer and allows specification of multiple different configurations
-> > > to run test under. Hence testing multiple mount an dmkfs
-> > > configurations becomes as simple as iterating the configurations
-> > > in the config file.
-> > 
-> > Hi,
-> > 
-> > I might be missing something, but after checking out these changes, I
-> > am no longer able to run btrfs tests. Example:
-> > 
-> > $ ./check btrfs/041
-> > common/config: Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
-> > Passed all 0 tests
-> > 
-> > $ cat local.config
-> > export TEST_DEV=/dev/sdb
-> > export TEST_DIR=/home/fdmanana/btrfs-tests/dev
-> > export SCRATCH_MNT="/home/fdmanana/btrfs-tests/scratch_1"
-> > export SCRATCH_DEV_POOL="/dev/sdc /dev/sdd"
-> 
-> OK, that'll be a bug in the new config file parsing code. Lukas,
-> can you have a look at this?
+> You use "blocks beyond end of file (EOF)" here and then later use
+> the terminology of "post-EOF" through the rest of the document. Just
+> pointing out the change in terminology.
+> >
 
-Oh, yes. I'll take a look at this. Honestly I was not aware of
-SCRATCH_DEV_POOL.
+Ok. I was just trying to be more descriptive here, this being the
+initial question so to speak (i.e., spelling out "end of file"). The
+remainder uses the abbreviation introduced here.
 
-Thanks!
--Lukas
+Brian
 
+> >>...
+> >>
+> >>>See the FAQ entry on speculative preallocation for details.
+> >>>
+> >>>Q: What is speculative preallocation?
+> >>>
+> >>>A:
+> >>>
+> >>>XFS speculatively preallocates post-EOF blocks on file extending writes
+> >>>in anticipation of future extending writes. The size of a preallocation
+> >>>is dynamic and depends on the runtime state of the file and fs.
+> >>>Generally speaking, preallocation is disabled for very small files and
+> >>			vague what is very small?   ^^^
+> >>...
+> >
+> >I originally pointed out 64k, but that and other heuristic details that
+> >are subject to change were purged in v2. I'm personally not against
+> >including something that indicates the default and the notion that it's
+> >subject to change. I don't feel too strongly about it either way.
+> >Thoughts appreciated.
 > 
-> Cheers,
 > 
-> Dave.
+> I think the details are good since everyone has a different idea on
+> "very small". The FAQ can be changed with the code. You can expect
+> the TOT FAQ to represent Linux 3.0-stable.
+> 
+> >>
+> >>
+> >>>Q: Is speculative preallocation permanent?
+> >>>
+> >>>A:
+> >>>
+> >>>Although speculative preallocation can lead to reports of excess space
+> >>>usage, the preallocated space is not permanent unless explicitly made so
+> >>>via fallocate or a similar interface. Preallocated space can also be
+> >>>encoded permanently in situations where file size is extended beyond a
+> >>>range of post-EOF blocks (i.e., via truncate). Otherwise, preallocated
+> >>>blocks are reclaimed on file close, inode reclaim, unmount or in the
+> >>>background once file write activity subsides.
+> >>
+> >>Switch order?
+> >>
+> >>Normally, preallocated
+> >>blocks are reclaimed on file close, inode reclaim, unmount or in the
+> >>background once file write activity subsides. They can be explictly
+> >>made permanent .
+> >>
+> >
+> >Thoughts on the following?
+> >
+> >"Preallocated blocks are normally reclaimed on file close, inode
+> >reclaim, unmount or in the background once file write activity subsides.
+> >They can be explicitly made permanent via fallocate or a similar
+> >interface. They can be implicitly made permanent in situations where
+> >file size is extended beyond a range of post-EOF blocks (i.e., via an
+> >extending truncate)."
+> >
+> 
+> Looks good to me.
+> 
+> >>>
+> >>>Q: My workload has known characteristics - can I tune speculative
+> >>>preallocation to an optimal fixed size?
+> >>>
+> >>>A:
+> >>>
+> >>>The 'allocsize=' mount option configures the XFS block allocation
+> >>>algorithm to use a fixed allocation size. Speculative preallocation is
+> >>>not dynamically resized when the allocsize mount option is set and thus
+> >>>the potential for fragmentation is increased. XFS historically set
+> >>
+> >>sets the
+> >>
+> >>>allocsize to 64k by default.
+> >>>
+> >>
+> >>
+> >>Q: Can I disable S-P-A ?
+> >>
+> >
+> >A: No..? ;)
+> >
+> >Are you proposing this with the similar intent to the previous Q (i.e.,
+> >"what's the alternative to the default behavior?"), or with the notion
+> >that Dave pointed out how technically preallocation is not really "off?"
+> >Or something else? If the former, we could modify the question:
+> >
+> >"My workload has known characteristics - can I disable speculative
+> >preallocation or tune it to an optimal fixed size?"
+> >
+> >Or something along those lines. Would anybody object to also pointing
+> >out that 'allocsize=4k' (or allocsize=<blocksize>?) could be considered
+> >"speculative preallocation == off" from the user's perspective?
+> >
+> 
+> That sounds good to me. If they know it is there, eventually someone
+> will ask "can I turn it off?". I would be happy with the answer of
+> "no, but it can be tuned" and don't tell them how to effectively
+> turn it off.
+> 
+> >Thanks for the feedback.
+> >
+> >Brian
+> >
+> 
+> Thanks for the FAQ.
+> 
+> --Mark.
 > 
 
 _______________________________________________
