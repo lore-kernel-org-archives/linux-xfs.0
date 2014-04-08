@@ -1,15 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CFB6E803F
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 07:38:38 -0500 (CDT)
-Message-ID: <5343EDCD.5060409@sgi.com>
-Date: Tue, 8 Apr 2014 07:38:37 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1E102805A
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 07:58:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A3144AC013
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 05:58:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id j8PboRsnEBEuViM6 for
+	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 05:58:35 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s38CwYeE031898
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 8 Apr 2014 08:58:34 -0400
+Date: Tue, 8 Apr 2014 08:58:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_repair: fix prefetch queue waiting
+Message-ID: <20140408125832.GA23051@bfoster.bfoster>
+References: <53436CA0.1090106@redhat.com>
 MIME-Version: 1.0
-Subject: Re: xfsprogs 3.1.12 and 3.2.0 releases?
-References: <201401201822.48520.arekm@maven.pl> <5342EC72.8060007@sgi.com>
-	<20140407233045.GF27017@dastard>
-In-Reply-To: <20140407233045.GF27017@dastard>
+Content-Disposition: inline
+In-Reply-To: <53436CA0.1090106@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,30 +29,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-T24gMDQvMDcvMjAxNCAwNjozMCBQTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIE1vbiwgQXBy
-IDA3LCAyMDE0IGF0IDAxOjIwOjM0UE0gLTA1MDAsIFJpY2ggSm9obnN0b24gd3JvdGU6Cj4+IE9u
-IDAxLzIwLzIwMTQgMTE6MjIgQU0sIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPj4+Cj4+
-PiBIZWxsby4KPj4+Cj4+PiBXaGF0J3MgbmVlZGVkIGZvciBib3RoIDMuMS4xMiBhbmQgMy4yLjAg
-cmVsZWFzZXMgdG8gaGFwcGVuPwo+Pj4KPj4+IElmIDMuMi4wIGlzIHRvIGJlIHJlbGVhc2VkIHNv
-b24gdGhlbiBuaWNlLiBEYXZlLCBBRkFJSyBpdCBpcyB3YWl0aW5nIGZvciB5b3UKPj4+IGFuZCB4
-ZnNfZGIgY3JjIHdvcmsgb25seT8KPj4+Cj4+PiBJZiAzLjIuMCBpcyBmYXIgYXdheSB0aGVuIGl0
-IHdvdWxkIGJlIG5pY2UgdG8gc2VlIDMuMS4xMiB3aXRoIGJ1Z2ZpeGVzIG9ubHkKPj4+IChmb3Ig
-dGhvc2UgcGFyYW5vaWQgYWJvdXQgbmV3IHN0dWZmKSBidXQgMy4xLjEzIHZlcnkgc29vbiBhZnRl
-ciB0aGF0IHdpdGgKPj4+IGJhY2twb3J0ZWQgZmVhdHVyZXMgbGlrZSBwcm9qZWN0IHF1b3RhIHN1
-cHBvcnQsIHBhcmFsbGVsaXNtLCBwZXJmb3JtYW5jZQo+Pj4gaW1wcm92ZW1lbnRzLgo+Pj4KPj4+
-IE9idmlvdXNseSBJIGhvcGUgMy4yLjAgaXMgc29vbiBhbmQgdGhlcmUgaXMgbm8gbmVlZCB0byB3
-YXN0ZSBlZmZvcnQgb24gMy4xLnguCj4+Pgo+PiBJcyB0aGVyZSBhbnkgaW50ZXJlc3QgaW4gYSAz
-LjEuMTIgcmVsZWFzZSBvciB3aWxsIGEgMy4yLnggcmVsZWFzZQo+PiBoYXBwZW4gc29vbj8KPgo+
-IDMuMi54IHNob3VsZCBoYXBwZW4gc29vbi4gSSd2ZSBnb3QgYSBmZXcgcGF0Y2hlcyB0byBpbnRl
-Z3JhdGUgYW5kCj4gdGVzdCBhbmQgdGhlbiB3ZSBjYW4gbW92ZSB0byBhIDMuMi1yYzEgcmVsZWFz
-ZSBhbmQgZ28gZnJvbSB0aGVyZS4KQXdlc29tZSwgdGhhbmtzIERhdmUuCj4KPiBDaGVlcnMsCj4K
-PiBEYXZlLgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+On Mon, Apr 07, 2014 at 10:27:28PM -0500, Eric Sandeen wrote:
+> This fixes a regression caused by:
+> 
+> 97b1fcf xfs_repair: fix array overrun in do_inode_prefetch
+> 
+> The thread creation loop has 2 ways to exit; either via
+> the loop counter based on thread_count, or the break statement
+> if we've started enough workers to cover all AGs.
+> 
+> Whether or not the loop counter "i" reflects the number of
+> threads started depends on whether or not we exited via the
+> break.
+> 
+> The above commit prevented us from indexing off the end
+> of the queues[] array if we actually advanced "i" all the
+> way to thread_count, but in the case where we break, "i"
+> is one *less* than the nr of threads started, so we don't
+> wait for completion of all threads, and all hell breaks
+> loose in phase 5.
+> 
+> Just stop with the cleverness of re-using the loop counter -
+> instead, explicitly count threads that we start, and then use
+> that counter to wait for each worker to complete.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> I have one fs which demonstrates the problem, and have verified
+> the regression & tested the fix against that.
+> 
+> I'll run this over xfstests overnight, but it seems obvious
+> from here (OTOH the other fix seemed obvious too) :(
+> 
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index e47a48e..4c32395 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -944,6 +944,7 @@ do_inode_prefetch(
+>  	int			i;
+>  	struct work_queue	queue;
+>  	struct work_queue	*queues;
+> +	int			queues_started = 0;
+>  
+>  	/*
+>  	 * If the previous phases of repair have not overflowed the buffer
+> @@ -987,6 +988,7 @@ do_inode_prefetch(
+>  
+>  		create_work_queue(&queues[i], mp, 1);
+>  		queue_work(&queues[i], prefetch_ag_range_work, 0, wargs);
+> +		queues_started++;
+>  
+>  		if (wargs->end_ag >= mp->m_sb.sb_agcount)
+>  			break;
+> @@ -995,7 +997,7 @@ do_inode_prefetch(
+>  	/*
+>  	 * wait for workers to complete
+>  	 */
+> -	while (i--)
+> +	for (i = 0; i < queues_started; i++)
+>  		destroy_work_queue(&queues[i]);
+
+Fix looks good, but any reason to reverse the order of the destroy loop?
+
+Brian
+
+>  	free(queues);
+>  }
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
