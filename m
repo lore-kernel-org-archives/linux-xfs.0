@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E098A80DD
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 18:25:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA8458F8092
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 16:25:24 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D1BF480E7
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 18:25:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CA155304089
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 16:25:37 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id UUKtBEO9VouAvUQ9 for <xfs@oss.sgi.com>;
-	Tue, 08 Apr 2014 16:25:16 -0700 (PDT)
+	ESMTP id Ld11IcOboN44jPE9 for <xfs@oss.sgi.com>;
+	Tue, 08 Apr 2014 16:25:09 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 06/14] xfs_quota: fix memory leak in quota_group_type() error
-	path
-Date: Tue,  8 Apr 2014 18:24:56 -0500
-Message-Id: <1396999504-13769-7-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 04/14] xfsprogs: fix memory leak in xlog_recover_add_to_trans
+Date: Tue,  8 Apr 2014 18:24:54 -0500
+Message-Id: <1396999504-13769-5-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1396999504-13769-1-git-send-email-sandeen@redhat.com>
 References: <1396999504-13769-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,57 +29,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-quota_group_type has some rather contorted logic that's
-been around since 2005.
+Free the memory in error path of xlog_recover_add_to_trans().
+Normally this memory is freed in recovery pass2, but is leaked
+in the error path.
 
-In the (!name) case, if any of the 3 calls setting up ngroups fails,
-we fall back to using just one group.
-
-However, if it's the getgroups() call that fails, we overwrite
-the allocated gid ptr with &gid, thus leaking that allocated
-memory.  Worse, we set "dofree" to 1, so will free non-allocated
-local var gid.  And that last else case is redundant; if we get there,
-gids is guaranteed to be non-null.
-
-Refactor it a bit to be more clear (I hope) and correct.
+Userspace version of kernel commits 519ccb8 & aaaae98
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- quota/quota.c |   20 ++++++++++++--------
- 1 files changed, 12 insertions(+), 8 deletions(-)
+ libxlog/xfs_log_recover.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/quota/quota.c b/quota/quota.c
-index 7e52ad2..367da8c 100644
---- a/quota/quota.c
-+++ b/quota/quota.c
-@@ -289,15 +289,19 @@ quota_group_type(
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index 3f22921..d1fa535 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -1131,6 +1131,7 @@ xlog_recover_add_to_trans(
+ 		"bad number of regions (%d) in inode log format",
+ 				  in_f->ilf_size);
+ 			ASSERT(0);
++			kmem_free(ptr);
+ 			return XFS_ERROR(EIO);
  		}
- 		gids = &gid;
- 		ngroups = 1;
--	} else if ( ((ngroups = sysconf(_SC_NGROUPS_MAX)) < 0) ||
--		    ((gids = malloc(ngroups * sizeof(gid_t))) == NULL) ||
--		    ((ngroups = getgroups(ngroups, gids)) < 0)) {
--		dofree = (gids != NULL);
--		gid = getgid();
--		gids = &gid;
--		ngroups = 1;
- 	} else {
--		dofree = (gids != NULL);
-+		if ( ((ngroups = sysconf(_SC_NGROUPS_MAX)) < 0) ||
-+		     ((gids = malloc(ngroups * sizeof(gid_t))) == NULL) ||
-+		     ((ngroups = getgroups(ngroups, gids)) < 0)) {
-+			/* something failed.  Fall back to 1 group */
-+			free(gids);
-+			gid = getgid();
-+			gids = &gid;
-+			ngroups = 1;
-+		} else {
-+			/* It all worked, and we allocated memory */
-+			dofree = 1;
-+		}
- 	}
  
- 	for (i = 0; i < ngroups; i++, name = NULL) {
 -- 
 1.7.1
 
