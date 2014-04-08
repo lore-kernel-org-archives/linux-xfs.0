@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6CC7A8060
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 03:56:49 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2DE2D801C
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 05:07:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E10EDAC013
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 01:56:45 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	I2sRXIHqXRRFViEt for <xfs@oss.sgi.com>;
-	Tue, 08 Apr 2014 01:56:43 -0700 (PDT)
-Date: Tue, 8 Apr 2014 18:56:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: fix directory hash ordering bug
-Message-ID: <20140408085612.GK27017@dastard>
-References: <20140328173430.622616177@sgi.com>
-	<20140407190101.292316075@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0633E304043
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2014 03:07:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 3ZQmD2bPGYWtZmvv for
+	<xfs@oss.sgi.com>; Tue, 08 Apr 2014 03:07:52 -0700 (PDT)
+Date: Tue, 8 Apr 2014 12:07:39 +0200 (CEST)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [ANNOUNCE] xfstests: updated to cf1ed54
+In-Reply-To: <20140404211224.GX17603@dastard>
+Message-ID: <alpine.LFD.2.00.1404081206190.2152@localhost.localdomain>
+References: <20140404090357.GW17603@dastard>
+	<CAL3q7H6q7M-hrvniaVkAm_L6aSHANmnfdTKGEHHLFqXUhWfY5w@mail.gmail.com>
+	<20140404211224.GX17603@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140407190101.292316075@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,70 +29,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-ext4@vger.kernel.org, Filipe David Manana <fdmanana@gmail.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Apr 07, 2014 at 02:00:34PM -0500, Mark Tinguely wrote:
-> Commit f5ea1100 ("xfs: add CRCs to dir2/da node blocks") introduced
-> in 3.10 incorrectly converted the btree hash index array pointer in
-> xfs_da3_fixhashpath(). It resulted in the the current hash always
-> being compared against the first entry in the btree rather than the
-> current block index into the btree block's hash entry array. As a
-> result, it was comparing the wrong hashes, and so could misorder the
-> entries in the btree.
-> 
-> For most cases, this doesn't cause any problems as it requires hash
-> collisions to expose the ordering problem. However, when there are
-> hash collisions within a directory there is a very good probability
-> that the entries will be ordered incorrectly and that actually
-> matters when duplicate hashes are placed into or removed from the
-> btree block hash entry array.
-> 
-> This bug results in an on-disk directory corruption and that results
-> in directory verifier functions throwing corruption warnings into
-> the logs. While no data or directory entries are lost, access to
-> them may be compromised, and attempts to remove entries from a
-> directory that has suffered from this corruption may result in a
-> filesystem shutdown.  xfs_repair will fix the directory hash
-> ordering without data loss occuring.
-> 
-> [dchinner: wrote useful a commit message]
-> 
-> Ported from equivalent kernel commit c88547a8.
-> 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  libxfs/xfs_da_btree.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: b/libxfs/xfs_da_btree.c
-> ===================================================================
-> --- a/libxfs/xfs_da_btree.c
-> +++ b/libxfs/xfs_da_btree.c
-> @@ -1313,7 +1313,7 @@ xfs_da3_fixhashpath(
->  		node = blk->bp->b_addr;
->  		xfs_da3_node_hdr_from_disk(&nodehdr, node);
->  		btree = xfs_da3_node_tree_p(node);
-> -		if (be32_to_cpu(btree->hashval) == lasthash)
-> +		if (be32_to_cpu(btree[blk->index]->hashval) == lasthash)
-                                                 ^^
-xfs_da_btree.c: In function 'xfs_da3_fixhashpath':
-xfs_da_btree.c:1316:7: error: invalid type argument of '->' (have 'struct xfs_da_node_entry')
-xfs_da_btree.c:1316:7: error: invalid type argument of '->' (have 'struct xfs_da_node_entry')
-xfs_da_btree.c:1316:7: error: invalid type argument of '->' (have 'struct xfs_da_node_entry')
-xfs_da_btree.c:1316:7: error: invalid type argument of '->' (have 'struct xfs_da_node_entry')
-xfs_da_btree.c:1316:7: error: invalid type argument of '->' (have 'struct xfs_da_node_entry')
-xfs_da_btree.c:1316:7: error: invalid type argument of '->' (have 'struct xfs_da_node_entry')
+On Sat, 5 Apr 2014, Dave Chinner wrote:
 
-I've fixed the copy I've got in my testing tree, but please be more
-careful to test patches before you send them for review in future.
+> Date: Sat, 5 Apr 2014 08:12:25 +1100
+> From: Dave Chinner <david@fromorbit.com>
+> To: Filipe David Manana <fdmanana@gmail.com>
+> Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>,
+>     "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+>     linux-ext4@vger.kernel.org, lczerner@redhat.com
+> Subject: Re: [ANNOUNCE] xfstests: updated to cf1ed54
+> 
+> On Fri, Apr 04, 2014 at 02:07:16PM +0100, Filipe David Manana wrote:
+> > On Fri, Apr 4, 2014 at 10:03 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > > Hi folks,
+> > >
+> > > The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
+> > > just been updated. Patches often get missed, so please check if your
+> > > outstanding patches were in this update. If they have not been in
+> > > this update, please resubmit them to xfs@oss.sgi.com so they can be
+> > > picked up in the next update.
+> > >
+> > > The new head of the master branch is commit:
+> > >
+> > > cf1ed54 check: fix RESULT_BASE typo in check script
+> > >
+> > > The major new functionality worth mentioning in this update is the
+> > > new config file format from Lukas. The existing format config files
+> > > should continue to work without change, but the new format is much
+> > > richer and allows specification of multiple different configurations
+> > > to run test under. Hence testing multiple mount an dmkfs
+> > > configurations becomes as simple as iterating the configurations
+> > > in the config file.
+> > 
+> > Hi,
+> > 
+> > I might be missing something, but after checking out these changes, I
+> > am no longer able to run btrfs tests. Example:
+> > 
+> > $ ./check btrfs/041
+> > common/config: Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
+> > Passed all 0 tests
+> > 
+> > $ cat local.config
+> > export TEST_DEV=/dev/sdb
+> > export TEST_DIR=/home/fdmanana/btrfs-tests/dev
+> > export SCRATCH_MNT="/home/fdmanana/btrfs-tests/scratch_1"
+> > export SCRATCH_DEV_POOL="/dev/sdc /dev/sdd"
+> 
+> OK, that'll be a bug in the new config file parsing code. Lukas,
+> can you have a look at this?
 
-Cheers,
+Oh, yes. I'll take a look at this. Honestly I was not aware of
+SCRATCH_DEV_POOL.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks!
+-Lukas
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
