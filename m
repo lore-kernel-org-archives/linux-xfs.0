@@ -1,30 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A1F717F5F
-	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 15:30:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7756E8F8052
-	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 13:30:51 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0b8x9zpAAoz73Cbf for
-	<xfs@oss.sgi.com>; Wed, 09 Apr 2014 13:30:50 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s39KUnRB032007
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2014 16:30:49 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s39KUmTh007548
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2014 16:30:49 -0400
-Message-ID: <5345ADF9.2030402@redhat.com>
-Date: Wed, 09 Apr 2014 15:30:49 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 71FD57F63
+	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 15:48:12 -0500 (CDT)
+Message-ID: <5345B209.5040906@sgi.com>
+Date: Wed, 09 Apr 2014 15:48:09 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: remove pointless pointer increment in
-	xfs_dir2_block_compact()
+Subject: Re: [PATCH] xfs_io: fix random pread/pwrite to honor offset
+References: <53459C4E.9030902@sandeen.net>
+In-Reply-To: <53459C4E.9030902@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,49 +17,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-xfs_dir2_block_compact() is passed a pointer to *blp, and
-advances it locally - but nobody uses the pointer (locally)
-after that.
+On 04/09/14 14:15, Eric Sandeen wrote:
+> xfs_io's pread & pwrite claim to support a random IO mode
+> where it will do random IOs between offset & offset+len.
+>
+> However, offset was ignored, and we did the IOs between 0
+> and len instead.
+>
+> Clang caught this by pointing out that the calculated/normalized
+> "offset" variable was never read.
+>
+> (NB: If the range is larger than RAND_MAX, these functions don't
+> work, but that's always been true, so I'll leave it for another
+> day...)
+>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
+>
+> I haven't tested this w/ xfstests but I don't see anyone who calls
+> pread/pwrite with "-R" (and it's not documented in the manpage!)
+>
+> diff --git a/io/pread.c b/io/pread.c
+> index a42baed..465c22b 100644
+> --- a/io/pread.c
+> +++ b/io/pread.c
+> @@ -246,7 +246,7 @@ read_random(
 
-This behavior came about as part of prior refactoring,
+offset can be the end of file offset. Do we care that the read (/write)
+could start or end past the end of file?
 
-20f7e9f xfs: factor dir2 block read operations
+>
+>   	*total = 0;
+>   	while (count > 0) {
+> -		off = ((random() % range) / buffersize) * buffersize;
+> +		off = ((offset + (random() % range)) / buffersize) * buffersize;
+>   		bytes = do_pread(fd, off, buffersize, buffersize);
+>   		if (bytes == 0)
+>   			break;
 
-and looking at the code as it was before, it seems quite clear
-that this change introduced a bug; the pre-refactoring code
-expects blp to be modified after compaction.
-And indeed it did; see this commit which fixed it:
+Looks like this was introduced in:
+commit 8fb2237e65555ff540e8b6108ffccfffefe239ac
+Author: Nathan Scott <nathans@sgi.com>
+Date:   Fri Nov 11 14:25:18 2005 +0000
 
-37f1356 xfs: recalculate leaf entry pointer after compacting a dir2 block
+Provide further debugging options and tweaks for analysing the 
+read/write paths.
+Merge of master-melb:xfs-cmds:24372a by kenmcd.
 
-So the bug was introduced & resolved in the 3.8 cycle.
+  ---
 
-Whoops.  Well, it's fixed now, and mystery solved; just remove
-the now-pointless local increment of the blp pointer.
+If it was broken for 8.5 years, I think it could be removed.
 
-(I guess we should have run clang earlier!)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 4f6a38c..5259939 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -319,7 +319,6 @@ xfs_dir2_block_compact(
- 		(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
- 		(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
- 		needlog, &needscan);
--	blp += be32_to_cpu(btp->stale) - 1;
- 	btp->stale = cpu_to_be32(1);
- 	/*
- 	 * If we now need to rebuild the bestfree map, do so.
+--Mark.
 
 _______________________________________________
 xfs mailing list
