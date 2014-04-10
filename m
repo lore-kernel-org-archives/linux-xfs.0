@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2962F7F63
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 07:23:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B2028F804B
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 05:23:05 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	feElkgSRN94tdeOy for <xfs@oss.sgi.com>;
-	Thu, 10 Apr 2014 05:23:04 -0700 (PDT)
-Date: Thu, 10 Apr 2014 22:22:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/6] xfs: zeroing space needs to punch delalloc blocks
-Message-ID: <20140410122259.GC27519@dastard>
-References: <1397106053-7489-1-git-send-email-david@fromorbit.com>
-	<1397106053-7489-5-git-send-email-david@fromorbit.com>
-	<20140410104001.GG17641@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 18F947F81
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 07:29:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A3ADAAC001
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 05:29:47 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id hHcTHAWMzyrcoXEg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 10 Apr 2014 05:29:45 -0700 (PDT)
+Date: Thu, 10 Apr 2014 05:29:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 1/2] xfs: fix tmpfile/selinux deadlock and initialize
+	security/acl
+Message-ID: <20140410122944.GA6579@infradead.org>
+References: <1397071311-28371-1-git-send-email-bfoster@redhat.com>
+	<1397071311-28371-2-git-send-email-bfoster@redhat.com>
+	<20140410102421.GA17641@infradead.org>
+	<20140410121947.GA14124@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140410104001.GG17641@infradead.org>
+In-Reply-To: <20140410121947.GA14124@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,52 +33,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-man@vger.kernel.org, Andreas Gruenbacher <agruen@linbit.com>, xfs@oss.sgi.com, linux-security-module@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Thu, Apr 10, 2014 at 03:40:01AM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 10, 2014 at 03:00:51PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When we are zeroing space andit is covered by a delalloc range, we
-> > need to punch the delalloc range out before we truncate the page
-> > cache. Failing to do so leaves and inconsistency between the page
-> > cache and the extent tree, which we later trip over when doing
-> > direct IO over the same range.
+On Thu, Apr 10, 2014 at 08:19:48AM -0400, Brian Foster wrote:
+> Are you saying it doesn't have to initialize security or the default
+> acl, or both?
+
+The ACLs for sure.  LSM do run-time access decisions, so they will
+probably rely on the security data being initialized.  Given that
+O_TMPFILE files aren't publicly available I'm not sure there's a point
+in them doing that, though.
+
+LSMs are also affected by the lack of a proper parent I'll discuss for
+ACLs below.
+
+> The intent here was to have the case covered where the inode happens to
+> be linked back into the namespace since we don't do this work in the
+> link path.
+
+That's an interesting one.  O_TMFILE files don't have a real parent
+to inherit ACLs from, the pathname passed in just needs to point to
+a directory to find the filesystem to create the tmpfile in.  On
+the other hand it seem like the extN implementations do inherity the
+ACL in this case.
+
+The link into the namespace is irrelavant here as ACL inheritance only
+happens on initial create, not at link time.
+
+I also think we'll absolutely need a test case for ACLs+tmpfile to
+make sure all filesystems handle it the same way.
+
+> The bulk of the refactoring was with the idea that the inode setup for
+> the tmpfile case is generally equivalent for the traditional create
+> case. The original version was posted here:
 > 
-> Looks good.
+> http://oss.sgi.com/archives/xfs/2014-04/msg00149.html
 > 
-> Which test found this?
+> ... and it just fixes the deadlock and adds the security initialization.
+> I suppose I could still break that out into multiple patches, but that
+> aside, is that behavior preferred?
 
-The fsstress tests - any of them will do. It showed after I merged
-Lukas' FALLOC_FL_ZERO_RANGE support patches for fsstress and fsx
-into xfstests, but it wasn't reliably triggering until I fixed the
-__xfs_get_blocks DIO bug that Al found...
-
-> > @@ -1432,9 +1434,18 @@ xfs_zero_file_space(
-> >  	ASSERT(end_boundary <= offset + len);
-> >  
-> >  	if (start_boundary < end_boundary - 1) {
-> > -		/* punch out the page cache over the conversion range */
-> > +		/*
-> > +		 * punch out delayed allocation blocks and the page cache over
-> > +		 * the conversion range
-> > +		 */
-> > +		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > +		error = xfs_bmap_punch_delalloc_range(ip,
-> > +				XFS_B_TO_FSB(mp, start_boundary),
-> 
-> Shouldn't this be XFS_B_TO_FSBT?
-
-XFS_B_TO_FSB gives the same result given that we've already rounded
-start_boundary to block granularity....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think just fixing the deadlock and initializing the security is enough
+for the first pass.  If you want to do the refactoring on top send it as
+a second series on top of the actual fixes.
 
 _______________________________________________
 xfs mailing list
