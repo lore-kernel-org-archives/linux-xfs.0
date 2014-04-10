@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CB38D7FF3
+	by oss.sgi.com (Postfix) with ESMTP id E0D137FF5
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 11:11:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B7A8A8F8035
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BA7A68F8052
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:15 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dRlE93ek2CgZiul7 for
+	cuda.sgi.com with ESMTP id b3BksdFdj9hbuC5I for
 	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:14 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBEs8003828
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBEop003921
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=OK) for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:14 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s3AGBCr0021278
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:13 -0400
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s3AGBCBU015427
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:14 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 18/20] xfsprogs/repair: reconstruct the finobt in phase 5
-Date: Thu, 10 Apr 2014 12:11:08 -0400
-Message-Id: <1397146270-42993-19-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 20/20] xfsprogs/db: add finobt support to metadump
+Date: Thu, 10 Apr 2014 12:11:10 -0400
+Message-Id: <1397146270-42993-21-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,180 +38,76 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Support reconstruction of the finobt in phase 5 of xfs_repair. We
-create a new cursor for the finobt and write the in-core records
-that contain free inodes to the tree. Finally, pass the cursor
-along to build_agi() to include the finobt root and level count in
-the agi header.
+Include the free inode btree in metadump images. If the source fs
+is finobt-enabled, run an additional scan_btree() of the finobt.
+Since the private 'agi' scanfunc_ino() parameter is unused, change
+the private parameter to a flag that indicates whether the current
+scan is for the inobt or finobt. If the latter, we skip copying the
+actual inode chunks as this work is already performed by the inobt
+scan.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase5.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 57 insertions(+), 13 deletions(-)
+ db/metadump.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 9632d2c..e138a6a 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -881,10 +881,11 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
-  */
- static void
- init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
--		__uint64_t *num_inos, __uint64_t *num_free_inos)
-+		__uint64_t *num_inos, __uint64_t *num_free_inos, int finobt)
- {
- 	__uint64_t		ninos;
- 	__uint64_t		nfinos;
-+	__uint64_t		rec_nfinos;
- 	ino_tree_node_t		*ino_rec;
- 	int			num_recs;
- 	int			level;
-@@ -920,13 +921,22 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 	 * build up statistics
- 	 */
- 	for (num_recs = 0; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec))  {
--		ninos += XFS_INODES_PER_CHUNK;
--		num_recs++;
-+		rec_nfinos = 0;
- 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
- 			ASSERT(is_inode_confirmed(ino_rec, i));
- 			if (is_inode_free(ino_rec, i))
--				nfinos++;
-+				rec_nfinos++;
+diff --git a/db/metadump.c b/db/metadump.c
+index 09bb85a..38cd441 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1917,6 +1917,7 @@ scanfunc_ino(
+ 	xfs_inobt_ptr_t		*pp;
+ 	int			i;
+ 	int			numrecs;
++	int			finobt = *(int *) arg;
+ 
+ 	numrecs = be16_to_cpu(block->bb_numrecs);
+ 
+@@ -1928,6 +1929,14 @@ scanfunc_ino(
+ 					typtab[btype].name, agno, agbno);
+ 			numrecs = mp->m_inobt_mxr[0];
  		}
 +
 +		/*
-+		 * finobt only considers records with free inodes
++		 * Only copy the btree blocks for the finobt. The inobt scan
++		 * copies the inode chunks.
 +		 */
-+		if (finobt && !rec_nfinos)
-+			continue;
++		if (finobt)
++			return 1;
 +
-+		nfinos += rec_nfinos;
-+		ninos += XFS_INODES_PER_CHUNK;
-+		num_recs++;
+ 		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
+ 		for (i = 0; i < numrecs; i++, rp++) {
+ 			if (!copy_inode_chunk(agno, rp))
+@@ -1967,6 +1976,7 @@ copy_inodes(
+ {
+ 	xfs_agblock_t		root;
+ 	int			levels;
++	int			finobt = 0;
+ 
+ 	root = be32_to_cpu(agi->agi_root);
+ 	levels = be32_to_cpu(agi->agi_level);
+@@ -1985,7 +1995,20 @@ copy_inodes(
+ 		return 1;
  	}
  
- 	blocks_allocated = lptr->num_blocks = howmany(num_recs,
-@@ -1061,8 +1071,8 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-  * XXX: yet more code that can be shared with mkfs, growfs.
-  */
- static void
--build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs, struct agi_stat *agi_stat)
-+build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-+		bt_status_t *finobt_curs, struct agi_stat *agi_stat)
- {
- 	xfs_buf_t	*agi_buf;
- 	xfs_agi_t	*agi;
-@@ -1096,6 +1106,11 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
- 		platform_uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
- 
+-	return scan_btree(agno, root, levels, TYP_INOBT, agi, scanfunc_ino);
++	if (!scan_btree(agno, root, levels, TYP_INOBT, &finobt, scanfunc_ino))
++		return 0;
++
 +	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+		agi->agi_free_root = cpu_to_be32(finobt_curs->root);
-+		agi->agi_free_level = cpu_to_be32(finobt_curs->num_levels);
++		root = be32_to_cpu(agi->agi_free_root);
++		levels = be32_to_cpu(agi->agi_free_level);
++
++		finobt = 1;
++		if (!scan_btree(agno, root, levels, TYP_INOBT, &finobt,
++				scanfunc_ino))
++			return 0;
 +	}
 +
- 	libxfs_writebuf(agi_buf, 0);
++	return 1;
  }
  
-@@ -1106,7 +1121,7 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
- static void
- build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		bt_status_t *btree_curs, __uint32_t magic,
--		struct agi_stat *agi_stat)
-+		struct agi_stat *agi_stat, int finobt)
- {
- 	xfs_agnumber_t		i;
- 	xfs_agblock_t		j;
-@@ -1158,7 +1173,10 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	 * pointers for the parent.  that can recurse up to the root
- 	 * if required.  set the sibling pointers for leaf level here.
- 	 */
--	ino_rec = findfirst_inode_rec(agno);
-+	if (finobt)
-+		ino_rec = findfirst_free_inode_rec(agno);
-+	else
-+		ino_rec = findfirst_inode_rec(agno);
- 
- 	if (ino_rec != NULL)
- 		first_agino = ino_rec->ino_startnum;
-@@ -1210,7 +1228,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 			bt_rec[j].ir_freecount = cpu_to_be32(inocnt);
- 			freecount += inocnt;
- 			count += XFS_INODES_PER_CHUNK;
--			ino_rec = next_ino_rec(ino_rec);
-+
-+			if (finobt)
-+				ino_rec = next_free_ino_rec(ino_rec);
-+			else
-+				ino_rec = next_ino_rec(ino_rec);
- 		}
- 
- 		if (ino_rec != NULL)  {
-@@ -1486,9 +1508,12 @@ phase5_func(
- {
- 	__uint64_t	num_inos;
- 	__uint64_t	num_free_inos;
-+	__uint64_t	finobt_num_inos;
-+	__uint64_t	finobt_num_free_inos;
- 	bt_status_t	bno_btree_curs;
- 	bt_status_t	bcnt_btree_curs;
- 	bt_status_t	ino_btree_curs;
-+	bt_status_t	fino_btree_curs;
- 	int		extra_blocks = 0;
- 	uint		num_freeblocks;
- 	xfs_extlen_t	freeblks1;
-@@ -1533,8 +1558,13 @@ phase5_func(
- 		 * on-disk btrees (includs pre-allocating all
- 		 * required blocks for the trees themselves)
- 		 */
--		init_ino_cursor(mp, agno, &ino_btree_curs,
--				&num_inos, &num_free_inos);
-+		init_ino_cursor(mp, agno, &ino_btree_curs, &num_inos,
-+				&num_free_inos, 0);
-+
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+			init_ino_cursor(mp, agno, &fino_btree_curs,
-+					&finobt_num_inos, &finobt_num_free_inos,
-+					1);
- 
- 		sb_icount_ag[agno] += num_inos;
- 		sb_ifree_ag[agno] += num_free_inos;
-@@ -1633,17 +1663,31 @@ phase5_func(
- 		 */
- 		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
- 				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
--		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat);
-+		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat, 0);
- 		write_cursor(&ino_btree_curs);
- 
-+		/*
-+		 * build free inode tree
-+		 */
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+			magic = xfs_sb_version_hascrc(&mp->m_sb) ?
-+					XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
-+			build_ino_tree(mp, agno, &fino_btree_curs, magic,
-+					NULL, 1);
-+			write_cursor(&fino_btree_curs);
-+		}
-+
- 		/* build the agi */
--		build_agi(mp, agno, &ino_btree_curs, &agi_stat);
-+		build_agi(mp, agno, &ino_btree_curs, &fino_btree_curs,
-+			  &agi_stat);
- 
- 		/*
- 		 * tear down cursors
- 		 */
- 		finish_cursor(&bno_btree_curs);
- 		finish_cursor(&ino_btree_curs);
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+			finish_cursor(&fino_btree_curs);
- 		finish_cursor(&bcnt_btree_curs);
- 		/*
- 		 * release the incore per-AG bno/bcnt trees so
+ static int
 -- 
 1.8.3.1
 
