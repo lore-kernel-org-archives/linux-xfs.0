@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8399E7F8C
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 08:29:02 -0500 (CDT)
-Message-ID: <53469C9C.8010604@sgi.com>
-Date: Thu, 10 Apr 2014 08:29:00 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1129E7F8E
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 08:38:56 -0500 (CDT)
+Message-ID: <53469EF0.3030407@sgi.com>
+Date: Thu, 10 Apr 2014 08:38:56 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: unmount does not wait for shutdown during unmount
-References: <1397104955-7247-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1397104955-7247-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 15/14] xfs_io: free memory on error path exit from bmap_f()
+References: <1396999504-13769-1-git-send-email-sandeen@redhat.com>
+	<5345C751.8040803@sandeen.net>
+In-Reply-To: <5345C751.8040803@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,70 +18,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: bob.mastors@solidfire.com, snitzer@redhat.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-T24gMDQvMDkvMTQgMjM6NDIsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBGcm9tOiBEYXZlIENoaW5u
-ZXI8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPgo+IEFuZCBpbnRlcmVzdGluZyBzaXR1YXRpb24gY2Fu
-IG9jY3VyIGlmIGEgbG9nIElPIGVycm9yIG9jY3VycyBkdXJpbmcKPiB0aGUgdW5tb3VudCBvZiBh
-IGZpbGVzeXN0ZW0uIFRoZSBjYXNlcyByZXBvcnRlZCBoYXZlIHRoZSBzYW1lCj4gc2lnbmF0dXJl
-IC0gdGhlIHVwZGF0ZSBvZiB0aGUgc3VwZXJibG9jayBjb3VudGVycyBmYWlscyBkdWUgdG8gYSBs
-b2cKPiB3cml0ZSBJTyBlcnJvcjoKPgo+IFhGUyAoZG0tMTYpOiB4ZnNfZG9fZm9yY2Vfc2h1dGRv
-d24oMHgyKSBjYWxsZWQgZnJvbSBsaW5lIDExNzAgb2YgZmlsZSBmcy94ZnMveGZzX2xvZy5jLiAg
-UmV0dXJuIGFkZHJlc3MgPSAweGZmZmZmZmZmYTA4YTQ0YTEKPiBYRlMgKGRtLTE2KTogTG9nIEkv
-TyBFcnJvciBEZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQo+IFhGUyAoZG0tMTYp
-OiBVbmFibGUgdG8gdXBkYXRlIHN1cGVyYmxvY2sgY291bnRlcnMuIEZyZWVzcGFjZSBtYXkgbm90
-IGJlIGNvcnJlY3Qgb24gbmV4dCBtb3VudC4KPiBYRlMgKGRtLTE2KTogeGZzX2xvZ19mb3JjZTog
-ZXJyb3IgNSByZXR1cm5lZC4KPiBYRlMgKMK/LcK/wr/Cvyk6IFBsZWFzZSB1bW91bnQgdGhlIGZp
-bGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPgo+IEl0IGNhbiBiZSBzZWVuIHRo
-YXQgdGhlIGxhc3QgbGluZSBvZiBvdXRwdXQgY29udGFpbnMgYSBjb3JydXB0Cj4gZGV2aWNlIG5h
-bWUgLSB0aGlzIGlzIGJlY2F1c2UgdGhlIGxvZyBhbmQgeGZzX21vdW50IHN0cnVjdHVyZXMgaGF2
-ZQo+IGFscmVhZHkgYmVlbiBmcmVlZCBieSB0aGUgdGltZSB0aGlzIG1lc3NhZ2UgaXMgcHJpbnRl
-ZC4gQSBrZXJuZWwKPiBvb3BzIGNsb3NlbHkgZm9sbG93cy4KPgo+IFRoZSBpc3N1ZSBpcyB0aGF0
-IHRoZSBzaHV0ZG93biBpcyBvY2N1cnJpbmcgaW4gYSBzZXBhcmF0ZSBJTwo+IGNvbXBsZXRpb24g
-dGhyZWFkIHRvIHRoZSB1bm1vdW50LiBPbmNlIHRoZSBzaHV0ZG93biBwcm9jZXNzaW5nIGhhcwo+
-IHN0YXJ0ZWQgYW5kIGFsbCB0aGUgaWNsb2dzIGFyZSBtYXJrZWQgd2l0aCBYTE9HX1NUQVRFX0lP
-RVJST1IsIHRoZQo+IGxvZyBzaHV0ZG93biBjb2RlIHdha2VzIGFueW9uZSB3YWl0aW5nIG9uIGEg
-bG9nIGZvcmNlIHNvIHRoZXkgY2FuCj4gcHJvY2VzcyB0aGUgc2h1dGRvd24gZXJyb3IuIFRoaXMg
-d2FrZXMgdXAgdGhlIHVubW91bnQgY29kZSB0aGF0Cj4gaXMgZG9pbmcgYSBzeW5jaHJvbm91cyB0
-cmFuc2FjdGlvbiB0byB1cGRhdGUgdGhlIHN1cGVyYmxvY2sKPiBjb3VudGVycy4KPgo+IFRoZSB1
-bm1vdW50IHBhdGggbm93IHNlZXMgYWxsIHRoZSBpY2xvZ3MgYXJlIG1hcmtlZCB3aXRoCj4gWExP
-R19TVEFURV9JT0VSUk9SIGFuZCBzbyBuZXZlciB3YWl0cyBvbiB0aGVtIGFnYWluLCBrbm93aW5n
-IHRoYXQgaWYKPiBpdCBkb2VzLCB0aGVyZSB3aWxsIG5vdCBiZSBhIHdha2V1cCB0cmlnZ2VyIGZv
-ciBpdCBhbmQgd2Ugd2lsbCBoYW5nCj4gdGhlIHVubW91bnQgaWYgd2UgZG8uIEhlbmNlIHRoZSB1
-bm1vdW50IHJ1bnMgdGhyb3VnaCBhbGwgdGhlCj4gcmVtYWluaW5nIGNvZGUgYW5kIGZyZWVzIGFs
-bCB0aGUgZmlsZXN5c3RlbSBzdHJ1Y3R1cmVzIHdoaWxlIHRoZQo+IHhsb2dfaW9kb25lKCkgaXMg
-c3RpbGwgcHJvY2Vzc2luZyB0aGUgc2h1dGRvd24uIFdoZW4gdGhlIGxvZwo+IHNodXRkb3duIHBy
-b2Nlc3NpbmcgY29tcGxldGVzLCB4ZnNfZG9fZm9yY2Vfc2h1dGRvd24oKSBlbWl0cyB0aGUKPiAi
-UGxlYXNlIHVtb3VudCB0aGUgZmlsZXN5c3RlbSBhbmQgcmVjdGlmeSB0aGUgcHJvYmxlbShzKSIg
-bWVzc2FnZSwKPiBhbmQgeGxvZ19pb2RvbmUoKSB0aGVuIGFib3J0cyBhbGwgdGhlIG9iamVjdHMg
-YXR0YWNoZWQgdG8gdGhlIGljbG9nLgo+IEFuIGljbG9nIHRoYXQgaGFzIGFscmVhZHkgYmVlbiBm
-cmVlZC4uLi4KPgo+IFRoZSByZWFsIGlzc3VlIGhlcmUgaXMgdGhhdCB0aGVyZSBpcyBubyBzZXJp
-YWxpc2F0aW9uIHBvaW50IGJldHdlZW4KPiB0aGUgbG9nIElPIGFuZCB0aGUgdW5tb3VudC4gV2Ug
-aGF2ZSBzZXJpYWxpc2F0aW9ucyBwb2ludHMgZm9yIGxvZwo+IHdyaXRlcywgbG9nIGZvcmNlcywg
-cmVzZXJ2YXRpb25zLCBldGMsIGJ1dCB3ZSBkb24ndCBhY3R1YWxseSBoYXZlCj4gYW55IGNvZGUg
-dGhhdCB3YWtlcyBmb3IgbG9nIElPIHRvIGZ1bGx5IGNvbXBsZXRlLiBXZSBkbyB0aGF0IGZvciBh
-bGwKPiBvdGhlciB0eXBlcyBvZiBvYmplY3QsIHNvIHdoeSBub3QgaWNsb2didWZzPwo+Cj4gV2Vs
-bCwgaXQgdHVybnMgb3V0IHRoYXQgd2UgY2FuIGVhc2lseSBkbyB0aGlzLiBXZSd2ZSBnb3QgeGZz
-X2J1Zgo+IGhhbmRsZXMsIGFuZCB0aGF0J3Mgd2hhdCBldmVyeW9uZSBlbHNlIHVzZXMgZm9yIElP
-IHNlcmlhbGlzYXRpb24uCj4gaS5lLiBicC0+Yl9zZW1hLiBTbywgbGV0cyBob2xkIGljbG9nYnVm
-cyBsb2NrZWQgb3ZlciBJTywgYW5kIG9ubHkKPiByZWxlYXNlIHRoZSBsb2NrIGluIHhsb2dfaW9k
-b25lKCkgd2hlbiB3ZSBhcmUgZmluaXNoZWQgd2l0aCB0aGUKPiBidWZmZXIuIFRoYXQgd2F5IGJl
-Zm9yZSB3ZSB0ZWFyIGRvd24gdGhlIGljbG9nLCB3ZSBjYW4gbG9jayBhbmQKPiB1bmxvY2sgdGhl
-IGJ1ZmZlciB0byBlbnN1cmUgSU8gY29tcGxldGlvbiBoYXMgZmluaXNoZWQgY29tcGxldGVseQo+
-IGJlZm9yZSB3ZSB0ZWFyIGl0IGRvd24uCj4KPiBTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXI8
-ZGNoaW5uZXJAcmVkaGF0LmNvbT4KClRoZSB3YWl0IHF1ZXVlICJ4Y19jb21taXRfd2FpdCIgaXMg
-dXNlZCBmb3IgdHdvIHB1cnBvc2VzLCBmaXJzdCB0byBzdGFydCAKdGhlIG5leHQgaWNfbG9nIGJ1
-ZmZlciBjb21wbGV0aW9uIGFuZCBhbHNvIHRvIHdha2UgdGhvc2Ugd2FpdGluZyBmb3IgYSAKc3lu
-Y3Jvbm91cyBldmVudC4gU2h1dGRvd24gZG9lcyBzeW5jcm9ub3VzIGNpbCBwdXNoZXMgYnV0IGl0
-IGRvZXMgbm90IAp3YWl0IGZvciB0aGUgSU8gdG8gaGFwcGVuLgoKV2h5IG5vdCB3YWl0IGZvciB0
-aGUgSU8gdG8gaGFwcGVuIG9yIGZhaWwgYmVmb3JlIHdha2luZyBvdXQgdGhlIHN5bmMgCndhaXRl
-cnM/IElmIHlvdSB3YW50IHRvIGtlZXAgdGhlIHNwZWVkaWVyIGNvbXBsZXRpb24gb2YgdGhlIG5l
-eHQgY2lsIApwdXNoIGFkZCBhbm90aGVyIHdhaXQgcXVldWUuIFRoZXJlIG9ubHkgYSBmZXcgKHR5
-cGljYWxseSA4KSBwZXIgZmlsZXN5c3RlbS4KCi0tTWFyay4KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 04/09/14 17:18, Eric Sandeen wrote:
+> If realloc() fails, the memory it was trying to realloc remains;
+> free it on the error path.
+>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
+>
+> diff --git a/io/bmap.c b/io/bmap.c
+> index a78cbb1..8e5d75e 100644
+> --- a/io/bmap.c
+> +++ b/io/bmap.c
+> @@ -227,6 +227,7 @@ bmap_f(
+>   				fprintf(stderr,
+>   					_("%s: cannot realloc %d bytes\n"),
+>   					progname, (int)(map_size*sizeof(*map)));
+> +				free(map);
+>   				exitcode = 1;
+>   				return 0;
+>   			}
+
+
+Didn't it get into this block by comparing map to NULL?
+
+--Mark.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
