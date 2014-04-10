@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 148C87FF8
+	by oss.sgi.com (Postfix) with ESMTP id AA1B78004
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 11:11:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E5D0D8F8035
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7A1008F8035
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 25joU6doOfcb11yi for
+	cuda.sgi.com with ESMTP id HSFUYPP7MRHmY8wx for
 	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:15 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBEwW005037
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:14 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBElB005052
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:15 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s3AGBCR0000747
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:13 -0400
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s3AGBCsf023652
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:14 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 17/20] xfsprogs/repair: helpers for finding in-core inode
-	records w/ free inodes
-Date: Thu, 10 Apr 2014 12:11:07 -0400
-Message-Id: <1397146270-42993-18-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 19/20] xfsprogs/growfs: report finobt status in fs geometry
+	(xfs_info)
+Date: Thu, 10 Apr 2014 12:11:09 -0400
+Message-Id: <1397146270-42993-20-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,54 +39,75 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add the findfirst_free_inode_rec() and next_free_ino_rec() helpers
-to assist scanning the in-core inode records for records with at
-least one free inode. These will be used to determine what records
-are included in the free inode btree.
+Check and report on the free inode btree status bit in the fs
+geometry.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/incore.h | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ growfs/xfs_growfs.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/repair/incore.h b/repair/incore.h
-index 5419884..5f8c188 100644
---- a/repair/incore.h
-+++ b/repair/incore.h
-@@ -381,6 +381,33 @@ void			clear_uncertain_ino_cache(xfs_agnumber_t agno);
- 		((ino_tree_node_t *) ((ino_node_ptr)->avl_node.avl_forw))
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index fb7eda8..119dc28 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -56,12 +56,13 @@ report_info(
+ 	int		projid32bit,
+ 	int		crcs_enabled,
+ 	int		cimode,
+-	int		ftype_enabled)
++	int		ftype_enabled,
++	int		finobt_enabled)
+ {
+ 	printf(_(
+ 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
+ 	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-	    "         =%-22s crc=%u\n"
++	    "         =%-22s crc=%-8u finobt=%u\n"
+ 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+@@ -71,7 +72,7 @@ report_info(
  
- /*
-+ * finobt helpers
-+ */
-+static inline ino_tree_node_t *
-+findfirst_free_inode_rec(xfs_agnumber_t agno)
-+{
-+	ino_tree_node_t *ino_rec;
-+
-+	ino_rec = findfirst_inode_rec(agno);
-+
-+	while (ino_rec && !ino_rec->ir_free)
-+		ino_rec = next_ino_rec(ino_rec);
-+
-+	return ino_rec;
-+}
-+
-+static inline ino_tree_node_t *
-+next_free_ino_rec(ino_tree_node_t *ino_rec)
-+{
-+	ino_rec = next_ino_rec(ino_rec);
-+
-+	while (ino_rec && !ino_rec->ir_free)
-+		ino_rec = next_ino_rec(ino_rec);
-+
-+	return ino_rec;
-+}
-+
-+/*
-  * Has an inode been processed for phase 6 (reference count checking)?
-  *
-  * add_inode_refchecked() is set on an inode when it gets traversed
+ 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
+ 		"", geo.sectsize, attrversion, projid32bit,
+-		"", crcs_enabled,
++		"", crcs_enabled, finobt_enabled,
+ 		"", geo.blocksize, (unsigned long long)geo.datablocks,
+ 			geo.imaxpct,
+ 		"", geo.sunit, geo.swidth,
+@@ -123,6 +124,7 @@ main(int argc, char **argv)
+ 	int			projid32bit;
+ 	int			crcs_enabled;
+ 	int			ftype_enabled = 0;
++	int			finobt_enabled;	/* free inode btree */
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -245,11 +247,12 @@ main(int argc, char **argv)
+ 	projid32bit = geo.flags & XFS_FSOP_GEOM_FLAGS_PROJID32 ? 1 : 0;
+ 	crcs_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_V5SB ? 1 : 0;
+ 	ftype_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FTYPE ? 1 : 0;
++	finobt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FINOBT ? 1 : 0;
+ 	if (nflag) {
+ 		report_info(geo, datadev, isint, logdev, rtdev,
+ 				lazycount, dirversion, logversion,
+ 				attrversion, projid32bit, crcs_enabled, ci,
+-				ftype_enabled);
++				ftype_enabled, finobt_enabled);
+ 		exit(0);
+ 	}
+ 
+@@ -286,7 +289,8 @@ main(int argc, char **argv)
+ 
+ 	report_info(geo, datadev, isint, logdev, rtdev,
+ 			lazycount, dirversion, logversion,
+-			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled);
++			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
++			finobt_enabled);
+ 
+ 	ddsize = xi.dsize;
+ 	dlsize = ( xi.logBBsize? xi.logBBsize :
 -- 
 1.8.3.1
 
