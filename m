@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B1DBE7F87
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 07:33:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 73F6AAC001
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 05:33:34 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9F7F87F8C
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 08:23:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8DE208F8039
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 06:23:47 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id yhYpO5eQD0VDjvAD (version=TLSv1
+	by cuda.sgi.com with ESMTP id XOuNd0STvTbXtpNL (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 10 Apr 2014 05:33:33 -0700 (PDT)
-Date: Thu, 10 Apr 2014 05:33:32 -0700
+	Thu, 10 Apr 2014 06:23:46 -0700 (PDT)
+Date: Thu, 10 Apr 2014 06:23:46 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/6] xfs: zeroing space needs to punch delalloc blocks
-Message-ID: <20140410123332.GA15577@infradead.org>
-References: <1397106053-7489-1-git-send-email-david@fromorbit.com>
-	<1397106053-7489-5-git-send-email-david@fromorbit.com>
-	<20140410104001.GG17641@infradead.org>
-	<20140410122259.GC27519@dastard>
+Subject: Re: [PATCH] xfs: fix tmpfile/selinux deadlock and initialize security
+Message-ID: <20140410132346.GA29876@infradead.org>
+References: <1396977915-35768-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140410122259.GC27519@dastard>
+In-Reply-To: <1396977915-35768-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +29,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Apr 10, 2014 at 10:22:59PM +1000, Dave Chinner wrote:
-> XFS_B_TO_FSB gives the same result given that we've already rounded
-> start_boundary to block granularity....
+As discussed previously I prefer this version for now:
 
-It does, but XFS_B_TO_FSBT is one less operation, and it's the better
-example for a start offset when people start copy & pasting it.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
