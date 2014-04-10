@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 312767F56
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 17:52:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 092A3304059
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 15:52:38 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C4AD37F8E
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 18:53:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 60BCBAC002
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 16:53:29 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	f1f8piuPlRz1u3xg for <xfs@oss.sgi.com>;
-	Thu, 10 Apr 2014 15:52:37 -0700 (PDT)
-Date: Fri, 11 Apr 2014 08:52:34 +1000
+	wtbs5avIIBj4ds8v for <xfs@oss.sgi.com>;
+	Thu, 10 Apr 2014 16:53:27 -0700 (PDT)
+Date: Fri, 11 Apr 2014 09:53:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs i_lock vs mmap_sem lockdep trace.
-Message-ID: <20140410225234.GF27519@dastard>
-References: <20140329223109.GA24098@redhat.com>
-	<20140330234335.GB16336@dastard>
-	<20140330235717.GO18016@ZenIV.linux.org.uk>
-	<20140331004053.GA17603@dastard> <53445EC0.9060707@oracle.com>
+Subject: Re: generic/204: correct log size for XFS
+Message-ID: <20140410235322.GA15995@dastard>
+References: <53467259.1080604@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53445EC0.9060707@oracle.com>
+In-Reply-To: <53467259.1080604@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +29,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Al Viro <viro@ZenIV.linux.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: alexander.tsvetkov@oracle.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 08, 2014 at 04:40:32PM -0400, Sasha Levin wrote:
-> On 03/30/2014 08:40 PM, Dave Chinner wrote:
-> > On Mon, Mar 31, 2014 at 12:57:17AM +0100, Al Viro wrote:
-> >> > On Mon, Mar 31, 2014 at 10:43:35AM +1100, Dave Chinner wrote:
-> >>> > > filldir on a directory inode vs page fault on regular file. Known
-> >>> > > issue, definitely a false positive. We have to change locking
-> >>> > > algorithms to avoid such deficiencies of lockdep (a case of "lockdep
-> >>> > > considered harmful", perhaps?) so it's not something I'm about to
-> >>> > > rush...
-> >> > 
-> >> > Give i_lock on directories a separate class, as it's been done for i_mutex...
-> > Already done that. Commit:
-> > 
-> > 93a8614 xfs: fix directory inode iolock lockdep false positive
+On Thu, Apr 10, 2014 at 02:28:41PM +0400, alexander.tsvetkov@oracle.com wrote:
+> generic/204 fails on device with Advanced Format of 4096 bytes per
+> physical sector and when partition starts at the 4K boundary/./In this case
+> filesystem sector/block size will be of 4096 bytes size and
+> _scratch_mkfs_sized
+> fails because mkfs reports that 5Mb log size is not enough to create
+> a filesystem,
+> for example attempt to make filesystem on such partition:
 > 
-> Hi Dave,
+> mkfs.xfs -f -bsize=4096 -l size=5m -d size=109051904 /dev/sdb2"
 > 
-> The commit above introduces a new lockdep issue for me:
+> results to:
+> 
+> "log size 1280 blocks too small, minimum size is 1605 blocks"
+> 
+> and generic/204fails with ENOSPC before it has finished creating the
+> necessary files:
+> 
+> "QA output created by 204
+> ./tests/generic/204: line 86: echo: write error: No space left on device
+> ..."
+> 
+> Log size of 7Mbis enough to make filesytem and pass this test.
 
-Right, it's fixed one class of false positive which uncovers the
-next class of false positive. lockdep gives me the shits at times
-because every time we make some obviously correct locking change
-to the XFS inodes we then spend the next 3-4 kernel releases chasing
-down and annotating locks so that lockdep doesn't throw false
-positives everywhere.
+This is missing a s-o-b line. Can you add one?
 
-It's on my queue of things to fix but, quite frankly, lockdep false
-positives are low priority to fix right now.
+> 
+> diff --git a/tests/generic/204 b/tests/generic/204
+> index 13a762a..4ebab26 100755
+> --- a/tests/generic/204
+> +++ b/tests/generic/204
+> @@ -53,9 +53,9 @@ _scratch_mkfs 2> /dev/null | _filter_mkfs 2>
+> $tmp.mkfs > /dev/null
+> 
+>  # For xfs, we need to handle the different default log sizes that
+> different
+>  # versions of mkfs create. All should be valid with a 5MB log, so
+> use that.
+> -[ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -l size=5m"
+> +[ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -l size=7m"
+> 
+> -SIZE=`expr 104 \* 1024 \* 1024`
+> +SIZE=`expr 106 \* 1024 \* 1024`
+>  _scratch_mkfs_sized $SIZE $dbsize 2> /dev/null \
+>                 | _filter_mkfs 2> $tmp.mkfs > /dev/null
+>  _scratch_mount
+
+The change looks fine, but your mailer is line wrapping and
+whitespace mangling the patches.  Please read
+Documentation/SubmittingPatches in the kernel tree for how to do
+this correctly.  Also, please don't send patches in multipart emails
+- turn off html sending so that git am doesn't throw a wobbly over
+it...
+
+I've fixed it up this time....
 
 Cheers,
 
