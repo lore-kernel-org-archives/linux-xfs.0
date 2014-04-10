@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C84197FAF
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 11:11:14 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1F1FC7FD8
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 11:11:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7A045AC002
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AE711AC007
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:14 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v8DRyimbhCkIZ7fK for
+	cuda.sgi.com with ESMTP id s8yydy4TBkjLCOhn for
 	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:13 -0700 (PDT)
 Received: from int-mx02.intmail.prod.int.phx2.redhat.com
 	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBDQ2003766
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBD8u003825
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:13 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s3AGBC6A000750
+	id s3AGBCQw000747
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 09/20] xfs: report finobt status in fs geometry
-Date: Thu, 10 Apr 2014 12:10:59 -0400
-Message-Id: <1397146270-42993-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 12/20] xfsprogs/db: finobt support
+Date: Thu, 10 Apr 2014 12:11:02 -0400
+Message-Id: <1397146270-42993-13-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,26 +38,57 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Define the XFS_FSOP_GEOM_FLAGS_FINOBT fs geometry flag and set the
-associated bit if the filesystem supports the free inode btree.
+Add the AGI finobt fields and fibt layouts.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- include/xfs_fs.h | 1 +
- 1 file changed, 1 insertion(+)
+ db/agi.c     |  2 ++
+ db/btblock.c | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 554fd66..59c40fc 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -238,6 +238,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
- #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
- #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
-+#define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
+diff --git a/db/agi.c b/db/agi.c
+index 398bdbb..6f167ac 100644
+--- a/db/agi.c
++++ b/db/agi.c
+@@ -57,6 +57,8 @@ const field_t	agi_flds[] = {
+ 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
++	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_INOBT },
++	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
  
- 
- /*
+diff --git a/db/btblock.c b/db/btblock.c
+index 1ea0cff..cdb8b1d 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -60,6 +60,12 @@ struct xfs_db_btree {
+ 		sizeof(xfs_inobt_rec_t),
+ 		sizeof(__be32),
+ 	},
++	{	XFS_FIBT_MAGIC,
++		XFS_BTREE_SBLOCK_LEN,
++		sizeof(xfs_inobt_key_t),
++		sizeof(xfs_inobt_rec_t),
++		sizeof(__be32),
++	},
+ 	{	XFS_BMAP_CRC_MAGIC,
+ 		XFS_BTREE_LBLOCK_CRC_LEN,
+ 		sizeof(xfs_bmbt_key_t),
+@@ -84,6 +90,12 @@ struct xfs_db_btree {
+ 		sizeof(xfs_inobt_rec_t),
+ 		sizeof(__be32),
+ 	},
++	{	XFS_FIBT_CRC_MAGIC,
++		XFS_BTREE_SBLOCK_CRC_LEN,
++		sizeof(xfs_inobt_key_t),
++		sizeof(xfs_inobt_rec_t),
++		sizeof(__be32),
++	},
+ 	{	0,
+ 	},
+ };
 -- 
 1.8.3.1
 
