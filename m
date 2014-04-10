@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 10FB27F84
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3CF697F87
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 11:08:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E5B3830405F
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:08:40 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B00A8F8040
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:08:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id g3S4ckOydINII48i for
-	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:08:39 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AG8df1008810
+	cuda.sgi.com with ESMTP id 5jP7tCK44tfoQyHO for
+	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:08:40 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AG8d9L002901
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=OK) for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:08:39 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s3AG8dOQ022368
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s3AG8d5g013378
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:08:39 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 09/11] xfs: add finobt support to growfs
-Date: Thu, 10 Apr 2014 12:08:34 -0400
-Message-Id: <1397146116-42546-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 05/11] xfs: insert newly allocated inode chunks into the
+	finobt
+Date: Thu, 10 Apr 2014 12:08:30 -0400
+Message-Id: <1397146116-42546-6-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1397146116-42546-1-git-send-email-bfoster@redhat.com>
 References: <1397146116-42546-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,65 +39,145 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add finobt support to growfs. Initialize the agi root/level fields
-and the root finobt block.
+A newly allocated inode chunk, by definition, has at least one
+free inode, so a record is always inserted into the finobt.
 
+Create the xfs_inobt_insert() helper from existing code to insert
+a record in an inobt based on the provided BTNUM. Update
+xfs_ialloc_ag_alloc() to invoke the helper for the existing
+XFS_BTNUM_INO tree and XFS_BTNUM_FINO tree, if enabled.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_fsops.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ fs/xfs/xfs_ialloc.c | 93 ++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 70 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 02fb943..96e4eb0 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -316,6 +316,10 @@ xfs_growfs_data_private(
- 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
- 			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
-+			agi->agi_free_level = cpu_to_be32(1);
-+		}
- 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
- 			agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index a0aead5..203db98 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -112,6 +112,66 @@ xfs_inobt_get_rec(
+ }
  
-@@ -407,6 +411,34 @@ xfs_growfs_data_private(
- 		xfs_buf_relse(bp);
- 		if (error)
- 			goto error0;
+ /*
++ * Insert a single inobt record. Cursor must already point to desired location.
++ */
++STATIC int
++xfs_inobt_insert_rec(
++	struct xfs_btree_cur	*cur,
++	__int32_t		freecount,
++	xfs_inofree_t		free,
++	int			*stat)
++{
++	cur->bc_rec.i.ir_freecount = freecount;
++	cur->bc_rec.i.ir_free = free;
++	return xfs_btree_insert(cur, stat);
++}
 +
-+		/*
-+		 * FINO btree root block
-+		 */
-+		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+			bp = xfs_growfs_get_hdr_buf(mp,
-+				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
-+				BTOBB(mp->m_sb.sb_blocksize), 0,
-+				&xfs_inobt_buf_ops);
-+			if (!bp) {
-+				error = ENOMEM;
-+				goto error0;
-+			}
++/*
++ * Insert records describing a newly allocated inode chunk into the inobt.
++ */
++STATIC int
++xfs_inobt_insert(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	xfs_agino_t		newino,
++	xfs_agino_t		newlen,
++	xfs_btnum_t		btnum)
++{
++	struct xfs_btree_cur	*cur;
++	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
++	xfs_agnumber_t		agno = be32_to_cpu(agi->agi_seqno);
++	xfs_agino_t		thisino;
++	int			i;
++	int			error;
 +
-+			if (xfs_sb_version_hascrc(&mp->m_sb))
-+				xfs_btree_init_block(mp, bp, XFS_FIBT_CRC_MAGIC,
-+						     0, 0, agno,
-+						     XFS_BTREE_CRC_BLOCKS);
-+			else
-+				xfs_btree_init_block(mp, bp, XFS_FIBT_MAGIC, 0,
-+						     0, agno, 0);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, btnum);
 +
-+			error = xfs_bwrite(bp);
-+			xfs_buf_relse(bp);
-+			if (error)
-+				goto error0;
++	for (thisino = newino;
++	     thisino < newino + newlen;
++	     thisino += XFS_INODES_PER_CHUNK) {
++		error = xfs_inobt_lookup(cur, thisino, XFS_LOOKUP_EQ, &i);
++		if (error) {
++			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++			return error;
 +		}
++		ASSERT(i == 0);
 +
- 	}
- 	xfs_trans_agblocks_delta(tp, nfree);
++		error = xfs_inobt_insert_rec(cur, XFS_INODES_PER_CHUNK,
++					     XFS_INOBT_ALL_FREE, &i);
++		if (error) {
++			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++			return error;
++		}
++		ASSERT(i == 1);
++	}
++
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++
++	return 0;
++}
++
++/*
+  * Verify that the number of free inodes in the AGI is correct.
+  */
+ #ifdef DEBUG
+@@ -303,13 +363,10 @@ xfs_ialloc_ag_alloc(
+ {
+ 	xfs_agi_t	*agi;		/* allocation group header */
+ 	xfs_alloc_arg_t	args;		/* allocation argument structure */
+-	xfs_btree_cur_t	*cur;		/* inode btree cursor */
+ 	xfs_agnumber_t	agno;
+ 	int		error;
+-	int		i;
+ 	xfs_agino_t	newino;		/* new first inode's number */
+ 	xfs_agino_t	newlen;		/* new number of inodes */
+-	xfs_agino_t	thisino;	/* current inode number, for loop */
+ 	int		isaligned = 0;	/* inode allocation at stripe unit */
+ 					/* boundary */
+ 	struct xfs_perag *pag;
+@@ -459,29 +516,19 @@ xfs_ialloc_ag_alloc(
+ 	agi->agi_newino = cpu_to_be32(newino);
+ 
  	/*
+-	 * Insert records describing the new inode chunk into the btree.
++	 * Insert records describing the new inode chunk into the btrees.
+ 	 */
+-	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno, XFS_BTNUM_INO);
+-	for (thisino = newino;
+-	     thisino < newino + newlen;
+-	     thisino += XFS_INODES_PER_CHUNK) {
+-		cur->bc_rec.i.ir_startino = thisino;
+-		cur->bc_rec.i.ir_freecount = XFS_INODES_PER_CHUNK;
+-		cur->bc_rec.i.ir_free = XFS_INOBT_ALL_FREE;
+-		error = xfs_btree_lookup(cur, XFS_LOOKUP_EQ, &i);
+-		if (error) {
+-			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-			return error;
+-		}
+-		ASSERT(i == 0);
+-		error = xfs_btree_insert(cur, &i);
+-		if (error) {
+-			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	error = xfs_inobt_insert(args.mp, tp, agbp, newino, newlen,
++				 XFS_BTNUM_INO);
++	if (error)
++		return error;
++
++	if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
++		error = xfs_inobt_insert(args.mp, tp, agbp, newino, newlen,
++					 XFS_BTNUM_FINO);
++		if (error)
+ 			return error;
+-		}
+-		ASSERT(i == 1);
+ 	}
+-	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 	/*
+ 	 * Log allocation group header fields
+ 	 */
 -- 
 1.8.3.1
 
