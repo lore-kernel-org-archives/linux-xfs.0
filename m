@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 858387F9D
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DD1537FC1
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 00:01:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F148AAC006
-	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 22:01:18 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BCE17304043
+	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 22:01:19 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	AxDYd6G6rcUT5Rss for <xfs@oss.sgi.com>;
-	Wed, 09 Apr 2014 22:01:17 -0700 (PDT)
+	Q2Z52ETXyBRCreiA for <xfs@oss.sgi.com>;
+	Wed, 09 Apr 2014 22:01:18 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WY76e-0004cB-O0
+	(envelope-from <dave@fromorbit.com>) id 1WY76e-0004cC-Ol
 	for xfs@oss.sgi.com; Thu, 10 Apr 2014 15:00:56 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WY76e-0002CR-NI
+	(envelope-from <dave@disappointment.disaster>) id 1WY76e-0002CW-Nl
 	for xfs@oss.sgi.com; Thu, 10 Apr 2014 15:00:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] xfs: zeroing space needs to punch delalloc blocks
-Date: Thu, 10 Apr 2014 15:00:51 +1000
-Message-Id: <1397106053-7489-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: don't map ranges that span EOF for direct IO
+Date: Thu, 10 Apr 2014 15:00:52 +1000
+Message-Id: <1397106053-7489-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1397106053-7489-1-git-send-email-david@fromorbit.com>
 References: <1397106053-7489-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,63 +39,65 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we are zeroing space andit is covered by a delalloc range, we
-need to punch the delalloc range out before we truncate the page
-cache. Failing to do so leaves and inconsistency between the page
-cache and the extent tree, which we later trip over when doing
-direct IO over the same range.
+Al Viro tracked down the problem that has caused generic/263 to fail
+on XFS since the test was introduced. If is caused by
+xfs_get_blocks() mapping a single extent that spans EOF without
+marking it as buffer-new() so that the direct Io code does not zero
+the tail of the block at the new EOF. This is a long standing bug
+that has been around for many, many years.
+
+Because xfs_get_blocks() starts the map before EOF, it can't set
+buffer_new(), because that causes he direct Io code to also zero
+unaligned sectors at the head of the IO. This would overwrite valid
+data with zeros, and hence we cannot validly return a single extent
+that spans EOF to direct IO.
+
+Fix this by detecting a mapping that spans EOF and truncate it down
+to EOF. This results in the the direct IO code doing the right thing
+for unaligned data blocks before EOF, and then returning to get
+another mapping for the region beyond EOF which XFS treats correctly
+by setting buffer_new() on it. This makes direct Io behave correctly
+w.r.t. tail block zeroing beyond EOF, and fsx is happy about that.
+
+Again, thanks to Al Viro for finding what I couldn't.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 13 ++++++++++++-
- fs/xfs/xfs_trace.h     |  1 +
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_aops.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 01f6a64..3235b74 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1418,6 +1418,8 @@ xfs_zero_file_space(
- 	xfs_off_t		end_boundary;
- 	int			error;
- 
-+	trace_xfs_zero_file_space(ip);
-+
- 	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
- 
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e0a7931..2c13967 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1344,6 +1344,14 @@ __xfs_get_blocks(
  	/*
-@@ -1432,9 +1434,18 @@ xfs_zero_file_space(
- 	ASSERT(end_boundary <= offset + len);
+ 	 * If this is O_DIRECT or the mpage code calling tell them how large
+ 	 * the mapping is, so that we can avoid repeated get_blocks calls.
++	 *
++	 * If the mapping spans EOF, then we have to break the mapping up as the
++	 * mapping for blocks beyond EOF must be marked new so that sub block
++	 * regions can be correctly zeroed. We can't do this for mappings within
++	 * EOF unless the mapping was just allocated or is unwritten, otherwise
++	 * the callers would overwrite existing data with zeros. Hence we have
++	 * to split the mapping into a range up to and including EOF, and a
++	 * second mapping for beyond EOF.
+ 	 */
+ 	if (direct || size > (1 << inode->i_blkbits)) {
+ 		xfs_off_t		mapping_size;
+@@ -1354,6 +1362,12 @@ __xfs_get_blocks(
+ 		ASSERT(mapping_size > 0);
+ 		if (mapping_size > size)
+ 			mapping_size = size;
++		if (offset < i_size_read(inode) &&
++		    offset + mapping_size >= i_size_read(inode)) {
++			/* limit mapping to block that spans EOF */
++			mapping_size = roundup(i_size_read(inode) - offset,
++					       1 << inode->i_blkbits);
++		}
+ 		if (mapping_size > LONG_MAX)
+ 			mapping_size = LONG_MAX;
  
- 	if (start_boundary < end_boundary - 1) {
--		/* punch out the page cache over the conversion range */
-+		/*
-+		 * punch out delayed allocation blocks and the page cache over
-+		 * the conversion range
-+		 */
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		error = xfs_bmap_punch_delalloc_range(ip,
-+				XFS_B_TO_FSB(mp, start_boundary),
-+				XFS_B_TO_FSB(mp, end_boundary - start_boundary));
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		truncate_pagecache_range(VFS_I(ip), start_boundary,
- 					 end_boundary - 1);
-+
- 		/* convert the blocks */
- 		error = xfs_alloc_file_space(ip, start_boundary,
- 					end_boundary - start_boundary - 1,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index a4ae41c..65d8c79 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -603,6 +603,7 @@ DEFINE_INODE_EVENT(xfs_readlink);
- DEFINE_INODE_EVENT(xfs_inactive_symlink);
- DEFINE_INODE_EVENT(xfs_alloc_file_space);
- DEFINE_INODE_EVENT(xfs_free_file_space);
-+DEFINE_INODE_EVENT(xfs_zero_file_space);
- DEFINE_INODE_EVENT(xfs_collapse_file_space);
- DEFINE_INODE_EVENT(xfs_readdir);
- #ifdef CONFIG_XFS_POSIX_ACL
 -- 
 1.9.0
 
