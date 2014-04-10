@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EA9067FB4
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 05:44:19 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 491FD7FB4
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 07:20:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DBB5C304039
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 03:44:19 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id FOKQPgylcO13zeKp (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 10 Apr 2014 03:44:19 -0700 (PDT)
-Date: Thu, 10 Apr 2014 03:44:18 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] xfs: collapse range is delalloc challenged.
-Message-ID: <20140410104418.GI17641@infradead.org>
-References: <1397106053-7489-1-git-send-email-david@fromorbit.com>
-	<1397106053-7489-7-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 32022304039
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 05:20:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cgLr0aSDSuRJ81nA for
+	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 05:20:30 -0700 (PDT)
+Date: Thu, 10 Apr 2014 08:19:56 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 2/2] xfs: fold xfs_create_tmpfile() into xfs_create()
+Message-ID: <20140410121956.GB14124@bfoster.bfoster>
+References: <1397071311-28371-1-git-send-email-bfoster@redhat.com>
+	<1397071311-28371-3-git-send-email-bfoster@redhat.com>
+	<20140410102901.GB17641@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397106053-7489-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140410102901.GB17641@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +30,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-> -	       *current_ext <  XFS_IFORK_NEXTENTS(ip, whichfork)) {
-> +	/*
-> +	 * There may be delalloc extents in the data fork before the range we
-> +	 * are collapsing out, so we cannot
-> +	 * use the count of real extents here. Instead we have to calculate it
-> +	 * from the incore fork.
-> +	 */
-> +	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
+On Thu, Apr 10, 2014 at 03:29:01AM -0700, Christoph Hellwig wrote:
+> > -	struct xfs_trans_res	tres;
+> > +	struct xfs_trans_res	*tres;
+> >  	uint			resblks;
+> >  
+> >  	trace_xfs_create(dp, name);
+> > @@ -1181,14 +1181,21 @@ xfs_create(
+> >  	if (is_dir) {
+> >  		rdev = 0;
+> >  		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
+> > -		tres.tr_logres = M_RES(mp)->tr_mkdir.tr_logres;
+> > -		tres.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> > +		tres = &M_RES(mp)->tr_mkdir;
+> 
+> The (nice) reservation cleanup should be a patch of it's own. 
+> 
 
-Between the amount of times we have this calculation opencoded, and the
-confusing nature of XFS_IFORK_NEXTENTS it might be time to introduce
-a macro to get the proper number of incore extents.
+Ok.
 
-But no need to do this now, so:
+> > +	} else {
+> > +		/*
+> > +		 * If we don't have a name, we're in the ->tmpfile() path. We
+> > +		 * have a unique transaction here since we modify the unlinked
+> > +		 * list rather than create a directory entry.
+> > +		 */
+> 
+> How is that transaction more "uniqueue" than the others?  Seems like
+> this comment generally doesn't add a whole lot of value.
+> 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It's just as unique as the others. ;) I wasn't intending to call out
+this transaction as special in any way. Rather, I was just trying to
+document why there is a separate transaction depending on the existence
+of the name. I can drop the comment.
+
+> > +	if (name) {
+> > +		xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+> > +		unlock_dp_on_error = true;
+> > +
+> > +		error = xfs_dir_canenter(tp, dp, name, resblks);
+> > +		if (error)
+> > +			goto out_trans_cancel;
+> > +	}
+> 
+> So we get another special case in this function.  Can't say I like that
+> too much, on the other hand I don't really like the duplicate code
+> either.  So I'm not excited about this, but also not strongly against it.
+> 
+
+Indeed. I debated whether it would be reasonable to make this function
+slightly longer and more complex on its own. When I realized
+xfs_create_tmpfile() was 90% duplicate, it seemed worth the tradeoff for
+a 100+ line function.
+
+Brian
 
 _______________________________________________
 xfs mailing list
