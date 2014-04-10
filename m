@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DD1537FC1
+	by oss.sgi.com (Postfix) with ESMTP id 50D0B7F9D
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 00:01:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BCE17304043
-	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 22:01:19 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 306CA30405F
+	for <xfs@oss.sgi.com>; Wed,  9 Apr 2014 22:01:15 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Q2Z52ETXyBRCreiA for <xfs@oss.sgi.com>;
-	Wed, 09 Apr 2014 22:01:18 -0700 (PDT)
+	bUH9roQLo2J3pabs for <xfs@oss.sgi.com>;
+	Wed, 09 Apr 2014 22:01:11 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WY76e-0004cC-Ol
+	(envelope-from <dave@fromorbit.com>) id 1WY76e-0004c7-MG
 	for xfs@oss.sgi.com; Thu, 10 Apr 2014 15:00:56 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WY76e-0002CW-Nl
+	(envelope-from <dave@disappointment.disaster>) id 1WY76e-0002C9-LH
 	for xfs@oss.sgi.com; Thu, 10 Apr 2014 15:00:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: don't map ranges that span EOF for direct IO
-Date: Thu, 10 Apr 2014 15:00:52 +1000
-Message-Id: <1397106053-7489-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1397106053-7489-1-git-send-email-david@fromorbit.com>
-References: <1397106053-7489-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/6 v2] xfs: delalloc, dio and corruption...
+Date: Thu, 10 Apr 2014 15:00:47 +1000
+Message-Id: <1397106053-7489-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,69 +35,36 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Al Viro tracked down the problem that has caused generic/263 to fail
-on XFS since the test was introduced. If is caused by
-xfs_get_blocks() mapping a single extent that spans EOF without
-marking it as buffer-new() so that the direct Io code does not zero
-the tail of the block at the new EOF. This is a long standing bug
-that has been around for many, many years.
+This is version 2 of the DIO vs delalloc patchset I posted here:
 
-Because xfs_get_blocks() starts the map before EOF, it can't set
-buffer_new(), because that causes he direct Io code to also zero
-unaligned sectors at the head of the IO. This would overwrite valid
-data with zeros, and hence we cannot validly return a single extent
-that spans EOF to direct IO.
+http://oss.sgi.com/archives/xfs/2014-03/msg00313.html
 
-Fix this by detecting a mapping that spans EOF and truncate it down
-to EOF. This results in the the direct IO code doing the right thing
-for unaligned data blocks before EOF, and then returning to get
-another mapping for the region beyond EOF which XFS treats correctly
-by setting buffer_new() on it. This makes direct Io behave correctly
-w.r.t. tail block zeroing beyond EOF, and fsx is happy about that.
+The changes to this version are:
 
-Again, thanks to Al Viro for finding what I couldn't.
+	- the bug fix to patch 2 that Brain noticed,
+	- I dropped the delalloc extent splittting patch because
+	  with the fix to patch 2 I can't trigger that bug anymore,
+	  and that patch was causing transaction overruns in
+	  xfs/297. Hence without an existing reproducer, I won't try
+	  to fix that problem.
+	- the last patch is new, and is a bug in the collapse range
+	  code where it fails to shift the last N extents correctly
+	  if there are N delalloc extents before the shifted range.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+With these 6 patches, all of the xfstests fsx/fsstress tests pass
+on 1k, 2k and 4k block size filesystems, with and without CRCs
+enabled, on 1, 2 and 16p test VMs.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index e0a7931..2c13967 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1344,6 +1344,14 @@ __xfs_get_blocks(
- 	/*
- 	 * If this is O_DIRECT or the mpage code calling tell them how large
- 	 * the mapping is, so that we can avoid repeated get_blocks calls.
-+	 *
-+	 * If the mapping spans EOF, then we have to break the mapping up as the
-+	 * mapping for blocks beyond EOF must be marked new so that sub block
-+	 * regions can be correctly zeroed. We can't do this for mappings within
-+	 * EOF unless the mapping was just allocated or is unwritten, otherwise
-+	 * the callers would overwrite existing data with zeros. Hence we have
-+	 * to split the mapping into a range up to and including EOF, and a
-+	 * second mapping for beyond EOF.
- 	 */
- 	if (direct || size > (1 << inode->i_blkbits)) {
- 		xfs_off_t		mapping_size;
-@@ -1354,6 +1362,12 @@ __xfs_get_blocks(
- 		ASSERT(mapping_size > 0);
- 		if (mapping_size > size)
- 			mapping_size = size;
-+		if (offset < i_size_read(inode) &&
-+		    offset + mapping_size >= i_size_read(inode)) {
-+			/* limit mapping to block that spans EOF */
-+			mapping_size = roundup(i_size_read(inode) - offset,
-+					       1 << inode->i_blkbits);
-+		}
- 		if (mapping_size > LONG_MAX)
- 			mapping_size = LONG_MAX;
- 
--- 
-1.9.0
+I'm much happier with these patches now - I don't think that there
+are more problems lurking, but only time will tell. I'd like to get
+these fixes to Linus for 3.15 (probably for -rc2), so eyeballs and
+testing would be appreciated.
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
