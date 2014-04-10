@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5997C7FD7
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1B9BB7F91
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 11:11:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2BF5A304066
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:14 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 95A8A8F8035
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:13 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rwiAQ8MDyU1DXkge for
+	cuda.sgi.com with ESMTP id zJXkjoVLBDBRS3F2 for
 	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 09:11:13 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBC8K007950
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:12 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3AGBCj0003693
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:12 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s3AGBCRK012027
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s3AGBCfd021274
 	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 12:11:12 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 04/20] xfs: update inode allocation/free transaction
-	reservations for finobt
-Date: Thu, 10 Apr 2014 12:10:54 -0400
-Message-Id: <1397146270-42993-5-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
-References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 00/20] xfsprogs: introduce the free inode btree
+Date: Thu, 10 Apr 2014 12:10:50 -0400
+Message-Id: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,157 +36,79 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Create the xfs_calc_finobt_res() helper to calculate the finobt log
-reservation for inode allocation and free. Update
-XFS_IALLOC_SPACE_RES() to reserve blocks for the additional finobt
-insertion on inode allocation. Create XFS_IFREE_SPACE_RES() to
-reserve blocks for the potential finobt record insertion on inode
-free (i.e., if an inode chunk was previously fully allocated).
+Hi all,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- include/xfs_trans_space.h |  7 ++++++-
- libxfs/xfs_trans_resv.c   | 47 +++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 49 insertions(+), 5 deletions(-)
+This is the v3 userspace portion of finobt support corresponding to v5
+of the kernel series.
 
-diff --git a/include/xfs_trans_space.h b/include/xfs_trans_space.h
-index 7d2c920..a7d1721 100644
---- a/include/xfs_trans_space.h
-+++ b/include/xfs_trans_space.h
-@@ -47,7 +47,9 @@
- #define	XFS_DIRREMOVE_SPACE_RES(mp)	\
- 	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
- #define	XFS_IALLOC_SPACE_RES(mp)	\
--	(XFS_IALLOC_BLOCKS(mp) + (mp)->m_in_maxlevels - 1)
-+	(XFS_IALLOC_BLOCKS(mp) + \
-+	 (xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1 * \
-+	  ((mp)->m_in_maxlevels - 1)))
- 
- /*
-  * Space reservation values for various transactions.
-@@ -82,5 +84,8 @@
- 	(XFS_DIRREMOVE_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
- #define	XFS_SYMLINK_SPACE_RES(mp,nl,b)	\
- 	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl) + (b))
-+#define XFS_IFREE_SPACE_RES(mp)		\
-+	(xfs_sb_version_hasfinobt(&mp->m_sb) ? (mp)->m_in_maxlevels : 0)
-+
- 
- #endif	/* __XFS_TRANS_SPACE_H__ */
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 1e59fad..870d4fc 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -81,6 +81,37 @@ xfs_calc_inode_res(
- }
- 
- /*
-+ * The free inode btree is a conditional feature and the log reservation
-+ * requirements differ slightly from that of the traditional inode allocation
-+ * btree. The finobt tracks records for inode chunks with at least one free inode.
-+ * Therefore, a record can be removed from the tree for an inode allocation or
-+ * free and the associated merge reservation is unconditional. This also covers
-+ * the possibility of a split on record insertion.
-+ *
-+ * the free inode btree: max depth * block size
-+ * the free inode btree entry: block size
-+ *
-+ * TODO: is the modify res really necessary? covered by the merge/split res?
-+ * This seems to be the pattern of ifree, but not create_resv_alloc. Why?
-+ */
-+STATIC uint
-+xfs_calc_finobt_res(
-+	struct xfs_mount 	*mp,
-+	int			modify)
-+{
-+	uint res;
-+
-+	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return 0;
-+
-+	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
-+	if (modify)
-+		res += (uint)XFS_FSB_TO_B(mp, 1);
-+
-+	return res;
-+}
-+
-+/*
-  * Various log reservation values.
-  *
-  * These are based on the size of the file system block because that is what
-@@ -250,6 +281,7 @@ xfs_calc_remove_reservation(
-  *    the superblock for the nlink flag: sector size
-  *    the directory btree: (max depth + v2) * dir block size
-  *    the directory inode's bmap btree: (max depth + v2) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_create_resv_modify(
-@@ -258,7 +290,8 @@ xfs_calc_create_resv_modify(
- 	return xfs_calc_inode_res(mp, 2) +
- 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
- 		(uint)XFS_FSB_TO_B(mp, 1) +
--		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
-+		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 1);
- }
- 
- /*
-@@ -268,6 +301,7 @@ xfs_calc_create_resv_modify(
-  *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
-  *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_create_resv_alloc(
-@@ -278,7 +312,8 @@ xfs_calc_create_resv_alloc(
- 		xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp), XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 0);
- }
- 
- STATIC uint
-@@ -296,6 +331,7 @@ __xfs_calc_create_reservation(
-  *    the superblock for the nlink flag: sector size
-  *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_icreate_resv_alloc(
-@@ -305,7 +341,8 @@ xfs_calc_icreate_resv_alloc(
- 		mp->m_sb.sb_sectsize +
- 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 0);
- }
- 
- STATIC uint
-@@ -359,6 +396,7 @@ xfs_calc_symlink_reservation(
-  *    the on disk inode before ours in the agi hash list: inode cluster size
-  *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_ifree_reservation(
-@@ -374,7 +412,8 @@ xfs_calc_ifree_reservation(
- 		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
- 				 mp->m_in_maxlevels, 0) +
- 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 1);
- }
- 
- /*
+Patches 1-10 are straight application of the corresponding kernel patches
+with omissions where appropriate.
+
+Patch 11 adds mkfs support. Patches 12 and 13 provide a couple minor db
+and repair fixes to support the new agi fields and calculate the fs
+format respectively. Patches 14-18 add real repair support for the
+finobt. Patch 19 adds support to report finobt state in xfs_info. Patch
+20 adds support for metadump.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+v3:
+- Rebased to latest master.
+v2:
+- Rebased onto the CRC v5 series and v2 kernel finobt bits.
+- Core finobt repair support.
+- xfs_info support.
+- xfs_metadump support.
+
+Brian Foster (20):
+  xfs: refactor xfs_ialloc_btree.c to support multiple inobt numbers
+  xfs: reserve v5 superblock read-only compat. feature bit for finobt
+  xfs: support the XFS_BTNUM_FINOBT free inode btree type
+  xfs: update inode allocation/free transaction reservations for finobt
+  xfs: insert newly allocated inode chunks into the finobt
+  xfs: use and update the finobt on inode allocation
+  xfs: refactor xfs_difree() inobt bits into xfs_difree_inobt() helper
+  xfs: update the finobt on inode free
+  xfs: report finobt status in fs geometry
+  xfs: enable the finobt feature on v5 superblocks
+  xfsprogs/mkfs: finobt mkfs support
+  xfsprogs/db: finobt support
+  xfsprogs/repair: account for finobt in ag 0 geometry pre-calculation
+  xfsprogs/repair: phase 2 finobt scan
+  xfsprogs/repair: pass btree block magic as param to build_ino_tree()
+  xfsprogs/repair: pull the build_agi() call up out of the inode tree
+    build
+  xfsprogs/repair: helpers for finding in-core inode records w/ free
+    inodes
+  xfsprogs/repair: reconstruct the finobt in phase 5
+  xfsprogs/growfs: report finobt status in fs geometry (xfs_info)
+  xfsprogs/db: add finobt support to metadump
+
+ db/agi.c                   |   2 +
+ db/btblock.c               |  12 +
+ db/metadump.c              |  25 +-
+ growfs/xfs_growfs.c        |  14 +-
+ include/xfs_ag.h           |  32 ++-
+ include/xfs_btree.h        |   3 +
+ include/xfs_format.h       |  14 +-
+ include/xfs_fs.h           |   1 +
+ include/xfs_ialloc_btree.h |   3 +-
+ include/xfs_sb.h           |  10 +-
+ include/xfs_trans_space.h  |   7 +-
+ include/xfs_types.h        |   2 +-
+ libxfs/xfs_btree.c         |   6 +-
+ libxfs/xfs_ialloc.c        | 617 ++++++++++++++++++++++++++++++++++++++-------
+ libxfs/xfs_ialloc_btree.c  |  68 ++++-
+ libxfs/xfs_trans_resv.c    |  47 +++-
+ mkfs/xfs_mkfs.c            |  83 ++++--
+ repair/incore.h            |  27 ++
+ repair/phase5.c            | 109 ++++++--
+ repair/scan.c              | 239 +++++++++++++++++-
+ repair/xfs_repair.c        |   2 +
+ 21 files changed, 1144 insertions(+), 179 deletions(-)
+
 -- 
 1.8.3.1
 
