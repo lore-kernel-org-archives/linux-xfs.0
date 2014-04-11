@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E144A7F75
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 23:49:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 67A0CAC00B
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 21:49:21 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	QOCk0TBdlU4d8xyG for <xfs@oss.sgi.com>;
-	Thu, 10 Apr 2014 21:49:19 -0700 (PDT)
-Date: Fri, 11 Apr 2014 14:48:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_io: fix random pread/pwrite to honor offset
-Message-ID: <20140411044844.GH15995@dastard>
-References: <53459C4E.9030902@sandeen.net> <5345B209.5040906@sgi.com>
-	<5345B3AD.5020805@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id CF6037F76
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 00:09:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FA89AC00B
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 22:09:53 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id ZVaJcqAAflRGwWI2
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 22:09:48 -0700 (PDT)
+Message-ID: <5347791A.6040609@hardwarefreak.com>
+Date: Fri, 11 Apr 2014 00:09:46 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5345B3AD.5020805@sandeen.net>
+Subject: Re: 10GB memorys occupied by XFS
+References: <1396596386220-35015.post@n7.nabble.com>
+	<533F14EC.6040705@hardwarefreak.com>
+	<76016fc7.13c84.14546bad411.Coremail.dx-wl@163.com>
+In-Reply-To: <76016fc7.13c84.14546bad411.Coremail.dx-wl@163.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +26,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: =?UTF-8?B?5oi05Zu96LaF?= <dx-wl@163.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Apr 09, 2014 at 03:55:09PM -0500, Eric Sandeen wrote:
-> On 4/9/14, 3:48 PM, Mark Tinguely wrote:
-> > On 04/09/14 14:15, Eric Sandeen wrote:
-> >> xfs_io's pread & pwrite claim to support a random IO mode
-> >> where it will do random IOs between offset & offset+len.
-> >>
-> >> However, offset was ignored, and we did the IOs between 0
-> >> and len instead.
-> >>
-> >> Clang caught this by pointing out that the calculated/normalized
-> >> "offset" variable was never read.
-> >>
-> >> (NB: If the range is larger than RAND_MAX, these functions don't
-> >> work, but that's always been true, so I'll leave it for another
-> >> day...)
-> >>
-> >> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> >> ---
-....
-> > 
-> > Looks like this was introduced in:
-> > commit 8fb2237e65555ff540e8b6108ffccfffefe239ac
-> > Author: Nathan Scott <nathans@sgi.com>
-> > Date:   Fri Nov 11 14:25:18 2005 +0000
-> > 
-> > Provide further debugging options and tweaks for analysing the read/write paths.
-> > Merge of master-melb:xfs-cmds:24372a by kenmcd.
-> > 
-> >  ---
-> > 
-> > If it was broken for 8.5 years, I think it could be removed.
-> 
-> Eh, could, or we could fix it.  :)  I suppose this means it needs a test... :/
-
-And document it ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNC85LzIwMTQgODo0MyBBTSwg5oi05Zu96LaFIHdyb3RlOgo+IERlYXIgU3RhbiwKPiBUaGFu
+ayB5b3UgZm9yIHlvdXIga2luZCBhc3Npc3RhbmNlLgo+IAo+IEluIGFjY29yZGFuY2Ugd2l0aCB5
+b3VyIHN1Z2dlc3Rpb24sIHdlIGV4ZWN1dGVkICJlY2hvIDMgPiAvcHJvYy9zeXNtL2Ryb3BfY2Fj
+aGVzIiBmb3IgdHJ5aW5nIHRvIHJlbGVhc2UgdmZzIGRlbnRyaWVzIGFuZCBpbm9kZXMuIFJlYWxs
+eSwKPiBvdXIgbG9zdCBtZW1vcnkgY2FtZSBiYWNrLiBCdXQgd2UgbGVhcm5lZCB0aGF0IHRoZSBt
+ZW1vcnkgb2YgdmZzIGRlbnRyaWVzIGFuZCBpbm9kZXMgaXMgZGlzdHJpYnV0ZWQgZnJvbSBzbGFi
+LiBQbGVhc2UgY2hlY2sgb3VyIHN5c3RlbSAiU2xhYjogIDUwOTcwOCBrQiIgZnJvbSAvcHJvYy9t
+ZW1pbmZvLCBhbmQgaXQgc2VlbXMgb25seSBiZSB0b29rIHVwIDUwME1CIGFuZCB4ZnNfYnVmIHRh
+a2UgdXAgNDUwTUIgYW1vbmcuIAoKVG8gZnJlZSBwYWdlY2FjaGU6CgllY2hvIDEgPiAvcHJvYy9z
+eXMvdm0vZHJvcF9jYWNoZXMKVG8gZnJlZSByZWNsYWltYWJsZSBzbGFiIG9iamVjdHMgKGluY2x1
+ZGVzIGRlbnRyaWVzIGFuZCBpbm9kZXMpOgoJZWNobyAyID4gL3Byb2Mvc3lzL3ZtL2Ryb3BfY2Fj
+aGVzClRvIGZyZWUgc2xhYiBvYmplY3RzIGFuZCBwYWdlY2FjaGU6CgllY2hvIDMgPiAvcHJvYy9z
+eXMvdm0vZHJvcF9jYWNoZXMKCj4gQW5kIC9wcm9jL21lbWluZm8gaW5kaWNhdGVkIHRoYXQgb3Vy
+IHN5c3RlbSBtZW1vcnkgaXMgYW5vbWFsb3VzLCB0aGVyZSBpcyBhYm91dCAxMEdCIG91dCBvZiB0
+aGUgc3RhdGlzdGljcy4gV2Ugd2FudCB0byBrbm93IGhvdyB0aGUgc3lzdGVtIGNvdWxkIG9ic2Vy
+dmUgdGhlIHVzYWdlIGFtb3VudCBvZiB2ZnMgZGVudHJpZXMgYW5kIGlvZGVzIHRocm91Z2ggdGhl
+IHN5c3RlbSBpbnRlcmZhY2UuIElmIHRoZSBtZW1vcnkgdXNhZ2Ugb2Ygc3lzdGVtIGlzIG5vdCBy
+ZWZsZWN0ZWQgaW4gL3Byb2MvbWVtaW5mbyBhcyB3ZSBjYW4gbm90IGZpbmQgdGhlIHN0YXRpc3Rp
+Y3MsIGFuZCB3ZSB0aG91Z2h0IGl0IGFzIGEgYnVnIG9mIHhmcy4KCkl0IHNlZW1zIG11Y2ggb2Yg
+dGhpcyAxMCBHQiBvZiBtZW1vcnkgaXMgYmVpbmcgY29uc3VtZWQgYnkgcGFnZWNhY2hlLApub3Qg
+ZGVudHJpZXMgYW5kIGlub2Rlcy4gIFNvIHRoZSBxdWVzdGlvbiBpczoKCldoeSBpcyBwYWdlY2Fj
+aGUgbm90IGJlaW5nIHJlY2xhaW1lZCB3aXRob3V0IG1hbnVhbCBpbnRlcnZlbnRpb24/Cgo+IE15
+ICB2bS52ZnNfY2FjaGVfcHJlc3N1cmUgb2YgbGludXggc3lzdGVtIGlzIDEwMC4gV2UgdGhpbmsg
+dGhhdCB0aGUgc3lzdGVtIHdpbGwgcHJvYWN0aXZlbHkgdGFrZSB0aGUgbWVtb3J5IGJhY2sgd2hl
+biB0aGUgbWVtb3J5IGlzIG5vdCBlbm91Z2gsIHJhdGhlciB0aGFuIG9vbS1raWxsZXIga2lsbHMg
+b3VyIHdvcmsgcHJvY2Vzcy4gT3VyIGRhdGFzIG9mIC9wcm9jL21lbWluZm8gb2NjdXJyZWQgZHVy
+aW5nIHRoZSBzeXN0ZW0gcHJvYmxlbSBhcyBiZWxvdzoKCkV4Y2VwdCBtb3N0IG9mIHlvdXIgc2xh
+YiBpcyByZXBvcnRlZCBhcyBub3QgcmVjbGFpbWFibGUsIHNlZSBiZWxvdy4KCj4gMTMwPiBjYXQg
+L3Byb2MvbWVtaW5mbyAKPiBNZW1Ub3RhbDogICAgICAgMTIxNzMyNjgga0IgCj4gTWVtRnJlZTog
+ICAgICAgICAgMjIzMDQ0IGtCIAo+IEJ1ZmZlcnM6ICAgICAgICAgICAgIDI0NCBrQiAKPiBDYWNo
+ZWQ6ICAgICAgICAgICAgIDQ1NDAga0IgIDwtLS0tLS0KCjQuNSBNQiBpcyByZXBvcnRlZCB1c2Ug
+YnkgdGhlIHBhZ2VjYWNoZS4gIEJ1dCBzb21lIDEwIEdCIGlzIGJlaW5nCmNvbnN1bWVkIGJ5IHRo
+ZSBwYWdlIGNhY2hlIGFuZCBub3QgcmVwb3J0ZWQgaGVyZS4KCj4gU3dhcENhY2hlZDogICAgICAg
+ICAgICAwIGtCIAo+IEFjdGl2ZTogICAgICAgICAgICAgMTcwMCBrQiAKPiBJbmFjdGl2ZTogICAg
+ICAgICAgIDUzMTIga0IgCj4gQWN0aXZlKGFub24pOiAgICAgICAxNjE2IGtCIAo+IEluYWN0aXZl
+KGFub24pOiAgICAgMTEyOCBrQiAKPiBBY3RpdmUoZmlsZSk6ICAgICAgICAgODQga0IgCj4gSW5h
+Y3RpdmUoZmlsZSk6ICAgICA0MTg0IGtCIAo+IFVuZXZpY3RhYmxlOiAgICAgICAgICAgMCBrQiAK
+PiBNbG9ja2VkOiAgICAgICAgICAgICAgIDAga0IgCj4gU3dhcFRvdGFsOiAgICAgICAgICAgICAw
+IGtCIAo+IFN3YXBGcmVlOiAgICAgICAgICAgICAgMCBrQiAKPiBEaXJ0eTogICAgICAgICAgICAg
+ICAgIDAga0IgCj4gV3JpdGViYWNrOiAgICAgICAgICAgICAwIGtCIAo+IEFub25QYWdlczogICAg
+ICAgICAgMjU1NiBrQiAKPiBNYXBwZWQ6ICAgICAgICAgICAgIDEwODgga0IgCj4gU2htZW06ICAg
+ICAgICAgICAgICAgMTk2IGtCIAo+IFNsYWI6ICAgICAgICAgICAgIDUwOTcwOCBrQiAgPC0tLS0t
+LQo+IFNSZWNsYWltYWJsZTogICAgICAgNzU5NiBrQiAgPC0tLS0tLQo+IFNVbnJlY2xhaW06ICAg
+ICAgIDUwMjExMiBrQiAgPC0tLS0tLQoKVGhpcyBpbmRpY2F0ZXMgdGhhdCB5b3VyIHNsYWIgaXMg
+bm90IGJlaW5nIHJlY2xhaW1lZCwgYnV0IG5vdCB3aHkuCgo+IEtlcm5lbFN0YWNrOiAgICAgICAg
+MTA5NiBrQiAKPiBQYWdlVGFibGVzOiAgICAgICAgICA3NDgga0IgCj4gTkZTX1Vuc3RhYmxlOiAg
+ICAgICAgICAwIGtCIAo+IEJvdW5jZTogICAgICAgICAgICAgICAgMCBrQiAKPiBXcml0ZWJhY2tU
+bXA6ICAgICAgICAgIDAga0IgCj4gQ29tbWl0TGltaXQ6ICAgICA2MDg2NjMyIGtCIAo+IENvbW1p
+dHRlZF9BUzogICAgICAgOTQ0MCBrQiAKPiBWbWFsbG9jVG90YWw6ICAgMzQzNTk3MzgzNjcga0Ig
+Cj4gVm1hbGxvY1VzZWQ6ICAgICAgMzAzNDg4IGtCIAo+IFZtYWxsb2NDaHVuazogICAzNDM1OTQy
+NjEzMiBrQiAKPiBIYXJkd2FyZUNvcnJ1cHRlZDogICAgIDAga0IgCj4gQW5vbkh1Z2VQYWdlczog
+ICAgICAgICAwIGtCIAo+IEh1Z2VQYWdlc19Ub3RhbDogICAgICAgMCAKPiBIdWdlUGFnZXNfRnJl
+ZTogICAgICAgIDAgCj4gSHVnZVBhZ2VzX1JzdmQ6ICAgICAgICAwIAo+IEh1Z2VQYWdlc19TdXJw
+OiAgICAgICAgMCAKPiBIdWdlcGFnZXNpemU6ICAgICAgIDIwNDgga0IgCj4gRGlyZWN0TWFwNGs6
+ICAgICAgICA2MTUyIGtCIAo+IERpcmVjdE1hcDJNOiAgICAgMjA3MDUyOCBrQiAKPiBEaXJlY3RN
+YXAxRzogICAgMTA0ODU3NjAga0IgCj4gCj4gSSBsb29rIGZvcndhcmQgdG8gaGVhcmluZyBmcm9t
+IHlvdSBhbmQgdGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciBraW5kIGFzc2lzdGFuY2UuCgpV
+bmZvcnR1bmF0ZWx5IEkgZG9uJ3QgaGF2ZSBzb2xpZCBhbnN3ZXJzIGZvciB5b3UgYXQgdGhpcyBw
+b2ludCwgbm9yIGEKc29sdXRpb24uICBUaGlzIGlzIGJleW9uZCBteSBleHBlcnRpc2UuICBNYXli
+ZSBzb21lb25lIGVsc2Ugd2l0aCBtb3JlCmtub3dsZWRnZS9leHBlcmllbmNlIHdpbGwganVtcCBp
+bi4gIEkgc3VzcGVjdCB5b3VyIGFwcGxpY2F0aW9uIG1heSBiZQpkb2luZyBzb21ldGhpbmcgYSBi
+aXQgdW51c3VhbC4KCkNoZWVycywKClN0YW4KCgoKPiBCZXN0IFJlZ2FyZHMsCj4gCj4gR3VvY2hh
+bwo+IAo+IAo+IEF0IDIwMTQtMDQtMDUgMDQ6MjQ6MTIsIlN0YW4gSG9lcHBuZXIiIDxzdGFuQGhh
+cmR3YXJlZnJlYWsuY29tPiB3cm90ZToKPj4gT24gNC80LzIwMTQgMjoyNiBBTSwgZGFpZ3VvY2hh
+byB3cm90ZToKPj4+ICBIZWxsbyBmb2xrcywKPj4KPj4gSGVsbG8sCj4+Cj4+IE5vdGUgdGhhdCB5
+b3VyIHByb2JsZW1zIGFyZSBub3QgWEZTIHNwZWNpZmljLCBidXQgY2FuIG9jY3VyIHdpdGggYW55
+Cj4+IExpbnV4IGZpbGVzeXN0ZW0uCj4+Cj4+PiAgSSB1c2VkIHhmcyBmaWxlIHN5c3RlbSBpbiBr
+ZXJuZWwtMi42LjMyLTIyMC4xMy4xLmVsNi54ODZfNjQgZm9yIHN0b3JlCj4+PiAgcGljdHVyZXMu
+IEFib3V0IDEwMCBkYXlzIHN5c3RlbSBtZW1vcnlzIGlzIGxvc3QgYW5kIHNvbWUgbmdpbnggcHJv
+Y2VzcyBpcwo+Pj4gIGtpbGxlZCBieSBvb20ta2lsbGVyLlNvLEkgbG9va2VkIC9wcm9jL21lbWlu
+Zm8gYW5kIGZpbmQgbWVtb3J5cyBpcwo+Pj4gIGxvc3QuRmluYWxseSwgSSB0cnkgdG8gdW1vdW50
+IHhmcyBzeXN0ZW0gYW5kIDEwR0IgbWVtb3J5cyBpcyBjb21pbmcgYmFjay4gbAo+Pj4gIGxvb2sg
+eGZzIGJ1Z3ppbGxhIG5vIHN1Y2ggQlVHLkkgaGF2ZSBubyBpZGVhIGZvciBpdC4KPj4+ICAKPj4+
+ICBDaGVlcnMsCj4+PiAgCj4+PiAgR3VvY2hhby4KPj4+ICAKPj4+ICBzb21lIG1lbW9yeXMgaW5m
+bzoKPj4+ICAKPj4+ICAwPiBmcmVlIC1tCj4+PiAgICAgICAgICAgICAgIHRvdGFsICAgICAgIHVz
+ZWQgICAgICAgZnJlZSAgICAgc2hhcmVkICAgIGJ1ZmZlcnMgICAgIGNhY2hlZAo+Pj4gIE1lbTog
+ICAgICAgICAxMTg4NyAgICAgIDExNjY4ICAgICAgICAyMTkgICAgICAgICAgMCAgICAgICAgICAw
+ICAgICAgICAgIDIKPj4+ICAtLysgYnVmZmVycy9jYWNoZTogICAgICAxMTY2NSAgICAgICAgMjIy
+Cj4+PiAgU3dhcDogICAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMAo+Pgo+Pgo+PiBG
+aXJzdCBwcm9ibGVtOiAgbm8gc3dhcAo+PiBTZWNvbmQgcHJvYmxlbTogY2FjaGUgaXMgbm90IGJl
+aW5nIHJlY2xhaW1lZAo+Pgo+PiBSZWFkIHZmc19jYWNoZV9wcmVzc3VyZSBhdDoKPj4gaHR0cHM6
+Ly93d3cua2VybmVsLm9yZy9kb2MvRG9jdW1lbnRhdGlvbi9zeXNjdGwvdm0udHh0Cj4+Cj4+IFlv
+dSd2ZSBsaWtlbHkgc2V0IHRoaXMgdmFsdWUgdG8gemVyby4gIENoYW5naW5nIGl0IHRvIDIwMCBz
+aG91bGQgcHJvbXB0Cj4+IHRoZSBrZXJuZWwgdG8gcmVjbGFpbSBkZW50cmllcyBhbmQgaW5vZGVz
+IGFnZ3Jlc3NpdmVseSwgcHJldmVudGluZyB0aGUKPj4gb29tLWtpbGxlciBmcm9tIGtpY2tpbmcg
+aW4uCj4+Cj4+IENoZWVycywKPj4KPj4gU3RhbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
