@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 357AB7F50
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 18:05:56 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 890B87F52
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 18:23:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B4EACAC003
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 16:05:52 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TPwsA0pzXBMG7GGD for <xfs@oss.sgi.com>;
-	Fri, 11 Apr 2014 16:05:49 -0700 (PDT)
-Message-ID: <5348754D.9010109@sandeen.net>
-Date: Fri, 11 Apr 2014 18:05:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 750F18F8049
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 16:23:23 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	gp3KEae1g48bBWCi for <xfs@oss.sgi.com>;
+	Fri, 11 Apr 2014 16:23:21 -0700 (PDT)
+Date: Sat, 12 Apr 2014 09:23:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/4] renameat2 syscall: add infrastructure
+Message-ID: <20140411232317.GA27694@dastard>
+References: <1397231517-4641-1-git-send-email-miklos@szeredi.hu>
 MIME-Version: 1.0
-Subject: Re: Strange hole creation behavior
-References: <534822D7.7090803@draigBrady.com>	<20140411204338.GA38024@bfoster.bfoster>
-	<53487383.6040001@draigBrady.com>
-In-Reply-To: <53487383.6040001@draigBrady.com>
+Content-Disposition: inline
+In-Reply-To: <1397231517-4641-1-git-send-email-miklos@szeredi.hu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,75 +25,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?UMOhZHJhaWcgQnJhZHk=?= <P@draigBrady.com>, Brian Foster <bfoster@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, Coreutils <coreutils@gnu.org>, =?UTF-8?B?T25kxZllaiBWYcWhw61r?= <ovasik@redhat.com>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Miklos Szeredi <mszeredi@suse.cz>, xfs@oss.sgi.com
 
-T24gNC8xMS8xNCwgNTo1OCBQTSwgUMOhZHJhaWcgQnJhZHkgd3JvdGU6Cj4gT24gMDQvMTEvMjAx
-NCAwOTo0MyBQTSwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+PiBPbiBGcmksIEFwciAxMSwgMjAxNCBh
-dCAwNjoxMzo1OVBNICswMTAwLCBQw6FkcmFpZyBCcmFkeSB3cm90ZToKPj4+IFNvIHRoaXMgY29y
-ZXV0aWxzIHRlc3QgaXMgZmFpbGluZyBvbiBYRlM6Cj4+PiBodHRwOi8vZ2l0LnN2LmdudS5vcmcv
-Z2l0d2ViLz9wPWNvcmV1dGlscy5naXQ7YT1ibG9iO2Y9dGVzdHMvZGQvc3BhcnNlLnNoO2g9MDZl
-ZmM3MDE3Cj4+PiBTcGVjaWZpY2FsbHkgdGhlIGxhc3QgaG9sZSBjaGVjayBvbiBsaW5lIDY2Lgo+
-Pj4KPj4+IEluIHN1bW1hcnkgd2hhdCdzIGhhcHBlbmluZyBpcyB0aGF0IGEgd3JpdGUoMU1pQiks
-IGxzZWVrKDFNaUIpLCB3cml0ZSgxTWlCKQo+Pj4gY3JlYXRlcyBvbmx5IGEgNjRLaUIgaG9sZS4g
-SXMgdGhhdCBleHBlY3RlZD8KPj4+Cj4+Cj4+IFRoaXMgaXMgZXhwZWN0ZWQgYmVoYXZpb3IgZHVl
-IHRvIHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb24uIEFuIEZBUSB3aXRoCj4+IHJlZ2FyZCB0byB0
-aGlzIGJlaGF2aW9yIGlzIHBlbmRpbmcsIGJ1dCBzZWUgaGVyZSBmb3IgcmVmZXJlbmNlOgo+Pgo+
-PiBodHRwOi8vb3NzLnNnaS5jb20vYXJjaGl2ZXMveGZzLzIwMTQtMDQvbXNnMDAwODMuaHRtbAo+
-Pgo+PiBJbiB0aGF0IHBhcnRpY3VsYXIgd3JpdGUoMU1CKSwgbHNlZWsoKzFNQiksIHdyaXRlKDFN
-Qikgd29ya2xvYWQsIGVhY2gKPj4gd3JpdGUgaXMgcHJlYWxsb2NhdGluZyBzb21lIGV4dHJhIHNw
-YWNlIGJleW9uZCB0aGUgY3VycmVudCBFT0YuIFRoZSBzZWVrCj4+IHRoZW4gbW92ZXMgcGFzdCB0
-aGF0IHNwYWNlLCBidXQgdGhlIHNwYWNlIGRvZXNuJ3QgZ28gYXdheS4gVGhlCj4+IHN1YnNlcXVl
-bnQgd3JpdGVzIHdpbGwgZXh0ZW5kIEVPRi4gVGhlIHByZXZpb3VzbHkgcHJlYWxsb2NhdGVkIHNw
-YWNlIG5vdwo+PiByZXNpZGVzIGluIHRoZSBtaWRkbGUgb2YgdGhlIGZpbGUgYW5kIGNhbid0IGJl
-IHRyaW1tZWQgYXdheSB3aGVuIHRoZQo+PiBmaWxlIGlzIGNsb3NlZC4KPj4KPj4+IE5vdyBhIDFN
-aUIgaG9sZSBpcyBzdXBwb3J0ZWQgdXNpbmcgdHJ1bmNhdGU6Cj4+PiAgIGRkIGlmPS9kZXYvdXJh
-bmRvbSBvZj1maWxlLmluIGJzPTFNIGNvdW50PTEgaWZsYWc9ZnVsbGJsb2NrCj4+PiAgIHRydW5j
-YXRlIC1zKzFNIGZpbGUuaW4KPj4+ICAgZGQgaWY9L2Rldi91cmFuZG9tIG9mPWZpbGUuaW4gYnM9
-MU0gY291bnQ9MSBpZmxhZz1mdWxsYmxvY2sgY29udj1ub3RydW5jIG9mbGFnPWFwcGVuZAo+Pj4g
-ICAkIGR1IC1rIGZpbGUuaW4KPj4+ICAgMjA0OCAgZmlsZS5pbgo+Pj4KPj4KPj4gVGhpcyB3b3Jr
-cyBzaW1wbHkgYmVjYXVzZSBpdCBpcyBicm9rZW4gaW50byBtdWx0aXBsZSBjb21tYW5kcy4gV2hl
-biB0aGUKPj4gZmlyc3QgZGQgZXhpdHMsIHRoZSBleGNlc3Mgc3BhY2UgaXMgdHJpbW1lZCBvZmYg
-KHRoZSBmaWxlIGRlc2NyaXB0b3IgaXMKPj4gY2xvc2VkKS4gVGhlIHN1YnNlcXVlbnQgdHJ1bmNh
-dGUgZXh0ZW5kcyB0aGUgZmlsZSBzaXplIHdpdGhvdXQgYW55Cj4+IGV4dHJhIHNwYWNlIGdldHRp
-bmcgY2F1Z2h0IGJldHdlZW4gdGhlIG9sZCBhbmQgbmV3IEVPRi4KPj4KPj4gWW91IGNhbiBjb25m
-aXJtIHRoaXMgYnkgdXNpbmcgdGhlICdhbGxvY3NpemU9NGsnIG1vdW50IG9wdGlvbiB0byB0aGUg
-WEZTCj4+IG1vdW50LiBJZiB5b3Ugd2FudGVkIHNvbWV0aGluZyBtb3JlIGdlbmVyaWMgZm9yIHRo
-ZSBwdXJwb3NlIG9mIHRlc3RpbmcKPj4gdGhlIGNvcmV1dGlscyBmdW5jdGlvbmFsaXR5LCB5b3Ug
-Y291bGQgYWxzbyBzZXQgdGhlIHNpemUgb2YgZmlsZS5vdXQgaW4KPj4gYWR2YW5jZS4gRS5nLiwg
-d2l0aCBwcmVhbGxvY2F0aW9uIGluIGVmZmVjdDoKPj4KPj4gIyBkZCBpZj1maWxlLmluIG9mPWZp
-bGUub3V0IGJzPTFNIGNvbnY9c3BhcnNlCj4+ICMgeGZzX2JtYXAgLXYgZmlsZS5vdXQgCj4+IGZp
-bGUub3V0Ogo+PiAgRVhUOiBGSUxFLU9GRlNFVCAgICAgIEJMT0NLLVJBTkdFICAgICAgQUcgQUct
-T0ZGU0VUICAgICAgICBUT1RBTAo+PiAgICAwOiBbMC4uMzk2N106ICAgICAgIDk3NzM5NDQuLjk3
-Nzc5MTEgIDEgKDkwODAuLjEzMDQ3KSAgICAgMzk2OAo+PiAgICAxOiBbMzk2OC4uNDA5NV06ICAg
-IGhvbGUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDEyOAo+PiAgICAyOiBbNDA5
-Ni4uNjE0M106ICAgIDk3NzgwNDAuLjk3ODAwODcgIDEgKDEzMTc2Li4xNTIyMykgICAgMjA0OAo+
-Pgo+PiAuLi4gYW5kIHRoZW4gcHJldmVudCBwcmVhbGxvY2F0aW9uIGJ5IGVuc3VyaW5nIHdyaXRl
-cyBkbyBub3QgZXh0ZW5kIHRoZQo+PiBmaWxlOgo+Pgo+PiAjIHJtIC1mIGZpbGUub3V0IAo+PiAj
-IHRydW5jYXRlIC0tc2l6ZT0zTSBmaWxlLm91dAo+PiAjIGRkIGlmPWZpbGUuaW4gb2Y9ZmlsZS5v
-dXQgYnM9MU0gY29udj1zcGFyc2Usbm90cnVuYwo+PiAjIHhmc19ibWFwIC12IGZpbGUub3V0IAo+
-PiBmaWxlLm91dDoKPj4gIEVYVDogRklMRS1PRkZTRVQgICAgICBCTE9DSy1SQU5HRSAgICAgIEFH
-IEFHLU9GRlNFVCAgICAgICAgVE9UQUwKPj4gICAgMDogWzAuLjIwNDddOiAgICAgICA5NzczOTQ0
-Li45Nzc1OTkxICAxICg5MDgwLi4xMTEyNykgICAgIDIwNDgKPj4gICAgMTogWzIwNDguLjQwOTVd
-OiAgICBob2xlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDIwNDgKPj4gICAgMjog
-WzQwOTYuLjYxNDNdOiAgICA5Nzc4MDQwLi45NzgwMDg3ICAxICgxMzE3Ni4uMTUyMjMpICAgIDIw
-NDgKPj4KPj4gSG9wZSB0aGF0IGhlbHBzLgo+IAo+IEV4Y2VsbGVudCBpbmZvIHRoYW5rcy4KPiBX
-aXRoIHRoYXQgSSBjYW4gYWRqdXN0IHRoZSB0ZXN0IHNvIGl0IHBhc3NlcyAocGF0Y2ggYXR0YWNo
-ZWQpLgo+IAo+IFNvIGZvciByZWZlcmVuY2UgdGhpcyBtZWFucyB0aGF0IGNwIGNhbiBubyBsb25n
-ZXIgcmVjcmVhdGUgaG9sZXMKPiA8PSAxTWlCIGZyb20gc291cmNlIHRvIGRlc3QgKHdpdGggdGhl
-IGRlZmF1bHQgWEZTIGFsbG9jYXRpb24gc2l6ZSk6CgpXZWxsLCB0aGUgYWxsb2NhdGlvbiBzaXpl
-IGNoYW5nZXMgYmFzZWQgb24gdGhlIGZpbGVzaXplOyB0aGVyZSdzIGEKaGV1cmlzdGljIGludm9s
-dmVkLiAgU28gSSBmZWFyIHRoYXQgaWYgeW91IGhhcmQtY29kZSBpdCBpbnRvIHlvdXIKdGVzdHMs
-IHlvdSByaXNrIGZhaWxpbmcgYWdhaW4gaW4gdGhlIGZ1dHVyZS4uLgoKPiBXZSBjb3VsZCBJIHN1
-cHBvc2UgdXNlIEZBTExPQ19GTF9QVU5DSF9IT0xFIHdoZXJlIGF2YWlsYWJsZQo+IHRvIGNhdGVy
-IGZvciB0aGlzIGNhc2UuIEknbGwgc2VlIHdoZXRoZXIgdGhpcyBpcyB3b3J0aCBhZGRpbmcuCgpU
-aGF0IG1pZ2h0IG1ha2Ugc2Vuc2UuCgpCdXQgZmlsZXN5c3RlbXMgZ2V0IHRvIHBpY2sgdGhlaXIg
-bGF5b3V0OyBldmVuIGV4dDQgbWF5IG9wcG9ydHVuaXN0aWNhbGx5CmZpbGwgaW4gaG9sZXMsIGV0
-YyAtIHNvIEkgdGhpbmsgeW91IG5lZWQgdG8gYmUgcHJldHR5IGNhcmVmdWwgd2l0aCB0aGVzZQpz
-b3J0cyBvZiB0ZXN0cy4uLgoKLUVyaWMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
-c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Fri, Apr 11, 2014 at 05:51:54PM +0200, Miklos Szeredi wrote:
+> From: Miklos Szeredi <mszeredi@suse.cz>
+> 
+> The renameat2() syscall was merged into 3.15-rc (merge commit: 7df934526c0b).
+> 
+> This adds the shared infrastructure for the actual test scripts.
+> 
+> Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
+
+Hi Miklos, all 4 patches look good now, so I'll pull them in with
+the next round of xfstests updates. I'll let ou know if there are
+any other problems I find. Thanks!
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
