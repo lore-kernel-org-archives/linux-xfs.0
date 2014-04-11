@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 33F797F56
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 10:52:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DB58A304053
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 08:52:08 -0700 (PDT)
-Received: from mail-ee0-f48.google.com (mail-ee0-f48.google.com
-	[74.125.83.48]) by cuda.sgi.com with ESMTP id bcHGTB4Er2OcDc47
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Apr 2014 08:52:05 -0700 (PDT)
-Received: by mail-ee0-f48.google.com with SMTP id b57so4263276eek.35
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 08:52:04 -0700 (PDT)
-From: Miklos Szeredi <miklos@szeredi.hu>
-Subject: [PATCH 1/4] renameat2 syscall: add infrastructure
-Date: Fri, 11 Apr 2014 17:51:54 +0200
-Message-Id: <1397231517-4641-1-git-send-email-miklos@szeredi.hu>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 928F17F3F
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 12:14:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A44C8F8033
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 10:14:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id PvYJOyvxjIl8vXvt for
+	<xfs@oss.sgi.com>; Fri, 11 Apr 2014 10:14:04 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3BHE3g4002694
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 13:14:03 -0400
+Message-ID: <534822D7.7090803@draigBrady.com>
+Date: Fri, 11 Apr 2014 18:13:59 +0100
+From: =?UTF-8?B?UMOhZHJhaWcgQnJhZHk=?= <P@draigBrady.com>
+MIME-Version: 1.0
+Subject: Strange hole creation behavior
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,317 +26,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Miklos Szeredi <mszeredi@suse.cz>
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: =?UTF-8?B?T25kxZllaiBWYcWhw61r?= <ovasik@redhat.com>
 
-From: Miklos Szeredi <mszeredi@suse.cz>
-
-The renameat2() syscall was merged into 3.15-rc (merge commit: 7df934526c0b).
-
-This adds the shared infrastructure for the actual test scripts.
-
-Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
----
- .gitignore       |   1 +
- common/renameat2 | 129 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- configure.ac     |   2 +
- src/Makefile     |   3 +-
- src/renameat2.c  | 102 +++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 236 insertions(+), 1 deletion(-)
- create mode 100644 common/renameat2
- create mode 100644 src/renameat2.c
-
-diff --git a/.gitignore b/.gitignore
-index e8c5012..66e6ee8 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -106,6 +106,7 @@
- /src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer
- /src/aio-dio-regress/aiodio_sparse2
- /src/cloner
-+/src/renameat2
- 
- # dmapi/ binaries
- /dmapi/src/common/cmd/read_invis
-diff --git a/common/renameat2 b/common/renameat2
-new file mode 100644
-index 0000000..a335169
---- /dev/null
-+++ b/common/renameat2
-@@ -0,0 +1,129 @@
-+######
-+#
-+# renameat2 helpers
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Miklos Szeredi.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+#
-+# Setup source or dest
-+#
-+_setup_one()
-+{
-+	local path=$1
-+	local type=$2
-+
-+	case $type in
-+		none)	;;
-+		regu)	echo foo > $path;;
-+		symb)	ln -s foo $path;;
-+		dire)	mkdir $path;;
-+		tree)	mkdir $path; echo foo > $path/bar;;
-+	esac
-+}
-+
-+#
-+# Cleanup source or dest
-+#
-+_cleanup_one()
-+{
-+	local path=$1
-+
-+	if test -d $path; then
-+		rm -f $path/bar
-+		rmdir $path
-+	else
-+		rm -f $path
-+	fi
-+}
-+
-+#
-+# Check type of source or destination
-+#
-+_showtype_one()
-+{
-+	local path=$1
-+
-+	if test -e $path -o -h $path; then
-+		if test -d $path -a -e $path/bar; then
-+			echo -n "tree"
-+		else
-+			echo -n `stat -c %F $path | cut -b-4`
-+		fi
-+	else
-+		echo -n "none"
-+	fi
-+}
-+
-+#
-+# This runs renameat2 on all combinations of source and dest
-+#
-+_rename_tests_source_dest()
-+{
-+	local source=$1
-+	local dest=$2
-+	local options=$3
-+
-+	for stype in none regu symb dire tree; do
-+		for dtype in none regu symb dire tree; do
-+			echo -n "$options $stype/$dtype -> "
-+			_setup_one $source $stype
-+			_setup_one $dest $dtype
-+			src/renameat2 $source $dest $flags
-+			if test $? == 0; then
-+				_showtype_one $source
-+				echo -n "/"
-+				_showtype_one $dest
-+				echo "."
-+			fi
-+			_cleanup_one $source
-+			_cleanup_one $dest
-+		done
-+	done
-+}
-+
-+#
-+# This runs _rename_tests_source_dest() for both same-directory and
-+# cross-directory renames
-+#
-+_rename_tests()
-+{
-+	local testdir=$1
-+	local flags=$2
-+
-+	#same directory renames
-+	_rename_tests_source_dest $testdir/src $testdir/dst     "samedir "
-+
-+	#cross directory renames
-+	mkdir $testdir/x $testdir/y
-+	_rename_tests_source_dest $testdir/x/src $testdir/y/dst "crossdir"
-+	rmdir $testdir/x $testdir/y
-+}
-+
-+#
-+# This checks whether the renameat2 syscall is supported
-+#
-+_requires_renameat2()
-+{
-+	if test ! -x src/renameat2; then
-+		_notrun "renameat2 binary not found"
-+	fi
-+	if ! src/renameat2 -t; then
-+		_notrun "kernel doesn't support renameat2 syscall"
-+	fi
-+}
-diff --git a/configure.ac b/configure.ac
-index 2f95c4c..43e6029 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -76,6 +76,8 @@ in
- 		;;
- esac
- 
-+AC_CHECK_FUNCS([renameat2])
-+
- AC_CONFIG_HEADER(include/config.h)
- AC_CONFIG_FILES([include/builddefs])
- AC_OUTPUT
-diff --git a/src/Makefile b/src/Makefile
-index 2dbc696..d754048 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -18,7 +18,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
- 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
- 	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
--	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner
-+	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
-+	renameat2
- 
- SUBDIRS =
- 
-diff --git a/src/renameat2.c b/src/renameat2.c
-new file mode 100644
-index 0000000..5145959
---- /dev/null
-+++ b/src/renameat2.c
-@@ -0,0 +1,102 @@
-+/*
-+ * Copyright (c) 2014, Miklos Szeredi <mszeredi@suse.cz>
-+ * This file is published under GPL2+.
-+ *
-+ * This is a trivial wrapper around the renameat2 syscall.
-+ */
-+
-+#include "global.h"
-+
-+#ifndef HAVE_RENAMEAT2
-+#include <sys/syscall.h>
-+
-+#if !defined(SYS_renameat2) && defined(__x86_64__)
-+#define SYS_renameat2 316
-+#endif
-+
-+static int renameat2(int dfd1, const char *path1,
-+		     int dfd2, const char *path2,
-+		     unsigned int flags)
-+{
-+#ifdef SYS_renameat2
-+	return syscall(SYS_renameat2, dfd1, path1, dfd2, path2, flags);
-+#else
-+	errno = ENOSYS;
-+	return -1;
-+#endif
-+}
-+#endif
-+
-+#ifndef RENAME_NOREPLACE
-+#define RENAME_NOREPLACE	(1 << 0)	/* Don't overwrite target */
-+#endif
-+#ifndef RENAME_EXCHANGE
-+#define RENAME_EXCHANGE		(1 << 1)	/* Exchange source and dest */
-+#endif
-+#ifndef RENAME_WHITEOUT
-+#define RENAME_WHITEOUT		(1 << 2)	/* Whiteout source */
-+#endif
-+
-+int main(int argc, char *argv[])
-+{
-+	int ret;
-+	int c;
-+	const char *path1 = NULL;
-+	const char *path2 = NULL;
-+	unsigned int flags = 0;
-+	int test = 0;
-+
-+	for (c = 1; c < argc; c++) {
-+		if (argv[c][0] == '-') {
-+			switch (argv[c][1]) {
-+			case 't':
-+				test = 1;
-+				break;
-+			case 'n':
-+				flags |= RENAME_NOREPLACE;
-+				break;
-+			case 'x':
-+				flags |= RENAME_EXCHANGE;
-+				break;
-+			case 'w':
-+				flags |= RENAME_WHITEOUT;
-+				break;
-+			default:
-+				goto usage;
-+			}
-+		} else if (!path1) {
-+			path1 = argv[c];
-+		} else if (!path2) {
-+			path2 = argv[c];
-+		} else {
-+			goto usage;
-+		}
-+	}
-+
-+	if (!test && (!path1 || !path2))
-+		goto usage;
-+
-+	ret = renameat2(AT_FDCWD, path1, AT_FDCWD, path2, flags);
-+	if (ret == -1) {
-+		if (test) {
-+			if (errno == ENOSYS || errno == EINVAL)
-+				return 1;
-+			else
-+				return 0;
-+		}
-+		perror("");
-+		return 1;
-+	}
-+
-+	return 0;
-+
-+usage:
-+	fprintf(stderr,
-+		"usage: %s [-t] [-n|-x|-w] path1 path2\n"
-+		"  -t  test\n"
-+		"  -n  noreplace\n"
-+		"  -x  exchange\n"
-+		"  -w  whiteout\n", argv[0]);
-+
-+	return 1;
-+}
--- 
-1.8.1.4
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U28gdGhpcyBjb3JldXRpbHMgdGVzdCBpcyBmYWlsaW5nIG9uIFhGUzoKaHR0cDovL2dpdC5zdi5n
+bnUub3JnL2dpdHdlYi8/cD1jb3JldXRpbHMuZ2l0O2E9YmxvYjtmPXRlc3RzL2RkL3NwYXJzZS5z
+aDtoPTA2ZWZjNzAxNwpTcGVjaWZpY2FsbHkgdGhlIGxhc3QgaG9sZSBjaGVjayBvbiBsaW5lIDY2
+LgoKSW4gc3VtbWFyeSB3aGF0J3MgaGFwcGVuaW5nIGlzIHRoYXQgYSB3cml0ZSgxTWlCKSwgbHNl
+ZWsoMU1pQiksIHdyaXRlKDFNaUIpCmNyZWF0ZXMgb25seSBhIDY0S2lCIGhvbGUuIElzIHRoYXQg
+ZXhwZWN0ZWQ/CgpOb3cgYSAxTWlCIGhvbGUgaXMgc3VwcG9ydGVkIHVzaW5nIHRydW5jYXRlOgog
+IGRkIGlmPS9kZXYvdXJhbmRvbSBvZj1maWxlLmluIGJzPTFNIGNvdW50PTEgaWZsYWc9ZnVsbGJs
+b2NrCiAgdHJ1bmNhdGUgLXMrMU0gZmlsZS5pbgogIGRkIGlmPS9kZXYvdXJhbmRvbSBvZj1maWxl
+LmluIGJzPTFNIGNvdW50PTEgaWZsYWc9ZnVsbGJsb2NrIGNvbnY9bm90cnVuYyBvZmxhZz1hcHBl
+bmQKICAkIGR1IC1rIGZpbGUuaW4KICAyMDQ4ICBmaWxlLmluCgpCdXQgd2hlbiB0cnlpbmcgdG8g
+Y3JlYXRlIHRoZSAxTWlCIGhvbGUgd2l0aCBkZCAobHNlZWspIGl0IGZhaWxzPwoKICAjIENyZWF0
+ZSAzTWlCIGlucHV0IGZpbGUgZmlsZQogICQgZGQgaWY9L2Rldi91cmFuZG9tIG9mPWZpbGUuaW4g
+YnM9MU0gY291bnQ9MyBpZmxhZz1mdWxsYmxvY2sKICAkIGRkIGlmPS9kZXYvemVybyAgICBvZj1m
+aWxlLmluIGJzPTFNIGNvdW50PTEgc2Vlaz0xIGNvbnY9bm90cnVuYwogICQgZHUgLWsgZmlsZS5p
+bgogIDMwNzIgIGZpbGUuaW4KCiAgIyBDb252ZXJ0IHRvIDFNaUIgaG9sZSBkb2Vzbid0IHdvcmsg
+OigKICAkIGRkIGlmPWZpbGUuaW4gb2Y9ZmlsZS5vdXQgYnM9MU0gY29udj1zcGFyc2UKICAkIGR1
+IC1rIGZpbGUub3V0CiAgMzAwOCAgZmlsZS5vdXQKCiAgIyBBZ2FpbiB3aXRoIHN5c2NhbGwgZGV0
+YWlsczoKICAkIHN0cmFjZSAtZSB3cml0ZSxsc2VlayBkZCBpZj1maWxlLmluIG9mPWZpbGUub3V0
+IGJzPTFNIGNvbnY9c3BhcnNlCiAgd3JpdGUoMSwgIi4uLiIsIDEwNDg1NzYpID0gMTA0ODU3Ngog
+IGxzZWVrKDEsIDEwNDg1NzYsIFNFRUtfQ1VSKSAgICAgICAgICAgICA9IDIwOTcxNTIKICB3cml0
+ZSgxLCAiLi4uIiwgMTA0ODU3NikgPSAxMDQ4NTc2CgpTbyBpdCBzZWVtcyB0aGF0IHRoZSBsc2Vl
+a3MgYXJlIHRyZWF0ZWQgZGlmZmVyZW50bHkgdG8gdGhlIHRydW5jYXRlCnRoYXQgd2FzIGRvbmUg
+aW4gdGhlIGZpcnN0IGV4YW1wbGUsIHdoaWNoIGlzIHN1cnByaXNpbmcuCklmIHdlIGxvb2sgYXQg
+dGhlIGZpbGUgbGF5b3V0IHdlIGNhbiBzZWUgdGhlIGhvbGUgaXMKb25seSBhdCB0aGUgbGFzdCA2
+NEtpQiBvZiB0aGUgbWlkZGxlIDFNaUIgb2YgemVyb3MsCnJhdGhlciB0aGFuIGZvciB0aGUgd2hv
+bGUgbWlkZGxlIDFNaUIgYXMgaW4gdGhlIGZpcnN0IGV4YW1wbGU/PwoKICAkIGZpbGVmcmFnIC12
+IGZpbGUub3V0CiAgRmlsZXN5c3RlbSB0eXBlIGlzOiA1ODQ2NTM0MgogIEZpbGUgc2l6ZSBvZiBm
+aWxlLm91dCBpcyAzMTQ1NzI4ICg3NjggYmxvY2tzIG9mIDQwOTYgYnl0ZXMpCiAgIGV4dDogICAg
+IGxvZ2ljYWxfb2Zmc2V0OiAgICAgICAgcGh5c2ljYWxfb2Zmc2V0OiBsZW5ndGg6ICAgZXhwZWN0
+ZWQ6IGZsYWdzOgogICAgIDA6ICAgICAgICAwLi4gICAgIDQ5NTogICAgICAzMTI3MS4uICAgICAz
+MTc2NjogICAgNDk2OgogICAgIDE6ICAgICAgNTEyLi4gICAgIDc2NzogICAgICAzMTc4My4uICAg
+ICAzMjAzODogICAgMjU2OiAgICAgIDMxNzY3OiBlb2YKCnRoYW5rcywKUMOhZHJhaWcuCgpWZXJz
+aW9ucyBldGMuIGluIGNhc2UgdXNlZnVsCgokIHVuYW1lIC1hCkxpbnV4IHRwMiAzLjEyLjYtMzAw
+LmZjMjAueDg2XzY0ICMxIFNNUCBNb24gRGVjIDIzIDE2OjQ0OjMxIFVUQyAyMDEzIHg4Nl82NCB4
+ODZfNjQgeDg2XzY0IEdOVS9MaW51eAoKJCB4ZnNfaW5mbyAuCm1ldGEtZGF0YT0vZGV2L2xvb3Ay
+ICAgICAgICAgICAgIGlzaXplPTI1NiAgICBhZ2NvdW50PTQsIGFnc2l6ZT02NTUzNiBibGtzCiAg
+ICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIKZGF0YSAg
+ICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNjIxNDQsIGlt
+YXhwY3Q9MjUKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3
+aWR0aD0wIGJsa3MKbmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAgICAgICAgYnNpemU9NDA5NiAg
+IGFzY2lpLWNpPTAKbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5NiAg
+IGJsb2Nrcz0yNTYwLCB2ZXJzaW9uPTIKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAg
+c2VjdHN6PTUxMiAgIHN1bml0PTAgYmxrcywgbGF6eS1jb3VudD0xCnJlYWx0aW1lID1ub25lICAg
+ICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9MCwgcnRleHRlbnRzPTAKCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
