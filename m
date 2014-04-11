@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 928F17F3F
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 12:14:11 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4765729DF7
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 13:57:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A44C8F8033
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 10:14:08 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 12049304059
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 11:57:51 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PvYJOyvxjIl8vXvt for
-	<xfs@oss.sgi.com>; Fri, 11 Apr 2014 10:14:04 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3BHE3g4002694
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 13:14:03 -0400
-Message-ID: <534822D7.7090803@draigBrady.com>
-Date: Fri, 11 Apr 2014 18:13:59 +0100
-From: =?UTF-8?B?UMOhZHJhaWcgQnJhZHk=?= <P@draigBrady.com>
-MIME-Version: 1.0
-Subject: Strange hole creation behavior
+	cuda.sgi.com with ESMTP id 1H2yuyU0Trxkyrbw for
+	<xfs@oss.sgi.com>; Fri, 11 Apr 2014 11:57:50 -0700 (PDT)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 1/4] ext4: Remove unnecessary check for APPEND and IMMUTABLE
+Date: Fri, 11 Apr 2014 20:57:42 +0200
+Message-Id: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +20,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: =?UTF-8?B?T25kxZllaiBWYcWhw61r?= <ovasik@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: Lukas Czerner <lczerner@redhat.com>, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-U28gdGhpcyBjb3JldXRpbHMgdGVzdCBpcyBmYWlsaW5nIG9uIFhGUzoKaHR0cDovL2dpdC5zdi5n
-bnUub3JnL2dpdHdlYi8/cD1jb3JldXRpbHMuZ2l0O2E9YmxvYjtmPXRlc3RzL2RkL3NwYXJzZS5z
-aDtoPTA2ZWZjNzAxNwpTcGVjaWZpY2FsbHkgdGhlIGxhc3QgaG9sZSBjaGVjayBvbiBsaW5lIDY2
-LgoKSW4gc3VtbWFyeSB3aGF0J3MgaGFwcGVuaW5nIGlzIHRoYXQgYSB3cml0ZSgxTWlCKSwgbHNl
-ZWsoMU1pQiksIHdyaXRlKDFNaUIpCmNyZWF0ZXMgb25seSBhIDY0S2lCIGhvbGUuIElzIHRoYXQg
-ZXhwZWN0ZWQ/CgpOb3cgYSAxTWlCIGhvbGUgaXMgc3VwcG9ydGVkIHVzaW5nIHRydW5jYXRlOgog
-IGRkIGlmPS9kZXYvdXJhbmRvbSBvZj1maWxlLmluIGJzPTFNIGNvdW50PTEgaWZsYWc9ZnVsbGJs
-b2NrCiAgdHJ1bmNhdGUgLXMrMU0gZmlsZS5pbgogIGRkIGlmPS9kZXYvdXJhbmRvbSBvZj1maWxl
-LmluIGJzPTFNIGNvdW50PTEgaWZsYWc9ZnVsbGJsb2NrIGNvbnY9bm90cnVuYyBvZmxhZz1hcHBl
-bmQKICAkIGR1IC1rIGZpbGUuaW4KICAyMDQ4ICBmaWxlLmluCgpCdXQgd2hlbiB0cnlpbmcgdG8g
-Y3JlYXRlIHRoZSAxTWlCIGhvbGUgd2l0aCBkZCAobHNlZWspIGl0IGZhaWxzPwoKICAjIENyZWF0
-ZSAzTWlCIGlucHV0IGZpbGUgZmlsZQogICQgZGQgaWY9L2Rldi91cmFuZG9tIG9mPWZpbGUuaW4g
-YnM9MU0gY291bnQ9MyBpZmxhZz1mdWxsYmxvY2sKICAkIGRkIGlmPS9kZXYvemVybyAgICBvZj1m
-aWxlLmluIGJzPTFNIGNvdW50PTEgc2Vlaz0xIGNvbnY9bm90cnVuYwogICQgZHUgLWsgZmlsZS5p
-bgogIDMwNzIgIGZpbGUuaW4KCiAgIyBDb252ZXJ0IHRvIDFNaUIgaG9sZSBkb2Vzbid0IHdvcmsg
-OigKICAkIGRkIGlmPWZpbGUuaW4gb2Y9ZmlsZS5vdXQgYnM9MU0gY29udj1zcGFyc2UKICAkIGR1
-IC1rIGZpbGUub3V0CiAgMzAwOCAgZmlsZS5vdXQKCiAgIyBBZ2FpbiB3aXRoIHN5c2NhbGwgZGV0
-YWlsczoKICAkIHN0cmFjZSAtZSB3cml0ZSxsc2VlayBkZCBpZj1maWxlLmluIG9mPWZpbGUub3V0
-IGJzPTFNIGNvbnY9c3BhcnNlCiAgd3JpdGUoMSwgIi4uLiIsIDEwNDg1NzYpID0gMTA0ODU3Ngog
-IGxzZWVrKDEsIDEwNDg1NzYsIFNFRUtfQ1VSKSAgICAgICAgICAgICA9IDIwOTcxNTIKICB3cml0
-ZSgxLCAiLi4uIiwgMTA0ODU3NikgPSAxMDQ4NTc2CgpTbyBpdCBzZWVtcyB0aGF0IHRoZSBsc2Vl
-a3MgYXJlIHRyZWF0ZWQgZGlmZmVyZW50bHkgdG8gdGhlIHRydW5jYXRlCnRoYXQgd2FzIGRvbmUg
-aW4gdGhlIGZpcnN0IGV4YW1wbGUsIHdoaWNoIGlzIHN1cnByaXNpbmcuCklmIHdlIGxvb2sgYXQg
-dGhlIGZpbGUgbGF5b3V0IHdlIGNhbiBzZWUgdGhlIGhvbGUgaXMKb25seSBhdCB0aGUgbGFzdCA2
-NEtpQiBvZiB0aGUgbWlkZGxlIDFNaUIgb2YgemVyb3MsCnJhdGhlciB0aGFuIGZvciB0aGUgd2hv
-bGUgbWlkZGxlIDFNaUIgYXMgaW4gdGhlIGZpcnN0IGV4YW1wbGU/PwoKICAkIGZpbGVmcmFnIC12
-IGZpbGUub3V0CiAgRmlsZXN5c3RlbSB0eXBlIGlzOiA1ODQ2NTM0MgogIEZpbGUgc2l6ZSBvZiBm
-aWxlLm91dCBpcyAzMTQ1NzI4ICg3NjggYmxvY2tzIG9mIDQwOTYgYnl0ZXMpCiAgIGV4dDogICAg
-IGxvZ2ljYWxfb2Zmc2V0OiAgICAgICAgcGh5c2ljYWxfb2Zmc2V0OiBsZW5ndGg6ICAgZXhwZWN0
-ZWQ6IGZsYWdzOgogICAgIDA6ICAgICAgICAwLi4gICAgIDQ5NTogICAgICAzMTI3MS4uICAgICAz
-MTc2NjogICAgNDk2OgogICAgIDE6ICAgICAgNTEyLi4gICAgIDc2NzogICAgICAzMTc4My4uICAg
-ICAzMjAzODogICAgMjU2OiAgICAgIDMxNzY3OiBlb2YKCnRoYW5rcywKUMOhZHJhaWcuCgpWZXJz
-aW9ucyBldGMuIGluIGNhc2UgdXNlZnVsCgokIHVuYW1lIC1hCkxpbnV4IHRwMiAzLjEyLjYtMzAw
-LmZjMjAueDg2XzY0ICMxIFNNUCBNb24gRGVjIDIzIDE2OjQ0OjMxIFVUQyAyMDEzIHg4Nl82NCB4
-ODZfNjQgeDg2XzY0IEdOVS9MaW51eAoKJCB4ZnNfaW5mbyAuCm1ldGEtZGF0YT0vZGV2L2xvb3Ay
-ICAgICAgICAgICAgIGlzaXplPTI1NiAgICBhZ2NvdW50PTQsIGFnc2l6ZT02NTUzNiBibGtzCiAg
-ICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIKZGF0YSAg
-ICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNjIxNDQsIGlt
-YXhwY3Q9MjUKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3
-aWR0aD0wIGJsa3MKbmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAgICAgICAgYnNpemU9NDA5NiAg
-IGFzY2lpLWNpPTAKbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5NiAg
-IGJsb2Nrcz0yNTYwLCB2ZXJzaW9uPTIKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAg
-c2VjdHN6PTUxMiAgIHN1bml0PTAgYmxrcywgbGF6eS1jb3VudD0xCnJlYWx0aW1lID1ub25lICAg
-ICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9MCwgcnRleHRlbnRzPTAKCl9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
-c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
-cwo=
+All the checks IS_APPEND and IS_IMMUTABLE for the fallocate operation on
+the inode are done in vfs. No need to do this again in ext4. Remove it.
+
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ fs/ext4/extents.c | 6 ------
+ fs/ext4/inode.c   | 6 +-----
+ 2 files changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 89f2227..0177150 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -5387,12 +5387,6 @@ int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
+ 	/* Take mutex lock */
+ 	mutex_lock(&inode->i_mutex);
+ 
+-	/* It's not possible punch hole on append only file */
+-	if (IS_APPEND(inode) || IS_IMMUTABLE(inode)) {
+-		ret = -EPERM;
+-		goto out_mutex;
+-	}
+-
+ 	if (IS_SWAPFILE(inode)) {
+ 		ret = -ETXTBSY;
+ 		goto out_mutex;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 1922f48..56f1ff4 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3528,11 +3528,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
+ 	}
+ 
+ 	mutex_lock(&inode->i_mutex);
+-	/* It's not possible punch hole on append only file */
+-	if (IS_APPEND(inode) || IS_IMMUTABLE(inode)) {
+-		ret = -EPERM;
+-		goto out_mutex;
+-	}
++
+ 	if (IS_SWAPFILE(inode)) {
+ 		ret = -ETXTBSY;
+ 		goto out_mutex;
+-- 
+1.8.3.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
