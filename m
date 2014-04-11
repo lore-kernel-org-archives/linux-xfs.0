@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A317B7F6B
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 22:23:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3411AAC002
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 20:23:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UbCBdNxZb9Hy97rR for
-	<xfs@oss.sgi.com>; Thu, 10 Apr 2014 20:23:23 -0700 (PDT)
-Date: Fri, 11 Apr 2014 11:23:18 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] ext4/306: disable 64bit feature too
-Message-ID: <20140411032318.GL24329@dhcp-13-216.nay.redhat.com>
-References: <1397044147-15727-1-git-send-email-eguan@redhat.com>
-	<20140411001235.GB15995@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4F6A47F6D
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 23:27:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 269E38F8037
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 21:27:05 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	YyyBR1Jg2m9EkiRG for <xfs@oss.sgi.com>;
+	Thu, 10 Apr 2014 21:27:00 -0700 (PDT)
+Date: Fri, 11 Apr 2014 14:26:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 10GB memorys occupied by XFS
+Message-ID: <20140411042625.GG15995@dastard>
+References: <1396596386220-35015.post@n7.nabble.com>
+	<1397184044761-35016.post@n7.nabble.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140411001235.GB15995@dastard>
+In-Reply-To: <1397184044761-35016.post@n7.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,59 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: daiguochao <dx-wl@163.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Apr 11, 2014 at 10:12:35AM +1000, Dave Chinner wrote:
-> On Wed, Apr 09, 2014 at 07:49:07PM +0800, Eryu Guan wrote:
-> > mke2fs ext4 without extent feature will fail if 64bit feature is
-> > enabled in mke2fs.conf
-> > 
-> > mke2fs 1.42.9 (28-Dec-2013)
-> > Extents MUST be enabled for a 64-bit filesystem.  Pass -O extents to rectify.
-> > 
-> > So disable 64bit feature together with extent explicitly.
-> > 
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> >  tests/ext4/306 | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/tests/ext4/306 b/tests/ext4/306
-> > index 9559cf2..fd50b0e 100755
-> > --- a/tests/ext4/306
-> > +++ b/tests/ext4/306
-> > @@ -48,7 +48,7 @@ _require_scratch
-> >  rm -f $seqres.full
-> >  
-> >  # Make a small ext4 fs with extents disabled & mount it
-> > -yes | mkfs.ext4 -O ^extents $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> > +yes | mkfs.ext4 -O ^extents,^64bit $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> >  _scratch_mount || _fail "couldn't mount fs"
-> >  
-> >  # Create a small non-extent-based file
-> > -- 
-> > 1.9.0
+On Thu, Apr 10, 2014 at 07:40:44PM -0700, daiguochao wrote:
+> Dear Stan, I can't send email to you.So I leave a message here.I hope not to
+> bother you.
+> Thank you for your kind assistance.
 > 
-> Looks fine to me, but you should CC ext4 test changes to
-> linux-ext4@vger.kernel.org as well so that the ext4 developers can
-> review such changes are well...
+> In accordance with your suggestion, we executed "echo 3 >
+> /proc/sysm/drop_caches" for trying to release vfs dentries and inodes.
+> Really,
+> our lost memory came back. But we learned that the memory of vfs dentries
+> and inodes is distributed from slab. Please check our system "Slab:  509708
+> kB" from /proc/meminfo, and it seems only be took up 500MB and xfs_buf take
+> up 450MB among.
 
-Ok, will do in future.
+That's where your memory is - in metadata buffers. The xfs_buf slab
+entries are just the handles - the metadata pages in the buffers
+usually take much more space and it's not accounted to the slab
+cache nor the page cache.
 
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Can you post the output of /proc/slabinfo, and what is the output of
+xfs_info on the filesystem in question? Also, a description of your
+workload that is resulting in large amounts of cached metadata
+buffers but no inodes or dentries would be helpful.
 
-Thanks for the review.
+Cheers,
 
-Eryu
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
