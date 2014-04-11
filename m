@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 99DE47F3F
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 16:43:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85E74304051
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 14:43:13 -0700 (PDT)
-Received: from mail-qc0-f174.google.com (mail-qc0-f174.google.com
-	[209.85.216.174]) by cuda.sgi.com with ESMTP id
-	EV1gHRnB6hpaVXBz (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E8C267F3F
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 16:46:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 956F8AC003
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 14:46:29 -0700 (PDT)
+Received: from mail-qc0-f171.google.com (mail-qc0-f171.google.com
+	[209.85.216.171]) by cuda.sgi.com with ESMTP id
+	6rsNhBB5XnfLktcw (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 11 Apr 2014 14:43:12 -0700 (PDT)
-Received: by mail-qc0-f174.google.com with SMTP id c9so6502953qcz.19
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 14:43:11 -0700 (PDT)
-Date: Fri, 11 Apr 2014 17:43:07 -0400
+	Fri, 11 Apr 2014 14:46:28 -0700 (PDT)
+Received: by mail-qc0-f171.google.com with SMTP id c9so6689886qcz.30
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 14:46:27 -0700 (PDT)
+Date: Fri, 11 Apr 2014 17:46:23 -0400
 From: Eric Whitney <enwlinux@gmail.com>
-Subject: [PATCH] generic: add fallocate() checks to generic/300
-Message-ID: <20140411214307.GC10174@wallace>
+Subject: [PATCH] generic: add fallocate() check to generic/311
+Message-ID: <20140411214623.GD10174@wallace>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,39 +33,41 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-ext4@vger.kernel.org
 
-Generic/300 fails when run on a test filesystem that does not support
-fallocate(). It uses fio's falloc ioengine to generate part of its I/O
-load and both allocates blocks and punches holes.  This causes EOPNOTSUPP
-failures when the test is run on indirect block-mapped ext4 filesystems
-or pre-3.14 ext4 filesystems created with bigalloc.
+Generic/311 fails when run on a test filesystem that does not support
+fallocate().  Its I/O load is produced by fsync-tester, which uses
+fallocate() system calls to allocate blocks for some of its test cases.
+This causes EOPNOTSUPP failures when the test is run on indirect
+block-mapped ext4 filesystems.
 
 Verify that the test filesystem supports fallocate() before proceeding
-with the test, checking for both block allocation and hole punching
-capabilities.  Also, delete any pre-existing test output.
+with the test, checking for block allocation capabilities.  Also, fix a
+minor error message typo.
 
 Signed-off-by: Eric Whitney <enwlinux@gmail.com>
 ---
- tests/generic/300 | 7 +++++++
- 1 file changed, 7 insertions(+)
+ tests/generic/311 | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+ mode change 100644 => 100755 tests/generic/311
 
-diff --git a/tests/generic/300 b/tests/generic/300
-index 7c60728..4e07f8a 100755
---- a/tests/generic/300
-+++ b/tests/generic/300
-@@ -44,6 +44,13 @@ _supported_os Linux
- _need_to_be_root
+diff --git a/tests/generic/311 b/tests/generic/311
+old mode 100644
+new mode 100755
+index 6802a96..284b59d
+--- a/tests/generic/311
++++ b/tests/generic/311
+@@ -57,7 +57,11 @@ _need_to_be_root
  _require_scratch
+ _require_dm_flakey
  
+-[ -x $here/src/fsync-tester ] || _notrun "fsync-tester not build"
 +# xfs_io is not required for this test, but it's the best way to verify
-+# the test system supports fallocate() for allocation and hole punching
++# the test system supports fallocate() for allocation
 +_require_xfs_io_falloc
-+_require_xfs_io_falloc_punch
 +
-+rm -f $seqres.full
-+
- NUM_JOBS=$((4*LOAD_FACTOR))
- BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
- if [ $((BLK_DEV_SIZE)) -gt 1048576 ]
++[ -x $here/src/fsync-tester ] || _notrun "fsync-tester not built"
+ 
+ rm -f $seqres.full
+ SEED=1
 -- 
 1.8.3.2
 
