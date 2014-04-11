@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6E6DE7F8E
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 19:12:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 502FC304053
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 17:12:39 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 768447F9C
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 19:14:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6473B8F8037
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2014 17:14:13 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	IPVpEbM836f5MVGw for <xfs@oss.sgi.com>;
-	Thu, 10 Apr 2014 17:12:37 -0700 (PDT)
-Date: Fri, 11 Apr 2014 10:12:35 +1000
+	Em6JNw3XsQDIj30a for <xfs@oss.sgi.com>;
+	Thu, 10 Apr 2014 17:14:11 -0700 (PDT)
+Date: Fri, 11 Apr 2014 10:14:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] ext4/306: disable 64bit feature too
-Message-ID: <20140411001235.GB15995@dastard>
-References: <1397044147-15727-1-git-send-email-eguan@redhat.com>
+Subject: Re: [PATCH] xfstests: fix specifying configuration value with
+	equality sign
+Message-ID: <20140411001410.GC15995@dastard>
+References: <1397123737-3478-1-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397044147-15727-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1397123737-3478-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
+To: Lukas Czerner <lczerner@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Apr 09, 2014 at 07:49:07PM +0800, Eryu Guan wrote:
-> mke2fs ext4 without extent feature will fail if 64bit feature is
-> enabled in mke2fs.conf
+On Thu, Apr 10, 2014 at 11:55:37AM +0200, Lukas Czerner wrote:
+> Currently there is a problem with parse_config_section() when the
+> configuration value contains equality sign like this for example:
 > 
-> mke2fs 1.42.9 (28-Dec-2013)
-> Extents MUST be enabled for a 64-bit filesystem.  Pass -O extents to rectify.
+> MOUNT_OPTIONS="-o data=journal"
 > 
-> So disable 64bit feature together with extent explicitly.
+> the result will be
 > 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->  tests/ext4/306 | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> export MOUNT_OPTIONS="-o data="journal"
 > 
-> diff --git a/tests/ext4/306 b/tests/ext4/306
-> index 9559cf2..fd50b0e 100755
-> --- a/tests/ext4/306
-> +++ b/tests/ext4/306
-> @@ -48,7 +48,7 @@ _require_scratch
->  rm -f $seqres.full
->  
->  # Make a small ext4 fs with extents disabled & mount it
-> -yes | mkfs.ext4 -O ^extents $SCRATCH_DEV 512m >> $seqres.full 2>&1
-> +yes | mkfs.ext4 -O ^extents,^64bit $SCRATCH_DEV 512m >> $seqres.full 2>&1
->  _scratch_mount || _fail "couldn't mount fs"
->  
->  # Create a small non-extent-based file
-> -- 
-> 1.9.0
+> which is not going to work. The reason is that the expression used to
+> parse the configuration options uses greedy matching '.*'. Fix this by
+> using non greedy expression to match the first equality sign '[^=]'.
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 
-Looks fine to me, but you should CC ext4 test changes to
-linux-ext4@vger.kernel.org as well so that the ext4 developers can
-review such changes are well...
+Looks fine.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+It would probably be a good idea to comment what the sed line noise
+is actually doing, so it's easier to understand in future...
 
 Cheers,
 
