@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 50A367F55
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 09:06:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8994AC001
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 07:06:43 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id J3WBvL6K4J5YTnab (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 12 Apr 2014 07:06:39 -0700 (PDT)
-Date: Sat, 12 Apr 2014 10:06:33 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH 4/4] fs: Disallow all fallocate operation on active
-	swapfile
-Message-ID: <20140412140633.GD13837@thunk.org>
+	by oss.sgi.com (Postfix) with ESMTP id CBB2C7F59
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 10:19:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 69DCBAC004
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 08:19:57 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id id8d30M8H5hv6xwm (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 12 Apr 2014 08:19:36 -0700 (PDT)
+Date: Sat, 12 Apr 2014 08:19:35 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/4] fs: Prevent doing FALLOC_FL_ZERO_RANGE on append
+	only file
+Message-ID: <20140412151935.GA18047@infradead.org>
 References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
-	<1397242665-2183-4-git-send-email-lczerner@redhat.com>
+	<1397242665-2183-2-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397242665-2183-4-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1397242665-2183-2-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,25 +34,19 @@ Sender: xfs-bounces@oss.sgi.com
 To: Lukas Czerner <lczerner@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Apr 11, 2014 at 08:57:45PM +0200, Lukas Czerner wrote:
-> Currently some file system have IS_SWAPFILE check in their fallocate
-> implementations and some does not. However we should really prevent any
-> fallocate operation on swapfile so move the check to vfs and remove the
-> redundant checks from the file systems fallocate implementations.
-> 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->  fs/ceph/file.c    | 3 ---
->  fs/ext4/extents.c | 5 -----
->  fs/ext4/inode.c   | 5 -----
->  fs/open.c         | 7 +++++++
->  4 files changed, 7 insertions(+), 13 deletions(-)
+On Fri, Apr 11, 2014 at 08:57:43PM +0200, Lukas Czerner wrote:
+>  	/*
+> -	 * It's not possible to punch hole or perform collapse range
+> -	 * on append only file
+> +	 * It's not possible to punch hole, perform collapse range
+> +	 * or zero range on append only file
+>  	 */
+> -	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE)
+> +	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE |
+> +		    FALLOC_FL_ZERO_RANGE)
 
-Thanks, applied.  Again, if anyone has an objections with my carrying
-these patches in the ext4 tree and pushing them to Linus shortly after
--rc1, please let me know.
-
-					- Ted
+Might be better to make this a negative test fo the operation that is
+allowed on an appen only file.  That's also much better future proof.
 
 _______________________________________________
 xfs mailing list
