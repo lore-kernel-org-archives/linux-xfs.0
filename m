@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CBB2C7F59
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 10:19:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69DCBAC004
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 08:19:57 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id id8d30M8H5hv6xwm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 12 Apr 2014 08:19:36 -0700 (PDT)
-Date: Sat, 12 Apr 2014 08:19:35 -0700
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CF7827F59
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 10:21:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A897F8F8035
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 08:21:22 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 76XmcJQqeuaFmyHH (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 12 Apr 2014 08:21:17 -0700 (PDT)
+Date: Sat, 12 Apr 2014 08:21:17 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] fs: Prevent doing FALLOC_FL_ZERO_RANGE on append
-	only file
-Message-ID: <20140412151935.GA18047@infradead.org>
+Subject: Re: [PATCH 3/4] fs: Remove i_size check from do_fallocate
+Message-ID: <20140412152117.GB18047@infradead.org>
 References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
-	<1397242665-2183-2-git-send-email-lczerner@redhat.com>
+	<1397242665-2183-3-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397242665-2183-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1397242665-2183-3-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,19 +33,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Lukas Czerner <lczerner@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Apr 11, 2014 at 08:57:43PM +0200, Lukas Czerner wrote:
->  	/*
-> -	 * It's not possible to punch hole or perform collapse range
-> -	 * on append only file
-> +	 * It's not possible to punch hole, perform collapse range
-> +	 * or zero range on append only file
->  	 */
-> -	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE)
-> +	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE |
-> +		    FALLOC_FL_ZERO_RANGE)
+Looks good, but the subject line is misleading, it should read something
+like:
 
-Might be better to make this a negative test fo the operation that is
-allowed on an appen only file.  That's also much better future proof.
+"fs: move falloc collapse range check into the filesystem methods"
+
+Might also be worth mentioning that size checks for the other modes
+are in the filesystems in the the long description.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
