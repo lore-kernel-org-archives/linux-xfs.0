@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 890B87F52
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 18:23:26 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 25DFB7F4E
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 02:59:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 750F18F8049
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2014 16:23:23 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	gp3KEae1g48bBWCi for <xfs@oss.sgi.com>;
-	Fri, 11 Apr 2014 16:23:21 -0700 (PDT)
-Date: Sat, 12 Apr 2014 09:23:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/4] renameat2 syscall: add infrastructure
-Message-ID: <20140411232317.GA27694@dastard>
-References: <1397231517-4641-1-git-send-email-miklos@szeredi.hu>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1397231517-4641-1-git-send-email-miklos@szeredi.hu>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 14156304062
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 00:59:57 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id LCFQXepG2Sw80PRy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 12 Apr 2014 00:59:56 -0700 (PDT)
+Received: from [83.175.99.196] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1WYsqw-0006GG-Vp
+	for xfs@oss.sgi.com; Sat, 12 Apr 2014 07:59:55 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/9] xfs: handle duplicate entries in xfs_mru_cache_insert
+Date: Sat, 12 Apr 2014 10:01:57 +0200
+Message-Id: <1397289723-26243-4-git-send-email-hch@lst.de>
+In-Reply-To: <1397289723-26243-1-git-send-email-hch@lst.de>
+References: <1397289723-26243-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,32 +27,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Miklos Szeredi <mszeredi@suse.cz>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Apr 11, 2014 at 05:51:54PM +0200, Miklos Szeredi wrote:
-> From: Miklos Szeredi <mszeredi@suse.cz>
-> 
-> The renameat2() syscall was merged into 3.15-rc (merge commit: 7df934526c0b).
-> 
-> This adds the shared infrastructure for the actual test scripts.
-> 
-> Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
+The radix tree code can detect and reject duplicate keys at insert
+time.  Make xfs_mru_cache_insert handle this case so that future
+changes to the filestream allocator can take advantage of this.
 
-Hi Miklos, all 4 patches look good now, so I'll pull them in with
-the next round of xfstests updates. I'll let ou know if there are
-any other problems I find. Thanks!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_mru_cache.c |   14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index 4aff563..4aa3166 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -443,6 +443,7 @@ xfs_mru_cache_insert(
+ 	void		*value)
+ {
+ 	xfs_mru_cache_elem_t *elem;
++	int error;
+ 
+ 	ASSERT(mru && mru->lists);
+ 	if (!mru || !mru->lists)
+@@ -453,8 +454,8 @@ xfs_mru_cache_insert(
+ 		return ENOMEM;
+ 
+ 	if (radix_tree_preload(GFP_KERNEL)) {
+-		kmem_zone_free(xfs_mru_elem_zone, elem);
+-		return ENOMEM;
++		error = ENOMEM;
++		goto out_free_item;
+ 	}
+ 
+ 	INIT_LIST_HEAD(&elem->list_node);
+@@ -463,13 +464,20 @@ xfs_mru_cache_insert(
+ 
+ 	spin_lock(&mru->lock);
+ 
+-	radix_tree_insert(&mru->store, key, elem);
++	error = -radix_tree_insert(&mru->store, key, elem);
+ 	radix_tree_preload_end();
++	if (error) {
++		spin_unlock(&mru->lock);
++		goto out_free_item;
++	}
+ 	_xfs_mru_cache_list_insert(mru, elem);
+ 
+ 	spin_unlock(&mru->lock);
+ 
+ 	return 0;
++out_free_item:
++	kmem_zone_free(xfs_mru_elem_zone, elem);
++	return error;
+ }
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
