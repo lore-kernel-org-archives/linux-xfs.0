@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2591A7F52
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 17:55:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 143328F8037
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 15:55:30 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D19FD7F50
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 17:55:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B176B8F8037
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 15:55:29 -0700 (PDT)
 Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id EV3wK6ipxXByZoCD (version=TLSv1 cipher=AES128-SHA
+	with ESMTP id zQpYEeRfp8GpdW5p (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 12 Apr 2014 15:55:29 -0700 (PDT)
+	Sat, 12 Apr 2014 15:55:28 -0700 (PDT)
 From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH 1/3] generic/004: fix filtering of expected error message
-Date: Sat, 12 Apr 2014 18:55:15 -0400
-Message-Id: <1397343317-14669-2-git-send-email-tytso@mit.edu>
+Subject: [PATCH 3/3] generic/237: fix filtering for expected failure message
+Date: Sat, 12 Apr 2014 18:55:17 -0400
+Message-Id: <1397343317-14669-4-git-send-email-tytso@mit.edu>
 In-Reply-To: <1397343317-14669-1-git-send-email-tytso@mit.edu>
 References: <1397343317-14669-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,41 +29,40 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>
 
-The failure message goes to stderr, so we need to redirect stderr to
-stdout before running sed.
+Newer kernels return EACCES instead of EPERM when modifying an acl
+fails.  Update the filtering to handle this.
 
 Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@infradead.org>
 ---
- tests/generic/004     | 2 +-
- tests/generic/004.out | 2 +-
+ tests/generic/237     | 2 +-
+ tests/generic/237.out | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/tests/generic/004 b/tests/generic/004
-index 406c29e..23ca349 100755
---- a/tests/generic/004
-+++ b/tests/generic/004
-@@ -58,7 +58,7 @@ $XFS_IO_PROG -T \
- rm ${testfile}
+diff --git a/tests/generic/237 b/tests/generic/237
+index 6a61ec8..b068150 100755
+--- a/tests/generic/237
++++ b/tests/generic/237
+@@ -68,7 +68,7 @@ touch file1
+ chown $acl1.$acl1 file1
  
- # test creating a r/o tmpfile.  Should fail
--$XFS_IO_PROG -Tr ${TEST_DIR} -c "close" | _filter_test_dir
-+$XFS_IO_PROG -Tr ${TEST_DIR} -c "close" 2>&1 | _filter_test_dir
+ echo "Expect to FAIL"
+-$runas -u $acl2 -g $acl2 -- `which setfacl` -m u::rwx file1 2>&1 | sed 's/^setfacl: \/.*file1: Operation not permitted$/setfacl: file1: Operation not permitted/'
++$runas -u $acl2 -g $acl2 -- `which setfacl` -m u::rwx file1 2>&1 | sed -e 's/Permission denied/Operation not permitted/' -e 's/file1: //' -e 's,[/a-zA-Z]*setfacl: ,setfacl: ,'
  
+ echo "Test over."
  # success, all done
- status=0
-diff --git a/tests/generic/004.out b/tests/generic/004.out
-index b85c11c..527b2c2 100644
---- a/tests/generic/004.out
-+++ b/tests/generic/004.out
-@@ -3,4 +3,4 @@ wrote 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
- read 4096/4096 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--/mnt/test: Invalid argument
-+TEST_DIR: Invalid argument
+diff --git a/tests/generic/237.out b/tests/generic/237.out
+index 09d98c6..4edafa6 100644
+--- a/tests/generic/237.out
++++ b/tests/generic/237.out
+@@ -1,4 +1,4 @@
+ QA output created by 237
+ Expect to FAIL
+-setfacl: file1: Operation not permitted
++setfacl: Operation not permitted
+ Test over.
 -- 
 1.9.0
 
