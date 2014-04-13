@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEE727F4E
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 07:44:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AE7B930407F
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 05:44:00 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id tsMknQpwCGARbi0R (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 13 Apr 2014 05:43:59 -0700 (PDT)
-Date: Sun, 13 Apr 2014 08:43:53 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH 3/3] generic/237: fix filtering for expected failure
-	message
-Message-ID: <20140413124353.GD14599@thunk.org>
-References: <1397343317-14669-1-git-send-email-tytso@mit.edu>
-	<1397343317-14669-4-git-send-email-tytso@mit.edu>
-	<20140413081738.GA5331@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 60C8D7F4E
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 18:40:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3CE4AC004
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 16:40:07 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	dOsHKWMb1E9FCqwL for <xfs@oss.sgi.com>;
+	Sun, 13 Apr 2014 16:40:02 -0700 (PDT)
+Date: Mon, 14 Apr 2014 09:39:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] fs: Remove i_size check from do_fallocate
+Message-ID: <20140413233958.GB27694@dastard>
+References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
+	<1397242665-2183-3-git-send-email-lczerner@redhat.com>
+	<20140412135906.GC13837@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140413081738.GA5331@infradead.org>
+In-Reply-To: <20140412135906.GC13837@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,44 +31,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Apr 13, 2014 at 01:17:38AM -0700, Christoph Hellwig wrote:
-> On Sat, Apr 12, 2014 at 06:55:17PM -0400, Theodore Ts'o wrote:
-> > Newer kernels return EACCES instead of EPERM when modifying an acl
-> > fails.  Update the filtering to handle this.
+On Sat, Apr 12, 2014 at 09:59:06AM -0400, Theodore Ts'o wrote:
+> On Fri, Apr 11, 2014 at 08:57:44PM +0200, Lukas Czerner wrote:
+> > Currently in do_fallocate in collapse range case we're checking whether
+> > offset + len is not bigger than i_size. However there is nothing which
+> > would prevent i_size from changing so the check is pointless. It should
+> > be done in the file system itself and the file system needs to make sure
+> > that i_size is not going to change.
 > > 
-> > Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
+> > As it is now we can easily crash kernel by having two processes doing
+> > truncate and fallocate collapse range at the same time. This can be
+> > reproduced on ext4 and it is theoretically possible on xfs even though I
+> > was not able to trigger it with this simple test.
+> > 
+> > This commit removes the check from do_fallocate and adds it to the file
+> > system.
+> > 
+> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> > ---
+> >  fs/ext4/extents.c | 11 +++++++++--
+> >  fs/open.c         |  8 --------
+> >  fs/xfs/xfs_file.c | 10 +++++++++-
+> >  3 files changed, 18 insertions(+), 11 deletions(-)
 > 
-> I've not seen this yet.  What exact configuration do you use to get the
-> error?
+> Looks good to me.  Do the xfs folks mind if I carry this in the ext4
+> tree and push it to Linus shortly after -rc1?  If so, please send me
+> an ack'ed by.
 
-I was using a 32-bit kernel, using a recent Linus upstream.  The bug
-was showing up for both ext4 and xfs, and xfstests-bld is using a very
-recent version of the acl package?
+No, go ahead. I was going to do the same thing, anyway, if nobody
+else beat me to it...
 
-If you're not seeing it, perhaps the most likely cause would be the
-fact that I was using an i386 kernel, and/or the version of the acl
-userspace package found in kvm-xfstests?
-
-If you want a repro, you could grab:
-
-	git://git.kernel.org/pub/scm/fs/ext2/xfstests-bld.git
-
-and then building the per the README.
-
-If you don't have a Debian testing system conviently to hand, you
-could pull down:
-
-https://www.kernel.org/pub/linux/kernel/people/tytso/kvm-xfstests/root_fs.img.i386
-
-... and then update the image to have the xfstests upstream version of
-/root/xfstests/tests/generic/237*.
+Acked-by: Dave Chinner <david@fromorbit.com>
 
 Cheers,
 
-						- Ted
+Dave
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
