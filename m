@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 80A5B7F53
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 23:07:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F4005AC001
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 21:07:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 2aXePdr9u4hadst4 for <xfs@oss.sgi.com>;
-	Sat, 12 Apr 2014 21:07:14 -0700 (PDT)
-Message-ID: <534A0D72.10304@sandeen.net>
-Date: Sat, 12 Apr 2014 23:07:14 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] generic/022: update expected output after the test
-	was renamed
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 417A57F56
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 03:17:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2811C8F8037
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 01:17:44 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id HmSKDaBwGTphblqt (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 13 Apr 2014 01:17:39 -0700 (PDT)
+Date: Sun, 13 Apr 2014 01:17:38 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] generic/237: fix filtering for expected failure
+	message
+Message-ID: <20140413081738.GA5331@infradead.org>
 References: <1397343317-14669-1-git-send-email-tytso@mit.edu>
-	<1397343317-14669-3-git-send-email-tytso@mit.edu>
-In-Reply-To: <1397343317-14669-3-git-send-email-tytso@mit.edu>
+	<1397343317-14669-4-git-send-email-tytso@mit.edu>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1397343317-14669-4-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +31,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-On 4/12/14, 5:55 PM, Theodore Ts'o wrote:
-> After generic/022 was renamed by commit 21723cdb, the wrong test
-> number was put into generic/022.out.  Fix this.
+On Sat, Apr 12, 2014 at 06:55:17PM -0400, Theodore Ts'o wrote:
+> Newer kernels return EACCES instead of EPERM when modifying an acl
+> fails.  Update the filtering to handle this.
 > 
 > Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
-> Cc: Lukas Czerner <lczerner@redhat.com>
 
-Lukas sent this a couple days ago as well.
 
-In any case, again, Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  tests/generic/022.out | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/tests/generic/022.out b/tests/generic/022.out
-> index 96c2d33..fbffa59 100644
-> --- a/tests/generic/022.out
-> +++ b/tests/generic/022.out
-> @@ -1,4 +1,4 @@
-> -QA output created by 009
-> +QA output created by 022
->  	1. into a hole
->  f4f35d60b3cc18aaa6d8d92f0cd3708a
->  	2. into allocated space
-> 
+I've not seen this yet.  What exact configuration do you use to get the
+error?
 
 _______________________________________________
 xfs mailing list
