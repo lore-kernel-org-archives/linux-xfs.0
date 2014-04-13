@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C9F07F4E
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 18:13:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 873847F4E
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 23:06:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 084ED304075
-	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 16:13:12 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id Kqi38L0rjur8PWS1 (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 12 Apr 2014 16:13:11 -0700 (PDT)
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH] renameat2: add system call number for i386
-Date: Sat, 12 Apr 2014 19:13:04 -0400
-Message-Id: <1397344384-15302-1-git-send-email-tytso@mit.edu>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5B183304075
+	for <xfs@oss.sgi.com>; Sat, 12 Apr 2014 21:06:09 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id KyIjWHJpu5DBUp8f for <xfs@oss.sgi.com>;
+	Sat, 12 Apr 2014 21:06:05 -0700 (PDT)
+Message-ID: <534A0D2C.409@sandeen.net>
+Date: Sat, 12 Apr 2014 23:06:04 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH 1/3] generic/004: fix filtering of expected error message
+References: <1397343317-14669-1-git-send-email-tytso@mit.edu>
+	<1397343317-14669-2-git-send-email-tytso@mit.edu>
+In-Reply-To: <1397343317-14669-2-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,37 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Miklos Szeredi <mszeredi@suse.cz>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>
+To: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Miklos Szeredi <mszeredi@suse.cz>
----
- src/renameat2.c | 4 ++++
- 1 file changed, 4 insertions(+)
+On 4/12/14, 5:55 PM, Theodore Ts'o wrote:
+> The failure message goes to stderr, so we need to redirect stderr to
+> stdout before running sed.
 
-diff --git a/src/renameat2.c b/src/renameat2.c
-index 5145959..8613aa9 100644
---- a/src/renameat2.c
-+++ b/src/renameat2.c
-@@ -14,6 +14,10 @@
- #define SYS_renameat2 316
- #endif
- 
-+#if !defined(SYS_renameat2) && defined(__i386__)
-+#define SYS_renameat2 353
-+#endif
-+
- static int renameat2(int dfd1, const char *path1,
- 		     int dfd2, const char *path2,
- 		     unsigned int flags)
--- 
-1.9.0
+Heh, whoops.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> ---
+>  tests/generic/004     | 2 +-
+>  tests/generic/004.out | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/generic/004 b/tests/generic/004
+> index 406c29e..23ca349 100755
+> --- a/tests/generic/004
+> +++ b/tests/generic/004
+> @@ -58,7 +58,7 @@ $XFS_IO_PROG -T \
+>  rm ${testfile}
+>  
+>  # test creating a r/o tmpfile.  Should fail
+> -$XFS_IO_PROG -Tr ${TEST_DIR} -c "close" | _filter_test_dir
+> +$XFS_IO_PROG -Tr ${TEST_DIR} -c "close" 2>&1 | _filter_test_dir
+>  
+>  # success, all done
+>  status=0
+> diff --git a/tests/generic/004.out b/tests/generic/004.out
+> index b85c11c..527b2c2 100644
+> --- a/tests/generic/004.out
+> +++ b/tests/generic/004.out
+> @@ -3,4 +3,4 @@ wrote 4096/4096 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  read 4096/4096 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -/mnt/test: Invalid argument
+> +TEST_DIR: Invalid argument
+> 
 
 _______________________________________________
 xfs mailing list
