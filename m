@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AADDF7F4E
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 09:46:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 404BCAC003
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 07:46:36 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 81E787F4E
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 09:48:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E7F38F8049
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 07:48:30 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gim97ALNjxZBlHVZ for <xfs@oss.sgi.com>;
-	Mon, 14 Apr 2014 07:46:36 -0700 (PDT)
-Message-ID: <534BF4CD.1080702@sandeen.net>
-Date: Mon, 14 Apr 2014 09:46:37 -0500
+	ESMTP id U1b5XZwKEtn64IGD for <xfs@oss.sgi.com>;
+	Mon, 14 Apr 2014 07:48:27 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 6A4D063C5FC4
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 09:48:27 -0500 (CDT)
+Message-ID: <534BF53C.4000706@sandeen.net>
+Date: Mon, 14 Apr 2014 09:48:28 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/2] xfs_logprint: Fix error handling in xlog_print_trans_efi
+Subject: Re: [PATCH 2/2] mkfs.xfs: prevent close(-1) on protofile error path
 References: <534BF472.8030908@sandeen.net>
 In-Reply-To: <534BF472.8030908@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,37 +32,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, Mark Tinguely <tinguely@sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-A recent change to xlog_print_trans_efi() led to a leaked
-"src_f" on this error return.
+My previous cleanups introduced this; in the case where
+fd=open() failed, the out_fail: path would try to close(-1).
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 928f60a..d482cf3 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -482,7 +482,7 @@ xlog_print_trans_efi(
- 	uint src_len,
- 	int continued)
- {
--    xfs_efi_log_format_t *src_f, *f;
-+    xfs_efi_log_format_t *src_f, *f = NULL;
-     uint		 dst_len;
-     xfs_extent_t	 *ex;
-     int			 i;
-@@ -505,7 +505,8 @@ xlog_print_trans_efi(
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 308325b..5a47e27 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -84,7 +84,8 @@ setup_proto(
+ 	return buf;
  
-     if (continued && src_len < core_size) {
- 	printf(_("EFI: Not enough data to decode further\n"));
--	return 1;
-+	error = 1;
-+	goto error;
-     }
- 
-     if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
+ out_fail:
+-	close(fd);
++	if (fd >= 0)
++		close(fd);
+ 	free(buf);
+ 	exit(1);
+ }
 
 _______________________________________________
 xfs mailing list
