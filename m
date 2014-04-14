@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4A56129DF7
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 09:54:26 -0500 (CDT)
-Message-ID: <534BF6A0.2070202@sgi.com>
-Date: Mon, 14 Apr 2014 09:54:24 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7F0DD29DF7
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 10:02:00 -0500 (CDT)
+Message-ID: <534BF866.4020007@sgi.com>
+Date: Mon, 14 Apr 2014 10:01:58 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs_logprint: Fix error handling in
-	xlog_print_trans_efi
-References: <534BF472.8030908@sandeen.net> <534BF4CD.1080702@sandeen.net>
-In-Reply-To: <534BF4CD.1080702@sandeen.net>
+Subject: Re: [PATCH 2/2] mkfs.xfs: prevent close(-1) on protofile error path
+References: <534BF472.8030908@sandeen.net> <534BF53C.4000706@sandeen.net>
+In-Reply-To: <534BF53C.4000706@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,39 +24,31 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 04/14/14 09:46, Eric Sandeen wrote:
-> A recent change to xlog_print_trans_efi() led to a leaked
-> "src_f" on this error return.
+On 04/14/14 09:48, Eric Sandeen wrote:
+> My previous cleanups introduced this; in the case where
+> fd=open() failed, the out_fail: path would try to close(-1).
 >
 > Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
 >
-> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> index 928f60a..d482cf3 100644
-> --- a/logprint/log_misc.c
-> +++ b/logprint/log_misc.c
-> @@ -482,7 +482,7 @@ xlog_print_trans_efi(
->   	uint src_len,
->   	int continued)
->   {
-> -    xfs_efi_log_format_t *src_f, *f;
-> +    xfs_efi_log_format_t *src_f, *f = NULL;
->       uint		 dst_len;
->       xfs_extent_t	 *ex;
->       int			 i;
-> @@ -505,7 +505,8 @@ xlog_print_trans_efi(
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 308325b..5a47e27 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -84,7 +84,8 @@ setup_proto(
+>   	return buf;
 >
->       if (continued&&  src_len<  core_size) {
->   	printf(_("EFI: Not enough data to decode further\n"));
-> -	return 1;
-> +	error = 1;
-> +	goto error;
->       }
->
->       if ((f = (xfs_efi_log_format_t *)malloc(dst_len)) == NULL) {
+>   out_fail:
+> -	close(fd);
+> +	if (fd>= 0)
+> +		close(fd);
+>   	free(buf);
+>   	exit(1);
+>   }
 >
 
-Looks good. Thank-you Eric and Coverity.
+I would have bypassed the close with a new open error goto, but this 
+does the trick as well.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
