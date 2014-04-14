@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 82C5C7F37
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 16:47:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 403A4AC006
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 14:47:39 -0700 (PDT)
-Received: from mail-yh0-f53.google.com (mail-yh0-f53.google.com
-	[209.85.213.53]) by cuda.sgi.com with ESMTP id eJExjrmxtDCZ2iFA
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Apr 2014 14:47:37 -0700 (PDT)
-Received: by mail-yh0-f53.google.com with SMTP id i57so7033036yha.40
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 14:47:36 -0700 (PDT)
-Date: Mon, 14 Apr 2014 17:47:30 -0400 (EDT)
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6BDC07F37
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 17:06:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CBE78F8039
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2014 15:06:41 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jgwyWqsY0BDos9wp for
+	<xfs@oss.sgi.com>; Mon, 14 Apr 2014 15:06:40 -0700 (PDT)
+Date: Mon, 14 Apr 2014 18:06:16 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: xfs readdir hang on for-next (3.15.0-rc1)
-In-Reply-To: <20140414205737.GI26782@laptop.programming.kicks-ass.net>
-Message-ID: <alpine.LNX.2.11.1404141732350.1181@bpserver.ds>
+Message-ID: <20140414220616.GA57010@bfoster.bfoster>
 References: <20140414164313.GA62307@bfoster.bfoster>
 	<20140414190834.GB62307@bfoster.bfoster>
 	<20140414205737.GI26782@laptop.programming.kicks-ass.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140414205737.GI26782@laptop.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,11 +30,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Brian Foster <bfoster@redhat.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, 14 Apr 2014, Peter Zijlstra wrote:
-
+On Mon, Apr 14, 2014 at 10:57:37PM +0200, Peter Zijlstra wrote:
 > On Mon, Apr 14, 2014 at 03:08:36PM -0400, Brian Foster wrote:
 > > On Mon, Apr 14, 2014 at 12:43:14PM -0400, Brian Foster wrote:
 > > > Hi all,
@@ -87,21 +84,12 @@ On Mon, 14 Apr 2014, Peter Zijlstra wrote:
 > 
 > That will make the kernel continue after the lockdep splat. I too see it
 > on some of my XFS using machines.
+> 
+> 
 
-It can happen on JFS, too, but my trusty "untar a system backup
-until a splat happens" test barely worked for the merge-window
-kernel.  Therefore, I used xfstests generic/113 on XFS (kernel +
-xfs-oss/for-next) to cause this situation.  The patch above has been
-through xfstests on both v4- and v5-superblock XFS, solving any new
-lockdep issues down here on x86.
+That fixes the problem for me. Thanks!
 
-Sorry to not report it here, therefore costing you time in doing a
-bisect.  The second lockdep splat I got after kernel 3.14 wasn't XFS,
-and so I treated it as a non-XFS issue.
-
-Good luck!
-
-Michael
+Brian
 
 _______________________________________________
 xfs mailing list
