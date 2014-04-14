@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. xfs-for-linus-3.15-rc1-14826-gc9eaa44
-Message-Id: <20140414072728.B89D57F52@oss.sgi.com>
-Date: Mon, 14 Apr 2014 02:27:25 -0500 (CDT)
+Message-Id: <20140414073551.4EB1D7F50@oss.sgi.com>
+Date: Mon, 14 Apr 2014 02:35:50 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,66 +23,22 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   5166701 Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs
   f182036 mm: implement ->map_pages for page cache
   d15e031 Merge tag 'xfs-for-linus-3.15-rc1' of git://oss.sgi.com/xfs/xfs
   24e7ea3 Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4
   91b0abe mm + fs: store shadow entries in page cache
-  a6cf33b Merge branch 'xfs-bug-fixes-for-3.15-3' into for-next
-  c88547a xfs: fix directory hash ordering bug
-  805eeb8 xfs: extra semi-colon breaks a condition
   0a64bc2 xfs_file_buffered_aio_write(): switch to generic_perform_write()
   5cb6c6c generic_file_direct_write(): get rid of ppos argument
   fcacafd kill the 5th argument of generic_file_buffered_write()
   5d826c8 new helper: readlink_copy()
   02b9984 fs: push sync_filesystem() down to the file system's remount_fs()
-  fe986f9 Merge branch 'xfs-O_TMPFILE-support' into for-next
-  5f44e4c Merge branch 'xfs-bug-fixes-for-3.15-2' into for-next
-  49ae4b9 Merge branch 'xfs-verifier-cleanup' into for-next
-  730357a Merge branch 'xfs-stack-fixes' into for-next
-  b6db055 Merge branch 'xfs-collapse-range' into for-next
-  376ba31 xfs: Add support for FALLOC_FL_ZERO_RANGE
-  fe4c224 xfs: inode log reservations are still too small
-  a49935f xfs: xfs_check_page_type buffer checks need help
-  e480a72 xfs: avoid AGI/AGF deadlock scenario for inode chunk allocation
-  ae687e5 xfs: use NOIO contexts for vm_map_ram
-  ac75a1f xfs: don't leak EFSBADCRC to userspace
   8d75318 Merge branch 'for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs
-  93a8614 xfs: fix directory inode iolock lockdep false positive
-  a1358aa xfs: allocate xfs_da_args to reduce stack footprint
-  f876e44 xfs: always do log forces via the workqueue
-  ce5028c xfs: modify verifiers to differentiate CRC from other errors
-  db9355c xfs: print useful caller information in xfs_error_report
-  ca23f8f xfs: add xfs_verifier_error()
-  f1dbcd7 xfs: add helper for updating checksums on xfs_bufs
-  5158217 xfs: add helper for verifying checksums on xfs_bufs
-  533b81c xfs: Use defines for CRC offsets in all cases
-  e0d2c23 xfs: skip pointless CRC updates after verifier failures
-  e1d8fb8 xfs: Add support FALLOC_FL_COLLAPSE_RANGE for fallocate
   645ceee Merge branch 'xfs-fixes-for-3.14-rc4' of git://oss.sgi.com/xfs/xfs
   0dc83bd Revert "writeback: do not sync data dirtied after sync start"
-  027f185 Merge remote-tracking branch 'xfs-async-aio-extend' into for-next
-  b678573 Merge branch 'xfs-fixes-for-3.15' into for-next
-  5ef11eb xfs: limit superblock corruption errors to actual corruption
-  daba542 xfs: skip verification on initial "guess" superblock read
-  7a01e70 xfs: xfs_sb_read_verify() doesn't flag bad crcs on primary sb
-  3895e51 xfs: ensure correct log item buffer alignment
-  fe60a8a xfs: ensure correct timestamp updates from truncate
-  9862f62 xfs: allow appending aio writes
-  d531d91 xfs: always use unwritten extents for direct I/O writes
   d311d79 fix O_SYNC|O_APPEND syncing the wrong range on write()
-  492185e xfs: remove XFS_TRANS_DEBUG dead code
-  4ae69fe xfs: return -E2BIG if hit the maximum size limits of ACLs
-  392c6de xfs: sanitize sb_inopblock in xfs_mount_validate_sb
-  c6f9726 xfs: convert xfs_log_commit_cil() to void
-  410b11a xfs: use tr_qm_dqalloc log reservation for dquot alloc
-  c19ec23 xfs: remove unused tr_swrite
-  70bbca07 xfs: use tr_growrtalloc for growing rt files
-  ab29743 xfs: allow linkat() on O_TMPFILE files
-  99b6436 xfs: add O_TMPFILE support
-  163467d xfs: factor prid related codes into xfs_get_initial_prid()
-      from  38dbfb59d1175ef458d006556061adeaa8751b72 (commit)
+      from  a6cf33bc566c5fe888bfa9cf6448037c90661f67 (commit)
 
 Those revisions listed above that are new to this repository have
 not appeared on any other notification email; so we list those
@@ -495,61 +451,10 @@ Date:   Sun Feb 9 15:18:09 2014 -0500
 -----------------------------------------------------------------------
 
 Summary of changes:
- fs/xfs/kmem.c               |  21 ++-
- fs/xfs/xfs_acl.c            |   2 +-
- fs/xfs/xfs_ag.h             |   6 +
- fs/xfs/xfs_alloc.c          |  45 +++---
- fs/xfs/xfs_alloc_btree.c    |  16 ++-
- fs/xfs/xfs_aops.c           |  84 ++++++-----
- fs/xfs/xfs_attr_leaf.c      |  17 +--
- fs/xfs/xfs_attr_remote.c    |  15 +-
- fs/xfs/xfs_bmap.c           | 193 +++++++++++++++++++++++++
- fs/xfs/xfs_bmap.h           |  15 ++
- fs/xfs/xfs_bmap_btree.c     |  16 +--
- fs/xfs/xfs_bmap_util.c      |  97 ++++++++++++-
- fs/xfs/xfs_bmap_util.h      |   2 +
- fs/xfs/xfs_btree.c          |  14 +-
- fs/xfs/xfs_buf.c            |  11 ++
- fs/xfs/xfs_buf.h            |  14 ++
- fs/xfs/xfs_buf_item.c       |  19 ---
- fs/xfs/xfs_da_btree.c       |  19 +--
- fs/xfs/xfs_dinode.h         |   2 +
- fs/xfs/xfs_dir2.c           | 342 +++++++++++++++++++++++++++-----------------
- fs/xfs/xfs_dir2_block.c     |  17 +--
- fs/xfs/xfs_dir2_data.c      |  20 +--
- fs/xfs/xfs_dir2_leaf.c      |  17 +--
- fs/xfs/xfs_dir2_node.c      |  17 +--
- fs/xfs/xfs_dquot.c          |   2 +-
- fs/xfs/xfs_dquot_buf.c      |  11 +-
- fs/xfs/xfs_error.c          |  27 +++-
- fs/xfs/xfs_error.h          |   1 +
- fs/xfs/xfs_file.c           |  42 ++++--
- fs/xfs/xfs_format.h         |   2 +
- fs/xfs/xfs_ialloc.c         |  36 +++--
- fs/xfs/xfs_ialloc_btree.c   |  16 ++-
- fs/xfs/xfs_inode.c          | 123 +++++++++++++++-
- fs/xfs/xfs_inode.h          |  12 ++
- fs/xfs/xfs_inode_buf.c      |   7 +-
- fs/xfs/xfs_ioctl.c          |  28 +---
- fs/xfs/xfs_iomap.c          |  10 +-
- fs/xfs/xfs_iops.c           |  46 ++++--
- fs/xfs/xfs_linux.h          |   2 +
- fs/xfs/xfs_log.h            |   2 +-
- fs/xfs/xfs_log_cil.c        |  74 +++++++---
- fs/xfs/xfs_mount.c          |  27 ++--
- fs/xfs/xfs_rtalloc.c        |   2 +-
- fs/xfs/xfs_sb.c             |  23 ++-
- fs/xfs/xfs_sb.h             |   2 +
- fs/xfs/xfs_shared.h         |   4 +-
- fs/xfs/xfs_super.c          |   5 +-
- fs/xfs/xfs_symlink.c        |   9 +-
- fs/xfs/xfs_symlink_remote.c |  16 +--
- fs/xfs/xfs_trace.h          |   1 +
- fs/xfs/xfs_trans.c          |  12 +-
- fs/xfs/xfs_trans_buf.c      |  11 ++
- fs/xfs/xfs_trans_resv.c     |  82 +++++++++--
- fs/xfs/xfs_trans_resv.h     |   3 +-
- 54 files changed, 1193 insertions(+), 466 deletions(-)
+ fs/xfs/xfs_file.c  | 16 +++++++++-------
+ fs/xfs/xfs_ioctl.c | 28 +---------------------------
+ fs/xfs/xfs_super.c |  5 +++--
+ 3 files changed, 13 insertions(+), 36 deletions(-)
 
 
 hooks/post-receive
