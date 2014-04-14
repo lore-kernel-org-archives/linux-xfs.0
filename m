@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE98C7F4E
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 20:42:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9701F30404E
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 18:42:47 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AAEFE7F4E
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 20:55:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 23E34AC004
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 18:55:49 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	mVEwVUAK02xerQ31 for <xfs@oss.sgi.com>;
-	Sun, 13 Apr 2014 18:42:44 -0700 (PDT)
-Date: Mon, 14 Apr 2014 11:42:12 +1000
+	hZUFmaXGpWMVpBDE for <xfs@oss.sgi.com>;
+	Sun, 13 Apr 2014 18:55:47 -0700 (PDT)
+Date: Mon, 14 Apr 2014 11:55:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: fix xfs_logprint EFI entry split on log buffer
-Message-ID: <20140414014212.GG27694@dastard>
-References: <20140409210013.095709266@sgi.com>
-	<20140409210048.859660076@sgi.com>
+Subject: Re: [PATCH 2/9] xfs: split xfs_bmap_btalloc_nullfb
+Message-ID: <20140414015544.GH27694@dastard>
+References: <1397289723-26243-1-git-send-email-hch@lst.de>
+	<1397289723-26243-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140409210048.859660076@sgi.com>
+In-Reply-To: <1397289723-26243-3-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +30,81 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: XFS Filesystem <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, Apr 09, 2014 at 04:00:14PM -0500, Mark Tinguely wrote:
-> xfs_logprint does not correctly handle EFI entries that
-> are split across two log buffers. xfs_efi_copy_format()
-> falsely interrupts the truncated size of the split entry
-> as being a corrupt entry.
+On Sat, Apr 12, 2014 at 10:01:56AM +0200, Christoph Hellwig wrote:
+> Split xfs_bmap_btalloc_nullfb into one function for filestream allocations
+> and one for everything else that share a few helpers.  This dramatically
+> simplifies the control flow.
 > 
-> If the first log entry has enough information, namely the
-> number of extents in the entry and the identifier, then
-> display this information and a warning that this entry is
-> truncated. Otherwise, if there is not enough information in
-> the first log buffer, then print a message that the EFI decode
-> was not possible. These messages are similar to split inode
-> entries.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Small comment below.
+
+> ---
+>  fs/xfs/xfs_bmap.c |  200 +++++++++++++++++++++++++++++++----------------------
+>  1 file changed, 117 insertions(+), 83 deletions(-)
 > 
-> Example of a continued entry:
-> Oper (336): tid: f214bdb  len: 44  clientid: TRANS  flags: CONTINUE
-> EFI:  #regs: 1    num_extents: 2  id: 0xffff880804f63900
-> EFI free extent data skipped (CONTINUE set, no space)
-> 
-> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 3340f0e..d5d52df 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+> @@ -3517,6 +3517,67 @@ xfs_bmap_adjacent(
+>  #undef ISVALID
+>  }
+>  
+> +static int
+> +xfs_bmap_longest_free_extent(
+> +	struct xfs_trans	*tp,
+> +	xfs_agnumber_t		ag,
+> +	xfs_extlen_t		*blen,
+> +	int			*notinit)
+> +{
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_perag	*pag;
+> +	xfs_extlen_t		longest;
+> +	int			error = 0;
+> +
+> +	pag = xfs_perag_get(mp, ag);
+> +	if (!pag->pagf_init) {
+> +		error = xfs_alloc_pagf_init(mp, tp, ag, XFS_ALLOC_FLAG_TRYLOCK);
+> +		if (error)
+> +			goto out;
+> +
+> +		if (!pag->pagf_init) {
+> +			*notinit = 1;
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	longest = xfs_alloc_longest_free_extent(mp, pag);
+> +	if (*blen < longest)
+> +		*blen = longest;
+> +
+> +out:
+> +	xfs_perag_put(pag);
+> +	return error;
+> +}
+> +
+> +static void
+> +xfs_bmap_fix_args(
+> +	struct xfs_bmalloca	*ap,
+> +	struct xfs_alloc_arg	*args,
+> +	xfs_extlen_t		*blen,
+> +	int			notinit)
 
-Looks fine.
+Not a big fan of the "fix_args" name here. What it's actually doing
+is setting the minimum allocation length. Also, it could return the
+minimum length rather than set it inside the function, and pass
+blen by value rather than reference as it isn't modified in the
+function...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Other than that, it's a good cleanup.
 
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
