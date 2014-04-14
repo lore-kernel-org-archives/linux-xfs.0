@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C3B857F4E
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 20:22:41 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AE98C7F4E
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 20:42:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D2EFAC002
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 18:22:40 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9701F30404E
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2014 18:42:47 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	0BcHLAnqzBFC2Tuk for <xfs@oss.sgi.com>;
-	Sun, 13 Apr 2014 18:22:38 -0700 (PDT)
-Date: Mon, 14 Apr 2014 11:22:25 +1000
+	mVEwVUAK02xerQ31 for <xfs@oss.sgi.com>;
+	Sun, 13 Apr 2014 18:42:44 -0700 (PDT)
+Date: Mon, 14 Apr 2014 11:42:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfstests: master branch updated to 8874560
-Message-ID: <20140414012225.GF27694@dastard>
-References: <20140414004938.GE27694@dastard>
+Subject: Re: [PATCH] xfsprogs: fix xfs_logprint EFI entry split on log buffer
+Message-ID: <20140414014212.GG27694@dastard>
+References: <20140409210013.095709266@sgi.com>
+	<20140409210048.859660076@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140414004938.GE27694@dastard>
+In-Reply-To: <20140409210048.859660076@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: XFS Filesystem <xfs@oss.sgi.com>
 
-On Mon, Apr 14, 2014 at 10:49:38AM +1000, Dave Chinner wrote:
-> Hi folks,
+On Wed, Apr 09, 2014 at 04:00:14PM -0500, Mark Tinguely wrote:
+> xfs_logprint does not correctly handle EFI entries that
+> are split across two log buffers. xfs_efi_copy_format()
+> falsely interrupts the truncated size of the split entry
+> as being a corrupt entry.
 > 
-> The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-> just been updated. Patches often get missed, so please check if your
-> outstanding patches were in this update. If they have not been in
-> this update, please resubmit them to xfs@oss.sgi.com so they can be
-> picked up in the next update.
+> If the first log entry has enough information, namely the
+> number of extents in the entry and the identifier, then
+> display this information and a warning that this entry is
+> truncated. Otherwise, if there is not enough information in
+> the first log buffer, then print a message that the EFI decode
+> was not possible. These messages are similar to split inode
+> entries.
 > 
-> This update includes tests for the new renameat2 syscall, and a
-> bunch of fixes for the new config file format infrastructure.
+> Example of a continued entry:
+> Oper (336): tid: f214bdb  len: 44  clientid: TRANS  flags: CONTINUE
+> EFI:  #regs: 1    num_extents: 2  id: 0xffff880804f63900
+> EFI free extent data skipped (CONTINUE set, no space)
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 
-Actaully, it's now updated to:
+Looks fine.
 
-8874560 generic/024: fix output number
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-because it missed a test number update in an output file again. That
-test doesn't run yet on XFS, so I missed it until I ran some ext4
-tests...
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
