@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 260F67F53
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 03:25:15 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 380A07F52
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 03:25:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0B371304067
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 01:25:14 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C6671AC006
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 01:25:13 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jZcbSR2RhFYKgEDD for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 01:25:13 -0700 (PDT)
+	6dY81LineBiLl1HW for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 01:25:11 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WZyfv-0003WU-BG
+	(envelope-from <dave@fromorbit.com>) id 1WZyfv-0003WQ-9H
 	for xfs@oss.sgi.com; Tue, 15 Apr 2014 18:25:03 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WZyfv-0008QO-A9
+	(envelope-from <dave@disappointment.disaster>) id 1WZyfv-0008Q4-8C
 	for xfs@oss.sgi.com; Tue, 15 Apr 2014 18:25:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 9/9] repair: detect and handle attribute tree CRC errors
-Date: Tue, 15 Apr 2014 18:25:01 +1000
-Message-Id: <1397550301-31883-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/9] repair: detect CRC errors in AG headers
+Date: Tue, 15 Apr 2014 18:24:57 +1000
+Message-Id: <1397550301-31883-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1397550301-31883-1-git-send-email-david@fromorbit.com>
 References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,119 +39,151 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently the attribute code will not detect and correct errors in
-the attribute tree. It also fails to validate the CRCs and headers
-on remote attribute blocks. Ensure that all the attribute blocks are
-CRC checked and that the processing functions understand the correct
-block formats for decoding.
+repair doesn't currently detect verifier errors in AG header
+blocks - apart from the primary superblock they are not detected.
+They are, fortunately, corrected in the important cases (AGF, AGI
+and AGFL) because these structures are rebuilt in phase 5, but if
+you run xfs_repair in checking mode it won't report them as bad.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/attr_repair.c | 35 ++++++++++++++++++++++++++++-------
- 1 file changed, 28 insertions(+), 7 deletions(-)
+ repair/scan.c | 66 ++++++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 38 insertions(+), 28 deletions(-)
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index ba85ac2..13ec90e 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -611,6 +611,8 @@ verify_da_path(xfs_mount_t	*mp,
- 		ASSERT(cursor->level[this_level].dirty == 0 ||
- 			(cursor->level[this_level].dirty && !no_modify));
+diff --git a/repair/scan.c b/repair/scan.c
+index 1744c32..6c43474 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1207,28 +1207,31 @@ scan_ag(
+ 	void		*arg)
+ {
+ 	struct aghdr_cnts *agcnts = arg;
+-	xfs_agf_t	*agf;
+-	xfs_buf_t	*agfbuf;
++	struct xfs_agf	*agf;
++	struct xfs_buf	*agfbuf = NULL;
+ 	int		agf_dirty = 0;
+-	xfs_agi_t	*agi;
+-	xfs_buf_t	*agibuf;
++	struct xfs_agi	*agi;
++	struct xfs_buf	*agibuf = NULL;
+ 	int		agi_dirty = 0;
+-	xfs_sb_t	*sb;
+-	xfs_buf_t	*sbbuf;
++	struct xfs_sb	*sb = NULL;
++	struct xfs_buf	*sbbuf = NULL;
+ 	int		sb_dirty = 0;
+ 	int		status;
++	char		*objname = NULL;
  
-+		if (bp->b_error == EFSBADCRC)
-+			cursor->level[this_level].dirty++;
- 		if (cursor->level[this_level].dirty && !no_modify)
- 			libxfs_writebuf(cursor->level[this_level].bp, 0);
- 		else
-@@ -974,6 +976,10 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
- 	xfs_dfsbno_t	bno;
- 	xfs_buf_t	*bp;
- 	int		clearit = 0, i = 0, length = 0, amountdone = 0;
-+	int		hdrsize = 0;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
- 
- 	/* ASSUMPTION: valuelen is a valid number, so use it for looping */
- 	/* Note that valuelen is not a multiple of blocksize */
-@@ -986,16 +992,26 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
- 			break;
- 		}
- 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
--				XFS_FSB_TO_BB(mp, 1), 0, NULL);
-+				    XFS_FSB_TO_BB(mp, 1), 0,
-+				    &xfs_attr3_rmt_buf_ops);
- 		if (!bp) {
- 			do_warn(
- 	_("can't read remote block for attributes of inode %" PRIu64 "\n"), ino);
- 			clearit = 1;
- 			break;
- 		}
-+
-+		if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
-+			do_warn(
-+	_("Corrupt remote block for attributes of inode %" PRIu64 "\n"), ino);
-+			clearit = 1;
-+			break;
-+		}
-+
- 		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
--		length = MIN(XFS_BUF_COUNT(bp), valuelen - amountdone);
--		memmove(value, XFS_BUF_PTR(bp), length);
-+
-+		length = MIN(XFS_BUF_COUNT(bp) - hdrsize, valuelen - amountdone);
-+		memmove(value, XFS_BUF_PTR(bp) + hdrsize, length);
- 		amountdone += length;
- 		value += length;
- 		i++;
-@@ -1320,13 +1336,16 @@ process_leaf_attr_level(xfs_mount_t	*mp,
- 		}
- 
- 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
--					XFS_FSB_TO_BB(mp, 1), 0, NULL);
-+				    XFS_FSB_TO_BB(mp, 1), 0,
-+				    &xfs_attr3_leaf_buf_ops);
- 		if (!bp) {
- 			do_warn(
- 	_("can't read file block %u (fsbno %" PRIu64 ") for attribute fork of inode %" PRIu64 "\n"),
- 				da_bno, dev_bno, ino);
- 			goto error_out;
- 		}
-+		if (bp->b_error == EFSBADCRC)
-+			repair++;
- 
- 		leaf = bp->b_addr;
- 		xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
-@@ -1382,9 +1401,9 @@ process_leaf_attr_level(xfs_mount_t	*mp,
- 
- 		current_hashval = greatest_hashval;
- 
--		if (repair && !no_modify) 
-+		if (repair && !no_modify)
- 			libxfs_writebuf(bp, 0);
--		else 
-+		else
- 			libxfs_putbuf(bp);
- 	} while (da_bno != 0);
- 
-@@ -1512,6 +1531,8 @@ process_longform_attr(
- 			ino);
- 		return(1);
+ 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+ 				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
+ 	if (!sbbuf)  {
+-		do_error(_("can't get root superblock for ag %d\n"), agno);
+-		return;
++		objname = _("root superblock");
++		goto out_free;
  	}
-+	if (bp->b_error == EFSBADCRC)
-+		(*repair)++;
++	if (sbbuf->b_error == EFSBADCRC || sbbuf->b_error == EFSCORRUPTED)
++		sb_dirty = 1;
++
+ 	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
+ 	if (!sb) {
+ 		do_error(_("can't allocate memory for superblock\n"));
+-		libxfs_putbuf(sbbuf);
+-		return;
++		goto out_free;
+ 	}
+ 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
  
- 	/* verify leaf block */
- 	leaf = (xfs_attr_leafblock_t *)XFS_BUF_PTR(bp);
-@@ -1555,7 +1576,7 @@ process_longform_attr(
- 	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
- 	case XFS_DA3_NODE_MAGIC:
- 		/* must do this now, to release block 0 before the traversal */
--		if (repairlinks) {
-+		if (*repair || repairlinks) {
- 			*repair = 1;
- 			libxfs_writebuf(bp, 0);
- 		} else
+@@ -1236,23 +1239,22 @@ scan_ag(
+ 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+ 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
+ 	if (!agfbuf)  {
+-		do_error(_("can't read agf block for ag %d\n"), agno);
+-		libxfs_putbuf(sbbuf);
+-		free(sb);
+-		return;
++		objname = _("agf block");
++		goto out_free;
+ 	}
++	if (agfbuf->b_error == EFSBADCRC || agfbuf->b_error == EFSCORRUPTED)
++		agf_dirty = 1;
+ 	agf = XFS_BUF_TO_AGF(agfbuf);
+ 
+ 	agibuf = libxfs_readbuf(mp->m_dev,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+ 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
+ 	if (!agibuf)  {
+-		do_error(_("can't read agi block for ag %d\n"), agno);
+-		libxfs_putbuf(agfbuf);
+-		libxfs_putbuf(sbbuf);
+-		free(sb);
+-		return;
++		objname = _("agi block");
++		goto out_free;
+ 	}
++	if (agibuf->b_error == EFSBADCRC || agibuf->b_error == EFSCORRUPTED)
++		agi_dirty = 1;
+ 	agi = XFS_BUF_TO_AGI(agibuf);
+ 
+ 	/* fix up bad ag headers */
+@@ -1277,7 +1279,7 @@ scan_ag(
+ 			do_warn(_("would reset bad sb for ag %d\n"), agno);
+ 		}
+ 	}
+-	if (status & XR_AG_AGF)  {
++	if (agf_dirty || status & XR_AG_AGF)  {
+ 		if (!no_modify) {
+ 			do_warn(_("reset bad agf for ag %d\n"), agno);
+ 			agf_dirty = 1;
+@@ -1285,7 +1287,7 @@ scan_ag(
+ 			do_warn(_("would reset bad agf for ag %d\n"), agno);
+ 		}
+ 	}
+-	if (status & XR_AG_AGI)  {
++	if (agi_dirty || status & XR_AG_AGI)  {
+ 		if (!no_modify) {
+ 			do_warn(_("reset bad agi for ag %d\n"), agno);
+ 			agi_dirty = 1;
+@@ -1295,15 +1297,9 @@ scan_ag(
+ 	}
+ 
+ 	if (status && no_modify)  {
+-		libxfs_putbuf(agibuf);
+-		libxfs_putbuf(agfbuf);
+-		libxfs_putbuf(sbbuf);
+-		free(sb);
+-
+ 		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
+ 			agno);
+-
+-		return;
++		goto out_free;
+ 	}
+ 
+ 	scan_freelist(agf, agcnts);
+@@ -1341,6 +1337,20 @@ scan_ag(
+ 	print_inode_list(i);
+ #endif
+ 	return;
++
++out_free:
++	if (sb)
++		free(sb);
++	if (agibuf)
++		libxfs_putbuf(agibuf);
++	if (agfbuf)
++		libxfs_putbuf(agfbuf);
++	if (sbbuf)
++		libxfs_putbuf(sbbuf);
++	if (objname)
++		do_error(_("can't get %s for ag %d\n"), objname, agno);
++	return;
++
+ }
+ 
+ #define SCAN_THREADS 32
 -- 
 1.9.0
 
