@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B8B877F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 17:02:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A8DF30407A
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 15:02:39 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	0hTkGODxdniGdsYc for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 15:02:33 -0700 (PDT)
-Date: Wed, 16 Apr 2014 08:02:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3 v2] fs: Prevent doing FALLOC_FL_ZERO_RANGE on append
-	only file
-Message-ID: <20140415220220.GR15995@dastard>
-References: <1397580076-19826-1-git-send-email-lczerner@redhat.com>
-	<1397580076-19826-2-git-send-email-lczerner@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id C218D7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 17:06:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AFDFE30404E
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 15:06:06 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5TtwR8PpAKMPVqzQ for
+	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 15:06:05 -0700 (PDT)
+Date: Tue, 15 Apr 2014 18:06:00 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/9] repair: ensure prefetched buffers have CRCs validated
+Message-ID: <20140415220559.GE3470@laptop.bfoster>
+References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
+	<1397550301-31883-4-git-send-email-david@fromorbit.com>
+	<20140415194000.GB3470@laptop.bfoster>
+	<20140415214642.GN15995@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397580076-19826-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <20140415214642.GN15995@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +31,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 15, 2014 at 06:41:15PM +0200, Lukas Czerner wrote:
-> Currently punch hole and collapse range fallocate operation are not
-> allowed on append only file. This should be case for zero range as well.
-> Fix it by allowing only pure fallocate (possibly with keep size set).
+On Wed, Apr 16, 2014 at 07:46:42AM +1000, Dave Chinner wrote:
+> On Tue, Apr 15, 2014 at 03:40:00PM -0400, Brian Foster wrote:
+> > On Tue, Apr 15, 2014 at 06:24:55PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Prefetch currently does not do CRC validation when the IO completes
+> > > due to the optimisation it performs and the fact that it does not
+> > > know what the type of metadata into the buffer is supposed to be.
+> > > Hence, mark all prefetched buffers as "suspect" so that when the
+> > > end user tries to read it with a supplied validation function the
+> > > validation is run even though the buffer was already in the cache.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  include/libxfs.h  |  1 +
+> > >  libxfs/rdwr.c     | 36 +++++++++++++++++++++++++++++++-----
+> > >  repair/prefetch.c |  3 +++
+> > >  3 files changed, 35 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/include/libxfs.h b/include/libxfs.h
+> > > index 6bc6c94..6b1e276 100644
+> > > --- a/include/libxfs.h
+> > > +++ b/include/libxfs.h
+> > > @@ -333,6 +333,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+> > >  	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
+> > >  	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+> > >  	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
+> > > +	LIBXFS_B_UNCHECKED	= 0x0020,	/* needs verification */
+> > 
+> > This is used in the first couple patches, so it should probably be
+> > defined earlier (or shuffle those patches appropriately).
 > 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
-> v2: Change the condition to be future proof as suggested by hch
+> Ah, I busted that on shuffling the patchset, and hadn't done a
+> patch-by-patch compile. Well spotted!
 > 
->  fs/open.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > >  };
+> > >  
+> > >  #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
+> > > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> > > index 7208a2f..a8f06aa 100644
+> > > --- a/libxfs/rdwr.c
+> > > +++ b/libxfs/rdwr.c
+> > > @@ -718,12 +718,25 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+> > >  	bp = libxfs_getbuf(btp, blkno, len);
+> > >  	if (!bp)
+> > >  		return NULL;
+> > > -	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+> > > +
+> > > +	/*
+> > > +	 * if the buffer was prefetched, it is likely that it was not
+> > > +	 * validated. Hence if we are supplied an ops function and the
+> > > +	 * buffer is marked as unchecked, we need to validate it now.
+> > > +	 */
+> > > +	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
+> > > +		if (ops && (bp->b_flags & LIBXFS_B_UNCHECKED)) {
+> > > +			bp->b_error = 0;
+> > > +			bp->b_ops = ops;
+> > > +			bp->b_ops->verify_read(bp);
+> > > +			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+> > 
+> > Should we always expect an unchecked buffer to be read with an ops
+> > vector before being written? Even if so, this might look cleaner if we
+> > didn't encode the possibility of running a read verifier on a dirty
+> > buffer. I presume that would always fail as the crc is updated in the
+> > write verifier.
 > 
-> diff --git a/fs/open.c b/fs/open.c
-> index 631aea81..fe48b2f 100644
-> --- a/fs/open.c
-> +++ b/fs/open.c
-> @@ -254,11 +254,9 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
->  		return -EBADF;
->  
->  	/*
-> -	 * It's not possible to punch hole or perform collapse range
-> -	 * on append only file
-> +	 * We can only allow pure fallocate on append only files
->  	 */
-> -	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE)
-> -	    && IS_APPEND(inode))
-> +	if (mode & ~FALLOC_FL_KEEP_SIZE && IS_APPEND(inode))
+> It should fail, and that's a good thing because writing to an
+> unchecked buffer would indicate that we didn't validate it properly
+> in the first place. Hence I thought that doing it this way leaves
+> a canary that traps other problem usage with unchecked buffers.
+> 
+> Realistically, we shouldn't be writing unchecked buffers - prefetch
+> doesn't touch buffers, it just does IO, and so someone else has to
+> read the buffers before they can be dirtied. If it's read without an
+> ops structure then modified and read again with an ops structure,
+> we'll catch it...
+> 
 
-	if ((mode & ~FALLOC_FL_KEEP_SIZE) && IS_APPEND(inode))
+Ah, I see. That sounds good, but a small comment there with the
+reasoning to allow a read verifier to run on a dirty buffer would be
+nice. :)
 
-gcc normally complains when you mix & and && in the same logic
-statement without () to separate the logic. I agree with gcc here,
-because the () indicate the intent of the logic and make it easy to
-determine that the & and && haven't been mixed up or fat-fingered...
+Brian
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
