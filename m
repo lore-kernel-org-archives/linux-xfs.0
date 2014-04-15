@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-fixes-for-3.15-rc2,
-	created. xfs-for-linus-3.15-rc1-14836-gb901592
-Message-Id: <20140415224519.C690F7F4E@oss.sgi.com>
-Date: Tue, 15 Apr 2014 17:45:19 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-3.15-rc1-14836-gb901592
+Message-Id: <20140415224539.6B9A97F52@oss.sgi.com>
+Date: Tue, 15 Apr 2014 17:45:38 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -13,20 +13,34 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============7613263070656622526=="
+Content-Type: multipart/mixed; boundary="===============3015904545477842818=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7613263070656622526==
+--===============3015904545477842818==
 Content-Type: text/plain
 
 This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-fixes-for-3.15-rc2 has been created
-        at  b90159297f95491c348354344e52a4b3da440234 (commit)
+The branch, for-next has been updated
+  b901592 xfs: fix tmpfile/selinux deadlock and initialize security
+  341fcf3 xfs: fix buffer use after free on IO error
+  b7f6608 xfs: wrong error sign conversion during failed DIO writes
+  d7cc0f3 xfs: unmount does not wait for shutdown during unmount
+  5425a32 xfs: collapse range is delalloc challenged
+  68c1fb5 xfs: don't map ranges that span EOF for direct IO
+  897b73b xfs: zeroing space needs to punch delalloc blocks
+  aad3f37 xfs: xfs_vm_write_end truncates too much on failure
+  72ab70a xfs: write failure beyond EOF truncates too much data
+  4ab9ed5 xfs: kill buffers over failed write ranges properly
+      from  c9eaa447e77efe77b7fa4c953bd62de8297fd6c5 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
 commit b90159297f95491c348354344e52a4b3da440234
@@ -381,13 +395,26 @@ Date:   Mon Apr 14 18:11:58 2014 +1000
 
 -----------------------------------------------------------------------
 
+Summary of changes:
+ fs/xfs/xfs_aops.c      | 51 ++++++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_bmap.c      | 17 ++++++++++------
+ fs/xfs/xfs_bmap_util.c | 13 ++++++++++++-
+ fs/xfs/xfs_buf.c       | 16 +++++++++++----
+ fs/xfs/xfs_file.c      |  2 +-
+ fs/xfs/xfs_inode.c     |  5 +++--
+ fs/xfs/xfs_inode.h     |  2 +-
+ fs/xfs/xfs_iops.c      | 20 ++++++++++++++++---
+ fs/xfs/xfs_log.c       | 53 +++++++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_trace.h     |  1 +
+ 10 files changed, 147 insertions(+), 33 deletions(-)
+
 
 hooks/post-receive
 -- 
 XFS development tree
 
 
---===============7613263070656622526==
+--===============3015904545477842818==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -398,4 +425,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7613263070656622526==--
+--===============3015904545477842818==--
