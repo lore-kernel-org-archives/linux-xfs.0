@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9079B7F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 16:52:29 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 546797F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 16:54:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8E7EC8F8071
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:52:29 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4556F8F8037
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:54:15 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	kBVNnsZ6bejIKMe3 for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 14:52:27 -0700 (PDT)
-Date: Wed, 16 Apr 2014 07:52:14 +1000
+	A3NvVc1FlPl7vyTF for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 14:54:13 -0700 (PDT)
+Date: Wed, 16 Apr 2014 07:53:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/9] repair: detect CRC errors in AG headers
-Message-ID: <20140415215214.GO15995@dastard>
+Subject: Re: [PATCH 6/9] repair: report AG btree verifier errors
+Message-ID: <20140415215359.GP15995@dastard>
 References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
-	<1397550301-31883-6-git-send-email-david@fromorbit.com>
-	<20140415194029.GC3470@laptop.bfoster>
+	<1397550301-31883-7-git-send-email-david@fromorbit.com>
+	<20140415194048.GD3470@laptop.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140415194029.GC3470@laptop.bfoster>
+In-Reply-To: <20140415194048.GD3470@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,63 +34,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 15, 2014 at 03:40:29PM -0400, Brian Foster wrote:
-> On Tue, Apr 15, 2014 at 06:24:57PM +1000, Dave Chinner wrote:
+On Tue, Apr 15, 2014 at 03:40:48PM -0400, Brian Foster wrote:
+> On Tue, Apr 15, 2014 at 06:24:58PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > repair doesn't currently detect verifier errors in AG header
-> > blocks - apart from the primary superblock they are not detected.
-> > They are, fortunately, corrected in the important cases (AGF, AGI
-> > and AGFL) because these structures are rebuilt in phase 5, but if
-> > you run xfs_repair in checking mode it won't report them as bad.
+> > When we scan the filesystem freespace and inode maps in phase 2, we
+> > don't report CRC errors that are found. We don't really care from a
+> > repair perspective, because the trees are completely rebuilt from
+> > the ground up in phase 5, but froma checking perspective we need to
+> > inform the user that we found inconsistencies.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-....
-> > @@ -1285,7 +1287,7 @@ scan_ag(
-> >  			do_warn(_("would reset bad agf for ag %d\n"), agno);
-> >  		}
+> > ---
+> >  repair/scan.c | 27 ++++++++++++++++++++++++---
+> >  1 file changed, 24 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/repair/scan.c b/repair/scan.c
+> > index 6c43474..75b4b70 100644
+> > --- a/repair/scan.c
+> > +++ b/repair/scan.c
+> > @@ -82,6 +82,12 @@ scan_sbtree(
+> >  		do_error(_("can't read btree block %d/%d\n"), agno, root);
+> >  		return;
 > >  	}
-> > -	if (status & XR_AG_AGI)  {
-> > +	if (agi_dirty || status & XR_AG_AGI)  {
-> >  		if (!no_modify) {
-> >  			do_warn(_("reset bad agi for ag %d\n"), agno);
-> >  			agi_dirty = 1;
-> 
-> There are a few asserts a bit further down this function that assume
-> *_dirty is set only when in !no_modify mode. E.g.:
-> 
-> 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
-> 
-> You'll probably want to remove those. Or...
-
-I thought I caught all of those...
-
-> 
-> > @@ -1295,15 +1297,9 @@ scan_ag(
-> >  	}
+> > +	if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
+> > +		do_warn(_("btree block %d/%d is suspect, error %d\n"),
+> > +			agno, root, bp->b_error);
+> > +		suspect = 1;
+> > +	}
+> > +
+> >  	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect,
+> >  							isroot, magic, priv);
+> >  	libxfs_putbuf(bp);
+> > @@ -123,6 +129,7 @@ scan_lbtree(
+> >  	xfs_buf_t	*bp;
+> >  	int		err;
+> >  	int		dirty = 0;
+> > +	bool		badcrc = false;
 > >  
-> >  	if (status && no_modify)  {
-> > -		libxfs_putbuf(agibuf);
-> > -		libxfs_putbuf(agfbuf);
-> > -		libxfs_putbuf(sbbuf);
-> > -		free(sb);
-> > -
-> >  		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
-> >  			agno);
-> > -
-> > -		return;
-> > +		goto out_free;
+> >  	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, root),
+> >  		      XFS_FSB_TO_BB(mp, 1), 0, ops);
+> > @@ -132,14 +139,25 @@ scan_lbtree(
+> >  			XFS_FSB_TO_AGBNO(mp, root));
+> >  		return(1);
 > >  	}
+> > +
+> > +	/*
+> > +	 * only check for bad CRC here - caller will determine if there
+> > +	 * is a corruption or not and whether it got corrected and so needs
+> > +	 * writing back. CRC errors always imply we need to write the block.
+> > +	 */
+> > +	if (bp->b_error == EFSBADCRC) {
+> > +		do_warn(_("btree block %d/%d is suspect, error %d\n"),
+> > +			XFS_FSB_TO_AGNO(mp, root),
+> > +			XFS_FSB_TO_AGBNO(mp, root), bp->b_error);
+> > +		badcrc = true;
+> > +	}
+> > +
+> >  	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
+> >  			type, whichfork, root, ino, tot, nex, blkmapp,
+> >  			bm_cursor, isroot, check_dups, &dirty,
+> >  			magic);
+> >  
+> > -	ASSERT(dirty == 0 || (dirty && !no_modify));
+> > -
 > 
-> Would we want to skip the ag, as such, on a CRC error in no_modify mode?
-> If so, perhaps we could set the status variable on crc errors and
-> bitwise or the value returned from verify_set_agheader().
+> Here we remove the dirty assert, but don't change the semantics of dirty
+> (we use badcrc).
 
-I figured that for CRC errors we really should try to validate
-everything if we can. If nothing else fails the validation, then it
-might be a bit flip in an unused portion of the sector and in that
-case we can actually continue onwards. IOWs, a CRC error is not
-necessarily fatal....
+Yeah, I went back and changed the mechanism for correcting pure
+CRC errors not to use the dirty flag. I'll re-instate the assert...
 
 Cheers,
 
