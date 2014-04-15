@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CA0417F58
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:40:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B80B58F8064
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:40:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YFZ4Q0gfrL3jksC9 for
-	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:40:58 -0700 (PDT)
-Date: Tue, 15 Apr 2014 15:40:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/9] repair: report AG btree verifier errors
-Message-ID: <20140415194048.GD3470@laptop.bfoster>
-References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
-	<1397550301-31883-7-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F044F7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:56:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9D6ACAC004
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:56:29 -0700 (PDT)
+Received: from server.loguj.cz (server.loguj.cz [83.167.232.152]) by
+	cuda.sgi.com with ESMTP id yWjgfD0UnboOFpIc for
+	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:56:25 -0700 (PDT)
+Date: Tue, 15 Apr 2014 21:57:41 +0200
+Message-ID: <20140415215741.Horde.d8xeUy2MbgZTTY81Gl8nkMA@mail.loguj.cz>
+From: =?utf-8?b?THVrw6HFoQ==?= Czerner <lukas@loguj.cz>
+Subject: Re: [PATCH 3/4] fs: Remove i_size check from do_fallocate
+References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
+	<1397242665-2183-3-git-send-email-lczerner@redhat.com>
+	<20140412152117.GB18047@infradead.org>
+	<alpine.LFD.2.00.1404151510150.2146@localhost.localdomain>
+	<20140415153643.GB4456@thunk.org>
+	<alpine.LFD.2.00.1404151808440.2146@localhost.localdomain>
+	<20140415194004.GG4456@thunk.org>
+In-Reply-To: <20140415194004.GG4456@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397550301-31883-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,106 +30,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"; DelSp="Yes"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, =?utf-8?b?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, Apr 15, 2014 at 06:24:58PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we scan the filesystem freespace and inode maps in phase 2, we
-> don't report CRC errors that are found. We don't really care from a
-> repair perspective, because the trees are completely rebuilt from
-> the ground up in phase 5, but froma checking perspective we need to
-> inform the user that we found inconsistencies.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  repair/scan.c | 27 ++++++++++++++++++++++++---
->  1 file changed, 24 insertions(+), 3 deletions(-)
-> 
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 6c43474..75b4b70 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -82,6 +82,12 @@ scan_sbtree(
->  		do_error(_("can't read btree block %d/%d\n"), agno, root);
->  		return;
->  	}
-> +	if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
-> +		do_warn(_("btree block %d/%d is suspect, error %d\n"),
-> +			agno, root, bp->b_error);
-> +		suspect = 1;
-> +	}
-> +
->  	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect,
->  							isroot, magic, priv);
->  	libxfs_putbuf(bp);
-> @@ -123,6 +129,7 @@ scan_lbtree(
->  	xfs_buf_t	*bp;
->  	int		err;
->  	int		dirty = 0;
-> +	bool		badcrc = false;
->  
->  	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, root),
->  		      XFS_FSB_TO_BB(mp, 1), 0, ops);
-> @@ -132,14 +139,25 @@ scan_lbtree(
->  			XFS_FSB_TO_AGBNO(mp, root));
->  		return(1);
->  	}
-> +
-> +	/*
-> +	 * only check for bad CRC here - caller will determine if there
-> +	 * is a corruption or not and whether it got corrected and so needs
-> +	 * writing back. CRC errors always imply we need to write the block.
-> +	 */
-> +	if (bp->b_error == EFSBADCRC) {
-> +		do_warn(_("btree block %d/%d is suspect, error %d\n"),
-> +			XFS_FSB_TO_AGNO(mp, root),
-> +			XFS_FSB_TO_AGBNO(mp, root), bp->b_error);
-> +		badcrc = true;
-> +	}
-> +
->  	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
->  			type, whichfork, root, ino, tot, nex, blkmapp,
->  			bm_cursor, isroot, check_dups, &dirty,
->  			magic);
->  
-> -	ASSERT(dirty == 0 || (dirty && !no_modify));
-> -
-
-Here we remove the dirty assert, but don't change the semantics of dirty
-(we use badcrc).
-
-Brian
-
-> -	if (dirty && !no_modify)
-> +	if ((dirty || badcrc) && !no_modify)
->  		libxfs_writebuf(bp, 0);
->  	else
->  		libxfs_putbuf(bp);
-> @@ -1066,6 +1084,9 @@ scan_freelist(
->  		do_abort(_("can't read agfl block for ag %d\n"), agno);
->  		return;
->  	}
-> +	if (agflbuf->b_error == EFSBADCRC)
-> +		do_warn(_("agfl has bad CRC for ag %d\n"), agno);
-> +
->  	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
->  	i = be32_to_cpu(agf->agf_flfirst);
->  
-> -- 
-> 1.9.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+WWVzLCBwbGVhc2UgZHJvcCB0aGUgcGF0Y2ggIzQgc2luY2UgaXQgcmVxdWlyZXMgZGlmZmVyZW50
+IHNvbHV0aW9uLCBJICAKZG8gbm90IHRoaW5rIGl0J3MgY3JpdGljYWwgZW5vdWdoIHRvIGhhdmUg
+cGFydGlhbCBzb2x1dGlvbiBhbmQgaXQgaGFzICAKYmVlbiB0aGF0IHdheSBmb3IgYSBsb25nIHRp
+bWUuIFdlIGNhbiBmaXggaXQgbGF0ZXIuCgpUaGFua3MhCi1MdWthcwoKClRoZW9kb3JlIFRzJ28g
+PHR5dHNvQG1pdC5lZHU+IHdyb3RlOgoKPiBPbiBUdWUsIEFwciAxNSwgMjAxNCBhdCAwNjowOToz
+NFBNICswMjAwLCBMdWvDocWhIEN6ZXJuZXIgd3JvdGU6Cj4+Cj4+IE9rLCBJJ2xsIHJ1biBzb21l
+IHRlc3RzIGFuZCByZXNlbmQgaXQgcmlnaHQgYXdheSB3aXRob3V0IHRoZSBwYXRjaAo+PiAjNC4K
+Pgo+IFRoYW5rcyEgIFNvIHNob3VsZCBJIGRyb3AgcGF0Y2ggIzQgZm9yIG5vdz8gIEkgZG9uJ3Qg
+dGhpbmsgaXQgZG9lcyBhbnkKPiBoYXJtLCBhbmQgaXQgZG9lcyBwbHVnIHRoZSBob2xlIHNvbWV3
+aGF0LCBidXQgQ3Jpc3RvcGggaXMgcmlnaHQgdGhhdAo+IHdlIHN0aWxsIGNvdWxkIGhhdmUgc3dh
+cG9uIHJhY2luZyB3aXRoIHRoZSBmYWxsb2NhdGUuCj4KPiAgICAJICAgICAgIAkgICAgCSAgIAkg
+ICAgICAgCSAgIC0gVGVkCj4gLS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2Vu
+ZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtZXh0NCIgaW4KPiB0aGUgYm9keSBvZiBhIG1l
+c3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8g
+YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAoKCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
