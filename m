@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC40A7F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 08:11:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2E6B47F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 08:27:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BD4B28F8037
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:11:07 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B7648F8037
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:27:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id W0TY8SE0BjsAbcvN for
-	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:11:03 -0700 (PDT)
-Date: Tue, 15 Apr 2014 15:10:38 +0200 (CEST)
+	cuda.sgi.com with ESMTP id mvWcMCUhz2nNAaik for
+	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:27:21 -0700 (PDT)
+Date: Tue, 15 Apr 2014 15:19:47 +0200 (CEST)
 From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 3/4] fs: Remove i_size check from do_fallocate
-In-Reply-To: <20140412152117.GB18047@infradead.org>
-Message-ID: <alpine.LFD.2.00.1404151510150.2146@localhost.localdomain>
+Subject: Re: [PATCH 4/4] fs: Disallow all fallocate operation on active
+	swapfile
+In-Reply-To: <20140412152225.GC18047@infradead.org>
+Message-ID: <alpine.LFD.2.00.1404151510560.2146@localhost.localdomain>
 References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
-	<1397242665-2183-3-git-send-email-lczerner@redhat.com>
-	<20140412152117.GB18047@infradead.org>
+	<1397242665-2183-4-git-send-email-lczerner@redhat.com>
+	<20140412152225.GC18047@infradead.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -34,29 +35,23 @@ Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, linux-ext4@vger.k
 
 On Sat, 12 Apr 2014, Christoph Hellwig wrote:
 
-> Date: Sat, 12 Apr 2014 08:21:17 -0700
+> Date: Sat, 12 Apr 2014 08:22:25 -0700
 > From: Christoph Hellwig <hch@infradead.org>
 > To: Lukas Czerner <lczerner@redhat.com>
 > Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org,
 >     linux-ext4@vger.kernel.org, xfs@oss.sgi.com
-> Subject: Re: [PATCH 3/4] fs: Remove i_size check from do_fallocate
+> Subject: Re: [PATCH 4/4] fs: Disallow all fallocate operation on active
+>     swapfile
 > 
-> Looks good, but the subject line is misleading, it should read something
-> like:
+> Given that the earlier patches were about races - what protects us
+> from swapon racing with the check outside the filesystem locks?
 > 
-> "fs: move falloc collapse range check into the filesystem methods"
-> 
-> Might also be worth mentioning that size checks for the other modes
-> are in the filesystems in the the long description.
 
-I'll update the description and the subject.
+That would be fairies :) This patch is obviously wrong so I'll drop
+it and try to think about better way of dealing with this.
 
 Thanks!
 -Lukas
-
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
 
 _______________________________________________
 xfs mailing list
