@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1A4867F52
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5FA227F52
 	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:56:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1DBF730407B
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:56:32 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D61FAC001
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:56:31 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7Ujm13UiarnrQaN6 for
+	cuda.sgi.com with ESMTP id wL1CDtZytsZJpzGB for
 	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:56:31 -0700 (PDT)
-Date: Tue, 15 Apr 2014 15:40:29 -0400
+Date: Tue, 15 Apr 2014 15:40:00 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/9] repair: detect CRC errors in AG headers
-Message-ID: <20140415194029.GC3470@laptop.bfoster>
+Subject: Re: [PATCH 3/9] repair: ensure prefetched buffers have CRCs validated
+Message-ID: <20140415194000.GB3470@laptop.bfoster>
 References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
-	<1397550301-31883-6-git-send-email-david@fromorbit.com>
+	<1397550301-31883-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397550301-31883-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1397550301-31883-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,169 +32,159 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 15, 2014 at 06:24:57PM +1000, Dave Chinner wrote:
+On Tue, Apr 15, 2014 at 06:24:55PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> repair doesn't currently detect verifier errors in AG header
-> blocks - apart from the primary superblock they are not detected.
-> They are, fortunately, corrected in the important cases (AGF, AGI
-> and AGFL) because these structures are rebuilt in phase 5, but if
-> you run xfs_repair in checking mode it won't report them as bad.
+> Prefetch currently does not do CRC validation when the IO completes
+> due to the optimisation it performs and the fact that it does not
+> know what the type of metadata into the buffer is supposed to be.
+> Hence, mark all prefetched buffers as "suspect" so that when the
+> end user tries to read it with a supplied validation function the
+> validation is run even though the buffer was already in the cache.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  repair/scan.c | 66 ++++++++++++++++++++++++++++++++++-------------------------
->  1 file changed, 38 insertions(+), 28 deletions(-)
+>  include/libxfs.h  |  1 +
+>  libxfs/rdwr.c     | 36 +++++++++++++++++++++++++++++++-----
+>  repair/prefetch.c |  3 +++
+>  3 files changed, 35 insertions(+), 5 deletions(-)
 > 
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 1744c32..6c43474 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -1207,28 +1207,31 @@ scan_ag(
->  	void		*arg)
->  {
->  	struct aghdr_cnts *agcnts = arg;
-> -	xfs_agf_t	*agf;
-> -	xfs_buf_t	*agfbuf;
-> +	struct xfs_agf	*agf;
-> +	struct xfs_buf	*agfbuf = NULL;
->  	int		agf_dirty = 0;
-> -	xfs_agi_t	*agi;
-> -	xfs_buf_t	*agibuf;
-> +	struct xfs_agi	*agi;
-> +	struct xfs_buf	*agibuf = NULL;
->  	int		agi_dirty = 0;
-> -	xfs_sb_t	*sb;
-> -	xfs_buf_t	*sbbuf;
-> +	struct xfs_sb	*sb = NULL;
-> +	struct xfs_buf	*sbbuf = NULL;
->  	int		sb_dirty = 0;
->  	int		status;
-> +	char		*objname = NULL;
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index 6bc6c94..6b1e276 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -333,6 +333,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+>  	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
+>  	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+>  	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
+> +	LIBXFS_B_UNCHECKED	= 0x0020,	/* needs verification */
+
+This is used in the first couple patches, so it should probably be
+defined earlier (or shuffle those patches appropriately).
+
+>  };
 >  
->  	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
->  				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
->  	if (!sbbuf)  {
-> -		do_error(_("can't get root superblock for ag %d\n"), agno);
-> -		return;
-> +		objname = _("root superblock");
-> +		goto out_free;
->  	}
-> +	if (sbbuf->b_error == EFSBADCRC || sbbuf->b_error == EFSCORRUPTED)
-> +		sb_dirty = 1;
+>  #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 7208a2f..a8f06aa 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -718,12 +718,25 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+>  	bp = libxfs_getbuf(btp, blkno, len);
+>  	if (!bp)
+>  		return NULL;
+> -	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
 > +
->  	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
->  	if (!sb) {
->  		do_error(_("can't allocate memory for superblock\n"));
-> -		libxfs_putbuf(sbbuf);
-> -		return;
-> +		goto out_free;
->  	}
->  	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
+> +	/*
+> +	 * if the buffer was prefetched, it is likely that it was not
+> +	 * validated. Hence if we are supplied an ops function and the
+> +	 * buffer is marked as unchecked, we need to validate it now.
+> +	 */
+> +	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
+> +		if (ops && (bp->b_flags & LIBXFS_B_UNCHECKED)) {
+> +			bp->b_error = 0;
+> +			bp->b_ops = ops;
+> +			bp->b_ops->verify_read(bp);
+> +			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+
+Should we always expect an unchecked buffer to be read with an ops
+vector before being written? Even if so, this might look cleaner if we
+didn't encode the possibility of running a read verifier on a dirty
+buffer. I presume that would always fail as the crc is updated in the
+write verifier.
+
+> +		}
+>  		return bp;
+> +	}
 >  
-> @@ -1236,23 +1239,22 @@ scan_ag(
->  			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
->  			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
->  	if (!agfbuf)  {
-> -		do_error(_("can't read agf block for ag %d\n"), agno);
-> -		libxfs_putbuf(sbbuf);
-> -		free(sb);
-> -		return;
-> +		objname = _("agf block");
-> +		goto out_free;
->  	}
-> +	if (agfbuf->b_error == EFSBADCRC || agfbuf->b_error == EFSCORRUPTED)
-> +		agf_dirty = 1;
->  	agf = XFS_BUF_TO_AGF(agfbuf);
+>  	/*
+> -	 * only set the ops on a cache miss (i.e. first physical read) as the
+> -	 * verifier may change the ops to match the typ eof buffer it contains.
+> +	 * Set the ops on a cache miss (i.e. first physical read) as the
+> +	 * verifier may change the ops to match the type of buffer it contains.
+>  	 * A cache hit might reset the verifier to the original type if we set
+>  	 * it again, but it won't get called again and set to match the buffer
+>  	 * contents. *cough* xfs_da_node_buf_ops *cough*.
+> @@ -733,8 +746,10 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+>  	error = libxfs_readbufr(btp, blkno, bp, len, flags);
+>  	if (error)
+>  		bp->b_error = error;
+> -	else if (bp->b_ops)
+> +	else if (bp->b_ops) {
+>  		bp->b_ops->verify_read(bp);
+> +		bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+> +	}
+>  	return bp;
+>  }
 >  
->  	agibuf = libxfs_readbuf(mp->m_dev,
->  			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
->  			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
->  	if (!agibuf)  {
-> -		do_error(_("can't read agi block for ag %d\n"), agno);
-> -		libxfs_putbuf(agfbuf);
-> -		libxfs_putbuf(sbbuf);
-> -		free(sb);
-> -		return;
-> +		objname = _("agi block");
-> +		goto out_free;
->  	}
-> +	if (agibuf->b_error == EFSBADCRC || agibuf->b_error == EFSCORRUPTED)
-> +		agi_dirty = 1;
->  	agi = XFS_BUF_TO_AGI(agibuf);
+> @@ -786,6 +801,14 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+>  		return NULL;
 >  
->  	/* fix up bad ag headers */
-> @@ -1277,7 +1279,7 @@ scan_ag(
->  			do_warn(_("would reset bad sb for ag %d\n"), agno);
->  		}
->  	}
-> -	if (status & XR_AG_AGF)  {
-> +	if (agf_dirty || status & XR_AG_AGF)  {
->  		if (!no_modify) {
->  			do_warn(_("reset bad agf for ag %d\n"), agno);
->  			agf_dirty = 1;
-> @@ -1285,7 +1287,7 @@ scan_ag(
->  			do_warn(_("would reset bad agf for ag %d\n"), agno);
->  		}
->  	}
-> -	if (status & XR_AG_AGI)  {
-> +	if (agi_dirty || status & XR_AG_AGI)  {
->  		if (!no_modify) {
->  			do_warn(_("reset bad agi for ag %d\n"), agno);
->  			agi_dirty = 1;
+>  	bp->b_error = 0;
+> +	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
+> +		if (ops && (bp->b_flags & LIBXFS_B_UNCHECKED)) {
+> +			bp->b_ops = ops;
+> +			bp->b_ops->verify_read(bp);
+> +			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+> +		}
 
-There are a few asserts a bit further down this function that assume
-*_dirty is set only when in !no_modify mode. E.g.:
-
-	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
-
-You'll probably want to remove those. Or...
-
-> @@ -1295,15 +1297,9 @@ scan_ag(
->  	}
->  
->  	if (status && no_modify)  {
-> -		libxfs_putbuf(agibuf);
-> -		libxfs_putbuf(agfbuf);
-> -		libxfs_putbuf(sbbuf);
-> -		free(sb);
-> -
->  		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
->  			agno);
-> -
-> -		return;
-> +		goto out_free;
->  	}
-
-Would we want to skip the ag, as such, on a CRC error in no_modify mode?
-If so, perhaps we could set the status variable on crc errors and
-bitwise or the value returned from verify_set_agheader().
+Same comment here.
 
 Brian
 
->  
->  	scan_freelist(agf, agcnts);
-> @@ -1341,6 +1337,20 @@ scan_ag(
->  	print_inode_list(i);
->  #endif
->  	return;
-> +
-> +out_free:
-> +	if (sb)
-> +		free(sb);
-> +	if (agibuf)
-> +		libxfs_putbuf(agibuf);
-> +	if (agfbuf)
-> +		libxfs_putbuf(agfbuf);
-> +	if (sbbuf)
-> +		libxfs_putbuf(sbbuf);
-> +	if (objname)
-> +		do_error(_("can't get %s for ag %d\n"), objname, agno);
-> +	return;
-> +
+> +		return bp;
+> +	}
+>  	bp->b_ops = ops;
+>  	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+>  		return bp;
+> @@ -793,8 +816,10 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+>  	error = libxfs_readbufr_map(btp, bp, flags);
+>  	if (!error) {
+>  		bp->b_flags |= LIBXFS_B_UPTODATE;
+> -		if (bp->b_ops)
+> +		if (bp->b_ops) {
+>  			bp->b_ops->verify_read(bp);
+> +			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+> +		}
+>  	}
+>  #ifdef IO_DEBUG
+>  	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
+> @@ -889,6 +914,7 @@ libxfs_writebufr(xfs_buf_t *bp)
+>  	if (!error) {
+>  		bp->b_flags |= LIBXFS_B_UPTODATE;
+>  		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT);
+> +		bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+>  	}
+>  	return error;
 >  }
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index 6d6d344..d794ba3 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -389,6 +389,7 @@ pf_read_inode_dirs(
 >  
->  #define SCAN_THREADS 32
+>  	bp->b_ops = &xfs_inode_buf_ops;
+>  	bp->b_ops->verify_read(bp);
+> +	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+>  	if (bp->b_error)
+>  		return;
+>  
+> @@ -460,6 +461,7 @@ pf_read_discontig(
+>  
+>  	pthread_mutex_unlock(&args->lock);
+>  	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
+> +	bp->b_flags |= LIBXFS_B_UNCHECKED;
+>  	libxfs_putbuf(bp);
+>  	pthread_mutex_lock(&args->lock);
+>  }
+> @@ -583,6 +585,7 @@ pf_batch_read(
+>  					break;
+>  				memcpy(XFS_BUF_PTR(bplist[i]), pbuf, size);
+>  				bplist[i]->b_flags |= LIBXFS_B_UPTODATE;
+> +				bplist[i]->b_flags |= LIBXFS_B_UNCHECKED;
+>  				len -= size;
+>  				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
+>  					pf_read_inode_dirs(args, bplist[i]);
 > -- 
 > 1.9.0
 > 
