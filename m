@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 66A147F4E
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:31:13 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 28E077F54
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:40:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0425CAC004
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:31:09 -0700 (PDT)
-Received: from zimbra13.linbit.com (zimbra13.linbit.com [212.69.166.240]) by
-	cuda.sgi.com with ESMTP id kGCi80NhH3Jga9u6 for
-	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:31:08 -0700 (PDT)
-Date: Tue, 15 Apr 2014 21:31:02 +0200 (CEST)
-From: Andreas Gruenbacher <andreas.gruenbacher@linbit.com>
-Message-ID: <1188577823.463241.1397590262478.JavaMail.zimbra@linbit.com>
-In-Reply-To: <20140415175228.GE26404@infradead.org>
-References: <1397071311-28371-1-git-send-email-bfoster@redhat.com>
-	<1397071311-28371-2-git-send-email-bfoster@redhat.com>
-	<20140410102421.GA17641@infradead.org>
-	<20140410121947.GA14124@bfoster.bfoster>
-	<20140410122944.GA6579@infradead.org>
-	<20140415175228.GE26404@infradead.org>
-Subject: Re: [PATCH v2 1/2] xfs: fix tmpfile/selinux deadlock and initialize
-	security/acl
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 198E18F8052
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 12:40:09 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id 0R3LoY77OsAq5023 (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 12:40:08 -0700 (PDT)
+Date: Tue, 15 Apr 2014 15:40:04 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 3/4] fs: Remove i_size check from do_fallocate
+Message-ID: <20140415194004.GG4456@thunk.org>
+References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
+	<1397242665-2183-3-git-send-email-lczerner@redhat.com>
+	<20140412152117.GB18047@infradead.org>
+	<alpine.LFD.2.00.1404151510150.2146@localhost.localdomain>
+	<20140415153643.GB4456@thunk.org>
+	<alpine.LFD.2.00.1404151808440.2146@localhost.localdomain>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1404151808440.2146@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +30,19 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-man@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, linux-security-module@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-Christoph,
-
-On Tue, Apr 15, 2014 at 10:52:28AM -0700, Christoph Hellwig wrote:
-> So any opinions from other fs / security people on how O_TMPFILE files
-> should behave for ACL inheritance / labeling?
-
-from how O_TMPFILE is documented right now [*], creating such a file and
-then linking it into the namespace is one of the obvious use cases.  The
-intent seems to be to make it seem like the file was created and populated
-atomically, possibly with inherited permissions and all.  I think this
-behavior require that the O_TMPFILE file inherits from the directory it
-was "created" in.
-
-Adding code to achieve the effect of create-time inheritance at link
-time, only for O_TMPFILE files or files without any links, doesn't seem 
-reasonable to me: it would duplicate create code in the link code path,
-and it would make it harder to override inherited permissions or labels.
-
-(Trying to fake inheritance by reimplementing it in user space seems like
-a much worse idea still.)
-
-[*] http://man7.org/linux/man-pages/man2/open.2.html
-
-Thanks,
-Andreas
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBBcHIgMTUsIDIwMTQgYXQgMDY6MDk6MzRQTSArMDIwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IAo+IE9rLCBJJ2xsIHJ1biBzb21lIHRlc3RzIGFuZCByZXNlbmQgaXQgcmlnaHQg
+YXdheSB3aXRob3V0IHRoZSBwYXRjaAo+ICM0LgoKVGhhbmtzISAgU28gc2hvdWxkIEkgZHJvcCBw
+YXRjaCAjNCBmb3Igbm93PyAgSSBkb24ndCB0aGluayBpdCBkb2VzIGFueQpoYXJtLCBhbmQgaXQg
+ZG9lcyBwbHVnIHRoZSBob2xlIHNvbWV3aGF0LCBidXQgQ3Jpc3RvcGggaXMgcmlnaHQgdGhhdAp3
+ZSBzdGlsbCBjb3VsZCBoYXZlIHN3YXBvbiByYWNpbmcgd2l0aCB0aGUgZmFsbG9jYXRlLgoKICAg
+CSAgICAgICAJICAgIAkgICAJICAgICAgIAkgICAtIFRlZAoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5j
+b20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
