@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E6B47F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 08:27:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B7648F8037
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:27:22 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A7F647F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 08:38:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 95387304051
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:38:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mvWcMCUhz2nNAaik for
-	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:27:21 -0700 (PDT)
-Date: Tue, 15 Apr 2014 15:19:47 +0200 (CEST)
+	cuda.sgi.com with ESMTP id YKNDJcptJthbmjdM for
+	<xfs@oss.sgi.com>; Tue, 15 Apr 2014 06:38:21 -0700 (PDT)
+Date: Tue, 15 Apr 2014 15:09:42 +0200 (CEST)
 From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH 4/4] fs: Disallow all fallocate operation on active
-	swapfile
-In-Reply-To: <20140412152225.GC18047@infradead.org>
-Message-ID: <alpine.LFD.2.00.1404151510560.2146@localhost.localdomain>
+Subject: Re: [PATCH 2/4] fs: Prevent doing FALLOC_FL_ZERO_RANGE on append
+	only file
+In-Reply-To: <20140412151935.GA18047@infradead.org>
+Message-ID: <alpine.LFD.2.00.1404151457550.2146@localhost.localdomain>
 References: <1397242665-2183-1-git-send-email-lczerner@redhat.com>
-	<1397242665-2183-4-git-send-email-lczerner@redhat.com>
-	<20140412152225.GC18047@infradead.org>
+	<1397242665-2183-2-git-send-email-lczerner@redhat.com>
+	<20140412151935.GA18047@infradead.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -35,20 +35,38 @@ Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, linux-ext4@vger.k
 
 On Sat, 12 Apr 2014, Christoph Hellwig wrote:
 
-> Date: Sat, 12 Apr 2014 08:22:25 -0700
+> Date: Sat, 12 Apr 2014 08:19:35 -0700
 > From: Christoph Hellwig <hch@infradead.org>
 > To: Lukas Czerner <lczerner@redhat.com>
 > Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org,
 >     linux-ext4@vger.kernel.org, xfs@oss.sgi.com
-> Subject: Re: [PATCH 4/4] fs: Disallow all fallocate operation on active
->     swapfile
+> Subject: Re: [PATCH 2/4] fs: Prevent doing FALLOC_FL_ZERO_RANGE on append only
+>      file
 > 
-> Given that the earlier patches were about races - what protects us
-> from swapon racing with the check outside the filesystem locks?
+> On Fri, Apr 11, 2014 at 08:57:43PM +0200, Lukas Czerner wrote:
+> >  	/*
+> > -	 * It's not possible to punch hole or perform collapse range
+> > -	 * on append only file
+> > +	 * It's not possible to punch hole, perform collapse range
+> > +	 * or zero range on append only file
+> >  	 */
+> > -	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE)
+> > +	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE |
+> > +		    FALLOC_FL_ZERO_RANGE)
+> 
+> Might be better to make this a negative test fo the operation that is
+> allowed on an appen only file.  That's also much better future proof.
 > 
 
-That would be fairies :) This patch is obviously wrong so I'll drop
-it and try to think about better way of dealing with this.
+True, it might be better to do it this way:
+
+if (mode & ~FALLOC_FL_KEEP_SIZE && IS_APPEND(inode))
+
+this makes FALLOC_FL_NO_HIDE_STALE (reserved, not implemented)
+potentially not work on the append only file since it could change
+the content of the file.
+
+Will resend.
 
 Thanks!
 -Lukas
