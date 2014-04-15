@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1A99A7F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 16:59:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1922A8F8054
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 14:59:46 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8B877F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 17:02:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A8DF30407A
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 15:02:39 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	UydC10ArImPAh5LN for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 14:59:45 -0700 (PDT)
-Date: Wed, 16 Apr 2014 07:59:31 +1000
+	0hTkGODxdniGdsYc for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 15:02:33 -0700 (PDT)
+Date: Wed, 16 Apr 2014 08:02:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 0/4] xfs: tmpfile fixes
-Message-ID: <20140415215931.GQ15995@dastard>
-References: <1397578706-5385-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 2/3 v2] fs: Prevent doing FALLOC_FL_ZERO_RANGE on append
+	only file
+Message-ID: <20140415220220.GR15995@dastard>
+References: <1397580076-19826-1-git-send-email-lczerner@redhat.com>
+	<1397580076-19826-2-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397578706-5385-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1397580076-19826-2-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +31,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Apr 15, 2014 at 12:18:22PM -0400, Brian Foster wrote:
-> Hi all,
+On Tue, Apr 15, 2014 at 06:41:15PM +0200, Lukas Czerner wrote:
+> Currently punch hole and collapse range fallocate operation are not
+> allowed on append only file. This should be case for zero range as well.
+> Fix it by allowing only pure fallocate (possibly with keep size set).
 > 
-> Here's a v3 series for the patches previously posted here:
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> ---
+> v2: Change the condition to be future proof as suggested by hch
 > 
-> http://oss.sgi.com/archives/xfs/2014-04/msg00181.html
+>  fs/open.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> Patches 1 and 2 are just a split-up of the v1 patch:
-> 
-> http://oss.sgi.com/archives/xfs/2014-04/msg00149.html
-> 
-> Note the v1 patch has a reviewed-by, so feel free to drop 1 and 2 here
-> in favor of that version. Patches 3 and 4 are a couple cleanups in the
-> xfs_create() path.
+> diff --git a/fs/open.c b/fs/open.c
+> index 631aea81..fe48b2f 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -254,11 +254,9 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  		return -EBADF;
+>  
+>  	/*
+> -	 * It's not possible to punch hole or perform collapse range
+> -	 * on append only file
+> +	 * We can only allow pure fallocate on append only files
+>  	 */
+> -	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE)
+> -	    && IS_APPEND(inode))
+> +	if (mode & ~FALLOC_FL_KEEP_SIZE && IS_APPEND(inode))
 
-I've already got the orginal patch lined up for commit and have been
-testing it for a couple of days, so I'll stick with the original.
+	if ((mode & ~FALLOC_FL_KEEP_SIZE) && IS_APPEND(inode))
 
-The other two patches I'll add to the 3.16 queue as they aren't
-really bug fixes....
+gcc normally complains when you mix & and && in the same logic
+statement without () to separate the logic. I agree with gcc here,
+because the () indicate the intent of the logic and make it easy to
+determine that the & and && haven't been mixed up or fat-fingered...
 
 Cheers,
 
