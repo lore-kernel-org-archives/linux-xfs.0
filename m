@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0E0677F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 03:25:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 540A27F52
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 03:25:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E1C15304059
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 01:25:08 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1CFA78F8033
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 01:25:11 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	FE7CZjc4PfDV0ziG for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 01:25:06 -0700 (PDT)
+	Qo2QI2lVwlZeTFfc for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 01:25:09 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WZyfv-0003WL-6m
+	(envelope-from <dave@fromorbit.com>) id 1WZyfv-0003WN-7h
 	for xfs@oss.sgi.com; Tue, 15 Apr 2014 18:25:03 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WZyfv-0008Ph-5h
+	(envelope-from <dave@disappointment.disaster>) id 1WZyfv-0008Pp-6q
 	for xfs@oss.sgi.com; Tue, 15 Apr 2014 18:25:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/9] xfs_db, xfs_repair: improve CRC error detection
-Date: Tue, 15 Apr 2014 18:24:52 +1000
-Message-Id: <1397550301-31883-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/9] db: verify buffer on type change
+Date: Tue, 15 Apr 2014 18:24:54 +1000
+Message-Id: <1397550301-31883-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1397550301-31883-1-git-send-email-david@fromorbit.com>
+References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,41 +37,91 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-After a conversion with a user on #IRC this morning, it was clear
-that xfs_repair and xfs_db weren't handling metadata blocks with CRC
-errors in them particularly well. xfs_metadump was reporting blocks
-with errors, but xfs_db was reporting them as having a correct CRC,
-which wasn't actually the case - they were unchecked, and the code
-saw the absence of error flags as meaning they were good.
+Currently when the type command is run, we simply change the type
+associated with the buffer, but don't verify it. This results in
+unchecked CRCs being displayed. Hence when changing the type, run
+the verifier associated with the type to determine if the buffer
+contents is valid or not.
 
-Repair had a similar problem - buffers that were prefetched never
-had the verifier run on them when they were read by the checking
-code as they were uptodate in the cache. Hence the prefetch code
-needed to mark the buffers as unchecked so that the code that
-checked the metadata ran the verifier and appropriately.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ db/io.c   | 25 +++++++++++++++++++++++++
+ db/io.h   |  1 +
+ db/type.c |  9 +++++----
+ 3 files changed, 31 insertions(+), 4 deletions(-)
 
-This then showed up the fact that there were many places where
-repair was not catching the CRC error and rewriting the buffer to
-correct the bad CRC.
-
-This then showed up that we weren't actually handling remote
-attribute properly for the CRC enabled format.
-
-And so I fixed all of them. I've verified the code by manually
-corrupting blocks with xfs_db by writing garabges into unused
-regions of the blocks so that CRC errors are triggered. In each case
-repair detected the CRC error and took appropriate action. The CRC
-error was not found on a second run of xfs_repair. This really needs
-to be turned into a xfstest, but I haven't had time to do that yet.
-Any volunteers?
-
-Anyway, these fixes mean we'll definitely need a 3.2.0-rc2 release
-in the not too distant future. Comments, flames and testing all
-welcome....
-
--Dave.
+diff --git a/db/io.c b/db/io.c
+index 387f171..1a75394 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -552,6 +552,31 @@ set_cur(
+ 		ring_add();
+ }
+ 
++void
++set_iocur_type(
++	const typ_t	*t)
++{
++	const struct xfs_buf_ops *ops = t ? t->bops : NULL;
++	struct xfs_buf	*bp = iocur_top->bp;
++
++	iocur_top->typ = t;
++
++	/* verify the buffer if the type has one. */
++	if (!bp)
++		return;
++	if (!ops) {
++		bp->b_ops = NULL;
++		bp->b_flags |= LIBXFS_B_UNCHECKED;
++		return;
++	}
++	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
++		return;
++	bp->b_error = 0;
++	bp->b_ops = ops;
++	bp->b_ops->verify_read(bp);
++	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
++}
++
+ static void
+ stack_help(void)
+ {
+diff --git a/db/io.h b/db/io.h
+index 7875119..71082e6 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -62,6 +62,7 @@ extern void     write_cur(void);
+ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ 			bbmap_t *bbmap);
+ extern void     ring_add(void);
++extern void	set_iocur_type(const struct typ *t);
+ 
+ /*
+  * returns -1 for unchecked, 0 for bad and 1 for good
+diff --git a/db/type.c b/db/type.c
+index 04d0d56..b29f2a4 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -162,10 +162,11 @@ type_f(
+ 		if (tt == NULL) {
+ 			dbprintf(_("no such type %s\n"), argv[1]);
+ 		} else {
+-			if (iocur_top->typ == NULL) {
+-			    dbprintf(_("no current object\n"));
+-			} else {
+-			    iocur_top->typ = cur_typ = tt;
++			if (iocur_top->typ == NULL)
++				dbprintf(_("no current object\n"));
++			else {
++				cur_typ = tt;
++				set_iocur_type(tt);
+ 			}
+ 		}
+ 	}
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
