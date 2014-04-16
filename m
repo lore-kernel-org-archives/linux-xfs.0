@@ -1,15 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A313B7F67
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:30:49 -0500 (CDT)
-Message-ID: <534F0498.4010902@sgi.com>
-Date: Wed, 16 Apr 2014 17:30:48 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix 32bit __divdi3 undefined
-References: <534EAB41.60901@windriver.com> <20140416215223.512644029@sgi.com>
-	<20140416221000.GO15995@dastard>
-In-Reply-To: <20140416221000.GO15995@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 25EF87F58
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:35:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0F0A28F8039
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 15:35:39 -0700 (PDT)
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25]) by
+	cuda.sgi.com with ESMTP id hAFDjl2Y9RHVhBSS (version=TLSv1
+	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Apr 2014 15:35:38 -0700 (PDT)
+Received: from epcpsbgr2.samsung.com
+	(u142.gpu120.samsung.co.kr [203.254.230.142])
+	by mailout2.samsung.com (Oracle Communications Messaging Server
+	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
+	with ESMTP id <0N4500FJGARC3J40@mailout2.samsung.com> for
+	xfs@oss.sgi.com; Thu, 17 Apr 2014 07:35:36 +0900 (KST)
+From: Namjae Jeon <namjae.jeon@samsung.com>
+Subject: [PATCH] xfstests: fsstress: remove duplicate COLLAPSE_RANGE flags
+Date: Thu, 17 Apr 2014 07:35:35 +0900
+Message-id: <002c01cf59c4$2f4273e0$8dc75ba0$@samsung.com>
+MIME-version: 1.0
+Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,55 +29,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>, XFS Filesystem <xfs@oss.sgi.com>
+To: 'Dave Chinner' <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On 04/16/14 17:10, Dave Chinner wrote:
-> On Wed, Apr 16, 2014 at 04:51:56PM -0500, Mark Tinguely wrote:
->> The roundup in commit 68c1fb5d should be a roundup_64()
->> because it is desired to round a 64 bit type by an integer
->> and that will result in a 64 bit value. On 32 bit machines
->> using roundup() in this case will result in the error:
->>
->>   ERROR: "__divdi3" [fs/xfs/xfs.ko] undefined!
->>
->> Reported-by: Paul Gortmaker<paul.gortmaker@windriver.com>
->> Tested-by: Paul Gortmaker<paul.gortmaker@windriver.com>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
->> ---
->>   fs/xfs/xfs_aops.c |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> Index: b/fs/xfs/xfs_aops.c
->> ===================================================================
->> --- a/fs/xfs/xfs_aops.c
->> +++ b/fs/xfs/xfs_aops.c
->> @@ -1365,7 +1365,7 @@ __xfs_get_blocks(
->>   		if (offset<  i_size_read(inode)&&
->>   		offset + mapping_size>= i_size_read(inode)) {
->>   			/* limit mapping to block that spans EOF */
->> -			mapping_size = roundup(i_size_read(inode) - offset,
->> +			mapping_size = roundup_64(i_size_read(inode) - offset,
->>   					       1<<  inode->i_blkbits);
->>   		}
->>   		if (mapping_size>  LONG_MAX)
->
-> I'm not going to apply this as a patch - I'm going to rebase the
-> branch with the fix in the original patch so we don't have a bisect
-> breakage in the branch. Don't worry, I'll add the fact you fixed the
-> bug into the commit message...
->
-> Cheers,
->
-> Dave.
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-Makes sense.
+Remove duplicate COLLAPSE_RANGE flags
 
---Mark.
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+---
+ ltp/fsstress.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 1eec11a..29fc250 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -2176,7 +2176,6 @@ struct print_flags falloc_flags [] = {
+ 	{ FALLOC_FL_NO_HIDE_STALE, "NO_HIDE_STALE"},
+ 	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
+ 	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
+-	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
+ 	{ -1, NULL}
+ };
 
 _______________________________________________
 xfs mailing list
