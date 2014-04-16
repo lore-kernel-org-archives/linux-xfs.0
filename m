@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E3877F54
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 18:14:28 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 717EE7F54
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 18:25:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 054DF304053
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 16:14:24 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	BQpaYjyAqSucjA1z for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 16:14:19 -0700 (PDT)
-Date: Thu, 17 Apr 2014 09:13:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: btrfs, test send's ability to punch holes and
-	prealloc extents
-Message-ID: <20140416231333.GQ15995@dastard>
-References: <1397580201-27475-1-git-send-email-fdmanana@gmail.com>
-	<20140416002349.GV15995@dastard>
-	<CAL3q7H75Da9uvLnE7HVam9ue-yayw=SgePbLszVWvnPbMwkd4Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAL3q7H75Da9uvLnE7HVam9ue-yayw=SgePbLszVWvnPbMwkd4Q@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E46D0AC001
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 16:25:23 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id BPzB8FRu2FsUJJ9t (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Apr 2014 16:25:22 -0700 (PDT)
+Date: Thu, 17 Apr 2014 09:25:04 +1000
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 05/19] SUNRPC: track whether a request is coming from a
+	loop-back interface.
+Message-ID: <20140417092504.57a49f9d@notabene.brown>
+In-Reply-To: <20140416104702.264cde48@tlielax.poochiereds.net>
+References: <20140416033623.10604.69237.stgit@notabene.brown>
+	<20140416040336.10604.14822.stgit@notabene.brown>
+	<20140416104702.264cde48@tlielax.poochiereds.net>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,130 +27,172 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2630147744965331529=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Filipe David Manana <fdmanana@gmail.com>
-Cc: Josef Bacik <jbacik@fb.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Jeff Layton <jlayton@poochiereds.net>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Apr 16, 2014 at 03:39:18PM +0100, Filipe David Manana wrote:
-> On Wed, Apr 16, 2014 at 1:23 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, Apr 15, 2014 at 05:43:21PM +0100, Filipe David Borba Manana wrote:
-> >> This test verifies that after an incremental btrfs send the replicated file has
-> >> the same exact hole and data structure as in the origin filesystem. This didn't
-> >> use to be the case before the send stream version 2 - holes were sent as write
-> >> operations of 0 valued bytes instead of punching holes with the fallocate system
-> >> call, and pre-allocated extents were sent as well as write operations of 0 valued
-> >> bytes instead of intructions for the receiver to use the fallocate system call.
-> >> Also checks that prealloc extents that lie beyond the file's size are replicated
-> >> by an incremental send.
-> >
-> > Can you wrap commit messages at 68 columns?
-> >
-> > ....
-> >> +md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
-> >> +# List all hole and data segments.
-> >> +$XFS_IO_PROG -r -c "seek -r -a 0" $SCRATCH_MNT/mysnap2/foo
-> >> +# List all extents, we're interested here in prealloc extents that lie beyond
-> >> +# the file's size.
-> >> +$XFS_IO_PROG -r -c "fiemap -l" $SCRATCH_MNT/mysnap2/foo | _filter_scratch
-> >
-> > That dumps raw block numbers into the golden output. _filter_fiemap
-> > is probably needed here.
-> 
-> Hum, just tried it and uploaded a v2.
-> However I'm now noticing it doesn't do everything I had in mind.
-> _filter_fiemap is not showing the extents falloc -k created, only a
-> collapsed range of holes.
-> 
-> So my intention is to verify not just holes, but also the extents
-> created by 'falloc -k'. The following filter I just made locally gives
-> me that:
-> 
-> _filter_all_fiemap()
-> {
-> awk --posix '
-> $3 ~ /hole/ {
-> print $1, $2, $3;
-> next;
-> }
-> $3 ~ /[[:xdigit:]]*..[[:xdigit:]]/ {
-> print $1, $2, "extent";
-> next;
-> }'
-> }
+--===============2630147744965331529==
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/CcwxN46Oguly3bCuijnuqE3"; protocol="application/pgp-signature"
 
-Which is effectively _filter_hole_fiemap(), except it coalesces
-adjacent extents into a single range.
+--Sig_/CcwxN46Oguly3bCuijnuqE3
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I'd suggest moving the _filter_* functions from common/punch to
-common/filter, and using _filter_hole_fiemap() as there's no
-guarantee that you'll get individual extents for each falloc -k
-range - they coul dbe allocated contiguously, and hence the number
-of extents reported can change from run to run. That's the reason
-why the filters coalesce adjacent file offsets of the same type - we
-care whether the range of the file contains the correct extent type,
-not how fragmented the range is....
+On Wed, 16 Apr 2014 10:47:02 -0400 Jeff Layton <jlayton@poochiereds.net>
+wrote:
 
-> (nicely printed/indented at
-> https://friendpaste.com/1JtG5bts2Sz0LWhUutCpzE, as e-mail is not good
-> for code pasting)
+> On Wed, 16 Apr 2014 14:03:36 +1000
+> NeilBrown <neilb@suse.de> wrote:
+>=20
+> > If an incoming NFS request is coming from the local host, then
+> > nfsd will need to perform some special handling.  So detect that
+> > possibility and make the source visible in rq_local.
+> >=20
+> > Signed-off-by: NeilBrown <neilb@suse.de>
+> > ---
+> >  include/linux/sunrpc/svc.h      |    1 +
+> >  include/linux/sunrpc/svc_xprt.h |    1 +
+> >  net/sunrpc/svcsock.c            |   10 ++++++++++
+> >  3 files changed, 12 insertions(+)
+> >=20
+> > diff --git a/include/linux/sunrpc/svc.h b/include/linux/sunrpc/svc.h
+> > index 04e763221246..a0dbbd1e00e9 100644
+> > --- a/include/linux/sunrpc/svc.h
+> > +++ b/include/linux/sunrpc/svc.h
+> > @@ -254,6 +254,7 @@ struct svc_rqst {
+> >  	u32			rq_prot;	/* IP protocol */
+> >  	unsigned short
+> >  				rq_secure  : 1;	/* secure port */
+> > +	unsigned short		rq_local   : 1;	/* local request */
+> > =20
+> >  	void *			rq_argp;	/* decoded arguments */
+> >  	void *			rq_resp;	/* xdr'd results */
+> > diff --git a/include/linux/sunrpc/svc_xprt.h b/include/linux/sunrpc/svc=
+_xprt.h
+> > index b05963f09ebf..b99bdfb0fcf9 100644
+> > --- a/include/linux/sunrpc/svc_xprt.h
+> > +++ b/include/linux/sunrpc/svc_xprt.h
+> > @@ -63,6 +63,7 @@ struct svc_xprt {
+> >  #define	XPT_DETACHED	10		/* detached from tempsocks list */
+> >  #define XPT_LISTENER	11		/* listening endpoint */
+> >  #define XPT_CACHE_AUTH	12		/* cache auth info */
+> > +#define XPT_LOCAL	13		/* connection from loopback interface */
+> > =20
+> >  	struct svc_serv		*xpt_server;	/* service for transport */
+> >  	atomic_t    	    	xpt_reserved;	/* space on outq that is rsvd */
+> > diff --git a/net/sunrpc/svcsock.c b/net/sunrpc/svcsock.c
+> > index b6e59f0a9475..193115fe968c 100644
+> > --- a/net/sunrpc/svcsock.c
+> > +++ b/net/sunrpc/svcsock.c
+> > @@ -811,6 +811,7 @@ static struct svc_xprt *svc_tcp_accept(struct svc_x=
+prt *xprt)
+> >  	struct socket	*newsock;
+> >  	struct svc_sock	*newsvsk;
+> >  	int		err, slen;
+> > +	struct dst_entry *dst;
+> >  	RPC_IFDEBUG(char buf[RPC_MAX_ADDRBUFLEN]);
+> > =20
+> >  	dprintk("svc: tcp_accept %p sock %p\n", svsk, sock);
+> > @@ -867,6 +868,14 @@ static struct svc_xprt *svc_tcp_accept(struct svc_=
+xprt *xprt)
+> >  	}
+> >  	svc_xprt_set_local(&newsvsk->sk_xprt, sin, slen);
+> > =20
+> > +	clear_bit(XPT_LOCAL, &newsvsk->sk_xprt.xpt_flags);
+> > +	rcu_read_lock();
+> > +	dst =3D rcu_dereference(newsock->sk->sk_dst_cache);
+> > +	if (dst && dst->dev &&
+> > +	    (dst->dev->features & NETIF_F_LOOPBACK))
+> > +		set_bit(XPT_LOCAL, &newsvsk->sk_xprt.xpt_flags);
+> > +	rcu_read_unlock();
+> > +
+>=20
+> In the use-case you describe, the client is unlikely to have mounted
+> "localhost", but is more likely to be mounting a floating address in
+> the cluster.
+>=20
+> Will this flag end up being set in such a situation? It looks like
+> NETIF_F_LOOPBACK isn't set on all adapters -- mostly on "lo" and a few
+> others that support MAC-LOOPBACK.
 
-Pasting code works fine for me ;)
+I was hoping someone on net-dev would have commented if it didn't work - I
+probably should have explicitly asked.
 
-> Which gives me:
-> 
-> 0: [0..191]: extent
-> 1: [192..199]: extent
-> 2: [200..231]: extent
-> 3: [232..239]: extent
-> 4: [240..287]: extent
-> 5: [288..295]: extent
-> 6: [296..487]: extent
-> 7: [488..495]: extent
-> 8: [496..519]: hole
-> 9: [520..527]: extent
-> 10: [528..583]: extent
-> 11: [584..591]: extent
-> 12: [592..2543]: extent
-> 13: [2544..17575]: hole
-> 14: [17576..21487]: extent
+My testing certainly suggests that this works if I use any local address to
+perform the mount, not just 127.0.0.1.
+I don't know enough about routing and neighbours and the dst cache to be
+certain but my shallow understanding was always that traffic to any local
+address was pseudo-routed through the lo interface and would never get
+anywhere near e.g. the eth0 interface.
 
-Also, you're trimming of the block count, so you can drop the "-l"
-option to the fiemap command....
+Can any network people confirm?
 
-> Versus only (from _filter_fiemap):
-> 
-> 0: [496..17575]: hole
+Thanks,
+NeilBrown
 
-Maybe the "-l" option is confusing the filter, it should be giving:
 
-0: [0..495]: data
-1: [496..519]: hole
-2: [520..2543]: data
-3: [2544..17575]: hole
-4: [17576..21487]: data
+>=20
+>=20
+> >  	if (serv->sv_stats)
+> >  		serv->sv_stats->nettcpconn++;
+> > =20
+> > @@ -1112,6 +1121,7 @@ static int svc_tcp_recvfrom(struct svc_rqst *rqst=
+p)
+> > =20
+> >  	rqstp->rq_xprt_ctxt   =3D NULL;
+> >  	rqstp->rq_prot	      =3D IPPROTO_TCP;
+> > +	rqstp->rq_local	      =3D !!test_bit(XPT_LOCAL, &svsk->sk_xprt.xpt_fl=
+ags);
+> > =20
+> >  	p =3D (__be32 *)rqstp->rq_arg.head[0].iov_base;
+> >  	calldir =3D p[1];
+> >=20
+> >=20
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+>=20
 
-Though if there are unwritten extents, it will say "unwritten"
-rather than "data". _filter_hole_fiemap should give:
 
-0: [0..495]: extent
-1: [496..519]: hole
-2: [520..2543]: extent
-3: [2544..17575]: hole
-4: [17576..21487]: extent
+--Sig_/CcwxN46Oguly3bCuijnuqE3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Which tells you that everything you asked for was allocated...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-Cheers,
+iQIVAwUBU08RVznsnt1WYoG5AQIqlxAAqLL4IuhcC8p8k8jWdErxWKT7tbRpFrbD
+Wuek/KQQWWceJyhB6Px0x6PqyZcQki523xOvzVPDhwH1ox0i1B+N6gBB9yNbjejF
+9SB+2M5iIWaTLmlJ4ikbTRqnymOabVxrq/wp8E32bB+x88s8KPg7/XUUeEDWmf2D
+a/ls9dlVObBQXEHkaNor8p9VDG/4amI+Wrc/n4wcDHoUu1mgUd9fcEjuy15OHd58
+jgni/EmCgDaAlVE/+rhgFeLuHzLcfgPB4Sr3oK7mCQR2YDJR7nKsfLIe6uJSvIOS
+ZmcPo7SdRaQRn1YFt8fFRWxEeoJVayH5NmKqcqgoja7Bo5Tt+XDQ+F7XGQCvAkyX
+0LzyMrm5o3qEky6HcsfpY/6bygcN7O+yuopeEUqIdvkZ4TupRs7WrabeJkAID238
+c1trKdNVPVL5IvJijDv76BquDKTWNvLCpDV0wMWvavgy+KOEp94798xYMYm6cRaM
+ttgqxcmCfhIZK5HbKSMO6ynqpln9HOioePR5FdhINRLw7Z1fP/2sgizDGKOeImea
+nlmMdxJgYxSkGpmYOwmAJuL36Fl6jivQpZdq6EvdtJ0fxeO17CIS2ImU0tiPtH1e
+cfb71+ISEIP0Y4GlV7D9dlqTXbw0wrno/84BJLjCTfUtPSzrA0KcqAOg6t+DbfHI
+HB1epNHm5L8=
+=3z3m
+-----END PGP SIGNATURE-----
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Sig_/CcwxN46Oguly3bCuijnuqE3--
+
+
+--===============2630147744965331529==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2630147744965331529==--
