@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CA5997F37
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 08:23:39 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2DE4C7F37
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 08:24:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 90127304062
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 06:23:39 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C9FEFAC004
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 06:24:01 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1QaPKy5cF3fDJRhD for
-	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 06:23:38 -0700 (PDT)
-Date: Wed, 16 Apr 2014 09:23:34 -0400
+	cuda.sgi.com with ESMTP id GzhDPUc6618A4eXW for
+	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 06:24:00 -0700 (PDT)
+Date: Wed, 16 Apr 2014 09:23:56 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/9] repair: remove more dirv1 leftovers
-Message-ID: <20140416132332.GA4180@laptop.bfoster>
+Subject: Re: [PATCH 8/9] repair: handle remote sylmlink CRC errors
+Message-ID: <20140416132356.GB4180@laptop.bfoster>
 References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
-	<1397550301-31883-8-git-send-email-david@fromorbit.com>
+	<1397550301-31883-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397550301-31883-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1397550301-31883-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,81 +32,66 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 15, 2014 at 06:24:59PM +1000, Dave Chinner wrote:
+On Tue, Apr 15, 2014 at 06:25:00PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> get_bmapi() and it's children were only called by dirv1 code. There
-> are no current callers, so remove them.
+
+Just a couple nits... otherwise it looks good to me. There's a typo in
+the patch subject...
+
+> We can't really repair broken symlink buffer contents, but we can at
+> least warn about it and correct the CRC error so the symlink is
+> again readable.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  repair/dinode.c | 239 --------------------------------------------------------
->  repair/dinode.h |   6 --
->  2 files changed, 245 deletions(-)
+>  repair/dinode.c | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
 > 
 > diff --git a/repair/dinode.c b/repair/dinode.c
-> index 48f17ac..b086bec 100644
+> index b086bec..51863c4 100644
 > --- a/repair/dinode.c
 > +++ b/repair/dinode.c
-...
-> -xfs_dfsbno_t
-> -get_bmapi(xfs_mount_t *mp, xfs_dinode_t *dino_p,
-> -		xfs_ino_t ino_num, xfs_dfiloff_t bno, int whichfork)
-> -{
-> -	xfs_dfsbno_t		fsbno;
-> -
-> -	switch (XFS_DFORK_FORMAT(dino_p, whichfork)) {
-> -	case XFS_DINODE_FMT_EXTENTS:
-> -		fsbno = getfunc_extlist(mp, ino_num, dino_p, bno, whichfork);
-> -		break;
-> -	case XFS_DINODE_FMT_BTREE:
-> -		fsbno = getfunc_btree(mp, ino_num, dino_p, bno, whichfork);
-> -		break;
-> -	case XFS_DINODE_FMT_LOCAL:
-> -		do_error(_("get_bmapi() called for local inode %" PRIu64 "\n"),
-> -			ino_num);
+> @@ -1254,6 +1254,7 @@ process_symlink_remote(
+>  	while (pathlen > 0) {
+>  		int	blk_cnt = 1;
+>  		int	byte_cnt;
+> +		int	dirty = 0;
+>  
+>  		fsbno = blkmap_get(blkmap, i);
+>  		if (fsbno == NULLDFSBNO) {
+> @@ -1284,6 +1285,12 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+>  				lino, i, fsbno);
+>  			return 1;
+>  		}
+> +		if (bp->b_error == EFSBADCRC) {
+> +			do_warn(
+> +_("Bad symlink buffer CRC block %" PRIu64 ", inode %" PRIu64 ".\n"
+     "Bad symlink buffer CRC, block ..."
 
-I'm not quite familiar with how we manage the .po translation files, but
-FYI this string appears in a couple of them. Not sure whether there is
-value in keeping the translation around. The string does include the
-specific function name.
+... and sticking a comma or some separator in that message makes it a
+little easier to read, IMO.
 
 Brian
 
-> -		fsbno = NULLDFSBNO;
-> -		break;
-> -	default:
-> -		/*
-> -		 * shouldn't happen
-> -		 */
-> -		do_error(_("bad inode format for inode %" PRIu64 "\n"), ino_num);
-> -		fsbno = NULLDFSBNO;
-> -	}
-> -
-> -	return(fsbno);
-> -}
-> -
-> -/*
->   * higher level inode processing stuff starts here:
->   * first, one utility routine for each type of inode
->   */
-> diff --git a/repair/dinode.h b/repair/dinode.h
-> index 5ee51ca..80f3e4e 100644
-> --- a/repair/dinode.h
-> +++ b/repair/dinode.h
-> @@ -119,12 +119,6 @@ get_agino_buf(xfs_mount_t	*mp,
->  		xfs_agino_t	agino,
->  		xfs_dinode_t	**dipp);
+> +  "Correcting CRC, but symlink may be bad.\n"), fsbno, lino);
+> +			dirty = 1;
+> +		}
 >  
-> -xfs_dfsbno_t
-> -get_bmapi(xfs_mount_t		*mp,
-> -		xfs_dinode_t	*dip,
-> -		xfs_ino_t	ino_num,
-> -		xfs_dfiloff_t	bno,
-> -		int             whichfork );
+>  		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+>  		byte_cnt = MIN(pathlen, byte_cnt);
+> @@ -1307,7 +1314,10 @@ _("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n")
+>  		offset += byte_cnt;
+>  		i++;
 >  
->  void dinode_bmbt_translation_init(void);
->  char * get_forkname(int whichfork);
+> -		libxfs_putbuf(bp);
+> +		if (dirty)
+> +			libxfs_writebuf(bp, 0);
+> +		else
+> +			libxfs_putbuf(bp);
+>  	}
+>  	return 0;
+>  }
 > -- 
 > 1.9.0
 > 
